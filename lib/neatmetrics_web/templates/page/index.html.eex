@@ -1,0 +1,127 @@
+<div class="container mx-auto">
+  <nav class="flex items-center justify-between flex-wrap p-6">
+    <div></div>
+    <div class="flex items-center flex-no-shrink text-white">
+      <a href="/" class="logo-text text-4xl no-underline">neatmetrics</a>
+    </div>
+    <div><a class="no-underline" href="/login">Log in</a></div>
+  </nav>
+</div>
+
+<div class="container mx-auto mt-20">
+  <h1 class="text-center font-sans text-grey-darkest tracking-wide text-4xl">
+    Simple analytics for your website
+  </h1>
+  <p class="text-center mx-auto font-sans text-2xl max-w-sm text-grey-darker mt-4">
+    Capture pageviews, top referrers, screen sizes and more without sacrificing users' privacy
+  </p>
+  <div class="flex items-center justify-between max-w-xs mx-auto mt-12">
+    <button class="bg-red hover:bg-red-dark focus:outline-none text-white font-bold py-2 px-4 rounded">
+      View live demo
+    </button>
+    <button class="bg-red hover:bg-red-dark focus:outline-none text-white font-bold py-2 px-4 rounded">
+      Get started
+    </button>
+  </div>
+
+  <div class="text-center mt-12">
+    <img class="shadow-lg" src="<%= Routes.static_path(@conn, "/images/Analytics.png") %>" alt="Screenshot of neatmetrics"/>
+  </div>
+
+  <p class="text-center mx-auto font-sans text-2xl max-w-md text-grey-darkest mt-20">
+    Neatmetrics records useful insights on the web and presents them in a clean UI. We don’t record any personal data or set browser cookies.
+  </p>
+
+  <div class="flex items-center justify-between max-w-xl mx-auto mt-12 text-grey-darkest">
+
+    <div class="w-1/3 p-6">
+      <h3>Super easy to set up</h3>
+      <p class="mt-4 text-lg">Just copy one line of code to the footer of your website to get started.</p>
+    </div>
+
+    <div class="w-1/3 p-6">
+      <h3>Record what matters</h3>
+      <p class="mt-4 text-lg">Page views, unique users, top referrers, screen sizes. It's all there.</p>
+    </div>
+
+    <div class="w-1/3 p-6">
+      <h3>Lightweight</h3>
+      <p class="mt-4 text-lg">Your analytics library should not be slowing down your customers experience.</p>
+    </div>
+
+  </div>
+  <div class="text-center mt-12">
+    <button class="bg-red hover:bg-red-dark focus:outline-none text-white font-bold py-2 px-4 rounded">
+      View live demo
+    </button>
+  </div>
+
+  <div class="mt-20 mb-12">
+    <h2 class="text-center mb-12">Pricing</h2>
+
+    <div class="flex items-center justify-between max-w-xl mx-auto">
+
+      <div class="w-1/4 rounded border border-dark-grey overflow-hidden shadow-lg">
+        <div class="px-6 py-4">
+          <div class="font-medium text-2xl mb-2 text-center">Free</div>
+          <div class="font-bold text-xl text-green mb-2 text-center">$0</div>
+          <div class="text-center text-grey-darker">always</div>
+        </div>
+        <div class="px-6 py-4 ">
+          <p class="text-grey-darker text-base border-b border-dark-grey py-4">&lt; 10k page views</p>
+          <p class="text-grey-darker text-base border-b border-dark-grey py-4">1 teammate seat</p>
+          <p class="text-grey-darker text-base py-4">3 months data retention</p>
+          <div class="text-center mt-6 mb-4">
+            <button class="bg-red hover:bg-red-dark focus:outline-none text-white font-bold py-2 px-4 rounded">
+              Get started
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-1/4 rounded border border-dark-grey overflow-hidden shadow-lg">
+        <div class="px-6 py-4">
+          <div class="font-medium text-2xl mb-2 text-center">Starter</div>
+          <div class="font-bold text-xl text-green mb-2 text-center">$9</div>
+          <div class="text-center text-grey-darker">per month</div>
+        </div>
+        <div class="px-6 py-4 ">
+          <p class="text-grey-darker text-base border-b border-dark-grey py-4">&lt; 100k page views</p>
+          <p class="text-grey-darker text-base border-b border-dark-grey py-4">3 teammate seats</p>
+          <p class="text-grey-darker text-base py-4">12 months data retention</p>
+          <div class="text-center mt-6 mb-4">
+            <button class="bg-red hover:bg-red-dark focus:outline-none text-white font-bold py-2 px-4 rounded">
+              Try for free
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-1/4 rounded border border-dark-grey overflow-hidden shadow-lg">
+        <div class="px-6 py-4">
+          <div class="font-medium text-2xl mb-2 text-center">Business</div>
+          <div class="font-bold text-xl text-green mb-2 text-center">$49</div>
+          <div class="text-center text-grey-darker">per month</div>
+        </div>
+        <div class="px-6 py-4 ">
+          <p class="text-grey-darker text-base border-b border-dark-grey py-4">&lt; 1m page views</p>
+          <p class="text-grey-darker text-base border-b border-dark-grey py-4">10 teammate seats</p>
+          <p class="text-grey-darker text-base py-4">3 years data retention</p>
+          <div class="text-center mt-6 mb-4">
+            <button class="bg-red hover:bg-red-dark focus:outline-none text-white font-bold py-2 px-4 rounded">
+              Try for free
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="text-center mt-24">
+    <p class="text-lg">Any questions?</p>
+    <button class="bg-red hover:bg-red-dark focus:outline-none text-white font-bold py-2 px-4 rounded mt-4">
+      Email the founder
+    </button>
+  </div>
+</div>
