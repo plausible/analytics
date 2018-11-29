@@ -12,22 +12,22 @@
   </div>
 
   <div class="container mx-auto mt-20">
-    <h1 class="text-center font-sans text-grey-darkest tracking-wide text-4xl">
+    <h1 class="text-center font-sans font-black text-grey-darkest tracking-wide text-4xl">
       Simple analytics for your website
     </h1>
     <p class="text-center mx-auto font-sans text-2xl max-w-sm text-grey-darker mt-4">
     Capture pageviews, top referrers, screen sizes and more without sacrificing users' privacy
     </p>
-    <div class="flex items-center justify-between max-w-xs mx-auto mt-12">
+    <div class="flex items-center justify-between max-w-xs mx-auto mt-8">
       <button class="button">View live demo</button>
       <button class="button">Get started</button>
     </div>
 
-    <div class="text-center mt-12">
+    <div class="text-center mt-20">
       <img class="shadow-lg" src="<%= Routes.static_path(@conn, "/images/Analytics.png") %>" alt="Screenshot of neatmetrics"/>
     </div>
 
-    <p class="text-center mx-auto font-sans text-2xl max-w-md text-grey-darkest mt-20">
+    <p class="text-center mx-auto font-sans text-2xl max-w-md text-grey-darkest mt-24">
     Neatmetrics records useful insights on the web and presents them in a clean UI. We don’t record any personal data or set browser cookies.
     </p>
 
@@ -60,7 +60,7 @@
 
       <div class="flex items-center justify-between max-w-xl mx-auto">
 
-        <div class="w-1/4 rounded border border-dark-grey overflow-hidden shadow-lg">
+        <div class="w-72 rounded border border-dark-grey overflow-hidden shadow-lg">
           <div class="px-6 py-4">
             <div class="font-medium text-2xl mb-2 text-center">Free</div>
             <div class="font-bold text-xl text-green mb-2 text-center">$0</div>
@@ -76,7 +76,7 @@
           </div>
         </div>
 
-        <div class="w-1/4 rounded border border-dark-grey overflow-hidden shadow-lg">
+        <div class="w-72 rounded border border-dark-grey overflow-hidden shadow-lg">
           <div class="px-6 py-4">
             <div class="font-medium text-2xl mb-2 text-center">Starter</div>
             <div class="font-bold text-xl text-green mb-2 text-center">$9</div>
@@ -92,7 +92,7 @@
           </div>
         </div>
 
-        <div class="w-1/4 rounded border border-dark-grey overflow-hidden shadow-lg">
+        <div class="w-72 rounded border border-dark-grey overflow-hidden shadow-lg">
           <div class="px-6 py-4">
             <div class="font-medium text-2xl mb-2 text-center">Business</div>
             <div class="font-bold text-xl text-green mb-2 text-center">$49</div>

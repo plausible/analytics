@@ -194,6 +194,7 @@ module.exports = {
 
   fonts: {
     'sans': [
+      'Lato',
       'system-ui',
       'BlinkMacSystemFont',
       '-apple-system',
@@ -484,6 +485,7 @@ module.exports = {
     '32': '8rem',
     '48': '12rem',
     '64': '16rem',
+    '72': '18rem',
     '1/2': '50%',
     '1/3': '33.33333%',
     '2/3': '66.66667%',
