@@ -20,3 +20,7 @@
   font-weight: bold;
   color: #89B6A5;
 }
+
+.landing-bg {
+  background-image: linear-gradient(160deg, #F5F6F7 41.6%, white calc(41.6% + 1px))
+}
