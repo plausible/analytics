@@ -1,10 +1,12 @@
 <div class="container mx-auto">
   <nav class="flex items-center justify-between flex-wrap p-6">
-    <div></div>
+    <div style="visibility: hidden"><a class="no-underline" href="/login">Log in</a></div>
     <div class="flex items-center flex-no-shrink text-white">
       <a href="/" class="logo-text text-4xl no-underline">neatmetrics</a>
     </div>
-    <div><a class="no-underline" href="/login">Log in</a></div>
+    <div>
+      <a class="no-underline" href="/login">Log in</a>
+    </div>
   </nav>
 </div>
 
