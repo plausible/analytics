@@ -2,7 +2,7 @@
 @tailwind components;
 
 .button {
-  @apply bg-red text-white font-black tracking-wide font-sans py-3 px-5 rounded;
+  @apply bg-red text-white font-bold tracking-wide py-3 px-5 rounded;
 }
 
 .button:hover {
@@ -11,6 +11,10 @@
 
 .button:focus {
   @apply outline-none;
+}
+
+html {
+  @apply font-sans;
 }
 
 @tailwind utilities;

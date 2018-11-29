@@ -12,10 +12,10 @@
   </div>
 
   <div class="container mx-auto mt-20">
-    <h1 class="text-center font-sans font-black text-grey-darkest tracking-wide text-4xl">
+    <h1 class="text-center text-grey-darkest tracking-wide text-4xl">
       Simple analytics for your website
     </h1>
-    <p class="text-center mx-auto font-sans text-2xl max-w-sm text-grey-darker mt-4">
+    <p class="text-center mx-auto font-light text-2xl max-w-sm text-grey-darker mt-4">
     Capture pageviews, top referrers, screen sizes and more without sacrificing users' privacy
     </p>
     <div class="flex items-center justify-between max-w-xs mx-auto mt-8">
@@ -27,7 +27,7 @@
       <img class="shadow-lg" src="<%= Routes.static_path(@conn, "/images/Analytics.png") %>" alt="Screenshot of neatmetrics"/>
     </div>
 
-    <p class="text-center mx-auto font-sans text-2xl max-w-md text-grey-darkest mt-24">
+    <p class="text-center mx-auto text-2xl max-w-md text-grey-darkest mt-24">
     Neatmetrics records useful insights on the web and presents them in a clean UI. We don’t record any personal data or set browser cookies.
     </p>
 
