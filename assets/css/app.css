@@ -1,3 +1,20 @@
+@tailwind preflight;
+@tailwind components;
+
+.button {
+  @apply bg-red text-white font-bold py-3 px-5 rounded;
+}
+
+.button:hover {
+  @apply shadow;
+}
+
+.button:focus {
+  @apply outline-none;
+}
+
+@tailwind utilities;
+
 .logo-text {
   font-family: 'Comfortaa', cursive;
   font-weight: bold;

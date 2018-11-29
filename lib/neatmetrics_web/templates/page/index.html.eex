@@ -5,7 +5,7 @@
       <a href="/" class="logo-text text-4xl no-underline">neatmetrics</a>
     </div>
     <div>
-      <a class="no-underline" href="/login">Log in</a>
+      <a class="no-underline text-green hover:underline" href="/login">Log in</a>
     </div>
   </nav>
 </div>
@@ -18,12 +18,8 @@
     Capture pageviews, top referrers, screen sizes and more without sacrificing users' privacy
   </p>
   <div class="flex items-center justify-between max-w-xs mx-auto mt-12">
-    <button class="bg-red hover:bg-red-dark focus:outline-none text-white font-bold py-2 px-4 rounded">
-      View live demo
-    </button>
-    <button class="bg-red hover:bg-red-dark focus:outline-none text-white font-bold py-2 px-4 rounded">
-      Get started
-    </button>
+    <button class="button">View live demo</button>
+    <button class="button">Get started</button>
   </div>
 
   <div class="text-center mt-12">
@@ -53,7 +49,7 @@
 
   </div>
   <div class="text-center mt-12">
-    <button class="bg-red hover:bg-red-dark focus:outline-none text-white font-bold py-2 px-4 rounded">
+    <button class="button">
       View live demo
     </button>
   </div>
@@ -74,9 +70,7 @@
           <p class="text-grey-darker text-base border-b border-dark-grey py-4">1 teammate seat</p>
           <p class="text-grey-darker text-base py-4">3 months data retention</p>
           <div class="text-center mt-6 mb-4">
-            <button class="bg-red hover:bg-red-dark focus:outline-none text-white font-bold py-2 px-4 rounded">
-              Get started
-            </button>
+            <button class="button">Get started</button>
           </div>
         </div>
       </div>
@@ -92,9 +86,7 @@
           <p class="text-grey-darker text-base border-b border-dark-grey py-4">3 teammate seats</p>
           <p class="text-grey-darker text-base py-4">12 months data retention</p>
           <div class="text-center mt-6 mb-4">
-            <button class="bg-red hover:bg-red-dark focus:outline-none text-white font-bold py-2 px-4 rounded">
-              Try for free
-            </button>
+            <button class="button">Try for free</button>
           </div>
         </div>
       </div>
@@ -110,9 +102,7 @@
           <p class="text-grey-darker text-base border-b border-dark-grey py-4">10 teammate seats</p>
           <p class="text-grey-darker text-base py-4">3 years data retention</p>
           <div class="text-center mt-6 mb-4">
-            <button class="bg-red hover:bg-red-dark focus:outline-none text-white font-bold py-2 px-4 rounded">
-              Try for free
-            </button>
+            <button class="button">Try for free</button>
           </div>
         </div>
       </div>
@@ -122,8 +112,6 @@
 
   <div class="text-center mt-24">
     <p class="text-lg">Any questions?</p>
-    <button class="bg-red hover:bg-red-dark focus:outline-none text-white font-bold py-2 px-4 rounded mt-4">
-      Email the founder
-    </button>
+    <button class="button mt-4">Email the founder</button>
   </div>
 </div>
