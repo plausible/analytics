@@ -1,0 +1,119 @@
+<div class="blue-bg" style="min-height: 100vh;">
+  <div class="container mx-auto">
+    <nav class="flex items-center justify-between flex-wrap p-6">
+      <div style="visibility: hidden"><a class="no-underline" href="/login">Log in</a></div>
+      <div class="flex items-center flex-no-shrink text-white">
+        <a href="/" class="logo-text text-4xl no-underline">neatmetrics</a>
+      </div>
+      <div>
+        <a class="no-underline text-green hover:underline" href="/login">Log in</a>
+      </div>
+    </nav>
+  </div>
+
+  <div class="container mx-auto mt-16 pb-32" style="max-width: 960px;">
+    <div class="w-full">
+      <div class="inline-block relative w-64">
+        <select class="block appearance-none w-full bg-white border border-grey-light hover:border-grey px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none">
+          <option>Last 7 days</option>
+          <option>Last 30 days</option>
+          <option>Option 3</option>
+        </select>
+        <div class="pointer-events-none absolute pin-y pin-r flex items-center px-2 text-grey-darker">
+          <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="w-full bg-white shadow rounded border border-grey-light mt-4 p-4">
+      <h3 class="ml-8">Pageviews</h3>
+      <canvas id="main-graph" class="mt-4" width="400" height="150"></canvas>
+    </div>
+
+    <div class="w-full flex items-center justify-between mt-6">
+      <div class="w-48 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
+        <h2 class="text-green">1,351</h2>
+        <div class="mt-2 text-lg font-semibold">Pageviews</div>
+      </div>
+      <div class="w-48 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
+        <h2 class="text-green">869</h2>
+        <div class="mt-2 text-lg font-semibold">Unique visitors</div>
+      </div>
+      <div class="w-48 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
+        <h2 class="text-green">78%</h2>
+        <div class="mt-2 text-lg font-semibold">Bounce rate</div>
+      </div>
+      <div class="w-48 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
+        <h2 class="text-green">1:31</h2>
+        <div class="mt-2 text-lg font-semibold">Avg session</div>
+      </div>
+    </div>
+
+    <div class="w-full flex items-center justify-between mt-6">
+      <div class="w-72 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
+        <h2>Top referrers</h2>
+        <div class="text-grey-darker mt-1">by unique visitors</div>
+        <div class="mt-8">
+          <div class="flex items-center justify-between my-2">
+            <span>facebook</span><h4 class="text-green">1.2k</h4>
+          </div>
+          <div class="flex items-center justify-between my-2">
+            <span>google</span><h4 class="text-green">884</h4>
+          </div>
+          <div class="flex items-center justify-between my-2">
+            <span>third-place.com</span><h4 class="text-green">619</h4>
+          </div>
+          <div class="flex items-center justify-between my-2">
+            <span>direct</span><h4 class="text-green">176</h4>
+          </div>
+          <div class="flex items-center justify-between my-2">
+            <span>blog</span><h4 class="text-green">91</h4>
+          </div>
+        </div>
+      </div>
+      <div class="w-72 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
+        <h2>Top pages</h2>
+        <div class="text-grey-darker mt-1">by unique visitors</div>
+        <div class="mt-8">
+          <div class="flex items-center justify-between my-2">
+            <span>/</span><h4 class="text-green">666</h4>
+          </div>
+          <div class="flex items-center justify-between my-2">
+            <span>/gigs/*</span><h4 class="text-green">457</h4>
+          </div>
+          <div class="flex items-center justify-between my-2">
+            <span>/gigs</span><h4 class="text-green">366</h4>
+          </div>
+          <div class="flex items-center justify-between my-2">
+            <span>/about</span><h4 class="text-green">87</h4>
+          </div>
+          <div class="flex items-center justify-between my-2">
+            <span>/login</span><h4 class="text-green">32</h4>
+          </div>
+        </div>
+      </div>
+      <div class="w-72 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
+        <h2>Screen sizes</h2>
+        <div class="text-grey-darker mt-1">by unique visitors</div>
+        <div class="mt-8">
+          <div class="flex items-center justify-between my-2">
+            <span>365 x 667</span><h4 class="text-green">194</h4>
+          </div>
+          <div class="flex items-center justify-between my-2">
+            <span>1440 x 900</span><h4 class="text-green">126</h4>
+          </div>
+          <div class="flex items-center justify-between my-2">
+            <span>360 x 640</span><h4 class="text-green">97</h4>
+          </div>
+          <div class="flex items-center justify-between my-2">
+            <span>1366 x 768</span><h4 class="text-green">91</h4>
+          </div>
+          <div class="flex items-center justify-between my-2">
+            <span>1280 x 800</span><h4 class="text-green">90</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

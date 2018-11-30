@@ -17,6 +17,7 @@ defmodule NeatmetricsWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :index
+    get "/:website", PageController, :analytics
   end
 
   # Other scopes may use custom stacks.

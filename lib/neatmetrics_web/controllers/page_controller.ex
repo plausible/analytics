@@ -4,4 +4,8 @@ defmodule NeatmetricsWeb.PageController do
   def index(conn, _params) do
     render(conn, "index.html")
   end
+
+  def analytics(conn, %{"website" => website}) do
+    render(conn, "analytics.html")
+  end
 end
