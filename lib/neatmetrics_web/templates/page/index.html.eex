@@ -16,7 +16,7 @@
       Simple analytics for your website
     </h1>
     <p class="text-center mx-auto font-light text-2xl max-w-sm text-grey-darker mt-4">
-    Capture pageviews, top referrers, screen sizes and more without sacrificing users' privacy
+      Capture pageviews, top referrers, screen sizes and more without sacrificing users' privacy
     </p>
     <div class="flex items-center justify-between max-w-xs mx-auto mt-8">
       <a href="/gigride.live" class="button">View live demo</a>
