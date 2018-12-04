@@ -28,89 +28,114 @@
     <div class="w-full bg-white shadow rounded border border-grey-light mt-4 p-4">
       <h3 class="ml-8">Pageviews</h3>
       <canvas id="main-graph" class="mt-4" width="400" height="150"></canvas>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
+      <script>
+      var plot = [<%= Enum.join(@plot, ",") %>];
+      var labels = [<%= raw Enum.map(@labels, fn l -> "'#{l}'" end) |> Enum.join(", ") %>]
+      var ctx = document.getElementById("main-graph");
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Pageviews',
+            data: plot,
+            backgroundColor: 'rgba(137,182,165, 0.2)',
+            borderColor: 'rgba(137,182,165)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(137,182,165)'
+          }]
+        },
+        options: {
+          legend: {
+            display: false
+          },
+          responsive: true,
+          tooltips: {
+            mode: 'index',
+            intersect: false,
+          },
+          hover: {
+            mode: 'nearest',
+            intersect: true
+          },
+          scales: {
+            xAxes: [{
+              display: true,
+              scaleLabel: {
+                display: true,
+                labelString: 'Day'
+              }
+            }],
+            yAxes: [{
+              ticks: {
+                callback: function (value) { if (Number.isInteger(value)) { return value; } }
+              }
+            }],
+          }
+        }
+      });
+      </script>
     </div>
 
     <div class="w-full flex items-center justify-between mt-6">
       <div class="w-48 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
-        <h2 class="text-green">1,351</h2>
+        <h2 class="text-green"><%= @pageviews %></h2>
         <div class="mt-2 text-lg font-semibold">Pageviews</div>
       </div>
       <div class="w-48 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
-        <h2 class="text-green">869</h2>
+        <h2 class="text-green"><%= @unique_visitors %></h2>
         <div class="mt-2 text-lg font-semibold">Unique visitors</div>
       </div>
       <div class="w-48 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
-        <h2 class="text-green">78%</h2>
+        <h2 class="text-green"><%= @bounce_rate %></h2>
         <div class="mt-2 text-lg font-semibold">Bounce rate</div>
       </div>
       <div class="w-48 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
-        <h2 class="text-green">1:31</h2>
+        <h2 class="text-green"><%= @average_session %></h2>
         <div class="mt-2 text-lg font-semibold">Avg session</div>
       </div>
     </div>
 
     <div class="w-full flex items-center justify-between mt-6">
       <div class="w-72 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
-        <h2>Top referrers</h2>
-        <div class="text-grey-darker mt-1">by unique visitors</div>
+        <h2>Top Referrers</h2>
+        <div class="text-grey-darker mt-1">by visitors</div>
+
         <div class="mt-8">
-          <div class="flex items-center justify-between my-2">
-            <span>facebook</span><h4 class="text-green">1.2k</h4>
-          </div>
-          <div class="flex items-center justify-between my-2">
-            <span>google</span><h4 class="text-green">884</h4>
-          </div>
-          <div class="flex items-center justify-between my-2">
-            <span>third-place.com</span><h4 class="text-green">619</h4>
-          </div>
-          <div class="flex items-center justify-between my-2">
-            <span>direct</span><h4 class="text-green">176</h4>
-          </div>
-          <div class="flex items-center justify-between my-2">
-            <span>blog</span><h4 class="text-green">91</h4>
-          </div>
+          <%= for {referrer, count} <- @top_referrers do %>
+            <div class="flex items-center justify-between my-2">
+              <span><%= referrer %></span>
+              <h4 class="text-green"><%= count %></h4>
+            </div>
+          <% end %>
         </div>
       </div>
+
       <div class="w-72 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
-        <h2>Top pages</h2>
-        <div class="text-grey-darker mt-1">by unique visitors</div>
+        <h2>Top Pages</h2>
+        <div class="text-grey-darker mt-1">by pageviews</div>
         <div class="mt-8">
-          <div class="flex items-center justify-between my-2">
-            <span>/</span><h4 class="text-green">666</h4>
-          </div>
-          <div class="flex items-center justify-between my-2">
-            <span>/gigs/*</span><h4 class="text-green">457</h4>
-          </div>
-          <div class="flex items-center justify-between my-2">
-            <span>/gigs</span><h4 class="text-green">366</h4>
-          </div>
-          <div class="flex items-center justify-between my-2">
-            <span>/about</span><h4 class="text-green">87</h4>
-          </div>
-          <div class="flex items-center justify-between my-2">
-            <span>/login</span><h4 class="text-green">32</h4>
-          </div>
+          <%= for {page, count} <- @top_pages do %>
+            <div class="flex items-center justify-between my-2">
+              <span><%= page %></span>
+              <h4 class="text-green"><%= count %></h4>
+            </div>
+          <% end %>
         </div>
       </div>
+
       <div class="w-72 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
-        <h2>Screen sizes</h2>
-        <div class="text-grey-darker mt-1">by unique visitors</div>
+        <h2>Screen Sizes</h2>
+        <div class="text-grey-darker mt-1">by sessions</div>
         <div class="mt-8">
-          <div class="flex items-center justify-between my-2">
-            <span>365 x 667</span><h4 class="text-green">194</h4>
-          </div>
-          <div class="flex items-center justify-between my-2">
-            <span>1440 x 900</span><h4 class="text-green">126</h4>
-          </div>
-          <div class="flex items-center justify-between my-2">
-            <span>360 x 640</span><h4 class="text-green">97</h4>
-          </div>
-          <div class="flex items-center justify-between my-2">
-            <span>1366 x 768</span><h4 class="text-green">91</h4>
-          </div>
-          <div class="flex items-center justify-between my-2">
-            <span>1280 x 800</span><h4 class="text-green">90</h4>
-          </div>
+          <%= for {screen_size, count} <- @top_screen_sizes do %>
+            <div class="flex items-center justify-between my-2">
+              <span><%= screen_size %></span>
+              <h4 class="text-green"><%= count %></h4>
+            </div>
+          <% end %>
         </div>
       </div>
     </div>

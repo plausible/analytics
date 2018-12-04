@@ -9,8 +9,12 @@ defmodule NeatmetricsWeb.Router do
     plug :put_secure_browser_headers
   end
 
+  pipeline :external_api do
+    plug :accepts, ["text/plain"]
+  end
+
   pipeline :api do
-    plug :accepts, ["json"]
+    plug :accepts, ["application/json"]
   end
 
   scope "/", NeatmetricsWeb do
@@ -20,8 +24,9 @@ defmodule NeatmetricsWeb.Router do
     get "/:website", PageController, :analytics
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", NeatmetricsWeb do
-  #   pipe_through :api
-  # end
+   scope "/api", NeatmetricsWeb do
+     pipe_through :external_api
+
+     post "/page", ApiController, :page
+   end
 end

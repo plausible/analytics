@@ -56,7 +56,8 @@
     </div>
 
     <div class="mt-20 mb-12">
-      <h2 class="text-center mb-12">Pricing</h2>
+      <h2 class="text-center">Pricing</h2>
+      <div class="text-center text-lg mt-2 mb-12 text-grey-darker">All plans can be used with unlimited websites</div>
 
       <div class="flex items-center justify-between max-w-xl mx-auto">
 

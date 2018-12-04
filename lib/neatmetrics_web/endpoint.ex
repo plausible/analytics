@@ -42,5 +42,6 @@ defmodule NeatmetricsWeb.Endpoint do
     key: "_neatmetrics_key",
     signing_salt: "3IL0ob4k"
 
+  plug CORSPlug
   plug NeatmetricsWeb.Router
 end
