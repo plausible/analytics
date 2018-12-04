@@ -18,4 +18,8 @@ defmodule Neatmetrics.Pageview do
     |> cast(attrs, [:hostname, :pathname, :referrer, :user_agent, :screen_width, :screen_height])
     |> validate_required([:hostname, :pathname])
   end
+
+  def screen_string(pageview) do
+    "#{pageview.screen_width} x #{pageview.screen_height}"
+  end
 end

@@ -29,21 +29,13 @@ defmodule NeatmetricsWeb.PageController do
       {"blog", "91"},
     ]
 
-    top_pages = [
-      {"/", "666"},
-      {"/gigs/*", "457"},
-      {"/gigs", "336"},
-      {"/about", "87"},
-      {"/login", "32"},
-    ]
+    top_pages = Enum.group_by(pageviews, &(&1.pathname))
+    |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
+    |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
 
-    top_screen_sizes = [
-      {"365 x 667", "194"},
-      {"1440 x 900", "126"},
-      {"360 x 640", "97"},
-      {"1366 x 768", "91"},
-      {"1280 x 800", "90"},
-    ]
+    top_screen_sizes = Enum.group_by(pageviews, &Neatmetrics.Pageview.screen_string/1)
+    |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
+    |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
 
     render(conn, "analytics.html",
       plot: plot,

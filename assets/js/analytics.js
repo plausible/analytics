@@ -2,8 +2,8 @@
   try {
     var userAgent = window.navigator.userAgent;
     var referrer = window.document.referrer;
-    var screenWidth = window.innerWidth;
-    var screenHeight = window.innerHeight;
+    var screenWidth = window.screen.width;
+    var screenHeight = window.screen.height;
 
     function page() {
       var url = window.location.protocol + '//' + 'gigride.live' + window.location.pathname;
