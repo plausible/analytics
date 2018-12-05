@@ -21,13 +21,10 @@ defmodule NeatmetricsWeb.PageController do
       formatted = Timex.format!(date, "{D} {Mshort}")
     end)
 
-    top_referrers = [
-      {"facebook", "1.2k"},
-      {"google", "884"},
-      {"third-place.com", "619"},
-      {"direct", "176"},
-      {"blog", "91"},
-    ]
+    top_referrers = Enum.filter(pageviews, fn pv -> pv.referrer && !String.contains?(pv.referrer, pv.hostname) end)
+    |> Enum.group_by(&(&1.referrer))
+    |> Enum.map(fn {ref, views} -> {ref, Enum.count(views)} end)
+    |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
 
     top_pages = Enum.group_by(pageviews, &(&1.pathname))
     |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
