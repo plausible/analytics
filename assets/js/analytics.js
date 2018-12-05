@@ -23,4 +23,4 @@
   } catch (e) {
     console.error(e)
   }
-})(window, 'http://localhost:8000');
+})(window, 'https://neatmetrics.herokuapp.com');
