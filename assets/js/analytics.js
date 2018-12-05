@@ -6,7 +6,7 @@
     var screenHeight = window.screen.height;
 
     function page() {
-      var url = window.location.protocol + '//' + 'gigride.live' + window.location.pathname;
+      var url = window.location.protocol + '//' + window.location.hostname + window.location.pathname;
       var postBody = {url: url};
       if (userAgent) postBody.user_agent = userAgent;
       if (referrer) postBody.referrer = referrer;
