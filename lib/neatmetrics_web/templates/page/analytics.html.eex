@@ -52,6 +52,11 @@
             display: false
           },
           responsive: true,
+          elements: {
+            line: {
+              tension: 0
+            }
+          },
           tooltips: {
             mode: 'index',
             intersect: false,
