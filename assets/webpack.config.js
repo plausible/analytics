@@ -4,6 +4,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const DefinePlugin = require('webpack').DefinePlugin;
 
 module.exports = (env, options) => ({
   optimization: {
@@ -37,6 +38,9 @@ module.exports = (env, options) => ({
   },
   plugins: [
     new MiniCssExtractPlugin({ filename: '../css/app.css' }),
-    new CopyWebpackPlugin([{ from: 'static/', to: '../' }])
+    new CopyWebpackPlugin([{ from: 'static/', to: '../' }]),
+    new DefinePlugin({
+      "HOST": JSON.stringify(process.env.HOST || "lvh.me:8000")
+    }),
   ]
 });

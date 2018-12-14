@@ -57,4 +57,4 @@
   } catch (e) {
     console.error(e)
   }
-})(window, 'https://neatmetrics.herokuapp.com');
+})(window, 'http://' + HOST);
