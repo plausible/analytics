@@ -2,8 +2,12 @@ defmodule NeatmetricsWeb.ApiController do
   use NeatmetricsWeb, :controller
 
   def page(conn, _params) do
-    {:ok, pageview} = create_pageview(conn)
-    conn |> send_resp(200, "")
+    with {:ok, _pageview} <- create_pageview(conn)
+    do
+      conn |> send_resp(202, "")
+    else
+      _ -> conn |> send_resp(400, "")
+    end
   end
 
   defp create_pageview(conn) do
@@ -14,7 +18,7 @@ defmodule NeatmetricsWeb.ApiController do
   end
 
   defp process_pageview(params) do
-    uri = URI.parse(params["url"])
+    uri = URI.parse(params["url"] || "")
 
     %{
       hostname: uri.host,
@@ -27,7 +31,7 @@ defmodule NeatmetricsWeb.ApiController do
   end
 
   defp parse_body(conn) do
-    {:ok, body, conn} = Plug.Conn.read_body(conn)
+    {:ok, body, _conn} = Plug.Conn.read_body(conn)
     Jason.decode!(body)
   end
 end

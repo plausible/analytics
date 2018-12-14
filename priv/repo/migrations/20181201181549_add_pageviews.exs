@@ -12,6 +12,5 @@ defmodule Neatmetrics.Repo.Migrations.AddPageviews do
 
       timestamps()
     end
-
   end
 end
