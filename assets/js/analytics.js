@@ -57,4 +57,4 @@
   } catch (e) {
     console.error(e)
   }
-})(window, 'http://lvh.me:8000');
+})(window, 'https://neatmetrics.herokuapp.com');
