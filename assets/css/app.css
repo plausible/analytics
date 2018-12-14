@@ -41,3 +41,7 @@ html {
   text-overflow: ellipsis;
   text-align: left;
 }
+
+.truncated-label:hover {
+  @apply underline;
+}

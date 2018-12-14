@@ -128,7 +128,7 @@
         <div class="mt-8">
           <%= for {page, count} <- @top_pages do %>
             <div class="flex items-center justify-between my-2">
-              <%= link(page, to: "//" <> @hostname <> page, target: "_blank", class: "no-underline text-grey-darkest") %>
+              <%= link(page, to: "//" <> @hostname <> page, target: "_blank", class: "truncated-label") %>
               <h4 class="text-green"><%= count %></h4>
             </div>
           <% end %>
