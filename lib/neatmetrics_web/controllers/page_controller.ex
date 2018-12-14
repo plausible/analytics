@@ -1,5 +1,6 @@
 defmodule NeatmetricsWeb.PageController do
   use NeatmetricsWeb, :controller
+  use Neatmetrics.Repo
 
   def index(conn, _params) do
     render(conn, "index.html")
@@ -10,7 +11,7 @@ defmodule NeatmetricsWeb.PageController do
     start_date = Timex.shift(Timex.today(), days: -7)
     date_range = Date.range(start_date, end_date)
 
-    pageviews = Neatmetrics.Repo.all(Neatmetrics.Pageview)
+    pageviews = Repo.all(from p in Neatmetrics.Pageview, where: p.hostname == ^website)
     pageview_groups = Enum.group_by(pageviews, fn pageview -> NaiveDateTime.to_date(pageview.inserted_at) end)
 
     plot = Enum.map(date_range, fn day ->
@@ -18,7 +19,7 @@ defmodule NeatmetricsWeb.PageController do
     end)
 
     labels = Enum.map(date_range, fn date ->
-      formatted = Timex.format!(date, "{D} {Mshort}")
+      Timex.format!(date, "{D} {Mshort}")
     end)
 
     top_referrers = Enum.filter(pageviews, fn pv -> pv.referrer && !String.contains?(pv.referrer, pv.hostname) end)
@@ -41,13 +42,13 @@ defmodule NeatmetricsWeb.PageController do
       plot: plot,
       labels: labels,
       pageviews: Enum.count(pageviews),
-      unique_visitors: "869",
+      unique_visitors: Enum.filter(pageviews, fn pv -> pv.new_visitor end) |> Enum.count,
       bounce_rate: "68%",
       average_session: "1:31",
       top_referrers: top_referrers,
       top_pages: top_pages,
       top_screen_sizes: top_screen_sizes,
-      hostname: "gigride.live"
+      hostname: website
     )
   end
 end

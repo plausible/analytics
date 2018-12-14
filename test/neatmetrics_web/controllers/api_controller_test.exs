@@ -17,7 +17,7 @@ defmodule NeatmetricsWeb.ApiControllerTest do
              |> put_req_header("content-type", "text/plain")
              |> post("/api/page", Jason.encode!(params))
 
-      pageview = Neatmetrics.Repo.one(Neatmetrics.Pageview)
+      pageview = Repo.one(Neatmetrics.Pageview)
 
       assert response(conn, 202) == ""
       assert pageview.hostname == "gigride.live"
@@ -38,6 +38,21 @@ defmodule NeatmetricsWeb.ApiControllerTest do
              |> post("/api/page", Jason.encode!(params))
 
       assert response(conn, 400) == ""
+    end
+
+    test "www. is stripped from hostname", %{conn: conn} do
+      params = %{
+        url: "http://www.example.com/",
+        new_visitor: true
+      }
+
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> post("/api/page", Jason.encode!(params))
+
+      pageview = Repo.one(Neatmetrics.Pageview)
+
+      assert pageview.hostname == "example.com"
     end
   end
 end

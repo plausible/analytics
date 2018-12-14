@@ -5,7 +5,7 @@ defmodule Neatmetrics.Repo do
 
   defmacro __using__(_) do
     quote do
-      alias __MODULE__
+      alias Neatmetrics.Repo
       import Ecto
       import Ecto.Query, only: [from: 1, from: 2]
     end

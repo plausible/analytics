@@ -8,7 +8,7 @@ defmodule NeatmetricsWeb.ApiController do
       conn |> send_resp(202, "")
     else
       {:error, changeset} ->
-        Logger.warn("Error processing pageview: #{inspect(changeset)}")
+        Logger.info("Error processing pageview: #{inspect(changeset)}")
         conn |> send_resp(400, "")
     end
   end
@@ -24,7 +24,7 @@ defmodule NeatmetricsWeb.ApiController do
     uri = URI.parse(params["url"] || "")
 
     %{
-      hostname: uri.host,
+      hostname: strip_www(uri.host),
       pathname: uri.path,
       referrer: params["referrer"],
       user_agent: params["user_agent"],
@@ -37,5 +37,10 @@ defmodule NeatmetricsWeb.ApiController do
   defp parse_body(conn) do
     {:ok, body, _conn} = Plug.Conn.read_body(conn)
     Jason.decode!(body)
+  end
+
+  defp strip_www(nil), do: nil
+  defp strip_www(hostname) do
+    String.replace_prefix(hostname, "www.", "")
   end
 end
