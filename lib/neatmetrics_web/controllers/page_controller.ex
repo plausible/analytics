@@ -25,14 +25,17 @@ defmodule NeatmetricsWeb.PageController do
     |> Enum.group_by(&(&1.referrer))
     |> Enum.map(fn {ref, views} -> {ref, Enum.count(views)} end)
     |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
+    |> Enum.take(10)
 
     top_pages = Enum.group_by(pageviews, &(&1.pathname))
     |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
     |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
+    |> Enum.take(10)
 
     top_screen_sizes = Enum.group_by(pageviews, &Neatmetrics.Pageview.screen_string/1)
     |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
     |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
+    |> Enum.take(10)
 
     render(conn, "analytics.html",
       plot: plot,
@@ -43,7 +46,8 @@ defmodule NeatmetricsWeb.PageController do
       average_session: "1:31",
       top_referrers: top_referrers,
       top_pages: top_pages,
-      top_screen_sizes: top_screen_sizes
+      top_screen_sizes: top_screen_sizes,
+      hostname: "gigride.live"
     )
   end
 end

@@ -32,3 +32,12 @@ html {
 .blue-bg {
   background: #F5F6F7;
 }
+
+.truncated-label {
+  @apply no-underline text-grey-darkest;
+  white-space: nowrap;
+  width: calc(100% - 40px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}

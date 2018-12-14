@@ -75,7 +75,8 @@
             }],
             yAxes: [{
               ticks: {
-                callback: function (value) { if (Number.isInteger(value)) { return value; } }
+                callback: function (value) { if (Number.isInteger(value)) { return value; } },
+                beginAtZero: true
               }
             }],
           }
@@ -111,10 +112,13 @@
         <div class="mt-8">
           <%= for {referrer, count} <- @top_referrers do %>
             <div class="flex items-center justify-between my-2">
-              <span><%= referrer %></span>
+              <a href="<%= referrer %>" target="_blank" class="truncated-label"><%= referrer %></a>
               <h4 class="text-green"><%= count %></h4>
             </div>
           <% end %>
+          <div class="mt-4">
+            <a class="no-underline text-red font-bold" href="//">More</a>
+          </div>
         </div>
       </div>
 
@@ -124,10 +128,13 @@
         <div class="mt-8">
           <%= for {page, count} <- @top_pages do %>
             <div class="flex items-center justify-between my-2">
-              <span><%= page %></span>
+              <%= link(page, to: "//" <> @hostname <> page, target: "_blank", class: "no-underline text-grey-darkest") %>
               <h4 class="text-green"><%= count %></h4>
             </div>
           <% end %>
+          <div class="mt-4">
+            <a class="no-underline text-red font-bold" href="//">More</a>
+          </div>
         </div>
       </div>
 
@@ -141,6 +148,9 @@
               <h4 class="text-green"><%= count %></h4>
             </div>
           <% end %>
+          <div class="mt-4">
+            <a class="no-underline text-red font-bold" href="//">More</a>
+          </div>
         </div>
       </div>
     </div>
