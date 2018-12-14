@@ -57,4 +57,4 @@
   } catch (e) {
     console.error(e)
   }
-})(window, 'http://' + HOST);
+})(window, BASE_URL);
