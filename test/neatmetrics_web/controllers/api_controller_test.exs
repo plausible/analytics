@@ -8,6 +8,7 @@ defmodule NeatmetricsWeb.ApiControllerTest do
         url: "http://gigride.live/",
         referrer: "http://m.facebook.com/",
         user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36",
+        new_visitor: true,
         screen_width: 1440,
         screen_height: 900
       }
@@ -21,6 +22,7 @@ defmodule NeatmetricsWeb.ApiControllerTest do
       assert response(conn, 202) == ""
       assert pageview.hostname == "gigride.live"
       assert pageview.pathname == "/"
+      assert pageview.new_visitor == true
       assert pageview.user_agent == params[:user_agent]
       assert pageview.screen_width == params[:screen_width]
       assert pageview.screen_height == params[:screen_height]

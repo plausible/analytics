@@ -1,12 +1,15 @@
 defmodule NeatmetricsWeb.ApiController do
   use NeatmetricsWeb, :controller
+  require Logger
 
   def page(conn, _params) do
     with {:ok, _pageview} <- create_pageview(conn)
     do
       conn |> send_resp(202, "")
     else
-      _ -> conn |> send_resp(400, "")
+      {:error, changeset} ->
+        Logger.warn("Error processing pageview: #{inspect(changeset)}")
+        conn |> send_resp(400, "")
     end
   end
 
@@ -25,6 +28,7 @@ defmodule NeatmetricsWeb.ApiController do
       pathname: uri.path,
       referrer: params["referrer"],
       user_agent: params["user_agent"],
+      new_visitor: params["new_visitor"],
       screen_width: params["screen_width"],
       screen_height: params["screen_height"]
     }

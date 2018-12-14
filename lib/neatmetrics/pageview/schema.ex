@@ -9,14 +9,15 @@ defmodule Neatmetrics.Pageview do
     field :user_agent, :string
     field :screen_width, :integer
     field :screen_height, :integer
+    field :new_visitor, :boolean
 
     timestamps()
   end
 
   def changeset(pageview, attrs) do
     pageview
-    |> cast(attrs, [:hostname, :pathname, :referrer, :user_agent, :screen_width, :screen_height])
-    |> validate_required([:hostname, :pathname])
+    |> cast(attrs, [:hostname, :pathname, :referrer, :user_agent, :new_visitor, :screen_width, :screen_height])
+    |> validate_required([:hostname, :pathname, :new_visitor])
   end
 
   def screen_string(pageview) do
