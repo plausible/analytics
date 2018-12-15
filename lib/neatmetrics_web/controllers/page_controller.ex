@@ -13,10 +13,8 @@ defmodule NeatmetricsWeb.PageController do
     |> String.replace_suffix("/", "")
   end
 
-  def analytics(conn, %{"website" => website}) do
-    end_date = Timex.today()
-    start_date = Timex.shift(Timex.today(), days: -7)
-    date_range = Date.range(start_date, end_date)
+  def analytics(conn, %{"website" => website} = params) do
+    {period, date_range} = get_date_range(params)
 
     pageviews = Repo.all(from p in Neatmetrics.Pageview, where: p.hostname == ^website)
     pageview_groups = Enum.group_by(pageviews, fn pageview -> NaiveDateTime.to_date(pageview.inserted_at) end)
@@ -58,7 +56,24 @@ defmodule NeatmetricsWeb.PageController do
       top_pages: top_pages,
       top_screen_sizes: top_screen_sizes,
       hostname: website,
-      title: "Neatmetrics · " <> website
+      title: "Neatmetrics · " <> website,
+      selected_period: period
     )
+  end
+
+  defp get_date_range(%{"period" => "7days"}) do
+    start_date = Timex.shift(Timex.today(), days: -7)
+    date_range = Date.range(start_date, Timex.today())
+    {"7days", date_range}
+  end
+
+  defp get_date_range(%{"period" => "30days"}) do
+    start_date = Timex.shift(Timex.today(), days: -30)
+    date_range = Date.range(start_date, Timex.today())
+    {"30days", date_range}
+  end
+
+  defp get_date_range(_) do
+    get_date_range(%{"period" => "30days"})
   end
 end
