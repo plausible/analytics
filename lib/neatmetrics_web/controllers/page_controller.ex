@@ -16,7 +16,12 @@ defmodule NeatmetricsWeb.PageController do
   def analytics(conn, %{"website" => website} = params) do
     {period, date_range} = get_date_range(params)
 
-    pageviews = Repo.all(from p in Neatmetrics.Pageview, where: p.hostname == ^website)
+    pageviews = Repo.all(
+      from p in Neatmetrics.Pageview,
+      where: p.hostname == ^website,
+      where: type(p.inserted_at, :date) >= ^date_range.first and type(p.inserted_at, :date) <= ^date_range.last
+    )
+
     pageview_groups = Enum.group_by(pageviews, fn pageview -> NaiveDateTime.to_date(pageview.inserted_at) end)
 
     plot = Enum.map(date_range, fn day ->
