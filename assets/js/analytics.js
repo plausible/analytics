@@ -2,27 +2,32 @@
   'use strict';
 
   try {
-    function getCookie(name) {
-      var cookies = document.cookie ? document.cookie.split('; ') : [];
-
-      for (var i = 0; i < cookies.length; i++) {
-        var parts = cookies[i].split('=');
-        if (decodeURIComponent(parts[0]) !== name) {
-          continue;
+    function setCookie(name,value,minutes) {
+        var expires = "";
+        if (minutes) {
+            var date = new Date();
+            date.setTime(date.getTime() + (minutes*60*1000));
+            expires = "; expires=" + date.toUTCString();
         }
-
-        var cookie = parts.slice(1).join('=');
-        return decodeURIComponent(cookie);
-      }
-
-      return '';
+        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
     }
 
-    function setCookie(name, data) {
-      data = encodeURIComponent(String(data));
-      var str = name + '=' + data + ';path=/';
+    function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    }
 
-      document.cookie = str;
+    function pseudoUUIDv4() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
     }
 
     function page() {
@@ -30,12 +35,16 @@
       var referrer = window.document.referrer;
       var screenWidth = window.screen.width;
       var screenHeight = window.screen.height;
-      var cookie = getCookie('_nm')
+      var uid = getCookie('nm_uid')
+      if (!uid && getCookie('_nm')) { // DELETE THIS SOON
+        uid = pseudoUUIDv4();
+        setCookie('nm_uid', uid)
+      }
 
       var url = window.location.protocol + '//' + window.location.hostname + window.location.pathname;
       var postBody = {
         url: url,
-        new_visitor: !cookie
+        new_visitor: !uid
       };
       if (userAgent) postBody.user_agent = userAgent;
       if (referrer) postBody.referrer = referrer;
@@ -46,9 +55,11 @@
       request.open('POST', apiHost + '/api/page', true);
       request.setRequestHeader('Content-Type', 'text/plain; charset=UTF-8');
       request.send(JSON.stringify(postBody));
-      request.onreadystatechange = function() {
-        if (request.readyState == XMLHttpRequest.DONE) {
-          setCookie('_nm', {foo: 'bar'})
+      if (!uid) {
+        request.onreadystatechange = function() {
+          if (request.readyState == XMLHttpRequest.DONE) {
+            setCookie('nm_uid', pseudoUUIDv4())
+          }
         }
       }
     }
