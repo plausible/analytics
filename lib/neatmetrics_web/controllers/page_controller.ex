@@ -26,7 +26,7 @@ defmodule NeatmetricsWeb.PageController do
     end)
 
     labels = Enum.map(date_range, fn date ->
-      Timex.format!(date, "{D} {Mshort}")
+      Timex.format!(date, "{WDshort} {D} {Mshort}")
     end)
 
     top_referrers = pageviews
@@ -57,7 +57,8 @@ defmodule NeatmetricsWeb.PageController do
       top_referrers: top_referrers,
       top_pages: top_pages,
       top_screen_sizes: top_screen_sizes,
-      hostname: website
+      hostname: website,
+      title: "Neatmetrics · " <> website
     )
   end
 end
