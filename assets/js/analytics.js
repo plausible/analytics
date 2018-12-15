@@ -31,6 +31,16 @@
     }
 
     function page() {
+      // Respect "Do Not Track" requests
+      if('doNotTrack' in window.navigator && window.navigator.doNotTrack === "1") {
+        return;
+      }
+
+      // ignore prerendered pages
+      if( 'visibilityState' in window.document && window.document.visibilityState === 'prerender' ) {
+        return;
+      }
+
       var userAgent = window.navigator.userAgent;
       var referrer = window.document.referrer;
       var screenWidth = window.screen.width;
