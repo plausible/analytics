@@ -41,7 +41,7 @@
         setCookie('nm_uid', uid)
       }
 
-      var sid = getCookie('nm_sid')
+      var sid = getCookie('nm_sid') || pseudoUUIDv4();
 
       var url = window.location.protocol + '//' + window.location.hostname + window.location.pathname;
       var postBody = {
@@ -49,6 +49,7 @@
         new_visitor: !uid,
         sid: sid
       };
+
       if (userAgent) postBody.user_agent = userAgent;
       if (referrer) postBody.referrer = referrer;
       if (screenWidth) postBody.screen_width = screenWidth;
@@ -63,7 +64,7 @@
             if (!uid) {
               setCookie('nm_uid', pseudoUUIDv4())
             }
-            setCookie('nm_sid', sid || pseudoUUIDv4(), 30)
+            setCookie('nm_sid', sid, 30)
           }
         }
       }
