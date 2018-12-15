@@ -44,15 +44,10 @@
           }]
         },
         options: {
-          legend: {
-            display: false
-          },
+          legend: {display: false},
           responsive: true,
-          elements: {
-            line: {
-              tension: 0
-            }
-          },
+          elements: {line: {tension: 0}},
+          animation: false,
           tooltips: {
             mode: 'index',
             intersect: false,
