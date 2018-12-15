@@ -32,14 +32,11 @@
 
     function page() {
       // Respect "Do Not Track" requests
-      if('doNotTrack' in window.navigator && window.navigator.doNotTrack === "1") {
-        return;
-      }
-
-      // ignore prerendered pages
-      if( 'visibilityState' in window.document && window.document.visibilityState === 'prerender' ) {
-        return;
-      }
+      if('doNotTrack' in window.navigator && window.navigator.doNotTrack === "1") return;
+      // Ignore prerendered pages
+      if( 'visibilityState' in window.document && window.document.visibilityState === 'prerender' ) return;
+      // Ignore locally server pages
+      if (window.location.hostname === 'localhost') return;
 
       var userAgent = window.navigator.userAgent;
       var referrer = window.document.referrer;
