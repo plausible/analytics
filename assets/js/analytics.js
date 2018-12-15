@@ -63,9 +63,7 @@
             if (!uid) {
               setCookie('nm_uid', pseudoUUIDv4())
             }
-            if (!sid) {
-              setCookie('nm_sid', pseudoUUIDv4(), 30)
-            }
+            setCookie('nm_sid', sid || pseudoUUIDv4(), 30)
           }
         }
       }
