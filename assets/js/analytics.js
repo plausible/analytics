@@ -31,17 +31,20 @@
     }
 
     function page() {
+      var userAgent = window.navigator.userAgent;
+      var referrer = window.document.referrer;
+      var screenWidth = window.screen.width;
+      var screenHeight = window.screen.height;
+
       // Respect "Do Not Track" requests
       if('doNotTrack' in window.navigator && window.navigator.doNotTrack === "1") return;
       // Ignore prerendered pages
       if( 'visibilityState' in window.document && window.document.visibilityState === 'prerender' ) return;
       // Ignore locally server pages
       if (window.location.hostname === 'localhost') return;
+      // Basic bot detection.
+      if (userAgent.search(/(bot|spider|crawl)/ig) > -1) return;
 
-      var userAgent = window.navigator.userAgent;
-      var referrer = window.document.referrer;
-      var screenWidth = window.screen.width;
-      var screenHeight = window.screen.height;
       var uid = getCookie('nm_uid')
       if (!uid && getCookie('_nm')) { // DELETE THIS SOON
         uid = pseudoUUIDv4();
