@@ -41,10 +41,13 @@
         setCookie('nm_uid', uid)
       }
 
+      var sid = getCookie('nm_sid')
+
       var url = window.location.protocol + '//' + window.location.hostname + window.location.pathname;
       var postBody = {
         url: url,
-        new_visitor: !uid
+        new_visitor: !uid,
+        sid: sid
       };
       if (userAgent) postBody.user_agent = userAgent;
       if (referrer) postBody.referrer = referrer;
@@ -55,14 +58,17 @@
       request.open('POST', apiHost + '/api/page', true);
       request.setRequestHeader('Content-Type', 'text/plain; charset=UTF-8');
       request.send(JSON.stringify(postBody));
-      if (!uid) {
         request.onreadystatechange = function() {
           if (request.readyState == XMLHttpRequest.DONE) {
-            setCookie('nm_uid', pseudoUUIDv4())
+            if (!uid) {
+              setCookie('nm_uid', pseudoUUIDv4())
+            }
+            if (!sid) {
+              setCookie('nm_sid', pseudoUUIDv4(), 30)
+            }
           }
         }
       }
-    }
 
     page()
   } catch (e) {

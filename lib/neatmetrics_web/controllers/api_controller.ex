@@ -30,7 +30,8 @@ defmodule NeatmetricsWeb.ApiController do
       user_agent: params["user_agent"],
       new_visitor: params["new_visitor"],
       screen_width: params["screen_width"],
-      screen_height: params["screen_height"]
+      screen_height: params["screen_height"],
+      session_id: params["sid"]
     }
   end
 

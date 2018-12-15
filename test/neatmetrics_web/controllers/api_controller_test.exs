@@ -10,7 +10,8 @@ defmodule NeatmetricsWeb.ApiControllerTest do
         user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36",
         new_visitor: true,
         screen_width: 1440,
-        screen_height: 900
+        screen_height: 900,
+        sid: "123"
       }
 
       conn = conn
@@ -43,6 +44,7 @@ defmodule NeatmetricsWeb.ApiControllerTest do
     test "www. is stripped from hostname", %{conn: conn} do
       params = %{
         url: "http://www.example.com/",
+        sid: "123",
         new_visitor: true
       }
 
