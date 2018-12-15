@@ -112,7 +112,7 @@
         <div class="mt-8">
           <%= for {referrer, count} <- @top_referrers do %>
             <div class="flex items-center justify-between my-2">
-              <a href="<%= referrer %>" target="_blank" class="truncated-label"><%= referrer %></a>
+              <a href="//<%= referrer %>" target="_blank" class="truncated-label" title="<%= referrer %>"><%= referrer %></a>
               <h4 class="text-green"><%= count %></h4>
             </div>
           <% end %>
@@ -128,7 +128,7 @@
         <div class="mt-8">
           <%= for {page, count} <- @top_pages do %>
             <div class="flex items-center justify-between my-2">
-              <%= link(page, to: "//" <> @hostname <> page, target: "_blank", class: "truncated-label") %>
+              <%= link(page, to: "//" <> @hostname <> page, target: "_blank", class: "truncated-label", title: @hostname <> page) %>
               <h4 class="text-green"><%= count %></h4>
             </div>
           <% end %>
