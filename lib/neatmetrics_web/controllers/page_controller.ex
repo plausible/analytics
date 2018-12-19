@@ -55,7 +55,7 @@ defmodule NeatmetricsWeb.PageController do
       labels: labels,
       pageviews: Enum.count(pageviews),
       unique_visitors: Enum.filter(pageviews, fn pv -> pv.new_visitor end) |> Enum.count,
-      bounce_rate: "68%",
+      bounce_rate: calculate_bounce_rate(pageviews),
       average_session: "1:31",
       top_referrers: top_referrers,
       top_pages: top_pages,
@@ -85,5 +85,13 @@ defmodule NeatmetricsWeb.PageController do
 
   defp get_date_range(_) do
     get_date_range(%{"period" => "30days"})
+  end
+
+  defp calculate_bounce_rate(pageviews) do
+    all_session_views = Enum.group_by(pageviews, fn pageview -> pageview.session_id end) |> IO.inspect
+    |> Enum.map(fn {_session_id, views} -> Enum.count(views) end)
+    one_page_sessions = all_session_views |> Enum.count(fn views -> views == 1 end)
+    percentage = (one_page_sessions / Enum.count(all_session_views)) * 100
+    "#{round(percentage)}%"
   end
 end
