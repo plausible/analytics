@@ -66,6 +66,11 @@ defmodule NeatmetricsWeb.PageController do
     )
   end
 
+  defp get_date_range(%{"period" => "today"}) do
+    date_range = Date.range(Timex.today(), Timex.today())
+    {"today", date_range}
+  end
+
   defp get_date_range(%{"period" => "7days"}) do
     start_date = Timex.shift(Timex.today(), days: -7)
     date_range = Date.range(start_date, Timex.today())
