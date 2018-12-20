@@ -88,7 +88,7 @@ defmodule NeatmetricsWeb.PageController do
   end
 
   defp calculate_bounce_rate(pageviews) do
-    all_session_views = Enum.group_by(pageviews, fn pageview -> pageview.session_id end) |> IO.inspect
+    all_session_views = Enum.group_by(pageviews, fn pageview -> pageview.session_id end)
     |> Enum.map(fn {_session_id, views} -> Enum.count(views) end)
     one_page_sessions = all_session_views |> Enum.count(fn views -> views == 1 end)
     percentage = (one_page_sessions / Enum.count(all_session_views)) * 100
