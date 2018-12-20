@@ -33,7 +33,7 @@ defmodule NeatmetricsWeb.PageController do
     end)
 
     top_referrers = pageviews
-    |> Enum.filter(fn pv -> pv.referrer && !String.contains?(pv.referrer, pv.hostname) end)
+    |> Enum.filter(fn pv -> pv.referrer && pv.new_visitor && !String.contains?(pv.referrer, pv.hostname) end)
     |> Enum.map(&(normalize_referrer(&1)))
     |> Enum.group_by(&(&1))
     |> Enum.map(fn {ref, views} -> {ref, Enum.count(views)} end)
