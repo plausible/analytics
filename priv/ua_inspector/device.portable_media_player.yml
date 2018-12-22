@@ -1,0 +1,59 @@
+###############
+# Device Detector - The Universal Device Detection library for parsing User Agents
+#
+# @link http://piwik.org
+# @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
+###############
+
+Apple:
+  regex: '(?:Apple-)?iPod'
+  device: 'portable media player'
+  models:
+    - regex: '(?:Apple-)?iPod1[C,]1'
+      model: 'iPod Touch 1G'
+    - regex: '(?:Apple-)?iPod2[C,]1'
+      model: 'iPod Touch 2G'
+    - regex: '(?:Apple-)?iPod3[C,]1'
+      model: 'iPod Touch 3'
+    - regex: '(?:Apple-)?iPod4[C,]1'
+      model: 'iPod Touch 4'
+    - regex: '(?:Apple-)?iPod5[C,]1'
+      model: 'iPod Touch 5'
+    - regex: '(?:Apple-)?iPod7[C,]1'
+      model: 'iPod Touch 6'
+    - regex: '(?:Apple-)?iPod'
+      model: 'iPod Touch'
+
+Cowon:
+  regex: 'COWON ([^;/]+) Build'
+  device: 'portable media player'
+  model: '$1'
+
+Microsoft:
+  regex: 'Microsoft ZuneHD'
+  device: 'portable media player'
+  model: 'Zune HD'
+
+Panasonic:
+  device: 'portable media player'
+  regex: '(SV-MV100)'
+  model: '$1'
+
+Samsung:
+  regex: 'YP-(G[SIPB]?1|G[57]0|GB70D)'
+  device: 'portable media player'
+  models:
+    - regex: 'YP-G[B]?1'
+      model: 'Galaxy Player 4.0'
+    - regex: 'YP-G70'
+      model: 'Galaxy Player 5.0'
+    - regex: 'YP-GS1'
+      model: 'Galaxy Player 3.6'
+    - regex: 'YP-GI1'
+      model: 'Galaxy Player 4.2'
+    - regex: 'YP-GP1'
+      model: 'Galaxy Player 5.8 '
+    - regex: 'YP-G50'
+      model: 'Galaxy Player 50'
+    - regex: 'YP-GB70D'
+      model: 'Galaxy Player 70 Plus'

@@ -1,0 +1,163 @@
+###############
+# Device Detector - The Universal Device Detection library for parsing User Agents
+#
+# @link http://piwik.org
+# @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
+###############
+
+# AndroidDownloadManager
+- regex: 'AndroidDownloadManager(?:[ /]([\d\.]+))?'
+  name: 'AndroidDownloadManager'
+  version: '$1'
+
+# Apple News
+- regex: '(?:Apple)?News(?:[ /][\d\.]+)? Version(?:[ /]([\d\.]+))?'
+  name: 'Apple News'
+  version: '$1'
+
+- regex: 'bPod'
+  name: 'bPod'
+  version: ''
+
+# Facebook Messenger
+- regex: '(?:MessengerForiOS|MESSENGER).(?:FBAV)(?:[ /]([\d\.]+))?'
+  name: 'Facebook Messenger'
+  version: '$1'
+
+# Facebook
+- regex: '(?:FBAV|com.facebook.katana)(?:[ /]([\d\.]+))?'
+  name: 'Facebook'
+  version: '$1'
+
+# FeedR
+- regex: 'FeedR(?:/([\d\.]+))?'
+  name: 'FeedR'
+  version: '$1'
+
+# Google Play Kiosk
+- regex: 'com.google.android.apps.magazines'
+  name: 'Google Play Newsstand'
+  version: ''
+
+# Google Plus
+- regex: 'com.google.GooglePlus'
+  name: 'Google Plus'
+  version: ''
+
+# WeChat
+- regex: 'MicroMessenger/([^ ]+)'
+  name: 'WeChat'
+  version: '$1'
+
+# Sina Weibo
+- regex: '.*__weibo__([0-9\.]+)__'
+  name: 'Sina Weibo'
+  version: '$1'
+
+# Pinterest
+- regex: 'Pinterest(?:/([\d\.]+))?'
+  name: 'Pinterest'
+  version: '$1'
+
+# Podcatcher Deluxe
+- regex: 'Podcatcher Deluxe'
+  name: 'Podcatcher Deluxe'
+  version: ''
+
+# YouTube
+- regex: 'com.google.android.youtube(?:/([\d\.]+))?'
+  name: 'YouTube'
+  version: '$1'
+
+# AFNetworking generic
+- regex: '([^/]+)/(\d+(?:\.\d+)+) \((?:iPhone|iPad); iOS [0-9\.]+; Scale/[0-9\.]+\)'
+  name: '$1'
+  version: '$2'
+
+# WhatsApp
+- regex: 'WhatsApp(?:[ /]([\d\.]+))?'
+  name: 'WhatsApp'
+  version: '$1'
+
+# Line
+- regex: 'Line(?:[ /]([\d\.]+))'
+  name: 'Line'
+  version: '$1'
+
+# Instacast
+- regex: 'Instacast(?:HD)?/(\d\.[\d\.abc]+) CFNetwork/([\d\.]+) Darwin/([\d\.]+)'
+  name: 'Instacast'
+  version: '$1'
+-
+  regex: 'Podcasts/([\d\.]+)'
+  name: 'Podcasts'
+  version: '$1'
+-
+  regex: 'Pocket Casts(?:, (?:Android|iOS) v([\d\.]+))?'
+  name: 'Pocket Casts'
+  version: '$1'
+-
+  regex: 'Podcat/([\d\.]+)'
+  name: 'Podcat'
+  version: '$1'
+
+-
+  regex: 'BeyondPod'
+  name: 'BeyondPod'
+  version:
+-
+  regex: 'AntennaPod/?([\d\.]+)?'
+  name: 'AntennaPod'
+  version: '$1'
+-
+  regex: 'Overcast/([\d\.]+)'
+  name: 'Overcast'
+  version: '$1'
+-
+  regex: 'Player FM'
+  name: 'Player FM'
+  version: ''
+-
+  regex: 'Podkicker(?: Pro)?/([\d\.]+)'
+  name: 'Podkicker'
+  version: '$1'
+-
+  regex: 'PodcastRepublic/([\d\.]+)'
+  name: 'Podcast Republic'
+  version: '$1'
+-
+  regex: 'Castro/(\d+)'
+  name: 'Castro'
+  version: '$1'
+-
+  regex: 'Castro 2 ([\d\.]+)/[\d]+ Like iTunes'
+  name: 'Castro 2'
+  version: '$1'
+-
+  regex: 'Castro 2'
+  name: 'Castro 2'
+  version: ''
+-
+  regex: 'DoggCatcher'
+  name: 'DoggCatcher'
+  version:
+-
+  regex: 'PodcastAddict/v([\d]+)'
+  name: 'Podcast & Radio Addict'
+  version: '$1'
+-
+  regex: 'Podcat/([\d]+) CFNetwork/([\d\.]+) Darwin/([\d\.]+)'
+  name: 'Podcat'
+  version: '$1'
+-
+  regex: 'i[cC]atcher[^\d]+([\d\.]+)'
+  name: 'iCatcher'
+  version: '$1'
+-
+  regex: 'YelpApp/([\d\.]+)'
+  name: 'Yelp Mobile'
+  version: '$1'
+-
+  regex: 'jp.co.yahoo.android.yjtop/([\d\.]+)'
+  name: 'Yahoo! Japan'
+  version: '$1'

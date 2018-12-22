@@ -1,0 +1,46 @@
+###############
+# Device Detector - The Universal Device Detection library for parsing User Agents
+#
+# @link http://piwik.org
+# @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
+###############
+
+- regex: 'Outlook-Express(?:/(\d+[\.\d]+))?'
+  name: 'Outlook Express'
+  version: '$1'
+
+- regex: 'Microsoft Outlook(?:[/ ](\d+[\.\d]+))?'
+  name: 'Microsoft Outlook'
+  version: '$1'
+
+- regex: '(?:Thunderbird|Icedove|Shredder)(?:/(\d+[\.\d]+))?'
+  name: 'Thunderbird'
+  version: '$1'
+
+- regex: 'Airmail(?: (\d+[\.\d]+))?'
+  name: 'Airmail'
+  version: '$1'
+
+- regex: 'Lotus-Notes(?:/(\d+[\.\d]+))?'
+  name: 'Lotus Notes'
+  version: '$1'
+
+- regex: 'Barca(?:Pro)?(?:[/ ](\d+[\.\d]+))?'
+  name: 'Barca'
+  version: '$1'
+
+- regex: 'Postbox(?:[/ ](\d+[\.\d]+))?'
+  name: 'Postbox'
+  version: '$1'
+
+- regex: 'MailBar(?:[/ ](\d+[\.\d]+))?'
+  name: 'MailBar'
+  version: '$1'
+
+- regex: 'The Bat!(?: Voyager)?(?:[/ ](\d+[\.\d]+))?'
+  name: 'The Bat!'
+  version: '$1'
+
+- regex: 'DAVdroid(?:/(\d+[\.\d]+))?'
+  name: 'DAVdroid'
+  version: '$1'

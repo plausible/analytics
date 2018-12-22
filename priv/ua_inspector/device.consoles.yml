@@ -1,0 +1,40 @@
+###############
+# Device Detector - The Universal Device Detection library for parsing User Agents
+#
+# @link http://piwik.org
+# @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
+###############
+
+Archos:
+  regex: 'Archos.*GAMEPAD([2]?)'
+  device: 'console'
+  model: 'Gamepad $1'
+
+Microsoft:
+  regex: 'Xbox'
+  device: 'console'
+  models:
+    - regex: 'Xbox One'
+      model: 'Xbox One'
+    - regex: 'Xbox'
+      model: 'Xbox 360'
+
+Nintendo:
+  regex: 'Nintendo (([3]?DS[i]?)|Wii[U]?)'
+  device: 'console'
+  model: '$1'
+
+OUYA:
+  regex: 'OUYA'
+  device: 'console'
+  model: 'OUYA'
+
+Sega:
+  regex: 'Dreamcast'
+  device: 'console'
+  model: 'Dreamcast'
+
+Sony:
+  regex: 'PlayStation (3|4|Portable|Vita)'
+  device: 'console'
+  model: 'PlayStation $1'
