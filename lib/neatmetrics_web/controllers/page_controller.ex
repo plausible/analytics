@@ -6,13 +6,6 @@ defmodule NeatmetricsWeb.PageController do
     render(conn, "index.html")
   end
 
-  def normalize_referrer(pageview) do
-    pageview.referrer
-    |> String.replace_prefix("https://", "")
-    |> String.replace_prefix("http://", "")
-    |> String.replace_suffix("/", "")
-  end
-
   def analytics(conn, %{"website" => website} = params) do
     {period, date_range} = get_date_range(params)
 
@@ -56,8 +49,8 @@ defmodule NeatmetricsWeb.PageController do
 
     top_referrers = pageviews
       |> Enum.filter(fn pv -> pv.referrer && pv.new_visitor && !String.contains?(pv.referrer, pv.hostname) end)
-      |> Enum.map(&(normalize_referrer(&1)))
-      |> Enum.group_by(&(&1))
+      |> Enum.map(&(RefInspector.parse(&1.referrer)))
+      |> Enum.group_by(&(&1.source))
       |> Enum.map(fn {ref, views} -> {ref, Enum.count(views)} end)
       |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
       |> Enum.take(10)
