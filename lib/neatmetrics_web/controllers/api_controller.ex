@@ -15,7 +15,7 @@ defmodule NeatmetricsWeb.ApiController do
 
   defp create_pageview(conn) do
     body = parse_body(conn)
-    pageview = process_pageview(body)
+    pageview = process_pageview(body, conn)
     if !bot?(pageview) do
       Neatmetrics.Pageview.changeset(%Neatmetrics.Pageview{}, pageview)
         |> Neatmetrics.Repo.insert
@@ -24,14 +24,15 @@ defmodule NeatmetricsWeb.ApiController do
     end
   end
 
-  defp process_pageview(params) do
+  defp process_pageview(params, conn) do
     uri = URI.parse(params["url"] || "")
+    user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first
 
     %{
       hostname: strip_www(uri.host),
       pathname: uri.path,
+      user_agent: user_agent,
       referrer: params["referrer"],
-      user_agent: params["user_agent"],
       new_visitor: params["new_visitor"],
       screen_width: params["screen_width"],
       screen_height: params["screen_height"],

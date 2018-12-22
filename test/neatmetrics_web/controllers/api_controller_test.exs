@@ -2,12 +2,13 @@ defmodule NeatmetricsWeb.ApiControllerTest do
   use NeatmetricsWeb.ConnCase
   use Neatmetrics.Repo
 
+  @user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
+
   describe "POST /api/page" do
     test "records the pageview", %{conn: conn} do
       params = %{
         url: "http://gigride.live/",
         referrer: "http://m.facebook.com/",
-        user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36",
         new_visitor: true,
         screen_width: 1440,
         screen_height: 900,
@@ -16,6 +17,7 @@ defmodule NeatmetricsWeb.ApiControllerTest do
 
       conn = conn
              |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
              |> post("/api/page", Jason.encode!(params))
 
       pageview = Repo.one(Neatmetrics.Pageview)
@@ -24,7 +26,7 @@ defmodule NeatmetricsWeb.ApiControllerTest do
       assert pageview.hostname == "gigride.live"
       assert pageview.pathname == "/"
       assert pageview.new_visitor == true
-      assert pageview.user_agent == params[:user_agent]
+      assert pageview.user_agent == @user_agent
       assert pageview.screen_width == params[:screen_width]
       assert pageview.screen_height == params[:screen_height]
     end
@@ -61,12 +63,12 @@ defmodule NeatmetricsWeb.ApiControllerTest do
       params = %{
         url: "http://www.example.com/",
         sid: "123",
-        new_visitor: true,
-        user_agent: "genreic crawler"
+        new_visitor: true
       }
 
       conn
       |> put_req_header("content-type", "text/plain")
+      |> put_req_header("user-agent", "generic crawler")
       |> post("/api/page", Jason.encode!(params))
 
       pageviews = Repo.all(Neatmetrics.Pageview)

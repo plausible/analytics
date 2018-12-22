@@ -43,14 +43,9 @@
       // Ignore locally server pages
       if (window.location.hostname === 'localhost') return;
       // Basic bot detection.
-      if (userAgent.search(/(bot|spider|crawl)/ig) > -1) return;
+      if (userAgent && userAgent.search(/(bot|spider|crawl)/ig) > -1) return;
 
       var uid = getCookie('nm_uid')
-      if (!uid && getCookie('_nm')) { // DELETE THIS SOON
-        uid = pseudoUUIDv4();
-        setCookie('nm_uid', uid)
-      }
-
       var sid = getCookie('nm_sid') || pseudoUUIDv4();
 
       var url = window.location.protocol + '//' + window.location.hostname + window.location.pathname;
@@ -81,6 +76,6 @@
 
     page()
   } catch (e) {
-    console.error(e)
+    throw e
   }
 })(window, BASE_URL);
