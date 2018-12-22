@@ -32,23 +32,45 @@ defmodule NeatmetricsWeb.PageController do
       Timex.format!(date, "{WDshort} {D} {Mshort}")
     end)
 
+    user_agents = pageviews
+      |> Enum.filter(fn pv -> pv.user_agent && pv.new_visitor end)
+      |> Enum.map(fn pv -> UAInspector.parse_client(pv.user_agent) end)
+
+    device_types = user_agents
+      |> Enum.group_by(&device_type/1)
+      |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
+      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
+      |> Enum.take(10)
+
+    browsers = user_agents
+      |> Enum.group_by(&browser_name/1)
+      |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
+      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
+      |> Enum.take(10)
+
+    operating_systems = user_agents
+      |> Enum.group_by(&operating_system/1)
+      |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
+      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
+      |> Enum.take(10)
+
     top_referrers = pageviews
-    |> Enum.filter(fn pv -> pv.referrer && pv.new_visitor && !String.contains?(pv.referrer, pv.hostname) end)
-    |> Enum.map(&(normalize_referrer(&1)))
-    |> Enum.group_by(&(&1))
-    |> Enum.map(fn {ref, views} -> {ref, Enum.count(views)} end)
-    |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-    |> Enum.take(10)
+      |> Enum.filter(fn pv -> pv.referrer && pv.new_visitor && !String.contains?(pv.referrer, pv.hostname) end)
+      |> Enum.map(&(normalize_referrer(&1)))
+      |> Enum.group_by(&(&1))
+      |> Enum.map(fn {ref, views} -> {ref, Enum.count(views)} end)
+      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
+      |> Enum.take(10)
 
     top_pages = Enum.group_by(pageviews, &(&1.pathname))
-    |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
-    |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-    |> Enum.take(10)
+      |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
+      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
+      |> Enum.take(10)
 
     top_screen_sizes = Enum.group_by(pageviews, &Neatmetrics.Pageview.screen_string/1)
-    |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
-    |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-    |> Enum.take(10)
+      |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
+      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
+      |> Enum.take(10)
 
     render(conn, "analytics.html",
       plot: plot,
@@ -60,6 +82,9 @@ defmodule NeatmetricsWeb.PageController do
       top_referrers: top_referrers,
       top_pages: top_pages,
       top_screen_sizes: top_screen_sizes,
+      device_types: device_types,
+      browsers: browsers,
+      operating_systems: operating_systems,
       hostname: website,
       title: "Neatmetrics · " <> website,
       selected_period: period
@@ -93,5 +118,26 @@ defmodule NeatmetricsWeb.PageController do
     one_page_sessions = all_session_views |> Enum.count(fn views -> views == 1 end)
     percentage = (one_page_sessions / Enum.count(all_session_views)) * 100
     "#{round(percentage)}%"
+  end
+
+  defp browser_name(ua) do
+    case ua.client do
+      %UAInspector.Result.Client{name: "Mobile Safari"} -> "Safari"
+      %UAInspector.Result.Client{name: "Chrome Mobile"} -> "Chrome"
+      %UAInspector.Result.Client{name: "Chrome Mobile iOS"} -> "Chrome"
+      %UAInspector.Result.Client{type: "mobile app"} -> "Mobile App"
+      client -> client.name
+    end
+  end
+
+  defp device_type(ua) do
+    case ua.device do
+      :unknown -> "unknown"
+      device -> device.type
+    end
+  end
+
+  defp operating_system(ua) do
+    ua.os.name
   end
 end

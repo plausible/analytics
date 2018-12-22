@@ -19,7 +19,7 @@ defmodule Neatmetrics.MixProject do
   def application do
     [
       mod: {Neatmetrics.Application, []},
-      extra_applications: [:logger, :runtime_tools, :timex]
+      extra_applications: [:logger, :runtime_tools, :timex, :ua_inspector]
     ]
   end
 
@@ -43,7 +43,9 @@ defmodule Neatmetrics.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:cors_plug, "~> 1.5"},
-      {:timex, "~> 3.1"}
+      {:timex, "~> 3.1"},
+      {:ua_inspector, "~> 0.18"},
+      {:browser, "~> 0.4.3"}
     ]
   end
 

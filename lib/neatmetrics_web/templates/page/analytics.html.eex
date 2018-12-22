@@ -129,7 +129,49 @@
           </div>
         </div>
       </div>
+
     </div>
 
+    <div class="w-full flex items-start justify-between mt-6">
+      <div class="w-72 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
+        <h2>Device types</h2>
+        <div class="text-grey-darker mt-1">by sessions</div>
+        <div class="mt-8">
+          <%= for {device, count} <- @device_types do %>
+            <div class="flex items-center justify-between my-2">
+              <span><%= device %></span>
+              <h4 class="text-green"><%= count %></h4>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="w-72 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
+        <h2>Operating systems</h2>
+        <div class="text-grey-darker mt-1">by sessions</div>
+        <div class="mt-8">
+          <%= for {os, count} <- @operating_systems do %>
+            <div class="flex items-center justify-between my-2">
+              <span><%= os %></span>
+              <h4 class="text-green"><%= count %></h4>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="w-72 bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
+        <h2>Browsers</h2>
+        <div class="text-grey-darker mt-1">by sessions</div>
+        <div class="mt-8">
+          <%= for {screen_size, count} <- @browsers do %>
+            <div class="flex items-center justify-between my-2">
+              <span><%= screen_size %></span>
+              <h4 class="text-green"><%= count %></h4>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+    </div>
   </div>
 </div>

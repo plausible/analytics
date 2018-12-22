@@ -16,8 +16,12 @@ defmodule NeatmetricsWeb.ApiController do
   defp create_pageview(conn) do
     body = parse_body(conn)
     pageview = process_pageview(body)
-    Neatmetrics.Pageview.changeset(%Neatmetrics.Pageview{}, pageview)
-      |> Neatmetrics.Repo.insert
+    if !bot?(pageview) do
+      Neatmetrics.Pageview.changeset(%Neatmetrics.Pageview{}, pageview)
+        |> Neatmetrics.Repo.insert
+    else
+      {:ok, nil}
+    end
   end
 
   defp process_pageview(params) do
@@ -38,6 +42,10 @@ defmodule NeatmetricsWeb.ApiController do
   defp parse_body(conn) do
     {:ok, body, _conn} = Plug.Conn.read_body(conn)
     Jason.decode!(body)
+  end
+
+  defp bot?(pageview) do
+    pageview.user_agent && UAInspector.bot?(pageview.user_agent)
   end
 
   defp strip_www(nil), do: nil

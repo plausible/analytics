@@ -48,13 +48,30 @@ defmodule NeatmetricsWeb.ApiControllerTest do
         new_visitor: true
       }
 
-      conn = conn
-             |> put_req_header("content-type", "text/plain")
-             |> post("/api/page", Jason.encode!(params))
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> post("/api/page", Jason.encode!(params))
 
       pageview = Repo.one(Neatmetrics.Pageview)
 
       assert pageview.hostname == "example.com"
+    end
+
+    test "bots and crawlers are ignored", %{conn: conn} do
+      params = %{
+        url: "http://www.example.com/",
+        sid: "123",
+        new_visitor: true,
+        user_agent: "genreic crawler"
+      }
+
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> post("/api/page", Jason.encode!(params))
+
+      pageviews = Repo.all(Neatmetrics.Pageview)
+
+      assert Enum.count(pageviews) == 0
     end
   end
 end
