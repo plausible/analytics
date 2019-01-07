@@ -33,19 +33,19 @@ defmodule NeatmetricsWeb.PageController do
       |> Enum.group_by(&device_type/1)
       |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
       |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-      |> Enum.take(10)
+      |> Enum.take(5)
 
     browsers = user_agents
       |> Enum.group_by(&browser_name/1)
       |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
       |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-      |> Enum.take(10)
+      |> Enum.take(5)
 
     operating_systems = user_agents
       |> Enum.group_by(&operating_system/1)
       |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
       |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-      |> Enum.take(10)
+      |> Enum.take(5)
 
     top_referrers = pageviews
       |> Enum.filter(fn pv -> pv.referrer && pv.new_visitor && !String.contains?(pv.referrer, pv.hostname) end)
@@ -53,17 +53,17 @@ defmodule NeatmetricsWeb.PageController do
       |> Enum.group_by(&(&1.source))
       |> Enum.map(fn {ref, views} -> {ref, Enum.count(views)} end)
       |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-      |> Enum.take(10)
+      |> Enum.take(5)
 
     top_pages = Enum.group_by(pageviews, &(&1.pathname))
       |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
       |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-      |> Enum.take(10)
+      |> Enum.take(5)
 
     top_screen_sizes = Enum.group_by(pageviews, &Neatmetrics.Pageview.screen_string/1)
       |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
       |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-      |> Enum.take(10)
+      |> Enum.take(5)
 
     render(conn, "analytics.html",
       plot: plot,

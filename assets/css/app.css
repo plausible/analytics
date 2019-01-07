@@ -45,3 +45,17 @@ html {
 .truncated-label:hover {
   @apply underline;
 }
+
+.bar {
+  height: 4px;
+  width: 100%;
+  background-color: #f5f6f7;
+  border-radius: 4px;
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+
+.bar__fill {
+  height: 100%;
+  border-radius: 4px;
+}

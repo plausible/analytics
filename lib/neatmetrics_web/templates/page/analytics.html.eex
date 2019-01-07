@@ -88,12 +88,13 @@
         <div class="mt-8">
           <%= for {referrer, count} <- @top_referrers do %>
             <div class="flex items-center justify-between my-2">
-              <div class="truncated-label" title="<%= referrer %>"><%= referrer %></div>
-              <h4 class="text-green"><%= count %></h4>
+              <span><%= referrer %></span>
+              <span><%= count %></span>
             </div>
+            <%= bar(count, @top_referrers) %>
           <% end %>
           <div class="mt-4">
-            <a class="no-underline text-red font-bold" href="//">More</a>
+            <a class="no-underline text-grey-darker" href="//">More</a>
           </div>
         </div>
       </div>
@@ -105,11 +106,12 @@
           <%= for {page, count} <- @top_pages do %>
             <div class="flex items-center justify-between my-2">
               <%= link(page, to: "//" <> @hostname <> page, target: "_blank", class: "truncated-label", title: @hostname <> page) %>
-              <h4 class="text-green"><%= count %></h4>
+              <span><%= count %></span>
             </div>
+            <%= bar(count, @top_pages, :orange) %>
           <% end %>
           <div class="mt-4">
-            <a class="no-underline text-red font-bold" href="//">More</a>
+            <a class="no-underline text-grey-darker" href="//">More</a>
           </div>
         </div>
       </div>
@@ -121,11 +123,12 @@
           <%= for {screen_size, count} <- @top_screen_sizes do %>
             <div class="flex items-center justify-between my-2">
               <span><%= screen_size %></span>
-              <h4 class="text-green"><%= count %></h4>
+              <span><%= count %></span>
             </div>
+            <%= bar(count, @top_screen_sizes, :indigo) %>
           <% end %>
           <div class="mt-4">
-            <a class="no-underline text-red font-bold" href="//">More</a>
+            <a class="no-underline text-grey-darker" href="//">More</a>
           </div>
         </div>
       </div>
@@ -140,8 +143,9 @@
           <%= for {device, count} <- @device_types do %>
             <div class="flex items-center justify-between my-2">
               <span><%= device %></span>
-              <h4 class="text-green"><%= count %></h4>
+              <span><%= count %></span>
             </div>
+            <%= bar(count, @device_types, :teal) %>
           <% end %>
         </div>
       </div>
@@ -153,8 +157,9 @@
           <%= for {os, count} <- @operating_systems do %>
             <div class="flex items-center justify-between my-2">
               <span><%= os %></span>
-              <h4 class="text-green"><%= count %></h4>
+              <span><%= count %></span>
             </div>
+            <%= bar(count, @operating_systems, :blue) %>
           <% end %>
         </div>
       </div>
@@ -166,8 +171,9 @@
           <%= for {screen_size, count} <- @browsers do %>
             <div class="flex items-center justify-between my-2">
               <span><%= screen_size %></span>
-              <h4 class="text-green"><%= count %></h4>
+              <span><%= count %></span>
             </div>
+            <%= bar(count, @browsers, :orange) %>
           <% end %>
         </div>
       </div>
