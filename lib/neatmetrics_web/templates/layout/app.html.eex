@@ -13,7 +13,7 @@
       <nav class="mx-auto container flex items-center justify-between flex-wrap py-6">
         <div class="flex items-center flex-no-shrink text-white">
           <%= img_tag(NeatmetricsWeb.Router.Helpers.static_path(@conn, "/images/logo_48w.png"), style: "height: 28px; margin-right: 6px;") %>
-          <a href="/" class="logo-text text-green text-4xl no-underline">neatmetrics</a>
+          <a href="/" class="logo-text text-4xl">neatmetrics</a>
         </div>
         <%= cond do %>
           <% Plug.Conn.get_session(@conn, :current_user_email) -> %>

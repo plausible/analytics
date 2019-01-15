@@ -2,7 +2,7 @@
 @tailwind components;
 
 .button {
-  @apply inline-block bg-red text-white text-center font-bold tracking-wide py-3 px-5 rounded no-underline;
+  @apply inline-block bg-indigo text-white text-center font-bold tracking-wide py-3 px-5 rounded no-underline;
 }
 
 .button:hover {
@@ -30,6 +30,7 @@ a, button {
 .logo-text {
   font-family: 'Comfortaa', cursive;
   font-weight: bold;
+  @apply text-indigo;
 }
 
 .landing-bg {

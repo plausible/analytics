@@ -28,16 +28,16 @@
           datasets: [{
             label: 'Pageviews',
             data: plot,
-            backgroundColor: 'rgba(137,182,165, 0.2)',
-            borderColor: 'rgba(137,182,165)',
-            borderWidth: 2,
-            pointBackgroundColor: 'rgba(137,182,165)'
+            borderWidth: 3,
+            borderColor: 'rgba(101,116,205)',
+            pointBackgroundColor: 'rgba(101,116,205)',
+            backgroundColor: 'rgba(101,116,205, 0.1)',
           }]
         },
         options: {
           legend: {display: false},
           responsive: true,
-          elements: {line: {tension: 0}},
+          elements: {line: {tension: 0.1}, point: {radius: 0}},
           animation: false,
           tooltips: {
             mode: 'index',
@@ -52,11 +52,13 @@
               ticks: {
                 callback: function (value) { if (Number.isInteger(value)) { return value; } },
                 beginAtZero: true
-              },
+              }
+            }],
+            xAxes: [{
               gridLines: {
                 display: false
               },
-            }],
+            }]
           }
         }
       });
@@ -148,7 +150,7 @@
             <span><%= screen_size %></span>
             <span><%= count %></span>
           </div>
-          <%= bar(count, @browsers, :orange) %>
+          <%= bar(count, @browsers, :red) %>
         <% end %>
       </div>
     </div>
