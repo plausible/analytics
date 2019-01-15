@@ -6,7 +6,7 @@
       <h1 class="tracking-wide text-4xl">
         Simple analytics for your website
       </h1>
-      <p class="font-light text-2xl mt-4">
+      <p class="font-light text-2xl mt-3">
         A lightweight, non-intrusive alternative to Google Analytics.
       </p>
       <a href="/gigride.live" class="button mt-4">View live demo</a>
@@ -36,11 +36,11 @@
     <div class="mt-20">
       <h1 class="text-center">Join the public beta</h1>
       <div class="text-center text-lg mt-4 mb-4 max-w-md mx-auto">
-        Neatmetrics is currently in public beta. It's completely free to use during this period.
-        All beta users will receive a special discount once we exit the beta period.
+        Neatmetrics is currently completely free to use.
+        All beta users will receive a special discount once we launch.
       </div>
     </div>
-    <div class="text-center mt-12">
+    <div class="text-center mt-8">
       <%= link("Sign up for free", to: "/onboarding", class: "button") %>
     </div>
   </div>

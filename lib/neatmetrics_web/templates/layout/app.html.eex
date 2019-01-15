@@ -4,6 +4,8 @@
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="<%= NeatmetricsWeb.Router.Helpers.static_path(@conn, "/images/icon/32x32.png") %>">
+    <link rel="icon" type="image/png" sizes="16x16" href="<%= NeatmetricsWeb.Router.Helpers.static_path(@conn, "/images/icon/16x16.png") %>">
     <title><%= assigns[:title] || "Neatmetrics · Web analytics" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
     <link href="https://fonts.googleapis.com/css?family=Comfortaa:700" rel="stylesheet">
@@ -12,7 +14,7 @@
     <div class="<%= if !@conn.assigns[:landing_nav] do "border-b border-grey-light bg-white" end %>">
       <nav class="mx-auto container flex items-center justify-between flex-wrap py-6">
         <div class="flex items-center flex-no-shrink text-white">
-          <%= img_tag(NeatmetricsWeb.Router.Helpers.static_path(@conn, "/images/logo_48w.png"), style: "height: 28px; margin-right: 6px;") %>
+          <%= img_tag(NeatmetricsWeb.Router.Helpers.static_path(@conn, "/images/icon/48x48.png"), style: "height: 28px; margin-right: 6px;") %>
           <a href="/" class="logo-text text-4xl">neatmetrics</a>
         </div>
         <%= cond do %>
