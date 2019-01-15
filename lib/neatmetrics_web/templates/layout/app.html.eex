@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
   <head>
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -8,12 +8,12 @@
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
     <link href="https://fonts.googleapis.com/css?family=Comfortaa:700" rel="stylesheet">
   </head>
-  <body>
+  <body class="flex flex-col h-full">
     <div class="border-b border-grey-light px-12">
       <nav class="flex items-center justify-between flex-wrap py-4 px-8">
         <div class="flex items-center flex-no-shrink text-white">
           <%= img_tag(NeatmetricsWeb.Router.Helpers.static_path(@conn, "/images/logo_48w.png"), style: "height: 28px; margin-right: 6px;") %>
-          <a href="/" class="logo-text text-4xl no-underline">neatmetrics</a>
+          <a href="/" class="logo-text text-green text-4xl no-underline">neatmetrics</a>
         </div>
         <%= cond do %>
           <% Plug.Conn.get_session(@conn, :current_user_email) -> %>
@@ -34,9 +34,15 @@
         <% end %>
       </nav>
     </div>
-    <main class="blue-bg">
+    <main class="bg-grey-lightest flex-1">
       <%= render @view_module, @view_template, assigns %>
     </main>
+    <footer class='bg-grey-lightest w-full text-center text-grey text-sm p-4 pin-b'>
+      <p>
+      Made with ❤️by <a href="https://twitter.com/ukutaht" class="text-grey-darker">@ukutaht</a> in London, UK •
+      ©2019 Acme Corp. All rights reserved.
+      </p>
+    </footer>
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </body>
 </html>

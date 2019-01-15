@@ -24,7 +24,8 @@ defmodule NeatmetricsWeb.Router do
     get "/onboarding", PageController, :onboarding
     post "/onboarding/site", PageController, :create_site
     post "/login", PageController, :send_login_link
-    get "/login", PageController, :claim_login_link
+    get "/claim-login", PageController, :claim_login_link
+    get "/login", PageController, :login_form
     get "/:website", PageController, :analytics
     post "/logout", PageController, :logout
   end

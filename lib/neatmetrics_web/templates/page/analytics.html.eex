@@ -10,8 +10,8 @@
   <% end %>
 
   <div class="w-full bg-white shadow rounded border border-grey-light mt-4">
-    <div class="border-b border-grey-light p-4">
-      <span><%= @pageviews %> Pageviews</span> | <span><%= @unique_visitors %> Unique visitors</span> | <span><%= @bounce_rate %> bounce rate</span>
+    <div class="border-b border-grey-light p-4 font-semibold">
+      <span><%= @pageviews %> Pageviews</span> • <span><%= @unique_visitors %> Unique visitors</span>
     </div>
     <div class="p-4">
       <canvas id="main-graph" class="mt-4" width="400" height="150"></canvas>
@@ -48,18 +48,14 @@
             intersect: true
           },
           scales: {
-            xAxes: [{
-              display: true,
-              scaleLabel: {
-                display: true,
-                labelString: 'Day'
-              }
-            }],
             yAxes: [{
               ticks: {
                 callback: function (value) { if (Number.isInteger(value)) { return value; } },
                 beginAtZero: true
-              }
+              },
+              gridLines: {
+                display: false
+              },
             }],
           }
         }

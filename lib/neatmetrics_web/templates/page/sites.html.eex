@@ -1,0 +1,15 @@
+<div class="pt-16"></div>
+<div class="max-w-md mx-auto flex justify-between">
+  <h1>Your websites</h1>
+  <a href="/sites/new" class="button">+ Add a website</a>
+</div>
+<div class="flex items-center justify-center w-full py-8">
+  <div class="overflow-hidden bg-white rounded max-w-md w-full shadow-lg leading-normal">
+    <%= for site <- @sites do %>
+      <a href="/<%= site.domain %>" class="block group hover:bg-grey-lighter p-4 border-b no-underline flex justify-between">
+        <p class="font-bold text-lg mb-1 text-grey-darkest group-hover:text-white"><%= site.domain %></p>
+        <p class="font-bold text-lg mb-1 text-grey-darkest group-hover:text-white">&rarr;</p>
+      </a>
+    <% end %>
+  </div>
+</div>

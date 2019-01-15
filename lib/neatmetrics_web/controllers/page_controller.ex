@@ -7,14 +7,7 @@ defmodule NeatmetricsWeb.PageController do
     if get_session(conn, :current_user_email) do
       user = Neatmetrics.Repo.get_by!(Neatmetrics.Auth.User, email: get_session(conn, :current_user_email))
              |> Neatmetrics.Repo.preload(:sites)
-      case user.sites do
-        [] ->
-          redirect(conn, to: "/onboarding")
-        [site] ->
-          redirect(conn, to: "/" <> site.domain)
-        [site | rest] ->
-          redirect(conn, to: "/sites")
-      end
+      render(conn, "sites.html", sites: user.sites)
     else
       render(conn, "index.html")
     end
@@ -64,24 +57,37 @@ defmodule NeatmetricsWeb.PageController do
 
   def send_login_link(conn, %{"email" => email}) do
     token = Phoenix.Token.sign(NeatmetricsWeb.Endpoint, "email_login", %{email: email})
-    IO.puts(NeatmetricsWeb.Endpoint.url() <> "/login?token=#{token}")
+    IO.puts(NeatmetricsWeb.Endpoint.url() <> "/claim-login?token=#{token}")
     conn |> send_resp(200, "We've sent a magic link to #{email}. You can use it to log in by clicking on it.")
+  end
+
+  def login_form(conn, _params) do
+    conn
+    |> render("login_form.html")
+  end
+
+  defp successful_login(email) do
+    found_user = Repo.get_by(Neatmetrics.Auth.User, email: email)
+    if found_user do
+      :found
+    else
+      Neatmetrics.Auth.User.changeset(%Neatmetrics.Auth.User{}, %{email: email})
+        |> Neatmetrics.Repo.insert!
+      :new
+    end
   end
 
   def claim_login_link(conn, %{"token" => token}) do
     case Phoenix.Token.verify(NeatmetricsWeb.Endpoint, "email_login", token, max_age: @half_hour_in_seconds) do
       {:ok, %{email: email}} ->
-        conn = if email == get_session(conn, :current_user_email) do
-          conn
-        else
-          user = Neatmetrics.Auth.User.changeset(%Neatmetrics.Auth.User{}, %{email: email})
-            |> Neatmetrics.Repo.insert!
+        conn = put_session(conn, :current_user_email, email)
 
-          conn
-          |> put_session(:current_user_email, user.email)
+        case successful_login(email) do
+          :new ->
+            redirect(conn, to: "/onboarding")
+          :found ->
+            redirect(conn, to: "/")
         end
-
-        conn  |> redirect(to: "/onboarding")
       {:error, :expired} ->
         conn |> send_resp(401, "Your login token has expired")
       {:error, _} ->
@@ -153,8 +159,6 @@ defmodule NeatmetricsWeb.PageController do
       labels: labels,
       pageviews: Enum.count(pageviews),
       unique_visitors: Enum.filter(pageviews, fn pv -> pv.new_visitor end) |> Enum.count,
-      bounce_rate: calculate_bounce_rate(pageviews),
-      average_session: "1:31",
       top_referrers: top_referrers,
       top_pages: top_pages,
       top_screen_sizes: top_screen_sizes,
@@ -186,14 +190,6 @@ defmodule NeatmetricsWeb.PageController do
 
   defp get_date_range(_) do
     get_date_range(%{"period" => "30days"})
-  end
-
-  defp calculate_bounce_rate(pageviews) do
-    all_session_views = Enum.group_by(pageviews, fn pageview -> pageview.session_id end)
-    |> Enum.map(fn {_session_id, views} -> Enum.count(views) end)
-    one_page_sessions = all_session_views |> Enum.count(fn views -> views == 1 end)
-    percentage = (one_page_sessions / Enum.count(all_session_views)) * 100
-    "#{round(percentage)}%"
   end
 
   defp browser_name(ua) do
