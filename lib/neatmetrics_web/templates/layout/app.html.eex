@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
     <link href="https://fonts.googleapis.com/css?family=Comfortaa:700" rel="stylesheet">
   </head>
-  <body class="flex flex-col h-full">
-    <div class="<%= if @conn.assigns[:landing_nav] do "bg-grey-lightest" else "border-b border-grey-light" end %> px-12">
-      <nav class="flex items-center justify-between flex-wrap py-4 px-8">
+  <body class="flex flex-col h-full bg-grey-lightest">
+    <div class="<%= if !@conn.assigns[:landing_nav] do "border-b border-grey-light bg-white" end %>">
+      <nav class="mx-auto container flex items-center justify-between flex-wrap py-6">
         <div class="flex items-center flex-no-shrink text-white">
           <%= img_tag(NeatmetricsWeb.Router.Helpers.static_path(@conn, "/images/logo_48w.png"), style: "height: 28px; margin-right: 6px;") %>
           <a href="/" class="logo-text text-green text-4xl no-underline">neatmetrics</a>
@@ -26,14 +26,21 @@
               </li>
             </ul>
           <% true -> %>
-            <div><a class="no-underline hover:underline" href="/login">Log in</a></div>
+            <ul class="list-reset flex">
+              <li class="mr-6">
+               <%= link("Login", to: "/login") %>
+              </li>
+              <li class="mr-6">
+               <%= link("Sign up free", to: "/onboarding") %>
+              </li>
+            </ul>
         <% end %>
       </nav>
     </div>
-    <main class="bg-grey-lightest flex-1">
+    <main class="flex-1">
       <%= render @view_module, @view_template, assigns %>
     </main>
-    <footer class='bg-grey-lightest w-full text-center text-grey text-sm p-8 pin-b pt-20'>
+    <footer class='w-full text-center text-grey text-sm p-8 pin-b pt-20'>
       <p>
       Made with ❤️by <a href="https://twitter.com/ukutaht" class="text-grey-darker">@ukutaht</a> in London, UK •
       ©2019 Acme Corp. All rights reserved.
