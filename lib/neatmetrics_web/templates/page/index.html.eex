@@ -1,5 +1,5 @@
 <div class="pt-12"></div>
-<div class="landing-bg">
+<div class="bg-grey-lightest">
   <div class="container mx-auto mt-20">
     <h1 class="text-center tracking-wide text-4xl">
       Simple analytics for your website
@@ -44,7 +44,7 @@
       </button>
     </div>
 
-    <div class="mt-20 mb-12">
+    <div class="mt-20">
       <h2 class="text-center">Pricing</h2>
       <div class="text-center text-lg mt-2 mb-12 text-grey-darker">All plans can be used with unlimited websites</div>
 
@@ -99,11 +99,6 @@
         </div>
 
       </div>
-    </div>
-
-    <div class="text-center mt-24">
-      <p class="text-lg">Any questions?</p>
-      <button class="button mt-4">Email the founder</button>
     </div>
   </div>
 </div>

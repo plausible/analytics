@@ -17,7 +17,7 @@ html {
   @apply font-sans text-grey-darkest;
 }
 
-a {
+a, button {
   @apply no-underline text-grey-darkest;
 }
 

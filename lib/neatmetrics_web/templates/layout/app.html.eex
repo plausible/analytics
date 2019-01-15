@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css?family=Comfortaa:700" rel="stylesheet">
   </head>
   <body class="flex flex-col h-full">
-    <div class="border-b border-grey-light px-12">
+    <div class="<%= if @conn.assigns[:landing_nav] do "bg-grey-lightest" else "border-b border-grey-light" end %> px-12">
       <nav class="flex items-center justify-between flex-wrap py-4 px-8">
         <div class="flex items-center flex-no-shrink text-white">
           <%= img_tag(NeatmetricsWeb.Router.Helpers.static_path(@conn, "/images/logo_48w.png"), style: "height: 28px; margin-right: 6px;") %>
@@ -17,18 +17,14 @@
         </div>
         <%= cond do %>
           <% Plug.Conn.get_session(@conn, :current_user_email) -> %>
-            <div class="relative group">
-              <div class="flex items-center cursor-pointer text-grey-darkest font-medium text-lg border border-white border-b-0  group-hover:border-grey-light rounded-t py-3 px-3">
-                gigride.live
-                <svg class="fill-current h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-              </div>
-              <div class="items-center absolute border border-t-0 rounded-b bg-white invisible group-hover:visible w-full">
-               <a href="/" class="px-3 py-3 block hover:bg-grey-lighter no-underline">Settings</a>
-               <a href="/" class="px-3 py-3 block hover:bg-grey-lighter no-underline">Websites</a>
-               <hr class="border-t border-grey-light m-0">
-               <%= button("Logout", to: "/logout", method: :post, class: "px-3 py-3 w-full text-left block hover:bg-grey-lighter") %>
-              </div>
-            </div>
+            <ul class="list-reset flex">
+              <li class="mr-6">
+               <%= link("My sites", to: "/") %>
+              </li>
+              <li class="mr-6">
+               <%= button("Logout", to: "/logout", method: :post) %>
+              </li>
+            </ul>
           <% true -> %>
             <div><a class="no-underline hover:underline" href="/login">Log in</a></div>
         <% end %>
@@ -37,7 +33,7 @@
     <main class="bg-grey-lightest flex-1">
       <%= render @view_module, @view_template, assigns %>
     </main>
-    <footer class='bg-grey-lightest w-full text-center text-grey text-sm p-4 pin-b'>
+    <footer class='bg-grey-lightest w-full text-center text-grey text-sm p-8 pin-b pt-20'>
       <p>
       Made with ❤️by <a href="https://twitter.com/ukutaht" class="text-grey-darker">@ukutaht</a> in London, UK •
       ©2019 Acme Corp. All rights reserved.

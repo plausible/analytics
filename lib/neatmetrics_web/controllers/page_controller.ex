@@ -9,7 +9,7 @@ defmodule NeatmetricsWeb.PageController do
              |> Neatmetrics.Repo.preload(:sites)
       render(conn, "sites.html", sites: user.sites)
     else
-      render(conn, "index.html")
+      render(conn, "index.html", landing_nav: true)
     end
   end
 
