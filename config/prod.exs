@@ -80,5 +80,5 @@ config :neatmetrics, Neatmetrics.Repo,
 
 config :neatmetrics, Neatmetrics.Mailer,
   adapter: Bamboo.MailgunAdapter,
-  api_key: System.get_env!("MAILGUN_API_KEY"),
+  api_key: System.get_env("MAILGUN_API_KEY"),
   domain: "sandbox39777549fe65469885d9342979b5287a.mailgun.org"
