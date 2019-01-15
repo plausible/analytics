@@ -42,6 +42,7 @@
           tooltips: {
             mode: 'index',
             intersect: false,
+            displayColors: false
           },
           hover: {
             mode: 'nearest',
