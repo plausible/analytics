@@ -1,9 +1,92 @@
 defmodule NeatmetricsWeb.PageController do
   use NeatmetricsWeb, :controller
   use Neatmetrics.Repo
+  @half_hour_in_seconds 30 * 60
 
   def index(conn, _params) do
-    render(conn, "index.html")
+    if get_session(conn, :current_user_email) do
+      user = Neatmetrics.Repo.get_by!(Neatmetrics.Auth.User, email: get_session(conn, :current_user_email))
+             |> Neatmetrics.Repo.preload(:sites)
+      case user.sites do
+        [] ->
+          redirect(conn, to: "/onboarding")
+        [site] ->
+          redirect(conn, to: "/" <> site.domain)
+        [site | rest] ->
+          redirect(conn, to: "/sites")
+      end
+    else
+      render(conn, "index.html")
+    end
+  end
+
+  def logout(conn, _params) do
+    conn
+    |> configure_session(drop: true)
+    |> redirect(to: "/")
+  end
+
+  def onboarding(conn, _params) do
+    if get_session(conn, :current_user_email) do
+      user = Neatmetrics.Repo.get_by!(Neatmetrics.Auth.User, email: get_session(conn, :current_user_email))
+             |> Neatmetrics.Repo.preload(:sites)
+
+      case user.sites do
+        [] ->
+          render(conn, "onboarding_create_site.html")
+        [site] ->
+          render(conn, "onboarding_add_tracking.html", site: site)
+        [site | rest] ->
+          send_resp(conn, 400, "Already onboarded")
+      end
+    else
+      render(conn, "onboarding_enter_email.html")
+    end
+  end
+
+  def create_site(conn, %{"domain" => domain}) do
+    site_changeset = Neatmetrics.Site.changeset(%Neatmetrics.Site{}, %{domain: domain})
+    user = Neatmetrics.Repo.get_by!(Neatmetrics.Auth.User, email: get_session(conn, :current_user_email))
+
+    {:ok, %{site: site}} = Ecto.Multi.new()
+    |> Ecto.Multi.insert(:site, site_changeset)
+    |>  Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
+      membership_changeset = Neatmetrics.Site.Membership.changeset(%Neatmetrics.Site.Membership{}, %{
+        site_id: site.id,
+        user_id: user.id
+      })
+      repo.insert(membership_changeset)
+    end)
+    |> Repo.transaction
+
+    redirect(conn, to: "/onboarding")
+  end
+
+  def send_login_link(conn, %{"email" => email}) do
+    token = Phoenix.Token.sign(NeatmetricsWeb.Endpoint, "email_login", %{email: email})
+    IO.puts(NeatmetricsWeb.Endpoint.url() <> "/login?token=#{token}")
+    conn |> send_resp(200, "We've sent a magic link to #{email}. You can use it to log in by clicking on it.")
+  end
+
+  def claim_login_link(conn, %{"token" => token}) do
+    case Phoenix.Token.verify(NeatmetricsWeb.Endpoint, "email_login", token, max_age: @half_hour_in_seconds) do
+      {:ok, %{email: email}} ->
+        conn = if email == get_session(conn, :current_user_email) do
+          conn
+        else
+          user = Neatmetrics.Auth.User.changeset(%Neatmetrics.Auth.User{}, %{email: email})
+            |> Neatmetrics.Repo.insert!
+
+          conn
+          |> put_session(:current_user_email, user.email)
+        end
+
+        conn  |> redirect(to: "/onboarding")
+      {:error, :expired} ->
+        conn |> send_resp(401, "Your login token has expired")
+      {:error, _} ->
+        conn |> send_resp(400, "Your login token is invalid")
+    end
   end
 
   def analytics(conn, %{"website" => website} = params) do

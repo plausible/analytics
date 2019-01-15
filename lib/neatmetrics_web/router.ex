@@ -21,7 +21,12 @@ defmodule NeatmetricsWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :index
+    get "/onboarding", PageController, :onboarding
+    post "/onboarding/site", PageController, :create_site
+    post "/login", PageController, :send_login_link
+    get "/login", PageController, :claim_login_link
     get "/:website", PageController, :analytics
+    post "/logout", PageController, :logout
   end
 
    scope "/api", NeatmetricsWeb do

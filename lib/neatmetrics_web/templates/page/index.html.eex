@@ -1,16 +1,5 @@
+<div class="pt-12"></div>
 <div class="landing-bg">
-  <div class="container mx-auto">
-    <nav class="flex items-center justify-between flex-wrap p-6">
-      <div style="visibility: hidden"><a class="no-underline" href="/login">Log in</a></div>
-      <div class="flex items-center flex-no-shrink text-white">
-        <a href="/" class="logo-text text-4xl no-underline">neatmetrics</a>
-      </div>
-      <div>
-        <a class="no-underline text-green hover:underline" href="/login">Log in</a>
-      </div>
-    </nav>
-  </div>
-
   <div class="container mx-auto mt-20">
     <h1 class="text-center tracking-wide text-4xl">
       Simple analytics for your website
@@ -20,7 +9,7 @@
     </p>
     <div class="flex items-center justify-between max-w-xs mx-auto mt-8">
       <a href="/gigride.live" class="button">View live demo</a>
-      <button class="button">Get started</button>
+      <a href="/onboarding" class="button">Get started</a>
     </div>
 
     <div class="text-center mt-20">

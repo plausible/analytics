@@ -2,7 +2,7 @@
 @tailwind components;
 
 .button {
-  @apply bg-red text-white font-bold tracking-wide py-3 px-5 rounded no-underline;
+  @apply inline-block bg-red text-white text-center font-bold tracking-wide py-3 px-5 rounded no-underline;
 }
 
 .button:hover {
@@ -18,6 +18,10 @@ html {
 }
 
 @tailwind utilities;
+
+.transition {
+  transition: all .1s ease-in;
+}
 
 .logo-text {
   font-family: 'Comfortaa', cursive;
