@@ -4,15 +4,14 @@
       <%= img_tag(NeatmetricsWeb.Router.Helpers.static_path(@conn, "/images/logo_48w.png"), style: "height: 28px; margin-right: 4px;") %>
       <a href="/" class="logo-text text-green text-4xl no-underline">neatmetrics</a>
     </div>
-    <%= form_for @conn, "/login", [class: "bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16"], fn f -> %>
+    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16">
       <div class="flex items-center justify-between">
-        <h2>Enter your email to log in</h2>
+        <h2>Success!</h2>
       </div>
       <div class="my-4">
-        <%= email_input f, :email, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "example@email.com" %>
+        We've sent a magic link to <%= @email %>. You can use it to log in by clicking on it.
       </div>
-      <%= submit "Send login link", class: "button mt-4 w-full" %>
-    <% end %>
+    </div>
     <p class="text-center text-grey text-xs">
       ©2019 Acme Corp. All rights reserved.
     </p>

@@ -58,7 +58,7 @@ defmodule NeatmetricsWeb.PageController do
   def send_login_link(conn, %{"email" => email}) do
     token = Phoenix.Token.sign(NeatmetricsWeb.Endpoint, "email_login", %{email: email})
     IO.puts(NeatmetricsWeb.Endpoint.url() <> "/claim-login?token=#{token}")
-    conn |> send_resp(200, "We've sent a magic link to #{email}. You can use it to log in by clicking on it.")
+    conn |> render("login_success.html", email: email)
   end
 
   def login_form(conn, _params) do
