@@ -57,7 +57,9 @@ defmodule NeatmetricsWeb.PageController do
 
   def send_login_link(conn, %{"email" => email}) do
     token = Phoenix.Token.sign(NeatmetricsWeb.Endpoint, "email_login", %{email: email})
-    IO.puts(NeatmetricsWeb.Endpoint.url() <> "/claim-login?token=#{token}")
+    url = NeatmetricsWeb.Endpoint.url() <> "/claim-login?token=#{token}"
+    email_template = NeatmetricsWeb.Email.login_email(email, url)
+    Neatmetrics.Mailer.deliver_now(email_template)
     conn |> render("login_success.html", email: email)
   end
 

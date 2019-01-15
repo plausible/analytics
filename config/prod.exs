@@ -77,3 +77,8 @@ config :neatmetrics, Neatmetrics.Repo,
   url: System.get_env("DATABASE_URL"),
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
   ssl: true
+
+config :neatmetrics, Neatmetrics.Mailer,
+  adapter: Bamboo.MailgunAdapter,
+  api_key: System.get_env!("MAILGUN_API_KEY"),
+  domain: "sandbox39777549fe65469885d9342979b5287a.mailgun.org"

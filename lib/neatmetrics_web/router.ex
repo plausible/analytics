@@ -17,6 +17,10 @@ defmodule NeatmetricsWeb.Router do
     plug :accepts, ["application/json"]
   end
 
+  if Mix.env == :dev do
+    forward "/sent-emails", Bamboo.SentEmailViewerPlug
+  end
+
   scope "/", NeatmetricsWeb do
     pipe_through :browser
 

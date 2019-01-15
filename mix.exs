@@ -19,7 +19,7 @@ defmodule Neatmetrics.MixProject do
   def application do
     [
       mod: {Neatmetrics.Application, []},
-      extra_applications: [:logger, :runtime_tools, :timex, :ua_inspector, :ref_inspector]
+      extra_applications: [:logger, :runtime_tools, :timex, :ua_inspector, :ref_inspector, :bamboo]
     ]
   end
 
@@ -46,7 +46,8 @@ defmodule Neatmetrics.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:ref_inspector, "~> 1.0"},
       {:timex, "~> 3.1"},
-      {:ua_inspector, "~> 0.18"}
+      {:ua_inspector, "~> 0.18"},
+      {:bamboo, "~> 1.1"}
     ]
   end
 

@@ -41,3 +41,6 @@ config :neatmetrics, Neatmetrics.Repo,
   database: "neatmetrics_dev",
   hostname: "localhost",
   pool_size: 10
+
+config :neatmetrics, Neatmetrics.Mailer,
+  adapter: Bamboo.LocalAdapter

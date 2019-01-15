@@ -1,4 +1,5 @@
 %{
+  "bamboo": {:hex, :bamboo, "1.1.0", "ecbdc851d0127d369957e5ca7bcfb4c7fe7dbfaf4fa0b2e5cc2493dd8a9a600e", [:mix], [{:hackney, ">= 1.13.0", [hex: :hackney, repo: "hexpm", optional: false]}, {:plug, "~> 1.0", [hex: :plug, repo: "hexpm", optional: false]}, {:poison, ">= 1.5.0", [hex: :poison, repo: "hexpm", optional: false]}], "hexpm"},
   "browser": {:hex, :browser, "0.4.3", "e6ec846464d11dcd24f3ff34e891f995637c85fa77a1452f26b8ec58e990bc35", [:mix], [{:plug, "~> 1.2", [hex: :plug, repo: "hexpm", optional: true]}], "hexpm"},
   "certifi": {:hex, :certifi, "2.4.2", "75424ff0f3baaccfd34b1214184b6ef616d89e420b258bb0a5ea7d7bc628f7f0", [:rebar3], [{:parse_trans, "~>3.3", [hex: :parse_trans, repo: "hexpm", optional: false]}], "hexpm"},
   "combine": {:hex, :combine, "0.10.0", "eff8224eeb56498a2af13011d142c5e7997a80c8f5b97c499f84c841032e429f", [:mix], [], "hexpm"},
@@ -29,6 +30,7 @@
   "plug": {:hex, :plug, "1.7.1", "8516d565fb84a6a8b2ca722e74e2cd25ca0fc9d64f364ec9dbec09d33eb78ccd", [:mix], [{:mime, "~> 1.0", [hex: :mime, repo: "hexpm", optional: false]}, {:plug_crypto, "~> 1.0", [hex: :plug_crypto, repo: "hexpm", optional: false]}], "hexpm"},
   "plug_cowboy": {:hex, :plug_cowboy, "2.0.0", "ab0c92728f2ba43c544cce85f0f220d8d30fc0c90eaa1e6203683ab039655062", [:mix], [{:cowboy, "~> 2.5", [hex: :cowboy, repo: "hexpm", optional: false]}, {:plug, "~> 1.7", [hex: :plug, repo: "hexpm", optional: false]}], "hexpm"},
   "plug_crypto": {:hex, :plug_crypto, "1.0.0", "18e49317d3fa343f24620ed22795ec29d4a5e602d52d1513ccea0b07d8ea7d4d", [:mix], [], "hexpm"},
+  "poison": {:hex, :poison, "3.1.0", "d9eb636610e096f86f25d9a46f35a9facac35609a7591b3be3326e99a0484665", [:mix], [], "hexpm"},
   "poolboy": {:hex, :poolboy, "1.5.1", "6b46163901cfd0a1b43d692657ed9d7e599853b3b21b95ae5ae0a777cf9b6ca8", [:rebar], [], "hexpm"},
   "postgrex": {:hex, :postgrex, "0.14.1", "63247d4a5ad6b9de57a0bac5d807e1c32d41e39c04b8a4156a26c63bcd8a2e49", [:mix], [{:connection, "~> 1.0", [hex: :connection, repo: "hexpm", optional: false]}, {:db_connection, "~> 2.0", [hex: :db_connection, repo: "hexpm", optional: false]}, {:decimal, "~> 1.5", [hex: :decimal, repo: "hexpm", optional: false]}, {:jason, "~> 1.0", [hex: :jason, repo: "hexpm", optional: true]}], "hexpm"},
   "ranch": {:hex, :ranch, "1.7.1", "6b1fab51b49196860b733a49c07604465a47bdb78aa10c1c16a3d199f7f8c881", [:rebar3], [], "hexpm"},
