@@ -6,8 +6,7 @@
     </div>
     <%= form_for @conn, "/onboarding/site", [class: "bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16"], fn f -> %>
       <div class="flex items-center justify-between">
-        <h2>Add tracking snippet</h2>
-        <span class="text-sm text-grey-dark">3/3 steps</span>
+        <h2>Add javascript snippet</h2>
       </div>
       <div class="my-4">
         <p>Paste this snippet in the <code>&lt;head&gt;</code> of your website.</p>
@@ -16,6 +15,6 @@
       </div>
       <%= link("Start collecting data →", class: "button mt-4 w-full", to: "/#{@site.domain}") %>
     <% end %>
-    <p class="text-center text-grey text-xs">©2018 Acme Corp. All rights reserved.</p>
+    <p class="text-center text-grey text-xs">©2019 Acme Corp. All rights reserved.</p>
   </div>
 </div>

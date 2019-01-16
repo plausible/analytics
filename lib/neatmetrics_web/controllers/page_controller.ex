@@ -21,51 +21,57 @@ defmodule NeatmetricsWeb.PageController do
 
   def onboarding(conn, _params) do
     if get_session(conn, :current_user_email) do
-      user = Neatmetrics.Repo.get_by!(Neatmetrics.Auth.User, email: get_session(conn, :current_user_email))
-             |> Neatmetrics.Repo.preload(:sites)
-
-      case user.sites do
-        [] ->
-          render(conn, "onboarding_create_site.html")
-        [site] ->
-          render(conn, "onboarding_add_tracking.html", site: site)
-        [site | rest] ->
-          send_resp(conn, 400, "Already onboarded")
-      end
+      redirect(conn, to: "/")
     else
       render(conn, "onboarding_enter_email.html")
     end
   end
 
-  def create_site(conn, %{"domain" => domain}) do
+  def new_site(conn, _params) do
+    render(conn, "new_site.html")
+  end
+
+  defp insert_site(user_id, domain) do
     site_changeset = Neatmetrics.Site.changeset(%Neatmetrics.Site{}, %{domain: domain})
-    user = Neatmetrics.Repo.get_by!(Neatmetrics.Auth.User, email: get_session(conn, :current_user_email))
 
     {:ok, %{site: site}} = Ecto.Multi.new()
     |> Ecto.Multi.insert(:site, site_changeset)
     |>  Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
       membership_changeset = Neatmetrics.Site.Membership.changeset(%Neatmetrics.Site.Membership{}, %{
         site_id: site.id,
-        user_id: user.id
+        user_id: user_id
       })
       repo.insert(membership_changeset)
     end)
     |> Repo.transaction
+    site
+  end
 
-    redirect(conn, to: "/onboarding")
+  def add_snippet(conn, %{"website" => website}) do
+    site = Neatmetrics.Repo.get_by!(Neatmetrics.Site, domain: website)
+    render(conn, "site_snippet.html", site: site)
+  end
+
+  def create_site(conn, %{"domain" => domain}) do
+    user = Neatmetrics.Repo.get_by!(Neatmetrics.Auth.User, email: get_session(conn, :current_user_email))
+
+    site = insert_site(user.id, domain)
+
+    redirect(conn, to: "/#{site.domain}/snippet")
   end
 
   def send_login_link(conn, %{"email" => email}) do
     token = Phoenix.Token.sign(NeatmetricsWeb.Endpoint, "email_login", %{email: email})
     url = NeatmetricsWeb.Endpoint.url() <> "/claim-login?token=#{token}"
+    require Logger
+    Logger.debug(url)
     email_template = NeatmetricsWeb.Email.login_email(email, url)
     Neatmetrics.Mailer.deliver_now(email_template)
     conn |> render("login_success.html", email: email)
   end
 
   def login_form(conn, _params) do
-    conn
-    |> render("login_form.html")
+    render(conn, "login_form.html")
   end
 
   defp successful_login(email) do
@@ -86,7 +92,7 @@ defmodule NeatmetricsWeb.PageController do
 
         case successful_login(email) do
           :new ->
-            redirect(conn, to: "/onboarding")
+            redirect(conn, to: "/sites/new")
           :found ->
             redirect(conn, to: "/")
         end
