@@ -28,9 +28,7 @@ a, button {
 }
 
 .logo-text {
-  font-family: 'Comfortaa', cursive;
-  font-weight: bold;
-  @apply text-indigo;
+  @apply font-black tracking-wide text-indigo text-4xl;
 }
 
 .landing-bg {

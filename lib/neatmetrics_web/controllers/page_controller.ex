@@ -103,8 +103,80 @@ defmodule NeatmetricsWeb.PageController do
     end
   end
 
+  defp show_analytics(conn, pageviews, website) do
+    {period, date_range} = get_date_range(conn.params)
+
+    pageview_groups = Enum.group_by(pageviews, fn pageview -> NaiveDateTime.to_date(pageview.inserted_at) end)
+
+    plot = Enum.map(date_range, fn day ->
+      Enum.count(pageview_groups[day] || [])
+    end)
+
+    labels = Enum.map(date_range, fn date ->
+      Timex.format!(date, "{WDshort} {D} {Mshort}")
+    end)
+
+    user_agents = pageviews
+      |> Enum.filter(fn pv -> pv.user_agent && pv.new_visitor end)
+      |> Enum.map(fn pv -> UAInspector.parse_client(pv.user_agent) end)
+
+    device_types = user_agents
+      |> Enum.group_by(&device_type/1)
+      |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
+      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
+      |> Enum.take(5)
+
+    browsers = user_agents
+      |> Enum.group_by(&browser_name/1)
+      |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
+      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
+      |> Enum.take(5)
+
+    operating_systems = user_agents
+      |> Enum.group_by(&operating_system/1)
+      |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
+      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
+      |> Enum.take(5)
+
+    top_referrers = pageviews
+      |> Enum.filter(fn pv -> pv.referrer && pv.new_visitor && !String.contains?(pv.referrer, pv.hostname) end)
+      |> Enum.map(&(RefInspector.parse(&1.referrer)))
+      |> Enum.group_by(&(&1.source))
+      |> Enum.map(fn {ref, views} -> {ref, Enum.count(views)} end)
+      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
+      |> Enum.take(5)
+
+    top_pages = Enum.group_by(pageviews, &(&1.pathname))
+      |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
+      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
+      |> Enum.take(5)
+
+    top_screen_sizes = Enum.group_by(pageviews, &Neatmetrics.Pageview.screen_string/1)
+      |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
+      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
+      |> Enum.take(5)
+
+    render(conn, "analytics.html",
+      plot: plot,
+      labels: labels,
+      pageviews: Enum.count(pageviews),
+      unique_visitors: Enum.filter(pageviews, fn pv -> pv.new_visitor end) |> Enum.count,
+      top_referrers: top_referrers,
+      top_pages: top_pages,
+      top_screen_sizes: top_screen_sizes,
+      device_types: device_types,
+      browsers: browsers,
+      operating_systems: operating_systems,
+      hostname: website,
+      title: "Neatmetrics · " <> website,
+      selected_period: period
+    )
+  end
+
+
   def analytics(conn, %{"website" => website} = params) do
     site = Repo.get_by(Neatmetrics.Site, domain: website)
+
     if site do
       {period, date_range} = get_date_range(params)
 
@@ -114,71 +186,11 @@ defmodule NeatmetricsWeb.PageController do
         where: type(p.inserted_at, :date) >= ^date_range.first and type(p.inserted_at, :date) <= ^date_range.last
       )
 
-      pageview_groups = Enum.group_by(pageviews, fn pageview -> NaiveDateTime.to_date(pageview.inserted_at) end)
-
-      plot = Enum.map(date_range, fn day ->
-        Enum.count(pageview_groups[day] || [])
-      end)
-
-      labels = Enum.map(date_range, fn date ->
-        Timex.format!(date, "{WDshort} {D} {Mshort}")
-      end)
-
-      user_agents = pageviews
-        |> Enum.filter(fn pv -> pv.user_agent && pv.new_visitor end)
-        |> Enum.map(fn pv -> UAInspector.parse_client(pv.user_agent) end)
-
-      device_types = user_agents
-        |> Enum.group_by(&device_type/1)
-        |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
-        |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-        |> Enum.take(5)
-
-      browsers = user_agents
-        |> Enum.group_by(&browser_name/1)
-        |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
-        |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-        |> Enum.take(5)
-
-      operating_systems = user_agents
-        |> Enum.group_by(&operating_system/1)
-        |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
-        |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-        |> Enum.take(5)
-
-      top_referrers = pageviews
-        |> Enum.filter(fn pv -> pv.referrer && pv.new_visitor && !String.contains?(pv.referrer, pv.hostname) end)
-        |> Enum.map(&(RefInspector.parse(&1.referrer)))
-        |> Enum.group_by(&(&1.source))
-        |> Enum.map(fn {ref, views} -> {ref, Enum.count(views)} end)
-        |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-        |> Enum.take(5)
-
-      top_pages = Enum.group_by(pageviews, &(&1.pathname))
-        |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
-        |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-        |> Enum.take(5)
-
-      top_screen_sizes = Enum.group_by(pageviews, &Neatmetrics.Pageview.screen_string/1)
-        |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
-        |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-        |> Enum.take(5)
-
-      render(conn, "analytics.html",
-        plot: plot,
-        labels: labels,
-        pageviews: Enum.count(pageviews),
-        unique_visitors: Enum.filter(pageviews, fn pv -> pv.new_visitor end) |> Enum.count,
-        top_referrers: top_referrers,
-        top_pages: top_pages,
-        top_screen_sizes: top_screen_sizes,
-        device_types: device_types,
-        browsers: browsers,
-        operating_systems: operating_systems,
-        hostname: website,
-        title: "Neatmetrics · " <> website,
-        selected_period: period
-      )
+      if Enum.count(pageviews) == 0 do
+        render(conn, "waiting_first_pageview.html")
+      else
+        show_analytics(conn, pageviews, website)
+      end
     else
       conn |> send_resp(404, "Website not found")
     end

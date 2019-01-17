@@ -1,0 +1,9 @@
+<div class="w-full max-w-sm mx-auto mt-8">
+  <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16">
+    <div class="flex items-center justify-between">
+      <h2>Waiting for first pageview</h2>
+    </div>
+    <div class="my-4">
+    </div>
+  </div>
+</div>
