@@ -52,6 +52,7 @@
       var postBody = {
         url: url,
         new_visitor: !uid,
+        uid: uid,
         sid: sid
       };
 

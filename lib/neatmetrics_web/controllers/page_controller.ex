@@ -168,7 +168,7 @@ defmodule NeatmetricsWeb.PageController do
       browsers: browsers,
       operating_systems: operating_systems,
       hostname: website,
-      title: "Neatmetrics · " <> website,
+      title: "Plausible · " <> website,
       selected_period: period
     )
   end
