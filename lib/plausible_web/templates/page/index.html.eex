@@ -19,24 +19,24 @@
   <div class="container mx-auto">
     <div class="flex items-center justify-between max-w-xl mx-auto mt-12 ">
       <div class="w-1/3 p-6">
-        <h3>⏱️Super easy to set up</h3>
+        <h2>Super easy to set up</h2>
         <p class="mt-4 text-lg">Just copy one line of code to the footer of your website to get started.</p>
       </div>
 
       <div class="w-1/3 p-6">
-        <h3>📈Record what matters</h3>
+        <h2>Record what matters</h2>
         <p class="mt-4 text-lg">Page views, unique users, top referrers, screen sizes. It's all there.</p>
       </div>
 
       <div class="w-1/3 p-6">
-        <h3>⚡Lightweight</h3>
+        <h2>Lightweight</h2>
         <p class="mt-4 text-lg">Your analytics library should not be slowing down your customers experience.</p>
       </div>
     </div>
     <div class="mt-20">
       <h1 class="text-center">Join the public beta</h1>
       <div class="text-center text-lg mt-4 mb-4 max-w-md mx-auto">
-        Plausible is currently completely free to use.
+        Plausible is currently completely <b>free to use.</b>
         All beta users will receive a special discount once we launch.
       </div>
     </div>
