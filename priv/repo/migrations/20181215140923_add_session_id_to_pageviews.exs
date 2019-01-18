@@ -1,4 +1,4 @@
-defmodule Neatmetrics.Repo.Migrations.AddSessionIdToPageviews do
+defmodule Plausible.Repo.Migrations.AddSessionIdToPageviews do
   use Ecto.Migration
 
   def change do
@@ -6,7 +6,7 @@ defmodule Neatmetrics.Repo.Migrations.AddSessionIdToPageviews do
       add :session_id, :string
     end
     flush()
-    Neatmetrics.Repo.update_all(Neatmetrics.Pageview, [set: [session_id: "123"]])
+    Plausible.Repo.update_all(Plausible.Pageview, [set: [session_id: "123"]])
     flush()
     alter table(:pageviews) do
       modify :session_id, :string, null: false

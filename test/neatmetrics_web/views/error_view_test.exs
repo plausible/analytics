@@ -1,14 +1,14 @@
-defmodule NeatmetricsWeb.ErrorViewTest do
-  use NeatmetricsWeb.ConnCase, async: true
+defmodule PlausibleWeb.ErrorViewTest do
+  use PlausibleWeb.ConnCase, async: true
 
   # Bring render/3 and render_to_string/3 for testing custom views
   import Phoenix.View
 
   test "renders 404.html" do
-    assert render_to_string(NeatmetricsWeb.ErrorView, "404.html", []) == "Not Found"
+    assert render_to_string(PlausibleWeb.ErrorView, "404.html", []) == "Not Found"
   end
 
   test "renders 500.html" do
-    assert render_to_string(NeatmetricsWeb.ErrorView, "500.html", []) == "Internal Server Error"
+    assert render_to_string(PlausibleWeb.ErrorView, "500.html", []) == "Internal Server Error"
   end
 end

@@ -7,15 +7,15 @@
 # General application configuration
 use Mix.Config
 
-config :neatmetrics,
-  ecto_repos: [Neatmetrics.Repo]
+config :plausible,
+  ecto_repos: [Plausible.Repo]
 
 # Configures the endpoint
-config :neatmetrics, NeatmetricsWeb.Endpoint,
+config :plausible, PlausibleWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "/NJrhNtbyCVAsTyvtk1ZYCwfm981Vpo/0XrVwjJvemDaKC/vsvBRevLwsc6u8RCg",
-  render_errors: [view: NeatmetricsWeb.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: Neatmetrics.PubSub, adapter: Phoenix.PubSub.PG2]
+  render_errors: [view: PlausibleWeb.ErrorView, accepts: ~w(html json)],
+  pubsub: [name: Plausible.PubSub, adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
 config :logger, :console,

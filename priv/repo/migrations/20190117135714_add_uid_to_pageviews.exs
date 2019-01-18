@@ -1,6 +1,6 @@
-defmodule Neatmetrics.Repo.Migrations.AddUidToPageviews do
+defmodule Plausible.Repo.Migrations.AddUidToPageviews do
   use Ecto.Migration
-  use Neatmetrics.Repo
+  use Plausible.Repo
 
   def change do
     alter table(:pageviews) do
@@ -9,7 +9,7 @@ defmodule Neatmetrics.Repo.Migrations.AddUidToPageviews do
 
     flush()
 
-    Repo.update_all(Neatmetrics.Pageview, set: [user_id: "dummy"])
+    Repo.update_all(Plausible.Pageview, set: [user_id: "dummy"])
 
     alter table(:pageviews) do
       modify :user_id, :string, null: false

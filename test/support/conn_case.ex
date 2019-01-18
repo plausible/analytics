@@ -1,4 +1,4 @@
-defmodule NeatmetricsWeb.ConnCase do
+defmodule PlausibleWeb.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -19,18 +19,18 @@ defmodule NeatmetricsWeb.ConnCase do
     quote do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
-      alias NeatmetricsWeb.Router.Helpers, as: Routes
+      alias PlausibleWeb.Router.Helpers, as: Routes
 
       # The default endpoint for testing
-      @endpoint NeatmetricsWeb.Endpoint
+      @endpoint PlausibleWeb.Endpoint
     end
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Neatmetrics.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plausible.Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Neatmetrics.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, {:shared, self()})
     end
 
     {:ok, conn: Phoenix.ConnTest.build_conn()}

@@ -1,4 +1,4 @@
-defmodule Neatmetrics.DataCase do
+defmodule Plausible.DataCase do
   @moduledoc """
   This module defines the setup for tests requiring
   access to the application's data layer.
@@ -16,20 +16,20 @@ defmodule Neatmetrics.DataCase do
 
   using do
     quote do
-      alias Neatmetrics.Repo
+      alias Plausible.Repo
 
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import Neatmetrics.DataCase
+      import Plausible.DataCase
     end
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Neatmetrics.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plausible.Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Neatmetrics.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, {:shared, self()})
     end
 
     :ok

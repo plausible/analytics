@@ -1,4 +1,4 @@
-defmodule Neatmetrics.Repo.Migrations.AddPageviews do
+defmodule Plausible.Repo.Migrations.AddPageviews do
   use Ecto.Migration
 
   def change do

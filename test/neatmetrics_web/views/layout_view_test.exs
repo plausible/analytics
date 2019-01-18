@@ -1,3 +1,3 @@
-defmodule NeatmetricsWeb.LayoutViewTest do
-  use NeatmetricsWeb.ConnCase, async: true
+defmodule PlausibleWeb.LayoutViewTest do
+  use PlausibleWeb.ConnCase, async: true
 end

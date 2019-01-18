@@ -1,4 +1,4 @@
-# Neatmetrics
+# Plausible
 
 To start your Phoenix server:
 

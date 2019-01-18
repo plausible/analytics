@@ -1,0 +1,1 @@
+<a href="<%= @login_link %>">Click here</a> to log in to Plausible.

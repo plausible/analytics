@@ -1,6 +1,6 @@
-defmodule NeatmetricsWeb.ApiControllerTest do
-  use NeatmetricsWeb.ConnCase
-  use Neatmetrics.Repo
+defmodule PlausibleWeb.ApiControllerTest do
+  use PlausibleWeb.ConnCase
+  use Plausible.Repo
 
   @user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
 
@@ -20,7 +20,7 @@ defmodule NeatmetricsWeb.ApiControllerTest do
              |> put_req_header("user-agent", @user_agent)
              |> post("/api/page", Jason.encode!(params))
 
-      pageview = Repo.one(Neatmetrics.Pageview)
+      pageview = Repo.one(Plausible.Pageview)
 
       assert response(conn, 202) == ""
       assert pageview.hostname == "gigride.live"
@@ -54,7 +54,7 @@ defmodule NeatmetricsWeb.ApiControllerTest do
       |> put_req_header("content-type", "text/plain")
       |> post("/api/page", Jason.encode!(params))
 
-      pageview = Repo.one(Neatmetrics.Pageview)
+      pageview = Repo.one(Plausible.Pageview)
 
       assert pageview.hostname == "example.com"
     end
@@ -71,7 +71,7 @@ defmodule NeatmetricsWeb.ApiControllerTest do
       |> put_req_header("user-agent", "generic crawler")
       |> post("/api/page", Jason.encode!(params))
 
-      pageviews = Repo.all(Neatmetrics.Pageview)
+      pageviews = Repo.all(Plausible.Pageview)
 
       assert Enum.count(pageviews) == 0
     end

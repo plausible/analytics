@@ -1,2 +1,2 @@
 ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(Neatmetrics.Repo, :manual)
+Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)

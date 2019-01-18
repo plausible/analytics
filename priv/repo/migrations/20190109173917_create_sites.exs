@@ -1,4 +1,4 @@
-defmodule Neatmetrics.Repo.Migrations.CreateSites do
+defmodule Plausible.Repo.Migrations.CreateSites do
   use Ecto.Migration
 
   def change do

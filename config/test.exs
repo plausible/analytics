@@ -2,7 +2,7 @@ use Mix.Config
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
-config :neatmetrics, NeatmetricsWeb.Endpoint,
+config :plausible, PlausibleWeb.Endpoint,
   http: [port: 4002],
   server: false
 
@@ -10,9 +10,9 @@ config :neatmetrics, NeatmetricsWeb.Endpoint,
 config :logger, level: :warn
 
 # Configure your database
-config :neatmetrics, Neatmetrics.Repo,
+config :plausible, Plausible.Repo,
   username: "postgres",
   password: "postgres",
-  database: "neatmetrics_test",
+  database: "plausible_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox

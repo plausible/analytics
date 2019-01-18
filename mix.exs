@@ -1,9 +1,9 @@
-defmodule Neatmetrics.MixProject do
+defmodule Plausible.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :neatmetrics,
+      app: :plausible,
       version: "0.1.0",
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()), compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -18,7 +18,7 @@ defmodule Neatmetrics.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {Neatmetrics.Application, []},
+      mod: {Plausible.Application, []},
       extra_applications: [:logger, :runtime_tools, :timex, :ua_inspector, :ref_inspector, :bamboo]
     ]
   end
