@@ -12,7 +12,8 @@ defmodule PlausibleWeb.ApiControllerTest do
         new_visitor: true,
         screen_width: 1440,
         screen_height: 900,
-        sid: "123"
+        sid: "123",
+        uid: "321"
       }
 
       conn = conn
@@ -29,24 +30,14 @@ defmodule PlausibleWeb.ApiControllerTest do
       assert pageview.user_agent == @user_agent
       assert pageview.screen_width == params[:screen_width]
       assert pageview.screen_height == params[:screen_height]
-    end
-
-    test "URL is required", %{conn: conn} do
-      params = %{
-        referrer: "http://m.facebook.com/",
-      }
-
-      conn = conn
-             |> put_req_header("content-type", "text/plain")
-             |> post("/api/page", Jason.encode!(params))
-
-      assert response(conn, 400) == ""
+      assert pageview.screen_size == "1440x900"
     end
 
     test "www. is stripped from hostname", %{conn: conn} do
       params = %{
         url: "http://www.example.com/",
         sid: "123",
+        uid: "321",
         new_visitor: true
       }
 
@@ -74,6 +65,47 @@ defmodule PlausibleWeb.ApiControllerTest do
       pageviews = Repo.all(Plausible.Pageview)
 
       assert Enum.count(pageviews) == 0
+    end
+
+    test "parses user_agent", %{conn: conn} do
+      params = %{
+        url: "http://gigride.live/",
+        new_visitor: false,
+        sid: "123",
+        uid: "321"
+      }
+
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/page", Jason.encode!(params))
+
+      pageview = Repo.one(Plausible.Pageview)
+
+      assert response(conn, 202) == ""
+      assert pageview.device_type == "Desktop"
+      assert pageview.operating_system == "Mac"
+      assert pageview.browser == "Chrome"
+    end
+
+    test "parses referrer", %{conn: conn} do
+      params = %{
+        url: "http://gigride.live/",
+        referrer: "https://facebook.com",
+        new_visitor: false,
+        sid: "123",
+        uid: "321"
+      }
+
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/page", Jason.encode!(params))
+
+      pageview = Repo.one(Plausible.Pageview)
+
+      assert response(conn, 202) == ""
+      assert pageview.referrer_source == "Facebook"
     end
   end
 end

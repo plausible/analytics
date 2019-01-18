@@ -14,44 +14,88 @@ defmodule PlausibleWeb.ApiController do
   end
 
   defp create_pageview(conn) do
-    body = parse_body(conn)
-    pageview = process_pageview(body, conn)
-    if !bot?(pageview) do
-      Plausible.Pageview.changeset(%Plausible.Pageview{}, pageview)
-        |> Plausible.Repo.insert
-    else
+    params = parse_body(conn)
+    uri = URI.parse(params["url"])
+    user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first
+    if UAInspector.bot?(user_agent) do
       {:ok, nil}
+    else
+      ua = if user_agent do
+        UAInspector.Parser.parse(user_agent)
+      end
+
+      ref = params["referrer"]
+      ref = if ref && !String.contains?(ref, strip_www(uri.host)) do
+        RefInspector.parse(ref)
+      end
+
+      pageview_attrs = %{
+        hostname: strip_www(uri.host),
+        pathname: uri.path,
+        user_agent: user_agent,
+        referrer: params["referrer"],
+        new_visitor: params["new_visitor"],
+        screen_width: params["screen_width"],
+        screen_height: params["screen_height"],
+        screen_size: screen_string(params),
+        session_id: params["sid"],
+        user_id: params["uid"],
+        device_type: ua && device_type(ua),
+        operating_system: ua && os_name(ua),
+        browser: ua && browser_name(ua),
+        referrer_source: ref && referrer_source(ref)
+      }
+
+      Plausible.Pageview.changeset(%Plausible.Pageview{}, pageview_attrs)
+        |> Plausible.Repo.insert
     end
   end
 
-  defp process_pageview(params, conn) do
-    uri = URI.parse(params["url"] || "")
-    user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first
-
-    %{
-      hostname: strip_www(uri.host),
-      pathname: uri.path,
-      user_agent: user_agent,
-      referrer: params["referrer"],
-      new_visitor: params["new_visitor"],
-      screen_width: params["screen_width"],
-      screen_height: params["screen_height"],
-      session_id: params["sid"],
-      user_id: params["uid"]
-    }
-  end
 
   defp parse_body(conn) do
     {:ok, body, _conn} = Plug.Conn.read_body(conn)
     Jason.decode!(body)
   end
 
-  defp bot?(pageview) do
-    pageview.user_agent && UAInspector.bot?(pageview.user_agent)
-  end
-
   defp strip_www(nil), do: nil
   defp strip_www(hostname) do
     String.replace_prefix(hostname, "www.", "")
+  end
+
+  def screen_string(%{"screen_width" => w, "screen_height" => h}) do
+    "#{w}x#{h}"
+  end
+  def screen_string(_), do: nil
+
+  defp browser_name(ua) do
+    case ua.client do
+      %UAInspector.Result.Client{name: "Mobile Safari"} -> "Safari"
+      %UAInspector.Result.Client{name: "Chrome Mobile"} -> "Chrome"
+      %UAInspector.Result.Client{name: "Chrome Mobile iOS"} -> "Chrome"
+      %UAInspector.Result.Client{type: "mobile app"} -> "Mobile App"
+      :unknown -> "Unknown"
+      client -> client.name
+    end
+  end
+
+  defp os_name(ua) do
+    case ua.os do
+      :unknown -> "Unknown"
+      os -> os.name
+    end
+  end
+
+  defp device_type(ua) do
+    case ua.device do
+      :unknown -> "Unknown"
+      device -> String.capitalize(device.type)
+    end
+  end
+
+  defp referrer_source(ref) do
+    case ref.source do
+      :unknown -> "Unknown"
+      source -> source
+    end
   end
 end

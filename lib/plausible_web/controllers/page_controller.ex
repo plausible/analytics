@@ -237,25 +237,4 @@ defmodule PlausibleWeb.PageController do
   defp get_date_range(_) do
     get_date_range(%{"period" => "30days"})
   end
-
-  defp browser_name(ua) do
-    case ua.client do
-      %UAInspector.Result.Client{name: "Mobile Safari"} -> "Safari"
-      %UAInspector.Result.Client{name: "Chrome Mobile"} -> "Chrome"
-      %UAInspector.Result.Client{name: "Chrome Mobile iOS"} -> "Chrome"
-      %UAInspector.Result.Client{type: "mobile app"} -> "Mobile App"
-      client -> client.name
-    end
-  end
-
-  defp device_type(ua) do
-    case ua.device do
-      :unknown -> "unknown"
-      device -> device.type
-    end
-  end
-
-  defp operating_system(ua) do
-    ua.os.name
-  end
 end

@@ -24,7 +24,7 @@ defmodule Plausible.Pageview do
 
   def changeset(pageview, attrs) do
     pageview
-    |> cast(attrs, [:hostname, :pathname, :referrer, :user_agent, :new_visitor, :screen_width, :screen_height, :session_id, :user_id])
+    |> cast(attrs, [:hostname, :pathname, :referrer, :user_agent, :new_visitor, :screen_width, :screen_height, :session_id, :user_id, :device_type, :operating_system, :browser, :referrer_source, :screen_size])
     |> validate_required([:hostname, :pathname, :new_visitor, :session_id, :user_id])
   end
 
