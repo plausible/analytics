@@ -22,6 +22,12 @@
   version: ''
   url: 'http://lincgeek.org/bashpodder/'
   type: 'Feed Reader'
+  
+- regex: 'Breaker/v([\d\.]+)'
+  name: 'Breaker'
+  version: '$1'
+  url: 'https://www.breaker.audio/'
+  type: 'Feed Reader App'
 
 - regex: 'Downcast/([\d\.]+)'
   name: 'Downcast'

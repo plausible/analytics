@@ -13,6 +13,12 @@ defmodule Plausible.Pageview do
     field :session_id, :string
     field :user_id, :string
 
+    field :device_type, :string
+    field :operating_system, :string
+    field :browser, :string
+    field :referrer_source, :string
+    field :screen_size, :string
+
     timestamps()
   end
 

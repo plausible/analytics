@@ -583,6 +583,19 @@ Acer:
       model: 'Iconia Tab A$1'
       device: 'tablet'
 
+# Advance
+Advance:
+  regex: 'Hollogram|HL6246|IntroTr3544|Tr3845'
+  device: 'smartphone'
+  models:
+    - regex: 'IntroTr3544|Tr3845'
+      model: 'Intro'
+      device: 'tablet'
+    - regex: 'HL6246'
+      model: 'Hollogram HL6246'
+    - regex: 'Hollogram ([^;\)]+) Build'
+      model: 'Hollogram $1'
+
 # Airness
 Airness:
   regex: 'AIRNESS-([\w]+)'
@@ -4154,6 +4167,8 @@ LG:
       model: 'Zero'
     - regex: '(?:LG-)?M154'
       model: 'Risio 2'
+    - regex: '(?:LG-)?P500H'
+      model: 'Optimus One'
     - regex: 'P713'
       model: 'Optimus L7II'
     - regex: 'L-01D'
@@ -5597,7 +5612,7 @@ Siemens:
 
 # Samsung
 Samsung:
-  regex: 'SAMSUNG|Maple |SC-(?:02[CH]|04E|01F)|N[57]100|N5110|N9100|S(?:CH|GH|PH|EC|AM|HV|HW|M)-|SMART-TV|GT-|Galaxy|(?:portalmmm|o2imode)/2\.0 [SZ]|sam[rua]|vollo Vi86[);/ ]|(?:OTV-)?SMT-E5015|ISW11SC|SCV35'
+  regex: 'SAMSUNG|Maple |SC-(?:02[CH]|04E|01F)|N[57]100|N5110|N9100|S(?:CH|GH|PH|EC|AM|HV|HW|M)-|SMART-TV|GT-|Galaxy|(?:portalmmm|o2imode)/2\.0 [SZ]|sam[rua]|vollo Vi86[);/ ]|(?:OTV-)?SMT-E5015|ISW11SC|SCV35|404SC'
   device: 'smartphone'
   models:
     # explicit tv models
@@ -5957,6 +5972,8 @@ Samsung:
       model: 'GALAXY S5 Neo'
     - regex: '(?:SAMSUNG-)?SM-G920(?:A|F|FD|FQ|I|P|R|S|T|V|8|9)'
       model: 'GALAXY S6'
+    - regex: '404SC'
+      model: 'GALAXY S6 edge (Softbank)'
     - regex: '(?:SAMSUNG-)?SM-G925[FIPRVW]'
       model: 'GALAXY S6 edge'
     - regex: '(?:SAMSUNG-)?SM-G928[FI]'
@@ -6186,6 +6203,20 @@ Samsung:
       model: '$1'
     - regex: 'sam([rua][0-9]+)'
       model: 'SCH-$1'
+
+# Sanei
+Sanei:
+  regex: '(?:8312D|G(60[25]|70[3568]G?|785|803)|N83(?:-2cpu)?|N91) Build'
+  device: 'smartphone'
+  models:
+    - regex: 'N83'
+      model: 'N83'
+    - regex: 'N91'
+      model: 'N91'
+    - regex: '8312D'
+      model: 'G101'
+    - regex: 'G(60[25]|70[3568]G?|785|803)'
+      model: 'G$1'
 
 # Sencor
 Sencor:

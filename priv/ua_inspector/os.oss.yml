@@ -107,6 +107,10 @@
   name: 'Android'
   version: ''
 
+- regex: '(?:TwitterAndroid).*[ /](?:[a-z]+ )?(\d+[\.\d]*)'
+  name: 'Android'
+  version: '$1'
+
 - regex: 'BeyondPod|AntennaPod|Podkicker|DoggCatcher|Player FM|okhttp|Podcatcher Deluxe'
   name: 'Android'
   version: ''

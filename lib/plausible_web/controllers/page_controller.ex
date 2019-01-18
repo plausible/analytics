@@ -103,64 +103,85 @@ defmodule PlausibleWeb.PageController do
     end
   end
 
-  defp show_analytics(conn, pageviews, website) do
+  defp show_analytics(conn, website, total_pageviews) do
     {period, date_range} = get_date_range(conn.params)
 
-    pageview_groups = Enum.group_by(pageviews, fn pageview -> NaiveDateTime.to_date(pageview.inserted_at) end)
+    base_query = from(p in Plausible.Pageview,
+      where: p.hostname == ^website,
+      where: type(p.inserted_at, :date) >= ^date_range.first and type(p.inserted_at, :date) <= ^date_range.last
+    )
+
+    pageview_groups = Repo.all(
+      from p in base_query,
+      group_by: 1,
+      order_by: 1,
+      select: {type(p.inserted_at, :date), count(p.id)}
+    ) |> Enum.into(%{})
 
     plot = Enum.map(date_range, fn day ->
-      Enum.count(pageview_groups[day] || [])
+      pageview_groups[day] || 0
     end)
 
     labels = Enum.map(date_range, fn date ->
       Timex.format!(date, "{WDshort} {D} {Mshort}")
     end)
 
-    user_agents = pageviews
-      |> Enum.filter(fn pv -> pv.user_agent && pv.new_visitor end)
-      |> Enum.map(fn pv -> UAInspector.parse_client(pv.user_agent) end)
+    unique_visitors = Repo.aggregate(from(
+      p in base_query,
+      where: p.new_visitor
+    ), :count, :id)
 
-    device_types = user_agents
-      |> Enum.group_by(&device_type/1)
-      |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
-      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-      |> Enum.take(5)
+    device_types = Repo.all(from p in base_query,
+      select: {p.device_type, count(p.device_type)},
+      group_by: p.device_type,
+      where: p.new_visitor == true,
+      order_by: [desc: count(p.device_type)],
+      limit: 5
+    )
 
-    browsers = user_agents
-      |> Enum.group_by(&browser_name/1)
-      |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
-      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-      |> Enum.take(5)
+    browsers = Repo.all(from p in base_query,
+      select: {p.browser, count(p.browser)},
+      group_by: p.browser,
+      where: p.new_visitor == true,
+      order_by: [desc: count(p.browser)],
+      limit: 5
+    )
 
-    operating_systems = user_agents
-      |> Enum.group_by(&operating_system/1)
-      |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
-      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-      |> Enum.take(5)
+    operating_systems = Repo.all(from p in base_query,
+      select: {p.operating_system, count(p.operating_system)},
+      group_by: p.operating_system,
+      where: p.new_visitor == true,
+      order_by: [desc: count(p.operating_system)],
+      limit: 5
+    )
 
-    top_referrers = pageviews
-      |> Enum.filter(fn pv -> pv.referrer && pv.new_visitor && !String.contains?(pv.referrer, pv.hostname) end)
-      |> Enum.map(&(RefInspector.parse(&1.referrer)))
-      |> Enum.group_by(&(&1.source))
-      |> Enum.map(fn {ref, views} -> {ref, Enum.count(views)} end)
-      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-      |> Enum.take(5)
+    top_referrers = Repo.all(from p in base_query,
+      select: {p.referrer_source, count(p.referrer_source)},
+      group_by: p.referrer_source,
+      where: p.new_visitor == true and not is_nil(p.referrer_source),
+      order_by: [desc: count(p.referrer_source)],
+      limit: 5
+    )
 
-    top_pages = Enum.group_by(pageviews, &(&1.pathname))
-      |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
-      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-      |> Enum.take(5)
+    top_pages = Repo.all(from p in base_query,
+      select: {p.pathname, count(p.pathname)},
+      group_by: p.pathname,
+      order_by: [desc: count(p.pathname)],
+      limit: 5
+    )
 
-    top_screen_sizes = Enum.group_by(pageviews, &Plausible.Pageview.screen_string/1)
-      |> Enum.map(fn {page, views} -> {page, Enum.count(views)} end)
-      |> Enum.sort(fn ({_, v1}, {_, v2}) -> v1 > v2 end)
-      |> Enum.take(5)
+    top_screen_sizes = Repo.all(from p in base_query,
+      select: {p.screen_size, count(p.screen_size)},
+      group_by: p.screen_size,
+      order_by: [desc: count(p.screen_size)],
+      limit: 5
+    )
 
     render(conn, "analytics.html",
       plot: plot,
       labels: labels,
-      pageviews: Enum.count(pageviews),
-      unique_visitors: Enum.filter(pageviews, fn pv -> pv.new_visitor end) |> Enum.count,
+      pageviews: total_pageviews,
+      unique_visitors: unique_visitors,
       top_referrers: top_referrers,
       top_pages: top_pages,
       top_screen_sizes: top_screen_sizes,
@@ -180,16 +201,16 @@ defmodule PlausibleWeb.PageController do
     if site do
       {period, date_range} = get_date_range(params)
 
-      pageviews = Repo.all(
-        from p in Plausible.Pageview,
+      pageviews = Repo.aggregate(
+        from(p in Plausible.Pageview,
         where: p.hostname == ^website,
         where: type(p.inserted_at, :date) >= ^date_range.first and type(p.inserted_at, :date) <= ^date_range.last
-      )
+      ), :count, :id)
 
-      if Enum.count(pageviews) == 0 do
+      if pageviews == 0 do
         render(conn, "waiting_first_pageview.html")
       else
-        show_analytics(conn, pageviews, website)
+        show_analytics(conn, website, pageviews)
       end
     else
       conn |> send_resp(404, "Website not found")
