@@ -47,15 +47,15 @@
       </p>
 
       <h3 class="mt-4">And who are you?</h3>
-      <p class="mt-2">My name is Uku; I’m a programmer from London who is frustrated with the analytics tools on the market.</p>
+      <p class="mt-2">My name is Uku; I’m a programmer in London who is frustrated with the analytics tools on the market.</p>
 
       <h3 class="mt-4">What’s next?</h3>
       <p class="mt-2">Get feedback from beta users, improve the product.
       Once the product is stable and subscription payments are in place I can launch Plausible for real.
       </p>
 
-      <h3 class="mt-4">Is there going to be a free tier?</h3>
-      <p class="mt-2">No. Google can provide their product for free because they use it to build advertising profiles at massive scale. I don’t do that, so even the smallest tier will have to be paid to keep the servers running.</p>
+      <h3 class="mt-4">Is there going to be a free tier once you launch?</h3>
+      <p class="mt-2">No. Google can provide their product for free because they use it to build advertising profiles at massive scale. I don’t do that, so even the smallest tier will have to be paid to keep the servers running. The beta is free for now though.</p>
     </div>
     <div class="mt-20 beta-bg p-8">
       <h1 class="text-center">Join the public beta</h1>
