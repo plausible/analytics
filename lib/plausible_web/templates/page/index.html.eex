@@ -53,18 +53,23 @@
         by Google.
         <br />
         <br />
-        Besides the privacy concerns, I believe that an analytics tool can be beautiful,
-        simple and still powerful. You don't need to take a course to use Plausible.
+        Besides the privacy concerns, I believe that an analytics tool can be <b>beautiful</b>,
+        <b>simple</b> and still <b>powerful</b>. You don't need to take a course to use Plausible.
       </p>
 
       <h3 class="mt-6">And who are you?</h3>
       <p class="mt-2">
-      My name is Uku; I’m a programmer who is frustrated with the analytics tools on the market.
+      My name is <b>Uku</b>; I’m a programmer who is frustrated with the analytics tools on the market.
+      </p>
+
+      <h3 class="mt-6">That's a weird name</h3>
+      <p class="mt-2">
+      That's not a question. But yeah, I'm an Estonian living in London.
       </p>
 
       <h3 class="mt-6">What’s next?</h3>
       <p class="mt-2">
-      I'm looking to sign up a decent amount of beta users so we can battle-test the product in the real world.
+      I'm looking to sign up a decent amount of beta users so we can <b>battle-test</b> the product in the real world.
       After a couple of months everything should be ready to launch for real.
       </p>
 
