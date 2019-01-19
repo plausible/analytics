@@ -1,9 +1,12 @@
+<meta http-equiv="refresh" content="5">
+
 <div class="w-full max-w-sm mx-auto mt-8">
-  <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16">
-    <div class="flex items-center justify-between">
+  <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16 h-64 relative">
+    <div class="text-center">
       <h2>Waiting for first pageview</h2>
     </div>
     <div class="my-4">
+      <div class="pulsating-circle"></div>
     </div>
   </div>
 </div>
