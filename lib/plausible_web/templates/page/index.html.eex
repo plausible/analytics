@@ -16,25 +16,36 @@
     </section>
   </div>
   <div class="mt-32"></div>
-  <div class="container mx-auto">
-    <div class="flex items-center justify-between max-w-xl mx-auto mt-12 ">
-      <div class="w-1/3 p-6">
-        <h2>Super easy to set up</h2>
-        <p class="mt-4 text-lg">Just copy one line of code to the footer of your website to get started.</p>
-      </div>
+  <div class="bg-indigo-darker">
+    <div class="container mx-auto text-white py-8">
+      <div class="flex items-center justify-between max-w-xl mx-auto leading-normal">
+        <div class="w-1/3 p-6">
+          <h3>Simple</h3>
+          <p class="text-lg">
+          Just copy one line of code to your website to get started
+          </p>
+        </div>
 
-      <div class="w-1/3 p-6">
-        <h2>Record what matters</h2>
-        <p class="mt-4 text-lg">Page views, unique users, top referrers, screen sizes. It's all there.</p>
-      </div>
+        <div class="w-1/3 p-6">
+          <h3>Lightweight</h3>
+          <p class="text-lg">
+          Google's snippet weighs 17kb
+          Our's is only 2.1kb
+          </p>
+        </div>
 
-      <div class="w-1/3 p-6">
-        <h2>Lightweight</h2>
-        <p class="mt-4 text-lg">Your analytics library should not be slowing down your customers experience.</p>
+        <div class="w-1/3 p-6">
+          <h3>Non-Intrusive</h3>
+          <p class="text-lg">
+          All pageviews are anonymized by default in our database
+          </p>
+        </div>
       </div>
     </div>
-
-    <div class="mt-20 max-w-md mx-auto">
+  </div>
+  <div class="container mx-auto">
+    <div class="mt-24 max-w-md mx-auto relative">
+      <div class="polka-dots h-24 w-24 absolute pin-t pin-r"></div>
       <h2 class="inline-block">Frequently Asked Questions</h2>
       <h3 class="mt-6">How is Plausible better than Google Analytics?</h3>
       <p class="mt-2">
@@ -47,17 +58,22 @@
       </p>
 
       <h3 class="mt-6">And who are you?</h3>
-      <p class="mt-2">My name is Uku; I’m a programmer in London who is frustrated with the analytics tools on the market.</p>
-
-      <h3 class="mt-6">What’s next?</h3>
-      <p class="mt-2">Get feedback from beta users, improve the product.
-      Once the product is stable and subscription payments are in place I can launch Plausible for real.
+      <p class="mt-2">
+      My name is Uku; I’m a programmer who is frustrated with the analytics tools on the market.
       </p>
 
-      <h3 class="mt-6">Is there going to be a free tier once you launch?</h3>
-      <p class="mt-2">No. Google can provide their product for free because they use it to build advertising profiles at massive scale. I don’t do that, so even the smallest tier will have to be paid to keep the servers running. The beta is free for now though.</p>
+      <h3 class="mt-6">What’s next?</h3>
+      <p class="mt-2">
+      I'm looking to sign up a decent amount of beta users so we can battle-test the product in the real world.
+      After a couple of months everything should be ready to launch for real.
+      </p>
+
+      <h3 class="mt-6">Will there be a free tier once you launch?</h3>
+      <p class="mt-2">
+      No. Google can provide their product for free because they use it to build advertising profiles at massive scale. I don’t do that, so even the smallest tier will have to be paid to keep the servers running.
+      </p>
     </div>
-    <div class="mt-20 beta-bg p-8">
+    <div class="mt-24 beta-bg p-8">
       <h1 class="text-center">Join the public beta</h1>
       <div class="text-center text-lg mt-4 mb-4 max-w-md mx-auto">
         Plausible is currently under construction and completely <b>free to use</b>.
