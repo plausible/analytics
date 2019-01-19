@@ -10,12 +10,12 @@
       </div>
       <div class="my-4">
         <%= email_input f, :email, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "example@email.com" %>
-        <p class="text-grey-dark text-xs mt-2">Your email is only used for authentication and support. You will never receive any marketing email or spam.</p>
+        <p class="text-grey-dark text-xs mt-2">Your email is only used for authentication and support. No spam, guaranteed.</p>
       </div>
       <%= submit "Send login link", class: "button mt-4 w-full" %>
     <% end %>
     <p class="text-center text-grey text-xs">
-      ©2018 Plausible Insights. All rights reserved.
+      ©2019 Plausible Insights. All rights reserved.
     </p>
   </div>
 </div>
