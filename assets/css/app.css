@@ -13,6 +13,10 @@
   @apply outline-none;
 }
 
+.button-outline {
+  @apply bg-transparent border border-indigo text-indigo;
+}
+
 html {
   @apply font-sans text-grey-darkest;
 }

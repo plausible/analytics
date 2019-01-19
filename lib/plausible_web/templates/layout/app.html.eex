@@ -30,10 +30,10 @@
           <% true -> %>
             <ul class="list-reset flex">
               <li class="mr-6">
-               <%= link("Login", to: "/login") %>
+               <%= link("Login", to: "/login", class: "text-indigo font-bold text-sm py-2", style: "line-height: 33px;") %>
               </li>
               <li class="mr-6">
-               <%= link("Sign up free", to: "/onboarding") %>
+               <%= link("Sign up free", to: "/onboarding", class: "button button-outline py-2 px-4 text-sm") %>
               </li>
             </ul>
         <% end %>
