@@ -7,7 +7,6 @@
     <%= form_for @conn, "/login", [class: "bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16"], fn f -> %>
       <div class="flex items-center justify-between">
         <h2>Enter your email to get started</h2>
-        <span class="text-sm text-grey-dark">1/3 steps</span>
       </div>
       <div class="my-4">
         <%= email_input f, :email, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "example@email.com" %>
@@ -16,7 +15,7 @@
       <%= submit "Send login link", class: "button mt-4 w-full" %>
     <% end %>
     <p class="text-center text-grey text-xs">
-      ©2018 Acme Corp. All rights reserved.
+      ©2018 Plausible Insights. All rights reserved.
     </p>
   </div>
 </div>

@@ -14,7 +14,7 @@
       <%= submit "Send login link", class: "button mt-4 w-full" %>
     <% end %>
     <p class="text-center text-grey text-xs">
-      ©2019 Acme Corp. All rights reserved.
+      ©2019 Plausible Insights. All rights reserved.
     </p>
   </div>
 </div>

@@ -33,15 +33,41 @@
         <p class="mt-4 text-lg">Your analytics library should not be slowing down your customers experience.</p>
       </div>
     </div>
-    <div class="mt-20">
+
+    <div class="mt-20 max-w-md mx-auto">
+      <h2>FAQ</h2>
+      <h3 class="mt-4">How is Plausible better than Google Analytics?</h3>
+      <p class="mt-2">
+        It gives you basic analytics without subjecting your users to surveillance
+        by Google.
+        <br />
+        <br />
+        Besides the privacy concerns, I believe that an analytics tool can be beautiful,
+        simple and still powerful. You don't need to take a course to use Plausible.
+      </p>
+
+      <h3 class="mt-4">And who are you?</h3>
+      <p class="mt-2">My name is Uku; I’m a programmer from London who is frustrated with the analytics tools on the market.</p>
+
+      <h3 class="mt-4">What’s next?</h3>
+      <p class="mt-2">Get feedback from beta users, improve the product.
+      Once the product is stable and subscription payments are in place I can launch Plausible for real.
+      </p>
+
+      <h3 class="mt-4">Is there going to be a free tier?</h3>
+      <p class="mt-2">No. Google can provide their product for free because they use it to build advertising profiles at massive scale. I don’t do that, so even the smallest tier will have to be paid to keep the servers running.</p>
+    </div>
+    <div class="mt-20 beta-bg p-8">
       <h1 class="text-center">Join the public beta</h1>
       <div class="text-center text-lg mt-4 mb-4 max-w-md mx-auto">
-        Plausible is currently completely <b>free to use.</b>
+        Plausible is currently under construction and completely <b>free to use</b>.
+        The only requirement is that you agree to provide feedback when prompted.
         All beta users will receive a special discount once we launch.
       </div>
-    </div>
-    <div class="text-center mt-8">
-      <%= link("Sign up for free", to: "/onboarding", class: "button") %>
+
+      <div class="text-center mt-8">
+        <%= link("Sign up for free", to: "/onboarding", class: "button") %>
+      </div>
     </div>
   </div>
 </div>

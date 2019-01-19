@@ -15,6 +15,6 @@
       </div>
       <%= link("Start collecting data →", class: "button mt-4 w-full", to: "/#{@site.domain}") %>
     <% end %>
-    <p class="text-center text-grey text-xs">©2019 Acme Corp. All rights reserved.</p>
+    <p class="text-center text-grey text-xs">©2019 Plausible Insights. All rights reserved.</p>
   </div>
 </div>
