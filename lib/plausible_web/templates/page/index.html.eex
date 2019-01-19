@@ -35,8 +35,8 @@
     </div>
 
     <div class="mt-20 max-w-md mx-auto">
-      <h2>FAQ</h2>
-      <h3 class="mt-4">How is Plausible better than Google Analytics?</h3>
+      <h2 class="inline-block">Frequently Asked Questions</h2>
+      <h3 class="mt-6">How is Plausible better than Google Analytics?</h3>
       <p class="mt-2">
         It gives you basic analytics without subjecting your users to surveillance
         by Google.
@@ -46,15 +46,15 @@
         simple and still powerful. You don't need to take a course to use Plausible.
       </p>
 
-      <h3 class="mt-4">And who are you?</h3>
+      <h3 class="mt-6">And who are you?</h3>
       <p class="mt-2">My name is Uku; I’m a programmer in London who is frustrated with the analytics tools on the market.</p>
 
-      <h3 class="mt-4">What’s next?</h3>
+      <h3 class="mt-6">What’s next?</h3>
       <p class="mt-2">Get feedback from beta users, improve the product.
       Once the product is stable and subscription payments are in place I can launch Plausible for real.
       </p>
 
-      <h3 class="mt-4">Is there going to be a free tier once you launch?</h3>
+      <h3 class="mt-6">Is there going to be a free tier once you launch?</h3>
       <p class="mt-2">No. Google can provide their product for free because they use it to build advertising profiles at massive scale. I don’t do that, so even the smallest tier will have to be paid to keep the servers running. The beta is free for now though.</p>
     </div>
     <div class="mt-20 beta-bg p-8">
