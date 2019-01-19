@@ -208,7 +208,7 @@ defmodule PlausibleWeb.PageController do
       ), :count, :id)
 
       if pageviews == 0 do
-        render(conn, "waiting_first_pageview.html")
+        render(conn, "waiting_first_pageview.html", site: site)
       else
         show_analytics(conn, website, pageviews)
       end
