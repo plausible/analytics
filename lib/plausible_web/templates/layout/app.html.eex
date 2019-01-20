@@ -8,7 +8,6 @@
     <link rel="icon" type="image/png" sizes="16x16" href="<%= PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/16x16.png") %>">
     <title><%= assigns[:title] || "Plausible · Web analytics" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
-    <link href="https://fonts.googleapis.com/css?family=Comfortaa:700" rel="stylesheet">
   </head>
   <body class="flex flex-col h-full bg-grey-lightest">
     <div class="<%= if !@conn.assigns[:landing_nav] do "border-b border-grey-light bg-white" end %>">
