@@ -5,6 +5,7 @@ defmodule PlausibleWeb.Email do
     new_email()
     |> to(email)
     |> from("uku@plausible.io")
+    |> put_header("X-Mailgun-Tag", "login-email")
     |> subject("Plausible login link")
     |> render("login_email.html", login_link: login_link)
   end
