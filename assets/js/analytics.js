@@ -45,13 +45,14 @@
       // Basic bot detection.
       if (userAgent && userAgent.search(/(bot|spider|crawl)/ig) > -1) return;
 
-      var uid = getCookie('nm_uid')
+      var existingUid = getCookie('nm_uid');
+      var uid = existingUid || pseudoUUIDv4();
       var sid = getCookie('nm_sid') || pseudoUUIDv4();
 
       var url = window.location.protocol + '//' + window.location.hostname + window.location.pathname;
       var postBody = {
         url: url,
-        new_visitor: !uid,
+        new_visitor: !existingUid,
         uid: uid,
         sid: sid
       };
@@ -67,8 +68,8 @@
       request.send(JSON.stringify(postBody));
         request.onreadystatechange = function() {
           if (request.readyState == XMLHttpRequest.DONE) {
-            if (!uid) {
-              setCookie('nm_uid', pseudoUUIDv4())
+            if (!existingUid) {
+              setCookie('nm_uid', uid)
             }
             setCookie('nm_sid', sid, 30)
           }
