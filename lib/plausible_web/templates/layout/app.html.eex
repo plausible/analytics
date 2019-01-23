@@ -25,6 +25,7 @@
         g.clearUserCookie=function(){};
     })(window,document,window['_fs_namespace'],'script','user');
     </script>
+    <script async type="text/javascript" src="https://plausible.io/js/analytics.js"></script>
   </head>
   <body class="flex flex-col h-full bg-grey-lightest">
     <div class="<%= if !@conn.assigns[:landing_nav] do "border-b border-grey-light bg-white" end %>">
