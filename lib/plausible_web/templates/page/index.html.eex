@@ -3,7 +3,7 @@
   <div class="container flex mx-auto">
     <section class="w-3/5">
       <div class="pt-24"></div>
-      <h1 class="tracking-wide text-4xl">
+      <h1 class="text-4xl">
         Simple analytics for your website
       </h1>
       <p class="font-light text-2xl mt-3">
@@ -51,40 +51,37 @@
     </div>
   </div>
   <div class="container mx-auto">
-    <div class="mt-24 max-w-md mx-auto relative">
+    <div class="mt-24 max-w-md mx-auto relative leading-normal">
       <div class="polka-dots h-24 w-24 absolute pin-t pin-r"></div>
       <h2 class="inline-block">Frequently Asked Questions</h2>
       <h3 class="mt-6">How is Plausible better than Google Analytics?</h3>
-      <p class="mt-2">
+      <p>
         It gives you basic analytics without subjecting your users to surveillance
-        by Google.
-        <br />
-        <br />
-        Besides the privacy concerns, I believe that an analytics tool can be <b>beautiful</b>,
+        by Google. Besides the privacy concerns, I believe that an analytics tool can be <b>beautiful</b>,
         <b>simple</b> and still <b>powerful</b>. Google Analytics is certainly powerful, but it's
         severy lacking in the other categories.
       </p>
 
       <h3 class="mt-6">And who are you?</h3>
-      <p class="mt-2">
+      <p>
       My name is <b>Uku</b>; I’m a developer living in London.
       </p>
 
       <h3 class="mt-6">What’s next?</h3>
-      <p class="mt-2">
+      <p>
       I'm looking to sign up a decent amount of beta users so we can <b>battle-test</b> the product in the real world.
       After a couple of months everything should be ready to launch for real.
       </p>
 
       <h3 class="mt-6">Will there be a free tier once you launch?</h3>
-      <p class="mt-2">
+      <p>
       No. Google can provide their product for free because they use it to build advertising profiles at massive scale. I don’t do that, so even the smallest tier will have to be paid to keep the servers running.
       </p>
       <a class="block mt-8 text-indigo" href="mailto:uku.taht@gmail.com">Ask a question</a>
     </div>
     <div class="mt-24 beta-bg p-8">
       <h1 class="text-center">Join the public beta</h1>
-      <div class="text-center text-lg mt-4 mb-4 max-w-md mx-auto">
+      <div class="text-center text-lg mt-4 mb-4 max-w-md mx-auto leading-normal">
         Plausible is currently under construction and completely <b>free to use</b>.
         The only requirement is that you agree to provide feedback when prompted.
         All beta users will receive a special discount once we launch.
