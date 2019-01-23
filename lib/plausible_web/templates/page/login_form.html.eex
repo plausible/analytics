@@ -1,7 +1,7 @@
 <div class="bg-grey-lightest" style="min-height: 100vh; width: 100%; position: absolute; top: 0;">
   <div class="w-full max-w-sm mx-auto mt-8">
     <div class="text-center w-full mb-8">
-      <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/logo_48w.png"), style: "height: 28px; margin-right: 4px;") %>
+      <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/48x48.png"), style: "height: 28px; margin-right: 4px;") %>
       <a href="/" class="logo-text text-green text-4xl no-underline">Plausible</a>
     </div>
     <%= form_for @conn, "/login", [class: "bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16"], fn f -> %>
