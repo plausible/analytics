@@ -31,6 +31,10 @@ blockquote {
 
 @tailwind utilities;
 
+.light-text {
+  color: #F0F4F8;
+}
+
 .transition {
   transition: all .1s ease-in;
 }
