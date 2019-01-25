@@ -29,6 +29,10 @@ blockquote {
   @apply my-4 py-2 px-4 border-l-4 border-grey;
 }
 
+.logo-text {
+  @apply font-black tracking-wide text-indigo text-4xl;
+}
+
 @tailwind utilities;
 
 .light-text {
@@ -37,10 +41,6 @@ blockquote {
 
 .transition {
   transition: all .1s ease-in;
-}
-
-.logo-text {
-  @apply font-black tracking-wide text-indigo text-4xl;
 }
 
 .landing-bg {
