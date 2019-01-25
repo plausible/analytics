@@ -8,25 +8,8 @@
     <link rel="icon" type="image/png" sizes="16x16" href="<%= PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/16x16.png") %>">
     <title><%= assigns[:title] || "Plausible · Web analytics" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
-    <script>
-    window['_fs_debug'] = false;
-    window['_fs_host'] = 'fullstory.com';
-    window['_fs_org'] = 'FJFV1';
-    window['_fs_namespace'] = 'FS';
-    (function(m,n,e,t,l,o,g,y){
-        if (e in m) {if(m.console && m.console.log) { m.console.log('FullStory namespace conflict. Please set window["_fs_namespace"].');} return;}
-        g=m[e]=function(a,b,s){g.q?g.q.push([a,b,s]):g._api(a,b,s);};g.q=[];
-        o=n.createElement(t);o.async=1;o.src='https://'+_fs_host+'/s/fs.js';
-        y=n.getElementsByTagName(t)[0];y.parentNode.insertBefore(o,y);
-        g.identify=function(i,v,s){g(l,{uid:i},s);if(v)g(l,v,s)};g.setUserVars=function(v,s){g(l,v,s)};g.event=function(i,v,s){g('event',{n:i,p:v},s)};
-        g.shutdown=function(){g("rec",!1)};g.restart=function(){g("rec",!0)};
-        g.consent=function(a){g("consent",!arguments.length||a)};
-        g.identifyAccount=function(i,v){o='account';v=v||{};v.acctId=i;g(o,v)};
-        g.clearUserCookie=function(){};
-    })(window,document,window['_fs_namespace'],'script','user');
-    </script>
-    <script async type="text/javascript" src="https://plausible.io/js/analytics.js"></script>
   </head>
+  <%= render("_tracking.html") %>
   <body class="flex flex-col h-full bg-grey-lightest">
     <div class="<%= if !@conn.assigns[:landing_nav] do "border-b border-grey-light bg-white" end %>">
       <nav class="mx-auto container flex items-center justify-between flex-wrap py-6">
