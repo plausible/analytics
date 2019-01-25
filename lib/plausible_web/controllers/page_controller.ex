@@ -217,6 +217,14 @@ defmodule PlausibleWeb.PageController do
     end
   end
 
+  def privacy(conn, _params) do
+    render(conn, "privacy.html")
+  end
+
+  def terms(conn, _params) do
+    render(conn, "terms.html")
+  end
+
   defp get_date_range(%{"period" => "today"}) do
     date_range = Date.range(Timex.today(), Timex.today())
     {"today", date_range}

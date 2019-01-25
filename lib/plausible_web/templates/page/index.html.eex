@@ -51,7 +51,7 @@
     </div>
   </div>
   <div class="container mx-auto">
-    <div class="mt-24 max-w-md mx-auto relative leading-normal">
+    <div class="mt-24 max-w-md mx-auto relative leading-normal text-lg">
       <div class="polka-dots h-24 w-24 absolute pin-t pin-r"></div>
       <h2 class="inline-block">Frequently Asked Questions</h2>
       <h3 class="mt-6">How is Plausible better than Google Analytics?</h3>
@@ -79,12 +79,12 @@
       </p>
       <a class="block mt-8 text-indigo" href="mailto:uku@plausible.io">Ask a question</a>
     </div>
-    <div class="my-24 beta-bg p-8">
+    <div class="my-24 beta-bg p-8 text-lg">
       <h1 class="text-center">Join the public beta</h1>
       <div class="text-center text-lg mt-4 mb-4 max-w-md mx-auto leading-normal">
-        Plausible is currently under construction and completely <b>free to use</b>.
-        The only requirement is that you agree to provide feedback when prompted.
-        All beta users will receive a special discount once we launch.
+        Plausible is currently in beta, which means it's not completely finished, but at the moment it's completely <b>free to use</b>.
+        Although it would be super useful if you could provide some feedback to me once you've had a chance to use it.
+        All beta users will receive a special discount once it's launched!
       </div>
 
       <div class="text-center mt-8">

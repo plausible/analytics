@@ -144,3 +144,13 @@ clip-path: polygon(10% 0, 100% 90%, 100% 0);
     transform: scale(.8);
   }
 }
+
+.just-text h1, .just-text h2, .just-text h3 {
+  margin-top: 1em;
+  margin-bottom: .5em;
+}
+
+.just-text p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}

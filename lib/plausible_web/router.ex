@@ -33,6 +33,8 @@ defmodule PlausibleWeb.Router do
     post "/logout", PageController, :logout
     get "/sites/new", PageController, :new_site
     post "/sites", PageController, :create_site
+    get "/privacy", PageController, :privacy
+    get "/terms", PageController, :terms
     get "/:website/snippet", PageController, :add_snippet
     get "/:website", PageController, :analytics
   end
