@@ -1,0 +1,6 @@
+Hi <%= @name %>,
+<br /><br />
+Thank you for signing up to Plausible. <a href="<%= @link %>">Click here</a> to activate your account.
+<br /><br />
+Best,<br />
+Uku

@@ -4,6 +4,7 @@ defmodule Plausible.Auth.User do
 
   schema "users" do
     field :email, :string
+    field :name, :string
 
     has_many :site_memberships, Plausible.Site.Membership
     has_many :sites, through: [:site_memberships, :site]
@@ -13,7 +14,8 @@ defmodule Plausible.Auth.User do
 
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:email])
-    |> validate_required([:email])
+    |> cast(attrs, [:email, :name])
+    |> validate_required([:email, :name])
+    |> unique_constraint(:email)
   end
 end

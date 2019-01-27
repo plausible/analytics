@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.PageController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  @half_hour_in_seconds 30 * 60
 
   def index(conn, _params) do
     if get_session(conn, :current_user_email) do

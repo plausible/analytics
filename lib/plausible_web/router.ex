@@ -24,11 +24,13 @@ defmodule PlausibleWeb.Router do
   scope "/", PlausibleWeb do
     pipe_through :browser
 
-    get "/onboarding", AuthController, :onboarding
+    get "/register", AuthController, :register_form
+    post "/register", AuthController, :register
+    get "/claim-activation", AuthController, :claim_activation_link
     get "/login", AuthController, :login_form
     post "/login", AuthController, :send_login_link
-    post "/logout", AuthController, :logout
     get "/claim-login", AuthController, :claim_login_link
+    post "/logout", AuthController, :logout
 
     get "/", PageController, :index
     get "/sites/new", PageController, :new_site

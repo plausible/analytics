@@ -4,7 +4,7 @@
       <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/48x48.png"), style: "height: 28px; margin-right: 4px;") %>
       <a href="/" class="logo-text text-4xl no-underline">Plausible</a>
     </div>
-    <%= form_for @conn, "/onboarding/site", [class: "bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16"], fn f -> %>
+    <%= form_for @conn, "/", [class: "bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16"], fn f -> %>
       <div class="flex items-center justify-between">
         <h2>Add javascript snippet</h2>
       </div>

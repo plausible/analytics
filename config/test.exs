@@ -16,3 +16,6 @@ config :plausible, Plausible.Repo,
   database: "plausible_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
+
+config :plausible, Plausible.Mailer,
+  adapter: Bamboo.TestAdapter
