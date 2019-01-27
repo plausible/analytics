@@ -1,6 +1,6 @@
 <div class="pt-16"></div>
 <div class="max-w-md mx-auto flex justify-between">
-  <h1>Your websites</h1>
+  <h1>My websites</h1>
   <a href="/sites/new" class="button">+ Add a website</a>
 </div>
 <div class="flex items-center justify-center w-full py-8">

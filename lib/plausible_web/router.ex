@@ -32,6 +32,8 @@ defmodule PlausibleWeb.Router do
     post "/login", AuthController, :login
     get "/claim-login", AuthController, :claim_login_link
     post "/logout", AuthController, :logout
+    get "/settings", AuthController, :user_settings
+    put "/settings", AuthController, :save_settings
 
     get "/", PageController, :index
     get "/sites/new", PageController, :new_site

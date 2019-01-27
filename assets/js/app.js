@@ -17,3 +17,11 @@ if (trigger) {
     }
   })
 }
+
+const flash = document.getElementById('flash')
+
+if (flash) {
+  setTimeout(function() {
+    flash.style.display = 'none'
+  }, 2500)
+}

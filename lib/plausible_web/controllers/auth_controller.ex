@@ -72,13 +72,30 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
+  def user_settings(conn, _params) do
+    changeset = Auth.User.changeset(conn.assigns[:current_user])
+    render(conn, "user_settings.html", changeset: changeset)
+  end
+
+  def save_settings(conn, %{"user" => user_params}) do
+    changes = Auth.User.changeset(conn.assigns[:current_user], user_params)
+    case Repo.update(changes) do
+      {:ok, user} ->
+        conn
+        |> put_flash(:success, "Account settings saved succesfully")
+        |> redirect(to: "/settings")
+      {:error, changeset} ->
+        render(conn, "user_settings.html", changeset: changeset)
+    end
+  end
+
   def logout(conn, _params) do
     conn
     |> configure_session(drop: true)
     |> redirect(to: "/")
   end
 
-  def require_logged_out(conn, _opts) do
+  defp require_logged_out(conn, _opts) do
     cond do
       get_session(conn, :current_user_email) ->
         conn

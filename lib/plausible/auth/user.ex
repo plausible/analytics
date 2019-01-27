@@ -12,7 +12,7 @@ defmodule Plausible.Auth.User do
     timestamps()
   end
 
-  def changeset(user, attrs) do
+  def changeset(user, attrs \\ %{}) do
     user
     |> cast(attrs, [:email, :name])
     |> validate_required([:email, :name])

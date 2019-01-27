@@ -1,0 +1,21 @@
+<div class="max-w-md mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16">
+  <div class="flex items-center justify-between">
+    <h2>Account settings</h2>
+  </div>
+
+  <div class="my-4 border-b border-grey-light"></div>
+
+  <%= form_for @changeset, "/settings", [class: "max-w-xs"], fn f -> %>
+    <div class="my-4">
+      <%= label f, :name, class: "block text-grey-darker text-sm font-bold mb-2" %>
+      <%= text_input f, :name, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light" %>
+      <%= error_tag f, :name %>
+    </div>
+    <div class="my-4">
+      <%= label f, :email, class: "block text-grey-darker text-sm font-bold mb-2" %>
+      <%= email_input f, :email, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light" %>
+      <%= error_tag f, :email %>
+    </div>
+    <%= submit "Save changes", class: "button mt-4" %>
+  <% end %>
+</div>
