@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Router do
     plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug PlausibleWeb.AuthPlug
   end
 
   pipeline :external_api do
@@ -41,9 +42,9 @@ defmodule PlausibleWeb.Router do
     get "/:website", PageController, :analytics
   end
 
-   scope "/api", PlausibleWeb do
-     pipe_through :external_api
+  scope "/api", PlausibleWeb do
+    pipe_through :external_api
 
-     post "/page", ApiController, :page
-   end
+    post "/page", ApiController, :page
+  end
 end

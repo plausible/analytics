@@ -154,3 +154,27 @@ clip-path: polygon(10% 0, 100% 90%, 100% 0);
   margin-top: 0;
   margin-bottom: 1rem;
 }
+
+.dropdown-content::before {
+    top: -16px;
+    right: 64px;
+    left: auto;
+}
+.dropdown-content::before {
+    border: 8px solid transparent;
+    border-bottom-color: rgba(27,31,35,0.15);
+}
+.dropdown-content::before, .dropdown-content::after {
+    position: absolute;
+    display: inline-block;
+    content: "";
+  }
+.dropdown-content::after {
+    border: 7px solid transparent;
+    border-bottom-color: #fff;
+}
+.dropdown-content::after {
+    top: -14px;
+    right: 65px;
+    left: auto;
+}
