@@ -15,6 +15,13 @@
       g.identifyAccount=function(i,v){o='account';v=v||{};v.acctId=i;g(o,v)};
       g.clearUserCookie=function(){};
   })(window,document,window['_fs_namespace'],'script','user');
+
+  <%= if @conn.assigns[:current_user] do %>
+    FS.identify('<%= @conn.assigns[:current_user].id %>', {
+      displayName: '<%= @conn.assigns[:current_user].name %>',
+      email: '<%= @conn.assigns[:current_user].email %>'
+    });
+  <% end %>
   </script>
   <script async type="text/javascript" src="https://plausible.io/js/analytics.js"></script>
 <% end %>

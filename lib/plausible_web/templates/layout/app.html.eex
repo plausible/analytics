@@ -9,7 +9,7 @@
     <title><%= assigns[:title] || "Plausible · Web analytics" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
   </head>
-  <%= render("_tracking.html") %>
+  <%= render("_tracking.html", assigns) %>
   <body class="flex flex-col h-full bg-grey-lightest">
     <div class="<%= if !@conn.assigns[:landing_nav] do "border-b-2 border-grey-lighter bg-white" end %>">
       <nav class="mx-auto container flex items-center justify-between flex-wrap py-6">
