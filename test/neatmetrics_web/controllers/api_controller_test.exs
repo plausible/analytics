@@ -107,5 +107,46 @@ defmodule PlausibleWeb.ApiControllerTest do
       assert response(conn, 202) == ""
       assert pageview.referrer_source == "Facebook"
     end
+
+    test "if it's an :unknown referrer, just the domain is used", %{conn: conn} do
+      params = %{
+        url: "http://gigride.live/",
+        referrer: "https://indiehackers.com",
+        new_visitor: false,
+        sid: "123",
+        uid: "321"
+      }
+
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/page", Jason.encode!(params))
+
+      pageview = Repo.one(Plausible.Pageview)
+
+      assert response(conn, 202) == ""
+      assert pageview.referrer_source == "indiehackers.com"
+    end
+
+    test "if the referrer is not http or https, it is considered unknown", %{conn: conn} do
+      params = %{
+        url: "http://gigride.live/",
+        referrer: "android-app://com.google.android.gm",
+        new_visitor: false,
+        sid: "123",
+        uid: "321"
+      }
+
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/page", Jason.encode!(params))
+
+      pageview = Repo.one(Plausible.Pageview)
+
+      assert response(conn, 202) == ""
+      assert pageview.referrer_source == "Unknown"
+    end
+
   end
 end

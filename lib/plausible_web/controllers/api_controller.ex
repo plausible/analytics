@@ -94,8 +94,20 @@ defmodule PlausibleWeb.ApiController do
 
   defp referrer_source(ref) do
     case ref.source do
-      :unknown -> "Unknown"
+      :unknown -> clean_uri(ref.referer) || "Unknown"
+
       source -> source
+    end
+  end
+
+  defp clean_uri(uri) do
+    uri = URI.parse(uri)
+    if uri.scheme in ["http", "https"] do
+      domain = uri.host |> String.replace_leading("www", "")
+      path = uri.path || ""
+      domain <> path
+    else
+      false
     end
   end
 end
