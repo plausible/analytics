@@ -138,12 +138,11 @@ defmodule PlausibleWeb.PageController do
     )
   end
 
-
   def analytics(conn, %{"website" => website} = params) do
     site = Repo.get_by(Plausible.Site, domain: website)
 
-    if site do
-      {period, date_range} = get_date_range(params)
+    if site && current_user_can_access?(conn, site) do
+      {_period, date_range} = get_date_range(params)
 
       pageviews = Repo.aggregate(
         from(p in Plausible.Pageview,
@@ -167,6 +166,21 @@ defmodule PlausibleWeb.PageController do
 
   def terms(conn, _params) do
     render(conn, "terms.html")
+  end
+
+  defp current_user_can_access?(_conn, %Plausible.Site{domain: "gigride.live"}) do
+    true
+  end
+
+  defp current_user_can_access?(conn, site) do
+    case get_session(conn, :current_user_email) do
+      nil -> false
+      email ->
+        user = Repo.get_by(Plausible.Auth.User, email: email)
+        |> Repo.preload(:sites)
+
+        Enum.any?(user.sites, fn user_site -> user_site == site end)
+    end
   end
 
   defp get_date_range(%{"period" => "today"}) do
@@ -194,7 +208,7 @@ defmodule PlausibleWeb.PageController do
     case get_session(conn, :current_user_email) do
       nil ->
         redirect(conn, to: "/login") |> Plug.Conn.halt
-      email ->
+      _email ->
         conn
     end
   end
