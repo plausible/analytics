@@ -28,7 +28,7 @@ defmodule PlausibleWeb.Router do
     post "/register", AuthController, :register
     get "/claim-activation", AuthController, :claim_activation_link
     get "/login", AuthController, :login_form
-    post "/login", AuthController, :send_login_link
+    post "/login", AuthController, :login
     get "/claim-login", AuthController, :claim_login_link
     post "/logout", AuthController, :logout
 

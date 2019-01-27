@@ -2,6 +2,8 @@ defmodule PlausibleWeb.PageController do
   use PlausibleWeb, :controller
   use Plausible.Repo
 
+  plug :require_account when action not in [:index, :privacy, :terms, :analytics]
+
   def index(conn, _params) do
     if get_session(conn, :current_user_email) do
       user = Plausible.Repo.get_by!(Plausible.Auth.User, email: get_session(conn, :current_user_email))
@@ -186,5 +188,14 @@ defmodule PlausibleWeb.PageController do
 
   defp get_date_range(_) do
     get_date_range(%{"period" => "30days"})
+  end
+
+  defp require_account(conn, _opts) do
+    case get_session(conn, :current_user_email) do
+      nil ->
+        redirect(conn, to: "/login") |> Plug.Conn.halt
+      email ->
+        conn
+    end
   end
 end

@@ -4,6 +4,8 @@ defmodule PlausibleWeb.AuthController do
   alias Plausible.Auth
   require Logger
 
+  plug :require_logged_out when action in [:register_form, :register, :login_form, :login]
+
   def register_form(conn, _params) do
     if get_session(conn, :current_user_email) do
       redirect(conn, to: "/")
@@ -38,7 +40,7 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  def send_login_link(conn, %{"email" => email}) do
+  def login(conn, %{"email" => email}) do
     token = Auth.Token.sign_login(email)
     url = PlausibleWeb.Endpoint.url() <> "/claim-login?token=#{token}"
     Logger.debug(url)
@@ -76,4 +78,14 @@ defmodule PlausibleWeb.AuthController do
     |> redirect(to: "/")
   end
 
+  def require_logged_out(conn, _opts) do
+    cond do
+      get_session(conn, :current_user_email) ->
+        conn
+        |> redirect(to: "/")
+        |> Plug.Conn.halt
+      :else ->
+        conn
+    end
+  end
 end
