@@ -1,32 +1,7 @@
 defmodule PlausibleWeb.AuthControllerTest do
   use PlausibleWeb.ConnCase
   use Bamboo.Test
-  alias Plausible.Auth
-
-  defp create_user(_) do
-    {:ok, user} = Auth.create_user("Jane Doe", "user@example.com")
-    {:ok, user: user}
-  end
-
-  defp log_in(%{user: user, conn: conn}) do
-    opts =
-      Plug.Session.init(
-        store: :cookie,
-        key: "foobar",
-        encryption_salt: "encrypted cookie salt",
-        signing_salt: "signing salt",
-        log: false,
-        encrypt: false
-      )
-
-    conn =
-      conn
-      |> Plug.Session.call(opts)
-      |> fetch_session()
-      |> put_session(:current_user_email, user.email)
-
-    {:ok, conn: conn}
-  end
+  import Plausible.TestUtils
 
   describe "GET /onboarding" do
     test "shows the register form", %{conn: conn} do

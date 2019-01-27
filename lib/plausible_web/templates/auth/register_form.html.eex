@@ -14,8 +14,8 @@
       </div>
       <div class="my-4">
         <%= label f, :email, class: "block text-grey-darker text-sm font-bold mb-2" %>
+        <p class="text-grey-dark text-xs mt-1 mb-2">No spam, guaranteed.</p>
         <%= email_input f, :email, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "example@email.com" %>
-        <p class="text-grey-dark text-xs mt-2">No spam, guaranteed.</p>
       </div>
       <%= submit "Send activation link", class: "button mt-4 w-full" %>
     <% end %>

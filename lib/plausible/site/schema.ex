@@ -4,13 +4,15 @@ defmodule Plausible.Site do
 
   schema "sites" do
     field :domain, :string
+    field :timezone, :string
 
     timestamps()
   end
 
-  def changeset(user, attrs) do
+  def changeset(user, attrs \\ %{}) do
     user
-    |> cast(attrs, [:domain])
-    |> validate_required([:domain])
+    |> cast(attrs, [:domain, :timezone])
+    |> validate_required([:domain, :timezone])
+    |> unique_constraint(:domain)
   end
 end
