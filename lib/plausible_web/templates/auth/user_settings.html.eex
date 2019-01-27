@@ -1,4 +1,4 @@
-<div class="max-w-md mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16">
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-4 border-indigo-lightest px-8 pt-6 pb-8 mb-4 mt-16">
   <div class="flex items-center justify-between">
     <h2>Account settings</h2>
   </div>
@@ -18,4 +18,15 @@
     </div>
     <%= submit "Save changes", class: "button mt-4" %>
   <% end %>
+</div>
+
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-4 border-red-dark px-8 pt-6 pb-8 my-16">
+  <div class="flex items-center justify-between">
+    <h2>Delete account</h2>
+  </div>
+
+  <div class="my-4 border-b border-grey-light"></div>
+
+  <p class="text-lg">Deleting your account removes all sites and stats you've collected</p>
+  <%= link "Delete my account ", to: "/me", method: :delete, class: "button bg-red-dark mt-4", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"] %>
 </div>

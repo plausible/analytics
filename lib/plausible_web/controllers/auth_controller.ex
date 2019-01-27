@@ -80,13 +80,31 @@ defmodule PlausibleWeb.AuthController do
   def save_settings(conn, %{"user" => user_params}) do
     changes = Auth.User.changeset(conn.assigns[:current_user], user_params)
     case Repo.update(changes) do
-      {:ok, user} ->
+      {:ok, _user} ->
         conn
         |> put_flash(:success, "Account settings saved succesfully")
         |> redirect(to: "/settings")
       {:error, changeset} ->
         render(conn, "user_settings.html", changeset: changeset)
     end
+  end
+
+  def delete_me(conn, _params) do
+    user = conn.assigns[:current_user] |> Repo.preload(:sites)
+
+    for site_membership <- user.site_memberships do
+      Repo.delete!(site_membership)
+    end
+
+    for site <- user.sites do
+      Repo.delete!(site)
+    end
+
+    Repo.delete!(user)
+
+    conn
+    |> configure_session(drop: true)
+    |> redirect(to: "/")
   end
 
   def logout(conn, _params) do

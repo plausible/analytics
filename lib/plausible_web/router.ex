@@ -34,6 +34,7 @@ defmodule PlausibleWeb.Router do
     post "/logout", AuthController, :logout
     get "/settings", AuthController, :user_settings
     put "/settings", AuthController, :save_settings
+    delete "/me", AuthController, :delete_me
 
     get "/", PageController, :index
     get "/sites/new", PageController, :new_site

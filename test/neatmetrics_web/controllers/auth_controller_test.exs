@@ -1,6 +1,32 @@
 defmodule PlausibleWeb.AuthControllerTest do
   use PlausibleWeb.ConnCase
   use Bamboo.Test
+  alias Plausible.Auth
+
+  defp create_user(_) do
+    {:ok, user} = Auth.create_user("Jane Doe", "user@example.com")
+    {:ok, user: user}
+  end
+
+  defp log_in(%{user: user, conn: conn}) do
+    opts =
+      Plug.Session.init(
+        store: :cookie,
+        key: "foobar",
+        encryption_salt: "encrypted cookie salt",
+        signing_salt: "signing salt",
+        log: false,
+        encrypt: false
+      )
+
+    conn =
+      conn
+      |> Plug.Session.call(opts)
+      |> fetch_session()
+      |> put_session(:current_user_email, user.email)
+
+    {:ok, conn: conn}
+  end
 
   describe "GET /onboarding" do
     test "shows the register form", %{conn: conn} do
@@ -10,13 +36,13 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "registering sends an activation link", %{conn: conn} do
-      post(conn, "/register", [name: "Jane Doe", email: "user@example.com"])
+      post(conn, "/register", name: "Jane Doe", email: "user@example.com")
 
       assert_email_delivered_with(subject: "Plausible activation link")
     end
 
     test "user sees success page after registering", %{conn: conn} do
-      conn = post(conn, "/register", [name: "Jane Doe", email: "user@example.com"])
+      conn = post(conn, "/register", name: "Jane Doe", email: "user@example.com")
 
       assert html_response(conn, 200) =~ "Success!"
     end
@@ -54,27 +80,20 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "submitting the form sends a login link", %{conn: conn} do
-      post(conn, "/login", [email: "user@example.com"])
+      post(conn, "/login", email: "user@example.com")
 
       assert_email_delivered_with(subject: "Plausible login link")
     end
 
     test "user sees success page after registering", %{conn: conn} do
-      conn = post(conn, "/login", [email: "user@example.com"])
+      conn = post(conn, "/login", email: "user@example.com")
 
       assert html_response(conn, 200) =~ "Success!"
     end
   end
 
-  def create_user() do
-    Plausible.Auth.create_user("Jane Doe", "user@example.com")
-  end
-
   describe "GET /claim-login" do
-    setup do
-      {:ok, user} = Plausible.Auth.create_user("Jane Doe", "user@example.com")
-      {:ok, %{user: user}}
-    end
+    setup [:create_user]
 
     test "logs the user in", %{conn: conn, user: user} do
       token = Plausible.Auth.Token.sign_login(user.email)
@@ -95,6 +114,15 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = get(conn, "/claim-login?token=#{token}")
 
       assert conn.status == 401
+    end
+  end
+
+  describe "GET /settings" do
+    setup [:create_user, :log_in]
+
+    test "shows the form", %{conn: conn} do
+      conn = get(conn, "/settings")
+      assert html_response(conn, 200) =~ "Account settings"
     end
   end
 end
