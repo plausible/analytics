@@ -111,7 +111,7 @@ defmodule PlausibleWeb.ApiControllerTest do
     test "if it's an :unknown referrer, just the domain is used", %{conn: conn} do
       params = %{
         url: "http://gigride.live/",
-        referrer: "https://indiehackers.com",
+        referrer: "https://www.indiehackers.com/landing-page-feedback",
         new_visitor: false,
         sid: "123",
         uid: "321"

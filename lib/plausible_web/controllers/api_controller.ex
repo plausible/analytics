@@ -101,11 +101,9 @@ defmodule PlausibleWeb.ApiController do
   end
 
   defp clean_uri(uri) do
-    uri = URI.parse(uri)
+    uri = URI.parse(String.trim(uri))
     if uri.scheme in ["http", "https"] do
-      domain = uri.host |> String.replace_leading("www", "")
-      path = uri.path || ""
-      domain <> path
+      String.replace_leading(uri.host, "www.", "")
     else
       false
     end
