@@ -12,7 +12,7 @@
   <%= render("_tracking.html", assigns) %>
   <body class="flex flex-col h-full bg-grey-lightest">
     <div class="<%= if !@conn.assigns[:landing_nav] do "border-b-2 border-grey-lighter bg-white" end %>">
-      <nav class="mx-auto container flex items-center justify-between flex-wrap py-6">
+      <nav class="container flex items-center justify-between flex-wrap py-6">
         <div class="flex items-center flex-no-shrink">
           <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/48x48.png"), style: "height: 28px; margin-right: 6px;") %>
           <a href="/" class="logo-text">Plausible</a>
@@ -38,7 +38,7 @@
               <li class="mr-6">
                <%= link("Login", to: "/login", class: "text-indigo font-bold text-sm py-2", style: "line-height: 33px;") %>
               </li>
-              <li class="mr-6">
+              <li class="mr-6 hidden sm:block">
                <%= link("Sign up free", to: "/register", class: "button button-outline py-2 px-4 text-sm") %>
               </li>
             </ul>

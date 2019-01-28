@@ -1,5 +1,5 @@
 <div class="pt-16"></div>
-<div class="container mx-auto pb-32" style="max-width: 1024px;">
+<div class="container pb-32" style="max-width: 1024px;">
   <%= form_for @conn, "", [class: "w-full"], fn f -> %>
     <div class="inline-block relative w-64">
       <%= select f, :period, [{"Last 7 days", "7days"}, {"Last 30 days", "30days"}], class: "block appearance-none w-full bg-white cursor-pointer border border-grey-light hover:border-grey px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none", onchange: "location.search = '?period=' + this.value;", value: @selected_period %>
