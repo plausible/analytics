@@ -78,6 +78,9 @@
 
     page()
   } catch (e) {
+    var url = apiHost + '/api/error';
+    if (e && e.message) url = url + '?message=' + encodeURIComponent(e.message);
+    new Image().src = url;
     throw e
   }
 })(window, BASE_URL);

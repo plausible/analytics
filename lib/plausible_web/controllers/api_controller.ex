@@ -14,6 +14,11 @@ defmodule PlausibleWeb.ApiController do
     end
   end
 
+  def error(conn, params) do
+    Sentry.capture_message("JS snippet error", extra: %{message: params["message"]})
+    send_resp(conn, 200, "")
+  end
+
   defp create_pageview(conn) do
     params = parse_body(conn)
     uri = URI.parse(params["url"])
