@@ -4,6 +4,7 @@
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content="A lightweight, non-intrusive alternative to Google Analytics."/>
     <link rel="icon" type="image/png" sizes="32x32" href="<%= PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/32x32.png") %>">
     <link rel="icon" type="image/png" sizes="16x16" href="<%= PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/16x16.png") %>">
     <title><%= assigns[:title] || "Plausible · Web analytics" %></title>
@@ -27,7 +28,6 @@
             </div>
 
             <div data-dropdown style="top: 42px; right: 0px; width: 185px;" class="dropdown-content hidden absolute pin-r bg-white border border-grey-light rounded shadow-md">
-              <%= link("My sites", to: "/", class: "block py-3 px-2 border-b border-grey-light hover:bg-grey-lighter") %>
               <%= link("Settings", to: "/settings", class: "block py-3 px-2 border-b border-grey-light hover:bg-grey-lighter") %>
               <%= link("Log out", to: "/logout", method: :post, class: "block py-3 px-2 hover:bg-grey-lighter") %>
             </div>

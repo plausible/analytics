@@ -5,8 +5,9 @@
     <h2>Waiting for first pageview</h2>
     <div class="my-4">
       <div class="pulsating-circle"></div>
-      <p class="text-grey-dark text-sm absolute pin-l pin-b mb-6 w-full text-center">
-        You can load <a href="//<%= @site.domain %>" target="_blank"><%= @site.domain %></a> to trigger the first pageview.
+      <p class="text-grey-dark text-sm absolute pin-l pin-b mb-6 w-full text-center leading-normal">
+        You can load <a href="//<%= @site.domain %>" target="_blank"><%= @site.domain %></a> to trigger the first pageview.<br />
+        Not working? Contact <a href="mailto:uku@plausible.io">uku@plausible.io</a> to get set up.
       </p>
     </div>
   </div>
