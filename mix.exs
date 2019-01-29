@@ -48,7 +48,7 @@ defmodule Plausible.MixProject do
       {:timex, "~> 3.1"},
       {:ua_inspector, "~> 0.18"},
       {:bamboo, "~> 1.1"},
-      {:sentry, "~> 6.4"}
+      {:sentry, "~> 7.0"}
     ]
   end
 
