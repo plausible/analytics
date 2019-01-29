@@ -1,1 +1,5 @@
-<a href="<%= @login_link %>">Click here</a> to log in to Plausible.
+<a href="<%= @login_link %>">Click here</a> to log in to Plausible.<br /><br />
+The link will expire in 30 minutes. If you don't use it by then, you can request another login link.
+<br /><br />
+Best,<br />
+Uku
