@@ -19,7 +19,7 @@ defmodule Plausible.MixProject do
   def application do
     [
       mod: {Plausible.Application, []},
-      extra_applications: [:logger, :runtime_tools, :timex, :ua_inspector, :ref_inspector, :bamboo]
+      extra_applications: [:logger, :sentry, :runtime_tools, :timex, :ua_inspector, :ref_inspector, :bamboo]
     ]
   end
 
@@ -47,7 +47,8 @@ defmodule Plausible.MixProject do
       {:ref_inspector, "~> 1.0"},
       {:timex, "~> 3.1"},
       {:ua_inspector, "~> 0.18"},
-      {:bamboo, "~> 1.1"}
+      {:bamboo, "~> 1.1"},
+      {:sentry, "~> 6.4"}
     ]
   end
 

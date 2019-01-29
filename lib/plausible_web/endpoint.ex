@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :plausible
+  use Sentry.Phoenix.Endpoint
 
   socket "/socket", PlausibleWeb.UserSocket,
     websocket: true,
