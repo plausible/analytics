@@ -8,6 +8,7 @@ defmodule PlausibleWeb.ApiController do
       conn |> send_resp(202, "")
     else
       {:error, changeset} ->
+        Sentry.capture_message("Error processing pageview", extra: %{errors: inspect(changeset.errors)})
         Logger.error("Error processing pageview: #{inspect(changeset)}")
         conn |> send_resp(400, "")
     end
