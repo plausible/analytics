@@ -20,29 +20,35 @@
         </div>
         <%= cond do %>
           <% @conn.assigns[:current_user] -> %>
-
-          <span class="relative font-medium text-grey-darker">
-            <div data-dropdown-trigger class="flex items-center hover:bg-grey-lighter rounded p-2 cursor-pointer">
-              <span class="mr-2"><%= @conn.assigns[:current_user].name || @conn.assigns[:current_user].email %></span>
-              <svg style="height: 18px; transform: translateY(2px); fill: #606f7b;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 512 640" enable-background="new 0 0 512 512" xml:space="preserve"><g><circle cx="256" cy="52.8" r="50.8"/><circle cx="256" cy="256" r="50.8"/><circle cx="256" cy="459.2" r="50.8"/></g></svg>
-            </div>
-
-            <div data-dropdown style="top: 42px; right: 0px; width: 185px;" class="dropdown-content hidden absolute pin-r bg-white border border-grey-light rounded shadow-md">
-              <%= link("Settings", to: "/settings", class: "block py-3 px-2 border-b border-grey-light hover:bg-grey-lighter") %>
-              <%= link("Log out", to: "/logout", method: :post, class: "block py-3 px-2 hover:bg-grey-lighter") %>
-            </div>
-          </span>
-
-            <% true -> %>
             <ul class="list-reset flex">
-              <li class="mr-6">
-               <%= link("Login", to: "/login", class: "text-indigo font-bold text-sm py-2", style: "line-height: 33px;") %>
-              </li>
               <li class="mr-6 hidden sm:block">
-               <%= link("Sign up free", to: "/register", class: "button button-outline py-2 px-4 text-sm") %>
+                <%= link("Give feedback", to: "/feedback", class: "font-medium text-grey-darker rounded p-2 hover:bg-grey-lighter", style: "line-height: 34px;") %>
+              </li>
+              <li>
+                <div class="relative font-medium text-grey-darker">
+                  <div data-dropdown-trigger class="flex items-center hover:bg-grey-lighter rounded p-2 cursor-pointer">
+                    <span class="mr-2"><%= @conn.assigns[:current_user].name || @conn.assigns[:current_user].email %></span>
+                    <svg style="height: 18px; transform: translateY(2px); fill: #606f7b;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 512 640" enable-background="new 0 0 512 512" xml:space="preserve"><g><circle cx="256" cy="52.8" r="50.8"/><circle cx="256" cy="256" r="50.8"/><circle cx="256" cy="459.2" r="50.8"/></g></svg>
+                  </div>
+
+                  <div data-dropdown style="top: 42px; right: 0px; width: 185px;" class="dropdown-content hidden absolute pin-r bg-white border border-grey-light rounded shadow-md">
+                    <%= link("Settings", to: "/settings", class: "block py-3 px-2 border-b border-grey-light hover:bg-grey-lighter") %>
+                    <%= link("Log out", to: "/logout", method: :post, class: "block py-3 px-2 hover:bg-grey-lighter") %>
+                  </div>
+                </div>
               </li>
             </ul>
-        <% end %>
+
+          <% true -> %>
+            <ul class="list-reset flex">
+              <li class="mr-6">
+                <%= link("Login", to: "/login", class: "text-indigo font-bold text-sm py-2", style: "line-height: 33px;") %>
+              </li>
+              <li class="mr-6 hidden sm:block">
+                <%= link("Sign up free", to: "/register", class: "button button-outline py-2 px-4 text-sm") %>
+              </li>
+            </ul>
+          <% end %>
       </nav>
     </div>
 
@@ -53,7 +59,7 @@
     <% end %>
 
     <main class="flex-1">
-      <%= render @view_module, @view_template, assigns %>
+    <%= render @view_module, @view_template, assigns %>
     </main>
     <%= render("_footer.html", assigns) %>
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>

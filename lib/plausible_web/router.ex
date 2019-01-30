@@ -38,14 +38,16 @@ defmodule PlausibleWeb.Router do
     put "/settings", AuthController, :save_settings
     delete "/me", AuthController, :delete_me
 
+    get "/", PageController, :index
+    get "/privacy", PageController, :privacy
+    get "/terms", PageController, :terms
+    get "/feedback", PageController, :feedback
+    post "/feedback", PageController, :submit_feedback
+
     get "/sites/new", SiteController, :new
     post "/sites", SiteController, :create_site
     get "/:website/snippet", SiteController, :add_snippet
     get "/:website", SiteController, :analytics
-
-    get "/", PageController, :index
-    get "/privacy", PageController, :privacy
-    get "/terms", PageController, :terms
   end
 
   scope "/api", PlausibleWeb do

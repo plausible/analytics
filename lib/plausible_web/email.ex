@@ -18,4 +18,13 @@ defmodule PlausibleWeb.Email do
     |> subject("Plausible activation link")
     |> render("activation_email.html", name: name, link: link)
   end
+
+  def feedback(from, text) do
+    new_email()
+    |> to("uku@plausible.io")
+    |> from(from)
+    |> put_header("X-Mailgun-Tag", "feedback")
+    |> subject("New feedback submission")
+    |> text_body(text)
+  end
 end

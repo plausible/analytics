@@ -12,6 +12,16 @@ defmodule PlausibleWeb.PageController do
     end
   end
 
+  def feedback(conn, _params) do
+    render(conn, "feedback.html")
+  end
+
+  def submit_feedback(conn, %{"text" => text, "email" => email}) do
+    PlausibleWeb.Email.feedback(email, text)
+      |> Plausible.Mailer.deliver_now
+    render(conn, "feedback_thanks.html")
+  end
+
   def privacy(conn, _params) do
     render(conn, "privacy.html")
   end

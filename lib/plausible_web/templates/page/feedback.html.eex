@@ -1,0 +1,16 @@
+<div class="w-full max-w-sm mx-auto mt-8">
+  <%= form_for @conn, "/feedback", [class: "bg-white shadow-md rounded px-8 py-6 mb-4 mt-16"], fn f -> %>
+    <h2>Feedback</h2>
+    <p class="text-grey-dark mt-2">Please share your thoughts, concerns or problems so Plausible can improve!</p>
+    <%= textarea f, :text, rows: 4, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light text-xs mt-4" %>
+    <%= if @conn.assigns[:current_user] do %>
+      <%= hidden_input f, :email, value: @conn.assigns[:current_user].email %>
+    <% else %>
+      <div class="my-4">
+        <%= label f, :email, "Your email", class: "block text-grey-darker text-sm font-bold mb-2" %>
+        <%= email_input f, :email, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "example@email.com" %>
+      </div>
+    <% end %>
+    <%= submit "Send feedback", class: "button mt-4 w-full" %>
+  <% end %>
+</div>

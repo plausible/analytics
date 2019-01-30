@@ -1,0 +1,8 @@
+<div class="max-w-sm mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16">
+  <div class="flex items-center justify-between">
+    <h2>Feedback submitted!</h2>
+  </div>
+  <div class="my-4">
+    Thank you for your input.
+  </div>
+</div>
