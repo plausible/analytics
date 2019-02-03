@@ -59,7 +59,7 @@ defmodule PlausibleWeb.SiteController do
     end)
 
     labels = Enum.map(date_range, fn date ->
-      Timex.format!(date, "{WDshort} {D} {Mshort}")
+      Timex.format!(date, "{D} {Mshort}")
     end)
 
     unique_visitors = Repo.aggregate(from(
@@ -185,7 +185,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   defp get_date_range(site, _) do
-    get_date_range(site, %{"period" => "30days"})
+    get_date_range(site, %{"period" => "7days"})
   end
 
   defp today(site) do

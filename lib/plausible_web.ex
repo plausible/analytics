@@ -41,6 +41,7 @@ defmodule PlausibleWeb do
 
       import PlausibleWeb.ErrorHelpers
       import PlausibleWeb.Gettext
+      import PhoenixActiveLink
       alias PlausibleWeb.Router.Helpers, as: Routes
     end
   end

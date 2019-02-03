@@ -1,25 +1,25 @@
 <div class="pt-16"></div>
 <div class="container pb-32" style="max-width: 1024px;">
-  <%= form_for @conn, "", [class: "w-full"], fn f -> %>
-    <div class="inline-block relative w-64">
-      <%= select f, :period, [{"Last 7 days", "7days"}, {"Last 30 days", "30days"}], class: "block appearance-none w-full bg-white cursor-pointer border border-grey-light hover:border-grey px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none", onchange: "location.search = '?period=' + this.value;", value: @selected_period %>
-      <div class="pointer-events-none absolute pin-y pin-r flex items-center px-2 text-red">
-        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-      </div>
-    </div>
-  <% end %>
+  <div class="w-full flex items-center">
+    <h2 class="leading-normal mr-8"><%= @hostname %></h2>
+    <%= active_link(@conn, "Last 7 days", to: "/#{@hostname}", active: !active_path?(@conn, to: "/#{@hostname}?period=30days", active: :inclusive_with_params), class: "leading-normal mt-1 tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
+    <%= active_link(@conn, "Last 30 days", to: "/#{@hostname}?period=30days", active: :inclusive_with_params, class: "leading-normal mt-1 tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
+  </div>
 
   <div class="w-full bg-white shadow rounded border border-grey-light mt-4">
-    <div class="border-b border-grey-light p-4 font-semibold">
+    <div class="border-b border-grey-light p-4 font-medium">
       <span><%= @pageviews %> Pageviews</span> • <span><%= @unique_visitors %> Unique visitors</span>
     </div>
     <div class="p-4">
-      <canvas id="main-graph" class="mt-4" width="400" height="150"></canvas>
+      <canvas id="main-graph" class="mt-4" width="400" height="125"></canvas>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
       <script>
       var plot = [<%= Enum.join(@plot, ",") %>];
       var labels = [<%= raw Enum.map(@labels, fn l -> "'#{l}'" end) |> Enum.join(", ") %>]
-      var ctx = document.getElementById("main-graph");
+      var ctx = document.getElementById("main-graph").getContext('2d');
+      var gradient = ctx.createLinearGradient(0, 0, 0, 300);
+      gradient.addColorStop(0, 'rgba(101,116,205, 0.2)');
+      gradient.addColorStop(1, 'rgba(101,116,205, 0)');
 
       new Chart(ctx, {
         type: 'line',
@@ -31,34 +31,43 @@
             borderWidth: 3,
             borderColor: 'rgba(101,116,205)',
             pointBackgroundColor: 'rgba(101,116,205)',
-            backgroundColor: 'rgba(101,116,205, 0.1)',
+            backgroundColor: gradient,
           }]
         },
         options: {
           legend: {display: false},
           responsive: true,
           elements: {line: {tension: 0.1}, point: {radius: 0}},
-          animation: false,
           tooltips: {
             mode: 'index',
             intersect: false,
             displayColors: false
           },
           hover: {
-            mode: 'nearest',
-            intersect: true
+            mode: 'index',
+            intersect: false
           },
           scales: {
             yAxes: [{
               ticks: {
                 callback: function (value) { if (Number.isInteger(value)) { return value; } },
-                beginAtZero: true
+                beginAtZero: true,
+                autoSkip: true,
+                maxTicksLimit: 8,
+              },
+              gridLines: {
+                zeroLineColor: 'transparent',
+                drawBorder: false,
               }
             }],
             xAxes: [{
               gridLines: {
-                display: false
+                display: false,
               },
+              ticks: {
+                autoSkip: true,
+                maxTicksLimit: 8,
+              }
             }]
           }
         }
