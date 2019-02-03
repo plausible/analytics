@@ -27,7 +27,9 @@ defmodule PlausibleWeb.SiteController do
 
   def add_snippet(conn, %{"website" => website}) do
     site = Plausible.Repo.get_by!(Plausible.Site, domain: website)
-    render(conn, "snippet.html", site: site)
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("snippet.html", site: site)
   end
 
   def create_site(conn, %{"site" => site_params}) do
@@ -113,7 +115,9 @@ defmodule PlausibleWeb.SiteController do
       limit: 5
     )
 
-    render(conn, "analytics.html",
+		conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("analytics.html",
       plot: plot,
       labels: labels,
       pageviews: total_pageviews,
@@ -143,7 +147,9 @@ defmodule PlausibleWeb.SiteController do
       ), :count, :id)
 
       if pageviews == 0 do
-        render(conn, "waiting_first_pageview.html", site: site)
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("waiting_first_pageview.html", site: site)
       else
         show_analytics(conn, site, pageviews)
       end

@@ -30,7 +30,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "cleans up the url", %{conn: conn} do
       conn = post(conn, "/sites", %{
         "site" => %{
-          "domain" => "https://www.example.com/",
+          "domain" => "https://www.Example.com/",
           "timezone" => "Europe/London"
         }
       })

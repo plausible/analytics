@@ -24,6 +24,7 @@ defmodule Plausible.Site do
                    |> String.replace_leading("https://", "")
                    |> String.replace_leading("www.", "")
                    |> String.replace_trailing("/", "")
+                   |> String.downcase()
 
     change(changeset, %{
       domain: clean_domain
