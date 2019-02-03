@@ -27,6 +27,18 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.exists?(Plausible.Site, domain: "example.com")
     end
 
+    test "cleans up the url", %{conn: conn} do
+      conn = post(conn, "/sites", %{
+        "site" => %{
+          "domain" => "https://www.example.com/",
+          "timezone" => "Europe/London"
+        }
+      })
+
+      assert redirected_to(conn) == "/example.com/snippet"
+      assert Repo.exists?(Plausible.Site, domain: "example.com")
+    end
+
     test "renders form again when domain is missing", %{conn: conn} do
       conn = post(conn, "/sites", %{
         "site" => %{
