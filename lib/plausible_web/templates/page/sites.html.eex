@@ -6,9 +6,9 @@
 <div class="flex items-center justify-center w-full py-8">
   <div class="overflow-hidden bg-white rounded max-w-md w-full shadow-lg leading-normal">
     <%= for site <- @sites do %>
-      <a href="/<%= site.domain %>" class="block group hover:bg-grey-lighter p-4 border-b no-underline flex justify-between">
-        <p class="font-bold text-lg mb-1 text-grey-darkest group-hover:text-white"><%= site.domain %></p>
-        <p class="font-bold text-lg mb-1 text-grey-darkest group-hover:text-white">&rarr;</p>
+      <a href="/<%= site.domain %>" class="block hover:bg-grey-lighter p-4 border-b no-underline flex justify-between">
+        <p class="font-bold text-lg mb-1 text-grey-darkest"><%= site.domain %></p>
+        <p class="font-bold text-lg mb-1 text-grey-darkest">&rarr;</p>
       </a>
     <% end %>
   </div>
