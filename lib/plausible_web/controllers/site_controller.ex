@@ -158,7 +158,7 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  defp current_user_can_access?(_conn, %Plausible.Site{domain: "gigride.live"}) do
+  defp current_user_can_access?(_conn, %Plausible.Site{domain: "plausible.io"}) do
     true
   end
 
