@@ -64,10 +64,10 @@ defmodule PlausibleWeb.SiteController do
       Timex.format!(date, "{D} {Mshort}")
     end)
 
-    unique_visitors = Repo.aggregate(from(
+    unique_visitors = Repo.one(from(
       p in base_query,
-      where: p.new_visitor
-    ), :count, :id)
+      select: count(p.user_id, :distinct)
+    ))
 
     device_types = Repo.all(from p in base_query,
       select: {p.device_type, count(p.device_type)},
