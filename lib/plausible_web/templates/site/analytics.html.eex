@@ -1,9 +1,11 @@
 <div class="pt-16"></div>
 <div class="container pb-32" style="max-width: 1024px;">
-  <div class="w-full flex items-center">
-    <h2 class="leading-normal mr-8"><%= @hostname %></h2>
-    <%= active_link(@conn, "Last 7 days", to: "/#{@hostname}", active: !active_path?(@conn, to: "/#{@hostname}?period=30days", active: :inclusive_with_params), class: "leading-normal mt-1 tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
-    <%= active_link(@conn, "Last 30 days", to: "/#{@hostname}?period=30days", active: :inclusive_with_params, class: "leading-normal mt-1 tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
+  <div class="w-full flex justify-between items-center">
+    <h2 class="mr-8"><%= @hostname %></h2>
+    <div>
+      <%= active_link(@conn, "Last 30 days", to: "/#{@hostname}?period=30days", active: :inclusive_with_params, class: "tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
+      <%= active_link(@conn, "Last 7 days", to: "/#{@hostname}", active: !active_path?(@conn, to: "/#{@hostname}?period=30days", active: :inclusive_with_params), class: "tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
+    </div>
   </div>
 
   <div class="w-full bg-white shadow rounded border border-grey-light mt-4">
