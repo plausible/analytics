@@ -12,6 +12,7 @@ defmodule PlausibleWeb.Router do
     plug :put_secure_browser_headers
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
     plug PlausibleWeb.AuthPlug
+    plug PlausibleWeb.LastSeenPlug
   end
 
   pipeline :external_api do

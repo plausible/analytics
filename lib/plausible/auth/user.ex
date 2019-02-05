@@ -5,6 +5,7 @@ defmodule Plausible.Auth.User do
   schema "users" do
     field :email, :string
     field :name, :string
+    field :last_seen, :naive_datetime
 
     has_many :site_memberships, Plausible.Site.Membership
     has_many :sites, through: [:site_memberships, :site]
