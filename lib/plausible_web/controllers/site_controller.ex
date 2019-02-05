@@ -54,7 +54,7 @@ defmodule PlausibleWeb.SiteController do
     labels = Analytics.labels(site, query)
 
 		conn
-    |> assign(:skip_plausible_tracking, true)
+    |> assign(:skip_plausible_tracking, site.domain !== "plausible.io")
     |> render("analytics.html",
       plot: plot,
       labels: labels,
