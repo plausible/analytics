@@ -3,12 +3,13 @@ defmodule PlausibleWeb.ApiController do
   require Logger
 
   def page(conn, _params) do
-    with {:ok, _pageview} <- create_pageview(conn)
-    do
-      conn |> send_resp(202, "")
-    else
+    params = parse_body(conn)
+
+    case create_pageview(conn, params) do
+      {:ok, _pageview} ->
+        conn |> send_resp(202, "")
       {:error, changeset} ->
-        Sentry.capture_message("Error processing pageview", extra: %{errors: inspect(changeset.errors)})
+        Sentry.capture_message("Error processing pageview", extra: %{errors: inspect(changeset.errors), params: params})
         Logger.error("Error processing pageview: #{inspect(changeset)}")
         conn |> send_resp(400, "")
     end
@@ -19,8 +20,7 @@ defmodule PlausibleWeb.ApiController do
     send_resp(conn, 200, "")
   end
 
-  defp create_pageview(conn) do
-    params = parse_body(conn)
+  defp create_pageview(conn, params) do
     uri = URI.parse(params["url"])
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first
     if UAInspector.bot?(user_agent) do
