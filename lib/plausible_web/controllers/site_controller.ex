@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.SiteController do
   use PlausibleWeb, :controller
   use Plausible.Repo
+  alias Plausible.Analytics
 
   plug :require_account when action not in [:index, :privacy, :terms, :analytics]
 
@@ -41,96 +42,32 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  defp show_analytics(conn, site, total_pageviews) do
-    {period, date_range} = get_date_range(site, conn.params)
+  defp show_analytics(conn, site) do
+    {date_range, step_type} = get_date_range(site, conn.params)
 
-    base_query = from(p in Plausible.Pageview,
-      where: p.hostname == ^site.domain,
-      where: type(fragment("(? at time zone 'utc' at time zone ?)", p.inserted_at, ^site.timezone), :date) >= ^date_range.first and type(fragment("(? at time zone 'utc' at time zone ?)", p.inserted_at, ^site.timezone), :date) <= ^date_range.last
+    query = Analytics.Query.new(
+      date_range: date_range,
+      step_type: step_type
     )
 
-    pageview_groups = Repo.all(
-      from p in base_query,
-      group_by: 1,
-      order_by: 1,
-      select: {type(fragment("(? at time zone 'utc' at time zone ?)", p.inserted_at, ^site.timezone), :date), count(p.id)}
-    ) |> Enum.into(%{})
-
-    plot = Enum.map(date_range, fn day ->
-      pageview_groups[day] || 0
-    end)
-
-    labels = Enum.map(date_range, fn date ->
-      Timex.format!(date, "{D} {Mshort}")
-    end)
-
-    unique_visitors = Repo.one(from(
-      p in base_query,
-      select: count(p.user_id, :distinct)
-    ))
-
-    device_types = Repo.all(from p in base_query,
-      select: {p.device_type, count(p.device_type)},
-      group_by: p.device_type,
-      where: p.new_visitor == true,
-      order_by: [desc: count(p.device_type)],
-      limit: 5
-    )
-
-    browsers = Repo.all(from p in base_query,
-      select: {p.browser, count(p.browser)},
-      group_by: p.browser,
-      where: p.new_visitor == true,
-      order_by: [desc: count(p.browser)],
-      limit: 5
-    )
-
-    operating_systems = Repo.all(from p in base_query,
-      select: {p.operating_system, count(p.operating_system)},
-      group_by: p.operating_system,
-      where: p.new_visitor == true,
-      order_by: [desc: count(p.operating_system)],
-      limit: 5
-    )
-
-    top_referrers = Repo.all(from p in base_query,
-      select: {p.referrer_source, count(p.referrer_source)},
-      group_by: p.referrer_source,
-      where: p.new_visitor == true and not is_nil(p.referrer_source),
-      order_by: [desc: count(p.referrer_source)],
-      limit: 5
-    )
-
-    top_pages = Repo.all(from p in base_query,
-      select: {p.pathname, count(p.pathname)},
-      group_by: p.pathname,
-      order_by: [desc: count(p.pathname)],
-      limit: 5
-    )
-
-    top_screen_sizes = Repo.all(from p in base_query,
-      select: {p.screen_size, count(p.screen_size)},
-      group_by: p.screen_size,
-      order_by: [desc: count(p.screen_size)],
-      limit: 5
-    )
+    plot = Analytics.calculate_plot(site, query)
+    labels = Analytics.labels(site, query)
 
 		conn
     |> assign(:skip_plausible_tracking, true)
     |> render("analytics.html",
       plot: plot,
       labels: labels,
-      pageviews: total_pageviews,
-      unique_visitors: unique_visitors,
-      top_referrers: top_referrers,
-      top_pages: top_pages,
-      top_screen_sizes: top_screen_sizes,
-      device_types: device_types,
-      browsers: browsers,
-      operating_systems: operating_systems,
-      hostname: site.domain,
-      title: "Plausible · " <> site.domain,
-      selected_period: period
+      pageviews: Analytics.total_pageviews(site, query),
+      unique_visitors: Analytics.unique_visitors(site, query),
+      top_referrers: Analytics.top_referrers(site, query),
+      top_pages: Analytics.top_pages(site, query),
+      top_screen_sizes: Analytics.top_screen_sizes(site, query),
+      device_types: Analytics.device_types(site, query),
+      browsers: Analytics.browsers(site, query),
+      operating_systems: Analytics.operating_systems(site, query),
+      site: site,
+      title: "Plausible · " <> site.domain
     )
   end
 
@@ -138,20 +75,19 @@ defmodule PlausibleWeb.SiteController do
     site = Repo.get_by(Plausible.Site, domain: website)
 
     if site && current_user_can_access?(conn, site) do
-      {_period, date_range} = get_date_range(site, params)
+      {date_range, _step} = get_date_range(site, params)
 
-      pageviews = Repo.aggregate(
-        from(p in Plausible.Pageview,
-        where: p.hostname == ^website,
-        where: type(p.inserted_at, :date) >= ^date_range.first and type(p.inserted_at, :date) <= ^date_range.last
-      ), :count, :id)
+      has_pageviews = Repo.exists?(
+        from p in Plausible.Pageview,
+        where: p.hostname == ^website
+      )
 
-      if pageviews == 0 do
+      if has_pageviews do
+        show_analytics(conn, site)
+      else
         conn
         |> assign(:skip_plausible_tracking, true)
         |> render("waiting_first_pageview.html", site: site)
-      else
-        show_analytics(conn, site, pageviews)
       end
     else
       conn |> send_resp(404, "Website not found")
@@ -175,19 +111,19 @@ defmodule PlausibleWeb.SiteController do
 
   defp get_date_range(site, %{"period" => "today"}) do
     date_range = Date.range(today(site), today(site))
-    {"today", date_range}
+    {date_range, "hour"}
   end
 
   defp get_date_range(site, %{"period" => "7days"}) do
     start_date = Timex.shift(today(site), days: -7)
     date_range = Date.range(start_date, today(site))
-    {"7days", date_range}
+    {date_range, "date"}
   end
 
   defp get_date_range(site, %{"period" => "30days"}) do
     start_date = Timex.shift(today(site), days: -30)
     date_range = Date.range(start_date, today(site))
-    {"30days", date_range}
+    {date_range, "date"}
   end
 
   defp get_date_range(site, _) do

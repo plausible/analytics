@@ -1,10 +1,11 @@
 <div class="pt-16"></div>
 <div class="container pb-32" style="max-width: 1024px;">
   <div class="w-full flex justify-between items-center">
-    <h2 class="mr-8"><%= @hostname %></h2>
+    <h2 class="mr-8"><%= @site.domain %></h2>
     <div>
-      <%= active_link(@conn, "Last 30 days", to: "/#{@hostname}?period=30days", active: :inclusive_with_params, class: "tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
-      <%= active_link(@conn, "Last 7 days", to: "/#{@hostname}", active: !active_path?(@conn, to: "/#{@hostname}?period=30days", active: :inclusive_with_params), class: "tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
+      <%= active_link(@conn, "Last 30 days", to: "/#{@site.domain}?period=30days", active: :inclusive_with_params, class: "tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
+      <%= active_link(@conn, "Last 7 days", to: "/#{@site.domain}", active: !active_path?(@conn, to: "/#{@site.domain}?period=30days", active: :inclusive_with_params) && !active_path?(@conn, to: "/#{@site.domain}?period=today", active: :inclusive_with_params), class: "tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
+      <%= active_link(@conn, "Today", to: "/#{@site.domain}?period=today", active: :inclusive_with_params, class: "tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
     </div>
   </div>
 
@@ -100,7 +101,7 @@
       <div class="mt-8">
         <%= for {page, count} <- @top_pages do %>
           <div class="flex items-center justify-between my-2">
-            <%= link(page, to: "//" <> @hostname <> page, target: "_blank", class: "truncated-label", title: @hostname <> page) %>
+            <%= link(page, to: "//" <> @site.domain <> page, target: "_blank", class: "truncated-label", title: @site.domain <> page) %>
             <span><%= count %></span>
           </div>
           <%= bar(count, @top_pages, :orange) %>
