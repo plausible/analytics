@@ -8,7 +8,7 @@
       <div class="pulsating-circle"></div>
       <p class="text-grey-dark text-sm absolute pin-l pin-b mb-6 w-full text-center leading-normal">
         <%= link("Click here", to: "/#{@site.domain}/snippet")%> to see the snippet again<br />
-        Not working? Contact <a href="mailto:uku@plausible.io">uku@plausible.io</a> to get set up.
+        Not working? Contact <a href="mailto:uku@plausible.io">uku@plausible.io</a> to get set up
       </p>
     </div>
   </div>
