@@ -30,6 +30,10 @@
       });
     }
 
+    function ignore(reason) {
+      if (console && console.warn) console.warn('[Plausible] Ignoring pageview because ' + reason);
+    }
+
     function page() {
       var userAgent = window.navigator.userAgent;
       var referrer = window.document.referrer;
@@ -37,13 +41,13 @@
       var screenHeight = window.screen.height;
 
       // Respect "Do Not Track" requests
-      if('doNotTrack' in window.navigator && window.navigator.doNotTrack === "1") return;
+      if('doNotTrack' in window.navigator && window.navigator.doNotTrack === "1") return ignore('Do Not Track is on');
       // Ignore prerendered pages
-      if( 'visibilityState' in window.document && window.document.visibilityState === 'prerender' ) return;
+      if( 'visibilityState' in window.document && window.document.visibilityState === 'prerender' ) return ignore('document is prerendering');
       // Ignore locally server pages
-      if (window.location.hostname === 'localhost') return;
+      if (window.location.hostname === 'localhost') return ignore('website is running locally');
       // Basic bot detection.
-      if (userAgent && userAgent.search(/(bot|spider|crawl)/ig) > -1) return;
+      if (userAgent && userAgent.search(/(bot|spider|crawl)/ig) > -1) return ignore('the user-agen is a bot');
 
       var existingUid = getCookie('nm_uid');
       var uid = existingUid || pseudoUUIDv4();
