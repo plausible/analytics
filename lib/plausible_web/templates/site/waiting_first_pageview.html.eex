@@ -3,10 +3,11 @@
 <div class="w-full max-w-sm mx-auto mt-8">
   <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16 h-72 relative text-center">
     <h2>Waiting for first pageview</h2>
+    <h2>on <%= @site.domain %></h2>
     <div class="my-4">
       <div class="pulsating-circle"></div>
       <p class="text-grey-dark text-sm absolute pin-l pin-b mb-6 w-full text-center leading-normal">
-        You can load <a href="//<%= @site.domain %>" target="_blank"><%= @site.domain %></a> to trigger the first pageview.<br />
+        <%= link("Click here", to: "/#{@site.domain}/snippet")%> to see the snippet again<br />
         Not working? Contact <a href="mailto:uku@plausible.io">uku@plausible.io</a> to get set up.
       </p>
     </div>
