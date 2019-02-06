@@ -106,6 +106,7 @@ defmodule Plausible.Analytics do
   def top_screen_sizes(site, query) do
     Repo.all(from p in base_query(site, query),
       select: {p.screen_size, count(p.screen_size)},
+      where: not is_nil(p.screen_size),
       group_by: p.screen_size,
       order_by: [desc: count(p.screen_size)],
       limit: 5

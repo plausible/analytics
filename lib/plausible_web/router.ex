@@ -56,7 +56,11 @@ defmodule PlausibleWeb.Router do
   scope "/api", PlausibleWeb do
     pipe_through :external_api
 
-    post "/page", ApiController, :page
-    get "/error", ApiController, :error
+    # external
+    post "/page", ExternalApiController, :page
+    get "/error", ExternalApiController, :error
+
+    # internal
+    get "/:domain/status", ApiController, :domain_status
   end
 end
