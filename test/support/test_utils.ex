@@ -21,7 +21,7 @@ defmodule Plausible.TestUtils do
       conn
       |> Plug.Session.call(opts)
       |> Plug.Conn.fetch_session()
-      |> Plug.Conn.put_session(:current_user_email, user.email)
+      |> Plug.Conn.put_session(:current_user_id, user.id)
 
     {:ok, conn: conn}
   end

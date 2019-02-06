@@ -7,11 +7,7 @@ defmodule PlausibleWeb.AuthController do
   plug :require_logged_out when action in [:register_form, :register, :login_form, :login]
 
   def register_form(conn, _params) do
-    if get_session(conn, :current_user_email) do
-      redirect(conn, to: "/")
-    else
-      render(conn, "register_form.html")
-    end
+    render(conn, "register_form.html")
   end
 
   def register(conn, %{"name" => name, "email" => email}) do
@@ -28,8 +24,9 @@ defmodule PlausibleWeb.AuthController do
       {:ok, %{name: name, email: email}} ->
         case Auth.create_user(name, email) do
           {:ok, user} ->
-            conn = put_session(conn, :current_user_email, user.email)
-            redirect(conn, to: "/sites/new")
+            conn
+            |> put_session(:current_user_id, user.id)
+            |> redirect(to: "/sites/new")
           {:error, changeset} ->
             send_resp(conn, 400, inspect(changeset.errors))
         end
@@ -62,7 +59,7 @@ defmodule PlausibleWeb.AuthController do
             send_resp(conn, 401, "User account with email #{email} does not exist. Please sign up to get started.")
           user ->
             conn
-            |> put_session(:current_user_email, user.email)
+            |> put_session(:current_user_id, user.id)
             |> redirect(to: "/")
         end
       {:error, :expired} ->
@@ -115,7 +112,7 @@ defmodule PlausibleWeb.AuthController do
 
   defp require_logged_out(conn, _opts) do
     cond do
-      get_session(conn, :current_user_email) ->
+      conn.assigns[:current_user] ->
         conn
         |> redirect(to: "/")
         |> Plug.Conn.halt

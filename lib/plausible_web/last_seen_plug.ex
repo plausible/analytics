@@ -13,11 +13,11 @@ defmodule PlausibleWeb.LastSeenPlug do
     user = conn.assigns[:current_user]
 
     cond do
-      user && last_seen && last_seen < (now() - @one_hour) ->
+      user && last_seen && last_seen < (unix_now() - @one_hour) ->
         persist_last_seen(user)
-        put_session(conn, :last_seen, now())
+        put_session(conn, :last_seen, unix_now())
       user && !last_seen ->
-        put_session(conn, :last_seen, now())
+        put_session(conn, :last_seen, unix_now())
       true ->
         conn
     end
@@ -29,7 +29,7 @@ defmodule PlausibleWeb.LastSeenPlug do
     Repo.update_all(q, [set: [last_seen: DateTime.utc_now()]])
   end
 
-  defp now do
+  defp unix_now do
     DateTime.utc_now() |> DateTime.to_unix
   end
 end

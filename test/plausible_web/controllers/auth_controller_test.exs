@@ -74,7 +74,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       token = Plausible.Auth.Token.sign_login(user.email)
       conn = get(conn, "/claim-login?token=#{token}")
 
-      assert get_session(conn, :current_user_email) == user.email
+      assert get_session(conn, :current_user_id) == user.id
     end
 
     test "redirects user to dashboard", %{conn: conn, user: user} do

@@ -99,11 +99,10 @@ defmodule PlausibleWeb.SiteController do
   end
 
   defp current_user_can_access?(conn, site) do
-    case get_session(conn, :current_user_email) do
+    case conn.assigns[:current_user] do
       nil -> false
-      email ->
-        user = Repo.get_by(Plausible.Auth.User, email: email)
-        |> Repo.preload(:sites)
+      user ->
+        user = user |> Repo.preload(:sites)
 
         Enum.any?(user.sites, fn user_site -> user_site == site end)
     end
@@ -135,7 +134,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   defp require_account(conn, _opts) do
-    case get_session(conn, :current_user_email) do
+    case conn.assigns[:current_user] do
       nil ->
         redirect(conn, to: "/login") |> Plug.Conn.halt
       _email ->
