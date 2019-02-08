@@ -47,7 +47,7 @@
       // Ignore locally server pages
       if (window.location.hostname === 'localhost') return ignore('website is running locally');
       // Basic bot detection.
-      if (userAgent && userAgent.search(/(bot|spider|crawl)/ig) > -1) return ignore('the user-agen is a bot');
+      if (userAgent && userAgent.search(/(bot|spider|crawl)/ig) > -1) return ignore('the user-agent is a bot');
 
       var existingUid = getCookie('nm_uid');
       var uid = existingUid || pseudoUUIDv4();
