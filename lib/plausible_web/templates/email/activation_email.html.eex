@@ -2,7 +2,4 @@ Hi <%= @name %>,
 <br /><br />
 Thank you for signing up to Plausible. <a href="<%= @link %>">Click here</a> to activate your account.
 <br /><br />
-The link will expire in 30 minutes. If you don't use it by then, you can request another activation link.
-<br /><br />
-Best,<br />
-Uku
+This link will expire in 30 minutes. If you don't use it by then, you can request another activation link.
