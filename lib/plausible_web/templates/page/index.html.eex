@@ -12,7 +12,8 @@
       <p class="font-normal text-grey-darker text-lg lg:text-2xl mt-3 leading-tight">
         A lightweight, non-intrusive alternative to Google Analytics
       </p>
-      <a href="/plausible.io" class="button mt-4">View live demo</a>
+      <%= link("Get started", to: "/register", class: "button button-outline mr-2 mt-4") %>
+      <%= link("View live demo", to: "/plausible.io", class: "button mr-2") %>
     </section>
   </div>
   <div class="mt-12 md:mt-32"></div>
@@ -88,6 +89,7 @@
       </div>
 
       <div class="text-center mt-8">
+        <%= link("View live demo", to: "/plausible.io", class: "button button-outline mr-2") %>
         <%= link("Sign up for free", to: "/register", class: "button") %>
       </div>
     </div>
