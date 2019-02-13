@@ -44,3 +44,6 @@ config :plausible, Plausible.Repo,
 
 config :plausible, Plausible.Mailer,
   adapter: Bamboo.LocalAdapter
+
+config :plausible, :amplitude,
+  api_key: "a2de0688a23355c0c332ee9a8707bbcd"

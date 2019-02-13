@@ -35,6 +35,7 @@ defmodule Plausible.MixProject do
       {:browser, "~> 0.4.3"},
       {:cors_plug, "~> 1.5"},
       {:ecto_sql, "~> 3.0"},
+      {:elixir_uuid, "~> 1.2"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:phoenix, "~> 1.4.0"},
@@ -49,7 +50,8 @@ defmodule Plausible.MixProject do
       {:timex, "~> 3.1"},
       {:ua_inspector, "~> 0.18"},
       {:bamboo, "~> 1.1"},
-      {:sentry, "~> 7.0"}
+      {:sentry, "~> 7.0"},
+      {:httpoison, "~> 1.4"}
     ]
   end
 

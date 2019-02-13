@@ -78,6 +78,9 @@ config :plausible, Plausible.Repo,
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
   ssl: true
 
+config :plausible, :amplitude,
+  api_key: System.get_env("AMPLITUDE_API_KEY")
+
 config :plausible, Plausible.Mailer,
   adapter: Bamboo.MailgunAdapter,
   api_key: System.get_env("MAILGUN_API_KEY"),

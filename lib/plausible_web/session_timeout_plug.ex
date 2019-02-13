@@ -16,8 +16,7 @@ defmodule PlausibleWeb.SessionTimeoutPlug do
 
   defp logout_user(conn) do
     conn
-    |> clear_session()
-    |> configure_session([:renew])
+    |> put_session(:current_user_id, nil) # Leave `device_id` in the session for accurate tracking
     |> assign(:session_timeout, true)
   end
 

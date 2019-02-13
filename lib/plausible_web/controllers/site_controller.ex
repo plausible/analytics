@@ -7,6 +7,7 @@ defmodule PlausibleWeb.SiteController do
 
   def new(conn, _params) do
     changeset = Plausible.Site.changeset(%Plausible.Site{})
+    Plausible.Tracking.event(conn, "New Site: View Form")
 
     render(conn, "new.html", changeset: changeset)
   end
@@ -28,6 +29,7 @@ defmodule PlausibleWeb.SiteController do
 
   def add_snippet(conn, %{"website" => website}) do
     site = Plausible.Repo.get_by!(Plausible.Site, domain: website)
+    Plausible.Tracking.event(conn, "Site: View Snippet")
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("snippet.html", site: site)
@@ -36,6 +38,7 @@ defmodule PlausibleWeb.SiteController do
   def create_site(conn, %{"site" => site_params}) do
     case insert_site(conn.assigns[:current_user].id, site_params) do
       {:ok, %{site: site}} ->
+        Plausible.Tracking.event(conn, "New Site: Create")
         redirect(conn, to: "/#{site.domain}/snippet")
       {:error, :site, changeset, _} ->
         render(conn, "new.html", changeset: changeset)
@@ -43,6 +46,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   defp show_analytics(conn, site) do
+    Plausible.Tracking.event(conn, "Site Analytics: Open")
     {date_range, step_type} = get_date_range(site, conn.params)
 
     query = Analytics.Query.new(

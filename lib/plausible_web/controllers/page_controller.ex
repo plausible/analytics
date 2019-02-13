@@ -7,6 +7,7 @@ defmodule PlausibleWeb.PageController do
       user = conn.assigns[:current_user] |> Repo.preload(:sites)
       render(conn, "sites.html", sites: user.sites)
     else
+      Plausible.Tracking.event(conn, "Landing: View Page")
       render(conn, "index.html", landing_nav: true)
     end
   end

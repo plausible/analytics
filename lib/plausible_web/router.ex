@@ -10,6 +10,7 @@ defmodule PlausibleWeb.Router do
     plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :assign_device_id
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
     plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.LastSeenPlug
@@ -62,5 +63,13 @@ defmodule PlausibleWeb.Router do
 
     # internal
     get "/:domain/status", ApiController, :domain_status
+  end
+
+  def assign_device_id(conn, _opts) do
+    if is_nil(Plug.Conn.get_session(conn, :device_id)) do
+      Plug.Conn.put_session(conn, :device_id, UUID.uuid4())
+    else
+      conn
+    end
   end
 end

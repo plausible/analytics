@@ -7,6 +7,7 @@ defmodule PlausibleWeb.AuthController do
   plug :require_logged_out when action in [:register_form, :register, :login_form, :login]
 
   def register_form(conn, _params) do
+    Plausible.Tracking.event(conn, "Register: View Form")
     render(conn, "register_form.html")
   end
 
@@ -16,6 +17,7 @@ defmodule PlausibleWeb.AuthController do
     Logger.debug(url)
     email_template = PlausibleWeb.Email.activation_email(name, email, url)
     Plausible.Mailer.deliver_now(email_template)
+    Plausible.Tracking.event(conn, "Register: Submit Form")
     conn |> render("register_success.html", email: email)
   end
 
@@ -24,15 +26,20 @@ defmodule PlausibleWeb.AuthController do
       {:ok, %{name: name, email: email}} ->
         case Auth.create_user(name, email) do
           {:ok, user} ->
+            Plausible.Tracking.event(conn, "Register: Activate Account")
+            Plausible.Tracking.identify(conn, user.id, %{name: user.name})
             conn
             |> put_session(:current_user_id, user.id)
             |> redirect(to: "/sites/new")
           {:error, changeset} ->
+            Plausible.Tracking.event(conn, "Register: Invalid Account")
             send_resp(conn, 400, inspect(changeset.errors))
         end
       {:error, :expired} ->
+        Plausible.Tracking.event(conn, "Register: Activation Failed", %{reason: :expired})
         conn |> send_resp(401, "Your login token has expired")
       {:error, _} ->
+        Plausible.Tracking.event(conn, "Register: Activation Failed", %{reason: :invalid})
         conn |> send_resp(400, "Your login token is invalid")
     end
   end
