@@ -89,9 +89,44 @@
       </div>
 
       <div class="text-center mt-8">
-        <%= link("View live demo", to: "/plausible.io", class: "button button-outline mr-2") %>
+        <%= link("View live demo", to: "/plausible.io", class: "button button-outline mb-4 md:mb-0 md:mr-2") %>
         <%= link("Sign up for free", to: "/register", class: "button") %>
       </div>
+    </div>
+    <div class="my-24 flex flex-col md:flex-row justify-between items-center">
+      <div class="w-full md:w-31percent bg-white shadow-lg rounded p-4">
+        <p class="italic">Plausible is focused on exactly what I need: clear insights into my site visitors, without getting in my way</p>
+        <div class="mt-2 md:mt-4 flex items-center justify-start">
+          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/felipe.jpg"), class: "inline w-10 h-10 object-cover rounded-full mr-3") %>
+          <div>
+            <h4>Felipe Sere</h4>
+            <p class="text-sm text-grey-dark"><%= link("@felipesere", to: "https://twitter.com/felipesere") %></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full md:w-31percent mt-10 md:mt-0 bg-white shadow-lg rounded p-4">
+        <p class="italic">We are shipping faster and PR review time has decreased. Pull Reminders is a great productivity boost for our engineering team.</p>
+        <div class="mt-2 md:mt-4 flex items-center justify-start">
+          <img class="inline w-10 h-10 rounded-full mr-2" src="https://d201zbfblqcbtj.cloudfront.net/assets/homepage/testimonials/stefandorresteijn-4182e62383de7b8965f87b94e7181b127eba6d61c34d24fc198a0e24fc157e63.jpg" />
+          <div>
+            <h5>Felipe Sere</h5>
+            <p class="text-sm text-grey-dark">Software Engineer</h4>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full md:w-31percent mt-10 md:mt-0 bg-white shadow-lg rounded p-4">
+        <p class="italic">We are shipping faster and PR review time has decreased. Pull Reminders is a great productivity boost for our engineering team.</p>
+        <div class="mt-2 md:mt-4 flex items-center justify-start">
+          <img class="inline w-10 h-10 rounded-full mr-2" src="https://d201zbfblqcbtj.cloudfront.net/assets/homepage/testimonials/stefandorresteijn-4182e62383de7b8965f87b94e7181b127eba6d61c34d24fc198a0e24fc157e63.jpg" />
+          <div>
+            <h5>Felipe Sere</h5>
+            <p class="text-sm text-grey-dark">Software Engineer</h4>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
