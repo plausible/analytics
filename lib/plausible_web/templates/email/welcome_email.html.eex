@@ -1,0 +1,14 @@
+Hey <%= user_salutation(@user) %>,
+
+Thank you so much for setting up your Plausible account. You're among the first users of the platform so I hope you didn't run into too many rough edges :)
+
+Speaking of, did you have a smooth experience setting it up? Any other feedback I should know about?
+
+If you have any questions, please let me know. I'd be happy to help with anything.
+
+Thanks,
+Uku Taht
+
+--
+
+https://plausible.io

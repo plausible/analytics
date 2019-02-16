@@ -1,0 +1,12 @@
+Hey <%= user_salutation(@user) %>,
+
+I saw that you signed up for Plausible but the setup isn't working completely. Is there anything I can do to help?
+
+If you have any questions let me know.
+
+Thanks,
+Uku Taht
+
+--
+
+https://plausible.io

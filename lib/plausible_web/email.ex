@@ -1,6 +1,24 @@
 defmodule PlausibleWeb.Email do
   use Bamboo.Phoenix, view: PlausibleWeb.EmailView
 
+  def welcome_email(user) do
+    new_email()
+    |> to(user.email)
+    |> from("Uku Taht <uku@plausible.io>")
+    |> put_header("X-Mailgun-Tag", "welcome-email")
+    |> subject("Plausible feedback")
+    |> render("welcome_email.html", user: user)
+  end
+
+  def help_email(user) do
+    new_email()
+    |> to(user.email)
+    |> from("Uku Taht <uku@plausible.io>")
+    |> put_header("X-Mailgun-Tag", " help-email")
+    |> subject("Plausible setup")
+    |> render("help_email.html", user: user)
+  end
+
   def login_email(email, login_link) do
     new_email()
     |> to(email)

@@ -16,11 +16,9 @@ defmodule Plausible.DataCase do
 
   using do
     quote do
-      alias Plausible.Repo
+      use Plausible.Repo
 
-      import Ecto
       import Ecto.Changeset
-      import Ecto.Query
       import Plausible.DataCase
     end
   end
