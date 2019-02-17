@@ -28,13 +28,13 @@ defmodule PlausibleWeb.Email do
     |> render("login_email.html", login_link: login_link)
   end
 
-  def activation_email(name, email, link) do
+  def activation_email(user, link) do
     new_email()
-    |> to(email)
+    |> to(user.email)
     |> from("Plausible <hello@plausible.io>")
     |> put_header("X-Mailgun-Tag", "activation-email")
     |> subject("Plausible activation link")
-    |> render("activation_email.html", name: name, link: link)
+    |> render("activation_email.html", name: user.name, link: link)
   end
 
   def feedback(from, text) do

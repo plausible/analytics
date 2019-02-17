@@ -7,18 +7,26 @@ defmodule PlausibleWeb.AuthController do
   plug :require_logged_out when action in [:register_form, :register, :login_form, :login]
 
   def register_form(conn, _params) do
+    changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
     Plausible.Tracking.event(conn, "Register: View Form")
-    render(conn, "register_form.html")
+    render(conn, "register_form.html", changeset: changeset)
   end
 
-  def register(conn, %{"name" => name, "email" => email}) do
-    token = Auth.Token.sign_activation(name, email)
-    url = PlausibleWeb.Endpoint.url() <> "/claim-activation?token=#{token}"
-    Logger.debug(url)
-    email_template = PlausibleWeb.Email.activation_email(name, email, url)
-    Plausible.Mailer.deliver_now(email_template)
-    Plausible.Tracking.event(conn, "Register: Submit Form")
-    conn |> render("register_success.html", email: email)
+  def register(conn, %{"user" => params}) do
+    user = Plausible.Auth.User.changeset(%Plausible.Auth.User{}, params)
+
+    case Ecto.Changeset.apply_action(user, :insert) do
+      {:ok, user} ->
+        token = Auth.Token.sign_activation(user.name, user.email)
+        url = PlausibleWeb.Endpoint.url() <> "/claim-activation?token=#{token}"
+        Logger.debug(url)
+        email_template = PlausibleWeb.Email.activation_email(user, url)
+        Plausible.Mailer.deliver_now(email_template)
+        Plausible.Tracking.event(conn, "Register: Submit Form")
+        conn |> render("register_success.html", email: user.email)
+      {:error, changeset} ->
+        render(conn, "register_form.html", changeset: changeset)
+    end
   end
 
   def claim_activation_link(conn, %{"token" => token}) do
