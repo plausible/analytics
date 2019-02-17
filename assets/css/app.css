@@ -33,6 +33,12 @@ blockquote {
   @apply font-black tracking-wide text-indigo text-4xl;
 }
 
+@screen xl {
+  .container {
+    max-width: 70rem;
+  }
+}
+
 @tailwind utilities;
 
 .light-text {

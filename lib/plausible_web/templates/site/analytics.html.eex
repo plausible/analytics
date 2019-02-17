@@ -1,5 +1,5 @@
 <div class="pt-16"></div>
-<div class="container pb-32" style="max-width: 1024px;">
+<div class="container pb-32">
   <div class="w-full flex justify-between items-center">
     <h2 class="mr-8"><%= @site.domain %></h2>
     <div>
