@@ -9,38 +9,46 @@ defmodule Mix.Tasks.SendIntroEmails do
 
   def run(args) do
     Application.ensure_all_started(:plausible)
-    run()
+    execute(args)
   end
 
-  def run() do
+  def execute(args \\ []) do
     q =
       from(u in Plausible.Auth.User,
         left_join: ie in "intro_emails", on: ie.user_id == u.id,
         where: is_nil(ie.id),
         where:
-          u.inserted_at > fragment("now() - '24 hours'::interval") and
-            u.inserted_at < fragment("now() - '6 hours'::interval")
+          u.inserted_at > fragment("now() - '24 days'::interval") and
+            u.inserted_at < fragment("now() - '6 days'::interval")
       )
 
     for user <- Repo.all(q) do
       if user_completed_setup?(user) do
         Logger.info("#{user.name} has completed the setup. Sending welcome email.")
-        send_welcome_email(user)
+        send_welcome_email(args, user)
       else
         Logger.info("#{user.name} has not completed the setup. Sending help email.")
-        send_help_email(user)
+        send_help_email(args, user)
       end
     end
   end
 
-  defp send_welcome_email(user) do
+  defp send_welcome_email(["--dry-run"], user) do
+    Logger.info("DRY RUN: welcome email to #{user.name}")
+  end
+
+  defp send_welcome_email(_, user) do
     PlausibleWeb.Email.welcome_email(user)
     |> Plausible.Mailer.deliver_now()
 
     intro_email_sent(user)
   end
 
-  defp send_help_email(user) do
+  defp send_help_email(["--dry-run"], user) do
+    Logger.info("DRY RUN: help email to #{user.name}")
+  end
+
+  defp send_help_email(_, user) do
     PlausibleWeb.Email.help_email(user)
     |> Plausible.Mailer.deliver_now()
 

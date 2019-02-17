@@ -6,7 +6,7 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
     test "does not send an email 5 hours after signup" do
       {:ok, _user} = create_user(%{inserted_at: hours_ago(5)})
 
-      Mix.Tasks.SendIntroEmails.run()
+      Mix.Tasks.SendIntroEmails.execute()
 
       assert_no_emails_delivered()
     end
@@ -14,7 +14,7 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
     test "sends a setup help email 6 hours after signup" do
       {:ok, user} = create_user(%{inserted_at: hours_ago(6)})
 
-      Mix.Tasks.SendIntroEmails.run()
+      Mix.Tasks.SendIntroEmails.execute()
 
       assert_email_delivered_with(
         to: [nil: user.email],
@@ -25,7 +25,7 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
     test "sends a setup help email 23 hours after signup" do
       {:ok, user} = create_user(%{inserted_at: hours_ago(23)})
 
-      Mix.Tasks.SendIntroEmails.run()
+      Mix.Tasks.SendIntroEmails.execute()
 
       assert_email_delivered_with(
         to: [nil: user.email],
@@ -36,7 +36,7 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
     test "does not send an email 24 hours after signup" do
       {:ok, _user} = create_user(%{inserted_at: hours_ago(24)})
 
-      Mix.Tasks.SendIntroEmails.run()
+      Mix.Tasks.SendIntroEmails.execute()
 
       assert_no_emails_delivered()
     end
@@ -46,7 +46,7 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
     test "does not send an email 5 hours after signup" do
       {:ok, _user} = create_user(%{inserted_at: hours_ago(5)})
 
-      Mix.Tasks.SendIntroEmails.run()
+      Mix.Tasks.SendIntroEmails.execute()
 
       assert_no_emails_delivered()
     end
@@ -55,7 +55,7 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
       {:ok, user} = create_user(%{inserted_at: hours_ago(6)})
       create_site(user.id)
 
-      Mix.Tasks.SendIntroEmails.run()
+      Mix.Tasks.SendIntroEmails.execute()
 
       assert_email_delivered_with(
         to: [nil: user.email],
@@ -68,7 +68,7 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
       site = create_site(user.id)
       create_pageview(site.domain)
 
-      Mix.Tasks.SendIntroEmails.run()
+      Mix.Tasks.SendIntroEmails.execute()
 
       assert_email_delivered_with(
         to: [nil: user.email],
@@ -81,7 +81,7 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
       site = create_site(user.id)
       create_pageview(site.domain)
 
-      Mix.Tasks.SendIntroEmails.run()
+      Mix.Tasks.SendIntroEmails.execute()
 
       assert_email_delivered_with(
         to: [nil: user.email],
@@ -94,7 +94,7 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
       site = create_site(user.id)
       create_pageview(site.domain)
 
-      Mix.Tasks.SendIntroEmails.run()
+      Mix.Tasks.SendIntroEmails.execute()
 
       assert_no_emails_delivered()
     end
@@ -103,12 +103,12 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
   test "does not send two intro emails to the same person" do
     {:ok, user} = create_user(%{inserted_at: hours_ago(12)})
 
-    Mix.Tasks.SendIntroEmails.run()
+    Mix.Tasks.SendIntroEmails.execute()
 
     site = create_site(user.id)
     create_pageview(site.domain)
 
-    Mix.Tasks.SendIntroEmails.run()
+    Mix.Tasks.SendIntroEmails.execute()
 
     assert_delivered_email(PlausibleWeb.Email.help_email(user))
     refute_delivered_email(PlausibleWeb.Email.welcome_email(user))
