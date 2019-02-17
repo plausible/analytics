@@ -31,7 +31,7 @@ defmodule PlausibleWeb.ExternalApiController do
       end
 
       ref = params["referrer"]
-      ref = if ref && !String.contains?(ref, strip_www(uri.host)) do
+      ref = if ref && strip_www(URI.parse(params["referrer"]).host) !== strip_www(uri.host) do
         RefInspector.parse(ref)
       end
 

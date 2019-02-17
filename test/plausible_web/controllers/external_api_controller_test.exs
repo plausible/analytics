@@ -108,6 +108,46 @@ defmodule PlausibleWeb.ExternalApiControllerTest do
       assert pageview.referrer_source == "Facebook"
     end
 
+    test "ignores when referrer is internal", %{conn: conn} do
+      params = %{
+        url: "http://gigride.live/",
+        referrer: "https://gigride.live",
+        new_visitor: false,
+        sid: "123",
+        uid: "321"
+      }
+
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/page", Jason.encode!(params))
+
+      pageview = Repo.one(Plausible.Pageview)
+
+      assert response(conn, 202) == ""
+      assert pageview.referrer_source == nil
+    end
+
+    test "parses subdomain referrer", %{conn: conn} do
+      params = %{
+        url: "http://gigride.live/",
+        referrer: "https://blog.gigride.live",
+        new_visitor: false,
+        sid: "123",
+        uid: "321"
+      }
+
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/page", Jason.encode!(params))
+
+      pageview = Repo.one(Plausible.Pageview)
+
+      assert response(conn, 202) == ""
+      assert pageview.referrer_source == "blog.gigride.live"
+    end
+
     test "if it's an :unknown referrer, just the domain is used", %{conn: conn} do
       params = %{
         url: "http://gigride.live/",
