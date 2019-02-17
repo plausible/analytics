@@ -14,7 +14,7 @@ defmodule PlausibleWeb.Email do
     new_email()
     |> to(user.email)
     |> from("Uku Taht <uku@plausible.io>")
-    |> put_header("X-Mailgun-Tag", " help-email")
+    |> put_header("X-Mailgun-Tag", "help-email")
     |> subject("Plausible setup")
     |> render("help_email.html", user: user)
   end
