@@ -2,11 +2,16 @@ defmodule PlausibleWeb.ExternalApiController do
   use PlausibleWeb, :controller
   require Logger
 
+  @blacklist_user_ids [
+    "e8150466-7ddb-4771-bcf5-7c58f232e8a6"
+  ]
+
   def page(conn, _params) do
     params = parse_body(conn)
 
     case create_pageview(conn, params) do
       {:ok, _pageview} ->
+        Logger.info("Pageview from ip: #{to_string(:inet_parse.ntoa(conn.remote_ip))}")
         conn |> send_resp(202, "")
       {:error, changeset} ->
         Sentry.capture_message("Error processing pageview", extra: %{errors: inspect(changeset.errors), params: params})
@@ -23,7 +28,7 @@ defmodule PlausibleWeb.ExternalApiController do
   defp create_pageview(conn, params) do
     uri = URI.parse(params["url"])
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first
-    if UAInspector.bot?(user_agent) do
+    if UAInspector.bot?(user_agent) || params["uid"] in @blacklist_user_ids do
       {:ok, nil}
     else
       ua = if user_agent do
