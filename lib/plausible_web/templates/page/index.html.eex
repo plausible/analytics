@@ -97,9 +97,13 @@
       <div class="w-full md:w-31percent">
         <p class="italic">Plausible is focused on exactly what I need: clear insights into my site visitors, without getting in my way</p>
         <div class="mt-2 md:mt-4 flex items-center justify-start">
-          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/felipe.jpg"), class: "inline w-12 h-12 object-cover rounded-full mr-3") %>
+          <a href="https://www.felipesere.com/">
+            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/felipe.jpg"), class: "inline w-12 h-12 object-cover rounded-full mr-3") %>
+          </a>
           <div>
-            <h4>Felipe Sere</h4>
+            <a href="https://www.felipesere.com/">
+              <h4>Felipe Sere</h4>
+            </a>
             <%= link("@felipesere", to: "https://twitter.com/felipesere", class: "text-sm text-grey-dark") %>
           </div>
         </div>
@@ -108,9 +112,13 @@
       <div class="w-full md:w-31percent mt-16 md:mt-0">
         <p class="italic">All the insights you need in a single page. Plausible's user experience and user interface are the stark opposite of Google Analytics.</p>
         <div class="mt-2 md:mt-4 flex items-center justify-start">
-          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/makis.jpg"), class: "inline w-12 h-12 rounded-full mr-3") %>
+          <a href="https://makisotman.com/">
+            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/makis.jpg"), class: "inline w-12 h-12 rounded-full mr-3") %>
+          </a>
           <div>
-            <h4>Makis Otman</h4>
+            <a href="https://makisotman.com/">
+              <h4>Makis Otman</h4>
+            </a>
             <%= link("@makisotman", to: "https://twitter.com/makisotman", class: "text-sm text-grey-dark") %>
           </div>
         </div>
@@ -119,10 +127,12 @@
       <div class="w-full md:w-31percent mt-16 md:mt-0">
         <p class="italic">I love Plausible because it is lightweight and looks beautiful. It shows me all the statistics that I need in a simple and unique style.</p>
         <div class="mt-2 md:mt-4 flex items-center justify-start">
-          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/markus.jpg"), class: "inline w-12 h-12 rounded-full mr-3") %>
+          <a href="https://www.schranz.io/">
+            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/markus.jpg"), class: "inline w-12 h-12 rounded-full mr-3") %>
+          </a>
           <div>
           <div>
-            <h4>Markus Schranz</h4>
+            <a href="https://www.schranz.io/"><h4>Markus Schranz</h4></a>
             <%= link("@ma_schranz", to: "https://twitter.com/ma_schranz", class: "text-sm text-grey-dark") %>
           </div>
         </div>
