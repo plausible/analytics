@@ -97,7 +97,7 @@
       <div class="w-full md:w-31percent">
         <p class="italic">Plausible is focused on exactly what I need: clear insights into my site visitors, without getting in my way</p>
         <div class="mt-2 md:mt-4 flex items-center justify-start">
-          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/felipe.jpg"), class: "inline w-10 h-10 object-cover rounded-full mr-3") %>
+          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/felipe.jpg"), class: "inline w-12 h-12 object-cover rounded-full mr-3") %>
           <div>
             <h4>Felipe Sere</h4>
             <%= link("@felipesere", to: "https://twitter.com/felipesere", class: "text-sm text-grey-dark") %>
@@ -105,28 +105,25 @@
         </div>
       </div>
 
-      <div class="w-full md:w-31percent mt-10 md:mt-0">
-        <p class="italic">
-All the insights you need in a single page. Plausible's user experience and user interface are the stark opposite of Google Analytics.
-
-
-</p>
+      <div class="w-full md:w-31percent mt-16 md:mt-0">
+        <p class="italic">All the insights you need in a single page. Plausible's user experience and user interface are the stark opposite of Google Analytics.</p>
         <div class="mt-2 md:mt-4 flex items-center justify-start">
-          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/makis.jpg"), class: "inline w-10 h-10 object-cover rounded-full mr-3") %>
+          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/makis.jpg"), class: "inline w-12 h-12 rounded-full mr-3") %>
           <div>
-            <h5>Makis Otman</h5>
+            <h4>Makis Otman</h4>
             <%= link("@makisotman", to: "https://twitter.com/makisotman", class: "text-sm text-grey-dark") %>
           </div>
         </div>
       </div>
 
-      <div class="w-full md:w-31percent mt-10 md:mt-0">
-        <p class="italic">We are shipping faster and PR review time has decreased. Pull Reminders is a great productivity boost for our engineering team.</p>
+      <div class="w-full md:w-31percent mt-16 md:mt-0">
+        <p class="italic">I love Plausible because it is lightweight and looks beautiful. It shows me all the statistics that I need in a simple and unique style.</p>
         <div class="mt-2 md:mt-4 flex items-center justify-start">
-          <img class="inline w-10 h-10 rounded-full mr-2" src="https://d201zbfblqcbtj.cloudfront.net/assets/homepage/testimonials/stefandorresteijn-4182e62383de7b8965f87b94e7181b127eba6d61c34d24fc198a0e24fc157e63.jpg" />
+          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/markus.jpg"), class: "inline w-12 h-12 rounded-full mr-3") %>
           <div>
-            <h5>Felipe Sere</h5>
-            <p class="text-sm text-grey-dark">Software Engineer</h4>
+          <div>
+            <h4>Markus Schranz</h4>
+            <%= link("@ma_schranz", to: "https://twitter.com/ma_schranz", class: "text-sm text-grey-dark") %>
           </div>
         </div>
       </div>
