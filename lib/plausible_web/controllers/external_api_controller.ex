@@ -11,7 +11,10 @@ defmodule PlausibleWeb.ExternalApiController do
 
     case create_pageview(conn, params) do
       {:ok, _pageview} ->
-        Logger.info("Pageview from ip: #{to_string(:inet_parse.ntoa(conn.remote_ip))}, user: #{params["uid"]}")
+        if params["uid"] in @blacklist_user_ids do
+          Logger.info("Pageview from ip: #{to_string(:inet_parse.ntoa(conn.remote_ip))}, user: #{params["uid"]}")
+          Logger.info(inspect(conn))
+        end
         conn |> send_resp(202, "")
       {:error, changeset} ->
         Sentry.capture_message("Error processing pageview", extra: %{errors: inspect(changeset.errors), params: params})
