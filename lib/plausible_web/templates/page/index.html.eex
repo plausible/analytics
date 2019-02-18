@@ -110,7 +110,7 @@
       </div>
 
       <div class="w-full md:w-31percent mt-16 md:mt-0">
-        <p class="italic">All the insights you need in a single page. Plausible's user experience and user interface are the stark opposite of Google Analytics.</p>
+        <p class="italic">All the stats you need in a single page. Plausible's user experience and user interface are the stark opposite of Google Analytics.</p>
         <div class="mt-2 md:mt-4 flex items-center justify-start">
           <a href="https://makisotman.com/">
             <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/makis.jpg"), class: "inline w-12 h-12 rounded-full mr-3") %>
