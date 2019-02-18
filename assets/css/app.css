@@ -21,6 +21,11 @@ html {
   @apply font-sans text-grey-darkest;
 }
 
+body {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
 a, button {
   @apply no-underline text-grey-darkest;
 }
