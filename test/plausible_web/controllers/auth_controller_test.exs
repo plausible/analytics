@@ -11,13 +11,19 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "registering sends an activation link", %{conn: conn} do
-      post(conn, "/register", name: "Jane Doe", email: "user@example.com")
+      post(conn, "/register", user: %{
+        name: "Jane Doe",
+        email: "user@example.com"
+      })
 
       assert_email_delivered_with(subject: "Plausible activation link")
     end
 
     test "user sees success page after registering", %{conn: conn} do
-      conn = post(conn, "/register", name: "Jane Doe", email: "user@example.com")
+      conn = post(conn, "/register", user: %{
+        name: "Jane Doe",
+        email: "user@example.com"
+      })
 
       assert html_response(conn, 200) =~ "Success!"
     end
@@ -98,6 +104,21 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "shows the form", %{conn: conn} do
       conn = get(conn, "/settings")
       assert html_response(conn, 200) =~ "Account settings"
+    end
+  end
+
+  describe "DELETE /me" do
+    setup [:create_user, :log_in, :create_site]
+    use Plausible.Repo
+
+    test "deletes the user", %{conn: conn, user: user} do
+      Repo.insert_all("intro_emails", [%{
+        user_id: user.id,
+        timestamp: NaiveDateTime.utc_now()
+      }])
+
+      conn = delete(conn, "/me")
+      assert redirected_to(conn) == "/"
     end
   end
 end
