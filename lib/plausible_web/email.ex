@@ -38,6 +38,8 @@ defmodule PlausibleWeb.Email do
   end
 
   def feedback(from, text) do
+    from = if from == "", do: "anonymous@plausible.io", else: from
+
     new_email()
     |> to("uku@plausible.io")
     |> from(from)
