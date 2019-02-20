@@ -8,8 +8,14 @@
       <div class="flex items-center justify-between">
         <h2>Success!</h2>
       </div>
-      <div class="my-4">
-        We've sent an activation link to <%= @email %>. Please click on the link to activate your account.
+      <div class="my-4 leading-tight">
+        We've sent an activation link to <b><%= @email %></b>. Please click on the link to activate your account.
+      </div>
+      <div class="mt-8 text-sm">
+        Didn't recieve an email?
+      </div>
+      <div class="mt-2 text-sm text-grey-dark leading-tight">
+        Please check your spam folder and contact <a href="mailto:uku@plausible.io">uku@plausible.io</a> if the problem persists
       </div>
     </div>
     <p class="text-center text-grey text-xs">
