@@ -4,7 +4,8 @@ defmodule PlausibleWeb.AuthController do
   alias Plausible.Auth
   require Logger
 
-  plug :require_logged_out when action in [:register_form, :register, :login_form, :login]
+  plug PlausibleWeb.RequireLoggedOutPlug when action in [:register_form, :register, :login_form, :login]
+  plug PlausibleWeb.RequireAccountPlug when action in [:user_settings, :save_settings, :delete_me]
 
   def register_form(conn, _params) do
     changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
@@ -123,16 +124,5 @@ defmodule PlausibleWeb.AuthController do
     conn
     |> configure_session(drop: true)
     |> redirect(to: "/")
-  end
-
-  defp require_logged_out(conn, _opts) do
-    cond do
-      conn.assigns[:current_user] ->
-        conn
-        |> redirect(to: "/")
-        |> Plug.Conn.halt
-      :else ->
-        conn
-    end
   end
 end

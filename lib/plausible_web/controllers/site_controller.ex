@@ -3,7 +3,7 @@ defmodule PlausibleWeb.SiteController do
   use Plausible.Repo
   alias Plausible.Analytics
 
-  plug :require_account when action not in [:index, :privacy, :terms, :analytics]
+  plug PlausibleWeb.RequireAccountPlug when action not in [:analytics]
 
   def new(conn, _params) do
     changeset = Plausible.Site.changeset(%Plausible.Site{})
@@ -135,14 +135,5 @@ defmodule PlausibleWeb.SiteController do
 
   defp today(site) do
     Timex.now(site.timezone) |> Timex.to_date
-  end
-
-  defp require_account(conn, _opts) do
-    case conn.assigns[:current_user] do
-      nil ->
-        redirect(conn, to: "/login") |> Plug.Conn.halt
-      _email ->
-        conn
-    end
   end
 end

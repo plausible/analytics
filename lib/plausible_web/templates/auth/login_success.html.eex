@@ -9,7 +9,7 @@
         <h2>Success!</h2>
       </div>
       <div class="my-4">
-        We've sent a magic link to <%= @email %>. You can use it to log in by clicking on it.
+        We've sent a magic link to <b><%= @email %></b>. You can log in by clicking on it.
       </div>
       <div class="mt-8 text-sm">
         Didn't recieve an email?
