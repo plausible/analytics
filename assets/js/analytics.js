@@ -40,8 +40,6 @@
       var screenWidth = window.screen.width;
       var screenHeight = window.screen.height;
 
-      // Respect "Do Not Track" requests
-      if('doNotTrack' in window.navigator && window.navigator.doNotTrack === "1") return ignore('Do Not Track is on');
       // Ignore prerendered pages
       if( 'visibilityState' in window.document && window.document.visibilityState === 'prerender' ) return ignore('document is prerendering');
       // Ignore locally server pages
