@@ -46,10 +46,10 @@ defmodule PlausibleWeb.AuthController do
         end
       {:error, :expired} ->
         Plausible.Tracking.event(conn, "Register: Activation Failed", %{reason: :expired})
-        conn |> send_resp(401, "Your login token has expired")
+        conn |> send_resp(401, "Your token has expired. Please request another activation link.")
       {:error, _} ->
         Plausible.Tracking.event(conn, "Register: Activation Failed", %{reason: :invalid})
-        conn |> send_resp(400, "Your login token is invalid")
+        conn |> send_resp(400, "Invalid token")
     end
   end
 

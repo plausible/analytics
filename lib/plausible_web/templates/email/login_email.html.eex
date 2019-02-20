@@ -1,2 +1,2 @@
 <a href="<%= @login_link %>">Click here</a> to log in to Plausible.<br /><br />
-This link will expire in 30 minutes. If you don't use it by then, you can request another login link.
+This link will expire in 24 hours. If you don't use it by then, you can request another login link.
