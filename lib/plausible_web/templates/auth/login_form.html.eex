@@ -10,6 +10,9 @@
       </div>
       <div class="my-4">
         <%= email_input f, :email, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "example@email.com" %>
+        <%= if @conn.assigns[:error] do %>
+          <div class="text-red text-xs italic mt-3"><%= @conn.assigns[:error] %></div>
+        <% end %>
       </div>
       <%= submit "Send login link", class: "button mt-4 w-full" %>
       <p class="text-center text-grey-dark text-xs mt-4">

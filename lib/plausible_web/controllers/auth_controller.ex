@@ -54,12 +54,22 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def login(conn, %{"email" => email}) do
-    token = Auth.Token.sign_login(email)
-    url = PlausibleWeb.Endpoint.url() <> "/claim-login?token=#{token}"
-    Logger.debug(url)
-    email_template = PlausibleWeb.Email.login_email(email, url)
-    Plausible.Mailer.deliver_now(email_template)
-    conn |> render("login_success.html", email: email)
+    case email do
+      "" ->
+        conn |> render("login_form.html", error: "email is required")
+
+      email ->
+        if Repo.get_by(Plausible.Auth.User, email: email) do
+          token = Auth.Token.sign_login(email)
+          url = PlausibleWeb.Endpoint.url() <> "/claim-login?token=#{token}"
+          Logger.debug(url)
+          email_template = PlausibleWeb.Email.login_email(email, url)
+          Plausible.Mailer.deliver_now(email_template)
+        else
+          Plausible.Tracking.event(conn, "Login: User Not Found")
+        end
+        conn |> render("login_success.html", email: email)
+    end
   end
 
   def login_form(conn, _params) do

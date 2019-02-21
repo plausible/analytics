@@ -59,11 +59,28 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = get(conn, "/login")
       assert html_response(conn, 200) =~ "Enter your email to log in"
     end
+  end
+
+  describe "POST /login" do
 
     test "submitting the form sends a login link", %{conn: conn} do
-      post(conn, "/login", email: "user@example.com")
+      {:ok, [user: user]} = create_user([])
+      post(conn, "/login", email: user.email)
 
       assert_email_delivered_with(subject: "Plausible login link")
+    end
+
+    test "submitting empty email renders form again", %{conn: conn} do
+      conn = post(conn, "/login", email: "")
+
+      assert_no_emails_delivered()
+      assert html_response(conn, 200) =~ "email is required"
+    end
+
+    test "submitting non-existent user email does not send email", %{conn: conn} do
+      post(conn, "/login", email: "fake@example.com")
+
+      assert_no_emails_delivered()
     end
 
     test "user sees success page after registering", %{conn: conn} do
