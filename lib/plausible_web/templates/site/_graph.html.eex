@@ -1,0 +1,69 @@
+<div class="w-full bg-white shadow rounded border border-grey-light mt-4">
+  <div class="border-b border-grey-light p-4 font-medium">
+    <span><%= @pageviews %> Pageviews</span> • <span><%= @unique_visitors %> Unique visitors</span>
+  </div>
+  <div class="p-4">
+    <canvas id="main-graph" class="mt-4" width="400" height="125"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
+    <script>
+    var plot = [<%= Enum.join(@plot, ",") %>];
+    var labels = [<%= raw Enum.map(@labels, fn l -> "'#{l}'" end) |> Enum.join(", ") %>]
+    var ctx = document.getElementById("main-graph").getContext('2d');
+    var gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(101,116,205, 0.2)');
+    gradient.addColorStop(1, 'rgba(101,116,205, 0)');
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Pageviews',
+          data: plot,
+          borderWidth: 3,
+          borderColor: 'rgba(101,116,205)',
+          pointBackgroundColor: 'rgba(101,116,205)',
+          backgroundColor: gradient,
+        }]
+      },
+      options: {
+        legend: {display: false},
+        responsive: true,
+        elements: {line: {tension: 0.1}, point: {radius: 0}},
+        tooltips: {
+          mode: 'index',
+          intersect: false,
+          displayColors: false
+        },
+        hover: {
+          mode: 'index',
+          intersect: false
+        },
+        scales: {
+          yAxes: [{
+            ticks: {
+              callback: function (value) { if (Number.isInteger(value)) { return value; } },
+              beginAtZero: true,
+              autoSkip: true,
+              maxTicksLimit: 8,
+            },
+            gridLines: {
+              zeroLineColor: 'transparent',
+              drawBorder: false,
+            }
+          }],
+          xAxes: [{
+            gridLines: {
+              display: false,
+            },
+            ticks: {
+              autoSkip: true,
+              maxTicksLimit: 8,
+            }
+          }]
+        }
+      }
+    });
+    </script>
+  </div>
+</div>

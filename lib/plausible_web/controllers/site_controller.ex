@@ -47,7 +47,7 @@ defmodule PlausibleWeb.SiteController do
 
   defp show_analytics(conn, site) do
     Plausible.Tracking.event(conn, "Site Analytics: Open")
-    {date_range, step_type} = get_date_range(site, conn.params)
+    {date_range, period, step_type} = get_date_range(site, conn.params)
 
     query = Analytics.Query.new(
       date_range: date_range,
@@ -71,16 +71,16 @@ defmodule PlausibleWeb.SiteController do
       browsers: Analytics.browsers(site, query),
       operating_systems: Analytics.operating_systems(site, query),
       site: site,
+      period: period,
+      date_range: date_range,
       title: "Plausible · " <> site.domain
     )
   end
 
-  def analytics(conn, %{"website" => website} = params) do
+  def analytics(conn, %{"website" => website}) do
     site = Repo.get_by(Plausible.Site, domain: website)
 
     if site && current_user_can_access?(conn, site) do
-      {date_range, _step} = get_date_range(site, params)
-
       has_pageviews = Repo.exists?(
         from p in Plausible.Pageview,
         where: p.hostname == ^website
@@ -114,19 +114,26 @@ defmodule PlausibleWeb.SiteController do
 
   defp get_date_range(site, %{"period" => "today"}) do
     date_range = Date.range(today(site), today(site))
-    {date_range, "hour"}
+    {date_range, "today","hour"}
   end
 
   defp get_date_range(site, %{"period" => "7days"}) do
     start_date = Timex.shift(today(site), days: -7)
     date_range = Date.range(start_date, today(site))
-    {date_range, "date"}
+    {date_range, "7days" ,"date"}
   end
 
   defp get_date_range(site, %{"period" => "30days"}) do
     start_date = Timex.shift(today(site), days: -30)
     date_range = Date.range(start_date, today(site))
-    {date_range, "date"}
+    {date_range, "30days" ,"date"}
+  end
+
+  defp get_date_range(_site, %{"period" => "custom", "from" => from, "to" => to}) do
+    start_date = Date.from_iso8601!(from)
+    end_date = Date.from_iso8601!(to)
+    date_range = Date.range(start_date, end_date)
+    {date_range, "custom" , "date"}
   end
 
   defp get_date_range(site, _) do

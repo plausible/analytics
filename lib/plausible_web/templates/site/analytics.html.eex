@@ -2,82 +2,17 @@
 <div class="container pb-32">
   <div class="w-full flex justify-between items-center">
     <h2 class="mr-8"><%= @site.domain %></h2>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <div>
-      <%= active_link(@conn, "Last 30 days", to: "/#{@site.domain}?period=30days", active: :inclusive_with_params, class: "tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
-      <%= active_link(@conn, "Last 7 days", to: "/#{@site.domain}", active: !active_path?(@conn, to: "/#{@site.domain}?period=30days", active: :inclusive_with_params) && !active_path?(@conn, to: "/#{@site.domain}?period=today", active: :inclusive_with_params), class: "tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
-      <%= active_link(@conn, "Today", to: "/#{@site.domain}?period=today", active: :inclusive_with_params, class: "tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
+      <%= active_link(@conn, "24h", to: "/#{@site.domain}?period=today", active: @period == "today", class: "tracking-wide text-sm font-bold mr-4 hover:text-indigo-darkest transition", class_active: "border-b-2 border-red text-indigo-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
+      <%= active_link(@conn, "7d", to: "/#{@site.domain}", active: @period == "7days", class: "tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
+      <%= active_link(@conn, "30d", to: "/#{@site.domain}?period=30days", active: @period == "30days", class: "tracking-wide text-sm font-bold mr-4 hover:text-indigo-darkest transition", class_active: "border-b-2 border-red text-indigo-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
+      <%= active_link(@conn, custom_range_text(@period, @date_range), to: "#", active: @period == "custom", class: "tracking-wide text-sm font-bold hover:text-indigo-darkest transition", id: "custom-daterange-trigger", class_active: "border-b-2 border-red text-indigo-darkest", class_inactive: "text-grey-dark", active_disable: true) %>
     </div>
   </div>
 
-  <div class="w-full bg-white shadow rounded border border-grey-light mt-4">
-    <div class="border-b border-grey-light p-4 font-medium">
-      <span><%= @pageviews %> Pageviews</span> • <span><%= @unique_visitors %> Unique visitors</span>
-    </div>
-    <div class="p-4">
-      <canvas id="main-graph" class="mt-4" width="400" height="125"></canvas>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
-      <script>
-      var plot = [<%= Enum.join(@plot, ",") %>];
-      var labels = [<%= raw Enum.map(@labels, fn l -> "'#{l}'" end) |> Enum.join(", ") %>]
-      var ctx = document.getElementById("main-graph").getContext('2d');
-      var gradient = ctx.createLinearGradient(0, 0, 0, 300);
-      gradient.addColorStop(0, 'rgba(101,116,205, 0.2)');
-      gradient.addColorStop(1, 'rgba(101,116,205, 0)');
-
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Pageviews',
-            data: plot,
-            borderWidth: 3,
-            borderColor: 'rgba(101,116,205)',
-            pointBackgroundColor: 'rgba(101,116,205)',
-            backgroundColor: gradient,
-          }]
-        },
-        options: {
-          legend: {display: false},
-          responsive: true,
-          elements: {line: {tension: 0.1}, point: {radius: 0}},
-          tooltips: {
-            mode: 'index',
-            intersect: false,
-            displayColors: false
-          },
-          hover: {
-            mode: 'index',
-            intersect: false
-          },
-          scales: {
-            yAxes: [{
-              ticks: {
-                callback: function (value) { if (Number.isInteger(value)) { return value; } },
-                beginAtZero: true,
-                autoSkip: true,
-                maxTicksLimit: 8,
-              },
-              gridLines: {
-                zeroLineColor: 'transparent',
-                drawBorder: false,
-              }
-            }],
-            xAxes: [{
-              gridLines: {
-                display: false,
-              },
-              ticks: {
-                autoSkip: true,
-                maxTicksLimit: 8,
-              }
-            }]
-          }
-        }
-      });
-      </script>
-    </div>
-  </div>
+  <%= render("_graph.html", assigns) %>
 
   <div class="w-full block md:flex items-start justify-between mt-6">
     <div class="w-full md:w-31percent bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
