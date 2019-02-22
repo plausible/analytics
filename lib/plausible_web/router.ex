@@ -16,10 +16,6 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.LastSeenPlug
   end
 
-  pipeline :external_api do
-    plug :accepts, ["text/plain"]
-  end
-
   pipeline :api do
     plug :accepts, ["application/json"]
   end
@@ -51,12 +47,11 @@ defmodule PlausibleWeb.Router do
     get "/sites/new", SiteController, :new
     post "/sites", SiteController, :create_site
     get "/:website/snippet", SiteController, :add_snippet
-    get "/:website", SiteController, :analytics
+
+    get "/:website", StatsController, :stats
   end
 
   scope "/api", PlausibleWeb do
-    pipe_through :external_api
-
     # external
     post "/page", ExternalApiController, :page
     get "/error", ExternalApiController, :error
