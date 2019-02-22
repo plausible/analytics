@@ -20,6 +20,7 @@ defmodule Plausible.DataCase do
 
       import Ecto.Changeset
       import Plausible.DataCase
+      import Plausible.Factory
     end
   end
 

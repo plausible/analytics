@@ -1,22 +1,6 @@
-defmodule Plausible.Analytics.Query do
-  defstruct [date_range: nil, step_type: nil]
-
-  def new(attrs) do
-    attrs
-      |> Enum.into(%{})
-      |> Map.put(:__struct__, __MODULE__)
-  end
-end
-
-defmodule Plausible.Analytics do
+defmodule Plausible.Stats do
   use Plausible.Repo
-  alias Plausible.Analytics.Query
-
-  defp transform_keys(map, fun) do
-    for {key, val} <- map, into: %{} do
-      {fun.(key), val}
-    end
-  end
+  alias Plausible.Stats.Query
 
   def calculate_plot(site, query) do
     groups = pageview_groups(site, query)
@@ -56,9 +40,9 @@ defmodule Plausible.Analytics do
   defp pageview_groups(site, %Query{step_type: "date"} = query) do
     Repo.all(
       from p in base_query(site, query),
+      select: {fragment("(? at time zone 'utc' at time zone ?)::date", p.inserted_at, ^site.timezone), count(p.id)},
       group_by: 1,
-      order_by: 1,
-      select: {fragment("(? at time zone 'utc' at time zone ?)::date", p.inserted_at, ^site.timezone), count(p.id)}
+      order_by: 1
     ) |> Enum.into(%{})
   end
 
@@ -149,4 +133,11 @@ defmodule Plausible.Analytics do
       where: type(fragment("(? at time zone 'utc' at time zone ?)", p.inserted_at, ^site.timezone), :date) >= ^query.date_range.first and type(fragment("(? at time zone 'utc' at time zone ?)", p.inserted_at, ^site.timezone), :date) <= ^query.date_range.last
     )
   end
+
+  defp transform_keys(map, fun) do
+    for {key, val} <- map, into: %{} do
+      {fun.(key), val}
+    end
+  end
+
 end

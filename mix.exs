@@ -51,7 +51,8 @@ defmodule Plausible.MixProject do
       {:ua_inspector, "~> 0.18"},
       {:bamboo, "~> 1.1"},
       {:sentry, "~> 7.0"},
-      {:httpoison, "~> 1.4"}
+      {:httpoison, "~> 1.4"},
+      {:ex_machina, "~> 2.2", only: :test}
     ]
   end
 

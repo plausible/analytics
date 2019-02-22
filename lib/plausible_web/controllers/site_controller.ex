@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.SiteController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.Analytics
 
   plug PlausibleWeb.RequireAccountPlug when action not in [:analytics]
 

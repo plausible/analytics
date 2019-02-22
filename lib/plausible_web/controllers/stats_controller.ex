@@ -1,33 +1,33 @@
 defmodule PlausibleWeb.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.Analytics
+  alias Plausible.Stats
 
   defp show_stats(conn, site) do
     Plausible.Tracking.event(conn, "Site Analytics: Open")
     {date_range, period, step_type} = get_date_range(site, conn.params)
 
-    query = Analytics.Query.new(
+    query = Stats.Query.new(
       date_range: date_range,
       step_type: step_type
     )
 
-    plot = Analytics.calculate_plot(site, query)
-    labels = Analytics.labels(site, query)
+    plot = Stats.calculate_plot(site, query)
+    labels = Stats.labels(site, query)
 
 		conn
     |> assign(:skip_plausible_tracking, site.domain !== "plausible.io")
     |> render("stats.html",
       plot: plot,
       labels: labels,
-      pageviews: Analytics.total_pageviews(site, query),
-      unique_visitors: Analytics.unique_visitors(site, query),
-      top_referrers: Analytics.top_referrers(site, query),
-      top_pages: Analytics.top_pages(site, query),
-      top_screen_sizes: Analytics.top_screen_sizes(site, query),
-      device_types: Analytics.device_types(site, query),
-      browsers: Analytics.browsers(site, query),
-      operating_systems: Analytics.operating_systems(site, query),
+      pageviews: Stats.total_pageviews(site, query),
+      unique_visitors: Stats.unique_visitors(site, query),
+      top_referrers: Stats.top_referrers(site, query),
+      top_pages: Stats.top_pages(site, query),
+      top_screen_sizes: Stats.top_screen_sizes(site, query),
+      device_types: Stats.device_types(site, query),
+      browsers: Stats.browsers(site, query),
+      operating_systems: Stats.operating_systems(site, query),
       site: site,
       period: period,
       date_range: date_range,
