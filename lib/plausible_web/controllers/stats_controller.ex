@@ -70,9 +70,9 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  defp get_date_range(site, %{"period" => "today"}) do
+  defp get_date_range(site, %{"period" => "24h"}) do
     date_range = Date.range(today(site), today(site))
-    {date_range, "today","hour"}
+    {date_range, "24h","hour"}
   end
 
   defp get_date_range(site, %{"period" => "7days"}) do

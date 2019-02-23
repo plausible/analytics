@@ -7,12 +7,12 @@ defmodule Plausible.Stats do
 
     steps = case query.step_type do
       "hour" ->
-        current_hour = Timex.now(site.timezone).hour
-        Enum.map(0..current_hour, fn shift ->
+        Enum.map(24..0, fn shift ->
           Timex.now(site.timezone)
-          |> Timex.beginning_of_day()
-          |> Timex.shift(hours: shift)
+          |> Timex.shift(hours: -shift)
           |> DateTime.to_naive
+          |> truncate_to_hour
+          |> NaiveDateTime.truncate(:second)
         end)
       "date" ->
         query.date_range
@@ -28,11 +28,11 @@ defmodule Plausible.Stats do
   end
 
   def labels(site, %Query{step_type: "hour"} = query) do
-    Enum.map(0..23, fn shift ->
+    Enum.map(24..0, fn shift ->
       Timex.now(site.timezone)
-      |> Timex.beginning_of_day()
-      |> Timex.shift(hours: shift)
+      |> Timex.shift(hours: -shift)
       |> DateTime.to_naive
+      |> truncate_to_hour
       |> Timex.format!("{h12}{am}")
     end)
   end
@@ -127,6 +127,13 @@ defmodule Plausible.Stats do
     )
   end
 
+  defp base_query(site, %Query{step_type: "hour"} = query) do
+    from(p in Plausible.Pageview,
+      where: p.hostname == ^site.domain,
+      where: p.inserted_at >= fragment("date_trunc('hour', now() - '24 hours'::interval)")
+    )
+  end
+
   defp base_query(site, query) do
     from(p in Plausible.Pageview,
       where: p.hostname == ^site.domain,
@@ -138,6 +145,11 @@ defmodule Plausible.Stats do
     for {key, val} <- map, into: %{} do
       {fun.(key), val}
     end
+  end
+
+  defp truncate_to_hour(datetime) do
+    {:ok, datetime} = NaiveDateTime.new(datetime.year, datetime.month, datetime.day, datetime.hour, 0, 0, 0)
+    datetime
   end
 
 end

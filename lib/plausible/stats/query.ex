@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Query do
       |> Map.put(:__struct__, __MODULE__)
   end
 
-  def from(tz, %{"period" => "today"}) do
+  def from(tz, %{"period" => "24h"}) do
     %__MODULE__{
       date_range: Date.range(today(tz), today(tz)),
       step_type: "hour"

@@ -5,7 +5,7 @@ defmodule Plausible.Stats.QueryTest do
   @tz "UTC"
 
   test "parses 24h format" do
-    q = Query.from(@tz, %{"period" => "today"})
+    q = Query.from(@tz, %{"period" => "24h"})
 
     assert q.date_range.first == Timex.today()
     assert q.date_range.last == Timex.today()
