@@ -13,7 +13,7 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "parses 7d format" do
-    q = Query.from(@tz, %{"period" => "7days"})
+    q = Query.from(@tz, %{"period" => "7d"})
 
     assert q.date_range.first == Timex.shift(Timex.today(), days: -7)
     assert q.date_range.last == Timex.today()
@@ -21,7 +21,7 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "parses 30d format" do
-    q = Query.from(@tz, %{"period" => "30days"})
+    q = Query.from(@tz, %{"period" => "30d"})
 
     assert q.date_range.first == Timex.shift(Timex.today(), days: -30)
     assert q.date_range.last == Timex.today()
@@ -29,7 +29,7 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "defaults to 7d format" do
-    assert Query.from(@tz, %{}) == Query.from(@tz, %{"period" => "7days"})
+    assert Query.from(@tz, %{}) == Query.from(@tz, %{"period" => "7d"})
   end
 
   test "parses custom format" do

@@ -21,13 +21,13 @@ defmodule Plausible.Stats do
     Enum.map(steps, fn step -> groups[step] || 0 end)
   end
 
-  def labels(site, %Query{step_type: "date"} = query) do
+  def labels(_site, %Query{step_type: "date"} = query) do
     Enum.map(query.date_range, fn date ->
       Timex.format!(date, "{D} {Mshort}")
     end)
   end
 
-  def labels(site, %Query{step_type: "hour"} = query) do
+  def labels(site, %Query{step_type: "hour"}) do
     Enum.map(24..0, fn shift ->
       Timex.now(site.timezone)
       |> Timex.shift(hours: -shift)
@@ -127,7 +127,7 @@ defmodule Plausible.Stats do
     )
   end
 
-  defp base_query(site, %Query{step_type: "hour"} = query) do
+  defp base_query(site, %Query{step_type: "hour"}) do
     from(p in Plausible.Pageview,
       where: p.hostname == ^site.domain,
       where: p.inserted_at >= fragment("date_trunc('hour', now() - '24 hours'::interval)")

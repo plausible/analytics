@@ -23,7 +23,7 @@ defmodule Plausible.StatsTest do
       insert(:pageview, hostname: site.domain)
       insert(:pageview, hostname: site.domain, inserted_at: days_ago(7))
 
-      query = Stats.Query.from(site.timezone, %{"period" => "7days"})
+      query = Stats.Query.from(site.timezone, %{"period" => "7d"})
 
       plot = Stats.calculate_plot(site, query)
 
@@ -37,7 +37,7 @@ defmodule Plausible.StatsTest do
       insert(:pageview, hostname: site.domain)
       insert(:pageview, hostname: site.domain, inserted_at: days_ago(31)) # TODO: Why is the symmetry broken? In the previous test we don't have to n+1 the insertion date
 
-      query = Stats.Query.from(site.timezone, %{"period" => "30days"})
+      query = Stats.Query.from(site.timezone, %{"period" => "30d"})
 
       plot = Stats.calculate_plot(site, query)
 

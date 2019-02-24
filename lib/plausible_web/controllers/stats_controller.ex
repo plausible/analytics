@@ -5,12 +5,8 @@ defmodule PlausibleWeb.StatsController do
 
   defp show_stats(conn, site) do
     Plausible.Tracking.event(conn, "Site Analytics: Open")
-    {date_range, period, step_type} = get_date_range(site, conn.params)
 
-    query = Stats.Query.new(
-      date_range: date_range,
-      step_type: step_type
-    )
+    query = Stats.Query.from(site.timezone, conn.params)
 
     plot = Stats.calculate_plot(site, query)
     labels = Stats.labels(site, query)
@@ -29,8 +25,8 @@ defmodule PlausibleWeb.StatsController do
       browsers: Stats.browsers(site, query),
       operating_systems: Stats.operating_systems(site, query),
       site: site,
-      period: period,
-      date_range: date_range,
+      period: conn.params["period"] || "7d",
+      query: query,
       title: "Plausible · " <> site.domain
     )
   end
@@ -68,37 +64,5 @@ defmodule PlausibleWeb.StatsController do
 
         Enum.any?(user.sites, fn user_site -> user_site == site end)
     end
-  end
-
-  defp get_date_range(site, %{"period" => "24h"}) do
-    date_range = Date.range(today(site), today(site))
-    {date_range, "24h","hour"}
-  end
-
-  defp get_date_range(site, %{"period" => "7days"}) do
-    start_date = Timex.shift(today(site), days: -7)
-    date_range = Date.range(start_date, today(site))
-    {date_range, "7days" ,"date"}
-  end
-
-  defp get_date_range(site, %{"period" => "30days"}) do
-    start_date = Timex.shift(today(site), days: -30)
-    date_range = Date.range(start_date, today(site))
-    {date_range, "30days" ,"date"}
-  end
-
-  defp get_date_range(_site, %{"period" => "custom", "from" => from, "to" => to}) do
-    start_date = Date.from_iso8601!(from)
-    end_date = Date.from_iso8601!(to)
-    date_range = Date.range(start_date, end_date)
-    {date_range, "custom" , "date"}
-  end
-
-  defp get_date_range(site, _) do
-    get_date_range(site, %{"period" => "7days"})
-  end
-
-  defp today(site) do
-    Timex.now(site.timezone) |> Timex.to_date
   end
 end

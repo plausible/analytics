@@ -6,9 +6,9 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <div>
       <%= active_link(@conn, "24h", to: "/#{@site.domain}?period=24h", active: @period == "24h", class: "tracking-wide text-sm font-bold mr-4 hover:text-indigo-darkest transition", class_active: "border-b-2 border-red text-indigo-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
-      <%= active_link(@conn, "7d", to: "/#{@site.domain}", active: @period == "7days", class: "tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
-      <%= active_link(@conn, "30d", to: "/#{@site.domain}?period=30days", active: @period == "30days", class: "tracking-wide text-sm font-bold mr-4 hover:text-indigo-darkest transition", class_active: "border-b-2 border-red text-indigo-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
-      <%= active_link(@conn, custom_range_text(@period, @date_range), to: "#", active: @period == "custom", class: "tracking-wide text-sm font-bold hover:text-indigo-darkest transition", id: "custom-daterange-trigger", class_active: "border-b-2 border-red text-indigo-darkest", class_inactive: "text-grey-dark", active_disable: true) %>
+      <%= active_link(@conn, "7d", to: "/#{@site.domain}", active: @period == "7d", class: "tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
+      <%= active_link(@conn, "30d", to: "/#{@site.domain}?period=30d", active: @period == "30d", class: "tracking-wide text-sm font-bold mr-4 hover:text-indigo-darkest transition", class_active: "border-b-2 border-red text-indigo-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
+      <%= active_link(@conn, custom_range_text(@period, @query.date_range), to: "#", active: @period == "custom", class: "tracking-wide text-sm font-bold hover:text-indigo-darkest transition", id: "custom-daterange-trigger", class_active: "border-b-2 border-red text-indigo-darkest", class_inactive: "text-grey-dark", active_disable: true) %>
     </div>
   </div>
 
