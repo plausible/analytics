@@ -2,7 +2,7 @@ defmodule PlausibleWeb.SiteController do
   use PlausibleWeb, :controller
   use Plausible.Repo
 
-  plug PlausibleWeb.RequireAccountPlug when action not in [:analytics]
+  plug PlausibleWeb.RequireAccountPlug
 
   def new(conn, _params) do
     changeset = Plausible.Site.changeset(%Plausible.Site{})
