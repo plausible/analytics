@@ -15,7 +15,8 @@ module.exports = (env, options) => ({
   },
   entry: {
       'app': ['./js/app.js'],
-      'analytics': ['./js/analytics.js']
+      'analytics': ['./js/plausible.js'],
+      'plausible': ['./js/plausible.js']
   },
   output: {
     filename: '[name].js',
