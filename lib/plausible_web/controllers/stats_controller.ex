@@ -48,7 +48,9 @@ defmodule PlausibleWeb.StatsController do
         |> render("waiting_first_pageview.html", site: site)
       end
     else
-      conn |> send_resp(404, "Website not found")
+      conn
+      |> put_status(404)
+      |> render(PlausibleWeb.ErrorView, :"404", layout: false)
     end
   end
 
