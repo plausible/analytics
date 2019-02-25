@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.SiteController do
   use PlausibleWeb, :controller
   use Plausible.Repo
+  alias Plausible.Sites
 
   plug PlausibleWeb.RequireAccountPlug
 
@@ -27,7 +28,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def add_snippet(conn, %{"website" => website}) do
-    site = Plausible.Repo.get_by!(Plausible.Site, domain: website)
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
     Plausible.Tracking.event(conn, "Site: View Snippet")
     conn
     |> assign(:skip_plausible_tracking, true)

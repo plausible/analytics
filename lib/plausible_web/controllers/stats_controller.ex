@@ -61,10 +61,7 @@ defmodule PlausibleWeb.StatsController do
   defp current_user_can_access?(conn, site) do
     case conn.assigns[:current_user] do
       nil -> false
-      user ->
-        user = user |> Repo.preload(:sites)
-
-        Enum.any?(user.sites, fn user_site -> user_site == site end)
+      user -> Plausible.Sites.can_access(user.id, site)
     end
   end
 end
