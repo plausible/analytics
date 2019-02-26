@@ -37,26 +37,6 @@ defmodule Plausible.Stats do
     end)
   end
 
-  defp pageview_groups(site, %Query{step_type: "date"} = query) do
-    Repo.all(
-      from p in base_query(site, query),
-      select: {fragment("(? at time zone 'utc' at time zone ?)::date", p.inserted_at, ^site.timezone), count(p.id)},
-      group_by: 1,
-      order_by: 1
-    ) |> Enum.into(%{})
-  end
-
-  defp pageview_groups(site, %Query{step_type: "hour"} = query) do
-    Repo.all(
-      from p in base_query(site, query),
-      group_by: 1,
-      order_by: 1,
-      select: {fragment("date_trunc(?, ? at time zone 'utc' at time zone ?)", "hour", p.inserted_at, ^site.timezone), count(p.id)}
-    )
-    |> Enum.into(%{})
-    |> transform_keys(fn dt -> NaiveDateTime.truncate(dt, :second) end)
-  end
-
   def total_pageviews(site, query) do
     Repo.aggregate(base_query(site, query), :count, :id)
   end
@@ -152,4 +132,23 @@ defmodule Plausible.Stats do
     datetime
   end
 
+  defp pageview_groups(site, %Query{step_type: "date"} = query) do
+    Repo.all(
+      from p in base_query(site, query),
+      select: {fragment("(? at time zone 'utc' at time zone ?)::date", p.inserted_at, ^site.timezone), count(p.id)},
+      group_by: 1,
+      order_by: 1
+    ) |> Enum.into(%{})
+  end
+
+  defp pageview_groups(site, %Query{step_type: "hour"} = query) do
+    Repo.all(
+      from p in base_query(site, query),
+      group_by: 1,
+      order_by: 1,
+      select: {fragment("date_trunc(?, ? at time zone 'utc' at time zone ?)", "hour", p.inserted_at, ^site.timezone), count(p.id)}
+    )
+    |> Enum.into(%{})
+    |> transform_keys(fn dt -> NaiveDateTime.truncate(dt, :second) end)
+  end
 end

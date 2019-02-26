@@ -48,6 +48,46 @@ defmodule Plausible.StatsTest do
     end
   end
 
+  describe "labels" do
+    test "shows last 30 days" do
+      query = %Stats.Query{
+        date_range: Date.range(~D[2019-01-01], ~D[2019-01-31]),
+        step_type: "date"
+      }
+
+      labels = Stats.labels(nil, query)
+
+      assert List.first(labels) == "1 Jan"
+      assert List.last(labels) == "31 Jan"
+    end
+
+    test "shows last 7 days" do
+      query = %Stats.Query{
+        date_range: Date.range(~D[2019-01-01], ~D[2019-01-08]),
+        step_type: "date"
+      }
+
+      labels = Stats.labels(nil, query)
+
+      assert List.first(labels) == "1 Jan"
+      assert List.last(labels) == "8 Jan"
+    end
+
+    test "shows last 24 hours" do
+      site = insert(:site)
+      query = %Stats.Query{
+        date_range: Date.range(~D[2019-01-31], ~D[2019-01-31]),
+        step_type: "hour"
+      }
+
+      labels = Stats.labels(site, query)
+      current_hour = Timex.now() |> Timex.format!("{h12}{am}")
+
+      assert List.first(labels) == current_hour
+      assert List.last(labels) == current_hour
+    end
+  end
+
   defp days_ago(days) do
     Timex.now() |> Timex.shift(days: -days)
   end
