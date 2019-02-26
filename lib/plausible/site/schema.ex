@@ -12,8 +12,8 @@ defmodule Plausible.Site do
     timestamps()
   end
 
-  def changeset(user, attrs \\ %{}) do
-    user
+  def changeset(site, attrs \\ %{}) do
+    site
     |> cast(attrs, [:domain, :timezone])
     |> validate_required([:domain, :timezone])
     |> unique_constraint(:domain)

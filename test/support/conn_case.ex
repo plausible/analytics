@@ -20,6 +20,7 @@ defmodule PlausibleWeb.ConnCase do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
       alias PlausibleWeb.Router.Helpers, as: Routes
+      import Plausible.Factory
 
       # The default endpoint for testing
       @endpoint PlausibleWeb.Endpoint

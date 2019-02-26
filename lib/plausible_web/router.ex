@@ -47,6 +47,9 @@ defmodule PlausibleWeb.Router do
     get "/sites/new", SiteController, :new
     post "/sites", SiteController, :create_site
     get "/:website/snippet", SiteController, :add_snippet
+    get "/:website/settings", SiteController, :settings
+    put "/:website/settings", SiteController, :update_settings
+    delete "/:website", SiteController, :delete_site
 
     get "/:website", StatsController, :stats
   end

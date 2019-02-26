@@ -1,0 +1,40 @@
+<div class="pt-24"></div>
+<div class="max-w-md mx-auto flex justify-between">
+  <a href="/<%= @site.domain %>"><h1><%= @site.domain %></h1></a>
+</div>
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10">
+  <div class="flex items-center justify-between">
+    <h2>Settings</h2>
+  </div>
+
+  <div class="my-4 border-b border-grey-light"></div>
+
+  <%= form_for @changeset, "/#{@site.domain}/settings", [class: "max-w-xs"], fn f -> %>
+    <div class="my-4">
+      <%= label f, :domain, class: "block text-grey-darker text-sm font-bold mb-2" %>
+      <%= text_input f, :domain, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:border-grey-light ", disabled: "disabled" %>
+      <%= error_tag f, :domain %>
+    </div>
+    <div class="my-4">
+      <%= label f, :timezone, "Reporting Timezone", class: "block text-grey-darker text-sm font-bold mb-2" %>
+      <div class="inline-block relative w-full">
+        <%= select f, :timezone, Plausible.Timezones.options(), class: "block appearance-none w-full bg-grey-lighter text-grey-darker cursor-pointer hover:border-grey p-2 pr-8 rounded leading-normal focus:outline-none" %>
+        <div class="pointer-events-none absolute pin-y pin-r flex items-center px-2 text-red">
+          <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+        </div>
+      </div>
+    </div>
+    <%= submit "Save changes", class: "button mt-4" %>
+  <% end %>
+</div>
+
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-red-dark px-8 pt-6 pb-8 mt-16 mb-24">
+  <div class="flex items-center justify-between">
+    <h2>Delete site data</h2>
+  </div>
+
+  <div class="my-4 border-b border-grey-light"></div>
+
+  <p class="text-lg">Deleting the site removes all stats you've collected</p>
+  <%= link "Delete #{@site.domain}", to: "/#{@site.domain}", method: :delete, class: "button bg-red-dark mt-4", data: [confirm: "Deleting the site data cannot be reversed. Are you sure?"] %>
+</div>

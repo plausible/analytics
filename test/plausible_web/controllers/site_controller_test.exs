@@ -50,7 +50,8 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "renders form again when it is a duplicate domain", %{conn: conn} do
-      Repo.insert!(%Plausible.Site{domain: "example.com", timezone: "Europe/London"})
+      insert(:site, domain: "example.com")
+
       conn = post(conn, "/sites", %{
         "site" => %{
           "domain" => "example.com",
@@ -59,6 +60,34 @@ defmodule PlausibleWeb.SiteControllerTest do
       })
 
       assert html_response(conn, 200) =~ "has already been taken"
+    end
+  end
+
+  describe "PUT /:website/settings" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "updates the timezone", %{conn: conn, site: site} do
+      put(conn, "/#{site.domain}/settings", %{
+        "site" => %{
+          "timezone" => "Europe/London"
+        }
+      })
+
+      updated = Repo.get(Plausible.Site, site.id)
+      assert updated.timezone == "Europe/London"
+    end
+  end
+
+  describe "DELETE /:website" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "deletes the site and all pageviews", %{conn: conn, site: site} do
+      pageview = insert(:pageview, hostname: site.domain)
+
+      delete(conn, "/#{site.domain}")
+
+      refute Repo.exists?(from s in Plausible.Site, where: s.id == ^site.id)
+      refute Repo.exists?(from p in Plausible.Pageview, where: p.id == ^pageview.id)
     end
   end
 end

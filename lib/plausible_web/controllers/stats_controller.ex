@@ -50,7 +50,8 @@ defmodule PlausibleWeb.StatsController do
     else
       conn
       |> put_status(404)
-      |> render(PlausibleWeb.ErrorView, :"404", layout: false)
+      |> put_view(PlausibleWeb.ErrorView)
+      |> render("404.html", layout: false)
     end
   end
 
