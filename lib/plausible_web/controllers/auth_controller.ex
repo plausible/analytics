@@ -82,7 +82,9 @@ defmodule PlausibleWeb.AuthController do
 
         case Auth.find_user_by(email: email) do
           nil ->
-            send_resp(conn, 401, "User account with email #{email} does not exist. Please sign up to get started.")
+            conn
+            |> put_resp_content_type("text/plain")
+            |> send_resp(401, "User account with email #{email} does not exist. Please sign up to get started.")
           user ->
             conn
             |> put_session(:current_user_id, user.id)
