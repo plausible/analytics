@@ -1,17 +1,13 @@
 defmodule Plausible.TestUtils do
-  alias Plausible.Auth
   use Plausible.Repo
+  import Plausible.Factory
 
   def create_user(_) do
-    {:ok, user} = Auth.create_user("Jane Doe", "user@example.com")
-    {:ok, user: user}
+    {:ok, user: insert(:user)}
   end
 
   def create_site(%{user: user}) do
-    site = Plausible.Site.changeset(%Plausible.Site{}, %{
-      domain: "example.com",
-      timezone: "UTC"
-    }) |> Repo.insert!
+    site = insert(:site)
     Plausible.Site.Membership.changeset(%Plausible.Site.Membership{}, %{site_id: site.id, user_id: user.id}) |> Repo.insert!
     {:ok, site: site}
   end

@@ -62,7 +62,6 @@ defmodule PlausibleWeb.AuthControllerTest do
   end
 
   describe "POST /login" do
-
     test "submitting the form sends a login link", %{conn: conn} do
       {:ok, [user: user]} = create_user([])
       post(conn, "/login", email: user.email)

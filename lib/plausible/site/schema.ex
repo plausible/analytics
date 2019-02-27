@@ -1,10 +1,13 @@
 defmodule Plausible.Site do
   use Ecto.Schema
   import Ecto.Changeset
+  alias Plausible.Auth.User
 
   schema "sites" do
     field :domain, :string
     field :timezone, :string
+
+    many_to_many :members, User, join_through: "site_memberships"
 
     timestamps()
   end
