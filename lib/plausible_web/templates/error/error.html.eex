@@ -12,8 +12,8 @@
   </head>
   <body class="flex flex-col h-full bg-grey-lightest">
     <div class="container text-center mt-24">
-      <h1 class="text-5xl font-black">404</h1>
-      <div class="mt-2 text-xl">Oops! There's nothing here</div>
+      <h1 class="text-5xl font-black"><%= @status %></h1>
+      <div class="my-4 text-xl"><%= @message %></div>
       <%= link("Go to the homepage", to: "/", class: "button mt-4") %>
     </div>
   </body>
