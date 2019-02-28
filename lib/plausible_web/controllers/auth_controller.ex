@@ -53,11 +53,10 @@ defmodule PlausibleWeb.AuthController do
         |> render("401.html", layout: false, message: "Your token has expired. Please request another activation link.")
       {:error, _} ->
         Plausible.Tracking.event(conn, "Register: Activation Failed", %{reason: :invalid})
-        conn |> send_resp(400, "Invalid token")
         conn
         |> put_status(400)
         |> put_view(PlausibleWeb.ErrorView)
-        |> render("400.html", layout: false, message: "Your token has expired. Please request another activation link.")
+        |> render("400.html", layout: false, message: "Provided token is invalid. Please request another activation link.")
     end
   end
 
