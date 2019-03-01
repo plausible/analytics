@@ -3,6 +3,7 @@ defmodule PlausibleWeb.ExternalApiControllerTest do
   use Plausible.Repo
 
   @user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
+  @country_code "EE"
 
   describe "POST /api/page" do
     test "records the pageview", %{conn: conn} do
@@ -19,6 +20,7 @@ defmodule PlausibleWeb.ExternalApiControllerTest do
       conn = conn
              |> put_req_header("content-type", "text/plain")
              |> put_req_header("user-agent", @user_agent)
+             |> put_req_header("cf-ipcountry", @country_code)
              |> post("/api/page", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Pageview)
@@ -31,6 +33,7 @@ defmodule PlausibleWeb.ExternalApiControllerTest do
       assert pageview.screen_width == params[:screen_width]
       assert pageview.screen_height == params[:screen_height]
       assert pageview.screen_size == "1440x900"
+      assert pageview.country_code == @country_code
     end
 
     test "www. is stripped from hostname", %{conn: conn} do
