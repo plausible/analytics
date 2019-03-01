@@ -1,8 +1,10 @@
 defmodule PlausibleWeb.PageController do
   use PlausibleWeb, :controller
   use Plausible.Repo
+  require Logger
 
   def index(conn, _params) do
+    Logger.info(inspect conn.req_headers)
     if conn.assigns[:current_user] do
       user = conn.assigns[:current_user] |> Repo.preload(:sites)
       render(conn, "sites.html", sites: user.sites)
