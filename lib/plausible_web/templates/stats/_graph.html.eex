@@ -1,9 +1,9 @@
-<div class="w-full bg-white shadow rounded border border-grey-light mt-4">
+<div class="w-full bg-white shadow rounded mt-8">
   <div class="border-b border-grey-light p-4 font-medium">
     <span><%= @pageviews %> Pageviews</span> • <span><%= @unique_visitors %> Unique visitors</span>
   </div>
   <div class="p-4">
-    <canvas id="main-graph" class="mt-4" width="400" height="125"></canvas>
+    <canvas id="main-graph" class="mt-4" width="1054" height="329"></canvas>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
     <script>
     var plot = [<%= Enum.join(@plot, ",") %>];

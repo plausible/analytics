@@ -15,7 +15,7 @@
   <%= render("_graph.html", assigns) %>
 
   <div class="w-full block md:flex items-start justify-between mt-6">
-    <div class="w-full md:w-31percent bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
+    <div class="w-full md:w-31percent bg-white shadow rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="referrer-modal">
       <h2>Top Referrers</h2>
       <div class="text-grey-darker mt-1">by visitors</div>
 
@@ -28,23 +28,35 @@
           <%= bar(count, @top_referrers) %>
         <% end %>
       </div>
+      <%= if Enum.count(@top_referrers) >= 5 do %>
+        <a href="javascript:;" class="font-bold text-sm text-grey-dark transition tracking-wide group-hover-fill-red">
+          <svg style="fill: #8795a1;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          MORE
+        </a>
+      <% end %>
     </div>
 
-    <div class="w-full md:w-31percent bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
+    <div class="w-full md:w-31percent bg-white shadow rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="pages-modal">
       <h2>Top Pages</h2>
       <div class="text-grey-darker mt-1">by pageviews</div>
       <div class="mt-8">
         <%= for {page, count} <- @top_pages do %>
           <div class="flex items-center justify-between my-2">
-            <%= link(page, to: "//" <> @site.domain <> page, target: "_blank", class: "truncated-label", title: @site.domain <> page) %>
+            <span class="truncated-label"><%= page %></span>
             <span><%= count %></span>
           </div>
           <%= bar(count, @top_pages, :orange) %>
         <% end %>
       </div>
+      <%= if Enum.count(@top_pages) >= 5 do %>
+        <a href="javascript:;" class="font-bold text-sm text-grey-dark transition tracking-wide group-hover-fill-red">
+          <svg style="fill: #8795a1;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          MORE
+        </a>
+      <% end %>
     </div>
 
-    <div class="w-full md:w-31percent bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
+    <div class="w-full md:w-31percent bg-white shadow rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="screens-modal">
       <h2>Screen Sizes</h2>
       <div class="text-grey-darker mt-1">by pageviews</div>
       <div class="mt-8">
@@ -56,12 +68,18 @@
           <%= bar(count, @top_screen_sizes, :indigo) %>
         <% end %>
       </div>
+      <%= if Enum.count(@top_screen_sizes) >= 5 do %>
+        <a href="javascript:;" class="font-bold text-sm text-grey-dark transition tracking-wide group-hover-fill-red">
+          <svg style="fill: #8795a1;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          MORE
+        </a>
+      <% end %>
     </div>
 
   </div>
 
   <div class="w-full block md:flex items-start justify-between mt-6">
-    <div class="w-full md:w-31percent bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
+    <div class="w-full md:w-31percent bg-white shadow rounded mt-4 p-4 text-center">
       <h2>Device types</h2>
       <div class="text-grey-darker mt-1">by sessions</div>
       <div class="mt-8">
@@ -75,8 +93,8 @@
       </div>
     </div>
 
-    <div class="w-full md:w-31percent bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
-      <h2>Operating systems</h2>
+    <div class="w-full md:w-31percent bg-white shadow rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="operating-systems-modal">
+      <h2>Operating Systems</h2>
       <div class="text-grey-darker mt-1">by sessions</div>
       <div class="mt-8">
         <%= for {os, count} <- @operating_systems do %>
@@ -87,9 +105,15 @@
           <%= bar(count, @operating_systems, :blue) %>
         <% end %>
       </div>
+      <%= if Enum.count(@operating_systems) >= 5 do %>
+        <a href="javascript:;" class="font-bold text-sm text-grey-dark transition tracking-wide group-hover-fill-red">
+          <svg style="fill: #8795a1;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          MORE
+        </a>
+      <% end %>
     </div>
 
-    <div class="w-full md:w-31percent bg-white shadow rounded border border-grey-light mt-4 p-4 text-center">
+    <div class="w-full md:w-31percent bg-white shadow rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="browsers-modal">
       <h2>Browsers</h2>
       <div class="text-grey-darker mt-1">by sessions</div>
       <div class="mt-8">
@@ -101,6 +125,12 @@
           <%= bar(count, @browsers, :red) %>
         <% end %>
       </div>
+      <%= if Enum.count(@browsers) >= 5 do %>
+        <a href="javascript:;" class="font-bold text-sm text-grey-dark transition tracking-wide group-hover-fill-red">
+          <svg style="fill: #8795a1;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          MORE
+        </a>
+      <% end %>
     </div>
 
   </div>

@@ -695,6 +695,7 @@ module.exports = {
     '20': '5rem',
     '24': '6rem',
     '32': '8rem',
+    '48': '12rem',
   },
 
 
@@ -903,7 +904,7 @@ module.exports = {
     svgStroke: [],
     tableLayout: ['responsive'],
     textAlign: ['responsive'],
-    textColors: ['responsive', 'hover', 'focus'],
+    textColors: ['responsive', 'hover', 'focus', 'group-hover'],
     textSizes: ['responsive'],
     textStyle: ['responsive', 'hover', 'focus'],
     tracking: ['responsive'],

@@ -52,6 +52,11 @@ defmodule PlausibleWeb.Router do
     delete "/:website", SiteController, :delete_site
 
     get "/:website", StatsController, :stats
+    get "/:domain/referrers", StatsController, :referrers
+    get "/:domain/pages", StatsController, :pages
+    get "/:domain/screens", StatsController, :screens
+    get "/:domain/operating-systems", StatsController, :operating_systems
+    get "/:domain/browsers", StatsController, :browsers
   end
 
   scope "/api", PlausibleWeb do
