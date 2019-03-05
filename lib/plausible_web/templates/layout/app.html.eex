@@ -21,10 +21,10 @@
         <% @conn.assigns[:current_user] -> %>
           <ul class="list-reset flex">
             <li class="mr-6 hidden sm:block">
-              <%= link("Give feedback", to: "/feedback", class: "text-indigo-darker font-bold rounded py-2 px-3 hover:bg-grey-lighter", style: "line-height: 34px;") %>
+              <%= link("Give feedback", to: "/feedback", class: "font-bold rounded py-2 px-3 hover:bg-grey-lighter", style: "line-height: 34px;") %>
             </li>
             <li>
-              <div class="relative text-indigo-darker font-bold rounded hover:bg-grey-lighter">
+              <div class="relative font-bold rounded hover:bg-grey-lighter">
                 <div data-dropdown-trigger class="flex items-center hover:bg-grey-lighter rounded p-2 cursor-pointer">
                   <span class="mr-2"><%= @conn.assigns[:current_user].name || @conn.assigns[:current_user].email %></span>
                   <svg style="height: 18px; transform: translateY(2px); fill: #606f7b;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 512 640" enable-background="new 0 0 512 512" xml:space="preserve"><g><circle cx="256" cy="52.8" r="50.8"/><circle cx="256" cy="256" r="50.8"/><circle cx="256" cy="459.2" r="50.8"/></g></svg>
@@ -40,7 +40,7 @@
       <% true -> %>
         <ul class="list-reset flex">
           <li>
-            <%= link("Login", to: "/login", class: "text-indigo-darker font-bold rounded py-2 px-3 hover:bg-grey-lighter", style: "line-height: 33px;") %>
+            <%= link("Login", to: "/login", class: "font-bold rounded py-2 px-3 hover:bg-grey-lighter", style: "line-height: 33px;") %>
           </li>
         </ul>
       <% end %>
@@ -56,6 +56,7 @@
     <%= render @view_module, @view_template, assigns %>
     </main>
     <%= render("_footer.html", assigns) %>
+    <script src="https://cdn.jsdelivr.net/npm/micromodal/dist/micromodal.min.js"></script>
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </body>
 </html>

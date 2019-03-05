@@ -55,6 +55,86 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
+  def referrers(conn, %{"domain" => domain}) do
+    site = Repo.get_by(Plausible.Site, domain: domain)
+
+    if site && current_user_can_access?(conn, site) do
+      query = Stats.Query.from(site.timezone, conn.params)
+      referrers = Stats.top_referrers(site, query, 100)
+
+      render(conn, "referrers.html", layout: false, site: site, top_referrers: referrers)
+    else
+      conn
+      |> put_status(404)
+      |> put_view(PlausibleWeb.ErrorView)
+      |> render("404.html", layout: false)
+    end
+  end
+
+  def pages(conn, %{"domain" => domain}) do
+    site = Repo.get_by(Plausible.Site, domain: domain)
+
+    if site && current_user_can_access?(conn, site) do
+      query = Stats.Query.from(site.timezone, conn.params)
+      pages = Stats.top_pages(site, query, 100)
+
+      render(conn, "pages.html", layout: false, site: site, top_pages: pages)
+    else
+      conn
+      |> put_status(404)
+      |> put_view(PlausibleWeb.ErrorView)
+      |> render("404.html", layout: false)
+    end
+  end
+
+  def screens(conn, %{"domain" => domain}) do
+    site = Repo.get_by(Plausible.Site, domain: domain)
+
+    if site && current_user_can_access?(conn, site) do
+      query = Stats.Query.from(site.timezone, conn.params)
+      screens = Stats.top_screen_sizes(site, query, 100)
+
+      render(conn, "screens.html", layout: false, site: site, top_screen_sizes: screens)
+    else
+      conn
+      |> put_status(404)
+      |> put_view(PlausibleWeb.ErrorView)
+      |> render("404.html", layout: false)
+    end
+  end
+
+  def operating_systems(conn, %{"domain" => domain}) do
+    site = Repo.get_by(Plausible.Site, domain: domain)
+
+    if site && current_user_can_access?(conn, site) do
+      query = Stats.Query.from(site.timezone, conn.params)
+      operating_systems = Stats.operating_systems(site, query, 100)
+
+      render(conn, "operating_systems.html", layout: false, site: site, operating_systems: operating_systems)
+    else
+      conn
+      |> put_status(404)
+      |> put_view(PlausibleWeb.ErrorView)
+      |> render("404.html", layout: false)
+    end
+  end
+
+  def browsers(conn, %{"domain" => domain}) do
+    site = Repo.get_by(Plausible.Site, domain: domain)
+
+    if site && current_user_can_access?(conn, site) do
+      query = Stats.Query.from(site.timezone, conn.params)
+      browsers = Stats.browsers(site, query, 100)
+
+      render(conn, "browsers.html", layout: false, site: site, browsers: browsers)
+    else
+      conn
+      |> put_status(404)
+      |> put_view(PlausibleWeb.ErrorView)
+      |> render("404.html", layout: false)
+    end
+  end
+
   defp current_user_can_access?(_conn, %Plausible.Site{domain: "plausible.io"}) do
     true
   end

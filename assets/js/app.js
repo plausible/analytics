@@ -1,5 +1,6 @@
 import css from "../css/app.css"
 import "./polyfills/closest"
+import "./stats-modal"
 import "phoenix_html"
 
 const trigger = document.querySelector('[data-dropdown-trigger]')
@@ -69,4 +70,3 @@ if (dateRangeTrigger) {
     }
   })
 }
-

@@ -48,32 +48,32 @@ defmodule Plausible.Stats do
     ))
   end
 
-  def top_referrers(site, query) do
+  def top_referrers(site, query, limit \\ 5) do
     Repo.all(from p in base_query(site, query),
       select: {p.referrer_source, count(p.referrer_source)},
       group_by: p.referrer_source,
       where: p.new_visitor == true and not is_nil(p.referrer_source),
       order_by: [desc: 2],
-      limit: 5
+      limit: ^limit
     )
   end
 
-  def top_pages(site, query) do
+  def top_pages(site, query, limit \\ 5) do
     Repo.all(from p in base_query(site, query),
       select: {p.pathname, count(p.pathname)},
       group_by: p.pathname,
       order_by: [desc: count(p.pathname)],
-      limit: 5
+      limit: ^limit
     )
   end
 
-  def top_screen_sizes(site, query) do
+  def top_screen_sizes(site, query, limit \\ 5) do
     Repo.all(from p in base_query(site, query),
       select: {p.screen_size, count(p.screen_size)},
       where: not is_nil(p.screen_size),
       group_by: p.screen_size,
       order_by: [desc: count(p.screen_size)],
-      limit: 5
+      limit: ^limit
     )
   end
 
@@ -87,23 +87,23 @@ defmodule Plausible.Stats do
     )
   end
 
-  def browsers(site, query) do
+  def browsers(site, query, limit \\ 5) do
     Repo.all(from p in base_query(site, query),
       select: {p.browser, count(p.browser)},
       group_by: p.browser,
       where: p.new_visitor == true,
       order_by: [desc: count(p.browser)],
-      limit: 5
+      limit: ^limit
     )
   end
 
-  def operating_systems(site, query) do
+  def operating_systems(site, query, limit \\ 5) do
     Repo.all(from p in base_query(site, query),
       select: {p.operating_system, count(p.operating_system)},
       group_by: p.operating_system,
       where: p.new_visitor == true,
       order_by: [desc: count(p.operating_system)],
-      limit: 5
+      limit: ^limit
     )
   end
 

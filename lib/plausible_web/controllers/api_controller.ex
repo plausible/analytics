@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.ApiController do
   use PlausibleWeb, :controller
-  require Logger
   use Plausible.Repo
 
   def domain_status(conn, %{"domain" => domain}) do
