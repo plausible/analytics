@@ -28,6 +28,17 @@
   <% end %>
 </div>
 
+<%= form_for @conn, "/", [class: "bg-white max-w-md mx-auto shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mb-4 mt-16"], fn f -> %>
+  <div class="flex items-center justify-between">
+    <h2>Javascript snippet</h2>
+  </div>
+  <div class="my-4">
+    <p>Include this snippet in the <code>&lt;head&gt;</code> of your website.</p>
+    <%= textarea f, :domain, id: "snippet_code", class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light text-xs mt-2", value: "<script async defer type=\"text/javascript\" src=\"https://plausible.io/js/plausible.js\"></script>" %>
+    <a onclick="var textarea = document.getElementById('snippet_code'); textarea.focus(); textarea.select(); document.execCommand('copy');" href="javascript:void(0)" class="no-underline text-blue text-sm hover:underline">Copy to clipboard</a>
+  </div>
+<% end %>
+
 <div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-red-dark px-8 pt-6 pb-8 mt-16 mb-24">
   <div class="flex items-center justify-between">
     <h2>Delete site data</h2>
