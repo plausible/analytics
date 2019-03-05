@@ -15,7 +15,7 @@
   <%= render("_graph.html", assigns) %>
 
   <div class="w-full block md:flex items-start justify-between mt-6">
-    <div class="w-full md:w-31percent bg-white shadow rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="referrer-modal">
+    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="referrer-modal">
       <h2>Top Referrers</h2>
       <div class="text-grey-darker mt-1">by visitors</div>
 
@@ -36,7 +36,7 @@
       <% end %>
     </div>
 
-    <div class="w-full md:w-31percent bg-white shadow rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="pages-modal">
+    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="pages-modal">
       <h2>Top Pages</h2>
       <div class="text-grey-darker mt-1">by pageviews</div>
       <div class="mt-8">
@@ -56,7 +56,7 @@
       <% end %>
     </div>
 
-    <div class="w-full md:w-31percent bg-white shadow rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="screens-modal">
+    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="screens-modal">
       <h2>Screen Sizes</h2>
       <div class="text-grey-darker mt-1">by pageviews</div>
       <div class="mt-8">
@@ -79,7 +79,7 @@
   </div>
 
   <div class="w-full block md:flex items-start justify-between mt-6">
-    <div class="w-full md:w-31percent bg-white shadow rounded mt-4 p-4 text-center">
+    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 text-center">
       <h2>Device types</h2>
       <div class="text-grey-darker mt-1">by sessions</div>
       <div class="mt-8">
@@ -93,7 +93,7 @@
       </div>
     </div>
 
-    <div class="w-full md:w-31percent bg-white shadow rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="operating-systems-modal">
+    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="operating-systems-modal">
       <h2>Operating Systems</h2>
       <div class="text-grey-darker mt-1">by sessions</div>
       <div class="mt-8">
@@ -113,7 +113,7 @@
       <% end %>
     </div>
 
-    <div class="w-full md:w-31percent bg-white shadow rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="browsers-modal">
+    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="browsers-modal">
       <h2>Browsers</h2>
       <div class="text-grey-darker mt-1">by sessions</div>
       <div class="mt-8">
