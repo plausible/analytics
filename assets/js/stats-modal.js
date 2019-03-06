@@ -25,11 +25,12 @@ function delayAtLeast(promise, time) {
   return Promise.all([promise, delayed]).then(function(val) { return val[0] })
 }
 
-function fetchModal(modal, triggerId) {
+function fetchModal(modal, triggerId, domain) {
   const path = MODAL_PATHS[triggerId]
 
   if (path) {
-    const promise = fetch("/plausible.io" + path + location.search)
+    const domain = document.querySelector('[data-site-domain]').getAttribute('data-site-domain')
+    const promise = fetch(domain + path + location.search)
     modal.children[0].children[0].innerHTML = SPINNER
 
     delayAtLeast(promise, MODAL_ANIMATION_DURATION_MS)

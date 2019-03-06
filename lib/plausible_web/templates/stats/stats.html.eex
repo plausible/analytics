@@ -1,5 +1,5 @@
 <div class="pt-24"></div>
-<div class="container pb-32">
+<div class="container pb-32" data-site-domain="<%= @site.domain %>">
   <div class="w-full flex justify-between items-center">
     <h2 class="mr-8"><%= @site.domain %></h2>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
