@@ -42,8 +42,10 @@
 
       // Ignore prerendered pages
       if( 'visibilityState' in window.document && window.document.visibilityState === 'prerender' ) return ignore('document is prerendering');
-      // Ignore locally server pages
+      // Ignore localhost
       if (window.location.hostname === 'localhost') return ignore('website is running locally');
+      // Ignore local file
+      if (window.location.href.substring(0, 7) === 'file://') return ignore('website is running locally');
       // Basic bot detection.
       if (userAgent && userAgent.search(/(bot|spider|crawl)/ig) > -1) return ignore('the user-agent is a bot');
 
