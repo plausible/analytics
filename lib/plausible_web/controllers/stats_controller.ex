@@ -4,7 +4,9 @@ defmodule PlausibleWeb.StatsController do
   alias Plausible.Stats
 
   defp show_stats(conn, site) do
-    Plausible.Tracking.event(conn, "Site Analytics: Open")
+    demo = site.domain == "plausible.io"
+
+    Plausible.Tracking.event(conn, "Site Analytics: Open", %{demo: demo})
 
     query = Stats.Query.from(site.timezone, conn.params)
 
@@ -12,7 +14,7 @@ defmodule PlausibleWeb.StatsController do
     labels = Stats.labels(site, query)
 
 		conn
-    |> assign(:skip_plausible_tracking, site.domain !== "plausible.io")
+    |> assign(:skip_plausible_tracking, !demo)
     |> render("stats.html",
       plot: plot,
       labels: labels,
