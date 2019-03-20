@@ -34,9 +34,9 @@
       if (console && console.warn) console.warn('[Plausible] Ignoring pageview because ' + reason);
     }
 
-    function page() {
+    function page(isPushState) {
       var userAgent = window.navigator.userAgent;
-      var referrer = window.document.referrer;
+      var referrer = !isPushState ? window.document.referrer : null;
       var screenWidth = window.screen.width;
       var screenHeight = window.screen.height;
 
@@ -70,15 +70,35 @@
       request.open('POST', apiHost + '/api/page', true);
       request.setRequestHeader('Content-Type', 'text/plain; charset=UTF-8');
       request.send(JSON.stringify(postBody));
-        request.onreadystatechange = function() {
-          if (request.readyState == XMLHttpRequest.DONE) {
-            if (!existingUid) {
-              setCookie('nm_uid', uid)
-            }
-            setCookie('nm_sid', sid, 30)
+      request.onreadystatechange = function() {
+        if (request.readyState == XMLHttpRequest.DONE) {
+          if (!existingUid) {
+            setCookie('nm_uid', uid)
           }
+          setCookie('nm_sid', sid, 30)
         }
       }
+    }
+
+    var dis = window.dispatchEvent;
+    var his = window.history;
+    var hisPushState = his ? his.pushState : null;
+    if (hisPushState && Event && dis) {
+      var stateListener = function(type) {
+        var orig = his[type];
+        return function() {
+          var rv = orig.apply(this, arguments);
+          var event = new Event(type);
+          event.arguments = arguments;
+          dis(event);
+          return rv;
+        };
+      };
+      his.pushState = stateListener('pushState');
+      window.addEventListener('pushState', function() {
+        page(true);
+      });
+    }
 
     page()
   } catch (e) {
