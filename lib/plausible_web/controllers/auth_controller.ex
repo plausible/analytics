@@ -5,7 +5,7 @@ defmodule PlausibleWeb.AuthController do
   require Logger
 
   plug PlausibleWeb.RequireLoggedOutPlug when action in [:register_form, :register, :login_form, :login]
-  plug PlausibleWeb.RequireAccountPlug when action in [:user_settings, :save_settings, :delete_me]
+  plug PlausibleWeb.RequireAccountPlug when action in [:user_settings, :save_settings, :delete_me, :password_form, :set_password]
 
   def register_form(conn, _params) do
     changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
@@ -39,43 +39,91 @@ defmodule PlausibleWeb.AuthController do
             Plausible.Tracking.identify(conn, user.id, %{name: user.name})
             conn
             |> put_session(:current_user_id, user.id)
-            |> redirect(to: "/sites/new")
+            |> redirect(to: "/password")
           {:error, changeset} ->
-            Plausible.Tracking.event(conn, "Register: Invalid Account")
             send_resp(conn, 400, inspect(changeset.errors))
         end
       {:error, :expired} ->
-        Plausible.Tracking.event(conn, "Register: Activation Failed", %{reason: :expired})
-
-        conn
-        |> put_status(401)
-        |> put_view(PlausibleWeb.ErrorView)
-        |> render("401.html", layout: false, message: "Your token has expired. Please request another activation link.")
+        render_error(conn, 401, "Your token has expired. Please request another activation link.")
       {:error, _} ->
-        Plausible.Tracking.event(conn, "Register: Activation Failed", %{reason: :invalid})
-        conn
-        |> put_status(400)
-        |> put_view(PlausibleWeb.ErrorView)
-        |> render("400.html", layout: false, message: "Provided token is invalid. Please request another activation link.")
+        render_error(conn, 400, "Your token is invalid. Please request another activation link.")
     end
   end
 
-  def login(conn, %{"email" => email}) do
-    case email do
-      "" ->
-        conn |> render("login_form.html", error: "email is required")
+  def password_reset_request_form(conn, _) do
+    render(conn, "password_reset_request_form.html")
+  end
 
-      email ->
-        if Repo.get_by(Plausible.Auth.User, email: email) do
-          token = Auth.Token.sign_login(email)
-          url = PlausibleWeb.Endpoint.url() <> "/claim-login?token=#{token}"
-          Logger.debug(url)
-          email_template = PlausibleWeb.Email.login_email(email, url)
-          Plausible.Mailer.deliver_now(email_template)
-        else
-          Plausible.Tracking.event(conn, "Login: User Not Found")
+  def password_reset_request(conn, %{"email" => ""}) do
+    render(conn, "password_reset_request_form.html", error: "Please enter an email address")
+  end
+
+  def password_reset_request(conn, %{"email" => email}) do
+    user = Repo.get_by(Plausible.Auth.User, email: email)
+
+    if user do
+      token = Auth.Token.sign_password_reset(email)
+      url = PlausibleWeb.Endpoint.url() <> "/password/reset?token=#{token}"
+      Logger.debug("PASSWORD RESET LINK: " <> url)
+      email_template = PlausibleWeb.Email.password_reset_email(email, url)
+      Plausible.Mailer.deliver_now(email_template)
+      render(conn, "password_reset_request_success.html", email: email)
+    else
+      render(conn, "password_reset_request_success.html", email: email)
+    end
+  end
+
+  def password_reset_form(conn, %{"token" => token}) do
+    case Auth.Token.verify_password_reset(token) do
+      {:ok, %{email: email}} ->
+        render(conn, "password_reset_form.html", token: token)
+      {:error, :expired} ->
+        render_error(conn, 401, "Your token has expired. Please request another password reset link.")
+      {:error, _} ->
+        render_error(conn, 401, "Your token is invalid. Please request another password reset link.")
+    end
+  end
+
+  def password_reset(conn, %{"token" => token, "password" => pw}) do
+    case Auth.Token.verify_password_reset(token) do
+      {:ok, %{email: email}} ->
+        user = Repo.get_by(Auth.User, email: email)
+        changeset = Auth.User.set_password(user, pw)
+        case Repo.update(changeset) do
+          {:ok, _updated} ->
+            conn
+            |> put_flash(:login_title, "Password updated successfully")
+            |> put_flash(:login_instructions, "Please log in with your new credentials")
+            |> redirect(to: "/login")
+          {:error, changeset} ->
+            render(conn, "password_reset_form.html", changeset: changeset, token: token)
         end
-        conn |> render("login_success.html", email: email)
+      {:error, :expired} ->
+        render_error(conn, 401, "Your token has expired. Please request another password reset link.")
+      {:error, _} ->
+        render_error(conn, 401, "Your token is invalid. Please request another password reset link.")
+    end
+  end
+
+  def login(conn, %{"email" => email, "password" => password}) do
+    alias Plausible.Auth.Password
+
+    user = Repo.one(
+      from u in Plausible.Auth.User,
+      where: u.email == ^email
+    )
+
+    if user do
+      if Password.match?(password, user.password_hash || "") do
+        conn
+        |> put_session(:current_user_id, user.id)
+        |> redirect(to: "/")
+      else
+        conn |> render("login_form.html", error: "Wrong email or password. Please try again.")
+      end
+    else
+      Password.dummy_calculation()
+      conn |> render("login_form.html", error: "Wrong email or password. Please try again.")
     end
   end
 
@@ -83,24 +131,18 @@ defmodule PlausibleWeb.AuthController do
     render(conn, "login_form.html")
   end
 
-  def claim_login_link(conn, %{"token" => token}) do
-    case Auth.Token.verify_login(token) do
-      {:ok, %{email: email}} ->
+  def password_form(conn, _params) do
+    render(conn, "password_form.html")
+  end
 
-        case Auth.find_user_by(email: email) do
-          nil ->
-            conn
-            |> put_resp_content_type("text/plain")
-            |> send_resp(401, "User account with email #{email} does not exist. Please sign up to get started.")
-          user ->
-            conn
-            |> put_session(:current_user_id, user.id)
-            |> redirect(to: "/")
-        end
-      {:error, :expired} ->
-        conn |> send_resp(401, "Your login token has expired")
-      {:error, _} ->
-        conn |> send_resp(400, "Your login token is invalid")
+  def set_password(conn, %{"password" => pw}) do
+    changeset = Auth.User.set_password(conn.assigns[:current_user], pw)
+
+    case Repo.update(changeset) do
+      {:ok, _user} ->
+        redirect(conn, to: "/sites/new")
+      {:error, changeset} ->
+        render(conn, "password_form.html", changeset: changeset)
     end
   end
 
@@ -143,5 +185,12 @@ defmodule PlausibleWeb.AuthController do
     conn
     |> configure_session(drop: true)
     |> redirect(to: "/")
+  end
+
+  defp render_error(conn, status, message) do
+    conn
+    |> put_status(status)
+    |> put_view(PlausibleWeb.ErrorView)
+    |> render("#{status}.html", layout: false, message: message)
   end
 end

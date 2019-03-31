@@ -110,7 +110,7 @@ defmodule Plausible.Stats do
   defp base_query(site, %Query{step_type: "hour"}) do
     from(p in Plausible.Pageview,
       where: p.hostname == ^site.domain,
-      where: p.inserted_at >= fragment("date_trunc('hour', now() - '24 hours'::interval)")
+      where: p.inserted_at >= fragment("date_trunc('hour', (now() at time zone 'utc') - '24 hours'::interval)")
     )
   end
 

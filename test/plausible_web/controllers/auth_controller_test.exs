@@ -3,7 +3,7 @@ defmodule PlausibleWeb.AuthControllerTest do
   use Bamboo.Test
   import Plausible.TestUtils
 
-  describe "GET /onboarding" do
+  describe "GET /register" do
     test "shows the register form", %{conn: conn} do
       conn = get(conn, "/register")
 
@@ -37,11 +37,11 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert Plausible.Auth.find_user_by(email: "user@example.com")
     end
 
-    test "redirects new user to create a site", %{conn: conn} do
+    test "redirects new user to create a password", %{conn: conn} do
       token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
       conn = get(conn, "/claim-activation?token=#{token}")
 
-      assert redirected_to(conn) == "/sites/new"
+      assert redirected_to(conn) == "/password"
     end
 
     test "shows error when user with that email already exists", %{conn: conn} do
@@ -57,60 +57,85 @@ defmodule PlausibleWeb.AuthControllerTest do
   describe "GET /login_form" do
     test "shows the login form", %{conn: conn} do
       conn = get(conn, "/login")
-      assert html_response(conn, 200) =~ "Enter your email to log in"
+      assert html_response(conn, 200) =~ "Enter your email and password"
     end
   end
 
   describe "POST /login" do
-    test "submitting the form sends a login link", %{conn: conn} do
-      {:ok, [user: user]} = create_user([])
-      post(conn, "/login", email: user.email)
+    test "valid email and password - logs the user in", %{conn: conn} do
+      user = insert(:user, password: "password")
 
-      assert_email_delivered_with(subject: "Plausible login link")
-    end
-
-    test "submitting empty email renders form again", %{conn: conn} do
-      conn = post(conn, "/login", email: "")
-
-      assert_no_emails_delivered()
-      assert html_response(conn, 200) =~ "email is required"
-    end
-
-    test "submitting non-existent user email does not send email", %{conn: conn} do
-      post(conn, "/login", email: "fake@example.com")
-
-      assert_no_emails_delivered()
-    end
-
-    test "user sees success page after registering", %{conn: conn} do
-      conn = post(conn, "/login", email: "user@example.com")
-
-      assert html_response(conn, 200) =~ "Success!"
-    end
-  end
-
-  describe "GET /claim-login" do
-    setup [:create_user]
-
-    test "logs the user in", %{conn: conn, user: user} do
-      token = Plausible.Auth.Token.sign_login(user.email)
-      conn = get(conn, "/claim-login?token=#{token}")
+      conn = post(conn, "/login", email: user.email, password: "password")
 
       assert get_session(conn, :current_user_id) == user.id
-    end
-
-    test "redirects user to dashboard", %{conn: conn, user: user} do
-      token = Plausible.Auth.Token.sign_login(user.email)
-      conn = get(conn, "/claim-login?token=#{token}")
-
       assert redirected_to(conn) == "/"
     end
 
-    test "shows error when user does not exist", %{conn: conn} do
-      token = Plausible.Auth.Token.sign_login("nonexistent@user.com")
-      conn = get(conn, "/claim-login?token=#{token}")
+    test "email does not exist - renders login form again", %{conn: conn} do
 
-      assert conn.status == 401
+      conn = post(conn, "/login", email: "user@example.com", password: "password")
+
+      assert get_session(conn, :current_user_id) == nil
+      assert html_response(conn, 200) =~ "Enter your email and password"
+    end
+
+    test "bad password - renders login form again", %{conn: conn} do
+      user = insert(:user, password: "password")
+      conn = post(conn, "/login", email: user.email, password: "wrong")
+
+      assert get_session(conn, :current_user_id) == nil
+      assert html_response(conn, 200) =~ "Enter your email and password"
+    end
+  end
+
+  describe "GET /password/request-reset" do
+    test "renders the form", %{conn: conn} do
+      conn = get(conn, "/password/request-reset")
+      assert html_response(conn, 200) =~ "Enter your email so we can send a password reset link"
+    end
+  end
+
+  describe "POST /password/request-reset" do
+    test "email is empty - renders form with error", %{conn: conn} do
+      conn = post(conn, "/password/request-reset", %{email: ""})
+
+      assert html_response(conn, 200) =~ "Enter your email so we can send a password reset link"
+    end
+
+    test "email is present and exists - sends password reset email", %{conn: conn} do
+      user = insert(:user)
+      conn = post(conn, "/password/request-reset", %{email: user.email})
+
+      assert html_response(conn, 200) =~ "Success!"
+      assert_email_delivered_with(subject: "Plausible password reset")
+    end
+  end
+
+  describe "GET /password/reset" do
+    test "with valid token - shows form", %{conn: conn} do
+      token = Plausible.Auth.Token.sign_password_reset("email@example.com")
+      conn = get(conn, "/password/reset", %{token: token})
+
+      assert html_response(conn, 200) =~ "Reset your password"
+    end
+
+    test "with invalid token - shows error page", %{conn: conn} do
+      conn = get(conn, "/password/reset", %{token: "blabla"})
+
+      assert html_response(conn, 401) =~ "Your token is invalid"
+    end
+  end
+
+  describe "POST /password/reset" do
+    alias Plausible.Auth.{User, Token, Password}
+
+    test "with valid token - resets the password", %{conn: conn} do
+      user = insert(:user)
+      token = Token.sign_password_reset(user.email)
+      post(conn, "/password/reset", %{token: token, password: "new-password"})
+
+      user = Plausible.Repo.get(User, user.id)
+      assert Password.match?("new-password", user.password_hash)
     end
   end
 
