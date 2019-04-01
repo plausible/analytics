@@ -89,22 +89,6 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  def screens(conn, %{"domain" => domain}) do
-    site = Repo.get_by(Plausible.Site, domain: domain)
-
-    if site && current_user_can_access?(conn, site) do
-      query = Stats.Query.from(site.timezone, conn.params)
-      screens = Stats.top_screen_sizes(site, query, 100)
-
-      render(conn, "screens.html", layout: false, site: site, top_screen_sizes: screens)
-    else
-      conn
-      |> put_status(404)
-      |> put_view(PlausibleWeb.ErrorView)
-      |> render("404.html", layout: false)
-    end
-  end
-
   def operating_systems(conn, %{"domain" => domain}) do
     site = Repo.get_by(Plausible.Site, domain: domain)
 

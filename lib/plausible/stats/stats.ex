@@ -68,13 +68,34 @@ defmodule Plausible.Stats do
   end
 
   def top_screen_sizes(site, query, limit \\ 5) do
-    Repo.all(from p in base_query(site, query),
-      select: {p.screen_size, count(p.screen_size)},
-      where: not is_nil(p.screen_size),
-      group_by: p.screen_size,
-      order_by: [desc: count(p.screen_size)],
-      limit: ^limit
+    mobile_q = from(
+      p in base_query(site, query),
+      where: p.screen_width < 600,
+      select: count(p.session_id, :distinct)
     )
+    mobile = Repo.one(mobile_q)
+
+    tablet_q = from(
+      p in base_query(site, query),
+      where: p.screen_width >= 600 and p.screen_width < 992,
+      select: count(p.session_id, :distinct)
+    )
+    tablet = Repo.one(tablet_q)
+
+    desktop_q = from(
+      p in base_query(site, query),
+      where: p.screen_width >= 992,
+      select: count(p.session_id, :distinct)
+    )
+    desktop = Repo.one(desktop_q)
+
+    [
+      {"Mobile", mobile},
+      {"Tablet", tablet},
+      {"Desktop", desktop}
+    ]
+    |> Enum.filter(fn {_, n} -> n > 0 end)
+    |> Enum.sort(fn {_, n}, {_, n1} -> n >= n1 end)
   end
 
   def device_types(site, query) do

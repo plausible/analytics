@@ -75,7 +75,7 @@ defmodule PlausibleWeb.AuthController do
 
   def password_reset_form(conn, %{"token" => token}) do
     case Auth.Token.verify_password_reset(token) do
-      {:ok, %{email: email}} ->
+      {:ok, _} ->
         render(conn, "password_reset_form.html", token: token)
       {:error, :expired} ->
         render_error(conn, 401, "Your token has expired. Please request another password reset link.")
