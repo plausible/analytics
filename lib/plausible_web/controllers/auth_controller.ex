@@ -94,6 +94,7 @@ defmodule PlausibleWeb.AuthController do
             conn
             |> put_flash(:login_title, "Password updated successfully")
             |> put_flash(:login_instructions, "Please log in with your new credentials")
+            |> put_session(:current_user_id, nil)
             |> redirect(to: "/login")
           {:error, changeset} ->
             render(conn, "password_reset_form.html", changeset: changeset, token: token)
