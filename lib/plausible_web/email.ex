@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Email do
   use Bamboo.Phoenix, view: PlausibleWeb.EmailView
+  import Bamboo.PostmarkHelper
 
   def welcome_email(user) do
     new_email()
@@ -22,7 +23,7 @@ defmodule PlausibleWeb.Email do
   def password_reset_email(email, reset_link) do
     new_email()
     |> to(email)
-    |> from("Plausible <hello@plausible.io>")
+    |> from("Uku Taht <uku@plausible.io>")
     |> put_header("X-Mailgun-Tag", "password-reset-email")
     |> subject("Plausible password reset")
     |> render("password_reset_email.html", reset_link: reset_link)
@@ -31,7 +32,7 @@ defmodule PlausibleWeb.Email do
   def activation_email(user, link) do
     new_email()
     |> to(user.email)
-    |> from("Plausible <hello@plausible.io>")
+    |> from("Uku Taht <uku@plausible.io>")
     |> put_header("X-Mailgun-Tag", "activation-email")
     |> subject("Plausible activation link")
     |> render("activation_email.html", name: user.name, link: link)
