@@ -1,6 +1,4 @@
 defmodule PlausibleWeb.RequireLoggedOutPlug do
-  import Plug.Conn
-
   def init(options) do
     options
   end

@@ -18,8 +18,8 @@ defmodule Mix.Tasks.SendIntroEmails do
         left_join: ie in "intro_emails", on: ie.user_id == u.id,
         where: is_nil(ie.id),
         where:
-          u.inserted_at > fragment("now() - '24 hours'::interval") and
-            u.inserted_at < fragment("now() - '6 hours'::interval")
+          u.inserted_at > fragment("(now() at time zone 'utc') - '24 hours'::interval") and
+            u.inserted_at < fragment("(now() at time zone 'utc') - '6 hours'::interval")
       )
 
     for user <- Repo.all(q) do

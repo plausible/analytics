@@ -19,7 +19,7 @@
         <%= email_input f, :email, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "example@email.com" %>
         <%= error_tag f, :email %>
       </div>
-      <%= submit "Send activation link", class: "button mt-4 w-full" %>
+      <%= submit "Send activation link →", class: "button mt-4 w-full" %>
       <p class="text-center text-grey-dark text-xs mt-4">
         Already have an account? <%= link("Log in", to: "/login") %> instead.
       </p>

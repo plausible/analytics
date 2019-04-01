@@ -33,6 +33,7 @@ defmodule Plausible.MixProject do
   defp deps do
     [
       {:browser, "~> 0.4.3"},
+      {:bcrypt_elixir, "~> 2.0"},
       {:cors_plug, "~> 1.5"},
       {:ecto_sql, "~> 3.0"},
       {:elixir_uuid, "~> 1.2"},
@@ -52,7 +53,7 @@ defmodule Plausible.MixProject do
       {:bamboo, "~> 1.1"},
       {:sentry, "~> 7.0"},
       {:httpoison, "~> 1.4"},
-      {:ex_machina, "~> 2.2", only: :test}
+      {:ex_machina, "~> 2.3", only: :test}
     ]
   end
 

@@ -4,6 +4,8 @@ defmodule Plausible.Auth.User do
 
   schema "users" do
     field :email, :string
+    field :password_hash
+    field :password, :string, virtual: true
     field :name, :string
     field :last_seen, :naive_datetime
 
@@ -18,5 +20,15 @@ defmodule Plausible.Auth.User do
     |> cast(attrs, [:email, :name])
     |> validate_required([:email, :name])
     |> unique_constraint(:email)
+  end
+
+  def set_password(user, password) do
+    hash = Plausible.Auth.Password.hash(password)
+
+    user
+    |> cast(%{password: password}, [:password])
+    |> validate_required(:password)
+    |> validate_length(:password, min: 6)
+    |> cast(%{password_hash: hash}, [:password_hash])
   end
 end

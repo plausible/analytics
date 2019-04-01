@@ -1,11 +1,16 @@
 defmodule Plausible.Factory do
   use ExMachina.Ecto, repo: Plausible.Repo
 
-  def user_factory do
-    %Plausible.Auth.User{
+  def user_factory(attrs) do
+    pw = Map.get(attrs, :password, "password")
+
+    user = %Plausible.Auth.User{
       name: "Jane Smith",
-      email: sequence(:email, &"email-#{&1}@example.com")
+      email: sequence(:email, &"email-#{&1}@example.com"),
+      password_hash: Plausible.Auth.Password.hash(pw)
     }
+
+    merge_attributes(user, attrs)
   end
 
   def site_factory do

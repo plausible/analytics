@@ -9,6 +9,9 @@ config :plausible, PlausibleWeb.Endpoint,
 # Print only warnings and errors during test
 config :logger, level: :warn
 
+# Reduce bcrypt rounds to speed up test suite
+config :bcrypt_elixir, :log_rounds, 4
+
 # Configure your database
 config :plausible, Plausible.Repo,
   username: "postgres",

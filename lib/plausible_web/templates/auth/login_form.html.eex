@@ -4,22 +4,29 @@
       <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/48x48.png"), style: "height: 28px; margin-right: 4px;") %>
       <a href="/" class="logo-text text-4xl no-underline">Plausible</a>
     </div>
-    <%= form_for @conn, "/login", [class: "bg-white shadow-md rounded px-8 py-6 mb-4 mt-16"], fn f -> %>
-      <div class="flex items-center justify-between">
-        <h2>Enter your email to log in</h2>
+    <%= form_for @conn, "/login", [class: "bg-white shadow-md rounded px-8 py-6 mt-16"], fn f -> %>
+      <h2><%= get_flash(@conn, :login_title) || "Enter your email and password" %></h2>
+      <%= if get_flash(@conn, :login_instructions) do %>
+        <p class="text-grey-dark text-sm mt-1 mb-2"><%= get_flash(@conn, :login_instructions) %></p>
+      <% end %>
+      <%= if @conn.assigns[:error] do %>
+        <div class="text-red text-xs italic mt-4"><%= @conn.assigns[:error] %></div>
+        <% end %>
+      <div class="my-4 mt-8">
+        <%= label f, :email, class: "block text-grey-darker text-sm font-bold mb-2" %>
+        <%= email_input f, :email, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light" %>
       </div>
       <div class="my-4">
-        <%= email_input f, :email, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "example@email.com" %>
-        <%= if @conn.assigns[:error] do %>
-          <div class="text-red text-xs italic mt-3"><%= @conn.assigns[:error] %></div>
-        <% end %>
+        <%= label f, :password, class: "block text-grey-darker text-sm font-bold mb-2" %>
+        <%= password_input f, :password, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light" %>
+        <p class="text-grey-dark text-xs my-2">Forgot password? <a href="/password/request-reset">Click here</a> to reset it.</p>
       </div>
-      <%= submit "Send login link", class: "button mt-4 w-full" %>
+      <%= submit "Login →", class: "button mt-4 w-full" %>
       <p class="text-center text-grey-dark text-xs mt-4">
         Don't have an account? <%= link("Register", to: "/register") %> instead.
       </p>
     <% end %>
-    <p class="text-center text-grey text-xs">
+    <p class="text-center text-grey text-xs mt-4">
       ©2019 Plausible Insights. All rights reserved.
     </p>
   </div>

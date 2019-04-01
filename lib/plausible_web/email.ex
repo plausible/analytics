@@ -19,13 +19,13 @@ defmodule PlausibleWeb.Email do
     |> render("help_email.html", user: user)
   end
 
-  def login_email(email, login_link) do
+  def password_reset_email(email, reset_link) do
     new_email()
     |> to(email)
     |> from("Plausible <hello@plausible.io>")
-    |> put_header("X-Mailgun-Tag", "login-email")
-    |> subject("Plausible login link")
-    |> render("login_email.html", login_link: login_link)
+    |> put_header("X-Mailgun-Tag", "password-reset-email")
+    |> subject("Plausible password reset")
+    |> render("password_reset_email.html", reset_link: reset_link)
   end
 
   def activation_email(user, link) do

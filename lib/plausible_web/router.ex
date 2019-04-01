@@ -33,6 +33,12 @@ defmodule PlausibleWeb.Router do
     get "/login", AuthController, :login_form
     post "/login", AuthController, :login
     get "/claim-login", AuthController, :claim_login_link
+    get "/password/request-reset", AuthController, :password_reset_request_form
+    post "/password/request-reset", AuthController, :password_reset_request
+    get "/password/reset", AuthController, :password_reset_form
+    post "/password/reset", AuthController, :password_reset
+    get "/password", AuthController, :password_form
+    post "/password", AuthController, :set_password
     post "/logout", AuthController, :logout
     get "/settings", AuthController, :user_settings
     put "/settings", AuthController, :save_settings
