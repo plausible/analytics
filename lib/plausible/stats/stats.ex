@@ -105,13 +105,13 @@ defmodule Plausible.Stats do
     |> Enum.filter(fn {_, n} -> n > 0 end)
   end
 
-  def device_types(site, query) do
+  def countries(site, query, limit \\ 5) do
     Repo.all(from p in base_query(site, query),
-      select: {p.device_type, count(p.device_type)},
-      group_by: p.device_type,
+      select: {p.country_code, count(p.country_code)},
+      group_by: p.country_code,
       where: p.new_visitor == true,
-      order_by: [desc: count(p.device_type)],
-      limit: 5
+      order_by: [desc: count(p.country_code)],
+      limit: ^limit
     )
   end
 

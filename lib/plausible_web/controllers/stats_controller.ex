@@ -23,7 +23,7 @@ defmodule PlausibleWeb.StatsController do
       top_referrers: Stats.top_referrers(site, query),
       top_pages: Stats.top_pages(site, query),
       top_screen_sizes: Stats.top_screen_sizes(site, query),
-      device_types: Stats.device_types(site, query),
+      countries: Stats.countries(site, query),
       browsers: Stats.browsers(site, query),
       operating_systems: Stats.operating_systems(site, query),
       site: site,

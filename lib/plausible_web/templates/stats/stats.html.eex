@@ -56,6 +56,22 @@
       <% end %>
     </div>
 
+    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 text-center">
+      <h2>Top Countries</h2>
+      <div class="text-grey-darker mt-1">by visitors</div>
+      <div class="mt-8">
+        <%= for {country, count} <- @countries do %>
+          <div class="flex items-center justify-between my-2">
+            <span><%= Plausible.Stats.CountryName.from_iso3166(country) %></span>
+            <span><%= count %></span>
+          </div>
+          <%= bar(count, @countries, :indigo) %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-full block md:flex items-start justify-between mt-6">
     <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 text-center group">
       <h2>Screen Sizes</h2>
       <div class="text-grey-darker mt-1">by sessions</div>
@@ -68,23 +84,7 @@
             </span>
             <span><%= count %></span>
           </div>
-          <%= bar(count, @top_screen_sizes, :indigo) %>
-        <% end %>
-      </div>
-    </div>
-  </div>
-
-  <div class="w-full block md:flex items-start justify-between mt-6">
-    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 text-center">
-      <h2>Device types</h2>
-      <div class="text-grey-darker mt-1">by sessions</div>
-      <div class="mt-8">
-        <%= for {device, count} <- @device_types do %>
-          <div class="flex items-center justify-between my-2">
-            <span><%= device %></span>
-            <span><%= count %></span>
-          </div>
-          <%= bar(count, @device_types, :teal) %>
+          <%= bar(count, @top_screen_sizes, :teal) %>
         <% end %>
       </div>
     </div>
