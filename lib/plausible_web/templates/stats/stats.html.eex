@@ -62,9 +62,9 @@
       <div class="mt-8">
         <%= for {screen_size, count} <- @top_screen_sizes do %>
           <div class="flex items-center justify-between my-2">
-            <span>
+            <span tooltip="<%= explanation_for(screen_size) %>">
               <%= icon_for(screen_size) %>
-              <span class="ml-1" title="<%= explanation_for(screen_size) %>"><%= screen_size %></span>
+              <span class="ml-1 cursor-default"><%= screen_size %></span>
             </span>
             <span><%= count %></span>
           </div>

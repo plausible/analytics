@@ -2,6 +2,7 @@
 @tailwind components;
 @import "modal.css";
 @import "coffee_cup.css";
+@import "tooltip.css";
 
 .button {
   @apply inline-block bg-indigo text-white text-center font-bold tracking-wide py-3 px-5 rounded no-underline;
