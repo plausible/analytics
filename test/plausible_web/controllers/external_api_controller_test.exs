@@ -12,7 +12,6 @@ defmodule PlausibleWeb.ExternalApiControllerTest do
         referrer: "http://m.facebook.com/",
         new_visitor: true,
         screen_width: 1440,
-        screen_height: 900,
         sid: "123",
         uid: "321"
       }
@@ -31,8 +30,6 @@ defmodule PlausibleWeb.ExternalApiControllerTest do
       assert pageview.new_visitor == true
       assert pageview.user_agent == @user_agent
       assert pageview.screen_width == params[:screen_width]
-      assert pageview.screen_height == params[:screen_height]
-      assert pageview.screen_size == "1440x900"
       assert pageview.country_code == @country_code
     end
 

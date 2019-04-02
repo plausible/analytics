@@ -48,9 +48,7 @@ defmodule PlausibleWeb.ExternalApiController do
         referrer: params["referrer"],
         new_visitor: params["new_visitor"],
         screen_width: params["screen_width"],
-        screen_height: params["screen_height"],
         country_code: country_code,
-        screen_size: screen_string(params),
         session_id: params["sid"],
         user_id: params["uid"],
         operating_system: ua && os_name(ua),
@@ -73,11 +71,6 @@ defmodule PlausibleWeb.ExternalApiController do
   defp strip_www(hostname) do
     String.replace_prefix(hostname, "www.", "")
   end
-
-  def screen_string(%{"screen_width" => w, "screen_height" => h}) do
-    "#{w}x#{h}"
-  end
-  def screen_string(_), do: nil
 
   defp browser_name(ua) do
     case ua.client do

@@ -37,8 +37,7 @@
     function page(isPushState) {
       var userAgent = window.navigator.userAgent;
       var referrer = !isPushState ? window.document.referrer : null;
-      var screenWidth = window.screen.width;
-      var screenHeight = window.screen.height;
+      var screenWidth = window.innerWidth;
 
       // Ignore prerendered pages
       if( 'visibilityState' in window.document && window.document.visibilityState === 'prerender' ) return ignore('document is prerendering');
@@ -64,7 +63,6 @@
       if (userAgent) postBody.user_agent = userAgent;
       if (referrer) postBody.referrer = referrer;
       if (screenWidth) postBody.screen_width = screenWidth;
-      if (screenHeight) postBody.screen_height = screenHeight;
 
       var request = new XMLHttpRequest();
       request.open('POST', apiHost + '/api/page', true);
