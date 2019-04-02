@@ -86,7 +86,6 @@ defmodule PlausibleWeb.ExternalApiControllerTest do
       pageview = Repo.one(Plausible.Pageview)
 
       assert response(conn, 202) == ""
-      assert pageview.device_type == "Desktop"
       assert pageview.operating_system == "Mac"
       assert pageview.browser == "Chrome"
     end

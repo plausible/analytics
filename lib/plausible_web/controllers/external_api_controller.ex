@@ -53,7 +53,6 @@ defmodule PlausibleWeb.ExternalApiController do
         screen_size: screen_string(params),
         session_id: params["sid"],
         user_id: params["uid"],
-        device_type: ua && device_type(ua),
         operating_system: ua && os_name(ua),
         browser: ua && browser_name(ua),
         referrer_source: ref && referrer_source(ref)
@@ -95,13 +94,6 @@ defmodule PlausibleWeb.ExternalApiController do
     case ua.os do
       :unknown -> "Unknown"
       os -> os.name
-    end
-  end
-
-  defp device_type(ua) do
-    case ua.device do
-      :unknown -> "Unknown"
-      device -> String.capitalize(device.type)
     end
   end
 
