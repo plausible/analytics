@@ -13,8 +13,8 @@ const EMPTY_MODAL = `
 const MODAL_PATHS = {
   'referrer-modal': '/referrers',
   'pages-modal': '/pages',
-  'screens-modal': '/screens',
   'operating-systems-modal': '/operating-systems',
+  'countries-modal': '/countries',
   'browsers-modal': '/browsers',
 }
 

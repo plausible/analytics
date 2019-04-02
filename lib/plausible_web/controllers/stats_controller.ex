@@ -89,6 +89,22 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
+  def countries(conn, %{"domain" => domain}) do
+    site = Repo.get_by(Plausible.Site, domain: domain)
+
+    if site && current_user_can_access?(conn, site) do
+      query = Stats.Query.from(site.timezone, conn.params)
+      countries = Stats.countries(site, query, 100)
+
+      render(conn, "countries.html", layout: false, site: site, countries: countries)
+    else
+      conn
+      |> put_status(404)
+      |> put_view(PlausibleWeb.ErrorView)
+      |> render("404.html", layout: false)
+    end
+  end
+
   def operating_systems(conn, %{"domain" => domain}) do
     site = Repo.get_by(Plausible.Site, domain: domain)
 
