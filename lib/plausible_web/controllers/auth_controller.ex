@@ -10,7 +10,7 @@ defmodule PlausibleWeb.AuthController do
   def register_form(conn, _params) do
     changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
     Plausible.Tracking.event(conn, "Register: View Form")
-    render(conn, "register_form.html", changeset: changeset)
+    render(conn, "register_form.html", changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def register(conn, %{"user" => params}) do
@@ -24,9 +24,9 @@ defmodule PlausibleWeb.AuthController do
         email_template = PlausibleWeb.Email.activation_email(user, url)
         Plausible.Mailer.deliver_now(email_template)
         Plausible.Tracking.event(conn, "Register: Submit Form")
-        conn |> render("register_success.html", email: user.email)
+        conn |> render("register_success.html", email: user.email, layout: {PlausibleWeb.LayoutView, "focus.html"})
       {:error, changeset} ->
-        render(conn, "register_form.html", changeset: changeset)
+        render(conn, "register_form.html", changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
     end
   end
 
@@ -51,11 +51,11 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def password_reset_request_form(conn, _) do
-    render(conn, "password_reset_request_form.html")
+    render(conn, "password_reset_request_form.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def password_reset_request(conn, %{"email" => ""}) do
-    render(conn, "password_reset_request_form.html", error: "Please enter an email address")
+    render(conn, "password_reset_request_form.html", error: "Please enter an email address", layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def password_reset_request(conn, %{"email" => email}) do
@@ -67,16 +67,16 @@ defmodule PlausibleWeb.AuthController do
       Logger.debug("PASSWORD RESET LINK: " <> url)
       email_template = PlausibleWeb.Email.password_reset_email(email, url)
       Plausible.Mailer.deliver_now(email_template)
-      render(conn, "password_reset_request_success.html", email: email)
+      render(conn, "password_reset_request_success.html", email: email, layout: {PlausibleWeb.LayoutView, "focus.html"})
     else
-      render(conn, "password_reset_request_success.html", email: email)
+      render(conn, "password_reset_request_success.html", email: email, layout: {PlausibleWeb.LayoutView, "focus.html"})
     end
   end
 
   def password_reset_form(conn, %{"token" => token}) do
     case Auth.Token.verify_password_reset(token) do
       {:ok, _} ->
-        render(conn, "password_reset_form.html", token: token)
+        render(conn, "password_reset_form.html", token: token, layout: {PlausibleWeb.LayoutView, "focus.html"})
       {:error, :expired} ->
         render_error(conn, 401, "Your token has expired. Please request another password reset link.")
       {:error, _} ->
@@ -97,7 +97,7 @@ defmodule PlausibleWeb.AuthController do
             |> put_session(:current_user_id, nil)
             |> redirect(to: "/login")
           {:error, changeset} ->
-            render(conn, "password_reset_form.html", changeset: changeset, token: token)
+            render(conn, "password_reset_form.html", changeset: changeset, token: token, layout: {PlausibleWeb.LayoutView, "focus.html"})
         end
       {:error, :expired} ->
         render_error(conn, 401, "Your token has expired. Please request another password reset link.")
@@ -120,20 +120,20 @@ defmodule PlausibleWeb.AuthController do
         |> put_session(:current_user_id, user.id)
         |> redirect(to: "/")
       else
-        conn |> render("login_form.html", error: "Wrong email or password. Please try again.")
+        conn |> render("login_form.html", error: "Wrong email or password. Please try again.", layout: {PlausibleWeb.LayoutView, "focus.html"})
       end
     else
       Password.dummy_calculation()
-      conn |> render("login_form.html", error: "Wrong email or password. Please try again.")
+      conn |> render("login_form.html", error: "Wrong email or password. Please try again.", layout: {PlausibleWeb.LayoutView, "focus.html"})
     end
   end
 
   def login_form(conn, _params) do
-    render(conn, "login_form.html")
+    render(conn, "login_form.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def password_form(conn, _params) do
-    render(conn, "password_form.html")
+    render(conn, "password_form.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def set_password(conn, %{"password" => pw}) do
@@ -143,7 +143,7 @@ defmodule PlausibleWeb.AuthController do
       {:ok, _user} ->
         redirect(conn, to: "/sites/new")
       {:error, changeset} ->
-        render(conn, "password_form.html", changeset: changeset)
+        render(conn, "password_form.html", changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
     end
   end
 

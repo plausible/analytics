@@ -9,8 +9,8 @@
     <link rel="icon" type="image/png" sizes="16x16" href="<%= PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/16x16.png") %>">
     <title><%= assigns[:title] || "Plausible · Web analytics" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
+    <%= render("_tracking.html", assigns) %>
   </head>
-  <%= render("_tracking.html", assigns) %>
   <body class="flex flex-col h-full bg-grey-lightest">
     <nav class="container flex items-center justify-between flex-wrap py-8">
       <div class="flex items-center flex-no-shrink">
