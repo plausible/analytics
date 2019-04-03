@@ -78,22 +78,21 @@ defmodule PlausibleWeb.ExternalApiController do
       %UAInspector.Result.Client{name: "Chrome Mobile"} -> "Chrome"
       %UAInspector.Result.Client{name: "Chrome Mobile iOS"} -> "Chrome"
       %UAInspector.Result.Client{type: "mobile app"} -> "Mobile App"
-      :unknown -> "Unknown"
+      :unknown -> nil
       client -> client.name
     end
   end
 
   defp os_name(ua) do
     case ua.os do
-      :unknown -> "Unknown"
+      :unknown -> nil
       os -> os.name
     end
   end
 
   defp referrer_source(ref) do
     case ref.source do
-      :unknown -> clean_uri(ref.referer) || "Unknown"
-
+      :unknown -> clean_uri(ref.referer)
       source -> source
     end
   end
@@ -102,8 +101,6 @@ defmodule PlausibleWeb.ExternalApiController do
     uri = URI.parse(String.trim(uri))
     if uri.scheme in ["http", "https"] do
       String.replace_leading(uri.host, "www.", "")
-    else
-      false
     end
   end
 end

@@ -22,7 +22,7 @@ defmodule PlausibleWeb do
       use Phoenix.Controller, namespace: PlausibleWeb
 
       import Plug.Conn
-      import PlausibleWeb.Gettext
+      import PlausibleWeb.ControllerHelpers
       alias PlausibleWeb.Router.Helpers, as: Routes
     end
   end
@@ -40,7 +40,6 @@ defmodule PlausibleWeb do
       use Phoenix.HTML
 
       import PlausibleWeb.ErrorHelpers
-      import PlausibleWeb.Gettext
       import PhoenixActiveLink
       alias PlausibleWeb.Router.Helpers, as: Routes
     end
@@ -57,7 +56,6 @@ defmodule PlausibleWeb do
   def channel do
     quote do
       use Phoenix.Channel
-      import PlausibleWeb.Gettext
     end
   end
 

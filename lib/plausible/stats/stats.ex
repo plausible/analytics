@@ -67,7 +67,7 @@ defmodule Plausible.Stats do
     )
   end
 
-  def top_screen_sizes(site, query, limit \\ 5) do
+  def top_screen_sizes(site, query) do
     mobile_q = from(
       p in base_query(site, query),
       where: p.screen_width < 576,
@@ -109,7 +109,7 @@ defmodule Plausible.Stats do
     Repo.all(from p in base_query(site, query),
       select: {p.country_code, count(p.country_code)},
       group_by: p.country_code,
-      where: p.new_visitor == true,
+      where: p.new_visitor == true and not is_nil(p.country_code),
       order_by: [desc: count(p.country_code)],
       limit: ^limit
     )
@@ -119,7 +119,7 @@ defmodule Plausible.Stats do
     Repo.all(from p in base_query(site, query),
       select: {p.browser, count(p.browser)},
       group_by: p.browser,
-      where: p.new_visitor == true,
+      where: p.new_visitor == true and not is_nil(p.browser),
       order_by: [desc: count(p.browser)],
       limit: ^limit
     )
@@ -129,7 +129,7 @@ defmodule Plausible.Stats do
     Repo.all(from p in base_query(site, query),
       select: {p.operating_system, count(p.operating_system)},
       group_by: p.operating_system,
-      where: p.new_visitor == true,
+      where: p.new_visitor == true and not is_nil(p.operating_system),
       order_by: [desc: count(p.operating_system)],
       limit: ^limit
     )

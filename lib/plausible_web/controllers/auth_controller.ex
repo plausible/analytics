@@ -187,11 +187,4 @@ defmodule PlausibleWeb.AuthController do
     |> configure_session(drop: true)
     |> redirect(to: "/")
   end
-
-  defp render_error(conn, status, message) do
-    conn
-    |> put_status(status)
-    |> put_view(PlausibleWeb.ErrorView)
-    |> render("#{status}.html", layout: false, message: message)
-  end
 end

@@ -184,7 +184,7 @@ defmodule PlausibleWeb.ExternalApiControllerTest do
       assert pageview.referrer_source == "indiehackers.com"
     end
 
-    test "if the referrer is not http or https, it is considered unknown", %{conn: conn} do
+    test "if the referrer is not http or https, it is ignored", %{conn: conn} do
       params = %{
         url: "http://gigride.live/",
         referrer: "android-app://com.google.android.gm",
@@ -201,7 +201,7 @@ defmodule PlausibleWeb.ExternalApiControllerTest do
       pageview = Repo.one(Plausible.Pageview)
 
       assert response(conn, 202) == ""
-      assert pageview.referrer_source == "Unknown"
+      assert is_nil(pageview.referrer_source)
     end
 
   end

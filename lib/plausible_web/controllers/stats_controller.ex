@@ -50,10 +50,7 @@ defmodule PlausibleWeb.StatsController do
         |> render("waiting_first_pageview.html", site: site)
       end
     else
-      conn
-      |> put_status(404)
-      |> put_view(PlausibleWeb.ErrorView)
-      |> render("404.html", layout: false)
+      render_error(conn, 404)
     end
   end
 
@@ -66,10 +63,7 @@ defmodule PlausibleWeb.StatsController do
 
       render(conn, "referrers.html", layout: false, site: site, top_referrers: referrers)
     else
-      conn
-      |> put_status(404)
-      |> put_view(PlausibleWeb.ErrorView)
-      |> render("404.html", layout: false)
+      render_error(conn, 404)
     end
   end
 
@@ -82,10 +76,7 @@ defmodule PlausibleWeb.StatsController do
 
       render(conn, "pages.html", layout: false, site: site, top_pages: pages)
     else
-      conn
-      |> put_status(404)
-      |> put_view(PlausibleWeb.ErrorView)
-      |> render("404.html", layout: false)
+      render_error(conn, 404)
     end
   end
 
@@ -98,10 +89,7 @@ defmodule PlausibleWeb.StatsController do
 
       render(conn, "countries.html", layout: false, site: site, countries: countries)
     else
-      conn
-      |> put_status(404)
-      |> put_view(PlausibleWeb.ErrorView)
-      |> render("404.html", layout: false)
+      render_error(conn, 404)
     end
   end
 
@@ -114,10 +102,7 @@ defmodule PlausibleWeb.StatsController do
 
       render(conn, "operating_systems.html", layout: false, site: site, operating_systems: operating_systems)
     else
-      conn
-      |> put_status(404)
-      |> put_view(PlausibleWeb.ErrorView)
-      |> render("404.html", layout: false)
+      render_error(conn, 404)
     end
   end
 
@@ -130,10 +115,7 @@ defmodule PlausibleWeb.StatsController do
 
       render(conn, "browsers.html", layout: false, site: site, browsers: browsers)
     else
-      conn
-      |> put_status(404)
-      |> put_view(PlausibleWeb.ErrorView)
-      |> render("404.html", layout: false)
+      render_error(conn, 404)
     end
   end
 
