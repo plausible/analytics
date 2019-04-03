@@ -25,16 +25,12 @@ defmodule Plausible.Tracking do
     end)
   end
 
-  def track(:test, _params) do
+  defp track(:test, _params) do
     # /dev/null
   end
 
-  def track(_, params) do
+  defp track(_, params) do
     HTTPoison.get!(@api_host <> "/httpapi", [], params: [api_key: api_key(), event: Jason.encode!(params)])
-  end
-
-  def api_identify(params) do
-    HTTPoison.get!(@api_host <> "/identify", [], params: [api_key: api_key(), identification: Jason.encode!(params)])
   end
 
   defp extract_user_id(conn) do
