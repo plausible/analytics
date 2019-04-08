@@ -43,11 +43,7 @@ config :plausible, Plausible.Repo,
   pool_size: 10
 
 config :plausible, Plausible.Mailer,
-  adapter: Bamboo.PostmarkAdapter,
-  api_key: "7007fc38-e1b4-44c4-b843-82f58b53fade"
-
-  #config :plausible, Plausible.Mailer,
-  #  adapter: Bamboo.LocalAdapter
+  adapter: Bamboo.LocalAdapter
 
 config :plausible, :amplitude,
   api_key: "a2de0688a23355c0c332ee9a8707bbcd"

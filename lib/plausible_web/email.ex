@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Email do
     new_email()
     |> to(user.email)
     |> from("Uku Taht <uku@plausible.io>")
-    |> put_header("X-Mailgun-Tag", "welcome-email")
+    |> tag("welcome-email")
     |> subject("Plausible feedback")
     |> render("welcome_email.html", user: user)
   end
@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Email do
     new_email()
     |> to(user.email)
     |> from("Uku Taht <uku@plausible.io>")
-    |> put_header("X-Mailgun-Tag", "help-email")
+    |> tag("help-email")
     |> subject("Plausible setup")
     |> render("help_email.html", user: user)
   end
@@ -24,7 +24,7 @@ defmodule PlausibleWeb.Email do
     new_email()
     |> to(email)
     |> from("Uku Taht <uku@plausible.io>")
-    |> put_header("X-Mailgun-Tag", "password-reset-email")
+    |> tag("password-reset-email")
     |> subject("Plausible password reset")
     |> render("password_reset_email.html", reset_link: reset_link)
   end
@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Email do
     new_email()
     |> to(user.email)
     |> from("Uku Taht <uku@plausible.io>")
-    |> put_header("X-Mailgun-Tag", "activation-email")
+    |> tag("activation-email")
     |> subject("Plausible activation link")
     |> render("activation_email.html", name: user.name, link: link)
   end
@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Email do
     new_email()
     |> to("uku@plausible.io")
     |> from(from)
-    |> put_header("X-Mailgun-Tag", "feedback")
+    |> tag("feedback")
     |> subject("New feedback submission")
     |> text_body(text)
   end
