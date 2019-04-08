@@ -43,7 +43,8 @@ defmodule PlausibleWeb.Email do
 
     new_email()
     |> to("uku@plausible.io")
-    |> from(from)
+    |> from("feedback@plausible.io")
+    |> put_param("ReplyTo", from)
     |> tag("feedback")
     |> subject("New feedback submission")
     |> text_body(text)
