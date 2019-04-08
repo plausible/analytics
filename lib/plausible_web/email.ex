@@ -1,11 +1,12 @@
 defmodule PlausibleWeb.Email do
   use Bamboo.Phoenix, view: PlausibleWeb.EmailView
+  import Bamboo.PostmarkHelper
 
   def welcome_email(user) do
     new_email()
     |> to(user.email)
     |> from("Uku Taht <uku@plausible.io>")
-    |> put_header("X-Mailgun-Tag", "welcome-email")
+    |> tag("welcome-email")
     |> subject("Plausible feedback")
     |> render("welcome_email.html", user: user)
   end
@@ -14,7 +15,7 @@ defmodule PlausibleWeb.Email do
     new_email()
     |> to(user.email)
     |> from("Uku Taht <uku@plausible.io>")
-    |> put_header("X-Mailgun-Tag", "help-email")
+    |> tag("help-email")
     |> subject("Plausible setup")
     |> render("help_email.html", user: user)
   end
@@ -22,8 +23,8 @@ defmodule PlausibleWeb.Email do
   def password_reset_email(email, reset_link) do
     new_email()
     |> to(email)
-    |> from("Plausible <hello@plausible.io>")
-    |> put_header("X-Mailgun-Tag", "password-reset-email")
+    |> from("Uku Taht <uku@plausible.io>")
+    |> tag("password-reset-email")
     |> subject("Plausible password reset")
     |> render("password_reset_email.html", reset_link: reset_link)
   end
@@ -31,8 +32,8 @@ defmodule PlausibleWeb.Email do
   def activation_email(user, link) do
     new_email()
     |> to(user.email)
-    |> from("Plausible <hello@plausible.io>")
-    |> put_header("X-Mailgun-Tag", "activation-email")
+    |> from("Uku Taht <uku@plausible.io>")
+    |> tag("activation-email")
     |> subject("Plausible activation link")
     |> render("activation_email.html", name: user.name, link: link)
   end
@@ -42,8 +43,9 @@ defmodule PlausibleWeb.Email do
 
     new_email()
     |> to("uku@plausible.io")
-    |> from(from)
-    |> put_header("X-Mailgun-Tag", "feedback")
+    |> from("feedback@plausible.io")
+    |> put_param("ReplyTo", from)
+    |> tag("feedback")
     |> subject("New feedback submission")
     |> text_body(text)
   end

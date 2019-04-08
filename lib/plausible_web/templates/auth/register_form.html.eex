@@ -3,7 +3,7 @@
     <h2>Enter your details to get started</h2>
   </div>
   <div class="my-4 mt-8">
-    <%= label f, :name, class: "block text-grey-darker text-sm font-bold mb-2" %>
+    <%= label f, "Full name", :name, class: "block text-grey-darker text-sm font-bold mb-2" %>
     <%= text_input f, :name, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "Jane Doe" %>
     <%= error_tag f, :name %>
   </div>

@@ -82,6 +82,5 @@ config :plausible, :amplitude,
   api_key: System.get_env("AMPLITUDE_API_KEY")
 
 config :plausible, Plausible.Mailer,
-  adapter: Bamboo.MailgunAdapter,
-  api_key: System.get_env("MAILGUN_API_KEY"),
-  domain: "mg.plausible.io"
+  adapter: Bamboo.PostmarkAdapter,
+  api_key: System.get_env("POSTMARK_API_KEY")
