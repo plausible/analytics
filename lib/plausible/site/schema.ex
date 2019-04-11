@@ -7,7 +7,7 @@ defmodule Plausible.Site do
     field :domain, :string
     field :timezone, :string
 
-    many_to_many :members, User, join_through: "site_memberships"
+    many_to_many :members, User, join_through: Plausible.Site.Membership
 
     timestamps()
   end

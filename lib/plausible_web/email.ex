@@ -38,6 +38,15 @@ defmodule PlausibleWeb.Email do
     |> render("activation_email.html", name: user.name, link: link)
   end
 
+  def feedback_survey_email(user) do
+    new_email()
+    |> to(user.email)
+    |> from("Uku Taht <uku@plausible.io>")
+    |> tag("feedback-survey-email")
+    |> subject("[Plausible] Beta feedback")
+    |> render("feedback_survey.html", user: user)
+  end
+
   def feedback(from, text) do
     from = if from == "", do: "anonymous@plausible.io", else: from
 

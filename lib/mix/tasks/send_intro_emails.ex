@@ -23,7 +23,7 @@ defmodule Mix.Tasks.SendIntroEmails do
       )
 
     for user <- Repo.all(q) do
-      if user_completed_setup?(user) do
+      if Plausible.Auth.user_completed_setup?(user) do
         Logger.info("#{user.name} has completed the setup. Sending welcome email.")
         send_welcome_email(args, user)
       else
@@ -60,21 +60,5 @@ defmodule Mix.Tasks.SendIntroEmails do
       user_id: user.id,
       timestamp: NaiveDateTime.utc_now()
     }])
-  end
-
-  defp user_completed_setup?(user) do
-    query =
-      from(
-        p in Plausible.Pageview,
-        join: s in Plausible.Site,
-        on: s.domain == p.hostname,
-        join: sm in Plausible.Site.Membership,
-        on: sm.site_id == s.id,
-        join: u in Plausible.Auth.User,
-        on: sm.user_id == u.id,
-        where: u.id == ^user.id
-      )
-
-    Repo.exists?(query)
   end
 end
