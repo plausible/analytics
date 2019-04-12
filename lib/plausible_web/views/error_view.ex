@@ -12,7 +12,7 @@ defmodule PlausibleWeb.ErrorView do
   def render("500.html", assigns) do
     render("error.html", Map.merge(%{
       layout: false,
-      status: 404,
+      status: 500,
       message: "Oops! Looks like we're having server issues"
     }, assigns))
   end
