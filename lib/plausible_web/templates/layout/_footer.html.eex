@@ -1,6 +1,6 @@
 <footer class='w-full text-center text-grey p-8 pin-b bg-indigo-darker'>
   <div>
-    <a href="https://journal.plausible.io" class="light-text font-medium mr-4">Blog</a>
+    <a href="/blog/" class="light-text font-medium mr-4">Blog</a>
     <a href="/feedback" class="light-text font-medium mr-4">Feedback</a>
     <a href="/plausible.io" class="light-text font-medium">Live Demo</a>
   </div>
