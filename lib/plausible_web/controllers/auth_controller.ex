@@ -133,7 +133,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def password_form(conn, _params) do
-    render(conn, "password_form.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+    render(conn, "password_form.html", layout: {PlausibleWeb.LayoutView, "focus.html"}, skip_plausible_tracking: true)
   end
 
   def set_password(conn, %{"password" => pw}) do
