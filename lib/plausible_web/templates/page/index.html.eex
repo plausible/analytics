@@ -1,7 +1,43 @@
 <div class="md:mt-12"></div>
 <div class="bg-grey-lightest">
   <div class="container max-w-2xl flex flex-col md:flex-row-reverse">
-    <section class="lg:w-2/5">
+    <section class="lg:w-2/5 relative">
+      <svg height="600" width="600" style="position: absolute; right: -380px; top: 100px;">
+        <circle cx="300" cy="300" r="300" fill="#6574cd" />
+      </svg>
+
+      <svg height="400" width="400" style="position: absolute; right: -50px; top: -30px;">
+        <circle cx="200" cy="200" r="200" fill="#b2b7ff" />
+      </svg>
+
+      <div class="w-3/4 bg-white shadow-lg rounded m-4 p-4 text-center absolute" style="left: 75px;">
+        <h2>Top Referrers</h2>
+        <div class="text-grey-darker mt-1">by visitors</div>
+
+        <div class="mt-8">
+          <%= for {referrer, count} <- @demo_referrers do %>
+            <div class="flex items-center justify-between my-2">
+              <span><%= referrer %></span>
+              <span><%= count %></span>
+            </div>
+            <%= PlausibleWeb.StatsView.bar(count, @demo_referrers) %>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="w-3/4 bg-white shadow-lg rounded m-4 p-4 text-center absolute" style="left: calc(75% + 150px);">
+        <h2>Top Countries</h2>
+        <div class="text-grey-darker mt-1">by visitors</div>
+        <div class="mt-8">
+          <%= for {country, count} <- @demo_countries do %>
+            <div class="flex items-center justify-between my-2">
+              <span><%= Plausible.Stats.CountryName.from_iso3166(country) %></span>
+              <span><%= count %></span>
+            </div>
+            <%= PlausibleWeb.StatsView.bar(count, @demo_countries, :orange) %>
+          <% end %>
+        </div>
+      </div>
     </section>
     <section class="lg:w-3/5">
       <div class="pt-12 lg:pt-24"></div>
@@ -15,18 +51,16 @@
       <%= link("View live demo", to: "/plausible.io", class: "button mr-2") %>
     </section>
   </div>
-  <div class="container my-12 md:mt-32">
-    <hr class="style13" />
-  </div>
-  <div class="container relative">
-    <div class="polka-dots h-24 w-24 absolute pin-t pin-r"></div>
+  <div class="pt-24"></div>
+  <div class="pt-24"></div>
+  <div class="container relative mt-32">
     <h2 class="font-black">Why Plausible?</h2>
     <p class="text-lg mt-2 leading-normal">
     Plausible is built by and for privacy-conscious minimalists<br />
     Here’s what makes it different from other solutions
     </p>
   </div>
-  <div class="container py-8">
+  <div class="container mt-10">
     <div class="flex flex-col md:flex-row items-center justify-between mx-auto leading-normal">
       <div class="w-full md:w-1/3 p-6 md:pl-0">
         <svg style="height: 1.5rem; width: 1.5rem; transform: translateY(0.3rem); margin-right: 4px; stroke: #5661b3;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check-circle"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
