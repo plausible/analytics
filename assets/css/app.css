@@ -53,6 +53,12 @@ blockquote {
   color: #F0F4F8;
 }
 
+hr.style13 {
+	height: 6px;
+	background: url(http://ibrahimjabbari.com/english/images/hr-12.png) repeat-x 0 0;
+    border: 0;
+}
+
 .transition {
   transition: all .1s ease-in;
 }
@@ -201,8 +207,6 @@ clip-path: polygon(10% 0, 100% 90%, 100% 0);
 .group-hover-fill-red svg {
   transition: all .1 ease-in;
 }
-
-
 
 .feather {
   height: 1em;
