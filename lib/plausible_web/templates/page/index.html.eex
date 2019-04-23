@@ -2,11 +2,11 @@
 <div class="bg-grey-lightest">
   <div class="container max-w-2xl flex flex-col md:flex-row-reverse">
     <section class="lg:w-2/5 relative">
-      <svg height="600" width="600" style="position: absolute; right: -380px; top: 100px;">
+      <svg height="600" width="600" style="position: absolute; right: -380px; top: 100px; filter: drop-shadow(0 15px 30px rgba(0, 0, 0, .11));">
         <circle cx="300" cy="300" r="300" fill="#6574cd" />
       </svg>
 
-      <svg height="400" width="400" style="position: absolute; right: -50px; top: -30px;">
+      <svg height="400" width="400" style="position: absolute; right: -60px; top: -30px; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .11));">
         <circle cx="200" cy="200" r="200" fill="#b2b7ff" />
       </svg>
 
@@ -104,17 +104,17 @@
           <div class="w-full flex justify-between items-center py-4">
             <span>Personal</span>
             <span><b>10k</b> pageviews</span>
-            <b class="bg-indigo-lightest p-1 rounded-sm">$8 / mo</b>
+            <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$8 / mo</b>
           </div>
           <div class="w-full flex justify-between items-center py-4 border-t">
             <span>Startup</span>
             <span><b>100k</b> pageviews</span>
-            <b class="bg-indigo-lightest p-1 rounded-sm">$16 / mo</b>
+            <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$16 / mo</b>
           </div>
           <div class="w-full flex justify-between items-center py-4 border-t">
             <span>Business</span>
             <span><b>1m</b> pageviews</span>
-            <b class="bg-indigo-lightest p-1 rounded-sm">$48 / mo</b>
+            <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$48 / mo</b>
           </div>
           <%= link("Start free trial ->", to: "/plausible.io", class: "button mt-6") %>
           <div class="text-sm text-grey-darker mt-2">* No credit card required up front</div>
@@ -124,18 +124,20 @@
       <div class="bg-white w-1/3 rounded-lg rounded-l-none absolute pin-r shadow" style="top: 250px;">
         <div class="rounded-b-lg p-6 text-grey-darker">
           <blockquote>If you’re not paying for the product, you are the product</blockquote>
-          Plausible does not sell your data or use it to follow people around with ads. Since we don’t use your data in nefarious ways, we ask a small monthly fee to keep the servers running.
+          Plausible does not sell your data or use it to follow people around with ads. Instead, we ask a small monthly fee to keep the servers running.
 
         </div>
       </div>
 
     </div>
   </div>
-  <div class="pt-8"></div>
-  <div class="container">
-    <div class="my-24 flex flex-col md:flex-row justify-between items-center">
-      <div class="w-full md:w-31percent">
-        <p class="italic">Plausible is focused on exactly what I need: clear insights into my site visitors, without getting in my way</p>
+  <div class="pt-16"></div>
+  <div class="container my-32">
+    <h3 class="font-black text-center text-2xl my-12">What people are saying</h3>
+    <div class="flex flex-col md:flex-row justify-between items-center">
+      <div class="w-full md:w-31percent bg-white shadow rounded p-6">
+        <svg fill="#3d4852" style="width: 24px; margin-bottom: 6px;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 100 125" enable-background="new 0 0 100 100" xml:space="preserve"><path d="M5,49.898h24.839C29.646,63.563,18.637,74.65,5,74.958v14.163c21.447-0.31,38.816-17.748,39.011-39.223h0.01v-0.361V10.879  H5V49.898z"/><path d="M55.98,10.879v39.02h24.839C80.625,63.563,69.617,74.65,55.98,74.958v14.163c21.447-0.31,38.816-17.748,39.011-39.223H95  v-0.361V10.879H55.98z"/></svg>
+        <p class="text-lg">Plausible is focused on exactly what I need: clear insights into my site visitors, without getting in my way</p>
         <div class="mt-2 md:mt-4 flex items-center justify-start">
           <a href="https://www.felipesere.com/">
             <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/felipe.jpg"), class: "inline w-12 h-12 object-cover rounded-full mr-3") %>
@@ -149,8 +151,9 @@
         </div>
       </div>
 
-      <div class="w-full md:w-31percent mt-16 md:mt-0">
-        <p class="italic">All the stats you need in a single page. Plausible's user experience and user interface are the stark opposite of Google Analytics.</p>
+      <div class="w-full md:w-31percent bg-white shadow rounded p-6 mt-16 md:mt-0">
+        <svg fill="#3d4852" style="width: 24px; margin-bottom: 6px;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 100 125" enable-background="new 0 0 100 100" xml:space="preserve"><path d="M5,49.898h24.839C29.646,63.563,18.637,74.65,5,74.958v14.163c21.447-0.31,38.816-17.748,39.011-39.223h0.01v-0.361V10.879  H5V49.898z"/><path d="M55.98,10.879v39.02h24.839C80.625,63.563,69.617,74.65,55.98,74.958v14.163c21.447-0.31,38.816-17.748,39.011-39.223H95  v-0.361V10.879H55.98z"/></svg>
+        <p class="text-lg">All the stats you need in a single page. Plausible's user experience and user interface are the stark opposite of Google Analytics.</p>
         <div class="mt-2 md:mt-4 flex items-center justify-start">
           <a href="https://makisotman.com/">
             <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/makis.jpg"), class: "inline w-12 h-12 rounded-full mr-3") %>
@@ -164,8 +167,9 @@
         </div>
       </div>
 
-      <div class="w-full md:w-31percent mt-16 md:mt-0">
-        <p class="italic">I love Plausible because it is lightweight and looks beautiful. It shows me all the statistics that I need in a simple and unique style.</p>
+      <div class="w-full md:w-31percent bg-white shadow rounded p-6 mt-16 md:mt-0">
+        <svg fill="#3d4852" style="width: 24px; margin-bottom: 6px;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 100 125" enable-background="new 0 0 100 100" xml:space="preserve"><path d="M5,49.898h24.839C29.646,63.563,18.637,74.65,5,74.958v14.163c21.447-0.31,38.816-17.748,39.011-39.223h0.01v-0.361V10.879  H5V49.898z"/><path d="M55.98,10.879v39.02h24.839C80.625,63.563,69.617,74.65,55.98,74.958v14.163c21.447-0.31,38.816-17.748,39.011-39.223H95  v-0.361V10.879H55.98z"/></svg>
+        <p class="text-lg">I love Plausible because it is lightweight and looks beautiful. It shows me all the statistics that I need in a simple and unique style.</p>
         <div class="mt-2 md:mt-4 flex items-center justify-start">
           <a href="https://www.schranz.io/">
             <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/markus.jpg"), class: "inline w-12 h-12 rounded-full mr-3") %>
