@@ -8,7 +8,7 @@ defmodule PlausibleWeb.SiteController do
   def new(conn, _params) do
     changeset = Plausible.Site.changeset(%Plausible.Site{})
 
-    render(conn, "new.html", changeset: changeset)
+    render(conn, "new.html", changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def create_site(conn, %{"site" => site_params}) do
@@ -25,7 +25,7 @@ defmodule PlausibleWeb.SiteController do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
     conn
     |> assign(:skip_plausible_tracking, true)
-    |> render("snippet.html", site: site)
+    |> render("snippet.html", site: site, layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def settings(conn, %{"website" => website}) do

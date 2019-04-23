@@ -1,5 +1,4 @@
-<div class="md:mt-12"></div>
-<div class="bg-grey-lightest">
+<div class="md:pt-12 bg-grey-lightest w-screen overflow-hidden">
   <div class="container max-w-2xl flex flex-col md:flex-row-reverse">
     <section class="lg:w-2/5 relative">
       <svg height="600" width="600" style="position: absolute; right: -380px; top: 100px; filter: drop-shadow(0 15px 30px rgba(0, 0, 0, .11));">
@@ -45,10 +44,10 @@
         Simple analytics for your website
       </h1>
       <p class="font-normal text-grey-darker text-lg lg:text-2xl mt-3 leading-tight font-medium">
-        A lightweight, non-intrusive alternative to Google Analytics
+        Plausible is a lightweight, non-intrusive alternative to Google Analytics
       </p>
-      <%= link("Get started", to: "/register", class: "button button-outline mr-2 mt-4") %>
-      <%= link("View live demo", to: "/plausible.io", class: "button mr-2") %>
+      <%= link("View live demo", to: "/plausible.io", class: "button button-outline mr-2 mt-6") %>
+      <%= link("Start free trial →", to: "/register", class: "button mr-2") %>
     </section>
   </div>
   <div class="pt-24"></div>
@@ -92,11 +91,11 @@
     <%= link("View live demo", to: "/plausible.io", class: "button mt-4") %>
   </div>
   <div class="bg-indigo-darker">
-    <div class="container relative pt-12 pb-64 mb-32">
+    <div class="container relative pt-16 pb-64 mb-32">
       <h2 class="font-black text-white text-center text-3xl">Simple, traffic based pricing</h2>
-      <h2 class="text-white text-center text-2xl text-indigo-lightest">Try Plausible free for 30 days</h2>
+      <h2 class="text-white text-center text-2xl text-indigo-lightest mb-12">Try Plausible free for 30 days</h2>
 
-      <div class="bg-white w-2/3 rounded-lg absolute pin-l shadow-lg z-50" style="top: 160px;">
+      <div class="bg-white w-2/3 rounded-lg absolute pin-l shadow-lg z-50" style="top: 200px;">
         <header class="bg-grey-lightest p-6 rounded-t-lg">
           <div class="uppercase font-bold text-indigo-dark">Pricing Plans</div>
         </header>
@@ -104,24 +103,24 @@
           <div class="w-full flex justify-between items-center py-4">
             <span>Personal</span>
             <span><b>10k</b> pageviews</span>
-            <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$8 / mo</b>
+            <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$6 / mo</b>
           </div>
           <div class="w-full flex justify-between items-center py-4 border-t">
             <span>Startup</span>
             <span><b>100k</b> pageviews</span>
-            <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$16 / mo</b>
+            <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$12 / mo</b>
           </div>
           <div class="w-full flex justify-between items-center py-4 border-t">
             <span>Business</span>
             <span><b>1m</b> pageviews</span>
-            <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$48 / mo</b>
+            <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$36 / mo</b>
           </div>
-          <%= link("Start free trial ->", to: "/plausible.io", class: "button mt-6") %>
+          <%= link("Start free trial →", to: "/plausible.io", class: "button mt-6") %>
           <div class="text-sm text-grey-darker mt-2">* No credit card required up front</div>
         </div>
       </div>
 
-      <div class="bg-white w-1/3 rounded-lg rounded-l-none absolute pin-r shadow" style="top: 250px;">
+      <div class="bg-white w-1/3 rounded-lg rounded-l-none absolute pin-r shadow" style="top: 300px;">
         <div class="rounded-b-lg p-6 text-grey-darker">
           <blockquote>If you’re not paying for the product, you are the product</blockquote>
           Plausible does not sell your data or use it to follow people around with ads. Instead, we ask a small monthly fee to keep the servers running.
