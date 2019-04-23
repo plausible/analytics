@@ -175,13 +175,34 @@
             <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/markus.jpg"), class: "inline w-12 h-12 rounded-full mr-3") %>
           </a>
           <div>
-          <div>
             <a href="https://www.schranz.io/"><h4>Markus Schranz</h4></a>
             <%= link("@ma_schranz", to: "https://twitter.com/ma_schranz", class: "text-sm text-grey-dark") %>
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
+  <div class="container my-32">
+    <h3 class="font-black text-center text-2xl my-12">Frequently asked questions</h3>
+
+    <div class="max-w-xl mx-auto bg-white border rounded p-6">
+      <h4>1. Can I use Plausible on more than one website?</h4>
+      <div class="text-grey-darker mt-4 leading-normal">
+        Yes. You can add as many websites as you want under a single account. You will be charged for the total pageviews on all of your websites.
+      </div>
+    </div>
+
+    <div class="max-w-xl mx-auto bg-white border rounded p-6 my-6">
+      <h4>2. What happens if I go over my plan limit?</h4>
+      <div class="text-grey-darker mt-4 leading-normal">
+        You don't have to pay for a one-time spike in traffic, but if you go over your plan limit for 2 months in a row, we will
+        contact you to discuss upgrade options.
+      </div>
+    </div>
+
+    <div class="text-center">
+      <%= link("Ask a question from the founder", to: "mailto: uku@plausible.io", class: "text-indigo") %>
     </div>
   </div>
 </div>
