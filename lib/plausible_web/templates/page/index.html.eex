@@ -73,7 +73,7 @@
         <svg style="height: 1.5rem; width: 1.5rem; transform: translateY(0.3rem); margin-right: 4px; stroke: #5661b3;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check-circle"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         <h3 class="inline">Anonymous</h3>
         <p class="text-lg mt-2">
-        Measure traffic, not individuals. No personal data or IP addresses are ever stored in our database. <%= link("Read more about our data policy", to: "#", class: "text-indigo") %>
+        Measure traffic, not individuals. No personal data or IP addresses are ever stored in our database. <%= link("Read more about our data policy", to: "/data-policy", class: "text-indigo") %>
         </p>
       </div>
 
@@ -100,7 +100,7 @@
           <div class="uppercase font-bold text-indigo-dark">Pricing Plans</div>
         </header>
         <div class="rounded-b-lg p-6 text-indigo-darkest">
-          <div class="pb-6">
+          <div class="pb-6 leading-normal">
             Track unlimited websites with all plans. Billing is based on the total monthly pageviews of the website(s) you're tracking
           </div>
           <div class="w-full flex justify-between items-center py-4 border-t">
@@ -118,7 +118,7 @@
             <span><b>1m</b> pageviews</span>
             <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$36 / mo</b>
           </div>
-          <%= link("Start free trial →", to: "/plausible.io", class: "button mt-6") %>
+          <%= link("Start free trial →", to: "/register", class: "button mt-6") %>
           <div class="text-sm text-grey-darker mt-2">* No credit card required up front</div>
         </div>
       </div>
@@ -127,7 +127,7 @@
         <div class="rounded-b-lg p-6">
           <svg style="width: 20px; height: 20px; margin-right: 2px; transform: translateY(0.2rem);" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8795a1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-info"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="8"/></svg>
           <h3 class="text-indigo-dark inline">If you’re not paying for the product, you are the product</h3>
-          <div class="mt-6">
+          <div class="mt-6 leading-normal">
             Plausible does not sell your data or use it to follow people around with ads. Instead, we ask a small monthly fee to keep the servers running.
           </div>
 
@@ -194,7 +194,7 @@
     <div class="max-w-xl mx-auto bg-white border rounded p-6">
       <h4>1. Can I use Plausible on more than one website?</h4>
       <div class="mt-4 leading-normal">
-        Yes. You can add as many websites as you want under a single account. You will be charged for the total pageviews on all of your websites.
+        Yes. You can add as many websites as you want under a single account. You will be charged for the total pageviews on all of your websites combined. For example, on the 10k plan you can either have 10 websites that gets 1000 pageviews per month, or one website that gets 10,000 pageviews per month.
       </div>
     </div>
 
@@ -203,6 +203,14 @@
       <div class="mt-4 leading-normal">
         You don't have to pay for a one-time spike in traffic, but if you go over your plan limit for 2 months in a row, we will
         contact you to discuss upgrade options.
+      </div>
+    </div>
+
+    <div class="max-w-xl mx-auto bg-white border rounded p-6 my-6">
+      <h4>3. How long is my data retained?</h4>
+      <div class="mt-4 leading-normal">
+        Currently, your data is retained forever in Plausible. If this ever changes, we will let you know and make sure to offer
+        an API to export your data.
       </div>
     </div>
 

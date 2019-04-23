@@ -47,6 +47,7 @@ defmodule PlausibleWeb.Router do
     get "/", PageController, :index
     get "/privacy", PageController, :privacy
     get "/terms", PageController, :terms
+    get "/data-policy", PageController, :data_policy
     get "/feedback", PageController, :feedback
     post "/feedback", PageController, :submit_feedback
 

@@ -42,6 +42,10 @@ defmodule PlausibleWeb.PageController do
     render(conn, "privacy.html")
   end
 
+  def data_policy(conn, _params) do
+    render(conn, "data_policy.html")
+  end
+
   def terms(conn, _params) do
     render(conn, "terms.html")
   end
