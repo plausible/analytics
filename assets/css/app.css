@@ -37,10 +37,6 @@ blockquote {
   @apply my-4 py-2 px-4 border-l-4 border-grey;
 }
 
-.logo-text {
-  @apply font-black tracking-wide text-indigo text-4xl;
-}
-
 @screen xl {
   .container {
     max-width: 70rem;
@@ -53,18 +49,8 @@ blockquote {
   color: #F0F4F8;
 }
 
-hr.style13 {
-	height: 6px;
-	background: url(http://ibrahimjabbari.com/english/images/hr-12.png) repeat-x 0 0;
-    border: 0;
-}
-
 .transition {
   transition: all .1s ease-in;
-}
-
-.landing-bg {
-  background-image: linear-gradient(160deg, #f8fafc 41.6%, white calc(41.6% + 1px))
 }
 
 .truncated-label {
