@@ -201,7 +201,7 @@
     <div class="max-w-xl mx-auto bg-white border rounded p-6">
       <h4>1. Can I use Plausible on more than one website?</h4>
       <div class="mt-4 leading-normal">
-        Yes. You can add as many websites as you want under a single account. You will be charged for the total pageviews on all of your websites combined. For example, on the 10k plan you can either have 10 websites that gets 1000 pageviews per month, or one website that gets 10,000 pageviews per month.
+        Yes. You can add as many websites as you want under a single account. You will be charged for the total pageviews on all of your websites combined. For example, on the 10k plan you can either have 10 websites that each get 1000 pageviews per month, or one website that gets 10,000 pageviews per month.
       </div>
     </div>
 
@@ -214,10 +214,9 @@
     </div>
 
     <div class="max-w-xl mx-auto bg-white border rounded p-6 my-6">
-      <h4>3. How long is my data retained?</h4>
+      <h4>3. How do you make sure my visitors' privacy is protected?</h4>
       <div class="mt-4 leading-normal">
-        Currently, your data is retained forever in Plausible. If this ever changes, we will let you know and make sure to offer
-        an API to export your data.
+        We take painstaking care to not collect or store any personal information that could be tied back to the visitor. You own your data and we will never sell it or use it in nefarious ways. <%= link("Read more about our data policy", to: "/data-policy", class: "text-indigo") %>.
       </div>
     </div>
 
