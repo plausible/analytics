@@ -91,9 +91,11 @@
     <%= link("View live demo →", to: "/plausible.io", class: "button mt-6") %>
   </div>
   <div class="bg-indigo-darker">
-    <div class="container relative pt-16 pb-64 mb-32">
+    <div class="container relative pt-16 mb-32">
       <h2 class="font-black text-white text-center text-3xl">Simple, traffic based pricing</h2>
       <h2 class="text-white text-center text-2xl text-indigo-lightest mb-12">Try Plausible free for 30 days</h2>
+      <div class="pt-32"></div>
+      <div class="pt-32"></div>
 
       <div class="bg-white w-full md:w-2/3 rounded-lg absolute pin-l shadow-lg z-50" style="top: 200px;">
         <header class="bg-grey-lightest p-6 rounded-t-lg">
