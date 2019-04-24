@@ -12,9 +12,12 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def create_site(conn, %{"site" => site_params}) do
-    case insert_site(conn.assigns[:current_user].id, site_params) do
+    user = conn.assigns[:current_user]
+
+    case insert_site(user.id, site_params) do
       {:ok, %{site: site}} ->
         Plausible.Tracking.event(conn, "New Site: Create", %{domain: site.domain})
+        Plausible.Slack.notify("#{user.name} created #{site.domain}")
         redirect(conn, to: "/#{site.domain}/snippet")
       {:error, :site, changeset, _} ->
         render(conn, "new.html", changeset: changeset)

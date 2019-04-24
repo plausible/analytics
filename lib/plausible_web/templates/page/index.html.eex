@@ -126,7 +126,7 @@
             <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$36 / mo</b>
           </div>
           <%= link("Start free trial →", to: "/register", class: "button mt-6") %>
-          <div class="text-sm text-grey-darker mt-2">* No credit card required up front</div>
+          <div class="text-sm text-grey-darker mt-2">No credit card required up front. Cancel anytime.</div>
         </div>
       </div>
 
