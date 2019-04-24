@@ -158,6 +158,11 @@ defmodule PlausibleWeb.AuthControllerTest do
         timestamp: NaiveDateTime.utc_now()
       }])
 
+      Repo.insert_all("feedback_emails", [%{
+        user_id: user.id,
+        timestamp: NaiveDateTime.utc_now()
+      }])
+
       conn = delete(conn, "/me")
       assert redirected_to(conn) == "/"
     end
