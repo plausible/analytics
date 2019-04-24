@@ -103,19 +103,24 @@
           <div class="pb-6 leading-normal">
             Track unlimited websites with all plans. Billing is based on the total monthly pageviews of the website(s) you're tracking
           </div>
+          <div class="w-full flex justify-between items-center pb-4">
+            <span class="uppercase text-grey-dark text-sm font-bold">Plan</span>
+            <span class="uppercase text-grey-dark text-sm font-bold">Pageviews</span>
+            <span class="uppercase text-grey-dark text-sm font-bold">Price</span>
+          </div>
           <div class="w-full flex justify-between items-center py-4 border-t">
             <span>Personal</span>
-            <span><b>10k</b> pageviews</span>
+            <span><b>10k</b> / mo</span>
             <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$6 / mo</b>
           </div>
           <div class="w-full flex justify-between items-center py-4 border-t">
             <span>Startup</span>
-            <span><b>100k</b> pageviews</span>
+            <span><b>100k</b> / mo</span>
             <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$12 / mo</b>
           </div>
           <div class="w-full flex justify-between items-center py-4 border-t">
             <span>Business</span>
-            <span><b>1m</b> pageviews</span>
+            <span><b>1m</b> / mo</span>
             <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$36 / mo</b>
           </div>
           <%= link("Start free trial →", to: "/register", class: "button mt-6") %>
