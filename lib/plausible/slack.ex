@@ -6,10 +6,7 @@ defmodule Plausible.Slack do
     Task.start(fn ->
       case @app_env do
         "prod" ->
-          HTTPoison.post!(@feed_channel_url, Poison.encode!(%{
-            text: text,
-            icon_url: "https://plausible.io/images/icon/plausible_favicon.png"
-          }))
+          HTTPoison.post!(@feed_channel_url, Poison.encode!(%{text: text}))
         _ ->
           nil
       end
