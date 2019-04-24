@@ -1,20 +1,11 @@
-<div class="bg-grey-lightest" style="min-height: 100vh; width: 100%; position: absolute; top: 0;">
-  <div class="w-full max-w-sm mx-auto mt-8">
-    <div class="text-center w-full mb-8">
-      <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/48x48.png"), style: "height: 28px; margin-right: 4px;") %>
-      <a href="/" class="logo-text text-4xl no-underline">Plausible</a>
-    </div>
-    <%= form_for @conn, "/", [class: "bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16"], fn f -> %>
-      <div class="flex items-center justify-between">
-        <h2>Add javascript snippet</h2>
-      </div>
-      <div class="my-4">
-        <p>Paste this snippet in the <code>&lt;head&gt;</code> of your website.</p>
-        <%= textarea f, :domain, id: "snippet_code", class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light text-xs mt-2", value: "<script async defer type=\"text/javascript\" src=\"https://plausible.io/js/plausible.js\"></script>" %>
-        <a onclick="var textarea = document.getElementById('snippet_code'); textarea.focus(); textarea.select(); document.execCommand('copy');" href="javascript:void(0)" class="no-underline text-blue text-sm hover:underline">Copy to clipboard</a>
-      </div>
-      <%= link("Start collecting data →", class: "button mt-4 w-full", to: "/#{@site.domain}") %>
-    <% end %>
-    <p class="text-center text-grey text-xs">©2019 Plausible Insights. All rights reserved.</p>
+<%= form_for @conn, "/", [class: "max-w-sm w-full mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
+  <div class="flex items-center justify-between">
+    <h2>Add javascript snippet</h2>
   </div>
-</div>
+  <div class="my-4">
+    <p>Paste this snippet in the <code>&lt;head&gt;</code> of your website.</p>
+    <%= textarea f, :domain, id: "snippet_code", class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light text-xs mt-2", value: "<script async defer type=\"text/javascript\" src=\"https://plausible.io/js/plausible.js\"></script>" %>
+    <a onclick="var textarea = document.getElementById('snippet_code'); textarea.focus(); textarea.select(); document.execCommand('copy');" href="javascript:void(0)" class="no-underline text-blue text-sm hover:underline">Copy to clipboard</a>
+  </div>
+  <%= link("Start collecting data →", class: "button mt-4 w-full", to: "/#{@site.domain}") %>
+<% end %>

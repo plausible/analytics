@@ -2,6 +2,22 @@ defmodule PlausibleWeb.PageController do
   use PlausibleWeb, :controller
   use Plausible.Repo
 
+  @demo_referrers [
+    {"indiehackers.com", 30},
+    {"Twitter", 17},
+    {"Google", 6},
+    {"DuckDuckGo", 4},
+    {"Bing", 2},
+  ]
+
+   @demo_countries [
+    {"United Kingdom", 41},
+    {"United States", 38},
+    {"France", 13},
+    {"India", 7},
+    {"Netherlands", 6},
+  ]
+
   def index(conn, _params) do
     if conn.assigns[:current_user] do
       Plausible.Tracking.event(conn, "Sites: View Page")
@@ -9,7 +25,7 @@ defmodule PlausibleWeb.PageController do
       render(conn, "sites.html", sites: user.sites)
     else
       Plausible.Tracking.event(conn, "Landing: View Page")
-      render(conn, "index.html", landing_nav: true)
+      render(conn, "index.html", demo_referrers: @demo_referrers, demo_countries: @demo_countries, landing_nav: true)
     end
   end
 
@@ -24,6 +40,10 @@ defmodule PlausibleWeb.PageController do
 
   def privacy(conn, _params) do
     render(conn, "privacy.html")
+  end
+
+  def data_policy(conn, _params) do
+    render(conn, "data_policy.html")
   end
 
   def terms(conn, _params) do

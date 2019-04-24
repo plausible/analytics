@@ -37,10 +37,6 @@ blockquote {
   @apply my-4 py-2 px-4 border-l-4 border-grey;
 }
 
-.logo-text {
-  @apply font-black tracking-wide text-indigo text-4xl;
-}
-
 @screen xl {
   .container {
     max-width: 70rem;
@@ -55,10 +51,6 @@ blockquote {
 
 .transition {
   transition: all .1s ease-in;
-}
-
-.landing-bg {
-  background-image: linear-gradient(160deg, #f8fafc 41.6%, white calc(41.6% + 1px))
 }
 
 .truncated-label {
@@ -82,18 +74,6 @@ blockquote {
 .bar__fill {
   height: 100%;
   border-radius: 4px;
-}
-
-.beta-bg {
-  background-color: #f8fafc;
-  background-image: url("data:image/svg+xml,%3Csvg width='42' height='44' viewBox='0 0 42 44' xmlns='http://www.w3.org/2000/svg'%3E%3Cg id='Page-1' fill='none' fill-rule='evenodd'%3E%3Cg id='brick-wall' fill='%23e6e8ff' fill-opacity='0.42'%3E%3Cpath d='M0 0h42v44H0V0zm1 1h40v20H1V1zM0 23h20v20H0V23zm22 0h20v20H22V23z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-}
-
-.polka-dots {
-background-color: #f8fafc;
-background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23b2b7ff' fill-opacity='0.4' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
--webkit-clip-path: polygon(10% 0, 100% 90%, 100% 0);
-clip-path: polygon(10% 0, 100% 90%, 100% 0);
 }
 
 .pulsating-circle {
@@ -201,8 +181,6 @@ clip-path: polygon(10% 0, 100% 90%, 100% 0);
 .group-hover-fill-red svg {
   transition: all .1 ease-in;
 }
-
-
 
 .feather {
   height: 1em;
