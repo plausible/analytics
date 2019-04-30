@@ -44,6 +44,22 @@ function defaultDate() {
   return [Date.parse(from), Date.parse(to)]
 }
 
+function dateToISOString(date) {
+  date = new Date('2013-08-03T02:00:00Z');
+  year = date.getFullYear();
+  month = date.getMonth()+1;
+  dt = date.getDate();
+
+  if (dt < 10) {
+    dt = '0' + dt;
+  }
+  if (month < 10) {
+    month = '0' + month;
+  }
+
+  return year + '-' + month + '-'+ dt;
+}
+
 const dateRangeTrigger = document.querySelector('#custom-daterange-trigger')
 
 if (dateRangeTrigger) {
@@ -55,8 +71,8 @@ if (dateRangeTrigger) {
     onChange: function(selectedDates, dateStr) {
       if (selectedDates.length === 2) {
         dateRangeTrigger.innerHTML = dateStr.replace("to", "-")
-        const from = selectedDates[0].toISOString().substring(0, 10)
-        const to = selectedDates[1].toISOString().substring(0, 10)
+        const from = dateToISOString(selectedDates[0])
+        const to = dateToISOString(selectedDates[1])
         document.location = '?period=custom&from=' + from + '&to=' + to
       }
     },
