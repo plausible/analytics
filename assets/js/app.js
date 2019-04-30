@@ -45,10 +45,9 @@ function defaultDate() {
 }
 
 function dateToISOString(date) {
-  date = new Date('2013-08-03T02:00:00Z');
-  year = date.getFullYear();
-  month = date.getMonth()+1;
-  dt = date.getDate();
+  const year = date.getFullYear();
+  let month = date.getMonth()+1;
+  let dt = date.getDate();
 
   if (dt < 10) {
     dt = '0' + dt;
