@@ -17,8 +17,8 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
       Mix.Tasks.SendIntroEmails.execute()
 
       assert_email_delivered_with(
-        to: [nil: user.email],
-        subject: "Plausible setup"
+        to: [{user.name, user.email}],
+        subject: "Your Plausible setup"
       )
     end
 
@@ -28,8 +28,8 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
       Mix.Tasks.SendIntroEmails.execute()
 
       assert_email_delivered_with(
-        to: [nil: user.email],
-        subject: "Plausible setup"
+        to: [{user.name, user.email}],
+        subject: "Your Plausible setup"
       )
     end
 
@@ -58,8 +58,8 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
       Mix.Tasks.SendIntroEmails.execute()
 
       assert_email_delivered_with(
-        to: [nil: user.email],
-        subject: "Plausible setup"
+        to: [{user.name, user.email}],
+        subject: "Your Plausible setup"
       )
     end
 
@@ -71,8 +71,8 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
       Mix.Tasks.SendIntroEmails.execute()
 
       assert_email_delivered_with(
-        to: [nil: user.email],
-        subject: "Plausible feedback"
+        to: [{user.name, user.email}],
+        subject: "Welcome to Plausible :) Plus, a quick question..."
       )
     end
 
@@ -84,8 +84,8 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
       Mix.Tasks.SendIntroEmails.execute()
 
       assert_email_delivered_with(
-        to: [nil: user.email],
-        subject: "Plausible feedback"
+        to: [{user.name, user.email}],
+        subject: "Welcome to Plausible :) Plus, a quick question..."
       )
     end
 

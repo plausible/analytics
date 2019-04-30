@@ -21,7 +21,7 @@ defmodule Mix.Tasks.SendFeedbackEmailsTest do
 
       SendFeedbackEmails.execute()
 
-      assert_email_delivered_with(subject: "[Plausible] Beta feedback")
+      assert_email_delivered_with(subject: "Plausible feedback")
     end
 
     test "sends the email only once" do
@@ -30,7 +30,7 @@ defmodule Mix.Tasks.SendFeedbackEmailsTest do
       insert(:pageview, hostname: site.domain)
 
       SendFeedbackEmails.execute()
-      assert_email_delivered_with(subject: "[Plausible] Beta feedback")
+      assert_email_delivered_with(subject: "Plausible feedback")
 
       SendFeedbackEmails.execute()
       assert_no_emails_delivered()

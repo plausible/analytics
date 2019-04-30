@@ -21,7 +21,7 @@ defmodule Plausible.StatsTest do
     test "displays pageviews for 7d" do
       site = insert(:site)
       insert(:pageview, hostname: site.domain)
-      insert(:pageview, hostname: site.domain, inserted_at: days_ago(8))
+      insert(:pageview, hostname: site.domain, inserted_at: days_ago(7))
 
       query = Stats.Query.from(site.timezone, %{"period" => "7d"})
       plot = Stats.calculate_plot(site, query)

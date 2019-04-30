@@ -1,3 +1,9 @@
+defimpl Bamboo.Formatter, for: Plausible.Auth.User do
+  def format_email_address(user, _opts) do
+    {user.name, user.email}
+  end
+end
+
 defmodule Plausible.Auth.User do
   use Ecto.Schema
   import Ecto.Changeset

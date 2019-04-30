@@ -4,19 +4,19 @@ defmodule PlausibleWeb.Email do
 
   def welcome_email(user) do
     new_email()
-    |> to(user.email)
+    |> to(user)
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("welcome-email")
-    |> subject("Plausible feedback")
+    |> subject("Welcome to Plausible :) Plus, a quick question...")
     |> render("welcome_email.html", user: user)
   end
 
   def help_email(user) do
     new_email()
-    |> to(user.email)
+    |> to(user)
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("help-email")
-    |> subject("Plausible setup")
+    |> subject("Your Plausible setup")
     |> render("help_email.html", user: user)
   end
 
@@ -40,10 +40,10 @@ defmodule PlausibleWeb.Email do
 
   def feedback_survey_email(user) do
     new_email()
-    |> to(user.email)
+    |> to(user)
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("feedback-survey-email")
-    |> subject("[Plausible] Beta feedback")
+    |> subject("Plausible feedback")
     |> render("feedback_survey.html", user: user)
   end
 

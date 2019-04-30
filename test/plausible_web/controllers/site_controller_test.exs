@@ -63,6 +63,16 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
+  describe "GET /:website/settings" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "shows settings form", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings")
+
+      assert html_response(conn, 200) =~ "Settings"
+    end
+  end
+
   describe "PUT /:website/settings" do
     setup [:create_user, :log_in, :create_site]
 
