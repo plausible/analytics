@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.ExternalApiController do
+defmodule PlausibleWeb.Api.ExternalController do
   use PlausibleWeb, :controller
   require Logger
 
@@ -13,7 +13,8 @@ defmodule PlausibleWeb.ExternalApiController do
       {:ok, _pageview} ->
         conn |> send_resp(202, "")
       {:error, changeset} ->
-        Sentry.capture_message("Error processing pageview", extra: %{errors: inspect(changeset.errors), params: params})
+        request = Sentry.Plug.build_request_interface_data(conn, [])
+        Sentry.capture_message("Error processing pageview", extra: %{errors: inspect(changeset.errors), params: params, request: request})
         Logger.error("Error processing pageview: #{inspect(changeset)}")
         conn |> send_resp(400, "")
     end

@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.ApiControllerTest do
+defmodule PlausibleWeb.Api.InternalControllerTest do
   use PlausibleWeb.ConnCase
   use Plausible.Repo
   import Plausible.TestUtils

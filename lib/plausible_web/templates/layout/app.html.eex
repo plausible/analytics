@@ -21,6 +21,9 @@
         <% @conn.assigns[:current_user] -> %>
           <ul class="list-reset flex">
             <li class="mr-6 hidden sm:block">
+              <%= link("6 trial days left", to: "/feedback", class: "font-bold rounded py-2 px-3 hover:bg-grey-lighter", style: "line-height: 34px;") %>
+            </li>
+            <li class="mr-6 hidden sm:block">
               <%= link("Give feedback", to: "/feedback", class: "font-bold rounded py-2 px-3 hover:bg-grey-lighter", style: "line-height: 34px;") %>
             </li>
             <li>

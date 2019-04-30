@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.ExternalApiControllerTest do
+defmodule PlausibleWeb.Api.ExternalControllerTest do
   use PlausibleWeb.ConnCase
   use Plausible.Repo
 

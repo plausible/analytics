@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.ApiController do
+defmodule PlausibleWeb.Api.InternalController do
   use PlausibleWeb, :controller
   use Plausible.Repo
 

@@ -35,4 +35,14 @@ defmodule Plausible.Factory do
       session_id: session_id
     }
   end
+
+  def subscription_factory do
+    %Plausible.Billing.Subscription{
+      paddle_subscription_id: sequence(:paddle_subscription_id, &"subscription-#{&1}"),
+      paddle_plan_id: sequence(:paddle_plan_id, &"plan-#{&1}"),
+      cancel_url: "cancel.com",
+      update_url: "cancel.com",
+      status: "active"
+    }
+  end
 end
