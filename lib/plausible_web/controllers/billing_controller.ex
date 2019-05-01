@@ -8,7 +8,11 @@ defmodule PlausibleWeb.BillingController do
 
   def change_plan(conn, _params) do
     subscription = Billing.active_subscription_for(conn.assigns[:current_user].id)
-    render(conn, "change_plan.html", subscription: subscription, layout: {PlausibleWeb.LayoutView, "focus.html"})
+    if subscription do
+      render(conn, "change_plan.html", subscription: subscription, layout: {PlausibleWeb.LayoutView, "focus.html"})
+    else
+      redirect(conn, to: "/billing/upgrade")
+    end
   end
 
   def upgrade(conn, _params) do

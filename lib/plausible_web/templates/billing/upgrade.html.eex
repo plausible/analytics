@@ -8,17 +8,17 @@
   <div class="w-full flex justify-between items-center py-4 border-t">
     <span><b>10,000</b> / mo</span>
     <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$6 / mo</b>
-    <button class="button button-sm" data-plan-select="personal">Select</button>
+    <button class="button button-sm" data-product-id="<%= Plausible.Billing.Plans.paddle_id_for_plan(:personal) %>">Select</button>
   </div>
   <div class="w-full flex justify-between items-center py-4 border-t">
     <span><b>100,000</b> / mo</span>
     <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$12 / mo</b>
-    <button class="button button-sm" data-plan-select="startup">Select</button>
+    <button class="button button-sm" data-product-id="<%= Plausible.Billing.Plans.paddle_id_for_plan(:startup) %>">Select</button>
   </div>
   <div class="w-full flex justify-between items-center py-4 border-t">
     <span><b>1,000,000</b> / mo</span>
     <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$36 / mo</b>
-    <button class="button button-sm" data-plan-select="business">Select</button>
+    <button class="button button-sm" data-product-id="<%= Plausible.Billing.Plans.paddle_id_for_plan(:business) %>">Select</button>
   </div>
 
   <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js"></script>
