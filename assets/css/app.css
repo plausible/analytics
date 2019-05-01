@@ -20,6 +20,10 @@
   @apply bg-transparent border border-indigo text-indigo;
 }
 
+.button-sm {
+  @apply text-sm py-2 px-4;
+}
+
 html {
   @apply font-sans text-grey-darkest;
 }

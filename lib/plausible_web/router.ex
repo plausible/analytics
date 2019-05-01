@@ -66,13 +66,13 @@ defmodule PlausibleWeb.Router do
     get "/:domain/browsers", StatsController, :browsers
   end
 
-  scope "/api", PlausibleWeb do
-    # external
-    post "/page", ExternalApiController, :page
-    get "/error", ExternalApiController, :error
+  scope "/api", PlausibleWeb.Api do
+    post "/page", ExternalController, :page
+    get "/error", ExternalController, :error
 
-    # internal
-    get "/:domain/status", ApiController, :domain_status
+    post "/paddle/webhook", PaddleController, :webhook
+
+    get "/:domain/status", InternalController, :domain_status
   end
 
   def assign_device_id(conn, _opts) do
