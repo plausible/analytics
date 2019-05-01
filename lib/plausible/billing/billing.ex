@@ -19,6 +19,14 @@ defmodule Plausible.Billing do
     Repo.update(changeset)
   end
 
+  def trial_days_left(user) do
+    if Timex.before?(user.inserted_at, ~D[2019-04-24]) do
+      Timex.diff(~D[2019-05-24], Timex.today, :days) + 1
+    else
+      30 - Timex.diff(Timex.today, user.inserted_at, :days)
+    end
+  end
+
   defp format_subscription(params) do
     %{
       paddle_subscription_id: params["subscription_id"],
