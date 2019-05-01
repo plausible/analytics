@@ -20,7 +20,7 @@ defmodule PlausibleWeb.AuthController do
       {:ok, user} ->
         token = Auth.Token.sign_activation(user.name, user.email)
         url = PlausibleWeb.Endpoint.url() <> "/claim-activation?token=#{token}"
-        Logger.debug(url)
+        Logger.info(url)
         email_template = PlausibleWeb.Email.activation_email(user, url)
         Plausible.Mailer.deliver_now(email_template)
         Plausible.Tracking.event(conn, "Register: Submit Form")

@@ -1,3 +1,7 @@
+const PADDLE_TEST_PRODUCT_IDS = {
+  'personal': 558156
+}
+
 window.Checkout = {}
 
 window.Checkout.init = function(userId, email) {
@@ -10,7 +14,7 @@ window.Checkout.init = function(userId, email) {
       const plan = e.target.getAttribute('data-plan-select')
 
       Paddle.Checkout.open({
-        product: 558018,
+        product: PADDLE_TEST_PRODUCT_IDS[plan],
         email: email,
         passthrough: userId
       });
