@@ -51,6 +51,9 @@ defmodule PlausibleWeb.Router do
     get "/feedback", PageController, :feedback
     post "/feedback", PageController, :submit_feedback
 
+    get "/billing/change-plan", BillingController, :change_plan
+    get "/billing/upgrade", BillingController, :upgrade
+
     get "/sites/new", SiteController, :new
     post "/sites", SiteController, :create_site
     get "/:website/snippet", SiteController, :add_snippet

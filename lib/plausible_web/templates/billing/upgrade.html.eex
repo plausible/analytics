@@ -1,0 +1,33 @@
+<div class="max-w-sm w-full mx-auto bg-white shadow-md rounded px-8 py-6 mb-4 mt-8">
+  <h2 class="font-black">Upgrade your free trial</h2>
+
+  <div class="py-8">
+    Please select a plan
+  </div>
+
+  <div class="w-full flex justify-between items-center py-4 border-t">
+    <span><b>10,000</b> / mo</span>
+    <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$6 / mo</b>
+    <button class="button button-sm" data-plan-select="personal">Select</button>
+  </div>
+  <div class="w-full flex justify-between items-center py-4 border-t">
+    <span><b>100,000</b> / mo</span>
+    <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$12 / mo</b>
+    <button class="button button-sm" data-plan-select="startup">Select</button>
+  </div>
+  <div class="w-full flex justify-between items-center py-4 border-t">
+    <span><b>1,000,000</b> / mo</span>
+    <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$36 / mo</b>
+    <button class="button button-sm" data-plan-select="business">Select</button>
+  </div>
+
+  <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js"></script>
+  <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/checkout.js") %>"></script>
+  <script>
+    window.Checkout.init(
+      <%= @conn.assigns[:current_user].id %>,
+      '<%= @conn.assigns[:current_user].email %>'
+    )
+  </script>
+
+</div>

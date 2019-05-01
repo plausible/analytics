@@ -1,6 +1,49 @@
-<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-24">
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-orange-lighter px-8 pt-6 pb-8 mt-24">
+  <h2 class="font-black">Subscription Plan</h2>
+
+  <div class="mt-4 border-b border-grey-light"></div>
+
+  <div class="flex items-start justify-between mt-8">
+    <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32" style="width: 11.75rem;">
+      <h4 class="font-black">Current plan</h4>
+      <%= if @subscription do %>
+        <div class="text-xl py-2 font-medium"><%= subscription_name(@subscription) %></div>
+        <%= link("Change plan", to: "/billing/change-plan", class: "text-sm text-indigo font-medium") %>
+      <% else %>
+        <div class="text-xl py-2 font-medium">Free trial</div>
+        <%= link("Upgrade", to: "/billing/upgrade", class: "text-sm text-indigo font-medium") %>
+      <% end %>
+    </div>
+    <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32" style="width: 11.75rem;">
+      <h4 class="font-black">Price</h4>
+      <%= if @subscription do %>
+        <div class="text-xl py-2 font-medium">$6.00 / month</div>
+      <% else %>
+        <div class="text-xl py-2 font-medium">$0 / month</div>
+      <% end %>
+    </div>
+    <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32" style="width: 11.75rem;">
+      <%= if @subscription do %>
+        <h4 class="font-black">Next payment</h4>
+        <div class="text-xl py-2 font-medium">May 24, 2019</div>
+        <%= link("Update billing info", to: "/billing/change-plan", class: "text-sm text-indigo font-medium") %>
+      <% else %>
+        <h4 class="font-black">Free trial left</h4>
+        <div class="text-xl py-2 font-medium">6 days</div>
+      <% end %>
+    </div>
+  </div>
+
+  <h3 class="mt-8">Usage</h3>
+  <div class="py-2"><b>12,312 / 100,000</b> pageviews this period</div>
+  <%= if @subscription do %>
+    <div class="mt-8"><%= link("Cancel my subscription", to: "/billing/cancel", class: "text-indigo text-sm") %></div>
+  <% end %>
+</div>
+
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-16">
   <div class="flex items-center justify-between">
-    <h2>Account settings</h2>
+    <h2 class="font-black">Account settings</h2>
   </div>
 
   <div class="my-4 border-b border-grey-light"></div>
@@ -20,50 +63,9 @@
   <% end %>
 </div>
 
-<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-orange-lighter px-8 pt-6 pb-8 mt-16">
-  <div class="flex items-center justify-between">
-    <h2>Subscription Plan</h2>
-  </div>
-
-  <div class="mt-4 border-b border-grey-light"></div>
-
-  <div class="py-8">
-    Billing is based on the total monthly pageviews of the website(s) you're tracking.
-  </div>
-
-  <div class="w-full flex justify-between items-center py-4 border-t">
-    <span>Personal</span>
-    <span><b>10k</b> / mo</span>
-    <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$6 / mo</b>
-    <button class="button button-sm" data-plan-select="personal">Select</button>
-  </div>
-  <div class="w-full flex justify-between items-center py-4 border-t">
-    <span>Startup</span>
-    <span><b>100k</b> / mo</span>
-    <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$12 / mo</b>
-    <button class="button button-sm" data-plan-select="startup">Select</button>
-  </div>
-  <div class="w-full flex justify-between items-center py-4 border-t">
-    <span>Business</span>
-    <span><b>1m</b> / mo</span>
-    <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$36 / mo</b>
-    <button class="button button-sm" data-plan-select="business">Select</button>
-  </div>
-
-  <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js"></script>
-  <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/checkout.js") %>"></script>
-  <script>
-    window.Checkout.init(
-      <%= @conn.assigns[:current_user].id %>,
-      '<%= @conn.assigns[:current_user].email %>'
-    )
-  </script>
-
-</div>
-
 <div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-red-dark px-8 pt-6 pb-8 mt-16 mb-24">
   <div class="flex items-center justify-between">
-    <h2>Delete account</h2>
+    <h2 class="font-black">Delete account</h2>
   </div>
 
   <div class="my-4 border-b border-grey-light"></div>

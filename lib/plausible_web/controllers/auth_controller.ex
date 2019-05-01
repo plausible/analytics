@@ -149,7 +149,8 @@ defmodule PlausibleWeb.AuthController do
 
   def user_settings(conn, _params) do
     changeset = Auth.User.changeset(conn.assigns[:current_user])
-    render(conn, "user_settings.html", changeset: changeset)
+    subscription = Plausible.Billing.active_subscription_for(conn.assigns[:current_user].id)
+    render(conn, "user_settings.html", changeset: changeset, subscription: subscription)
   end
 
   def save_settings(conn, %{"user" => user_params}) do

@@ -2,6 +2,10 @@ defmodule Plausible.Billing do
   use Plausible.Repo
   alias Plausible.Billing.Subscription
 
+  def active_subscription_for(user_id) do
+    Repo.get_by(Subscription, user_id: user_id, status: "active")
+  end
+
   def subscription_created(params) do
     changeset = Subscription.changeset(%Subscription{}, format_subscription(params))
 
