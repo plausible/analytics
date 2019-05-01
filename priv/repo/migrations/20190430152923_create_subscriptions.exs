@@ -14,6 +14,5 @@ defmodule Plausible.Repo.Migrations.CreateSubscriptions do
     end
 
     create unique_index(:subscriptions, [:paddle_subscription_id])
-    create unique_index(:subscriptions, [:user_id])
   end
 end

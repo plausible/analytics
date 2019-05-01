@@ -23,6 +23,5 @@ defmodule Plausible.Billing.Subscription do
     |> validate_required(@required_fields)
     |> validate_inclusion(:status, @valid_statuses)
     |> unique_constraint(:paddle_subscription_id)
-    |> unique_constraint(:user_id)
   end
 end
