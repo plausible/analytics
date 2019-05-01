@@ -26,7 +26,7 @@
       <%= if @subscription do %>
         <h4 class="font-black">Next payment</h4>
         <div class="text-xl py-2 font-medium">May 24, 2019</div>
-        <%= link("Update billing info", to: "/billing/change-plan", class: "text-sm text-indigo font-medium") %>
+        <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo font-medium") %>
       <% else %>
         <h4 class="font-black">Free trial left</h4>
         <div class="text-xl py-2 font-medium">6 days</div>
@@ -37,7 +37,7 @@
   <h3 class="mt-8">Usage</h3>
   <div class="py-2"><b>12,312 / 100,000</b> pageviews this period</div>
   <%= if @subscription do %>
-    <div class="mt-8"><%= link("Cancel my subscription", to: "/billing/cancel", class: "text-indigo text-sm") %></div>
+    <div class="mt-8"><%= link("Cancel my subscription", to: @subscription.cancel_url, class: "text-indigo text-sm") %></div>
   <% end %>
 </div>
 

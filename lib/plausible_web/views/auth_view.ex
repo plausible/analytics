@@ -3,7 +3,7 @@ defmodule PlausibleWeb.AuthView do
 
   @subscription_names %{
     "558018" => "Personal",
-    "558156" => "TEST - Personal"
+    "558156" => "Personal (T)"
   }
 
   def subscription_name(subscription) do
