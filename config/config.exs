@@ -19,7 +19,7 @@ config :plausible, PlausibleWeb.Endpoint,
 
 config :sentry,
   dsn: "https://0350a42aa6234a2eaf1230866788598e@sentry.io/1382353",
-  included_environments: [:prod],
+  included_environments: [:prod, :staging],
   environment_name: String.to_atom(Map.get(System.get_env(), "APP_ENV", "dev")),
   enable_source_code_context: true,
   root_source_code_path: File.cwd!
