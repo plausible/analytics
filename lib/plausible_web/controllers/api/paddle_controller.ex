@@ -13,15 +13,19 @@ defmodule PlausibleWeb.Api.PaddleController do
     |> webhook_response(conn, params)
   end
 
-  defp webhook_response(conn, {:ok, _}, _params) do
+  def webhook(conn, _params) do
+    send_resp(conn, 404, "") |> halt
+  end
+
+  defp webhook_response({:ok, _}, conn, _params) do
     json(conn, "")
   end
 
-  defp webhook_response(conn, {:error, changeset}, params) do
+  defp webhook_response({:error, changeset}, conn, params) do
     request = Sentry.Plug.build_request_interface_data(conn, [])
     Sentry.capture_message("Error processing Paddle webhook", extra: %{errors: inspect(changeset.errors), params: params, request: request})
     Logger.error("Error processing Paddle webhook: #{inspect(changeset)}")
 
-    conn |> send_resp(400, "")
+    conn |> send_resp(400, "") |> halt
   end
 end
