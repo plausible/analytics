@@ -1,10 +1,10 @@
 <div class="pt-24"></div>
 <div class="container pb-32" data-site-domain="<%= @site.domain %>">
-  <div class="w-full flex justify-between items-center">
-    <h2 class="mr-8"><%= @site.domain %></h2>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <div>
+  <div class="w-full sm:flex justify-between items-center">
+    <h2 class="sm:mr-8"><%= @site.domain %></h2>
+    <div class="mt-4 sm:mt-0">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+      <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
       <%= active_link(@conn, "24h", to: "/#{@site.domain}?period=24h", active: @period == "24h", class: "tracking-wide text-sm font-bold mr-4 hover:text-indigo-darkest transition", class_active: "border-b-2 border-red text-indigo-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
       <%= active_link(@conn, "7d", to: "/#{@site.domain}", active: @period == "7d", class: "tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
       <%= active_link(@conn, "30d", to: "/#{@site.domain}?period=30d", active: @period == "30d", class: "tracking-wide text-sm font-bold mr-4 hover:text-indigo-darkest transition", class_active: "border-b-2 border-red text-indigo-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
