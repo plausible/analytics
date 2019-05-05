@@ -3,12 +3,16 @@ defmodule Plausible.Billing.Plans do
   }
 
   @test_plans %{
-    personal: 558156,
-    startup: 558199,
-    business: 558200
+    personal: "558156",
+    startup: "558199",
+    business: "558200"
   }
 
   def paddle_id_for_plan(plan) do
     @test_plans[plan]
+  end
+
+  def is?(subscription, plan) do
+    paddle_id_for_plan(plan) == subscription.paddle_plan_id
   end
 end

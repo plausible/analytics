@@ -6,12 +6,28 @@ defmodule PlausibleWeb.BillingController do
 
   plug PlausibleWeb.RequireAccountPlug when action in [:change_plan]
 
-  def change_plan(conn, _params) do
+  def change_plan_form(conn, _params) do
     subscription = Billing.active_subscription_for(conn.assigns[:current_user].id)
     if subscription do
       render(conn, "change_plan.html", subscription: subscription, layout: {PlausibleWeb.LayoutView, "focus.html"})
     else
       redirect(conn, to: "/billing/upgrade")
+    end
+  end
+
+  def change_plan(conn, %{"plan_name" => plan}) when plan in ["personal", "startup", "business"] do
+    new_plan = String.to_existing_atom(plan)
+
+    case Billing.change_plan(conn.assigns[:current_user], new_plan) do
+      {:ok, _subscription} ->
+        conn
+        |> put_flash(:success, "Plan changed successfully")
+        |> redirect(to: "/settings")
+      {:error, e} ->
+        Sentry.capture_message("Error changing plans", extra: %{errors: inspect(e), new_plan: new_plan, user_id: conn.assigns[:current_user].id})
+        conn
+        |> put_flash(:error, "Something went wrong. Please try again or contact support at uku@plausible.io")
+        |> redirect(to: "/settings")
     end
   end
 

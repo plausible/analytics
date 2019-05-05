@@ -15,7 +15,7 @@
       <% end %>
     </div>
     <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32" style="width: 11.75rem;">
-      <h4 class="font-black">Price</h4>
+      <h4 class="font-black">Next bill total</h4>
       <%= if @subscription do %>
         <div class="text-xl py-2 font-medium">$6.00 / month</div>
       <% else %>
@@ -24,7 +24,7 @@
     </div>
     <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32" style="width: 11.75rem;">
       <%= if @subscription do %>
-        <h4 class="font-black">Next payment</h4>
+        <h4 class="font-black">Next bill date</h4>
         <div class="text-xl py-2 font-medium">May 24, 2019</div>
         <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo font-medium") %>
       <% else %>

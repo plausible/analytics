@@ -11,4 +11,12 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert redirected_to(conn) == "/billing/upgrade"
     end
   end
+
+  describe "POST /change-plan" do
+    setup [:create_user, :log_in]
+
+    test "calls Paddle API to update subscription" do
+
+    end
+  end
 end

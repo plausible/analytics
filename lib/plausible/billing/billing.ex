@@ -1,6 +1,6 @@
 defmodule Plausible.Billing do
   use Plausible.Repo
-  alias Plausible.Billing.Subscription
+  alias Plausible.Billing.{Subscription, Plans, PaddleApi}
 
   def active_subscription_for(user_id) do
     Repo.get_by(Subscription, user_id: user_id, status: "active")
@@ -17,6 +17,22 @@ defmodule Plausible.Billing do
     changeset = Subscription.changeset(subscription, format_subscription(params))
 
     Repo.update(changeset)
+  end
+
+  def change_plan(user, new_plan) do
+    subscription = active_subscription_for(user.id)
+
+    res = PaddleApi.update_subscription(subscription.paddle_subscription_id, %{
+      plan_id: Plans.paddle_id_for_plan(new_plan)
+    })
+
+    case res do
+      {:ok, response} ->
+        Subscription.changeset(subscription, %{
+          paddle_plan_id: Integer.to_string(response["plan_id"])
+        }) |> Repo.update
+      e -> e
+    end
   end
 
   def trial_days_left(user) do
