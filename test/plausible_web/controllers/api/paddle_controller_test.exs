@@ -17,12 +17,16 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
         "update_url" => "update_url.com",
         "cancel_url" => "cancel_url.com",
         "passthrough" => user.id,
-        "status" => "active"
+        "status" => "active",
+        "next_bill_date" => "2019-06-01",
+        "unit_price" => "6.00"
       })
 
       assert json_response(conn, 200) == ""
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
       assert subscription.paddle_subscription_id == @subscription_id
+      assert subscription.next_bill_date == ~D[2019-06-01]
+      assert subscription.next_bill_amount == "6.00"
     end
   end
 
@@ -39,12 +43,15 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
         "update_url" => "update_url.com",
         "cancel_url" => "cancel_url.com",
         "passthrough" => user.id,
-        "status" => "active"
+        "status" => "active",
+        "next_bill_date" => "2019-06-01",
+        "new_unit_price" => "12.00"
       })
 
       assert json_response(conn, 200) == ""
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
       assert subscription.paddle_plan_id == "new-plan-id"
+      assert subscription.next_bill_amount == "12.00"
     end
   end
 end

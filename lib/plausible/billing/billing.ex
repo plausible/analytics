@@ -50,7 +50,9 @@ defmodule Plausible.Billing do
       cancel_url: params["cancel_url"],
       update_url: params["update_url"],
       user_id: params["passthrough"],
-      status: params["status"]
+      status: params["status"],
+      next_bill_date: params["next_bill_date"],
+      next_bill_amount: params["unit_price"] || params["new_unit_price"]
     }
   end
 end

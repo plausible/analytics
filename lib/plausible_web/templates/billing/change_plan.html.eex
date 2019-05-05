@@ -2,7 +2,8 @@
   <h2 class="font-black">Change subscription plan</h2>
 
   <div class="py-8">
-    Billing is based on the total monthly pageviews of the website(s) you're tracking.
+    If you choose to change your plan, your current subscription will
+    be prorated.
   </div>
 
   <div class="w-full flex justify-between items-center py-4 border-t">

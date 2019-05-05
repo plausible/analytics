@@ -9,6 +9,8 @@ defmodule Plausible.Repo.Migrations.CreateSubscriptions do
       add :update_url, :text, null: false
       add :cancel_url, :text, null: false
       add :status, :string, null: false
+      add :next_bill_amount, :string, null: false
+      add :next_bill_date, :date, null: false
 
       timestamps()
     end

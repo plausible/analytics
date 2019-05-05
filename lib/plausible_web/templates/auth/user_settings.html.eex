@@ -15,9 +15,9 @@
       <% end %>
     </div>
     <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32" style="width: 11.75rem;">
-      <h4 class="font-black">Next bill total</h4>
+      <h4 class="font-black">Next bill amount</h4>
       <%= if @subscription do %>
-        <div class="text-xl py-2 font-medium">$6.00 / month</div>
+        <div class="text-xl py-2 font-medium">$6.00</div>
       <% else %>
         <div class="text-xl py-2 font-medium">$0 / month</div>
       <% end %>
@@ -26,7 +26,6 @@
       <%= if @subscription do %>
         <h4 class="font-black">Next bill date</h4>
         <div class="text-xl py-2 font-medium">May 24, 2019</div>
-        <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo font-medium") %>
       <% else %>
         <h4 class="font-black">Free trial left</h4>
         <div class="text-xl py-2 font-medium"><%= Plausible.Billing.trial_days_left(@conn.assigns[:current_user]) %> days</div>
@@ -38,7 +37,12 @@
   <div class="py-2"><b>12,312 / 100,000</b> pageviews this period</div>
 
   <%= if @subscription do %>
-    <div class="mt-8"><%= link("Cancel my subscription", to: @subscription.cancel_url, class: "text-indigo text-sm") %></div>
+    <div class="mt-8">
+      <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo") %>
+    </div>
+    <div class="mt-2">
+      <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "text-indigo text-sm") %>
+    </div>
   <% end %>
 </div>
 
