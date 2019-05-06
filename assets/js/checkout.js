@@ -12,7 +12,8 @@ window.Checkout.init = function(userId, email) {
       Paddle.Checkout.open({
         product: plan,
         email: email,
-        passthrough: userId
+        passthrough: userId,
+        success: '/settings'
       });
 
     })
