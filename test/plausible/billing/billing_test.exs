@@ -10,7 +10,7 @@ defmodule Plausible.BillingTest do
     end
 
     test "is 29 days for day old user" do
-      user = insert(:user, inserted_at: Timex.shift(Timex.now(), days: -2))
+      user = insert(:user, inserted_at: Timex.shift(Timex.now(), days: -1))
 
       assert Billing.trial_days_left(user) == 29
     end
