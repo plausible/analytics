@@ -32,7 +32,9 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def upgrade(conn, _params) do
-    render(conn, "upgrade.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+    usage = Plausible.Billing.usage(conn.assigns[:current_user])
+
+    render(conn, "upgrade.html", usage: usage, layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
 end

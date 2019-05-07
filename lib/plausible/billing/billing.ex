@@ -72,6 +72,14 @@ defmodule Plausible.Billing do
     end
   end
 
+  def trial_end_date(user) do
+    if Timex.before?(user.inserted_at, ~D[2019-04-25]) do
+      ~D[2019-05-24]
+    else
+      Timex.shift(user.inserted_at, days: 30)
+    end
+  end
+
   def usage(user) do
     user = Repo.preload(user, :sites)
     Enum.reduce(user.sites, 0, fn site, total ->
