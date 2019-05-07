@@ -71,6 +71,16 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
       assert subscription.status == "deleted"
     end
+
+    test "ignores if the subscription cannot be found", %{conn: conn} do
+      conn = post(conn, "/api/paddle/webhook", %{
+        "alert_name" => "subscription_cancelled",
+        "subscription_id" => "some_nonexistent_id",
+        "status" => "deleted"
+      })
+
+      assert json_response(conn, 200) == ""
+    end
   end
 
   describe "subscription_payment_succeeded" do
@@ -90,6 +100,17 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
       assert subscription.next_bill_date == Timex.shift(Timex.today(), days: 30)
       assert subscription.next_bill_amount == "12.00"
+    end
+
+    test "ignores if the subscription cannot be found", %{conn: conn} do
+      conn = post(conn, "/api/paddle/webhook", %{
+        "alert_name" => "subscription_payment_succeeded",
+        "subscription_id" => "nonexistent_subscription_id",
+        "next_bill_date" => Timex.shift(Timex.today(), days: 30),
+        "unit_price" => "12.00"
+      })
+
+      assert json_response(conn, 200) == ""
     end
   end
 end

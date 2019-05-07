@@ -20,22 +20,32 @@ defmodule Plausible.Billing do
   end
 
   def subscription_cancelled(params) do
-    subscription = Repo.get_by!(Subscription, paddle_subscription_id: params["subscription_id"])
-    changeset = Subscription.changeset(subscription, %{
-      status: params["status"]
-    })
+    subscription = Repo.get_by(Subscription, paddle_subscription_id: params["subscription_id"])
 
-    Repo.update(changeset)
+    if subscription do
+      changeset = Subscription.changeset(subscription, %{
+        status: params["status"]
+      })
+
+      Repo.update(changeset)
+    else
+      {:ok, nil}
+    end
   end
 
   def subscription_payment_succeeded(params) do
-    subscription = Repo.get_by!(Subscription, paddle_subscription_id: params["subscription_id"])
-    changeset = Subscription.changeset(subscription, %{
-      next_bill_amount: params["unit_price"],
-      next_bill_date: params["next_bill_date"]
-    })
+    subscription = Repo.get_by(Subscription, paddle_subscription_id: params["subscription_id"])
 
-    Repo.update(changeset)
+    if subscription do
+      changeset = Subscription.changeset(subscription, %{
+        next_bill_amount: params["unit_price"],
+        next_bill_date: params["next_bill_date"]
+      })
+
+      Repo.update(changeset)
+    else
+      {:ok, nil}
+    end
   end
 
   def change_plan(user, new_plan) do
