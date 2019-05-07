@@ -62,6 +62,22 @@ defmodule Plausible.Billing do
     end
   end
 
+  def usage(user) do
+    user = Repo.preload(user, :sites)
+    Enum.reduce(user.sites, 0, fn site, total ->
+      total + site_usage(site)
+    end)
+  end
+
+  defp site_usage(site) do
+    Repo.aggregate(from(
+      p in Plausible.Pageview,
+      where: p.hostname == ^site.domain,
+      where: p.inserted_at >= fragment("now() - '30 days'::interval")
+    ), :count, :id
+    )
+  end
+
   defp format_subscription(params) do
     %{
       paddle_subscription_id: params["subscription_id"],

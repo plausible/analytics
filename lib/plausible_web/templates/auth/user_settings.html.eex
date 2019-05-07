@@ -35,7 +35,12 @@
 
   <h3 class="mt-8">Usage</h3>
 
-  <div class="py-2"><b>12,312 / 100,000</b> pageviews this period</div>
+  <div class="py-2">
+    <b>
+      <%= delimit_integer(Plausible.Billing.usage(@conn.assigns[:current_user])) %> / 100,000
+    </b>
+    pageviews in the last 30 days
+  </div>
 
   <%= if @subscription do %>
     <div class="mt-8">
