@@ -54,4 +54,22 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
       assert subscription.next_bill_amount == "12.00"
     end
   end
+
+  describe "subscription_cancelled" do
+    setup [:create_user]
+
+    test "sets the status to deleted", %{conn: conn, user: user} do
+      subscription = insert(:subscription, status: "active", user: user)
+
+      conn = post(conn, "/api/paddle/webhook", %{
+        "alert_name" => "subscription_cancelled",
+        "subscription_id" => subscription.paddle_subscription_id,
+        "status" => "deleted"
+      })
+
+      assert json_response(conn, 200) == ""
+      subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
+      assert subscription.status == "deleted"
+    end
+  end
 end

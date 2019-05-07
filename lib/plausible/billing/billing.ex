@@ -19,6 +19,15 @@ defmodule Plausible.Billing do
     Repo.update(changeset)
   end
 
+  def subscription_cancelled(params) do
+    subscription = Repo.get_by!(Subscription, paddle_subscription_id: params["subscription_id"])
+    changeset = Subscription.changeset(subscription, %{
+      status: params["status"]
+    })
+
+    Repo.update(changeset)
+  end
+
   def change_plan(user, new_plan) do
     subscription = active_subscription_for(user.id)
 
