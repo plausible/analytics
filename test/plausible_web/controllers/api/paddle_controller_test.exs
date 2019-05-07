@@ -72,4 +72,24 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
       assert subscription.status == "deleted"
     end
   end
+
+  describe "subscription_payment_succeeded" do
+    setup [:create_user]
+
+    test "sets the next bill amount and date", %{conn: conn, user: user} do
+      subscription = insert(:subscription, user: user)
+
+      conn = post(conn, "/api/paddle/webhook", %{
+        "alert_name" => "subscription_payment_succeeded",
+        "subscription_id" => subscription.paddle_subscription_id,
+        "next_bill_date" => Timex.shift(Timex.today(), days: 30),
+        "unit_price" => "12.00"
+      })
+
+      assert json_response(conn, 200) == ""
+      subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
+      assert subscription.next_bill_date == Timex.shift(Timex.today(), days: 30)
+      assert subscription.next_bill_amount == "12.00"
+    end
+  end
 end

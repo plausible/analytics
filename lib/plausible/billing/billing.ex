@@ -28,6 +28,16 @@ defmodule Plausible.Billing do
     Repo.update(changeset)
   end
 
+  def subscription_payment_succeeded(params) do
+    subscription = Repo.get_by!(Subscription, paddle_subscription_id: params["subscription_id"])
+    changeset = Subscription.changeset(subscription, %{
+      next_bill_amount: params["unit_price"],
+      next_bill_date: params["next_bill_date"]
+    })
+
+    Repo.update(changeset)
+  end
+
   def change_plan(user, new_plan) do
     subscription = active_subscription_for(user.id)
 

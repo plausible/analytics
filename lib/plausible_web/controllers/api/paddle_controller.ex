@@ -18,6 +18,11 @@ defmodule PlausibleWeb.Api.PaddleController do
     |> webhook_response(conn, params)
   end
 
+  def webhook(conn, %{"alert_name" => "subscription_payment_succeeded"} = params) do
+    Plausible.Billing.subscription_payment_succeeded(params)
+    |> webhook_response(conn, params)
+  end
+
   def webhook(conn, _params) do
     send_resp(conn, 404, "") |> halt
   end
