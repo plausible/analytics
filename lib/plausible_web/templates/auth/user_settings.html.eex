@@ -17,7 +17,7 @@
     <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32" style="width: 11.75rem;">
       <h4 class="font-black">Next bill amount</h4>
       <%= if @subscription do %>
-        <div class="text-xl py-2 font-medium">$6.00</div>
+        <div class="text-xl py-2 font-medium">$<%= @subscription.next_bill_amount %></div>
       <% else %>
         <div class="text-xl py-2 font-medium">$0</div>
       <% end %>
@@ -26,7 +26,7 @@
       <h4 class="font-black">Next bill date</h4>
 
       <%= if @subscription do %>
-        <div class="text-xl py-2 font-medium">May 24, 2019</div>
+        <div class="text-xl py-2 font-medium"><%= Timex.format!(@subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %></div>
       <% else %>
         <div class="text-xl py-2 font-medium">–</div>
       <% end %>
