@@ -18,6 +18,7 @@
       <h4 class="font-black">Next bill amount</h4>
       <%= if @subscription do %>
         <div class="text-xl py-2 font-medium">$<%= @subscription.next_bill_amount %></div>
+        <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo font-medium") %>
       <% else %>
         <div class="text-xl py-2 font-medium">$0</div>
       <% end %>
@@ -33,7 +34,7 @@
     </div>
   </div>
 
-  <h3 class="mt-8">Usage</h3>
+  <h3 class="mt-8">Your usage</h3>
 
   <div class="py-2">
     <b><%= delimit_integer(Plausible.Billing.usage(@conn.assigns[:current_user])) %></b>
@@ -42,9 +43,6 @@
 
   <%= if @subscription do %>
     <div class="mt-8">
-      <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo") %>
-    </div>
-    <div class="mt-2">
       <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "text-indigo text-sm") %>
     </div>
   <% end %>
