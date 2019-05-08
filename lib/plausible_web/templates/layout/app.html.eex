@@ -21,9 +21,6 @@
       <%= cond do %>
         <% @conn.assigns[:current_user] -> %>
           <ul class="list-reset flex">
-            <li class="mr-6 hidden sm:block">
-              <%= link("#{Plausible.Billing.trial_days_left(@conn.assigns[:current_user])} trial days left", to: "/settings", class: "font-bold rounded py-2 px-3 bg-orange-lighter", style: "line-height: 34px;") %>
-            </li>
             <li>
               <div class="relative font-bold rounded hover:bg-grey-lighter">
                 <div data-dropdown-trigger class="flex items-center hover:bg-grey-lighter rounded p-2 cursor-pointer">
