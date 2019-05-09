@@ -112,7 +112,9 @@ defmodule Plausible.Stats do
       where: p.new_visitor == true and not is_nil(p.country_code),
       order_by: [desc: count(p.country_code)],
       limit: ^limit
-    )
+    ) |> Enum.map(fn {country_code, count} ->
+      {Plausible.Stats.CountryName.from_iso3166(country_code), count}
+    end)
   end
 
   def browsers(site, query, limit \\ 5) do

@@ -15,69 +15,37 @@
   <%= render("_graph.html", assigns) %>
 
   <div class="w-full block md:flex items-start justify-between mt-6">
-    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="referrer-modal">
-      <h2>Top Referrers</h2>
-      <div class="text-grey-darker mt-1">by visitors</div>
 
-      <div class="mt-8">
-        <%= for {referrer, count} <- @top_referrers do %>
-          <div class="flex items-center justify-between my-2">
-            <span><%= referrer %></span>
-            <span><%= count %></span>
-          </div>
-          <%= bar(count, @top_referrers) %>
-        <% end %>
-      </div>
-      <%= if Enum.count(@top_referrers) >= 5 do %>
-        <a href="javascript:;" class="font-bold text-sm text-grey-dark transition tracking-wide group-hover-fill-red">
-          <svg style="fill: #8795a1;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-          MORE
-        </a>
-      <% end %>
-    </div>
+    <%= render("_bar_graph.html",
+          micromodal_trigger: "referrer-modal",
+          title: "Top Referrers",
+          by: :visitors,
+          list: @top_referrers,
+          color: :blue
+        )
+    %>
 
-    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="pages-modal">
-      <h2>Top Pages</h2>
-      <div class="text-grey-darker mt-1">by pageviews</div>
-      <div class="mt-8">
-        <%= for {page, count} <- @top_pages do %>
-          <div class="flex items-center justify-between my-2">
-            <span class="truncated-label"><%= page %></span>
-            <span><%= count %></span>
-          </div>
-          <%= bar(count, @top_pages, :orange) %>
-        <% end %>
-      </div>
-      <%= if Enum.count(@top_pages) >= 5 do %>
-        <a href="javascript:;" class="font-bold text-sm text-grey-dark transition tracking-wide group-hover-fill-red">
-          <svg style="fill: #8795a1;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-          MORE
-        </a>
-      <% end %>
-    </div>
+    <%= render("_bar_graph.html",
+          micromodal_trigger: "pages-modal",
+          title: "Top Pages",
+          by: :pageviews,
+          list: @top_pages,
+          color: :orange
+        )
+    %>
 
-    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="countries-modal">
-      <h2>Top Countries</h2>
-      <div class="text-grey-darker mt-1">by visitors</div>
-      <div class="mt-8">
-        <%= for {country, count} <- @countries do %>
-          <div class="flex items-center justify-between my-2">
-            <span><%= Plausible.Stats.CountryName.from_iso3166(country) %></span>
-            <span><%= count %></span>
-          </div>
-          <%= bar(count, @countries, :indigo) %>
-        <% end %>
-      </div>
-      <%= if Enum.count(@countries) >= 5 do %>
-        <a href="javascript:;" class="font-bold text-sm text-grey-dark transition tracking-wide group-hover-fill-red">
-          <svg style="fill: #8795a1;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-          MORE
-        </a>
-      <% end %>
-    </div>
+    <%= render("_bar_graph.html",
+          micromodal_trigger: "countries-modal",
+          title: "Top Countries",
+          by: :visitors,
+          list: @countries,
+          color: :indigo
+        )
+    %>
   </div>
 
   <div class="w-full block md:flex items-start justify-between mt-6">
+
     <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 text-center group">
       <h2>Screen Sizes</h2>
       <div class="text-grey-darker mt-1">by sessions</div>
@@ -95,45 +63,22 @@
       </div>
     </div>
 
-    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="operating-systems-modal">
-      <h2>Operating Systems</h2>
-      <div class="text-grey-darker mt-1">by sessions</div>
-      <div class="mt-8">
-        <%= for {os, count} <- @operating_systems do %>
-          <div class="flex items-center justify-between my-2">
-            <span><%= os %></span>
-            <span><%= count %></span>
-          </div>
-          <%= bar(count, @operating_systems, :blue) %>
-        <% end %>
-      </div>
-      <%= if Enum.count(@operating_systems) >= 5 do %>
-        <a href="javascript:;" class="font-bold text-sm text-grey-dark transition tracking-wide group-hover-fill-red">
-          <svg style="fill: #8795a1;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-          MORE
-        </a>
-      <% end %>
-    </div>
+    <%= render("_bar_graph.html",
+          micromodal_trigger: "operating-systems-modal",
+          title: "Operating Systems",
+          by: :sessions,
+          list: @operating_systems,
+          color: :blue
+        )
+    %>
 
-    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 text-center cursor-pointer group" data-micromodal-trigger="browsers-modal">
-      <h2>Browsers</h2>
-      <div class="text-grey-darker mt-1">by sessions</div>
-      <div class="mt-8">
-        <%= for {screen_size, count} <- @browsers do %>
-          <div class="flex items-center justify-between my-2">
-            <span><%= screen_size %></span>
-            <span><%= count %></span>
-          </div>
-          <%= bar(count, @browsers, :red) %>
-        <% end %>
-      </div>
-      <%= if Enum.count(@browsers) >= 5 do %>
-        <a href="javascript:;" class="font-bold text-sm text-grey-dark transition tracking-wide group-hover-fill-red">
-          <svg style="fill: #8795a1;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-          MORE
-        </a>
-      <% end %>
-    </div>
-
+    <%= render("_bar_graph.html",
+          micromodal_trigger: "browsers-modal",
+          title: "Browsers",
+          by: :sessions,
+          list: @browsers,
+          color: :red
+        )
+    %>
   </div>
 </div>
