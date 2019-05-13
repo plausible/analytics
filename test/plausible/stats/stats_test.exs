@@ -45,6 +45,23 @@ defmodule Plausible.StatsTest do
       assert Enum.count(plot) == 31
       assert plot == [1] ++ zeroes ++ [1]
     end
+
+    test "displays pageviews for a 3 months" do
+      site = insert(:site)
+      insert(:pageview, hostname: site.domain)
+      insert(:pageview, hostname: site.domain, inserted_at: months_ago(3))
+
+      query = Stats.Query.from(site.timezone, %{"period" => "3mo"})
+
+      plot = Stats.calculate_plot(site, query)
+
+      n_days = Timex.diff(Timex.now(), months_ago(3), :days)
+
+      zeroes = Stream.repeatedly(fn -> 0 end) |> Stream.take(n_days) |> Enum.into([])
+
+      assert Enum.count(plot) == n_days + 2
+      assert plot == [1] ++ zeroes ++ [1]
+    end
   end
 
   describe "labels" do
@@ -85,6 +102,10 @@ defmodule Plausible.StatsTest do
       assert List.first(labels) == current_hour
       assert List.last(labels) == current_hour
     end
+  end
+
+  defp months_ago(months) do
+    Timex.now() |> Timex.shift(months: -months)
   end
 
   defp days_ago(days) do

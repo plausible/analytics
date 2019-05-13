@@ -8,6 +8,8 @@ if (selector) {
       document.location = '?period=week'
     } else if (e.target.value === 'Month') {
       document.location = '?period=month'
+    } else if (e.target.value === '3 Months') {
+      document.location = '?period=3mo'
     } else if (e.target.value === 'Custom') {
       const parent = e.target.closest('div')
       parent.classList.add('hidden')

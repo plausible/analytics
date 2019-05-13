@@ -14,6 +14,7 @@
           <option <%= if @period == "day", do: :selected %>>Day</option>
           <option <%= if @period == "week", do: :selected %>>Week</option>
           <option <%= if @period == "month", do: :selected %>>Month</option>
+          <option <%= if @period == "3mo", do: :selected %>>3 Months</option>
           <option>Custom</option>
         </select>
         <div class="pointer-events-none absolute pin-y pin-r flex items-center px-2 text-pink">
