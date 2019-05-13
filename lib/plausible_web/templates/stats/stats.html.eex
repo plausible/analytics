@@ -1,14 +1,31 @@
 <div class="pt-24"></div>
 <div class="container pb-32" data-site-domain="<%= @site.domain %>">
   <div class="w-full sm:flex justify-between items-center">
-    <h2 class="sm:mr-8"><%= @site.domain %></h2>
+    <h2 class="text-center sm:text-left sm:mr-8">Analytics for <%= @site.domain %></h2>
     <div class="mt-4 sm:mt-0">
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
       <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-      <%= active_link(@conn, "24h", to: "/#{@site.domain}?period=24h", active: @period == "24h", class: "tracking-wide text-sm font-bold mr-4 hover:text-indigo-darkest transition", class_active: "border-b-2 border-red text-indigo-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
-      <%= active_link(@conn, "7d", to: "/#{@site.domain}", active: @period == "7d", class: "tracking-wide text-sm font-bold mr-4 hover:text-grey-darkest transition", class_active: "border-b-2 border-red text-grey-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
-      <%= active_link(@conn, "30d", to: "/#{@site.domain}?period=30d", active: @period == "30d", class: "tracking-wide text-sm font-bold mr-4 hover:text-indigo-darkest transition", class_active: "border-b-2 border-red text-indigo-darkest", class_inactive: "text-grey-dark", active_disable: true)%>
-      <%= active_link(@conn, custom_range_text(@period, @query.date_range), to: "#", active: @period == "custom", class: "tracking-wide text-sm font-bold hover:text-indigo-darkest transition", id: "custom-daterange-trigger", class_active: "border-b-2 border-red text-indigo-darkest", class_inactive: "text-grey-dark", active_disable: true) %>
+
+      <div class="block relative w-full sm:w-48">
+        <select class="block appearance-none w-full bg-white border border-grey-light hover:border-grey px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none text-sm font-bold text-grey-darker" data-timeframe-select autocomplete="off">
+          <%= if @period == "custom" do %>
+            <option selected><%= custom_range_text(@query.date_range) %></option>
+          <% end %>
+          <option <%= if @period == "day", do: :selected %>>Day</option>
+          <option <%= if @period == "week", do: :selected %>>Week</option>
+          <option <%= if @period == "month", do: :selected %>>Month</option>
+          <option>Custom</option>
+        </select>
+        <div class="pointer-events-none absolute pin-y pin-r flex items-center px-2 text-pink">
+          <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+        </div>
+      </div>
+      <div class="hidden block relative w-full sm:w-48" style="padding: 1px 0;">
+        <input type="text" id="custom-daterange-trigger" class="bg-white cursor-default w-full appearance-none border border-grey-light rounded shadow py-2 px-4 text-grey-darker text-sm font-bold leading-tight appearance-none focus:outline-none focus:border-grey hover:border-grey" placeholder="Select date range" />
+        <div class="pointer-events-none absolute pin-y pin-r flex items-center px-2 text-pink">
+          <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+        </div>
+      </div>
     </div>
   </div>
 

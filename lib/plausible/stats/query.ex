@@ -7,14 +7,14 @@ defmodule Plausible.Stats.Query do
       |> Map.put(:__struct__, __MODULE__)
   end
 
-  def from(tz, %{"period" => "24h"}) do
+  def from(tz, %{"period" => "day"}) do
     %__MODULE__{
       date_range: Date.range(today(tz), today(tz)),
       step_type: "hour"
     }
   end
 
-  def from(tz, %{"period" => "7d"}) do
+  def from(tz, %{"period" => "week"}) do
     start_date = Timex.shift(today(tz), days: -7)
 
     %__MODULE__{
@@ -23,7 +23,7 @@ defmodule Plausible.Stats.Query do
     }
   end
 
-  def from(tz, %{"period" => "30d"}) do
+  def from(tz, %{"period" => "month"}) do
     start_date = Timex.shift(today(tz), days: -30)
 
     %__MODULE__{
@@ -44,7 +44,7 @@ defmodule Plausible.Stats.Query do
   end
 
   def from(tz, _) do
-    __MODULE__.from(tz, %{"period" => "7d"})
+    __MODULE__.from(tz, %{"period" => "month"})
   end
 
   defp today(tz) do

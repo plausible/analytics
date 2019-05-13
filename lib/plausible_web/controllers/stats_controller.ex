@@ -27,7 +27,7 @@ defmodule PlausibleWeb.StatsController do
       browsers: Stats.browsers(site, query),
       operating_systems: Stats.operating_systems(site, query),
       site: site,
-      period: conn.params["period"] || "7d",
+      period: conn.params["period"] || "month",
       query: query,
       title: "Plausible · " <> site.domain
     )

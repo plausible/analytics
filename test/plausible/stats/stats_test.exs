@@ -3,12 +3,12 @@ defmodule Plausible.StatsTest do
   alias Plausible.Stats
 
   describe "calculate_plot" do
-    test "displays pageviews for 24h" do
+    test "displays pageviews for a day" do
       site = insert(:site)
       insert(:pageview, hostname: site.domain)
       insert(:pageview, hostname: site.domain, inserted_at: hours_ago(24))
 
-      query = Stats.Query.from(site.timezone, %{"period" => "24h"})
+      query = Stats.Query.from(site.timezone, %{"period" => "day"})
 
       plot = Stats.calculate_plot(site, query)
 
@@ -18,12 +18,12 @@ defmodule Plausible.StatsTest do
       assert plot == [1] ++ zeroes ++ [1]
     end
 
-    test "displays pageviews for 7d" do
+    test "displays pageviews for a week" do
       site = insert(:site)
       insert(:pageview, hostname: site.domain)
       insert(:pageview, hostname: site.domain, inserted_at: days_ago(7))
 
-      query = Stats.Query.from(site.timezone, %{"period" => "7d"})
+      query = Stats.Query.from(site.timezone, %{"period" => "week"})
       plot = Stats.calculate_plot(site, query)
 
 
@@ -31,12 +31,12 @@ defmodule Plausible.StatsTest do
       assert plot == [1, 0, 0, 0, 0, 0, 0, 1]
     end
 
-    test "displays pageviews for 30d" do
+    test "displays pageviews for a month" do
       site = insert(:site)
       insert(:pageview, hostname: site.domain)
       insert(:pageview, hostname: site.domain, inserted_at: days_ago(30))
 
-      query = Stats.Query.from(site.timezone, %{"period" => "30d"})
+      query = Stats.Query.from(site.timezone, %{"period" => "month"})
 
       plot = Stats.calculate_plot(site, query)
 

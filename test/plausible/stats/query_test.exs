@@ -4,32 +4,32 @@ defmodule Plausible.Stats.QueryTest do
 
   @tz "UTC"
 
-  test "parses 24h format" do
-    q = Query.from(@tz, %{"period" => "24h"})
+  test "parses day format" do
+    q = Query.from(@tz, %{"period" => "day"})
 
     assert q.date_range.first == Timex.today()
     assert q.date_range.last == Timex.today()
     assert q.step_type == "hour"
   end
 
-  test "parses 7d format" do
-    q = Query.from(@tz, %{"period" => "7d"})
+  test "parses week format" do
+    q = Query.from(@tz, %{"period" => "week"})
 
     assert q.date_range.first == Timex.shift(Timex.today(), days: -7)
     assert q.date_range.last == Timex.today()
     assert q.step_type == "date"
   end
 
-  test "parses 30d format" do
-    q = Query.from(@tz, %{"period" => "30d"})
+  test "parses month format" do
+    q = Query.from(@tz, %{"period" => "month"})
 
     assert q.date_range.first == Timex.shift(Timex.today(), days: -30)
     assert q.date_range.last == Timex.today()
     assert q.step_type == "date"
   end
 
-  test "defaults to 7d format" do
-    assert Query.from(@tz, %{}) == Query.from(@tz, %{"period" => "7d"})
+  test "defaults to month format" do
+    assert Query.from(@tz, %{}) == Query.from(@tz, %{"period" => "month"})
   end
 
   test "parses custom format" do
