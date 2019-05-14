@@ -13,6 +13,7 @@ window.Checkout.init = function(userId, email) {
         product: plan,
         email: email,
         passthrough: userId,
+        disableLogout: true,
         success: '/settings'
       });
 
