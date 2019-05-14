@@ -14,7 +14,7 @@ defmodule Plausible.Billing.Plans do
   }
 
   def paddle_id_for_plan(plan) do
-    if @app_env == "prod" do
+    if @app_env == "prod" || "staging" do
       @real_plans[plan]
     else
       @test_plans[plan]
