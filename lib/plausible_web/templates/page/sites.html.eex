@@ -1,7 +1,7 @@
 <div class="pt-16"></div>
-<div class="max-w-md mx-auto flex justify-between">
+<div class="max-w-md mx-auto flex flex-col sm:flex-row justify-between">
   <h1>My websites</h1>
-  <a href="/sites/new" class="button">+ Add a website</a>
+  <a href="/sites/new" class="button w-full my-2 sm:my-0 sm:w-auto">+ Add a website</a>
 </div>
 <div class="flex items-center justify-center w-full py-8">
   <div class="overflow-hidden bg-white rounded max-w-md w-full shadow-md leading-normal">
