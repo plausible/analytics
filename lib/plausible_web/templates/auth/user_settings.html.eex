@@ -3,8 +3,8 @@
 
   <div class="mt-4 border-b border-grey-light"></div>
 
-  <div class="flex items-start justify-between mt-8">
-    <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32" style="width: 11.75rem;">
+  <div class="flex flex-col items-center sm:flex-row sm:items-start justify-between mt-8">
+    <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32 my-4" style="width: 11.75rem;">
       <h4 class="font-black">Current plan</h4>
       <%= if @subscription do %>
         <div class="text-xl py-2 font-medium"><%= subscription_name(@subscription) %></div>
@@ -14,7 +14,7 @@
         <%= link("Upgrade", to: "/billing/upgrade", class: "text-sm text-indigo font-medium") %>
       <% end %>
     </div>
-    <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32" style="width: 11.75rem;">
+    <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32 my-4" style="width: 11.75rem;">
       <h4 class="font-black">Next bill amount</h4>
       <%= if @subscription do %>
         <div class="text-xl py-2 font-medium">$<%= @subscription.next_bill_amount %></div>
@@ -23,7 +23,7 @@
         <div class="text-xl py-2 font-medium">$0</div>
       <% end %>
     </div>
-    <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32" style="width: 11.75rem;">
+    <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32 my-4" style="width: 11.75rem;">
       <h4 class="font-black">Next bill date</h4>
 
       <%= if @subscription do %>

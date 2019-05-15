@@ -34,7 +34,6 @@ defmodule Mix.Tasks.SendTrialNotificationsTest do
       assert_delivered_email(PlausibleWeb.Email.trial_upgrade_email(user, "tomorrow", 1))
     end
 
-
     test "sends an upgrade email the day the trial ends" do
       user = insert(:user, inserted_at: Timex.now |> Timex.shift(days: -30))
       site = insert(:site, members: [user])
