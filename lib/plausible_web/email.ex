@@ -38,6 +38,33 @@ defmodule PlausibleWeb.Email do
     |> render("activation_email.html", name: user.name, link: link)
   end
 
+  def trial_two_week_reminder(user) do
+    new_email()
+    |> to(user)
+    |> from("Uku Taht <uku@plausible.io>")
+    |> tag("trial-two-week-reminder")
+    |> subject("14 days left on your Plausible trial")
+    |> render("trial_two_week_reminder.html", user: user)
+  end
+
+  def trial_upgrade_email(user, day, pageviews) do
+    new_email()
+    |> to(user)
+    |> from("Uku Taht <uku@plausible.io>")
+    |> tag("trial-upgrade-email")
+    |> subject("Your Plausible trial ends #{day}")
+    |> render("trial_upgrade_email.html", user: user, day: day, pageviews: pageviews)
+  end
+
+  def trial_over_email(user) do
+    new_email()
+    |> to(user)
+    |> from("Uku Taht <uku@plausible.io>")
+    |> tag("trial-over-email")
+    |> subject("Your Plausible trial has ended")
+    |> render("trial_over_email.html", user: user)
+  end
+
   def feedback_survey_email(user) do
     new_email()
     |> to(user)
