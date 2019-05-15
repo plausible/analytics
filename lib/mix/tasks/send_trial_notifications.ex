@@ -40,19 +40,19 @@ defmodule Mix.Tasks.SendTrialNotifications do
     )
 
     for user <- Repo.all(two_weeks_left) do
-      send_two_week_reminder(args, user)
+      if Plausible.Auth.user_completed_setup?(user), do: send_two_week_reminder(args, user)
     end
 
     for user <- Repo.all(tomorrow) do
-      send_tomorrow_reminder(args, user)
+      if Plausible.Auth.user_completed_setup?(user), do: send_tomorrow_reminder(args, user)
     end
 
     for user <- Repo.all(today) do
-      send_today_reminder(args, user)
+      if Plausible.Auth.user_completed_setup?(user), do: send_today_reminder(args, user)
     end
 
     for user <- Repo.all(yesterday) do
-      send_over_reminder(args, user)
+      if Plausible.Auth.user_completed_setup?(user), do: send_over_reminder(args, user)
     end
   end
 
