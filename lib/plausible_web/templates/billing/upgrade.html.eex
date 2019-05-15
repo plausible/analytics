@@ -30,17 +30,17 @@
   <div class="w-full flex justify-between items-center py-4 border-t">
     <span><b>10,000</b> / mo</span>
     <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$6 / mo</b>
-    <button class="button button-sm" data-product-id="<%= Plausible.Billing.Plans.paddle_id_for_plan(:personal) %>">Select</button>
+    <%= render("_checkout_button.html", conn: @conn, plan: :personal) %>
   </div>
   <div class="w-full flex justify-between items-center py-4 border-t">
     <span><b>100,000</b> / mo</span>
     <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$12 / mo</b>
-    <button class="button button-sm" data-product-id="<%= Plausible.Billing.Plans.paddle_id_for_plan(:startup) %>">Select</button>
+    <%= render("_checkout_button.html", conn: @conn, plan: :startup) %>
   </div>
   <div class="w-full flex justify-between items-center py-4 border-t">
     <span><b>1,000,000</b> / mo</span>
     <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$36 / mo</b>
-    <button class="button button-sm" data-product-id="<%= Plausible.Billing.Plans.paddle_id_for_plan(:business) %>">Select</button>
+    <%= render("_checkout_button.html", conn: @conn, plan: :business) %>
   </div>
   <div class="w-full flex justify-between items-center py-4 border-t">
     <span>Your usage: <b><%= PlausibleWeb.AuthView.delimit_integer(@usage) %></b> pageviews in the last 30 days</span>
@@ -51,12 +51,6 @@
   </div>
 
   <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js"></script>
-  <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/checkout.js") %>"></script>
-  <script>
-    window.Checkout.init(
-      <%= @conn.assigns[:current_user].id %>,
-      '<%= @conn.assigns[:current_user].email %>'
-    )
-  </script>
+  <script>Paddle.Setup({vendor: 49430})</script>
 
 </div>
