@@ -64,6 +64,16 @@ defmodule Plausible.Billing do
     end
   end
 
+  def coupon_for(user) do
+    if was_beta_user(user) do
+      "8FE5AF26"
+    end
+  end
+
+  def was_beta_user(user) do
+    Timex.before?(user.inserted_at, ~D[2019-04-25])
+  end
+
   def trial_days_left(user) do
     if Timex.before?(user.inserted_at, ~D[2019-04-24]) do
       Timex.diff(~D[2019-05-24], Timex.today, :days) + 1
