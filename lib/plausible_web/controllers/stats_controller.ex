@@ -6,9 +6,26 @@ defmodule PlausibleWeb.StatsController do
   defp show_stats(conn, site) do
     demo = site.domain == "plausible.io"
 
+    # TODO: This should move to localStorage when stats page is AJAX'ified
+    {conn, period_params} = case conn.params["period"] do
+      "custom" ->
+        {conn, conn.params}
+      p when p in ["day", "week", "month", "3mo"] ->
+        saved_periods = get_session(conn, :saved_periods) || %{}
+        {put_session(conn, :saved_periods, Map.merge(saved_periods, %{site.domain => p})), conn.params}
+      _ ->
+        saved_period = (get_session(conn, :saved_periods) || %{})[site.domain]
+
+        if saved_period do
+          {conn, %{"period" => saved_period}}
+        else
+          {conn, conn.params}
+        end
+    end
+
     Plausible.Tracking.event(conn, "Site Analytics: Open", %{demo: demo})
 
-    query = Stats.Query.from(site.timezone, conn.params)
+    query = Stats.Query.from(site.timezone, period_params)
 
     plot = Stats.calculate_plot(site, query)
     labels = Stats.labels(site, query)
@@ -27,7 +44,7 @@ defmodule PlausibleWeb.StatsController do
       browsers: Stats.browsers(site, query),
       operating_systems: Stats.operating_systems(site, query),
       site: site,
-      period: conn.params["period"] || "month",
+      period: period_params["period"] || "month",
       query: query,
       title: "Plausible · " <> site.domain
     )
