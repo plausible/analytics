@@ -1,4 +1,4 @@
-<div class="w-full bg-white shadow-md rounded mt-8">
+<div class="w-full bg-white shadow-md rounded mt-6">
   <div class="border-b border-grey-light p-4 font-medium">
     <span><%= @pageviews %> Pageviews</span> • <span><%= @unique_visitors %> Unique visitors</span>
   </div>
