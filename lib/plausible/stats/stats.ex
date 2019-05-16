@@ -71,28 +71,28 @@ defmodule Plausible.Stats do
     mobile_q = from(
       p in base_query(site, query),
       where: p.screen_width < 576,
-      select: count(p.session_id, :distinct)
+      select: count(p.user_id, :distinct)
     )
     mobile = Repo.one(mobile_q)
 
     tablet_q = from(
       p in base_query(site, query),
       where: p.screen_width >= 576 and p.screen_width < 992,
-      select: count(p.session_id, :distinct)
+      select: count(p.user_id, :distinct)
     )
     tablet = Repo.one(tablet_q)
 
     laptop_q = from(
       p in base_query(site, query),
       where: p.screen_width >= 992 and p.screen_width < 1440,
-      select: count(p.session_id, :distinct)
+      select: count(p.user_id, :distinct)
     )
     laptop = Repo.one(laptop_q)
 
     desktop_q = from(
       p in base_query(site, query),
       where: p.screen_width >= 1440,
-      select: count(p.session_id, :distinct)
+      select: count(p.user_id, :distinct)
     )
     desktop = Repo.one(desktop_q)
 
