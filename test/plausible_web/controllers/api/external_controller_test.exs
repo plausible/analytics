@@ -12,7 +12,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         referrer: "http://m.facebook.com/",
         new_visitor: true,
         screen_width: 1440,
-        sid: "123",
         uid: "321"
       }
 
@@ -36,7 +35,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "www. is stripped from hostname", %{conn: conn} do
       params = %{
         url: "http://www.example.com/",
-        sid: "123",
         uid: "321",
         new_visitor: true
       }
@@ -53,7 +51,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "bots and crawlers are ignored", %{conn: conn} do
       params = %{
         url: "http://www.example.com/",
-        sid: "123",
         new_visitor: true
       }
 
@@ -71,7 +68,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         url: "http://gigride.live/",
         new_visitor: false,
-        sid: "123",
         uid: "321"
       }
 
@@ -92,7 +88,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         url: "http://gigride.live/",
         referrer: "https://facebook.com",
         new_visitor: false,
-        sid: "123",
         uid: "321"
       }
 
@@ -112,7 +107,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         url: "http://gigride.live/",
         referrer: "https://gigride.live",
         new_visitor: false,
-        sid: "123",
         uid: "321"
       }
 
@@ -132,7 +126,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         url: "http://gigride.live/",
         referrer: "https://blog.gigride.live",
         new_visitor: false,
-        sid: "123",
         uid: "321"
       }
 
@@ -152,7 +145,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         url: "http://gigride.live/",
         referrer: "https://blog.gigride.live",
         new_visitor: false,
-        sid: "123",
         uid: "e8150466-7ddb-4771-bcf5-7c58f232e8a6"
       }
 
@@ -169,7 +161,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         url: "http://gigride.live/",
         referrer: "https://www.indiehackers.com/landing-page-feedback",
         new_visitor: false,
-        sid: "123",
         uid: "321"
       }
 
@@ -189,7 +180,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         url: "http://gigride.live/",
         referrer: "android-app://com.google.android.gm",
         new_visitor: false,
-        sid: "123",
         uid: "321"
       }
 

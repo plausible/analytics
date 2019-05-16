@@ -50,7 +50,6 @@ defmodule PlausibleWeb.Api.ExternalController do
         new_visitor: params["new_visitor"],
         screen_width: params["screen_width"],
         country_code: country_code,
-        session_id: params["sid"],
         user_id: params["uid"],
         operating_system: ua && os_name(ua),
         browser: ua && browser_name(ua),

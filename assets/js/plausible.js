@@ -50,14 +50,12 @@
 
       var existingUid = getCookie('nm_uid');
       var uid = existingUid || pseudoUUIDv4();
-      var sid = getCookie('nm_sid') || pseudoUUIDv4();
 
       var url = window.location.protocol + '//' + window.location.hostname + window.location.pathname;
       var postBody = {
         url: url,
         new_visitor: !existingUid,
-        uid: uid,
-        sid: sid
+        uid: uid
       };
 
       if (userAgent) postBody.user_agent = userAgent;
@@ -73,7 +71,6 @@
           if (!existingUid) {
             setCookie('nm_uid', uid)
           }
-          setCookie('nm_sid', sid, 30)
         }
       }
     }

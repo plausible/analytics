@@ -13,13 +13,7 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
     end
 
     test "is READY when site has at least 1 pageview", %{conn: conn, site: site} do
-      Repo.insert!(%Plausible.Pageview{
-        hostname: site.domain,
-        pathname: "/",
-        new_visitor: true,
-        session_id: "123",
-        user_id: "321"
-      })
+      insert(:pageview, hostname: site.domain)
 
       conn = get(conn, "/api/#{site.domain}/status")
 
