@@ -6,22 +6,7 @@ defmodule PlausibleWeb.StatsController do
   defp show_stats(conn, site) do
     demo = site.domain == "plausible.io"
 
-    # TODO: This should move to localStorage when stats page is AJAX'ified
-    {conn, period_params} = case conn.params["period"] do
-      "custom" ->
-        {conn, conn.params}
-      p when p in ["day", "week", "month", "3mo"] ->
-        saved_periods = get_session(conn, :saved_periods) || %{}
-        {put_session(conn, :saved_periods, Map.merge(saved_periods, %{site.domain => p})), conn.params}
-      _ ->
-        saved_period = (get_session(conn, :saved_periods) || %{})[site.domain]
-
-        if saved_period do
-          {conn, %{"period" => saved_period}}
-        else
-          {conn, conn.params}
-        end
-    end
+    {conn, period_params} = fetch_period(conn, site)
 
     Plausible.Tracking.event(conn, "Site Analytics: Open", %{demo: demo})
 
@@ -75,7 +60,8 @@ defmodule PlausibleWeb.StatsController do
     site = Repo.get_by(Plausible.Site, domain: domain)
 
     if site && current_user_can_access?(conn, site) do
-      query = Stats.Query.from(site.timezone, conn.params)
+      {conn, period_params} = fetch_period(conn, site)
+      query = Stats.Query.from(site.timezone, period_params)
       referrers = Stats.top_referrers(site, query, 100)
 
       render(conn, "referrers.html", layout: false, site: site, top_referrers: referrers)
@@ -88,7 +74,8 @@ defmodule PlausibleWeb.StatsController do
     site = Repo.get_by(Plausible.Site, domain: domain)
 
     if site && current_user_can_access?(conn, site) do
-      query = Stats.Query.from(site.timezone, conn.params)
+      {conn, period_params} = fetch_period(conn, site)
+      query = Stats.Query.from(site.timezone, period_params)
       pages = Stats.top_pages(site, query, 100)
 
       render(conn, "pages.html", layout: false, site: site, top_pages: pages)
@@ -101,7 +88,8 @@ defmodule PlausibleWeb.StatsController do
     site = Repo.get_by(Plausible.Site, domain: domain)
 
     if site && current_user_can_access?(conn, site) do
-      query = Stats.Query.from(site.timezone, conn.params)
+      {conn, period_params} = fetch_period(conn, site)
+      query = Stats.Query.from(site.timezone, period_params)
       countries = Stats.countries(site, query, 100)
 
       render(conn, "countries.html", layout: false, site: site, countries: countries)
@@ -114,7 +102,8 @@ defmodule PlausibleWeb.StatsController do
     site = Repo.get_by(Plausible.Site, domain: domain)
 
     if site && current_user_can_access?(conn, site) do
-      query = Stats.Query.from(site.timezone, conn.params)
+      {conn, period_params} = fetch_period(conn, site)
+      query = Stats.Query.from(site.timezone, period_params)
       operating_systems = Stats.operating_systems(site, query, 100)
 
       render(conn, "operating_systems.html", layout: false, site: site, operating_systems: operating_systems)
@@ -127,7 +116,8 @@ defmodule PlausibleWeb.StatsController do
     site = Repo.get_by(Plausible.Site, domain: domain)
 
     if site && current_user_can_access?(conn, site) do
-      query = Stats.Query.from(site.timezone, conn.params)
+      {conn, period_params} = fetch_period(conn, site)
+      query = Stats.Query.from(site.timezone, period_params)
       browsers = Stats.browsers(site, query, 100)
 
       render(conn, "browsers.html", layout: false, site: site, browsers: browsers)
@@ -144,6 +134,25 @@ defmodule PlausibleWeb.StatsController do
     case conn.assigns[:current_user] do
       nil -> false
       user -> Plausible.Sites.can_access?(user.id, site)
+    end
+  end
+
+  # TODO: This should move to localStorage when stats page is AJAX'ified
+  defp fetch_period(conn, site) do
+    case conn.params["period"] do
+      "custom" ->
+        {conn, conn.params}
+      p when p in ["day", "week", "month", "3mo"] ->
+        saved_periods = get_session(conn, :saved_periods) || %{}
+        {put_session(conn, :saved_periods, Map.merge(saved_periods, %{site.domain => p})), conn.params}
+      _ ->
+        saved_period = (get_session(conn, :saved_periods) || %{})[site.domain]
+
+        if saved_period do
+          {conn, %{"period" => saved_period}}
+        else
+          {conn, conn.params}
+        end
     end
   end
 end
