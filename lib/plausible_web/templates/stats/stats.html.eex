@@ -37,7 +37,7 @@
     <%= render("_bar_graph.html",
           micromodal_trigger: "referrer-modal",
           title: "Top Referrers",
-          by: :visitors,
+          by: "new visitors",
           list: @top_referrers,
           color: :blue
         )

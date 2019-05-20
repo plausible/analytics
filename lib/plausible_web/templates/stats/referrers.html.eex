@@ -2,7 +2,7 @@
   <h1>Top Referrers</h1>
   <button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
 </header>
-<div class="text-grey-darker text-lg ml-1 mt-1">by visitors</div>
+<div class="text-grey-darker text-lg ml-1 mt-1">by new visitors</div>
 <div class="my-4 border-b border-grey-light"></div>
 <main class="modal__content" id="modal-1-content">
   <div class="mt-8">
