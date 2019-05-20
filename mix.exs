@@ -55,7 +55,8 @@ defmodule Plausible.MixProject do
       {:poison, ">= 1.5.0"}, # For bamboo_postmark
       {:sentry, "~> 7.0"},
       {:httpoison, "~> 1.4"},
-      {:ex_machina, "~> 2.3", only: :test}
+      {:ex_machina, "~> 2.3", only: :test},
+      {:appsignal, "~> 1.0"}
     ]
   end
 

@@ -38,6 +38,13 @@ config :ua_inspector,
 config :ref_inspector,
   database_path: "priv/ref_inspector"
 
+config :plausible, PlausibleWeb.Endpoint,
+  instrumenters: [Appsignal.Phoenix.Instrumenter]
+
+config :phoenix, :template_engines,
+  eex: Appsignal.Phoenix.Template.EExEngine,
+  exs: Appsignal.Phoenix.Template.ExsEngine
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
