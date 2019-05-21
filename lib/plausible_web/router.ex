@@ -49,7 +49,9 @@ defmodule PlausibleWeb.Router do
     get "/terms", PageController, :terms
     get "/data-policy", PageController, :data_policy
     get "/feedback", PageController, :feedback
-    post "/feedback", PageController, :submit_feedback
+    get "/roadmap", PageController, :roadmap
+    get "/contact", PageController, :contact_form
+    post "/contact", PageController, :submit_contact_form
 
     get "/billing/change-plan", BillingController, :change_plan_form
     post "/billing/change-plan/:plan_name", BillingController, :change_plan

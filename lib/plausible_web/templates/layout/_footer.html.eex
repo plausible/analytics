@@ -1,7 +1,9 @@
 <footer class='w-full text-center text-grey p-8 pin-b bg-indigo-darker'>
   <div>
     <a href="/blog/" class="light-text font-medium mr-4">Blog</a>
-    <a href="/feedback" class="light-text font-medium mr-4">Feedback</a>
+    <a href="/feedback" target="_blank" class="light-text font-medium mr-4">Feedback</a>
+    <a href="/roadmap" target="_blank" class="light-text font-medium mr-4">Roadmap</a>
+    <a href="/contact" class="light-text font-medium mr-4">Contact us</a>
     <a href="/plausible.io" class="light-text font-medium">Live Demo</a>
   </div>
   <div class="leading-normal text-sm pt-12">
