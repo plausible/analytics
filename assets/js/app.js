@@ -1,6 +1,6 @@
 import css from "../css/app.css"
 import "./polyfills/closest"
-import "./stats-modal"
+import "./stats"
 import "./timeframe-selector"
 import "phoenix_html"
 
