@@ -1,17 +1,16 @@
 <header class="modal__header">
-  <h1>Top Referrers</h1>
+  <h1>Referrers > <%= @referrer %></h1>
   <button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
 </header>
-<div class="text-grey-darker text-lg ml-1 mt-1">by new visitors</div>
 <div class="my-4 border-b border-grey-light"></div>
 <main class="modal__content">
   <div class="mt-8">
-    <%= for {referrer, count} <- @top_referrers do %>
+    <%= for {one_referrer, count} <- @referrers do %>
       <div class="flex items-center justify-between my-2">
-        <%= link(referrer, to: "/#{@site.domain}/referrers/#{referrer}", "data-pushstate": true) %>
+        <span><%= one_referrer %></span>
         <span><%= count %></span>
       </div>
-      <%= bar(count, @top_referrers) %>
+      <%= bar(count, @referrers) %>
     <% end %>
   </div>
 </main>

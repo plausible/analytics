@@ -70,6 +70,20 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
+  def referrer_drilldown(conn, %{"domain" => domain, "referrer" => referrer}) do
+    site = Repo.get_by(Plausible.Site, domain: domain)
+
+    if site && current_user_can_access?(conn, site) do
+      {conn, period_params} = fetch_period(conn, site)
+      query = Stats.Query.from(site.timezone, period_params)
+      referrers = Stats.referrer_drilldown(site, query, referrer)
+
+      render(conn, "referrer_drilldown.html", layout: false, site: site, referrers: referrers, referrer: referrer)
+    else
+      render_error(conn, 404)
+    end
+  end
+
   def pages(conn, %{"domain" => domain}) do
     site = Repo.get_by(Plausible.Site, domain: domain)
 

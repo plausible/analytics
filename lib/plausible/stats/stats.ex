@@ -58,6 +58,16 @@ defmodule Plausible.Stats do
     )
   end
 
+  def referrer_drilldown(site, query, referrer) do
+    Repo.all(from p in base_query(site, query),
+      select: {p.referrer, count(p.referrer)},
+      group_by: p.referrer,
+      where: p.new_visitor == true and p.referrer_source == ^referrer,
+      order_by: [desc: 2],
+      limit: 100
+    )
+  end
+
   def top_pages(site, query, limit \\ 5) do
     Repo.all(from p in base_query(site, query),
       select: {p.pathname, count(p.pathname)},

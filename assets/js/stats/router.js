@@ -4,7 +4,7 @@ const REPLACE_VARIABLE_REGEXP = '([^\/]+)';
 export default class Router {
   constructor() {
     this.routes = []
-    this._attachLinkHandlers()
+    this.updateLinkHandlers()
     window.addEventListener('popstate', this.resolve.bind(this));
   }
 
@@ -25,6 +25,27 @@ export default class Router {
   navigate(to) {
     history.pushState({}, '', to)
     this.resolve()
+  }
+
+  updateLinkHandlers() {
+    const self = this
+    const links = document.querySelectorAll('[data-pushstate]')
+
+    for (const link of links) {
+      if (!link.hasListenerAttached) {
+        link.addEventListener('click', function (e) {
+          if (e.ctrlKey || e.metaKey) {
+            return false;
+          }
+
+          e.preventDefault();
+          const location = link.getAttribute('href');;
+          self.navigate(location.replace(/\/+$/, '').replace(/^\/+/, '/'));
+        })
+
+        link.hasListenerAttached = true;
+      }
+    }
   }
 
   _matchRoute() {
@@ -55,27 +76,6 @@ export default class Router {
       params[paramNames[index]] = decodeURIComponent(value);
       return params;
     }, null);
-  }
-
-  _attachLinkHandlers() {
-    const self = this
-    const links = document.querySelectorAll('[data-pushstate]')
-
-    for (const link of links) {
-      if (!link.hasListenerAttached) {
-        link.addEventListener('click', function (e) {
-          if (e.ctrlKey || e.metaKey) {
-            return false;
-          }
-
-          e.preventDefault();
-          const location = link.getAttribute('href');;
-          self.navigate(location.replace(/\/+$/, '').replace(/^\/+/, '/'));
-        })
-
-        link.hasListenerAttached = true;
-      }
-    }
   }
 }
 

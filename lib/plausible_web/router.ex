@@ -35,6 +35,7 @@ defmodule PlausibleWeb.Router do
 
     get "/:domain/status", Api.InternalController, :domain_status
     get "/:domain/referrers", StatsController, :referrers
+    get "/:domain/referrers/:referrer", StatsController, :referrer_drilldown
   end
 
   scope "/", PlausibleWeb do

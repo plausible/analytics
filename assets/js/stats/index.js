@@ -19,16 +19,27 @@ function fetchModal(modal, path) {
       return res.text()
     }).then(function(res) {
       m.setModalBody(modal, res)
+      router.updateLinkHandlers()
     })
 }
 
 const router = new Router()
 
 router
+  .on('/:domain/referrers/:referrer', function(params) {
+    m.showModal({
+      onShow: function(modal) {
+        fetchModal(modal, `/api/${params.domain}/referrers/${params.referrer}`)
+      },
+      onClose: function() {
+        router.navigate('/' + params.domain)
+      }
+    })
+  })
   .on('/:domain/referrers', function(params) {
     m.showModal({
       onShow: function(modal) {
-        fetchModal(modal, '/api/plausible.io/referrers')
+        fetchModal(modal, `/api/${params.domain}/referrers`)
       },
       onClose: function() {
         router.navigate('/' + params.domain)
