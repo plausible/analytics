@@ -1,5 +1,5 @@
 <header class="modal__header">
-  <h1>Top Referrers</h1>
+  <h1>Referrers</h1>
   <button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
 </header>
 <div class="text-grey-darker text-lg ml-1 mt-1">by new visitors</div>
