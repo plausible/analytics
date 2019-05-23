@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         referrer: "http://m.facebook.com/",
         new_visitor: true,
         screen_width: 1440,
-        uid: "321"
+        uid: UUID.uuid4()
       }
 
       conn = conn
@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "www. is stripped from hostname", %{conn: conn} do
       params = %{
         url: "http://www.example.com/",
-        uid: "321",
+        uid: UUID.uuid4(),
         new_visitor: true
       }
 
@@ -68,7 +68,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         url: "http://gigride.live/",
         new_visitor: false,
-        uid: "321"
+        uid: UUID.uuid4()
       }
 
       conn = conn
@@ -88,7 +88,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         url: "http://gigride.live/",
         referrer: "https://facebook.com",
         new_visitor: false,
-        uid: "321"
+        uid: UUID.uuid4()
       }
 
       conn = conn
@@ -107,7 +107,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         url: "http://gigride.live/",
         referrer: "https://gigride.live",
         new_visitor: false,
-        uid: "321"
+        uid: UUID.uuid4()
       }
 
       conn = conn
@@ -126,7 +126,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         url: "http://gigride.live/",
         referrer: "https://blog.gigride.live",
         new_visitor: false,
-        uid: "321"
+        uid: UUID.uuid4()
       }
 
       conn = conn
@@ -161,7 +161,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         url: "http://gigride.live/",
         referrer: "https://www.indiehackers.com/landing-page-feedback",
         new_visitor: false,
-        uid: "321"
+        uid: UUID.uuid4()
       }
 
       conn = conn
@@ -180,7 +180,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         url: "http://gigride.live/",
         referrer: "android-app://com.google.android.gm",
         new_visitor: false,
-        uid: "321"
+        uid: UUID.uuid4()
       }
 
       conn = conn

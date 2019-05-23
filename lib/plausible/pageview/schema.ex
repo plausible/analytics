@@ -9,7 +9,7 @@ defmodule Plausible.Pageview do
     field :user_agent, :string
     field :screen_width, :integer
     field :new_visitor, :boolean
-    field :user_id, :string
+    field :user_id, :binary_id
     field :country_code, :string
 
     field :operating_system, :string

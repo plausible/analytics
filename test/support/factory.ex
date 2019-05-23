@@ -24,13 +24,12 @@ defmodule Plausible.Factory do
 
   def pageview_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
-    user_id = sequence(:user_id, &"uid-#{&1}")
 
     %Plausible.Pageview{
       hostname: hostname,
       pathname: "/",
       new_visitor: true,
-      user_id: user_id,
+      user_id: UUID.uuid4(),
     }
   end
 
