@@ -17,8 +17,7 @@ defmodule Mix.Tasks.SendTrialNotifications do
       from(u in Plausible.Auth.User,
         left_join: s in Plausible.Billing.Subscription, on: s.user_id == u.id,
         where: is_nil(s.id),
-        order_by: u.inserted_at,
-        offset: 20
+        order_by: u.inserted_at
       )
 
     users = Repo.all(base_query)
