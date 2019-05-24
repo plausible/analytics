@@ -16,48 +16,75 @@ defmodule Mix.Tasks.SendTrialNotifications do
     base_query =
       from(u in Plausible.Auth.User,
         left_join: s in Plausible.Billing.Subscription, on: s.user_id == u.id,
-        where: is_nil(s.id)
+        where: is_nil(s.id),
+        order_by: u.inserted_at,
+        limit: 20
       )
 
-    two_weeks_left = from(
-      u in base_query,
-      where: type(u.inserted_at, :date) == fragment("now()::date - '14 days'::interval")
-    )
+    users = Repo.all(base_query)
 
-    tomorrow = from(
-      u in base_query,
-      where: type(u.inserted_at, :date) == fragment("now()::date - '29 days'::interval")
-    )
-
-    today = from(
-      u in base_query,
-      where: type(u.inserted_at, :date) == fragment("now()::date - '30 days'::interval")
-    )
-
-    yesterday = from(
-      u in base_query,
-      where: type(u.inserted_at, :date) == fragment("now()::date - '31 days'::interval")
-    )
-
-    for user <- Repo.all(two_weeks_left) do
-      if Plausible.Auth.user_completed_setup?(user), do: send_two_week_reminder(args, user)
+    for user <- users do
+      case Timex.diff(Plausible.Billing.trial_end_date(user), Timex.today(), :days) do
+       14 ->
+          if Plausible.Auth.user_completed_setup?(user) do
+            send_two_week_reminder(args, user)
+          end
+       1 ->
+          if Plausible.Auth.user_completed_setup?(user) do
+            send_tomorrow_reminder(args, user)
+          end
+       0 ->
+          if Plausible.Auth.user_completed_setup?(user) do
+            send_today_reminder(args, user)
+          end
+       -1 ->
+          if Plausible.Auth.user_completed_setup?(user) do
+            send_over_reminder(args, user)
+          end
+        _ ->
+          # noop
+      end
     end
 
-    for user <- Repo.all(tomorrow) do
-      if Plausible.Auth.user_completed_setup?(user), do: send_tomorrow_reminder(args, user)
-    end
+    #two_weeks_left = from(
+    #  u in base_query,
+    #  where: type(u.inserted_at, :date) == fragment("now()::date - '14 days'::interval")
+    #)
 
-    for user <- Repo.all(today) do
-      if Plausible.Auth.user_completed_setup?(user), do: send_today_reminder(args, user)
-    end
+    #tomorrow = from(
+    #  u in base_query,
+    #  where: type(u.inserted_at, :date) == fragment("now()::date - '29 days'::interval")
+    #)
 
-    for user <- Repo.all(yesterday) do
-      if Plausible.Auth.user_completed_setup?(user), do: send_over_reminder(args, user)
-    end
+    #today = from(
+    #  u in base_query,
+    #  where: type(u.inserted_at, :date) == fragment("now()::date - '30 days'::interval")
+    #)
+
+    #yesterday = from(
+    #  u in base_query,
+    #  where: type(u.inserted_at, :date) == fragment("now()::date - '31 days'::interval")
+    #)
+
+    #for user <- Repo.all(two_weeks_left) do
+    #  if Plausible.Auth.user_completed_setup?(user), do: send_two_week_reminder(args, user)
+    #end
+
+    #for user <- Repo.all(tomorrow) do
+    #  if Plausible.Auth.user_completed_setup?(user), do: send_tomorrow_reminder(args, user)
+    #end
+
+    #for user <- Repo.all(today) do
+    #  if Plausible.Auth.user_completed_setup?(user), do: send_today_reminder(args, user)
+    #end
+
+    #for user <- Repo.all(yesterday) do
+    #  if Plausible.Auth.user_completed_setup?(user), do: send_over_reminder(args, user)
+    #end
   end
 
   defp send_two_week_reminder(["--dry-run"], user) do
-    Logger.info("DRY RUN: trial notification email to #{user.name}")
+    Logger.info("DRY RUN: 2-week trial notification email to #{user.name} [inserted=#{user.inserted_at}]")
   end
 
   defp send_two_week_reminder(_, user) do
@@ -66,7 +93,7 @@ defmodule Mix.Tasks.SendTrialNotifications do
   end
 
   defp send_tomorrow_reminder(["--dry-run"], user) do
-    Logger.info("DRY RUN: trial upgrade email to #{user.name}")
+    Logger.info("DRY RUN: tomorrow trial upgrade email to #{user.name} [inserted=#{user.inserted_at}]")
   end
 
   defp send_tomorrow_reminder(_, user) do
@@ -77,7 +104,7 @@ defmodule Mix.Tasks.SendTrialNotifications do
   end
 
   defp send_today_reminder(["--dry-run"], user) do
-    Logger.info("DRY RUN: trial upgrade email to #{user.name}")
+    Logger.info("DRY RUN: today trial upgrade email to #{user.name} [inserted=#{user.inserted_at}]")
   end
 
   defp send_today_reminder(_, user) do
@@ -88,7 +115,7 @@ defmodule Mix.Tasks.SendTrialNotifications do
   end
 
   defp send_over_reminder(["--dry-run"], user) do
-    Logger.info("DRY RUN: trial over email to #{user.name}")
+    Logger.info("DRY RUN: over trial notification email to #{user.name} [inserted=#{user.inserted_at}]")
   end
 
   defp send_over_reminder(_, user) do

@@ -14,8 +14,8 @@ defmodule Mix.Tasks.SendTrialNotificationsTest do
   end
 
   describe "with site and pageviews" do
-    test "sends a reminder 14 days before trial ends" do
-      user = insert(:user, inserted_at: Timex.now |> Timex.shift(days: -14))
+    test "sends a reminder 14 days before trial ends (16 days after user signed up)" do
+      user = insert(:user, inserted_at: Timex.now |> Timex.shift(days: -16))
       site = insert(:site, members: [user])
       insert(:pageview, hostname: site.domain)
 
@@ -34,25 +34,25 @@ defmodule Mix.Tasks.SendTrialNotificationsTest do
       assert_delivered_email(PlausibleWeb.Email.trial_upgrade_email(user, "tomorrow", 1))
     end
 
-    test "sends an upgrade email the day the trial ends" do
-      user = insert(:user, inserted_at: Timex.now |> Timex.shift(days: -30))
-      site = insert(:site, members: [user])
-      insert(:pageview, hostname: site.domain)
+    #    test "sends an upgrade email the day the trial ends" do
+    #      user = insert(:user, inserted_at: Timex.now |> Timex.shift(days: -30))
+    #      site = insert(:site, members: [user])
+    #      insert(:pageview, hostname: site.domain)
+    #
+    #      Mix.Tasks.SendTrialNotifications.execute()
+    #
+    #      assert_delivered_email(PlausibleWeb.Email.trial_upgrade_email(user, "today", 1))
+    #    end
+    #
+    #test "sends a trial over email on the day after the trial ends" do
+    #  user = insert(:user, inserted_at: Timex.now |> Timex.shift(days: -31))
+    #  site = insert(:site, members: [user])
+    #  insert(:pageview, hostname: site.domain)
 
-      Mix.Tasks.SendTrialNotifications.execute()
+    #  Mix.Tasks.SendTrialNotifications.execute()
 
-      assert_delivered_email(PlausibleWeb.Email.trial_upgrade_email(user, "today", 1))
-    end
-
-    test "sends a trial over email on the day after the trial ends" do
-      user = insert(:user, inserted_at: Timex.now |> Timex.shift(days: -31))
-      site = insert(:site, members: [user])
-      insert(:pageview, hostname: site.domain)
-
-      Mix.Tasks.SendTrialNotifications.execute()
-
-      assert_delivered_email(PlausibleWeb.Email.trial_over_email(user))
-    end
+    #  assert_delivered_email(PlausibleWeb.Email.trial_over_email(user))
+    #end
 
     test "does not send a notification if user has a subscription" do
       user1 = insert(:user, inserted_at: Timex.now |> Timex.shift(days: -14))

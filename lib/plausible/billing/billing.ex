@@ -76,7 +76,7 @@ defmodule Plausible.Billing do
 
   def trial_days_left(user) do
     if Timex.before?(user.inserted_at, ~D[2019-04-24]) do
-      Timex.diff(~D[2019-05-24], Timex.today, :days) + 1
+      Timex.diff(~D[2019-05-25], Timex.today, :days) + 1
     else
       30 - Timex.diff(Timex.today, user.inserted_at, :days)
     end
@@ -84,9 +84,9 @@ defmodule Plausible.Billing do
 
   def trial_end_date(user) do
     if Timex.before?(user.inserted_at, ~D[2019-04-25]) do
-      ~D[2019-05-24]
+      ~D[2019-05-25]
     else
-      Timex.shift(user.inserted_at, days: 30)
+      Timex.shift(user.inserted_at, days: 30) |> NaiveDateTime.to_date
     end
   end
 
