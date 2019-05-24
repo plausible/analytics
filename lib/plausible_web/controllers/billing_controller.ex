@@ -4,7 +4,7 @@ defmodule PlausibleWeb.BillingController do
   alias Plausible.Billing
   require Logger
 
-  plug PlausibleWeb.RequireAccountPlug when action in [:change_plan]
+  plug PlausibleWeb.RequireAccountPlug
 
   def change_plan_form(conn, _params) do
     subscription = Billing.active_subscription_for(conn.assigns[:current_user].id)

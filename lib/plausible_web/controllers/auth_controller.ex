@@ -116,9 +116,12 @@ defmodule PlausibleWeb.AuthController do
 
     if user do
       if Password.match?(password, user.password_hash || "") do
+        login_dest = get_session(conn, :login_dest) || "/"
+
         conn
         |> put_session(:current_user_id, user.id)
-        |> redirect(to: "/")
+        |> put_session(:login_dest, nil)
+        |> redirect(to: login_dest)
       else
         conn |> render("login_form.html", error: "Wrong email or password. Please try again.", layout: {PlausibleWeb.LayoutView, "focus.html"})
       end
