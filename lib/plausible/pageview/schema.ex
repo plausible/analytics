@@ -6,6 +6,7 @@ defmodule Plausible.Pageview do
     field :hostname, :string
     field :pathname, :string
     field :referrer, :string
+    field :raw_referrer, :string
     field :user_agent, :string
     field :screen_width, :integer
     field :new_visitor, :boolean

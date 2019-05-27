@@ -18,10 +18,24 @@ defmodule PlausibleWeb.Router do
 
   pipeline :api do
     plug :accepts, ["application/json"]
+    plug :fetch_session
   end
 
   if Mix.env == :dev do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
+  end
+
+  scope "/api", PlausibleWeb do
+    pipe_through :api
+
+    post "/page", Api.ExternalController, :page
+    get "/error", Api.ExternalController, :error
+
+    post "/paddle/webhook", Api.PaddleController, :webhook
+
+    get "/:domain/status", Api.InternalController, :domain_status
+    get "/:domain/referrers", StatsController, :referrers
+    get "/:domain/referrers/:referrer", StatsController, :referrer_drilldown
   end
 
   scope "/", PlausibleWeb do
@@ -65,21 +79,12 @@ defmodule PlausibleWeb.Router do
     put "/:website/settings", SiteController, :update_settings
     delete "/:website", SiteController, :delete_site
 
-    get "/:website", StatsController, :stats
+    get "/:website/*path", StatsController, :stats
     get "/:domain/referrers", StatsController, :referrers
     get "/:domain/pages", StatsController, :pages
     get "/:domain/countries", StatsController, :countries
     get "/:domain/operating-systems", StatsController, :operating_systems
     get "/:domain/browsers", StatsController, :browsers
-  end
-
-  scope "/api", PlausibleWeb.Api do
-    post "/page", ExternalController, :page
-    get "/error", ExternalController, :error
-
-    post "/paddle/webhook", PaddleController, :webhook
-
-    get "/:domain/status", InternalController, :domain_status
   end
 
   def assign_device_id(conn, _opts) do

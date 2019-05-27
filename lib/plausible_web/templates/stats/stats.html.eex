@@ -35,6 +35,7 @@
   <div class="w-full block md:flex items-start justify-between mt-6">
 
     <%= render("_bar_graph.html",
+          link: "/#{@site.domain}/referrers",
           micromodal_trigger: "referrer-modal",
           title: "Top Referrers",
           by: "new visitors",
