@@ -45,6 +45,7 @@
     %>
 
     <%= render("_bar_graph.html",
+          link: "/#{@site.domain}/pages",
           micromodal_trigger: "pages-modal",
           title: "Top Pages",
           by: :pageviews,
@@ -54,6 +55,7 @@
     %>
 
     <%= render("_bar_graph.html",
+          link: "/#{@site.domain}/countries",
           micromodal_trigger: "countries-modal",
           title: "Top Countries",
           by: :visitors,
@@ -83,6 +85,7 @@
     </div>
 
     <%= render("_bar_graph.html",
+          link: "/#{@site.domain}/operating-systems",
           micromodal_trigger: "operating-systems-modal",
           title: "Operating Systems",
           by: :visitors,
@@ -92,6 +95,7 @@
     %>
 
     <%= render("_bar_graph.html",
+          link: "/#{@site.domain}/browsers",
           micromodal_trigger: "browsers-modal",
           title: "Browsers",
           by: :visitors,

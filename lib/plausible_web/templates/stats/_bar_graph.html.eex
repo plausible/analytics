@@ -5,7 +5,12 @@
   <div class="mt-8">
     <%= for {key, count} <- @list do %>
       <div class="flex items-center justify-between my-2">
-        <span><%= key %></span>
+        <%= case key do %>
+          <% {:link, name, to} -> %>
+            <%= link(name, to: to, "data-pushstate": true, class: "hover:underline") %>
+          <% key -> %>
+            <span><%= key %></span>
+        <% end %>
         <span><%= count %></span>
       </div>
       <%= bar(count, @list, @color) %>

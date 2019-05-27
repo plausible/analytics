@@ -22,7 +22,7 @@ defmodule PlausibleWeb.StatsController do
       labels: labels,
       pageviews: Stats.total_pageviews(site, query),
       unique_visitors: Stats.unique_visitors(site, query),
-      top_referrers: Stats.top_referrers(site, query),
+      top_referrers: Stats.top_referrers(site, query) |> Enum.map(&(referrer_link(site, &1))),
       top_pages: Stats.top_pages(site, query),
       top_screen_sizes: Stats.top_screen_sizes(site, query),
       countries: Stats.countries(site, query),
@@ -33,6 +33,11 @@ defmodule PlausibleWeb.StatsController do
       query: query,
       title: "Plausible · " <> site.domain
     )
+  end
+
+  defp referrer_link(site, {name, count}) do
+    link = "/#{site.domain}/referrers/#{name}"
+    {{:link, name, link}, count}
   end
 
   def stats(conn, %{"website" => website}) do
