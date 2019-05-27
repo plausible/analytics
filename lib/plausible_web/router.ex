@@ -36,6 +36,10 @@ defmodule PlausibleWeb.Router do
     get "/:domain/status", Api.InternalController, :domain_status
     get "/:domain/referrers", StatsController, :referrers
     get "/:domain/referrers/:referrer", StatsController, :referrer_drilldown
+    get "/:domain/pages", StatsController, :pages
+    get "/:domain/countries", StatsController, :countries
+    get "/:domain/operating-systems", StatsController, :operating_systems
+    get "/:domain/browsers", StatsController, :browsers
   end
 
   scope "/", PlausibleWeb do
@@ -80,11 +84,6 @@ defmodule PlausibleWeb.Router do
     delete "/:website", SiteController, :delete_site
 
     get "/:website/*path", StatsController, :stats
-    get "/:domain/referrers", StatsController, :referrers
-    get "/:domain/pages", StatsController, :pages
-    get "/:domain/countries", StatsController, :countries
-    get "/:domain/operating-systems", StatsController, :operating_systems
-    get "/:domain/browsers", StatsController, :browsers
   end
 
   def assign_device_id(conn, _opts) do

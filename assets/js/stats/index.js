@@ -25,26 +25,35 @@ function fetchModal(modal, path) {
 
 const router = new Router()
 
+function showModal(domain, endpoint) {
+  m.showModal({
+    onShow: function(modal) {
+      fetchModal(modal, endpoint)
+    },
+    onClose: function() {
+      router.navigate('/' + domain)
+    }
+  })
+}
+
 router
   .on('/:domain/referrers/:referrer', function(params) {
-    m.showModal({
-      onShow: function(modal) {
-        fetchModal(modal, `/api/${params.domain}/referrers/${params.referrer}`)
-      },
-      onClose: function() {
-        router.navigate('/' + params.domain)
-      }
-    })
+    showModal(params.domain, `/api/${params.domain}/referrers/${params.referrer}`)
   })
   .on('/:domain/referrers', function(params) {
-    m.showModal({
-      onShow: function(modal) {
-        fetchModal(modal, `/api/${params.domain}/referrers`)
-      },
-      onClose: function() {
-        router.navigate('/' + params.domain)
-      }
-    })
+    showModal(params.domain, `/api/${params.domain}/referrers`)
+  })
+  .on('/:domain/pages', function(params) {
+    showModal(params.domain, `/api/${params.domain}/pages`)
+  })
+  .on('/:domain/countries', function(params) {
+    showModal(params.domain, `/api/${params.domain}/countries`)
+  })
+  .on('/:domain/operating-systems', function(params) {
+    showModal(params.domain, `/api/${params.domain}/operating-systems`)
+  })
+  .on('/:domain/browsers', function(params) {
+    showModal(params.domain, `/api/${params.domain}/browsers`)
   })
   .on('/:domain', function() {
     m.ensureModalClosed()

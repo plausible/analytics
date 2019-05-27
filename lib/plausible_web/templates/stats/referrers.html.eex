@@ -8,7 +8,7 @@
   <div class="mt-8">
     <%= for {referrer, count} <- @top_referrers do %>
       <div class="flex items-center justify-between my-2">
-        <%= link(referrer, to: "/#{@site.domain}/referrers/#{referrer}", "data-pushstate": true) %>
+        <%= link(referrer, to: "/#{@site.domain}/referrers/#{referrer}", "data-pushstate": true, class: "hover:underline") %>
         <span><%= count %></span>
       </div>
       <%= bar(count, @top_referrers) %>
