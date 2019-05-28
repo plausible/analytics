@@ -13,7 +13,7 @@
         </p>
       <% {today, d} when d < today -> %>
         <p class="py-2">
-        Please select a plan and enter your billing info to get access to your stats.
+        Your free trial ended on <%= Timex.format!(d, "{Mshort} {D}")%>. To access your stats going forward, please select a plan and enter your billing info.
         </p>
     <% end %>
 

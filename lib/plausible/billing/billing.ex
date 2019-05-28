@@ -64,6 +64,14 @@ defmodule Plausible.Billing do
     end
   end
 
+  def needs_to_upgrade?(user) do
+    if trial_end_date(user) < Timex.today() do
+      !active_subscription_for(user.id)
+    else
+      false
+    end
+  end
+
   def coupon_for(user) do
     if was_beta_user(user) do
       "8FE5AF26"

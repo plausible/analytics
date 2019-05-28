@@ -44,17 +44,21 @@ defmodule PlausibleWeb.StatsController do
     site = Repo.get_by(Plausible.Site, domain: website)
 
     if site && current_user_can_access?(conn, site) do
-      has_pageviews = Repo.exists?(
-        from p in Plausible.Pageview,
-        where: p.hostname == ^website
-      )
-
-      if has_pageviews do
-        show_stats(conn, site)
+      if Plausible.Billing.needs_to_upgrade?(conn.assigns[:current_user]) do
+        redirect(conn, to: "/billing/upgrade")
       else
-        conn
-        |> assign(:skip_plausible_tracking, true)
-        |> render("waiting_first_pageview.html", site: site)
+        has_pageviews = Repo.exists?(
+          from p in Plausible.Pageview,
+          where: p.hostname == ^website
+        )
+
+        if has_pageviews do
+          show_stats(conn, site)
+        else
+          conn
+          |> assign(:skip_plausible_tracking, true)
+          |> render("waiting_first_pageview.html", site: site)
+        end
       end
     else
       render_error(conn, 404)
