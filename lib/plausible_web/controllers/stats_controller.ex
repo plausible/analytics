@@ -44,7 +44,8 @@ defmodule PlausibleWeb.StatsController do
     site = Repo.get_by(Plausible.Site, domain: website)
 
     if site && current_user_can_access?(conn, site) do
-      if Plausible.Billing.needs_to_upgrade?(conn.assigns[:current_user]) do
+      user = conn.assigns[:current_user]
+      if user && Plausible.Billing.needs_to_upgrade?(conn.assigns[:current_user]) do
         redirect(conn, to: "/billing/upgrade")
       else
         has_pageviews = Repo.exists?(
