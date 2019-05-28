@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         url: "http://www.example.com/",
         referrer: "https://www.indiehackers.com/page?query=param#hash",
-        uid: "321",
+        uid: UUID.uuid4(),
         new_visitor: true
       }
 
@@ -63,7 +63,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = Repo.one(Plausible.Pageview)
 
       assert pageview.referrer == "indiehackers.com/page"
-      assert pageview.raw_referrer == "https://www.indiehackers.com/page?query=param#hash",
+      assert pageview.raw_referrer == "https://www.indiehackers.com/page?query=param#hash"
     end
 
     test "bots and crawlers are ignored", %{conn: conn} do

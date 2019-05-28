@@ -41,7 +41,7 @@ defmodule Mix.Tasks.SendTrialNotifications do
             send_over_reminder(args, user)
           end
         _ ->
-          # noop
+          nil
       end
     end
 

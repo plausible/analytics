@@ -46,7 +46,8 @@ defmodule PlausibleWeb.Api.ExternalController do
         hostname: strip_www(uri.host),
         pathname: uri.path,
         user_agent: user_agent,
-        referrer: params["referrer"],
+        referrer: clean_referrer(params["referrer"]),
+        raw_referrer: params["referrer"],
         new_visitor: params["new_visitor"],
         screen_width: params["screen_width"],
         country_code: country_code,
@@ -61,6 +62,14 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
+  defp clean_referrer(referrer) do
+    uri = URI.parse(referrer)
+
+    if uri && uri.scheme in ["http", "https"] do
+      host = String.replace_prefix(uri.host, "www.", "")
+      host <> (uri.path || "")
+    end
+  end
 
   defp parse_body(conn) do
     {:ok, body, _conn} = Plug.Conn.read_body(conn)
