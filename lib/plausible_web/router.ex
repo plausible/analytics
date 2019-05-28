@@ -19,6 +19,7 @@ defmodule PlausibleWeb.Router do
   pipeline :api do
     plug :accepts, ["application/json"]
     plug :fetch_session
+    plug PlausibleWeb.AuthPlug
   end
 
   if Mix.env == :dev do
