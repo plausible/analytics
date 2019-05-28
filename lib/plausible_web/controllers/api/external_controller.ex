@@ -63,7 +63,9 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   defp clean_referrer(referrer) do
-    uri = URI.parse(referrer)
+    uri = if referrer do
+      URI.parse(referrer)
+    end
 
     if uri && uri.scheme in ["http", "https"] do
       host = String.replace_prefix(uri.host, "www.", "")
