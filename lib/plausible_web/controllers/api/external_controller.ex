@@ -46,15 +46,15 @@ defmodule PlausibleWeb.Api.ExternalController do
         hostname: strip_www(uri.host),
         pathname: uri.path,
         user_agent: user_agent,
-        referrer: clean_referrer(params["referrer"]),
-        raw_referrer: params["referrer"],
         new_visitor: params["new_visitor"],
         screen_width: params["screen_width"],
         country_code: country_code,
         user_id: params["uid"],
         operating_system: ua && os_name(ua),
         browser: ua && browser_name(ua),
-        referrer_source: ref && referrer_source(ref)
+        raw_referrer: params["referrer"],
+        referrer_source: ref && referrer_source(uri, ref),
+        referrer: ref && clean_referrer(params["referrer"])
       }
 
       Plausible.Pageview.changeset(%Plausible.Pageview{}, pageview_attrs)
@@ -101,10 +101,12 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp referrer_source(ref) do
+  defp referrer_source(uri, ref) do
     case ref.source do
-      :unknown -> clean_uri(ref.referer)
-      source -> source
+      :unknown ->
+        query_param_source(uri) || clean_uri(ref.referer)
+      source ->
+        source
     end
   end
 
@@ -114,4 +116,17 @@ defmodule PlausibleWeb.Api.ExternalController do
       String.replace_leading(uri.host, "www.", "")
     end
   end
+
+  @source_query_params ["ref", "utm_source", "source"]
+
+  defp query_param_source(uri) do
+    if uri && uri.query do
+      Enum.find_value(URI.query_decoder(uri.query), fn {key, val} ->
+        if Enum.member?(@source_query_params, key) do
+          val
+        end
+      end)
+    end
+  end
+
 end

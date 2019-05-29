@@ -48,24 +48,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.hostname == "example.com"
     end
 
-    test "referrer is cleaned", %{conn: conn} do
-      params = %{
-        url: "http://www.example.com/",
-        referrer: "https://www.indiehackers.com/page?query=param#hash",
-        uid: UUID.uuid4(),
-        new_visitor: true
-      }
-
-      conn
-      |> put_req_header("content-type", "text/plain")
-      |> post("/api/page", Jason.encode!(params))
-
-      pageview = Repo.one(Plausible.Pageview)
-
-      assert pageview.referrer == "indiehackers.com/page"
-      assert pageview.raw_referrer == "https://www.indiehackers.com/page?query=param#hash"
-    end
-
     test "bots and crawlers are ignored", %{conn: conn} do
       params = %{
         url: "http://www.example.com/",
@@ -156,6 +138,58 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == ""
       assert pageview.referrer_source == "blog.gigride.live"
+    end
+
+    test "referrer is cleaned", %{conn: conn} do
+      params = %{
+        url: "http://www.example.com/",
+        referrer: "https://www.indiehackers.com/page?query=param#hash",
+        uid: UUID.uuid4(),
+        new_visitor: true
+      }
+
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> post("/api/page", Jason.encode!(params))
+
+      pageview = Repo.one(Plausible.Pageview)
+
+      assert pageview.referrer == "indiehackers.com/page"
+      assert pageview.raw_referrer == "https://www.indiehackers.com/page?query=param#hash"
+    end
+
+    test "?ref= query param controls the referrer source", %{conn: conn} do
+      params = %{
+        url: "http://www.example.com/?wat=wet&ref=traffic-source",
+        referrer: "https://www.indiehackers.com/page",
+        uid: UUID.uuid4(),
+        new_visitor: true
+      }
+
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> post("/api/page", Jason.encode!(params))
+
+      pageview = Repo.one(Plausible.Pageview)
+
+      assert pageview.referrer_source == "traffic-source"
+    end
+
+    test "?utm_source= query param controls the referrer source", %{conn: conn} do
+      params = %{
+        url: "http://www.example.com/?wat=wet&utm_source=traffic-source",
+        referrer: "https://www.indiehackers.com/page",
+        uid: UUID.uuid4(),
+        new_visitor: true
+      }
+
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> post("/api/page", Jason.encode!(params))
+
+      pageview = Repo.one(Plausible.Pageview)
+
+      assert pageview.referrer_source == "traffic-source"
     end
 
     test "ignores pageviews from a user blacklist", %{conn: conn} do
