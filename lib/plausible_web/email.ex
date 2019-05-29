@@ -41,6 +41,7 @@ defmodule PlausibleWeb.Email do
   def trial_two_week_reminder(user) do
     new_email()
     |> to(user)
+    |> bcc("uku@plausible.io")
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("trial-two-week-reminder")
     |> subject("14 days left on your Plausible trial")
@@ -50,6 +51,7 @@ defmodule PlausibleWeb.Email do
   def trial_upgrade_email(user, day, pageviews) do
     new_email()
     |> to(user)
+    |> bcc("uku@plausible.io")
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("trial-upgrade-email")
     |> subject("Your Plausible trial ends #{day}")
