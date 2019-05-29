@@ -51,7 +51,7 @@
       var existingUid = getCookie('nm_uid');
       var uid = existingUid || pseudoUUIDv4();
 
-      var url = window.location.protocol + '//' + window.location.hostname + window.location.pathname;
+      var url = window.location.protocol + '//' + window.location.hostname + window.location.pathname + window.location.search;
       var postBody = {
         url: url,
         new_visitor: !existingUid,
