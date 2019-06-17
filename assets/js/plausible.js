@@ -95,7 +95,10 @@
       });
     }
 
-    page()
+    var isDisabled = window.localStorage.disablePlausibleTracking
+    if (isDisabled !== "true" && isDisabled !== true) {
+      page()
+    }
   } catch (e) {
     var url = apiHost + '/api/error';
     if (e && e.message) url = url + '?message=' + encodeURIComponent(e.message);
