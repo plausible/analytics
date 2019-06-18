@@ -6,6 +6,7 @@ defmodule Plausible.Site do
   schema "sites" do
     field :domain, :string
     field :timezone, :string
+    field :public, :boolean
 
     many_to_many :members, User, join_through: Plausible.Site.Membership
 
@@ -18,6 +19,14 @@ defmodule Plausible.Site do
     |> validate_required([:domain, :timezone])
     |> unique_constraint(:domain)
     |> clean_domain
+  end
+
+  def make_public(site) do
+    change(site, public: true)
+  end
+
+  def make_private(site) do
+    change(site, public: false)
   end
 
   defp clean_domain(changeset) do

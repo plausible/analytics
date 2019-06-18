@@ -68,6 +68,26 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/")
   end
 
+  def make_public(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    |> Plausible.Site.make_public
+    |> Repo.update!
+
+    conn
+    |> put_flash(:success, "Congrats! Stats for #{site.domain} are now public.")
+    |> redirect(to: "/" <> site.domain <> "/settings")
+  end
+
+  def make_private(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    |> Plausible.Site.make_private
+    |> Repo.update!
+
+    conn
+    |> put_flash(:success, "Stats for #{site.domain} are now private.")
+    |> redirect(to: "/" <> site.domain <> "/settings")
+  end
+
   defp insert_site(user_id, params) do
     site_changeset = Plausible.Site.changeset(%Plausible.Site{}, params)
 

@@ -88,6 +88,28 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
+  describe "POST /sites/:website/make-public" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "makes the site public", %{conn: conn, site: site} do
+      post(conn, "/sites/#{site.domain}/make-public")
+
+      updated = Repo.get(Plausible.Site, site.id)
+      assert updated.public
+    end
+  end
+
+  describe "POST /sites/:website/make-private" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "makes the site private", %{conn: conn, site: site} do
+      post(conn, "/sites/#{site.domain}/make-private")
+
+      updated = Repo.get(Plausible.Site, site.id)
+      refute updated.public
+    end
+  end
+
   describe "DELETE /:website" do
     setup [:create_user, :log_in, :create_site]
 

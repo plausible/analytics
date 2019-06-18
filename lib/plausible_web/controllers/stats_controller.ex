@@ -5,7 +5,6 @@ defmodule PlausibleWeb.StatsController do
 
   defp show_stats(conn, site) do
     demo = site.domain == "plausible.io"
-
     {conn, period_params} = fetch_period(conn, site)
 
     Plausible.Tracking.event(conn, "Site Analytics: Open", %{demo: demo})
@@ -150,7 +149,7 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  defp current_user_can_access?(_conn, %Plausible.Site{domain: "plausible.io"}) do
+  defp current_user_can_access?(_conn, %Plausible.Site{public: true}) do
     true
   end
 

@@ -4,11 +4,11 @@ defmodule PlausibleWeb.StatsControllerTest do
   import Plausible.TestUtils
 
   describe "as an anonymous visitor" do
-    test "plausible.io - shows site stats", %{conn: conn} do
-      insert(:site, domain: "plausible.io")
-      insert(:pageview, hostname: "plausible.io")
+    test "public site - shows site stats", %{conn: conn} do
+      insert(:site, domain: "public-site.io", public: true)
+      insert(:pageview, hostname: "public-site.io")
 
-      conn = get(conn, "/plausible.io")
+      conn = get(conn, "/public-site.io")
       assert html_response(conn, 200) =~ "Top Pages"
     end
 
