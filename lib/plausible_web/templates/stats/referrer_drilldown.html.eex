@@ -8,7 +8,11 @@
   <div class="mt-8">
     <%= for {one_referrer, count} <- @referrers do %>
       <div class="flex items-center justify-between my-2">
-        <span><%= link(one_referrer, to: "//" <> one_referrer, target: "_blank", class: "hover:underline") %></span>
+        <%= if one_referrer do %>
+          <span><%= link(one_referrer, to: "//" <> one_referrer, target: "_blank", class: "hover:underline") %></span>
+        <% else %>
+          <span>unknown</span>
+        <% end %>
         <span><%= count %></span>
       </div>
       <%= bar(count, @referrers) %>

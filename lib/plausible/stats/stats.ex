@@ -60,7 +60,7 @@ defmodule Plausible.Stats do
 
   def referrer_drilldown(site, query, referrer) do
     Repo.all(from p in base_query(site, query),
-      select: {p.referrer, count(p.referrer)},
+      select: {p.referrer, count(p)},
       group_by: p.referrer,
       where: p.new_visitor == true and p.referrer_source == ^referrer,
       order_by: [desc: 2],

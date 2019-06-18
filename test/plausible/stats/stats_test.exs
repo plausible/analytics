@@ -104,6 +104,62 @@ defmodule Plausible.StatsTest do
     end
   end
 
+  describe "referrer_drilldown" do
+    test "shows grouped counts of referrers" do
+      site = insert(:site)
+
+      insert(:pageview, %{
+        hostname: site.domain,
+        referrer: "10words.io/somepage",
+        referrer_source: "10words",
+        new_visitor: true
+      })
+
+      insert(:pageview, %{
+        hostname: site.domain,
+        referrer: "10words.io/somepage",
+        referrer_source: "10words",
+        new_visitor: true
+      })
+
+      insert(:pageview, %{
+        hostname: site.domain,
+        referrer: "10words.io/some_other_page",
+        referrer_source: "10words",
+        new_visitor: true
+      })
+
+      query = Stats.Query.from("UTC", %{"period" => "day"})
+      drilldown = Stats.referrer_drilldown(site, query, "10words")
+
+      assert {"10words.io/somepage", 2} in drilldown
+      assert {"10words.io/some_other_page", 1} in drilldown
+    end
+
+    test "counts nil values as a group" do
+      site = insert(:site)
+
+      insert(:pageview, %{
+        hostname: site.domain,
+        referrer: nil,
+        referrer_source: "10words",
+        new_visitor: true
+      })
+
+      insert(:pageview, %{
+        hostname: site.domain,
+        referrer: nil,
+        referrer_source: "10words",
+        new_visitor: true
+      })
+
+      query = Stats.Query.from("UTC", %{"period" => "day"})
+      drilldown = Stats.referrer_drilldown(site, query, "10words")
+
+      assert {nil, 2} in drilldown
+    end
+  end
+
   defp months_ago(months) do
     Timex.now() |> Timex.shift(months: -months)
   end
