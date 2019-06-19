@@ -38,7 +38,7 @@
       Stats for <%= @site.domain %> are currently <b>public</b>. Anyone with the following link can view the stats:
     <div class="w-full md:w-2/3">
       <input type="text" id="public-link" value="https://plausible.io/<%= @site.domain  %>" class="transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:border-grey-light mt-4" />
-    <a onclick="var input = document.getElementById('public-link'); inpu.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="no-underline text-blue text-sm hover:underline">Copy to clipboard</a>
+    <a onclick="var input = document.getElementById('public-link'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="no-underline text-blue text-sm hover:underline">Copy to clipboard</a>
     </div>
     <%= button("Make stats private", to: "/sites/#{@site.domain}/make-private", method: "POST", class: "button mt-8") %>
   <% else %>
