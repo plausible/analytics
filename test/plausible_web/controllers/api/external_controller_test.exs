@@ -121,6 +121,25 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.referrer_source == nil
     end
 
+    test "ignores localhost referrer", %{conn: conn} do
+      params = %{
+        url: "http://gigride.live/",
+        referrer: "http://localhost:4000/",
+        new_visitor: true,
+        uid: UUID.uuid4()
+      }
+
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/page", Jason.encode!(params))
+
+      pageview = Repo.one(Plausible.Pageview)
+
+      assert response(conn, 202) == ""
+      assert pageview.referrer_source == nil
+    end
+
     test "parses subdomain referrer", %{conn: conn} do
       params = %{
         url: "http://gigride.live/",
