@@ -1,13 +1,13 @@
 defmodule Plausible.TestUtils do
   use Plausible.Repo
-  import Plausible.Factory
+  alias Plausible.Factory
 
   def create_user(_) do
-    {:ok, user: insert(:user)}
+    {:ok, user: Factory.insert(:user)}
   end
 
   def create_site(%{user: user}) do
-    site = insert(:site)
+    site = Factory.insert(:site)
     Plausible.Site.Membership.changeset(%Plausible.Site.Membership{}, %{site_id: site.id, user_id: user.id}) |> Repo.insert!
     {:ok, site: site}
   end

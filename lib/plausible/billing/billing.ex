@@ -1,6 +1,7 @@
 defmodule Plausible.Billing do
   use Plausible.Repo
   alias Plausible.Billing.{Subscription, Plans, PaddleApi}
+  @paddle_api Application.fetch_env!(:plausible, :paddle_api)
 
   def active_subscription_for(user_id) do
     Repo.get_by(Subscription, user_id: user_id, status: "active")
@@ -37,9 +38,12 @@ defmodule Plausible.Billing do
     subscription = Repo.get_by(Subscription, paddle_subscription_id: params["subscription_id"])
 
     if subscription do
+      {:ok, api_subscription} = @paddle_api.get_subscription(subscription.paddle_subscription_id)
+      amount = :erlang.float_to_binary(api_subscription["next_payment"]["amount"] / 1, decimals: 2)
+
       changeset = Subscription.changeset(subscription, %{
-        next_bill_amount: params["unit_price"],
-        next_bill_date: params["next_bill_date"]
+        next_bill_amount: amount,
+        next_bill_date: api_subscription["next_payment"]["date"]
       })
 
       Repo.update(changeset)

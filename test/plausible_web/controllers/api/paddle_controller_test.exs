@@ -91,15 +91,13 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
 
       conn = post(conn, "/api/paddle/webhook", %{
         "alert_name" => "subscription_payment_succeeded",
-        "subscription_id" => subscription.paddle_subscription_id,
-        "next_bill_date" => Timex.shift(Timex.today(), days: 30),
-        "unit_price" => "12.00"
+        "subscription_id" => subscription.paddle_subscription_id
       })
 
       assert json_response(conn, 200) == ""
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
-      assert subscription.next_bill_date == Timex.shift(Timex.today(), days: 30)
-      assert subscription.next_bill_amount == "12.00"
+      assert subscription.next_bill_date == ~D[2019-07-10]
+      assert subscription.next_bill_amount == "6.00"
     end
 
     test "ignores if the subscription cannot be found", %{conn: conn} do

@@ -22,3 +22,6 @@ config :plausible, Plausible.Repo,
 
 config :plausible, Plausible.Mailer,
   adapter: Bamboo.TestAdapter
+
+config :plausible,
+  paddle_api: Plausible.PaddleApi.Mock
