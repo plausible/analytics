@@ -24,6 +24,10 @@
   @apply text-sm py-2 px-4;
 }
 
+.button-md {
+  @apply py-2 px-4;
+}
+
 html {
   @apply font-sans text-grey-darkest;
 }

@@ -42,6 +42,7 @@
         <ul class="list-reset flex">
           <li>
             <%= link("Login", to: "/login", class: "font-bold rounded py-2 px-3 hover:bg-grey-lighter", style: "line-height: 33px;") %>
+            <%= link("Start free trial", to: "/register", class: "button button-md hidden sm:inline") %>
           </li>
         </ul>
       <% end %>

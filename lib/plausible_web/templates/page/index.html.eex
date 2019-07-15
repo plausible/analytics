@@ -46,8 +46,8 @@
       <p class="font-normal text-grey-darker text-lg lg:text-2xl mt-3 leading-tight font-medium">
         Plausible is a lightweight, non-intrusive alternative to Google Analytics
       </p>
-      <%= link("View live demo", to: "/plausible.io", class: "button button-outline w-full sm:w-auto mt-12 mr-2") %>
-      <%= link("Start free trial →", to: "/register", class: "button w-full sm:w-auto mt-6 md:mt-0") %>
+      <%= link("Start free trial", to: "/register", class: "button w-full sm:w-auto mt-6 mr-2") %>
+      <%= link("View live demo", to: "/plausible.io", class: "button button-outline w-full sm:w-auto mt-4 md:mt-0") %>
     </section>
   </div>
   <div class="pt-12 lg:pt-24"></div>
