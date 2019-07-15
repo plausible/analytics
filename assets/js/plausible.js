@@ -2,7 +2,7 @@
   'use strict';
 
   if (window.PLAUSIBLE_LOCK) {
-    console.warn('Looksl like the Plausible script has been included multiple times on this website. Unexpected behaviour may happen.')
+    console.warn('Looks like the Plausible script has been included multiple times on this website. Unexpected behaviour may happen.')
     return null
   } else {
     window.PLAUSIBLE_LOCK = true
