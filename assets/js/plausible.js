@@ -1,15 +1,19 @@
 (function(window, apiHost){
   'use strict';
 
+  if (window.PLAUSIBLE_LOCK) {
+    console.warn('Looksl like the Plausible script has been included multiple times on this website. Unexpected behaviour may happen.')
+    return null
+  } else {
+    window.PLAUSIBLE_LOCK = true
+  };
+
   try {
-    function setCookie(name,value,minutes) {
-        var expires = "";
-        if (minutes) {
-            var date = new Date();
-            date.setTime(date.getTime() + (minutes*60*1000));
-            expires = "; expires=" + date.toUTCString();
-        }
-        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+    function setCookie(name,value) {
+      var date = new Date();
+      date.setTime(date.getTime() + (3*365*24*60*60*1000)); // 3 YEARS
+      var expires = "; expires=" + date.toUTCString();
+      document.cookie = name + "=" + (value || "")  + expires + "; path=/";
     }
 
     function getCookie(name) {
@@ -100,10 +104,7 @@
       });
     }
 
-    var isDisabled = window.localStorage.disablePlausibleTracking
-    if (isDisabled !== "true" && isDisabled !== true) {
-      page()
-    }
+    page()
   } catch (e) {
     var url = apiHost + '/api/error';
     if (e && e.message) url = url + '?message=' + encodeURIComponent(e.message);
