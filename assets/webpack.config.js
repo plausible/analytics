@@ -15,6 +15,7 @@ module.exports = (env, options) => ({
   },
   entry: {
       'app': ['./js/app.js'],
+      'p': ['./js/p.js'],
       'analytics': ['./js/plausible.js'],
       'plausible': ['./js/plausible.js']
   },
