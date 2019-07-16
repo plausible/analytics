@@ -1,0 +1,50 @@
+<header class="modal__header">
+  <a href="/<%= @site.domain %>/referrers" data-pushstate><h1>Referrers > Google</h1></a>
+  <button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
+</header>
+<div class="my-4 border-b border-grey-light"></div>
+<main class="modal__content mt-0">
+  <h3><%= @total_visitors %> new visitors from Google</h3>
+  <h4 class="mt-8">Google Search performance</h4>
+  <div class="text-xs text-grey-darker">The following comes directly from Google Search Console. It may not match exactly with visitor numbers from Plausible, and there can be inconsistencies in the data. <%= link("Read more", to: "https://support.google.com/webmasters/answer/7576553#data_discrepancies", class: "text-indigo") %></div>
+  <div class="w-full block md:flex items-start justify-between mt-2">
+    <div class="w-full md:w-64 rounded-l mt-2 py-6 px-2 text-center border border-grey-light md:border-r-0">
+      <b class="text-2xl font-black"><%= clean_number(@overall_performance["position"]) %></b>
+      <div class="text-grey-dark text-sm font-bold mt-2 tracking-wide">AVERAGE POSITION</div>
+    </div>
+    <div class="w-full md:w-64 mt-2 py-6 px-2 text-center border border-grey-light md:border-r-0">
+      <b class="text-2xl font-black"><%= clean_number(@overall_performance["impressions"]) %></b>
+      <div class="text-grey-dark text-sm font-bold mt-2 tracking-wide">TOTAL IMPRESSIONS</div>
+    </div>
+    <div class="w-full md:w-64 mt-2 py-6 px-2 text-center border border-grey-light md:border-r-0">
+      <b class="text-2xl font-black"><%= clean_number(@overall_performance["clicks"]) %></b>
+      <div class="text-grey-dark text-sm font-bold mt-2 tracking-wide">TOTAL CLICKS</div>
+    </div>
+    <div class="w-full md:w-64 rounded-r mt-2 py-6 px-2 text-center border border-grey-light">
+      <b class="text-2xl font-black"><%= to_percentage(@overall_performance["ctr"]) %></b>
+      <div class="text-grey-dark text-sm font-bold mt-2 tracking-wide">AVERAGE CTR</div>
+    </div>
+  </div>
+  <table class="mt-8 w-full text-left border-collapse">
+    <thead class="my-2">
+      <tr class="text-sm font-bold text-grey-darker">
+        <th class="py-3">Search term</th>
+        <th class="text-right py-3">Avg. Position</th>
+        <th class="text-right py-3">Impressions</th>
+        <th class="text-right py-3">Clicks</th>
+        <th class="text-right py-3">CTR</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= for kw <- @keywords do %>
+        <tr class="relative border-t border-grey-light">
+          <td class="py-3"><%= kw["keys"] %></td>
+          <td class="text-right py-3"><%= clean_number(kw["position"], 1) %></td>
+          <td class="text-right py-3"><%= clean_number(kw["impressions"]) %></td>
+          <td class="text-right py-3"><%= clean_number(kw["clicks"]) %></td>
+          <td class="text-right py-3"><%= to_percentage(kw["ctr"], 1) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</main>
