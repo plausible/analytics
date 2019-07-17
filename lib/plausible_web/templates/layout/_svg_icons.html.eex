@@ -9,5 +9,9 @@
       <path d="M5,49.898h24.839C29.646,63.563,18.637,74.65,5,74.958v14.163c21.447-0.31,38.816-17.748,39.011-39.223h0.01v-0.361V10.879  H5V49.898z"/>
       <path d="M55.98,10.879v39.02h24.839C80.625,63.563,69.617,74.65,55.98,74.958v14.163c21.447-0.31,38.816-17.748,39.011-39.223H95  v-0.361V10.879H55.98z"/>
     </symbol>
+
+    <symbol id="feather-chevron-down" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </symbol>
   </defs>
 </svg>

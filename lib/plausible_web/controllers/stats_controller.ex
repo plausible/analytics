@@ -85,8 +85,8 @@ defmodule PlausibleWeb.StatsController do
     if site && current_user_can_access?(conn, site) do
       {conn, period_params} = fetch_period(conn, site)
       query = Stats.Query.from(site.timezone, period_params)
-      {:ok, keywords} = Plausible.Stats.GoogleSearchConsole.fetch_queries(site.domain)
-      {:ok, overall_performance} = Plausible.Stats.GoogleSearchConsole.fetch_totals(site.domain)
+      {:ok, keywords} = Plausible.Stats.GoogleSearchConsole.fetch_queries(site.domain, query)
+      {:ok, overall_performance} = Plausible.Stats.GoogleSearchConsole.fetch_totals(site.domain, query)
       total_visitors = Stats.visitors_from_referrer(site, query, "Google")
       max_clicks = Enum.max_by(keywords, fn kw -> kw["clicks"] end)["clicks"]
       render(conn, "google_referrer.html",
