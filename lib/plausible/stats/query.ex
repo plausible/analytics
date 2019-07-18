@@ -1,5 +1,5 @@
 defmodule Plausible.Stats.Query do
-  defstruct [date_range: nil, step_type: nil]
+  defstruct [date_range: nil, step_type: nil, period: nil]
 
   def new(attrs) do
     attrs
@@ -18,6 +18,7 @@ defmodule Plausible.Stats.Query do
     start_date = Timex.shift(today(tz), days: -7)
 
     %__MODULE__{
+      period: "week",
       date_range: Date.range(start_date, today(tz)),
       step_type: "date"
     }
@@ -27,6 +28,7 @@ defmodule Plausible.Stats.Query do
     start_date = Timex.shift(today(tz), days: -30)
 
     %__MODULE__{
+      period: "month",
       date_range: Date.range(start_date, today(tz)),
       step_type: "date"
     }
@@ -36,6 +38,7 @@ defmodule Plausible.Stats.Query do
     start_date = Timex.shift(today(tz), months: -3)
 
     %__MODULE__{
+      period: "3mo",
       date_range: Date.range(start_date, today(tz)),
       step_type: "date"
     }
@@ -47,6 +50,7 @@ defmodule Plausible.Stats.Query do
     date_range = Date.range(start_date, end_date)
 
     %__MODULE__{
+      period: "custom",
       date_range: date_range,
       step_type: "date"
     }

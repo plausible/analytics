@@ -1,11 +1,12 @@
 <header class="modal__header">
-  <a href="/<%= @site.domain %>/referrers" data-pushstate><h1>Referrers > Google</h1></a>
+  <a href="/<%= @site.domain %>/referrers" data-pushstate><div class="font-bold text-grey-darker">&larr; All referrers</div></a>
   <button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
 </header>
 <div class="my-4 border-b border-grey-light"></div>
 <main class="modal__content mt-0">
-  <h3><%= @total_visitors %> new visitors from Google</h3>
-  <h4 class="mt-8">Google Search performance</h4>
+  <h1><%= @total_visitors %> new visitors from Google</h1>
+  <h1 class="text-grey-darker" style="transform: translateY(-1rem);">in the last month</h1>
+  <h3 class="mt-4">Google Search performance</h3>
   <div class="text-xs text-grey-darker">The following comes directly from Google Search Console. It may not match exactly with visitor numbers from Plausible, and there can be inconsistencies in the data. <%= link("Read more", to: "https://support.google.com/webmasters/answer/7576553#data_discrepancies", class: "text-indigo") %></div>
   <div class="w-full block md:flex items-start justify-between mt-2">
     <div class="w-full md:w-64 rounded-l mt-2 py-6 px-2 text-center border border-grey-light md:border-r-0">

@@ -9,6 +9,18 @@ defmodule PlausibleWeb.StatsView do
     """
   end
 
+  def timeframe_to_human(query) do
+    case query.period do
+      "day" ->
+        "today"
+      "week" ->
+        "in the last week"
+      "month" ->
+        "in the last month"
+      "custom" ->
+    end
+  end
+
   defp bar_width(count, all) do
     max = Enum.max_by(all, fn {_, count} -> count end) |> elem(1)
     count / max * 100

@@ -22,8 +22,8 @@ defmodule Plausible.Stats.GoogleSearchConsole do
   def fetch_totals(domain, query) do
     with_https = URI.encode_www_form("https://#{domain}")
     res = HTTPoison.post!("https://www.googleapis.com/webmasters/v3/sites/#{with_https}/searchAnalytics/query", Jason.encode!(%{
-      startDate: "2019-06-16",
-      endDate: "2019-07-16"
+      startDate: Date.to_iso8601(query.date_range.first),
+      endDate: Date.to_iso8601(query.date_range.last),
     }), ["Content-Type": "application/json", "Authorization": "Bearer #{@access_token}"])
     case res.status_code do
       200 ->

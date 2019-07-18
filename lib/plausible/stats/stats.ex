@@ -60,7 +60,7 @@ defmodule Plausible.Stats do
 
   def visitors_from_referrer(site, query, referrer) do
     Repo.one(from p in base_query(site, query),
-      select: count(p.user_id),
+      select: count(p),
       where: p.new_visitor == true and p.referrer_source == ^referrer
     )
   end

@@ -1,11 +1,12 @@
 <header class="modal__header">
-  <a href="/<%= @site.domain %>/referrers" data-pushstate><h1>Referrers > <%= @referrer %></h1></a>
+  <a href="/<%= @site.domain %>/referrers" data-pushstate><div class="font-bold text-grey-darker">&larr; All referrers</div></a>
   <button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
 </header>
-<div class="text-grey-darker text-lg ml-1 mt-1">by new visitors</div>
 <div class="my-4 border-b border-grey-light"></div>
-<main class="modal__content">
-  <div class="mt-8">
+<main class="modal__content mt-0">
+  <h1><%= @total_visitors %> new visitors from <%= @referrer %></h1>
+  <h1 class="text-grey-darker" style="transform: translateY(-1rem);"><%= timeframe_to_human(@query) %></h1>
+  <div class="mt-4">
     <%= for {one_referrer, count} <- @referrers do %>
       <div class="flex items-center justify-between my-2">
         <%= if one_referrer do %>

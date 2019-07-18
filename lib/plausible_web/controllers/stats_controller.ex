@@ -88,14 +88,13 @@ defmodule PlausibleWeb.StatsController do
       {:ok, keywords} = Plausible.Stats.GoogleSearchConsole.fetch_queries(site.domain, query)
       {:ok, overall_performance} = Plausible.Stats.GoogleSearchConsole.fetch_totals(site.domain, query)
       total_visitors = Stats.visitors_from_referrer(site, query, "Google")
-      max_clicks = Enum.max_by(keywords, fn kw -> kw["clicks"] end)["clicks"]
       render(conn, "google_referrer.html",
         layout: false,
         site: site,
         keywords: keywords,
         total_visitors: total_visitors,
         overall_performance: overall_performance,
-        max_clicks: max_clicks
+        query: query
       )
     else
       render_error(conn, 404)
@@ -109,8 +108,9 @@ defmodule PlausibleWeb.StatsController do
       {conn, period_params} = fetch_period(conn, site)
       query = Stats.Query.from(site.timezone, period_params)
       referrers = Stats.referrer_drilldown(site, query, referrer)
+      total_visitors = Stats.visitors_from_referrer(site, query, referrer)
 
-      render(conn, "referrer_drilldown.html", layout: false, site: site, referrers: referrers, referrer: referrer)
+      render(conn, "referrer_drilldown.html", layout: false, site: site, referrers: referrers, referrer: referrer, total_visitors: total_visitors, query: query)
     else
       render_error(conn, 404)
     end
