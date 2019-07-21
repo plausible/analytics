@@ -191,4 +191,26 @@ defmodule PlausibleWeb.AuthController do
     |> configure_session(drop: true)
     |> redirect(to: "/")
   end
+
+  def google_auth_callback(conn, params) do
+    %{"code" => code, "state" => site_id} = params
+
+    if code && site_id do
+      res = Plausible.Stats.GoogleSearchConsole.fetch_access_token(code)
+
+      google_auth = Plausible.Site.GoogleAuth.changeset(%Plausible.Site.GoogleAuth{}, %{
+        refresh_token: res["refresh_token"],
+        access_token: res["access_token"],
+        expires: NaiveDateTime.utc_now() |> NaiveDateTime.add(res["expires_in"]),
+        site_id: site_id,
+        user_id: conn.assigns[:current_user].id
+      }) |> Repo.insert!
+
+      site = Repo.get(Plausible.Site, site_id)
+
+      redirect(conn, to: "/#{site.domain}/settings#google-auth")
+    else
+      render_error(conn, 500, "Someting went wrong. Please try again or contact support.")
+    end
+  end
 end

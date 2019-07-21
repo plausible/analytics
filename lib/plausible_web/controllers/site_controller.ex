@@ -33,10 +33,11 @@ defmodule PlausibleWeb.SiteController do
 
   def settings(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    google_auth = Repo.get_by(Plausible.Site.GoogleAuth, site_id: site.id)
     changeset = Plausible.Site.changeset(site, %{})
     conn
     |> assign(:skip_plausible_tracking, true)
-    |> render("settings.html", site: site, changeset: changeset)
+    |> render("settings.html", site: site, google_auth: google_auth, changeset: changeset)
   end
 
   def update_settings(conn, %{"website" => website, "site" => site_params}) do

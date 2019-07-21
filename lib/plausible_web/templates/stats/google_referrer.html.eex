@@ -6,23 +6,24 @@
 <main class="modal__content mt-0">
   <h1><%= @total_visitors %> new visitors from Google</h1>
   <h1 class="text-grey-darker" style="transform: translateY(-1rem);">in the last month</h1>
-  <h3 class="mt-4">Google Search performance</h3>
+  <h3 class="mt-4">Search terms</h3>
+  <%= if @google_stats do %>
   <div class="text-xs text-grey-darker">The following comes directly from Google Search Console. It may not match exactly with visitor numbers from Plausible, and there can be inconsistencies in the data. <%= link("Read more", to: "https://support.google.com/webmasters/answer/7576553#data_discrepancies", class: "text-indigo") %></div>
   <div class="w-full block md:flex items-start justify-between mt-2">
     <div class="w-full md:w-64 rounded-l mt-2 py-6 px-2 text-center border border-grey-light md:border-r-0">
-      <b class="text-2xl font-black"><%= clean_number(@overall_performance["clicks"]) %></b>
+      <b class="text-2xl font-black"><%= clean_number(@google_stats["clicks"]) %></b>
       <div class="text-grey-dark text-sm font-bold mt-2 tracking-wide">TOTAL CLICKS</div>
     </div>
     <div class="w-full md:w-64 mt-2 py-6 px-2 text-center border border-grey-light md:border-r-0">
-      <b class="text-2xl font-black"><%= clean_number(@overall_performance["impressions"]) %></b>
+      <b class="text-2xl font-black"><%= clean_number(@google_stats["impressions"]) %></b>
       <div class="text-grey-dark text-sm font-bold mt-2 tracking-wide">TOTAL IMPRESSIONS</div>
     </div>
     <div class="w-full md:w-64 mt-2 py-6 px-2 text-center border border-grey-light md:border-r-0">
-      <b class="text-2xl font-black"><%= to_percentage(@overall_performance["ctr"]) %></b>
+      <b class="text-2xl font-black"><%= to_percentage(@google_stats["ctr"]) %></b>
       <div class="text-grey-dark text-sm font-bold mt-2 tracking-wide">AVERAGE CTR</div>
     </div>
     <div class="w-full md:w-64 rounded-r mt-2 py-6 px-2 text-center border border-grey-light">
-      <b class="text-2xl font-black"><%= clean_number(@overall_performance["position"]) %></b>
+      <b class="text-2xl font-black"><%= clean_number(@google_stats["position"]) %></b>
       <div class="text-grey-dark text-sm font-bold mt-2 tracking-wide">AVERAGE POSITION</div>
     </div>
   </div>
@@ -40,15 +41,19 @@
       </tr>
     </thead>
     <tbody>
-      <%= for kw <- @keywords do %>
+      <%= for term <- @google_stats[:search_terms] do %>
         <tr class="relative border-t border-grey-light">
-          <td class="py-3"><%= kw["keys"] %></td>
-          <td class="text-center py-3"><%= clean_number(kw["clicks"]) %></td>
-          <td class="text-center py-3"><%= clean_number(kw["impressions"]) %></td>
-          <td class="text-center py-3"><%= to_percentage(kw["ctr"], 1) %></td>
-          <td class="text-center py-3"><%= clean_number(kw["position"], 1) %></td>
+          <td class="py-3"><%= term["keys"] %></td>
+          <td class="text-center py-3"><%= clean_number(term["clicks"]) %></td>
+          <td class="text-center py-3"><%= clean_number(term["impressions"]) %></td>
+          <td class="text-center py-3"><%= to_percentage(term["ctr"], 1) %></td>
+          <td class="text-center py-3"><%= clean_number(term["position"], 1) %></td>
         </tr>
       <% end %>
     </tbody>
   </table>
+  <% else %>
+    <div>Please link your google account to see the search terms your visitors have used to find your website</div>
+    <%= link("Connect with Google", to: "/" <> @site.domain <> "/settings#google-auth", class: "button mt-4") %>
+  <% end %>
 </main>

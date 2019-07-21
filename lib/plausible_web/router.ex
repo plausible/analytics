@@ -63,6 +63,8 @@ defmodule PlausibleWeb.Router do
     put "/settings", AuthController, :save_settings
     delete "/me", AuthController, :delete_me
 
+    get "/auth/google/callback", AuthController, :google_auth_callback
+
     get "/", PageController, :index
     get "/privacy", PageController, :privacy
     get "/terms", PageController, :terms

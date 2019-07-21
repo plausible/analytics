@@ -85,15 +85,15 @@ defmodule PlausibleWeb.StatsController do
     if site && current_user_can_access?(conn, site) do
       {conn, period_params} = fetch_period(conn, site)
       query = Stats.Query.from(site.timezone, period_params)
-      {:ok, keywords} = Plausible.Stats.GoogleSearchConsole.fetch_queries(site.domain, query)
-      {:ok, overall_performance} = Plausible.Stats.GoogleSearchConsole.fetch_totals(site.domain, query)
       total_visitors = Stats.visitors_from_referrer(site, query, "Google")
+      google_auth = Plausible.Repo.get_by(Plausible.Site.GoogleAuth, site_id: site.id)
+      google_stats = Stats.GoogleSearchConsole.fetch_stats(site, google_auth, query)
+
       render(conn, "google_referrer.html",
         layout: false,
         site: site,
-        keywords: keywords,
+        google_stats: google_stats,
         total_visitors: total_visitors,
-        overall_performance: overall_performance,
         query: query
       )
     else
