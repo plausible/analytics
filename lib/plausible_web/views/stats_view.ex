@@ -26,19 +26,6 @@ defmodule PlausibleWeb.StatsView do
     count / max * 100
   end
 
-  def clean_number(number, decimals \\ 2) do
-    if round(number) == number do
-      round(number)
-    else
-      :erlang.float_to_binary(number, decimals: decimals)
-    end
-  end
-
-  def to_percentage(n, decimal \\ 2) do
-    percent = clean_number(n * 100, decimal)
-    "#{percent}%"
-  end
-
   def icon_for("Mobile") do
     ~E"""
     <svg width="16px" height="16px" style="transform: translateY(3px)" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-smartphone"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>

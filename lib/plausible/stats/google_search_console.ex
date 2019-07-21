@@ -16,13 +16,8 @@ defmodule Plausible.Stats.GoogleSearchConsole do
   end
 
   def fetch_stats(site, auth, query) do
-    {:ok, overall_performance} = fetch_totals(site.domain, auth, query)
     {:ok, keywords} = fetch_queries(site.domain, auth, query)
-
-    Map.merge(
-      overall_performance,
-      %{search_terms: keywords}
-    )
+    %{search_terms: keywords}
   end
 
   defp fetch_queries(domain, auth, query) do
@@ -35,24 +30,12 @@ defmodule Plausible.Stats.GoogleSearchConsole do
     }), ["Content-Type": "application/json", "Authorization": "Bearer #{auth.access_token}"])
     case res.status_code do
       200 ->
-        {:ok, Jason.decode!(res.body)["rows"]}
-      401 ->
-        {:error, :invalid_credentials}
-      _ ->
-        {:error, :unknown}
-    end
-  end
+        terms = Jason.decode!(res.body)["rows"]
+                |> Enum.map(fn row ->
+                  {row["keys"], round(row["clicks"])}
+                end)
 
-  defp fetch_totals(domain, auth, query) do
-    with_https = URI.encode_www_form("https://#{domain}")
-    res = HTTPoison.post!("https://www.googleapis.com/webmasters/v3/sites/#{with_https}/searchAnalytics/query", Jason.encode!(%{
-      startDate: Date.to_iso8601(query.date_range.first),
-      endDate: Date.to_iso8601(query.date_range.last),
-    }), ["Content-Type": "application/json", "Authorization": "Bearer #{auth.access_token}"])
-    case res.status_code do
-      200 ->
-        [result] = Jason.decode!(res.body)["rows"]
-        {:ok, result}
+        {:ok, terms}
       401 ->
         {:error, :invalid_credentials}
       _ ->
