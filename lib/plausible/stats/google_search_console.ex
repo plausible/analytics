@@ -13,10 +13,6 @@ defmodule Plausible.Stats.GoogleSearchConsole do
     Jason.decode!(res.body)
   end
 
-  def fetch_stats(_site, nil, _query) do
-    nil
-  end
-
   def fetch_stats(site, auth, query) do
     if Timex.before?(auth.expires, Timex.now() |> Timex.shift(seconds: 5)) do
       auth = refresh_token(auth)
