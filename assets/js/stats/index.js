@@ -28,7 +28,7 @@ const router = new Router()
 function showModal(domain, endpoint) {
   m.showModal({
     onShow: function(modal) {
-      fetchModal(modal, endpoint)
+      fetchModal(modal, endpoint + window.location.search)
     },
     onClose: function() {
       router.navigate('/' + domain)

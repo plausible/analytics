@@ -9,6 +9,7 @@ defmodule Plausible.Stats.Query do
 
   def from(tz, %{"period" => "day"}) do
     %__MODULE__{
+      period: "day",
       date_range: Date.range(today(tz), today(tz)),
       step_type: "hour"
     }

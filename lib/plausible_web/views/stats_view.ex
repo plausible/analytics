@@ -20,6 +20,28 @@ defmodule PlausibleWeb.StatsView do
       "3mo" ->
         "in the last 3 months"
       "custom" ->
+        if query.date_range.last == Timex.today() do
+          "since #{Timex.format!(query.date_range.first, "{Mshort} {D}")}"
+        else
+          "from #{Timex.format!(query.date_range.first, "{Mshort} {D}")} to #{Timex.format!(query.date_range.last, "{Mshort} {D}")}"
+        end
+    end
+  end
+
+  def query_params(query) do
+    case query.period do
+      "day" ->
+        "?period=day"
+      "week" ->
+        "?period=week"
+      "month" ->
+        "?period=month"
+      "3mo" ->
+        "?period=3mo"
+      "custom" ->
+        from = Date.to_iso8601(query.date_range.first)
+        to = Date.to_iso8601(query.date_range.last)
+        "?period=custom&from=#{from}&to=#{to}"
     end
   end
 

@@ -21,7 +21,7 @@ defmodule PlausibleWeb.StatsController do
       labels: labels,
       pageviews: Stats.total_pageviews(site, query),
       unique_visitors: Stats.unique_visitors(site, query),
-      top_referrers: Stats.top_referrers(site, query) |> Enum.map(&(referrer_link(site, &1))),
+      top_referrers: Stats.top_referrers(site, query) |> Enum.map(&(referrer_link(site, &1, query))),
       top_pages: Stats.top_pages(site, query),
       top_screen_sizes: Stats.top_screen_sizes(site, query),
       countries: Stats.countries(site, query),
@@ -34,8 +34,8 @@ defmodule PlausibleWeb.StatsController do
     )
   end
 
-  defp referrer_link(site, {name, count}) do
-    link = "/#{site.domain}/referrers/#{name}"
+  defp referrer_link(site, {name, count}, query) do
+    link = "/#{site.domain}/referrers/#{name}" <> PlausibleWeb.StatsView.query_params(query)
     {{:link, name, link}, count}
   end
 
@@ -73,7 +73,7 @@ defmodule PlausibleWeb.StatsController do
       query = Stats.Query.from(site.timezone, period_params)
       referrers = Stats.top_referrers(site, query, 100)
 
-      render(conn, "referrers.html", layout: false, site: site, top_referrers: referrers)
+      render(conn, "referrers.html", layout: false, site: site, top_referrers: referrers, query: query)
     else
       render_error(conn, 404)
     end
@@ -108,7 +108,9 @@ defmodule PlausibleWeb.StatsController do
 
     if site && current_user_can_access?(conn, site) do
       {conn, period_params} = fetch_period(conn, site)
+      IO.inspect(period_params)
       query = Stats.Query.from(site.timezone, period_params)
+      IO.inspect(query)
       referrers = Stats.referrer_drilldown(site, query, referrer)
       total_visitors = Stats.visitors_from_referrer(site, query, referrer)
 

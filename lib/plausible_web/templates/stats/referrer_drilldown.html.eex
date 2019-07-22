@@ -1,5 +1,5 @@
 <header class="modal__header">
-  <a href="/<%= @site.domain %>/referrers" data-pushstate><div class="font-bold text-grey-darker">&larr; All referrers</div></a>
+  <%= link("← All referrers", to: "/#{@site.domain}/referrers" <> query_params(@query), "data-pushstate": true, class: "font-bold text-grey-darker hover:underline") %>
   <button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
 </header>
 <div class="my-4 border-b border-grey-light"></div>

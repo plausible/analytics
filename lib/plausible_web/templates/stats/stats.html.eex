@@ -35,7 +35,7 @@
   <div class="w-full block md:flex items-start justify-between mt-6">
 
     <%= render("_bar_graph.html",
-          link: "/#{@site.domain}/referrers",
+          link: "/#{@site.domain}/referrers" <> query_params(@query),
           micromodal_trigger: "referrer-modal",
           title: "Top Referrers",
           by: "new visitors",
@@ -45,7 +45,7 @@
     %>
 
     <%= render("_bar_graph.html",
-          link: "/#{@site.domain}/pages",
+          link: "/#{@site.domain}/pages" <> query_params(@query),
           micromodal_trigger: "pages-modal",
           title: "Top Pages",
           by: :pageviews,
@@ -55,7 +55,7 @@
     %>
 
     <%= render("_bar_graph.html",
-          link: "/#{@site.domain}/countries",
+          link: "/#{@site.domain}/countries" <> query_params(@query),
           micromodal_trigger: "countries-modal",
           title: "Top Countries",
           by: :visitors,
@@ -85,7 +85,7 @@
     </div>
 
     <%= render("_bar_graph.html",
-          link: "/#{@site.domain}/operating-systems",
+          link: "/#{@site.domain}/operating-systems" <> query_params(@query),
           micromodal_trigger: "operating-systems-modal",
           title: "Operating Systems",
           by: :visitors,
@@ -95,7 +95,7 @@
     %>
 
     <%= render("_bar_graph.html",
-          link: "/#{@site.domain}/browsers",
+          link: "/#{@site.domain}/browsers" <> query_params(@query),
           micromodal_trigger: "browsers-modal",
           title: "Browsers",
           by: :visitors,
