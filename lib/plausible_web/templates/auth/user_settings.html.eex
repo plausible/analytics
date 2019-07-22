@@ -87,7 +87,10 @@
         <use xlink:href="#feather-check-circle" />
       </svg>
       <span class="text-grey-darker">
-        Your account is connected to the following Google account: <b><%= @user.google_auth.email %></b>. If you have set up any of your
+        Connected account: : <b><%= @user.google_auth.email %></b>
+      </span>
+      <span class="text-grey-darker block mt-4">
+        If you have set up any of your
         websites on <%= link("Google Search Console", to: "https://search.google.com/search-console") %>, the data will
         be available on Plausible as well.
       </span>
