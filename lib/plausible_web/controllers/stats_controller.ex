@@ -88,7 +88,7 @@ defmodule PlausibleWeb.StatsController do
       total_visitors = Stats.visitors_from_referrer(site, query, "Google")
       google_auth = Plausible.Sites.google_auth_for(site)
       search_terms = if google_auth do
-         Stats.GoogleSearchConsole.fetch_stats(site, google_auth, query)
+         Plausible.Google.Api.fetch_stats(site, google_auth, query)
       end
 
       render(conn, "google_referrer.html",

@@ -95,7 +95,7 @@
         be available on Plausible as well.
       </span>
     <% else %>
-      <%= button("Continue with Google", to: Plausible.Stats.GoogleSearchConsole.authorize_url(), class: "button mt-4") %>
+      <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(), class: "button mt-4") %>
     <% end %>
 </div>
 

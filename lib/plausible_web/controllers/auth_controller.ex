@@ -194,7 +194,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def google_auth_callback(conn, %{"code" => code}) do
-    res = Plausible.Stats.GoogleSearchConsole.fetch_access_token(code)
+    res = Plausible.Google.Api.fetch_access_token(code)
     id_token = res["id_token"]
     [_, body, _] = String.split(id_token, ".")
     id = body |> Base.decode64! |> Jason.decode!

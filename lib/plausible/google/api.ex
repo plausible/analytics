@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.GoogleSearchConsole do
+defmodule Plausible.Google.Api do
   @redirect_uri URI.encode_www_form("http://localhost:8000/auth/google/callback")
   @client_id "1067516560281-9ugr4iijgr3uge3j6qir5n131me0o42o.apps.googleusercontent.com"
   @client_secret "aeeswPFIzagXeN4Q7a3IQ8aB"
