@@ -152,8 +152,9 @@ defmodule PlausibleWeb.AuthController do
 
   def user_settings(conn, _params) do
     changeset = Auth.User.changeset(conn.assigns[:current_user])
+    user = Repo.preload(conn.assigns[:current_user], :google_auth)
     subscription = Plausible.Billing.active_subscription_for(conn.assigns[:current_user].id)
-    render(conn, "user_settings.html", changeset: changeset, subscription: subscription)
+    render(conn, "user_settings.html", changeset: changeset, subscription: subscription, user: user)
   end
 
   def save_settings(conn, %{"user" => user_params}) do
@@ -192,25 +193,20 @@ defmodule PlausibleWeb.AuthController do
     |> redirect(to: "/")
   end
 
-  def google_auth_callback(conn, params) do
-    %{"code" => code, "state" => site_id} = params
+  def google_auth_callback(conn, %{"code" => code}) do
+    res = Plausible.Stats.GoogleSearchConsole.fetch_access_token(code)
+    id_token = res["id_token"]
+    [_, body, _] = String.split(id_token, ".")
+    id = body |> Base.decode64! |> Jason.decode!
 
-    if code && site_id do
-      res = Plausible.Stats.GoogleSearchConsole.fetch_access_token(code)
+    google_auth = Plausible.Site.GoogleAuth.changeset(%Plausible.Site.GoogleAuth{}, %{
+      email: id["email"],
+      refresh_token: res["refresh_token"],
+      access_token: res["access_token"],
+      expires: NaiveDateTime.utc_now() |> NaiveDateTime.add(res["expires_in"]),
+      user_id: conn.assigns[:current_user].id
+    }) |> Repo.insert!
 
-      google_auth = Plausible.Site.GoogleAuth.changeset(%Plausible.Site.GoogleAuth{}, %{
-        refresh_token: res["refresh_token"],
-        access_token: res["access_token"],
-        expires: NaiveDateTime.utc_now() |> NaiveDateTime.add(res["expires_in"]),
-        site_id: site_id,
-        user_id: conn.assigns[:current_user].id
-      }) |> Repo.insert!
-
-      site = Repo.get(Plausible.Site, site_id)
-
-      redirect(conn, to: "/#{site.domain}/settings#google-auth")
-    else
-      render_error(conn, 500, "Someting went wrong. Please try again or contact support.")
-    end
+    redirect(conn, to: "/settings#google-auth")
   end
 end

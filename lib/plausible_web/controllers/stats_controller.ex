@@ -86,10 +86,9 @@ defmodule PlausibleWeb.StatsController do
       {conn, period_params} = fetch_period(conn, site)
       query = Stats.Query.from(site.timezone, period_params)
       total_visitors = Stats.visitors_from_referrer(site, query, "Google")
-      google_auth = Plausible.Repo.get_by(Plausible.Site.GoogleAuth, site_id: site.id)
+      google_auth = Plausible.Sites.google_auth_for(site)
       search_terms = if google_auth do
-        {:ok, terms} = Stats.GoogleSearchConsole.fetch_stats(site, google_auth, query)
-        terms
+         Stats.GoogleSearchConsole.fetch_stats(site, google_auth, query)
       end
 
       render(conn, "google_referrer.html",

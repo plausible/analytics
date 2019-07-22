@@ -2,9 +2,10 @@ defmodule Plausible.Stats.GoogleSearchConsole do
   @redirect_uri URI.encode_www_form("http://localhost:8000/auth/google/callback")
   @client_id "1067516560281-9ugr4iijgr3uge3j6qir5n131me0o42o.apps.googleusercontent.com"
   @client_secret "aeeswPFIzagXeN4Q7a3IQ8aB"
+  @scope URI.encode_www_form("https://www.googleapis.com/auth/webmasters.readonly email")
 
-  def authorize_url(site_id) do
-    "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{@client_id}&redirect_uri=#{@redirect_uri}&response_type=code&approval_prompt=force&access_type=offline&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fwebmasters.readonly&state=#{site_id}"
+  def authorize_url() do
+    "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{@client_id}&redirect_uri=#{@redirect_uri}&response_type=code&access_type=offline&scope=#{@scope}"
   end
 
   def fetch_access_token(code) do
@@ -44,7 +45,11 @@ defmodule Plausible.Stats.GoogleSearchConsole do
         {:ok, terms}
       401 ->
         {:error, :invalid_credentials}
+      403 ->
+        msg = Jason.decode!(res.body)["error"]["message"]
+        {:error, msg}
       _ ->
+        IO.inspect(Jason.decode!(res.body))
         {:error, :unknown}
     end
   end

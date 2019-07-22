@@ -50,28 +50,6 @@
   <% end %>
 </div>
 
-<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10" id="google-auth">
-  <div class="flex items-center justify-between">
-    <h2>Google Search Console Integration</h2>
-  </div>
-
-  <div class="my-4 border-b border-grey-light"></div>
-  <%= if @google_auth do %>
-    <svg class="w-6 h-6 mr-1 text-green" style="transform: translateY(0.4rem);">
-      <use xlink:href="#feather-check-circle" />
-    </svg>
-    <span class="text-grey-darker">
-      Your website is connected to Google Search Console
-    </span>
-  <% else %>
-    <div class="text-grey-darker">
-      Please connect your Google account to see more data about the search terms your visitors have used to find
-      your website.
-    </div>
-    <%= button("Link with Google", to: Plausible.Stats.GoogleSearchConsole.authorize_url(@site.id), class: "button mt-8") %>
-  <% end %>
-</div>
-
 <%= form_for @conn, "/", [class: "bg-white max-w-md mx-auto shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mb-4 mt-16"], fn f -> %>
   <div class="flex items-center justify-between">
     <h2>Javascript snippet</h2>
