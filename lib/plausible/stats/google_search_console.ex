@@ -44,12 +44,14 @@ defmodule Plausible.Stats.GoogleSearchConsole do
 
         {:ok, terms}
       401 ->
+        Sentry.capture_message("Error fetching Google queries", extra: Jason.decode!(res.body))
         {:error, :invalid_credentials}
       403 ->
+        Sentry.capture_message("Error fetching Google queries", extra: Jason.decode!(res.body))
         msg = Jason.decode!(res.body)["error"]["message"]
         {:error, msg}
       _ ->
-        IO.inspect(Jason.decode!(res.body))
+        Sentry.capture_message("Error fetching Google queries", extra: Jason.decode!(res.body))
         {:error, :unknown}
     end
   end
