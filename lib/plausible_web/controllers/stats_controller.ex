@@ -181,7 +181,7 @@ defmodule PlausibleWeb.StatsController do
   defp current_user_can_access?(conn, site) do
     case conn.assigns[:current_user] do
       nil -> false
-      user -> Plausible.Sites.can_access?(user.id, site)
+      user -> Plausible.Sites.is_owner?(user.id, site)
     end
   end
 

@@ -11,16 +11,16 @@ defmodule Plausible.Sites do
     )
   end
 
-  def can_access?(user_id, site) do
-    Repo.exists?(
-      from sm in Plausible.Site.Membership,
-      where: sm.user_id == ^user_id and sm.site_id == ^site.id
-    )
-  end
-
   def google_auth_for(site) do
     membership = Repo.get_by(Plausible.Site.Membership, site_id: site.id)
     owner_id = membership.user_id
     Repo.get_by(Plausible.Site.GoogleAuth, user_id: owner_id)
+  end
+
+  def is_owner?(user_id, site) do
+    Repo.exists?(
+      from sm in Plausible.Site.Membership,
+      where: sm.user_id == ^user_id and sm.site_id == ^site.id
+    )
   end
 end
