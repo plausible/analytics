@@ -17,6 +17,8 @@ defmodule PlausibleWeb.StatsView do
         "in the last week"
       "month" ->
         "in the last month"
+      "3mo" ->
+        "in the last 3 months"
       "custom" ->
     end
   end

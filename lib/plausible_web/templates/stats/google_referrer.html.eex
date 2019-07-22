@@ -5,18 +5,18 @@
 <div class="my-4 border-b border-grey-light"></div>
 <main class="modal__content mt-0">
   <h1><%= @total_visitors %> new visitors from Google</h1>
-  <h1 class="text-grey-darker" style="transform: translateY(-1rem);">in the last month</h1>
-  <%= if @google_stats do %>
+  <h1 class="text-grey-darker" style="transform: translateY(-1rem);"><%= timeframe_to_human(@query) %></h1>
+  <%= if @search_terms do %>
     <div class="flex items-center justify-between py-2 border-b border-b-grey text-sm font-bold text-grey-darker">
       <span>Search term</span>
       <span>Visitors</span>
     </div>
-    <%= for {term, count} <- @google_stats[:search_terms] do %>
+    <%= for {term, count} <- @search_terms do %>
       <div class="flex items-center justify-between my-2">
         <span><%= term %></span>
         <span><%= count %></span>
       </div>
-      <%= bar(count, @google_stats[:search_terms]) %>
+      <%= bar(count, @search_terms) %>
     <% end %>
   <% else %>
     <div>Please link your google account to see the search terms your visitors have used to find your website</div>
