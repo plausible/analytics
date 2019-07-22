@@ -76,24 +76,24 @@
   </div>
 
   <div class="my-4 border-b border-grey-light"></div>
-  <%= if @user.google_auth do %>
     <div class="text-grey-darker my-4">
-      Integrating with your Google account allows Plausible to see more information about your websites' performance on their
+      Integrating with your Google account allows Plausible to show more information about your websites' performance on their
       search engine.
     </div>
-    <svg class="w-6 h-6 mr-1 text-green" style="transform: translateY(0.4rem);">
-      <use xlink:href="#feather-check-circle" />
-    </svg>
-    <span class="text-grey-darker">
-      Your account is connected to Google via <b><%= @user.google_auth.email %></b>
-    </span>
-  <% else %>
-    <div class="text-grey-darker">
-      Please connect your Google account to see more data about the search terms your visitors have used to find
-      your website.
-    </div>
-    <%= button("Link with Google", to: Plausible.Stats.GoogleSearchConsole.authorize_url(), class: "button mt-8") %>
-  <% end %>
+
+    <%= if @user.google_auth do %>
+      <div class="py-2"></div>
+      <svg class="w-6 h-6 mr-r text-green" style="transform: translateY(0.4rem);">
+        <use xlink:href="#feather-check-circle" />
+      </svg>
+      <span class="text-grey-darker">
+        Your account is connected to the following Google account: <b><%= @user.google_auth.email %></b>. If you have set up any of your
+        websites on <%= link("Google Search Console", to: "https://search.google.com/search-console") %>, the data will
+        be available on Plausible as well.
+      </span>
+    <% else %>
+      <%= button("Continue with Google", to: Plausible.Stats.GoogleSearchConsole.authorize_url(), class: "button mt-4") %>
+    <% end %>
 </div>
 
 

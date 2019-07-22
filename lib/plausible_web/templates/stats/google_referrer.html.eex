@@ -24,7 +24,9 @@
       <div class="mt-4 p-4 rounded bg-grey-lightest"><%= msg %></div>
     <% nil -> %>
       <%= if @conn.assigns[:current_user] && Plausible.Sites.is_owner?(@conn.assigns[:current_user].id, @site) do %>
-        <div>Please link your google account to see the search terms your visitors have used to find your website</div>
+        <div>
+          You can link your Google account to see the search terms that lead to your website.
+        </div>
         <%= link("Connect with Google", to: "/settings#google-auth", class: "button mt-4") %>
       <% end %>
   <% end %>

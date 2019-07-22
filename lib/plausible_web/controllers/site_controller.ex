@@ -33,7 +33,6 @@ defmodule PlausibleWeb.SiteController do
 
   def settings(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
-           |> Plausible.Repo.preload(:google_auth)
 
     changeset = Plausible.Site.changeset(site, %{})
     conn
