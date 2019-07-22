@@ -108,9 +108,7 @@ defmodule PlausibleWeb.StatsController do
 
     if site && current_user_can_access?(conn, site) do
       {conn, period_params} = fetch_period(conn, site)
-      IO.inspect(period_params)
       query = Stats.Query.from(site.timezone, period_params)
-      IO.inspect(query)
       referrers = Stats.referrer_drilldown(site, query, referrer)
       total_visitors = Stats.visitors_from_referrer(site, query, referrer)
 
