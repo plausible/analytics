@@ -1,7 +1,7 @@
 defmodule Plausible.Google.Api do
   @redirect_uri URI.encode_www_form("http://localhost:8000/auth/google/callback")
-  @client_id "1067516560281-9ugr4iijgr3uge3j6qir5n131me0o42o.apps.googleusercontent.com"
-  @client_secret "aeeswPFIzagXeN4Q7a3IQ8aB"
+  @client_id Keyword.fetch!(Application.get_env(:plausible, :google), :client_id)
+  @client_secret Keyword.fetch!(Application.get_env(:plausible, :google), :client_secret)
   @scope URI.encode_www_form("https://www.googleapis.com/auth/webmasters.readonly email")
 
   def authorize_url() do
@@ -9,7 +9,7 @@ defmodule Plausible.Google.Api do
   end
 
   def fetch_access_token(code) do
-    res = HTTPoison.post!("https://www.googleapis.com/oauth2/v4/token", "client_id=#{@client_id}&client_secret=aeeswPFIzagXeN4Q7a3IQ8aB&code=#{code}&grant_type=authorization_code&redirect_uri=#{@redirect_uri}", ["Content-Type": "application/x-www-form-urlencoded"])
+    res = HTTPoison.post!("https://www.googleapis.com/oauth2/v4/token", "client_id=#{@client_id}&client_secret=#{@client_secret}&code=#{code}&grant_type=authorization_code&redirect_uri=#{@redirect_uri}", ["Content-Type": "application/x-www-form-urlencoded"])
     Jason.decode!(res.body)
   end
 

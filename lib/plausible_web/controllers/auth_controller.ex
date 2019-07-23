@@ -199,7 +199,7 @@ defmodule PlausibleWeb.AuthController do
     [_, body, _] = String.split(id_token, ".")
     id = body |> Base.decode64! |> Jason.decode!
 
-    google_auth = Plausible.Site.GoogleAuth.changeset(%Plausible.Site.GoogleAuth{}, %{
+    Plausible.Site.GoogleAuth.changeset(%Plausible.Site.GoogleAuth{}, %{
       email: id["email"],
       refresh_token: res["refresh_token"],
       access_token: res["access_token"],
