@@ -1,0 +1,125 @@
+<div class="pt-24"></div>
+<div class="max-w-md mx-auto flex justify-between">
+  <a href="/<%= @site.domain %>"><h1>Settings for <%= @site.domain %></h1></a>
+</div>
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10">
+  <div class="flex items-center justify-between">
+    <h2>General</h2>
+  </div>
+
+  <div class="my-4 border-b border-grey-light"></div>
+
+  <%= form_for @changeset, "/#{@site.domain}/settings", [class: "max-w-xs"], fn f -> %>
+    <div class="my-4">
+      <%= label f, :domain, class: "block text-grey-darker text-sm font-bold mb-2" %>
+      <%= text_input f, :domain, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:border-grey-light ", disabled: "disabled" %>
+      <%= error_tag f, :domain %>
+    </div>
+    <div class="my-4">
+      <%= label f, :timezone, "Reporting Timezone", class: "block text-grey-darker text-sm font-bold mb-2" %>
+      <div class="inline-block relative w-full">
+        <%= select f, :timezone, Plausible.Timezones.options(), class: "block appearance-none w-full bg-grey-lighter text-grey-darker cursor-pointer hover:border-grey p-2 pr-8 rounded leading-normal focus:outline-none" %>
+        <div class="pointer-events-none absolute pin-y pin-r flex items-center px-2 text-red">
+          <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+        </div>
+      </div>
+    </div>
+    <%= submit "Save changes", class: "button mt-4" %>
+  <% end %>
+</div>
+
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10">
+  <div class="flex items-center justify-between">
+    <h2>Visibility</h2>
+  </div>
+
+  <div class="my-4 border-b border-grey-light"></div>
+  <%= if @site.public do %>
+      Stats for <%= @site.domain %> are currently <b>public</b>. Anyone with the following link can view the stats:
+    <div class="w-full md:w-2/3">
+      <input type="text" id="public-link" value="https://plausible.io/<%= @site.domain  %>" class="transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:border-grey-light mt-4" />
+    <a onclick="var input = document.getElementById('public-link'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="no-underline text-blue text-sm hover:underline">Copy to clipboard</a>
+    </div>
+    <%= button("Make stats private", to: "/sites/#{@site.domain}/make-private", method: "POST", class: "button mt-8") %>
+  <% else %>
+    <div class="text-grey-darker">
+      Stats for <%= @site.domain %> are currently <b>private</b>. You are the only person who can see them.
+      If you choose to make your stats public, anyone with the link will be able to view them.
+    </div>
+    <%= button("Make stats public", to: "/sites/#{@site.domain}/make-public", method: "POST", class: "button mt-8") %>
+  <% end %>
+</div>
+
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10" id="google-auth">
+  <div class="flex items-center justify-between">
+    <h2>Google Integration</h2>
+  </div>
+
+  <div class="my-4 border-b border-grey-light"></div>
+    <div class="text-grey-darker my-4">
+      Integrating with your Google account allows Plausible to show more information about your websites' performance on their search engine.
+    </div>
+
+    <%= if @site.google_auth do %>
+      <div class="py-2"></div>
+      <svg class="w-6 h-6 mr-r text-green" style="transform: translateY(0.4rem);">
+        <use xlink:href="#feather-check-circle" />
+      </svg>
+      <span class="text-grey-darker">Connected Google account: <b><%= @site.google_auth.email %></b></span>
+      <%= if @google_search_console_verified do %>
+        <div class="py-2"></div>
+        <svg class="w-6 h-6 mr-r text-green" style="transform: translateY(0.4rem);">
+          <use xlink:href="#feather-check-circle" />
+        </svg>
+        <span class="text-grey-darker">Verified access to site <b>https://<%= @site.domain %></b></span>
+        <div class="mt-6">
+          <%= link("View google stats", to: "/#{@site.domain}/referrers/Google", class: "text-indigo") %>
+        </div>
+      <% else %>
+        <div class="py-2"></div>
+        <svg class="w-6 h-6 mr-r text-red-dark" style="transform: translateY(0.4rem);">
+          <use xlink:href="#feather-x-circle" />
+        </svg>
+        <span class="text-grey-darker">No access to site <b>https://<%= @site.domain %></b></span>
+        <div class="mt-6">
+          <%= link("Verify your site on Google Search Console to continue", to: "https://support.google.com/webmasters/answer/34592", class: "text-indigo") %>
+        </div>
+      <% end %>
+    <% else %>
+      <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(@site.id), class: "button mt-4") %>
+
+      <div class="text-grey-darker mt-8">
+        NB: You also need to set up your site on <%= link("Google Search Console", to: "https://search.google.com/search-console/about") %> for the integration to work.
+      </div>
+    <% end %>
+</div>
+
+<%= form_for @conn, "/", [class: "bg-white max-w-md mx-auto shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mb-4 mt-16"], fn f -> %>
+  <div class="flex items-center justify-between">
+    <h2>Javascript snippet</h2>
+  </div>
+  <div class="my-4">
+    <p>Include this snippet in the <code>&lt;head&gt;</code> of your website.</p>
+    <div class="relative">
+      <%= textarea f, :domain, id: "snippet_code", class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light text-xs mt-2 resize-none", value: snippet(), rows: 9 %>
+      <a onclick="var textarea = document.getElementById('snippet_code'); textarea.focus(); textarea.select(); document.execCommand('copy');" href="javascript:void(0)" class="no-underline text-indigo text-sm hover:underline">
+        <svg class="absolute text-indigo" style="top: 24px; right: 12px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-copy"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      </a>
+    </div>
+    <div class="mt-4 text-sm">
+      Is your website a single-page application?
+      <%= link("Read the docs", class: "text-indigo hover:underline", to: "https://docs.plausible.io/single-page-application-support", target: "_blank") %>
+    </div>
+  </div>
+<% end %>
+
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-red-dark px-8 pt-6 pb-8 mt-16 mb-24">
+  <div class="flex items-center justify-between">
+    <h2>Delete site data</h2>
+  </div>
+
+  <div class="my-4 border-b border-grey-light"></div>
+
+  <p class="text-lg">Deleting the site removes all stats you've collected</p>
+  <%= link "Delete #{@site.domain}", to: "/#{@site.domain}", method: :delete, class: "button bg-red-dark mt-4", data: [confirm: "Deleting the site data cannot be reversed. Are you sure?"] %>
+</div>

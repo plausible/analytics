@@ -1,0 +1,28 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/3.0.0/fetch.min.js" integrity="sha256-E1M+0f/hvoNVoV8K5RSn1gwe4EFwlvORnOrFzghX0wM=" crossorigin="anonymous"></script>
+<script>
+  function updateStatus() {
+    fetch("/api/<%= @site.domain %>/status")
+    .then(function(res) { return res.json() })
+      .then(function(status) {
+        if (status === "READY") {
+          window.location.reload()
+        }
+      })
+  }
+
+  setInterval(updateStatus, 1500)
+</script>
+
+<div class="w-full max-w-sm mx-auto mt-8">
+  <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16 h-72 relative text-center">
+    <h2>Waiting for first pageview</h2>
+    <h2>on <%= @site.domain %></h2>
+    <div class="my-4">
+      <div class="pulsating-circle"></div>
+      <p class="text-grey-dark text-sm absolute pin-l pin-b mb-6 w-full text-center leading-normal">
+        Need to see the snippet again? <%= link("Click here", to: "/#{@site.domain}/snippet")%><br />
+        Not working? Contact <a href="mailto:uku@plausible.io">uku@plausible.io</a> to get set up
+      </p>
+    </div>
+  </div>
+</div>

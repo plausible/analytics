@@ -1,0 +1,33 @@
+<header class="modal__header">
+  <a href="/<%= @site.domain %>/referrers" data-pushstate><div class="font-bold text-grey-darker">&larr; All referrers</div></a>
+  <button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
+</header>
+<div class="my-4 border-b border-grey-light"></div>
+<main class="modal__content mt-0">
+  <h1><%= @total_visitors %> new visitors from Google</h1>
+  <h1 class="text-grey-darker" style="transform: translateY(-1rem);"><%= timeframe_to_human(@query) %></h1>
+  <%= case @search_terms do %>
+    <% {:ok, search_terms} -> %>
+      <div class="flex items-center justify-between py-2 border-b border-b-grey text-sm font-bold text-grey-darker">
+        <span>Search term</span>
+        <span>Visitors</span>
+      </div>
+      <%= for {term, count} <- search_terms do %>
+        <div class="flex items-center justify-between my-2">
+          <span><%= term %></span>
+          <span><%= count %></span>
+        </div>
+        <%= bar(count, search_terms) %>
+      <% end %>
+    <% {:error, msg} -> %>
+      <div>Unable to show search terms. Google Search Console API returned the following error:</div>
+      <div class="mt-4 p-4 rounded bg-grey-lightest"><%= msg %></div>
+    <% nil -> %>
+      <%= if @conn.assigns[:current_user] && Plausible.Sites.is_owner?(@conn.assigns[:current_user].id, @site) do %>
+        <div>
+          You can link your Google account to see the search terms that lead to your website.
+        </div>
+        <%= link("Connect with Google", to: "/#{@site.domain}/settings#google-auth", class: "button mt-4") %>
+      <% end %>
+  <% end %>
+</main>

@@ -1,0 +1,138 @@
+###############
+# Device Detector - The Universal Device Detection library for parsing User Agents
+#
+# @link http://piwik.org
+# @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
+###############
+
+- regex: 'Akregator(?:/(\d+[\.\d]+))?'
+  name: 'Akregator'
+  version: '$1'
+  url: 'http://userbase.kde.org/Akregator'
+  type: 'Feed Reader'
+
+- regex: 'Apple-PubSub(?:/(\d+[\.\d]+))?'
+  name: 'Apple PubSub'
+  version: '$1'
+  url: 'https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/pubsub.1.html'
+  type: 'Feed Reader'
+
+- regex: 'BashPodder'
+  name: 'BashPodder'
+  version: ''
+  url: 'http://lincgeek.org/bashpodder/'
+  type: 'Feed Reader'
+  
+- regex: 'Breaker/v([\d\.]+)'
+  name: 'Breaker'
+  version: '$1'
+  url: 'https://www.breaker.audio/'
+  type: 'Feed Reader App'
+
+- regex: 'Downcast/([\d\.]+)'
+  name: 'Downcast'
+  version: '$1'
+  url: 'http://downcastapp.com/'
+  type: 'Feed Reader App'
+
+- regex: 'FeedDemon(?:/(\d+[\.\d]+))?'
+  name: 'FeedDemon'
+  version: '$1'
+  url: 'http://www.feeddemon.com/'
+  type: 'Feed Reader'
+
+- regex: 'Feeddler(?:RSS|PRO)(?:[/ ](\d+[\.\d]+))?'
+  name: 'Feeddler RSS Reader'
+  version: '$1'
+  url: 'http://www.chebinliu.com/projects/iphone/feeddler-rss-reader/'
+  type: 'Feed Reader App'
+
+- regex: 'gPodder/([\d\.]+)'
+  name: 'gPodder'
+  version: '$1'
+  url: 'http://gpodder.org/'
+  type: 'Feed Reader App'
+
+- regex: 'JetBrains Omea Reader(?:[/ ](\d+[\.\d]+))?'
+  name: 'JetBrains Omea Reader'
+  version: '$1'
+  url: 'http://www.jetbrains.com/omea/reader/'
+  type: 'Feed Reader'
+
+- regex: 'Liferea(?:[/ ](\d+[\.\d]+))?'
+  name: 'Liferea'
+  version: '$1'
+  url: 'http://liferea.sf.net/'
+  type: 'Feed Reader'
+
+- regex: 'NetNewsWire(?:[/ ](\d+[\.\d]+))?'
+  name: 'NetNewsWire'
+  version: '$1'
+  url: 'http://netnewswireapp.com/'
+  type: 'Feed Reader'
+
+- regex: 'NewsBlur (?:iPhone|iPad) App(?: v(\d+[\.\d]+))?'
+  name: 'NewsBlur Mobile App'
+  version: '$1'
+  url: 'http://www.newsblur.com'
+  type: 'Feed Reader App'
+
+- regex: 'NewsBlur(?:/(\d+[\.\d]+))'
+  name: 'NewsBlur'
+  version: '$1'
+  url: 'http://www.newsblur.com'
+  type: 'Feed Reader'
+
+- regex: 'newsbeuter(?:[/ ](\d+[\.\d]+))?'
+  name: 'Newsbeuter'
+  version: '$1'
+  url: 'http://www.newsbeuter.org/'
+  type: 'Feed Reader'
+
+- regex: 'PritTorrent/([\d\.]+)'
+  name: 'PritTorrent'
+  version: '$1'
+  url: 'http://bitlove.org'
+  type: 'Feed Reader'
+
+- regex: 'Pulp[/ ](\d+[\.\d]+)'
+  name: 'Pulp'
+  version: '$1'
+  url: 'http://www.acrylicapps.com/pulp/'
+  type: 'Feed Reader App'
+
+- regex: 'ReadKit(?:[/ ](\d+[\.\d]+))?'
+  name: 'ReadKit'
+  version: '$1'
+  url: 'http://readkitapp.com/'
+  type: 'Feed Reader App'
+
+- regex: 'Reeder(?:[/ ](\d+[\.\d]+))?'
+  name: 'Reeder'
+  version: '$1'
+  url: 'http://reederapp.com/'
+  type: 'Feed Reader App'
+
+- regex: 'RSSBandit(?:[/ ](\d+[\.\d]+))?'
+  name: 'RSS Bandit'
+  version: '$1'
+  url: 'http://www.rssbandit.org)'
+  type: 'Feed Reader'
+
+- regex: 'RSS Junkie(?:[/ ](\d+[\.\d]+))?'
+  name: 'RSS Junkie'
+  version: '$1'
+  url: 'https://play.google.com/store/apps/details?id=com.bitpowder.rssjunkie'
+  type: 'Feed Reader App'
+
+- regex: 'RSSOwl(?:[/ ](\d+[\.\d]+))?'
+  name: 'RSSOwl'
+  version: '$1'
+  url: 'http://www.rssowl.org/'
+  type: 'Feed Reader'
+
+- regex: 'Stringer'
+  name: 'Stringer'
+  version: ''
+  url: 'https://github.com/swanson/stringer'
+  type: 'Feed Reader'

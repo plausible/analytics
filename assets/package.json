@@ -1,0 +1,27 @@
+{
+  "repository": {},
+  "license": "MIT",
+  "scripts": {
+    "deploy": "webpack --mode production",
+    "watch": "webpack --mode development --watch"
+  },
+  "dependencies": {
+    "autoprefixer": "^9.6.1",
+    "phoenix": "file:../deps/phoenix",
+    "phoenix_html": "file:../deps/phoenix_html"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "babel-loader": "^8.0.6",
+    "copy-webpack-plugin": "^5.0.4",
+    "css-loader": "^3.2.0",
+    "mini-css-extract-plugin": "^0.8.0",
+    "optimize-css-assets-webpack-plugin": "^5.0.3",
+    "postcss-loader": "^3.0.0",
+    "tailwindcss": "^0.7.4",
+    "uglifyjs-webpack-plugin": "^2.2.0",
+    "webpack": "4.39.2",
+    "webpack-cli": "^3.3.7"
+  }
+}

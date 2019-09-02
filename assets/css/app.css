@@ -1,0 +1,201 @@
+@tailwind preflight;
+@tailwind components;
+@import "modal.css";
+@import "coffee_cup.css";
+@import "tooltip.css";
+
+.button {
+  @apply inline-block bg-indigo text-white text-center font-bold tracking-wide py-3 px-5 rounded no-underline;
+}
+
+.button:hover {
+  @apply shadow;
+}
+
+.button:focus {
+  @apply outline-none;
+}
+
+.button-outline {
+  @apply bg-transparent border border-indigo text-indigo;
+}
+
+.button-sm {
+  @apply text-sm py-2 px-4;
+}
+
+.button-md {
+  @apply py-2 px-4;
+}
+
+html {
+  @apply font-sans text-grey-darkest;
+}
+
+body {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+a, button {
+  @apply no-underline;
+}
+
+blockquote {
+  @apply my-4 py-2 px-4 border-l-4 border-grey;
+}
+
+@screen xl {
+  .container {
+    max-width: 70rem;
+  }
+}
+
+@tailwind utilities;
+
+a {
+  color: inherit;
+}
+
+.light-text {
+  color: #F0F4F8;
+}
+
+.transition {
+  transition: all .1s ease-in;
+}
+
+.truncated-label {
+  @apply no-underline text-grey-darkest;
+  white-space: nowrap;
+  width: calc(100% - 40px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.bar {
+  height: 4px;
+  width: 100%;
+  background-color: #f5f6f7;
+  border-radius: 4px;
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+
+.bar__fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.pulsating-circle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  width: 20px;
+  height: 20px;
+}
+
+.pulsating-circle:before {
+  content: '';
+  position: relative;
+  display: block;
+  width: 300%;
+  height: 300%;
+  box-sizing: border-box;
+  margin-left: -100%;
+  margin-top: -100%;
+  border-radius: 45px;
+  background-color: #01a4e9;
+  animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  @apply bg-green;
+}
+.pulsating-circle:after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  border-radius: 15px;
+  animation: pulse-dot 1.25s cubic-bezier(0.455, 0.03, 0.515, 0.955) -.4s infinite;
+  @apply bg-green;
+}
+
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(.33);
+  }
+  80%, 100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-dot {
+  0% {
+    transform: scale(.8);
+  }
+  50% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(.8);
+  }
+}
+
+.just-text h1, .just-text h2, .just-text h3 {
+  margin-top: 1em;
+  margin-bottom: .5em;
+}
+
+.just-text p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.dropdown-content::before {
+    top: -16px;
+    right: 64px;
+    left: auto;
+}
+.dropdown-content::before {
+    border: 8px solid transparent;
+    border-bottom-color: rgba(27,31,35,0.15);
+}
+.dropdown-content::before, .dropdown-content::after {
+    position: absolute;
+    display: inline-block;
+    content: "";
+  }
+.dropdown-content::after {
+    border: 7px solid transparent;
+    border-bottom-color: #fff;
+}
+.dropdown-content::after {
+    top: -14px;
+    right: 65px;
+    left: auto;
+}
+
+
+.group:hover > .group-hover-fill-red > svg {
+  fill: #ff6978!important;
+}
+
+.group:hover > .group-hover-fill-red {
+  color: #ff6978;
+}
+
+.group-hover-fill-red svg {
+  transition: all .1 ease-in;
+}
+
+.feather {
+  height: 1em;
+  width: 1em;
+  transform: translateY(0.15em);
+}

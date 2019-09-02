@@ -1,0 +1,3 @@
+<%= if Mix.env() == :prod && !@conn.assigns[:skip_plausible_tracking] do %>
+  <script async defer type="text/javascript" src="https://plausible.io/js/plausible.js"></script>
+<% end %>
