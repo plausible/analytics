@@ -32,3 +32,8 @@ Plausible is a standard Elixir/Phoenix application backed by a PostgreSQL databa
 
 We have a [feedback board](https://feedback.plausible.io/) and a [public roadmap](https://feedback.plausible.io/roadmap).
 Please let us know if you have any requests and vote on open issues so we can better prioritize.
+
+### License
+
+Plausible is open-source under the most permissive MIT license. There are no restrictions on redistributing,
+modifying or using this software for any reason.
