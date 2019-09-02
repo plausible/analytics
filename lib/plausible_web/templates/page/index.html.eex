@@ -44,7 +44,7 @@
         Simple analytics for your website
       </h1>
       <p class="font-normal text-grey-darker text-lg lg:text-2xl mt-3 leading-tight font-medium">
-        Plausible is a lightweight, non-intrusive alternative to Google Analytics
+        Plausible is a lightweight, fully open-source alternative to Google Analytics
       </p>
       <%= link("Start free trial", to: "/register", class: "button w-full sm:w-auto mt-6 mr-2") %>
       <%= link("View live demo", to: "/plausible.io", class: "button button-outline w-full sm:w-auto mt-4 md:mt-0") %>
@@ -75,9 +75,9 @@
         <svg class="w-6 h-6 mr-1 text-indigo" style="transform: translateY(0.3rem);">
           <use xlink:href="#feather-check-circle" />
         </svg>
-        <h3 class="inline">Anonymous</h3>
+        <h3 class="inline">Lightweight</h3>
         <p class="text-lg mt-2">
-        Measure traffic, not individuals. No personal data or IP addresses are ever stored in our database. <%= link("Read more about our data policy", to: "/data-policy", class: "text-indigo") %>
+          Plausible works by loading a script on your website, like Google Analytics. Our script is 14x smaller, making your website quicker to load.
         </p>
       </div>
 
@@ -85,11 +85,12 @@
         <svg class="w-6 h-6 mr-1 text-indigo" style="transform: translateY(0.3rem);">
           <use xlink:href="#feather-check-circle" />
         </svg>
-        <h3 class="inline">Lightweight</h3>
+        <h3 class="inline">Open source</h3>
         <p class="text-lg mt-2">
-          Plausible works by loading a script on your website, like Google Analytics. Our script is 14x smaller, making your website quicker to load.
+        Plausible is fully open source and <%= link("available on Github", to: "https://github.com/plausible-insights/plausible", class: "text-indigo") %>. Feel free to check out the code and <%= link("read in depth about our data policy", to: "/data-policy", class: "text-indigo") %>
         </p>
       </div>
+
     </div>
   </div>
   <div class="container my-12 md:my-24 text-center relative">
