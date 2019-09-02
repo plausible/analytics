@@ -58,6 +58,11 @@ defmodule PlausibleWeb.StatsView do
     end
   end
 
+  def today(site) do
+    Timex.now(site.timezone)
+    |> DateTime.to_date
+  end
+
   def this_month(site) do
     Timex.now(site.timezone)
     |> DateTime.to_date
@@ -69,16 +74,24 @@ defmodule PlausibleWeb.StatsView do
     |> Timex.shift(months: -1)
   end
 
-  def timeframe_text(query) do
+  def timeframe_text(site, query) do
     case query.period do
       "6mo" ->
         "Last 6 months"
       "3mo" ->
         "Last 3 months"
       "month" ->
-        Timex.format!(query.date_range.first, "{Mfull} {YYYY}")
+        if query.date_range.first == this_month(site) do
+          "This month"
+        else
+          Timex.format!(query.date_range.first, "{Mfull} {YYYY}")
+        end
       "day" ->
-        Timex.format!(query.date_range.first, "{D} {Mfull} {YYYY}")
+        if query.date_range.first == today(site) do
+          "Today"
+        else
+          Timex.format!(query.date_range.first, "{D} {Mfull} {YYYY}")
+        end
       _ ->
         "wat"
     end
