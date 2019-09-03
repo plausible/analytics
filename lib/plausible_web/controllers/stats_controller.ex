@@ -308,7 +308,7 @@ defmodule PlausibleWeb.StatsController do
 
   defp fetch_period(conn, site) do
     case conn.params["period"] do
-      p when p in ["day", "month", "3mo", "6mo"] ->
+      p when p in ["day", "month", "7d", "3mo", "6mo"] ->
         saved_periods = get_session(conn, :saved_periods) || %{}
         {put_session(conn, :saved_periods, Map.merge(saved_periods, %{site.domain => p})), conn.params}
       _ ->

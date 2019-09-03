@@ -46,9 +46,10 @@
           </div>
 
           <div data-dropdown style="top: 42px; right: 0px; width: 225px;" class="dropdown-content hidden absolute pin-r bg-white border border-grey-light rounded shadow z-10 font-bold text-sm text-grey-darker">
-            <%= link("Today", to: "/#{@site.domain}?period=day&date=#{Timex.now(@site.timezone) |> Timex.format!("{ISOdate}")}", class: "block px-2 py-3 hover:bg-grey-lighter") %>
-            <%= link("This month (#{this_month(@site) |> Timex.format!("{Mfull}")})", to: "/#{@site.domain}?period=month&date=#{this_month(@site) |> Timex.format!("{ISOdate}")}", class: "block p-2 hover:bg-grey-lighter") %>
-            <%= link("Last month (#{last_month(@site) |> Timex.format!("{Mfull}")})", to: "/#{@site.domain}?period=month&date=#{last_month(@site) |> Timex.format!("{ISOdate}")}", class: "block p-2 hover:bg-grey-lighter") %>
+            <%= link("Today", to: "/#{@site.domain}?period=day", class: "block p-2 hover:bg-grey-lighter") %>
+            <%= link("Last 7 days", to: "/#{@site.domain}?period=7d", class: "block px-2 py-3 hover:bg-grey-lighter") %>
+            <%= link("This month", to: "/#{@site.domain}?period=month", class: "block p-2 hover:bg-grey-lighter") %>
+            <%= link("Last month", to: "/#{@site.domain}?period=month&date=#{last_month(@site) |> Timex.format!("{ISOdate}")}", class: "block p-2 hover:bg-grey-lighter") %>
             <%= link("Last 3 months", to: "/#{@site.domain}?period=3mo", class: "block p-2 hover:bg-grey-lighter") %>
             <%= link("Last 6 months", to: "/#{@site.domain}?period=6mo", class: "block p-2 hover:bg-grey-lighter") %>
           </div>
