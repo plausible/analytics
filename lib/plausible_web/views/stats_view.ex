@@ -36,6 +36,8 @@ defmodule PlausibleWeb.StatsView do
         "on #{Timex.format!(query.date_range.first, "{Mfull} {D}")}"
       "month" ->
         "in #{Timex.format!(query.date_range.first, "{Mfull} {YYYY}")}"
+      "7d" ->
+        "in the last 7 days"
       "3mo" ->
         "in the last 3 months"
       "6mo" ->
@@ -51,11 +53,18 @@ defmodule PlausibleWeb.StatsView do
       "month" ->
         date = Date.to_iso8601(query.date_range.first)
         "?period=month&date=#{date}"
+      "7d" ->
+        "?period=7d"
       "3mo" ->
         "?period=3mo"
       "6mo" ->
         "?period=6mo"
     end
+  end
+
+  def today(site) do
+    Timex.now(site.timezone)
+    |> DateTime.to_date
   end
 
   def this_month(site) do
@@ -69,16 +78,26 @@ defmodule PlausibleWeb.StatsView do
     |> Timex.shift(months: -1)
   end
 
-  def timeframe_text(query) do
+  def timeframe_text(site, query) do
     case query.period do
       "6mo" ->
         "Last 6 months"
       "3mo" ->
         "Last 3 months"
       "month" ->
-        Timex.format!(query.date_range.first, "{Mfull} {YYYY}")
+        if query.date_range.first == this_month(site) do
+          "This month"
+        else
+          Timex.format!(query.date_range.first, "{Mfull} {YYYY}")
+        end
+      "7d" ->
+        "Last 7 days"
       "day" ->
-        Timex.format!(query.date_range.first, "{D} {Mfull} {YYYY}")
+        if query.date_range.first == today(site) do
+          "Today"
+        else
+          Timex.format!(query.date_range.first, "{D} {Mfull} {YYYY}")
+        end
       _ ->
         "wat"
     end

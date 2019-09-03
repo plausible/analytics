@@ -39,16 +39,17 @@
 
         <div class="relative" style="height: 35.5px; width: 180px;">
           <div data-dropdown-trigger class="flex items-center justify-between hover:bg-grey-lighter rounded bg-white shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-bold text-grey-darker h-full">
-            <span class="mr-2"><%= timeframe_text(@query) %></span>
+            <span class="mr-2"><%= timeframe_text(@site, @query) %></span>
             <svg class="text-pink fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
               <use xlink:href="#feather-chevron-down" />
             </svg>
           </div>
 
-          <div data-dropdown style="top: 42px; right: 0px; width: 185px;" class="dropdown-content hidden absolute pin-r bg-white border border-grey-light rounded shadow-md z-10 font-bold text-sm text-grey-darker">
-            <%= link("Today", to: "/#{@site.domain}?period=day&date=#{Timex.now(@site.timezone) |> Timex.format!("{ISOdate}")}", class: "block p-2 hover:bg-grey-lighter") %>
-            <%= link("This month (#{this_month(@site) |> Timex.format!("{Mfull}")})", to: "/#{@site.domain}?period=month&date=#{this_month(@site) |> Timex.format!("{ISOdate}")}", class: "block p-2 hover:bg-grey-lighter") %>
-            <%= link("Last month (#{last_month(@site) |> Timex.format!("{Mfull}")})", to: "/#{@site.domain}?period=month&date=#{last_month(@site) |> Timex.format!("{ISOdate}")}", class: "block p-2 hover:bg-grey-lighter") %>
+          <div data-dropdown style="top: 42px; right: 0px; width: 225px;" class="dropdown-content hidden absolute pin-r bg-white border border-grey-light rounded shadow z-10 font-bold text-sm text-grey-darker">
+            <%= link("Today", to: "/#{@site.domain}?period=day", class: "block p-2 hover:bg-grey-lighter") %>
+            <%= link("Last 7 days", to: "/#{@site.domain}?period=7d", class: "block px-2 py-3 hover:bg-grey-lighter") %>
+            <%= link("This month", to: "/#{@site.domain}?period=month", class: "block p-2 hover:bg-grey-lighter") %>
+            <%= link("Last month", to: "/#{@site.domain}?period=month&date=#{last_month(@site) |> Timex.format!("{ISOdate}")}", class: "block p-2 hover:bg-grey-lighter") %>
             <%= link("Last 3 months", to: "/#{@site.domain}?period=3mo", class: "block p-2 hover:bg-grey-lighter") %>
             <%= link("Last 6 months", to: "/#{@site.domain}?period=6mo", class: "block p-2 hover:bg-grey-lighter") %>
           </div>

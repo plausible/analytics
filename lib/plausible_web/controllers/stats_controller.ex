@@ -21,7 +21,8 @@ defmodule PlausibleWeb.StatsController do
 
           Plausible.Tracking.event(conn, "Site Analytics: Open", %{demo: demo})
 
-          query = Stats.Query.from(site.timezone, conn.params)
+          {conn, params} = fetch_period(conn, site)
+          query = Stats.Query.from(site.timezone, params)
 
           conn
           |> assign(:skip_plausible_tracking, !demo)
@@ -43,7 +44,8 @@ defmodule PlausibleWeb.StatsController do
 
   def browsers_preview(conn, %{"domain" => domain}) do
     site = Repo.get_by(Plausible.Site, domain: domain)
-    query = Stats.Query.from(site.timezone, conn.params)
+    {conn, params} = fetch_period(conn, site)
+    query = Stats.Query.from(site.timezone, params)
 
     if site && current_user_can_access?(conn, site) do
       render(conn,
@@ -60,7 +62,8 @@ defmodule PlausibleWeb.StatsController do
 
   def operating_systems_preview(conn, %{"domain" => domain}) do
     site = Repo.get_by(Plausible.Site, domain: domain)
-    query = Stats.Query.from(site.timezone, conn.params)
+    {conn, params} = fetch_period(conn, site)
+    query = Stats.Query.from(site.timezone, params)
 
     if site && current_user_can_access?(conn, site) do
       render(conn,
@@ -77,7 +80,8 @@ defmodule PlausibleWeb.StatsController do
 
   def screen_sizes_preview(conn, %{"domain" => domain}) do
     site = Repo.get_by(Plausible.Site, domain: domain)
-    query = Stats.Query.from(site.timezone, conn.params)
+    {conn, params} = fetch_period(conn, site)
+    query = Stats.Query.from(site.timezone, params)
 
     if site && current_user_can_access?(conn, site) do
       render(conn,
@@ -94,7 +98,8 @@ defmodule PlausibleWeb.StatsController do
 
   def referrers_preview(conn, %{"domain" => domain}) do
     site = Repo.get_by(Plausible.Site, domain: domain)
-    query = Stats.Query.from(site.timezone, conn.params)
+    {conn, params} = fetch_period(conn, site)
+    query = Stats.Query.from(site.timezone, params)
 
     if site && current_user_can_access?(conn, site) do
       render(conn,
@@ -111,7 +116,8 @@ defmodule PlausibleWeb.StatsController do
 
   def pages_preview(conn, %{"domain" => domain}) do
     site = Repo.get_by(Plausible.Site, domain: domain)
-    query = Stats.Query.from(site.timezone, conn.params)
+    {conn, params} = fetch_period(conn, site)
+    query = Stats.Query.from(site.timezone, params)
 
     if site && current_user_can_access?(conn, site) do
       render(conn,
@@ -128,7 +134,8 @@ defmodule PlausibleWeb.StatsController do
 
   def countries_preview(conn, %{"domain" => domain}) do
     site = Repo.get_by(Plausible.Site, domain: domain)
-    query = Stats.Query.from(site.timezone, conn.params)
+    {conn, params} = fetch_period(conn, site)
+    query = Stats.Query.from(site.timezone, params)
 
     if site && current_user_can_access?(conn, site) do
       render(conn,
@@ -145,7 +152,8 @@ defmodule PlausibleWeb.StatsController do
 
   def main_graph(conn, %{"domain" => domain}) do
     site = Repo.get_by(Plausible.Site, domain: domain)
-    query = Stats.Query.from(site.timezone, conn.params)
+    {conn, params} = fetch_period(conn, site)
+    query = Stats.Query.from(site.timezone, params)
 
     plot_task = Task.async(fn -> Stats.calculate_plot(site, query) end)
     {pageviews, visitors} = Stats.pageviews_and_visitors(site, query)
@@ -163,7 +171,8 @@ defmodule PlausibleWeb.StatsController do
 
   def compare(conn, %{"domain" => domain}) do
     site = Repo.get_by(Plausible.Site, domain: domain)
-    query = Stats.Query.from(site.timezone, conn.params)
+    {conn, params} = fetch_period(conn, site)
+    query = Stats.Query.from(site.timezone, params)
     {pageviews, ""} = Integer.parse(conn.params["pageviews"])
     {unique_visitors, ""} = Integer.parse(conn.params["unique_visitors"])
 
@@ -181,7 +190,8 @@ defmodule PlausibleWeb.StatsController do
     site = Repo.get_by(Plausible.Site, domain: domain)
 
     if site && current_user_can_access?(conn, site) do
-      query = Stats.Query.from(site.timezone, conn.params)
+      {conn, params} = fetch_period(conn, site)
+      query = Stats.Query.from(site.timezone, params)
       referrers = Stats.top_referrers(site, query, 100)
 
       render(conn, "referrers.html", layout: false, site: site, top_referrers: referrers, query: query)
@@ -195,7 +205,8 @@ defmodule PlausibleWeb.StatsController do
            |> Repo.preload(:google_auth)
 
     if site && current_user_can_access?(conn, site) do
-      query = Stats.Query.from(site.timezone, conn.params)
+      {conn, params} = fetch_period(conn, site)
+      query = Stats.Query.from(site.timezone, params)
       total_visitors = Stats.visitors_from_referrer(site, query, "Google")
       search_terms = if site.google_auth do
          Plausible.Google.Api.fetch_stats(site, site.google_auth, query)
@@ -217,7 +228,8 @@ defmodule PlausibleWeb.StatsController do
     site = Repo.get_by(Plausible.Site, domain: domain)
 
     if site && current_user_can_access?(conn, site) do
-      query = Stats.Query.from(site.timezone, conn.params)
+      {conn, params} = fetch_period(conn, site)
+      query = Stats.Query.from(site.timezone, params)
       referrers = Stats.referrer_drilldown(site, query, referrer)
       total_visitors = Stats.visitors_from_referrer(site, query, referrer)
 
@@ -231,7 +243,8 @@ defmodule PlausibleWeb.StatsController do
     site = Repo.get_by(Plausible.Site, domain: domain)
 
     if site && current_user_can_access?(conn, site) do
-      query = Stats.Query.from(site.timezone, conn.params)
+      {conn, params} = fetch_period(conn, site)
+      query = Stats.Query.from(site.timezone, params)
       pages = Stats.top_pages(site, query, 100)
 
       render(conn, "pages.html", layout: false, site: site, top_pages: pages)
@@ -244,7 +257,8 @@ defmodule PlausibleWeb.StatsController do
     site = Repo.get_by(Plausible.Site, domain: domain)
 
     if site && current_user_can_access?(conn, site) do
-      query = Stats.Query.from(site.timezone, conn.params)
+      {conn, params} = fetch_period(conn, site)
+      query = Stats.Query.from(site.timezone, params)
       countries = Stats.countries(site, query, 100)
 
       render(conn, "countries.html", layout: false, site: site, countries: countries)
@@ -257,7 +271,8 @@ defmodule PlausibleWeb.StatsController do
     site = Repo.get_by(Plausible.Site, domain: domain)
 
     if site && current_user_can_access?(conn, site) do
-      query = Stats.Query.from(site.timezone, conn.params)
+      {conn, params} = fetch_period(conn, site)
+      query = Stats.Query.from(site.timezone, params)
       operating_systems = Stats.operating_systems(site, query, 100)
 
       render(conn, "operating_systems.html", layout: false, site: site, operating_systems: operating_systems)
@@ -270,7 +285,8 @@ defmodule PlausibleWeb.StatsController do
     site = Repo.get_by(Plausible.Site, domain: domain)
 
     if site && current_user_can_access?(conn, site) do
-      query = Stats.Query.from(site.timezone, conn.params)
+      {conn, params} = fetch_period(conn, site)
+      query = Stats.Query.from(site.timezone, params)
       browsers = Stats.browsers(site, query, 100)
 
       render(conn, "browsers.html", layout: false, site: site, browsers: browsers)
@@ -289,4 +305,21 @@ defmodule PlausibleWeb.StatsController do
       user -> Plausible.Sites.is_owner?(user.id, site)
     end
   end
+
+  defp fetch_period(conn, site) do
+    case conn.params["period"] do
+      p when p in ["day", "month", "7d", "3mo", "6mo"] ->
+        saved_periods = get_session(conn, :saved_periods) || %{}
+        {put_session(conn, :saved_periods, Map.merge(saved_periods, %{site.domain => p})), conn.params}
+      _ ->
+        saved_period = (get_session(conn, :saved_periods) || %{})[site.domain]
+
+        if saved_period do
+          {conn, %{"period" => saved_period}}
+        else
+          {conn, conn.params}
+        end
+    end
+  end
+
 end
