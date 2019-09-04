@@ -58,7 +58,7 @@
         uid: uid,
         user_agent: window.navigator.userAgent,
         referrer: window.document.referrer,
-        screenWidth: window.innerWidth
+        screen_width: window.innerWidth
       }));
 
       request.onreadystatechange = function() {

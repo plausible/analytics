@@ -63,11 +63,11 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
+  defp calculate_screen_size(nil) , do: nil
   defp calculate_screen_size(width) when width < 576, do: "Mobile"
   defp calculate_screen_size(width) when width < 992, do: "Tablet"
   defp calculate_screen_size(width) when width < 1440, do: "Laptop"
   defp calculate_screen_size(width) when width >= 1440, do: "Desktop"
-  defp calculate_screen_size(_) , do: nil
 
   defp clean_referrer(referrer) do
     uri = if referrer do

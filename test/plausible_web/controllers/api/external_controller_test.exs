@@ -285,4 +285,22 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert response(conn, 202) == ""
     assert pageview.screen_size == "Mobile"
   end
+
+  test "screen size is nil if screen_width is missing", %{conn: conn} do
+    params = %{
+      url: "http://gigride.live/",
+      new_visitor: true,
+      uid: UUID.uuid4()
+    }
+
+    conn = conn
+           |> put_req_header("content-type", "text/plain")
+           |> put_req_header("user-agent", @user_agent)
+           |> post("/api/page", Jason.encode!(params))
+
+    pageview = Repo.one(Plausible.Pageview)
+
+    assert response(conn, 202) == ""
+    assert pageview.screen_size == nil
+  end
 end
