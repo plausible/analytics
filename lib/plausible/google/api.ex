@@ -48,7 +48,7 @@ defmodule Plausible.Google.Api do
 
     case res.status_code do
       200 ->
-        terms = Jason.decode!(res.body)["rows"]
+        terms = (Jason.decode!(res.body)["rows"] || [])
                 |> Enum.filter(fn row -> row["clicks"] > 0 end)
                 |> Enum.map(fn row -> {row["keys"], round(row["clicks"])} end)
 
