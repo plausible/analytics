@@ -23,12 +23,14 @@ defmodule PlausibleWeb.StatsController do
 
           {conn, params} = fetch_period(conn, site)
           query = Stats.Query.from(site.timezone, params)
+          current_visitors = Stats.current_visitors(site)
 
           conn
           |> assign(:skip_plausible_tracking, !demo)
           |> render("stats.html",
             site: site,
             query: query,
+            current_visitors: current_visitors,
             title: "Plausible · " <> site.domain
     )
         else
@@ -290,6 +292,16 @@ defmodule PlausibleWeb.StatsController do
       browsers = Stats.browsers(site, query, 100)
 
       render(conn, "browsers.html", layout: false, site: site, browsers: browsers)
+    else
+      render_error(conn, 404)
+    end
+  end
+
+  def current_visitors(conn, %{"domain" => domain}) do
+    site = Repo.get_by(Plausible.Site, domain: domain)
+
+    if site && current_user_can_access?(conn, site) do
+      json(conn, Stats.current_visitors(site))
     else
       render_error(conn, 404)
     end

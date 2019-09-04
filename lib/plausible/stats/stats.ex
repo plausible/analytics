@@ -181,6 +181,15 @@ defmodule Plausible.Stats do
     )
   end
 
+  def current_visitors(site) do
+    Repo.one(
+      from p in Plausible.Pageview,
+      where: p.inserted_at >= fragment("(now() at time zone 'utc') - '5 minutes'::interval"),
+      where: p.hostname == ^site.domain,
+      select: count(p.user_id, :distinct)
+    )
+  end
+
   defp base_query(site, query) do
     {:ok, first} = NaiveDateTime.new(query.date_range.first, ~T[00:00:00])
     first_datetime = Timex.to_datetime(first, site.timezone)

@@ -125,4 +125,13 @@ if (domainEl) {
         router.updateLinkHandlers()
       })
   })
+
+  setInterval(function() {
+    fetch(`/api/${domain}/current-visitors`)
+      .then(res => res.json())
+      .then((res) => {
+        console.log(res)
+        document.getElementById('current-visitors').innerHTML = res
+      })
+  }, 10000)
 }

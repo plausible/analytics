@@ -42,6 +42,7 @@ defmodule PlausibleWeb.Router do
     get "/:domain/operating-systems", StatsController, :operating_systems
     get "/:domain/browsers", StatsController, :browsers
     get "/:domain/compare", StatsController, :compare
+    get "/:domain/current-visitors", StatsController, :current_visitors
   end
 
   scope "/", PlausibleWeb do

@@ -143,6 +143,48 @@ defmodule Plausible.StatsTest do
     end
   end
 
+  describe "current_visitors" do
+    test "counts user ids seen in the last 5 minutes" do
+      site = insert(:site)
+
+      insert(:pageview, %{
+        hostname: site.domain,
+        user_id: UUID.uuid4(),
+      })
+
+      insert(:pageview, %{
+        hostname: site.domain,
+        user_id: UUID.uuid4(),
+        inserted_at: Timex.now() |> Timex.shift(minutes: -4)
+      })
+
+      insert(:pageview, %{
+        hostname: site.domain,
+        user_id: UUID.uuid4(),
+        inserted_at: Timex.now() |> Timex.shift(minutes: -6)
+      })
+
+      assert Stats.current_visitors(site) == 2
+    end
+
+    test "counts unique user ids" do
+      site = insert(:site)
+      id = UUID.uuid4()
+
+      insert(:pageview, %{
+        hostname: site.domain,
+        user_id: id,
+      })
+
+      insert(:pageview, %{
+        hostname: site.domain,
+        user_id: id,
+      })
+
+      assert Stats.current_visitors(site) == 1
+    end
+  end
+
   defp months_ago(months) do
     Timex.now() |> Timex.shift(months: -months)
   end
