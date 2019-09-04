@@ -11,9 +11,6 @@
       </div>
     </div>
     <div class="mt-4 sm:mt-0">
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-      <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
       <div class="flex">
         <%= if @query.period == "month" do %>
           <div class="flex rounded shadow bg-white mr-4 cursor-pointer">
