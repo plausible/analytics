@@ -2,7 +2,7 @@ defmodule Plausible.Billing.PaddleApi do
   @update_endpoint "https://vendors.paddle.com/api/2.0/subscription/users/update"
   @get_endpoint "https://vendors.paddle.com/api/2.0/subscription/users"
   @vendor_id "49430"
-  @vendor_auth_code "00e75d18fde1457171b73723ecf54c4026f9b0047e70b6dbff"
+  @vendor_auth_code System.get_env("PADDLE_VENDOR_AUTH_CODE")
   @headers [
     {"Content-type", "application/json"},
     {"Accept", "application/json"}
