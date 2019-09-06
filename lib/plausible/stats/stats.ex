@@ -31,9 +31,9 @@ defmodule Plausible.Stats do
     ) |> Enum.into(%{})
     |> transform_keys(fn dt -> NaiveDateTime.to_date(dt) end)
 
+    present_index = Enum.find_index(steps, fn step -> step == Timex.now(site.timezone) |> Timex.to_date |> Timex.beginning_of_month end)
     plot = Enum.map(steps, fn step -> groups[step] || 0 end)
     labels = Enum.map(steps, fn step -> Timex.format!(step, "{ISOdate}") end)
-    present_index = Enum.find_index(steps, fn step -> step == Timex.now(site.timezone) |> Timex.to_date |> Timex.beginning_of_month  end)
 
     {plot, labels, present_index}
   end
@@ -49,9 +49,10 @@ defmodule Plausible.Stats do
     ) |> Enum.into(%{})
     |> transform_keys(fn dt -> NaiveDateTime.to_date(dt) end)
 
-    plot = Enum.map(steps, fn step -> groups[step] || 0 end)
-    labels = Enum.map(steps, fn step -> Timex.format!(step, "{ISOdate}") end)
     present_index = Enum.find_index(steps, fn step -> step == Timex.now(site.timezone) |> Timex.to_date  end)
+    steps_to_show = if present_index, do: present_index + 1, else: Enum.count(steps)
+    plot = Enum.map(steps, fn step -> groups[step] || 0 end) |> Enum.take(steps_to_show)
+    labels = Enum.map(steps, fn step -> Timex.format!(step, "{ISOdate}") end)
 
     {plot, labels, present_index}
   end
@@ -75,9 +76,10 @@ defmodule Plausible.Stats do
     |> Enum.into(%{})
     |> transform_keys(fn dt -> NaiveDateTime.truncate(dt, :second) end)
 
-    plot = Enum.map(steps, fn step -> groups[step] || 0 end)
-    labels = Enum.map(steps, fn step -> NaiveDateTime.to_iso8601(step) end)
     present_index = Enum.find_index(steps, fn step -> step == Timex.now(site.timezone) |> truncate_to_hour |> NaiveDateTime.truncate(:second) end)
+    steps_to_show = if present_index, do: present_index + 1, else: Enum.count(steps)
+    plot = Enum.map(steps, fn step -> groups[step] || 0 end) |> Enum.take(steps_to_show)
+    labels = Enum.map(steps, fn step -> NaiveDateTime.to_iso8601(step) end)
     {plot, labels, present_index}
   end
 
