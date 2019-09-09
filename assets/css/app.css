@@ -51,6 +51,16 @@ blockquote {
   }
 }
 
+.pricing-table {
+  height: 920px;
+}
+
+@screen md {
+  .pricing-table {
+    height: auto;
+  }
+}
+
 @tailwind utilities;
 
 a {
