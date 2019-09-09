@@ -42,8 +42,8 @@ defmodule PlausibleWeb.SiteController do
       !google_site["error"]
     end
 
-    report = Repo.get_by(Plausible.Site.EmailSettings, site_id: site.id)
-    report_changeset = report && Plausible.Site.EmailSettings.changeset(report, %{})
+    report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
+    report_changeset = report && Plausible.Site.WeeklyReport.changeset(report, %{})
 
     changeset = Plausible.Site.changeset(site, %{})
 
@@ -58,10 +58,10 @@ defmodule PlausibleWeb.SiteController do
   end
 
 
-  def update_email_settings(conn, %{"website" => website, "email_settings" => email_settings}) do
+  def update_email_settings(conn, %{"website" => website, "weekly_report" => weekly_report}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
-    Repo.get_by(Plausible.Site.EmailSettings, site_id: site.id)
-    |> Plausible.Site.EmailSettings.changeset(email_settings)
+    Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
+    |> Plausible.Site.WeeklyReport.changeset(weekly_report)
     |> Repo.update!
 
     conn
@@ -125,7 +125,7 @@ defmodule PlausibleWeb.SiteController do
   def enable_email_report(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
 
-    Plausible.Site.EmailSettings.changeset(%Plausible.Site.EmailSettings{}, %{
+    Plausible.Site.WeeklyReport.changeset(%Plausible.Site.WeeklyReport{}, %{
       site_id: site.id,
       email: conn.assigns[:current_user].email
     })

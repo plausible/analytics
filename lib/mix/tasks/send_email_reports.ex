@@ -15,17 +15,17 @@ defmodule Mix.Tasks.SendEmailReports do
   def execute(args \\ []) do
     sites = Repo.all(
       from s in Plausible.Site,
-      join: es in Plausible.Site.EmailSettings, on: es.site_id == s.id,
-      left_join: se in "sent_email_reports", on: se.site_id == s.id and se.year == fragment("EXTRACT(year from (now() at time zone ?))", s.timezone) and se.week == fragment("EXTRACT(week from (now() at time zone ?))", s.timezone),
+      join: wr in Plausible.Site.WeeklyReport, on: wr.site_id == s.id,
+      left_join: se in "sent_weekly_reports", on: se.site_id == s.id and se.year == fragment("EXTRACT(year from (now() at time zone ?))", s.timezone) and se.week == fragment("EXTRACT(week from (now() at time zone ?))", s.timezone),
       where: is_nil(se), # We haven't sent a report for this site on this week
       where: fragment("EXTRACT(dow from (now() at time zone ?))", s.timezone) == 1, # It's monday in the local timezone
       where: fragment("EXTRACT(hour from (now() at time zone ?))", s.timezone) >= 9, # It's after 9am
       select: s,
-      preload: [email_settings: es]
+      preload: [weekly_report: wr]
     )
 
     for site <- sites do
-      email = site.email_settings.email
+      email = site.weekly_report.email
       IO.puts("Sending email report for #{site.domain} to #{email}")
       send_report(email, site)
     end
@@ -58,7 +58,7 @@ defmodule Mix.Tasks.SendEmailReports do
   defp email_report_sent(site) do
     {year, week} = Timex.now(site.timezone) |> DateTime.to_date |> Timex.iso_week
 
-    Repo.insert_all("sent_email_reports", [%{
+    Repo.insert_all("sent_weekly_reports", [%{
       site_id: site.id,
       year: year,
       week: week,
