@@ -41,7 +41,6 @@ defmodule PlausibleWeb.Email do
   def trial_two_week_reminder(user) do
     new_email()
     |> to(user)
-    |> bcc("uku@plausible.io")
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("trial-two-week-reminder")
     |> subject("14 days left on your Plausible trial")
