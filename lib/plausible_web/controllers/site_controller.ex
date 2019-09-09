@@ -42,31 +42,20 @@ defmodule PlausibleWeb.SiteController do
       !google_site["error"]
     end
 
-    report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
-    report_changeset = report && Plausible.Site.WeeklyReport.changeset(report, %{})
-
-    changeset = Plausible.Site.changeset(site, %{})
+    weekly_report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
+    weekly_report_changeset = weekly_report && Plausible.Site.WeeklyReport.changeset(weekly_report, %{})
+    monthly_report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
+    monthly_report_changeset = monthly_report && Plausible.Site.WeeklyReport.changeset(monthly_report, %{})
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings.html",
       site: site,
-      report_changeset: report_changeset,
+      weekly_report_changeset: weekly_report_changeset,
+      monthly_report_changeset: monthly_report_changeset,
       google_search_console_verified: google_search_console_verified,
-      changeset: changeset
+      changeset: Plausible.Site.changeset(site, %{})
     )
-  end
-
-
-  def update_email_settings(conn, %{"website" => website, "weekly_report" => weekly_report}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
-    Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
-    |> Plausible.Site.WeeklyReport.changeset(weekly_report)
-    |> Repo.update!
-
-    conn
-    |> put_flash(:success, "Email address saved succesfully")
-    |> redirect(to: "/#{site.domain}/settings")
   end
 
   def update_settings(conn, %{"website" => website, "site" => site_params}) do
@@ -122,7 +111,7 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/" <> site.domain <> "/settings")
   end
 
-  def enable_email_report(conn, %{"website" => website}) do
+  def enable_weekly_report(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
 
     Plausible.Site.WeeklyReport.changeset(%Plausible.Site.WeeklyReport{}, %{
@@ -136,13 +125,58 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/" <> site.domain <> "/settings")
   end
 
-  def disable_email_report(conn, %{"website" => website}) do
+  def disable_weekly_report(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
-    Repo.delete_all(from es in Plausible.Site.EmailSettings, where: es.site_id == ^site.id)
+    Repo.delete_all(from wr in Plausible.Site.WeeklyReport, where: wr.site_id == ^site.id)
 
     conn
     |> put_flash(:success, "Success! You will not receive weekly email reports going forward")
     |> redirect(to: "/" <> site.domain <> "/settings")
+  end
+
+  def update_weekly_settings(conn, %{"website" => website, "weekly_report" => weekly_report}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
+    |> Plausible.Site.WeeklyReport.changeset(weekly_report)
+    |> Repo.update!
+
+    conn
+    |> put_flash(:success, "Email address saved succesfully")
+    |> redirect(to: "/#{site.domain}/settings")
+  end
+
+  def enable_monthly_report(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+
+    Plausible.Site.MonthlyReport.changeset(%Plausible.Site.MonthlyReport{}, %{
+      site_id: site.id,
+      email: conn.assigns[:current_user].email
+    })
+    |> Repo.insert!
+
+    conn
+    |> put_flash(:success, "Success! You will receive an email report every month going forward")
+    |> redirect(to: "/" <> site.domain <> "/settings")
+  end
+
+  def disable_monthly_report(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    Repo.delete_all(from mr in Plausible.Site.MonthlyReport, where: mr.site_id == ^site.id)
+
+    conn
+    |> put_flash(:success, "Success! You will not receive monthly email reports going forward")
+    |> redirect(to: "/" <> site.domain <> "/settings")
+  end
+
+  def update_monthly_settings(conn, %{"website" => website, "monthly_report" => monthly_report}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
+    |> Plausible.Site.WeeklyReport.changeset(monthly_report)
+    |> Repo.update!
+
+    conn
+    |> put_flash(:success, "Email address saved succesfully")
+    |> redirect(to: "/#{site.domain}/settings")
   end
 
   defp insert_site(user_id, params) do

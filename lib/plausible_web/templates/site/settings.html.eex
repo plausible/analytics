@@ -102,28 +102,48 @@
   <div class="my-4 border-b border-grey-light"></div>
 
   <div class="my-8 flex items-center">
-    <%= if @report_changeset do %>
-      <%= button(to: "/sites/#{@site.domain}/email-report/disable", method: :post, class: "border rounded-full border-grey flex items-center cursor-pointer w-8 bg-green justify-end") do %>
+    <%= if @weekly_report_changeset do %>
+      <%= button(to: "/sites/#{@site.domain}/weekly-report/disable", method: :post, class: "border rounded-full border-grey flex items-center cursor-pointer w-8 bg-green justify-end") do %>
         <span class="rounded-full border w-4 h-4 border-grey shadow-inner bg-white shadow"></span>
       <% end %>
-      <span class="ml-2">Receive a weekly email report every Monday</span>
     <% else %>
-      <%= button(to: "/sites/#{@site.domain}/email-report/enable", method: :post, class: "border rounded-full border-grey flex items-center cursor-pointer w-8 justify-start") do %>
+      <%= button(to: "/sites/#{@site.domain}/weekly-report/enable", method: :post, class: "border rounded-full border-grey flex items-center cursor-pointer w-8 justify-start") do %>
         <span class="rounded-full border w-4 h-4 border-grey shadow-inner bg-white shadow"></span>
       <% end %>
-      <span class="ml-2">Receive a weekly email report every Monday</span>
     <% end %>
+    <span class="ml-2">Receive a weekly email report every Monday</span>
   </div>
-  <%= if @report_changeset do %>
-    <div class="my-4 border-b border-grey-light"></div>
+  <%= if @weekly_report_changeset do %>
     <div class="text-sm text-grey-darker mt-6">
-      <%= form_for @report_changeset, "/sites/#{@site.domain}/email-report", [class: "max-w-xs"], fn f -> %>
-        <div class="my-4">
-          <%= label f, :email, "Email address", class: "block text-grey-darker text-sm font-bold mb-2" %>
-          <%= email_input f, :email, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:border-grey-light" %>
-          <%= error_tag f, :email %>
+      <%= form_for @weekly_report_changeset, "/sites/#{@site.domain}/weekly-report", [class: "max-w-xs"], fn f -> %>
+        <%= label f, :email, "Email address", class: "block text-grey-darker text-sm font-bold mb-2" %>
+        <div class="flex">
+          <%= email_input f, :email, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:border-grey-light", style: "flex-grow: 2" %>
+          <%= submit "Update", class: "button rounded-l-none" %>
         </div>
-        <%= submit "Set email address", class: "button mt-2" %>
+      <% end %>
+    </div>
+  <% end %>
+  <div class="my-4 border-b border-grey-light"></div>
+  <div class="my-8 flex items-center">
+    <%= if @monthly_report_changeset do %>
+      <%= button(to: "/sites/#{@site.domain}/monthly-report/disable", method: :post, class: "border rounded-full border-grey flex items-center cursor-pointer w-8 bg-green justify-end") do %>
+        <span class="rounded-full border w-4 h-4 border-grey shadow-inner bg-white shadow"></span>
+      <% end %>
+    <% else %>
+      <%= button(to: "/sites/#{@site.domain}/monthly-report/enable", method: :post, class: "border rounded-full border-grey flex items-center cursor-pointer w-8 justify-start") do %>
+        <span class="rounded-full border w-4 h-4 border-grey shadow-inner bg-white shadow"></span>
+      <% end %>
+    <% end %>
+    <span class="ml-2">Receive a monthly email report on 1st of the month</span>
+  </div>
+  <%= if @monthly_report_changeset do %>
+    <div class="text-sm text-grey-darker mt-6">
+      <%= form_for @monthly_report_changeset, "/sites/#{@site.domain}/monthly-report", [class: "max-w-xs"], fn f -> %>
+        <div class="flex">
+          <%= email_input f, :email, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:border-grey-light", style: "flex-grow: 2" %>
+          <%= submit "Update", class: "button rounded-l-none" %>
+        </div>
       <% end %>
     </div>
   <% end %>
