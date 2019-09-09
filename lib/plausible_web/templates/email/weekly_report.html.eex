@@ -642,7 +642,7 @@ body {
                         <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right: 10px; padding-left: 10px; padding-top: 10px; padding-bottom: 10px; font-family: Arial, sans-serif"><![endif]-->
                         <div style="color:#3d4852;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;line-height:120%;padding-top:10px;padding-right:10px;padding-bottom:10px;padding-left:10px;">
                           <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; color: #3d4852;">
-                            <p style="font-size: 14px; line-height: 14px; margin: 0;"><span style="font-size: 12px;">You are receiving this email because you have enabled weekly email reports for plausible.io. <a href="<%= @settings_link %>" rel="noopener" style="text-decoration: underline; color: #0068A5;" target="_blank">Click here </a>to manage your notification settings.</span></p>
+                            <p style="font-size: 14px; line-height: 14px; margin: 0;"><span style="font-size: 12px;">You are receiving this email because you have enabled weekly email reports for <%= link(@site.domain, rel: "nofollow", style: "text-decoration: none; color: #3d4852", to: "#") %>. <a href="<%= @settings_link %>" rel="noopener" style="text-decoration: underline; color: #0068A5;" target="_blank">Click here </a>to manage your notification settings.</span></p>
                           </div>
                         </div>
                         <!--[if mso]></td></tr></table><![endif]-->
