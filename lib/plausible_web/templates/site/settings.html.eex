@@ -94,6 +94,31 @@
     <% end %>
 </div>
 
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10" id="google-auth">
+  <div class="flex items-center justify-between">
+    <h2>Email reports</h2>
+  </div>
+
+  <div class="my-4 border-b border-grey-light"></div>
+
+  <div class="my-4 flex items-center">
+    <%= if @weekly_report_enabled do %>
+      <%= button(to: "/sites/#{@site.domain}/email-report/disable", method: :post, class: "border rounded-full border-grey flex items-center cursor-pointer w-8 bg-green justify-end") do %>
+        <span class="rounded-full border w-4 h-4 border-grey shadow-inner bg-white shadow"></span>
+      <% end %>
+      <span class="ml-2">Receive a weekly email report every Monday</span>
+    <% else %>
+      <%= button(to: "/sites/#{@site.domain}/email-report/enable", method: :post, class: "border rounded-full border-grey flex items-center cursor-pointer w-8 justify-start") do %>
+        <span class="rounded-full border w-4 h-4 border-grey shadow-inner bg-white shadow"></span>
+      <% end %>
+      <span class="ml-2">Receive a weekly email report every Monday</span>
+    <% end %>
+  </div>
+  <div class="text-sm text-grey-darker mt-6">
+    Configured email: <%= @conn.assigns[:current_user].email %>
+  </div>
+</div>
+
 <%= form_for @conn, "/", [class: "bg-white max-w-md mx-auto shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mb-4 mt-16"], fn f -> %>
   <div class="flex items-center justify-between">
     <h2>Javascript snippet</h2>

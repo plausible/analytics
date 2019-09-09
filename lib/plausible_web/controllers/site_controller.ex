@@ -40,10 +40,17 @@ defmodule PlausibleWeb.SiteController do
       !google_site["error"]
     end
 
+    weekly_report_enabled = Repo.exists?(from es in "email_settings", where: es.site_id == ^site.id)
+
     changeset = Plausible.Site.changeset(site, %{})
     conn
     |> assign(:skip_plausible_tracking, true)
-    |> render("settings.html", site: site, google_search_console_verified: google_search_console_verified, changeset: changeset)
+    |> render("settings.html",
+      site: site,
+      weekly_report_enabled: weekly_report_enabled,
+      google_search_console_verified: google_search_console_verified,
+      changeset: changeset
+    )
   end
 
   def update_settings(conn, %{"website" => website, "site" => site_params}) do
@@ -96,6 +103,26 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Stats for #{site.domain} are now private.")
+    |> redirect(to: "/" <> site.domain <> "/settings")
+  end
+
+  def enable_email_report(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+
+    Plausible.Site.EmailSettings.changeset(%Plausible.Site.EmailSettings{}, %{site_id: site.id})
+    |> Repo.insert!
+
+    conn
+    |> put_flash(:success, "Success! You will receive an email report every Monday going forward")
+    |> redirect(to: "/" <> site.domain <> "/settings")
+  end
+
+  def disable_email_report(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    Repo.delete_all(from es in Plausible.Site.EmailSettings, where: es.site_id == ^site.id)
+
+    conn
+    |> put_flash(:success, "Success! You will not receive weekly email reports going forward")
     |> redirect(to: "/" <> site.domain <> "/settings")
   end
 
