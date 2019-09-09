@@ -33,7 +33,7 @@ Plausible aims to track overall trends in your website traffic, not indivual vis
 
 <div class="my-8">
   <h3 class="mb-2">Cookie policy</h3>
-  Plausible installs a first-party cooky to be able to differentiate between a new visitor and a returning visitor. This cookie contains a random identifier that is sent along with each pageview request. On the backend, this allows us to aggregate and show unique visitors and total pageviews separately.
+  Plausible installs a first-party cookie to be able to differentiate between a new visitor and a returning visitor. This cookie contains a random identifier that is sent along with each pageview request. On the backend, this allows us to aggregate and show unique visitors and total pageviews separately.
   </div>
   <%= link("Back to homepage", to: "/", class: "text-indigo") %>
 </div>
