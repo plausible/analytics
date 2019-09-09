@@ -234,7 +234,7 @@
     </div>
 
     <div class="text-center">
-      <%= link("Ask a question from the founder", to: "mailto: uku@plausible.io", class: "text-indigo") %>
+      <%= link("Ask a question from the founder", to: "mailto:uku@plausible.io", class: "text-indigo") %>
     </div>
   </div>
 </div>
