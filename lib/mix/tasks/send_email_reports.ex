@@ -15,19 +15,19 @@ defmodule Mix.Tasks.SendEmailReports do
   def execute(args \\ []) do
     sites = Repo.all(
       from s in Plausible.Site,
-      join: es in "email_settings", on: es.site_id == s.id,
+      join: es in Plausible.Site.EmailSettings, on: es.site_id == s.id,
       left_join: se in "sent_email_reports", on: se.site_id == s.id and se.year == fragment("EXTRACT(year from (now() at time zone ?))", s.timezone) and se.week == fragment("EXTRACT(week from (now() at time zone ?))", s.timezone),
       where: is_nil(se), # We haven't sent a report for this site on this week
       where: fragment("EXTRACT(dow from (now() at time zone ?))", s.timezone) == 1, # It's monday in the local timezone
       where: fragment("EXTRACT(hour from (now() at time zone ?))", s.timezone) >= 9, # It's after 9am
       select: s,
-      preload: :members
+      preload: [email_settings: es]
     )
 
     for site <- sites do
-      [owner] = site.members
-      IO.puts("Sending email report for #{site.domain} to #{owner.email}")
-      send_report(owner.email, site)
+      email = site.email_settings.email
+      IO.puts("Sending email report for #{site.domain} to #{email}")
+      send_report(email, site)
     end
   end
 

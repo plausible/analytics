@@ -40,17 +40,31 @@ defmodule PlausibleWeb.SiteController do
       !google_site["error"]
     end
 
-    weekly_report_enabled = Repo.exists?(from es in "email_settings", where: es.site_id == ^site.id)
+    report_changeset = Repo.get_by(Plausible.Site.EmailSettings, site_id: site.id)
+                      |> Plausible.Site.EmailSettings.changeset(%{})
 
     changeset = Plausible.Site.changeset(site, %{})
+
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings.html",
       site: site,
-      weekly_report_enabled: weekly_report_enabled,
+      report_changeset: report_changeset,
       google_search_console_verified: google_search_console_verified,
       changeset: changeset
     )
+  end
+
+
+  def update_email_settings(conn, %{"website" => website, "email_settings" => email_settings}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    Repo.get_by(Plausible.Site.EmailSettings, site_id: site.id)
+    |> Plausible.Site.EmailSettings.changeset(email_settings)
+    |> Repo.update!
+
+    conn
+    |> put_flash(:success, "Email address saved succesfully")
+    |> redirect(to: "/#{site.domain}/settings")
   end
 
   def update_settings(conn, %{"website" => website, "site" => site_params}) do
