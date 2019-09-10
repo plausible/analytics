@@ -18,7 +18,9 @@ defmodule PlausibleWeb.SiteController do
       {:ok, %{site: site}} ->
         Plausible.Tracking.event(conn, "New Site: Create", %{domain: site.domain})
         Plausible.Slack.notify("#{user.name} created #{site.domain}")
-        redirect(conn, to: "/#{site.domain}/snippet")
+        conn
+        |> put_session(site.domain <> "_offer_email_report", true)
+        |> redirect(to: "/#{site.domain}/snippet")
       {:error, :site, changeset, _} ->
         render(conn, "new.html", changeset: changeset)
     end
@@ -40,8 +42,8 @@ defmodule PlausibleWeb.SiteController do
       !google_site["error"]
     end
 
-    report_changeset = Repo.get_by(Plausible.Site.EmailSettings, site_id: site.id)
-                      |> Plausible.Site.EmailSettings.changeset(%{})
+    report = Repo.get_by(Plausible.Site.EmailSettings, site_id: site.id)
+    report_changeset = report && Plausible.Site.EmailSettings.changeset(report, %{})
 
     changeset = Plausible.Site.changeset(site, %{})
 
@@ -123,7 +125,10 @@ defmodule PlausibleWeb.SiteController do
   def enable_email_report(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
 
-    Plausible.Site.EmailSettings.changeset(%Plausible.Site.EmailSettings{}, %{site_id: site.id})
+    Plausible.Site.EmailSettings.changeset(%Plausible.Site.EmailSettings{}, %{
+      site_id: site.id,
+      email: conn.assigns[:current_user].email
+    })
     |> Repo.insert!
 
     conn

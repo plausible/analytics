@@ -18,6 +18,7 @@ defmodule PlausibleWeb.StatsController do
       else
         if Plausible.Sites.has_pageviews?(site) do
           demo = site.domain == "plausible.io"
+          offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
 
           Plausible.Tracking.event(conn, "Site Analytics: Open", %{demo: demo})
 
@@ -27,12 +28,14 @@ defmodule PlausibleWeb.StatsController do
 
           conn
           |> assign(:skip_plausible_tracking, !demo)
+          |> put_session(site.domain <> "_offer_email_report", nil)
           |> render("stats.html",
             site: site,
             query: query,
             current_visitors: current_visitors,
-            title: "Plausible · " <> site.domain
-    )
+            title: "Plausible · " <> site.domain,
+            offer_email_report: offer_email_report
+          )
         else
           conn
           |> assign(:skip_plausible_tracking, true)

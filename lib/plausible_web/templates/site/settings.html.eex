@@ -94,7 +94,7 @@
     <% end %>
 </div>
 
-<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10" id="google-auth">
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10" id="email-reports">
   <div>
     <h2>Email reports</h2>
   </div>

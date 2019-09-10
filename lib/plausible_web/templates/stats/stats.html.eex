@@ -1,5 +1,10 @@
-<div class="pt-12"></div>
 <div class="container pb-32" data-site-domain="<%= @site.domain %>">
+  <%= if @offer_email_report do %>
+    <div class="text-center bg-blue-lighter text-blue-darkest text-sm font-bold px-4 w-full rounded transition" style="top: 91px" role="alert">
+      <%= link("Click here to enable weekly email reports →", to: "/#{@site.domain}/settings#email-reports", class: "py-2 block") %>
+    </div>
+  <% end %>
+  <div class="pt-12"></div>
   <div class="w-full sm:flex justify-between items-center">
     <div class="w-full sm:flex items-center">
       <h2 class="text-center sm:text-left sm:mr-8">Analytics for <%= link(@site.domain, to: "//" <> @site.domain, target: "_blank") %></h2>
