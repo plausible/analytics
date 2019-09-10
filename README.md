@@ -11,9 +11,9 @@ lightweight script.
 
 ### Why Plausible?
 
-* **Clutter Free**: Stop digging through complex reports to find what you’re looking for. Plausible presents the most important information to you on a single page.
-* **Anonymous**: Measure traffic, not individuals. No personal data or IP addresses are ever stored in our database. Read more about our data policy
-* **Lightweight**: Plausible works by loading a script on your website, like Google Analytics. Our script is 14x smaller, making your website quicker to load.
+- **Clutter Free**: Stop digging through complex reports to find what you’re looking for. Plausible presents the most important information to you on a single page.
+- **Anonymous**: Measure traffic, not individuals. No personal data or IP addresses are ever stored in our database. [Read more about our data policy](https://plausible.io/data-policy)
+- **Lightweight**: Plausible works by loading a script on your website, like Google Analytics. Our script is 14x smaller, making your website quicker to load.
 
 Interested? [Read more on our website](https://plausible.io)
 
