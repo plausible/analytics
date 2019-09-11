@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.AuthPlug do
   import Plug.Conn
+  use Plausible.Repo
 
   def init(options) do
     options
@@ -9,7 +10,8 @@ defmodule PlausibleWeb.AuthPlug do
     case get_session(conn, :current_user_id) do
       nil -> conn
       id ->
-        user = Plausible.Auth.find_user_by(id: id)
+        user = Repo.get_by(Plausible.Auth.User, id: id)
+               |> Repo.preload(:subscription)
         if user do
           assign(conn, :current_user, user)
         else

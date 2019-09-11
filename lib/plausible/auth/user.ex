@@ -18,6 +18,7 @@ defmodule Plausible.Auth.User do
     has_many :site_memberships, Plausible.Site.Membership
     has_many :sites, through: [:site_memberships, :site]
     has_one :google_auth, Plausible.Site.GoogleAuth
+    has_one :subscription, Plausible.Billing.Subscription
 
     timestamps()
   end

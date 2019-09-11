@@ -21,9 +21,15 @@
       <%= cond do %>
         <% @conn.assigns[:current_user] -> %>
           <ul class="list-reset flex">
-            <li class="mr-6 hidden sm:block">
-              <%= link("Give feedback", to: "/feedback", class: "font-bold rounded py-2 px-3 hover:bg-grey-lighter", style: "line-height: 34px;") %>
-            </li>
+            <%= if @conn.assigns[:current_user].subscription == nil do %>
+              <li class="mr-6 hidden sm:block">
+                <%= link(trial_notificaton(@conn.assigns[:current_user]), to: "/settings", class: "font-bold text-orange-darkest rounded py-2 px-3 bg-orange-lighter", style: "line-height: 34px;") %>
+              </li>
+            <% else %>
+              <li class="mr-6 hidden sm:block">
+                <%= link("Give feedback", to: "/feedback", class: "font-bold rounded py-2 px-3 hover:bg-grey-lighter", style: "line-height: 34px;") %>
+              </li>
+            <% end %>
             <li>
               <div class="relative font-bold rounded hover:bg-grey-lighter">
                 <div data-dropdown-trigger class="flex items-center hover:bg-grey-lighter rounded p-2 cursor-pointer">
