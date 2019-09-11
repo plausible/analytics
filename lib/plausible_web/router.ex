@@ -85,9 +85,12 @@ defmodule PlausibleWeb.Router do
     post "/sites", SiteController, :create_site
     post "/sites/:website/make-public", SiteController, :make_public
     post "/sites/:website/make-private", SiteController, :make_private
-    post "/sites/:website/email-report/enable", SiteController, :enable_email_report
-    post "/sites/:website/email-report/disable", SiteController, :disable_email_report
-    put "/sites/:website/email-report", SiteController, :update_email_settings
+    post "/sites/:website/weekly-report/enable", SiteController, :enable_weekly_report
+    post "/sites/:website/weekly-report/disable", SiteController, :disable_weekly_report
+    put "/sites/:website/weekly-report", SiteController, :update_weekly_settings
+    post "/sites/:website/monthly-report/enable", SiteController, :enable_monthly_report
+    post "/sites/:website/monthly-report/disable", SiteController, :disable_monthly_report
+    put "/sites/:website/monthly-report", SiteController, :update_monthly_settings
     get "/:website/snippet", SiteController, :add_snippet
     get "/:website/settings", SiteController, :settings
     put "/:website/settings", SiteController, :update_settings
