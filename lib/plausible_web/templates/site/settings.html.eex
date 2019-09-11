@@ -140,6 +140,7 @@
   <%= if @monthly_report_changeset do %>
     <div class="text-sm text-grey-darker mt-6">
       <%= form_for @monthly_report_changeset, "/sites/#{@site.domain}/monthly-report", [class: "max-w-xs"], fn f -> %>
+        <%= label f, :email, "Email address", class: "block text-grey-darker text-sm font-bold mb-2" %>
         <div class="flex">
           <%= email_input f, :email, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:border-grey-light", style: "flex-grow: 2" %>
           <%= submit "Update", class: "button rounded-l-none" %>
