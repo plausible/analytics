@@ -240,7 +240,7 @@ body {
                               </div>
                             <% @change_visitors < 0 -> %>
                               <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; color: #ff4457;">
-                                <p style="font-size: 12px; line-height: 14px; text-align: left; margin: 0;"><strong>-<%= @change_visitors %>%</strong></p>
+                                <p style="font-size: 12px; line-height: 14px; text-align: left; margin: 0;"><strong><%= @change_visitors %>%</strong></p>
                               </div>
                           <% end %>
                         </div>
@@ -282,7 +282,7 @@ body {
                               </div>
                             <% @change_pageviews < 0 -> %>
                               <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; color: #ff4457;">
-                                <p style="font-size: 12px; line-height: 14px; text-align: left; margin: 0;"><strong>-<%= @change_pageviews %>%</strong></p>
+                                <p style="font-size: 12px; line-height: 14px; text-align: left; margin: 0;"><strong><%= @change_pageviews %>%</strong></p>
                               </div>
                           <% end %>
                         </div>
