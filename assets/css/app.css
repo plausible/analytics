@@ -63,6 +63,12 @@ blockquote {
 
 @tailwind utilities;
 
+#main-graph {
+  @screen sm {
+    height: 460px;
+  }
+}
+
 a {
   color: inherit;
 }
@@ -189,19 +195,6 @@ a {
     top: -14px;
     right: 65px;
     left: auto;
-}
-
-
-.group:hover > .group-hover-fill-red > svg {
-  fill: #ff6978!important;
-}
-
-.group:hover > .group-hover-fill-red {
-  color: #ff6978;
-}
-
-.group-hover-fill-red svg {
-  transition: all .1 ease-in;
 }
 
 .feather {

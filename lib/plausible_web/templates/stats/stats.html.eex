@@ -6,17 +6,17 @@
   <% end %>
   <div class="pt-12"></div>
   <div class="w-full sm:flex justify-between items-center">
-    <div class="w-full sm:flex items-center">
-      <h2 class="text-center sm:text-left sm:mr-8">Analytics for <%= link(@site.domain, to: "//" <> @site.domain, target: "_blank") %></h2>
-      <div class="text-sm font-bold text-grey-darker">
+    <div class="w-full flex items-center">
+      <h2 class="text-left mr-8">Analytics for <%= link(@site.domain, to: "//" <> @site.domain, target: "_blank") %></h2>
+      <div class="text-sm font-bold text-grey-darker mt-2 mt-0">
         <svg class="w-2 mr-1 fill-current text-green" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
           <circle cx="8" cy="8" r="8"/>
         </svg>
         <span id="current-visitors"><%= @current_visitors %></span> current visitors
       </div>
     </div>
-    <div class="mt-4 sm:mt-0">
-      <div class="flex">
+    <div class="mt-6 md:mt-0">
+      <div class="flex justify-between sm:justify-between">
         <%= if @query.period == "month" do %>
           <div class="flex rounded shadow bg-white mr-4 cursor-pointer">
             <%= link(to: "/#{@site.domain}?period=month&date=#{@query.date_range.first |> Timex.shift(months: -1) |> Timex.format!("{ISOdate}")}", class: "flex items-center px-2 border-r border-grey-light") do %>
@@ -47,7 +47,7 @@
           </div>
         <% end %>
 
-        <div class="relative" style="height: 35.5px; width: 180px;">
+        <div class="relative" style="height: 35.5px; width: 190px;">
           <div data-dropdown-trigger class="flex items-center justify-between hover:bg-grey-lighter rounded bg-white shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-bold text-grey-darker h-full">
             <span class="mr-2"><%= timeframe_text(@site, @query) %></span>
             <svg class="text-pink fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -74,7 +74,7 @@
     </div>
   </div>
 
-  <div class="w-full bg-white shadow-md rounded mt-6" id="main-graph" style="height: 460px;">
+  <div class="w-full bg-white shadow-md rounded mt-6" id="main-graph">
     <div class="loading pt-48 mx-auto"><div></div></div>
   </div>
 
