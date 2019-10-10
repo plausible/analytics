@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content="Plausible is a simple, lightweight web analytics service. Monitor your website traffic while respecting your visitors' privacy."/>
     <link rel="icon" type="image/png" sizes="32x32" href="<%= PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_favicon.png") %>">
-    <title><%= assigns[:title] || "Plausible · Simple web analytics" %></title>
+    <title><%= assigns[:title] || "Plausible · Simple, open-source web analytics" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
     <%= render("_tracking.html", assigns) %>
   </head>

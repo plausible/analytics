@@ -4,6 +4,7 @@ defmodule Plausible.Site.GoogleAuth do
 
   schema "google_auth" do
     field :email, :string
+    field :property, :string
     field :refresh_token, :string
     field :access_token, :string
     field :expires, :naive_datetime
@@ -19,5 +20,10 @@ defmodule Plausible.Site.GoogleAuth do
     |> cast(attrs, [:refresh_token, :access_token, :expires, :email, :user_id, :site_id])
     |> validate_required([:refresh_token, :access_token, :expires, :email, :user_id, :site_id])
     |> unique_constraint(:site)
+  end
+
+  def set_property(auth, attrs \\ %{}) do
+    auth
+    |> cast(attrs, [:property])
   end
 end
