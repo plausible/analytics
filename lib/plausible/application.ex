@@ -11,12 +11,6 @@ defmodule Plausible.Application do
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
     {:ok, _} = Logger.add_backend(Sentry.LoggerBackend)
-    :telemetry.attach(
-      "appsignal-ecto",
-      [:plausible, :repo, :query],
-      &Appsignal.Ecto.handle_event/4,
-      nil
-    )
     Supervisor.start_link(children, opts)
   end
 

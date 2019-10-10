@@ -38,13 +38,6 @@ config :ua_inspector,
 config :ref_inspector,
   database_path: "priv/ref_inspector"
 
-config :plausible, PlausibleWeb.Endpoint,
-  instrumenters: [Appsignal.Phoenix.Instrumenter]
-
-config :phoenix, :template_engines,
-  eex: Appsignal.Phoenix.Template.EExEngine,
-  exs: Appsignal.Phoenix.Template.ExsEngine
-
 config :plausible,
   paddle_api: Plausible.Billing.PaddleApi
 

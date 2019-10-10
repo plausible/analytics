@@ -56,7 +56,6 @@ defmodule Plausible.MixProject do
       {:sentry, "~> 7.0"},
       {:httpoison, "~> 1.4"},
       {:ex_machina, "~> 2.3", only: :test},
-      {:appsignal, "~> 1.0"},
       {:joken, "~> 2.0"},
       {:php_serializer, "~> 0.9.0"}
     ]
