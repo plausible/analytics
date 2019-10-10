@@ -62,34 +62,35 @@
 
     <%= if @site.google_auth do %>
       <div class="py-2"></div>
-      <svg class="w-6 h-6 mr-r text-green" style="transform: translateY(0.4rem);">
-        <use xlink:href="#feather-check-circle" />
-      </svg>
       <span class="text-grey-darker">Connected Google account: <b><%= @site.google_auth.email %></b></span>
-      <%= if @google_search_console_verified do %>
-        <div class="py-2"></div>
-        <svg class="w-6 h-6 mr-r text-green" style="transform: translateY(0.4rem);">
-          <use xlink:href="#feather-check-circle" />
-        </svg>
-        <span class="text-grey-darker">Verified access to site <b>https://<%= @site.domain %></b></span>
-        <div class="mt-6">
-          <%= link("View google stats", to: "/#{@site.domain}/referrers/Google", class: "text-indigo") %>
-        </div>
+
+      <%= if @site.google_auth.property && !(@site.google_auth.property in @search_console_domains) do %>
+        <p class="text-grey-darker mt-6 font-bold">
+        NB: Your Google account does not have access to your currently configured property, <%= @site.google_auth.property %>. Please select a verified property from the list below.
+        </p>
       <% else %>
-        <div class="py-2"></div>
-        <svg class="w-6 h-6 mr-r text-red-dark" style="transform: translateY(0.4rem);">
-          <use xlink:href="#feather-x-circle" />
-        </svg>
-        <span class="text-grey-darker">No access to site <b>https://<%= @site.domain %></b></span>
-        <div class="mt-6">
-          <%= link("Verify your site on Google Search Console to continue", to: "https://support.google.com/webmasters/answer/34592", class: "text-indigo") %>
+        <p class="text-grey-darker mt-6">
+        Select the Google Search Console property you would like to pull keyword data from. If you don't see your domain, <%= link("set it up and verify", to: "https://docs.plausible.io/google-search-console-integration#1-add-your-site-on-the-search-console", class: "text-indigo") %> on Search Console first.
+        </p>
+      <% end %>
+
+      <%= form_for Plausible.Site.GoogleAuth.changeset(@site.google_auth), "/#{@site.domain}/settings/google", [class: "max-w-xs"], fn f -> %>
+        <div class="my-6">
+          <div class="inline-block relative w-full">
+            <%= select f, :property, @search_console_domains, prompt: "(Choose property)", class: "block appearance-none w-full bg-grey-lighter text-grey-darker cursor-pointer hover:border-grey p-2 pr-8 rounded leading-normal focus:outline-none" %>
+            <div class="pointer-events-none absolute pin-y pin-r flex items-center px-2 text-red">
+              <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            </div>
+          </div>
         </div>
+
+        <%= submit "Save", class: "button" %>
       <% end %>
     <% else %>
       <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(@site.id), class: "button mt-4") %>
 
       <div class="text-grey-darker mt-8">
-        NB: You also need to set up your site on <%= link("Google Search Console", to: "https://search.google.com/search-console/about") %> for the integration to work.
+        NB: You also need to set up your site on <%= link("Google Search Console", to: "https://search.google.com/search-console/about") %> for the integration to work. <%= link("Read the docs", to: "https://docs.plausible.io/google-search-console-integration", class: "text-indigo") %>
       </div>
     <% end %>
 </div>

@@ -1,5 +1,6 @@
 defmodule Plausible.Google.Api do
   @scope URI.encode_www_form("https://www.googleapis.com/auth/webmasters.readonly email")
+  @verified_permission_levels ["siteOwner", "siteFullUser", "siteRestrictedUser"]
 
   def authorize_url(site_id) do
     if Mix.env() == :test do
@@ -14,32 +15,20 @@ defmodule Plausible.Google.Api do
     Jason.decode!(res.body)
   end
 
-  def fetch_site(domain, auth) do
-    auth = if Timex.before?(auth.expires, Timex.now() |> Timex.shift(seconds: 5)) do
-      refresh_token(auth)
-    else
-      auth
-    end
-    with_https = URI.encode_www_form("https://#{domain}")
-
-    res = HTTPoison.get!("https://www.googleapis.com/webmasters/v3/sites/#{with_https}",["Content-Type": "application/json", "Authorization": "Bearer #{auth.access_token}"])
-
+  def fetch_verified_properties(auth) do
+    auth = refresh_if_needed(auth)
+    res = HTTPoison.get!("https://www.googleapis.com/webmasters/v3/sites",["Content-Type": "application/json", "Authorization": "Bearer #{auth.access_token}"])
     Jason.decode!(res.body)
+    |> Map.get("siteEntry")
+    |> Enum.filter(fn site -> site["permissionLevel"] in @verified_permission_levels end)
+    |> Enum.map(fn site -> site["siteUrl"] end)
   end
 
-  def fetch_stats(site, auth, query) do
-    if Timex.before?(auth.expires, Timex.now() |> Timex.shift(seconds: 5)) do
-      auth = refresh_token(auth)
-      fetch_queries(site.domain, auth, query)
-    else
-      fetch_queries(site.domain, auth, query)
-    end
-  end
+  def fetch_stats(auth, query) do
+    auth = refresh_if_needed(auth)
+    property = URI.encode_www_form(auth.property)
 
-  defp fetch_queries(domain, auth, query) do
-    with_https = URI.encode_www_form("https://#{domain}")
-
-    res = HTTPoison.post!("https://www.googleapis.com/webmasters/v3/sites/#{with_https}/searchAnalytics/query", Jason.encode!(%{
+    res = HTTPoison.post!("https://www.googleapis.com/webmasters/v3/sites/#{property}/searchAnalytics/query", Jason.encode!(%{
       startDate: Date.to_iso8601(query.date_range.first),
       endDate: Date.to_iso8601(query.date_range.last),
       dimensions: ["query"],
@@ -63,6 +52,14 @@ defmodule Plausible.Google.Api do
       _ ->
         Sentry.capture_message("Error fetching Google queries", extra: Jason.decode!(res.body))
         {:error, :unknown}
+    end
+  end
+
+  defp refresh_if_needed(auth) do
+    if Timex.before?(auth.expires, Timex.now() |> Timex.shift(seconds: 30)) do
+      refresh_token(auth)
+    else
+      auth
     end
   end
 

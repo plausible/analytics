@@ -94,6 +94,7 @@ defmodule PlausibleWeb.Router do
     get "/:website/snippet", SiteController, :add_snippet
     get "/:website/settings", SiteController, :settings
     put "/:website/settings", SiteController, :update_settings
+    put "/:website/settings/google", SiteController, :update_google_auth
     delete "/:website", SiteController, :delete_site
 
     get "/stats/:domain/referrers", StatsController, :referrers_preview

@@ -37,9 +37,8 @@ defmodule PlausibleWeb.SiteController do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
            |> Repo.preload(:google_auth)
 
-    google_search_console_verified = if site.google_auth do
-      google_site = Plausible.Google.Api.fetch_site(site.domain, site.google_auth)
-      !google_site["error"]
+    search_console_domains = if site.google_auth do
+      Plausible.Google.Api.fetch_verified_properties(site.google_auth)
     end
 
     weekly_report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
@@ -53,9 +52,21 @@ defmodule PlausibleWeb.SiteController do
       site: site,
       weekly_report_changeset: weekly_report_changeset,
       monthly_report_changeset: monthly_report_changeset,
-      google_search_console_verified: google_search_console_verified,
+      search_console_domains: search_console_domains,
       changeset: Plausible.Site.changeset(site, %{})
     )
+  end
+
+  def update_google_auth(conn, %{"website" => website, "google_auth" => attrs}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+           |> Repo.preload(:google_auth)
+
+    Plausible.Site.GoogleAuth.set_property(site.google_auth, attrs)
+    |> Repo.update!
+
+    conn
+    |> put_flash(:success, "Google integration saved succesfully")
+    |> redirect(to: "/#{site.domain}/settings")
   end
 
   def update_settings(conn, %{"website" => website, "site" => site_params}) do
@@ -177,6 +188,20 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> put_flash(:success, "Email address saved succesfully")
     |> redirect(to: "/#{site.domain}/settings")
+  end
+
+  def google_settings(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+           |> Repo.preload(:google_auth)
+
+    verified_domains = Plausible.Google.Api.fetch_verified_properties(site.google_auth)
+
+    render(conn,
+      "google_settings.html",
+      site: site,
+      verified_domains: verified_domains,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
   end
 
   defp insert_site(user_id, params) do
