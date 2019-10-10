@@ -50,7 +50,6 @@ defmodule PlausibleWeb.Email do
   def trial_upgrade_email(user, day, pageviews) do
     new_email()
     |> to(user)
-    |> bcc("uku@plausible.io")
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("trial-upgrade-email")
     |> subject("Your Plausible trial ends #{day}")
