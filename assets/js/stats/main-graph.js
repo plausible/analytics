@@ -216,11 +216,11 @@ function dateFormatter(graphData) {
     const date = new Date(isoDate)
 
     if (graphData.interval === 'month') {
-      return MONTHS[date.getMonth()];
+      return MONTHS[date.getUTCMonth()];
     } else if (graphData.interval === 'date') {
-      return date.getDate() + ' ' + MONTHS[date.getMonth()];
+      return date.getUTCDate() + ' ' + MONTHS[date.getUTCMonth()];
     } else if (graphData.interval === 'hour') {
-      var hours = date.getHours();
+      var hours = date.getUTCHours();
       var ampm = hours >= 12 ? 'pm' : 'am';
       hours = hours % 12;
       hours = hours ? hours : 12; // the hour '0' should be '12'
