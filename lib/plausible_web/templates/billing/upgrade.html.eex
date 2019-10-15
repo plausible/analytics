@@ -50,7 +50,7 @@
   </div>
 
   <div class="text-center mt-8">
-    Questions? Contact <%= link("uku@plausibile.io", to: "mailto: uku@plausibile.io", class: "text-indigo") %>
+    Questions? Contact <%= link("uku@plausible.io", to: "mailto: uku@plausible.io", class: "text-indigo") %>
   </div>
 
   <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js"></script>
