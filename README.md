@@ -14,6 +14,9 @@ lightweight script.
 - **Clutter Free**: Stop digging through complex reports to find what you’re looking for. Plausible presents the most important information to you on a single page.
 - **Anonymous**: Measure traffic, not individuals. No personal data or IP addresses are ever stored in our database. [Read more about our data policy](https://plausible.io/data-policy)
 - **Lightweight**: Plausible works by loading a script on your website, like Google Analytics. Our script is 14x smaller, making your website quicker to load.
+- **Email reports**: Keep an eye on your traffic with a weekly email report including pageviews, visitor numbers, top pages and top referrers for the week.
+- **Search keywords**: Integrate your dashboard with Google Search Console to get the most accurate reporting on your search keywords.
+- **SPA support**: Plausible is built with modern web frameworks in mind and it works automatically with any pushState based router on the frontend.
 
 Interested? [Read more on our website](https://plausible.io)
 
