@@ -220,7 +220,7 @@ function dateFormatter(graphData) {
     } else if (graphData.interval === 'date') {
       return date.getUTCDate() + ' ' + MONTHS[date.getUTCMonth()];
     } else if (graphData.interval === 'hour') {
-      var hours = date.getUTCHours();
+      var hours = date.getHours(); // Not sure why getUTCHours doesn't work here
       var ampm = hours >= 12 ? 'pm' : 'am';
       hours = hours % 12;
       hours = hours ? hours : 12; // the hour '0' should be '12'
