@@ -5,8 +5,8 @@ defmodule Plausible.StatsTest do
   describe "calculate_plot" do
     test "displays pageviews for a day" do
       site = insert(:site)
-      insert(:pageview, hostname: site.domain, inserted_at: ~N[2019-01-01 00:00:00])
-      insert(:pageview, hostname: site.domain, inserted_at: ~N[2019-01-01 23:59:00])
+      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 00:00:00])
+      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 23:59:00])
 
       query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
 
@@ -20,8 +20,8 @@ defmodule Plausible.StatsTest do
 
     test "displays pageviews for a month" do
       site = insert(:site)
-      insert(:pageview, hostname: site.domain, inserted_at: ~N[2019-01-01 12:00:00])
-      insert(:pageview, hostname: site.domain, inserted_at: ~N[2019-01-31 12:00:00])
+      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 12:00:00])
+      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-31 12:00:00])
 
       query = Stats.Query.from(site.timezone, %{"period" => "month", "date" => "2019-01-01"})
       {plot, _labels, _index} = Stats.calculate_plot(site, query)
@@ -34,7 +34,7 @@ defmodule Plausible.StatsTest do
     test "displays pageviews for a 3 months" do
       site = insert(:site)
       insert(:pageview, hostname: site.domain)
-      insert(:pageview, hostname: site.domain, inserted_at: months_ago(2))
+      insert(:pageview, hostname: site.domain, timestamp: months_ago(2))
 
       query = Stats.Query.from(site.timezone, %{"period" => "3mo"})
       {plot, _labels, _index} = Stats.calculate_plot(site, query)
@@ -155,13 +155,13 @@ defmodule Plausible.StatsTest do
       insert(:pageview, %{
         hostname: site.domain,
         user_id: UUID.uuid4(),
-        inserted_at: Timex.now() |> Timex.shift(minutes: -4)
+        timestamp: Timex.now() |> Timex.shift(minutes: -4)
       })
 
       insert(:pageview, %{
         hostname: site.domain,
         user_id: UUID.uuid4(),
-        inserted_at: Timex.now() |> Timex.shift(minutes: -6)
+        timestamp: Timex.now() |> Timex.shift(minutes: -6)
       })
 
       assert Stats.current_visitors(site) == 2

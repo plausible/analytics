@@ -120,7 +120,7 @@ defmodule Plausible.Billing do
     Repo.aggregate(from(
       p in Plausible.Pageview,
       where: p.hostname == ^site.domain,
-      where: p.inserted_at >= fragment("now() - '30 days'::interval")
+      where: p.timestamp >= fragment("now() - '30 days'::interval")
     ), :count, :id
     )
   end

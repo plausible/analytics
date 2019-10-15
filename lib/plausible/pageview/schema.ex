@@ -15,7 +15,7 @@ defmodule Plausible.Pageview do
     field :browser, :string
     field :referrer_source, :string
 
-    timestamps()
+    timestamps(inserted_at: :timestamp, updated_at: false)
   end
 
   def changeset(pageview, attrs) do

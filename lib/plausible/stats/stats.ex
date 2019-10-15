@@ -27,7 +27,7 @@ defmodule Plausible.Stats do
       from p in base_query(site, query),
       group_by: 1,
       order_by: 1,
-      select: {fragment("date_trunc('month', ? at time zone 'utc' at time zone ?)", p.inserted_at, ^site.timezone), count(p.user_id, :distinct)}
+      select: {fragment("date_trunc('month', ? at time zone 'utc' at time zone ?)", p.timestamp, ^site.timezone), count(p.user_id, :distinct)}
     ) |> Enum.into(%{})
     |> transform_keys(fn dt -> NaiveDateTime.to_date(dt) end)
 
@@ -45,7 +45,7 @@ defmodule Plausible.Stats do
       from p in base_query(site, query),
       group_by: 1,
       order_by: 1,
-      select: {fragment("date_trunc('day', ? at time zone 'utc' at time zone ?)", p.inserted_at, ^site.timezone), count(p.user_id, :distinct)}
+      select: {fragment("date_trunc('day', ? at time zone 'utc' at time zone ?)", p.timestamp, ^site.timezone), count(p.user_id, :distinct)}
     ) |> Enum.into(%{})
     |> transform_keys(fn dt -> NaiveDateTime.to_date(dt) end)
 
@@ -71,7 +71,7 @@ defmodule Plausible.Stats do
       from p in base_query(site, query),
       group_by: 1,
       order_by: 1,
-      select: {fragment("date_trunc('hour', ? at time zone 'utc' at time zone ?)", p.inserted_at, ^site.timezone), count(p.user_id, :distinct)}
+      select: {fragment("date_trunc('hour', ? at time zone 'utc' at time zone ?)", p.timestamp, ^site.timezone), count(p.user_id, :distinct)}
     )
     |> Enum.into(%{})
     |> transform_keys(fn dt -> NaiveDateTime.truncate(dt, :second) end)
@@ -186,7 +186,7 @@ defmodule Plausible.Stats do
   def current_visitors(site) do
     Repo.one(
       from p in Plausible.Pageview,
-      where: p.inserted_at >= fragment("(now() at time zone 'utc') - '5 minutes'::interval"),
+      where: p.timestamp >= fragment("(now() at time zone 'utc') - '5 minutes'::interval"),
       where: p.hostname == ^site.domain,
       select: count(p.user_id, :distinct)
     )
@@ -201,7 +201,7 @@ defmodule Plausible.Stats do
 
     from(p in Plausible.Pageview,
       where: p.hostname == ^site.domain,
-      where: p.inserted_at >= ^first_datetime and p.inserted_at < ^last_datetime
+      where: p.timestamp >= ^first_datetime and p.timestamp < ^last_datetime
     )
   end
 
