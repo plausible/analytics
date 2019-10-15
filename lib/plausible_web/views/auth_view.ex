@@ -3,6 +3,7 @@ defmodule PlausibleWeb.AuthView do
 
   @subscription_names %{
     "558018" => "Personal",
+    "572810" => "Personal (A)",
     "558745" => "Startup",
     "558746" => "Business",
     "558156" => "Personal (T)",
