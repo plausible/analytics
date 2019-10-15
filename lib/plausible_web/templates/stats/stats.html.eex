@@ -75,7 +75,7 @@
   </div>
 
   <div class="w-full bg-white shadow-md rounded mt-6" id="main-graph">
-    <div class="loading pt-48 mx-auto"><div></div></div>
+    <div class="loading pt-24 sm:pt-32 md:pt-48 mx-auto"><div></div></div>
   </div>
 
   <div class="w-full block md:flex items-start justify-between mt-6">
