@@ -8,7 +8,7 @@ defmodule Plausible.Billing do
   end
 
   def subscription_created(params) do
-    params = if params["passthrough"] do
+    params = if present?(params["passthrough"]) do
       params
     else
       user = Repo.get_by(Plausible.Auth.User, email: params["email"])
@@ -137,4 +137,9 @@ defmodule Plausible.Billing do
       next_bill_amount: params["unit_price"] || params["new_unit_price"]
     }
   end
+
+  defp present?(""), do: false
+  defp present?(nil), do: false
+  defp present?(_), do: true
+
 end

@@ -45,6 +45,7 @@ defmodule Plausible.BillingTest do
       user = insert(:user)
 
       Billing.subscription_created(%{
+        "passthrough" => "",
         "email" => user.email,
         "alert_name" => "subscription_created",
         "subscription_id" => @subscription_id,
