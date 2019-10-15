@@ -27,8 +27,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.hostname == "gigride.live"
       assert pageview.pathname == "/"
       assert pageview.new_visitor == true
-      assert pageview.user_agent == @user_agent
-      assert pageview.screen_width == params[:screen_width]
       assert pageview.country_code == @country_code
     end
 
@@ -174,7 +172,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = Repo.one(Plausible.Pageview)
 
       assert pageview.referrer == "indiehackers.com/page"
-      assert pageview.raw_referrer == "https://www.indiehackers.com/page?query=param#hash"
     end
 
     test "?ref= query param controls the referrer source", %{conn: conn} do

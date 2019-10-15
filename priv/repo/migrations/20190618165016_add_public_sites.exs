@@ -1,6 +1,5 @@
 defmodule Plausible.Repo.Migrations.AddPublicSites do
   use Ecto.Migration
-  alias Plausible.Repo
 
   def change do
     alter table(:sites) do

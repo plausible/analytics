@@ -45,14 +45,11 @@ defmodule PlausibleWeb.Api.ExternalController do
       pageview_attrs = %{
         hostname: strip_www(uri.host),
         pathname: uri.path,
-        user_agent: user_agent,
         new_visitor: params["new_visitor"],
-        screen_width: params["screen_width"],
         country_code: country_code,
         user_id: params["uid"],
         operating_system: ua && os_name(ua),
         browser: ua && browser_name(ua),
-        raw_referrer: params["referrer"],
         referrer_source: ref && referrer_source(uri, ref),
         referrer: ref && clean_referrer(params["referrer"]),
         screen_size: calculate_screen_size(params["screen_width"])
