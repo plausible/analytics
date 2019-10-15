@@ -8,6 +8,13 @@ defmodule Plausible.Billing do
   end
 
   def subscription_created(params) do
+    params = if params["passthrough"] do
+      params
+    else
+      user = Repo.get_by(Plausible.Auth.User, email: params["email"])
+      Map.put(params, "passthrough", user && user.id)
+    end
+
     changeset = Subscription.changeset(%Subscription{}, format_subscription(params))
 
     Repo.insert(changeset)

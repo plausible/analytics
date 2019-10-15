@@ -40,6 +40,27 @@ defmodule Plausible.BillingTest do
       assert subscription.next_bill_date == ~D[2019-06-01]
       assert subscription.next_bill_amount == "6.00"
     end
+
+    test "create with email address" do
+      user = insert(:user)
+
+      Billing.subscription_created(%{
+        "email" => user.email,
+        "alert_name" => "subscription_created",
+        "subscription_id" => @subscription_id,
+        "subscription_plan_id" => @plan_id,
+        "update_url" => "update_url.com",
+        "cancel_url" => "cancel_url.com",
+        "status" => "active",
+        "next_bill_date" => "2019-06-01",
+        "unit_price" => "6.00"
+      })
+
+      subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
+      assert subscription.paddle_subscription_id == @subscription_id
+      assert subscription.next_bill_date == ~D[2019-06-01]
+      assert subscription.next_bill_amount == "6.00"
+    end
   end
 
   describe "subscription_updated" do
