@@ -15,9 +15,9 @@ defmodule Plausible.Auth do
   def user_completed_setup?(user) do
     query =
       from(
-        p in Plausible.Pageview,
+        e in Plausible.Event,
         join: s in Plausible.Site,
-        on: s.domain == p.hostname,
+        on: s.domain == e.hostname,
         join: sm in Plausible.Site.Membership,
         on: sm.site_id == s.id,
         join: u in Plausible.Auth.User,

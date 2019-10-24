@@ -13,8 +13,8 @@ defmodule Plausible.Sites do
 
   def has_pageviews?(site) do
     Repo.exists?(
-      from p in Plausible.Pageview,
-      where: p.hostname == ^site.domain
+      from e in Plausible.Event,
+      where: e.hostname == ^site.domain
     )
   end
 

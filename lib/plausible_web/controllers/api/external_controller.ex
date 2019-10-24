@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         screen_size: calculate_screen_size(params["screen_width"])
       }
 
-      Plausible.Pageview.changeset(%Plausible.Pageview{}, pageview_attrs)
+      Plausible.Event.changeset(%Plausible.Event{}, pageview_attrs)
         |> Plausible.Repo.insert
     end
   end

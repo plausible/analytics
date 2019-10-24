@@ -120,7 +120,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       delete(conn, "/#{site.domain}")
 
       refute Repo.exists?(from s in Plausible.Site, where: s.id == ^site.id)
-      refute Repo.exists?(from p in Plausible.Pageview, where: p.id == ^pageview.id)
+      refute Repo.exists?(from e in Plausible.Event, where: e.id == ^pageview.id)
     end
   end
 end

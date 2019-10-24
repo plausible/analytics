@@ -118,11 +118,10 @@ defmodule Plausible.Billing do
 
   defp site_usage(site) do
     Repo.aggregate(from(
-      p in Plausible.Pageview,
-      where: p.hostname == ^site.domain,
-      where: p.timestamp >= fragment("now() - '30 days'::interval")
-    ), :count, :id
-    )
+      e in Plausible.Event,
+      where: e.hostname == ^site.domain,
+      where: e.timestamp >= fragment("now() - '30 days'::interval")
+    ), :count, :id)
   end
 
   defp format_subscription(params) do

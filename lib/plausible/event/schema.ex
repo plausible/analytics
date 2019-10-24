@@ -1,19 +1,19 @@
-defmodule Plausible.Pageview do
+defmodule Plausible.Event do
   use Ecto.Schema
   import Ecto.Changeset
 
-  schema "pageviews" do
+  schema "events" do
     field :hostname, :string
     field :pathname, :string
     field :new_visitor, :boolean
     field :user_id, :binary_id
 
     field :referrer, :string
-    field :screen_size, :string
+    field :referrer_source, :string
     field :country_code, :string
+    field :screen_size, :string
     field :operating_system, :string
     field :browser, :string
-    field :referrer_source, :string
 
     timestamps(inserted_at: :timestamp, updated_at: false)
   end

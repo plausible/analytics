@@ -25,7 +25,7 @@ defmodule Plausible.Factory do
   def pageview_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 
-    %Plausible.Pageview{
+    %Plausible.Event{
       hostname: hostname,
       pathname: "/",
       new_visitor: true,

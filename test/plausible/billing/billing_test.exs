@@ -2,6 +2,23 @@ defmodule Plausible.BillingTest do
   use Plausible.DataCase
   alias Plausible.Billing
 
+  describe "usage" do
+    test "is 0 with no events" do
+      user = insert(:user)
+
+      assert Billing.usage(user) == 0
+    end
+
+    test "counts the total number of events" do
+      user = insert(:user)
+      site = insert(:site, members: [user])
+      insert(:pageview, hostname: site.domain)
+      insert(:pageview, hostname: site.domain)
+
+      assert Billing.usage(user) == 2
+    end
+  end
+
   describe "trial_days_left" do
     test "is 30 days for new signup" do
       user = insert(:user)

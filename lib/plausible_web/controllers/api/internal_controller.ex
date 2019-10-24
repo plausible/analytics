@@ -4,8 +4,8 @@ defmodule PlausibleWeb.Api.InternalController do
 
   def domain_status(conn, %{"domain" => domain}) do
     has_pageviews = Repo.exists?(
-      from p in Plausible.Pageview,
-      where: p.hostname == ^domain
+      from e in Plausible.Event,
+      where: e.hostname == ^domain
     )
 
     if has_pageviews do
