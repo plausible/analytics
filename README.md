@@ -1,5 +1,7 @@
 # Plausible Insights
 
+[![Build Status](https://travis-ci.org/plausible-insights/plausible.svg?branch=master)](https://travis-ci.org/plausible-insights/plausible)
+
 Plausible is a simple, lightweight web analytics service that provides the most
 important traffic stats without intruding on your visitors' privacy. It collects
 unique visitors, referrers, top pages, countries, and device information using a
