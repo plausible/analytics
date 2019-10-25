@@ -23,6 +23,15 @@ defmodule Plausible.Factory do
   end
 
   def pageview_factory do
+    struct!(
+      event_factory(),
+      %{
+        name: "pageview"
+      }
+    )
+  end
+
+  def event_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 
     %Plausible.Event{

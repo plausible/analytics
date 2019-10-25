@@ -200,6 +200,7 @@ defmodule Plausible.Stats do
     last_datetime = Timex.to_datetime(last, site.timezone)
 
     from(e in Plausible.Event,
+      where: e.name == "pageview",
       where: e.hostname == ^site.domain,
       where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
     )

@@ -1,6 +1,31 @@
 defmodule Plausible.StatsTest do
   use Plausible.DataCase
   alias Plausible.Stats
+  @user_id UUID.uuid4()
+
+  describe "pageviews_and_visitors" do
+    test "counts unique visitors" do
+      site = insert(:site)
+      insert(:pageview, hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 00:00:00])
+      insert(:pageview, hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 23:59:00])
+      query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
+      {pageviews, visitors} = Stats.pageviews_and_visitors(site, query)
+
+      assert pageviews == 2
+      assert visitors == 1
+    end
+
+    test "does not count custom events" do
+      site = insert(:site)
+      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 00:00:00])
+      insert(:event, name: "Custom", hostname: site.domain, timestamp: ~N[2019-01-01 23:59:00])
+      query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
+      {pageviews, visitors} = Stats.pageviews_and_visitors(site, query)
+
+      assert pageviews == 1
+      assert visitors == 1
+    end
+  end
 
   describe "calculate_plot" do
     test "displays pageviews for a day" do

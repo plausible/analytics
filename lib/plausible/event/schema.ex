@@ -3,6 +3,7 @@ defmodule Plausible.Event do
   import Ecto.Changeset
 
   schema "events" do
+    field :name, :string
     field :hostname, :string
     field :pathname, :string
     field :new_visitor, :boolean
