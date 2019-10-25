@@ -45,4 +45,6 @@ config :plausible, Plausible.Repo,
 config :plausible, Plausible.Mailer,
   adapter: Bamboo.LocalAdapter
 
-import_config "dev.secret.exs"
+if File.exists?("dev.secret.exs") do
+  import_config "dev.secret.exs"
+end

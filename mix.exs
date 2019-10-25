@@ -9,7 +9,8 @@ defmodule Plausible.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()), compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      test_coverage: [tool: ExCoveralls]
     ]
   end
 
@@ -56,6 +57,7 @@ defmodule Plausible.MixProject do
       {:sentry, "~> 7.0"},
       {:httpoison, "~> 1.4"},
       {:ex_machina, "~> 2.3", only: :test},
+      {:excoveralls, "~> 0.10", only: :test},
       {:joken, "~> 2.0"},
       {:php_serializer, "~> 0.9.0"}
     ]

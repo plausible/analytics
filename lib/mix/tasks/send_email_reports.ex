@@ -12,7 +12,7 @@ defmodule Mix.Tasks.SendEmailReports do
     The email report should be sent on Monday at 9am according to the timezone
     of the site. This job runs every hour to be able to send it with hourly precision.
   """
-  def execute(args \\ []) do
+  def execute(_args \\ []) do
     send_weekly_emails()
     send_monthly_emails()
   end
