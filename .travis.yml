@@ -3,3 +3,6 @@ elixir: '1.7.4'
 otp_release: '21.1'
 services:
   - postgresql
+env:
+  - MIX_ENV=test
+script: mix coveralls.travis
