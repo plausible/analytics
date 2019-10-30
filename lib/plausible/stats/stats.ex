@@ -90,17 +90,6 @@ defmodule Plausible.Stats do
     ))
   end
 
-  def total_pageviews(site, query) do
-    Repo.aggregate(base_query(site, query), :count, :id)
-  end
-
-  def unique_visitors(site, query) do
-    Repo.one(from(
-      e in base_query(site, query),
-      select: count(e.user_id, :distinct)
-    ))
-  end
-
   def top_referrers(site, query, limit \\ 5) do
     Repo.all(from e in base_query(site, query),
       select: {e.referrer_source, count(e.referrer_source)},

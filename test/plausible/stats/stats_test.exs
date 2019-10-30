@@ -3,6 +3,115 @@ defmodule Plausible.StatsTest do
   alias Plausible.Stats
   @user_id UUID.uuid4()
 
+  describe "compare_pageviews_and_visitors" do
+    test "comparisons are nil when no historical data" do
+      site = insert(:site)
+      query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
+      res = Stats.compare_pageviews_and_visitors(site, query, {10, 10})
+
+      assert res == {nil, nil}
+    end
+
+    test "comparisons show percent change with historical data" do
+      site = insert(:site)
+      insert(:pageview, hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 02:00:00])
+      query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-02"})
+      {change_pageviews, change_visitors} = Stats.compare_pageviews_and_visitors(site, query, {3, 2})
+
+      assert change_pageviews == 50
+      assert change_visitors == 100
+    end
+  end
+
+  describe "visitors_from_referrer" do
+    test "queries for new visitors from a referrer source" do
+      site = insert(:site)
+      insert(:pageview, hostname: site.domain, referrer_source: "Google", new_visitor: true, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, hostname: site.domain, referrer_source: "Google", new_visitor: false, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, referrer_source: "Google", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, referrer_source: "Bing", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
+      query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
+
+      assert Stats.visitors_from_referrer(site, query, "Google") == 2
+    end
+  end
+
+  describe "top_pages" do
+    test "shows top 5 pages by pageviews" do
+      site = insert(:site)
+      insert(:pageview, hostname: site.domain, pathname: "/", timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, hostname: site.domain, pathname: "/", timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, pathname: "/hello", timestamp: ~N[2019-01-01 02:00:00])
+      query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
+
+      assert Stats.top_pages(site, query) == [
+        {"/", 2},
+        {"/hello", 1}
+      ]
+    end
+  end
+
+  describe "top_screen_sizes" do
+    test "shows top screen sizes by new visitors" do
+      site = insert(:site)
+      insert(:pageview, hostname: site.domain, screen_size: "desktop", new_visitor: true, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, hostname: site.domain, screen_size: "desktop", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, screen_size: "mobile", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
+      query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
+
+      assert Stats.top_screen_sizes(site, query) == [
+        {"mobile", 1},
+        {"desktop", 2}
+      ]
+    end
+  end
+
+  describe "countries" do
+    test "shows top countries by new visitors" do
+      site = insert(:site)
+      insert(:pageview, hostname: site.domain, country_code: "EE", new_visitor: true, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, hostname: site.domain, country_code: "EE", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, country_code: "GB", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
+      query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
+
+      assert Stats.countries(site, query) == [
+        {"Estonia", 2},
+        {"United Kingdom", 1}
+      ]
+    end
+  end
+
+  describe "browsers" do
+    test "shows top browsers by new visitors" do
+      site = insert(:site)
+      insert(:pageview, hostname: site.domain, browser: "Chrome", new_visitor: true, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, hostname: site.domain, browser: "Chrome", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, browser: "Safari", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
+      query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
+
+      assert Stats.browsers(site, query) == [
+        {"Chrome", 2},
+        {"Safari", 1}
+      ]
+    end
+  end
+
+  describe "operating_systems" do
+    test "shows top browsers by new visitors" do
+      site = insert(:site)
+      insert(:pageview, hostname: site.domain, operating_system: "Mac", new_visitor: true, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, hostname: site.domain, operating_system: "Windows", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, operating_system: "Windows", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
+      query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
+
+      assert Stats.operating_systems(site, query) == [
+        {"Windows", 2},
+        {"Mac", 1}
+      ]
+    end
+  end
+
   describe "pageviews_and_visitors" do
     test "counts unique visitors" do
       site = insert(:site)
