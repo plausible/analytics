@@ -3,7 +3,6 @@ defmodule Plausible.Goal do
   import Ecto.Changeset
 
   schema "goals" do
-    field :name, :string
     field :domain, :string
     field :event_name, :string
     field :page_path, :string
@@ -13,8 +12,8 @@ defmodule Plausible.Goal do
 
   def changeset(goal, attrs \\ %{}) do
     goal
-    |> cast(attrs, [:domain, :name, :event_name, :page_path])
-    |> validate_required([:domain, :name])
+    |> cast(attrs, [:domain, :event_name, :page_path])
+    |> validate_required([:domain])
     |> validate_event_name_and_page_path()
   end
 

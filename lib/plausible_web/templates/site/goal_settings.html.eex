@@ -10,8 +10,8 @@
   <%= if Enum.count(@goals) > 0 do %>
     <%= for goal <- @goals do %>
       <div class="border-b border-grey-light py-3 flex justify-between">
-        <small class="font-bold"><%= goal.name %></small>
-        <%= button("❌", to: "/#{@site.domain}/goals/#{goal.id}", method: :delete, class: "text-sm", data: [confirm: "Are you sure? This will permanently delete the goal #{goal.name}"]) %>
+        <small class="font-bold"><%= goal_name(goal) %></small>
+        <%= button("❌", to: "/#{@site.domain}/goals/#{goal.id}", method: :delete, class: "text-sm", data: [confirm: "Are you sure? This will permanently delete the goal #{goal_name(goal)}"]) %>
       </div>
     <% end %>
   <% else %>

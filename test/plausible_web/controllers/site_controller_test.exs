@@ -147,7 +147,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       goal = Repo.one(Plausible.Goal)
 
-      assert goal.name == "Visit /success"
+      assert goal.page_path == "/success"
       assert goal.event_name == nil
     end
 
@@ -161,7 +161,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       goal = Repo.one(Plausible.Goal)
 
-      assert goal.name == "Signup"
+      assert goal.event_name == "Signup"
       assert goal.page_path == nil
     end
   end
@@ -170,8 +170,8 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "lists goals for the site", %{conn: conn, site: site} do
-      insert(:goal, domain: site.domain, event_name: "Custom event", name: "Custom event")
-      insert(:goal, domain: site.domain, page_path: "/register", name: "Visit /register")
+      insert(:goal, domain: site.domain, event_name: "Custom event")
+      insert(:goal, domain: site.domain, page_path: "/register")
 
       conn = get(conn, "/#{site.domain}/goals")
 
@@ -186,7 +186,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "lists goals for the site", %{conn: conn, site: site} do
-      goal = insert(:goal, domain: site.domain, event_name: "Custom event", name: "Custom event")
+      goal = insert(:goal, domain: site.domain, event_name: "Custom event")
 
       delete(conn, "/#{site.domain}/goals/#{goal.id}")
 
