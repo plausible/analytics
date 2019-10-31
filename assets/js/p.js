@@ -77,13 +77,13 @@
       }))
     }
 
-    function page() {
+    function trigger(eventName) {
       if (/localhost$/.test(window.location.hostname)) return ignore('website is running locally');
       if (window.location.protocol === 'file:') return ignore('website is running locally');
       if (window.document.visibilityState === 'prerender') return ignore('document is prerendering');
 
       var payload = getUserData()
-      payload.name = 'pageview'
+      payload.name = eventName
       payload.url = getUrl()
 
       var request = new XMLHttpRequest();
@@ -97,6 +97,11 @@
           setUserData(payload)
         }
       }
+
+    }
+
+    function page() {
+      trigger('pageview')
     }
 
     function trackPushState() {
@@ -112,6 +117,7 @@
 
     const functions = {
       page: page,
+      trigger: trigger,
       trackPushState: trackPushState
     }
 
