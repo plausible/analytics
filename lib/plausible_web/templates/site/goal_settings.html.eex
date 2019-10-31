@@ -1,0 +1,23 @@
+<%= if get_flash(@conn, :success) do %>
+  <div id="flash" class="max-w-sm w-full rounded mx-auto text-center bg-green-dark text-green-lightest text-sm font-bold px-4 w-full transition overflow-hidden" role="alert">
+    <p class="py-3"><%= get_flash(@conn, :success) %></p>
+  </div>
+<% end %>
+
+<div class="max-w-sm w-full mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8">
+  <h2>Goals for <%= @site.domain %></h2>
+  <div class="my-6">
+  <%= if Enum.count(@goals) > 0 do %>
+    <%= for goal <- @goals do %>
+      <div class="border-b border-grey-light py-3 flex justify-between">
+        <small class="font-bold"><%= goal.name %></small>
+        <%= button("❌", to: "/#{@site.domain}/goals/#{URI.encode(goal.name, &URI.char_unreserved?/1)}", method: :delete, class: "text-sm", data: [confirm: "Are you sure? This will permanently delete the goal #{goal.name}"]) %>
+      </div>
+    <% end %>
+  <% else %>
+    <div>No goals configured for this site yet</div>
+  <% end %>
+  </div>
+
+  <%= link("+ Add goal", to: "/#{@site.domain}/goals/new", class: "button mt-4 w-full") %>
+</div>

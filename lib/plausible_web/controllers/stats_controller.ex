@@ -25,12 +25,14 @@ defmodule PlausibleWeb.StatsController do
           {conn, params} = fetch_period(conn, site)
           query = Stats.Query.from(site.timezone, params)
           current_visitors = Stats.current_visitors(site)
+          has_goals = user && Plausible.Sites.has_goals?(site)
 
           conn
           |> assign(:skip_plausible_tracking, !demo)
           |> put_session(site.domain <> "_offer_email_report", nil)
           |> render("stats.html",
             site: site,
+            has_goals: has_goals,
             query: query,
             current_visitors: current_visitors,
             title: "Plausible · " <> site.domain,
@@ -305,6 +307,20 @@ defmodule PlausibleWeb.StatsController do
 
     if site && current_user_can_access?(conn, site) do
       json(conn, Stats.current_visitors(site))
+    else
+      render_error(conn, 404)
+    end
+  end
+
+  def conversions_preview(conn, %{"domain" => domain}) do
+    site = Repo.get_by(Plausible.Site, domain: domain)
+
+    if site && current_user_can_access?(conn, site) do
+      {conn, params} = fetch_period(conn, site)
+      query = Stats.Query.from(site.timezone, params)
+      goals = Stats.goal_conversions(site, query)
+
+      render(conn, "conversions_preview.html", layout: false, query: query, site: site, goals: goals)
     else
       render_error(conn, 404)
     end

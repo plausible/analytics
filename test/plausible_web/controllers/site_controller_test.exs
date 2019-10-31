@@ -123,4 +123,36 @@ defmodule PlausibleWeb.SiteControllerTest do
       refute Repo.exists?(from e in Plausible.Event, where: e.id == ^pageview.id)
     end
   end
+
+  describe "POST /:website/goals" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "creates a pageview goal for the website", %{conn: conn, site: site} do
+      post(conn, "/#{site.domain}/goals", %{
+        goal: %{
+          page_path: "/success",
+          event_name: ""
+        }
+      })
+
+      goal = Repo.one(Plausible.Goal)
+
+      assert goal.name == "Visit /success"
+      assert goal.event_name == nil
+    end
+
+    test "creates a custom event goal for the website", %{conn: conn, site: site} do
+      post(conn, "/#{site.domain}/goals", %{
+        goal: %{
+          page_path: "",
+          event_name: "Signup"
+        }
+      })
+
+      goal = Repo.one(Plausible.Goal)
+
+      assert goal.name == "Signup"
+      assert goal.page_path == nil
+    end
+  end
 end

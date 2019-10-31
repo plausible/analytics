@@ -33,7 +33,7 @@
     }
 
     function ignore(reason) {
-      console.warn('[Plausible] Ignoring pageview because ' + reason);
+      console.warn('[Plausible] Ignoring event because ' + reason);
     }
 
     function getUrl() {
@@ -77,7 +77,7 @@
       }))
     }
 
-    function trigger(eventName) {
+    function trigger(eventName, options) {
       if (/localhost$/.test(window.location.hostname)) return ignore('website is running locally');
       if (window.location.protocol === 'file:') return ignore('website is running locally');
       if (window.document.visibilityState === 'prerender') return ignore('document is prerendering');
@@ -95,13 +95,14 @@
       request.onreadystatechange = function() {
         if (request.readyState == XMLHttpRequest.DONE) {
           setUserData(payload)
+          options && options.callback && options.callback()
         }
       }
 
     }
 
-    function page() {
-      trigger('pageview')
+    function page(options) {
+      trigger('pageview', options)
     }
 
     function trackPushState() {

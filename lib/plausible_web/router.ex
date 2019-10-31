@@ -93,6 +93,10 @@ defmodule PlausibleWeb.Router do
     put "/sites/:website/monthly-report", SiteController, :update_monthly_settings
     get "/:website/snippet", SiteController, :add_snippet
     get "/:website/settings", SiteController, :settings
+    get "/:website/goals", SiteController, :goals
+    get "/:website/goals/new", SiteController, :new_goal
+    post "/:website/goals", SiteController, :create_goal
+    delete "/:website/goals/:name", SiteController, :delete_goal
     put "/:website/settings", SiteController, :update_settings
     put "/:website/settings/google", SiteController, :update_google_auth
     delete "/:website", SiteController, :delete_site
@@ -103,6 +107,7 @@ defmodule PlausibleWeb.Router do
     get "/stats/:domain/screen-sizes", StatsController, :screen_sizes_preview
     get "/stats/:domain/operating-systems", StatsController, :operating_systems_preview
     get "/stats/:domain/browsers", StatsController, :browsers_preview
+    get "/stats/:domain/conversions", StatsController, :conversions_preview
     get "/stats/:domain/main-graph", StatsController, :main_graph
     get "/:website/*path", StatsController, :stats
   end

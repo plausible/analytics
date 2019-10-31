@@ -3,8 +3,7 @@
     <div class="text-center bg-blue-lighter text-blue-darkest text-sm font-bold px-4 w-full rounded transition" style="top: 91px" role="alert">
       <%= link("Click here to enable weekly email reports →", to: "/#{@site.domain}/settings#email-reports", class: "py-2 block") %>
     </div>
-  <% end %>
-  <div class="pt-12"></div>
+  <% end %> <div class="pt-12"></div>
   <div class="w-full sm:flex justify-between items-center">
     <div class="w-full flex items-center">
       <h2 class="text-left mr-8">Analytics for <%= link(@site.domain, to: "//" <> @site.domain, target: "_blank") %></h2>
@@ -91,14 +90,22 @@
   </div>
 
   <div class="w-full block md:flex items-start justify-between mt-6">
-    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4" id="screen-sizes-stats">
+    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4" id="browsers-stats">
       <div class="loading my-32 mx-auto"><div></div></div>
     </div>
     <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4" id="operating-systems-stats">
       <div class="loading my-32 mx-auto"><div></div></div>
     </div>
-    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4" id="browsers-stats">
+    <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4" id="screen-sizes-stats">
       <div class="loading my-32 mx-auto"><div></div></div>
     </div>
   </div>
+
+  <%= if @has_goals do %>
+    <div class="w-full block md:flex items-start justify-between mt-6">
+      <div class="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4" id="conversion-stats">
+        <div class="loading my-32 mx-auto"><div></div></div>
+      </div>
+    </div>
+  <% end %>
 </div>
