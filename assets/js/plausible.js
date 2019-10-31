@@ -40,32 +40,60 @@
       return window.location.protocol + '//' + window.location.hostname + window.location.pathname + window.location.search;
     }
 
+    function getUserData() {
+      var oldUid = getCookie('nm_uid')
+      var userData = JSON.parse(getCookie('plausible_user'))
+
+      if (userData) {
+        userData.new_visitor = false
+        userData.user_agent = decodeURIComponent(userData.user_agent)
+        userData.referrer = decodeURIComponent(userData.referrer)
+        return userData
+      } else if (oldUid) {
+        return {
+          uid: oldUid,
+          new_visitor: false,
+          user_agent: window.navigator.userAgent,
+          referrer: window.document.referrer,
+          screen_width: window.innerWidth
+        }
+      } else {
+        return {
+          uid: pseudoUUIDv4(),
+          new_visitor: true,
+          user_agent: window.navigator.userAgent,
+          referrer: window.document.referrer,
+          screen_width: window.innerWidth
+        }
+      }
+    }
+
+    function setUserData(payload) {
+      setCookie('plausible_user', JSON.stringify({
+          uid: payload.uid,
+          user_agent: encodeURIComponent(payload.user_agent),
+          referrer: encodeURIComponent(payload.referrer),
+          screen_width: payload.screen_width
+      }))
+    }
+
     function page() {
       if (/localhost$/.test(window.location.hostname)) return ignore('website is running locally');
       if (window.location.protocol === 'file:') return ignore('website is running locally');
       if (window.document.visibilityState === 'prerender') return ignore('document is prerendering');
 
-      var existingUid = getCookie('nm_uid');
+      var payload = getUserData()
+      payload.url = getUrl()
 
       var request = new XMLHttpRequest();
       request.open('POST', plausibleHost + '/api/page', true);
       request.setRequestHeader('Content-Type', 'text/plain');
-      var uid = existingUid || pseudoUUIDv4()
 
-      request.send(JSON.stringify({
-        url: getUrl(),
-        new_visitor: !existingUid,
-        uid: uid,
-        user_agent: window.navigator.userAgent,
-        referrer: window.document.referrer,
-        screen_width: window.innerWidth
-      }));
+      request.send(JSON.stringify(payload));
 
       request.onreadystatechange = function() {
         if (request.readyState == XMLHttpRequest.DONE) {
-          if (!existingUid) {
-            setCookie('nm_uid', uid)
-          }
+          setUserData(payload)
         }
       }
     }
