@@ -23,9 +23,6 @@
     </p>
     <p class="py-2">
       All plans are on a monthly basis, cancel any time.
-    <%= if Plausible.Billing.was_beta_user(@conn.assigns[:current_user]) do %>
-      As a beta user, you will get 33% off on all plans. The coupon will be applied at checkout.
-    <% end %>
     </p>
   </div>
   <div class="pt-8"></div>

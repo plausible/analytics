@@ -7,9 +7,6 @@ Based on that we recommend you select the <%= suggested_plan_name(@pageviews) %>
 <br /><br />
 <%= link("Upgrade now", to: "https://plausible.io/billing/upgrade") %>
 <br /><br />
-<%= if Plausible.Billing.was_beta_user(@user) do %>
-  PS: Since you joined during the beta, you'll get 33% off at checkout.<br /><br />
-<% end %>
 Have any questions? Just reply to this email to get in touch!
 <br /><br />
 <br /><br />
