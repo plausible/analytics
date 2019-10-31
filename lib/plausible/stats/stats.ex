@@ -181,11 +181,11 @@ defmodule Plausible.Stats do
     )
   end
 
-  def goal_conversions(site, query, limit \\ 5) do
+  def goal_conversions(site, query, _limit \\ 5) do
     goals = Repo.all(from g in Plausible.Goal, where: g.domain == ^site.domain)
-    conversions = fetch_pageview_goals(goals, site, query)
-                  ++ fetch_event_goals(goals, site, query)
-                  |> sort_conversions
+    fetch_pageview_goals(goals, site, query)
+    ++ fetch_event_goals(goals, site, query)
+    |> sort_conversions()
   end
 
   defp fetch_event_goals(goals, site, query) do
@@ -195,7 +195,7 @@ defmodule Plausible.Stats do
     {:ok, last} = NaiveDateTime.new(query.date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
     last_datetime = Timex.to_datetime(last, site.timezone)
 
-    events = Enum.map(goals, fn goal -> goal.name end)
+    events = Enum.map(goals, fn goal -> goal.event_name end)
              |> Enum.filter(&(&1))
 
     if Enum.count(events) > 0 do
@@ -212,9 +212,34 @@ defmodule Plausible.Stats do
     end
   end
 
-  defp fetch_pageview_goals(goals, site, query), do: []
+  defp fetch_pageview_goals(goals, site, query) do
+    {:ok, first} = NaiveDateTime.new(query.date_range.first, ~T[00:00:00])
+    first_datetime = Timex.to_datetime(first, site.timezone)
 
-  defp sort_conversions(conversions), do: conversions
+    {:ok, last} = NaiveDateTime.new(query.date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
+    last_datetime = Timex.to_datetime(last, site.timezone)
+
+    pages = Enum.map(goals, fn goal -> goal.page_path end)
+             |> Enum.filter(&(&1))
+
+    if Enum.count(pages) > 0 do
+      Repo.all(
+        from e in Plausible.Event,
+        where: e.hostname == ^site.domain,
+        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
+        where: e.name == "pageview",
+        where: e.pathname in ^pages,
+        group_by: e.pathname,
+        select: {fragment("concat('Visit ', ?)", e.pathname), count(e.user_id, :distinct)}
+      )
+    else
+      []
+    end
+  end
+
+  defp sort_conversions(conversions) do
+    Enum.sort_by(conversions, fn {_, count} -> -count end)
+  end
 
   defp base_query(site, query) do
     {:ok, first} = NaiveDateTime.new(query.date_range.first, ~T[00:00:00])

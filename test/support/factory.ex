@@ -42,6 +42,10 @@ defmodule Plausible.Factory do
     }
   end
 
+  def goal_factory do
+    %Plausible.Goal{}
+  end
+
   def subscription_factory do
     %Plausible.Billing.Subscription{
       paddle_subscription_id: sequence(:paddle_subscription_id, &"subscription-#{&1}"),
