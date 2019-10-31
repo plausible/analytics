@@ -2,20 +2,16 @@ defmodule PlausibleWeb.Api.ExternalController do
   use PlausibleWeb, :controller
   require Logger
 
-  @blacklist_user_ids [
-    "e8150466-7ddb-4771-bcf5-7c58f232e8a6"
-  ]
-
-  def page(conn, _params) do
+  def event(conn, _params) do
     params = parse_body(conn)
 
-    case create_pageview(conn, params) do
-      {:ok, _pageview} ->
+    case create_event(conn, params) do
+      {:ok, _event} ->
         conn |> send_resp(202, "")
       {:error, changeset} ->
         request = Sentry.Plug.build_request_interface_data(conn, [])
-        Sentry.capture_message("Error processing pageview", extra: %{errors: inspect(changeset.errors), params: params, request: request})
-        Logger.error("Error processing pageview: #{inspect(changeset)}")
+        Sentry.capture_message("Error processing event", extra: %{errors: inspect(changeset.errors), params: params, request: request})
+        Logger.error("Error processing event: #{inspect(changeset)}")
         conn |> send_resp(400, "")
     end
   end
@@ -26,11 +22,11 @@ defmodule PlausibleWeb.Api.ExternalController do
     send_resp(conn, 200, "")
   end
 
-  defp create_pageview(conn, params) do
+  defp create_event(conn, params) do
     uri = URI.parse(params["url"])
     country_code = Plug.Conn.get_req_header(conn, "cf-ipcountry") |> List.first
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first
-    if UAInspector.bot?(user_agent) || params["uid"] in @blacklist_user_ids do
+    if UAInspector.bot?(user_agent) do
       {:ok, nil}
     else
       ua = if user_agent do
@@ -42,7 +38,8 @@ defmodule PlausibleWeb.Api.ExternalController do
         RefInspector.parse(ref)
       end
 
-      pageview_attrs = %{
+      event_attrs = %{
+        name: params["name"],
         hostname: strip_www(uri.host),
         pathname: uri.path,
         new_visitor: params["new_visitor"],
@@ -55,7 +52,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         screen_size: calculate_screen_size(params["screen_width"])
       }
 
-      Plausible.Event.changeset(%Plausible.Event{name: "pageview"}, pageview_attrs)
+      Plausible.Event.changeset(%Plausible.Event{}, event_attrs)
         |> Plausible.Repo.insert
     end
   end

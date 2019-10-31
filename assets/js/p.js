@@ -83,10 +83,11 @@
       if (window.document.visibilityState === 'prerender') return ignore('document is prerendering');
 
       var payload = getUserData()
+      payload.name = 'pageview'
       payload.url = getUrl()
 
       var request = new XMLHttpRequest();
-      request.open('POST', plausibleHost + '/api/page', true);
+      request.open('POST', plausibleHost + '/api/event', true);
       request.setRequestHeader('Content-Type', 'text/plain');
 
       request.send(JSON.stringify(payload));

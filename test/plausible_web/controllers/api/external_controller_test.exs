@@ -5,9 +5,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
   @user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
   @country_code "EE"
 
-  describe "POST /api/page" do
-    test "records the pageview", %{conn: conn} do
+  describe "POST /api/event" do
+    test "records the event", %{conn: conn} do
       params = %{
+        name: "pageview",
         url: "http://gigride.live/",
         referrer: "http://m.facebook.com/",
         new_visitor: true,
@@ -19,7 +20,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
              |> put_req_header("content-type", "text/plain")
              |> put_req_header("user-agent", @user_agent)
              |> put_req_header("cf-ipcountry", @country_code)
-             |> post("/api/page", Jason.encode!(params))
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
 
@@ -32,6 +33,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     test "www. is stripped from hostname", %{conn: conn} do
       params = %{
+        name: "pageview",
         url: "http://www.example.com/",
         uid: UUID.uuid4(),
         new_visitor: true
@@ -39,7 +41,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       conn
       |> put_req_header("content-type", "text/plain")
-      |> post("/api/page", Jason.encode!(params))
+      |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
 
@@ -48,6 +50,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     test "bots and crawlers are ignored", %{conn: conn} do
       params = %{
+        name: "pageview",
         url: "http://www.example.com/",
         new_visitor: true
       }
@@ -55,7 +58,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn
       |> put_req_header("content-type", "text/plain")
       |> put_req_header("user-agent", "generic crawler")
-      |> post("/api/page", Jason.encode!(params))
+      |> post("/api/event", Jason.encode!(params))
 
       pageviews = Repo.all(Plausible.Event)
 
@@ -64,6 +67,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     test "parses user_agent", %{conn: conn} do
       params = %{
+        name: "pageview",
         url: "http://gigride.live/",
         new_visitor: false,
         uid: UUID.uuid4()
@@ -72,7 +76,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn = conn
              |> put_req_header("content-type", "text/plain")
              |> put_req_header("user-agent", @user_agent)
-             |> post("/api/page", Jason.encode!(params))
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
 
@@ -83,6 +87,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     test "parses referrer", %{conn: conn} do
       params = %{
+        name: "pageview",
         url: "http://gigride.live/",
         referrer: "https://facebook.com",
         new_visitor: false,
@@ -92,7 +97,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn = conn
              |> put_req_header("content-type", "text/plain")
              |> put_req_header("user-agent", @user_agent)
-             |> post("/api/page", Jason.encode!(params))
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
 
@@ -102,6 +107,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     test "ignores when referrer is internal", %{conn: conn} do
       params = %{
+        name: "pageview",
         url: "http://gigride.live/",
         referrer: "https://gigride.live",
         new_visitor: false,
@@ -111,7 +117,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn = conn
              |> put_req_header("content-type", "text/plain")
              |> put_req_header("user-agent", @user_agent)
-             |> post("/api/page", Jason.encode!(params))
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
 
@@ -121,6 +127,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     test "ignores localhost referrer", %{conn: conn} do
       params = %{
+        name: "pageview",
         url: "http://gigride.live/",
         referrer: "http://localhost:4000/",
         new_visitor: true,
@@ -130,7 +137,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn = conn
              |> put_req_header("content-type", "text/plain")
              |> put_req_header("user-agent", @user_agent)
-             |> post("/api/page", Jason.encode!(params))
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
 
@@ -140,6 +147,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     test "parses subdomain referrer", %{conn: conn} do
       params = %{
+        name: "pageview",
         url: "http://gigride.live/",
         referrer: "https://blog.gigride.live",
         new_visitor: false,
@@ -149,7 +157,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn = conn
              |> put_req_header("content-type", "text/plain")
              |> put_req_header("user-agent", @user_agent)
-             |> post("/api/page", Jason.encode!(params))
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
 
@@ -159,6 +167,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     test "referrer is cleaned", %{conn: conn} do
       params = %{
+        name: "pageview",
         url: "http://www.example.com/",
         referrer: "https://www.indiehackers.com/page?query=param#hash",
         uid: UUID.uuid4(),
@@ -167,7 +176,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       conn
       |> put_req_header("content-type", "text/plain")
-      |> post("/api/page", Jason.encode!(params))
+      |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
 
@@ -176,6 +185,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     test "?ref= query param controls the referrer source", %{conn: conn} do
       params = %{
+        name: "pageview",
         url: "http://www.example.com/?wat=wet&ref=traffic-source",
         referrer: "https://www.indiehackers.com/page",
         uid: UUID.uuid4(),
@@ -184,7 +194,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       conn
       |> put_req_header("content-type", "text/plain")
-      |> post("/api/page", Jason.encode!(params))
+      |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
 
@@ -193,6 +203,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     test "?utm_source= query param controls the referrer source", %{conn: conn} do
       params = %{
+        name: "pageview",
         url: "http://www.example.com/?wat=wet&utm_source=traffic-source",
         referrer: "https://www.indiehackers.com/page",
         uid: UUID.uuid4(),
@@ -201,31 +212,16 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       conn
       |> put_req_header("content-type", "text/plain")
-      |> post("/api/page", Jason.encode!(params))
+      |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
 
       assert pageview.referrer_source == "traffic-source"
     end
 
-    test "ignores pageviews from a user blacklist", %{conn: conn} do
-      params = %{
-        url: "http://gigride.live/",
-        referrer: "https://blog.gigride.live",
-        new_visitor: false,
-        uid: "e8150466-7ddb-4771-bcf5-7c58f232e8a6"
-      }
-
-      conn
-      |> put_req_header("content-type", "text/plain")
-      |> put_req_header("user-agent", @user_agent)
-      |> post("/api/page", Jason.encode!(params))
-
-      assert Repo.aggregate(Plausible.Event, :count, :id) == 0
-    end
-
     test "if it's an :unknown referrer, just the domain is used", %{conn: conn} do
       params = %{
+        name: "pageview",
         url: "http://gigride.live/",
         referrer: "https://www.indiehackers.com/landing-page-feedback",
         new_visitor: false,
@@ -235,7 +231,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn = conn
              |> put_req_header("content-type", "text/plain")
              |> put_req_header("user-agent", @user_agent)
-             |> post("/api/page", Jason.encode!(params))
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
 
@@ -245,6 +241,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     test "if the referrer is not http or https, it is ignored", %{conn: conn} do
       params = %{
+        name: "pageview",
         url: "http://gigride.live/",
         referrer: "android-app://com.google.android.gm",
         new_visitor: false,
@@ -254,7 +251,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn = conn
              |> put_req_header("content-type", "text/plain")
              |> put_req_header("user-agent", @user_agent)
-             |> post("/api/page", Jason.encode!(params))
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
 
@@ -266,6 +263,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
   test "screen size is calculated from screen_width", %{conn: conn} do
     params = %{
+      name: "pageview",
       url: "http://gigride.live/",
       new_visitor: true,
       screen_width: 480,
@@ -275,7 +273,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     conn = conn
            |> put_req_header("content-type", "text/plain")
            |> put_req_header("user-agent", @user_agent)
-           |> post("/api/page", Jason.encode!(params))
+           |> post("/api/event", Jason.encode!(params))
 
     pageview = Repo.one(Plausible.Event)
 
@@ -285,6 +283,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
   test "screen size is nil if screen_width is missing", %{conn: conn} do
     params = %{
+      name: "pageview",
       url: "http://gigride.live/",
       new_visitor: true,
       uid: UUID.uuid4()
@@ -293,11 +292,30 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     conn = conn
            |> put_req_header("content-type", "text/plain")
            |> put_req_header("user-agent", @user_agent)
-           |> post("/api/page", Jason.encode!(params))
+           |> post("/api/event", Jason.encode!(params))
 
     pageview = Repo.one(Plausible.Event)
 
     assert response(conn, 202) == ""
     assert pageview.screen_size == nil
+  end
+
+  test "can trigger a custom event", %{conn: conn} do
+    params = %{
+      name: "custom event",
+      url: "http://gigride.live/",
+      new_visitor: false,
+      uid: UUID.uuid4()
+    }
+
+    conn = conn
+           |> put_req_header("content-type", "text/plain")
+           |> put_req_header("user-agent", @user_agent)
+           |> post("/api/event", Jason.encode!(params))
+
+    event = Repo.one(Plausible.Event)
+
+    assert response(conn, 202) == ""
+    assert event.name == "custom event"
   end
 end
