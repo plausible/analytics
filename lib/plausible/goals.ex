@@ -8,7 +8,7 @@ defmodule Plausible.Goals do
       "domain" => site.domain
     })
 
-    changeset = Goal.changeset(%Goal{}, params)
+    Goal.changeset(%Goal{}, params)
                 |> Repo.insert
   end
 
@@ -19,11 +19,8 @@ defmodule Plausible.Goals do
     )
   end
 
-  def delete(site, goal_name) do
-    Repo.one(
-      from g in Goal,
-      where: g.domain == ^site.domain and g.name == ^goal_name
-    ) |> Repo.delete!
+  def delete(id) do
+    Repo.one(from g in Goal, where: g.id == ^id) |> Repo.delete!
   end
 
   defp name_for(%{"event_name" => name}) when name != "" do

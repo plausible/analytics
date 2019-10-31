@@ -68,7 +68,6 @@ defmodule PlausibleWeb.SiteController do
         |> put_flash(:success, "Goal created succesfully")
         |> redirect(to: "/#{website}/goals")
       {:error, :goal, changeset, _} ->
-        IO.inspect(changeset)
         conn
         |> assign(:skip_plausible_tracking, true)
         |> render("new_goal.html",
@@ -79,9 +78,8 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  def delete_goal(conn, %{"website" => website, "name" => goal_name}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
-    Plausible.Goals.delete(site, goal_name)
+  def delete_goal(conn, %{"website" => website, "id" => goal_id}) do
+    Plausible.Goals.delete(goal_id)
 
     conn
     |> put_flash(:success, "Goal deleted succesfully")

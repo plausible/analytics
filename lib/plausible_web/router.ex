@@ -96,7 +96,7 @@ defmodule PlausibleWeb.Router do
     get "/:website/goals", SiteController, :goals
     get "/:website/goals/new", SiteController, :new_goal
     post "/:website/goals", SiteController, :create_goal
-    delete "/:website/goals/:name", SiteController, :delete_goal
+    delete "/:website/goals/:id", SiteController, :delete_goal
     put "/:website/settings", SiteController, :update_settings
     put "/:website/settings/google", SiteController, :update_google_auth
     delete "/:website", SiteController, :delete_site

@@ -11,7 +11,7 @@
     <%= for goal <- @goals do %>
       <div class="border-b border-grey-light py-3 flex justify-between">
         <small class="font-bold"><%= goal.name %></small>
-        <%= button("❌", to: "/#{@site.domain}/goals/#{URI.encode(goal.name, &URI.char_unreserved?/1)}", method: :delete, class: "text-sm", data: [confirm: "Are you sure? This will permanently delete the goal #{goal.name}"]) %>
+        <%= button("❌", to: "/#{@site.domain}/goals/#{goal.id}", method: :delete, class: "text-sm", data: [confirm: "Are you sure? This will permanently delete the goal #{goal.name}"]) %>
       </div>
     <% end %>
   <% else %>

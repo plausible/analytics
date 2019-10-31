@@ -124,6 +124,16 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
+  describe "GET /:website/goals/new" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "shows form to create a new goal", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/goals/new")
+
+      assert html_response(conn, 200) =~ "Add goal"
+    end
+  end
+
   describe "POST /:website/goals" do
     setup [:create_user, :log_in, :create_site]
 
@@ -153,6 +163,34 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert goal.name == "Signup"
       assert goal.page_path == nil
+    end
+  end
+
+  describe "GET /:website/goals" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "lists goals for the site", %{conn: conn, site: site} do
+      insert(:goal, domain: site.domain, event_name: "Custom event", name: "Custom event")
+      insert(:goal, domain: site.domain, page_path: "/register", name: "Visit /register")
+
+      conn = get(conn, "/#{site.domain}/goals")
+
+
+      assert html_response(conn, 200) =~ "Goals for " <> site.domain
+      assert html_response(conn, 200) =~ "Custom event"
+      assert html_response(conn, 200) =~ "Visit /register"
+    end
+  end
+
+  describe "DELETE /:website/goals/:id" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "lists goals for the site", %{conn: conn, site: site} do
+      goal = insert(:goal, domain: site.domain, event_name: "Custom event", name: "Custom event")
+
+      delete(conn, "/#{site.domain}/goals/#{goal.id}")
+
+      assert Repo.aggregate(Plausible.Goal, :count, :id) == 0
     end
   end
 end
