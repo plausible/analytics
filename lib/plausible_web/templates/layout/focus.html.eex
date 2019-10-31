@@ -23,5 +23,7 @@
     <p class="text-center text-grey text-xs mt-4">
       ©2019 Plausible Insights. All rights reserved.
     </p>
+
+    <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </body>
 </html>

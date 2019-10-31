@@ -1,6 +1,14 @@
 defmodule PlausibleWeb.SiteView do
   use PlausibleWeb, :view
 
+  def goal_name(%Plausible.Goal{page_path: page_path}) when is_binary(page_path)  do
+    "Visit " <> page_path
+  end
+
+  def goal_name(%Plausible.Goal{event_name: name}) when is_binary(name) do
+    name
+  end
+
   def snippet() do
     """
     <script>

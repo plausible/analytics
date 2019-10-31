@@ -319,6 +319,61 @@ defmodule Plausible.StatsTest do
     end
   end
 
+  describe "goal_conversions" do
+    test "shows custom event conversions" do
+      site = insert(:site)
+      insert(:goal, %{domain: site.domain, event_name: "Register"})
+      insert(:goal, %{domain: site.domain, event_name: "Newsletter signup"})
+      insert(:event, name: "Register", hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "Register", hostname: site.domain, user_id: UUID.uuid4(), timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "Newsletter signup", hostname: site.domain, user_id: UUID.uuid4(), timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "Irrelevant", hostname: site.domain, user_id: UUID.uuid4(), timestamp: ~N[2019-01-01 01:00:00])
+      query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
+
+      conversions = Stats.goal_conversions(site, query)
+
+      assert conversions == [
+        {"Register", 2},
+        {"Newsletter signup", 1}
+      ]
+    end
+
+    test "shows pageview conversions" do
+      site = insert(:site)
+      insert(:goal, %{domain: site.domain, page_path: "/success"})
+      insert(:goal, %{domain: site.domain, page_path: "/register"})
+      insert(:event, name: "pageview", pathname: "/success", hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "pageview", pathname: "/success", hostname: site.domain, user_id: UUID.uuid4(), timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "pageview", pathname: "/register", hostname: site.domain, user_id: UUID.uuid4(), timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "pageview", pathname: "/irrelevant", hostname: site.domain, user_id: UUID.uuid4(), timestamp: ~N[2019-01-01 01:00:00])
+      query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
+
+      conversions = Stats.goal_conversions(site, query)
+
+      assert conversions == [
+        {"Visit /success", 2},
+        {"Visit /register", 1}
+      ]
+    end
+
+    test "shows mixed conversions in order of occurence" do
+      site = insert(:site)
+      insert(:goal, %{domain: site.domain, page_path: "/success"})
+      insert(:goal, %{domain: site.domain, event_name: "Signup"})
+      insert(:event, name: "Signup", hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "pageview", pathname: "/success", hostname: site.domain, user_id: UUID.uuid4(), timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "pageview", pathname: "/success", hostname: site.domain, user_id: UUID.uuid4(), timestamp: ~N[2019-01-01 01:00:00])
+      query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
+
+      conversions = Stats.goal_conversions(site, query)
+
+      assert conversions == [
+        {"Visit /success", 2},
+        {"Signup", 1}
+      ]
+    end
+  end
+
   defp months_ago(months) do
     Timex.now() |> Timex.shift(months: -months)
   end

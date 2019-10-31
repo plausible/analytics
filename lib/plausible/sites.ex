@@ -18,6 +18,13 @@ defmodule Plausible.Sites do
     )
   end
 
+  def has_goals?(site) do
+    Repo.exists?(
+      from g in Plausible.Goal,
+      where: g.domain == ^site.domain
+    )
+  end
+
   def is_owner?(user_id, site) do
     Repo.exists?(
       from sm in Plausible.Site.Membership,

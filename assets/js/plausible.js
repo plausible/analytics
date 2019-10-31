@@ -33,7 +33,7 @@
     }
 
     function ignore(reason) {
-      console.warn('[Plausible] Ignoring pageview because ' + reason);
+      console.warn('[Plausible] Ignoring event because ' + reason);
     }
 
     function getUrl() {

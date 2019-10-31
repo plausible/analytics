@@ -1,4 +1,4 @@
-<%= form_for @changeset, "/register", [class: "max-w-sm w-full mx-auto bg-white shadow-md rounded px-8 py-6 mb-4 mt-8"], fn f -> %>
+<%= form_for @changeset, "/register", [class: "max-w-sm w-full mx-auto bg-white shadow-md rounded px-8 py-6 mb-4 mt-8", id: "register-form"], fn f -> %>
   <div class="flex items-center justify-between">
     <h2>Enter your details to get started</h2>
   </div>

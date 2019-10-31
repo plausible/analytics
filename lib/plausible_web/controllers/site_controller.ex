@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.SiteController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.Sites
+  alias Plausible.{Sites, Goals}
 
   plug PlausibleWeb.RequireAccountPlug
 
@@ -31,6 +31,59 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("snippet.html", site: site, layout: {PlausibleWeb.LayoutView, "focus.html"})
+  end
+
+  def goals(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    goals = Goals.for_site(site.domain)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("goal_settings.html",
+      site: site,
+      goals: goals,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
+  end
+
+  def new_goal(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    changeset = Plausible.Goal.changeset(%Plausible.Goal{})
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("new_goal.html",
+      site: site,
+      changeset: changeset,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
+  end
+
+  def create_goal(conn, %{"website" => website, "goal" => goal}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+
+    case Plausible.Goals.create(site, goal) do
+      {:ok, _} ->
+        conn
+        |> put_flash(:success, "Goal created succesfully")
+        |> redirect(to: "/#{website}/goals")
+      {:error, :goal, changeset, _} ->
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("new_goal.html",
+          site: site,
+          changeset: changeset,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+    end
+  end
+
+  def delete_goal(conn, %{"website" => website, "id" => goal_id}) do
+    Plausible.Goals.delete(goal_id)
+
+    conn
+    |> put_flash(:success, "Goal deleted succesfully")
+    |> redirect(to: "/#{website}/goals")
   end
 
   def settings(conn, %{"website" => website}) do

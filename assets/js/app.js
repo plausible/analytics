@@ -31,3 +31,22 @@ if (flash) {
     flash.style.display = 'none'
   }, 2500)
 }
+
+const registerForm = document.getElementById('register-form')
+
+if (registerForm) {
+  registerForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    setTimeout(submitForm, 1000);
+    var formSubmitted = false;
+
+    function submitForm() {
+      if (!formSubmitted) {
+        formSubmitted = true;
+        registerForm.submit();
+      }
+    }
+
+    plausible('trigger', 'Signup', {callback: submitForm});
+  })
+}

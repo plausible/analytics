@@ -123,4 +123,74 @@ defmodule PlausibleWeb.SiteControllerTest do
       refute Repo.exists?(from e in Plausible.Event, where: e.id == ^pageview.id)
     end
   end
+
+  describe "GET /:website/goals/new" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "shows form to create a new goal", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/goals/new")
+
+      assert html_response(conn, 200) =~ "Add goal"
+    end
+  end
+
+  describe "POST /:website/goals" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "creates a pageview goal for the website", %{conn: conn, site: site} do
+      post(conn, "/#{site.domain}/goals", %{
+        goal: %{
+          page_path: "/success",
+          event_name: ""
+        }
+      })
+
+      goal = Repo.one(Plausible.Goal)
+
+      assert goal.page_path == "/success"
+      assert goal.event_name == nil
+    end
+
+    test "creates a custom event goal for the website", %{conn: conn, site: site} do
+      post(conn, "/#{site.domain}/goals", %{
+        goal: %{
+          page_path: "",
+          event_name: "Signup"
+        }
+      })
+
+      goal = Repo.one(Plausible.Goal)
+
+      assert goal.event_name == "Signup"
+      assert goal.page_path == nil
+    end
+  end
+
+  describe "GET /:website/goals" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "lists goals for the site", %{conn: conn, site: site} do
+      insert(:goal, domain: site.domain, event_name: "Custom event")
+      insert(:goal, domain: site.domain, page_path: "/register")
+
+      conn = get(conn, "/#{site.domain}/goals")
+
+
+      assert html_response(conn, 200) =~ "Goals for " <> site.domain
+      assert html_response(conn, 200) =~ "Custom event"
+      assert html_response(conn, 200) =~ "Visit /register"
+    end
+  end
+
+  describe "DELETE /:website/goals/:id" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "lists goals for the site", %{conn: conn, site: site} do
+      goal = insert(:goal, domain: site.domain, event_name: "Custom event")
+
+      delete(conn, "/#{site.domain}/goals/#{goal.id}")
+
+      assert Repo.aggregate(Plausible.Goal, :count, :id) == 0
+    end
+  end
 end
