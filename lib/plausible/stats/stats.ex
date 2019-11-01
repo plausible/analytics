@@ -244,9 +244,11 @@ defmodule Plausible.Stats do
   defp base_query(site, query) do
     {:ok, first} = NaiveDateTime.new(query.date_range.first, ~T[00:00:00])
     first_datetime = Timex.to_datetime(first, site.timezone)
+    |> Timex.Timezone.convert("UTC")
 
     {:ok, last} = NaiveDateTime.new(query.date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
     last_datetime = Timex.to_datetime(last, site.timezone)
+    |> Timex.Timezone.convert("UTC")
 
     from(e in Plausible.Event,
       where: e.name == "pageview",

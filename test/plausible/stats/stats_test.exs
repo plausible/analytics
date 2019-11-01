@@ -152,6 +152,19 @@ defmodule Plausible.StatsTest do
       assert plot == [1] ++ zeroes ++ [1]
     end
 
+    test "displays hourly stats in configured timezone" do
+      site = insert(:site, timezone: "CET") # UTC+1
+      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 00:00:00]) # Timestamp is in UTC
+
+      query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
+
+      {plot, _labels, _index} = Stats.calculate_plot(site, query)
+
+      zeroes = Stream.repeatedly(fn -> 0 end) |> Stream.take(22) |> Enum.into([])
+
+      assert plot == [0, 1] ++ zeroes # Expecting pageview to show at 1am CET
+    end
+
     test "displays pageviews for a month" do
       site = insert(:site)
       insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 12:00:00])
