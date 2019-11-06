@@ -53,7 +53,7 @@ defmodule Plausible.StatsTest do
   end
 
   describe "top_screen_sizes" do
-    test "shows top screen sizes by new visitors" do
+    test "shows top screen sizes by new visitors and percentages" do
       site = insert(:site)
       insert(:pageview, hostname: site.domain, screen_size: "desktop", new_visitor: true, timestamp: ~N[2019-01-01 01:00:00])
       insert(:pageview, hostname: site.domain, screen_size: "desktop", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
@@ -61,14 +61,14 @@ defmodule Plausible.StatsTest do
       query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
 
       assert Stats.top_screen_sizes(site, query) == [
-        {"mobile", 1},
-        {"desktop", 2}
+        {"mobile", 1, 33},
+        {"desktop", 2, 67}
       ]
     end
   end
 
   describe "countries" do
-    test "shows top countries by new visitors" do
+    test "shows top countries by new visitors and percentages" do
       site = insert(:site)
       insert(:pageview, hostname: site.domain, country_code: "EE", new_visitor: true, timestamp: ~N[2019-01-01 01:00:00])
       insert(:pageview, hostname: site.domain, country_code: "EE", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
@@ -76,8 +76,8 @@ defmodule Plausible.StatsTest do
       query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
 
       assert Stats.countries(site, query) == [
-        {"Estonia", 2},
-        {"United Kingdom", 1}
+        {"Estonia", 2, 67},
+        {"United Kingdom", 1, 33}
       ]
     end
   end
@@ -91,14 +91,14 @@ defmodule Plausible.StatsTest do
       query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
 
       assert Stats.browsers(site, query) == [
-        {"Chrome", 2},
-        {"Safari", 1}
+        {"Chrome", 2, 67},
+        {"Safari", 1, 33}
       ]
     end
   end
 
   describe "operating_systems" do
-    test "shows top browsers by new visitors" do
+    test "shows top operating systems by new visitors" do
       site = insert(:site)
       insert(:pageview, hostname: site.domain, operating_system: "Mac", new_visitor: true, timestamp: ~N[2019-01-01 01:00:00])
       insert(:pageview, hostname: site.domain, operating_system: "Windows", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
@@ -106,8 +106,8 @@ defmodule Plausible.StatsTest do
       query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
 
       assert Stats.operating_systems(site, query) == [
-        {"Windows", 2},
-        {"Mac", 1}
+        {"Windows", 2, 67},
+        {"Mac", 1, 33}
       ]
     end
   end

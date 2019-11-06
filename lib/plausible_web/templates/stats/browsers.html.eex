@@ -6,10 +6,10 @@
 <div class="my-4 border-b border-grey-light"></div>
 <main class="modal__content" id="modal-1-content">
   <div class="mt-8">
-    <%= for {browser, count} <- @browsers do %>
+    <%= for {browser, count, percentage} <- @browsers do %>
       <div class="flex items-center justify-between my-2">
         <span><%= browser %></span>
-        <span title="<%= count %>"><%= large_number_format(count) %></span>
+        <span tooltip="<%= count %> visitors"><%= percentage %>%</span>
       </div>
       <%= bar(count, @browsers, :red) %>
     <% end %>

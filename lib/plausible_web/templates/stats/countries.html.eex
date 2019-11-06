@@ -6,10 +6,10 @@
 <div class="my-4 border-b border-grey-light"></div>
 <main class="modal__content">
   <div class="mt-8">
-    <%= for {country, count} <- @countries do %>
+    <%= for {country, count, percentage} <- @countries do %>
       <div class="flex items-center justify-between my-2">
-        <span><%= Plausible.Stats.CountryName.from_iso3166(country) %></span>
-        <span title="<%= count %>"><%= large_number_format(count) %></span>
+        <span><%= country %></span>
+        <span tooltip="<%= count %> visitors"><%= percentage %>%</span>
       </div>
       <%= bar(count, @countries, :indigo) %>
     <% end %>

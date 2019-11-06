@@ -4,10 +4,10 @@
 </div>
 
 <div class="mt-8">
-  <%= for {key, count} <- @browsers do %>
+  <%= for {key, count, percentage} <- @browsers do %>
     <div class="flex items-center justify-between my-2">
       <span class="truncate" style="max-width: 80%;"><%= key %></span>
-      <span title="<%= count %>"><%= large_number_format(count) %></span>
+      <span tooltip="<%= count %> visitors"><%= percentage %>%</span>
     </div>
     <%= bar(count, @browsers, :red) %>
   <% end %>

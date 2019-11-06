@@ -3,13 +3,13 @@
   <div class="text-grey-darker mt-1">by visitors</div>
 </div>
 <div class="mt-8">
-  <%= for {screen_size, count} <- @top_screen_sizes do %>
+  <%= for {screen_size, count, percentage} <- @top_screen_sizes do %>
     <div class="flex items-center justify-between my-2">
       <span tooltip="<%= explanation_for(screen_size) %>">
         <%= icon_for(screen_size) %>
         <span class="ml-1 cursor-default"><%= screen_size %></span>
       </span>
-      <span title="<%= count %>"><%= large_number_format(count) %></span>
+      <span tooltip="<%= count %> visitors"><%= percentage %>%</span>
     </div>
     <%= bar(count, @top_screen_sizes, :teal) %>
   <% end %>

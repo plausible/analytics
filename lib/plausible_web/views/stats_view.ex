@@ -104,7 +104,11 @@ defmodule PlausibleWeb.StatsView do
   end
 
   defp bar_width(count, all) do
-    max = Enum.max_by(all, fn {_, count} -> count end) |> elem(1)
+    max = Enum.max_by(all, fn
+      {_, count} -> count
+      {_, count, _} -> count
+    end) |> elem(1)
+
     count / max * 100
   end
 

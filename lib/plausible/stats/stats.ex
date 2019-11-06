@@ -129,27 +129,36 @@ defmodule Plausible.Stats do
   @available_screen_sizes ["Desktop", "Laptop", "Tablet", "Mobile"]
 
   def top_screen_sizes(site, query) do
-    Repo.all(from e in base_query(site, query),
+    sizes = Repo.all(from e in base_query(site, query),
       select: {e.screen_size, count(e.screen_size)},
       group_by: e.screen_size,
       where: e.new_visitor == true and not is_nil(e.screen_size)
-    ) |> Enum.sort(fn {screen_size1, _}, {screen_size2, _} ->
+    )
+    |> Enum.sort(fn {screen_size1, _}, {screen_size2, _} ->
       index1 = Enum.find_index(@available_screen_sizes, fn s -> s == screen_size1 end)
       index2 = Enum.find_index(@available_screen_sizes, fn s -> s == screen_size2 end)
       index2 > index1
     end)
+    |> add_percentages
+  end
+
+  defp add_percentages(stat_list) do
+    total = Enum.reduce(stat_list, 0, fn {_, count}, total -> total + count end)
+    Enum.map(stat_list, fn {stat, count} -> {stat, count, round(count / total * 100)} end)
   end
 
   def countries(site, query, limit \\ 5) do
-    Repo.all(from e in base_query(site, query),
+    countries = Repo.all(from e in base_query(site, query),
       select: {e.country_code, count(e.country_code)},
       group_by: e.country_code,
       where: e.new_visitor == true and not is_nil(e.country_code),
-      order_by: [desc: count(e.country_code)],
-      limit: ^limit
-    ) |> Enum.map(fn {country_code, count} ->
+      order_by: [desc: count(e.country_code)]
+    )
+    |> Enum.map(fn {country_code, count} ->
       {Plausible.Stats.CountryName.from_iso3166(country_code), count}
     end)
+    |> add_percentages
+    |> Enum.take(limit)
   end
 
   def browsers(site, query, limit \\ 5) do
@@ -157,9 +166,10 @@ defmodule Plausible.Stats do
       select: {e.browser, count(e.browser)},
       group_by: e.browser,
       where: e.new_visitor == true and not is_nil(e.browser),
-      order_by: [desc: count(e.browser)],
-      limit: ^limit
+      order_by: [desc: count(e.browser)]
     )
+    |> add_percentages
+    |> Enum.take(limit)
   end
 
   def operating_systems(site, query, limit \\ 5) do
@@ -167,9 +177,10 @@ defmodule Plausible.Stats do
       select: {e.operating_system, count(e.operating_system)},
       group_by: e.operating_system,
       where: e.new_visitor == true and not is_nil(e.operating_system),
-      order_by: [desc: count(e.operating_system)],
-      limit: ^limit
+      order_by: [desc: count(e.operating_system)]
     )
+    |> add_percentages
+    |> Enum.take(limit)
   end
 
   def current_visitors(site) do
