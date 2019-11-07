@@ -67,41 +67,14 @@ if (domainEl) {
 
   const promises = []
 
-  promises.push(
-    fetch(`/stats/${domain}/main-graph${location.search}`)
-      .then(res => res.json())
-      .then(res => renderMainGraph(res))
-      .then(graphData => fetch(`/api/${domain}/compare${location.search || '?'}&pageviews=${graphData.pageviews}&unique_visitors=${graphData.unique_visitors}`))
-      .then(res => res.json())
-      .then(res => renderComparisons(res))
-  )
-
-  promises.push(
-    fetch(`/stats/${domain}/referrers${location.search}`)
-      .then(res => res.text())
-      .then((res) => {
-        document.getElementById('referrer-stats').innerHTML = res
-        router.updateLinkHandlers()
-      })
-  )
-
-  promises.push(
-    fetch(`/stats/${domain}/pages${location.search}`)
-      .then(res => res.text())
-      .then((res) => {
-        document.getElementById('pages-stats').innerHTML = res
-        router.updateLinkHandlers()
-      })
-  )
-
-  promises.push(
-    fetch(`/stats/${domain}/countries${location.search}`)
-      .then(res => res.text())
-      .then((res) => {
-        document.getElementById('countries-stats').innerHTML = res
-        router.updateLinkHandlers()
-      })
-  )
+  // promises.push(
+  //   fetch(`/stats/${domain}/main-graph${location.search}`)
+  //     .then(res => res.json())
+  //     .then(res => renderMainGraph(res))
+  //     .then(graphData => fetch(`/api/${domain}/compare${location.search || '?'}&pageviews=${graphData.pageviews}&unique_visitors=${graphData.unique_visitors}`))
+  //     .then(res => res.json())
+  //     .then(res => renderComparisons(res))
+  // )
 
   Promise.all(promises).then(() => {
     fetch(`/stats/${domain}/screen-sizes${location.search}`)
@@ -139,7 +112,6 @@ if (domainEl) {
     fetch(`/api/${domain}/current-visitors`)
       .then(res => res.json())
       .then((res) => {
-        console.log(res)
         document.getElementById('current-visitors').innerHTML = res
       })
   }, 10000)

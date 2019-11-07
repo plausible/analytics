@@ -63,18 +63,18 @@ blockquote {
 
 @tailwind utilities;
 
-#main-graph {
+.main-graph {
   height: 250px;
 }
 
 @screen sm {
-  #main-graph {
+  .main-graph {
     height: 300px;
   }
 }
 
 @screen md {
-  #main-graph {
+  .main-graph {
     height: 460px;
   }
 }

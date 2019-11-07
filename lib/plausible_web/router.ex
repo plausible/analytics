@@ -43,6 +43,17 @@ defmodule PlausibleWeb.Router do
     get "/:domain/browsers", StatsController, :browsers
     get "/:domain/compare", StatsController, :compare
     get "/:domain/current-visitors", StatsController, :current_visitors
+
+    scope "/stats/", Api do
+      get "/:domain/main-graph", StatsController, :main_graph
+      get "/:domain/referrers", StatsController, :referrers
+      get "/:domain/pages", StatsController, :pages
+      get "/:domain/countries", StatsController, :countries
+      get "/:domain/browsers", StatsController, :browsers
+      get "/:domain/operating-systems", StatsController, :operating_systems
+      get "/:domain/screen-sizes", StatsController, :screen_sizes
+      get "/:domain/conversions", StatsController, :conversions
+    end
   end
 
   scope "/", PlausibleWeb do
