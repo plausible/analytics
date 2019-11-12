@@ -20,7 +20,7 @@ export default class Referrers extends React.Component {
     return (
       <React.Fragment key={referrer.name}>
         <div className="flex items-center justify-between my-2">
-          <span className="truncate" style={{maxWidth: '80%'}}>{ referrer.name }</span>
+          <a className="hover:underline truncate" style={{maxWidth: '80%'}} href={`/${this.props.site.domain}/referrers/${referrer.name}${window.location.search}`}>{ referrer.name }</a>
           <span>{numberFormatter(referrer.count)}</span>
         </div>
         <Bar count={referrer.count} all={this.state.referrers} color="blue" />
