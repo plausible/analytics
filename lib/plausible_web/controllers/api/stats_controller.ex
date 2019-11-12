@@ -103,4 +103,14 @@ defmodule PlausibleWeb.Api.StatsController do
       json(conn, formatted_conversions)
     end
   end
+
+  def current_visitors(conn, %{"domain" => domain}) do
+    site = Repo.get_by(Plausible.Site, domain: domain)
+
+    if site do
+      json(conn, Stats.current_visitors(site))
+    else
+      render_error(conn, 404)
+    end
+  end
 end

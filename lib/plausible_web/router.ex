@@ -45,6 +45,7 @@ defmodule PlausibleWeb.Router do
     get "/:domain/current-visitors", StatsController, :current_visitors
 
     scope "/stats/", Api do
+      get "/:domain/current-visitors", StatsController, :current_visitors
       get "/:domain/main-graph", StatsController, :main_graph
       get "/:domain/referrers", StatsController, :referrers
       get "/:domain/pages", StatsController, :pages

@@ -22,9 +22,6 @@ defmodule PlausibleWeb.StatsController do
 
           Plausible.Tracking.event(conn, "Site Analytics: Open", %{demo: demo})
 
-          {conn, params} = fetch_period(conn, site)
-          query = Stats.Query.from(site.timezone, params)
-          current_visitors = Stats.current_visitors(site)
           has_goals = user && Plausible.Sites.has_goals?(site)
 
           conn
@@ -33,8 +30,6 @@ defmodule PlausibleWeb.StatsController do
           |> render("stats.html",
             site: site,
             has_goals: has_goals,
-            query: query,
-            current_visitors: current_visitors,
             title: "Plausible · " <> site.domain,
             offer_email_report: offer_email_report
           )

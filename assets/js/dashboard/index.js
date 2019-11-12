@@ -2,6 +2,7 @@ import React from 'react';
 
 import {parseQueryString} from './query-string'
 import Datepicker from './datepicker'
+import CurrentVisitors from './stats/current-visitors'
 import VisitorGraph from './stats/visitor-graph'
 import Referrers from './stats/referrers'
 import Pages from './stats/pages'
@@ -56,12 +57,7 @@ export default class Stats extends React.Component {
         <div className="w-full sm:flex justify-between items-center">
           <div className="w-full flex items-center">
             <h2 className="text-left mr-8">Analytics for <a href="//{this.props.domain}" target="_blank">{this.props.site.domain}</a></h2>
-            <div className="text-sm font-bold text-grey-darker mt-2 mt-0">
-              <svg className="w-2 mr-1 fill-current text-green" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="8" cy="8" r="8"/>
-              </svg>
-              <span> 4</span> current visitors
-            </div>
+            <CurrentVisitors site={this.props.site}  />
           </div>
           <Datepicker site={this.props.site} query={this.state.query} />
         </div>
