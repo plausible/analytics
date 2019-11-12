@@ -155,8 +155,18 @@ class LineGraph extends React.Component {
     });
   }
 
+  renderComparison(comparison) {
+    const formattedComparison = numberFormatter(Math.abs(comparison))
+
+    if (comparison >= 0) {
+      return <span className="bg-green-lightest text-green-dark px-2 py-1 text-xs font-bold rounded">&uarr; {formattedComparison}%</span>
+    } else if (comparison < 0) {
+      return <span className="bg-red-lightest text-red-dark px-2 py-1 text-xs font-bold rounded">&darr; {formattedComparison}%</span>
+    }
+  }
+
   render() {
-    const {graphData} = this.props
+    const {graphData, comparisons} = this.props
 
     return (
       <React.Fragment>
@@ -165,12 +175,14 @@ class LineGraph extends React.Component {
             <div className="text-grey-dark text-sm font-bold tracking-wide">UNIQUE VISITORS</div>
             <div className="mt-2 flex items-center justify-between">
               <b className="text-2xl" title={graphData.unique_visitors.toLocaleString()}>{numberFormatter(graphData.unique_visitors)}</b>
+              {this.renderComparison(comparisons.change_visitors)}
             </div>
           </div>
           <div className="px-10">
             <div className="text-grey-dark text-sm font-bold tracking-wide">TOTAL PAGEVIEWS</div>
             <div className="mt-2 flex items-center justify-between">
               <b className="text-2xl" title={graphData.pageviews.toLocaleString()}>{numberFormatter(graphData.pageviews)}</b>
+              {this.renderComparison(comparisons.change_pageviews)}
             </div>
           </div>
         </div>
@@ -186,13 +198,19 @@ export default class VisitorGraph extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      loading: true
+      loading: true,
+      comparisons: {}
     }
   }
 
   componentDidMount() {
     api.get(`/api/stats/${this.props.site.domain}/main-graph`, this.props.query)
-      .then((res) => this.setState({loading: false, graphData: res}))
+      .then((res) => {
+        this.setState({loading: false, graphData: res})
+        return res
+      })
+      .then(graphData => api.get(`/api/${this.props.site.domain}/compare`, Object.assign({}, this.props.query, {pageviews: graphData.pageviews, unique_visitors: graphData.unique_visitors})))
+      .then(res => this.setState({comparisons: res}))
   }
 
   renderInner() {
@@ -201,7 +219,7 @@ export default class VisitorGraph extends React.Component {
         <div className="loading pt-24 sm:pt-32 md:pt-48 mx-auto"><div></div></div>
       )
     } else if (this.state.graphData) {
-      return <LineGraph graphData={this.state.graphData} />
+      return <LineGraph graphData={this.state.graphData} comparisons={this.state.comparisons} />
     }
   }
 
