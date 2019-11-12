@@ -1,6 +1,7 @@
 import React from 'react';
 
 import Bar from './bar'
+import * as api from '../api'
 
 function iconFor(screenSize) {
   if (screenSize === 'Mobile') {
@@ -29,8 +30,7 @@ export default class ScreenSizes extends React.Component {
   }
 
   componentDidMount() {
-    fetch(`/api/stats/${this.props.site.domain}/screen-sizes${window.location.search}`)
-      .then((res) => res.json())
+    api.get(`/api/stats/${this.props.site.domain}/screen-sizes`, this.props.query)
       .then((res) => this.setState({loading: false, sizes: res}))
   }
 

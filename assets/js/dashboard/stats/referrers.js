@@ -3,6 +3,7 @@ import React from 'react';
 import Bar from './bar'
 import MoreLink from './more-link'
 import numberFormatter from '../number-formatter'
+import * as api from '../api'
 
 export default class Referrers extends React.Component {
   constructor(props) {
@@ -11,8 +12,7 @@ export default class Referrers extends React.Component {
   }
 
   componentDidMount() {
-    fetch(`/api/stats/${this.props.site.domain}/referrers${window.location.search}`)
-      .then((res) => res.json())
+    api.get(`/api/stats/${this.props.site.domain}/referrers`, this.props.query)
       .then((res) => this.setState({loading: false, referrers: res}))
   }
 

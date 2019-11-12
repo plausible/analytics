@@ -11,8 +11,21 @@ import OperatingSystems from './stats/operating-systems'
 import ScreenSizes from './stats/screen-sizes'
 import Conversions from './stats/conversions'
 
-function parseQuery(querystring) {
-  const {period, date} = parseQueryString(querystring)
+const PERIODS = ['day', 'month', '7d', '3mo', '6mo']
+
+function parseQuery(querystring, siteDomain) {
+  let {period, date} = parseQueryString(querystring)
+  const periodKey = 'period__' + siteDomain
+
+  if (PERIODS.includes(period)) {
+    window.localStorage[periodKey] = period
+  } else {
+    if (window.localStorage[periodKey]) {
+      period = window.localStorage[periodKey]
+    } else {
+      period = '6mo'
+    }
+  }
 
   return {
     period: period,
@@ -23,7 +36,7 @@ function parseQuery(querystring) {
 export default class Stats extends React.Component {
   constructor(props) {
     super(props)
-    const query = parseQuery(window.location.search)
+    const query = parseQuery(window.location.search, this.props.site.domain)
     this.state = {query: query}
   }
 
@@ -31,7 +44,7 @@ export default class Stats extends React.Component {
     if (this.props.site.hasGoals) {
       return (
         <div className="w-full block md:flex items-start justify-between mt-6">
-          <Conversions site={this.props.site} />
+          <Conversions site={this.props.site} query={this.state.query} />
         </div>
       )
     }
@@ -54,14 +67,14 @@ export default class Stats extends React.Component {
         </div>
         <VisitorGraph site={this.props.site} query={this.state.query} />
         <div className="w-full block md:flex items-start justify-between mt-6">
-          <Referrers site={this.props.site} />
-          <Pages site={this.props.site} />
-          <Countries site={this.props.site} />
+          <Referrers site={this.props.site} query={this.state.query} />
+          <Pages site={this.props.site} query={this.state.query} />
+          <Countries site={this.props.site} query={this.state.query} />
         </div>
         <div className="w-full block md:flex items-start justify-between mt-6">
-          <Browsers site={this.props.site} />
-          <OperatingSystems site={this.props.site} />
-          <ScreenSizes site={this.props.site} />
+          <Browsers site={this.props.site} query={this.state.query} />
+          <OperatingSystems site={this.props.site} query={this.state.query} />
+          <ScreenSizes site={this.props.site} query={this.state.query} />
         </div>
 
         { this.renderConversions() }

@@ -1,5 +1,6 @@
 import React from 'react';
 import numberFormatter from '../number-formatter'
+import * as api from '../api'
 
 function dataSets(graphData, ctx) {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
@@ -190,8 +191,7 @@ export default class VisitorGraph extends React.Component {
   }
 
   componentDidMount() {
-    fetch(`/api/stats/${this.props.site.domain}/main-graph${window.location.search}`)
-      .then((res) => res.json())
+    api.get(`/api/stats/${this.props.site.domain}/main-graph`, this.props.query)
       .then((res) => this.setState({loading: false, graphData: res}))
   }
 

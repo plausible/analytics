@@ -3,6 +3,7 @@ import React from 'react';
 import Bar from './bar'
 import MoreLink from './more-link'
 import numberFormatter from '../number-formatter'
+import * as api from '../api'
 
 export default class Pages extends React.Component {
   constructor(props) {
@@ -13,8 +14,7 @@ export default class Pages extends React.Component {
   }
 
   componentDidMount() {
-    fetch(`/api/stats/${this.props.site.domain}/pages${window.location.search}`)
-      .then((res) => res.json())
+    api.get(`/api/stats/${this.props.site.domain}/pages`, this.props.query)
       .then((res) => this.setState({loading: false, pages: res}))
   }
 

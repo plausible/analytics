@@ -7,4 +7,3 @@ export function parseQueryString(queryString) {
     }
     return query;
 }
-
