@@ -28,14 +28,14 @@ export default class Countries extends React.Component {
       .then((res) => this.setState({loading: false, countries: res}))
   }
 
-  renderCountry(page) {
+  renderCountry(country) {
     return (
-      <React.Fragment key={page.name}>
+      <React.Fragment key={country.name}>
         <div className="flex items-center justify-between my-2">
-          <span className="truncate" style={{maxWidth: '80%'}}>{page.name}</span>
-          <span>{page.percentage}%</span>
+          <span className="truncate" style={{maxWidth: '80%'}}>{country.name}</span>
+          <span>{country.percentage}%</span>
         </div>
-        <Bar count={page.count} all={this.state.countries} color="indigo" />
+        <Bar count={country.count} all={this.state.countries} color="indigo" />
       </React.Fragment>
     )
   }

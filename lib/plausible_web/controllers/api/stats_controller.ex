@@ -21,12 +21,12 @@ defmodule PlausibleWeb.Api.StatsController do
     })
   end
 
-  def referrers(conn, %{"domain" => domain} = params) do
+  def referrers(conn, %{"domain" => domain}) do
     site = Repo.get_by(Plausible.Site, domain: domain)
     query = Stats.Query.from(site.timezone, conn.params)
 
     if site do
-      formatted_referrers = Stats.top_referrers(site, query, params["limit"] || 5)
+      formatted_referrers = Stats.top_referrers(site, query, conn.params["limit"] || 5)
                             |> Enum.map(fn {name, count} -> %{name: name, count: count} end)
       json(conn, formatted_referrers)
     end
@@ -37,7 +37,7 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Stats.Query.from(site.timezone, conn.params)
 
     if site do
-      formatted_pages = Stats.top_pages(site, query)
+      formatted_pages = Stats.top_pages(site, query, conn.params["limit"] || 5)
                         |> Enum.map(fn {name, count} -> %{name: name, count: count} end)
 
       json(conn, formatted_pages)
@@ -49,7 +49,7 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Stats.Query.from(site.timezone, conn.params)
 
     if site do
-      formatted_countries = Stats.countries(site, query)
+      formatted_countries = Stats.countries(site, query, parse_integer(conn.params["limit"]) || 5)
                         |> Enum.map(fn {name, count, percentage} -> %{name: name, count: count, percentage: percentage} end)
 
       json(conn, formatted_countries)
@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Stats.Query.from(site.timezone, conn.params)
 
     if site do
-      formatted_browsers = Stats.browsers(site, query)
+      formatted_browsers = Stats.browsers(site, query, parse_integer(conn.params["limit"]) || 5)
                         |> Enum.map(fn {name, count, percentage} -> %{name: name, count: count, percentage: percentage} end)
 
       json(conn, formatted_browsers)
@@ -73,7 +73,7 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Stats.Query.from(site.timezone, conn.params)
 
     if site do
-      formatted_systems = Stats.operating_systems(site, query)
+      formatted_systems = Stats.operating_systems(site, query, parse_integer(conn.params["limit"]) || 5)
                         |> Enum.map(fn {name, count, percentage} -> %{name: name, count: count, percentage: percentage} end)
 
       json(conn, formatted_systems)
@@ -111,6 +111,15 @@ defmodule PlausibleWeb.Api.StatsController do
       json(conn, Stats.current_visitors(site))
     else
       render_error(conn, 404)
+    end
+  end
+
+  defp parse_integer(nil), do: nil
+
+  defp parse_integer(nr) do
+    case Integer.parse(nr) do
+      {number, ""} -> number
+      _ -> nil
     end
   end
 end
