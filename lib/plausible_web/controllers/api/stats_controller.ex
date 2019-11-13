@@ -21,12 +21,12 @@ defmodule PlausibleWeb.Api.StatsController do
     })
   end
 
-  def referrers(conn, %{"domain" => domain}) do
+  def referrers(conn, %{"domain" => domain} = params) do
     site = Repo.get_by(Plausible.Site, domain: domain)
     query = Stats.Query.from(site.timezone, conn.params)
 
     if site do
-      formatted_referrers = Stats.top_referrers(site, query)
+      formatted_referrers = Stats.top_referrers(site, query, params["limit"] || 5)
                             |> Enum.map(fn {name, count} -> %{name: name, count: count} end)
       json(conn, formatted_referrers)
     end

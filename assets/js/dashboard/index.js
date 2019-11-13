@@ -1,6 +1,6 @@
 import React from 'react';
+import { withRouter } from 'react-router-dom'
 
-import {parseQueryString} from './query-string'
 import Datepicker from './datepicker'
 import CurrentVisitors from './stats/current-visitors'
 import VisitorGraph from './stats/visitor-graph'
@@ -11,34 +11,18 @@ import Browsers from './stats/browsers'
 import OperatingSystems from './stats/operating-systems'
 import ScreenSizes from './stats/screen-sizes'
 import Conversions from './stats/conversions'
+import {parseQuery} from './query'
 
-const PERIODS = ['day', 'month', '7d', '3mo', '6mo']
-
-function parseQuery(querystring, siteDomain) {
-  let {period, date} = parseQueryString(querystring)
-  const periodKey = 'period__' + siteDomain
-
-  if (PERIODS.includes(period)) {
-    window.localStorage[periodKey] = period
-  } else {
-    if (window.localStorage[periodKey]) {
-      period = window.localStorage[periodKey]
-    } else {
-      period = '6mo'
-    }
-  }
-
-  return {
-    period: period,
-    date: date ? new Date(date) : new Date()
-  }
-}
-
-export default class Stats extends React.Component {
+class Stats extends React.Component {
   constructor(props) {
     super(props)
-    const query = parseQuery(window.location.search, this.props.site.domain)
-    this.state = {query: query}
+    this.state = {query: parseQuery(props.location.search)}
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.location.search !== this.props.location.search) {
+      this.setState({query: parseQuery(this.props.location.search)})
+    }
   }
 
   renderConversions() {
@@ -78,3 +62,5 @@ export default class Stats extends React.Component {
     )
   }
 }
+
+export default withRouter(Stats)

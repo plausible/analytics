@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import Stats from './index'
+import Router from './router'
 
 const container = document.getElementById('stats-react-container')
 
@@ -11,4 +11,4 @@ const site = {
   hasGoals: container.dataset.hasGoals === 'true'
 }
 
-ReactDOM.render(<Stats site={site} />, container);
+ReactDOM.render(<Router site={site} />, container);

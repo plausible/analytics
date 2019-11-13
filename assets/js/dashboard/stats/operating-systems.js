@@ -11,6 +11,17 @@ export default class OperatingSystems extends React.Component {
   }
 
   componentDidMount() {
+    this.fetchOperatingSystems()
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.query !== prevProps.query) {
+      this.setState({loading: true, systems: null})
+      this.fetchOperatingSystems()
+    }
+  }
+
+  fetchOperatingSystems() {
     api.get(`/api/stats/${this.props.site.domain}/operating-systems`, this.props.query)
       .then((res) => this.setState({loading: false, systems: res}))
   }

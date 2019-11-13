@@ -204,12 +204,23 @@ export default class VisitorGraph extends React.Component {
   }
 
   componentDidMount() {
+    this.fetchGraphData()
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.query !== prevProps.query) {
+      this.setState({loading: true, graphData: null, comparisons: {}})
+      this.fetchGraphData()
+    }
+  }
+
+  fetchGraphData() {
     api.get(`/api/stats/${this.props.site.domain}/main-graph`, this.props.query)
       .then((res) => {
         this.setState({loading: false, graphData: res})
         return res
       })
-      .then(graphData => api.get(`/api/${this.props.site.domain}/compare`, Object.assign({}, this.props.query, {pageviews: graphData.pageviews, unique_visitors: graphData.unique_visitors})))
+      .then(graphData => api.get(`/api/${this.props.site.domain}/compare`, this.props.query, {pageviews: graphData.pageviews, unique_visitors: graphData.unique_visitors}))
       .then(res => this.setState({comparisons: res}))
   }
 

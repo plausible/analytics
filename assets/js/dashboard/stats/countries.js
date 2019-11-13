@@ -2,6 +2,7 @@ import React from 'react';
 
 import Bar from './bar'
 import MoreLink from './more-link'
+import * as api from '../api'
 
 export default class Countries extends React.Component {
   constructor(props) {
@@ -12,8 +13,18 @@ export default class Countries extends React.Component {
   }
 
   componentDidMount() {
-    fetch(`/api/stats/${this.props.site.domain}/countries${window.location.search}`)
-      .then((res) => res.json())
+    this.fetchCountries()
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.query !== prevProps.query) {
+      this.setState({loading: true, countries: null})
+      this.fetchCountries()
+    }
+  }
+
+  fetchCountries() {
+    api.get(`/api/stats/${this.props.site.domain}/countries`, this.props.query)
       .then((res) => this.setState({loading: false, countries: res}))
   }
 

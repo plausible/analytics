@@ -12,6 +12,17 @@ export default class Conversions extends React.Component {
   }
 
   componentDidMount() {
+    this.fetchConversions()
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.query !== prevProps.query) {
+      this.setState({loading: true, goals: null})
+      this.fetchConversions()
+    }
+  }
+
+  fetchConversions() {
     api.get(`/api/stats/${this.props.site.domain}/conversions`, this.props.query)
       .then((res) => this.setState({loading: false, goals: res}))
   }

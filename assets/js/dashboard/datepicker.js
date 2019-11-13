@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom'
 import {shiftDays, shiftMonths, formatDay, formatMonth, formatISO} from './date'
 
 export default class DatePicker extends React.Component {
@@ -21,16 +22,16 @@ export default class DatePicker extends React.Component {
   renderArrow(period, prevDate, nextDate) {
     return (
       <div className="flex rounded shadow bg-white mr-4 cursor-pointer">
-        <a href={`/${this.props.site.domain}?period=${period}&date=${prevDate}`} className="flex items-center px-2 border-r border-grey-light">
+        <Link to={`/${this.props.site.domain}?period=${period}&date=${prevDate}`} className="flex items-center px-2 border-r border-grey-light">
           <svg className="fill-current h-4 w-4" style={{transform: 'translateY(-2px)'}}>
             <use xlinkHref="#feather-chevron-left" />
           </svg>
-        </a>
-        <a href={`/${this.props.site.domain}?period=${period}&date=${nextDate}`} className="flex items-center px-2">
+        </Link>
+        <Link to={`/${this.props.site.domain}?period=${period}&date=${nextDate}`} className="flex items-center px-2">
           <svg className="fill-current h-4 w-4" style={{transform: 'translateY(-2px)'}}>
             <use xlinkHref="#feather-chevron-right" />
           </svg>
-        </a>
+        </Link>
       </div>
     )
   }

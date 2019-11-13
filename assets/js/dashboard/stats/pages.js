@@ -14,6 +14,17 @@ export default class Pages extends React.Component {
   }
 
   componentDidMount() {
+    this.fetchPages()
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.query !== prevProps.query) {
+      this.setState({loading: true, pages: null})
+      this.fetchPages()
+    }
+  }
+
+  fetchPages() {
     api.get(`/api/stats/${this.props.site.domain}/pages`, this.props.query)
       .then((res) => this.setState({loading: false, pages: res}))
   }

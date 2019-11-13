@@ -11,6 +11,17 @@ export default class Browsers extends React.Component {
   }
 
   componentDidMount() {
+    this.fetchBrowsers()
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.query !== prevProps.query) {
+      this.setState({loading: true, browsers: null})
+      this.fetchBrowsers()
+    }
+  }
+
+  fetchBrowsers() {
     api.get(`/api/stats/${this.props.site.domain}/browsers`, this.props.query)
       .then((res) => this.setState({loading: false, browsers: res}))
   }
