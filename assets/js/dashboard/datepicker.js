@@ -1,13 +1,21 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
-import {shiftDays, shiftMonths, formatDay, formatMonth, formatISO} from './date'
+import {shiftDays, shiftMonths, formatDay, formatMonth, formatISO, newDateInOffset} from './date'
+
+function isToday(site, date) {
+  return formatISO(date) === formatISO(newDateInOffset(site.offset))
+}
 
 export default class DatePicker extends React.Component {
   timeFrameText() {
-    const {query} = this.props
+    const {query, site} = this.props
 
     if (query.period === 'day') {
-      return formatDay(query.date)
+      if (isToday(site, query.date)) {
+        return 'Today'
+      } else {
+        return formatDay(query.date)
+      }
     } else if (query.period === '7d') {
       return 'Last 7 days'
     } else if (query.period === 'month') {

@@ -13,7 +13,7 @@ class BrowsersModal extends React.Component {
   }
 
   componentDidMount() {
-    const query = parseQuery(this.props.location.search)
+    const query = parseQuery(this.props.location.search, this.props.site)
 
     api.get(`/api/stats/${this.props.site.domain}/browsers`, query, {limit: 100})
       .then((res) => this.setState({loading: false, browsers: res}))

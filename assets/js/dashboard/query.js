@@ -1,3 +1,5 @@
+import {newDateInOffset} from './date'
+
 function parseQueryString(queryString) {
     var query = {};
     var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
@@ -10,9 +12,9 @@ function parseQueryString(queryString) {
 
 const PERIODS = ['day', 'month', '7d', '3mo', '6mo']
 
-export function parseQuery(querystring, siteDomain) {
+export function parseQuery(querystring, site) {
   let {period, date} = parseQueryString(querystring)
-  const periodKey = 'period__' + siteDomain
+  const periodKey = 'period__' + site.domain
 
   if (PERIODS.includes(period)) {
     window.localStorage[periodKey] = period
@@ -26,6 +28,6 @@ export function parseQuery(querystring, siteDomain) {
 
   return {
     period: period,
-    date: date ? new Date(date) : new Date()
+    date: date ? new Date(date) : newDateInOffset(site.offset)
   }
 }

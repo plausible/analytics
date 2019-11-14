@@ -31,3 +31,8 @@ export function formatMonth(date) {
 export function formatDay(date) {
   return `${date.getDate()} ${formatMonth(date)}`;
 }
+
+// https://stackoverflow.com/a/11124448
+export function newDateInOffset(offset) {
+  return new Date(new Date().getTime() + offset * 1000)
+}

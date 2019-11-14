@@ -7,7 +7,7 @@ const container = document.getElementById('stats-react-container')
 
 const site = {
   domain: container.dataset.domain,
-  timezone: container.dataset.timezone,
+  offset: container.dataset.offset,
   hasGoals: container.dataset.hasGoals === 'true'
 }
 

@@ -16,12 +16,12 @@ import {parseQuery} from './query'
 class Stats extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {query: parseQuery(props.location.search)}
+    this.state = {query: parseQuery(props.location.search, this.props.site)}
   }
 
   componentDidUpdate(prevProps) {
     if (prevProps.location.search !== this.props.location.search) {
-      this.setState({query: parseQuery(this.props.location.search)})
+      this.setState({query: parseQuery(this.props.location.search, this.props.site)})
     }
   }
 

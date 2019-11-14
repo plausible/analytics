@@ -13,7 +13,7 @@ class OperatingSystemsModal extends React.Component {
   }
 
   componentDidMount() {
-    const query = parseQuery(this.props.location.search)
+    const query = parseQuery(this.props.location.search, this.props.site)
 
     api.get(`/api/stats/${this.props.site.domain}/operating-systems`, query, {limit: 100})
       .then((res) => this.setState({loading: false, systems: res}))

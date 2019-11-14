@@ -5,6 +5,6 @@
     </div>
   <% end %>
   <div class="pt-12"></div>
-  <div id="stats-react-container" data-domain="<%= @site.domain %>" data-timezone="<%= @site.timezone %>" data-has-goals="<%= @has_goals %>"></div>
+  <div id="stats-react-container" data-domain="<%= @site.domain %>" data-offset="<%= Timex.Timezone.total_offset(Timex.Timezone.get(@site.timezone)) %>" data-has-goals="<%= @has_goals %>"></div>
   <div id="modal_root"></div>
 </div>
