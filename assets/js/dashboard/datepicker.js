@@ -1,4 +1,5 @@
 import React from 'react';
+import { withRouter } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import {shiftDays, shiftMonths, formatDay, formatMonth, formatISO, newDateInOffset} from './date'
 
@@ -6,7 +7,42 @@ function isToday(site, date) {
   return formatISO(date) === formatISO(newDateInOffset(site.offset))
 }
 
-export default class DatePicker extends React.Component {
+class DatePicker extends React.Component {
+  constructor(props) {
+    super(props)
+    this.handleKeyup = this.handleKeyup.bind(this)
+  }
+
+  componentDidMount() {
+    document.addEventListener("keyup", this.handleKeyup);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("keyup", this.handleKeyup);
+  }
+
+  handleKeyup(e) {
+    const {query, history} = this.props
+
+    if (e.key === 'ArrowLeft') {
+      if (query.period === 'day') {
+        const prevDate = formatISO(shiftDays(query.date, -1))
+        history.push('?period=day&date=' + prevDate)
+      } else if (query.period === 'month') {
+        const prevMonth = formatISO(shiftMonths(query.date, -1))
+        history.push('?period=month&date=' + prevMonth)
+      }
+    } else if (e.key === 'ArrowRight') {
+      if (query.period === 'day') {
+        const nextDate = formatISO(shiftDays(query.date, 1))
+        history.push('?period=day&date=' + nextDate)
+      } else if (query.period === 'month') {
+        const nextMonth = formatISO(shiftMonths(query.date, 1))
+        history.push('?period=month&date=' + nextMonth)
+      }
+    }
+  }
+
   timeFrameText() {
     const {query, site} = this.props
 
@@ -92,3 +128,5 @@ export default class DatePicker extends React.Component {
     )
   }
 }
+
+export default withRouter(DatePicker)
