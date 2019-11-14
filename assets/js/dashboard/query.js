@@ -1,4 +1,4 @@
-import {newDateInOffset} from './date'
+import {formatDay, newDateInOffset} from './date'
 
 function parseQueryString(queryString) {
     var query = {};
@@ -29,5 +29,21 @@ export function parseQuery(querystring, site) {
   return {
     period: period,
     date: date ? new Date(date) : newDateInOffset(site.offset)
+  }
+}
+
+export function toHuman(query) {
+  if (query.period === 'day') {
+    return formatDay(query.date)
+  } else if (query.period === 'month') {
+    return formatMonth(query.date)
+  } else if (query.period === '7d') {
+    return 'in the last 7 days'
+  } else if (query.period === '30d') {
+    return 'in the last 30 days'
+  } else if (query.period === '3mo') {
+    return 'in the last 3 months'
+  } else if (query.period === '6mo') {
+    return 'in the last 6 months'
   }
 }

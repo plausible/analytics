@@ -1,4 +1,5 @@
 import React from 'react';
+import { withRouter } from 'react-router-dom'
 import numberFormatter from '../number-formatter'
 import * as api from '../api'
 
@@ -43,18 +44,6 @@ function dataSets(graphData, ctx) {
   }
 }
 
-function onClick(graphData) {
-  return function(e) {
-    const element = this.getElementsAtEventForMode(e, 'index', {intersect: false})[0]
-    const date = element._chart.config.data.labels[element._index]
-    if (graphData.interval === 'month') {
-      document.location = '?period=month&date=' + date
-    } else if (graphData.interval === 'date') {
-      document.location = '?period=day&date=' + date
-    }
-  }
-}
-
 const MONTHS = [
   "January", "February", "March",
   "April", "May", "June", "July",
@@ -85,7 +74,7 @@ class LineGraph extends React.Component {
     const {graphData} = this.props
     const ctx = document.getElementById("main-graph-canvas").getContext('2d');
 
-    new Chart(ctx, {
+    this.chart = new Chart(ctx, {
       type: 'line',
       data: {
         labels: graphData.labels,
@@ -96,7 +85,7 @@ class LineGraph extends React.Component {
         legend: {display: false},
         responsive: true,
         elements: {line: {tension: 0.1}, point: {radius: 0}},
-        onClick: onClick(graphData),
+        onClick: this.onClick.bind(this),
         tooltips: {
           mode: 'index',
           intersect: false,
@@ -155,6 +144,17 @@ class LineGraph extends React.Component {
     });
   }
 
+  onClick(e) {
+    const element = this.chart.getElementsAtEventForMode(e, 'index', {intersect: false})[0]
+    const date = element._chart.config.data.labels[element._index]
+    if (this.props.graphData.interval === 'month') {
+      this.props.history.push('?period=month&date=' + date)
+    } else if (this.props.graphData.interval === 'date') {
+      this.props.history.push('?period=day&date=' + date)
+    }
+  }
+
+
   renderComparison(comparison) {
     const formattedComparison = numberFormatter(Math.abs(comparison))
 
@@ -167,6 +167,7 @@ class LineGraph extends React.Component {
 
   render() {
     const {graphData, comparisons} = this.props
+    const extraClass = graphData.interval === 'hour' ? '' : 'cursor-pointer'
 
     return (
       <React.Fragment>
@@ -187,12 +188,14 @@ class LineGraph extends React.Component {
           </div>
         </div>
         <div className="p-4">
-          <canvas id="main-graph-canvas" className="mt-4 ${extraClass}" width="1054" height="329"></canvas>
+          <canvas id="main-graph-canvas" className={'mt-4 ' + extraClass} width="1054" height="329"></canvas>
         </div>
       </React.Fragment>
     )
   }
 }
+
+LineGraph = withRouter(LineGraph)
 
 export default class VisitorGraph extends React.Component {
   constructor(props) {

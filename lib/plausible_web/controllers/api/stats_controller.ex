@@ -32,6 +32,18 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  def referrer_drilldown(conn, %{"domain" => domain, "referrer" => referrer}) do
+    site = Repo.get_by(Plausible.Site, domain: domain)
+    query = Stats.Query.from(site.timezone, conn.params)
+
+    if site do
+      referrers = Stats.referrer_drilldown(site, query, referrer)
+                  |> Enum.map(fn {name, count} -> %{name: name, count: count} end)
+      total_visitors = Stats.visitors_from_referrer(site, query, referrer)
+      json(conn, %{referrers: referrers, total_visitors: total_visitors})
+    end
+  end
+
   def pages(conn, %{"domain" => domain}) do
     site = Repo.get_by(Plausible.Site, domain: domain)
     query = Stats.Query.from(site.timezone, conn.params)

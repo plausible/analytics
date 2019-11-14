@@ -1,5 +1,5 @@
 import React from "react";
-import { withRouter } from 'react-router-dom'
+import { Link, withRouter } from 'react-router-dom'
 
 import * as api from '../../api'
 import numberFormatter from '../../number-formatter'
@@ -23,7 +23,7 @@ class ReferrersModal extends React.Component {
     return (
       <React.Fragment key={referrer.name}>
         <div className="flex items-center justify-between my-2">
-          <a className="hover:underline truncate" style={{maxWidth: '80%'}} href={`/${this.props.site.domain}/referrers/${referrer.name}${window.location.search}`}>{ referrer.name }</a>
+          <Link className="hover:underline truncate" style={{maxWidth: '80%'}} to={`/${this.props.site.domain}/referrers/${referrer.name}${window.location.search}`}>{ referrer.name }</Link>
           <span>{numberFormatter(referrer.count)}</span>
         </div>
         <Bar count={referrer.count} all={this.state.referrers} color="blue" />

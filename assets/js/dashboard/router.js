@@ -2,6 +2,7 @@ import React from 'react';
 import Dash from './index'
 import Modal from './stats/modals/modal'
 import ReferrersModal from './stats/modals/referrers'
+import ReferrersDrilldownModal from './stats/modals/referrer-drilldown'
 import PagesModal from './stats/modals/pages'
 import CountriesModal from './stats/modals/countries'
 import BrowsersModal from './stats/modals/browsers'
@@ -19,9 +20,14 @@ export default function Router({site}) {
       <Route path="/:domain">
         <Dash site={site} />
         <Switch>
-          <Route path="/:domain/referrers">
+          <Route exact path="/:domain/referrers">
             <Modal site={site}>
               <ReferrersModal site={site} />
+            </Modal>
+          </Route>
+          <Route exact path="/:domain/referrers/:referrer">
+            <Modal site={site}>
+              <ReferrersDrilldownModal site={site} />
             </Modal>
           </Route>
           <Route path="/:domain/pages">
