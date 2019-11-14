@@ -18,6 +18,8 @@ export default class DatePicker extends React.Component {
       }
     } else if (query.period === '7d') {
       return 'Last 7 days'
+    } else if (query.period === '30d') {
+      return 'Last 30 days'
     } else if (query.period === 'month') {
       return formatMonth(query.date)
     } else if (query.period === '3mo') {
@@ -71,11 +73,11 @@ export default class DatePicker extends React.Component {
         </div>
 
         <div data-dropdown style={{top: '42px', right: '0px', width: '225px'}} className="dropdown-content hidden absolute pin-r bg-white border border-grey-light rounded shadow z-10 font-bold text-sm text-grey-darker">
-          <a href={`/${this.props.site.domain}?period=day`} className="block p-2 hover:bg-grey-lighter">Today</a>
-          <a href={`/${this.props.site.domain}?period=7d`} className="block p-2 hover:bg-grey-lighter">Last 7 days</a>
-          <a href={`/${this.props.site.domain}?period=month`} className="block p-2 hover:bg-grey-lighter">This month</a>
-          <a href={`/${this.props.site.domain}?period=3mo`} className="block p-2 hover:bg-grey-lighter">Last 3 months</a>
-          <a href={`/${this.props.site.domain}?period=6mo`} className="block p-2 hover:bg-grey-lighter">Last 6 months</a>
+          <Link to={`/${this.props.site.domain}?period=day`} className="block p-2 hover:bg-grey-lighter">Today</Link>
+          <Link to={`/${this.props.site.domain}?period=7d`} className="block p-2 hover:bg-grey-lighter">Last 7 days</Link>
+          <Link to={`/${this.props.site.domain}?period=30d`} className="block p-2 hover:bg-grey-lighter">Last 30 days</Link>
+          <Link to={`/${this.props.site.domain}?period=3mo`} className="block p-2 hover:bg-grey-lighter">Last 3 months</Link>
+          <Link to={`/${this.props.site.domain}?period=6mo`} className="block p-2 hover:bg-grey-lighter">Last 6 months</Link>
         </div>
       </div>
     )

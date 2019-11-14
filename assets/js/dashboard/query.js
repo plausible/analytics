@@ -10,7 +10,7 @@ function parseQueryString(queryString) {
     return query;
 }
 
-const PERIODS = ['day', 'month', '7d', '3mo', '6mo']
+const PERIODS = ['day', 'month', '7d', '30d', '3mo', '6mo']
 
 export function parseQuery(querystring, site) {
   let {period, date} = parseQueryString(querystring)
