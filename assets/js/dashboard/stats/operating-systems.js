@@ -26,14 +26,14 @@ export default class OperatingSystems extends React.Component {
       .then((res) => this.setState({loading: false, systems: res}))
   }
 
-  renderSystem(page) {
+  renderSystem(system) {
     return (
-      <React.Fragment key={page.name}>
+      <React.Fragment key={system.name}>
         <div className="flex items-center justify-between my-2">
-          <span className="truncate" style={{maxWidth: '80%'}}>{page.name}</span>
-          <span>{page.percentage}%</span>
+          <span className="truncate" style={{maxWidth: '80%'}}>{system.name}</span>
+          <span tooltip={`${system.count} visitors`}>{system.percentage}%</span>
         </div>
-        <Bar count={page.count} all={this.state.systems} color="blue" />
+        <Bar count={system.count} all={this.state.systems} color="blue" />
       </React.Fragment>
     )
   }

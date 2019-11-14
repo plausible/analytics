@@ -53,7 +53,7 @@ export default class ScreenSizes extends React.Component {
             { iconFor(size.name) }
             <span className="ml-1">{size.name}</span>
           </span>
-          <span>{size.percentage}%</span>
+          <span tooltip={`${size.count} visitors`}>{size.percentage}%</span>
         </div>
         <Bar count={size.count} all={this.state.sizes} color="teal" />
       </React.Fragment>

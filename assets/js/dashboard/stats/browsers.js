@@ -26,14 +26,14 @@ export default class Browsers extends React.Component {
       .then((res) => this.setState({loading: false, browsers: res}))
   }
 
-  renderBrowser(page) {
+  renderBrowser(browser) {
     return (
-      <React.Fragment key={page.name}>
+      <React.Fragment key={browser.name}>
         <div className="flex items-center justify-between my-2">
-          <span className="truncate" style={{maxWidth: '80%'}}>{page.name}</span>
-          <span>{page.percentage}%</span>
+          <span className="truncate" style={{maxWidth: '80%'}}>{browser.name}</span>
+          <span tooltip={`${browser.count} visitors`}>{browser.percentage}%</span>
         </div>
-        <Bar count={page.count} all={this.state.browsers} color="red" />
+        <Bar count={browser.count} all={this.state.browsers} color="red" />
       </React.Fragment>
     )
   }

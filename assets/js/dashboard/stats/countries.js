@@ -33,7 +33,7 @@ export default class Countries extends React.Component {
       <React.Fragment key={country.name}>
         <div className="flex items-center justify-between my-2">
           <span className="truncate" style={{maxWidth: '80%'}}>{country.name}</span>
-          <span>{country.percentage}%</span>
+          <span tooltip={`${country.count} visitors`}>{country.percentage}%</span>
         </div>
         <Bar count={country.count} all={this.state.countries} color="indigo" />
       </React.Fragment>
