@@ -7,5 +7,5 @@
       }(window, document, 'script', 'plausible', 'https://plausible.io/js/p.js'));
 
       plausible('page')
-    </script>\
+    </script>
 <% end %>
