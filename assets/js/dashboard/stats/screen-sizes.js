@@ -3,6 +3,23 @@ import React from 'react';
 import Bar from './bar'
 import * as api from '../api'
 
+//  def explanation_for("Mobile") do
+//    "up to 576px"
+//  end
+//
+//  def explanation_for("Tablet") do
+//    "576px to 992px"
+//  end
+//
+//  def explanation_for("Laptop") do
+//    "992px to 1440px"
+//  end
+//
+//  def explanation_for("Desktop") do
+//    "above 1440px"
+//  end
+
+
 function iconFor(screenSize) {
   if (screenSize === 'Mobile') {
     return (
