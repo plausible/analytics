@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.Stats
 
   def stats(conn, %{"website" => website}) do
     site = Repo.get_by(Plausible.Site, domain: website)

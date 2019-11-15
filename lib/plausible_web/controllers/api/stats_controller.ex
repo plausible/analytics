@@ -29,9 +29,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
 
-    formatted_referrers = Stats.top_referrers(site, query, params["limit"] || 5)
-                          |> Enum.map(fn {name, count} -> %{name: name, count: count} end)
-    json(conn, formatted_referrers)
+    json(conn, Stats.top_referrers(site, query, params["limit"] || 5))
   end
 
   def referrer_drilldown(conn, %{"referrer" => referrer} = params) do
@@ -39,7 +37,6 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Stats.Query.from(site.timezone, params)
 
     referrers = Stats.referrer_drilldown(site, query, referrer)
-                |> Enum.map(fn {name, count} -> %{name: name, count: count} end)
     total_visitors = Stats.visitors_from_referrer(site, query, referrer)
     json(conn, %{referrers: referrers, total_visitors: total_visitors})
   end
@@ -48,60 +45,42 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
 
-    formatted_pages = Stats.top_pages(site, query, params["limit"] || 5)
-                      |> Enum.map(fn {name, count} -> %{name: name, count: count} end)
-
-    json(conn, formatted_pages)
+    json(conn, Stats.top_pages(site, query, params["limit"] || 5))
   end
 
   def countries(conn, params) do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
 
-    formatted_countries = Stats.countries(site, query, parse_integer(params["limit"]) || 5)
-                      |> Enum.map(fn {name, count, percentage} -> %{name: name, count: count, percentage: percentage} end)
-
-    json(conn, formatted_countries)
+    json(conn, Stats.countries(site, query, parse_integer(params["limit"]) || 5))
   end
 
   def browsers(conn, params) do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
 
-    formatted_browsers = Stats.browsers(site, query, parse_integer(params["limit"]) || 5)
-                      |> Enum.map(fn {name, count, percentage} -> %{name: name, count: count, percentage: percentage} end)
-
-    json(conn, formatted_browsers)
+    json(conn, Stats.browsers(site, query, parse_integer(params["limit"]) || 5))
   end
 
   def operating_systems(conn, params) do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
 
-    formatted_systems = Stats.operating_systems(site, query, parse_integer(params["limit"]) || 5)
-                      |> Enum.map(fn {name, count, percentage} -> %{name: name, count: count, percentage: percentage} end)
-
-    json(conn, formatted_systems)
+    json(conn, Stats.operating_systems(site, query, parse_integer(params["limit"]) || 5))
   end
 
   def screen_sizes(conn, params) do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
 
-    formatted_sizes = Stats.top_screen_sizes(site, query)
-                      |> Enum.map(fn {name, count, percentage} -> %{name: name, count: count, percentage: percentage} end)
-
-    json(conn, formatted_sizes)
+    json(conn, Stats.top_screen_sizes(site, query))
   end
 
   def conversions(conn, params) do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
 
-    formatted_conversions = Stats.goal_conversions(site, query)
-                      |> Enum.map(fn {name, count} -> %{name: name, count: count} end)
-
-    json(conn, formatted_conversions)
+    json(conn, Stats.goal_conversions(site, query))
   end
 
   def current_visitors(conn, _) do

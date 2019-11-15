@@ -96,7 +96,7 @@ defmodule Plausible.Stats do
 
   def top_referrers(site, query, limit \\ 5) do
     Repo.all(from e in base_query(site, query),
-      select: {e.referrer_source, count(e.referrer_source)},
+      select: %{name: e.referrer_source, count: count(e.referrer_source)},
       group_by: e.referrer_source,
       where: e.new_visitor == true and not is_nil(e.referrer_source),
       order_by: [desc: 2],
@@ -114,7 +114,7 @@ defmodule Plausible.Stats do
 
   def referrer_drilldown(site, query, referrer) do
     Repo.all(from e in base_query(site, query),
-      select: {e.referrer, count(e)},
+      select: %{name: e.referrer, count: count(e)},
       group_by: e.referrer,
       where: e.new_visitor == true and e.referrer_source == ^referrer,
       order_by: [desc: 2],
@@ -124,7 +124,7 @@ defmodule Plausible.Stats do
 
   def top_pages(site, query, limit \\ 5) do
     Repo.all(from e in base_query(site, query),
-      select: {e.pathname, count(e.pathname)},
+      select: %{name: e.pathname, count: count(e.pathname)},
       group_by: e.pathname,
       order_by: [desc: count(e.pathname)],
       limit: ^limit
@@ -149,7 +149,13 @@ defmodule Plausible.Stats do
 
   defp add_percentages(stat_list) do
     total = Enum.reduce(stat_list, 0, fn {_, count}, total -> total + count end)
-    Enum.map(stat_list, fn {stat, count} -> {stat, count, round(count / total * 100)} end)
+    Enum.map(stat_list, fn {stat, count} ->
+      %{
+        name: stat,
+        count: count,
+        percentage: round(count / total * 100)
+      }
+    end)
   end
 
   def countries(site, query, limit \\ 5) do
@@ -221,7 +227,7 @@ defmodule Plausible.Stats do
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
         where: e.name in ^events,
         group_by: e.name,
-        select: {e.name, count(e.user_id, :distinct)}
+        select: %{name: e.name, count: count(e.user_id, :distinct)}
       )
     else
       []
@@ -246,7 +252,7 @@ defmodule Plausible.Stats do
         where: e.name == "pageview",
         where: e.pathname in ^pages,
         group_by: e.pathname,
-        select: {fragment("concat('Visit ', ?)", e.pathname), count(e.user_id, :distinct)}
+        select: %{name: fragment("concat('Visit ', ?)", e.pathname), count: count(e.user_id, :distinct)}
       )
     else
       []
@@ -254,7 +260,7 @@ defmodule Plausible.Stats do
   end
 
   defp sort_conversions(conversions) do
-    Enum.sort_by(conversions, fn {_, count} -> -count end)
+    Enum.sort_by(conversions, fn conversion -> -conversion[:count] end)
   end
 
   defp base_query(site, query) do
