@@ -14,6 +14,14 @@ for (const trigger of triggers) {
 
 if (triggers.length > 0) {
   document.addEventListener('click', function(e) {
+    const dropdown = e.target.closest('[data-dropdown]')
+
+    if (dropdown && e.target.tagName === 'A') {
+      dropdown.classList.add('hidden')
+    }
+  })
+
+  document.addEventListener('click', function(e) {
     const clickedInDropdown = e.target.closest('[data-dropdown]')
 
     if (!clickedInDropdown) {
