@@ -1,6 +1,5 @@
-defmodule PlausibleWeb.Api.StatsControllerTest do
+defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
   use PlausibleWeb.ConnCase
-  use Plausible.Repo
   import Plausible.TestUtils
 
   describe "API authorization - as anonymous user" do
