@@ -14,7 +14,10 @@ config :plausible,
 config :plausible, PlausibleWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "/NJrhNtbyCVAsTyvtk1ZYCwfm981Vpo/0XrVwjJvemDaKC/vsvBRevLwsc6u8RCg",
-  render_errors: [view: PlausibleWeb.ErrorView, accepts: ~w(html json)],
+  render_errors: [
+    view: PlausibleWeb.ErrorView,
+    accepts: ~w(html json)
+  ],
   pubsub: [name: Plausible.PubSub, adapter: Phoenix.PubSub.PG2]
 
 config :sentry,

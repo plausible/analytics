@@ -1,6 +1,19 @@
 defmodule PlausibleWeb.ErrorView do
   use PlausibleWeb, :view
 
+  def render("500.json", assigns) do
+    message = if assigns[:reason] do
+      assigns[:reason].message
+    else
+      "Something went wrong"
+    end
+
+    %{
+      status: 500,
+      message: message
+    }
+  end
+
   def render("404.html", assigns) do
     render("error.html", Map.merge(%{
       layout: false,

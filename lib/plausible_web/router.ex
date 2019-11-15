@@ -23,7 +23,7 @@ defmodule PlausibleWeb.Router do
   end
 
   pipeline :stats_api do
-    plug :accepts, ["application/json"]
+    plug :accepts, ["json"]
     plug :fetch_session
   end
 

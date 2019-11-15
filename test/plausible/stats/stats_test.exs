@@ -4,12 +4,12 @@ defmodule Plausible.StatsTest do
   @user_id UUID.uuid4()
 
   describe "compare_pageviews_and_visitors" do
-    test "comparisons are nil when no historical data" do
+    test "comparisons are 100% when historical data is 0" do
       site = insert(:site)
       query = Stats.Query.from(site.timezone, %{"period" => "day", "date" => "2019-01-01"})
       res = Stats.compare_pageviews_and_visitors(site, query, {10, 10})
 
-      assert res == {nil, nil}
+      assert res == {100, 100}
     end
 
     test "comparisons show percent change with historical data" do

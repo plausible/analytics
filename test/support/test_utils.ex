@@ -7,12 +7,18 @@ defmodule Plausible.TestUtils do
   end
 
   def create_site(%{user: user}) do
-    site = Factory.insert(:site)
-    Plausible.Site.Membership.changeset(%Plausible.Site.Membership{}, %{site_id: site.id, user_id: user.id}) |> Repo.insert!
+    site = Factory.insert(:site, members: [user])
     {:ok, site: site}
   end
 
   def log_in(%{user: user, conn: conn}) do
+    conn = init_session(conn)
+    |> Plug.Conn.put_session(:current_user_id, user.id)
+
+    {:ok, conn: conn}
+  end
+
+  def init_session(conn) do
     opts =
       Plug.Session.init(
         store: :cookie,
@@ -23,12 +29,8 @@ defmodule Plausible.TestUtils do
         encrypt: false
       )
 
-    conn =
-      conn
+    conn
       |> Plug.Session.call(opts)
       |> Plug.Conn.fetch_session()
-      |> Plug.Conn.put_session(:current_user_id, user.id)
-
-    {:ok, conn: conn}
   end
 end
