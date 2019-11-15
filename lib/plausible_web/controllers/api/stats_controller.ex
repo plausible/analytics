@@ -2,9 +2,10 @@ defmodule PlausibleWeb.Api.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias Plausible.Stats
+  plug :authorize
 
   def main_graph(conn, %{"domain" => domain}) do
-    site = Repo.get_by(Plausible.Site, domain: domain)
+    site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, conn.params)
 
     plot_task = Task.async(fn -> Stats.calculate_plot(site, query) end)
@@ -25,18 +26,16 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def referrers(conn, %{"domain" => domain}) do
-    site = Repo.get_by(Plausible.Site, domain: domain)
+    site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, conn.params)
 
-    if site do
-      formatted_referrers = Stats.top_referrers(site, query, conn.params["limit"] || 5)
-                            |> Enum.map(fn {name, count} -> %{name: name, count: count} end)
-      json(conn, formatted_referrers)
-    end
+    formatted_referrers = Stats.top_referrers(site, query, conn.params["limit"] || 5)
+                          |> Enum.map(fn {name, count} -> %{name: name, count: count} end)
+    json(conn, formatted_referrers)
   end
 
   def referrer_drilldown(conn, %{"domain" => domain, "referrer" => referrer}) do
-    site = Repo.get_by(Plausible.Site, domain: domain)
+    site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, conn.params)
 
     if site do
@@ -48,7 +47,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def pages(conn, %{"domain" => domain}) do
-    site = Repo.get_by(Plausible.Site, domain: domain)
+    site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, conn.params)
 
     if site do
@@ -60,7 +59,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def countries(conn, %{"domain" => domain}) do
-    site = Repo.get_by(Plausible.Site, domain: domain)
+    site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, conn.params)
 
     if site do
@@ -72,7 +71,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def browsers(conn, %{"domain" => domain}) do
-    site = Repo.get_by(Plausible.Site, domain: domain)
+    site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, conn.params)
 
     if site do
@@ -84,7 +83,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def operating_systems(conn, %{"domain" => domain}) do
-    site = Repo.get_by(Plausible.Site, domain: domain)
+    site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, conn.params)
 
     if site do
@@ -96,7 +95,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def screen_sizes(conn, %{"domain" => domain}) do
-    site = Repo.get_by(Plausible.Site, domain: domain)
+    site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, conn.params)
 
     if site do
@@ -108,7 +107,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def conversions(conn, %{"domain" => domain}) do
-    site = Repo.get_by(Plausible.Site, domain: domain)
+    site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, conn.params)
 
     if site do
@@ -120,7 +119,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def current_visitors(conn, %{"domain" => domain}) do
-    site = Repo.get_by(Plausible.Site, domain: domain)
+    site = conn.assigns[:site]
 
     if site do
       json(conn, Stats.current_visitors(site))
@@ -135,6 +134,51 @@ defmodule PlausibleWeb.Api.StatsController do
     case Integer.parse(nr) do
       {number, ""} -> number
       _ -> nil
+    end
+  end
+
+  @doc """
+    When the stats dashboard is loaded we make > 8 API calls. Instead of hitting the DB to authorize each
+    request we 'memoize' the fact that the current user has access to the site stats. It is invalidated
+    every 30 minutes and we hit the DB again to make sure their access hasn't been revoked.
+  """
+  defp authorize(conn, _opts) do
+    site_session_key = "authorized_site__" <> conn.params["domain"]
+    user_id = get_session(conn, :current_user_id)
+
+    case get_session(conn, site_session_key) do
+      nil ->
+        verify_access_via_db(conn, user_id, site_session_key)
+      site_session ->
+        if site_session[:valid_until] > DateTime.to_unix(Timex.now()) do
+          assign(conn, :site, %Plausible.Site{
+            domain: site_session[:domain],
+            timezone: site_session[:timezone]
+          })
+        else
+          verify_access_via_db(conn, user_id, site_session_key)
+        end
+    end
+  end
+
+  defp verify_access_via_db(conn, user_id, site_session_key) do
+    site = Repo.get_by(Plausible.Site, domain: conn.params["domain"])
+
+    if !site do
+      send_resp(conn, 404, "")
+    else
+      can_access = site.public || Plausible.Sites.is_owner?(user_id, site)
+
+      if !can_access do
+        send_resp(conn, 401, "")
+      else
+        put_session(conn, site_session_key, %{
+          domain: site.domain,
+          timezone: site.timezone,
+          valid_until: Timex.now() |> Timex.shift(minutes: 30) |> DateTime.to_unix()
+        })
+        |> assign(:site, site)
+      end
     end
   end
 end
