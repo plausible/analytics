@@ -64,18 +64,24 @@ blockquote {
 @tailwind utilities;
 
 .main-graph {
-  height: 250px;
-}
-
-@screen sm {
-  .main-graph {
-    height: 300px;
-  }
+  height: 310px;
 }
 
 @screen md {
   .main-graph {
-    height: 460px;
+    height: 360px;
+  }
+}
+
+@screen lg {
+  .main-graph {
+    height: 440px;
+  }
+}
+
+@screen xl {
+  .main-graph {
+    height: 480px;
   }
 }
 

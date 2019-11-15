@@ -9,6 +9,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     plot_task = Task.async(fn -> Stats.calculate_plot(site, query) end)
     {pageviews, visitors} = Stats.pageviews_and_visitors(site, query)
+    {change_pageviews, change_visitors} = Stats.compare_pageviews_and_visitors(site, query, {pageviews, visitors})
     {plot, labels, present_index} = Task.await(plot_task)
 
     json(conn, %{
@@ -17,6 +18,8 @@ defmodule PlausibleWeb.Api.StatsController do
       present_index: present_index,
       pageviews: pageviews,
       unique_visitors: visitors,
+      change_pageviews: change_pageviews,
+      change_visitors: change_visitors,
       interval: query.step_type
     })
   end

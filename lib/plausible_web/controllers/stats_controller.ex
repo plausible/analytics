@@ -173,8 +173,7 @@ defmodule PlausibleWeb.StatsController do
 
   def compare(conn, %{"domain" => domain}) do
     site = Repo.get_by(Plausible.Site, domain: domain)
-    {conn, params} = fetch_period(conn, site)
-    query = Stats.Query.from(site.timezone, params)
+    query = Stats.Query.from(site.timezone, conn.params)
     {pageviews, ""} = Integer.parse(conn.params["pageviews"])
     {unique_visitors, ""} = Integer.parse(conn.params["unique_visitors"])
 

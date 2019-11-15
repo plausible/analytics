@@ -5,13 +5,17 @@ defmodule Plausible.Stats do
   def compare_pageviews_and_visitors(site, query, {pageviews, visitors}) do
     query = Query.shift_back(query)
     {old_pageviews, old_visitors} = pageviews_and_visitors(site, query)
-    if old_visitors > 0 do
-      {
-        round((pageviews - old_pageviews) / old_pageviews * 100),
-        round((visitors - old_visitors) / old_visitors * 100),
-      }
-    else
-      {nil, nil}
+    cond do
+      old_pageviews == 0 and pageviews > 0 ->
+        {100, 100}
+      old_pageviews == 0 and pageviews == 0 ->
+        {0, 0}
+      true ->
+        {
+          round((pageviews - old_pageviews) / old_pageviews * 100),
+            round((visitors - old_visitors) / old_visitors * 100),
+        }
+
     end
   end
 
@@ -101,7 +105,8 @@ defmodule Plausible.Stats do
   end
 
   def visitors_from_referrer(site, query, referrer) do
-    Repo.one(from e in base_query(site, query),
+    Repo.one(
+      from e in base_query(site, query),
       select: count(e),
       where: e.new_visitor == true and e.referrer_source == ^referrer
     )
@@ -129,7 +134,7 @@ defmodule Plausible.Stats do
   @available_screen_sizes ["Desktop", "Laptop", "Tablet", "Mobile"]
 
   def top_screen_sizes(site, query) do
-    sizes = Repo.all(from e in base_query(site, query),
+    Repo.all(from e in base_query(site, query),
       select: {e.screen_size, count(e.screen_size)},
       group_by: e.screen_size,
       where: e.new_visitor == true and not is_nil(e.screen_size)
@@ -148,7 +153,7 @@ defmodule Plausible.Stats do
   end
 
   def countries(site, query, limit \\ 5) do
-    countries = Repo.all(from e in base_query(site, query),
+     Repo.all(from e in base_query(site, query),
       select: {e.country_code, count(e.country_code)},
       group_by: e.country_code,
       where: e.new_visitor == true and not is_nil(e.country_code),

@@ -1,6 +1,7 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
 import numberFormatter from '../number-formatter'
+import { isToday, shiftMonths, formatMonth } from '../date'
 import * as api from '../api'
 
 function dataSets(graphData, ctx) {
@@ -154,41 +155,64 @@ class LineGraph extends React.Component {
     }
   }
 
+  comparisonTimeframe() {
+    const {query, site} = this.props
+
+    if (query.period === 'day') {
+      if (isToday(site, query.date)) {
+        return 'yesterday'
+      } else {
+        return 'previous day'
+      }
+    } else if (query.period === 'month') {
+      return formatMonth(shiftMonths(query.date, -1))
+    } else if (query.period === '7d') {
+      return 'last week'
+    } else if (query.period === '30d') {
+      return 'last month'
+    } else if (query.period === '3mo') {
+      return 'previous 3 months'
+    } else if (query.period === '6mo') {
+      return 'previous 6 months'
+    }
+  }
 
   renderComparison(comparison) {
     const formattedComparison = numberFormatter(Math.abs(comparison))
 
-    if (comparison >= 0) {
-      return <span className="bg-green-lightest text-green-dark px-2 py-1 text-xs font-bold rounded">&uarr; {formattedComparison}%</span>
+    if (comparison > 0) {
+      return <span className="py-1 text-xs text-grey-darker"><span className="text-green-dark">&uarr;</span> {formattedComparison}% from {this.comparisonTimeframe()}</span>
     } else if (comparison < 0) {
-      return <span className="bg-red-lightest text-red-dark px-2 py-1 text-xs font-bold rounded">&darr; {formattedComparison}%</span>
+      return <span className="py-1 text-xs text-grey-darker"><span className="text-red-light">&darr;</span> {formattedComparison}% from {this.comparisonTimeframe()}</span>
+    } else if (comparison === 0) {
+      return <span className="py-1 text-xs text-grey-darker">&#12336; same as {this.comparisonTimeframe()}</span>
     }
   }
 
   render() {
-    const {graphData, comparisons} = this.props
+    const {graphData} = this.props
     const extraClass = graphData.interval === 'hour' ? '' : 'cursor-pointer'
 
     return (
       <React.Fragment>
         <div className="border-b border-grey-light flex p-4">
-          <div className="border-r border-grey-light pl-2 pr-10">
-            <div className="text-grey-dark text-sm font-bold tracking-wide">UNIQUE VISITORS</div>
-            <div className="mt-2 flex items-center justify-between">
+          <div className="border-r border-grey-light pl-2 w-52">
+            <div className="text-grey-dark text-xs font-bold tracking-wide">UNIQUE VISITORS</div>
+            <div className="my-1 flex items-end justify-between">
               <b className="text-2xl" title={graphData.unique_visitors.toLocaleString()}>{numberFormatter(graphData.unique_visitors)}</b>
-              {this.renderComparison(comparisons.change_visitors)}
             </div>
+            {this.renderComparison(graphData.change_visitors)}
           </div>
-          <div className="px-10">
-            <div className="text-grey-dark text-sm font-bold tracking-wide">TOTAL PAGEVIEWS</div>
-            <div className="mt-2 flex items-center justify-between">
+          <div className="pl-8 w-60">
+            <div className="text-grey-dark text-xs font-bold tracking-wide">TOTAL PAGEVIEWS</div>
+            <div className="my-1 flex items-end justify-between">
               <b className="text-2xl" title={graphData.pageviews.toLocaleString()}>{numberFormatter(graphData.pageviews)}</b>
-              {this.renderComparison(comparisons.change_pageviews)}
             </div>
+            {this.renderComparison(graphData.change_pageviews)}
           </div>
         </div>
         <div className="p-4">
-          <canvas id="main-graph-canvas" className={'mt-4 ' + extraClass} width="1054" height="329"></canvas>
+          <canvas id="main-graph-canvas" className={'mt-4 ' + extraClass} width="1054" height="342"></canvas>
         </div>
       </React.Fragment>
     )
@@ -200,10 +224,7 @@ LineGraph = withRouter(LineGraph)
 export default class VisitorGraph extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {
-      loading: true,
-      comparisons: {}
-    }
+    this.state = {loading: true}
   }
 
   componentDidMount() {
@@ -212,7 +233,7 @@ export default class VisitorGraph extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
-      this.setState({loading: true, graphData: null, comparisons: {}})
+      this.setState({loading: true, graphData: null})
       this.fetchGraphData()
     }
   }
@@ -223,8 +244,6 @@ export default class VisitorGraph extends React.Component {
         this.setState({loading: false, graphData: res})
         return res
       })
-      .then(graphData => api.get(`/api/${this.props.site.domain}/compare`, this.props.query, {pageviews: graphData.pageviews, unique_visitors: graphData.unique_visitors}))
-      .then(res => this.setState({comparisons: res}))
   }
 
   renderInner() {
@@ -233,7 +252,7 @@ export default class VisitorGraph extends React.Component {
         <div className="loading pt-24 sm:pt-32 md:pt-48 mx-auto"><div></div></div>
       )
     } else if (this.state.graphData) {
-      return <LineGraph graphData={this.state.graphData} comparisons={this.state.comparisons} />
+      return <LineGraph graphData={this.state.graphData} site={this.props.site} query={this.props.query} />
     }
   }
 

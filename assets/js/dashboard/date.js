@@ -24,8 +24,12 @@ const MONTHS = [
   "November", "December"
 ]
 
-export function formatMonth(date) {
+export function formatMonthYYYY(date) {
   return `${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+export function formatMonth(date) {
+  return `${MONTHS[date.getMonth()]}`;
 }
 
 export function formatDay(date) {
@@ -35,4 +39,8 @@ export function formatDay(date) {
 // https://stackoverflow.com/a/11124448
 export function newDateInOffset(offset) {
   return new Date(new Date().getTime() + offset * 1000)
+}
+
+export function isToday(site, date) {
+  return formatISO(date) === formatISO(newDateInOffset(site.offset))
 }
