@@ -39,10 +39,16 @@ defmodule PlausibleWeb.Api.StatsController do
     search_terms = if site.google_auth && site.google_auth.property do
       Plausible.Google.Api.fetch_stats(site.google_auth, query)
     end
+
     case search_terms do
+      nil ->
+        total_visitors = Stats.visitors_from_referrer(site, query, "Google")
+        user_id = get_session(conn, :current_user_id)
+        is_owner = user_id && Plausible.Sites.is_owner?(user_id, site)
+        json(conn, %{not_configured: true, is_owner: is_owner, total_visitors: total_visitors})
       {:ok, terms} ->
         total_visitors = Stats.visitors_from_referrer(site, query, "Google")
-        json(conn, %{referrers: terms, total_visitors: total_visitors})
+        json(conn, %{search_terms: terms, total_visitors: total_visitors})
       {:error, e} ->
         put_status(conn, 500)
         |> json(%{error: e})

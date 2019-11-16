@@ -5,10 +5,12 @@ import Router from './router'
 
 const container = document.getElementById('stats-react-container')
 
-const site = {
-  domain: container.dataset.domain,
-  offset: container.dataset.offset,
-  hasGoals: container.dataset.hasGoals === 'true'
-}
+if (container) {
+  const site = {
+    domain: container.dataset.domain,
+    offset: container.dataset.offset,
+    hasGoals: container.dataset.hasGoals === 'true'
+  }
 
-ReactDOM.render(<Router site={site} />, container);
+  ReactDOM.render(<Router site={site} />, container);
+}
