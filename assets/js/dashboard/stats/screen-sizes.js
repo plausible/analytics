@@ -3,22 +3,12 @@ import React from 'react';
 import Bar from './bar'
 import * as api from '../api'
 
-//  def explanation_for("Mobile") do
-//    "up to 576px"
-//  end
-//
-//  def explanation_for("Tablet") do
-//    "576px to 992px"
-//  end
-//
-//  def explanation_for("Laptop") do
-//    "992px to 1440px"
-//  end
-//
-//  def explanation_for("Desktop") do
-//    "above 1440px"
-//  end
-
+const EXPLANATION = {
+  'Mobile': 'up to 576px',
+  'Tablet': '576px to 992px',
+  'Laptop': '992px to 1440px',
+  'Desktop': 'above 1440px',
+}
 
 function iconFor(screenSize) {
   if (screenSize === 'Mobile') {
@@ -66,7 +56,7 @@ export default class ScreenSizes extends React.Component {
     return (
       <React.Fragment key={size.name}>
         <div className="flex items-center justify-between my-2">
-          <span>
+          <span tooltip={EXPLANATION[size.name]}>
             { iconFor(size.name) }
             <span className="ml-1">{size.name}</span>
           </span>
