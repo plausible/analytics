@@ -32,6 +32,23 @@ defmodule PlausibleWeb.Api.StatsController do
     json(conn, Stats.top_referrers(site, query, params["limit"] || 5))
   end
 
+  def referrer_drilldown(conn, %{"referrer" => "Google"} = params) do
+    site = conn.assigns[:site] |> Repo.preload(:google_auth)
+    query = Stats.Query.from(site.timezone, params)
+
+    search_terms = if site.google_auth && site.google_auth.property do
+      Plausible.Google.Api.fetch_stats(site.google_auth, query)
+    end
+    case search_terms do
+      {:ok, terms} ->
+        total_visitors = Stats.visitors_from_referrer(site, query, "Google")
+        json(conn, %{referrers: terms, total_visitors: total_visitors})
+      {:error, e} ->
+        put_status(conn, 500)
+        |> json(%{error: e})
+    end
+  end
+
   def referrer_drilldown(conn, %{"referrer" => referrer} = params) do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
@@ -111,6 +128,7 @@ defmodule PlausibleWeb.Api.StatsController do
       site_session ->
         if site_session[:valid_until] > DateTime.to_unix(Timex.now()) do
           assign(conn, :site, %Plausible.Site{
+            id: site_session[:id],
             domain: site_session[:domain],
             timezone: site_session[:timezone]
           })
@@ -132,6 +150,7 @@ defmodule PlausibleWeb.Api.StatsController do
         send_resp(conn, 401, "") |> halt
       else
         put_session(conn, site_session_key, %{
+          id: site.id,
           domain: site.domain,
           timezone: site.timezone,
           valid_until: Timex.now() |> Timex.shift(minutes: 30) |> DateTime.to_unix()

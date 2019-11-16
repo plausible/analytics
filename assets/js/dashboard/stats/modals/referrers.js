@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, withRouter } from 'react-router-dom'
 
+import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter from '../../number-formatter'
 import Bar from '../bar'
@@ -31,7 +32,7 @@ class ReferrersModal extends React.Component {
     )
   }
 
-  render() {
+  renderBody() {
     if (this.state.loading) {
       return (
         <div className="loading my-32 mx-auto"><div></div></div>
@@ -53,6 +54,14 @@ class ReferrersModal extends React.Component {
         </React.Fragment>
       )
     }
+  }
+
+  render() {
+    return (
+      <Modal site={this.props.site}>
+        { this.renderBody() }
+      </Modal>
+    )
   }
 }
 

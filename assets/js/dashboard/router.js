@@ -21,34 +21,22 @@ export default function Router({site}) {
         <Dash site={site} />
         <Switch>
           <Route exact path="/:domain/referrers">
-            <Modal site={site}>
-              <ReferrersModal site={site} />
-            </Modal>
+            <ReferrersModal site={site} />
           </Route>
           <Route exact path="/:domain/referrers/:referrer">
-            <Modal site={site}>
-              <ReferrersDrilldownModal site={site} />
-            </Modal>
+            <ReferrersDrilldownModal site={site} />
           </Route>
           <Route path="/:domain/pages">
-            <Modal site={site}>
-              <PagesModal site={site} />
-            </Modal>
+            <PagesModal site={site} />
           </Route>
           <Route path="/:domain/countries">
-            <Modal site={site}>
-              <CountriesModal site={site} />
-            </Modal>
+            <CountriesModal site={site} />
           </Route>
           <Route path="/:domain/browsers">
-            <Modal site={site}>
-              <BrowsersModal site={site} />
-            </Modal>
+            <BrowsersModal site={site} />
           </Route>
           <Route path="/:domain/operating-systems">
-            <Modal site={site}>
-              <OperatingSystemsModal site={site} />
-            </Modal>
+            <OperatingSystemsModal site={site} />
           </Route>
         </Switch>
       </Route>
