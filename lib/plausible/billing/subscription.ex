@@ -26,4 +26,16 @@ defmodule Plausible.Billing.Subscription do
     |> validate_inclusion(:status, @valid_statuses)
     |> unique_constraint(:paddle_subscription_id)
   end
+
+  def free(attrs \\ %{}) do
+    %__MODULE__{
+      paddle_plan_id: "free_10k",
+      status: "active",
+      next_bill_amount: "0"
+    }
+    |> cast(attrs, @required_fields)
+    |> validate_required([:user_id])
+    |> validate_inclusion(:status, @valid_statuses)
+    |> unique_constraint(:paddle_subscription_id)
+  end
 end

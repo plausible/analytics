@@ -18,7 +18,9 @@
       <h4 class="font-black">Next bill amount</h4>
       <%= if @subscription do %>
         <div class="text-xl py-2 font-medium">$<%= @subscription.next_bill_amount %></div>
-        <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo font-medium") %>
+        <%= if @subscription.update_url do %>
+          <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo font-medium") %>
+        <% end %>
       <% else %>
         <div class="text-xl py-2 font-medium">$0</div>
       <% end %>
@@ -26,7 +28,7 @@
     <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32 my-4" style="width: 11.75rem;">
       <h4 class="font-black">Next bill date</h4>
 
-      <%= if @subscription do %>
+      <%= if @subscription && @subscription.next_bill_date do %>
         <div class="text-xl py-2 font-medium"><%= Timex.format!(@subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %></div>
       <% else %>
         <div class="text-xl py-2 font-medium">–</div>
@@ -41,7 +43,7 @@
     pageviews in the last 30 days
   </div>
 
-  <%= if @subscription do %>
+  <%= if @subscription && @subscription.cancel_url do %>
     <div class="mt-8">
       <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "text-indigo text-sm") %>
     </div>

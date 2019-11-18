@@ -8,7 +8,8 @@ defmodule PlausibleWeb.AuthView do
     "558746" => "Business",
     "558156" => "Personal (T)",
     "558199" => "Startup (T)",
-    "558200" => "Business (T)"
+    "558200" => "Business (T)",
+    "free_10k" => "Free 10k"
   }
 
   def subscription_name(subscription) do

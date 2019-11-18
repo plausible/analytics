@@ -27,6 +27,10 @@ defmodule Plausible.Billing.Plans do
 
   def allowance(subscription) do
     cond do
+      subscription.paddle_plan_id == "572810" -> # Personal annual
+        10_000
+      subscription.paddle_plan_id == "free_10k" ->
+        10_000
       is?(subscription, :personal) ->
         10_000
       is?(subscription, :startup) ->
