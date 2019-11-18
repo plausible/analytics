@@ -1,16 +1,21 @@
 Hey <%= user_salutation(@user) %>,
 <br /><br />
-I'm building Plausible to help create a more ethical approach to tracking website visitors. I really
-appreciate you joining, and I hope you'll love the simple analytics we provide.
+I'm building Plausible to help create a more ethical approach to tracking website visitors. I'm super excited to
+have you on board, hopefully you'll love the simple stats.
 <br /><br />
-If you wouldn't mind, I'd love it if you answered one quick question: why did you sign up for Plausible?
+The hardest part about building this product is getting the word out there. I'm a solo developer with no
+marketing budget, trying to make this business work. With your help, I might be able to go full-time on
+Plausible soon.
 <br /><br />
-I'm asking because knowing what made you sign up is really helpful for us in making sure that we're
-delivering on what our users want. Just hit 'reply' and let me know.
+If you could share why you switched to Plausible with your friends, it would really help me out a lot.
+Truly, a single tweet or a blog post could make a huge difference for a small project like this.
+Would you be up for this?
+<br /><br />
+PS: Also check out our <a href="https://feedback.plausible.io/">collaborative roadmapping tool</a>. If you have any feature request, you can raise them there.
 <br /><br />
 Thanks,<br />
 Uku Taht,<br />
-CEO, Plausible Insights
+Founder, Plausible Insights
 <br /><br />
 --
 <br /><br />
