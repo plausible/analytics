@@ -16,7 +16,11 @@ defmodule Mix.Tasks.CreateFreeSubscription do
   def run(_), do: IO.puts("Usage - mix create_free_subscription <user_id>")
 
   def execute(user_id) do
+    user = Repo.get(Plausible.Auth.User, user_id)
+
     Subscription.free(%{user_id: user_id})
     |> Repo.insert!
+
+    IO.puts("Created a free subscription for user: #{user.name}")
   end
 end
