@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "autoprefixer": "^9.6.1",
+    "chart.js": "^2.9.3",
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html",
     "react": "^16.11.0",

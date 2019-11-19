@@ -1,5 +1,6 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
+import Chart from 'chart.js'
 import numberFormatter from '../number-formatter'
 import { isToday, shiftMonths, formatMonth } from '../date'
 import * as api from '../api'
