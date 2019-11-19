@@ -22,7 +22,7 @@ export function parseQuery(querystring, site) {
     if (window.localStorage[periodKey]) {
       period = window.localStorage[periodKey]
     } else {
-      period = '6mo'
+      period = '30d'
     }
   }
 
