@@ -1,6 +1,5 @@
 import css from "../css/app.css"
 import "./polyfills/closest"
-import "./dashboard/mount"
 import "phoenix_html"
 
 const triggers = document.querySelectorAll('[data-dropdown-trigger]')
