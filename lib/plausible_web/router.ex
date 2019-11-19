@@ -55,14 +55,6 @@ defmodule PlausibleWeb.Router do
     post "/paddle/webhook", Api.PaddleController, :webhook
 
     get "/:domain/status", Api.InternalController, :domain_status
-    get "/:domain/referrers", StatsController, :referrers
-    get "/:domain/referrers/:referrer", StatsController, :referrer_drilldown
-    get "/:domain/pages", StatsController, :pages
-    get "/:domain/countries", StatsController, :countries
-    get "/:domain/operating-systems", StatsController, :operating_systems
-    get "/:domain/browsers", StatsController, :browsers
-    get "/:domain/compare", StatsController, :compare
-    get "/:domain/current-visitors", StatsController, :current_visitors
   end
 
   scope "/", PlausibleWeb do
@@ -121,14 +113,6 @@ defmodule PlausibleWeb.Router do
     put "/:website/settings/google", SiteController, :update_google_auth
     delete "/:website", SiteController, :delete_site
 
-    get "/stats/:domain/referrers", StatsController, :referrers_preview
-    get "/stats/:domain/pages", StatsController, :pages_preview
-    get "/stats/:domain/countries", StatsController, :countries_preview
-    get "/stats/:domain/screen-sizes", StatsController, :screen_sizes_preview
-    get "/stats/:domain/operating-systems", StatsController, :operating_systems_preview
-    get "/stats/:domain/browsers", StatsController, :browsers_preview
-    get "/stats/:domain/conversions", StatsController, :conversions_preview
-    get "/stats/:domain/main-graph", StatsController, :main_graph
     get "/:website/*path", StatsController, :stats
   end
 
