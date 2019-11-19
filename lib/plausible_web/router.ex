@@ -22,8 +22,28 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.AuthPlug
   end
 
+  pipeline :stats_api do
+    plug :accepts, ["json"]
+    plug :fetch_session
+  end
+
   if Mix.env == :dev do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
+  end
+
+  scope "/api/stats", PlausibleWeb.Api do
+    pipe_through :stats_api
+
+    get "/:domain/current-visitors", StatsController, :current_visitors
+    get "/:domain/main-graph", StatsController, :main_graph
+    get "/:domain/referrers", StatsController, :referrers
+    get "/:domain/referrers/:referrer", StatsController, :referrer_drilldown
+    get "/:domain/pages", StatsController, :pages
+    get "/:domain/countries", StatsController, :countries
+    get "/:domain/browsers", StatsController, :browsers
+    get "/:domain/operating-systems", StatsController, :operating_systems
+    get "/:domain/screen-sizes", StatsController, :screen_sizes
+    get "/:domain/conversions", StatsController, :conversions
   end
 
   scope "/api", PlausibleWeb do

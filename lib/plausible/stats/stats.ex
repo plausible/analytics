@@ -5,13 +5,17 @@ defmodule Plausible.Stats do
   def compare_pageviews_and_visitors(site, query, {pageviews, visitors}) do
     query = Query.shift_back(query)
     {old_pageviews, old_visitors} = pageviews_and_visitors(site, query)
-    if old_visitors > 0 do
-      {
-        round((pageviews - old_pageviews) / old_pageviews * 100),
-        round((visitors - old_visitors) / old_visitors * 100),
-      }
-    else
-      {nil, nil}
+    cond do
+      old_pageviews == 0 and pageviews > 0 ->
+        {100, 100}
+      old_pageviews == 0 and pageviews == 0 ->
+        {0, 0}
+      true ->
+        {
+          round((pageviews - old_pageviews) / old_pageviews * 100),
+            round((visitors - old_visitors) / old_visitors * 100),
+        }
+
     end
   end
 
@@ -92,7 +96,7 @@ defmodule Plausible.Stats do
 
   def top_referrers(site, query, limit \\ 5) do
     Repo.all(from e in base_query(site, query),
-      select: {e.referrer_source, count(e.referrer_source)},
+      select: %{name: e.referrer_source, count: count(e.referrer_source)},
       group_by: e.referrer_source,
       where: e.new_visitor == true and not is_nil(e.referrer_source),
       order_by: [desc: 2],
@@ -101,7 +105,8 @@ defmodule Plausible.Stats do
   end
 
   def visitors_from_referrer(site, query, referrer) do
-    Repo.one(from e in base_query(site, query),
+    Repo.one(
+      from e in base_query(site, query),
       select: count(e),
       where: e.new_visitor == true and e.referrer_source == ^referrer
     )
@@ -109,7 +114,7 @@ defmodule Plausible.Stats do
 
   def referrer_drilldown(site, query, referrer) do
     Repo.all(from e in base_query(site, query),
-      select: {e.referrer, count(e)},
+      select: %{name: e.referrer, count: count(e)},
       group_by: e.referrer,
       where: e.new_visitor == true and e.referrer_source == ^referrer,
       order_by: [desc: 2],
@@ -119,7 +124,7 @@ defmodule Plausible.Stats do
 
   def top_pages(site, query, limit \\ 5) do
     Repo.all(from e in base_query(site, query),
-      select: {e.pathname, count(e.pathname)},
+      select: %{name: e.pathname, count: count(e.pathname)},
       group_by: e.pathname,
       order_by: [desc: count(e.pathname)],
       limit: ^limit
@@ -129,7 +134,7 @@ defmodule Plausible.Stats do
   @available_screen_sizes ["Desktop", "Laptop", "Tablet", "Mobile"]
 
   def top_screen_sizes(site, query) do
-    sizes = Repo.all(from e in base_query(site, query),
+    Repo.all(from e in base_query(site, query),
       select: {e.screen_size, count(e.screen_size)},
       group_by: e.screen_size,
       where: e.new_visitor == true and not is_nil(e.screen_size)
@@ -144,11 +149,17 @@ defmodule Plausible.Stats do
 
   defp add_percentages(stat_list) do
     total = Enum.reduce(stat_list, 0, fn {_, count}, total -> total + count end)
-    Enum.map(stat_list, fn {stat, count} -> {stat, count, round(count / total * 100)} end)
+    Enum.map(stat_list, fn {stat, count} ->
+      %{
+        name: stat,
+        count: count,
+        percentage: round(count / total * 100)
+      }
+    end)
   end
 
   def countries(site, query, limit \\ 5) do
-    countries = Repo.all(from e in base_query(site, query),
+     Repo.all(from e in base_query(site, query),
       select: {e.country_code, count(e.country_code)},
       group_by: e.country_code,
       where: e.new_visitor == true and not is_nil(e.country_code),
@@ -216,7 +227,7 @@ defmodule Plausible.Stats do
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
         where: e.name in ^events,
         group_by: e.name,
-        select: {e.name, count(e.user_id, :distinct)}
+        select: %{name: e.name, count: count(e.user_id, :distinct)}
       )
     else
       []
@@ -241,7 +252,7 @@ defmodule Plausible.Stats do
         where: e.name == "pageview",
         where: e.pathname in ^pages,
         group_by: e.pathname,
-        select: {fragment("concat('Visit ', ?)", e.pathname), count(e.user_id, :distinct)}
+        select: %{name: fragment("concat('Visit ', ?)", e.pathname), count: count(e.user_id, :distinct)}
       )
     else
       []
@@ -249,7 +260,7 @@ defmodule Plausible.Stats do
   end
 
   defp sort_conversions(conversions) do
-    Enum.sort_by(conversions, fn {_, count} -> -count end)
+    Enum.sort_by(conversions, fn conversion -> -conversion[:count] end)
   end
 
   defp base_query(site, query) do

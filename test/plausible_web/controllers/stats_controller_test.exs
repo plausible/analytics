@@ -9,7 +9,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       insert(:pageview, hostname: "public-site.io")
 
       conn = get(conn, "/public-site.io")
-      assert html_response(conn, 200) =~ "Analytics for"
+      assert html_response(conn, 200) =~ "stats-react-container"
     end
 
     test "can not view stats of a private website", %{conn: conn} do
@@ -27,7 +27,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       insert(:pageview, hostname: site.domain)
 
       conn = get(conn, "/" <> site.domain)
-      assert html_response(conn, 200) =~ "Analytics for"
+      assert html_response(conn, 200) =~ "stats-react-container"
     end
 
     test "can not view stats of someone else's website", %{conn: conn} do

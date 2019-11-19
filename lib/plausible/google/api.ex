@@ -39,7 +39,7 @@ defmodule Plausible.Google.Api do
       200 ->
         terms = (Jason.decode!(res.body)["rows"] || [])
                 |> Enum.filter(fn row -> row["clicks"] > 0 end)
-                |> Enum.map(fn row -> {row["keys"], round(row["clicks"])} end)
+                |> Enum.map(fn row -> %{name: row["keys"], count: round(row["clicks"])} end)
 
         {:ok, terms}
       401 ->

@@ -43,13 +43,15 @@
 }
 
 .modal__close {
-  background: transparent;
-  border: 0;
-  font-size: 20px;
+  position: fixed;
+  color: #b8c2cc;
+  font-size: 48px;
   font-weight: bold;
+  top: 12px;
+  right: 24px;
 }
 
-.modal__header .modal__close:before { content: "\2715"; }
+.modal__close:before { content: "\2715"; }
 
 .modal__content {
   margin-top: 2rem;

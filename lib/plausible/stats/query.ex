@@ -62,20 +62,19 @@ defmodule Plausible.Stats.Query do
     }
   end
 
-  def from(_tz, %{"period" => "month", "date" => month_start}) do
-    start_date = Date.from_iso8601!(month_start) |> Timex.beginning_of_month
-    end_date = Timex.end_of_month(start_date)
+  def from(tz, %{"period" => "30d"}) do
+    end_date = today(tz)
+    start_date = end_date |> Timex.shift(days: -30)
 
     %__MODULE__{
-      period: "month",
+      period: "30d",
       date_range: Date.range(start_date, end_date),
-      step_type: "date",
-      steps: Timex.diff(start_date, end_date, :days)
+      step_type: "date"
     }
   end
 
-  def from(tz, %{"period" => "month"}) do
-    start_date = today(tz) |> Timex.beginning_of_month
+  def from(_tz, %{"period" => "month", "date" => month_start}) do
+    start_date = Date.from_iso8601!(month_start) |> Timex.beginning_of_month
     end_date = Timex.end_of_month(start_date)
 
     %__MODULE__{

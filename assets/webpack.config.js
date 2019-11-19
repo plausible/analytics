@@ -15,6 +15,7 @@ module.exports = (env, options) => ({
   },
   entry: {
       'app': ['./js/app.js'],
+      'dashboard': ['./js/dashboard/mount.js'],
       'p': ['./js/p.js'],
       'analytics': ['./js/plausible.js'],
       'plausible': ['./js/plausible.js']
@@ -26,7 +27,7 @@ module.exports = (env, options) => ({
   module: {
     rules: [
       {
-        test: /\.js$/,
+        test: /\.(js|jsx)$/,
         exclude: /node_modules/,
         use: {
           loader: 'babel-loader'
