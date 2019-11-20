@@ -100,13 +100,14 @@ class LineGraph extends React.Component {
           backgroundColor: 'rgba(25, 30, 56)',
           callbacks: {
             title: function(dataPoints) {
-              var data = dataPoints[0]
+              const data = dataPoints[0]
+              const formatDate = dateFormatter(graphData)
               if (graphData.interval === 'month') {
-                return data.yLabel.toLocaleString() + ' visitors in ' + data.xLabel
+                return data.yLabel.toLocaleString() + ' visitors in ' + formatDate(data.xLabel)
               } else if (graphData.interval === 'date') {
-                return data.yLabel.toLocaleString() + ' visitors on ' + data.xLabel
+                return data.yLabel.toLocaleString() + ' visitors on ' + formatDate(data.xLabel)
               } else if (graphData.interval === 'hour') {
-                return data.yLabel.toLocaleString() + ' visitors at ' + data.xLabel
+                return data.yLabel.toLocaleString() + ' visitors at ' + formatDate(data.xLabel)
               }
             },
             label: function() {},
