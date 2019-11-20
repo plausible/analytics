@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Dash from './index'
 import Modal from './stats/modals/modal'
 import ReferrersModal from './stats/modals/referrers'
@@ -9,16 +9,25 @@ import CountriesModal from './stats/modals/countries'
 import BrowsersModal from './stats/modals/browsers'
 import OperatingSystemsModal from './stats/modals/operating-systems'
 
-import {
-  BrowserRouter,
-  Switch,
-  Route
-} from "react-router-dom";
+import {BrowserRouter, Switch, Route, useLocation} from "react-router-dom";
+
+function ScrollToTop() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state && location.state.scrollTop) {
+      window.scrollTo(0, 0);
+    }
+  }, [location]);
+
+  return null;
+}
 
 export default function Router({site}) {
   return (
     <BrowserRouter>
       <Route path="/:domain">
+        <ScrollToTop />
         <Dash site={site} />
         <Switch>
           <Route exact path="/:domain/referrers">

@@ -5,11 +5,11 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
   describe "GET /api/stats/:domain/referrers" do
     setup [:create_user, :log_in, :create_site]
 
-    test "returns top referrer sources by new visitors", %{conn: conn, site: site} do
-      insert(:pageview, hostname: site.domain, referrer_source: "Google", new_visitor: true, timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, hostname: site.domain, referrer_source: "Google", new_visitor: false, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, hostname: site.domain, referrer_source: "Google", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, hostname: site.domain, referrer_source: "Bing", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
+    test "returns top referrer sources by unique visitors", %{conn: conn, site: site} do
+      pageview1 = insert(:pageview, hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, hostname: site.domain, referrer_source: "Google", user_id: pageview1.user_id, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, referrer_source: "Bing", timestamp: ~N[2019-01-01 02:00:00])
 
       conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01")
 

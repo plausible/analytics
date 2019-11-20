@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
     query = Stats.Query.from(site.timezone, params)
 
-    search_terms = if site.google_auth && site.google_auth.property do
+    search_terms = if site.google_auth && site.google_auth.property && !query.filters["goal"] do
       Plausible.Google.Api.fetch_stats(site.google_auth, query)
     end
 

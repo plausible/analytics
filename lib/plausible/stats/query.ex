@@ -1,5 +1,5 @@
 defmodule Plausible.Stats.Query do
-  defstruct [date_range: nil, step_type: nil, period: nil, steps: nil]
+  defstruct [date_range: nil, step_type: nil, period: nil, steps: nil, filters: %{}]
 
   def new(attrs) do
     attrs
@@ -31,61 +31,66 @@ defmodule Plausible.Stats.Query do
     Map.put(query, :date_range, Date.range(new_first, new_last))
   end
 
-  def from(_tz, %{"period" => "day", "date" => date}) do
+  def from(_tz, %{"period" => "day", "date" => date} = params) do
     date = Date.from_iso8601!(date)
 
     %__MODULE__{
       period: "day",
       date_range: Date.range(date, date),
-      step_type: "hour"
+      step_type: "hour",
+      filters: parse_filters(params)
     }
   end
 
-  def from(tz, %{"period" => "day"}) do
+  def from(tz, %{"period" => "day"} = params) do
     date = today(tz)
 
     %__MODULE__{
       period: "day",
       date_range: Date.range(date, date),
-      step_type: "hour"
+      step_type: "hour",
+      filters: parse_filters(params)
     }
   end
 
-  def from(tz, %{"period" => "7d"}) do
+  def from(tz, %{"period" => "7d"} = params) do
     end_date = today(tz)
     start_date = end_date |> Timex.shift(days: -7)
 
     %__MODULE__{
       period: "7d",
       date_range: Date.range(start_date, end_date),
-      step_type: "date"
+      step_type: "date",
+      filters: parse_filters(params)
     }
   end
 
-  def from(tz, %{"period" => "30d"}) do
+  def from(tz, %{"period" => "30d"} = params) do
     end_date = today(tz)
     start_date = end_date |> Timex.shift(days: -30)
 
     %__MODULE__{
       period: "30d",
       date_range: Date.range(start_date, end_date),
-      step_type: "date"
+      step_type: "date",
+      filters: parse_filters(params)
     }
   end
 
-  def from(_tz, %{"period" => "month", "date" => month_start}) do
-    start_date = Date.from_iso8601!(month_start) |> Timex.beginning_of_month
+  def from(_tz, %{"period" => "month", "date" => date} = params) do
+    start_date = Date.from_iso8601!(date) |> Timex.beginning_of_month
     end_date = Timex.end_of_month(start_date)
 
     %__MODULE__{
       period: "month",
       date_range: Date.range(start_date, end_date),
       step_type: "date",
-      steps: Timex.diff(start_date, end_date, :days)
+      steps: Timex.diff(start_date, end_date, :days),
+      filters: parse_filters(params)
     }
   end
 
-  def from(tz, %{"period" => "3mo"}) do
+  def from(tz, %{"period" => "3mo"} = params) do
     start_date = Timex.shift(today(tz), months: -2)
                  |> Timex.beginning_of_month()
 
@@ -93,11 +98,12 @@ defmodule Plausible.Stats.Query do
       period: "3mo",
       date_range: Date.range(start_date, today(tz)),
       step_type: "month",
-      steps: 3
+      steps: 3,
+      filters: parse_filters(params)
     }
   end
 
-  def from(tz, %{"period" => "6mo"}) do
+  def from(tz, %{"period" => "6mo"} = params) do
     start_date = Timex.shift(today(tz), months: -5)
                  |> Timex.beginning_of_month()
 
@@ -105,28 +111,23 @@ defmodule Plausible.Stats.Query do
       period: "6mo",
       date_range: Date.range(start_date, today(tz)),
       step_type: "month",
-      steps: 6
-    }
-  end
-
-  def from(_tz, %{"period" => "custom", "from" => from, "to" => to}) do
-    start_date = Date.from_iso8601!(from)
-    end_date = Date.from_iso8601!(to)
-    date_range = Date.range(start_date, end_date)
-
-    %__MODULE__{
-      period: "custom",
-      date_range: date_range,
-      step_type: "date"
+      steps: 6,
+      filters: parse_filters(params)
     }
   end
 
   def from(tz, _) do
-    __MODULE__.from(tz, %{"period" => "6mo"})
+    __MODULE__.from(tz, %{"period" => "30d"})
   end
 
   defp today(tz) do
     Timex.now(tz) |> Timex.to_date
+  end
+
+  defp parse_filters(params) do
+    if params["filters"] do
+      Jason.decode!(params["filters"])
+    end
   end
 end
 

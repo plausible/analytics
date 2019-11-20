@@ -1,6 +1,7 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
 import Chart from 'chart.js'
+import { eventName } from '../query'
 import numberFormatter from '../number-formatter'
 import { isToday, shiftMonths, formatMonth } from '../date'
 import * as api from '../api'
@@ -205,7 +206,7 @@ class LineGraph extends React.Component {
             {this.renderComparison(graphData.change_visitors)}
           </div>
           <div className="pl-8 w-60">
-            <div className="text-grey-dark text-xs font-bold tracking-wide">TOTAL PAGEVIEWS</div>
+            <div className="text-grey-dark text-xs font-bold tracking-wide uppercase">TOTAL {eventName(this.props.query)}</div>
             <div className="my-1 flex items-end justify-between">
               <b className="text-2xl" title={graphData.pageviews.toLocaleString()}>{numberFormatter(graphData.pageviews)}</b>
             </div>

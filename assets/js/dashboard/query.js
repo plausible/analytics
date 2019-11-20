@@ -1,19 +1,10 @@
 import {formatDay, formatMonthYYYY, newDateInOffset} from './date'
 
-function parseQueryString(queryString) {
-    var query = {};
-    var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
-    for (var i = 0; i < pairs.length; i++) {
-        var pair = pairs[i].split('=');
-        query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
-    }
-    return query;
-}
-
 const PERIODS = ['day', 'month', '7d', '30d', '3mo', '6mo']
 
 export function parseQuery(querystring, site) {
-  let {period, date} = parseQueryString(querystring)
+  const q = new URLSearchParams(querystring)
+  let period = q.get('period')
   const periodKey = 'period__' + site.domain
 
   if (PERIODS.includes(period)) {
@@ -28,7 +19,10 @@ export function parseQuery(querystring, site) {
 
   return {
     period: period,
-    date: date ? new Date(date) : newDateInOffset(site.offset)
+    date: q.get('date') ? new Date(q.get('date')) : newDateInOffset(site.offset),
+    filters: {
+      'goal': q.get('goal')
+    }
   }
 }
 
@@ -45,5 +39,22 @@ export function toHuman(query) {
     return 'in the last 3 months'
   } else if (query.period === '6mo') {
     return 'in the last 6 months'
+  }
+}
+
+export function removeQueryParam(search, parameter) {
+  const q = new URLSearchParams(search)
+  q.delete(parameter)
+  return q.toString()
+}
+
+export function eventName(query) {
+  if (query.filters.goal) {
+    if (query.filters.goal.startsWith('Visit ')) {
+      return 'pageviews'
+    }
+    return 'events'
+  } else {
+    return 'pageviews'
   }
 }

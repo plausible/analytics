@@ -11,7 +11,8 @@ function serialize(obj) {
 
 export function get(url, query, ...extraQuery) {
   query = Object.assign({}, query, {
-    date: query.date ? formatISO(query.date) : undefined
+    date: query.date ? formatISO(query.date) : undefined,
+    filters: query.filters ? JSON.stringify(query.filters) : undefined
   }, ...extraQuery)
 
   url = url + `?${serialize(query)}`

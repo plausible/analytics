@@ -2,6 +2,7 @@ import React from 'react';
 import { withRouter } from 'react-router-dom'
 
 import Datepicker from './datepicker'
+import Filters from './filters'
 import CurrentVisitors from './stats/current-visitors'
 import VisitorGraph from './stats/visitor-graph'
 import Referrers from './stats/referrers'
@@ -40,11 +41,12 @@ class Stats extends React.Component {
       <div className="mb-12">
         <div className="w-full sm:flex justify-between items-center">
           <div className="w-full flex items-center">
-            <h2 className="text-left mr-8">Analytics for <a href="//{this.props.domain}" target="_blank">{this.props.site.domain}</a></h2>
+            <h2 className="text-left mr-8">Analytics for <a href={`//${this.props.site.domain}`} target="_blank">{this.props.site.domain}</a></h2>
             <CurrentVisitors site={this.props.site}  />
           </div>
           <Datepicker site={this.props.site} query={this.state.query} />
         </div>
+        <Filters query={this.state.query} history={this.props.history} />
         <VisitorGraph site={this.props.site} query={this.state.query} />
         <div className="w-full block md:flex items-start justify-between mt-6">
           <Referrers site={this.props.site} query={this.state.query} />
