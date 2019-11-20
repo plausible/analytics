@@ -37,6 +37,14 @@ defmodule Plausible.Stats.QueryTest do
     assert q.step_type == "month"
   end
 
+  test "parses 6 month format" do
+    q = Query.from(@tz, %{"period" => "6mo"})
+
+    assert q.date_range.first == Timex.shift(Timex.today(), months: -5) |> Timex.beginning_of_month()
+    assert q.date_range.last == Timex.today()
+    assert q.step_type == "month"
+  end
+
   test "defaults to 30 days format" do
     assert Query.from(@tz, %{}) == Query.from(@tz, %{"period" => "30d"})
   end
