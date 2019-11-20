@@ -18,6 +18,19 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
         %{"name" => "Bing", "count" => 1},
       ]
     end
+
+    test "filters referrers for a goal", %{conn: conn, site: site} do
+      insert(:event, name: "Signup", hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "Signup", hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+      conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+        %{"name" => "Google", "count" => 2},
+      ]
+    end
   end
 
   describe "GET /api/stats/:domain/referrer-drilldown" do
