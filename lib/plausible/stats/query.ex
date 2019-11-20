@@ -1,24 +1,6 @@
 defmodule Plausible.Stats.Query do
   defstruct [date_range: nil, step_type: nil, period: nil, steps: nil, filters: %{}]
 
-  def new(attrs) do
-    attrs
-      |> Enum.into(%{})
-      |> Map.put(:__struct__, __MODULE__)
-  end
-
-  def month(date) do
-    %__MODULE__{
-      date_range: Date.range(Timex.beginning_of_month(date), Timex.end_of_month(date))
-    }
-  end
-
-  def day(date) do
-    %__MODULE__{
-      date_range: Date.range(date, date)
-    }
-  end
-
   def shift_back(%__MODULE__{period: "day"} = query) do
     new_date = query.date_range.first |> Timex.shift(days: -1)
     Map.put(query, :date_range, Date.range(new_date, new_date))
