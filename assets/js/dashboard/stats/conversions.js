@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom'
 
 import Bar from './bar'
 import MoreLink from './more-link'
@@ -28,10 +29,13 @@ export default class Conversions extends React.Component {
   }
 
   renderGoal(goal) {
+    const query = new URLSearchParams(window.location.search)
+    query.set('goal', goal.name)
+
     return (
       <React.Fragment key={goal.name}>
         <div className="flex items-center justify-between my-2">
-          <span className="truncate" style={{maxWidth: '80%'}}>{ goal.name }</span>
+          <Link to={{search: query.toString(), state: {scrollTop: true}}} className="truncate hover:underline" style={{maxWidth: '80%'}}>{ goal.name }</Link>
           <span>{numberFormatter(goal.count)}</span>
         </div>
         <Bar count={goal.count} all={this.state.goals} color="indigo" />

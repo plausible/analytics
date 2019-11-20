@@ -33,6 +33,14 @@ class ReferrerDrilldownModal extends React.Component {
     )
   }
 
+  renderGoalText() {
+    if (this.state.query.filters.goal) {
+      return (
+        <h1 className="text-grey-darker leading-none">completed {this.state.query.filters.goal}</h1>
+      )
+    }
+  }
+
   renderBody() {
     if (this.state.loading) {
       return (
@@ -47,10 +55,10 @@ class ReferrerDrilldownModal extends React.Component {
 
           <div className="my-4 border-b border-grey-light"></div>
           <main className="modal__content mt-0">
-            <h1>{this.state.totalVisitors} new visitors from {this.props.match.params.referrer}</h1>
-            <h1 className="text-grey-darker" style={{transform: 'translateY(-1rem)'}}>{toHuman(this.state.query)}</h1>
+            <h1 className="mb-0 leading-none">{this.state.totalVisitors} visitors from {this.props.match.params.referrer}<br /> {toHuman(this.state.query)}</h1>
+            {this.renderGoalText()}
 
-            <div className="mt-4">
+            <div className="mt-8">
               { this.state.referrers.map(this.renderReferrer.bind(this)) }
             </div>
           </main>

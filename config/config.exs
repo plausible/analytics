@@ -42,7 +42,8 @@ config :ref_inspector,
   database_path: "priv/ref_inspector"
 
 config :plausible,
-  paddle_api: Plausible.Billing.PaddleApi
+  paddle_api: Plausible.Billing.PaddleApi,
+  google_api: Plausible.Google.Api
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

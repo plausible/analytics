@@ -43,7 +43,7 @@ class ReferrersModal extends React.Component {
           <header className="modal__header">
             <h1>Referrers</h1>
           </header>
-          <div className="text-grey-darker text-lg ml-1 mt-1">by new visitors</div>
+          <div className="text-grey-darker text-lg ml-1 mt-1">by visitors</div>
 
           <div className="my-4 border-b border-grey-light"></div>
           <main className="modal__content">

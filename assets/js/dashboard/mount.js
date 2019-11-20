@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import 'url-search-params-polyfill';
 
 import Router from './router'
 

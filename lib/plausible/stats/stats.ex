@@ -96,9 +96,9 @@ defmodule Plausible.Stats do
 
   def top_referrers(site, query, limit \\ 5) do
     Repo.all(from e in base_query(site, query),
-      select: %{name: e.referrer_source, count: count(e.referrer_source)},
+      select: %{name: e.referrer_source, count: count(e.user_id, :distinct)},
       group_by: e.referrer_source,
-      where: e.new_visitor == true and not is_nil(e.referrer_source),
+      where: not is_nil(e.referrer_source),
       order_by: [desc: 2],
       limit: ^limit
     )
@@ -107,16 +107,16 @@ defmodule Plausible.Stats do
   def visitors_from_referrer(site, query, referrer) do
     Repo.one(
       from e in base_query(site, query),
-      select: count(e),
-      where: e.new_visitor == true and e.referrer_source == ^referrer
+      select: count(e.user_id, :distinct),
+      where: e.referrer_source == ^referrer
     )
   end
 
   def referrer_drilldown(site, query, referrer) do
     Repo.all(from e in base_query(site, query),
-      select: %{name: e.referrer, count: count(e)},
+      select: %{name: e.referrer, count: count(e.user_id, :distinct)},
       group_by: e.referrer,
-      where: e.new_visitor == true and e.referrer_source == ^referrer,
+      where: e.referrer_source == ^referrer,
       order_by: [desc: 2],
       limit: 100
     )
@@ -135,9 +135,9 @@ defmodule Plausible.Stats do
 
   def top_screen_sizes(site, query) do
     Repo.all(from e in base_query(site, query),
-      select: {e.screen_size, count(e.screen_size)},
+      select: {e.screen_size, count(e.user_id, :distinct)},
       group_by: e.screen_size,
-      where: e.new_visitor == true and not is_nil(e.screen_size)
+      where: not is_nil(e.screen_size)
     )
     |> Enum.sort(fn {screen_size1, _}, {screen_size2, _} ->
       index1 = Enum.find_index(@available_screen_sizes, fn s -> s == screen_size1 end)
@@ -160,10 +160,10 @@ defmodule Plausible.Stats do
 
   def countries(site, query, limit \\ 5) do
      Repo.all(from e in base_query(site, query),
-      select: {e.country_code, count(e.country_code)},
+      select: {e.country_code, count(e.user_id, :distinct)},
       group_by: e.country_code,
-      where: e.new_visitor == true and not is_nil(e.country_code),
-      order_by: [desc: count(e.country_code)]
+      where: not is_nil(e.country_code),
+      order_by: [desc: 2]
     )
     |> Enum.map(fn {country_code, count} ->
       {Plausible.Stats.CountryName.from_iso3166(country_code), count}
@@ -174,10 +174,10 @@ defmodule Plausible.Stats do
 
   def browsers(site, query, limit \\ 5) do
     Repo.all(from e in base_query(site, query),
-      select: {e.browser, count(e.browser)},
+      select: {e.browser, count(e.user_id, :distinct)},
       group_by: e.browser,
-      where: e.new_visitor == true and not is_nil(e.browser),
-      order_by: [desc: count(e.browser)]
+      where: not is_nil(e.browser),
+      order_by: [desc: 2]
     )
     |> add_percentages
     |> Enum.take(limit)
@@ -185,10 +185,10 @@ defmodule Plausible.Stats do
 
   def operating_systems(site, query, limit \\ 5) do
     Repo.all(from e in base_query(site, query),
-      select: {e.operating_system, count(e.operating_system)},
+      select: {e.operating_system, count(e.user_id, :distinct)},
       group_by: e.operating_system,
-      where: e.new_visitor == true and not is_nil(e.operating_system),
-      order_by: [desc: count(e.operating_system)]
+      where: not is_nil(e.operating_system),
+      order_by: [desc: 2]
     )
     |> add_percentages
     |> Enum.take(limit)
@@ -203,7 +203,15 @@ defmodule Plausible.Stats do
     )
   end
 
-  def goal_conversions(site, query, _limit \\ 5) do
+  def goal_conversions(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
+    Repo.all(from e in base_query(site, query),
+      select: count(e.user_id, :distinct),
+      group_by: e.name,
+      order_by: [desc: 1]
+    ) |> Enum.map(fn count -> %{name: goal, count: count} end)
+  end
+
+  def goal_conversions(site, query) do
     goals = Repo.all(from g in Plausible.Goal, where: g.domain == ^site.domain)
     fetch_pageview_goals(goals, site, query)
     ++ fetch_event_goals(goals, site, query)
@@ -211,21 +219,12 @@ defmodule Plausible.Stats do
   end
 
   defp fetch_event_goals(goals, site, query) do
-    {:ok, first} = NaiveDateTime.new(query.date_range.first, ~T[00:00:00])
-    first_datetime = Timex.to_datetime(first, site.timezone)
-
-    {:ok, last} = NaiveDateTime.new(query.date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
-    last_datetime = Timex.to_datetime(last, site.timezone)
-
     events = Enum.map(goals, fn goal -> goal.event_name end)
              |> Enum.filter(&(&1))
 
     if Enum.count(events) > 0 do
       Repo.all(
-        from e in Plausible.Event,
-        where: e.hostname == ^site.domain,
-        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
-        where: e.name in ^events,
+        from e in base_query(site, query, events),
         group_by: e.name,
         select: %{name: e.name, count: count(e.user_id, :distinct)}
       )
@@ -235,21 +234,12 @@ defmodule Plausible.Stats do
   end
 
   defp fetch_pageview_goals(goals, site, query) do
-    {:ok, first} = NaiveDateTime.new(query.date_range.first, ~T[00:00:00])
-    first_datetime = Timex.to_datetime(first, site.timezone)
-
-    {:ok, last} = NaiveDateTime.new(query.date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
-    last_datetime = Timex.to_datetime(last, site.timezone)
-
     pages = Enum.map(goals, fn goal -> goal.page_path end)
              |> Enum.filter(&(&1))
 
     if Enum.count(pages) > 0 do
       Repo.all(
-        from e in Plausible.Event,
-        where: e.hostname == ^site.domain,
-        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
-        where: e.name == "pageview",
+        from e in base_query(site, query),
         where: e.pathname in ^pages,
         group_by: e.pathname,
         select: %{name: fragment("concat('Visit ', ?)", e.pathname), count: count(e.user_id, :distinct)}
@@ -263,7 +253,7 @@ defmodule Plausible.Stats do
     Enum.sort_by(conversions, fn conversion -> -conversion[:count] end)
   end
 
-  defp base_query(site, query) do
+  defp base_query(site, query, events \\ ["pageview"]) do
     {:ok, first} = NaiveDateTime.new(query.date_range.first, ~T[00:00:00])
     first_datetime = Timex.to_datetime(first, site.timezone)
     |> Timex.Timezone.convert("UTC")
@@ -272,11 +262,35 @@ defmodule Plausible.Stats do
     last_datetime = Timex.to_datetime(last, site.timezone)
     |> Timex.Timezone.convert("UTC")
 
-    from(e in Plausible.Event,
-      where: e.name == "pageview",
+    {goal_event, path} = event_name_for_goal(query)
+
+    q = from(e in Plausible.Event,
       where: e.hostname == ^site.domain,
       where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
     )
+
+    q = if path do
+      from(e in q, where: e.pathname == ^path)
+    else
+      q
+    end
+
+    if goal_event do
+      from(e in q, where: e.name == ^goal_event)
+    else
+      from(e in q, where: e.name in ^events)
+    end
+  end
+
+  defp event_name_for_goal(query) do
+    case query.filters["goal"] do
+      "Visit " <> page ->
+        {"pageview", page}
+      goal when is_binary(goal) ->
+        {goal, nil}
+      _ ->
+        {nil, nil}
+    end
   end
 
   defp transform_keys(map, fun) do

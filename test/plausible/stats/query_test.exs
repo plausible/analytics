@@ -37,19 +37,24 @@ defmodule Plausible.Stats.QueryTest do
     assert q.step_type == "month"
   end
 
-  test "defaults to 6 months format" do
-    assert Query.from(@tz, %{}) == Query.from(@tz, %{"period" => "6mo"})
+  test "parses 6 month format" do
+    q = Query.from(@tz, %{"period" => "6mo"})
+
+    assert q.date_range.first == Timex.shift(Timex.today(), months: -5) |> Timex.beginning_of_month()
+    assert q.date_range.last == Timex.today()
+    assert q.step_type == "month"
   end
 
-  test "parses custom format" do
-    q = Query.from(@tz, %{
-      "period" => "custom",
-      "from" => "2019-01-01",
-      "to" => "2019-02-01"
-    })
+  test "defaults to 30 days format" do
+    assert Query.from(@tz, %{}) == Query.from(@tz, %{"period" => "30d"})
+  end
 
-    assert q.date_range.first == ~D[2019-01-01]
-    assert q.date_range.last == ~D[2019-02-01]
-    assert q.step_type == "date"
+  describe "filters" do
+    test "parses goal filter" do
+      filters = Jason.encode!(%{"goal" => "Signup"})
+      q = Query.from(@tz, %{"period" => "3mo", "filters" => filters})
+
+      assert q.filters["goal"] == "Signup"
+    end
   end
 end

@@ -5,17 +5,43 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
   describe "GET /api/stats/:domain/referrers" do
     setup [:create_user, :log_in, :create_site]
 
-    test "returns top referrer sources by new visitors", %{conn: conn, site: site} do
-      insert(:pageview, hostname: site.domain, referrer_source: "Google", new_visitor: true, timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, hostname: site.domain, referrer_source: "Google", new_visitor: false, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, hostname: site.domain, referrer_source: "Google", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, hostname: site.domain, referrer_source: "Bing", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
+    test "returns top referrer sources by unique visitors", %{conn: conn, site: site} do
+      pageview1 = insert(:pageview, hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, hostname: site.domain, referrer_source: "Google", user_id: pageview1.user_id, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, referrer_source: "Bing", timestamp: ~N[2019-01-01 02:00:00])
 
       conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
         %{"name" => "Google", "count" => 2},
         %{"name" => "Bing", "count" => 1},
+      ]
+    end
+
+    test "filters referrers for a custom goal", %{conn: conn, site: site} do
+      insert(:event, name: "Signup", hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "Signup", hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+      conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+        %{"name" => "Google", "count" => 2},
+      ]
+    end
+
+    test "filters referrers for a pageview goal", %{conn: conn, site: site} do
+      insert(:pageview, pathname: "/register", hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, pathname: "/register", hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, pathname: "/irrelevant", hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
+
+      filters = Jason.encode!(%{goal: "Visit /register"})
+      conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+        %{"name" => "Google", "count" => 2},
       ]
     end
   end
@@ -56,6 +82,20 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
           %{"name" => "10words.io/somepage", "count" => 2},
           %{"name" => "10words.io/some_other_page", "count" => 1},
         ]
+      }
+    end
+
+    test "gets keywords from Google", %{conn: conn, user: user, site: site} do
+      insert(:google_auth, user: user, user: user,site: site, property: "sc-domain:example.com")
+      insert(:pageview, hostname: site.domain, referrer: "google.com", referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, hostname: site.domain, referrer: "google.com", referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
+
+      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day&date=2019-01-01")
+      {:ok, terms} = Plausible.Google.Api.Mock.fetch_stats(nil, nil)
+
+      assert json_response(conn, 200) == %{
+        "total_visitors" => 2,
+        "search_terms" => terms
       }
     end
   end

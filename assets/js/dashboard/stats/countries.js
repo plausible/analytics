@@ -43,13 +43,13 @@ export default class Countries extends React.Component {
   render() {
     if (this.state.loading) {
       return (
-        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4">
+        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4" style={{height: '405px'}}>
           <div className="loading my-32 mx-auto"><div></div></div>
         </div>
       )
     } else if (this.state.countries) {
       return (
-        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4">
+        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4" style={{height: '405px'}}>
           <div className="text-center">
             <h2>Top Countries</h2>
             <div className="text-grey-darker mt-1">by visitors</div>
