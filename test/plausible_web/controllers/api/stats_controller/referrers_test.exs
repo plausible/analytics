@@ -84,5 +84,19 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
         ]
       }
     end
+
+    test "gets keywords from Google", %{conn: conn, user: user, site: site} do
+      insert(:google_auth, user: user, user: user,site: site, property: "sc-domain:example.com")
+      insert(:pageview, hostname: site.domain, referrer: "google.com", referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, hostname: site.domain, referrer: "google.com", referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
+
+      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day&date=2019-01-01")
+      {:ok, terms} = Plausible.Google.Api.Mock.fetch_stats(nil, nil)
+
+      assert json_response(conn, 200) == %{
+        "total_visitors" => 2,
+        "search_terms" => terms
+      }
+    end
   end
 end
