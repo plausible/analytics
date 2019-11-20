@@ -205,10 +205,10 @@ defmodule Plausible.Stats do
 
   def goal_conversions(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
     Repo.all(from e in base_query(site, query),
-      select: %{name: ^goal, count: count(e.user_id, :distinct)},
+      select: count(e.user_id, :distinct),
       group_by: e.name,
-      order_by: [desc: 2]
-    )
+      order_by: [desc: 1]
+    ) |> Enum.map(fn count -> %{name: goal, count: count} end)
   end
 
   def goal_conversions(site, query) do
