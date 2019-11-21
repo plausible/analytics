@@ -37,8 +37,9 @@ export function formatDay(date) {
 }
 
 // https://stackoverflow.com/a/11124448
-export function newDateInOffset(offset) {
-  return new Date(new Date().getTime() + offset * 1000)
+export function newDateInOffset(siteOffset) {
+  const browserOffset = (new Date()).getTimezoneOffset() * 60
+  return new Date(new Date().getTime() + (siteOffset * 1000) + (browserOffset * 1000))
 }
 
 export function isToday(site, date) {

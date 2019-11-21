@@ -124,12 +124,15 @@ defmodule PlausibleWeb.SiteController do
 
   def update_settings(conn, %{"website" => website, "site" => site_params}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
-    changeset =  site |> Plausible.Site.changeset(site_params)
+    changeset = site |> Plausible.Site.changeset(site_params)
     res = changeset |> Repo.update
 
     case res do
       {:ok, site} ->
+        site_session_key = "authorized_site__" <> site.domain
+
         conn
+        |> put_session(site_session_key, nil)
         |> put_flash(:success, "Site settings saved succesfully")
         |> redirect(to: "/#{site.domain}/settings")
       {:error, changeset} ->
