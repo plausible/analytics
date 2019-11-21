@@ -54,37 +54,36 @@ export default class ScreenSizes extends React.Component {
 
   renderScreenSize(size) {
     return (
-      <React.Fragment key={size.name}>
-        <div className="flex items-center justify-between my-2">
-          <span tooltip={EXPLANATION[size.name]}>
+      <div className="flex items-center justify-between my-4" key={size.name}>
+        <div className="w-full" style={{maxWidth: 'calc(100% - 4rem)'}}>
+          <Bar count={size.count} all={this.state.sizes} color="yellow" />
+          <span tooltip={EXPLANATION[size.name]} className="block px-2" style={{marginTop: '-25px'}}>
             { iconFor(size.name) }
             <span className="ml-1">{size.name}</span>
           </span>
-          <span tooltip={`${size.count} visitors`}>{size.percentage}%</span>
         </div>
-        <Bar count={size.count} all={this.state.sizes} color="teal" />
-      </React.Fragment>
+        <span tooltip={`${size.count} visitors`} className="font-medium">{size.percentage}%</span>
+      </div>
     )
   }
 
   render() {
     if (this.state.loading) {
       return (
-        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4" style={{height: '405px'}}>
+        <div className="stats-item bg-white shadow-xl rounded p-4" style={{height: '424px'}}>
           <div className="loading my-32 mx-auto"><div></div></div>
         </div>
       )
     } else if (this.state.sizes) {
       return (
-        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4" style={{height: '405px'}}>
-          <div className="text-center">
-            <h2>Screen Sizes</h2>
-            <div className="text-grey-darker mt-1">by visitors</div>
+        <div className="stats-item bg-white shadow-xl rounded p-4" style={{height: '424px'}}>
+          <h3>Devices</h3>
+          <div className="flex items-center mt-6 mb-3 justify-between text-grey-dark text-xs font-bold tracking-wide">
+            <span>DEVICE TYPE</span>
+            <span>VISITORS</span>
           </div>
 
-          <div className="mt-8">
-            { this.state.sizes.map(this.renderScreenSize.bind(this)) }
-          </div>
+          { this.state.sizes.map(this.renderScreenSize.bind(this)) }
         </div>
       )
     }

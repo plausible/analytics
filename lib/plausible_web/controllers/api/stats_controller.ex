@@ -70,7 +70,7 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Stats.Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
 
-    json(conn, Stats.top_referrers(site, query, params["limit"] || 5, include))
+    json(conn, Stats.top_referrers(site, query, params["limit"] || 9, include))
   end
 
   def referrers_for_goal(conn, params) do
@@ -129,28 +129,28 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Stats.Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
 
-    json(conn, Stats.top_pages(site, query, params["limit"] || 5, include))
+    json(conn, Stats.top_pages(site, query, params["limit"] || 9, include))
   end
 
   def countries(conn, params) do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
 
-    json(conn, Stats.countries(site, query, parse_integer(params["limit"]) || 5))
+    json(conn, Stats.countries(site, query))
   end
 
   def browsers(conn, params) do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
 
-    json(conn, Stats.browsers(site, query, parse_integer(params["limit"]) || 5))
+    json(conn, Stats.browsers(site, query, parse_integer(params["limit"]) || 9))
   end
 
   def operating_systems(conn, params) do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
 
-    json(conn, Stats.operating_systems(site, query, parse_integer(params["limit"]) || 5))
+    json(conn, Stats.operating_systems(site, query, parse_integer(params["limit"]) || 9))
   end
 
   def screen_sizes(conn, params) do

@@ -35,37 +35,41 @@ export default class Referrers extends React.Component {
 
   renderReferrer(referrer) {
     return (
-      <React.Fragment key={referrer.name}>
-        <div className="flex items-center justify-between my-2">
-          <Link className="hover:underline truncate" style={{maxWidth: '80%'}} to={`/${encodeURIComponent(this.props.site.domain)}/referrers/${referrer.name}${window.location.search}`}>{ referrer.name }</Link>
-          <span>{numberFormatter(referrer.count)}</span>
+      <div className="flex items-center justify-between my-1 text-sm" key={referrer.name}>
+        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
+          <Bar count={referrer.count} all={this.state.referrers} color="blue" />
+          <Link className="hover:underline block px-2" style={{marginTop: '-23px'}} to={`/${encodeURIComponent(this.props.site.domain)}/referrers/${referrer.name}${window.location.search}`}>{ referrer.name }</Link>
         </div>
-        <Bar count={referrer.count} all={this.state.referrers} color="blue" />
-      </React.Fragment>
+        <span className="font-medium">{numberFormatter(referrer.count)}</span>
+      </div>
     )
   }
 
-  render() {
+  renderContent() {
     if (this.state.loading) {
+      return <div className="loading my-32 mx-auto"><div></div></div>
+    } else {
       return (
-        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 relative" style={{height: '405px'}}>
-          <div className="loading my-32 mx-auto"><div></div></div>
-        </div>
-      )
-    } else if (this.state.referrers) {
-      return (
-        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 relative" style={{height: '405px'}}>
-          <div className="text-center">
-            <h2>Top Referrers</h2>
-            <div className="text-grey-darker mt-1">by visitors</div>
+        <React.Fragment>
+
+          <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+            <span>Referrer</span>
+            <span>Visitors</span>
           </div>
 
-          <div className="mt-8">
-            { this.state.referrers.map(this.renderReferrer.bind(this)) }
-          </div>
-          <MoreLink site={this.props.site} endpoint="referrers" />
-        </div>
+          { this.state.referrers.map(this.renderReferrer.bind(this)) }
+          <MoreLink site={this.props.site} list={this.state.referrers} endpoint="referrers" />
+        </React.Fragment>
       )
     }
+  }
+
+  render() {
+    return (
+      <div className="stats-item bg-white shadow-xl rounded p-4" style={{height: '436px'}}>
+        <h3>Top Referrers</h3>
+        { this.renderContent() }
+      </div>
+    )
   }
 }

@@ -81,7 +81,7 @@ blockquote {
 
 @screen xl {
   .main-graph {
-    height: 480px;
+    height: 460px;
   }
 }
 
@@ -107,12 +107,12 @@ a {
 }
 
 .bar {
-  height: 4px;
+  height: 3px;
   width: 100%;
   background-color: #f5f6f7;
   border-radius: 4px;
   margin-top: 8px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .bar__fill {
@@ -247,4 +247,18 @@ a {
 
 .tweet-text a:hover {
   text-decoration: underline;
+}
+
+.stats-item {
+  margin: 0 6px;
+  width: calc(50% - 6px);
+  position: relative;
+}
+
+.stats-item:first-child {
+  margin-left: 0;
+}
+
+.stats-item:last-child {
+  margin-right: 0;
 }

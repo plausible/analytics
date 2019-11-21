@@ -15,8 +15,7 @@ export default function Bar({count, all, color}) {
   const width = barWidth(count, all)
 
   return (
-    <div className="bar">
-      <div className={`bar__fill bg-${color}`} style={{width: width + '%'}}></div>
+    <div className={`bg-${color}-lightest`} style={{width: width + '%', height: '30px'}}>
     </div>
   )
 }

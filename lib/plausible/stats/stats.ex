@@ -386,15 +386,22 @@ defmodule Plausible.Stats do
     end)
   end
 
+  defp add_percentages(stat_list) do
+    total = Enum.reduce(stat_list, 0, fn %{count: count}, total -> total + count end)
+    Enum.map(stat_list, fn stat ->
+      Map.put(stat, :percentage, round(stat[:count] / total * 100))
+    end)
+  end
+
   @available_screen_sizes ["Desktop", "Laptop", "Tablet", "Mobile"]
 
   def top_screen_sizes(site, query) do
     Repo.all(from e in base_query(site, query),
-      select: {e.screen_size, count(e.user_id, :distinct)},
+      select: %{name: e.screen_size, count: count(e.user_id, :distinct)},
       group_by: e.screen_size,
       where: not is_nil(e.screen_size)
     )
-    |> Enum.sort(fn {screen_size1, _}, {screen_size2, _} ->
+    |> Enum.sort(fn %{name: screen_size1}, %{name: screen_size2} ->
       index1 = Enum.find_index(@available_screen_sizes, fn s -> s == screen_size1 end)
       index2 = Enum.find_index(@available_screen_sizes, fn s -> s == screen_size2 end)
       index2 > index1
@@ -402,34 +409,25 @@ defmodule Plausible.Stats do
     |> add_percentages
   end
 
-  defp add_percentages(stat_list) do
-    total = Enum.reduce(stat_list, 0, fn {_, count}, total -> total + count end)
-    Enum.map(stat_list, fn {stat, count} ->
-      %{
-        name: stat,
-        count: count,
-        percentage: round(count / total * 100)
-      }
-    end)
-  end
-
-  def countries(site, query, limit \\ 5) do
+  def countries(site, query) do
      Repo.all(from e in base_query(site, query),
-      select: {e.country_code, count(e.user_id, :distinct)},
+      select: %{name: e.country_code, count: count(e.user_id, :distinct)},
       group_by: e.country_code,
       where: not is_nil(e.country_code),
       order_by: [desc: 2]
     )
-    |> Enum.map(fn {country_code, count} ->
-      {Plausible.Stats.CountryName.from_iso3166(country_code), count}
+    |> Enum.map(fn stat ->
+      two_letter_code = stat[:name]
+      stat
+      |> Map.put(:name, Plausible.Stats.CountryName.to_alpha3(two_letter_code))
+      |> Map.put(:full_country_name, Plausible.Stats.CountryName.from_iso3166(two_letter_code))
     end)
     |> add_percentages
-    |> Enum.take(limit)
   end
 
   def browsers(site, query, limit \\ 5) do
     Repo.all(from e in base_query(site, query),
-      select: {e.browser, count(e.user_id, :distinct)},
+      select: %{name: e.browser, count: count(e.user_id, :distinct)},
       group_by: e.browser,
       where: not is_nil(e.browser),
       order_by: [desc: 2]
@@ -440,7 +438,7 @@ defmodule Plausible.Stats do
 
   def operating_systems(site, query, limit \\ 5) do
     Repo.all(from e in base_query(site, query),
-      select: {e.operating_system, count(e.user_id, :distinct)},
+      select: %{name: e.operating_system, count: count(e.user_id, :distinct)},
       group_by: e.operating_system,
       where: not is_nil(e.operating_system),
       order_by: [desc: 2]
