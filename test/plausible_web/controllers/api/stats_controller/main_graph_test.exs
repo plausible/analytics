@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   describe "GET /api/stats/main-graph - plot" do
     setup [:create_user, :log_in, :create_site]
 
-    test "displays pageviews for a day", %{conn: conn, site: site} do
+    test "displays visitors for a day", %{conn: conn, site: site} do
       insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 00:00:00])
       insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 23:59:00])
 
@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert plot == [0, 1] ++ zeroes # Expecting pageview to show at 1am CET
     end
 
-    test "displays pageviews for a month", %{conn: conn, site: site} do
+    test "displays visitors for a month", %{conn: conn, site: site} do
       insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 12:00:00])
       insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-31 12:00:00])
 
@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert List.last(plot) == 1
     end
 
-    test "displays pageviews for 3 months", %{conn: conn, site: site} do
+    test "displays visitors for 3 months", %{conn: conn, site: site} do
       insert(:pageview, hostname: site.domain)
       insert(:pageview, hostname: site.domain, timestamp: months_ago(2))
 
@@ -152,6 +152,21 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-02")
 
       assert %{"change_pageviews" => -50} = json_response(conn, 200)
+    end
+  end
+
+  describe "GET /api/stats/main-graph - conversion rate" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "returns conversion rate when filtering for a goal", %{conn: conn, site: site} do
+      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "Signup", hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 02:00:00])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01&filters=#{filters}")
+
+      assert %{"conversion_rate" => 50} = json_response(conn, 200)
     end
   end
 
