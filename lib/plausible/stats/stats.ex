@@ -5,6 +5,7 @@ defmodule Plausible.Stats do
   def compare_pageviews_and_visitors(site, query, {pageviews, visitors}) do
     query = Query.shift_back(query)
     {old_pageviews, old_visitors} = pageviews_and_visitors(site, query)
+
     cond do
       old_pageviews == 0 and pageviews > 0 ->
         {100, 100}

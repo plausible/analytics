@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Query do
   end
 
   def shift_back(query) do
-    diff = Timex.diff(query.date_range.first, query.date_range.last, :days)
+    diff = Timex.diff(query.date_range.first, query.date_range.last, :days) - 1
     new_first = query.date_range.first |> Timex.shift(days: diff)
     new_last = query.date_range.last |> Timex.shift(days: diff)
     Map.put(query, :date_range, Date.range(new_first, new_last))
