@@ -17,24 +17,37 @@ class DatePicker extends React.Component {
     document.removeEventListener("keyup", this.handleKeyup);
   }
 
+  queryWithPeriod(period, date) {
+    const query = new URLSearchParams(window.location.search)
+    query.set('period', period)
+
+    if (date) {
+      query.set('date', date)
+    } else {
+      query.delete('date')
+    }
+
+    return query.toString()
+  }
+
   handleKeyup(e) {
     const {query, history} = this.props
 
     if (e.key === 'ArrowLeft') {
       if (query.period === 'day') {
         const prevDate = formatISO(shiftDays(query.date, -1))
-        history.push('?period=day&date=' + prevDate)
+        history.push({search: this.queryWithPeriod('day', prevDate)})
       } else if (query.period === 'month') {
         const prevMonth = formatISO(shiftMonths(query.date, -1))
-        history.push('?period=month&date=' + prevMonth)
+        history.push({search: this.queryWithPeriod('month', prevMonth)})
       }
     } else if (e.key === 'ArrowRight') {
       if (query.period === 'day') {
         const nextDate = formatISO(shiftDays(query.date, 1))
-        history.push('?period=day&date=' + nextDate)
+        history.push({search: this.queryWithPeriod('day', nextDate)})
       } else if (query.period === 'month') {
         const nextMonth = formatISO(shiftMonths(query.date, 1))
-        history.push('?period=month&date=' + nextMonth)
+        history.push({search: this.queryWithPeriod('month', nextMonth)})
       }
     }
   }
@@ -64,12 +77,12 @@ class DatePicker extends React.Component {
   renderArrow(period, prevDate, nextDate) {
     return (
       <div className="flex rounded shadow bg-white mr-4 cursor-pointer">
-        <Link to={`/${this.props.site.domain}?period=${period}&date=${prevDate}`} className="flex items-center px-2 border-r border-grey-light">
+        <Link to={{search: this.queryWithPeriod(period, prevDate)}} className="flex items-center px-2 border-r border-grey-light">
           <svg className="fill-current h-4 w-4" style={{transform: 'translateY(-2px)'}}>
             <use xlinkHref="#feather-chevron-left" />
           </svg>
         </Link>
-        <Link to={`/${this.props.site.domain}?period=${period}&date=${nextDate}`} className="flex items-center px-2">
+        <Link to={{search: this.queryWithPeriod(period, nextDate)}} className="flex items-center px-2">
           <svg className="fill-current h-4 w-4" style={{transform: 'translateY(-2px)'}}>
             <use xlinkHref="#feather-chevron-right" />
           </svg>
@@ -105,11 +118,11 @@ class DatePicker extends React.Component {
         </div>
 
         <div data-dropdown style={{top: '42px', right: '0px', width: '225px'}} className="dropdown-content hidden absolute pin-r bg-white border border-grey-light rounded shadow z-10 font-bold text-sm text-grey-darker">
-          <Link to={`/${this.props.site.domain}?period=day`} className="block p-2 hover:bg-grey-lighter">Today</Link>
-          <Link to={`/${this.props.site.domain}?period=7d`} className="block p-2 hover:bg-grey-lighter">Last 7 days</Link>
-          <Link to={`/${this.props.site.domain}?period=30d`} className="block p-2 hover:bg-grey-lighter">Last 30 days</Link>
-          <Link to={`/${this.props.site.domain}?period=3mo`} className="block p-2 hover:bg-grey-lighter">Last 3 months</Link>
-          <Link to={`/${this.props.site.domain}?period=6mo`} className="block p-2 hover:bg-grey-lighter">Last 6 months</Link>
+          <Link to={{search: this.queryWithPeriod('day')}} className="block p-2 hover:bg-grey-lighter">Today</Link>
+          <Link to={{search: this.queryWithPeriod('7d')}} className="block p-2 hover:bg-grey-lighter">Last 7 days</Link>
+          <Link to={{search: this.queryWithPeriod('30d')}} className="block p-2 hover:bg-grey-lighter">Last 30 days</Link>
+          <Link to={{search: this.queryWithPeriod('3mo')}} className="block p-2 hover:bg-grey-lighter">Last 3 months</Link>
+          <Link to={{search: this.queryWithPeriod('6mo')}} className="block p-2 hover:bg-grey-lighter">Last 6 months</Link>
         </div>
       </div>
     )

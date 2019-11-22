@@ -149,12 +149,17 @@ class LineGraph extends React.Component {
   }
 
   onClick(e) {
+    const query = new URLSearchParams(window.location.search)
     const element = this.chart.getElementsAtEventForMode(e, 'index', {intersect: false})[0]
     const date = element._chart.config.data.labels[element._index]
     if (this.props.graphData.interval === 'month') {
-      this.props.history.push('?period=month&date=' + date)
+      query.set('period', 'month')
+      query.set('date', date)
+      this.props.history.push({search: query.toString()})
     } else if (this.props.graphData.interval === 'date') {
-      this.props.history.push('?period=day&date=' + date)
+      query.set('period', 'day')
+      query.set('date', date)
+      this.props.history.push({search: query.toString()})
     }
   }
 
