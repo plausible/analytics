@@ -117,6 +117,13 @@ defmodule Plausible.Stats do
     ))
   end
 
+  def unique_visitors(site, query) do
+    Repo.one(from(
+      e in base_query(site, query),
+      select: count(e.user_id, :distinct)
+    ))
+  end
+
   def conversion_rate(site, query) do
     {_, total_visitors} = pageviews_and_visitors(site, %{ query | filters: %{} })
     {_, converted_visitors} = pageviews_and_visitors(site, query)

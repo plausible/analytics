@@ -238,9 +238,9 @@ class LineGraph extends React.Component {
     } else if (query.period === '30d') {
       return 'last month'
     } else if (query.period === '3mo') {
-      return 'previous 3 months'
+      return 'prev 3 months'
     } else if (query.period === '6mo') {
-      return 'previous 6 months'
+      return 'prev 6 months'
     }
   }
 
@@ -256,41 +256,30 @@ class LineGraph extends React.Component {
     }
   }
 
-  renderConversionRate() {
-    if (typeof(this.props.graphData.conversion_rate) === "number") {
+  renderTopStats() {
+    const {graphData} = this.props
+    return this.props.graphData.top_stats.map((stat, index) => {
+      const border = index > 0 ? 'border-l border-grey-light' : ''
+
       return (
-        <div className="border-l border-grey-light pl-8 w-60">
-          <div className="text-grey-dark text-xs font-bold tracking-wide uppercase">CONVERSION RATE</div>
+        <div className={`pl-8 w-52 ${border}`} key={stat.name}>
+          <div className="text-grey-dark text-xs font-bold tracking-wide uppercase">{stat.name}</div>
           <div className="my-1 flex items-end justify-between">
-            <b className="text-2xl">{this.props.graphData.conversion_rate}%</b>
+            <b className="text-2xl">{ typeof(stat.count) == 'number' ? numberFormatter(stat.count) : stat.percentage + '%' }</b>
           </div>
+          {this.renderComparison(stat.change)}
         </div>
       )
-    }
+    })
   }
 
   render() {
-    const {graphData} = this.props
-    const extraClass = graphData.interval === 'hour' ? '' : 'cursor-pointer'
+    const extraClass = this.props.graphData.interval === 'hour' ? '' : 'cursor-pointer'
 
     return (
       <React.Fragment>
         <div className="border-b border-grey-light flex p-4">
-          <div className="pl-2 w-52">
-            <div className="text-grey-dark text-xs font-bold tracking-wide">UNIQUE VISITORS</div>
-            <div className="my-1 flex items-end justify-between">
-              <b className="text-2xl" title={graphData.unique_visitors.toLocaleString()}>{numberFormatter(graphData.unique_visitors)}</b>
-            </div>
-            {this.renderComparison(graphData.change_visitors)}
-          </div>
-          <div className="border-l border-grey-light pl-8 w-60">
-            <div className="text-grey-dark text-xs font-bold tracking-wide uppercase">TOTAL {eventName(this.props.query)}</div>
-            <div className="my-1 flex items-end justify-between">
-              <b className="text-2xl" title={graphData.pageviews.toLocaleString()}>{numberFormatter(graphData.pageviews)}</b>
-            </div>
-            {this.renderComparison(graphData.change_pageviews)}
-          </div>
-          { this.renderConversionRate() }
+          { this.renderTopStats() }
         </div>
         <div className="p-4">
           <canvas id="main-graph-canvas" className={'mt-4 ' + extraClass} width="1054" height="342"></canvas>

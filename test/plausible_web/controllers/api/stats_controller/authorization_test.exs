@@ -23,7 +23,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       site = insert(:site, public: true)
       conn = get(conn, "/api/stats/#{site.domain}/main-graph")
 
-      assert %{"unique_visitors" => _any} = json_response(conn, 200)
+      assert %{"plot" => _any} = json_response(conn, 200)
     end
   end
 
@@ -48,14 +48,14 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       site = insert(:site, public: true)
       conn = get(conn, "/api/stats/#{site.domain}/main-graph")
 
-      assert %{"unique_visitors" => _any} = json_response(conn, 200)
+      assert %{"plot" => _any} = json_response(conn, 200)
     end
 
     test "returns stats for a private site that the user owns", %{conn: conn, user: user} do
       site = insert(:site, public: false, members: [user])
       conn = get(conn, "/api/stats/#{site.domain}/main-graph")
 
-      assert %{"unique_visitors" => _any} = json_response(conn, 200)
+      assert %{"plot" => _any} = json_response(conn, 200)
     end
   end
 end
