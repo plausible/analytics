@@ -12,10 +12,11 @@ defmodule PlausibleWeb.Api.StatsController do
     {pageviews, visitors} = Stats.pageviews_and_visitors(site, query)
     {change_pageviews, change_visitors} = Stats.compare_pageviews_and_visitors(site, query, {pageviews, visitors})
     conversion_rate = if query.filters["goal"], do: Stats.conversion_rate(site, query)
-    {plot, labels, present_index} = Task.await(plot_task)
+    {plot, compare_plot, labels, present_index} = Task.await(plot_task)
 
     json(conn, %{
       plot: plot,
+      compare_plot: compare_plot,
       labels: labels,
       present_index: present_index,
       pageviews: pageviews,

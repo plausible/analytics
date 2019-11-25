@@ -6,21 +6,21 @@ import numberFormatter from '../number-formatter'
 import { isToday, shiftMonths, formatMonth } from '../date'
 import * as api from '../api'
 
-function dataSets(graphData, ctx) {
+function mainSet(plot, present_index, ctx) {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
   gradient.addColorStop(0, 'rgba(101,116,205, 0.2)');
   gradient.addColorStop(1, 'rgba(101,116,205, 0)');
 
-  if (graphData.present_index) {
-    var dashedPart = graphData.plot.slice(graphData.present_index - 1);
-    var dashedPlot = (new Array(graphData.plot.length - dashedPart.length)).concat(dashedPart)
-    for(var i = graphData.present_index; i < graphData.plot.length; i++) {
-      graphData.plot[i] = undefined
+  if (present_index) {
+    var dashedPart = plot.slice(present_index - 1);
+    var dashedPlot = (new Array(plot.length - dashedPart.length)).concat(dashedPart)
+    for(var i = present_index; i < plot.length; i++) {
+      plot[i] = undefined
     }
 
     return [{
         label: 'Visitors',
-        data: graphData.plot,
+        data: plot,
         borderWidth: 3,
         borderColor: 'rgba(101,116,205)',
         pointBackgroundColor: 'rgba(101,116,205)',
@@ -38,12 +38,63 @@ function dataSets(graphData, ctx) {
   } else {
     return [{
       label: 'Visitors',
-      data: graphData.plot,
+      data: plot,
       borderWidth: 3,
       borderColor: 'rgba(101,116,205)',
       pointBackgroundColor: 'rgba(101,116,205)',
       backgroundColor: gradient,
     }]
+  }
+}
+
+function compareSet(plot, present_index, ctx) {
+  var gradient = ctx.createLinearGradient(0, 0, 0, 300);
+  gradient.addColorStop(0, 'rgba(255, 68, 87, .2)');
+  gradient.addColorStop(1, 'rgba(255, 68, 87, 0)');
+
+  if (present_index) {
+    var dashedPart = plot.slice(present_index - 1);
+    var dashedPlot = (new Array(plot.length - dashedPart.length)).concat(dashedPart)
+    for(var i = present_index; i < plot.length; i++) {
+      plot[i] = undefined
+    }
+
+    return [{
+        label: 'Conversions',
+        data: plot,
+        borderWidth: 3,
+        borderColor: 'rgba(255, 68, 87, 1)',
+        pointBackgroundColor: 'rgba(255, 68, 87, 1)',
+        backgroundColor: gradient,
+      },
+      {
+        label: 'Conversions',
+        data: dashedPlot,
+        borderWidth: 3,
+        borderDash: [5, 10],
+        borderColor: 'rgba(255, 68, 87, 1)',
+        pointBackgroundColor: 'rgba(255, 68, 87, 1)',
+        backgroundColor: gradient,
+    }]
+  } else {
+    return [{
+      label: 'Conversions',
+      data: plot,
+      borderWidth: 3,
+      borderColor: 'rgba(101,116,205)',
+      pointBackgroundColor: 'rgba(101,116,205)',
+      backgroundColor: gradient,
+    }]
+  }
+}
+
+function dataSets(graphData, ctx) {
+  const dataSets = mainSet(graphData.plot, graphData.present_index, ctx)
+
+  if (graphData.compare_plot) {
+    return dataSets.concat(compareSet(graphData.compare_plot, graphData.present_index, ctx))
+  } else {
+    return dataSets
   }
 }
 
@@ -87,31 +138,39 @@ class LineGraph extends React.Component {
         animation: false,
         legend: {display: false},
         responsive: true,
-        elements: {line: {tension: 0.1}, point: {radius: 0}},
+        elements: {line: {tension: 0}, point: {radius: 0}},
         onClick: this.onClick.bind(this),
         tooltips: {
           mode: 'index',
           intersect: false,
           xPadding: 10,
           yPadding: 10,
-          titleFontSize: 16,
+          titleFontSize: 18,
           footerFontSize: 14,
-          footerFontColor: '#e6e8ff',
+          bodyFontSize: 14,
           backgroundColor: 'rgba(25, 30, 56)',
+          titleMarginBottom: 8,
+          bodySpacing: 6,
+          footerMarginTop: 8,
+          xPadding: 16,
+          yPadding: 12,
+          multiKeyBackground: 'none',
           callbacks: {
             title: function(dataPoints) {
               const data = dataPoints[0]
-              const formatDate = dateFormatter(graphData)
-              if (graphData.interval === 'month') {
-                return data.yLabel.toLocaleString() + ' visitors in ' + formatDate(data.xLabel)
-              } else if (graphData.interval === 'date') {
-                return data.yLabel.toLocaleString() + ' visitors on ' + formatDate(data.xLabel)
-              } else if (graphData.interval === 'hour') {
-                return data.yLabel.toLocaleString() + ' visitors at ' + formatDate(data.xLabel)
+              return dateFormatter(graphData)(data.xLabel)
+            },
+            beforeBody: function() {
+              this.drawnLabels = {}
+            },
+            label: function(item) {
+              const dataset = this._data.datasets[item.datasetIndex]
+              if (!this.drawnLabels[dataset.label]) {
+                this.drawnLabels[dataset.label] = true
+                return ` ${item.yLabel} ${dataset.label}`
               }
             },
-            label: function() {},
-            afterBody: function(dataPoints) {
+            footer: function(dataPoints) {
               if (graphData.interval === 'month') {
                 return 'Click to view month'
               } else if (graphData.interval === 'date') {

@@ -29,37 +29,59 @@ defmodule Plausible.Stats do
     end)
 
     groups = Repo.all(
-      from e in base_query(site, query),
+      from e in base_query(site, %{query | filters: %{}}),
       group_by: 1,
       order_by: 1,
       select: {fragment("date_trunc('month', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.user_id, :distinct)}
     ) |> Enum.into(%{})
     |> transform_keys(fn dt -> NaiveDateTime.to_date(dt) end)
 
+    compare_groups = if query.filters["goal"] do
+      Repo.all(
+        from e in base_query(site, query),
+        group_by: 1,
+        order_by: 1,
+        select: {fragment("date_trunc('month', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.user_id, :distinct)}
+      ) |> Enum.into(%{})
+      |> transform_keys(fn dt -> NaiveDateTime.to_date(dt) end)
+    end
+
     present_index = Enum.find_index(steps, fn step -> step == Timex.now(site.timezone) |> Timex.to_date |> Timex.beginning_of_month end)
     plot = Enum.map(steps, fn step -> groups[step] || 0 end)
+    compare_plot = compare_groups && Enum.map(steps, fn step -> compare_groups[step] || 0 end)
     labels = Enum.map(steps, fn step -> Timex.format!(step, "{ISOdate}") end)
 
-    {plot, labels, present_index}
+    {plot, compare_plot, labels, present_index}
   end
 
   def calculate_plot(site, %Query{step_type: "date"} = query) do
     steps = Enum.into(query.date_range, [])
 
     groups = Repo.all(
-      from e in base_query(site, query),
+      from e in base_query(site, %{ query | filters: %{} }),
       group_by: 1,
       order_by: 1,
       select: {fragment("date_trunc('day', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.user_id, :distinct)}
     ) |> Enum.into(%{})
     |> transform_keys(fn dt -> NaiveDateTime.to_date(dt) end)
 
+    compare_groups = if query.filters["goal"] do
+      Repo.all(
+        from e in base_query(site, query),
+        group_by: 1,
+        order_by: 1,
+        select: {fragment("date_trunc('day', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.user_id, :distinct)}
+      ) |> Enum.into(%{})
+      |> transform_keys(fn dt -> NaiveDateTime.to_date(dt) end)
+    end
+
     present_index = Enum.find_index(steps, fn step -> step == Timex.now(site.timezone) |> Timex.to_date  end)
     steps_to_show = if present_index, do: present_index + 1, else: Enum.count(steps)
     plot = Enum.map(steps, fn step -> groups[step] || 0 end) |> Enum.take(steps_to_show)
+    compare_plot = compare_groups && Enum.map(steps, fn step -> compare_groups[step] || 0 end)
     labels = Enum.map(steps, fn step -> Timex.format!(step, "{ISOdate}") end)
 
-    {plot, labels, present_index}
+    {plot, compare_plot, labels, present_index}
   end
 
   def calculate_plot(site, %Query{step_type: "hour"} = query) do
@@ -85,7 +107,7 @@ defmodule Plausible.Stats do
     steps_to_show = if present_index, do: present_index + 1, else: Enum.count(steps)
     plot = Enum.map(steps, fn step -> groups[step] || 0 end) |> Enum.take(steps_to_show)
     labels = Enum.map(steps, fn step -> NaiveDateTime.to_iso8601(step) end)
-    {plot, labels, present_index}
+    {plot, [], labels, present_index}
   end
 
   def pageviews_and_visitors(site, query) do
