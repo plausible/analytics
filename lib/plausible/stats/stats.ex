@@ -124,16 +124,6 @@ defmodule Plausible.Stats do
     ))
   end
 
-  def conversion_rate(site, query) do
-    {_, total_visitors} = pageviews_and_visitors(site, %{ query | filters: %{} })
-    {_, converted_visitors} = pageviews_and_visitors(site, query)
-    if total_visitors > 0 do
-      Float.round(converted_visitors / total_visitors * 100, 1)
-    else
-        0.0
-    end
-  end
-
   def top_referrers(site, query, limit \\ 5) do
     Repo.all(from e in base_query(site, query),
       select: %{name: e.referrer_source, count: count(e.user_id, :distinct)},
