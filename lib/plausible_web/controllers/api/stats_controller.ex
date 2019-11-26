@@ -2,6 +2,7 @@ defmodule PlausibleWeb.Api.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias Plausible.Stats
+  alias Plausible.Stats.Query
   plug :authorize
 
   def main_graph(conn, params) do
@@ -9,20 +10,54 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Stats.Query.from(site.timezone, params)
 
     plot_task = Task.async(fn -> Stats.calculate_plot(site, query) end)
-    {pageviews, visitors} = Stats.pageviews_and_visitors(site, query)
-    {change_pageviews, change_visitors} = Stats.compare_pageviews_and_visitors(site, query, {pageviews, visitors})
-    {plot, labels, present_index} = Task.await(plot_task)
+    top_stats = fetch_top_stats(site, query)
+    {plot, compare_plot, labels, present_index} = Task.await(plot_task)
 
     json(conn, %{
       plot: plot,
+      compare_plot: compare_plot,
       labels: labels,
       present_index: present_index,
-      pageviews: pageviews,
-      unique_visitors: visitors,
-      change_pageviews: change_pageviews,
-      change_visitors: change_visitors,
-      interval: query.step_type
+      top_stats: top_stats,
+      interval: query.step_type,
     })
+  end
+
+  defp fetch_top_stats(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
+    prev_query = Query.shift_back(query)
+    total_visitors = Stats.unique_visitors(site, %{query | filters: %{}})
+    prev_total_visitors = Stats.unique_visitors(site, %{prev_query | filters: %{}})
+    converted_visitors = Stats.unique_visitors(site, query)
+    prev_converted_visitors = Stats.unique_visitors(site, prev_query)
+    conversion_rate = if total_visitors > 0, do: Float.round(converted_visitors / total_visitors * 100, 1), else: 0.0
+    prev_conversion_rate = if prev_total_visitors > 0, do: Float.round(prev_converted_visitors / prev_total_visitors * 100, 1), else: 0.0
+
+    [
+      %{name: "Total visitors", count: total_visitors, change: percent_change(prev_total_visitors, total_visitors)},
+      %{name: "Converted visitors", count: converted_visitors, change: percent_change(prev_converted_visitors, converted_visitors)},
+      %{name: "Conversion rate", percentage: conversion_rate, change: percent_change(prev_conversion_rate, conversion_rate)},
+    ]
+  end
+
+  defp fetch_top_stats(site, query) do
+    {pageviews, visitors} = Stats.pageviews_and_visitors(site, query)
+    {prev_pageviews, prev_visitors} = Stats.pageviews_and_visitors(site, Query.shift_back(query))
+
+    [
+      %{name: "Unique visitors", count: visitors, change: percent_change(prev_visitors, visitors)},
+      %{name: "Total pageviews", count: pageviews, change: percent_change(prev_pageviews, pageviews)},
+    ]
+  end
+
+  defp percent_change(old_count, new_count) do
+    cond do
+      old_count == 0 and new_count > 0 ->
+        100
+      old_count == 0 and new_count == 0 ->
+        0
+      true ->
+        round((new_count - old_count) / old_count * 100)
+    end
   end
 
   def referrers(conn, params) do
