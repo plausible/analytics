@@ -81,8 +81,8 @@ function compareSet(plot, present_index, ctx) {
       label: 'Conversions',
       data: plot,
       borderWidth: 3,
-      borderColor: 'rgba(101,116,205)',
-      pointBackgroundColor: 'rgba(101,116,205)',
+      borderColor: 'rgba(255, 68, 87, 1)',
+      pointBackgroundColor: 'rgba(255, 68, 87, 1)',
       backgroundColor: gradient,
     }]
   }
