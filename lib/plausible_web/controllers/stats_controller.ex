@@ -11,14 +11,15 @@ defmodule PlausibleWeb.StatsController do
         redirect(conn, to: "/billing/upgrade")
       else
         if Plausible.Sites.has_pageviews?(site) do
+          demo = site.domain == "plausible.io"
           offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
 
-          Plausible.Tracking.event(conn, "Site Analytics: Open", %{demo: site.domain == "plausible.io"})
+          Plausible.Tracking.event(conn, "Site Analytics: Open", %{demo: demo})
 
           has_goals = user && Plausible.Sites.has_goals?(site)
 
           conn
-          |> assign(:skip_plausible_tracking, !site.public)
+          |> assign(:skip_plausible_tracking, !demo)
           |> put_session(site.domain <> "_offer_email_report", nil)
           |> render("stats.html",
             site: site,
