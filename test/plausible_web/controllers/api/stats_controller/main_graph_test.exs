@@ -152,7 +152,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       insert(:event, name: "Signup", hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 02:00:00])
 
       filters = Jason.encode!(%{goal: "Signup"})
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01&filters=#{filters}")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2019-01-01&filters=#{filters}")
 
       res = json_response(conn, 200)
       assert %{"name" => "Converted visitors", "count" => 1, "change" => 100} in res["top_stats"]
