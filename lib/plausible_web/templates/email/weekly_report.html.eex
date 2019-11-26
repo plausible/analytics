@@ -391,7 +391,7 @@ body {
                 </div>
               </div>
             </div>
-            <%= for {referrer, count} <- @referrers do %>
+            <%= for referrer <- @referrers do %>
               <div style="background-color:transparent;">
                 <div class="block-grid mixed-two-up" style="Margin: 0 auto; min-width: 320px; max-width: 480px; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; background-color: transparent;">
                   <div style="border-collapse: collapse;display: table;width: 100%;background-color:transparent;">
@@ -405,7 +405,7 @@ body {
                           <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right: 5px; padding-left: 5px; padding-top: 5px; padding-bottom: 5px; font-family: Arial, sans-serif"><![endif]-->
                           <div style="color:#555555;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;line-height:120%;padding-top:5px;padding-right:5px;padding-bottom:5px;padding-left:5px;">
                             <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; color: #555555;">
-                              <p style="font-size: 14px; line-height: 16px; margin: 0;"><%= referrer %></p>
+                              <p style="font-size: 14px; line-height: 16px; margin: 0;"><%= referrer[:name] %></p>
                             </div>
                           </div>
                           <!--[if mso]></td></tr></table><![endif]-->
@@ -424,7 +424,7 @@ body {
                           <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right: 5px; padding-left: 5px; padding-top: 5px; padding-bottom: 5px; font-family: Arial, sans-serif"><![endif]-->
                           <div style="color:#555555;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;line-height:120%;padding-top:5px;padding-right:5px;padding-bottom:5px;padding-left:5px;">
                             <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; color: #555555;">
-                              <p style="font-size: 12px; line-height: 16px; text-align: right; margin: 0;"><span style="font-size: 14px;"><%= PlausibleWeb.StatsView.large_number_format(count) %></span></p>
+                              <p style="font-size: 12px; line-height: 16px; text-align: right; margin: 0;"><span style="font-size: 14px;"><%= PlausibleWeb.StatsView.large_number_format(referrer[:count]) %></span></p>
                             </div>
                           </div>
                           <!--[if mso]></td></tr></table><![endif]-->
@@ -520,7 +520,7 @@ body {
                 </div>
               </div>
             </div>
-            <%= for {page, count} <- @pages do %>
+            <%= for page <- @pages do %>
               <div style="background-color:transparent;">
                 <div class="block-grid mixed-two-up" style="Margin: 0 auto; min-width: 320px; max-width: 480px; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; background-color: transparent;">
                   <div style="border-collapse: collapse;display: table;width: 100%;background-color:transparent;">
@@ -534,7 +534,7 @@ body {
                           <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right: 5px; padding-left: 5px; padding-top: 5px; padding-bottom: 5px; font-family: Arial, sans-serif"><![endif]-->
                           <div style="color:#555555;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;line-height:120%;padding-top:5px;padding-right:5px;padding-bottom:5px;padding-left:5px;">
                             <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; color: #555555;">
-                              <p style="font-size: 14px; line-height: 16px; margin: 0;"><%= page %></p>
+                              <p style="font-size: 14px; line-height: 16px; margin: 0;"><%= page[:name] %></p>
                             </div>
                           </div>
                           <!--[if mso]></td></tr></table><![endif]-->
@@ -553,7 +553,7 @@ body {
                           <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right: 5px; padding-left: 5px; padding-top: 5px; padding-bottom: 5px; font-family: Arial, sans-serif"><![endif]-->
                           <div style="color:#555555;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;line-height:120%;padding-top:5px;padding-right:5px;padding-bottom:5px;padding-left:5px;">
                             <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; color: #555555;">
-                              <p style="font-size: 12px; line-height: 16px; text-align: right; margin: 0;"><span style="font-size: 14px;"><%= PlausibleWeb.StatsView.large_number_format(count) %></span></p>
+                              <p style="font-size: 12px; line-height: 16px; text-align: right; margin: 0;"><span style="font-size: 14px;"><%= PlausibleWeb.StatsView.large_number_format(page[:count]) %></span></p>
                             </div>
                           </div>
                           <!--[if mso]></td></tr></table><![endif]-->
