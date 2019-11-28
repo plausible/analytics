@@ -99,9 +99,9 @@
         <svg class="w-6 h-6 mr-1 text-indigo" style="transform: translateY(0.3rem);">
           <use xlink:href="#feather-check-circle" />
         </svg>
-        <h3 class="inline">Email reports</h3>
+        <h3 class="inline">Goals & Conversions</h3>
         <p class="text-lg mt-2">
-          Keep an eye on your traffic with a weekly email report including pageviews, visitor numbers, top pages and top referrers for the week.
+          Find out which referrers are driving the most conversions to your site. Works with custom events or page URLs you want your visitors to reach.
         </p>
       </div>
 
@@ -119,9 +119,9 @@
         <svg class="w-6 h-6 mr-1 text-indigo" style="transform: translateY(0.3rem);">
           <use xlink:href="#feather-check-circle" />
         </svg>
-        <h3 class="inline">SPA support</h3>
+        <h3 class="inline">Email reports</h3>
         <p class="text-lg mt-2">
-          Plausible is built with modern web frameworks in mind and it works automatically with any pushState based router on the frontend.
+          Keep an eye on your traffic with a weekly email report including pageviews, visitor numbers, top pages and top referrers for the week.
         </p>
       </div>
 

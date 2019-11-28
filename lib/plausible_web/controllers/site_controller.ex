@@ -33,19 +33,6 @@ defmodule PlausibleWeb.SiteController do
     |> render("snippet.html", site: site, layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
-  def goals(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
-    goals = Goals.for_site(site.domain)
-
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> render("goal_settings.html",
-      site: site,
-      goals: goals,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
-  end
-
   def new_goal(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
     changeset = Plausible.Goal.changeset(%Plausible.Goal{})
@@ -66,7 +53,7 @@ defmodule PlausibleWeb.SiteController do
       {:ok, _} ->
         conn
         |> put_flash(:success, "Goal created succesfully")
-        |> redirect(to: "/#{website}/goals")
+        |> redirect(to: "/#{website}/settings")
       {:error, :goal, changeset, _} ->
         conn
         |> assign(:skip_plausible_tracking, true)
@@ -83,7 +70,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Goal deleted succesfully")
-    |> redirect(to: "/#{website}/goals")
+    |> redirect(to: "/#{website}/settings")
   end
 
   def settings(conn, %{"website" => website}) do
@@ -98,6 +85,7 @@ defmodule PlausibleWeb.SiteController do
     weekly_report_changeset = weekly_report && Plausible.Site.WeeklyReport.changeset(weekly_report, %{})
     monthly_report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
     monthly_report_changeset = monthly_report && Plausible.Site.WeeklyReport.changeset(monthly_report, %{})
+    goals = Goals.for_site(site.domain)
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -106,6 +94,7 @@ defmodule PlausibleWeb.SiteController do
       weekly_report_changeset: weekly_report_changeset,
       monthly_report_changeset: monthly_report_changeset,
       search_console_domains: search_console_domains,
+      goals: goals,
       changeset: Plausible.Site.changeset(site, %{})
     )
   end

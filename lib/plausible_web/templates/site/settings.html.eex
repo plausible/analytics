@@ -50,6 +50,25 @@
   <% end %>
 </div>
 
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10">
+  <h2>Goals</h2>
+  <div class="my-4 border-b border-grey-light"></div>
+  <div>
+    <%= if Enum.count(@goals) > 0 do %>
+      <%= for goal <- @goals do %>
+        <div class="border-b border-grey-light py-3 flex justify-between">
+          <small class="font-bold"><%= goal_name(goal) %></small>
+          <%= button("❌", to: "/#{@site.domain}/goals/#{goal.id}", method: :delete, class: "text-sm", data: [confirm: "Are you sure you want to remove goal #{goal_name(goal)}? This will just affect the UI, all of your analytics data will stay intact."]) %>
+        </div>
+      <% end %>
+    <% else %>
+      <div>No goals configured for this site yet</div>
+    <% end %>
+  </div>
+
+  <%= link("+ Add goal", to: "/#{@site.domain}/goals/new", class: "button mt-6") %>
+</div>
+
 <div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10" id="google-auth">
   <div class="flex items-center justify-between">
     <h2>Google Integration</h2>

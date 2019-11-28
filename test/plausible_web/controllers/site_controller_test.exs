@@ -71,6 +71,16 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert html_response(conn, 200) =~ "Settings"
     end
+
+    test "lists goals for the site", %{conn: conn, site: site} do
+      insert(:goal, domain: site.domain, event_name: "Custom event")
+      insert(:goal, domain: site.domain, page_path: "/register")
+
+      conn = get(conn, "/#{site.domain}/settings")
+
+      assert html_response(conn, 200) =~ "Custom event"
+      assert html_response(conn, 200) =~ "Visit /register"
+    end
   end
 
   describe "PUT /:website/settings" do
@@ -163,22 +173,6 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert goal.event_name == "Signup"
       assert goal.page_path == nil
-    end
-  end
-
-  describe "GET /:website/goals" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "lists goals for the site", %{conn: conn, site: site} do
-      insert(:goal, domain: site.domain, event_name: "Custom event")
-      insert(:goal, domain: site.domain, page_path: "/register")
-
-      conn = get(conn, "/#{site.domain}/goals")
-
-
-      assert html_response(conn, 200) =~ "Goals for " <> site.domain
-      assert html_response(conn, 200) =~ "Custom event"
-      assert html_response(conn, 200) =~ "Visit /register"
     end
   end
 
