@@ -16,14 +16,12 @@ defmodule PlausibleWeb.StatsController do
 
           Plausible.Tracking.event(conn, "Site Analytics: Open", %{demo: demo})
 
-          has_goals = user && Plausible.Sites.has_goals?(site)
-
           conn
           |> assign(:skip_plausible_tracking, !demo)
           |> put_session(site.domain <> "_offer_email_report", nil)
           |> render("stats.html",
             site: site,
-            has_goals: has_goals,
+            has_goals: Plausible.Sites.has_goals?(site),
             title: "Plausible · " <> site.domain,
             offer_email_report: offer_email_report
           )
