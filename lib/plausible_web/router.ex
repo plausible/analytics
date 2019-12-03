@@ -17,7 +17,7 @@ defmodule PlausibleWeb.Router do
   end
 
   pipeline :api do
-    plug :accepts, ["application/json"]
+    plug :accepts, ["json"]
     plug :fetch_session
     plug PlausibleWeb.AuthPlug
   end
