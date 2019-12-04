@@ -48,7 +48,7 @@ defmodule Plausible.MixProject do
       {:phoenix_pubsub, "~> 1.1"},
       {:plug_cowboy, "~> 2.0"},
       {:postgrex, ">= 0.0.0"},
-      {:ref_inspector, "~> 1.0"},
+      {:ref_inspector, "~> 1.3"},
       {:timex, "~> 3.6"},
       {:ua_inspector, "~> 0.18"},
       {:bamboo, "~> 1.2"},
