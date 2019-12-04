@@ -49,7 +49,7 @@ defmodule Plausible.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:postgrex, ">= 0.0.0"},
       {:ref_inspector, "~> 1.0"},
-      {:timex, "~> 3.5"},
+      {:timex, "~> 3.6"},
       {:ua_inspector, "~> 0.18"},
       {:bamboo, "~> 1.2"},
       {:bamboo_postmark, "~> 0.5"},
