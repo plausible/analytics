@@ -45,6 +45,9 @@ config :plausible,
   paddle_api: Plausible.Billing.PaddleApi,
   google_api: Plausible.Google.Api
 
+config :plausible,
+  session_timeout: 1000 * 60 * 30 # 30 minutes
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"

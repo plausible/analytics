@@ -2,6 +2,13 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
   use PlausibleWeb.ConnCase
   use Plausible.Repo
 
+  defp finalize_session(user_id) do
+    session_pid = :global.whereis_name(user_id)
+    Process.monitor(session_pid)
+
+    assert_receive({:DOWN, session_pid, _, _, _})
+  end
+
   @user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
   @country_code "EE"
 
@@ -23,6 +30,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
              |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
+      finalize_session(pageview.user_id)
 
       assert response(conn, 202) == ""
       assert pageview.hostname == "gigride.live"
@@ -44,6 +52,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
+      finalize_session(pageview.user_id)
 
       assert pageview.hostname == "example.com"
     end
@@ -79,6 +88,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
              |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
+      finalize_session(pageview.user_id)
 
       assert response(conn, 202) == ""
       assert pageview.operating_system == "Mac"
@@ -100,6 +110,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
              |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
+      finalize_session(pageview.user_id)
 
       assert response(conn, 202) == ""
       assert pageview.referrer_source == "Facebook"
@@ -120,6 +131,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
              |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
+      finalize_session(pageview.user_id)
 
       assert response(conn, 202) == ""
       assert pageview.referrer_source == nil
@@ -140,6 +152,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
              |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
+      finalize_session(pageview.user_id)
 
       assert response(conn, 202) == ""
       assert pageview.referrer_source == nil
@@ -160,6 +173,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
              |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
+      finalize_session(pageview.user_id)
 
       assert response(conn, 202) == ""
       assert pageview.referrer_source == "blog.gigride.live"
@@ -179,6 +193,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
+      finalize_session(pageview.user_id)
 
       assert pageview.referrer == "indiehackers.com/page"
     end
@@ -197,6 +212,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
+      finalize_session(pageview.user_id)
 
       assert pageview.referrer_source == "traffic-source"
     end
@@ -215,6 +231,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
+      finalize_session(pageview.user_id)
 
       assert pageview.referrer_source == "traffic-source"
     end
@@ -234,6 +251,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
              |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
+      finalize_session(pageview.user_id)
 
       assert response(conn, 202) == ""
       assert pageview.referrer_source == "indiehackers.com"
@@ -254,6 +272,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
              |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
+      finalize_session(pageview.user_id)
 
       assert response(conn, 202) == ""
       assert is_nil(pageview.referrer_source)
@@ -276,6 +295,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
            |> post("/api/event", Jason.encode!(params))
 
     pageview = Repo.one(Plausible.Event)
+    finalize_session(pageview.user_id)
 
     assert response(conn, 202) == ""
     assert pageview.screen_size == "Mobile"
@@ -295,6 +315,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
            |> post("/api/event", Jason.encode!(params))
 
     pageview = Repo.one(Plausible.Event)
+    finalize_session(pageview.user_id)
 
     assert response(conn, 202) == ""
     assert pageview.screen_size == nil
@@ -314,6 +335,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
            |> post("/api/event", Jason.encode!(params))
 
     event = Repo.one(Plausible.Event)
+    finalize_session(event.user_id)
 
     assert response(conn, 202) == ""
     assert event.name == "custom event"

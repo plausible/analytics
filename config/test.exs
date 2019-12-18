@@ -26,3 +26,6 @@ config :plausible, Plausible.Mailer,
 config :plausible,
   paddle_api: Plausible.PaddleApi.Mock,
   google_api: Plausible.Google.Api.Mock
+
+config :plausible,
+  session_timeout: 0

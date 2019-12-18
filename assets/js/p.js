@@ -101,8 +101,14 @@
 
     }
 
+    function onUnload() {
+      var userData = getUserData()
+      navigator.sendBeacon(plausibleHost + '/api/unload', JSON.stringify({uid: userData.uid}));
+    }
+
     function page(options) {
       trigger('pageview', options)
+      window.addEventListener('unload', onUnload, false);
     }
 
     function trackPushState() {

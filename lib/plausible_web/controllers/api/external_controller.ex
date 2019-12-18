@@ -6,7 +6,10 @@ defmodule PlausibleWeb.Api.ExternalController do
     params = parse_body(conn)
 
     case create_event(conn, params) do
-      {:ok, _event} ->
+      {:ok, nil} ->
+        conn |> send_resp(202, "")
+      {:ok, event} ->
+        Plausible.Ingest.Session.on_event(event)
         conn |> send_resp(202, "")
       {:error, changeset} ->
         request = Sentry.Plug.build_request_interface_data(conn, [])
@@ -14,6 +17,12 @@ defmodule PlausibleWeb.Api.ExternalController do
         Logger.error("Error processing event: #{inspect(changeset)}")
         conn |> send_resp(400, "")
     end
+  end
+
+  def unload(conn, _params) do
+    params = parse_body(conn)
+    Plausible.Ingest.Session.on_unload(params["uid"], Timex.now())
+    conn |> send_resp(202, "")
   end
 
   def error(conn, _params) do
