@@ -19,6 +19,12 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
+  def unload(conn, _params) do
+    params = parse_body(conn)
+    Plausible.Ingest.Session.on_unload(params["uid"], Timex.now())
+    conn |> send_resp(202, "")
+  end
+
   def error(conn, _params) do
     request = Sentry.Plug.build_request_interface_data(conn, [])
     Sentry.capture_message("JS snippet error", request: request)
