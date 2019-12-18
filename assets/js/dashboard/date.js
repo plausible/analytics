@@ -36,12 +36,17 @@ export function formatDay(date) {
   return `${date.getDate()} ${formatMonth(date)}`;
 }
 
+export function parseUTCDate(dateString) {
+  var date = new Date(dateString);
+  return new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+}
+
 // https://stackoverflow.com/a/11124448
-export function newDateInOffset(siteOffset) {
+export function nowInOffset(siteOffset) {
   const browserOffset = (new Date()).getTimezoneOffset() * 60
   return new Date(new Date().getTime() + (siteOffset * 1000) + (browserOffset * 1000))
 }
 
 export function isToday(site, date) {
-  return formatISO(date) === formatISO(newDateInOffset(site.offset))
+  return formatISO(date) === formatISO(nowInOffset(site.offset))
 }
