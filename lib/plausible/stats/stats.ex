@@ -122,6 +122,33 @@ defmodule Plausible.Stats do
     {plot, compare_plot, labels, present_index}
   end
 
+  def bounce_rate(site, query) do
+    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+
+    sessions_query = from(s in Plausible.Session,
+      where: s.hostname == ^site.domain,
+      where: s.new_visitor,
+      where: s.start >= ^first_datetime and s.start < ^last_datetime
+    )
+    total_sessions = Repo.one( from s in sessions_query, select: count(s))
+    bounced_sessions = Repo.one(from s in sessions_query, where: s.is_bounce, select: count(s))
+
+    case total_sessions do
+      0 -> 0
+      total -> round(bounced_sessions / total * 100)
+    end
+  end
+
+  def session_length(site, query) do
+    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+
+    Repo.one(from s in Plausible.Session,
+      where: s.hostname == ^site.domain,
+      where: s.start >= ^first_datetime and s.start < ^last_datetime,
+      select: coalesce(avg(s.length), 0)
+    ) |> Decimal.round |> Decimal.to_integer
+  end
+
   def pageviews_and_visitors(site, query) do
     Repo.one(from(
       e in base_query(site, query),
@@ -296,14 +323,7 @@ defmodule Plausible.Stats do
   end
 
   defp base_query(site, query, events \\ ["pageview"]) do
-    {:ok, first} = NaiveDateTime.new(query.date_range.first, ~T[00:00:00])
-    first_datetime = Timex.to_datetime(first, site.timezone)
-    |> Timex.Timezone.convert("UTC")
-
-    {:ok, last} = NaiveDateTime.new(query.date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
-    last_datetime = Timex.to_datetime(last, site.timezone)
-    |> Timex.Timezone.convert("UTC")
-
+    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
     {goal_event, path} = event_name_for_goal(query)
 
     q = from(e in Plausible.Event,
@@ -322,6 +342,18 @@ defmodule Plausible.Stats do
     else
       from(e in q, where: e.name in ^events)
     end
+  end
+
+  defp date_range_utc_boundaries(date_range, timezone) do
+    {:ok, first} = NaiveDateTime.new(date_range.first, ~T[00:00:00])
+    first_datetime = Timex.to_datetime(first, timezone)
+    |> Timex.Timezone.convert("UTC")
+
+    {:ok, last} = NaiveDateTime.new(date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
+    last_datetime = Timex.to_datetime(last, timezone)
+    |> Timex.Timezone.convert("UTC")
+
+    {first_datetime, last_datetime}
   end
 
   defp event_name_for_goal(query) do

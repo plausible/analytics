@@ -64,12 +64,12 @@ blockquote {
 @tailwind utilities;
 
 .main-graph {
-  height: 310px;
+  height: 440px;
 }
 
 @screen md {
   .main-graph {
-    height: 360px;
+    height: 480px;
   }
 }
 

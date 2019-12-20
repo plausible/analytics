@@ -22,6 +22,18 @@ defmodule Plausible.Factory do
     }
   end
 
+  def session_factory do
+    hostname = sequence(:domain, &"example-#{&1}.com")
+
+    %Plausible.Session{
+      hostname: hostname,
+      new_visitor: true,
+      user_id: UUID.uuid4(),
+      start: Timex.now(),
+      is_bounce: false
+    }
+  end
+
   def pageview_factory do
     struct!(
       event_factory(),

@@ -123,6 +123,16 @@ function dateFormatter(graphData) {
   }
 }
 
+function formatStat(stat) {
+  if (typeof(stat.count) === 'number') {
+    return numberFormatter(stat.count)
+  } else if (typeof(stat.duration) === 'number') {
+    return new Date(stat.duration * 1000).toISOString().substr(14, 5)
+  } else if (typeof(stat.percentage) === 'number') {
+    return stat.percentage + '%'
+  }
+}
+
 class LineGraph extends React.Component {
   componentDidMount() {
     const {graphData} = this.props
@@ -244,13 +254,15 @@ class LineGraph extends React.Component {
     }
   }
 
-  renderComparison(comparison) {
+  renderComparison(name, comparison) {
     const formattedComparison = numberFormatter(Math.abs(comparison))
 
     if (comparison > 0) {
-      return <span className="py-1 text-xs text-grey-darker"><span className="text-green-dark">&uarr;</span> {formattedComparison}% from {this.comparisonTimeframe()}</span>
+      const color = name === 'Bounce rate' ? 'text-red-light' : 'text-green-dark'
+      return <span className="py-1 text-xs text-grey-darker"><span className={color}>&uarr;</span> {formattedComparison}% from {this.comparisonTimeframe()}</span>
     } else if (comparison < 0) {
-      return <span className="py-1 text-xs text-grey-darker"><span className="text-red-light">&darr;</span> {formattedComparison}% from {this.comparisonTimeframe()}</span>
+      const color = name === 'Bounce rate' ? 'text-green-dark' : 'text-red-light'
+      return <span className="py-1 text-xs text-grey-darker"><span className={color}>&darr;</span> {formattedComparison}% from {this.comparisonTimeframe()}</span>
     } else if (comparison === 0) {
       return <span className="py-1 text-xs text-grey-darker">&#12336; same as {this.comparisonTimeframe()}</span>
     }
@@ -259,15 +271,16 @@ class LineGraph extends React.Component {
   renderTopStats() {
     const {graphData} = this.props
     return this.props.graphData.top_stats.map((stat, index) => {
-      const border = index > 0 ? 'border-l border-grey-light' : ''
+      let border = index > 0 ? 'lg:border-l border-grey-light' : ''
+      border = index % 2 === 0 ? border + ' border-r lg:border-r-0' : border
 
       return (
-        <div className={`pl-8 w-52 ${border}`} key={stat.name}>
+        <div className={`pl-8 w-1/2 my-4 lg:w-52 ${border}`} key={stat.name}>
           <div className="text-grey-dark text-xs font-bold tracking-wide uppercase">{stat.name}</div>
           <div className="my-1 flex items-end justify-between">
-            <b className="text-2xl">{ typeof(stat.count) == 'number' ? numberFormatter(stat.count) : stat.percentage + '%' }</b>
+            <b className="text-2xl">{formatStat(stat)}</b>
           </div>
-          {this.renderComparison(stat.change)}
+          {this.renderComparison(stat.name, stat.change)}
         </div>
       )
     })
@@ -278,7 +291,7 @@ class LineGraph extends React.Component {
 
     return (
       <React.Fragment>
-        <div className="border-b border-grey-light flex p-4">
+        <div className="border-b border-grey-light flex flex-wrap">
           { this.renderTopStats() }
         </div>
         <div className="p-4">
