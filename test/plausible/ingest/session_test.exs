@@ -31,6 +31,7 @@ defmodule Plausible.Ingest.SessionTest do
 
       assert session.user_id == pageview.user_id
       assert session.new_visitor == pageview.new_visitor
+      assert session.start == pageview.timestamp
     end
 
     test "inserts bounced session when timeout fires after one pageview" do

@@ -55,7 +55,8 @@ defmodule Plausible.Ingest.Session do
         referrer_source: event.referrer_source,
         country_code: event.country_code,
         operating_system: event.operating_system,
-        browser: event.browser
+        browser: event.browser,
+        start: event.timestamp
       }) |> Repo.insert!
     end
 
