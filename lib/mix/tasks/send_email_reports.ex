@@ -21,7 +21,7 @@ defmodule Mix.Tasks.SendEmailReports do
     sites = Repo.all(
       from s in Plausible.Site,
       join: wr in Plausible.Site.WeeklyReport, on: wr.site_id == s.id,
-      left_join: se in "sent_weekly_reports", on: se.site_id == s.id and se.year == fragment("EXTRACT(year from (now() at time zone ?))", s.timezone) and se.week == fragment("EXTRACT(week from (now() at time zone ?))", s.timezone),
+      left_join: se in "sent_weekly_reports", on: se.site_id == s.id and se.year == fragment("EXTRACT(isoyear from (now() at time zone ?))", s.timezone) and se.week == fragment("EXTRACT(week from (now() at time zone ?))", s.timezone),
       where: is_nil(se), # We haven't sent a report for this site on this week
       where: fragment("EXTRACT(dow from (now() at time zone ?))", s.timezone) == 1, # It's monday in the local timezone
       where: fragment("EXTRACT(hour from (now() at time zone ?))", s.timezone) >= 9, # It's after 9am
