@@ -152,7 +152,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     setup [:create_user, :log_in, :create_site]
     use Plausible.Repo
 
-    test "deletes the user", %{conn: conn, user: user} do
+    test "deletes the user", %{conn: conn, user: user, site: site} do
       Repo.insert_all("intro_emails", [%{
         user_id: user.id,
         timestamp: NaiveDateTime.utc_now()
@@ -162,6 +162,8 @@ defmodule PlausibleWeb.AuthControllerTest do
         user_id: user.id,
         timestamp: NaiveDateTime.utc_now()
       }])
+
+      insert(:google_auth, site: site, user: user)
 
       conn = delete(conn, "/me")
       assert redirected_to(conn) == "/"
