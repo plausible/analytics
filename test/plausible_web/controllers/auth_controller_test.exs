@@ -163,9 +163,6 @@ defmodule PlausibleWeb.AuthControllerTest do
         timestamp: NaiveDateTime.utc_now()
       }])
 
-      site = insert(:site, members: [user])
-      insert(:google_auth, site: site, user: user)
-
       conn = delete(conn, "/me")
       assert redirected_to(conn) == "/"
     end
