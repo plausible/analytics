@@ -152,28 +152,6 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       res = json_response(conn, 200)
       assert %{"name" => "Bounce rate", "percentage" => 67, "change" => 17} in res["top_stats"]
     end
-
-    test "calculates avg session length", %{conn: conn, site: site} do
-      insert(:session, hostname: site.domain, length: 10, start: ~N[2019-01-01 01:00:00])
-      insert(:session, hostname: site.domain, length: 20, start: ~N[2019-01-01 02:00:00])
-
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
-
-      res = json_response(conn, 200)
-      assert %{"name" => "Session length", "duration" => 15, "change" => nil} in res["top_stats"]
-    end
-
-    test "calculates change in session length", %{conn: conn, site: site} do
-      insert(:session, hostname: site.domain, length: 10, start: ~N[2019-01-01 01:00:00])
-      insert(:session, hostname: site.domain, length: 20, start: ~N[2019-01-01 02:00:00])
-
-      insert(:session, hostname: site.domain, length: 20, start: ~N[2019-01-02 02:00:00])
-
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-02")
-
-      res = json_response(conn, 200)
-      assert %{"name" => "Session length", "duration" => 20, "change" => 5} in res["top_stats"]
-    end
   end
 
 

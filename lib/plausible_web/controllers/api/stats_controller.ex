@@ -46,15 +46,11 @@ defmodule PlausibleWeb.Api.StatsController do
     bounce_rate = Stats.bounce_rate(site, query)
     prev_bounce_rate = Stats.bounce_rate(site, prev_query)
     change_bounce_rate = if prev_bounce_rate > 0, do: bounce_rate - prev_bounce_rate
-    session_length = Stats.session_length(site, query)
-    prev_session_length = Stats.session_length(site, prev_query)
-    change_session_length = if prev_session_length > 0, do: session_length - prev_session_length
 
     [
       %{name: "Unique visitors", count: visitors, change: percent_change(prev_visitors, visitors)},
       %{name: "Total pageviews", count: pageviews, change: percent_change(prev_pageviews, pageviews)},
       %{name: "Bounce rate", percentage: bounce_rate, change: change_bounce_rate},
-      %{name: "Session length", duration: session_length, change: change_session_length},
     ]
   end
 
