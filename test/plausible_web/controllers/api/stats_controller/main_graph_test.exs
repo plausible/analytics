@@ -87,7 +87,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   describe "GET /api/stats/main-graph - top stats" do
     setup [:create_user, :log_in, :create_site]
 
-    test "counts distinct user ids", %{conn: conn, site: site} do
+    test "unique users counts distinct user ids", %{conn: conn, site: site} do
       insert(:pageview, hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 00:00:00])
       insert(:pageview, hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 23:59:00])
 
@@ -127,6 +127,52 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       res = json_response(conn, 200)
       assert %{"name" => "Total pageviews", "count" => 1, "change" => -50} in res["top_stats"]
+    end
+
+    test "calculates bounce rate", %{conn: conn, site: site} do
+      insert(:session, hostname: site.domain, is_bounce: true, start: ~N[2019-01-01 01:00:00])
+      insert(:session, hostname: site.domain, is_bounce: false, start: ~N[2019-01-01 02:00:00])
+
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
+
+      res = json_response(conn, 200)
+      assert %{"name" => "Bounce rate", "percentage" => 50, "change" => nil} in res["top_stats"]
+    end
+
+    test "calculates change in bounce rate", %{conn: conn, site: site} do
+      insert(:session, hostname: site.domain, is_bounce: true, start: ~N[2019-01-01 01:00:00])
+      insert(:session, hostname: site.domain, is_bounce: false, start: ~N[2019-01-01 02:00:00])
+
+      insert(:session, hostname: site.domain, is_bounce: true, start: ~N[2019-01-02 01:00:00])
+      insert(:session, hostname: site.domain, is_bounce: true, start: ~N[2019-01-02 01:00:00])
+      insert(:session, hostname: site.domain, is_bounce: false, start: ~N[2019-01-02 02:00:00])
+
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-02")
+
+      res = json_response(conn, 200)
+      assert %{"name" => "Bounce rate", "percentage" => 67, "change" => 17} in res["top_stats"]
+    end
+
+    test "calculates avg session length", %{conn: conn, site: site} do
+      insert(:session, hostname: site.domain, length: 10, start: ~N[2019-01-01 01:00:00])
+      insert(:session, hostname: site.domain, length: 20, start: ~N[2019-01-01 02:00:00])
+
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
+
+      res = json_response(conn, 200)
+      assert %{"name" => "Session length", "duration" => 15, "change" => nil} in res["top_stats"]
+    end
+
+    test "calculates change in session length", %{conn: conn, site: site} do
+      insert(:session, hostname: site.domain, length: 10, start: ~N[2019-01-01 01:00:00])
+      insert(:session, hostname: site.domain, length: 20, start: ~N[2019-01-01 02:00:00])
+
+      insert(:session, hostname: site.domain, length: 20, start: ~N[2019-01-02 02:00:00])
+
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-02")
+
+      res = json_response(conn, 200)
+      assert %{"name" => "Session length", "duration" => 20, "change" => 5} in res["top_stats"]
     end
   end
 
