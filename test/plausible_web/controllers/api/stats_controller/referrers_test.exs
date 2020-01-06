@@ -19,6 +19,22 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       ]
     end
 
+    test "calculates bounce rate for referrers", %{conn: conn, site: site} do
+      insert(:pageview, hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, referrer_source: "Bing", timestamp: ~N[2019-01-01 02:00:00])
+
+      insert(:session, hostname: site.domain, referrer_source: "Google", is_bounce: true, start: ~N[2019-01-01 02:00:00])
+      insert(:session, hostname: site.domain, referrer_source: "Google", is_bounce: false, start: ~N[2019-01-01 02:00:00])
+
+      conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01&include=bounce_rate")
+
+      assert json_response(conn, 200) == [
+        %{"name" => "Google", "count" => 2, "bounce_rate" => 50},
+        %{"name" => "Bing", "count" => 1, "bounce_rate" => nil},
+      ]
+    end
+
     test "filters referrers for a custom goal", %{conn: conn, site: site} do
       insert(:event, name: "Signup", hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00])
       insert(:event, name: "Signup", hostname: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
@@ -81,6 +97,25 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
         "referrers" => [
           %{"name" => "10words.io/somepage", "count" => 2},
           %{"name" => "10words.io/some_other_page", "count" => 1},
+        ]
+      }
+    end
+
+    test "calculates bounce rate for referrer urls", %{conn: conn, site: site} do
+      insert(:pageview, hostname: site.domain, referrer_source: "10words", referrer: "10words.io/hello", timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, referrer_source: "10words", referrer: "10words.io/hello", timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, hostname: site.domain, referrer_source: "10words", referrer: "10words.io/", timestamp: ~N[2019-01-01 02:00:00])
+
+      insert(:session, hostname: site.domain, referrer_source: "10words", referrer: "10words.io/hello", is_bounce: true, start: ~N[2019-01-01 02:00:00])
+      insert(:session, hostname: site.domain, referrer_source: "10words", referrer: "10words.io/hello",is_bounce: false, start: ~N[2019-01-01 02:00:00])
+
+      conn = get(conn, "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&include=bounce_rate")
+
+      assert json_response(conn, 200) == %{
+        "total_visitors" => 3,
+        "referrers" => [
+          %{"name" => "10words.io/hello", "count" => 2, "bounce_rate" => 50},
+          %{"name" => "10words.io/", "count" => 1, "bounce_rate" => nil},
         ]
       }
     end

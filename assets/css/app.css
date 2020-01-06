@@ -218,3 +218,7 @@ a {
   width: 1em;
   transform: translateY(0.15em);
 }
+
+.table-striped tbody tr:nth-child(odd) {
+  background-color: #f1f5f8;
+}

@@ -4,7 +4,6 @@ import { Link, withRouter } from 'react-router-dom'
 import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter from '../../number-formatter'
-import Bar from '../bar'
 import {parseQuery, toHuman} from '../../query'
 
 class ReferrerDrilldownModal extends React.Component {
@@ -17,19 +16,27 @@ class ReferrerDrilldownModal extends React.Component {
   }
 
   componentDidMount() {
-    api.get(`/api/stats/${this.props.site.domain}/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100})
+    api.get(`/api/stats/${this.props.site.domain}/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100, include: 'bounce_rate'})
       .then((res) => this.setState({loading: false, referrers: res.referrers, totalVisitors: res.total_visitors}))
+  }
+
+  formatBounceRate(ref) {
+    if (ref.bounce_rate) {
+      return ref.bounce_rate + '%'
+    } else {
+      return '-'
+    }
   }
 
   renderReferrer(referrer) {
     return (
-      <React.Fragment key={referrer.name}>
-        <div className="flex items-center justify-between my-2">
-          <a className="hover:underline truncate" target="_blank" style={{maxWidth: '80%'}} href={'//' + referrer.name}>{ referrer.name }</a>
-          <span>{numberFormatter(referrer.count)}</span>
-        </div>
-        <Bar count={referrer.count} all={this.state.referrers} color="blue" />
-      </React.Fragment>
+      <tr className="text-sm" key={referrer.name}>
+        <td className="p-2 truncate">
+          <a className="hover:underline" target="_blank" href={'//' + referrer.name}>{ referrer.name }</a>
+        </td>
+        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.count)}</td>
+        <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td>
+      </tr>
     )
   }
 
@@ -58,9 +65,18 @@ class ReferrerDrilldownModal extends React.Component {
             <h1 className="mb-0 leading-none">{this.state.totalVisitors} visitors from {this.props.match.params.referrer}<br /> {toHuman(this.state.query)}</h1>
             {this.renderGoalText()}
 
-            <div className="mt-8">
-              { this.state.referrers.map(this.renderReferrer.bind(this)) }
-            </div>
+            <table className="w-full table-striped table-fixed mt-4">
+              <thead>
+                <tr>
+                  <th className="p-2 text-xs tracking-wide font-bold text-grey-dark" align="left">Referrer</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Visitors</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Bounce rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                { this.state.referrers.map(this.renderReferrer.bind(this)) }
+              </tbody>
+            </table>
           </main>
         </React.Fragment>
       )

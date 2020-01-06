@@ -68,8 +68,9 @@ defmodule PlausibleWeb.Api.StatsController do
   def referrers(conn, params) do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
+    include = if params["include"], do: String.split(params["include"], ","), else: []
 
-    json(conn, Stats.top_referrers(site, query, params["limit"] || 5))
+    json(conn, Stats.top_referrers(site, query, params["limit"] || 5, include))
   end
 
 
@@ -101,8 +102,9 @@ defmodule PlausibleWeb.Api.StatsController do
   def referrer_drilldown(conn, %{"referrer" => referrer} = params) do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
+    include = if params["include"], do: String.split(params["include"], ","), else: []
 
-    referrers = Stats.referrer_drilldown(site, query, referrer)
+    referrers = Stats.referrer_drilldown(site, query, referrer, include)
     total_visitors = Stats.visitors_from_referrer(site, query, referrer)
     json(conn, %{referrers: referrers, total_visitors: total_visitors})
   end
@@ -110,8 +112,9 @@ defmodule PlausibleWeb.Api.StatsController do
   def pages(conn, params) do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
+    include = if params["include"], do: String.split(params["include"], ","), else: []
 
-    json(conn, Stats.top_pages(site, query, params["limit"] || 5))
+    json(conn, Stats.top_pages(site, query, params["limit"] || 5, include))
   end
 
   def countries(conn, params) do

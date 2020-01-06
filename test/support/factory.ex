@@ -28,6 +28,7 @@ defmodule Plausible.Factory do
     %Plausible.Session{
       hostname: hostname,
       new_visitor: true,
+      entry_page: "/",
       user_id: UUID.uuid4(),
       start: Timex.now(),
       is_bounce: false

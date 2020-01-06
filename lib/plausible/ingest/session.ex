@@ -49,6 +49,7 @@ defmodule Plausible.Ingest.Session do
         hostname: event.hostname,
         user_id: event.user_id,
         new_visitor: event.new_visitor,
+        entry_page: event.pathname,
         is_bounce: state[:is_bounce],
         length: length,
         referrer: event.referrer,

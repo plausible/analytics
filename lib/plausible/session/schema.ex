@@ -10,6 +10,7 @@ defmodule Plausible.Session do
     field :start, :naive_datetime, null: false
     field :length, :integer
     field :is_bounce, :boolean
+    field :entry_page, :string
 
     field :referrer, :string
     field :referrer_source, :string
@@ -23,7 +24,7 @@ defmodule Plausible.Session do
 
   def changeset(session, attrs) do
     session
-    |> cast(attrs, [:hostname, :referrer, :new_visitor, :user_id, :start, :length, :is_bounce, :operating_system, :browser, :referrer_source, :country_code, :screen_size])
+    |> cast(attrs, [:hostname, :entry_page, :referrer, :new_visitor, :user_id, :start, :length, :is_bounce, :operating_system, :browser, :referrer_source, :country_code, :screen_size])
     |> validate_required([:hostname, :new_visitor, :user_id, :is_bounce, :start])
   end
 end
