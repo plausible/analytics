@@ -4,7 +4,6 @@ import { withRouter } from 'react-router-dom'
 import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter from '../../number-formatter'
-import Bar from '../bar'
 import {parseQuery} from '../../query'
 
 class PagesModal extends React.Component {
@@ -16,19 +15,25 @@ class PagesModal extends React.Component {
   componentDidMount() {
     const query = parseQuery(this.props.location.search, this.props.site)
 
-    api.get(`/api/stats/${this.props.site.domain}/pages`, query, {limit: 100})
+    api.get(`/api/stats/${this.props.site.domain}/pages`, query, {limit: 100, include: 'bounce_rate'})
       .then((res) => this.setState({loading: false, pages: res}))
+  }
+
+  formatBounceRate(page) {
+    if (page.bounce_rate) {
+      return page.bounce_rate + '%'
+    } else {
+      return '-'
+    }
   }
 
   renderPage(page) {
     return (
-      <React.Fragment key={page.name}>
-        <div className="flex items-center justify-between my-2">
-          <span>{ page.name }</span>
-          <span>{numberFormatter(page.count)}</span>
-        </div>
-        <Bar count={page.count} all={this.state.pages} color="orange" />
-      </React.Fragment>
+      <tr className="text-sm" key={page.name}>
+        <td className="p-2 truncate">{page.name}</td>
+        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
+        <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td>
+      </tr>
     )
   }
 
@@ -43,13 +48,21 @@ class PagesModal extends React.Component {
           <header className="modal__header">
             <h1>Top pages</h1>
           </header>
-          <div className="text-grey-darker text-lg ml-1 mt-1">by pageviews</div>
 
           <div className="my-4 border-b border-grey-light"></div>
           <main className="modal__content">
-            <div className="mt-8">
-              { this.state.pages.map(this.renderPage.bind(this)) }
-            </div>
+            <table className="w-full table-striped table-fixed">
+              <thead>
+                <tr>
+                  <th className="p-2 text-xs tracking-wide font-bold text-grey-dark" align="left">Page url</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Pageviews</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Bounce rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                { this.state.pages.map(this.renderPage.bind(this)) }
+              </tbody>
+            </table>
           </main>
         </React.Fragment>
       )

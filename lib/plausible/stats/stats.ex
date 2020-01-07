@@ -163,14 +163,60 @@ defmodule Plausible.Stats do
     ))
   end
 
-  def top_referrers(site, query, limit \\ 5) do
-    Repo.all(from e in base_query(site, query),
+  def top_referrers(site, query, limit \\ 5, include \\ []) do
+    referrers = Repo.all(from e in base_query(site, query),
       select: %{name: e.referrer_source, count: count(e.user_id, :distinct)},
       group_by: e.referrer_source,
       where: not is_nil(e.referrer_source),
       order_by: [desc: 2],
       limit: ^limit
     )
+
+    if "bounce_rate" in include do
+      bounce_rates = bounce_rates_by_referrer_source(site, query, Enum.map(referrers, fn ref -> ref[:name] end))
+
+      Enum.map(referrers, fn referrer ->
+        Map.put(referrer, :bounce_rate, bounce_rates[referrer[:name]])
+      end)
+    else
+      referrers
+    end
+  end
+
+  defp bounce_rates_by_referrer_source(site, query, referrers) do
+    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+
+    total_sessions_by_referrer = Repo.all(
+      from s in Plausible.Session,
+      where: s.hostname == ^site.domain,
+      where: s.new_visitor,
+      where: s.start >= ^first_datetime and s.start < ^last_datetime,
+      where: s.referrer_source in ^referrers,
+      group_by: s.referrer_source,
+      select: {s.referrer_source, count(s.id)}
+    ) |> Enum.into(%{})
+
+    bounced_sessions_by_referrer = Repo.all(
+      from s in Plausible.Session,
+      where: s.hostname == ^site.domain,
+      where: s.new_visitor,
+      where: s.start >= ^first_datetime and s.start < ^last_datetime,
+      where: s.is_bounce,
+      where: s.referrer_source in ^referrers,
+      group_by: s.referrer_source,
+      select: {s.referrer_source, count(s.id)}
+    ) |> Enum.into(%{})
+
+    Enum.reduce(referrers, %{}, fn referrer, acc ->
+      total_sessions = Map.get(total_sessions_by_referrer, referrer, 0)
+      bounced_sessions = Map.get(bounced_sessions_by_referrer, referrer, 0)
+
+      bounce_rate = if total_sessions > 0 do
+        round(bounced_sessions / total_sessions * 100)
+      end
+
+      Map.put(acc, referrer, bounce_rate)
+    end)
   end
 
   def visitors_from_referrer(site, query, referrer) do
@@ -181,23 +227,115 @@ defmodule Plausible.Stats do
     )
   end
 
-  def referrer_drilldown(site, query, referrer) do
-    Repo.all(from e in base_query(site, query),
+  def referrer_drilldown(site, query, referrer, include \\ []) do
+    referring_urls = Repo.all(from e in base_query(site, query),
       select: %{name: e.referrer, count: count(e.user_id, :distinct)},
       group_by: e.referrer,
       where: e.referrer_source == ^referrer,
       order_by: [desc: 2],
       limit: 100
     )
+
+    if "bounce_rate" in include do
+      bounce_rates = bounce_rates_by_referring_url(site, query, Enum.map(referring_urls, fn ref -> ref[:name] end))
+
+      Enum.map(referring_urls, fn url ->
+        Map.put(url, :bounce_rate, bounce_rates[url[:name]])
+      end)
+    else
+      referring_urls
+    end
   end
 
-  def top_pages(site, query, limit \\ 5) do
-    Repo.all(from e in base_query(site, query),
+  defp bounce_rates_by_referring_url(site, query, referring_urls) do
+    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+
+    total_sessions_by_url = Repo.all(
+      from s in Plausible.Session,
+      where: s.hostname == ^site.domain,
+      where: s.new_visitor,
+      where: s.start >= ^first_datetime and s.start < ^last_datetime,
+      where: s.referrer in ^referring_urls,
+      group_by: s.referrer,
+      select: {s.referrer, count(s.id)}
+    ) |> Enum.into(%{})
+
+    bounced_sessions_by_url = Repo.all(
+      from s in Plausible.Session,
+      where: s.hostname == ^site.domain,
+      where: s.new_visitor,
+      where: s.start >= ^first_datetime and s.start < ^last_datetime,
+      where: s.is_bounce,
+      where: s.referrer in ^referring_urls,
+      group_by: s.referrer,
+      select: {s.referrer, count(s.id)}
+    ) |> Enum.into(%{})
+
+    Enum.reduce(referring_urls, %{}, fn url, acc ->
+      total_sessions = Map.get(total_sessions_by_url, url, 0)
+      bounced_sessions = Map.get(bounced_sessions_by_url, url, 0)
+
+      bounce_rate = if total_sessions > 0 do
+        round(bounced_sessions / total_sessions * 100)
+      end
+
+      Map.put(acc, url, bounce_rate)
+    end)
+  end
+
+  def top_pages(site, query, limit \\ 5, include \\ []) do
+    pages = Repo.all(from e in base_query(site, query),
       select: %{name: e.pathname, count: count(e.pathname)},
       group_by: e.pathname,
       order_by: [desc: count(e.pathname)],
       limit: ^limit
     )
+
+    if "bounce_rate" in include do
+      bounce_rates = bounce_rates_by_page_url(site, query, Enum.map(pages, fn page -> page[:name] end))
+
+      Enum.map(pages, fn url ->
+        Map.put(url, :bounce_rate, bounce_rates[url[:name]])
+      end)
+    else
+      pages
+    end
+  end
+
+  defp bounce_rates_by_page_url(site, query, page_urls) do
+    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+
+    total_sessions_by_url = Repo.all(
+      from s in Plausible.Session,
+      where: s.hostname == ^site.domain,
+      where: s.new_visitor,
+      where: s.start >= ^first_datetime and s.start < ^last_datetime,
+      where: s.entry_page in ^page_urls,
+      group_by: s.entry_page,
+      select: {s.entry_page, count(s.id)}
+    ) |> Enum.into(%{})
+
+    bounced_sessions_by_url = Repo.all(
+      from s in Plausible.Session,
+      where: s.hostname == ^site.domain,
+      where: s.new_visitor,
+      where: s.start >= ^first_datetime and s.start < ^last_datetime,
+      where: s.is_bounce,
+      where: s.entry_page in ^page_urls,
+      group_by: s.entry_page,
+      select: {s.entry_page, count(s.id)}
+    ) |> Enum.into(%{})
+
+    Enum.reduce(page_urls, %{}, fn url, acc ->
+      total_sessions = Map.get(total_sessions_by_url, url, 0)
+      bounced_sessions = Map.get(bounced_sessions_by_url, url, 0)
+
+      bounce_rate = if total_sessions > 0 do
+        round(bounced_sessions / total_sessions * 100)
+      end
+
+      Map.put(acc, url, bounce_rate)
+    end)
   end
 
   @available_screen_sizes ["Desktop", "Laptop", "Tablet", "Mobile"]
