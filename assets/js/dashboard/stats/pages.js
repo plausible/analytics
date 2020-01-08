@@ -45,13 +45,13 @@ export default class Pages extends React.Component {
   render() {
     if (this.state.loading) {
       return (
-        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4" style={{height: '405px'}}>
+        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 relative" style={{height: '405px'}}>
           <div className="loading my-32 mx-auto"><div></div></div>
         </div>
       )
     } else if (this.state.pages) {
       return (
-        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4" style={{height: '405px'}}>
+        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 relative" style={{height: '405px'}}>
           <div className="text-center">
             <h2>Top Pages</h2>
             <div className="text-grey-darker mt-1">by {eventName(this.props.query)}</div>
@@ -60,7 +60,7 @@ export default class Pages extends React.Component {
           <div className="mt-8">
             { this.state.pages.map(this.renderPage.bind(this)) }
           </div>
-          <MoreLink site={this.props.site} list={this.state.pages} endpoint="pages" />
+          <MoreLink site={this.props.site} endpoint="pages" />
         </div>
       )
     }

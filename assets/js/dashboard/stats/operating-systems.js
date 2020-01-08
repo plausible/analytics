@@ -41,13 +41,13 @@ export default class OperatingSystems extends React.Component {
   render() {
     if (this.state.loading) {
       return (
-        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4" style={{height: '405px'}}>
+        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 relative" style={{height: '405px'}}>
           <div className="loading my-32 mx-auto"><div></div></div>
         </div>
       )
     } else if (this.state.systems) {
       return (
-        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4" style={{height: '405px'}}>
+        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 relative" style={{height: '405px'}}>
           <div className="text-center">
             <h2>Operating Systems</h2>
             <div className="text-grey-darker mt-1">by visitors</div>
@@ -56,7 +56,7 @@ export default class OperatingSystems extends React.Component {
           <div className="mt-8">
             { this.state.systems.map(this.renderSystem.bind(this)) }
           </div>
-          <MoreLink site={this.props.site} list={this.state.systems} endpoint="operating-systems" />
+          <MoreLink site={this.props.site} endpoint="operating-systems" />
         </div>
       )
     }

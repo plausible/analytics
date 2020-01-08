@@ -61,7 +61,6 @@ export default class Conversions extends React.Component {
           <div className="mt-8">
             { this.state.goals.map(this.renderGoal.bind(this)) }
           </div>
-          <MoreLink site={this.props.site} list={this.state.goals} endpoint="conversions" />
         </div>
       )
     }
