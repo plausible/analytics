@@ -247,10 +247,12 @@ class LineGraph extends React.Component {
       return 'last week'
     } else if (query.period === '30d') {
       return 'last month'
+    } else if (query.period === '60d') {
+      return 'prev 60 days'
     } else if (query.period === '3mo') {
       return 'prev 3 months'
-    } else if (query.period === '6mo') {
-      return 'prev 6 months'
+    } else if (query.period === '12mo') {
+      return 'last year'
     }
   }
 
