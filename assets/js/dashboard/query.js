@@ -40,7 +40,7 @@ export function toHuman(query) {
   } else if (query.period === '6mo') {
     return 'in the last 6 months'
   } else if (query.period === '12mo') {
-    return 'in the last year'
+    return 'in the last 12 months'
   }
 }
 
