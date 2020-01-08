@@ -46,18 +46,18 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert List.last(plot) == 1
     end
 
-    test "displays visitors for 3 months", %{conn: conn, site: site} do
+    test "displays visitors for 6 months", %{conn: conn, site: site} do
       insert(:pageview, hostname: site.domain)
-      insert(:pageview, hostname: site.domain, timestamp: months_ago(2))
+      insert(:pageview, hostname: site.domain, timestamp: months_ago(5))
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=3mo")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=6mo")
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
-      assert plot == [1, 0, 1]
+      assert plot == [1, 0, 0, 0, 0, 1]
     end
 
-    # TODO: missing 6 months, 7 days, 30 days
+    # TODO: missing 12 months, 7 days, 30 days
   end
 
   describe "GET /api/stats/main-graph - labels" do

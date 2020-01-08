@@ -84,15 +84,15 @@ defmodule Plausible.Stats.Query do
     }
   end
 
-  def from(tz, %{"period" => "3mo"} = params) do
-    start_date = Timex.shift(today(tz), months: -2)
+  def from(tz, %{"period" => "6mo"} = params) do
+    start_date = Timex.shift(today(tz), months: -5)
                  |> Timex.beginning_of_month()
 
     %__MODULE__{
-      period: "3mo",
+      period: "6mo",
       date_range: Date.range(start_date, today(tz)),
       step_type: "month",
-      steps: 3,
+      steps: 6,
       filters: parse_filters(params)
     }
   end

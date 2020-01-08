@@ -69,8 +69,8 @@ class DatePicker extends React.Component {
       return 'Last 60 days'
     } else if (query.period === 'month') {
       return formatMonthYYYY(query.date)
-    } else if (query.period === '3mo') {
-      return 'Last 3 months'
+    } else if (query.period === '6mo') {
+      return 'Last 6 months'
     } else if (query.period === '12mo') {
       return 'Last year'
     }
@@ -124,7 +124,7 @@ class DatePicker extends React.Component {
           <Link to={{search: this.queryWithPeriod('7d')}} className="block p-2 hover:bg-grey-lighter">Last 7 days</Link>
           <Link to={{search: this.queryWithPeriod('30d')}} className="block p-2 hover:bg-grey-lighter">Last 30 days</Link>
           <Link to={{search: this.queryWithPeriod('60d')}} className="block p-2 hover:bg-grey-lighter">Last 60 days</Link>
-          <Link to={{search: this.queryWithPeriod('3mo')}} className="block p-2 hover:bg-grey-lighter">Last 3 months</Link>
+          <Link to={{search: this.queryWithPeriod('6mo')}} className="block p-2 hover:bg-grey-lighter">Last 6 months</Link>
           <Link to={{search: this.queryWithPeriod('12mo')}} className="block p-2 hover:bg-grey-lighter">Last year</Link>
         </div>
       </div>
