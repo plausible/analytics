@@ -74,7 +74,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp clean_referrer(referrer) do
     uri = if referrer do
-      URI.parse(referrer)
+      URI.parse(String.trim_trailing(referrer, "/"))
     end
 
     if uri && uri.scheme in ["http", "https"] do

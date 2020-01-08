@@ -116,6 +116,28 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.referrer_source == "Facebook"
     end
 
+    test "strips trailing slash from referrer", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://gigride.live/",
+        referrer: "https://facebook.com/page/",
+        new_visitor: false,
+        uid: UUID.uuid4()
+      }
+
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/event", Jason.encode!(params))
+
+      pageview = Repo.one(Plausible.Event)
+      finalize_session(pageview.user_id)
+
+      assert response(conn, 202) == ""
+      assert pageview.referrer == "facebook.com/page"
+      assert pageview.referrer_source == "Facebook"
+    end
+
     test "ignores when referrer is internal", %{conn: conn} do
       params = %{
         name: "pageview",
