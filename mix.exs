@@ -50,9 +50,8 @@ defmodule Plausible.MixProject do
       {:ref_inspector, "~> 1.3"},
       {:timex, "~> 3.6"},
       {:ua_inspector, "~> 0.18"},
-      {:bamboo, "~> 1.2"},
+      {:bamboo, "~> 1.3"},
       {:bamboo_postmark, "~> 0.5"},
-      {:poison, ">= 1.5.0"}, # For bamboo_postmark
       {:sentry, "~> 7.0"},
       {:httpoison, "~> 1.4"},
       {:ex_machina, "~> 2.3", only: :test},
