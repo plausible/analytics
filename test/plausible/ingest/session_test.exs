@@ -53,6 +53,17 @@ defmodule Plausible.Ingest.SessionTest do
       session = capture_session(pageview.user_id)
       refute session.is_bounce
     end
+
+    test "captures the exit page" do
+      pageview = insert(:pageview)
+      pageview2 = insert(:pageview, user_id: pageview.user_id, pathname: "/exit")
+
+      Ingest.Session.on_event(pageview)
+      Ingest.Session.on_event(pageview2)
+
+      session = capture_session(pageview.user_id)
+      assert session.exit_page == "/exit"
+    end
   end
 
   describe "on_unload/1" do
