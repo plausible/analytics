@@ -9,7 +9,7 @@ function serialize(obj) {
   return str.join("&");
 }
 
-export function serializeQuery(query, ...extraQuery) {
+export function serializeQuery(query, extraQuery=[]) {
   query = Object.assign({}, query, {
     date: query.date ? formatISO(query.date) : undefined,
     filters: query.filters ? JSON.stringify(query.filters) : undefined
