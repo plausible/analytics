@@ -40,7 +40,6 @@ defmodule PlausibleWeb do
       use Phoenix.HTML
 
       import PlausibleWeb.ErrorHelpers
-      import PhoenixActiveLink
       alias PlausibleWeb.Router.Helpers, as: Routes
     end
   end

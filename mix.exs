@@ -41,7 +41,6 @@ defmodule Plausible.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:phoenix, "~> 1.4.0"},
-      {:phoenix_active_link, "~> 0.2.1"},
       {:phoenix_ecto, "~> 4.0"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
@@ -51,15 +50,15 @@ defmodule Plausible.MixProject do
       {:ref_inspector, "~> 1.3"},
       {:timex, "~> 3.6"},
       {:ua_inspector, "~> 0.18"},
-      {:bamboo, "~> 1.2"},
+      {:bamboo, "~> 1.3"},
       {:bamboo_postmark, "~> 0.5"},
-      {:poison, ">= 1.5.0"}, # For bamboo_postmark
       {:sentry, "~> 7.0"},
       {:httpoison, "~> 1.4"},
       {:ex_machina, "~> 2.3", only: :test},
       {:excoveralls, "~> 0.10", only: :test},
       {:joken, "~> 2.0"},
-      {:php_serializer, "~> 0.9.0"}
+      {:php_serializer, "~> 0.9.0"},
+      {:csv, "~> 2.3"}
     ]
   end
 

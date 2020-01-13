@@ -288,15 +288,28 @@ class LineGraph extends React.Component {
     })
   }
 
+  downloadLink() {
+    const endpoint = `/${this.props.site.domain}/visitors.csv${api.serializeQuery(this.props.query)}`
+
+    return (
+      <a href={endpoint} download>
+        <svg className="w-4 h-5 absolute text-grey-darker" style={{right: '2rem', top: '-2rem'}}>
+          <use xlinkHref="#feather-download" />
+        </svg>
+      </a>
+    )
+  }
+
   render() {
     const extraClass = this.props.graphData.interval === 'hour' ? '' : 'cursor-pointer'
 
     return (
       <React.Fragment>
-        <div className="border-b border-grey-light flex flex-wrap">
+        <div className="flex flex-wrap">
           { this.renderTopStats() }
         </div>
-        <div className="p-4">
+        <div className="px-2 relative">
+          { this.downloadLink() }
           <canvas id="main-graph-canvas" className={'mt-4 ' + extraClass} width="1054" height="342"></canvas>
         </div>
       </React.Fragment>

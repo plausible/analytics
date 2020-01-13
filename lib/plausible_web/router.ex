@@ -114,6 +114,7 @@ defmodule PlausibleWeb.Router do
     put "/:website/settings/google", SiteController, :update_google_auth
     delete "/:website", SiteController, :delete_site
 
+    get "/:website/visitors.csv", StatsController, :csv_export
     get "/:website/*path", StatsController, :stats
   end
 
