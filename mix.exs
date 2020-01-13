@@ -41,7 +41,6 @@ defmodule Plausible.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:phoenix, "~> 1.4.0"},
-      {:phoenix_active_link, "~> 0.2.1"},
       {:phoenix_ecto, "~> 4.0"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
@@ -59,7 +58,8 @@ defmodule Plausible.MixProject do
       {:ex_machina, "~> 2.3", only: :test},
       {:excoveralls, "~> 0.10", only: :test},
       {:joken, "~> 2.0"},
-      {:php_serializer, "~> 0.9.0"}
+      {:php_serializer, "~> 0.9.0"},
+      {:csv, "~> 2.3"}
     ]
   end
 

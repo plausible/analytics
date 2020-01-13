@@ -3,7 +3,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   use Plausible.Repo
   import Plausible.TestUtils
 
-  describe "as an anonymous visitor" do
+  describe "GET /:website - anonymous user" do
     test "public site - shows site stats", %{conn: conn} do
       insert(:site, domain: "public-site.io", public: true)
       insert(:pageview, hostname: "public-site.io")
@@ -20,7 +20,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
-  describe "as a logged in user" do
+  describe "GET /:website - as a logged in user" do
     setup [:create_user, :log_in, :create_site]
 
     test "can view stats of a website I've created", %{conn: conn, site: site} do
@@ -35,6 +35,19 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       conn = get(conn, "/some-other-site.com")
       assert html_response(conn, 404) =~ "There&#39;s nothing here"
+    end
+  end
+
+  describe "GET /:website/visitors.csv" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "exports graph as csv", %{conn: conn, site: site} do
+      insert(:pageview, hostname: site.domain)
+      today = Timex.today() |> Timex.format!("{ISOdate}")
+
+      conn = get(conn, "/" <> site.domain <> "/visitors.csv")
+      assert response(conn, 200) =~ "Date,Visitors"
+      assert response(conn, 200) =~ "#{today},1"
     end
   end
 end

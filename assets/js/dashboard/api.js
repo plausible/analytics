@@ -9,12 +9,16 @@ function serialize(obj) {
   return str.join("&");
 }
 
-export function get(url, query, ...extraQuery) {
+export function serializeQuery(query, ...extraQuery) {
   query = Object.assign({}, query, {
     date: query.date ? formatISO(query.date) : undefined,
     filters: query.filters ? JSON.stringify(query.filters) : undefined
   }, ...extraQuery)
 
-  url = url + `?${serialize(query)}`
+  return '?' + serialize(query)
+}
+
+export function get(url, query, ...extraQuery) {
+  url = url + serializeQuery(query, extraQuery)
   return fetch(url).then(res => res.json())
 }
