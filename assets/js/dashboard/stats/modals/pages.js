@@ -9,14 +9,21 @@ import {parseQuery} from '../../query'
 class PagesModal extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {loading: true}
+    this.state = {
+      loading: true,
+      query: parseQuery(props.location.search, props.site)
+    }
   }
 
   componentDidMount() {
-    const query = parseQuery(this.props.location.search, this.props.site)
+    const include = this.showBounceRate() ? 'bounce_rate' : null
 
-    api.get(`/api/stats/${this.props.site.domain}/pages`, query, {limit: 100, include: 'bounce_rate'})
+    api.get(`/api/stats/${this.props.site.domain}/pages`, this.state.query, {limit: 100, include: include})
       .then((res) => this.setState({loading: false, pages: res}))
+  }
+
+  showBounceRate() {
+    return !this.state.query.filters.goal
   }
 
   formatBounceRate(page) {
@@ -32,7 +39,7 @@ class PagesModal extends React.Component {
       <tr className="text-sm" key={page.name}>
         <td className="p-2 truncate">{page.name}</td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
-        <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td>
+        {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td> }
       </tr>
     )
   }
@@ -56,7 +63,7 @@ class PagesModal extends React.Component {
                 <tr>
                   <th className="p-2 text-xs tracking-wide font-bold text-grey-dark" align="left">Page url</th>
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Pageviews</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Bounce rate</th>
+                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Bounce rate</th>}
                 </tr>
               </thead>
               <tbody>

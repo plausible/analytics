@@ -16,8 +16,14 @@ class ReferrerDrilldownModal extends React.Component {
   }
 
   componentDidMount() {
-    api.get(`/api/stats/${this.props.site.domain}/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100, include: 'bounce_rate'})
+    const include = this.showBounceRate() ? 'bounce_rate' : null
+
+    api.get(`/api/stats/${this.props.site.domain}/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100, include: include})
       .then((res) => this.setState({loading: false, referrers: res.referrers, totalVisitors: res.total_visitors}))
+  }
+
+  showBounceRate() {
+    return !this.state.query.filters.goal
   }
 
   formatBounceRate(ref) {
@@ -35,7 +41,7 @@ class ReferrerDrilldownModal extends React.Component {
           <a className="hover:underline" target="_blank" href={'//' + referrer.name}>{ referrer.name }</a>
         </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.count)}</td>
-        <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td>
+        {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td> }
       </tr>
     )
   }
@@ -70,7 +76,7 @@ class ReferrerDrilldownModal extends React.Component {
                 <tr>
                   <th className="p-2 text-xs tracking-wide font-bold text-grey-dark" align="left">Referrer</th>
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Visitors</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Bounce rate</th>
+                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Bounce rate</th>}
                 </tr>
               </thead>
               <tbody>
