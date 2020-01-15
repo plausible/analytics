@@ -24,13 +24,13 @@ defmodule Plausible.Ingest.Session do
 
   def init(event) do
     timer = Process.send_after(self(), :finalize, @session_timeout)
-    {:ok, %{first_event: event, timer: timer, is_bounce: true, last_unload: nil}}
+    {:ok, %{first_event: event, last_event: event, timer: timer, is_bounce: true, last_unload: nil}}
   end
 
-  def handle_cast({:on_event, _event}, state) do
+  def handle_cast({:on_event, event}, state) do
     Process.cancel_timer(state[:timer])
     new_timer = Process.send_after(self(), :finalize, @session_timeout)
-    {:noreply, %{state | timer: new_timer, is_bounce: false, last_unload: nil}}
+    {:noreply, %{state | timer: new_timer, last_event: event, is_bounce: false, last_unload: nil}}
   end
 
   def handle_cast({:on_unload, timestamp}, state) do
@@ -38,26 +38,28 @@ defmodule Plausible.Ingest.Session do
   end
 
   def handle_info(:finalize, state) do
-    event = state[:first_event]
+    first_event = state[:first_event]
+    last_event = state[:last_event]
 
-    if !is_potential_leftover?(event) do
+    if !is_potential_leftover?(first_event) do
       length = if state[:last_unload] do
-        Timex.diff(state[:last_unload], event.timestamp, :seconds)
+        Timex.diff(state[:last_unload], first_event.timestamp, :seconds)
       end
 
       Plausible.Session.changeset(%Plausible.Session{}, %{
-        hostname: event.hostname,
-        user_id: event.user_id,
-        new_visitor: event.new_visitor,
-        entry_page: event.pathname,
+        hostname: first_event.hostname,
+        user_id: first_event.user_id,
+        new_visitor: first_event.new_visitor,
+        entry_page: first_event.pathname,
+        exit_page: last_event.pathname,
         is_bounce: state[:is_bounce],
         length: length,
-        referrer: event.referrer,
-        referrer_source: event.referrer_source,
-        country_code: event.country_code,
-        operating_system: event.operating_system,
-        browser: event.browser,
-        start: event.timestamp
+        referrer: first_event.referrer,
+        referrer_source: first_event.referrer_source,
+        country_code: first_event.country_code,
+        operating_system: first_event.operating_system,
+        browser: first_event.browser,
+        start: first_event.timestamp
       }) |> Repo.insert!
     end
 
