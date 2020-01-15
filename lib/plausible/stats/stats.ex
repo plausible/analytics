@@ -228,7 +228,8 @@ defmodule Plausible.Stats do
   end
 
   def referrer_drilldown(site, query, referrer, include \\ []) do
-    referring_urls = Repo.all(from e in base_query(site, query),
+    referring_urls = Repo.all(
+      from e in base_query(site, query),
       select: %{name: e.referrer, count: count(e.user_id, :distinct)},
       group_by: e.referrer,
       where: e.referrer_source == ^referrer,
@@ -236,11 +237,29 @@ defmodule Plausible.Stats do
       limit: 100
     )
 
-    if "bounce_rate" in include do
+    referring_urls = if "bounce_rate" in include do
       bounce_rates = bounce_rates_by_referring_url(site, query, Enum.map(referring_urls, fn ref -> ref[:name] end))
 
       Enum.map(referring_urls, fn url ->
         Map.put(url, :bounce_rate, bounce_rates[url[:name]])
+      end)
+    else
+      referring_urls
+    end
+
+    if referrer == "Twitter" do
+      urls = Enum.map(referring_urls, &(&1[:name]))
+
+      tweets = Repo.all(
+        from t in Plausible.Twitter.Tweet,
+        where: t.link in ^urls
+      ) |> Enum.reduce(%{}, fn tweet, acc ->
+        Map.update(acc, tweet.link, [tweet], &([tweet | &1]))
+      end)
+      |> IO.inspect
+
+      Enum.map(referring_urls, fn url ->
+        Map.put(url, :tweets, tweets[url[:name]])
       end)
     else
       referring_urls
