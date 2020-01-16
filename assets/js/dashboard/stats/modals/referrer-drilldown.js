@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, withRouter } from 'react-router-dom'
+import TweetEmbed from 'react-tweet-embed'
 
 import Modal from './modal'
 import * as api from '../../api'
@@ -34,16 +35,67 @@ class ReferrerDrilldownModal extends React.Component {
     }
   }
 
-  renderReferrer(referrer) {
+  renderReferrerName(name) {
+    if (name) {
+      return <a className="hover:underline" target="_blank" href={'//' + name}>{name}</a>
+    } else {
+      return '(no referrer)'
+    }
+  }
+
+  renderTweet(tweet, index) {
+    const authorUrl = `https://twitter.com/${tweet.author_handle}`
+    const tweetUrl = `${authorUrl}/status/${tweet.tweet_id}`
+    const border = index === 0 ? '' : ' pt-4 border-t border-grey-light'
+
     return (
-      <tr className="text-sm" key={referrer.name}>
-        <td className="p-2 truncate">
-          <a className="hover:underline" target="_blank" href={'//' + referrer.name}>{ referrer.name }</a>
-        </td>
-        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.count)}</td>
-        {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td> }
-      </tr>
+      <div key={tweet.tweet_id}>
+        <div className={"flex items-center my-4" + border} >
+          <a className="flex items-center group" href={authorUrl} target="_blank">
+            <img className="rounded-full w-6" src={tweet.author_image} />
+            <div className="font-bold ml-2 group-hover:text-blue">{tweet.author_name}</div>
+            <div className="ml-2 text-xs text-grey-dark">@{tweet.author_handle}</div>
+          </a>
+          <a className="ml-auto twitter-icon" href={tweetUrl} target="_blank"></a>
+        </div>
+        <div className="my-2 cursor-text tweet-text" dangerouslySetInnerHTML={{__html: tweet.text}}>
+        </div>
+        <div className="text-xs text-grey-darker font-medium">
+          {tweet.created}
+        </div>
+      </div>
     )
+  }
+
+  renderReferrer(referrer) {
+    if (false && referrer.tweets) {
+      return (
+        <tr className="text-sm" key={referrer.name}>
+          <td className="p-2">
+            { this.renderReferrerName(referrer.name) }
+            <span className="text-grey-dark ml-2 text-xs">
+              appears in {referrer.tweets.length} tweets
+              <svg className="feather ml-1"><use xlinkHref="#feather-chevron-down" /></svg>
+            </span>
+            <div className="my-4 ml-4">
+              { referrer.tweets.map(this.renderTweet) }
+            </div>
+          </td>
+          <td className="p-2 w-32 font-medium" align="right" valign="top">{numberFormatter(referrer.count)}</td>
+          {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right" valign="top">{this.formatBounceRate(referrer)}</td> }
+        </tr>
+      )
+    } else {
+      return (
+        <tr className="text-sm" key={referrer.name}>
+          <td className="p-2 truncate">
+            { this.renderReferrerName(referrer.name) }
+          </td>
+          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.count)}</td>
+          {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td> }
+        </tr>
+      )
+    }
   }
 
   renderGoalText() {
