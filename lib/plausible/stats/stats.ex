@@ -163,11 +163,22 @@ defmodule Plausible.Stats do
     ))
   end
 
-  def top_referrers(site, query, limit \\ 5, include \\ []) do
-    referrers = Repo.all(from e in base_query(site, query),
+  def top_referrers_for_goal(site, query, limit \\ 5) do
+    Repo.all(from e in base_query(site, query),
       select: %{name: e.referrer_source, count: count(e.user_id, :distinct)},
       group_by: e.referrer_source,
       where: not is_nil(e.referrer_source),
+      order_by: [desc: 2],
+      limit: ^limit
+    )
+  end
+
+  def top_referrers(site, query, limit \\ 5, include \\ []) do
+    referrers = Repo.all(from e in base_query(site, query),
+      select: %{name: e.referrer_source, count: count(e)},
+      group_by: e.referrer_source,
+      where: not is_nil(e.referrer_source),
+      where: e.new_visitor,
       order_by: [desc: 2],
       limit: ^limit
     )
@@ -222,6 +233,15 @@ defmodule Plausible.Stats do
   def visitors_from_referrer(site, query, referrer) do
     Repo.one(
       from e in base_query(site, query),
+      select: count(e),
+      where: e.new_visitor,
+      where: e.referrer_source == ^referrer
+    )
+  end
+
+  def conversions_from_referrer(site, query, referrer) do
+    Repo.one(
+      from e in base_query(site, query),
       select: count(e.user_id, :distinct),
       where: e.referrer_source == ^referrer
     )
@@ -230,9 +250,10 @@ defmodule Plausible.Stats do
   def referrer_drilldown(site, query, referrer, include \\ []) do
     referring_urls = Repo.all(
       from e in base_query(site, query),
-      select: %{name: e.referrer, count: count(e.user_id, :distinct)},
+      select: %{name: e.referrer, count: count(e)},
       group_by: e.referrer,
       where: e.referrer_source == ^referrer,
+      where: e.new_visitor,
       order_by: [desc: 2],
       limit: 100
     )
@@ -261,6 +282,17 @@ defmodule Plausible.Stats do
     else
       referring_urls
     end
+  end
+
+  def referrer_drilldown_for_goal(site, query, referrer) do
+    Repo.all(
+      from e in base_query(site, query),
+      select: %{name: e.referrer, count: count(e.user_id, :distinct)},
+      group_by: e.referrer,
+      where: e.referrer_source == ^referrer,
+      order_by: [desc: 2],
+      limit: 100
+    )
   end
 
   defp bounce_rates_by_referring_url(site, query, referring_urls) do

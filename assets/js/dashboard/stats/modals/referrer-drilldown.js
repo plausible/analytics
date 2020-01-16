@@ -17,10 +17,15 @@ class ReferrerDrilldownModal extends React.Component {
   }
 
   componentDidMount() {
-    const include = this.showBounceRate() ? 'bounce_rate' : null
+    if (this.state.query.filters.goal) {
+      api.get(`/api/stats/${this.props.site.domain}/goal/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100})
+        .then((res) => this.setState({loading: false, referrers: res.referrers, totalVisitors: res.total_visitors}))
+    } else {
+      const include = this.showBounceRate() ? 'bounce_rate' : null
 
-    api.get(`/api/stats/${this.props.site.domain}/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100, include: include})
-      .then((res) => this.setState({loading: false, referrers: res.referrers, totalVisitors: res.total_visitors}))
+      api.get(`/api/stats/${this.props.site.domain}/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100, include: include})
+        .then((res) => this.setState({loading: false, referrers: res.referrers, totalVisitors: res.total_visitors}))
+    }
   }
 
   showBounceRate() {

@@ -73,6 +73,12 @@ defmodule PlausibleWeb.Api.StatsController do
     json(conn, Stats.top_referrers(site, query, params["limit"] || 5, include))
   end
 
+  def referrers_for_goal(conn, params) do
+    site = conn.assigns[:site]
+    query = Stats.Query.from(site.timezone, params)
+
+    json(conn, Stats.top_referrers_for_goal(site, query, params["limit"] || 5))
+  end
 
   @google_api Application.fetch_env!(:plausible, :google_api)
 
@@ -106,6 +112,15 @@ defmodule PlausibleWeb.Api.StatsController do
 
     referrers = Stats.referrer_drilldown(site, query, referrer, include)
     total_visitors = Stats.visitors_from_referrer(site, query, referrer)
+    json(conn, %{referrers: referrers, total_visitors: total_visitors})
+  end
+
+  def referrer_drilldown_for_goal(conn, %{"referrer" => referrer} = params) do
+    site = conn.assigns[:site]
+    query = Stats.Query.from(site.timezone, params)
+
+    referrers = Stats.referrer_drilldown_for_goal(site, query, referrer)
+    total_visitors = Stats.conversions_from_referrer(site, query, referrer)
     json(conn, %{referrers: referrers, total_visitors: total_visitors})
   end
 

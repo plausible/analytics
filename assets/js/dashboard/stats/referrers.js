@@ -24,8 +24,13 @@ export default class Referrers extends React.Component {
   }
 
   fetchReferrers() {
-    api.get(`/api/stats/${this.props.site.domain}/referrers`, this.props.query)
-      .then((res) => this.setState({loading: false, referrers: res}))
+    if (this.props.query.filters.goal) {
+      api.get(`/api/stats/${this.props.site.domain}/goal/referrers`, this.props.query)
+        .then((res) => this.setState({loading: false, referrers: res}))
+    } else {
+      api.get(`/api/stats/${this.props.site.domain}/referrers`, this.props.query)
+        .then((res) => this.setState({loading: false, referrers: res}))
+    }
   }
 
   renderReferrer(referrer) {
