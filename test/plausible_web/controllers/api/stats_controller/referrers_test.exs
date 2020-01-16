@@ -133,5 +133,21 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
         "search_terms" => terms
       }
     end
+
+    test "enriches twitter referrers with tweets if available", %{conn: conn, site: site} do
+      insert(:pageview, hostname: site.domain, referrer: "t.co/some-link", referrer_source: "Twitter", timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, hostname: site.domain, referrer: "t.co/some-link", referrer_source: "Twitter", timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, hostname: site.domain, referrer: "t.co/nonexistent-link", referrer_source: "Twitter", timestamp: ~N[2019-01-01 02:00:00])
+
+      insert(:tweet, link: "t.co/some-link", text: "important tweet")
+
+      conn = get(conn, "/api/stats/#{site.domain}/referrers/Twitter?period=day&date=2019-01-01")
+
+      res = json_response(conn, 200)
+      assert res["total_visitors"] == 3
+      assert [tweet1, tweet2] = res["referrers"]
+      assert %{"name" => "t.co/some-link", "count" => 2, "tweets" => [%{"text" => "important tweet"}]} = tweet1
+      assert %{"name" => "t.co/nonexistent-link", "count" => 1, "tweets" => nil} = tweet2
+    end
   end
 end

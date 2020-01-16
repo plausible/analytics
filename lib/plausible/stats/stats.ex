@@ -253,10 +253,7 @@ defmodule Plausible.Stats do
       tweets = Repo.all(
         from t in Plausible.Twitter.Tweet,
         where: t.link in ^urls
-      ) |> Enum.reduce(%{}, fn tweet, acc ->
-        Map.update(acc, tweet.link, [tweet], &([tweet | &1]))
-      end)
-      |> IO.inspect
+      ) |> Enum.group_by(&(&1.link))
 
       Enum.map(referring_urls, fn url ->
         Map.put(url, :tweets, tweets[url[:name]])

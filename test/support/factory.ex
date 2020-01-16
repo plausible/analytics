@@ -79,4 +79,15 @@ defmodule Plausible.Factory do
       expires: Timex.now() |> Timex.shift(days: 1)
     }
   end
+
+  def tweet_factory do
+    %Plausible.Twitter.Tweet{
+      tweet_id: UUID.uuid4(),
+      author_handle: "author-handle",
+      author_name: "author-name",
+      author_image: "pic.twitter.com/author.png",
+      text: "tweet-text",
+      created: Timex.now()
+    }
+  end
 end
