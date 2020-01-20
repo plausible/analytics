@@ -22,6 +22,7 @@ defmodule Plausible.Google.Api do
     |> Map.get("siteEntry")
     |> Enum.filter(fn site -> site["permissionLevel"] in @verified_permission_levels end)
     |> Enum.map(fn site -> site["siteUrl"] end)
+    |> Enum.map(fn url -> String.trim_trailing(url, "/") end)
   end
 
   def fetch_stats(auth, query) do
