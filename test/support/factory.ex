@@ -50,8 +50,7 @@ defmodule Plausible.Factory do
     %Plausible.Event{
       hostname: hostname,
       pathname: "/",
-      new_visitor: true,
-      user_id: UUID.uuid4(),
+      new_visitor: true, user_id: UUID.uuid4(),
     }
   end
 
@@ -89,5 +88,13 @@ defmodule Plausible.Factory do
       text: "tweet-text",
       created: Timex.now()
     }
+  end
+
+  def weekly_report_factory do
+    %Plausible.Site.WeeklyReport{}
+  end
+
+  def monthly_report_factory do
+    %Plausible.Site.MonthlyReport{}
   end
 end

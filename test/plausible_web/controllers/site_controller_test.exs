@@ -187,4 +187,102 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.aggregate(Plausible.Goal, :count, :id) == 0
     end
   end
+
+  describe "POST /sites/:website/weekly-report/enable" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "creates a weekly report record with the user email", %{conn: conn, site: site, user: user} do
+      post(conn, "/sites/#{site.domain}/weekly-report/enable")
+
+      report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
+      assert report.recipients == [user.email]
+    end
+  end
+
+  describe "POST /sites/:website/weekly-report/disable" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "deletes the weekly report record", %{conn: conn, site: site} do
+      insert(:weekly_report, site: site)
+
+      post(conn, "/sites/#{site.domain}/weekly-report/disable")
+
+      refute Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
+    end
+  end
+
+  describe "POST /sites/:website/weekly-report/recipients" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "adds a recipient to the weekly report", %{conn: conn, site: site} do
+      insert(:weekly_report, site: site)
+
+      post(conn, "/sites/#{site.domain}/weekly-report/recipients", recipient: "user@email.com")
+
+      report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
+      assert report.recipients == ["user@email.com"]
+    end
+  end
+
+  describe "DELETE /sites/:website/weekly-report/recipients/:recipient" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "removes a recipient from the weekly report", %{conn: conn, site: site} do
+      insert(:weekly_report, site: site, recipients: ["recipient@email.com"])
+
+      delete(conn, "/sites/#{site.domain}/weekly-report/recipients/recipient@email.com")
+
+      report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
+      assert report.recipients == []
+    end
+  end
+
+  describe "POST /sites/:website/monthly-report/enable" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "creates a monthly report record with the user email", %{conn: conn, site: site, user: user} do
+      post(conn, "/sites/#{site.domain}/monthly-report/enable")
+
+      report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
+      assert report.recipients == [user.email]
+    end
+  end
+
+  describe "POST /sites/:website/monthly-report/disable" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "deletes the monthly report record", %{conn: conn, site: site} do
+      insert(:monthly_report, site: site)
+
+      post(conn, "/sites/#{site.domain}/monthly-report/disable")
+
+      refute Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
+    end
+  end
+
+  describe "POST /sites/:website/monthly-report/recipients" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "adds a recipient to the monthly report", %{conn: conn, site: site} do
+      insert(:monthly_report, site: site)
+
+      post(conn, "/sites/#{site.domain}/monthly-report/recipients", recipient: "user@email.com")
+
+      report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
+      assert report.recipients == ["user@email.com"]
+    end
+  end
+
+  describe "DELETE /sites/:website/monthly-report/recipients/:recipient" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "removes a recipient from the monthly report", %{conn: conn, site: site} do
+      insert(:monthly_report, site: site, recipients: ["recipient@email.com"])
+
+      delete(conn, "/sites/#{site.domain}/monthly-report/recipients/recipient@email.com")
+
+      report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
+      assert report.recipients == []
+    end
+  end
 end
