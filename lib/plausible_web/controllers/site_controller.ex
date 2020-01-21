@@ -259,20 +259,6 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{site.domain}/settings#email-reports")
   end
 
-  def google_settings(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
-           |> Repo.preload(:google_auth)
-
-    verified_domains = Plausible.Google.Api.fetch_verified_properties(site.google_auth)
-
-    render(conn,
-      "google_settings.html",
-      site: site,
-      verified_domains: verified_domains,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
-  end
-
   defp insert_site(user_id, params) do
     site_changeset = Plausible.Site.changeset(%Plausible.Site{}, params)
 
