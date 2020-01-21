@@ -149,7 +149,7 @@ body {
                         <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right: 10px; padding-left: 10px; padding-top: 10px; padding-bottom: 0px; font-family: Arial, sans-serif"><![endif]-->
                         <div style="color:#3d4852;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;line-height:120%;padding-top:10px;padding-right:10px;padding-bottom:0px;padding-left:10px;">
                           <div style="font-size: 12px; line-height: 14px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #3d4852;">
-                            <p style="font-size: 14px; line-height: 19px; text-align: right; margin: 0;"><span style="font-size: 16px;"><span style="line-height: 19px; font-size: 16px;"><strong><span style="line-height: 19px; font-size: 16px;">Weekly report for <%= @site.domain %></span></strong></span></span></p>
+<p style="font-size: 14px; line-height: 19px; text-align: right; margin: 0;"><span style="font-size: 16px;"><span style="line-height: 19px; font-size: 16px;"><strong><span style="line-height: 19px; font-size: 16px;"><%= @name %> report for <%= @site.domain %></span></strong></span></span></p>
                           </div>
                         </div>
                         <!--[if mso]></td></tr></table><![endif]-->

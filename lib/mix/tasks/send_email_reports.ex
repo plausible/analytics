@@ -3,66 +3,68 @@ defmodule Mix.Tasks.SendEmailReports do
   use Plausible.Repo
   require Logger
 
-  def run(args) do
+  def run(_args) do
     Application.ensure_all_started(:plausible)
-    execute(args)
+    execute(Timex.now())
   end
 
   @doc"""
     The email report should be sent on Monday at 9am according to the timezone
     of the site. This job runs every hour to be able to send it with hourly precision.
   """
-  def execute(_args \\ []) do
-    send_weekly_emails()
-    send_monthly_emails()
+  def execute(job_start) do
+    send_weekly_emails(job_start)
+    send_monthly_emails(job_start)
   end
 
-  defp send_weekly_emails() do
+  defp send_weekly_emails(job_start) do
     sites = Repo.all(
       from s in Plausible.Site,
       join: wr in Plausible.Site.WeeklyReport, on: wr.site_id == s.id,
-      left_join: se in "sent_weekly_reports", on: se.site_id == s.id and se.year == fragment("EXTRACT(isoyear from (now() at time zone ?))", s.timezone) and se.week == fragment("EXTRACT(week from (now() at time zone ?))", s.timezone),
+      left_join: se in "sent_weekly_reports", on: se.site_id == s.id and se.year == fragment("EXTRACT(isoyear from (? at time zone ?))", ^job_start, s.timezone) and se.week == fragment("EXTRACT(week from (? at time zone ?))", ^job_start, s.timezone),
       where: is_nil(se), # We haven't sent a report for this site on this week
-      where: fragment("EXTRACT(dow from (now() at time zone ?))", s.timezone) == 1, # It's monday in the local timezone
-      where: fragment("EXTRACT(hour from (now() at time zone ?))", s.timezone) >= 9, # It's after 9am
+      where: fragment("EXTRACT(dow from (? at time zone ?))", ^job_start, s.timezone) == 1, # It's monday in the local timezone
+      where: fragment("EXTRACT(hour from (? at time zone ?))", ^job_start, s.timezone) >= 9, # It's after 9am
       preload: [weekly_report: wr]
     )
 
     for site <- sites do
-      email = site.weekly_report.email
       query = Plausible.Stats.Query.from(site.timezone, %{"period" => "7d"})
 
-      IO.puts("Sending weekly report for #{site.domain} to #{email}")
+      for email <- site.weekly_report.recipients do
+        Logger.info("Sending weekly report for #{site.domain} to #{email}")
+        send_report(email, site, "Weekly", query)
+      end
 
-      send_report(email, site, query)
-      weekly_report_sent(site)
+      weekly_report_sent(site, job_start)
     end
   end
 
-  defp send_monthly_emails() do
+  defp send_monthly_emails(job_start) do
     sites = Repo.all(
       from s in Plausible.Site,
       join: mr in Plausible.Site.MonthlyReport, on: mr.site_id == s.id,
-      left_join: se in "sent_monthly_reports", on: se.site_id == s.id and se.year == fragment("EXTRACT(year from (now() at time zone ?))", s.timezone) and se.month == fragment("EXTRACT(month from (now() at time zone ?))", s.timezone),
+      left_join: se in "sent_monthly_reports", on: se.site_id == s.id and se.year == fragment("EXTRACT(year from (? at time zone ?))", ^job_start, s.timezone) and se.month == fragment("EXTRACT(month from (? at time zone ?))", ^job_start, s.timezone),
       where: is_nil(se), # We haven't sent a report for this site this month
-      where: fragment("EXTRACT(day from (now() at time zone ?))", s.timezone) == 1, # It's the 1st of the month in the local timezone
-      where: fragment("EXTRACT(hour from (now() at time zone ?))", s.timezone) >= 9, # It's after 9am
+      where: fragment("EXTRACT(day from (? at time zone ?))", ^job_start, s.timezone) == 1, # It's the 1st of the month in the local timezone
+      where: fragment("EXTRACT(hour from (? at time zone ?))", ^job_start, s.timezone) >= 9, # It's after 9am
       preload: [monthly_report: mr]
     )
 
     for site <- sites do
-      email = site.monthly_report.email
-      last_month = Timex.now(site.timezone) |> Timex.shift(months: -1) |> Timex.beginning_of_month |> Timex.format!("{ISOdate}")
-      query = Plausible.Stats.Query.from(site.timezone, %{"period" => "month", "date" => last_month})
+      last_month = job_start |> Timex.Timezone.convert(site.timezone) |> Timex.shift(months: -1) |> Timex.beginning_of_month
+      query = Plausible.Stats.Query.from(site.timezone, %{"period" => "month", "date" => Timex.format!(last_month, "{ISOdate}")})
 
-      IO.puts("Sending monthly report for #{site.domain} to #{email}")
+      for email <- site.monthly_report.recipients do
+        Logger.info("Sending monthly report for #{site.domain} to #{email}")
+        send_report(email, site, Timex.format!(last_month, "{Mfull}"), query)
+      end
 
-      send_report(email, site, query)
-      monthly_report_sent(site)
+      monthly_report_sent(site, job_start)
     end
   end
 
-  defp send_report(email, site, query) do
+  defp send_report(email, site, name, query) do
     {pageviews, unique_visitors} = Plausible.Stats.pageviews_and_visitors(site, query)
     {change_pageviews, change_visitors} = Plausible.Stats.compare_pageviews_and_visitors(site, query, {pageviews, unique_visitors})
     referrers = Plausible.Stats.top_referrers(site, query)
@@ -79,12 +81,13 @@ defmodule Mix.Tasks.SendEmailReports do
       settings_link: settings_link,
       view_link: view_link,
       pages: pages,
-      query: query
+      query: query,
+      name: name
     ) |> Plausible.Mailer.deliver_now()
   end
 
-  defp weekly_report_sent(site) do
-    {year, week} = Timex.now(site.timezone) |> DateTime.to_date |> Timex.iso_week
+  defp weekly_report_sent(site, time) do
+    {year, week} = time |> DateTime.to_date |> Timex.iso_week
 
     Repo.insert_all("sent_weekly_reports", [%{
       site_id: site.id,
@@ -94,8 +97,8 @@ defmodule Mix.Tasks.SendEmailReports do
     }])
   end
 
-  defp monthly_report_sent(site) do
-    date = Timex.now(site.timezone) |> DateTime.to_date
+  defp monthly_report_sent(site, time) do
+    date = DateTime.to_date(time)
 
     Repo.insert_all("sent_monthly_reports", [%{
       site_id: site.id,
