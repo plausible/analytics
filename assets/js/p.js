@@ -41,7 +41,6 @@
     }
 
     function getUserData() {
-      var oldUid = getCookie('nm_uid')
       var userData = JSON.parse(getCookie('plausible_user'))
 
       if (userData) {
@@ -49,14 +48,6 @@
         userData.user_agent = decodeURIComponent(userData.user_agent)
         userData.referrer = decodeURIComponent(userData.referrer)
         return userData
-      } else if (oldUid) {
-        return {
-          uid: oldUid,
-          new_visitor: false,
-          user_agent: window.navigator.userAgent,
-          referrer: window.document.referrer,
-          screen_width: window.innerWidth
-        }
       } else {
         return {
           uid: pseudoUUIDv4(),
@@ -70,10 +61,10 @@
 
     function setUserData(payload) {
       setCookie('plausible_user', JSON.stringify({
-          uid: payload.uid,
-          user_agent: encodeURIComponent(payload.user_agent),
-          referrer: encodeURIComponent(payload.referrer),
-          screen_width: payload.screen_width
+        uid: payload.uid,
+        user_agent: encodeURIComponent(payload.user_agent),
+        referrer: encodeURIComponent(payload.referrer),
+        screen_width: payload.screen_width
       }))
     }
 
