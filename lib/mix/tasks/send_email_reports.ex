@@ -71,7 +71,6 @@ defmodule Mix.Tasks.SendEmailReports do
     {change_pageviews, change_visitors} = Plausible.Stats.compare_pageviews_and_visitors(site, query, {pageviews, unique_visitors})
     referrers = Plausible.Stats.top_referrers(site, query)
     pages = Plausible.Stats.top_pages(site, query)
-    view_link = PlausibleWeb.Endpoint.url() <> "/#{site.domain}?period=7d"
 
     PlausibleWeb.Email.weekly_report(email, site,
       unique_visitors: unique_visitors,
@@ -80,7 +79,7 @@ defmodule Mix.Tasks.SendEmailReports do
       change_pageviews: change_pageviews,
       referrers: referrers,
       unsubscribe_link: unsubscribe_link,
-      view_link: view_link,
+      view_link: view_link(site, query),
       pages: pages,
       query: query,
       name: name
@@ -107,5 +106,14 @@ defmodule Mix.Tasks.SendEmailReports do
       month: date.month,
       timestamp: Timex.now()
     }])
+  end
+
+  defp view_link(site, %Plausible.Stats.Query{period: "7d"}) do
+    PlausibleWeb.Endpoint.url() <> "/#{site.domain}?period=7d"
+  end
+
+  defp view_link(site, %Plausible.Stats.Query{period: "month", date_range: range}) do
+    month = Timex.format!(range.first, "{ISOdate}")
+    PlausibleWeb.Endpoint.url() <> "/#{site.domain}?period=month&date=#{month}"
   end
 end
