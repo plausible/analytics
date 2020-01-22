@@ -16,7 +16,6 @@ defmodule PlausibleWeb.SiteController do
 
     case insert_site(user.id, site_params) do
       {:ok, %{site: site}} ->
-        Plausible.Tracking.event(conn, "New Site: Create", %{domain: site.domain})
         Plausible.Slack.notify("#{user.name} created #{site.domain}")
         conn
         |> put_session(site.domain <> "_offer_email_report", true)

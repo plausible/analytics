@@ -79,9 +79,6 @@ config :plausible, Plausible.Repo,
   timeout: 10_000,
   ssl: true
 
-config :plausible, :amplitude,
-  api_key: System.get_env("AMPLITUDE_API_KEY")
-
 config :plausible, :google,
   client_id: System.get_env("GOOGLE_CLIENT_ID"),
   client_secret: System.get_env("GOOGLE_CLIENT_SECRET")

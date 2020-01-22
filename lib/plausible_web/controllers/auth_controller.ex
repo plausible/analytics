@@ -9,7 +9,6 @@ defmodule PlausibleWeb.AuthController do
 
   def register_form(conn, _params) do
     changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
-    Plausible.Tracking.event(conn, "Register: View Form")
     render(conn, "register_form.html", changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
@@ -23,7 +22,6 @@ defmodule PlausibleWeb.AuthController do
         Logger.info(url)
         email_template = PlausibleWeb.Email.activation_email(user, url)
         Plausible.Mailer.deliver_now(email_template)
-        Plausible.Tracking.event(conn, "Register: Submit Form")
         conn |> render("register_success.html", email: user.email, layout: {PlausibleWeb.LayoutView, "focus.html"})
       {:error, changeset} ->
         render(conn, "register_form.html", changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
@@ -35,8 +33,6 @@ defmodule PlausibleWeb.AuthController do
       {:ok, %{name: name, email: email}} ->
         case Auth.create_user(name, email) do
           {:ok, user} ->
-            Plausible.Tracking.event(conn, "Register: Activate Account")
-            Plausible.Tracking.identify(conn, user.id, %{name: user.name})
             conn
             |> put_session(:current_user_id, user.id)
             |> redirect(to: "/password")

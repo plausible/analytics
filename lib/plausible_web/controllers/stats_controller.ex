@@ -15,8 +15,6 @@ defmodule PlausibleWeb.StatsController do
           demo = site.domain == "plausible.io"
           offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
 
-          Plausible.Tracking.event(conn, "Site Analytics: Open", %{demo: demo})
-
           conn
           |> assign(:skip_plausible_tracking, !demo)
           |> put_session(site.domain <> "_offer_email_report", nil)
