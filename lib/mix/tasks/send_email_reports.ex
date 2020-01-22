@@ -2,6 +2,7 @@ defmodule Mix.Tasks.SendEmailReports do
   use Mix.Task
   use Plausible.Repo
   require Logger
+  alias Plausible.Stats
 
   def run(_args) do
     Application.ensure_all_started(:plausible)
@@ -29,7 +30,7 @@ defmodule Mix.Tasks.SendEmailReports do
     )
 
     for site <- sites do
-      query = Plausible.Stats.Query.from(site.timezone, %{"period" => "7d"})
+      query = Stats.Query.from(site.timezone, %{"period" => "7d"})
 
       for email <- site.weekly_report.recipients do
         Logger.info("Sending weekly report for #{site.domain} to #{email}")
@@ -54,7 +55,7 @@ defmodule Mix.Tasks.SendEmailReports do
 
     for site <- sites do
       last_month = job_start |> Timex.Timezone.convert(site.timezone) |> Timex.shift(months: -1) |> Timex.beginning_of_month
-      query = Plausible.Stats.Query.from(site.timezone, %{"period" => "month", "date" => Timex.format!(last_month, "{ISOdate}")})
+      query = Stats.Query.from(site.timezone, %{"period" => "month", "date" => Timex.format!(last_month, "{ISOdate}")})
 
       for email <- site.monthly_report.recipients do
         Logger.info("Sending monthly report for #{site.domain} to #{email}")
@@ -67,16 +68,21 @@ defmodule Mix.Tasks.SendEmailReports do
   end
 
   defp send_report(email, site, name, unsubscribe_link, query) do
-    {pageviews, unique_visitors} = Plausible.Stats.pageviews_and_visitors(site, query)
-    {change_pageviews, change_visitors} = Plausible.Stats.compare_pageviews_and_visitors(site, query, {pageviews, unique_visitors})
-    referrers = Plausible.Stats.top_referrers(site, query)
-    pages = Plausible.Stats.top_pages(site, query)
+    {pageviews, unique_visitors} = Stats.pageviews_and_visitors(site, query)
+    {change_pageviews, change_visitors} = Stats.compare_pageviews_and_visitors(site, query, {pageviews, unique_visitors})
+    bounce_rate = Stats.bounce_rate(site, query)
+    prev_bounce_rate = Stats.bounce_rate(site, Stats.Query.shift_back(query))
+    change_bounce_rate = if prev_bounce_rate > 0, do: bounce_rate - prev_bounce_rate
+    referrers = Stats.top_referrers(site, query)
+    pages = Stats.top_pages(site, query)
 
     PlausibleWeb.Email.weekly_report(email, site,
       unique_visitors: unique_visitors,
       change_visitors: change_visitors,
       pageviews: pageviews,
       change_pageviews: change_pageviews,
+      bounce_rate: bounce_rate,
+      change_bounce_rate: change_bounce_rate,
       referrers: referrers,
       unsubscribe_link: unsubscribe_link,
       view_link: view_link(site, query),

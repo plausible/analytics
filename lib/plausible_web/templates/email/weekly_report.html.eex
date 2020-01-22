@@ -299,14 +299,43 @@ body {
                       <!--[if (!mso)&(!IE)]><!-->
                         <div style="border-top:0px solid transparent; border-left:0px solid transparent; border-bottom:0px solid transparent; border-right:0px solid transparent; padding-top:5px; padding-bottom:5px; padding-right: 0px; padding-left: 0px;">
                         <!--<![endif]-->
-                        <div></div>
+                        <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right: 5px; padding-left: 5px; padding-top: 5px; padding-bottom: 5px; font-family: Arial, sans-serif"><![endif]-->
+                        <div style="color:#8795a1;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;line-height:120%;padding-top:5px;padding-right:5px;padding-bottom:5px;padding-left:5px;">
+                          <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; text-align: left; color: #8795a1;"><span style="font-size: 12px; line-height: 14px;"><strong>BOUNCE RATE</strong></span></div>
+                        </div>
+                        <!--[if mso]></td></tr></table><![endif]-->
+                        <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right: 5px; padding-left: 5px; padding-top: 0px; padding-bottom: 5px; font-family: Arial, sans-serif"><![endif]-->
+                        <div style="color:#555555;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;line-height:120%;padding-top:0px;padding-right:5px;padding-bottom:5px;padding-left:5px;">
+                          <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; color: #555555;">
+                            <p style="font-size: 12px; line-height: 14px; text-align: left; margin: 0;"><strong><span style="font-size: 20px; line-height: 24px;"><%= @bounce_rate %>%</span></strong></p>
+                          </div>
+                        </div>
+                        <!--[if mso]></td></tr></table><![endif]-->
+                        <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right: 5px; padding-left: 5px; padding-top: 0px; padding-bottom: 5px; font-family: Arial, sans-serif"><![endif]-->
+                        <div style="color:#1f9d55;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;line-height:120%;padding-top:0px;padding-right:5px;padding-bottom:5px;padding-left:5px;">
+                          <%= cond do  %>
+                            <% @change_bounce_rate == nil -> %>
+                              <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; color: #8795a1;">
+                                <p style="font-size: 12px; line-height: 14px; text-align: left; margin: 0;"><strong>N/A</strong></p>
+                              </div>
+                            <% @change_bounce_rate <= 0 -> %>
+                              <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; color: #1f9d55;">
+                                <p style="font-size: 12px; line-height: 14px; text-align: left; margin: 0;"><strong><%= @change_bounce_rate %>%</strong></p>
+                              </div>
+                            <% @change_bounce_rate > 0 -> %>
+                              <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; color: #ff4457;">
+                                <p style="font-size: 12px; line-height: 14px; text-align: left; margin: 0;"><strong>+<%= @change_bounce_rate %>%</strong></p>
+                              </div>
+                          <% end %>
+                        </div>
+                        <!--[if mso]></td></tr></table><![endif]-->
                         <!--[if (!mso)&(!IE)]><!-->
                           </div>
                           <!--<![endif]-->
                     </div>
                   </div>
                   <!--[if (mso)|(IE)]></td></tr></table><![endif]-->
-                  <!--[if (mso)|(IE)]></td></tr></table></td></tr></table><![endif]-->
+                  <!--[if (mso)|(IE)]></td><td align="center" width="160" style="background-color:transparent;width:160px; border-top: 0px solid transparent; border-left: 0px solid transparent; border-bottom: 0px solid transparent; border-right: 0px solid transparent;" valign="top"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right: 0px; padding-left: 0px; padding-top:5px; padding-bottom:5px;"><![endif]-->
                 </div>
               </div>
             </div>
