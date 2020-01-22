@@ -82,17 +82,15 @@ defmodule PlausibleWeb.SiteController do
     end
 
     weekly_report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
-    weekly_report_changeset = weekly_report && Plausible.Site.WeeklyReport.changeset(weekly_report, %{})
     monthly_report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
-    monthly_report_changeset = monthly_report && Plausible.Site.WeeklyReport.changeset(monthly_report, %{})
     goals = Goals.for_site(site.domain)
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings.html",
       site: site,
-      weekly_report_changeset: weekly_report_changeset,
-      monthly_report_changeset: monthly_report_changeset,
+      weekly_report: weekly_report,
+      monthly_report: monthly_report,
       search_console_domains: search_console_domains,
       goals: goals,
       changeset: Plausible.Site.changeset(site, %{})
@@ -172,13 +170,13 @@ defmodule PlausibleWeb.SiteController do
 
     Plausible.Site.WeeklyReport.changeset(%Plausible.Site.WeeklyReport{}, %{
       site_id: site.id,
-      email: conn.assigns[:current_user].email
+      recipients: [conn.assigns[:current_user].email]
     })
     |> Repo.insert!
 
     conn
     |> put_flash(:success, "Success! You will receive an email report every Monday going forward")
-    |> redirect(to: "/" <> site.domain <> "/settings")
+    |> redirect(to: "/" <> site.domain <> "/settings#email-reports")
   end
 
   def disable_weekly_report(conn, %{"website" => website}) do
@@ -187,18 +185,31 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Success! You will not receive weekly email reports going forward")
-    |> redirect(to: "/" <> site.domain <> "/settings")
+    |> redirect(to: "/" <> site.domain <> "/settings#email-reports")
   end
 
-  def update_weekly_settings(conn, %{"website" => website, "weekly_report" => weekly_report}) do
+  def add_weekly_report_recipient(conn, %{"website" => website, "recipient" => recipient}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+
     Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
-    |> Plausible.Site.WeeklyReport.changeset(weekly_report)
+    |> Plausible.Site.WeeklyReport.add_recipient(recipient)
     |> Repo.update!
 
     conn
-    |> put_flash(:success, "Email address saved succesfully")
-    |> redirect(to: "/#{site.domain}/settings")
+    |> put_flash(:success, "Succesfully added #{recipient} as a recipient for the weekly report")
+    |> redirect(to: "/#{site.domain}/settings#email-reports")
+  end
+
+  def remove_weekly_report_recipient(conn, %{"website" => website, "recipient" => recipient}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+
+    Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
+    |> Plausible.Site.WeeklyReport.remove_recipient(recipient)
+    |> Repo.update!
+
+    conn
+    |> put_flash(:success, "Succesfully removed #{recipient} as a recipient for the weekly report")
+    |> redirect(to: "/#{site.domain}/settings#email-reports")
   end
 
   def enable_monthly_report(conn, %{"website" => website}) do
@@ -206,13 +217,13 @@ defmodule PlausibleWeb.SiteController do
 
     Plausible.Site.MonthlyReport.changeset(%Plausible.Site.MonthlyReport{}, %{
       site_id: site.id,
-      email: conn.assigns[:current_user].email
+      recipients: [conn.assigns[:current_user].email]
     })
     |> Repo.insert!
 
     conn
     |> put_flash(:success, "Success! You will receive an email report every month going forward")
-    |> redirect(to: "/" <> site.domain <> "/settings")
+    |> redirect(to: "/" <> site.domain <> "/settings#email-reports")
   end
 
   def disable_monthly_report(conn, %{"website" => website}) do
@@ -221,32 +232,31 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Success! You will not receive monthly email reports going forward")
-    |> redirect(to: "/" <> site.domain <> "/settings")
+    |> redirect(to: "/" <> site.domain <> "/settings#email-reports")
   end
 
-  def update_monthly_settings(conn, %{"website" => website, "monthly_report" => monthly_report}) do
+  def add_monthly_report_recipient(conn, %{"website" => website, "recipient" => recipient}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+
     Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
-    |> Plausible.Site.WeeklyReport.changeset(monthly_report)
+    |> Plausible.Site.MonthlyReport.add_recipient(recipient)
     |> Repo.update!
 
     conn
-    |> put_flash(:success, "Email address saved succesfully")
-    |> redirect(to: "/#{site.domain}/settings")
+    |> put_flash(:success, "Succesfully added #{recipient} as a recipient for the monthly report")
+    |> redirect(to: "/#{site.domain}/settings#email-reports")
   end
 
-  def google_settings(conn, %{"website" => website}) do
+  def remove_monthly_report_recipient(conn, %{"website" => website, "recipient" => recipient}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
-           |> Repo.preload(:google_auth)
 
-    verified_domains = Plausible.Google.Api.fetch_verified_properties(site.google_auth)
+    Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
+    |> Plausible.Site.MonthlyReport.remove_recipient(recipient)
+    |> Repo.update!
 
-    render(conn,
-      "google_settings.html",
-      site: site,
-      verified_domains: verified_domains,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
+    conn
+    |> put_flash(:success, "Succesfully removed #{recipient} as a recipient for the monthly report")
+    |> redirect(to: "/#{site.domain}/settings#email-reports")
   end
 
   defp insert_site(user_id, params) do
