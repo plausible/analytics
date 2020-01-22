@@ -33,7 +33,8 @@ defmodule Mix.Tasks.SendEmailReports do
 
       for email <- site.weekly_report.recipients do
         Logger.info("Sending weekly report for #{site.domain} to #{email}")
-        send_report(email, site, "Weekly", query)
+        unsubscribe_link = PlausibleWeb.Endpoint.url() <> "/sites/#{site.domain}/weekly-report/unsubscribe?email=#{email}"
+        send_report(email, site, "Weekly", unsubscribe_link, query)
       end
 
       weekly_report_sent(site, job_start)
@@ -57,19 +58,19 @@ defmodule Mix.Tasks.SendEmailReports do
 
       for email <- site.monthly_report.recipients do
         Logger.info("Sending monthly report for #{site.domain} to #{email}")
-        send_report(email, site, Timex.format!(last_month, "{Mfull}"), query)
+        unsubscribe_link = PlausibleWeb.Endpoint.url() <> "/sites/#{site.domain}/monthly-report/unsubscribe?email=#{email}"
+        send_report(email, site, Timex.format!(last_month, "{Mfull}"), unsubscribe_link, query)
       end
 
       monthly_report_sent(site, job_start)
     end
   end
 
-  defp send_report(email, site, name, query) do
+  defp send_report(email, site, name, unsubscribe_link, query) do
     {pageviews, unique_visitors} = Plausible.Stats.pageviews_and_visitors(site, query)
     {change_pageviews, change_visitors} = Plausible.Stats.compare_pageviews_and_visitors(site, query, {pageviews, unique_visitors})
     referrers = Plausible.Stats.top_referrers(site, query)
     pages = Plausible.Stats.top_pages(site, query)
-    settings_link = PlausibleWeb.Endpoint.url() <> "/#{site.domain}/settings#email-reports"
     view_link = PlausibleWeb.Endpoint.url() <> "/#{site.domain}?period=7d"
 
     PlausibleWeb.Email.weekly_report(email, site,
@@ -78,7 +79,7 @@ defmodule Mix.Tasks.SendEmailReports do
       pageviews: pageviews,
       change_pageviews: change_pageviews,
       referrers: referrers,
-      settings_link: settings_link,
+      unsubscribe_link: unsubscribe_link,
       view_link: view_link,
       pages: pages,
       query: query,
