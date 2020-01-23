@@ -83,6 +83,7 @@ defmodule PlausibleWeb.SiteController do
     weekly_report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
     monthly_report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
     goals = Goals.for_site(site.domain)
+    shared_links = Repo.all(from l in Plausible.Site.SharedLink, where: l.site_id == ^site.id)
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -92,6 +93,7 @@ defmodule PlausibleWeb.SiteController do
       monthly_report: monthly_report,
       search_console_domains: search_console_domains,
       goals: goals,
+      shared_links: shared_links,
       changeset: Plausible.Site.changeset(site, %{})
     )
   end
