@@ -48,6 +48,15 @@
     </div>
     <%= button("Make stats public", to: "/sites/#{@site.domain}/make-public", method: "POST", class: "button mt-8") %>
   <% end %>
+
+  <div class="flex items-center justify-between mt-16">
+    <h2>Shared links</h2>
+  </div>
+
+  <div class="my-4 border-b border-grey-light"></div>
+
+  <div>You can share your stats privately by generating a password-protected link.</div>
+  <%= link("+ New link", to: "/sites/#{@site.domain}/shared-links/new", class: "button mt-8") %>
 </div>
 
 <div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10">

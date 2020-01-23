@@ -285,4 +285,38 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert report.recipients == []
     end
   end
+
+  describe "GET /sites/:website/shared-links/new" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "shows form for new shared link", %{conn: conn, site: site} do
+      conn = get(conn, "/sites/#{site.domain}/shared-links/new")
+
+      assert html_response(conn, 200) =~ "New shared link"
+    end
+  end
+
+  describe "POSt /sites/:website/shared-links" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "creates shared link without password", %{conn: conn, site: site} do
+      post(conn, "/sites/#{site.domain}/shared-links", %{"shared_link" => %{}})
+
+      link = Repo.one(Plausible.Site.SharedLink)
+
+      refute is_nil(link.slug)
+      assert is_nil(link.password_hash)
+    end
+
+    test "creates shared link with password", %{conn: conn, site: site} do
+      post(conn, "/sites/#{site.domain}/shared-links", %{
+        "shared_link" => %{"password" => "password"}
+      })
+
+      link = Repo.one(Plausible.Site.SharedLink)
+
+      refute is_nil(link.slug)
+      refute is_nil(link.password_hash)
+    end
+  end
 end

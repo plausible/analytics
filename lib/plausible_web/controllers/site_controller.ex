@@ -258,6 +258,28 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{site.domain}/settings#email-reports")
   end
 
+  def new_shared_link(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    changeset = Plausible.Site.SharedLink.changeset(%Plausible.Site.SharedLink{}, %{})
+
+    render(conn, "new_shared_link.html", site: site, changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
+  end
+
+  def create_shared_link(conn, %{"website" => website, "shared_link" => link}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    changes = Plausible.Site.SharedLink.changeset(%Plausible.Site.SharedLink{
+      site_id: site.id,
+      slug: Nanoid.generate()
+    }, link)
+
+    case Repo.insert(changes) do
+      {:ok, _created} ->
+        redirect(conn, to: "/#{site.domain}/settings#visibility")
+      {:error, changeset} ->
+        render(conn, "new_shared_link.html", site: site, changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
+    end
+  end
+
   defp insert_site(user_id, params) do
     site_changeset = Plausible.Site.changeset(%Plausible.Site{}, params)
 

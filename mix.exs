@@ -60,7 +60,8 @@ defmodule Plausible.MixProject do
       {:joken, "~> 2.0"},
       {:php_serializer, "~> 0.9.0"},
       {:csv, "~> 2.3"},
-      {:oauther, "~> 1.1"}
+      {:oauther, "~> 1.1"},
+      {:nanoid, "~> 2.0.2"}
     ]
   end
 
