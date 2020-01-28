@@ -217,6 +217,14 @@ a {
   height: 1em;
   width: 1em;
   transform: translateY(0.15em);
+  overflow: visible;
+}
+
+.feather-sm {
+  height: 1em;
+  width: 1em;
+  transform: translateY(0.05em);
+  overflow: visible;
 }
 
 .table-striped tbody tr:nth-child(odd) {

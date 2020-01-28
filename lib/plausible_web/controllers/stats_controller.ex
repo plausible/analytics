@@ -59,6 +59,21 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
+  def shared_link(conn, %{"slug" => slug, "website" => website}) do
+    shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug)
+                  |> Repo.preload(:site)
+
+    if shared_link && shared_link.site.domain == website do
+      if shared_link.password_hash do
+        render(conn, "shared_link_password.html", link: shared_link, layout: {PlausibleWeb.LayoutView, "focus.html"})
+      else
+        send_resp(conn, 200, "You're in")
+      end
+    else
+      render_error(conn, 404)
+    end
+  end
+
   defp current_user_can_access?(_conn, %Plausible.Site{public: true}) do
     true
   end

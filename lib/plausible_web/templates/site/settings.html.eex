@@ -38,7 +38,9 @@
       Stats for <%= @site.domain %> are currently <b>public</b>. Anyone with the following link can view the stats:
       <div class="relative text-sm mt-4">
         <input type="text" id="public-link" value="https://plausible.io/<%= @site.domain  %>" class="transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 pr-16 text-grey-darker appearance-none focus:outline-none focus:border-grey-light" />
-        <a onclick="var input = document.getElementById('public-link'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="absolute pin-r text-indigo font-bold p-2">Copy</a>
+        <a onclick="var input = document.getElementById('public-link'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="absolute pin-r text-indigo-darker font-bold p-2">
+          <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
+        </a>
       </div>
     <%= button("Make stats private", to: "/sites/#{@site.domain}/make-private", method: "POST", class: "button mt-8") %>
   <% else %>
@@ -59,14 +61,12 @@
     <%= for link <- @shared_links do %>
       <div class="flex relative w-full mt-2 text-sm">
         <input type="text" id="<%= link.slug %>" readonly="readonly" value="<%= shared_link_dest(@site, link) %>" class="transition bg-grey-lighter appearance-none border border-transparent rounded rounded-r-none w-full p-2 text-grey-darker appearance-none focus:outline-none focus:border-grey-light" />
-        <%= button(to: "#", class: "button button-sm bg-grey-light text-grey-darkest rounded-l-none", "data-dropdown-trigger": "") do %>
-          <svg class="feather"><use xlink:href="#feather-chevron-down" /></svg>
+        <%= button(to: "#", class: "py-2 px-4 bg-grey-lighter text-indigo-darker rounded-none border-r border-grey-light") do %>
+          <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
         <% end %>
-
-        <div data-dropdown style="top: 42px; right: 0px; width: 185px;" class="dropdown-content hidden absolute pin-r bg-white border border-grey-light rounded shadow-md z-10">
-          <%= link("Copy to clipboard", to: "/settings", class: "block py-3 px-2 font-bold border-b border-grey-light hover:bg-grey-lighter") %>
-          <%= link("Delete", to: "/logout", method: :post, class: "block py-3 px-2 text-red-dark font-bold hover:bg-grey-lighter") %>
-        </div>
+        <%= button(to: "#", class: "py-2 px-4 bg-grey-lighter text-red-dark rounded-l-none", "data-dropdown-trigger": "") do %>
+          <svg class="feather-sm"><use xlink:href="#feather-trash-2" /></svg>
+        <% end %>
       </div>
     <% end %>
   </div>

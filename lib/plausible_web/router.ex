@@ -127,6 +127,7 @@ defmodule PlausibleWeb.Router do
     delete "/:website", SiteController, :delete_site
 
     get "/:website/visitors.csv", StatsController, :csv_export
+    get "/:website/share/:slug", StatsController, :shared_link
     get "/:website/*path", StatsController, :stats
   end
 
