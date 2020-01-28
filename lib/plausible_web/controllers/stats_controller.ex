@@ -67,7 +67,15 @@ defmodule PlausibleWeb.StatsController do
       if shared_link.password_hash do
         render(conn, "shared_link_password.html", link: shared_link, layout: {PlausibleWeb.LayoutView, "focus.html"})
       else
-        send_resp(conn, 200, "You're in")
+        site_session_key = "authorized_site__" <> website
+        conn
+        |> put_session(site_session_key, %{
+          id: shared_link.site.id,
+          domain: shared_link.site.domain,
+          timezone: shared_link.site.timezone,
+          valid_until: Timex.now() |> Timex.shift(minutes: 30) |> DateTime.to_unix()
+        })
+        |> redirect(to: "/#{website}")
       end
     else
       render_error(conn, 404)
@@ -79,6 +87,14 @@ defmodule PlausibleWeb.StatsController do
   end
 
   defp current_user_can_access?(conn, site) do
+    site_session_key = "authorized_site__" <> site.domain
+    site_session = get_session(conn, site_session_key)
+    valid_site_session = site_session && site_session[:valid_until] > DateTime.to_unix(Timex.now())
+
+    valid_site_session || current_user_is_owner?(conn, site)
+  end
+
+  defp current_user_is_owner?(conn, site) do
     case conn.assigns[:current_user] do
       nil -> false
       user -> Plausible.Sites.is_owner?(user.id, site)

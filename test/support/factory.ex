@@ -97,4 +97,10 @@ defmodule Plausible.Factory do
   def monthly_report_factory do
     %Plausible.Site.MonthlyReport{}
   end
+
+  def shared_link_factory do
+    %Plausible.Site.SharedLink{
+      slug: Nanoid.generate()
+    }
+  end
 end
