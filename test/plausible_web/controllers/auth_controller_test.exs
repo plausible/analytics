@@ -164,6 +164,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       }])
 
       insert(:google_auth, site: site, user: user)
+      insert(:subscription, user: user, status: "deleted")
 
       conn = delete(conn, "/me")
       assert redirected_to(conn) == "/"

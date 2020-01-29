@@ -79,6 +79,12 @@
 
   <div class="my-4 border-b border-grey-light"></div>
 
-  <p class="text-lg">Deleting your account removes all sites and stats you've collected</p>
-  <%= link "Delete my account ", to: "/me", method: :delete, class: "button bg-red-dark mt-4", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"] %>
+  <p>Deleting your account removes all sites and stats you've collected</p>
+
+  <%= if @subscription && @subscription.status == "active" do %>
+    <span class="button bg-grey-dark mt-6 hover:shadow-none">Delete my account</span>
+    <p class="text-grey-darker mt-2">Your account cannot be deleted because you have an active subscription. If you want to delete your account, please cancel your subscription first.</p>
+  <% else %>
+    <%= link "Delete my account ", to: "/me", method: :delete, class: "button bg-red-dark mt-6", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"] %>
+  <% end %>
 </div>

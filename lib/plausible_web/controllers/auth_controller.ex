@@ -165,7 +165,9 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def delete_me(conn, _params) do
-    user = conn.assigns[:current_user] |> Repo.preload(:sites)
+    user = conn.assigns[:current_user]
+           |> Repo.preload(:sites)
+           |> Repo.preload(:subscription)
 
     for site_membership <- user.site_memberships do
       Repo.delete!(site_membership)
@@ -175,6 +177,7 @@ defmodule PlausibleWeb.AuthController do
       Repo.delete!(site)
     end
 
+    Repo.delete!(user.subscription)
     Repo.delete!(user)
 
     conn
