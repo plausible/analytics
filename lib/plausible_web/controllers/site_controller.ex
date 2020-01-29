@@ -282,6 +282,13 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
+  def delete_shared_link(conn, %{"website" => website, "slug" => slug}) do
+    Repo.get_by(Plausible.Site.SharedLink, slug: slug)
+    |> Repo.delete!
+
+    redirect(conn, to: "/#{website}/settings#visibility")
+  end
+
   defp insert_site(user_id, params) do
     site_changeset = Plausible.Site.changeset(%Plausible.Site{}, params)
 

@@ -111,6 +111,7 @@ defmodule PlausibleWeb.Router do
 
     get "/sites/:website/shared-links/new", SiteController, :new_shared_link
     post "/sites/:website/shared-links", SiteController, :create_shared_link
+    delete "/sites/:website/shared-links/:slug", SiteController, :delete_shared_link
 
     get "/sites/:website/weekly-report/unsubscribe", UnsubscribeController, :weekly_report
     get "/sites/:website/monthly-report/unsubscribe", UnsubscribeController, :monthly_report

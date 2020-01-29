@@ -67,7 +67,7 @@
         <button onclick="var input = document.getElementById('<%= link.slug %>'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="py-2 px-4 bg-grey-lighter text-indigo-darker rounded-none border-r border-grey-light">
           <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
         </button>
-        <%= button(to: "#", class: "py-2 px-4 bg-grey-lighter text-red-dark rounded-l-none", "data-dropdown-trigger": "") do %>
+        <%= button(to: "/sites/#{@site.domain}/shared-links/#{link.slug}", method: :delete, class: "py-2 px-4 bg-grey-lighter text-red-dark rounded-l-none", data: [confirm: "Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."]) do %>
           <svg class="feather-sm"><use xlink:href="#feather-trash-2" /></svg>
         <% end %>
       </div>

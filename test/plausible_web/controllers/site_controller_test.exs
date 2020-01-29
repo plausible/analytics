@@ -319,4 +319,17 @@ defmodule PlausibleWeb.SiteControllerTest do
       refute is_nil(link.password_hash)
     end
   end
+
+  describe "DELETE /sites/:website/shared-links/:slug" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "shows form for new shared link", %{conn: conn, site: site} do
+      link = insert(:shared_link, site: site)
+
+      conn = delete(conn, "/sites/#{site.domain}/shared-links/#{link.slug}")
+
+      refute Repo.one(Plausible.Site.SharedLink)
+      assert redirected_to(conn, 302) =~ "/#{site.domain}/settings"
+    end
+  end
 end
