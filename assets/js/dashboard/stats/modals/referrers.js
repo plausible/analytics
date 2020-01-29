@@ -32,7 +32,7 @@ class ReferrersModal extends React.Component {
   }
 
   formatBounceRate(page) {
-    if (page.bounce_rate) {
+    if (typeof(page.bounce_rate) === 'number') {
       return page.bounce_rate + '%'
     } else {
       return '-'

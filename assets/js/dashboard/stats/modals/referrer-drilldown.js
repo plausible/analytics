@@ -33,7 +33,7 @@ class ReferrerDrilldownModal extends React.Component {
   }
 
   formatBounceRate(ref) {
-    if (ref.bounce_rate) {
+    if (typeof(ref.bounce_rate) === 'number') {
       return ref.bounce_rate + '%'
     } else {
       return '-'
