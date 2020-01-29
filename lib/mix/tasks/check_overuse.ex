@@ -3,9 +3,7 @@ defmodule Mix.Tasks.CheckOveruse do
   use Plausible.Repo
   require Logger
 
-  @doc """
-  This is scheduled to run every 6 hours.
-  """
+  # coveralls-ignore-start
 
   def run(args) do
     Application.ensure_all_started(:plausible)
