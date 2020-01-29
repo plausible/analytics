@@ -126,8 +126,9 @@ defmodule PlausibleWeb.Router do
     put "/:website/settings/google", SiteController, :update_google_auth
     delete "/:website", SiteController, :delete_site
 
+    get "/share/:slug", StatsController, :shared_link
+    post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
     get "/:website/visitors.csv", StatsController, :csv_export
-    get "/:website/share/:slug", StatsController, :shared_link
     get "/:website/*path", StatsController, :stats
   end
 

@@ -9,8 +9,8 @@ defmodule PlausibleWeb.SiteView do
     name
   end
 
-  def shared_link_dest(site, link) do
-    PlausibleWeb.Endpoint.url() <> "/#{site.domain}/share/" <> link.slug
+  def shared_link_dest(link) do
+    PlausibleWeb.Endpoint.url() <> "/share/" <> link.slug
   end
 
   def snippet() do

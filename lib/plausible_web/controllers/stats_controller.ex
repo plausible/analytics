@@ -59,27 +59,47 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  def shared_link(conn, %{"slug" => slug, "website" => website}) do
+  def shared_link(conn, %{"slug" => slug}) do
     shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug)
                   |> Repo.preload(:site)
 
-    if shared_link && shared_link.site.domain == website do
+    if shared_link do
       if shared_link.password_hash do
         render(conn, "shared_link_password.html", link: shared_link, layout: {PlausibleWeb.LayoutView, "focus.html"})
       else
-        site_session_key = "authorized_site__" <> website
-        conn
-        |> put_session(site_session_key, %{
-          id: shared_link.site.id,
-          domain: shared_link.site.domain,
-          timezone: shared_link.site.timezone,
-          valid_until: Timex.now() |> Timex.shift(minutes: 30) |> DateTime.to_unix()
-        })
-        |> redirect(to: "/#{website}")
+        shared_link_auth_success(conn, shared_link)
       end
     else
       render_error(conn, 404)
     end
+  end
+
+  def authenticate_shared_link(conn, %{"slug" => slug, "password" => password}) do
+    shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug)
+                  |> Repo.preload(:site)
+
+    if shared_link do
+      if Plausible.Auth.Password.match?(password, shared_link.password_hash) do
+        shared_link_auth_success(conn, shared_link)
+      else
+        render(conn, "shared_link_password.html", link: shared_link, error: "Incorrect password. Please try again.", layout: {PlausibleWeb.LayoutView, "focus.html"})
+      end
+    else
+      render_error(conn, 404)
+    end
+  end
+
+  defp shared_link_auth_success(conn, shared_link) do
+    site_session_key = "authorized_site__" <> shared_link.site.domain
+
+    conn
+    |> put_session(site_session_key, %{
+      id: shared_link.site.id,
+      domain: shared_link.site.domain,
+      timezone: shared_link.site.timezone,
+      valid_until: Timex.now() |> Timex.shift(minutes: 30) |> DateTime.to_unix()
+    })
+    |> redirect(to: "/#{shared_link.site.domain}")
   end
 
   defp current_user_can_access?(_conn, %Plausible.Site{public: true}) do
