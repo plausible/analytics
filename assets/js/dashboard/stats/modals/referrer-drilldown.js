@@ -1,6 +1,5 @@
 import React from "react";
 import { Link, withRouter } from 'react-router-dom'
-import TweetEmbed from 'react-tweet-embed'
 
 import Modal from './modal'
 import * as api from '../../api'
