@@ -109,8 +109,13 @@ defmodule PlausibleWeb.Router do
     post "/sites/:website/monthly-report/recipients", SiteController, :add_monthly_report_recipient
     delete "/sites/:website/monthly-report/recipients/:recipient", SiteController, :remove_monthly_report_recipient
 
+    get "/sites/:website/shared-links/new", SiteController, :new_shared_link
+    post "/sites/:website/shared-links", SiteController, :create_shared_link
+    delete "/sites/:website/shared-links/:slug", SiteController, :delete_shared_link
+
     get "/sites/:website/weekly-report/unsubscribe", UnsubscribeController, :weekly_report
     get "/sites/:website/monthly-report/unsubscribe", UnsubscribeController, :monthly_report
+
 
     get "/:website/snippet", SiteController, :add_snippet
     get "/:website/settings", SiteController, :settings
@@ -122,6 +127,8 @@ defmodule PlausibleWeb.Router do
     put "/:website/settings/google", SiteController, :update_google_auth
     delete "/:website", SiteController, :delete_site
 
+    get "/share/:slug", StatsController, :shared_link
+    post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
     get "/:website/visitors.csv", StatsController, :csv_export
     get "/:website/*path", StatsController, :stats
   end

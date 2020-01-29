@@ -28,7 +28,7 @@
   <% end %>
 </div>
 
-<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10">
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10" id="visibility">
   <div class="flex items-center justify-between">
     <h2>Visibility</h2>
   </div>
@@ -36,10 +36,12 @@
   <div class="my-4 border-b border-grey-light"></div>
   <%= if @site.public do %>
       Stats for <%= @site.domain %> are currently <b>public</b>. Anyone with the following link can view the stats:
-    <div class="w-full md:w-2/3">
-      <input type="text" id="public-link" value="https://plausible.io/<%= @site.domain  %>" class="transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:border-grey-light mt-4" />
-    <a onclick="var input = document.getElementById('public-link'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="no-underline text-blue text-sm hover:underline">Copy to clipboard</a>
-    </div>
+      <div class="relative text-sm mt-4">
+        <input type="text" id="public-link" value="https://plausible.io/<%= @site.domain  %>" class="transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 pr-16 text-grey-darker appearance-none focus:outline-none focus:border-grey-light" />
+        <a onclick="var input = document.getElementById('public-link'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="absolute pin-r text-indigo-darker font-bold p-2">
+          <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
+        </a>
+      </div>
     <%= button("Make stats private", to: "/sites/#{@site.domain}/make-private", method: "POST", class: "button mt-8") %>
   <% else %>
     <div class="text-grey-darker">
@@ -48,6 +50,31 @@
     </div>
     <%= button("Make stats public", to: "/sites/#{@site.domain}/make-public", method: "POST", class: "button mt-8") %>
   <% end %>
+
+  <div class="mt-16">
+    <h2>Shared links</h2>
+
+    <div class="my-4 border-b border-grey-light"></div>
+
+    <div class="my-4">
+      You can share your stats privately by generating a shared link. The links are impossible to guess and
+      you can add password protection for extra security.
+    </div>
+
+    <%= for link <- @shared_links do %>
+      <div class="flex relative w-full mt-2 text-sm">
+        <input type="text" id="<%= link.slug %>" readonly="readonly" value="<%= shared_link_dest(link) %>" class="transition bg-grey-lighter appearance-none border border-transparent rounded rounded-r-none w-full p-2 text-grey-darker appearance-none focus:outline-none focus:border-grey-light" />
+        <button onclick="var input = document.getElementById('<%= link.slug %>'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="py-2 px-4 bg-grey-lighter text-indigo-darker rounded-none border-r border-grey-light">
+          <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
+        </button>
+        <%= button(to: "/sites/#{@site.domain}/shared-links/#{link.slug}", method: :delete, class: "py-2 px-4 bg-grey-lighter text-red-dark rounded-l-none", data: [confirm: "Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."]) do %>
+          <svg class="feather-sm"><use xlink:href="#feather-trash-2" /></svg>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <%= link("+ New link", to: "/sites/#{@site.domain}/shared-links/new", class: "button mt-4") %>
 </div>
 
 <div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10">
