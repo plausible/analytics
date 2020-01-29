@@ -4,9 +4,7 @@ defmodule Mix.Tasks.CreateFreeSubscription do
   require Logger
   alias Plausible.Billing.Subscription
 
-  @doc """
-  This is scheduled to run every 6 hours.
-  """
+  # coveralls-ignore-start
 
   def run([user_id]) do
     Application.ensure_all_started(:plausible)
