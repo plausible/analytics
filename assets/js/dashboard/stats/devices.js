@@ -58,7 +58,7 @@ class ScreenSizes extends React.Component {
       <div className="flex items-center justify-between my-1 text-sm" key={size.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
           <Bar count={size.count} all={this.state.sizes} color="green" />
-          <span className="hover:underline block px-2" style={{marginTop: '-23px'}}>{iconFor(size.name)} {size.name}</span>
+          <span className="block px-2" style={{marginTop: '-23px'}}>{iconFor(size.name)} {size.name}</span>
         </div>
         <span className="font-medium">{size.percentage}%</span>
       </div>
@@ -109,7 +109,7 @@ class Browsers extends React.Component {
       <div className="flex items-center justify-between my-1 text-sm" key={browser.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
           <Bar count={browser.count} all={this.state.browsers} color="green" />
-          <span className="hover:underline block px-2" style={{marginTop: '-23px'}}>{browser.name}</span>
+          <span className="block px-2" style={{marginTop: '-23px'}}>{browser.name}</span>
         </div>
         <span className="font-medium">{browser.percentage}%</span>
       </div>
@@ -160,7 +160,7 @@ class OperatingSystems extends React.Component {
       <div className="flex items-center justify-between my-1 text-sm" key={os.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
           <Bar count={os.count} all={this.state.operatingSystems} color="green" />
-          <span className="hover:underline block px-2" style={{marginTop: '-23px'}}>{os.name}</span>
+          <span className="block px-2" style={{marginTop: '-23px'}}>{os.name}</span>
         </div>
         <span className="font-medium">{os.percentage}%</span>
       </div>
