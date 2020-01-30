@@ -19,7 +19,7 @@ defmodule Plausible.Google.Api do
     auth = refresh_if_needed(auth)
     res = HTTPoison.get!("https://www.googleapis.com/webmasters/v3/sites",["Content-Type": "application/json", "Authorization": "Bearer #{auth.access_token}"])
     Jason.decode!(res.body)
-    |> Map.get("siteEntry")
+    |> Map.get("siteEntry", [])
     |> Enum.filter(fn site -> site["permissionLevel"] in @verified_permission_levels end)
     |> Enum.map(fn site -> site["siteUrl"] end)
     |> Enum.map(fn url -> String.trim_trailing(url, "/") end)
