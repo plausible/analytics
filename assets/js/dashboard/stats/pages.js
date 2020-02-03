@@ -26,7 +26,7 @@ export default class Pages extends React.Component {
   }
 
   fetchPages() {
-    api.get(`/api/stats/${this.props.site.domain}/pages`, this.props.query)
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, this.props.query)
       .then((res) => this.setState({loading: false, pages: res}))
   }
 

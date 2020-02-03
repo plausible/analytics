@@ -25,10 +25,10 @@ export default class Referrers extends React.Component {
 
   fetchReferrers() {
     if (this.props.query.filters.goal) {
-      api.get(`/api/stats/${this.props.site.domain}/goal/referrers`, this.props.query)
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers`, this.props.query)
         .then((res) => this.setState({loading: false, referrers: res}))
     } else {
-      api.get(`/api/stats/${this.props.site.domain}/referrers`, this.props.query)
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers`, this.props.query)
         .then((res) => this.setState({loading: false, referrers: res}))
     }
   }
@@ -37,7 +37,7 @@ export default class Referrers extends React.Component {
     return (
       <React.Fragment key={referrer.name}>
         <div className="flex items-center justify-between my-2">
-          <Link className="hover:underline truncate" style={{maxWidth: '80%'}} to={`/${this.props.site.domain}/referrers/${referrer.name}${window.location.search}`}>{ referrer.name }</Link>
+          <Link className="hover:underline truncate" style={{maxWidth: '80%'}} to={`/${encodeURIComponent(this.props.site.domain)}/referrers/${referrer.name}${window.location.search}`}>{ referrer.name }</Link>
           <span>{numberFormatter(referrer.count)}</span>
         </div>
         <Bar count={referrer.count} all={this.state.referrers} color="blue" />

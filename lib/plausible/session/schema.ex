@@ -4,6 +4,7 @@ defmodule Plausible.Session do
 
   schema "sessions" do
     field :hostname, :string
+    field :site_id, :string
     field :new_visitor, :boolean
     field :user_id, :binary_id
 
@@ -25,7 +26,7 @@ defmodule Plausible.Session do
 
   def changeset(session, attrs) do
     session
-    |> cast(attrs, [:hostname, :entry_page, :exit_page, :referrer, :new_visitor, :user_id, :start, :length, :is_bounce, :operating_system, :browser, :referrer_source, :country_code, :screen_size])
-    |> validate_required([:hostname, :new_visitor, :user_id, :is_bounce, :start])
+    |> cast(attrs, [:hostname, :site_id, :entry_page, :exit_page, :referrer, :new_visitor, :user_id, :start, :length, :is_bounce, :operating_system, :browser, :referrer_source, :country_code, :screen_size])
+    |> validate_required([:hostname, :site_id, :new_visitor, :user_id, :is_bounce, :start])
   end
 end

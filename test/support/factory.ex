@@ -27,6 +27,7 @@ defmodule Plausible.Factory do
 
     %Plausible.Session{
       hostname: hostname,
+      site_id: hostname,
       new_visitor: true,
       entry_page: "/",
       user_id: UUID.uuid4(),
@@ -49,6 +50,7 @@ defmodule Plausible.Factory do
 
     %Plausible.Event{
       hostname: hostname,
+      site_id: hostname,
       pathname: "/",
       new_visitor: true, user_id: UUID.uuid4(),
     }

@@ -48,7 +48,7 @@ export default class ScreenSizes extends React.Component {
   }
 
   fetchScreenSizes() {
-    api.get(`/api/stats/${this.props.site.domain}/screen-sizes`, this.props.query)
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/screen-sizes`, this.props.query)
       .then((res) => this.setState({loading: false, sizes: res}))
   }
 

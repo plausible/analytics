@@ -24,7 +24,7 @@ export default class Conversions extends React.Component {
   }
 
   fetchConversions() {
-    api.get(`/api/stats/${this.props.site.domain}/conversions`, this.props.query)
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/conversions`, this.props.query)
       .then((res) => this.setState({loading: false, goals: res}))
   }
 
