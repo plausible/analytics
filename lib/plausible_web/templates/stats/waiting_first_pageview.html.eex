@@ -1,7 +1,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/3.0.0/fetch.min.js" integrity="sha256-E1M+0f/hvoNVoV8K5RSn1gwe4EFwlvORnOrFzghX0wM=" crossorigin="anonymous"></script>
 <script>
   function updateStatus() {
-    fetch("/api/<%= @site.domain %>/status")
+    fetch("/api/<%= URI.encode_www_form(@site.domain) %>/status")
     .then(function(res) { return res.json() })
       .then(function(status) {
         if (status === "READY") {
@@ -20,7 +20,7 @@
     <div class="my-4">
       <div class="pulsating-circle"></div>
       <p class="text-grey-dark text-sm absolute pin-l pin-b mb-6 w-full text-center leading-normal">
-        Need to see the snippet again? <%= link("Click here", to: "/#{@site.domain}/snippet")%><br />
+        Need to see the snippet again? <%= link("Click here", to: "/#{URI.encode_www_form(@site.domain)}/snippet")%><br />
         Not working? Contact <a href="mailto:uku@plausible.io">uku@plausible.io</a> to get set up
       </p>
     </div>

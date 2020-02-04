@@ -1,6 +1,6 @@
 <div class="pt-24"></div>
 <div class="max-w-md mx-auto flex justify-between">
-  <a href="/<%= @site.domain %>"><h1>Settings for <%= @site.domain %></h1></a>
+  <a href="/<%= URI.encode_www_form(@site.domain) %>"><h1>Settings for <%= @site.domain %></h1></a>
 </div>
 <div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10">
   <div class="flex items-center justify-between">
@@ -37,7 +37,7 @@
   <%= if @site.public do %>
       Stats for <%= @site.domain %> are currently <b>public</b>. Anyone with the following link can view the stats:
       <div class="relative text-sm mt-4">
-        <input type="text" id="public-link" value="https://plausible.io/<%= @site.domain  %>" class="transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 pr-16 text-grey-darker appearance-none focus:outline-none focus:border-grey-light" />
+        <input type="text" id="public-link" value="https://plausible.io/<%= URI.encode_www_form(@site.domain)  %>" class="transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 pr-16 text-grey-darker appearance-none focus:outline-none focus:border-grey-light" />
         <a onclick="var input = document.getElementById('public-link'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="absolute pin-r text-indigo-darker font-bold p-2">
           <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
         </a>
