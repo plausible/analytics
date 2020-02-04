@@ -7,8 +7,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     setup [:create_user, :log_in, :create_site]
 
     test "displays visitors for a day", %{conn: conn, site: site} do
-      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 00:00:00])
-      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 23:59:00])
+      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 00:00:00])
+      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 23:59:00])
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
     test "displays hourly stats in configured timezone", %{conn: conn, user: user} do
       site = insert(:site, members: [user], timezone: "CET") # UTC+1
-      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 00:00:00]) # Timestamp is in UTC
+      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 00:00:00]) # Timestamp is in UTC
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
@@ -34,8 +34,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "displays visitors for a month", %{conn: conn, site: site} do
-      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 12:00:00])
-      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-31 12:00:00])
+      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 12:00:00])
+      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-31 12:00:00])
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2019-01-01")
 
@@ -47,8 +47,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "displays visitors for 6 months", %{conn: conn, site: site} do
-      insert(:pageview, hostname: site.domain)
-      insert(:pageview, hostname: site.domain, timestamp: months_ago(5))
+      insert(:pageview, domain: site.domain)
+      insert(:pageview, domain: site.domain, timestamp: months_ago(5))
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=6mo")
 
@@ -88,8 +88,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     setup [:create_user, :log_in, :create_site]
 
     test "unique users counts distinct user ids", %{conn: conn, site: site} do
-      insert(:pageview, hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 00:00:00])
-      insert(:pageview, hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 23:59:00])
+      insert(:pageview, domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 00:00:00])
+      insert(:pageview, domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 23:59:00])
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
@@ -98,8 +98,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "does not count custom events in custom user ids", %{conn: conn, site: site} do
-      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 00:00:00])
-      insert(:event, name: "Custom", hostname: site.domain, timestamp: ~N[2019-01-01 00:00:00])
+      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 00:00:00])
+      insert(:event, name: "Custom", domain: site.domain, timestamp: ~N[2019-01-01 00:00:00])
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
@@ -108,8 +108,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "counts total pageviews even from same user ids", %{conn: conn, site: site} do
-      insert(:pageview, hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 00:00:00])
-      insert(:pageview, hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 23:59:00])
+      insert(:pageview, domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 00:00:00])
+      insert(:pageview, domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 23:59:00])
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
@@ -118,10 +118,10 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "compares pageviews with previous time period", %{conn: conn, site: site} do
-      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
 
-      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-02 02:00:00])
+      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-02 02:00:00])
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-02")
 
@@ -130,8 +130,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "calculates bounce rate", %{conn: conn, site: site} do
-      insert(:session, hostname: site.domain, is_bounce: true, start: ~N[2019-01-01 01:00:00])
-      insert(:session, hostname: site.domain, is_bounce: false, start: ~N[2019-01-01 02:00:00])
+      insert(:session, domain: site.domain, is_bounce: true, start: ~N[2019-01-01 01:00:00])
+      insert(:session, domain: site.domain, is_bounce: false, start: ~N[2019-01-01 02:00:00])
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
@@ -140,12 +140,12 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "calculates change in bounce rate", %{conn: conn, site: site} do
-      insert(:session, hostname: site.domain, is_bounce: true, start: ~N[2019-01-01 01:00:00])
-      insert(:session, hostname: site.domain, is_bounce: false, start: ~N[2019-01-01 02:00:00])
+      insert(:session, domain: site.domain, is_bounce: true, start: ~N[2019-01-01 01:00:00])
+      insert(:session, domain: site.domain, is_bounce: false, start: ~N[2019-01-01 02:00:00])
 
-      insert(:session, hostname: site.domain, is_bounce: true, start: ~N[2019-01-02 01:00:00])
-      insert(:session, hostname: site.domain, is_bounce: true, start: ~N[2019-01-02 01:00:00])
-      insert(:session, hostname: site.domain, is_bounce: false, start: ~N[2019-01-02 02:00:00])
+      insert(:session, domain: site.domain, is_bounce: true, start: ~N[2019-01-02 01:00:00])
+      insert(:session, domain: site.domain, is_bounce: true, start: ~N[2019-01-02 01:00:00])
+      insert(:session, domain: site.domain, is_bounce: false, start: ~N[2019-01-02 02:00:00])
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-02")
 
@@ -159,9 +159,9 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     setup [:create_user, :log_in, :create_site]
 
     test "returns total unique visitors", %{conn: conn, site: site} do
-      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 01:00:00])
-      insert(:event, name: "Signup", hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "Signup", domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 02:00:00])
 
       filters = Jason.encode!(%{goal: "Signup"})
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01&filters=#{filters}")
@@ -171,9 +171,9 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "returns converted visitors", %{conn: conn, site: site} do
-      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 01:00:00])
-      insert(:event, name: "Signup", hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "Signup", domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 02:00:00])
 
       filters = Jason.encode!(%{goal: "Signup"})
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2019-01-01&filters=#{filters}")
@@ -183,9 +183,9 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "returns conversion rate", %{conn: conn, site: site} do
-      insert(:pageview, hostname: site.domain, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 01:00:00])
-      insert(:event, name: "Signup", hostname: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "Signup", domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 02:00:00])
 
       filters = Jason.encode!(%{goal: "Signup"})
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01&filters=#{filters}")

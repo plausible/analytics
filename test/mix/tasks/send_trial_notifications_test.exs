@@ -17,7 +17,7 @@ defmodule Mix.Tasks.SendTrialNotificationsTest do
     test "sends a reminder 14 days before trial ends (16 days after user signed up)" do
       user = insert(:user, inserted_at: Timex.now |> Timex.shift(days: -16))
       site = insert(:site, members: [user])
-      insert(:pageview, hostname: site.domain)
+      insert(:pageview, domain: site.domain)
 
       Mix.Tasks.SendTrialNotifications.execute()
 
@@ -27,7 +27,7 @@ defmodule Mix.Tasks.SendTrialNotificationsTest do
     test "sends an upgrade email the day before the trial ends" do
       user = insert(:user, inserted_at: Timex.now |> Timex.shift(days: -29))
       site = insert(:site, members: [user])
-      insert(:pageview, hostname: site.domain)
+      insert(:pageview, domain: site.domain)
 
       Mix.Tasks.SendTrialNotifications.execute()
 
@@ -37,10 +37,10 @@ defmodule Mix.Tasks.SendTrialNotificationsTest do
     test "does not send a notification if user has a subscription" do
       user1 = insert(:user, inserted_at: Timex.now |> Timex.shift(days: -14))
       site1 = insert(:site, members: [user1])
-      insert(:pageview, hostname: site1.domain)
+      insert(:pageview, domain: site1.domain)
       user2 = insert(:user, inserted_at: Timex.now |> Timex.shift(days: -29))
       site2 = insert(:site, members: [user2])
-      insert(:pageview, hostname: site2.domain)
+      insert(:pageview, domain: site2.domain)
 
       insert(:subscription, user: user1)
       insert(:subscription, user: user2)

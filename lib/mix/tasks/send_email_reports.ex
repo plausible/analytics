@@ -33,8 +33,8 @@ defmodule Mix.Tasks.SendEmailReports do
       query = Stats.Query.from(site.timezone, %{"period" => "7d"})
 
       for email <- site.weekly_report.recipients do
-        Logger.info("Sending weekly report for #{site.domain} to #{email}")
-        unsubscribe_link = PlausibleWeb.Endpoint.url() <> "/sites/#{site.domain}/weekly-report/unsubscribe?email=#{email}"
+        Logger.info("Sending weekly report for #{URI.encode_www_form(site.domain)} to #{email}")
+        unsubscribe_link = PlausibleWeb.Endpoint.url() <> "/sites/#{URI.encode_www_form(site.domain)}/weekly-report/unsubscribe?email=#{email}"
         send_report(email, site, "Weekly", unsubscribe_link, query)
       end
 
@@ -59,7 +59,7 @@ defmodule Mix.Tasks.SendEmailReports do
 
       for email <- site.monthly_report.recipients do
         Logger.info("Sending monthly report for #{site.domain} to #{email}")
-        unsubscribe_link = PlausibleWeb.Endpoint.url() <> "/sites/#{site.domain}/monthly-report/unsubscribe?email=#{email}"
+        unsubscribe_link = PlausibleWeb.Endpoint.url() <> "/sites/#{URI.encode_www_form(site.domain)}/monthly-report/unsubscribe?email=#{email}"
         send_report(email, site, Timex.format!(last_month, "{Mfull}"), unsubscribe_link, query)
       end
 
@@ -115,11 +115,11 @@ defmodule Mix.Tasks.SendEmailReports do
   end
 
   defp view_link(site, %Plausible.Stats.Query{period: "7d"}) do
-    PlausibleWeb.Endpoint.url() <> "/#{site.domain}?period=7d"
+    PlausibleWeb.Endpoint.url() <> "/#{URI.encode_www_form(site.domain)}?period=7d"
   end
 
   defp view_link(site, %Plausible.Stats.Query{period: "month", date_range: range}) do
     month = Timex.format!(range.first, "{ISOdate}")
-    PlausibleWeb.Endpoint.url() <> "/#{site.domain}?period=month&date=#{month}"
+    PlausibleWeb.Endpoint.url() <> "/#{URI.encode_www_form(site.domain)}?period=month&date=#{month}"
   end
 end

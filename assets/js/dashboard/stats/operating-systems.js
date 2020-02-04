@@ -22,7 +22,7 @@ export default class OperatingSystems extends React.Component {
   }
 
   fetchOperatingSystems() {
-    api.get(`/api/stats/${this.props.site.domain}/operating-systems`, this.props.query)
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/operating-systems`, this.props.query)
       .then((res) => this.setState({loading: false, systems: res}))
   }
 

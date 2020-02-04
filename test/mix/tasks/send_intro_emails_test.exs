@@ -66,7 +66,7 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
     test "sends a welcome email 6 hours after signup if the user has created a site and has received a pageview" do
       user = insert(:user, inserted_at: hours_ago(6))
       site = insert(:site, members: [user])
-      insert(:pageview, hostname: site.domain)
+      insert(:pageview, domain: site.domain)
 
       Mix.Tasks.SendIntroEmails.execute()
 
@@ -79,7 +79,7 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
     test "sends a welcome email 23 hours after signup" do
       user = insert(:user, inserted_at: hours_ago(23))
       site = insert(:site, members: [user])
-      insert(:pageview, hostname: site.domain)
+      insert(:pageview, domain: site.domain)
 
       Mix.Tasks.SendIntroEmails.execute()
 
@@ -92,7 +92,7 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
     test "does not send a welcome email 24 hours after signup" do
       user = insert(:user, inserted_at: hours_ago(24))
       site = insert(:site, members: [user])
-      insert(:pageview, hostname: site.domain)
+      insert(:pageview, domain: site.domain)
 
       Mix.Tasks.SendIntroEmails.execute()
 
@@ -106,7 +106,7 @@ defmodule Mix.Tasks.SendIntroEmailsTest do
     Mix.Tasks.SendIntroEmails.execute()
 
     site = insert(:site, members: [user])
-    insert(:pageview, hostname: site.domain)
+    insert(:pageview, domain: site.domain)
 
     Mix.Tasks.SendIntroEmails.execute()
 

@@ -17,12 +17,12 @@ class ReferrerDrilldownModal extends React.Component {
 
   componentDidMount() {
     if (this.state.query.filters.goal) {
-      api.get(`/api/stats/${this.props.site.domain}/goal/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100})
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100})
         .then((res) => this.setState({loading: false, referrers: res.referrers, totalVisitors: res.total_visitors}))
     } else {
       const include = this.showBounceRate() ? 'bounce_rate' : null
 
-      api.get(`/api/stats/${this.props.site.domain}/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100, include: include})
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100, include: include})
         .then((res) => this.setState({loading: false, referrers: res.referrers, totalVisitors: res.total_visitors}))
     }
   }
@@ -119,7 +119,7 @@ class ReferrerDrilldownModal extends React.Component {
       return (
         <React.Fragment>
           <header className="modal__header">
-            <Link to={`/${this.props.site.domain}/referrers${window.location.search}`} className="font-bold text-grey-darker hover:underline">← All referrers</Link>
+            <Link to={`/${encodeURIComponent(this.props.site.domain)}/referrers${window.location.search}`} className="font-bold text-grey-darker hover:underline">← All referrers</Link>
           </header>
 
           <div className="my-4 border-b border-grey-light"></div>

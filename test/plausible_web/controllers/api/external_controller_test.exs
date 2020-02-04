@@ -34,9 +34,31 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == ""
       assert pageview.hostname == "gigride.live"
+      assert pageview.domain == "gigride.live"
       assert pageview.pathname == "/"
       assert pageview.new_visitor == true
       assert pageview.country_code == @country_code
+    end
+
+    test "can specify the domain", %{conn: conn} do
+      params = %{
+        name: "custom event",
+        url: "http://gigride.live/",
+        domain: "some_site.com",
+        new_visitor: false,
+        uid: UUID.uuid4()
+      }
+
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/event", Jason.encode!(params))
+
+      event = Repo.one(Plausible.Event)
+      finalize_session(event.user_id)
+
+      assert response(conn, 202) == ""
+      assert event.domain == "some_site.com"
     end
 
     test "www. is stripped from hostname", %{conn: conn} do

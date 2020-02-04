@@ -4,6 +4,7 @@ defmodule Plausible.Event do
 
   schema "events" do
     field :name, :string
+    field :domain, :string
     field :hostname, :string
     field :pathname, :string
     field :new_visitor, :boolean
@@ -21,7 +22,7 @@ defmodule Plausible.Event do
 
   def changeset(pageview, attrs) do
     pageview
-    |> cast(attrs, [:name, :hostname, :pathname, :referrer, :new_visitor, :user_id, :operating_system, :browser, :referrer_source, :country_code, :screen_size])
-    |> validate_required([:name, :hostname, :pathname, :new_visitor, :user_id])
+    |> cast(attrs, [:name, :domain, :hostname, :pathname, :referrer, :new_visitor, :user_id, :operating_system, :browser, :referrer_source, :country_code, :screen_size])
+    |> validate_required([:name, :domain, :hostname, :pathname, :new_visitor, :user_id])
   end
 end

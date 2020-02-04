@@ -18,7 +18,7 @@ class GoogleKeywordsModal extends React.Component {
   }
 
   componentDidMount() {
-    api.get(`/api/stats/${this.props.site.domain}/referrers/Google`, this.state.query, {limit: 100})
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/Google`, this.state.query, {limit: 100})
       .then((res) => this.setState({
         loading: false,
         searchTerms: res.search_terms,
@@ -56,7 +56,7 @@ class GoogleKeywordsModal extends React.Component {
             <RocketIcon />
             <div className="text-lg">The site is not connected to Google Search Keywords</div>
             <div className="text-lg">Configure the integration to view search terms</div>
-            <a href={`/${this.props.site.domain}/settings#google-auth`} className="button mt-4">Connect with Google</a>
+            <a href={`/${encodeURIComponent(this.props.site.domain)}/settings#google-auth`} className="button mt-4">Connect with Google</a>
           </div>
         )
       } else {
@@ -93,7 +93,7 @@ class GoogleKeywordsModal extends React.Component {
       return (
         <React.Fragment>
           <header className="modal__header">
-            <Link to={`/${this.props.site.domain}/referrers${window.location.search}`} className="font-bold text-grey-darker hover:underline">← All referrers</Link>
+            <Link to={`/${encodeURIComponent(this.props.site.domain)}/referrers${window.location.search}`} className="font-bold text-grey-darker hover:underline">← All referrers</Link>
           </header>
 
           <div className="my-4 border-b border-grey-light"></div>

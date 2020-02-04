@@ -289,7 +289,7 @@ class LineGraph extends React.Component {
   }
 
   downloadLink() {
-    const endpoint = `/${this.props.site.domain}/visitors.csv${api.serializeQuery(this.props.query)}`
+    const endpoint = `/${encodeURIComponent(this.props.site.domain)}/visitors.csv${api.serializeQuery(this.props.query)}`
 
     return (
       <a href={endpoint} download>
@@ -337,7 +337,7 @@ export default class VisitorGraph extends React.Component {
   }
 
   fetchGraphData() {
-    api.get(`/api/stats/${this.props.site.domain}/main-graph`, this.props.query)
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/main-graph`, this.props.query)
       .then((res) => {
         this.setState({loading: false, graphData: res})
         return res

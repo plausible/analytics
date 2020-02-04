@@ -22,7 +22,7 @@ export default class Browsers extends React.Component {
   }
 
   fetchBrowsers() {
-    api.get(`/api/stats/${this.props.site.domain}/browsers`, this.props.query)
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/browsers`, this.props.query)
       .then((res) => this.setState({loading: false, browsers: res}))
   }
 

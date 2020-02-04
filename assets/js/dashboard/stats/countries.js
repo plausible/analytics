@@ -24,7 +24,7 @@ export default class Countries extends React.Component {
   }
 
   fetchCountries() {
-    api.get(`/api/stats/${this.props.site.domain}/countries`, this.props.query)
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/countries`, this.props.query)
       .then((res) => this.setState({loading: false, countries: res}))
   }
 

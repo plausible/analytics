@@ -15,5 +15,5 @@
       <%= link("Read the docs", class: "text-indigo hover:underline", to: "https://docs.plausible.io/single-page-application-support", target: "_blank") %>
     </div>
   </div>
-  <%= link("Start collecting data →", class: "button mt-4 w-full", to: "/#{@site.domain}") %>
+  <%= link("Start collecting data →", class: "button mt-4 w-full", to: "/#{URI.encode_www_form(@site.domain)}") %>
 <% end %>

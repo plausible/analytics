@@ -17,7 +17,7 @@ defmodule Mix.Tasks.SendFeedbackEmailsTest do
     test "sends an email if the user is more than 30 days old and logged on in the last week" do
       user = insert(:user, inserted_at: days_ago(31), last_seen: days_ago(1))
       site = insert(:site, members: [user])
-      insert(:pageview, hostname: site.domain)
+      insert(:pageview, domain: site.domain)
 
       SendFeedbackEmails.execute()
 
@@ -27,7 +27,7 @@ defmodule Mix.Tasks.SendFeedbackEmailsTest do
     test "sends the email only once" do
       user = insert(:user, inserted_at: days_ago(31), last_seen: days_ago(1))
       site = insert(:site, members: [user])
-      insert(:pageview, hostname: site.domain)
+      insert(:pageview, domain: site.domain)
 
       SendFeedbackEmails.execute()
       assert_email_delivered_with(subject: "Plausible feedback")
@@ -39,7 +39,7 @@ defmodule Mix.Tasks.SendFeedbackEmailsTest do
     test "does not send if user has not logged in recently" do
       user = insert(:user, inserted_at: days_ago(31), last_seen: days_ago(15))
       site = insert(:site, members: [user])
-      insert(:pageview, hostname: site.domain)
+      insert(:pageview, domain: site.domain)
 
       SendFeedbackEmails.execute()
 
@@ -49,7 +49,7 @@ defmodule Mix.Tasks.SendFeedbackEmailsTest do
     test "does not send if user is less than a month old" do
       user = insert(:user, inserted_at: days_ago(15), last_seen: days_ago(1))
       site = insert(:site, members: [user])
-      insert(:pageview, hostname: site.domain)
+      insert(:pageview, domain: site.domain)
 
       SendFeedbackEmails.execute()
 

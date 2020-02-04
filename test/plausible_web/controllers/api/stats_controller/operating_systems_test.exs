@@ -6,9 +6,9 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
     setup [:create_user, :log_in, :create_site]
 
     test "returns operating systems by new visitors", %{conn: conn, site: site} do
-      insert(:pageview, hostname: site.domain, operating_system: "Mac", new_visitor: true, timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, hostname: site.domain, operating_system: "Mac", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, hostname: site.domain, operating_system: "Android", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, domain: site.domain, operating_system: "Mac", new_visitor: true, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, domain: site.domain, operating_system: "Mac", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, domain: site.domain, operating_system: "Android", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
 
       conn = get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&date=2019-01-01")
 

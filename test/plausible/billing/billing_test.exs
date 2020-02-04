@@ -12,8 +12,8 @@ defmodule Plausible.BillingTest do
     test "counts the total number of events" do
       user = insert(:user)
       site = insert(:site, members: [user])
-      insert(:pageview, hostname: site.domain)
-      insert(:pageview, hostname: site.domain)
+      insert(:pageview, domain: site.domain)
+      insert(:pageview, domain: site.domain)
 
       assert Billing.usage(user) == 2
     end

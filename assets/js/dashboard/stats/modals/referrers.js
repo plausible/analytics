@@ -17,12 +17,12 @@ class ReferrersModal extends React.Component {
 
   componentDidMount() {
     if (this.state.query.filters.goal) {
-      api.get(`/api/stats/${this.props.site.domain}/goal/referrers`, this.state.query, {limit: 100})
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers`, this.state.query, {limit: 100})
         .then((res) => this.setState({loading: false, referrers: res}))
     } else {
       const include = this.showBounceRate() ? 'bounce_rate' : null
 
-      api.get(`/api/stats/${this.props.site.domain}/referrers`, this.state.query, {limit: 100, include: include})
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers`, this.state.query, {limit: 100, include: include})
         .then((res) => this.setState({loading: false, referrers: res}))
     }
   }
@@ -43,7 +43,7 @@ class ReferrersModal extends React.Component {
     return (
       <tr className="text-sm" key={referrer.name}>
         <td className="p-2">
-          <Link className="hover:underline truncate" style={{maxWidth: '80%'}} to={`/${this.props.site.domain}/referrers/${referrer.name}${window.location.search}`}>{ referrer.name }</Link>
+          <Link className="hover:underline truncate" style={{maxWidth: '80%'}} to={`/${encodeURIComponent(this.props.site.domain)}/referrers/${referrer.name}${window.location.search}`}>{ referrer.name }</Link>
         </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.count)}</td>
         {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td> }

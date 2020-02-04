@@ -208,6 +208,6 @@ defmodule PlausibleWeb.AuthController do
 
     site = Repo.get(Plausible.Site, site_id)
 
-    redirect(conn, to: "/#{site.domain}/settings#google-auth")
+    redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings#google-auth")
   end
 end

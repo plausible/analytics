@@ -5,7 +5,7 @@ defmodule Plausible.SitesTest do
   describe "has_pageviews?" do
     test "is true if site has pageviews" do
       site = insert(:site)
-      insert(:pageview, hostname: site.domain)
+      insert(:pageview, domain: site.domain)
 
       assert Sites.has_pageviews?(site)
     end

@@ -124,7 +124,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "deletes the site and all pageviews", %{conn: conn, user: user, site: site} do
-      pageview = insert(:pageview, hostname: site.domain)
+      pageview = insert(:pageview, domain: site.domain)
       insert(:google_auth, user: user, site: site)
 
       delete(conn, "/#{site.domain}")

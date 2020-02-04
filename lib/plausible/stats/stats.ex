@@ -126,7 +126,7 @@ defmodule Plausible.Stats do
     {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
 
     sessions_query = from(s in Plausible.Session,
-      where: s.hostname == ^site.domain,
+      where: s.domain == ^site.domain,
       where: s.new_visitor,
       where: s.start >= ^first_datetime and s.start < ^last_datetime
     )
@@ -143,7 +143,7 @@ defmodule Plausible.Stats do
     {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
 
     Repo.one(from s in Plausible.Session,
-      where: s.hostname == ^site.domain,
+      where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       select: coalesce(avg(s.length), 0)
     ) |> Decimal.round |> Decimal.to_integer
@@ -199,7 +199,7 @@ defmodule Plausible.Stats do
 
     total_sessions_by_referrer = Repo.all(
       from s in Plausible.Session,
-      where: s.hostname == ^site.domain,
+      where: s.domain == ^site.domain,
       where: s.new_visitor,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.referrer_source in ^referrers,
@@ -209,7 +209,7 @@ defmodule Plausible.Stats do
 
     bounced_sessions_by_referrer = Repo.all(
       from s in Plausible.Session,
-      where: s.hostname == ^site.domain,
+      where: s.domain == ^site.domain,
       where: s.new_visitor,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.is_bounce,
@@ -300,7 +300,7 @@ defmodule Plausible.Stats do
 
     total_sessions_by_url = Repo.all(
       from s in Plausible.Session,
-      where: s.hostname == ^site.domain,
+      where: s.domain == ^site.domain,
       where: s.new_visitor,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.referrer in ^referring_urls,
@@ -310,7 +310,7 @@ defmodule Plausible.Stats do
 
     bounced_sessions_by_url = Repo.all(
       from s in Plausible.Session,
-      where: s.hostname == ^site.domain,
+      where: s.domain == ^site.domain,
       where: s.new_visitor,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.is_bounce,
@@ -355,7 +355,7 @@ defmodule Plausible.Stats do
 
     total_sessions_by_url = Repo.all(
       from s in Plausible.Session,
-      where: s.hostname == ^site.domain,
+      where: s.domain == ^site.domain,
       where: s.new_visitor,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.entry_page in ^page_urls,
@@ -365,7 +365,7 @@ defmodule Plausible.Stats do
 
     bounced_sessions_by_url = Repo.all(
       from s in Plausible.Session,
-      where: s.hostname == ^site.domain,
+      where: s.domain == ^site.domain,
       where: s.new_visitor,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.is_bounce,
@@ -453,7 +453,7 @@ defmodule Plausible.Stats do
     Repo.one(
       from e in Plausible.Event,
       where: e.timestamp >= fragment("(now() at time zone 'utc') - '5 minutes'::interval"),
-      where: e.hostname == ^site.domain,
+      where: e.domain == ^site.domain,
       select: count(e.user_id, :distinct)
     )
   end
@@ -513,7 +513,7 @@ defmodule Plausible.Stats do
     {goal_event, path} = event_name_for_goal(query)
 
     q = from(e in Plausible.Event,
-      where: e.hostname == ^site.domain,
+      where: e.domain == ^site.domain,
       where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
     )
 

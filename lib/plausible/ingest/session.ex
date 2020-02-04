@@ -48,6 +48,7 @@ defmodule Plausible.Ingest.Session do
 
       Plausible.Session.changeset(%Plausible.Session{}, %{
         hostname: first_event.hostname,
+        domain: first_event.domain,
         user_id: first_event.user_id,
         new_visitor: first_event.new_visitor,
         entry_page: first_event.pathname,

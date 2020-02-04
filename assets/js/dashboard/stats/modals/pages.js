@@ -18,7 +18,7 @@ class PagesModal extends React.Component {
   componentDidMount() {
     const include = this.showBounceRate() ? 'bounce_rate' : null
 
-    api.get(`/api/stats/${this.props.site.domain}/pages`, this.state.query, {limit: 100, include: include})
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, this.state.query, {limit: 100, include: include})
       .then((res) => this.setState({loading: false, pages: res}))
   }
 

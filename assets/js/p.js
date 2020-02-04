@@ -2,6 +2,10 @@
   'use strict';
 
   try {
+    const CONFIG = {
+      domain: window.location.hostname
+    }
+
     function setCookie(name,value) {
       var date = new Date();
       date.setTime(date.getTime() + (3*365*24*60*60*1000)); // 3 YEARS
@@ -76,6 +80,7 @@
       var payload = getUserData()
       payload.name = eventName
       payload.url = getUrl()
+      payload.domain = CONFIG['domain']
 
       var request = new XMLHttpRequest();
       request.open('POST', plausibleHost + '/api/event', true);
@@ -113,10 +118,15 @@
       }
     }
 
+    function configure(key, val) {
+      CONFIG[key] = val
+    }
+
     const functions = {
       page: page,
       trigger: trigger,
-      trackPushState: trackPushState
+      trackPushState: trackPushState,
+      configure: configure
     }
 
     const queue = window.plausible.q || []

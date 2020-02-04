@@ -44,42 +44,6 @@ defmodule Mix.Tasks.SendTrialNotifications do
           nil
       end
     end
-
-    #two_weeks_left = from(
-    #  u in base_query,
-    #  where: type(u.inserted_at, :date) == fragment("now()::date - '14 days'::interval")
-    #)
-
-    #tomorrow = from(
-    #  u in base_query,
-    #  where: type(u.inserted_at, :date) == fragment("now()::date - '29 days'::interval")
-    #)
-
-    #today = from(
-    #  u in base_query,
-    #  where: type(u.inserted_at, :date) == fragment("now()::date - '30 days'::interval")
-    #)
-
-    #yesterday = from(
-    #  u in base_query,
-    #  where: type(u.inserted_at, :date) == fragment("now()::date - '31 days'::interval")
-    #)
-
-    #for user <- Repo.all(two_weeks_left) do
-    #  if Plausible.Auth.user_completed_setup?(user), do: send_two_week_reminder(args, user)
-    #end
-
-    #for user <- Repo.all(tomorrow) do
-    #  if Plausible.Auth.user_completed_setup?(user), do: send_tomorrow_reminder(args, user)
-    #end
-
-    #for user <- Repo.all(today) do
-    #  if Plausible.Auth.user_completed_setup?(user), do: send_today_reminder(args, user)
-    #end
-
-    #for user <- Repo.all(yesterday) do
-    #  if Plausible.Auth.user_completed_setup?(user), do: send_over_reminder(args, user)
-    #end
   end
 
   defp send_two_week_reminder(["--dry-run"], user) do
