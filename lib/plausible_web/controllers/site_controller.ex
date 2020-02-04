@@ -134,7 +134,7 @@ defmodule PlausibleWeb.SiteController do
       |> Repo.preload(:google_auth)
 
     Repo.delete_all(from sm in "site_memberships", where: sm.site_id == ^site.id)
-    Repo.delete_all(from e in "events", where: e.site_id == ^site.domain)
+    Repo.delete_all(from e in "events", where: e.domain == ^site.domain)
 
     if site.google_auth do
       Repo.delete!(site.google_auth)

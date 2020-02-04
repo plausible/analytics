@@ -3,7 +3,7 @@
 
   try {
     const CONFIG = {
-      site_id: window.location.hostname
+      domain: window.location.hostname
     }
 
     function setCookie(name,value) {
@@ -80,7 +80,7 @@
       var payload = getUserData()
       payload.name = eventName
       payload.url = getUrl()
-      payload.site_id = CONFIG['site_id']
+      payload.domain = CONFIG['domain']
 
       var request = new XMLHttpRequest();
       request.open('POST', plausibleHost + '/api/event', true);
