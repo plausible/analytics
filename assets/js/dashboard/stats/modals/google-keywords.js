@@ -46,7 +46,7 @@ class GoogleKeywordsModal extends React.Component {
         <div className="text-center text-grey-darker mt-6">
           <RocketIcon />
           <div className="text-lg">Sorry, we cannot show which keywords converted best for goal <b>{this.state.query.filters.goal}</b></div>
-          <div className="text-lg">Google has a monopoly on that data which helps them dominate the analytics market</div>
+          <div className="text-lg">Google does not share this information</div>
         </div>
       )
     } else if (this.state.notConfigured) {
