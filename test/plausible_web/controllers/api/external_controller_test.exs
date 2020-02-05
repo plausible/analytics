@@ -61,6 +61,25 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert event.domain == "some_site.com"
     end
 
+    test "www. is stripped from domain", %{conn: conn} do
+      params = %{
+        name: "custom event",
+        url: "http://gigride.live/",
+        domain: "www.some_site.com",
+        new_visitor: false,
+        uid: UUID.uuid4()
+      }
+
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> post("/api/event", Jason.encode!(params))
+
+      pageview = Repo.one(Plausible.Event)
+      finalize_session(pageview.user_id)
+
+      assert pageview.domain == "some_site.com"
+    end
+
     test "www. is stripped from hostname", %{conn: conn} do
       params = %{
         name: "pageview",

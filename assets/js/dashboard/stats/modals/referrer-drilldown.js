@@ -79,7 +79,6 @@ class ReferrerDrilldownModal extends React.Component {
             { this.renderReferrerName(referrer.name) }
             <span className="text-grey-dark ml-2 text-xs">
               appears in {referrer.tweets.length} tweets
-              <svg className="feather ml-1"><use xlinkHref="#feather-chevron-down" /></svg>
             </span>
             <div className="my-4 ml-4">
               { referrer.tweets.map(this.renderTweet) }

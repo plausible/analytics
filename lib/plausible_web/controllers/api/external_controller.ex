@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       event_attrs = %{
         name: params["name"],
         hostname: strip_www(uri.host),
-        domain: params["domain"] || strip_www(uri.host),
+        domain: strip_www(params["domain"]) || strip_www(uri.host),
         pathname: uri.path,
         new_visitor: params["new_visitor"],
         country_code: country_code,
