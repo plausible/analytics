@@ -54,6 +54,6 @@ if (registerForm) {
       }
     }
 
-    plausible('trigger', 'Signup', {callback: submitForm});
+    plausible('Signup', {callback: submitForm});
   })
 }

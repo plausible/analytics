@@ -2,6 +2,13 @@
   'use strict';
 
   try {
+    const scriptEl = window.document.querySelector('[src*="' + plausibleHost +'"]')
+    const domainAttr = scriptEl && scriptEl.getAttribute('data-domain')
+
+    const CONFIG = {
+      domain: domainAttr || window.location.hostname
+    }
+
     function setCookie(name,value) {
       var date = new Date();
       date.setTime(date.getTime() + (3*365*24*60*60*1000)); // 3 YEARS
@@ -68,7 +75,7 @@
       }))
     }
 
-    function trigger(eventName) {
+    function trigger(eventName, options) {
       if (/localhost$/.test(window.location.hostname)) return ignore('website is running locally');
       if (window.location.protocol === 'file:') return ignore('website is running locally');
       if (window.document.visibilityState === 'prerender') return ignore('document is prerendering');
@@ -76,6 +83,7 @@
       var payload = getUserData()
       payload.name = eventName
       payload.url = getUrl()
+      payload.domain = CONFIG['domain']
 
       var request = new XMLHttpRequest();
       request.open('POST', plausibleHost + '/api/event', true);
@@ -86,9 +94,9 @@
       request.onreadystatechange = function() {
         if (request.readyState == XMLHttpRequest.DONE) {
           setUserData(payload)
+          options && options.callback && options.callback()
         }
       }
-
     }
 
     function onUnload() {
@@ -108,6 +116,12 @@
         originalFn.apply(this, arguments)
         page();
       }
+    }
+
+    const queue = (window.plausible && window.plausible.q) || []
+    window.plausible = trigger
+    for (var i = 0; i < queue.length; i++) {
+      trigger.apply(this, queue[i])
     }
 
     page()
