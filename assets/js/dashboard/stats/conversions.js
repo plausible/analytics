@@ -55,8 +55,8 @@ export default class Conversions extends React.Component {
         <div className="w-full bg-white shadow-xl rounded p-4">
           <h3>Goal Conversions</h3>
           <div className="flex items-center mt-6 mb-3 justify-between text-grey-dark text-xs font-bold tracking-wide">
-            <span>GOAL</span>
-            <span>CONVERSIONS</span>
+            <span>Goal</span>
+            <span>Conversions</span>
           </div>
 
           { this.state.goals.map(this.renderGoal.bind(this)) }

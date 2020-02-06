@@ -250,9 +250,17 @@ a {
 }
 
 .stats-item {
-  margin: 0 6px;
-  width: calc(50% - 6px);
-  position: relative;
+  @apply mt-6;
+  width: 100%;
+}
+
+@screen md {
+  .stats-item {
+    margin-left: 6px;
+    margin-right: 6px;
+    width: calc(50% - 6px);
+    position: relative;
+  }
 }
 
 .stats-item:first-child {

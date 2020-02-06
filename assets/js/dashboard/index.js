@@ -57,11 +57,11 @@ class Stats extends React.Component {
         </div>
         <Filters query={this.state.query} history={this.props.history} />
         <VisitorGraph site={this.props.site} query={this.state.query} />
-        <div className="w-full block md:flex items-start justify-between mt-6">
+        <div className="w-full block md:flex items-start justify-between">
           <Referrers site={this.props.site} query={this.state.query} />
           <Pages site={this.props.site} query={this.state.query} />
         </div>
-        <div className="w-full block md:flex items-start justify-between mt-6">
+        <div className="w-full block md:flex items-start justify-between">
           <Countries site={this.props.site} query={this.state.query} />
           <Devices site={this.props.site} query={this.state.query} />
         </div>
