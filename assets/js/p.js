@@ -116,6 +116,7 @@
           page();
         }
       }
+      window.addEventListener('popstate', page)
     }
 
     function configure(key, val) {
