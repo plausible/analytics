@@ -15,7 +15,7 @@ defmodule PlausibleWeb.SiteView do
 
   def snippet(site) do
     """
-    <script async defer data-domain="#{site.domain}" src="https://plausibe.io/js/plausible.js"></script>
+    <script async defer data-domain="#{site.domain}" src="https://plausible.io/js/plausible.js"></script>
     """
   end
 end
