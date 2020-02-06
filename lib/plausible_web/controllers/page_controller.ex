@@ -3,19 +3,23 @@ defmodule PlausibleWeb.PageController do
   use Plausible.Repo
 
   @demo_referrers [
-    {"indiehackers.com", 30},
+    {"indiehackers.com", 56},
+    {"Github", 23},
     {"Twitter", 17},
+    {"Reddit", 8},
     {"Google", 6},
     {"DuckDuckGo", 4},
     {"Bing", 2},
   ]
 
-   @demo_countries [
-    {"United Kingdom", 41},
-    {"United States", 38},
-    {"France", 13},
-    {"India", 7},
-    {"Netherlands", 6},
+   @demo_pages [
+     {"/", 140},
+     {"/plausible.io", 63},
+     {"/blog", 41},
+     {"/register", 13},
+     {"/login", 7},
+     {"/blog/google-analytics-and-privacy", 4},
+     {"/blog/launching-plausible", 2}
   ]
 
   def index(conn, _params) do
@@ -23,7 +27,7 @@ defmodule PlausibleWeb.PageController do
       user = conn.assigns[:current_user] |> Repo.preload(:sites)
       render(conn, "sites.html", sites: user.sites)
     else
-      render(conn, "index.html", demo_referrers: @demo_referrers, demo_countries: @demo_countries, landing_nav: true)
+      render(conn, "index.html", demo_referrers: @demo_referrers, demo_pages: @demo_pages, landing_nav: true)
     end
   end
 
