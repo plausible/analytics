@@ -97,29 +97,6 @@ a {
   transition: all .1s ease-in;
 }
 
-.truncated-label {
-  @apply no-underline text-grey-darkest;
-  white-space: nowrap;
-  width: calc(100% - 40px);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: left;
-}
-
-.bar {
-  height: 3px;
-  width: 100%;
-  background-color: #f5f6f7;
-  border-radius: 4px;
-  margin-top: 8px;
-  margin-bottom: 16px;
-}
-
-.bar__fill {
-  height: 100%;
-  border-radius: 4px;
-}
-
 .pulsating-circle {
   position: absolute;
   left: 50%;
