@@ -247,3 +247,11 @@ a {
 .stats-item:last-child {
   margin-right: 0;
 }
+
+.fade-enter {
+  opacity: 0;
+}
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 200ms ease-in;
+}

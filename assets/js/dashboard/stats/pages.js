@@ -45,7 +45,7 @@ export default class Pages extends React.Component {
   render() {
     if (this.state.loading) {
       return (
-        <div className="stats-item bg-white shadow-xl rounded p-4" style={{height: '424px'}}>
+        <div className="stats-item bg-white shadow-xl rounded p-4" style={{height: '436px'}}>
           <div className="loading my-32 mx-auto"><div></div></div>
         </div>
       )
