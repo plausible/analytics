@@ -21,7 +21,7 @@ defmodule PlausibleWeb.SiteController do
         |> put_session(site.domain <> "_offer_email_report", true)
         |> redirect(to: "/#{URI.encode_www_form(site.domain)}/snippet")
       {:error, :site, changeset, _} ->
-        render(conn, "new.html", changeset: changeset)
+        render(conn, "new.html", changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
     end
   end
 

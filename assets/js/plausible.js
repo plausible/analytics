@@ -111,11 +111,12 @@
 
     var his = window.history
     if (his.pushState) {
-      var originalFn = his['pushState']
+      var originalPushState = his['pushState']
       his.pushState = function() {
-        originalFn.apply(this, arguments)
+        originalPushState.apply(this, arguments)
         page();
       }
+      window.addEventListener('popstate', page)
     }
 
     const queue = (window.plausible && window.plausible.q) || []
