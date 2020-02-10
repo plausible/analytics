@@ -22,13 +22,10 @@ class CountriesModal extends React.Component {
 
   renderCountry(country) {
     return (
-      <React.Fragment key={country.name}>
-        <div className="flex items-center justify-between my-2">
-          <span>{country.name}</span>
-          <span tooltip={`${country.count} visitors`}>{country.percentage}%</span>
-        </div>
-        <Bar count={country.count} all={this.state.countries} color="indigo" />
-      </React.Fragment>
+      <tr className="text-sm" key={country.name}>
+        <td className="p-2">{country.full_country_name}</td>
+        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(country.percentage)}%</td>
+      </tr>
     )
   }
 
@@ -47,9 +44,17 @@ class CountriesModal extends React.Component {
 
           <div className="my-4 border-b border-grey-light"></div>
           <main className="modal__content">
-            <div className="mt-8">
-              { this.state.countries.map(this.renderCountry.bind(this)) }
-            </div>
+            <table className="w-full table-striped table-fixed">
+              <thead>
+                <tr>
+                  <th className="p-2 text-xs tracking-wide font-bold text-grey-dark" align="left">Country</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Visitors</th>
+                </tr>
+              </thead>
+              <tbody>
+                { this.state.countries.map(this.renderCountry.bind(this)) }
+              </tbody>
+            </table>
           </main>
         </React.Fragment>
       )

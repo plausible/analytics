@@ -32,35 +32,35 @@ export default class Pages extends React.Component {
 
   renderPage(page) {
     return (
-      <React.Fragment key={page.name}>
-        <div className="flex items-center justify-between my-2">
-          <span className="truncate" style={{maxWidth: '80%'}}>{page.name}</span>
-          <span>{numberFormatter(page.count)}</span>
+      <div className="flex items-center justify-between my-1 text-sm" key={page.name}>
+        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
+          <Bar count={page.count} all={this.state.pages} color="orange" />
+          <span className="block px-2" style={{marginTop: '-23px'}}>{page.name}</span>
         </div>
-        <Bar count={page.count} all={this.state.pages} color="orange" />
-      </React.Fragment>
+        <span className="font-medium">{numberFormatter(page.count)}</span>
+      </div>
     )
   }
 
   render() {
     if (this.state.loading) {
       return (
-        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 relative" style={{height: '405px'}}>
+        <div className="stats-item bg-white shadow-xl rounded p-4" style={{height: '436px'}}>
           <div className="loading my-32 mx-auto"><div></div></div>
         </div>
       )
     } else if (this.state.pages) {
       return (
-        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4 relative" style={{height: '405px'}}>
-          <div className="text-center">
-            <h2>Top Pages</h2>
-            <div className="text-grey-darker mt-1">by {eventName(this.props.query)}</div>
+        <div className="stats-item bg-white shadow-xl rounded p-4" style={{height: '436px'}}>
+          <h3>Top Pages</h3>
+
+          <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+            <span>Page url</span>
+            <span>Pageviews</span>
           </div>
 
-          <div className="mt-8">
-            { this.state.pages.map(this.renderPage.bind(this)) }
-          </div>
-          <MoreLink site={this.props.site} endpoint="pages" />
+          { this.state.pages.map(this.renderPage.bind(this)) }
+          <MoreLink site={this.props.site} list={this.state.pages} endpoint="pages" />
         </div>
       )
     }

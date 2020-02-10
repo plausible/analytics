@@ -123,16 +123,6 @@ function dateFormatter(graphData) {
   }
 }
 
-function formatStat(stat) {
-  if (typeof(stat.count) === 'number') {
-    return numberFormatter(stat.count)
-  } else if (typeof(stat.duration) === 'number') {
-    return new Date(stat.duration * 1000).toISOString().substr(14, 5)
-  } else if (typeof(stat.percentage) === 'number') {
-    return stat.percentage + '%'
-  }
-}
-
 class LineGraph extends React.Component {
   componentDidMount() {
     const {graphData} = this.props
@@ -260,13 +250,13 @@ class LineGraph extends React.Component {
     const formattedComparison = numberFormatter(Math.abs(comparison))
 
     if (comparison > 0) {
-      const color = name === 'Bounce rate' ? 'text-red-light' : 'text-green-dark'
-      return <span className="py-1 text-xs text-grey-darker"><span className={color}>&uarr;</span> {formattedComparison}% from {this.comparisonTimeframe()}</span>
+      const color = name === 'Bounce rate' ? 'text-red-light' : 'text-green'
+      return <span className="text-xs"><span className={color + ' font-bold'}>&uarr;</span> {formattedComparison}%</span>
     } else if (comparison < 0) {
-      const color = name === 'Bounce rate' ? 'text-green-dark' : 'text-red-light'
-      return <span className="py-1 text-xs text-grey-darker"><span className={color}>&darr;</span> {formattedComparison}% from {this.comparisonTimeframe()}</span>
+      const color = name === 'Bounce rate' ? 'text-green' : 'text-red-light'
+      return <span className="text-xs"><span className={color + ' font-bold'}>&darr;</span> {formattedComparison}%</span>
     } else if (comparison === 0) {
-      return <span className="py-1 text-xs text-grey-darker">&#12336; same as {this.comparisonTimeframe()}</span>
+      return <span className="text-xs text-grey-darker">&#12336; N/A</span>
     }
   }
 
@@ -277,12 +267,12 @@ class LineGraph extends React.Component {
       border = index % 2 === 0 ? border + ' border-r lg:border-r-0' : border
 
       return (
-        <div className={`pl-8 w-1/2 my-4 lg:w-52 ${border}`} key={stat.name}>
+        <div className={`px-8 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
           <div className="text-grey-dark text-xs font-bold tracking-wide uppercase">{stat.name}</div>
-          <div className="my-1 flex items-end justify-between">
-            <b className="text-2xl">{formatStat(stat)}</b>
+          <div className="my-1 flex justify-between items-center">
+            <b className="text-2xl mr-4">{ typeof(stat.count) == 'number' ? numberFormatter(stat.count) : stat.percentage + '%' }</b>
+            {this.renderComparison(stat.name, stat.change)}
           </div>
-          {this.renderComparison(stat.name, stat.change)}
         </div>
       )
     })
@@ -356,7 +346,7 @@ export default class VisitorGraph extends React.Component {
 
   render() {
     return (
-      <div className="w-full bg-white shadow-md rounded mt-6 main-graph">
+      <div className="w-full bg-white shadow-xl rounded mt-6 main-graph">
         { this.renderInner() }
       </div>
     )

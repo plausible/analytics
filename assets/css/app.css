@@ -81,7 +81,7 @@ blockquote {
 
 @screen xl {
   .main-graph {
-    height: 480px;
+    height: 460px;
   }
 }
 
@@ -95,29 +95,6 @@ a {
 
 .transition {
   transition: all .1s ease-in;
-}
-
-.truncated-label {
-  @apply no-underline text-grey-darkest;
-  white-space: nowrap;
-  width: calc(100% - 40px);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: left;
-}
-
-.bar {
-  height: 4px;
-  width: 100%;
-  background-color: #f5f6f7;
-  border-radius: 4px;
-  margin-top: 8px;
-  margin-bottom: 24px;
-}
-
-.bar__fill {
-  height: 100%;
-  border-radius: 4px;
 }
 
 .pulsating-circle {
@@ -247,4 +224,34 @@ a {
 
 .tweet-text a:hover {
   text-decoration: underline;
+}
+
+.stats-item {
+  @apply mt-6;
+  width: 100%;
+}
+
+@screen md {
+  .stats-item {
+    margin-left: 6px;
+    margin-right: 6px;
+    width: calc(50% - 6px);
+    position: relative;
+  }
+}
+
+.stats-item:first-child {
+  margin-left: 0;
+}
+
+.stats-item:last-child {
+  margin-right: 0;
+}
+
+.fade-enter {
+  opacity: 0;
+}
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 200ms ease-in;
 }

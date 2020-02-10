@@ -33,34 +33,33 @@ export default class Conversions extends React.Component {
     query.set('goal', goal.name)
 
     return (
-      <React.Fragment key={goal.name}>
-        <div className="flex items-center justify-between my-2">
-          <Link to={{search: query.toString(), state: {scrollTop: true}}} className="truncate hover:underline" style={{maxWidth: '80%'}}>{ goal.name }</Link>
-          <span>{numberFormatter(goal.count)}</span>
+      <div className="flex items-center justify-between my-2 text-sm" key={goal.name}>
+        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
+          <Bar count={goal.count} all={this.state.goals} color="red" />
+          <Link to={{search: query.toString(), state: {scrollTop: true}}} style={{marginTop: '-23px'}} className="hover:underline block px-2">{ goal.name }</Link>
         </div>
-        <Bar count={goal.count} all={this.state.goals} color="indigo" />
-      </React.Fragment>
+        <span className="font-medium">{numberFormatter(goal.count)}</span>
+      </div>
     )
   }
 
   render() {
     if (this.state.loading) {
       return (
-        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4">
+        <div className="w-full bg-white shadow-xl rounded p-4">
           <div className="loading my-32 mx-auto"><div></div></div>
         </div>
       )
     } else if (this.state.goals) {
       return (
-        <div className="w-full md:w-31percent bg-white shadow-md rounded mt-4 p-4">
-          <div className="text-center">
-            <h2>Goal Conversions</h2>
-            <div className="text-grey-darker mt-1">by visitors</div>
+        <div className="w-full bg-white shadow-xl rounded p-4">
+          <h3>Goal Conversions</h3>
+          <div className="flex items-center mt-6 mb-3 justify-between text-grey-dark text-xs font-bold tracking-wide">
+            <span>Goal</span>
+            <span>Conversions</span>
           </div>
 
-          <div className="mt-8">
-            { this.state.goals.map(this.renderGoal.bind(this)) }
-          </div>
+          { this.state.goals.map(this.renderGoal.bind(this)) }
         </div>
       )
     }

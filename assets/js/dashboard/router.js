@@ -6,8 +6,6 @@ import ReferrersDrilldownModal from './stats/modals/referrer-drilldown'
 import GoogleKeywordsModal from './stats/modals/google-keywords'
 import PagesModal from './stats/modals/pages'
 import CountriesModal from './stats/modals/countries'
-import BrowsersModal from './stats/modals/browsers'
-import OperatingSystemsModal from './stats/modals/operating-systems'
 
 import {BrowserRouter, Switch, Route, useLocation} from "react-router-dom";
 
@@ -44,12 +42,6 @@ export default function Router({site}) {
           </Route>
           <Route path="/:domain/countries">
             <CountriesModal site={site} />
-          </Route>
-          <Route path="/:domain/browsers">
-            <BrowsersModal site={site} />
-          </Route>
-          <Route path="/:domain/operating-systems">
-            <OperatingSystemsModal site={site} />
           </Route>
         </Switch>
       </Route>

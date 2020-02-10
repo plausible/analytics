@@ -9,33 +9,39 @@
         <circle cx="200" cy="200" r="200" fill="#b2b7ff" />
       </svg>
 
-      <div class="w-3/4 bg-white shadow-lg rounded m-4 p-4 text-center absolute z-10" style="left: 75px;">
-        <h2>Top Referrers</h2>
-        <div class="text-grey-darker mt-1">by visitors</div>
-
-        <div class="mt-8">
-          <%= for {referrer, count} <- @demo_referrers do %>
-            <div class="flex items-center justify-between my-2">
-              <span><%= referrer %></span>
-              <span><%= count %></span>
-            </div>
-            <%= PlausibleWeb.StatsView.bar(count, @demo_referrers) %>
-          <% end %>
+      <div class="w-3/4 bg-white shadow-xl rounded m-4 p-4 absolute z-10" style="left: 75px;">
+        <h3>Top Referrers</h3>
+        <div class="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+          <span>Referrer</span>
+          <span>Visitors</span>
         </div>
+
+        <%= for {referrer, count} <- @demo_referrers do %>
+          <div class="flex items-center justify-between my-1 text-sm">
+            <div class="w-full h-8" style="max-width: calc(100% - 3rem)">
+              <%= PlausibleWeb.StatsView.bar(count, @demo_referrers, :blue) %>
+              <span class="block px-2" style="margin-top: -23px"><%= referrer %></span>
+            </div>
+            <span className="font-medium"><%= count %></span>
+          </div>
+        <% end %>
       </div>
 
-      <div class="w-3/4 bg-white shadow-lg rounded m-4 p-4 text-center absolute" style="left: calc(75%); top: 50px;">
-        <h2>Top Countries</h2>
-        <div class="text-grey-darker mt-1">by visitors</div>
-        <div class="mt-8">
-          <%= for {country, count} <- @demo_countries do %>
-            <div class="flex items-center justify-between my-2">
-              <span><%= Plausible.Stats.CountryName.from_iso3166(country) %></span>
-              <span><%= count %></span>
-            </div>
-            <%= PlausibleWeb.StatsView.bar(count, @demo_countries, :orange) %>
-          <% end %>
+      <div class="w-3/4 bg-white shadow-xl rounded m-4 p-4 absolute" style="left: calc(75%); top: 50px;">
+        <h3>Top Pages</h3>
+        <div class="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+          <span>Page</span>
+          <span>Visitors</span>
         </div>
+        <%= for {country, count} <- @demo_pages do %>
+          <div class="flex items-center justify-between my-1 text-sm">
+            <div class="w-full h-8" style="max-width: calc(100% - 3rem)">
+              <%= PlausibleWeb.StatsView.bar(count, @demo_pages, :orange) %>
+              <span class="block px-2" style="margin-top: -23px"><%= Plausible.Stats.CountryName.from_iso3166(country) %></span>
+            </div>
+            <span className="font-medium"><%= count %></span>
+          </div>
+        <% end %>
       </div>
     </section>
     <section class="w-full text-center lg:text-left lg:w-3/5">
