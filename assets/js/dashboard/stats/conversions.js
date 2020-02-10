@@ -36,7 +36,7 @@ export default class Conversions extends React.Component {
       <div className="flex items-center justify-between my-2 text-sm" key={goal.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
           <Bar count={goal.count} all={this.state.goals} color="red" />
-          <Link to={{search: query.toString(), state: {scrollTop: true}}} style={{marginTop: '-25px'}} className="hover:underline block px-2">{ goal.name }</Link>
+          <Link to={{search: query.toString(), state: {scrollTop: true}}} style={{marginTop: '-23px'}} className="hover:underline block px-2">{ goal.name }</Link>
         </div>
         <span className="font-medium">{numberFormatter(goal.count)}</span>
       </div>
