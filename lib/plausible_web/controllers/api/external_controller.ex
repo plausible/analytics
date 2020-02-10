@@ -55,6 +55,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         new_visitor: params["new_visitor"],
         country_code: country_code,
         user_id: params["uid"],
+        fingerprint: calculate_fingerprint(conn, params),
         operating_system: ua && os_name(ua),
         browser: ua && browser_name(ua),
         referrer_source: ref && referrer_source(uri, ref),
@@ -65,6 +66,16 @@ defmodule PlausibleWeb.Api.ExternalController do
       Plausible.Event.changeset(%Plausible.Event{}, event_attrs)
         |> Plausible.Repo.insert
     end
+  end
+
+  defp calculate_fingerprint(conn, params) do
+    user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
+    ip_address = to_string(:inet_parse.ntoa(conn.remote_ip)) || ""
+    domain = Map.get(params, "domain", "")
+
+    :crypto.hash(:sha256, [user_agent, ip_address, domain])
+    |> Base.encode16
+    |> String.downcase
   end
 
   defp calculate_screen_size(nil) , do: nil
