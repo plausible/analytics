@@ -71,7 +71,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp calculate_fingerprint(conn, params) do
     user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
     ip_address = to_string(:inet_parse.ntoa(conn.remote_ip)) || ""
-    domain = Map.get(params, "domain", "")
+    domain = strip_www(params["domain"]) || ""
 
     :crypto.hash(:sha256, [user_agent, ip_address, domain])
     |> Base.encode16
