@@ -33,7 +33,7 @@ export default class Pages extends React.Component {
   renderPage(page) {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={page.name}>
-        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
+        <div className="w-full h-8 truncate" style={{maxWidth: 'calc(100% - 4rem)'}}>
           <Bar count={page.count} all={this.state.pages} color="orange" />
           <span className="block px-2" style={{marginTop: '-23px'}}>{page.name}</span>
         </div>

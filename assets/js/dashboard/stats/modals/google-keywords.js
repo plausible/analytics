@@ -31,11 +31,11 @@ class GoogleKeywordsModal extends React.Component {
   renderTerm(term) {
     return (
       <React.Fragment key={term.name}>
-        <div className="flex items-center justify-between my-2">
-          <a className="hover:underline truncate" target="_blank" style={{maxWidth: '80%'}} href={'//' + term.name}>{ term.name }</a>
-          <span>{numberFormatter(term.count)}</span>
-        </div>
-        <Bar count={term.count} all={this.state.searchTerms} color="blue" />
+
+        <tr className="text-sm" key={term.name}>
+          <td className="p-2 truncate">{term.name}</td>
+          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(term.count)}</td>
+        </tr>
       </React.Fragment>
     )
   }
@@ -70,9 +70,7 @@ class GoogleKeywordsModal extends React.Component {
       }
     } else if (this.state.searchTerms.length > 0) {
       return (
-        <div className="mt-4">
-          { this.state.searchTerms.map(this.renderTerm.bind(this)) }
-        </div>
+        this.state.searchTerms.map(this.renderTerm.bind(this))
       )
     } else {
       return (
@@ -101,12 +99,17 @@ class GoogleKeywordsModal extends React.Component {
             <h1>{this.state.totalVisitors} new visitors from Google</h1>
             <h1 className="text-grey-darker" style={{transform: 'translateY(-1rem)'}}>{toHuman(this.state.query)}</h1>
 
-            <div className="flex items-center justify-between py-2 border-b border-b-grey text-sm font-bold text-grey-darker">
-              <span>Search term</span>
-              <span>Visitors</span>
-            </div>
-
-            { this.renderKeywords() }
+            <table className="w-full table-striped table-fixed">
+              <thead>
+                <tr>
+                  <th className="p-2 text-xs tracking-wide font-bold text-grey-dark" align="left">Search Term</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Visitors</th>
+                </tr>
+              </thead>
+              <tbody>
+                { this.renderKeywords() }
+              </tbody>
+            </table>
           </main>
         </React.Fragment>
       )
