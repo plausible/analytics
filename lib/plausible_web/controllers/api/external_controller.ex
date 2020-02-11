@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp calculate_raw_fingerprint(conn, params) do
     user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
-    ip_address = to_string(:inet_parse.ntoa(conn.remote_ip)) || ""
+    ip_address = List.first(Plug.Conn.get_req_header(conn, "cf-connecting-ip")) || ""
     domain = strip_www(params["domain"]) || ""
     Enum.join([user_agent, ip_address, domain], ":")
   end
