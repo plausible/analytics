@@ -30,7 +30,7 @@ defmodule Mix.Tasks.FetchTweets do
           tweet_id: tweet["id_str"],
           author_handle: tweet["user"]["screen_name"],
           author_name: tweet["user"]["name"],
-          author_image: tweet["user"]["profile_image_url"],
+          author_image: tweet["user"]["profile_image_url_https"],
           text: html_body(tweet),
           created: created
         }) |> Repo.insert!(on_conflict: :nothing)
