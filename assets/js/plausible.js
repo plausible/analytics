@@ -58,10 +58,10 @@
       if (userData) {
         userData.new_visitor = false
         if (userData.referrer) {
-          userData.initial_referrer = decodeURIComponent(userData.referrer)
+          userData.initial_referrer = userData.referrer && decodeURIComponent(userData.referrer)
         } else {
-          userData.initial_referrer = decodeURIComponent(userData.initial_referrer)
-          userData.initial_source = decodeURIComponent(userData.initial_source)
+          userData.initial_referrer = userData.initial_referrer && decodeURIComponent(userData.initial_referrer)
+          userData.initial_source = userData.initial_source && decodeURIComponent(userData.initial_source)
         }
         return userData
       } else {
@@ -70,7 +70,6 @@
           new_visitor: true,
           initial_referrer: window.document.referrer,
           initial_source: getSourceFromQueryParam(),
-          screen_width: window.innerWidth
         }
       }
     }
@@ -78,10 +77,8 @@
     function setUserData(payload) {
       setCookie('plausible_user', JSON.stringify({
           uid: payload.uid,
-          user_agent: encodeURIComponent(payload.user_agent),
-          initial_referrer: encodeURIComponent(payload.initial_referrer),
-          initial_source: encodeURIComponent(payload.initial_source),
-          screen_width: payload.screen_width
+          initial_referrer: payload.initial_referrer && encodeURIComponent(payload.initial_referrer),
+          initial_source: payload.initial_source && encodeURIComponent(payload.initial_source),
       }))
     }
 
@@ -97,6 +94,7 @@
       payload.referrer = window.document.referrer
       payload.user_agent = window.navigator.userAgent
       payload.source = getSourceFromQueryParam()
+      payload.screen_width = window.innerWidth
 
       var request = new XMLHttpRequest();
       request.open('POST', plausibleHost + '/api/event', true);
