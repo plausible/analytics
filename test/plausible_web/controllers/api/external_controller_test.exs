@@ -400,4 +400,18 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert response(conn, 202) == ""
     assert event.name == "custom event"
   end
+
+  test "responds 400 when required fields are missing", %{conn: conn} do
+    params = %{
+      name: "pageview",
+      url: "http://gigride.live/",
+    }
+
+    conn = conn
+           |> put_req_header("content-type", "text/plain")
+           |> put_req_header("user-agent", @user_agent)
+           |> post("/api/event", Jason.encode!(params))
+
+    assert response(conn, 400) == ""
+  end
 end

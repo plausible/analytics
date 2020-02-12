@@ -138,16 +138,6 @@ defmodule Plausible.Stats do
     end
   end
 
-  def session_length(site, query) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
-
-    Repo.one(from s in Plausible.Session,
-      where: s.domain == ^site.domain,
-      where: s.start >= ^first_datetime and s.start < ^last_datetime,
-      select: coalesce(avg(s.length), 0)
-    ) |> Decimal.round |> Decimal.to_integer
-  end
-
   def pageviews_and_visitors(site, query) do
     Repo.one(from(
       e in base_query(site, query),

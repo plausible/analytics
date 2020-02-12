@@ -14,7 +14,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       {:error, changeset} ->
         request = Sentry.Plug.build_request_interface_data(conn, [])
         Sentry.capture_message("Error processing event", extra: %{errors: inspect(changeset.errors), params: params, request: request})
-        Logger.error("Error processing event: #{inspect(changeset)}")
+        Logger.info("Error processing event: #{inspect(changeset)}")
         conn |> send_resp(400, "")
     end
   end
