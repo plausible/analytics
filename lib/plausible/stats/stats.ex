@@ -219,8 +219,7 @@ defmodule Plausible.Stats do
   def visitors_from_referrer(site, query, referrer) do
     Repo.one(
       from e in base_query(site, query),
-      select: count(e),
-      where: e.new_visitor,
+      select: count(e.user_id, :distinct),
       where: e.referrer_source == ^referrer
     )
   end
