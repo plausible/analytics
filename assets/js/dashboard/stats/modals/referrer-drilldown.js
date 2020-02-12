@@ -5,6 +5,7 @@ import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter from '../../number-formatter'
 import {parseQuery, toHuman} from '../../query'
+import {formatFullDate} from '../../date'
 
 class ReferrerDrilldownModal extends React.Component {
   constructor(props) {
@@ -56,23 +57,25 @@ class ReferrerDrilldownModal extends React.Component {
       <div key={tweet.tweet_id}>
         <div className={"flex items-center my-4" + border} >
           <a className="flex items-center group" href={authorUrl} target="_blank">
-            <img className="rounded-full w-6" src={tweet.author_image} />
-            <div className="font-bold ml-2 group-hover:text-blue">{tweet.author_name}</div>
-            <div className="ml-2 text-xs text-grey-dark">@{tweet.author_handle}</div>
+            <img className="rounded-full w-8" src={tweet.author_image} />
+            <div className="ml-2 leading-tight">
+              <div className="font-bold group-hover:text-blue">{tweet.author_name}</div>
+              <div className="text-xs text-grey-dark">@{tweet.author_handle}</div>
+            </div>
           </a>
           <a className="ml-auto twitter-icon" href={tweetUrl} target="_blank"></a>
         </div>
         <div className="my-2 cursor-text tweet-text" dangerouslySetInnerHTML={{__html: tweet.text}}>
         </div>
         <div className="text-xs text-grey-darker font-medium">
-          {tweet.created}
+          {formatFullDate(new Date(tweet.created))}
         </div>
       </div>
     )
   }
 
   renderReferrer(referrer) {
-    if (false && referrer.tweets) {
+    if (referrer.tweets) {
       return (
         <tr className="text-sm" key={referrer.name}>
           <td className="p-2">
@@ -80,7 +83,7 @@ class ReferrerDrilldownModal extends React.Component {
             <span className="text-grey-dark ml-2 text-xs">
               appears in {referrer.tweets.length} tweets
             </span>
-            <div className="my-4 ml-4">
+            <div className="my-4 pl-4 border-l-2 border-grey-light">
               { referrer.tweets.map(this.renderTweet) }
             </div>
           </td>
