@@ -12,6 +12,28 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
   @user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
   @country_code "EE"
 
+  test "TEMP - adding historical fingerprints", %{conn: conn} do
+    uid = UUID.uuid4()
+    insert(:pageview, domain: "gigride.live", user_id: uid, new_visitor: true)
+
+    params = %{
+      name: "pageview",
+      url: "http://gigride.live/",
+      new_visitor: false,
+      uid: uid
+    }
+
+    conn
+    |> put_req_header("content-type", "text/plain")
+    |> put_req_header("user-agent", @user_agent)
+    |> post("/api/event", Jason.encode!(params))
+
+    [pageview1, pageview2] = Repo.all(Plausible.Event)
+    finalize_session(uid)
+
+    assert pageview1.fingerprint == pageview2.fingerprint
+  end
+
   describe "POST /api/event" do
     test "records the event", %{conn: conn} do
       params = %{
