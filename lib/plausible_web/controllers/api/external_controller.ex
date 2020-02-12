@@ -10,6 +10,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         conn |> send_resp(202, "")
       {:ok, event} ->
         Plausible.Ingest.Session.on_event(event)
+        update_fingerprint(event)
         conn |> send_resp(202, "")
       {:error, changeset} ->
         request = Sentry.Plug.build_request_interface_data(conn, [])
@@ -29,6 +30,13 @@ defmodule PlausibleWeb.Api.ExternalController do
     request = Sentry.Plug.build_request_interface_data(conn, [])
     Sentry.capture_message("JS snippet error", request: request)
     send_resp(conn, 200, "")
+  end
+
+  defp update_fingerprint(%Plausible.Event{new_visitor: true}), do: nil
+  defp update_fingerprint(event) do
+    use Plausible.Repo
+    q = from(e in Plausible.Event, where: e.user_id == ^event.user_id and is_nil(e.fingerprint))
+    Repo.update_all(q, set: [fingerprint: event.fingerprint])
   end
 
   defp create_event(conn, params) do
