@@ -76,9 +76,9 @@
 
     function setUserData(payload) {
       setCookie('plausible_user', JSON.stringify({
-          uid: payload.uid,
-          initial_referrer: payload.initial_referrer && encodeURIComponent(payload.initial_referrer),
-          initial_source: payload.initial_source && encodeURIComponent(payload.initial_source),
+        uid: payload.uid,
+        initial_referrer: payload.initial_referrer && encodeURIComponent(payload.initial_referrer),
+        initial_source: payload.initial_source && encodeURIComponent(payload.initial_source),
       }))
     }
 
@@ -92,8 +92,8 @@
       payload.url = getUrl()
       payload.domain = CONFIG['domain']
       payload.referrer = window.document.referrer
-      payload.user_agent = window.navigator.userAgent
       payload.source = getSourceFromQueryParam()
+      payload.user_agent = window.navigator.userAgent
       payload.screen_width = window.innerWidth
 
       var request = new XMLHttpRequest();
