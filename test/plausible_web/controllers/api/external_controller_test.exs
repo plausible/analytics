@@ -141,6 +141,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         name: "pageview",
         url: "http://gigride.live/",
         referrer: "https://facebook.com",
+        initial_referrer: "https://facebook.com",
         new_visitor: false,
         uid: UUID.uuid4()
       }
@@ -155,6 +156,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == ""
       assert pageview.referrer_source == "Facebook"
+      assert pageview.initial_referrer_source == "Facebook"
     end
 
     test "strips trailing slash from referrer", %{conn: conn} do
@@ -162,6 +164,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         name: "pageview",
         url: "http://gigride.live/",
         referrer: "https://facebook.com/page/",
+        initial_referrer: "https://facebook.com/page/",
         new_visitor: false,
         uid: UUID.uuid4()
       }
@@ -176,7 +179,9 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == ""
       assert pageview.referrer == "facebook.com/page"
+      assert pageview.initial_referrer == "facebook.com/page"
       assert pageview.referrer_source == "Facebook"
+      assert pageview.initial_referrer_source == "Facebook"
     end
 
     test "ignores when referrer is internal", %{conn: conn} do
@@ -184,6 +189,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         name: "pageview",
         url: "http://gigride.live/",
         referrer: "https://gigride.live",
+        initial_referrer: "https://gigride.live",
         new_visitor: false,
         uid: UUID.uuid4()
       }
@@ -198,6 +204,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == ""
       assert pageview.referrer_source == nil
+      assert pageview.initial_referrer_source == nil
     end
 
     test "ignores localhost referrer", %{conn: conn} do
@@ -205,6 +212,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         name: "pageview",
         url: "http://gigride.live/",
         referrer: "http://localhost:4000/",
+        initial_referrer: "http://localhost:4000/",
         new_visitor: true,
         uid: UUID.uuid4()
       }
@@ -219,6 +227,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == ""
       assert pageview.referrer_source == nil
+      assert pageview.initial_referrer_source == nil
     end
 
     test "parses subdomain referrer", %{conn: conn} do
@@ -226,6 +235,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         name: "pageview",
         url: "http://gigride.live/",
         referrer: "https://blog.gigride.live",
+        initial_referrer: "https://blog.gigride.live",
         new_visitor: false,
         uid: UUID.uuid4()
       }
@@ -240,6 +250,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == ""
       assert pageview.referrer_source == "blog.gigride.live"
+      assert pageview.initial_referrer_source == "blog.gigride.live"
     end
 
     test "referrer is cleaned", %{conn: conn} do
@@ -247,6 +258,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         name: "pageview",
         url: "http://www.example.com/",
         referrer: "https://www.indiehackers.com/page?query=param#hash",
+        initial_referrer: "https://www.indiehackers.com/page?query=param#hash",
         uid: UUID.uuid4(),
         new_visitor: true
       }
@@ -259,13 +271,16 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       finalize_session(pageview.user_id)
 
       assert pageview.referrer == "indiehackers.com/page"
+      assert pageview.initial_referrer == "indiehackers.com/page"
     end
 
-    test "?ref= query param controls the referrer source", %{conn: conn} do
+    test "source param controls the referrer source", %{conn: conn} do
       params = %{
         name: "pageview",
-        url: "http://www.example.com/?wat=wet&ref=traffic-source",
-        referrer: "https://www.indiehackers.com/page",
+        url: "http://www.example.com/",
+        referrer: "https://betalist.com/my-produxct",
+        source: "betalist",
+        initial_source: "betalist",
         uid: UUID.uuid4(),
         new_visitor: true
       }
@@ -277,26 +292,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = Repo.one(Plausible.Event)
       finalize_session(pageview.user_id)
 
-      assert pageview.referrer_source == "traffic-source"
-    end
-
-    test "?utm_source= query param controls the referrer source", %{conn: conn} do
-      params = %{
-        name: "pageview",
-        url: "http://www.example.com/?wat=wet&utm_source=traffic-source",
-        referrer: "https://www.indiehackers.com/page",
-        uid: UUID.uuid4(),
-        new_visitor: true
-      }
-
-      conn
-      |> put_req_header("content-type", "text/plain")
-      |> post("/api/event", Jason.encode!(params))
-
-      pageview = Repo.one(Plausible.Event)
-      finalize_session(pageview.user_id)
-
-      assert pageview.referrer_source == "traffic-source"
+      assert pageview.referrer_source == "betalist"
+      assert pageview.initial_referrer_source == "betalist"
     end
 
     test "if it's an :unknown referrer, just the domain is used", %{conn: conn} do
@@ -402,5 +399,19 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     assert response(conn, 202) == ""
     assert event.name == "custom event"
+  end
+
+  test "responds 400 when required fields are missing", %{conn: conn} do
+    params = %{
+      name: "pageview",
+      url: "http://gigride.live/",
+    }
+
+    conn = conn
+           |> put_req_header("content-type", "text/plain")
+           |> put_req_header("user-agent", @user_agent)
+           |> post("/api/event", Jason.encode!(params))
+
+    assert response(conn, 400) == ""
   end
 end

@@ -47,20 +47,29 @@
       return window.location.protocol + '//' + window.location.hostname + window.location.pathname + window.location.search;
     }
 
+    function getSourceFromQueryParam() {
+      const result = window.location.search.match(/[?&](ref|source|utm_source)=([^?&]+)/);
+      return result ? result[2] : null
+    }
+
     function getUserData() {
       var userData = JSON.parse(getCookie('plausible_user'))
 
       if (userData) {
         userData.new_visitor = false
-        userData.user_agent = decodeURIComponent(userData.user_agent)
-        userData.referrer = decodeURIComponent(userData.referrer)
+        if (userData.referrer) {
+          userData.initial_referrer = decodeURIComponent(userData.referrer)
+        } else {
+          userData.initial_referrer = decodeURIComponent(userData.initial_referrer)
+          userData.initial_source = decodeURIComponent(userData.initial_source)
+        }
         return userData
       } else {
         return {
           uid: pseudoUUIDv4(),
           new_visitor: true,
-          user_agent: window.navigator.userAgent,
-          referrer: window.document.referrer,
+          initial_referrer: window.document.referrer,
+          initial_source: getSourceFromQueryParam(),
           screen_width: window.innerWidth
         }
       }
@@ -70,7 +79,8 @@
       setCookie('plausible_user', JSON.stringify({
           uid: payload.uid,
           user_agent: encodeURIComponent(payload.user_agent),
-          referrer: encodeURIComponent(payload.referrer),
+          initial_referrer: encodeURIComponent(payload.initial_referrer),
+          initial_source: encodeURIComponent(payload.initial_source),
           screen_width: payload.screen_width
       }))
     }
@@ -84,6 +94,9 @@
       payload.name = eventName
       payload.url = getUrl()
       payload.domain = CONFIG['domain']
+      payload.referrer = window.document.referrer
+      payload.user_agent = window.navigator.userAgent
+      payload.source = getSourceFromQueryParam()
 
       var request = new XMLHttpRequest();
       request.open('POST', plausibleHost + '/api/event', true);

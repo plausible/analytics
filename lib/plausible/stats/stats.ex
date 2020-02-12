@@ -127,7 +127,6 @@ defmodule Plausible.Stats do
 
     sessions_query = from(s in Plausible.Session,
       where: s.domain == ^site.domain,
-      where: s.new_visitor,
       where: s.start >= ^first_datetime and s.start < ^last_datetime
     )
     total_sessions = Repo.one( from s in sessions_query, select: count(s))
@@ -137,16 +136,6 @@ defmodule Plausible.Stats do
       0 -> 0
       total -> round(bounced_sessions / total * 100)
     end
-  end
-
-  def session_length(site, query) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
-
-    Repo.one(from s in Plausible.Session,
-      where: s.domain == ^site.domain,
-      where: s.start >= ^first_datetime and s.start < ^last_datetime,
-      select: coalesce(avg(s.length), 0)
-    ) |> Decimal.round |> Decimal.to_integer
   end
 
   def pageviews_and_visitors(site, query) do
@@ -165,9 +154,9 @@ defmodule Plausible.Stats do
 
   def top_referrers_for_goal(site, query, limit \\ 5) do
     Repo.all(from e in base_query(site, query),
-      select: %{name: e.referrer_source, count: count(e.user_id, :distinct)},
-      group_by: e.referrer_source,
-      where: not is_nil(e.referrer_source),
+      select: %{name: e.initial_referrer_source, count: count(e.user_id, :distinct)},
+      group_by: e.initial_referrer_source,
+      where: not is_nil(e.initial_referrer_source),
       order_by: [desc: 2],
       limit: ^limit
     )
@@ -175,10 +164,9 @@ defmodule Plausible.Stats do
 
   def top_referrers(site, query, limit \\ 5, include \\ []) do
     referrers = Repo.all(from e in base_query(site, query),
-      select: %{name: e.referrer_source, count: count(e)},
+      select: %{name: e.referrer_source, count: count(e.user_id, :distinct)},
       group_by: e.referrer_source,
       where: not is_nil(e.referrer_source),
-      where: e.new_visitor,
       order_by: [desc: 2],
       limit: ^limit
     )
@@ -200,7 +188,6 @@ defmodule Plausible.Stats do
     total_sessions_by_referrer = Repo.all(
       from s in Plausible.Session,
       where: s.domain == ^site.domain,
-      where: s.new_visitor,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.referrer_source in ^referrers,
       group_by: s.referrer_source,
@@ -210,7 +197,6 @@ defmodule Plausible.Stats do
     bounced_sessions_by_referrer = Repo.all(
       from s in Plausible.Session,
       where: s.domain == ^site.domain,
-      where: s.new_visitor,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.is_bounce,
       where: s.referrer_source in ^referrers,
@@ -243,17 +229,16 @@ defmodule Plausible.Stats do
     Repo.one(
       from e in base_query(site, query),
       select: count(e.user_id, :distinct),
-      where: e.referrer_source == ^referrer
+      where: e.initial_referrer_source == ^referrer
     )
   end
 
   def referrer_drilldown(site, query, referrer, include \\ []) do
     referring_urls = Repo.all(
       from e in base_query(site, query),
-      select: %{name: e.referrer, count: count(e)},
+      select: %{name: e.referrer, count: count(e.user_id, :distinct)},
       group_by: e.referrer,
       where: e.referrer_source == ^referrer,
-      where: e.new_visitor,
       order_by: [desc: 2],
       limit: 100
     )
@@ -287,9 +272,9 @@ defmodule Plausible.Stats do
   def referrer_drilldown_for_goal(site, query, referrer) do
     Repo.all(
       from e in base_query(site, query),
-      select: %{name: e.referrer, count: count(e.user_id, :distinct)},
-      group_by: e.referrer,
-      where: e.referrer_source == ^referrer,
+      select: %{name: e.initial_referrer, count: count(e.user_id, :distinct)},
+      group_by: e.initial_referrer,
+      where: e.initial_referrer_source == ^referrer,
       order_by: [desc: 2],
       limit: 100
     )
@@ -301,7 +286,6 @@ defmodule Plausible.Stats do
     total_sessions_by_url = Repo.all(
       from s in Plausible.Session,
       where: s.domain == ^site.domain,
-      where: s.new_visitor,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.referrer in ^referring_urls,
       group_by: s.referrer,
@@ -311,7 +295,6 @@ defmodule Plausible.Stats do
     bounced_sessions_by_url = Repo.all(
       from s in Plausible.Session,
       where: s.domain == ^site.domain,
-      where: s.new_visitor,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.is_bounce,
       where: s.referrer in ^referring_urls,
@@ -356,7 +339,6 @@ defmodule Plausible.Stats do
     total_sessions_by_url = Repo.all(
       from s in Plausible.Session,
       where: s.domain == ^site.domain,
-      where: s.new_visitor,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.entry_page in ^page_urls,
       group_by: s.entry_page,
@@ -366,7 +348,6 @@ defmodule Plausible.Stats do
     bounced_sessions_by_url = Repo.all(
       from s in Plausible.Session,
       where: s.domain == ^site.domain,
-      where: s.new_visitor,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.is_bounce,
       where: s.entry_page in ^page_urls,

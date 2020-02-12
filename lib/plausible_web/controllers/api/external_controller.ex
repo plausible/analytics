@@ -14,7 +14,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       {:error, changeset} ->
         request = Sentry.Plug.build_request_interface_data(conn, [])
         Sentry.capture_message("Error processing event", extra: %{errors: inspect(changeset.errors), params: params, request: request})
-        Logger.error("Error processing event: #{inspect(changeset)}")
+        Logger.info("Error processing event: #{inspect(changeset)}")
         conn |> send_resp(400, "")
     end
   end
@@ -42,10 +42,8 @@ defmodule PlausibleWeb.Api.ExternalController do
         UAInspector.Parser.parse(user_agent)
       end
 
-      ref = params["referrer"]
-      ref = if ref && strip_www(URI.parse(ref).host) !== strip_www(uri.host) && URI.parse(ref).host !== "localhost" do
-        RefInspector.parse(ref)
-      end
+      ref = parse_referrer(uri, params["referrer"])
+      initial_ref = parse_referrer(uri, params["initial_referrer"])
 
       event_attrs = %{
         name: params["name"],
@@ -58,13 +56,24 @@ defmodule PlausibleWeb.Api.ExternalController do
         fingerprint: calculate_fingerprint(conn, params),
         operating_system: ua && os_name(ua),
         browser: ua && browser_name(ua),
-        referrer_source: ref && referrer_source(uri, ref),
-        referrer: ref && clean_referrer(params["referrer"]),
+        referrer_source: params["source"] || referrer_source(ref),
+        referrer: clean_referrer(ref),
+        initial_referrer_source: params["initial_source"] || referrer_source(initial_ref),
+        initial_referrer: clean_referrer(initial_ref),
         screen_size: calculate_screen_size(params["screen_width"])
       }
 
       Plausible.Event.changeset(%Plausible.Event{}, event_attrs)
         |> Plausible.Repo.insert
+    end
+  end
+
+  defp parse_referrer(_, nil), do: nil
+  defp parse_referrer(uri, referrer_str) do
+    referrer_uri = URI.parse(referrer_str)
+
+    if strip_www(referrer_uri.host) !== strip_www(uri.host) && referrer_uri.host !== "localhost" do
+      RefInspector.parse(referrer_str)
     end
   end
 
@@ -84,10 +93,9 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp calculate_screen_size(width) when width < 1440, do: "Laptop"
   defp calculate_screen_size(width) when width >= 1440, do: "Desktop"
 
-  defp clean_referrer(referrer) do
-    uri = if referrer do
-      URI.parse(String.trim_trailing(referrer, "/"))
-    end
+  defp clean_referrer(nil), do: nil
+  defp clean_referrer(ref) do
+    uri = URI.parse(String.trim_trailing(ref.referer, "/"))
 
     if uri && uri.scheme in ["http", "https"] do
       host = String.replace_prefix(uri.host, "www.", "")
@@ -123,10 +131,11 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp referrer_source(uri, ref) do
+  defp referrer_source(nil), do: nil
+  defp referrer_source(ref) do
     case ref.source do
       :unknown ->
-        query_param_source(uri) || clean_uri(ref.referer)
+        clean_uri(ref.referer)
       source ->
         source
     end
@@ -138,17 +147,4 @@ defmodule PlausibleWeb.Api.ExternalController do
       String.replace_leading(uri.host, "www.", "")
     end
   end
-
-  @source_query_params ["ref", "utm_source", "source"]
-
-  defp query_param_source(uri) do
-    if uri && uri.query do
-      Enum.find_value(URI.query_decoder(uri.query), fn {key, val} ->
-        if Enum.member?(@source_query_params, key) do
-          val
-        end
-      end)
-    end
-  end
-
 end
