@@ -70,7 +70,17 @@ class GoogleKeywordsModal extends React.Component {
       }
     } else if (this.state.searchTerms.length > 0) {
       return (
-        this.state.searchTerms.map(this.renderTerm.bind(this))
+        <table className="w-full table-striped table-fixed">
+          <thead>
+            <tr>
+              <th className="p-2 text-xs tracking-wide font-bold text-grey-dark" align="left">Search Term</th>
+              <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Visitors</th>
+            </tr>
+          </thead>
+          <tbody>
+            {this.state.searchTerms.map(this.renderTerm.bind(this))}
+          </tbody>
+        </table>
       )
     } else {
       return (
@@ -98,18 +108,7 @@ class GoogleKeywordsModal extends React.Component {
           <main className="modal__content mt-0">
             <h1>{this.state.totalVisitors} new visitors from Google</h1>
             <h1 className="text-grey-darker" style={{transform: 'translateY(-1rem)'}}>{toHuman(this.state.query)}</h1>
-
-            <table className="w-full table-striped table-fixed">
-              <thead>
-                <tr>
-                  <th className="p-2 text-xs tracking-wide font-bold text-grey-dark" align="left">Search Term</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Visitors</th>
-                </tr>
-              </thead>
-              <tbody>
-                { this.renderKeywords() }
-              </tbody>
-            </table>
+            { this.renderKeywords() }
           </main>
         </React.Fragment>
       )
