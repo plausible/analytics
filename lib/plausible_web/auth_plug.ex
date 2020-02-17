@@ -13,6 +13,7 @@ defmodule PlausibleWeb.AuthPlug do
         user = Repo.get_by(Plausible.Auth.User, id: id)
                |> Repo.preload(:subscription)
         if user do
+          Sentry.Context.set_user_context(%{id: user.id, name: user.name})
           assign(conn, :current_user, user)
         else
           conn
