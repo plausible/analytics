@@ -1,0 +1,10 @@
+<div class="max-w-sm w-full mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8">
+  <h2>DNS for <%= @site.custom_domain.domain %></h2>
+  <ol class="my-6">
+    <li>Go to your DNS provider’s website</li>
+    <li class="mt-4">Create a new CNAME record for <code><%= @site.custom_domain.domain %></code></li>
+    <li class="mt-4">Point the record to <code>custom.plausible.io.</code> (including the dot)</li>
+  </ol>
+
+  <%= link("Done ->", to: "/sites/#{URI.encode_www_form(@site.domain)}/custom-domains/snippet", class: "button w-full") %>
+</div>

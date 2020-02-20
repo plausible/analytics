@@ -1,5 +1,6 @@
 defmodule Plausible.Sites do
   use Plausible.Repo
+  alias Plausible.Site.CustomDomain
 
   def get_for_user!(user_id, domain) do
     Repo.one!(
@@ -30,5 +31,12 @@ defmodule Plausible.Sites do
       from sm in Plausible.Site.Membership,
       where: sm.user_id == ^user_id and sm.site_id == ^site.id
     )
+  end
+
+  def add_custom_domain(site, custom_domain) do
+    CustomDomain.changeset(%CustomDomain{}, %{
+      site_id: site.id,
+      domain: custom_domain
+    }) |> Repo.insert
   end
 end

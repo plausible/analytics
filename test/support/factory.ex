@@ -81,6 +81,12 @@ defmodule Plausible.Factory do
     }
   end
 
+  def custom_domain_factory do
+    %Plausible.Site.CustomDomain{
+      domain: sequence(:custom_domain, &"domain-#{&1}.com")
+    }
+  end
+
   def tweet_factory do
     %Plausible.Twitter.Tweet{
       tweet_id: UUID.uuid4(),

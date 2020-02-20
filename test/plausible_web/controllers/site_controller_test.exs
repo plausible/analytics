@@ -296,7 +296,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "POSt /sites/:website/shared-links" do
+  describe "POST /sites/:website/shared-links" do
     setup [:create_user, :log_in, :create_site]
 
     test "creates shared link without password", %{conn: conn, site: site} do
@@ -330,6 +330,54 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       refute Repo.one(Plausible.Site.SharedLink)
       assert redirected_to(conn, 302) =~ "/#{site.domain}/settings"
+    end
+  end
+
+  describe "GET /sites/:website/custom-domains/new" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "shows form for new custom domain", %{conn: conn, site: site} do
+      conn = get(conn, "/sites/#{site.domain}/custom-domains/new")
+
+      assert html_response(conn, 200) =~ "Setup custom domain"
+    end
+  end
+
+  describe "POST /sites/:website/custom-domains" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "creates a custom domain", %{conn: conn, site: site} do
+      conn = post(conn, "/sites/#{site.domain}/custom-domains", %{"custom_domain" => %{"domain" => "plausible.example.com"}})
+
+      domain = Repo.one(Plausible.Site.CustomDomain)
+
+      assert redirected_to(conn, 302) =~ "/sites/#{site.domain}/custom-domains/dns-setup"
+      assert domain.domain == "plausible.example.com"
+    end
+
+    test "validates presence of domain name", %{conn: conn, site: site} do
+      conn = post(conn, "/sites/#{site.domain}/custom-domains", %{"custom_domain" => %{"domain" => ""}})
+
+      refute Repo.one(Plausible.Site.CustomDomain)
+      assert html_response(conn, 200) =~ "Setup custom domain"
+    end
+
+    test "validates format of domain name", %{conn: conn, site: site} do
+      conn = post(conn, "/sites/#{site.domain}/custom-domains", %{"custom_domain" => %{"domain" => "ASD?/not-domain"}})
+
+      refute Repo.one(Plausible.Site.CustomDomain)
+      assert html_response(conn, 200) =~ "Setup custom domain"
+    end
+  end
+
+  describe "GET /sites/:website/custom-domains/dns-setup" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "shows instructions to set up dns", %{conn: conn, site: site} do
+      domain = insert(:custom_domain, site: site)
+      conn = get(conn, "/sites/#{site.domain}/custom-domains/dns-setup")
+
+      assert html_response(conn, 200) =~ "DNS for #{domain.domain}"
     end
   end
 end

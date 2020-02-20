@@ -13,6 +13,7 @@ defmodule Plausible.Site do
     has_one :google_auth, GoogleAuth
     has_one :weekly_report, Plausible.Site.WeeklyReport
     has_one :monthly_report, Plausible.Site.MonthlyReport
+    has_one :custom_domain, Plausible.Site.CustomDomain
 
     timestamps()
   end
