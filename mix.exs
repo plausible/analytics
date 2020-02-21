@@ -33,7 +33,7 @@ defmodule Plausible.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:browser, "~> 0.4.3"},
+      {:browser, "~> 0.4.3"}, # remove
       {:bcrypt_elixir, "~> 2.0"},
       {:cors_plug, "~> 1.5"},
       {:ecto_sql, "~> 3.0"},
@@ -47,7 +47,7 @@ defmodule Plausible.MixProject do
       {:phoenix_pubsub, "~> 1.1"},
       {:plug_cowboy, "~> 2.0"},
       {:postgrex, ">= 0.0.0"},
-      {:poison, "~> 3.1"}, # Used in paddle_api
+      {:poison, "~> 3.1"}, # Used in paddle_api, can remove
       {:ref_inspector, "~> 1.3"},
       {:timex, "~> 3.6"},
       {:ua_inspector, "~> 0.18"},
@@ -57,6 +57,7 @@ defmodule Plausible.MixProject do
       {:httpoison, "~> 1.4"},
       {:ex_machina, "~> 2.3", only: :test},
       {:excoveralls, "~> 0.10", only: :test},
+      {:double, "~> 0.7.0", only: :test},
       {:joken, "~> 2.0"},
       {:php_serializer, "~> 0.9.0"},
       {:csv, "~> 2.3"},

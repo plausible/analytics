@@ -5,6 +5,7 @@ defmodule Plausible.Site.CustomDomain do
 
   schema "custom_domains" do
     field :domain, :string
+    field :has_ssl_certificate, :boolean
     belongs_to :site, Plausible.Site
 
     timestamps()
