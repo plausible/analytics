@@ -1,6 +1,6 @@
 defmodule Plausible.Slack do
   @app_env System.get_env("APP_ENV") || "dev"
-  @feed_channel_url "https://hooks.slack.com/services/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"
+  @feed_channel_url "https://hooks.slack.com/services/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"
 
   def notify(text) do
     Task.start(fn ->
