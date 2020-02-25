@@ -214,9 +214,6 @@
   </div>
   <%= if @site.custom_domain do %>
     Configured domain: <b><%= @site.custom_domain.domain %></b>
-    <div class="mt-4">
-      <%= link("Change", to: "/sites/#{URI.encode_www_form(@site.domain)}/custom-domains/#{@site.custom_domain.id}/edit", class: "button") %>
-    </div>
   <% else %>
     <div class="mt-4">
       <%= link("Add custom domain", to: "/sites/#{URI.encode_www_form(@site.domain)}/custom-domains/new", class: "button") %>

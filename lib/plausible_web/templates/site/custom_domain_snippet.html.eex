@@ -4,10 +4,13 @@
   </div>
   <div class="my-4">
     <p>
-    Before updating your website, make sure that <a href="//<%= @site.custom_domain.domain %>/js/plausible.js" target="_blank" class="text-indigo"><%= @site.custom_domain.domain %>/js/plausible.js</a> loads the javascript tracker. DNS changes may take time to propagate.
+    Allow up to 4 hours for DNS changes to propagate and for us to obtain an SSL certificate for <code><%= @site.custom_domain.domain %></code>
     </p>
     <p class="mt-4">
-    To finish your custom domain setup, please update the tracking snippet on your site.
+    The setup is working when <a href="//<%= @site.custom_domain.domain %>/js/plausible.js" target="_blank" class="text-indigo"><%= @site.custom_domain.domain %>/js/plausible.js</a> loads the javascript tracker.
+    </p>
+    <p class="mt-4">
+    To finish your setup, please update the tracking snippet on your site with your custom domain.
     </p>
 
     <div class="relative">
@@ -17,5 +20,8 @@
       </a>
     </div>
   </div>
-  <%= link("Done →", class: "button mt-4 w-full", to: "/#{URI.encode_www_form(@site.domain)}") %>
+  <%= link("Back to settings →", class: "button mt-4 w-full", to: "/#{URI.encode_www_form(@site.domain)}/settings#custom-domain") %>
+  <p class="mt-4 text-grey-dark text-sm">
+  Problems? <%= link("Get help via email", to: "mailto:uku@plausible.io", class: "text-indigo-darker underline") %>
+  </p>
 <% end %>

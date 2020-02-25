@@ -2,12 +2,12 @@
   <h2>Setup custom domain</h2>
   <div class="my-6">
     We recommend using a subdomain of the website you're running Plausible on.
-    If your site is on <code>example.com</code> you can use <code>plausible.example.com</code>.
-    <br /><br /> The name of the subdomain can be anything, it doesn't have to be <code>plausible</code>.
+    If your site is on <code>example.com</code> you can use <code>stats.example.com</code>.
+    <br /><br /> The name of the subdomain can be anything, it doesn't have to be <code>stats</code>.
   </div>
   <div class="my-6">
     <%= label f, :domain, class: "block text-sm font-bold" %>
-    <%= text_input f, :domain, class: "transition mt-3 bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "plausible.[yourdomain].com" %>
+    <%= text_input f, :domain, class: "transition mt-3 bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "stats.[yourdomain].com" %>
     <%= error_tag f, :domain %>
   </div>
 
