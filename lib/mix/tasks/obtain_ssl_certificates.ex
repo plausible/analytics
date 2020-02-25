@@ -14,7 +14,7 @@ defmodule Mix.Tasks.ObtainSslCertificates do
     )
 
     for domain <- recent_custom_domains do
-      system.cmd("ssh", ["-t", "custom.plausible.io", "sudo certbot certonly --nginx -n -d #{domain.domain}"])
+      system.cmd("ssh", ["-t", "ubuntu@custom.plausible.io", "sudo certbot certonly --nginx -n -d #{domain.domain}"])
       |> report_result(domain)
     end
   end
