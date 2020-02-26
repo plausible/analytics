@@ -27,6 +27,8 @@ defmodule PlausibleWeb.SiteController do
 
   def add_snippet(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+           |> Repo.preload(:custom_domain)
+
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("snippet.html", site: site, layout: {PlausibleWeb.LayoutView, "focus.html"})
