@@ -13,7 +13,7 @@
       var date = new Date();
       date.setTime(date.getTime() + (3*365*24*60*60*1000)); // 3 YEARS
       var expires = "; expires=" + date.toUTCString();
-      document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+      document.cookie = name + "=" + (value || "")  + expires + "; samesite=strict; path=/";
     }
 
     function getCookie(name) {
