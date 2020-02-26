@@ -65,7 +65,7 @@ class ReferrerDrilldownModal extends React.Component {
           </a>
           <a className="ml-auto twitter-icon" href={tweetUrl} target="_blank"></a>
         </div>
-        <div className="my-2 cursor-text tweet-text" dangerouslySetInnerHTML={{__html: tweet.text}}>
+        <div className="my-2 cursor-text tweet-text whitespace-pre-wrap" dangerouslySetInnerHTML={{__html: tweet.text}}>
         </div>
         <div className="text-xs text-grey-darker font-medium">
           {formatFullDate(new Date(tweet.created))}
