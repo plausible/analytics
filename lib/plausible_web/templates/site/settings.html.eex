@@ -207,10 +207,22 @@
   <% end %>
 </div>
 
-<%= form_for @conn, "/", [class: "bg-white max-w-md mx-auto shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mb-4 mt-16"], fn f -> %>
-  <div class="flex items-center justify-between">
-    <h2>Javascript snippet</h2>
+<div class="bg-white max-w-md mx-auto shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mb-4 mt-16" id="custom-domain">
+  <h2>Custom domain</h2>
+  <div class="my-4">
+    Some browsers and extensions block analytics services. To get around that, Plausible offers a quick and easy way to serve the script from your own custom domain.
   </div>
+  <%= if @site.custom_domain do %>
+    Configured domain: <b><%= @site.custom_domain.domain %></b>
+  <% else %>
+    <div class="mt-4">
+      <%= link("Add custom domain", to: "/sites/#{URI.encode_www_form(@site.domain)}/custom-domains/new", class: "button") %>
+    </div>
+  <% end %>
+</div>
+
+<%= form_for @conn, "/", [class: "bg-white max-w-md mx-auto shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mb-4 mt-16"], fn f -> %>
+  <h2>Javascript snippet</h2>
   <div class="my-4">
     <p>Include this snippet in the <code>&lt;head&gt;</code> of your website.</p>
     <div class="relative">

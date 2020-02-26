@@ -75,6 +75,7 @@ defmodule PlausibleWeb.SiteController do
   def settings(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
            |> Repo.preload(:google_auth)
+           |> Repo.preload(:custom_domain)
 
     search_console_domains = if site.google_auth do
       Plausible.Google.Api.fetch_verified_properties(site.google_auth)
@@ -288,6 +289,38 @@ defmodule PlausibleWeb.SiteController do
     |> Repo.delete!
 
     redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings#visibility")
+  end
+
+  def new_custom_domain(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    changeset = Plausible.Site.CustomDomain.changeset(%Plausible.Site.CustomDomain{}, %{})
+
+    render(conn, "new_custom_domain.html", site: site, changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
+  end
+
+  def custom_domain_dns_setup(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+           |> Repo.preload(:custom_domain)
+
+    render(conn, "custom_domain_dns_setup.html", site: site, layout: {PlausibleWeb.LayoutView, "focus.html"})
+  end
+
+  def custom_domain_snippet(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+           |> Repo.preload(:custom_domain)
+
+    render(conn, "custom_domain_snippet.html", site: site, layout: {PlausibleWeb.LayoutView, "focus.html"})
+  end
+
+  def add_custom_domain(conn, %{"website" => website, "custom_domain" => domain}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+
+    case Sites.add_custom_domain(site, domain["domain"]) do
+      {:ok, _custom_domain} ->
+        redirect(conn, to: "/sites/#{URI.encode_www_form(site.domain)}/custom-domains/dns-setup")
+      {:error, changeset} ->
+        render(conn, "new_custom_domain.html", site: site, changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
+    end
   end
 
   defp insert_site(user_id, params) do

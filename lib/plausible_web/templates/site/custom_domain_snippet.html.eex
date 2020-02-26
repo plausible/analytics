@@ -1,9 +1,17 @@
 <%= form_for @conn, "/", [class: "max-w-sm w-full mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
   <div class="flex items-center justify-between">
-    <h2>Add javascript snippet</h2>
+    <h2>Update javascript snippet</h2>
   </div>
   <div class="my-4">
-    <p>Paste this snippet in the <code>&lt;head&gt;</code> of your website.</p>
+    <p>
+    Allow up to 4 hours for DNS changes to propagate and for us to obtain an SSL certificate for <code><%= @site.custom_domain.domain %></code>
+    </p>
+    <p class="mt-4">
+    The setup is working when <a href="//<%= @site.custom_domain.domain %>/js/plausible.js" target="_blank" class="text-indigo"><%= @site.custom_domain.domain %>/js/plausible.js</a> loads the javascript tracker.
+    </p>
+    <p class="mt-4">
+    To finish your setup, please update the tracking snippet on your site with your custom domain.
+    </p>
 
     <div class="relative">
       <%= textarea f, :domain, id: "snippet_code", class: "transition overflow-hidden bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 pr-6 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light text-xs mt-4 resize-none", value: snippet(@site), rows: 2, readonly: "readonly" %>
@@ -12,5 +20,8 @@
       </a>
     </div>
   </div>
-  <%= link("Start collecting data →", class: "button mt-4 w-full", to: "/#{URI.encode_www_form(@site.domain)}") %>
+  <%= link("Back to settings →", class: "button mt-4 w-full", to: "/#{URI.encode_www_form(@site.domain)}/settings#custom-domain") %>
+  <p class="mt-4 text-grey-dark text-sm">
+  Problems? <%= link("Get help via email", to: "mailto:uku@plausible.io", class: "text-indigo-darker underline") %>
+  </p>
 <% end %>

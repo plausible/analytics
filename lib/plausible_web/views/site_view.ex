@@ -14,8 +14,10 @@ defmodule PlausibleWeb.SiteView do
   end
 
   def snippet(site) do
+    tracker_domain = if site.custom_domain, do: site.custom_domain.domain, else: "plausible.io"
+
     """
-    <script async defer data-domain="#{site.domain}" src="https://plausible.io/js/plausible.js"></script>
+    <script async defer data-domain="#{site.domain}" src="https://#{tracker_domain}/js/plausible.js"></script>
     """
   end
 end
