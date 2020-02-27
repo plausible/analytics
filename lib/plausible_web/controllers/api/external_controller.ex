@@ -10,6 +10,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         conn |> send_resp(202, "")
       {:ok, event} ->
         Plausible.Ingest.Session.on_event(event)
+        Plausible.Ingest.FingerprintSession.on_event(event)
         update_fingerprint(event)
         conn |> send_resp(202, "")
       {:error, changeset} ->
@@ -23,6 +24,8 @@ defmodule PlausibleWeb.Api.ExternalController do
   def unload(conn, _params) do
     params = parse_body(conn)
     Plausible.Ingest.Session.on_unload(params["uid"], Timex.now())
+    fingerprint = calculate_fingerprint(conn, params)
+    Plausible.Ingest.FingerprintSession.on_unload(params["uid"], Timex.now())
     conn |> send_resp(202, "")
   end
 

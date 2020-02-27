@@ -108,7 +108,10 @@
 
     function onUnload() {
       var userData = getUserData()
-      navigator.sendBeacon(plausibleHost + '/api/unload', JSON.stringify({uid: userData.uid}));
+      navigator.sendBeacon(plausibleHost + '/api/unload', JSON.stringify({
+        uid: userData.uid,
+        domain: CONFIG['domain']
+      }));
     }
 
     function page() {
