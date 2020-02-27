@@ -25,7 +25,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     params = parse_body(conn)
     Plausible.Ingest.Session.on_unload(params["uid"], Timex.now())
     fingerprint = calculate_fingerprint(conn, params)
-    Plausible.Ingest.FingerprintSession.on_unload(params["uid"], Timex.now())
+    Plausible.Ingest.FingerprintSession.on_unload(fingerprint, Timex.now())
     conn |> send_resp(202, "")
   end
 
