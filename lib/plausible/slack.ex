@@ -1,6 +1,6 @@
 defmodule Plausible.Slack do
   @app_env System.get_env("APP_ENV") || "dev"
-  @feed_channel_url "https://hooks.slack.com/services/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"
+  @feed_channel_url "https://hooks.slack.com/services/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"
   require Logger
 
   def notify(text) do
