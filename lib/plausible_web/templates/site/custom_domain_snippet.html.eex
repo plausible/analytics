@@ -10,7 +10,7 @@
     The setup is working when <a href="//<%= @site.custom_domain.domain %>/js/plausible.js" target="_blank" class="text-indigo"><%= @site.custom_domain.domain %>/js/plausible.js</a> loads the javascript tracker.
     </p>
     <p class="mt-4">
-    To finish your setup, please update the tracking snippet on your site with your custom domain.
+    To finish your setup, please replace the tracking snippet on your site with the following.
     </p>
 
     <div class="relative">
