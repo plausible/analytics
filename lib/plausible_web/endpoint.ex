@@ -38,7 +38,8 @@ defmodule PlausibleWeb.Endpoint do
     store: :cookie,
     key: "_plausible_key",
     signing_salt: "3IL0ob4k",
-    max_age: 60*60*24*365*5 # 5 years, this is super long but the SlidingSessionTimeout will log people out if they don't return for 2 weeks
+    max_age: 60*60*24*365*5, # 5 years, this is super long but the SlidingSessionTimeout will log people out if they don't return for 2 weeks
+    extra: "SameSite=Strict"
 
 
   plug CORSPlug
