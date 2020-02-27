@@ -83,6 +83,9 @@ config :plausible, :google,
   client_id: System.get_env("GOOGLE_CLIENT_ID"),
   client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
 
+config :plausible, :slack,
+ webhook: System.get_env("SLACK_WEBHOOK")
+
 config :plausible, Plausible.Mailer,
   adapter: Bamboo.PostmarkAdapter,
   api_key: System.get_env("POSTMARK_API_KEY")
