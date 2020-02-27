@@ -210,7 +210,7 @@
 <div class="bg-white max-w-md mx-auto shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mb-4 mt-16" id="custom-domain">
   <h2>Custom domain</h2>
   <div class="my-4">
-    Some browsers and extensions block analytics services. To get around that, Plausible offers a quick and easy way to serve the script from your own custom domain.
+    Some browsers and extensions block all analytics services, including privacy-friendly ones like Plausible. To get around that, we offer a quick and easy way to serve the script from your custom domain. As a result, your stats are never blocked by clients because they are proxied through your subdomain.
   </div>
   <%= if @site.custom_domain do %>
     Configured domain: <b><%= @site.custom_domain.domain %></b>
