@@ -280,7 +280,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         name: "pageview",
         url: "http://www.example.com/",
         referrer: "https://www.indiehackers.com/page?query=param#hash",
-        initial_referrer: "https://www.indiehackers.com/page?query=param#hash",
+        initial_referrer: "https://www.indiehackers.com/?query=param#hash",
         uid: UUID.uuid4(),
         new_visitor: true
       }
@@ -293,7 +293,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       finalize_session(pageview.user_id)
 
       assert pageview.referrer == "indiehackers.com/page"
-      assert pageview.initial_referrer == "indiehackers.com/page"
+      assert pageview.initial_referrer == "indiehackers.com"
     end
 
     test "source param controls the referrer source", %{conn: conn} do
