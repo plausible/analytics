@@ -93,11 +93,7 @@ class GoogleKeywordsModal extends React.Component {
   }
 
   renderBody() {
-    if (this.state.loading) {
-      return (
-        <div className="loading my-32 mx-auto"><div></div></div>
-      )
-    } else {
+    if (!this.state.loading) {
       return (
         <React.Fragment>
           <header className="modal__header">
@@ -107,7 +103,7 @@ class GoogleKeywordsModal extends React.Component {
           <div className="my-4 border-b border-grey-light"></div>
           <main className="modal__content mt-0">
             <h1>{this.state.totalVisitors} new visitors from Google</h1>
-            <h1 className="text-grey-darker" style={{transform: 'translateY(-1rem)'}}>{toHuman(this.state.query)}</h1>
+            <h1 className="text-grey-darker mt-2" style={{transform: 'translateY(-1rem)'}}>{toHuman(this.state.query)}</h1>
             { this.renderKeywords() }
           </main>
         </React.Fragment>
@@ -117,7 +113,7 @@ class GoogleKeywordsModal extends React.Component {
 
   render() {
     return (
-      <Modal site={this.props.site}>
+      <Modal site={this.props.site} show={!this.state.loading}>
         { this.renderBody() }
       </Modal>
     )

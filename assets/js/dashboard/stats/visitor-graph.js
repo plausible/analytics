@@ -1,6 +1,7 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
 import Chart from 'chart.js'
+import FadeIn from '../fade-in'
 import { eventName } from '../query'
 import numberFormatter from '../number-formatter'
 import { isToday, shiftMonths, formatMonth } from '../date'
@@ -335,19 +336,20 @@ export default class VisitorGraph extends React.Component {
   }
 
   renderInner() {
-    if (this.state.loading) {
+    if (this.state.graphData) {
       return (
-        <div className="loading pt-24 sm:pt-32 md:pt-48 mx-auto"><div></div></div>
+        <LineGraph graphData={this.state.graphData} site={this.props.site} query={this.props.query} />
       )
-    } else if (this.state.graphData) {
-      return <LineGraph graphData={this.state.graphData} site={this.props.site} query={this.props.query} />
     }
   }
 
   render() {
     return (
       <div className="w-full bg-white shadow-xl rounded mt-6 main-graph">
-        { this.renderInner() }
+        { this.state.loading && <div className="loading pt-24 sm:pt-32 md:pt-48 mx-auto"><div></div></div> }
+        <FadeIn show={!this.state.loading}>
+          { this.renderInner() }
+        </FadeIn>
       </div>
     )
   }

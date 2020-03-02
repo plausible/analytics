@@ -74,15 +74,18 @@ class ScreenSizes extends React.Component {
 
   render() {
     return (
-      <FadeIn show={!this.state.loading}>
-        <React.Fragment>
-          <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
-            <span>Screen size</span>
-            <span>Visitors</span>
-          </div>
-          { this.state.sizes && this.state.sizes.map(this.renderScreenSize.bind(this)) }
-        </React.Fragment>
-      </FadeIn>
+      <React.Fragment>
+        { this.state.loading && <div className="loading my-32 mx-auto"><div></div></div> }
+        <FadeIn show={!this.state.loading}>
+          <React.Fragment>
+            <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+              <span>Screen size</span>
+              <span>Visitors</span>
+            </div>
+            { this.state.sizes && this.state.sizes.map(this.renderScreenSize.bind(this)) }
+          </React.Fragment>
+        </FadeIn>
+      </React.Fragment>
     )
   }
 }
@@ -123,15 +126,18 @@ class Browsers extends React.Component {
 
   render() {
     return (
-      <FadeIn show={!this.state.loading}>
-        <div>
-          <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
-            <span>Browser</span>
-            <span>Visitors</span>
-          </div>
-          { this.state.browsers && this.state.browsers.map(this.renderBrowser.bind(this)) }
-        </div>
-      </FadeIn>
+      <React.Fragment>
+        { this.state.loading && <div className="loading my-32 mx-auto"><div></div></div> }
+        <FadeIn show={!this.state.loading}>
+          <React.Fragment>
+            <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+              <span>Browser</span>
+              <span>Visitors</span>
+            </div>
+            { this.state.browsers && this.state.browsers.map(this.renderBrowser.bind(this)) }
+          </React.Fragment>
+        </FadeIn>
+      </React.Fragment>
     )
   }
 }
@@ -172,15 +178,18 @@ class OperatingSystems extends React.Component {
 
   render() {
     return (
-      <FadeIn show={!this.state.loading}>
-        <React.Fragment>
-          <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
-            <span>Operating system</span>
-            <span>Visitors</span>
-          </div>
-          { this.state.operatingSystems && this.state.operatingSystems.map(this.renderOperatingSystem.bind(this)) }
-        </React.Fragment>
-      </FadeIn>
+      <React.Fragment>
+        { this.state.loading && <div className="loading my-32 mx-auto"><div></div></div> }
+        <FadeIn show={!this.state.loading}>
+          <React.Fragment>
+            <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+              <span>Operating system</span>
+              <span>Visitors</span>
+            </div>
+            { this.state.operatingSystems && this.state.operatingSystems.map(this.renderOperatingSystem.bind(this)) }
+          </React.Fragment>
+        </FadeIn>
+      </React.Fragment>
     )
   }
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
 
+import FadeIn from '../fade-in'
 import Bar from './bar'
 import MoreLink from './more-link'
 import numberFormatter from '../number-formatter'
@@ -46,11 +47,10 @@ export default class Referrers extends React.Component {
   }
 
   renderContent() {
-    if (this.state.loading) {
-      return <div className="loading my-32 mx-auto"><div></div></div>
-    } else {
+    if (this.state.referrers) {
       return (
         <React.Fragment>
+          <h3>Top Referrers</h3>
 
           <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
             <span>Referrer</span>
@@ -67,8 +67,10 @@ export default class Referrers extends React.Component {
   render() {
     return (
       <div className="stats-item bg-white shadow-xl rounded p-4" style={{height: '436px'}}>
-        <h3>Top Referrers</h3>
-        { this.renderContent() }
+        { this.state.loading && <div className="loading my-32 mx-auto"><div></div></div> }
+        <FadeIn show={!this.state.loading}>
+          { this.renderContent() }
+        </FadeIn>
       </div>
     )
   }

@@ -1,7 +1,7 @@
 @tailwind preflight;
 @tailwind components;
 @import "modal.css";
-@import "coffee_cup.css";
+@import "loader.css";
 @import "tooltip.css";
 
 .button {
@@ -253,5 +253,5 @@ a {
 }
 .fade-enter-active {
   opacity: 1;
-  transition: opacity 200ms ease-in;
+  transition: opacity 100ms ease-in;
 }
