@@ -12,6 +12,9 @@ defmodule PlausibleWeb.Api.ExternalController do
         Plausible.Ingest.Session.on_event(event)
         Plausible.Ingest.FingerprintSession.on_event(event)
         update_fingerprint(event)
+        if event.referrer == "opensource.builders/" do
+          Plausible.Slack.notify("Got bad referrer: " <> Jason.encode!(params))
+        end
         conn |> send_resp(202, "")
       {:error, changeset} ->
         request = Sentry.Plug.build_request_interface_data(conn, [])
