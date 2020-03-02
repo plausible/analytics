@@ -10,7 +10,9 @@ defmodule PlausibleWeb.UnsubscribeController do
     |> WeeklyReport.remove_recipient(email)
     |> Repo.update!
 
-    render(conn, "success.html", interval: "weekly", site: website, layout: {PlausibleWeb.LayoutView, "focus.html"})
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("success.html", interval: "weekly", site: website, layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def monthly_report(conn, %{"website" => website, "email" => email}) do
@@ -20,6 +22,8 @@ defmodule PlausibleWeb.UnsubscribeController do
     |> MonthlyReport.remove_recipient(email)
     |> Repo.update!
 
-    render(conn, "success.html", interval: "monthly", site: website, layout: {PlausibleWeb.LayoutView, "focus.html"})
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("success.html", interval: "monthly", site: website, layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 end

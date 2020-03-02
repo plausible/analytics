@@ -267,7 +267,9 @@ defmodule PlausibleWeb.SiteController do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
     changeset = Plausible.Site.SharedLink.changeset(%Plausible.Site.SharedLink{}, %{})
 
-    render(conn, "new_shared_link.html", site: site, changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("new_shared_link.html", site: site, changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def create_shared_link(conn, %{"website" => website, "shared_link" => link}) do
@@ -281,7 +283,9 @@ defmodule PlausibleWeb.SiteController do
       {:ok, _created} ->
         redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings#visibility")
       {:error, changeset} ->
-        render(conn, "new_shared_link.html", site: site, changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("new_shared_link.html", site: site, changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
     end
   end
 
@@ -297,21 +301,27 @@ defmodule PlausibleWeb.SiteController do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
     changeset = Plausible.Site.CustomDomain.changeset(%Plausible.Site.CustomDomain{}, %{})
 
-    render(conn, "new_custom_domain.html", site: site, changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("new_custom_domain.html", site: site, changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def custom_domain_dns_setup(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
            |> Repo.preload(:custom_domain)
 
-    render(conn, "custom_domain_dns_setup.html", site: site, layout: {PlausibleWeb.LayoutView, "focus.html"})
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("custom_domain_dns_setup.html", site: site, layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def custom_domain_snippet(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
            |> Repo.preload(:custom_domain)
 
-    render(conn, "custom_domain_snippet.html", site: site, layout: {PlausibleWeb.LayoutView, "focus.html"})
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("custom_domain_snippet.html", site: site, layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def add_custom_domain(conn, %{"website" => website, "custom_domain" => domain}) do
@@ -321,7 +331,9 @@ defmodule PlausibleWeb.SiteController do
       {:ok, _custom_domain} ->
         redirect(conn, to: "/sites/#{URI.encode_www_form(site.domain)}/custom-domains/dns-setup")
       {:error, changeset} ->
-        render(conn, "new_custom_domain.html", site: site, changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("new_custom_domain.html", site: site, changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
     end
   end
 
