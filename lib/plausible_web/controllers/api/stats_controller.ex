@@ -77,7 +77,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
 
-    json(conn, Stats.top_referrers_for_goal(site, query, params["limit"] || 5))
+    json(conn, Stats.top_referrers_for_goal(site, query, params["limit"] || 9))
   end
 
   @google_api Application.fetch_env!(:plausible, :google_api)
