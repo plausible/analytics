@@ -113,11 +113,7 @@ class ReferrerDrilldownModal extends React.Component {
   }
 
   renderBody() {
-    if (this.state.loading) {
-      return (
-        <div className="loading my-32 mx-auto"><div></div></div>
-      )
-    } else if (this.state.referrers) {
+    if (this.state.referrers) {
       return (
         <React.Fragment>
           <header className="modal__header">
@@ -149,7 +145,7 @@ class ReferrerDrilldownModal extends React.Component {
 
   render() {
     return (
-      <Modal site={this.props.site}>
+      <Modal site={this.props.site} show={!this.state.loading}>
         { this.renderBody() }
       </Modal>
     )

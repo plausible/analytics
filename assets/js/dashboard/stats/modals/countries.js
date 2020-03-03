@@ -30,11 +30,7 @@ class CountriesModal extends React.Component {
   }
 
   renderBody() {
-    if (this.state.loading) {
-      return (
-        <div className="loading my-32 mx-auto"><div></div></div>
-      )
-    } else if (this.state.countries) {
+    if (this.state.countries) {
       return (
         <React.Fragment>
           <header className="modal__header">
@@ -63,7 +59,7 @@ class CountriesModal extends React.Component {
 
   render() {
     return (
-      <Modal site={this.props.site}>
+      <Modal site={this.props.site} show={!this.state.loading}>
         { this.renderBody() }
       </Modal>
     )

@@ -1,6 +1,7 @@
 import React from 'react';
 import Datamap from 'datamaps'
 
+import FadeIn from '../fade-in'
 import Bar from './bar'
 import MoreLink from './more-link'
 import * as api from '../api'
@@ -79,21 +80,26 @@ export default class Countries extends React.Component {
     });
   }
 
-  render() {
-    if (this.state.loading) {
+  renderBody() {
+    if (this.state.countries) {
       return (
-        <div className="stats-item bg-white shadow-xl rounded p-4" style={{height: '436px'}}>
-          <div className="loading my-32 mx-auto"><div></div></div>
-        </div>
-      )
-    } else if (this.state.countries) {
-      return (
-        <div className="stats-item bg-white shadow-xl rounded p-4" style={{height: '436px'}}>
+        <React.Fragment>
           <h3>Countries</h3>
           <div className="mt-6 mx-auto" style={{width: '100%', maxWidth: '475px', height: '320px'}} id="map-container"></div>
           <MoreLink site={this.props.site} list={this.state.countries} endpoint="countries" />
-        </div>
+        </React.Fragment>
       )
     }
+  }
+
+  render() {
+    return (
+      <div className="stats-item bg-white shadow-xl rounded p-4" style={{height: '436px'}}>
+        { this.state.loading && <div className="loading my-32 mx-auto"><div></div></div> }
+        <FadeIn show={!this.state.loading}>
+          { this.renderBody() }
+        </FadeIn>
+      </div>
+    )
   }
 }

@@ -2,6 +2,12 @@ import React from "react";
 import { createPortal } from "react-dom";
 import { withRouter } from 'react-router-dom';
 
+function SlideIn({show, children}) {
+  const className = show ? "modal-enter-active" : "modal-enter"
+
+  return <div className={className}>{children}</div>
+}
+
 class Modal extends React.Component {
   constructor(props) {
     super(props)
@@ -47,9 +53,16 @@ class Modal extends React.Component {
       <div className="modal is-open" onClick={this.props.onClick}>
         <div className="modal__overlay">
           <button className="modal__close"></button>
-          <div ref={this.node} className="modal__container">
-            {this.props.children}
-          </div>
+          { !this.props.show &&
+              <div className="modal__loader loading"><div></div></div>
+          }
+
+          <SlideIn show={this.props.show}>
+            <div ref={this.node} className="modal__container">
+              {this.props.children}
+            </div>
+          </SlideIn>
+
         </div>
       </div>,
       document.getElementById("modal_root"),

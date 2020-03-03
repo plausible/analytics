@@ -1,6 +1,7 @@
 .loading {
   width: 50px;
   height: 50px;
+  animation: loaderFadein .2s ease-in;
 }
 
 .loading div {
@@ -19,4 +20,10 @@
 }
 @-webkit-keyframes spin {
   to { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes loaderFadein {
+    0%   { opacity: 0; }
+    50%  { opacity: 0; }
+    100% { opacity: 1; }
 }
