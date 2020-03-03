@@ -35,17 +35,6 @@
   overflow-y: auto;
 }
 
-.modal__loader {
-  margin: 300px auto 0 auto;
-  animation: loaderFadein .4s ease-in;
-}
-
-@keyframes loaderFadein {
-    0%   { opacity: 0; }
-    50%  { opacity: 0; }
-    100% { opacity: 1; }
-}
-
 .modal__container {
   background-color: #fff;
   padding: 1rem 2rem;

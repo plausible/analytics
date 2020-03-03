@@ -93,7 +93,11 @@ class GoogleKeywordsModal extends React.Component {
   }
 
   renderBody() {
-    if (!this.state.loading) {
+    if (this.state.loading) {
+      return (
+        <div className="loading mt-32 mx-auto"><div></div></div>
+      )
+    } else {
       return (
         <React.Fragment>
           <header className="modal__header">

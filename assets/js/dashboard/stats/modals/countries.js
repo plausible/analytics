@@ -30,7 +30,11 @@ class CountriesModal extends React.Component {
   }
 
   renderBody() {
-    if (this.state.countries) {
+    if (this.state.loading) {
+      return (
+        <div className="loading mt-32 mx-auto"><div></div></div>
+      )
+    } else if (this.state.countries) {
       return (
         <React.Fragment>
           <header className="modal__header">
