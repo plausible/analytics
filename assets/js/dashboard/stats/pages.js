@@ -49,7 +49,7 @@ export default class Pages extends React.Component {
         <React.Fragment>
           <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
             <span>Page url</span>
-            <span>Visitors</span>
+            <span>Pageviews</span>
           </div>
 
           { this.state.pages.map(this.renderPage.bind(this)) }

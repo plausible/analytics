@@ -112,20 +112,30 @@ class DatePicker extends React.Component {
   renderDropDown() {
     return (
       <div className="relative" style={{height: '35.5px', width: '190px'}}>
-        <div data-dropdown-trigger className="flex items-center justify-between hover:bg-grey-lighter rounded bg-white shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-bold text-grey-darker h-full">
+        <div data-dropdown-trigger className="flex items-center justify-between rounded bg-white shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-grey-darkest h-full">
           <span className="mr-2">{this.timeFrameText()}</span>
           <svg className="text-pink fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
             <use xlinkHref="#feather-chevron-down" />
           </svg>
         </div>
 
-        <div data-dropdown style={{top: '42px', right: '0px', width: '225px'}} className="dropdown-content hidden absolute pin-r bg-white border border-grey-light rounded shadow z-10 font-bold text-sm text-grey-darker">
-          <Link to={{search: this.queryWithPeriod('day')}} className="block p-2 hover:bg-grey-lighter">Today</Link>
-          <Link to={{search: this.queryWithPeriod('7d')}} className="block p-2 hover:bg-grey-lighter">Last 7 days</Link>
-          <Link to={{search: this.queryWithPeriod('30d')}} className="block p-2 hover:bg-grey-lighter">Last 30 days</Link>
-          <Link to={{search: this.queryWithPeriod('60d')}} className="block p-2 hover:bg-grey-lighter">Last 60 days</Link>
-          <Link to={{search: this.queryWithPeriod('6mo')}} className="block p-2 hover:bg-grey-lighter">Last 6 months</Link>
-          <Link to={{search: this.queryWithPeriod('12mo')}} className="block p-2 hover:bg-grey-lighter">Last 12 months</Link>
+        <div data-dropdown className="hidden absolute mt-2 rounded-md shadow-md z-10" style={{width: '220px', right: '-10px'}}>
+          <div className="rounded-md bg-white shadow-xs font-medium text-grey-darkest">
+            <div className="py-1">
+              <Link to={{search: this.queryWithPeriod('day')}} className="block px-4 py-2 text-sm leading-tight hover:bg-grey-lightest hover:text-black">Today</Link>
+            </div>
+            <div className="border-t border-grey-lighter"></div>
+            <div className="py-1">
+              <Link to={{search: this.queryWithPeriod('7d')}} className="block px-4 py-2 text-sm leading-tight hover:bg-grey-lightest hover:text-black">Last 7 days</Link>
+              <Link to={{search: this.queryWithPeriod('30d')}} className="block px-4 py-2 text-sm leading-tight hover:bg-grey-lightest hover:text-black">Last 30 days</Link>
+              <Link to={{search: this.queryWithPeriod('60d')}} className="block px-4 py-2 text-sm leading-tight hover:bg-grey-lightest hover:text-black">Last 60 days</Link>
+            </div>
+            <div className="border-t border-grey-lighter"></div>
+            <div className="py-1">
+              <Link to={{search: this.queryWithPeriod('6mo')}} className="block px-4 py-2 text-sm leading-tight hover:bg-grey-lightest hover:text-black">Last 6 months</Link>
+              <Link to={{search: this.queryWithPeriod('12mo')}} className="block px-4 py-2 text-sm leading-tight hover:bg-grey-lightest hover:text-black">Last 12 months</Link>
+            </div>
+          </div>
         </div>
       </div>
     )
