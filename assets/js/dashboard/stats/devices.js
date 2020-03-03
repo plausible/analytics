@@ -72,18 +72,28 @@ class ScreenSizes extends React.Component {
     )
   }
 
+  renderList() {
+    if (this.state.sizes && this.state.sizes.length > 0) {
+      return (
+        <React.Fragment>
+          <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+            <span>Screen size</span>
+            <span>Visitors</span>
+          </div>
+          { this.state.sizes && this.state.sizes.map(this.renderScreenSize.bind(this)) }
+        </React.Fragment>
+      )
+    } else {
+      return <div className="text-center mt-44 font-medium text-grey-dark">No data yet</div>
+    }
+  }
+
   render() {
     return (
       <React.Fragment>
-        { this.state.loading && <div className="loading my-32 mx-auto"><div></div></div> }
+        { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
         <FadeIn show={!this.state.loading}>
-          <React.Fragment>
-            <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
-              <span>Screen size</span>
-              <span>Visitors</span>
-            </div>
-            { this.state.sizes && this.state.sizes.map(this.renderScreenSize.bind(this)) }
-          </React.Fragment>
+          { this.renderList() }
         </FadeIn>
       </React.Fragment>
     )
@@ -124,18 +134,28 @@ class Browsers extends React.Component {
     )
   }
 
+  renderList() {
+    if (this.state.browsers && this.state.browsers.length > 0) {
+      return (
+        <React.Fragment>
+          <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+            <span>Browser</span>
+            <span>Visitors</span>
+          </div>
+          { this.state.browsers && this.state.browsers.map(this.renderBrowser.bind(this)) }
+        </React.Fragment>
+      )
+    } else {
+      return <div className="text-center mt-44 font-medium text-grey-dark">No data yet</div>
+    }
+  }
+
   render() {
     return (
       <React.Fragment>
-        { this.state.loading && <div className="loading my-32 mx-auto"><div></div></div> }
+        { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
         <FadeIn show={!this.state.loading}>
-          <React.Fragment>
-            <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
-              <span>Browser</span>
-              <span>Visitors</span>
-            </div>
-            { this.state.browsers && this.state.browsers.map(this.renderBrowser.bind(this)) }
-          </React.Fragment>
+          { this.renderList() }
         </FadeIn>
       </React.Fragment>
     )
@@ -176,18 +196,28 @@ class OperatingSystems extends React.Component {
     )
   }
 
+  renderList() {
+    if (this.state.operatingSystems && this.state.operatingSystems.length > 0) {
+      return (
+        <React.Fragment>
+          <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+            <span>Operating system</span>
+            <span>Visitors</span>
+          </div>
+          { this.state.operatingSystems && this.state.operatingSystems.map(this.renderOperatingSystem.bind(this)) }
+        </React.Fragment>
+      )
+    } else {
+      return <div className="text-center mt-44 font-medium text-grey-dark">No data yet</div>
+    }
+  }
+
   render() {
     return (
       <React.Fragment>
-        { this.state.loading && <div className="loading my-32 mx-auto"><div></div></div> }
+        { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
         <FadeIn show={!this.state.loading}>
-          <React.Fragment>
-            <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
-              <span>Operating system</span>
-              <span>Visitors</span>
-            </div>
-            { this.state.operatingSystems && this.state.operatingSystems.map(this.renderOperatingSystem.bind(this)) }
-          </React.Fragment>
+          { this.renderList() }
         </FadeIn>
       </React.Fragment>
     )

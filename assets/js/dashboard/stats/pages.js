@@ -43,18 +43,29 @@ export default class Pages extends React.Component {
     )
   }
 
+  renderList() {
+    if (this.state.pages.length > 0) {
+      return (
+        <React.Fragment>
+          <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+            <span>Page url</span>
+            <span>Visitors</span>
+          </div>
+
+          { this.state.pages.map(this.renderPage.bind(this)) }
+        </React.Fragment>
+      )
+    } else {
+      return <div className="text-center mt-44 font-medium text-grey-dark">No data yet</div>
+    }
+  }
+
   renderContent() {
     if (this.state.pages) {
       return (
         <React.Fragment>
           <h3>Top Pages</h3>
-
-          <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
-            <span>Page url</span>
-            <span>Pageviews</span>
-          </div>
-
-          { this.state.pages.map(this.renderPage.bind(this)) }
+          { this.renderList() }
           <MoreLink site={this.props.site} list={this.state.pages} endpoint="pages" />
         </React.Fragment>
       )
@@ -64,7 +75,7 @@ export default class Pages extends React.Component {
   render() {
     return (
       <div className="stats-item bg-white shadow-xl rounded p-4" style={{height: '436px'}}>
-        { this.state.loading && <div className="loading my-32 mx-auto"><div></div></div> }
+        { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
         <FadeIn show={!this.state.loading}>
           { this.renderContent() }
         </FadeIn>

@@ -49,18 +49,29 @@ export default class Referrers extends React.Component {
     )
   }
 
-  renderContent() {
-    if (this.state.referrers) {
+  renderList() {
+    if (this.state.referrers.length > 0) {
       return (
         <React.Fragment>
-          <h3>Top Referrers</h3>
-
           <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
             <span>Referrer</span>
             <span>Visitors</span>
           </div>
 
-          { this.state.referrers.map(this.renderReferrer.bind(this)) }
+          {this.state.referrers.map(this.renderReferrer.bind(this))}
+        </React.Fragment>
+      )
+    } else {
+      return <div className="text-center mt-44 font-medium text-grey-dark">No data yet</div>
+    }
+  }
+
+  renderContent() {
+    if (this.state.referrers) {
+      return (
+        <React.Fragment>
+          <h3>Top Referrers</h3>
+          { this.renderList() }
           <MoreLink site={this.props.site} list={this.state.referrers} endpoint="referrers" />
         </React.Fragment>
       )
@@ -70,7 +81,7 @@ export default class Referrers extends React.Component {
   render() {
     return (
       <div className="stats-item bg-white shadow-xl rounded p-4" style={{height: '436px'}}>
-        { this.state.loading && <div className="loading my-32 mx-auto"><div></div></div> }
+        { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
         <FadeIn show={!this.state.loading}>
           { this.renderContent() }
         </FadeIn>
