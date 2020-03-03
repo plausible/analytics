@@ -14,8 +14,8 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
-        %{"name" => "Google", "count" => 2},
-        %{"name" => "Bing", "count" => 1},
+        %{"name" => "Google", "count" => 2, "url" => nil},
+        %{"name" => "Bing", "count" => 1, "url" => nil},
       ]
     end
 
@@ -30,8 +30,8 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01&include=bounce_rate")
 
       assert json_response(conn, 200) == [
-        %{"name" => "Google", "count" => 2, "bounce_rate" => 50},
-        %{"name" => "Bing", "count" => 1, "bounce_rate" => nil},
+        %{"name" => "Google", "count" => 2, "bounce_rate" => 50, "url" => nil},
+        %{"name" => "Bing", "count" => 1, "bounce_rate" => nil, "url" => nil},
       ]
     end
   end
@@ -48,7 +48,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       conn = get(conn, "/api/stats/#{site.domain}/goal/referrers?period=day&date=2019-01-01&filters=#{filters}")
 
       assert json_response(conn, 200) == [
-        %{"name" => "Google", "count" => 2},
+        %{"name" => "Google", "count" => 2, "url" => nil},
       ]
     end
 
@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       conn = get(conn, "/api/stats/#{site.domain}/goal/referrers?period=day&date=2019-01-01&filters=#{filters}")
 
       assert json_response(conn, 200) == [
-        %{"name" => "Google", "count" => 2},
+        %{"name" => "Google", "count" => 2, "url" => nil},
       ]
     end
   end

@@ -154,22 +154,26 @@ defmodule Plausible.Stats do
 
   def top_referrers_for_goal(site, query, limit \\ 5) do
     Repo.all(from e in base_query(site, query),
-      select: %{name: e.initial_referrer_source, count: count(e.user_id, :distinct)},
+      select: %{name: e.initial_referrer_source, url: min(e.initial_referrer), count: count(e.user_id, :distinct)},
       group_by: e.initial_referrer_source,
       where: not is_nil(e.initial_referrer_source),
-      order_by: [desc: 2],
+      order_by: [desc: 3],
       limit: ^limit
-    )
+    ) |> Enum.map(fn ref ->
+      Map.update(ref, :url, nil, fn url -> url && URI.parse("http://" <> url).host end)
+    end)
   end
 
   def top_referrers(site, query, limit \\ 5, include \\ []) do
     referrers = Repo.all(from e in base_query(site, query),
-      select: %{name: e.referrer_source, count: count(e.user_id, :distinct)},
+      select: %{name: e.referrer_source, url: min(e.referrer), count: count(e.user_id, :distinct)},
       group_by: e.referrer_source,
       where: not is_nil(e.referrer_source),
-      order_by: [desc: 2],
+      order_by: [desc: 3],
       limit: ^limit
-    )
+    ) |> Enum.map(fn ref ->
+      Map.update(ref, :url, nil, fn url -> url && URI.parse("http://" <> url).host end)
+    end)
 
     if "bounce_rate" in include do
       bounce_rates = bounce_rates_by_referrer_source(site, query, Enum.map(referrers, fn ref -> ref[:name] end))
