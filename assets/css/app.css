@@ -255,3 +255,8 @@ a {
   opacity: 1;
   transition: opacity 100ms ease-in;
 }
+
+.flatpickr-calendar.static.open {
+  right: 2px;
+  top: calc(100% - 12px);
+}

@@ -110,6 +110,18 @@ defmodule Plausible.Stats.Query do
     }
   end
 
+  def from(_tz, %{"period" => "custom", "from" => from, "to" => to} = params) do
+    from_date = Date.from_iso8601!(from)
+    to_date = Date.from_iso8601!(to)
+
+    %__MODULE__{
+      period: "custom",
+      date_range: Date.range(from_date, to_date),
+      step_type: "date",
+      filters: parse_filters(params)
+    }
+  end
+
   def from(tz, _) do
     __MODULE__.from(tz, %{"period" => "30d"})
   end

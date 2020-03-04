@@ -8,6 +8,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="<%= PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_favicon.png") %>">
     <title><%= assigns[:title] || "Plausible · Simple, open-source web analytics" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
+    <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/dashboard.css") %>"/>
     <%= render("_tracking.html", assigns) %>
   </head>
   <body class="flex flex-col h-full bg-grey-lightest">

@@ -13,6 +13,7 @@
     "phoenix_html": "file:../deps/phoenix_html",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
+    "react-flatpickr": "^3.10.0",
     "react-router-dom": "^5.1.2",
     "url-search-params-polyfill": "^7.0.1"
   },
