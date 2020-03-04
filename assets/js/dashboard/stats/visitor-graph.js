@@ -4,7 +4,6 @@ import Chart from 'chart.js'
 import FadeIn from '../fade-in'
 import { eventName } from '../query'
 import numberFormatter from '../number-formatter'
-import { isToday, shiftMonths, formatMonth } from '../date'
 import * as api from '../api'
 
 function mainSet(plot, present_index, ctx) {
@@ -220,30 +219,6 @@ class LineGraph extends React.Component {
       query.set('period', 'day')
       query.set('date', date)
       this.props.history.push({search: query.toString()})
-    }
-  }
-
-  comparisonTimeframe() {
-    const {query, site} = this.props
-
-    if (query.period === 'day') {
-      if (isToday(site, query.date)) {
-        return 'yesterday'
-      } else {
-        return 'previous day'
-      }
-    } else if (query.period === 'month') {
-      return formatMonth(shiftMonths(query.date, -1))
-    } else if (query.period === '7d') {
-      return 'last week'
-    } else if (query.period === '30d') {
-      return 'last month'
-    } else if (query.period === '60d') {
-      return 'prev 60 days'
-    } else if (query.period === '6mo') {
-      return 'prev 6 months'
-    } else if (query.period === '12mo') {
-      return 'last year'
     }
   }
 

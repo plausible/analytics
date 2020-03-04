@@ -56,6 +56,13 @@ defmodule Plausible.Stats.QueryTest do
     assert q.step_type == "date"
   end
 
+  test "parses custom format" do
+    q = Query.from(@tz, %{"period" => "custom", "from" => "2019-01-01", "to" => "2019-01-15"})
+
+    assert q.date_range.first == ~D[2019-01-01]
+    assert q.date_range.last == ~D[2019-01-15]
+    assert q.step_type == "date"
+  end
 
   describe "filters" do
     test "parses goal filter" do

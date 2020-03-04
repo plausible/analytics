@@ -149,7 +149,7 @@ class ReferrerDrilldownModal extends React.Component {
 
   render() {
     return (
-      <Modal site={this.props.site} show={!this.state.loading}>
+      <Modal site={this.props.site}>
         { this.renderBody() }
       </Modal>
     )
