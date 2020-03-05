@@ -27,7 +27,7 @@
     "mini-css-extract-plugin": "^0.8.2",
     "optimize-css-assets-webpack-plugin": "^5.0.3",
     "postcss-loader": "^3.0.0",
-    "tailwindcss": "^0.7.4",
+    "tailwindcss": "^1.2.0",
     "uglifyjs-webpack-plugin": "^2.2.0",
     "webpack": "4.39.2",
     "webpack-cli": "^3.3.10"

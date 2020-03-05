@@ -19,7 +19,7 @@
       <%= label f, :timezone, "Reporting Timezone", class: "block text-grey-darker text-sm font-bold mb-2" %>
       <div class="inline-block relative w-full">
         <%= select f, :timezone, Plausible.Timezones.options(), class: "block appearance-none w-full bg-grey-lighter text-grey-darker cursor-pointer hover:border-grey p-2 pr-8 rounded leading-normal focus:outline-none" %>
-        <div class="pointer-events-none absolute pin-y pin-r flex items-center px-2 text-red">
+        <div class="pointer-events-none absolute top-0 right-0 flex items-center px-2 text-red">
           <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
         </div>
       </div>
@@ -38,7 +38,7 @@
       Stats for <%= @site.domain %> are currently <b>public</b>. Anyone with the following link can view the stats:
       <div class="relative text-sm mt-4">
         <input type="text" id="public-link" value="https://plausible.io/<%= URI.encode_www_form(@site.domain)  %>" class="transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 pr-16 text-grey-darker appearance-none focus:outline-none focus:border-grey-light" />
-        <a onclick="var input = document.getElementById('public-link'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="absolute pin-r text-indigo-darker font-bold p-2">
+        <a onclick="var input = document.getElementById('public-link'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="absolute right-0 text-indigo-darker font-bold p-2">
           <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
         </a>
       </div>
@@ -124,7 +124,7 @@
         <div class="my-6">
           <div class="inline-block relative w-full">
             <%= select f, :property, @search_console_domains, prompt: "(Choose property)", class: "block appearance-none w-full bg-grey-lighter text-grey-darker cursor-pointer hover:border-grey p-2 pr-8 rounded leading-normal focus:outline-none" %>
-            <div class="pointer-events-none absolute pin-y pin-r flex items-center px-2 text-red">
+            <div class="pointer-events-none absolute top-0 right-0 flex items-center px-2 text-red">
               <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
             </div>
           </div>
