@@ -1,17 +1,17 @@
-<div class="max-w-sm w-full mx-auto bg-white shadow-md rounded px-8 py-6 mb-4 mt-8">
-  <h2 class="font-black">Change subscription plan</h2>
+<div class="max-w-md w-full mx-auto bg-white shadow-md rounded px-8 py-6 mb-4 mt-8">
+  <h2 class="text-xl font-black">Change subscription plan</h2>
 
-  <div class="py-8">
+  <div class="py-4">
     If you choose to change your plan, your current subscription will
     be prorated.
   </div>
 
   <div class="w-full flex justify-between items-center py-4 border-t">
     <span><b>10,000</b> / mo</span>
-    <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$6 / mo</b>
+    <b class="bg-orange-200 text-orange-900 p-1 rounded-sm">$6 / mo</b>
     <%= if Plausible.Billing.Plans.is?(@subscription, :personal) do %>
       <div>
-        <svg class="feather text-green"><use xlink:href="#feather-check-circle" /></svg>
+        <svg class="feather text-green-500"><use xlink:href="#feather-check-circle" /></svg>
         Selected
       </div>
     <% else %>
@@ -20,10 +20,10 @@
   </div>
   <div class="w-full flex justify-between items-center py-4 border-t">
     <span><b>100,000</b> / mo</span>
-    <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$12 / mo</b>
+    <b class="bg-orange-200 text-orange-900 p-1 rounded-sm">$12 / mo</b>
     <%= if Plausible.Billing.Plans.is?(@subscription, :startup) do %>
       <div>
-        <svg class="feather text-green"><use xlink:href="#feather-check-circle" /></svg>
+        <svg class="feather text-green-500"><use xlink:href="#feather-check-circle" /></svg>
         Selected
       </div>
     <% else %>
@@ -32,10 +32,10 @@
   </div>
   <div class="w-full flex justify-between items-center py-4 border-t">
     <span><b>1,000,000</b> / mo</span>
-    <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$36 / mo</b>
+    <b class="bg-orange-200 text-orange-900 p-1 rounded-sm">$36 / mo</b>
     <%= if Plausible.Billing.Plans.is?(@subscription, :business) do %>
       <div>
-        <svg class="feather text-green"><use xlink:href="#feather-check-circle" /></svg>
+        <svg class="feather text-green-500"><use xlink:href="#feather-check-circle" /></svg>
         Selected
       </div>
     <% else %>
