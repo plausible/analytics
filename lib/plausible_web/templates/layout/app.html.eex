@@ -56,13 +56,13 @@
     </nav>
 
     <%= if get_flash(@conn, :success) do %>
-      <div id="flash" class="text-center bg-green text-green-lightest text-sm font-bold px-4 absolute w-full transition overflow-hidden" style="top: 91px" role="alert">
+      <div id="flash" class="text-center bg-green-500 text-green-100 text-sm font-bold px-4 absolute w-full transition overflow-hidden" style="top: 91px" role="alert">
         <p class="py-3 "><%= get_flash(@conn, :success) %></p>
       </div>
     <% end %>
 
     <%= if get_flash(@conn, :error) do %>
-      <div id="flash" class="text-center bg-red-dark text-red-lightest text-sm font-bold px-4 absolute w-full transition overflow-hidden" style="top: 91px" role="alert">
+      <div id="flash" class="text-center bg-red-dark-500 text-red-100 text-sm font-bold px-4 absolute w-full transition overflow-hidden" style="top: 91px" role="alert">
         <p class="py-3 "><%= get_flash(@conn, :error) %></p>
       </div>
     <% end %>
