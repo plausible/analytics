@@ -8,7 +8,7 @@
   <div class="mt-8 text-sm">
     Didn't recieve an email?
   </div>
-  <div class="mt-2 text-sm text-grey-dark leading-tight">
+  <div class="mt-2 text-sm text-gray-600 leading-tight">
     Please check your spam folder and contact <a href="mailto:uku@plausible.io">uku@plausible.io</a> if the problem persists
   </div>
 </div>

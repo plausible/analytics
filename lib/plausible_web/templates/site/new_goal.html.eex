@@ -8,12 +8,12 @@
   <div class="my-6">
     <div id="pageview-fields">
       <%= label f, :page_path, class: "block text-sm font-bold" %>
-      <%= text_input f, :page_path, class: "transition mt-3 bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "/success" %>
+      <%= text_input f, :page_path, class: "transition mt-3 bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "/success" %>
       <%= error_tag f, :page_path %>
     </div>
     <div id="event-fields" class="hidden">
       <%= label f, :event_name, class: "block text-sm font-bold" %>
-      <%= text_input f, :event_name, class: "transition mt-3 bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "Signup" %>
+      <%= text_input f, :event_name, class: "transition mt-3 bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "Signup" %>
       <%= error_tag f, :event_name %>
     </div>
   </div>

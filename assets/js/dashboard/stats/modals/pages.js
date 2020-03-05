@@ -61,9 +61,9 @@ class PagesModal extends React.Component {
             <table className="w-full table-striped table-fixed">
               <thead>
                 <tr>
-                  <th className="p-2 text-xs tracking-wide font-bold text-grey-dark" align="left">Page url</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Pageviews</th>
-                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Bounce rate</th>}
+                  <th className="p-2 text-xs tracking-wide font-bold text-gray-600" align="left">Page url</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-600" align="right">Pageviews</th>
+                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-600" align="right">Bounce rate</th>}
                 </tr>
               </thead>
               <tbody>

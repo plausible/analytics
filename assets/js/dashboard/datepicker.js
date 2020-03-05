@@ -133,7 +133,7 @@ class DatePicker extends React.Component {
   renderDropDown() {
     return (
       <div className="relative" style={{height: '35.5px', width: '190px'}}  ref={node => this.dropDownNode = node}>
-        <div onClick={this.open.bind(this)} className="flex items-center justify-between rounded bg-white shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-grey-darkest h-full">
+        <div onClick={this.open.bind(this)} className="flex items-center justify-between rounded bg-white shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800 h-full">
           <span className="mr-2">{this.timeFrameText()}</span>
           <svg className="text-pink fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
             <use xlinkHref="#feather-chevron-down" />
@@ -169,7 +169,7 @@ class DatePicker extends React.Component {
     if (this.state.mode === 'open') {
       return (
         <div className="absolute mt-2 rounded shadow-md z-10" style={{width: '235px', right: '-14px'}}>
-          <div className="rounded bg-white shadow-xs font-medium text-grey-darkest">
+          <div className="rounded bg-white shadow-xs font-medium text-gray-800">
             <div className="py-1">
               { this.renderLink('day', 'Today') }
             </div>
@@ -186,7 +186,7 @@ class DatePicker extends React.Component {
             </div>
             <div className="border-t border-grey-lighter"></div>
             <div className="py-1">
-              <span onClick={e => this.setState({mode: 'calendar'}, this.openCalendar.bind(this))} className="block px-4 py-2 text-sm leading-tight hover:bg-grey-lightest hover:text-black cursor-pointer">Custom range</span>
+              <span onClick={e => this.setState({mode: 'calendar'}, this.openCalendar.bind(this))} className="block px-4 py-2 text-sm leading-tight hover:bg-grey-lightest hover:text-gray-900 cursor-pointer">Custom range</span>
             </div>
           </div>
         </div>

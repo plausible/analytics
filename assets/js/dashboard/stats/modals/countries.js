@@ -40,15 +40,15 @@ class CountriesModal extends React.Component {
           <header className="modal__header">
             <h1>Top countries</h1>
           </header>
-          <div className="text-grey-darker text-lg ml-1 mt-1">by visitors</div>
+          <div className="text-gray-700 text-lg ml-1 mt-1">by visitors</div>
 
           <div className="my-4 border-b border-grey-light"></div>
           <main className="modal__content">
             <table className="w-full table-striped table-fixed">
               <thead>
                 <tr>
-                  <th className="p-2 text-xs tracking-wide font-bold text-grey-dark" align="left">Country</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Visitors</th>
+                  <th className="p-2 text-xs tracking-wide font-bold text-gray-600" align="left">Country</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-600" align="right">Visitors</th>
                 </tr>
               </thead>
               <tbody>

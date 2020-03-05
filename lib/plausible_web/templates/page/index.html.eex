@@ -11,7 +11,7 @@
 
       <div class="w-3/4 bg-white shadow-xl rounded m-4 p-4 absolute z-10" style="left: 75px;">
         <h3>Top Referrers</h3>
-        <div class="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+        <div class="flex items-center mt-4 mb-2 justify-between text-gray-600 text-xs font-bold tracking-wide">
           <span>Referrer</span>
           <span>Visitors</span>
         </div>
@@ -29,7 +29,7 @@
 
       <div class="w-3/4 bg-white shadow-xl rounded m-4 p-4 absolute" style="left: calc(75%); top: 50px;">
         <h3>Top Pages</h3>
-        <div class="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+        <div class="flex items-center mt-4 mb-2 justify-between text-gray-600 text-xs font-bold tracking-wide">
           <span>Page</span>
           <span>Visitors</span>
         </div>
@@ -49,7 +49,7 @@
       <h1 class="text-3xl lg:text-4xl font-black">
         Simple analytics for your website
       </h1>
-      <p class="font-normal text-grey-darker text-lg lg:text-2xl mt-3 leading-tight font-medium">
+      <p class="font-normal text-gray-700 text-lg lg:text-2xl mt-3 leading-tight font-medium">
         Plausible is a lightweight, fully open-source alternative to Google Analytics
       </p>
       <%= link("Start free trial", to: "/register", class: "button w-full sm:w-auto mt-6 mr-2") %>
@@ -158,7 +158,7 @@
             <div class="rounded-b-lg p-6 text-indigo-darkest">
               <div class="pb-2">
                 <b class="text-3xl font-black">$6</b>
-                <div class="text-grey-dark text-lg font-bold">per month</div>
+                <div class="text-gray-600 text-lg font-bold">per month</div>
               </div>
               <div class="my-4 font-medium">
                 <svg class="feather mr-1 text-indigo"><use xlink:href="#feather-check-circle" /></svg>
@@ -182,7 +182,7 @@
 
               <div class="w-full text-center">
                 <%= link("Start free trial →", to: "/register", class: "button mt-6 inline-block") %>
-                <div class="my-2 text-sm text-grey-darker">No credit card required</div>
+                <div class="my-2 text-sm text-gray-700">No credit card required</div>
               </div>
             </div>
           </div>
@@ -196,7 +196,7 @@
             <div class="rounded-b-lg p-6 text-indigo-darkest">
               <div class="pb-2">
                 <b class="text-3xl font-black">$12</b>
-                <div class="text-grey-dark text-lg font-bold">per month</div>
+                <div class="text-gray-600 text-lg font-bold">per month</div>
               </div>
               <div class="my-4 font-medium">
                 <svg class="feather mr-1 text-indigo"><use xlink:href="#feather-check-circle" /></svg>
@@ -220,7 +220,7 @@
 
               <div class="w-full text-center">
                 <%= link("Start free trial →", to: "/register", class: "button mt-6 inline-block") %>
-                <div class="my-2 text-sm text-grey-darker">No credit card required</div>
+                <div class="my-2 text-sm text-gray-700">No credit card required</div>
               </div>
             </div>
           </div>
@@ -234,7 +234,7 @@
             <div class="rounded-b-lg p-6 text-indigo-darkest">
               <div class="pb-2">
                 <b class="text-3xl font-black">$36</b>
-                <div class="text-grey-dark text-lg font-bold">per month</div>
+                <div class="text-gray-600 text-lg font-bold">per month</div>
               </div>
               <div class="my-4 font-medium">
                 <svg class="feather mr-1 text-indigo"><use xlink:href="#feather-check-circle" /></svg>
@@ -258,7 +258,7 @@
 
               <div class="w-full text-center">
                 <%= link("Start free trial →", to: "/register", class: "button mt-6 inline-block") %>
-                <div class="my-2 text-sm text-grey-darker">No credit card required</div>
+                <div class="my-2 text-sm text-gray-700">No credit card required</div>
               </div>
             </div>
           </div>
@@ -272,7 +272,7 @@
     <h3 class="font-black text-center text-2xl my-12">What people are saying</h3>
     <div class="flex flex-col md:flex-row justify-between items-center">
       <div class="w-full md:w-31percent bg-white shadow rounded p-6">
-        <svg class="w-8 h-8 text-grey-darkest">
+        <svg class="w-8 h-8 text-gray-800">
           <use xlink:href="#testimonial-quotemark" />
         </svg>
         <p class="text-lg">Plausible is focused on exactly what I need: clear insights into my site visitors, without getting in my way</p>
@@ -284,13 +284,13 @@
             <a href="https://www.felipesere.com/">
               <h4>Felipe Sere</h4>
             </a>
-            <%= link("@felipesere", to: "https://twitter.com/felipesere", class: "text-sm text-grey-dark") %>
+            <%= link("@felipesere", to: "https://twitter.com/felipesere", class: "text-sm text-gray-600") %>
           </div>
         </div>
       </div>
 
       <div class="w-full md:w-31percent bg-white shadow rounded p-6 mt-16 md:mt-0">
-        <svg class="w-8 h-8 text-grey-darkest">
+        <svg class="w-8 h-8 text-gray-800">
           <use xlink:href="#testimonial-quotemark" />
         </svg>
         <p class="text-lg">All the stats you need in a single page. Plausible's user experience and user interface are the stark opposite of Google Analytics.</p>
@@ -302,13 +302,13 @@
             <a href="https://makisotman.com/">
               <h4>Makis Otman</h4>
             </a>
-            <%= link("@makisotman", to: "https://twitter.com/makisotman", class: "text-sm text-grey-dark") %>
+            <%= link("@makisotman", to: "https://twitter.com/makisotman", class: "text-sm text-gray-600") %>
           </div>
         </div>
       </div>
 
       <div class="w-full md:w-31percent bg-white shadow rounded p-6 mt-16 md:mt-0">
-        <svg class="w-8 h-8 text-grey-darkest">
+        <svg class="w-8 h-8 text-gray-800">
           <use xlink:href="#testimonial-quotemark" />
         </svg>
         <p class="text-lg">I love Plausible because it is lightweight and looks beautiful. It shows me all the statistics that I need in a simple and unique style.</p>
@@ -318,7 +318,7 @@
           </a>
           <div>
             <a href="https://www.schranz.io/"><h4>Markus Schranz</h4></a>
-            <%= link("@ma_schranz", to: "https://twitter.com/ma_schranz", class: "text-sm text-grey-dark") %>
+            <%= link("@ma_schranz", to: "https://twitter.com/ma_schranz", class: "text-sm text-gray-600") %>
           </div>
         </div>
       </div>

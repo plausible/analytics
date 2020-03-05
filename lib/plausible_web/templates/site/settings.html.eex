@@ -11,14 +11,14 @@
 
   <%= form_for @changeset, "/#{URI.encode_www_form(@site.domain)}/settings", [class: "max-w-xs"], fn f -> %>
     <div class="my-4">
-      <%= label f, :domain, class: "block text-grey-darker text-sm font-bold mb-2" %>
-      <%= text_input f, :domain, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:border-grey-light ", disabled: "disabled" %>
+      <%= label f, :domain, class: "block text-gray-700 text-sm font-bold mb-2" %>
+      <%= text_input f, :domain, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-grey-light ", disabled: "disabled" %>
       <%= error_tag f, :domain %>
     </div>
     <div class="my-4">
-      <%= label f, :timezone, "Reporting Timezone", class: "block text-grey-darker text-sm font-bold mb-2" %>
+      <%= label f, :timezone, "Reporting Timezone", class: "block text-gray-700 text-sm font-bold mb-2" %>
       <div class="inline-block relative w-full">
-        <%= select f, :timezone, Plausible.Timezones.options(), class: "block appearance-none w-full bg-grey-lighter text-grey-darker cursor-pointer hover:border-grey p-2 pr-8 rounded leading-normal focus:outline-none" %>
+        <%= select f, :timezone, Plausible.Timezones.options(), class: "block appearance-none w-full bg-grey-lighter text-gray-700 cursor-pointer hover:border-grey p-2 pr-8 rounded leading-normal focus:outline-none" %>
         <div class="pointer-events-none absolute top-0 right-0 flex items-center px-2 text-red">
           <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
         </div>
@@ -37,14 +37,14 @@
   <%= if @site.public do %>
       Stats for <%= @site.domain %> are currently <b>public</b>. Anyone with the following link can view the stats:
       <div class="relative text-sm mt-4">
-        <input type="text" id="public-link" value="https://plausible.io/<%= URI.encode_www_form(@site.domain)  %>" class="transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 pr-16 text-grey-darker appearance-none focus:outline-none focus:border-grey-light" />
+        <input type="text" id="public-link" value="https://plausible.io/<%= URI.encode_www_form(@site.domain)  %>" class="transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 pr-16 text-gray-700 appearance-none focus:outline-none focus:border-grey-light" />
         <a onclick="var input = document.getElementById('public-link'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="absolute right-0 text-indigo-darker font-bold p-2">
           <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
         </a>
       </div>
     <%= button("Make stats private", to: "/sites/#{URI.encode_www_form(@site.domain)}/make-private", method: "POST", class: "button mt-8") %>
   <% else %>
-    <div class="text-grey-darker">
+    <div class="text-gray-700">
       Stats for <%= @site.domain %> are currently <b>private</b>. You are the only person who can see them.
       If you choose to make your stats public, anyone with the link will be able to view them.
     </div>
@@ -63,7 +63,7 @@
 
     <%= for link <- @shared_links do %>
       <div class="flex relative w-full mt-2 text-sm">
-        <input type="text" id="<%= link.slug %>" readonly="readonly" value="<%= shared_link_dest(link) %>" class="transition bg-grey-lighter appearance-none border border-transparent rounded rounded-r-none w-full p-2 text-grey-darker appearance-none focus:outline-none focus:border-grey-light" />
+        <input type="text" id="<%= link.slug %>" readonly="readonly" value="<%= shared_link_dest(link) %>" class="transition bg-grey-lighter appearance-none border border-transparent rounded rounded-r-none w-full p-2 text-gray-700 appearance-none focus:outline-none focus:border-grey-light" />
         <button onclick="var input = document.getElementById('<%= link.slug %>'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="py-2 px-4 bg-grey-lighter text-indigo-darker rounded-none border-r border-grey-light">
           <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
         </button>
@@ -102,20 +102,20 @@
   </div>
 
   <div class="my-4 border-b border-grey-light"></div>
-    <div class="text-grey-darker my-4">
+    <div class="text-gray-700 my-4">
       Integrating with your Google account allows Plausible to show more information about your websites' performance on their search engine.
     </div>
 
     <%= if @site.google_auth do %>
       <div class="py-2"></div>
-      <span class="text-grey-darker">Connected Google account: <b><%= @site.google_auth.email %></b></span>
+      <span class="text-gray-700">Connected Google account: <b><%= @site.google_auth.email %></b></span>
 
       <%= if @site.google_auth.property && !(@site.google_auth.property in @search_console_domains) do %>
-        <p class="text-grey-darker mt-6 font-bold">
+        <p class="text-gray-700 mt-6 font-bold">
         NB: Your Google account does not have access to your currently configured property, <%= @site.google_auth.property %>. Please select a verified property from the list below.
         </p>
       <% else %>
-        <p class="text-grey-darker mt-6">
+        <p class="text-gray-700 mt-6">
         Select the Google Search Console property you would like to pull keyword data from. If you don't see your domain, <%= link("set it up and verify", to: "https://docs.plausible.io/google-search-console-integration#1-add-your-site-on-the-search-console", class: "text-indigo") %> on Search Console first.
         </p>
       <% end %>
@@ -123,7 +123,7 @@
       <%= form_for Plausible.Site.GoogleAuth.changeset(@site.google_auth), "/#{URI.encode_www_form(@site.domain)}/settings/google", [class: "max-w-xs"], fn f -> %>
         <div class="my-6">
           <div class="inline-block relative w-full">
-            <%= select f, :property, @search_console_domains, prompt: "(Choose property)", class: "block appearance-none w-full bg-grey-lighter text-grey-darker cursor-pointer hover:border-grey p-2 pr-8 rounded leading-normal focus:outline-none" %>
+            <%= select f, :property, @search_console_domains, prompt: "(Choose property)", class: "block appearance-none w-full bg-grey-lighter text-gray-700 cursor-pointer hover:border-grey p-2 pr-8 rounded leading-normal focus:outline-none" %>
             <div class="pointer-events-none absolute top-0 right-0 flex items-center px-2 text-red">
               <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
             </div>
@@ -135,7 +135,7 @@
     <% else %>
       <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(@site.id), class: "button mt-4") %>
 
-      <div class="text-grey-darker mt-8">
+      <div class="text-gray-700 mt-8">
         NB: You also need to set up your site on <%= link("Google Search Console", to: "https://search.google.com/search-console/about") %> for the integration to work. <%= link("Read the docs", to: "https://docs.plausible.io/google-search-console-integration", class: "text-indigo") %>
       </div>
     <% end %>
@@ -159,7 +159,7 @@
     <span class="ml-2">Send a weekly email report every Monday</span>
   </div>
   <%= if @weekly_report do %>
-    <div class="text-sm text-grey-darker mt-6">
+    <div class="text-sm text-gray-700 mt-6">
       <h4 class="my-2">Weekly report recipients</h4>
       <%= for recipient <- @weekly_report.recipients do %>
         <div class="p-3 flex justify-between bg-grey-lighter rounded my-2 max-w-sm">
@@ -169,7 +169,7 @@
       <% end %>
       <%= form_for @conn, "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/recipients", fn f -> %>
         <div class="flex justify-between my-2 max-w-sm">
-          <%= email_input f, :recipient, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:border-grey-light", style: "flex-grow: 2", placeholder: "recipient@example.com" %>
+          <%= email_input f, :recipient, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-grey-light", style: "flex-grow: 2", placeholder: "recipient@example.com" %>
           <%= submit "Add recipient", class: "button rounded-l-none whitespace-no-wrap" %>
         </div>
       <% end %>
@@ -189,7 +189,7 @@
     <span class="ml-2">Send a monthly email report on 1st of the month</span>
   </div>
   <%= if @monthly_report do %>
-    <div class="text-sm text-grey-darker mt-6">
+    <div class="text-sm text-gray-700 mt-6">
       <h4 class="my-2">Monthly report recipients</h4>
       <%= for recipient <- @monthly_report.recipients do %>
         <div class="p-3 flex justify-between bg-grey-lighter rounded my-2 max-w-sm">
@@ -199,7 +199,7 @@
       <% end %>
       <%= form_for @conn, "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/recipients", fn f -> %>
         <div class="flex justify-between my-2 max-w-sm">
-          <%= email_input f, :recipient, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:border-grey-light", style: "flex-grow: 2", placeholder: "recipient@example.com" %>
+          <%= email_input f, :recipient, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-grey-light", style: "flex-grow: 2", placeholder: "recipient@example.com" %>
           <%= submit "Add recipient", class: "button rounded-l-none whitespace-no-wrap" %>
         </div>
       <% end %>
@@ -226,7 +226,7 @@
   <div class="my-4">
     <p>Include this snippet in the <code>&lt;head&gt;</code> of your website.</p>
     <div class="relative">
-      <%= textarea f, :domain, id: "snippet_code", class: "transition overflow-hidden bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 pr-6 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light text-xs mt-2 resize-none", value: snippet(@site), rows: 2 %>
+      <%= textarea f, :domain, id: "snippet_code", class: "transition overflow-hidden bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 pr-6 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light text-xs mt-2 resize-none", value: snippet(@site), rows: 2 %>
       <a onclick="var textarea = document.getElementById('snippet_code'); textarea.focus(); textarea.select(); document.execCommand('copy');" href="javascript:void(0)" class="no-underline text-indigo text-sm hover:underline">
         <svg class="absolute text-indigo" style="top: 24px; right: 12px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-copy"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       </a>
