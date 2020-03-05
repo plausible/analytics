@@ -5,7 +5,7 @@
 @import "tooltip.css";
 
 .button {
-  @apply inline-block bg-indigo-500 text-white text-center font-bold tracking-wide py-3 px-5 rounded no-underline;
+  @apply inline-block bg-indigo-600 text-white text-center font-bold tracking-wide py-2 px-5 rounded no-underline;
 }
 
 .button:hover {
@@ -17,7 +17,7 @@
 }
 
 .button-outline {
-  @apply bg-transparent border border-indigo-500 text-indigo-500;
+  @apply bg-transparent border border-indigo-600 text-indigo-600;
 }
 
 .button-sm {
