@@ -226,10 +226,10 @@ class LineGraph extends React.Component {
     const formattedComparison = numberFormatter(Math.abs(comparison))
 
     if (comparison > 0) {
-      const color = name === 'Bounce rate' ? 'text-red-light' : 'text-green'
+      const color = name === 'Bounce rate' ? 'text-red-400' : 'text-green-500'
       return <span className="text-xs"><span className={color + ' font-bold'}>&uarr;</span> {formattedComparison}%</span>
     } else if (comparison < 0) {
-      const color = name === 'Bounce rate' ? 'text-green' : 'text-red-light'
+      const color = name === 'Bounce rate' ? 'text-green-500' : 'text-red-400'
       return <span className="text-xs"><span className={color + ' font-bold'}>&darr;</span> {formattedComparison}%</span>
     } else if (comparison === 0) {
       return <span className="text-xs text-gray-700">&#12336; N/A</span>
@@ -239,7 +239,7 @@ class LineGraph extends React.Component {
   renderTopStats() {
     const {graphData} = this.props
     return this.props.graphData.top_stats.map((stat, index) => {
-      let border = index > 0 ? 'lg:border-l border-grey-light' : ''
+      let border = index > 0 ? 'lg:border-l border-gray-300' : ''
       border = index % 2 === 0 ? border + ' border-r lg:border-r-0' : border
 
       return (

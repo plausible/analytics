@@ -100,14 +100,12 @@ class GoogleKeywordsModal extends React.Component {
     } else {
       return (
         <React.Fragment>
-          <header className="modal__header">
-            <Link to={`/${encodeURIComponent(this.props.site.domain)}/referrers${window.location.search}`} className="font-bold text-gray-700 hover:underline">← All referrers</Link>
-          </header>
+          <Link to={`/${encodeURIComponent(this.props.site.domain)}/referrers${window.location.search}`} className="font-bold text-gray-700 hover:underline">← All referrers</Link>
 
-          <div className="my-4 border-b border-grey-light"></div>
-          <main className="modal__content mt-0">
-            <h1>{this.state.totalVisitors} new visitors from Google</h1>
-            <h1 className="text-gray-700 mt-2" style={{transform: 'translateY(-1rem)'}}>{toHuman(this.state.query)}</h1>
+          <div className="my-4 border-b border-gray-300"></div>
+          <main className="modal__content">
+            <h1 className="text-xl font-semibold">{this.state.totalVisitors} new visitors from Google</h1>
+            <h1 className="text-xl font-semibold text-gray-700 mt-2" style={{transform: 'translateY(-1rem)'}}>{toHuman(this.state.query)}</h1>
             { this.renderKeywords() }
           </main>
         </React.Fragment>

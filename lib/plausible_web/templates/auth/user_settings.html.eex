@@ -8,10 +8,10 @@
       <h4 class="font-black">Current plan</h4>
       <%= if @subscription do %>
         <div class="text-xl py-2 font-medium"><%= subscription_name(@subscription) %></div>
-        <%= link("Change plan", to: "/billing/change-plan", class: "text-sm text-indigo font-medium") %>
+        <%= link("Change plan", to: "/billing/change-plan", class: "text-sm text-indigo-500 font-medium") %>
       <% else %>
         <div class="text-xl py-2 font-medium">Free trial</div>
-        <%= link("Upgrade", to: "/billing/upgrade", class: "text-sm text-indigo font-medium") %>
+        <%= link("Upgrade", to: "/billing/upgrade", class: "text-sm text-indigo-500 font-medium") %>
       <% end %>
     </div>
     <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32 my-4" style="width: 11.75rem;">
@@ -19,7 +19,7 @@
       <%= if @subscription do %>
         <div class="text-xl py-2 font-medium">$<%= @subscription.next_bill_amount %></div>
         <%= if @subscription.update_url do %>
-          <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo font-medium") %>
+          <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo-500 font-medium") %>
         <% end %>
       <% else %>
         <div class="text-xl py-2 font-medium">$0</div>
@@ -45,12 +45,12 @@
 
   <%= if @subscription && @subscription.cancel_url do %>
     <div class="mt-8">
-      <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "text-indigo text-sm") %>
+      <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "text-indigo-500 text-sm") %>
     </div>
   <% end %>
 </div>
 
-<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-16">
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-100 px-8 pt-6 pb-8 mt-16">
   <div class="flex items-center justify-between">
     <h2 class="font-black">Account settings</h2>
   </div>

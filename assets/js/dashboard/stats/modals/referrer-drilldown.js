@@ -59,7 +59,7 @@ class ReferrerDrilldownModal extends React.Component {
           <a className="flex items-center group" href={authorUrl} target="_blank">
             <img className="rounded-full w-8" src={tweet.author_image} />
             <div className="ml-2 leading-tight">
-              <div className="font-bold group-hover:text-blue">{tweet.author_name}</div>
+              <div className="font-bold group-hover:text-blue-500">{tweet.author_name}</div>
               <div className="text-xs text-gray-600">@{tweet.author_handle}</div>
             </div>
           </a>
@@ -107,7 +107,7 @@ class ReferrerDrilldownModal extends React.Component {
   renderGoalText() {
     if (this.state.query.filters.goal) {
       return (
-        <h1 className="text-gray-700 leading-none">completed {this.state.query.filters.goal}</h1>
+        <h1 className="text-xl font-semibold text-gray-600 leading-none">completed {this.state.query.filters.goal}</h1>
       )
     }
   }
@@ -120,13 +120,11 @@ class ReferrerDrilldownModal extends React.Component {
     } else if (this.state.referrers) {
       return (
         <React.Fragment>
-          <header className="modal__header">
-            <Link to={`/${encodeURIComponent(this.props.site.domain)}/referrers${window.location.search}`} className="font-bold text-gray-700 hover:underline">← All referrers</Link>
-          </header>
+          <Link to={`/${encodeURIComponent(this.props.site.domain)}/referrers${window.location.search}`} className="font-bold text-gray-700 hover:underline">← All referrers</Link>
 
-          <div className="my-4 border-b border-grey-light"></div>
+          <div className="my-4 border-b border-gray-300"></div>
           <main className="modal__content mt-0">
-            <h1 className="mb-0 leading-none">{this.state.totalVisitors} visitors from {this.props.match.params.referrer}<br /> {toHuman(this.state.query)}</h1>
+            <h1 className="text-xl font-semibold mb-0 leading-none">{this.state.totalVisitors} visitors from {this.props.match.params.referrer}<br /> {toHuman(this.state.query)}</h1>
             {this.renderGoalText()}
 
             <table className="w-full table-striped table-fixed mt-4">

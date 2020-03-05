@@ -37,10 +37,7 @@ class CountriesModal extends React.Component {
     } else if (this.state.countries) {
       return (
         <React.Fragment>
-          <header className="modal__header">
-            <h1>Top countries</h1>
-          </header>
-          <div className="text-gray-700 text-lg ml-1 mt-1">by visitors</div>
+          <h1 className="text-xl font-bold">Top countries</h1>
 
           <div className="my-4 border-b border-grey-light"></div>
           <main className="modal__content">

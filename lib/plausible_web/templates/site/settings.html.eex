@@ -2,7 +2,7 @@
 <div class="max-w-md mx-auto flex justify-between">
   <a href="/<%= URI.encode_www_form(@site.domain) %>"><h1>Settings for <%= @site.domain %></h1></a>
 </div>
-<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10">
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-100 px-8 pt-6 pb-8 mt-10">
   <div class="flex items-center justify-between">
     <h2>General</h2>
   </div>
@@ -28,7 +28,7 @@
   <% end %>
 </div>
 
-<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10" id="visibility">
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-100 px-8 pt-6 pb-8 mt-10" id="visibility">
   <div class="flex items-center justify-between">
     <h2>Visibility</h2>
   </div>
@@ -38,7 +38,7 @@
       Stats for <%= @site.domain %> are currently <b>public</b>. Anyone with the following link can view the stats:
       <div class="relative text-sm mt-4">
         <input type="text" id="public-link" value="https://plausible.io/<%= URI.encode_www_form(@site.domain)  %>" class="transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 pr-16 text-gray-700 appearance-none focus:outline-none focus:border-grey-light" />
-        <a onclick="var input = document.getElementById('public-link'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="absolute right-0 text-indigo-darker font-bold p-2">
+        <a onclick="var input = document.getElementById('public-link'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="absolute right-0 text-indigo-800 font-bold p-2">
           <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
         </a>
       </div>
@@ -64,7 +64,7 @@
     <%= for link <- @shared_links do %>
       <div class="flex relative w-full mt-2 text-sm">
         <input type="text" id="<%= link.slug %>" readonly="readonly" value="<%= shared_link_dest(link) %>" class="transition bg-grey-lighter appearance-none border border-transparent rounded rounded-r-none w-full p-2 text-gray-700 appearance-none focus:outline-none focus:border-grey-light" />
-        <button onclick="var input = document.getElementById('<%= link.slug %>'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="py-2 px-4 bg-grey-lighter text-indigo-darker rounded-none border-r border-grey-light">
+        <button onclick="var input = document.getElementById('<%= link.slug %>'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="py-2 px-4 bg-grey-lighter text-indigo-800 rounded-none border-r border-grey-light">
           <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
         </button>
         <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/shared-links/#{link.slug}", method: :delete, class: "py-2 px-4 bg-grey-lighter text-red-dark rounded-l-none", data: [confirm: "Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."]) do %>
@@ -77,7 +77,7 @@
   <%= link("+ New link", to: "/sites/#{URI.encode_www_form(@site.domain)}/shared-links/new", class: "button mt-4") %>
 </div>
 
-<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10">
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-100 px-8 pt-6 pb-8 mt-10">
   <h2>Goals</h2>
   <div class="my-4 border-b border-grey-light"></div>
   <div>
@@ -96,7 +96,7 @@
   <%= link("+ Add goal", to: "/#{URI.encode_www_form(@site.domain)}/goals/new", class: "button mt-6") %>
 </div>
 
-<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10" id="google-auth">
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-100 px-8 pt-6 pb-8 mt-10" id="google-auth">
   <div class="flex items-center justify-between">
     <h2>Google Integration</h2>
   </div>
@@ -116,7 +116,7 @@
         </p>
       <% else %>
         <p class="text-gray-700 mt-6">
-        Select the Google Search Console property you would like to pull keyword data from. If you don't see your domain, <%= link("set it up and verify", to: "https://docs.plausible.io/google-search-console-integration#1-add-your-site-on-the-search-console", class: "text-indigo") %> on Search Console first.
+        Select the Google Search Console property you would like to pull keyword data from. If you don't see your domain, <%= link("set it up and verify", to: "https://docs.plausible.io/google-search-console-integration#1-add-your-site-on-the-search-console", class: "text-indigo-500") %> on Search Console first.
         </p>
       <% end %>
 
@@ -136,12 +136,12 @@
       <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(@site.id), class: "button mt-4") %>
 
       <div class="text-gray-700 mt-8">
-        NB: You also need to set up your site on <%= link("Google Search Console", to: "https://search.google.com/search-console/about") %> for the integration to work. <%= link("Read the docs", to: "https://docs.plausible.io/google-search-console-integration", class: "text-indigo") %>
+        NB: You also need to set up your site on <%= link("Google Search Console", to: "https://search.google.com/search-console/about") %> for the integration to work. <%= link("Read the docs", to: "https://docs.plausible.io/google-search-console-integration", class: "text-indigo-500") %>
       </div>
     <% end %>
 </div>
 
-<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-10" id="email-reports">
+<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-100 px-8 pt-6 pb-8 mt-10" id="email-reports">
   <h2>Email reports</h2>
 
   <div class="my-4 border-b border-grey-light"></div>
@@ -207,7 +207,7 @@
   <% end %>
 </div>
 
-<div class="bg-white max-w-md mx-auto shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mb-4 mt-16" id="custom-domain">
+<div class="bg-white max-w-md mx-auto shadow-md rounded rounded-t-none border-t-2 border-indigo-100 px-8 pt-6 pb-8 mb-4 mt-16" id="custom-domain">
   <h2>Custom domain</h2>
   <div class="my-4">
     Some browsers and extensions block all analytics services, including privacy-friendly ones like Plausible.<br /><br /> To get around that, we offer a quick and easy way to serve the script from your custom domain. As a result, your stats are never blocked by clients because they are proxied through your subdomain.
@@ -221,14 +221,14 @@
   <% end %>
 </div>
 
-<%= form_for @conn, "/", [class: "bg-white max-w-md mx-auto shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mb-4 mt-16"], fn f -> %>
+<%= form_for @conn, "/", [class: "bg-white max-w-md mx-auto shadow-md rounded rounded-t-none border-t-2 border-indigo-100 px-8 pt-6 pb-8 mb-4 mt-16"], fn f -> %>
   <h2>Javascript snippet</h2>
   <div class="my-4">
     <p>Include this snippet in the <code>&lt;head&gt;</code> of your website.</p>
     <div class="relative">
       <%= textarea f, :domain, id: "snippet_code", class: "transition overflow-hidden bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 pr-6 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light text-xs mt-2 resize-none", value: snippet(@site), rows: 2 %>
-      <a onclick="var textarea = document.getElementById('snippet_code'); textarea.focus(); textarea.select(); document.execCommand('copy');" href="javascript:void(0)" class="no-underline text-indigo text-sm hover:underline">
-        <svg class="absolute text-indigo" style="top: 24px; right: 12px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-copy"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <a onclick="var textarea = document.getElementById('snippet_code'); textarea.focus(); textarea.select(); document.execCommand('copy');" href="javascript:void(0)" class="no-underline text-indigo-500 text-sm hover:underline">
+        <svg class="absolute text-indigo-500" style="top: 24px; right: 12px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-copy"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       </a>
     </div>
   </div>

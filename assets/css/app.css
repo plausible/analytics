@@ -185,15 +185,15 @@ blockquote {
 .feather {
   height: 1em;
   width: 1em;
-  transform: translateY(0.15em);
   overflow: visible;
+  display: inline;
 }
 
 .feather-sm {
   height: 1em;
   width: 1em;
-  transform: translateY(0.05em);
   overflow: visible;
+  display: inline;
 }
 
 .table-striped tbody tr:nth-child(odd) {

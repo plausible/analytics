@@ -52,11 +52,9 @@ class PagesModal extends React.Component {
     } else if (this.state.pages) {
       return (
         <React.Fragment>
-          <header className="modal__header">
-            <h1>Top pages</h1>
-          </header>
+          <h1 className="text-xl font-bold">Top pages</h1>
 
-          <div className="my-4 border-b border-grey-light"></div>
+          <div className="my-4 border-b border-gray-300"></div>
           <main className="modal__content">
             <table className="w-full table-striped table-fixed">
               <thead>
