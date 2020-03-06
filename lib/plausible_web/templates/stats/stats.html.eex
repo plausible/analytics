@@ -7,7 +7,5 @@
   <div class="pt-6"></div>
   <div id="stats-react-container" data-domain="<%= @site.domain %>" data-offset="<%= Timex.Timezone.total_offset(Timex.Timezone.get(@site.timezone)) %>" data-has-goals="<%= @has_goals %>"></div>
   <div id="modal_root"></div>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
   <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/dashboard.js") %>"></script>
 </div>
