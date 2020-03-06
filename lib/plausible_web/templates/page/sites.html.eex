@@ -1,20 +1,20 @@
 <div class="pt-16"></div>
-<div class="max-w-md mx-auto flex flex-col sm:flex-row justify-between">
-  <h1>My websites</h1>
+<div class="max-w-xl mx-auto flex flex-col sm:flex-row justify-between">
+  <h1 class="text-2xl font-black">My websites</h1>
   <a href="/sites/new" class="button w-full my-2 sm:my-0 sm:w-auto">+ Add a website</a>
 </div>
-<div class="flex items-center justify-center w-full py-8">
-  <div class="overflow-hidden bg-white rounded max-w-md w-full shadow-md leading-normal">
+<div class="flex items-center justify-center w-full py-8 mb-16">
+  <div class="overflow-hidden bg-white rounded max-w-xl w-full shadow-md leading-normal">
     <%= for site <- @sites do %>
       <div class="w-full relative">
-        <a href="/<%= URI.encode_www_form(site.domain) %>" class="block hover:bg-grey-lighter group p-4 border-b no-underline flex justify-between transition">
-          <p class="w-full font-bold text-lg mb-1 text-grey-darkest"><%= site.domain %></p>
+        <a href="/<%= URI.encode_www_form(site.domain) %>" class="block hover:bg-gray-200 group p-4 border-b no-underline flex justify-between transition">
+          <p class="w-full font-bold text-lg mb-1 text-gray-800"><%= site.domain %></p>
         </a>
-        <%= link(to: "/#{URI.encode_www_form(site.domain)}/settings", class: "flex absolute hover:bg-grey-lighter transition rounded py-3 px-5", style: "top: 6px; right: 6px;") do %>
+        <%= link(to: "/#{URI.encode_www_form(site.domain)}/settings", class: "flex absolute hover:bg-gray-200 transition rounded py-2 px-5", style: "top: 12px; right: 6px;") do %>
           <div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-settings"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-settings -mt-px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </div>
-          <p class="ml-1 text-grey-darkest font-medium">Settings</p>
+          <p class="ml-1 text-gray-800 font-medium">Settings</p>
         <% end %>
       </div>
     <% end %>

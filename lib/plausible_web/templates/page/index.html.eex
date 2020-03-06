@@ -1,5 +1,5 @@
-<div class="md:pt-12 bg-grey-lightest w-screen overflow-hidden">
-  <div class="container max-w-2xl flex flex-col md:flex-row-reverse">
+<div class="md:pt-12 bg-gray-100 w-screen overflow-hidden">
+  <div class="container flex flex-col md:flex-row-reverse">
     <section class="hidden lg:block lg:w-2/5 relative">
       <svg height="600" width="600" style="position: absolute; right: -380px; top: 100px; filter: drop-shadow(0 15px 30px rgba(0, 0, 0, .11));">
         <circle cx="300" cy="300" r="300" fill="#6574cd" />
@@ -10,8 +10,8 @@
       </svg>
 
       <div class="w-3/4 bg-white shadow-xl rounded m-4 p-4 absolute z-10" style="left: 75px;">
-        <h3>Top Referrers</h3>
-        <div class="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+        <h3 class="font-bold">Top Referrers</h3>
+        <div class="flex items-center mt-4 mb-2 justify-between text-gray-600 text-xs font-bold tracking-wide">
           <span>Referrer</span>
           <span>Visitors</span>
         </div>
@@ -28,8 +28,8 @@
       </div>
 
       <div class="w-3/4 bg-white shadow-xl rounded m-4 p-4 absolute" style="left: calc(75%); top: 50px;">
-        <h3>Top Pages</h3>
-        <div class="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+        <h3 class="font-bold">Top Pages</h3>
+        <div class="flex items-center mt-4 mb-2 justify-between text-gray-600 text-xs font-bold tracking-wide">
           <span>Page</span>
           <span>Visitors</span>
         </div>
@@ -49,7 +49,7 @@
       <h1 class="text-3xl lg:text-4xl font-black">
         Simple analytics for your website
       </h1>
-      <p class="font-normal text-grey-darker text-lg lg:text-2xl mt-3 leading-tight font-medium">
+      <p class="font-normal text-gray-700 text-lg lg:text-2xl mt-3 leading-tight font-medium">
         Plausible is a lightweight, fully open-source alternative to Google Analytics
       </p>
       <%= link("Start free trial", to: "/register", class: "button w-full sm:w-auto mt-6 mr-2") %>
@@ -59,7 +59,7 @@
   <div class="pt-12 lg:pt-16"></div>
   <div class="lg:pt-24"></div>
   <div class="container relative mt-32">
-    <h2 class="font-black">Why Plausible?</h2>
+    <h2 class="text-2xl font-black">Why Plausible?</h2>
     <p class="text-lg mt-2 leading-normal">
     Plausible is built by and for privacy-conscious minimalists<br />
     Here’s what makes it different from other solutions
@@ -68,32 +68,26 @@
   <div class="container mt-12">
     <div class="flex flex-col md:flex-row items-center justify-between mx-auto leading-normal">
       <div class="w-full md:w-1/3 py-6 md:px-6 md:pl-0">
-        <svg class="w-6 h-6 mr-1 text-indigo" style="transform: translateY(0.3rem);">
-          <use xlink:href="#feather-check-circle" />
-        </svg>
-        <h3 class="inline">Clutter-free</h3>
+        <svg class="inline w-6 h-6 mr-1 text-indigo-500 -mt-1"><use xlink:href="#feather-check-circle" /></svg>
+        <h3 class="inline text-lg font-bold">Clutter-free</h3>
         <p class="text-lg mt-2">
           Stop digging through complex reports to find what you’re looking for. Plausible presents the most important information to you on a single page.
         </p>
       </div>
 
       <div class="w-full md:w-1/3 py-6 md:px-6">
-        <svg class="w-6 h-6 mr-1 text-indigo" style="transform: translateY(0.3rem);">
-          <use xlink:href="#feather-check-circle" />
-        </svg>
-        <h3 class="inline">Lightweight</h3>
+        <svg class="inline w-6 h-6 mr-1 text-indigo-500 -mt-1"><use xlink:href="#feather-check-circle" /></svg>
+        <h3 class="inline text-lg font-bold">Lightweight</h3>
         <p class="text-lg mt-2">
           Plausible works by loading a script on your website, like Google Analytics. Our script is 14x smaller, making your website quicker to load.
         </p>
       </div>
 
       <div class="w-full md:w-1/3 py-6 md:px-6 md:pr-0">
-        <svg class="w-6 h-6 mr-1 text-indigo" style="transform: translateY(0.3rem);">
-          <use xlink:href="#feather-check-circle" />
-        </svg>
-        <h3 class="inline">Open source</h3>
+        <svg class="inline w-6 h-6 mr-1 text-indigo-500 -mt-1"><use xlink:href="#feather-check-circle" /></svg>
+        <h3 class="inline text-lg font-bold">Open source</h3>
         <p class="text-lg mt-2">
-        Plausible is fully open source and <%= link("available on Github", to: "https://github.com/plausible-insights/plausible", class: "text-indigo") %>. Feel free to check out the code and <%= link("read in depth about our data policy", to: "/data-policy", class: "text-indigo") %>
+        Plausible is fully open source and <%= link("available on Github", to: "https://github.com/plausible-insights/plausible", class: "text-indigo-500") %>. Feel free to check out the code and <%= link("read in depth about our data policy", to: "/data-policy", class: "text-indigo-500") %>
         </p>
       </div>
 
@@ -102,30 +96,24 @@
   <div class="container mt-6">
     <div class="flex flex-col md:flex-row items-center justify-between mx-auto leading-normal">
       <div class="w-full md:w-1/3 py-6 md:px-6 md:pl-0">
-        <svg class="w-6 h-6 mr-1 text-indigo" style="transform: translateY(0.3rem);">
-          <use xlink:href="#feather-check-circle" />
-        </svg>
-        <h3 class="inline">Goals & Conversions</h3>
+        <svg class="inline w-6 h-6 mr-1 text-indigo-500 -mt-1"><use xlink:href="#feather-check-circle" /></svg>
+        <h3 class="inline text-lg font-bold">Goals & Conversions</h3>
         <p class="text-lg mt-2">
           Find out which referrers are driving the most conversions to your site. Works with custom events or page URLs you want your visitors to reach.
         </p>
       </div>
 
       <div class="w-full md:w-1/3 py-6 md:px-6">
-        <svg class="w-6 h-6 mr-1 text-indigo" style="transform: translateY(0.3rem);">
-          <use xlink:href="#feather-check-circle" />
-        </svg>
-        <h3 class="inline">Search keywords</h3>
+        <svg class="inline w-6 h-6 mr-1 text-indigo-500 -mt-1"><use xlink:href="#feather-check-circle" /></svg>
+        <h3 class="inline text-lg font-bold">Search keywords</h3>
         <p class="text-lg mt-2">
           Integrate your dashboard with Google Search Console to get the most accurate reporting on your search keywords.
         </p>
       </div>
 
       <div class="w-full md:w-1/3 py-6 md:px-6 md:pr-0">
-        <svg class="w-6 h-6 mr-1 text-indigo" style="transform: translateY(0.3rem);">
-          <use xlink:href="#feather-check-circle" />
-        </svg>
-        <h3 class="inline">Email reports</h3>
+        <svg class="inline w-6 h-6 mr-1 text-indigo-500 -mt-1"><use xlink:href="#feather-check-circle" /></svg>
+        <h3 class="inline text-lg font-bold">Email reports</h3>
         <p class="text-lg mt-2">
           Keep an eye on your traffic with a weekly email report including pageviews, visitor numbers, top pages and top referrers for the week.
         </p>
@@ -134,16 +122,15 @@
     </div>
   </div>
   <div class="container my-12 md:my-24 text-center relative">
-    <h2>Check out our analytics</h2>
+    <h2 class="text-xl font-black">Check out our analytics</h2>
     <%= link("View live demo →", to: "/plausible.io", class: "button mt-6") %>
   </div>
-  <div class="bg-indigo-darker">
+  <div class="bg-gray-800">
     <div class="container relative pt-16 mb-32">
       <h2 class="font-black text-white text-center text-3xl">Simple, traffic based pricing</h2>
-      <h2 class="text-white text-center text-2xl text-indigo-lightest mb-12">Try Plausible free for 30 days</h2>
+      <h2 class="text-white text-center text-2xl text-indigo-100 mb-12">Try Plausible free for 30 days</h2>
       <div class="pt-32"></div>
-      <div class="pt-32"></div>
-
+      <div class="pt-24"></div>
     </div>
   </div>
   <div class="relative w-full pricing-table">
@@ -152,37 +139,37 @@
 
         <div class="flex-1 w-full my-4 md:w-auto px-4">
           <div class="bg-white rounded-lg shadow-lg z-50">
-            <header class="bg-grey-lightest p-6 rounded-t-lg">
-              <div class="uppercase font-bold text-indigo-dark">Hobby</div>
+            <header class="bg-gray-100 p-5 rounded-t-lg">
+              <div class="uppercase font-bold text-indigo-600">Hobby</div>
             </header>
-            <div class="rounded-b-lg p-6 text-indigo-darkest">
+            <div class="rounded-b-lg p-5 text-indigo-900">
               <div class="pb-2">
                 <b class="text-3xl font-black">$6</b>
-                <div class="text-grey-dark text-lg font-bold">per month</div>
+                <div class="text-gray-600 text-lg font-bold">per month</div>
               </div>
               <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo"><use xlink:href="#feather-check-circle" /></svg>
+                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
                 <span>Up to 10k pageviews/mo</span>
               </div>
 
               <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo"><use xlink:href="#feather-check-circle" /></svg>
+                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
                 <span>Unlimited websites</span>
               </div>
 
               <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo"><use xlink:href="#feather-check-circle" /></svg>
+                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
                 <span>100% data ownership</span>
               </div>
 
               <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo"><use xlink:href="#feather-check-circle" /></svg>
+                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
                 <span>Email support</span>
               </div>
 
               <div class="w-full text-center">
                 <%= link("Start free trial →", to: "/register", class: "button mt-6 inline-block") %>
-                <div class="my-2 text-sm text-grey-darker">No credit card required</div>
+                <div class="my-2 text-sm text-gray-700">No credit card required</div>
               </div>
             </div>
           </div>
@@ -190,37 +177,37 @@
 
         <div class="flex-1 w-full my-4 md:w-auto px-4">
           <div class="bg-white rounded-lg shadow-lg z-50">
-            <header class="bg-grey-lightest p-6 rounded-t-lg">
-              <div class="uppercase font-bold text-indigo-dark">Startup</div>
+            <header class="bg-gray-100 p-5 rounded-t-lg">
+              <div class="uppercase font-bold text-indigo-600">Startup</div>
             </header>
-            <div class="rounded-b-lg p-6 text-indigo-darkest">
+            <div class="rounded-b-lg p-5 text-indigo-900">
               <div class="pb-2">
                 <b class="text-3xl font-black">$12</b>
-                <div class="text-grey-dark text-lg font-bold">per month</div>
+                <div class="text-gray-600 text-lg font-bold">per month</div>
               </div>
               <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo"><use xlink:href="#feather-check-circle" /></svg>
+                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
                 <span>Up to 100k pageviews/mo</span>
               </div>
 
               <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo"><use xlink:href="#feather-check-circle" /></svg>
+                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
                 <span>Unlimited websites</span>
               </div>
 
               <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo"><use xlink:href="#feather-check-circle" /></svg>
+                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
                 <span>100% data ownership</span>
               </div>
 
               <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo"><use xlink:href="#feather-check-circle" /></svg>
+                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
                 <span>Priority support</span>
               </div>
 
               <div class="w-full text-center">
                 <%= link("Start free trial →", to: "/register", class: "button mt-6 inline-block") %>
-                <div class="my-2 text-sm text-grey-darker">No credit card required</div>
+                <div class="my-2 text-sm text-gray-700">No credit card required</div>
               </div>
             </div>
           </div>
@@ -228,37 +215,37 @@
 
         <div class="flex-1 w-full my-4 md:w-auto px-4">
           <div class="bg-white rounded-lg shadow-lg z-50">
-            <header class="bg-grey-lightest p-6 rounded-t-lg">
-              <div class="uppercase font-bold text-indigo-dark">Business</div>
+            <header class="bg-gray-100 p-5 rounded-t-lg">
+              <div class="uppercase font-bold text-indigo-600">Business</div>
             </header>
-            <div class="rounded-b-lg p-6 text-indigo-darkest">
+            <div class="rounded-b-lg p-5 text-indigo-900">
               <div class="pb-2">
                 <b class="text-3xl font-black">$36</b>
-                <div class="text-grey-dark text-lg font-bold">per month</div>
+                <div class="text-gray-600 text-lg font-bold">per month</div>
               </div>
               <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo"><use xlink:href="#feather-check-circle" /></svg>
+                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
                 <span>Up to 1m pageviews/mo</span>
               </div>
 
               <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo"><use xlink:href="#feather-check-circle" /></svg>
+                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
                 <span>Unlimited websites</span>
               </div>
 
               <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo"><use xlink:href="#feather-check-circle" /></svg>
+                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
                 <span>100% data ownership</span>
               </div>
 
               <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo"><use xlink:href="#feather-check-circle" /></svg>
+                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
                 <span>Priority support</span>
               </div>
 
               <div class="w-full text-center">
                 <%= link("Start free trial →", to: "/register", class: "button mt-6 inline-block") %>
-                <div class="my-2 text-sm text-grey-darker">No credit card required</div>
+                <div class="my-2 text-sm text-gray-700">No credit card required</div>
               </div>
             </div>
           </div>
@@ -267,12 +254,12 @@
     </div>
   </div>
 
-  <div class="pt-16"></div>
+  <div class="pt-32"></div>
   <div class="container my-32">
     <h3 class="font-black text-center text-2xl my-12">What people are saying</h3>
     <div class="flex flex-col md:flex-row justify-between items-center">
       <div class="w-full md:w-31percent bg-white shadow rounded p-6">
-        <svg class="w-8 h-8 text-grey-darkest">
+        <svg class="w-8 h-8 text-gray-800">
           <use xlink:href="#testimonial-quotemark" />
         </svg>
         <p class="text-lg">Plausible is focused on exactly what I need: clear insights into my site visitors, without getting in my way</p>
@@ -284,13 +271,13 @@
             <a href="https://www.felipesere.com/">
               <h4>Felipe Sere</h4>
             </a>
-            <%= link("@felipesere", to: "https://twitter.com/felipesere", class: "text-sm text-grey-dark") %>
+            <%= link("@felipesere", to: "https://twitter.com/felipesere", class: "text-sm text-gray-600") %>
           </div>
         </div>
       </div>
 
       <div class="w-full md:w-31percent bg-white shadow rounded p-6 mt-16 md:mt-0">
-        <svg class="w-8 h-8 text-grey-darkest">
+        <svg class="w-8 h-8 text-gray-800">
           <use xlink:href="#testimonial-quotemark" />
         </svg>
         <p class="text-lg">All the stats you need in a single page. Plausible's user experience and user interface are the stark opposite of Google Analytics.</p>
@@ -302,13 +289,13 @@
             <a href="https://makisotman.com/">
               <h4>Makis Otman</h4>
             </a>
-            <%= link("@makisotman", to: "https://twitter.com/makisotman", class: "text-sm text-grey-dark") %>
+            <%= link("@makisotman", to: "https://twitter.com/makisotman", class: "text-sm text-gray-600") %>
           </div>
         </div>
       </div>
 
       <div class="w-full md:w-31percent bg-white shadow rounded p-6 mt-16 md:mt-0">
-        <svg class="w-8 h-8 text-grey-darkest">
+        <svg class="w-8 h-8 text-gray-800">
           <use xlink:href="#testimonial-quotemark" />
         </svg>
         <p class="text-lg">I love Plausible because it is lightweight and looks beautiful. It shows me all the statistics that I need in a simple and unique style.</p>
@@ -318,7 +305,7 @@
           </a>
           <div>
             <a href="https://www.schranz.io/"><h4>Markus Schranz</h4></a>
-            <%= link("@ma_schranz", to: "https://twitter.com/ma_schranz", class: "text-sm text-grey-dark") %>
+            <%= link("@ma_schranz", to: "https://twitter.com/ma_schranz", class: "text-sm text-gray-600") %>
           </div>
         </div>
       </div>
@@ -328,30 +315,30 @@
   <div class="container my-32">
     <h3 class="font-black text-center text-2xl my-12">Frequently asked questions</h3>
 
-    <div class="max-w-xl mx-auto bg-white border rounded p-6">
-      <h4>1. Can I use Plausible on more than one website?</h4>
+    <div class="max-w-3xl mx-auto bg-white border rounded p-6">
+      <h4 class="font-bold">1. Can I use Plausible on more than one website?</h4>
       <div class="mt-4 leading-normal">
         Yes. You can add as many websites as you want under a single account. You will be charged for the total pageviews on all of your websites combined. For example, on the 10k plan you can either have 10 websites that each get 1000 pageviews per month, or one website that gets 10,000 pageviews per month.
       </div>
     </div>
 
-    <div class="max-w-xl mx-auto bg-white border rounded p-6 my-6">
-      <h4>2. What happens if I go over my plan limit?</h4>
+    <div class="max-w-3xl mx-auto bg-white border rounded p-6 my-6">
+      <h4 class="font-bold">2. What happens if I go over my plan limit?</h4>
       <div class="mt-4 leading-normal">
         You don't have to pay for a one-time spike in traffic, but if you go over your plan limit for 2 months in a row, we will
         contact you to discuss upgrade options.
       </div>
     </div>
 
-    <div class="max-w-xl mx-auto bg-white border rounded p-6 my-6">
-      <h4>3. How do you make sure my visitors' privacy is protected?</h4>
+    <div class="max-w-3xl mx-auto bg-white border rounded p-6 my-6">
+      <h4 class="font-bold">3. How do you make sure my visitors' privacy is protected?</h4>
       <div class="mt-4 leading-normal">
-        We take painstaking care to not collect or store any personal information that could be tied back to the visitor. You own your data and we will never sell it or use it in nefarious ways. <%= link("Read more about our data policy", to: "/data-policy", class: "text-indigo") %>.
+        We take painstaking care to not collect or store any personal information that could be tied back to the visitor. You own your data and we will never sell it or use it in nefarious ways. <%= link("Read more about our data policy", to: "/data-policy", class: "text-indigo-500") %>.
       </div>
     </div>
 
     <div class="text-center">
-      <%= link("Ask a question to the founder", to: "mailto:uku@plausible.io", class: "text-indigo") %>
+      <%= link("Ask a question to the founder", to: "mailto:uku@plausible.io", class: "text-indigo-500") %>
     </div>
   </div>
 </div>

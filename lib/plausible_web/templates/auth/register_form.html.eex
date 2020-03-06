@@ -1,20 +1,18 @@
-<%= form_for @changeset, "/register", [class: "max-w-sm w-full mx-auto bg-white shadow-md rounded px-8 py-6 mb-4 mt-8", id: "register-form"], fn f -> %>
-  <div class="flex items-center justify-between">
-    <h2>Enter your details to get started</h2>
-  </div>
+<%= form_for @changeset, "/register", [class: "max-w-md w-full mx-auto bg-white shadow-md rounded px-8 py-6 mb-4 mt-8", id: "register-form"], fn f -> %>
+  <h2 class="text-xl font-black">Enter your details to get started</h2>
   <div class="my-4 mt-8">
-    <%= label f, :name, "Full name", class: "block text-grey-darker text-sm font-bold mb-2" %>
-    <%= text_input f, :name, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "Jane Doe" %>
+    <%= label f, :name, "Full name", class: "block text-gray-700 text-sm font-bold mb-2" %>
+    <%= text_input f, :name, class: "transition bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300", placeholder: "Jane Doe" %>
     <%= error_tag f, :name %>
   </div>
   <div class="my-4">
-    <%= label f, :email, class: "block text-grey-darker text-sm font-bold mb-2" %>
-    <p class="text-grey-dark text-xs mt-1 mb-2">No spam, guaranteed.</p>
-    <%= email_input f, :email, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:bg-white focus:border-grey-light", placeholder: "example@email.com" %>
+    <%= label f, :email, class: "block text-gray-700 text-sm font-bold mb-2" %>
+    <p class="text-gray-600 text-xs mt-1 mb-2">No spam, guaranteed.</p>
+    <%= email_input f, :email, class: "transition bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300", placeholder: "example@email.com" %>
     <%= error_tag f, :email %>
   </div>
   <%= submit "Send activation link →", class: "button mt-4 w-full" %>
-  <p class="text-center text-grey-dark text-xs mt-4">
-    Already have an account? <%= link("Log in", to: "/login") %> instead.
+  <p class="text-center text-gray-600 text-xs mt-4">
+    Already have an account? <%= link("Log in", to: "/login", class: "underline text-gray-800") %> instead.
   </p>
 <% end %>

@@ -1,39 +1,39 @@
-<div class="container max-w-md pt-12 pb-32 leading-normal text-lg">
+<div class="container max-w-2xl pt-12 pb-32 leading-normal text-lg">
 
-<h1 class="font-black">Data policy</h1>
+<h1 class="text-2xl font-black">Data policy</h1>
 
 <div class="my-4">
 Plausible aims to track overall trends in your website traffic, not indivual visitors. With privacy in mind, we don’t collect or store any data beyond what is absolutely necessary. Here is a list of what we collect and store about your website visitors.
 </div>
 
 <div class="my-4">
-  <h4 class="mb-1">User-Agent</h4>
+  <h4 class="mb-1 font-bold">User-Agent</h4>
   We use the <code>User-Agent</code> header to figure out what browsers and operating systems your visitors are using.
 </div>
 
 <div class="my-4">
-  <h4 class="mb-1">Referer</h4>
+  <h4 class="mb-1 font-bold">Referer</h4>
   Plausible uses the referrer string to show which other websites are driving traffic to the site you’re tracking.
 </div>
 
 <div class="my-4">
-  <h4 class="mb-1">Page URLs</h4>
+  <h4 class="mb-1 font-bold">Page URLs</h4>
   We track the pathname of each pageview to be able to show the Top Pages report.
 </div>
 
 <div class="my-4">
-  <h4 class="mb-1">Window inner width</h4>
+  <h4 class="mb-1 font-bold">Window inner width</h4>
   We use <code>window.innerWidth</code> to determine the actual size of the open browser window, rather than the full width of the device. This is more accurate and makes fingerprinting harder.
 </div>
 
 <div class="my-4 mt-8">
-  <h4 class="mb-1">We don’t store IP addresses</h4>
+  <h4 class="mb-1 font-bold">We don’t store IP addresses</h4>
   We never store IP addresses in our database or logs. The IP address is used to look up the visitor country, which we store to show the Top Countries report. The IP address is discarded.
 </div>
 
 <div class="my-8">
-  <h3 class="mb-2">Cookie policy</h3>
+  <h3 class="mb-2 font-bold">Cookie policy</h3>
   Plausible installs a first-party cookie to be able to differentiate between a new visitor and a returning visitor. This cookie contains a random identifier that is sent along with each pageview request. On the backend, this allows us to aggregate and show unique visitors and total pageviews separately.
   </div>
-  <%= link("Back to homepage", to: "/", class: "text-indigo") %>
+  <%= link("Back to homepage", to: "/", class: "text-indigo-500") %>
 </div>

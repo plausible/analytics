@@ -51,7 +51,7 @@ class ReferrerDrilldownModal extends React.Component {
   renderTweet(tweet, index) {
     const authorUrl = `https://twitter.com/${tweet.author_handle}`
     const tweetUrl = `${authorUrl}/status/${tweet.tweet_id}`
-    const border = index === 0 ? '' : ' pt-4 border-t border-grey-light'
+    const border = index === 0 ? '' : ' pt-4 border-t border-gray-300'
 
     return (
       <div key={tweet.tweet_id}>
@@ -59,15 +59,15 @@ class ReferrerDrilldownModal extends React.Component {
           <a className="flex items-center group" href={authorUrl} target="_blank">
             <img className="rounded-full w-8" src={tweet.author_image} />
             <div className="ml-2 leading-tight">
-              <div className="font-bold group-hover:text-blue">{tweet.author_name}</div>
-              <div className="text-xs text-grey-dark">@{tweet.author_handle}</div>
+              <div className="font-bold group-hover:text-blue-500">{tweet.author_name}</div>
+              <div className="text-xs text-gray-600">@{tweet.author_handle}</div>
             </div>
           </a>
           <a className="ml-auto twitter-icon" href={tweetUrl} target="_blank"></a>
         </div>
         <div className="my-2 cursor-text tweet-text whitespace-pre-wrap" dangerouslySetInnerHTML={{__html: tweet.text}}>
         </div>
-        <div className="text-xs text-grey-darker font-medium">
+        <div className="text-xs text-gray-700 font-medium">
           {formatFullDate(new Date(tweet.created))}
         </div>
       </div>
@@ -80,10 +80,10 @@ class ReferrerDrilldownModal extends React.Component {
         <tr className="text-sm" key={referrer.name}>
           <td className="p-2">
             { this.renderReferrerName(referrer.name) }
-            <span className="text-grey-dark ml-2 text-xs">
+            <span className="text-gray-600 ml-2 text-xs">
               appears in {referrer.tweets.length} tweets
             </span>
-            <div className="my-4 pl-4 border-l-2 border-grey-light">
+            <div className="my-4 pl-4 border-l-2 border-gray-300">
               { referrer.tweets.map(this.renderTweet) }
             </div>
           </td>
@@ -107,7 +107,7 @@ class ReferrerDrilldownModal extends React.Component {
   renderGoalText() {
     if (this.state.query.filters.goal) {
       return (
-        <h1 className="text-grey-darker leading-none">completed {this.state.query.filters.goal}</h1>
+        <h1 className="text-xl font-semibold text-gray-600 leading-none">completed {this.state.query.filters.goal}</h1>
       )
     }
   }
@@ -120,21 +120,19 @@ class ReferrerDrilldownModal extends React.Component {
     } else if (this.state.referrers) {
       return (
         <React.Fragment>
-          <header className="modal__header">
-            <Link to={`/${encodeURIComponent(this.props.site.domain)}/referrers${window.location.search}`} className="font-bold text-grey-darker hover:underline">← All referrers</Link>
-          </header>
+          <Link to={`/${encodeURIComponent(this.props.site.domain)}/referrers${window.location.search}`} className="font-bold text-gray-700 hover:underline">← All referrers</Link>
 
-          <div className="my-4 border-b border-grey-light"></div>
+          <div className="my-4 border-b border-gray-300"></div>
           <main className="modal__content mt-0">
-            <h1 className="mb-0 leading-none">{this.state.totalVisitors} visitors from {this.props.match.params.referrer}<br /> {toHuman(this.state.query)}</h1>
+            <h1 className="text-xl font-semibold mb-0 leading-none">{this.state.totalVisitors} visitors from {this.props.match.params.referrer}<br /> {toHuman(this.state.query)}</h1>
             {this.renderGoalText()}
 
             <table className="w-full table-striped table-fixed mt-4">
               <thead>
                 <tr>
-                  <th className="p-2 text-xs tracking-wide font-bold text-grey-dark" align="left">Referrer</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Visitors</th>
-                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Bounce rate</th>}
+                  <th className="p-2 text-xs tracking-wide font-bold text-gray-600" align="left">Referrer</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-600" align="right">Visitors</th>
+                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-600" align="right">Bounce rate</th>}
                 </tr>
               </thead>
               <tbody>

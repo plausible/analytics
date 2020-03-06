@@ -1,31 +1,31 @@
-<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-orange-lighter px-8 pt-6 pb-8 mt-24">
-  <h2 class="font-black">Subscription Plan</h2>
+<div class="max-w-2xl mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-orange-200 px-8 pt-6 pb-8 mt-24">
+  <h2 class="text-xl font-black">Subscription Plan</h2>
 
-  <div class="mt-4 border-b border-grey-light"></div>
+  <div class="mt-4 border-b border-gray-400"></div>
 
   <div class="flex flex-col items-center sm:flex-row sm:items-start justify-between mt-8">
-    <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32 my-4" style="width: 11.75rem;">
+    <div class="text-center bg-gray-200 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
       <h4 class="font-black">Current plan</h4>
       <%= if @subscription do %>
         <div class="text-xl py-2 font-medium"><%= subscription_name(@subscription) %></div>
-        <%= link("Change plan", to: "/billing/change-plan", class: "text-sm text-indigo font-medium") %>
+        <%= link("Change plan", to: "/billing/change-plan", class: "text-sm text-indigo-500 font-medium") %>
       <% else %>
         <div class="text-xl py-2 font-medium">Free trial</div>
-        <%= link("Upgrade", to: "/billing/upgrade", class: "text-sm text-indigo font-medium") %>
+        <%= link("Upgrade", to: "/billing/upgrade", class: "text-sm text-indigo-500 font-medium") %>
       <% end %>
     </div>
-    <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32 my-4" style="width: 11.75rem;">
+    <div class="text-center bg-gray-200 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
       <h4 class="font-black">Next bill amount</h4>
       <%= if @subscription do %>
         <div class="text-xl py-2 font-medium">$<%= @subscription.next_bill_amount %></div>
         <%= if @subscription.update_url do %>
-          <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo font-medium") %>
+          <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo-500 font-medium") %>
         <% end %>
       <% else %>
         <div class="text-xl py-2 font-medium">$0</div>
       <% end %>
     </div>
-    <div class="text-center bg-grey-lighter py-8 px-6 rounded h-32 my-4" style="width: 11.75rem;">
+    <div class="text-center bg-gray-200 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
       <h4 class="font-black">Next bill date</h4>
 
       <%= if @subscription && @subscription.next_bill_date do %>
@@ -36,7 +36,7 @@
     </div>
   </div>
 
-  <h3 class="mt-8">Your usage</h3>
+  <h3 class="text-xl font-bold mt-8">Your usage</h3>
 
   <div class="py-2">
     <b><%= delimit_integer(Plausible.Billing.usage(@conn.assigns[:current_user])) %></b>
@@ -45,46 +45,44 @@
 
   <%= if @subscription && @subscription.cancel_url do %>
     <div class="mt-8">
-      <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "text-indigo text-sm") %>
+      <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "text-indigo-500 text-sm") %>
     </div>
   <% end %>
 </div>
 
-<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-lightest px-8 pt-6 pb-8 mt-16">
-  <div class="flex items-center justify-between">
-    <h2 class="font-black">Account settings</h2>
-  </div>
+<div class="max-w-2xl mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-100 px-8 pt-6 pb-8 mt-16">
+  <h2 class="text-xl font-black">Account settings</h2>
 
-  <div class="my-4 border-b border-grey-light"></div>
+  <div class="my-4 border-b border-gray-300"></div>
 
-  <%= form_for @changeset, "/settings", [class: "max-w-xs"], fn f -> %>
+  <%= form_for @changeset, "/settings", [class: "max-w-sm"], fn f -> %>
     <div class="my-4">
-      <%= label f, :name, class: "block text-grey-darker text-sm font-bold mb-2" %>
-      <%= text_input f, :name, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:border-grey-light" %>
+      <%= label f, :name, class: "block text-gray-700 text-sm font-bold mb-2" %>
+      <%= text_input f, :name, class: "transition bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300" %>
       <%= error_tag f, :name %>
     </div>
     <div class="my-4">
-      <%= label f, :email, class: "block text-grey-darker text-sm font-bold mb-2" %>
-      <%= email_input f, :email, class: "transition bg-grey-lighter appearance-none border border-transparent rounded w-full p-2 text-grey-darker leading-normal appearance-none focus:outline-none focus:border-grey-light" %>
+      <%= label f, :email, class: "block text-gray-700 text-sm font-bold mb-2" %>
+      <%= email_input f, :email, class: "transition bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300" %>
       <%= error_tag f, :email %>
     </div>
     <%= submit "Save changes", class: "button mt-4" %>
   <% end %>
 </div>
 
-<div class="max-w-md mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-red-dark px-8 pt-6 pb-8 mt-16 mb-24">
+<div class="max-w-2xl mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-red-600 px-8 pt-6 pb-8 mt-16 mb-24">
   <div class="flex items-center justify-between">
-    <h2 class="font-black">Delete account</h2>
+    <h2 class="text-xl font-black">Delete account</h2>
   </div>
 
-  <div class="my-4 border-b border-grey-light"></div>
+  <div class="my-4 border-b border-gray-300"></div>
 
   <p>Deleting your account removes all sites and stats you've collected</p>
 
   <%= if @subscription && @subscription.status == "active" do %>
-    <span class="button bg-grey-dark mt-6 hover:shadow-none">Delete my account</span>
-    <p class="text-grey-darker mt-2">Your account cannot be deleted because you have an active subscription. If you want to delete your account, please cancel your subscription first.</p>
+    <span class="button bg-gray-500 mt-6 hover:shadow-none">Delete my account</span>
+    <p class="text-gray-600 text-sm mt-2">Your account cannot be deleted because you have an active subscription. If you want to delete your account, please cancel your subscription first.</p>
   <% else %>
-    <%= link "Delete my account ", to: "/me", method: :delete, class: "button bg-red-dark mt-6", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"] %>
+    <%= link "Delete my account ", to: "/me", method: :delete, class: "button bg-red-600 mt-6", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"] %>
   <% end %>
 </div>

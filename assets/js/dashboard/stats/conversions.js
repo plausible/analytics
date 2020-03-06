@@ -35,8 +35,8 @@ export default class Conversions extends React.Component {
     return (
       <div className="flex items-center justify-between my-2 text-sm" key={goal.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
-          <Bar count={goal.count} all={this.state.goals} color="red" />
-          <Link to={{search: query.toString(), state: {scrollTop: true}}} style={{marginTop: '-23px'}} className="hover:underline block px-2">{ goal.name }</Link>
+          <Bar count={goal.count} all={this.state.goals} bg="bg-red-100" />
+          <Link to={{search: query.toString(), state: {scrollTop: true}}} style={{marginTop: '-26px'}} className="hover:underline block px-2">{ goal.name }</Link>
         </div>
         <span className="font-medium">{numberFormatter(goal.count)}</span>
       </div>
@@ -53,8 +53,8 @@ export default class Conversions extends React.Component {
     } else if (this.state.goals) {
       return (
         <div className="w-full bg-white shadow-xl rounded p-4">
-          <h3>Goal Conversions</h3>
-          <div className="flex items-center mt-6 mb-3 justify-between text-grey-dark text-xs font-bold tracking-wide">
+          <h3 className="font-bold">Goal Conversions</h3>
+          <div className="flex items-center mt-3 mb-2 justify-between text-gray-600 text-xs font-bold tracking-wide">
             <span>Goal</span>
             <span>Conversions</span>
           </div>

@@ -84,7 +84,7 @@ export default class Countries extends React.Component {
     if (this.state.countries) {
       return (
         <React.Fragment>
-          <h3>Countries</h3>
+          <h3 className="font-bold">Countries</h3>
           <div className="mt-6 mx-auto" style={{width: '100%', maxWidth: '475px', height: '320px'}} id="map-container"></div>
           <MoreLink site={this.props.site} list={this.state.countries} endpoint="countries" />
         </React.Fragment>

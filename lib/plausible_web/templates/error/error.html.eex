@@ -9,7 +9,7 @@
     <title><%= assigns[:title] || "Plausible · Web analytics" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
   </head>
-  <body class="flex flex-col h-full bg-grey-lightest">
+  <body class="flex flex-col h-full bg-gray-100">
     <div class="container text-center mt-24">
       <h1 class="text-5xl font-black"><%= @status %></h1>
       <div class="my-4 text-xl"><%= @message %></div>

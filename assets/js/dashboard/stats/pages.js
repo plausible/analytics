@@ -35,8 +35,8 @@ export default class Pages extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={page.name}>
         <div className="w-full h-8 truncate" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={page.count} all={this.state.pages} color="orange" />
-          <span className="block px-2" style={{marginTop: '-23px'}}>{page.name}</span>
+          <Bar count={page.count} all={this.state.pages} bg="bg-orange-100" />
+          <span className="block px-2" style={{marginTop: '-26px'}}>{page.name}</span>
         </div>
         <span className="font-medium">{numberFormatter(page.count)}</span>
       </div>
@@ -47,7 +47,7 @@ export default class Pages extends React.Component {
     if (this.state.pages.length > 0) {
       return (
         <React.Fragment>
-          <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+          <div className="flex items-center mt-3 mb-2 justify-between text-gray-600 text-xs font-bold tracking-wide">
             <span>Page url</span>
             <span>Pageviews</span>
           </div>
@@ -56,7 +56,7 @@ export default class Pages extends React.Component {
         </React.Fragment>
       )
     } else {
-      return <div className="text-center mt-44 font-medium text-grey-dark">No data yet</div>
+      return <div className="text-center mt-44 font-medium text-gray-600">No data yet</div>
     }
   }
 
@@ -64,7 +64,7 @@ export default class Pages extends React.Component {
     if (this.state.pages) {
       return (
         <React.Fragment>
-          <h3>Top Pages</h3>
+          <h3 className="font-bold">Top Pages</h3>
           { this.renderList() }
           <MoreLink site={this.props.site} list={this.state.pages} endpoint="pages" />
         </React.Fragment>

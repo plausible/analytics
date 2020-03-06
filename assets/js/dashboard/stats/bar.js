@@ -10,12 +10,11 @@ function barWidth(count, all) {
   return count / maxVal * 100
 }
 
-export default function Bar({count, all, color}) {
-  color = color ? color : "blue"
+export default function Bar({count, all, bg}) {
   const width = barWidth(count, all)
 
   return (
-    <div className={`bg-${color}-lightest`} style={{width: width + '%', height: '30px'}}>
+    <div className={bg} style={{width: width + '%', height: '30px'}}>
     </div>
   )
 }

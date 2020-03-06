@@ -1,7 +1,7 @@
-<div class="max-w-sm w-full mx-auto bg-white shadow-md rounded px-8 py-6 mb-4 mt-8">
-  <h2 class="font-black">Upgrade your free trial</h2>
+<div class="max-w-md w-full mx-auto bg-white shadow-md rounded px-8 py-6 mb-4 mt-8">
+  <h2 class="text-xl font-black">Upgrade your free trial</h2>
 
-  <div class="mt-4">
+  <div class="mt-2">
     <%= cond do %>
       <% Timex.equal?(@trial_end_date, @today) ->  %>
         Today is the last day of your trial. Please select a plan and enter
@@ -25,21 +25,21 @@
       All plans are on a monthly basis, cancel any time.
     </p>
   </div>
-  <div class="pt-8"></div>
+  <div class="pt-6"></div>
 
   <div class="w-full flex justify-between items-center py-4 border-t">
     <span><b>10,000</b> / mo</span>
-    <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$6 / mo</b>
+    <b class="bg-orange-200 text-orange-900 p-1 rounded-sm">$6 / mo</b>
     <%= render("_checkout_button.html", conn: @conn, plan: :personal) %>
   </div>
   <div class="w-full flex justify-between items-center py-4 border-t">
     <span><b>100,000</b> / mo</span>
-    <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$12 / mo</b>
+    <b class="bg-orange-200 text-orange-900 p-1 rounded-sm">$12 / mo</b>
     <%= render("_checkout_button.html", conn: @conn, plan: :startup) %>
   </div>
   <div class="w-full flex justify-between items-center py-4 border-t">
     <span><b>1,000,000</b> / mo</span>
-    <b class="bg-orange-lighter text-orange-darkest p-1 rounded-sm">$36 / mo</b>
+    <b class="bg-orange-200 text-orange-900 p-1 rounded-sm">$36 / mo</b>
     <%= render("_checkout_button.html", conn: @conn, plan: :business) %>
   </div>
   <div class="w-full flex justify-between items-center py-4 border-t">
@@ -47,7 +47,7 @@
   </div>
 
   <div class="text-center mt-8">
-    Questions? Contact <%= link("uku@plausible.io", to: "mailto: uku@plausible.io", class: "text-indigo") %>
+    Questions? Contact <%= link("uku@plausible.io", to: "mailto: uku@plausible.io", class: "text-indigo-500") %>
   </div>
 
   <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js"></script>

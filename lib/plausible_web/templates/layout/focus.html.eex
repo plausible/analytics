@@ -10,17 +10,17 @@
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
     <%= render("_tracking.html", assigns) %>
   </head>
-  <body class="flex flex-col h-full bg-grey-lightest">
+  <body class="flex flex-col h-full bg-gray-100">
     <%= render("_svg_icons.html") %>
     <div class="text-center w-full my-8">
         <a href="/">
-          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), style: "height: 2.5rem;") %>
+          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), class: "inline", style: "height: 2.5rem;") %>
         </a>
     </div>
 
     <%= render @view_module, @view_template, assigns %>
 
-    <p class="text-center text-grey text-xs mt-4">
+    <p class="text-center text-gray-500 text-xs mt-4">
       ©2020 Plausible Insights. All rights reserved.
     </p>
 

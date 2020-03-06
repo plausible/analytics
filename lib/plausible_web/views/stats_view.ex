@@ -24,7 +24,7 @@ defmodule PlausibleWeb.StatsView do
 
   def bar(count, all, color \\ :blue) do
     ~E"""
-    <div class="bg-<%= color %>-lightest" style="width: <%= bar_width(count, all) %>%; height: 30px"></div>
+    <div class="bg-<%= color %>-100" style="width: <%= bar_width(count, all) %>%; height: 30px"></div>
     """
   end
 

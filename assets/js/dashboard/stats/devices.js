@@ -21,19 +21,19 @@ const EXPLANATION = {
 function iconFor(screenSize) {
   if (screenSize === 'Mobile') {
     return (
-      <svg width="16px" height="16px" style={{transform: 'translateY(3px)'}} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-smartphone"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+      <svg width="16px" height="16px" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather -mt-px"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
     )
   } else if (screenSize === 'Tablet') {
     return (
-      <svg width="16px" height="16px" style={{transform: 'translateY(3px)'}} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-tablet"><rect x="4" y="2" width="16" height="20" rx="2" ry="2" transform="rotate(180 12 12)"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+      <svg width="16px" height="16px" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather -mt-px"><rect x="4" y="2" width="16" height="20" rx="2" ry="2" transform="rotate(180 12 12)"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
     )
   } else if (screenSize === 'Laptop') {
     return (
-      <svg width="16px" height="16px" style={{transform: 'translateY(3px)'}} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-laptop"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+      <svg width="16px" height="16px" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather -mt-px"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
     )
   } else if (screenSize === 'Desktop') {
     return (
-      <svg width="16px" height="16px" style={{transform: 'translateY(3px)'}} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-monitor"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      <svg width="16px" height="16px" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather -mt-px"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
     )
   }
 }
@@ -64,8 +64,8 @@ class ScreenSizes extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={size.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={size.count} all={this.state.sizes} color="green" />
-          <span className="block px-2" style={{marginTop: '-23px'}}>{iconFor(size.name)} {size.name}</span>
+          <Bar count={size.count} all={this.state.sizes} bg="bg-green-100" />
+          <span className="block px-2" style={{marginTop: '-26px'}}>{iconFor(size.name)} {size.name}</span>
         </div>
         <span className="font-medium">{size.percentage}%</span>
       </div>
@@ -76,7 +76,7 @@ class ScreenSizes extends React.Component {
     if (this.state.sizes && this.state.sizes.length > 0) {
       return (
         <React.Fragment>
-          <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+          <div className="flex items-center mt-3 mb-2 justify-between text-gray-600 text-xs font-bold tracking-wide">
             <span>Screen size</span>
             <span>Visitors</span>
           </div>
@@ -84,7 +84,7 @@ class ScreenSizes extends React.Component {
         </React.Fragment>
       )
     } else {
-      return <div className="text-center mt-44 font-medium text-grey-dark">No data yet</div>
+      return <div className="text-center mt-44 font-medium text-gray-600">No data yet</div>
     }
   }
 
@@ -126,8 +126,8 @@ class Browsers extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={browser.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={browser.count} all={this.state.browsers} color="green" />
-          <span className="block px-2" style={{marginTop: '-23px'}}>{browser.name}</span>
+          <Bar count={browser.count} all={this.state.browsers} bg="bg-green-100" />
+          <span className="block px-2" style={{marginTop: '-26px'}}>{browser.name}</span>
         </div>
         <span className="font-medium">{browser.percentage}%</span>
       </div>
@@ -138,7 +138,7 @@ class Browsers extends React.Component {
     if (this.state.browsers && this.state.browsers.length > 0) {
       return (
         <React.Fragment>
-          <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+          <div className="flex items-center mt-3 mb-2 justify-between text-gray-600 text-xs font-bold tracking-wide">
             <span>Browser</span>
             <span>Visitors</span>
           </div>
@@ -146,7 +146,7 @@ class Browsers extends React.Component {
         </React.Fragment>
       )
     } else {
-      return <div className="text-center mt-44 font-medium text-grey-dark">No data yet</div>
+      return <div className="text-center mt-44 font-medium text-gray-600">No data yet</div>
     }
   }
 
@@ -188,8 +188,8 @@ class OperatingSystems extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={os.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={os.count} all={this.state.operatingSystems} color="green" />
-          <span className="block px-2" style={{marginTop: '-23px'}}>{os.name}</span>
+          <Bar count={os.count} all={this.state.operatingSystems} bg="bg-green-100" />
+          <span className="block px-2" style={{marginTop: '-26px'}}>{os.name}</span>
         </div>
         <span className="font-medium">{os.percentage}%</span>
       </div>
@@ -200,7 +200,7 @@ class OperatingSystems extends React.Component {
     if (this.state.operatingSystems && this.state.operatingSystems.length > 0) {
       return (
         <React.Fragment>
-          <div className="flex items-center mt-4 mb-2 justify-between text-grey-dark text-xs font-bold tracking-wide">
+          <div className="flex items-center mt-3 mb-2 justify-between text-gray-600 text-xs font-bold tracking-wide">
             <span>Operating system</span>
             <span>Visitors</span>
           </div>
@@ -208,7 +208,7 @@ class OperatingSystems extends React.Component {
         </React.Fragment>
       )
     } else {
-      return <div className="text-center mt-44 font-medium text-grey-dark">No data yet</div>
+      return <div className="text-center mt-44 font-medium text-gray-600">No data yet</div>
     }
   }
 
@@ -248,12 +248,12 @@ export default class Devices extends React.Component {
 
   renderPill(name, mode) {
     const isActive = this.state.mode === mode
-    const extraClass = name === 'OS' ? '' : ' border-r border-grey-light'
+    const extraClass = name === 'OS' ? '' : ' border-r border-gray-400'
 
     if (isActive) {
       return <span className={"inline-block shadow-inner text-sm font-bold py-1 px-4" + extraClass}>{name}</span>
     } else {
-      return <span className={"inline-block cursor-pointer bg-grey-lighter text-sm font-bold py-1 px-4" + extraClass} onClick={this.setMode(mode)}>{name}</span>
+      return <span className={"inline-block cursor-pointer bg-gray-200 text-sm font-bold py-1 px-4" + extraClass} onClick={this.setMode(mode)}>{name}</span>
     }
   }
 
@@ -261,9 +261,9 @@ export default class Devices extends React.Component {
     return (
       <div className="stats-item">
         <div className="bg-white shadow-xl rounded p-4 relative" style={{height: '436px'}}>
-          <h3>Devices</h3>
+          <h3 className="font-bold">Devices</h3>
 
-          <div className="rounded border border-grey-light absolute" style={{top: '1rem', right: '1rem'}}>
+          <div className="rounded border border-gray-400 absolute" style={{top: '1rem', right: '1rem'}}>
             { this.renderPill('Size', 'size') }
             { this.renderPill('Browser', 'browser') }
             { this.renderPill('OS', 'os') }

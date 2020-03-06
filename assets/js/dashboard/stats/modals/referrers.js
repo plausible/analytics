@@ -44,7 +44,7 @@ class ReferrersModal extends React.Component {
     return (
       <tr className="text-sm" key={referrer.name}>
         <td className="p-2">
-          <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} className="h-4 w-4 mr-2 align-middle" />
+          <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} className="h-4 w-4 mr-2 align-middle inline" />
           <Link className="hover:underline truncate" style={{maxWidth: '80%'}} to={`/${encodeURIComponent(this.props.site.domain)}/referrers/${referrer.name}${window.location.search}`}>{ referrer.name }</Link>
         </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.count)}</td>
@@ -61,18 +61,16 @@ class ReferrersModal extends React.Component {
     } else if (this.state.referrers) {
       return (
         <React.Fragment>
-          <header className="modal__header">
-            <h1>Top Referrers</h1>
-          </header>
+          <h1 className="text-xl font-bold">Top Referrers</h1>
 
-          <div className="my-4 border-b border-grey-light"></div>
+          <div className="my-4 border-b border-gray-300"></div>
           <main className="modal__content">
             <table className="w-full table-striped table-fixed">
               <thead>
                 <tr>
-                  <th className="p-2 text-xs tracking-wide font-bold text-grey-dark" align="left">Referrer</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Visitors</th>
-                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Bounce rate</th>}
+                  <th className="p-2 text-xs tracking-wide font-bold text-gray-600" align="left">Referrer</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-600" align="right">Visitors</th>
+                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-600" align="right">Bounce rate</th>}
                 </tr>
               </thead>
               <tbody>

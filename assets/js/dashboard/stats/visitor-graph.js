@@ -226,25 +226,25 @@ class LineGraph extends React.Component {
     const formattedComparison = numberFormatter(Math.abs(comparison))
 
     if (comparison > 0) {
-      const color = name === 'Bounce rate' ? 'text-red-light' : 'text-green'
+      const color = name === 'Bounce rate' ? 'text-red-400' : 'text-green-500'
       return <span className="text-xs"><span className={color + ' font-bold'}>&uarr;</span> {formattedComparison}%</span>
     } else if (comparison < 0) {
-      const color = name === 'Bounce rate' ? 'text-green' : 'text-red-light'
+      const color = name === 'Bounce rate' ? 'text-green-500' : 'text-red-400'
       return <span className="text-xs"><span className={color + ' font-bold'}>&darr;</span> {formattedComparison}%</span>
     } else if (comparison === 0) {
-      return <span className="text-xs text-grey-darker">&#12336; N/A</span>
+      return <span className="text-xs text-gray-700">&#12336; N/A</span>
     }
   }
 
   renderTopStats() {
     const {graphData} = this.props
     return this.props.graphData.top_stats.map((stat, index) => {
-      let border = index > 0 ? 'lg:border-l border-grey-light' : ''
+      let border = index > 0 ? 'lg:border-l border-gray-300' : ''
       border = index % 2 === 0 ? border + ' border-r lg:border-r-0' : border
 
       return (
         <div className={`px-8 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
-          <div className="text-grey-dark text-xs font-bold tracking-wide uppercase">{stat.name}</div>
+          <div className="text-gray-600 text-xs font-bold tracking-wide uppercase">{stat.name}</div>
           <div className="my-1 flex justify-between items-center">
             <b className="text-2xl mr-4">{ typeof(stat.count) == 'number' ? numberFormatter(stat.count) : stat.percentage + '%' }</b>
             {this.renderComparison(stat.name, stat.change)}
@@ -259,7 +259,7 @@ class LineGraph extends React.Component {
 
     return (
       <a href={endpoint} download>
-        <svg className="w-4 h-5 absolute text-grey-darker" style={{right: '2rem', top: '-2rem'}}>
+        <svg className="w-4 h-5 absolute text-gray-700" style={{right: '2rem', top: '-2rem'}}>
           <use xlinkHref="#feather-download" />
         </svg>
       </a>

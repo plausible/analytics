@@ -1,4 +1,4 @@
-<div class="w-full max-w-sm mx-auto bg-white shadow-md rounded px-8 py-6 mt-8"]>
+<div class="w-full max-w-md mx-auto bg-white shadow-md rounded px-8 py-6 mt-8"]>
   <h2>Unsubscribe successful</h2>
   <p class="mt-4">You will no longer receive a <%= @interval %> analytics report for <%= @site %></p>
 </div>

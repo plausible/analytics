@@ -1,15 +1,15 @@
-<footer class="w-full text-center text-grey p-8 pin-b bg-indigo-darkest">
+<footer class="w-full text-center text-gray-500 p-8 bottom-0" style="background: #191e38;">
   <div class="container flex items-center justify-between flex-col md:flex-row py-4">
     <div class="text-center md:text-left">
       <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo_inverted.png"), style: "height: 2.5rem;") %>
       <p class="mt-2">Made by <a href="https://twitter.com/ukutaht" class="light-text underline">@ukutaht</a> in London, UK</p>
     </div>
-    <ul class="text-center md:text-left my-4 md:m-0 list-reset">
+    <ul class="text-center md:text-left my-4 md:m-0">
       <li>Read our <a href="/blog/" class="light-text font-medium mr-4 underline">Blog</a></li>
       <li>Study the <a href="https://docs.plausible.io" target="_blank" class="light-text font-medium mr-4 underline">Documentation</a></li>
       <li>Check out the <a href="/plausible.io" class="light-text font-medium underline">Live Demo</a></li>
     </ul>
-    <ul class="text-center md:text-left my-4 md:m-0 list-reset">
+    <ul class="text-center md:text-left my-4 md:m-0">
       <li>Give us <a href="/feedback" target="_blank" class="light-text font-medium mr-4 underline">Feedback</a></li>
       <li>We have a <a href="/roadmap" target="_blank" class="light-text font-medium mr-4 underline">Public roadmap</a></li>
       <li>Contact us <a href="/contact" class="light-text font-medium mr-4 underline">via email</a></li>

@@ -43,7 +43,7 @@ class GoogleKeywordsModal extends React.Component {
   renderKeywords() {
     if (this.state.query.filters.goal) {
       return (
-        <div className="text-center text-grey-darker mt-6">
+        <div className="text-center text-gray-700 mt-6">
           <RocketIcon />
           <div className="text-lg">Sorry, we cannot show which keywords converted best for goal <b>{this.state.query.filters.goal}</b></div>
           <div className="text-lg">Google does not share this information</div>
@@ -52,7 +52,7 @@ class GoogleKeywordsModal extends React.Component {
     } else if (this.state.notConfigured) {
       if (this.state.isOwner) {
         return (
-          <div className="text-center text-grey-darker mt-6">
+          <div className="text-center text-gray-700 mt-6">
             <RocketIcon />
             <div className="text-lg">The site is not connected to Google Search Keywords</div>
             <div className="text-lg">Configure the integration to view search terms</div>
@@ -61,7 +61,7 @@ class GoogleKeywordsModal extends React.Component {
         )
       } else {
         return (
-          <div className="text-center text-grey-darker mt-6">
+          <div className="text-center text-gray-700 mt-6">
             <RocketIcon />
             <div className="text-lg">The site is not connected to Google Search Kewyords</div>
             <div className="text-lg">Cannot show search terms</div>
@@ -73,8 +73,8 @@ class GoogleKeywordsModal extends React.Component {
         <table className="w-full table-striped table-fixed">
           <thead>
             <tr>
-              <th className="p-2 text-xs tracking-wide font-bold text-grey-dark" align="left">Search Term</th>
-              <th className="p-2 w-32 text-xs tracking-wide font-bold text-grey-dark" align="right">Visitors</th>
+              <th className="p-2 text-xs tracking-wide font-bold text-gray-600" align="left">Search Term</th>
+              <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-600" align="right">Visitors</th>
             </tr>
           </thead>
           <tbody>
@@ -84,7 +84,7 @@ class GoogleKeywordsModal extends React.Component {
       )
     } else {
       return (
-        <div className="text-center text-grey-darker mt-6">
+        <div className="text-center text-gray-700 mt-6">
           <RocketIcon />
           <div className="text-lg">Could not find any search terms for this period</div>
         </div>
@@ -100,14 +100,12 @@ class GoogleKeywordsModal extends React.Component {
     } else {
       return (
         <React.Fragment>
-          <header className="modal__header">
-            <Link to={`/${encodeURIComponent(this.props.site.domain)}/referrers${window.location.search}`} className="font-bold text-grey-darker hover:underline">← All referrers</Link>
-          </header>
+          <Link to={`/${encodeURIComponent(this.props.site.domain)}/referrers${window.location.search}`} className="font-bold text-gray-700 hover:underline">← All referrers</Link>
 
-          <div className="my-4 border-b border-grey-light"></div>
-          <main className="modal__content mt-0">
-            <h1>{this.state.totalVisitors} new visitors from Google</h1>
-            <h1 className="text-grey-darker mt-2" style={{transform: 'translateY(-1rem)'}}>{toHuman(this.state.query)}</h1>
+          <div className="my-4 border-b border-gray-300"></div>
+          <main className="modal__content">
+            <h1 className="text-xl font-semibold">{this.state.totalVisitors} new visitors from Google</h1>
+            <h1 className="text-xl font-semibold text-gray-700 mt-2" style={{transform: 'translateY(-1rem)'}}>{toHuman(this.state.query)}</h1>
             { this.renderKeywords() }
           </main>
         </React.Fragment>

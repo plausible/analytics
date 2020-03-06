@@ -1,11 +1,13 @@
-@tailwind preflight;
+/* purgecss start ignore */
+@tailwind base;
 @tailwind components;
+/* purgecss end ignore */
 @import "modal.css";
 @import "loader.css";
 @import "tooltip.css";
 
 .button {
-  @apply inline-block bg-indigo text-white text-center font-bold tracking-wide py-3 px-5 rounded no-underline;
+  @apply inline-block bg-indigo-600 text-white text-center font-bold tracking-wide py-2 px-5 rounded no-underline;
 }
 
 .button:hover {
@@ -17,7 +19,7 @@
 }
 
 .button-outline {
-  @apply bg-transparent border border-indigo text-indigo;
+  @apply bg-transparent border border-indigo-600 text-indigo-600;
 }
 
 .button-sm {
@@ -29,7 +31,7 @@
 }
 
 html {
-  @apply font-sans text-grey-darkest;
+  @apply text-gray-800;
 }
 
 body {
@@ -37,12 +39,8 @@ body {
 	-moz-osx-font-smoothing: grayscale;
 }
 
-a, button {
-  @apply no-underline;
-}
-
 blockquote {
-  @apply my-4 py-2 px-4 border-l-4 border-grey;
+  @apply my-4 py-2 px-4 border-l-4 border-gray-500;
 }
 
 @screen xl {
@@ -85,10 +83,6 @@ blockquote {
   }
 }
 
-a {
-  color: inherit;
-}
-
 .light-text {
   color: #F0F4F8;
 }
@@ -118,7 +112,7 @@ a {
   border-radius: 45px;
   background-color: #01a4e9;
   animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-  @apply bg-green;
+  @apply bg-green-500;
 }
 .pulsating-circle:after {
   content: '';
@@ -131,7 +125,7 @@ a {
   background-color: white;
   border-radius: 15px;
   animation: pulse-dot 1.25s cubic-bezier(0.455, 0.03, 0.515, 0.955) -.4s infinite;
-  @apply bg-green;
+  @apply bg-green-500;
 }
 
 
@@ -193,15 +187,15 @@ a {
 .feather {
   height: 1em;
   width: 1em;
-  transform: translateY(0.15em);
   overflow: visible;
+  display: inline;
 }
 
 .feather-sm {
   height: 1em;
   width: 1em;
-  transform: translateY(0.05em);
   overflow: visible;
+  display: inline;
 }
 
 .table-striped tbody tr:nth-child(odd) {
@@ -219,7 +213,7 @@ a {
 }
 
 .tweet-text a {
-  @apply text-blue;
+  @apply text-blue-500;
 }
 
 .tweet-text a:hover {

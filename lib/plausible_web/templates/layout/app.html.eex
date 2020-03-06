@@ -8,47 +8,47 @@
     <link rel="icon" type="image/png" sizes="32x32" href="<%= PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_favicon.png") %>">
     <title><%= assigns[:title] || "Plausible · Simple, open-source web analytics" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
-    <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/dashboard.css") %>"/>
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/airbnb.css">
     <%= render("_tracking.html", assigns) %>
   </head>
-  <body class="flex flex-col h-full bg-grey-lightest">
+  <body class="flex flex-col h-full bg-gray-100">
     <%= render("_svg_icons.html") %>
     <nav class="container flex items-center justify-between flex-wrap py-8">
-      <div class="flex items-center flex-no-shrink">
+      <div class="flex items-center flex-shrink-0">
         <a href="/">
           <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), style: "height: 2.5rem;") %>
         </a>
       </div>
       <%= cond do %>
         <% @conn.assigns[:current_user] -> %>
-          <ul class="list-reset flex">
+          <ul class="flex">
             <%= if @conn.assigns[:current_user].subscription == nil do %>
               <li class="mr-6 hidden sm:block">
-                <%= link(trial_notificaton(@conn.assigns[:current_user]), to: "/settings", class: "font-bold text-orange-darkest rounded py-2 px-3 bg-orange-lighter", style: "line-height: 34px;") %>
+                <%= link(trial_notificaton(@conn.assigns[:current_user]), to: "/settings", class: "font-bold text-orange-900 rounded p-2 bg-orange-200", style: "line-height: 40px;") %>
               </li>
             <% else %>
               <li class="mr-6 hidden sm:block">
-                <%= link("Give feedback", to: "/feedback", class: "font-bold rounded py-2 px-3 hover:bg-grey-lighter", style: "line-height: 34px;") %>
+                <%= link("Give feedback", to: "/feedback", class: "font-bold rounded p-2 hover:bg-gray-200", style: "line-height: 40px;") %>
               </li>
             <% end %>
             <li>
-              <div class="relative font-bold rounded hover:bg-grey-lighter">
-                <div data-dropdown-trigger class="flex items-center hover:bg-grey-lighter rounded p-2 cursor-pointer">
+              <div class="relative font-bold rounded">
+                <div data-dropdown-trigger class="flex items-center hover:bg-gray-200 rounded p-2 cursor-pointer">
                   <span class="mr-2"><%= @conn.assigns[:current_user].name || @conn.assigns[:current_user].email %></span>
                   <svg style="height: 18px; transform: translateY(2px); fill: #606f7b;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 512 640" enable-background="new 0 0 512 512" xml:space="preserve"><g><circle cx="256" cy="52.8" r="50.8"/><circle cx="256" cy="256" r="50.8"/><circle cx="256" cy="459.2" r="50.8"/></g></svg>
                 </div>
 
-                <div data-dropdown style="top: 42px; right: 0px; width: 185px;" class="dropdown-content hidden absolute pin-r bg-white border border-grey-light rounded shadow-md z-10">
-                  <%= link("Settings", to: "/settings", class: "block py-3 px-2 border-b border-grey-light hover:bg-grey-lighter") %>
-                  <%= link("Log out", to: "/logout", method: :post, class: "block py-3 px-2 hover:bg-grey-lighter") %>
+                <div data-dropdown style="top: 42px; right: 0px; width: 185px;" class="dropdown-content hidden absolute right-0 bg-white border border-gray-400 rounded shadow-md z-10">
+                  <%= link("Settings", to: "/settings", class: "block py-2 px-2 border-b border-gray-400 hover:bg-gray-200") %>
+                  <%= link("Log out", to: "/logout", method: :post, class: "block py-2 px-2 hover:bg-gray-200") %>
                 </div>
               </div>
             </li>
           </ul>
       <% true -> %>
-        <ul class="list-reset flex">
+        <ul class="flex">
           <li>
-            <%= link("Login", to: "/login", class: "font-bold rounded py-2 px-3 hover:bg-grey-lighter", style: "line-height: 33px;") %>
+            <%= link("Login", to: "/login", class: "font-bold rounded py-2 px-3 hover:bg-gray-200", style: "line-height: 33px;") %>
             <%= link("Start free trial", to: "/register", class: "button button-md hidden sm:inline") %>
           </li>
         </ul>
@@ -56,13 +56,13 @@
     </nav>
 
     <%= if get_flash(@conn, :success) do %>
-      <div id="flash" class="text-center bg-green text-green-lightest text-sm font-bold px-4 absolute w-full transition overflow-hidden" style="top: 91px" role="alert">
+      <div id="flash" class="text-center bg-green-500 text-green-100 text-sm font-bold px-4 absolute w-full transition overflow-hidden" style="top: 91px" role="alert">
         <p class="py-3 "><%= get_flash(@conn, :success) %></p>
       </div>
     <% end %>
 
     <%= if get_flash(@conn, :error) do %>
-      <div id="flash" class="text-center bg-red-dark text-red-lightest text-sm font-bold px-4 absolute w-full transition overflow-hidden" style="top: 91px" role="alert">
+      <div id="flash" class="text-center bg-red-dark-500 text-red-100 text-sm font-bold px-4 absolute w-full transition overflow-hidden" style="top: 91px" role="alert">
         <p class="py-3 "><%= get_flash(@conn, :error) %></p>
       </div>
     <% end %>
