@@ -1,5 +1,7 @@
+/* purgecss start ignore */
 @tailwind base;
 @tailwind components;
+/* purgecss end ignore */
 @import "modal.css";
 @import "loader.css";
 @import "tooltip.css";

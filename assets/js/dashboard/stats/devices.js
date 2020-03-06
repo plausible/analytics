@@ -64,7 +64,7 @@ class ScreenSizes extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={size.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={size.count} all={this.state.sizes} color="green" />
+          <Bar count={size.count} all={this.state.sizes} bg="bg-green-100" />
           <span className="block px-2" style={{marginTop: '-26px'}}>{iconFor(size.name)} {size.name}</span>
         </div>
         <span className="font-medium">{size.percentage}%</span>
@@ -126,7 +126,7 @@ class Browsers extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={browser.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={browser.count} all={this.state.browsers} color="green" />
+          <Bar count={browser.count} all={this.state.browsers} bg="bg-green-100" />
           <span className="block px-2" style={{marginTop: '-26px'}}>{browser.name}</span>
         </div>
         <span className="font-medium">{browser.percentage}%</span>
@@ -188,7 +188,7 @@ class OperatingSystems extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={os.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={os.count} all={this.state.operatingSystems} color="green" />
+          <Bar count={os.count} all={this.state.operatingSystems} bg="bg-green-100" />
           <span className="block px-2" style={{marginTop: '-26px'}}>{os.name}</span>
         </div>
         <span className="font-medium">{os.percentage}%</span>

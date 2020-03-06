@@ -1,7 +1,6 @@
 import React from 'react';
 import { withRouter, Link } from 'react-router-dom'
 import Flatpickr from "react-flatpickr";
-import "flatpickr/dist/themes/airbnb.css";
 import {shiftDays, shiftMonths, formatDay, formatDayShort, formatMonthYYYY, formatISO, isToday} from './date'
 
 
