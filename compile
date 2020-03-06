@@ -1,4 +1,4 @@
 cd $phoenix_dir
-npm --prefix ./assets run deploy
+NODE_ENV=production npm --prefix ./assets run deploy
 mix "${phoenix_ex}.digest"
 mix "${phoenix_ex}.digest.clean"
