@@ -254,7 +254,7 @@
     </div>
   </div>
 
-  <div class="pt-16"></div>
+  <div class="pt-32"></div>
   <div class="container my-32">
     <h3 class="font-black text-center text-2xl my-12">What people are saying</h3>
     <div class="flex flex-col md:flex-row justify-between items-center">
