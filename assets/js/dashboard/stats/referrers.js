@@ -40,7 +40,7 @@ export default class Referrers extends React.Component {
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
           <Bar count={referrer.count} all={this.state.referrers} color="blue" />
           <Link className="hover:underline block px-2" style={{marginTop: '-26px'}} to={`/${encodeURIComponent(this.props.site.domain)}/referrers/${referrer.name}${window.location.search}`}>
-            <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} className="inline h-4 w-4 mr-2 align-middle" />
+            <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} className="inline h-4 w-4 mr-2 align-middle -mt-px" />
             { referrer.name }
           </Link>
         </div>

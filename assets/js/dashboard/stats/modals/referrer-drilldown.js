@@ -51,7 +51,7 @@ class ReferrerDrilldownModal extends React.Component {
   renderTweet(tweet, index) {
     const authorUrl = `https://twitter.com/${tweet.author_handle}`
     const tweetUrl = `${authorUrl}/status/${tweet.tweet_id}`
-    const border = index === 0 ? '' : ' pt-4 border-t border-grey-light'
+    const border = index === 0 ? '' : ' pt-4 border-t border-gray-300'
 
     return (
       <div key={tweet.tweet_id}>
@@ -83,7 +83,7 @@ class ReferrerDrilldownModal extends React.Component {
             <span className="text-gray-600 ml-2 text-xs">
               appears in {referrer.tweets.length} tweets
             </span>
-            <div className="my-4 pl-4 border-l-2 border-grey-light">
+            <div className="my-4 pl-4 border-l-2 border-gray-300">
               { referrer.tweets.map(this.renderTweet) }
             </div>
           </td>

@@ -1,4 +1,4 @@
-<div class="md:pt-12 bg-grey-lightest w-screen overflow-hidden">
+<div class="md:pt-12 bg-gray-100 w-screen overflow-hidden">
   <div class="container flex flex-col md:flex-row-reverse">
     <section class="hidden lg:block lg:w-2/5 relative">
       <svg height="600" width="600" style="position: absolute; right: -380px; top: 100px; filter: drop-shadow(0 15px 30px rgba(0, 0, 0, .11));">

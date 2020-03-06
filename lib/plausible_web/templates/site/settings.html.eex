@@ -52,7 +52,7 @@
   <div class="mt-12">
     <h2 class="text-xl font-black">Shared links</h2>
 
-    <div class="my-4 border-b border-grey-light"></div>
+    <div class="my-4 border-b border-gray-300"></div>
 
     <div class="my-4">
       You can share your stats privately by generating a shared link. The links are impossible to guess and
@@ -77,11 +77,11 @@
 
 <div class="max-w-xl mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-100 px-8 pt-6 pb-8 mt-10">
   <h2 class="text-xl font-black">Goals</h2>
-  <div class="my-4 border-b border-grey-light"></div>
+  <div class="my-4 border-b border-gray-300"></div>
   <div>
     <%= if Enum.count(@goals) > 0 do %>
       <%= for goal <- @goals do %>
-        <div class="border-b border-grey-light py-3 flex justify-between">
+        <div class="border-b border-gray-300 py-3 flex justify-between">
           <small class="font-bold"><%= goal_name(goal) %></small>
           <%= button("❌", to: "/#{URI.encode_www_form(@site.domain)}/goals/#{goal.id}", method: :delete, class: "text-sm", data: [confirm: "Are you sure you want to remove goal #{goal_name(goal)}? This will just affect the UI, all of your analytics data will stay intact."]) %>
         </div>
@@ -97,7 +97,7 @@
 <div class="max-w-xl mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-100 px-8 pt-6 pb-8 mt-10" id="google-auth">
   <h2 class="text-xl font-black">Google Integration</h2>
 
-  <div class="my-4 border-b border-grey-light"></div>
+  <div class="my-4 border-b border-gray-300"></div>
     <div class="text-gray-700 my-4">
       Integrating with your Google account allows Plausible to show more information about your websites' performance on their search engine.
     </div>

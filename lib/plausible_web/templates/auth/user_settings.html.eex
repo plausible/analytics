@@ -53,7 +53,7 @@
 <div class="max-w-2xl mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-100 px-8 pt-6 pb-8 mt-16">
   <h2 class="text-xl font-black">Account settings</h2>
 
-  <div class="my-4 border-b border-grey-light"></div>
+  <div class="my-4 border-b border-gray-300"></div>
 
   <%= form_for @changeset, "/settings", [class: "max-w-sm"], fn f -> %>
     <div class="my-4">
@@ -75,7 +75,7 @@
     <h2 class="text-xl font-black">Delete account</h2>
   </div>
 
-  <div class="my-4 border-b border-grey-light"></div>
+  <div class="my-4 border-b border-gray-300"></div>
 
   <p>Deleting your account removes all sites and stats you've collected</p>
 
