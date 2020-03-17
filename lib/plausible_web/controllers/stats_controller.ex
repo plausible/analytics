@@ -18,6 +18,7 @@ defmodule PlausibleWeb.StatsController do
           conn
           |> assign(:skip_plausible_tracking, !demo)
           |> put_session(site.domain <> "_offer_email_report", nil)
+          |> put_resp_header("x-robots-tag", "noindex")
           |> render("stats.html",
             site: site,
             has_goals: Plausible.Sites.has_goals?(site),
