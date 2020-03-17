@@ -23,7 +23,7 @@ defmodule Mix.Tasks.SendTrialNotifications do
     users = Repo.all(base_query)
 
     for user <- users do
-      case Timex.diff(Plausible.Billing.trial_end_date(user), Timex.today(), :days) do
+      case Timex.diff(user.trial_expiry_date, Timex.today(), :days) do
        14 ->
           if Plausible.Auth.user_completed_setup?(user) do
             send_two_week_reminder(args, user)

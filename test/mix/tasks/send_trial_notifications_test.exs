@@ -15,7 +15,7 @@ defmodule Mix.Tasks.SendTrialNotificationsTest do
 
   describe "with site and pageviews" do
     test "sends a reminder 14 days before trial ends (16 days after user signed up)" do
-      user = insert(:user, inserted_at: Timex.now |> Timex.shift(days: -16))
+      user = insert(:user, trial_expiry_date: Timex.now |> Timex.shift(days: 14))
       site = insert(:site, members: [user])
       insert(:pageview, domain: site.domain)
 
@@ -25,7 +25,7 @@ defmodule Mix.Tasks.SendTrialNotificationsTest do
     end
 
     test "sends an upgrade email the day before the trial ends" do
-      user = insert(:user, inserted_at: Timex.now |> Timex.shift(days: -29))
+      user = insert(:user, trial_expiry_date: Timex.now |> Timex.shift(days: 1))
       site = insert(:site, members: [user])
       insert(:pageview, domain: site.domain)
 
@@ -34,11 +34,31 @@ defmodule Mix.Tasks.SendTrialNotificationsTest do
       assert_delivered_email(PlausibleWeb.Email.trial_upgrade_email(user, "tomorrow", 1))
     end
 
+    test "sends an upgrade email the day the trial ends" do
+      user = insert(:user, trial_expiry_date: Timex.today())
+      site = insert(:site, members: [user])
+      insert(:pageview, domain: site.domain)
+
+      Mix.Tasks.SendTrialNotifications.execute()
+
+      assert_delivered_email(PlausibleWeb.Email.trial_upgrade_email(user, "today", 1))
+    end
+
+    test "sends a trial over email the day after the trial ends" do
+      user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
+      site = insert(:site, members: [user])
+      insert(:pageview, domain: site.domain)
+
+      Mix.Tasks.SendTrialNotifications.execute()
+
+      assert_delivered_email(PlausibleWeb.Email.trial_over_email(user))
+    end
+
     test "does not send a notification if user has a subscription" do
-      user1 = insert(:user, inserted_at: Timex.now |> Timex.shift(days: -14))
+      user1 = insert(:user, trial_expiry_date: Timex.now |> Timex.shift(days: 14))
       site1 = insert(:site, members: [user1])
       insert(:pageview, domain: site1.domain)
-      user2 = insert(:user, inserted_at: Timex.now |> Timex.shift(days: -29))
+      user2 = insert(:user, trial_expiry_date: Timex.now |> Timex.shift(days: 1))
       site2 = insert(:site, members: [user2])
       insert(:pageview, domain: site2.domain)
 

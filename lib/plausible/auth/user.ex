@@ -14,6 +14,7 @@ defmodule Plausible.Auth.User do
     field :password, :string, virtual: true
     field :name, :string
     field :last_seen, :naive_datetime
+    field :trial_expiry_date, :date
 
     has_many :site_memberships, Plausible.Site.Membership
     has_many :sites, through: [:site_memberships, :site]
@@ -21,6 +22,14 @@ defmodule Plausible.Auth.User do
     has_one :subscription, Plausible.Billing.Subscription
 
     timestamps()
+  end
+
+  def new(user, attrs \\ %{}) do
+    user
+    |> cast(attrs, [:email, :name])
+    |> validate_required([:email, :name])
+    |> change(trial_expiry_date: Timex.today() |> Timex.shift(days: 30))
+    |> unique_constraint(:email)
   end
 
   def changeset(user, attrs \\ %{}) do

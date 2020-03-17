@@ -33,10 +33,9 @@ defmodule PlausibleWeb.BillingController do
 
   def upgrade(conn, _params) do
     usage = Plausible.Billing.usage(conn.assigns[:current_user])
-    trial_end_date = Plausible.Billing.trial_end_date(conn.assigns[:current_user])
     today = Timex.today()
 
-    render(conn, "upgrade.html", usage: usage, trial_end_date: trial_end_date, today: today, layout: {PlausibleWeb.LayoutView, "focus.html"})
+    render(conn, "upgrade.html", usage: usage, today: today, user: conn.assigns[:current_user], layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def success(conn, _params) do

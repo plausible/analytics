@@ -76,7 +76,7 @@ defmodule Plausible.Billing do
   end
 
   def needs_to_upgrade?(user) do
-    if Timex.before?(trial_end_date(user), Timex.today()) do
+    if Timex.before?(user.trial_expiry_date, Timex.today()) do
       !active_subscription_for(user.id)
     else
       false
@@ -84,11 +84,7 @@ defmodule Plausible.Billing do
   end
 
   def trial_days_left(user) do
-    30 - Timex.diff(Timex.today, user.inserted_at, :days)
-  end
-
-  def trial_end_date(user) do
-    Timex.shift(user.inserted_at, days: 30) |> NaiveDateTime.to_date
+    Timex.diff(user.trial_expiry_date, Timex.today(), :days)
   end
 
   def usage(user) do

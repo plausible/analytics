@@ -1,19 +1,19 @@
-<div class="max-w-md w-full mx-auto bg-white shadow-md rounded px-8 py-6 mb-4 mt-8">
+<div class="max-w-lg w-full mx-auto bg-white shadow-md rounded px-8 py-6 mb-4 mt-8">
   <h2 class="text-xl font-black">Upgrade your free trial</h2>
 
   <div class="mt-2">
     <%= cond do %>
-      <% Timex.equal?(@trial_end_date, @today) ->  %>
+      <% Timex.equal?(@user.trial_expiry_date, @today) ->  %>
         Today is the last day of your trial. Please select a plan and enter
         your billing info to access your stats after the trial ends.
-        <% Timex.after?(@trial_end_date, @today) ->  %>
+        <% Timex.after?(@user.trial_expiry_date, @today) ->  %>
         <p class="py-2">
-        Your free trial ends on <b><%= Timex.format!(@trial_end_date, "{WDshort} {D} {Mshort}") %></b>. Please select a plan and enter
+        Your free trial ends on <b><%= Timex.format!(@user.trial_expiry_date, "{WDshort} {D} {Mshort}") %></b>. Please select a plan and enter
         your billing info to access your stats after the trial ends.
         </p>
-      <% Timex.before?(@trial_end_date, @today) ->  %>
+      <% Timex.before?(@user.trial_expiry_date, @today) ->  %>
         <p class="py-2">
-        Your free trial ended on <%= Timex.format!(@trial_end_date, "{Mshort} {D}")%>. To access your stats going forward, please select a plan and enter your billing info.
+        Your free trial ended on <%= Timex.format!(@user.trial_expiry_date, "{Mshort} {D}")%>. To access your stats going forward, please select a plan and enter your billing info.
         </p>
     <% end %>
 

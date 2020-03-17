@@ -7,7 +7,8 @@ defmodule Plausible.Factory do
     user = %Plausible.Auth.User{
       name: "Jane Smith",
       email: sequence(:email, &"email-#{&1}@example.com"),
-      password_hash: Plausible.Auth.Password.hash(pw)
+      password_hash: Plausible.Auth.Password.hash(pw),
+      trial_expiry_date: Timex.today() |> Timex.shift(days: 30)
     }
 
     merge_attributes(user, attrs)
