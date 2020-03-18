@@ -26,10 +26,38 @@ defmodule Plausible.BillingTest do
       assert Billing.trial_days_left(user) == 30
     end
 
-    test "is 29 days for day old user" do
-      user = insert(:user, inserted_at: Timex.shift(Timex.now(), days: -1))
+    test "is based on trial_expiry_date" do
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: 1))
 
-      assert Billing.trial_days_left(user) == 29
+      assert Billing.trial_days_left(user) == 1
+    end
+  end
+
+  describe "needs_to_upgrade?" do
+    test "is false for a trial user" do
+      user = insert(:user)
+
+      refute Billing.needs_to_upgrade?(user)
+    end
+
+    test "is true for a user with an expired trial" do
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
+
+      assert Billing.needs_to_upgrade?(user)
+    end
+
+    test "is false for a user with an expired trial but an active subscription" do
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
+      insert(:subscription, user: user)
+
+      refute Billing.needs_to_upgrade?(user)
+    end
+
+    test "is true for a user with an expired trial and a non-active subscription" do
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
+      insert(:subscription, user: user, status: "past_due")
+
+      assert Billing.needs_to_upgrade?(user)
     end
   end
 
