@@ -1,6 +1,6 @@
 <div class="w-full max-w-md mx-auto mt-8">
   <%= form_for @conn, "/contact", [class: "bg-white shadow-md rounded px-8 py-6 mb-4 mt-16"], fn f -> %>
-    <h2 class="text-xl font-black">Contact us</h2>
+    <h1 class="text-xl font-black">Contact us</h1>
     <p class="text-gray-600 mt-2">Please get in touch with any questions and thoughts, we'll get back to you as soon as possible!</p>
     <%= textarea f, :text, rows: 4, class: "transition bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300 text-xs mt-4" %>
     <%= if @conn.assigns[:current_user] do %>
