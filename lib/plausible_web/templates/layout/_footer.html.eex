@@ -1,7 +1,7 @@
 <footer class="w-full text-center text-gray-500 p-8 bottom-0" style="background: #191e38;">
   <div class="container flex items-center justify-between flex-col md:flex-row py-4">
     <div class="text-center md:text-left">
-      <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo_inverted.png"), style: "height: 2.5rem;") %>
+      <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo_inverted.png"), style: "height: 2.5rem;", alt: "Plausible logo") %>
       <p class="mt-2">Made by <a href="https://twitter.com/ukutaht" class="light-text underline">@ukutaht</a> in London, UK</p>
     </div>
     <ul class="text-center md:text-left my-4 md:m-0">

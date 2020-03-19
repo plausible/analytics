@@ -16,7 +16,7 @@
     <nav class="container flex items-center justify-between flex-wrap py-8">
       <div class="flex items-center flex-shrink-0">
         <a href="/">
-          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), style: "height: 2.5rem;") %>
+          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), style: "height: 2.5rem;", alt: "Plausible logo") %>
         </a>
       </div>
       <%= cond do %>

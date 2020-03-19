@@ -265,7 +265,7 @@
         <p class="text-lg">Plausible is focused on exactly what I need: clear insights into my site visitors, without getting in my way</p>
         <div class="mt-2 md:mt-4 flex items-center justify-start">
           <a href="https://www.felipesere.com/">
-            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/felipe.jpg"), class: "inline w-12 h-12 object-cover rounded-full mr-3") %>
+            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/felipe.jpg"), class: "inline w-12 h-12 object-cover rounded-full mr-3", alt: "Image of Felipe Sere") %>
           </a>
           <div>
             <a href="https://www.felipesere.com/">
@@ -283,7 +283,7 @@
         <p class="text-lg">All the stats you need in a single page. Plausible's user experience and user interface are the stark opposite of Google Analytics.</p>
         <div class="mt-2 md:mt-4 flex items-center justify-start">
           <a href="https://makisotman.com/">
-            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/makis.jpg"), class: "inline w-12 h-12 rounded-full mr-3") %>
+            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/makis.jpg"), class: "inline w-12 h-12 rounded-full mr-3", alt: "Image of Makis Otman") %>
           </a>
           <div>
             <a href="https://makisotman.com/">
@@ -301,7 +301,7 @@
         <p class="text-lg">I love Plausible because it is lightweight and looks beautiful. It shows me all the statistics that I need in a simple and unique style.</p>
         <div class="mt-2 md:mt-4 flex items-center justify-start">
           <a href="https://www.schranz.io/">
-            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/markus.jpg"), class: "inline w-12 h-12 rounded-full mr-3") %>
+            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/markus.jpg"), class: "inline w-12 h-12 rounded-full mr-3", alt: "Image of Markus Schranz") %>
           </a>
           <div>
             <a href="https://www.schranz.io/"><h4>Markus Schranz</h4></a>
