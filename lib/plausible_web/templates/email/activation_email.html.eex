@@ -1,5 +1,5 @@
 Hi <%= @name %>,
 <br /><br />
-Thank you for signing up to Plausible. <a href="<%= @link %>">Click here</a> to activate your account.
+Thank you for signing up for the free trial of Plausible, a simple and privacy-friendly alternative to Google Analytics.
 <br /><br />
-This link will expire in 24 hours. If you don't use it by then, you can request another activation link.
+<a href="<%= @link %>">Click here</a> to activate your trial account. This link will expire in 24 hours.

@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Email do
     |> to(user.email)
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("activation-email")
-    |> subject("Plausible activation link")
+    |> subject("Activate your Plausible free trial")
     |> render("activation_email.html", name: user.name, link: link)
   end
 
