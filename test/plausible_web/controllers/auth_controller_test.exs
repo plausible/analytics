@@ -37,6 +37,13 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert Plausible.Auth.find_user_by(email: "user@example.com")
     end
 
+    test "sends the welcome email", %{conn: conn} do
+      token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
+      get(conn, "/claim-activation?token=#{token}")
+
+      assert_email_delivered_with(subject: "Welcome to Plausible")
+    end
+
     test "redirects new user to create a password", %{conn: conn} do
       token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
       conn = get(conn, "/claim-activation?token=#{token}")

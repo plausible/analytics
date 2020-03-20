@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("welcome-email")
-    |> subject("Welcome to Plausible :) Plus, a quick question...")
+    |> subject("Welcome to Plausible")
     |> render("welcome_email.html", user: user)
   end
 
