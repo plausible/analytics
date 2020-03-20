@@ -2,6 +2,15 @@ defmodule PlausibleWeb.Email do
   use Bamboo.Phoenix, view: PlausibleWeb.EmailView
   import Bamboo.PostmarkHelper
 
+  def activation_email(user, link) do
+    new_email()
+    |> to(user.email)
+    |> from("Uku Taht <uku@plausible.io>")
+    |> tag("activation-email")
+    |> subject("Activate your Plausible free trial")
+    |> render("activation_email.html", name: user.name, link: link)
+  end
+
   def welcome_email(user) do
     new_email()
     |> to(user)
@@ -29,15 +38,6 @@ defmodule PlausibleWeb.Email do
     |> render("password_reset_email.html", reset_link: reset_link)
   end
 
-  def activation_email(user, link) do
-    new_email()
-    |> to(user.email)
-    |> from("Uku Taht <uku@plausible.io>")
-    |> tag("activation-email")
-    |> subject("Activate your Plausible free trial")
-    |> render("activation_email.html", name: user.name, link: link)
-  end
-
   def trial_one_week_reminder(user) do
     new_email()
     |> to(user)
@@ -63,15 +63,6 @@ defmodule PlausibleWeb.Email do
     |> tag("trial-over-email")
     |> subject("Your Plausible trial has ended")
     |> render("trial_over_email.html", user: user)
-  end
-
-  def feedback_survey_email(user) do
-    new_email()
-    |> to(user)
-    |> from("Uku Taht <uku@plausible.io>")
-    |> tag("feedback-survey-email")
-    |> subject("Plausible feedback")
-    |> render("feedback_survey.html", user: user)
   end
 
   def feedback(from, text) do
