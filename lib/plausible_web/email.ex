@@ -20,13 +20,22 @@ defmodule PlausibleWeb.Email do
     |> render("welcome_email.html", user: user)
   end
 
-  def help_email(user) do
+  def site_setup_help(user, site) do
     new_email()
     |> to(user)
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("help-email")
-    |> subject("Your Plausible setup")
-    |> render("help_email.html", user: user)
+    |> subject("Your Plausible setup: Waiting for the first page views")
+    |> render("site_setup_help_email.html", user: user, site: site)
+  end
+
+  def site_setup_success(user, site) do
+    new_email()
+    |> to(user)
+    |> from("Uku Taht <uku@plausible.io>")
+    |> tag("setup-success-email")
+    |> subject("Plausible is now tracking your website stats")
+    |> render("site_setup_success_email.html", user: user, site: site)
   end
 
   def password_reset_email(email, reset_link) do
