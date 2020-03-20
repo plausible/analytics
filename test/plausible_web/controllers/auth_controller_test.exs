@@ -7,7 +7,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "shows the register form", %{conn: conn} do
       conn = get(conn, "/register")
 
-      assert html_response(conn, 200) =~ "Enter your details to get started"
+      assert html_response(conn, 200) =~ "Enter your details"
     end
 
     test "registering sends an activation link", %{conn: conn} do
@@ -16,7 +16,7 @@ defmodule PlausibleWeb.AuthControllerTest do
         email: "user@example.com"
       })
 
-      assert_email_delivered_with(subject: "Plausible activation link")
+      assert_email_delivered_with(subject: "Activate your Plausible free trial")
     end
 
     test "user sees success page after registering", %{conn: conn} do
