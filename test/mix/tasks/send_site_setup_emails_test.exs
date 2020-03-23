@@ -69,6 +69,27 @@ defmodule Mix.Tasks.SendSiteSetupEmailsTest do
     end
   end
 
+  describe "trial user who has not set up a website" do
+    test "does not send an email before 48h have passed" do
+      insert(:user, inserted_at: hours_ago(47))
+
+      Mix.Tasks.SendSiteSetupEmails.execute()
+
+      assert_no_emails_delivered()
+    end
+
+    test "sends the create site email after 48h" do
+      user = insert(:user, inserted_at: hours_ago(49))
+
+      Mix.Tasks.SendSiteSetupEmails.execute()
+
+      assert_email_delivered_with(
+        to: [{user.name, user.email}],
+        subject: "Your Plausible setup: Add your website details"
+      )
+    end
+  end
+
   defp hours_ago(hours) do
     NaiveDateTime.utc_now()
     |> NaiveDateTime.truncate(:second)

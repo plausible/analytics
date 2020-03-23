@@ -13,24 +13,23 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
   end
 
   def execute(args \\ []) do
+    send_create_site_emails(args)
     send_setup_help_emails(args)
     send_setup_success_emails(args)
   end
 
-  defp send_setup_success_emails(args) do
+  defp send_create_site_emails(args \\ []) do
     q =
-      from(s in Plausible.Site,
-        left_join: se in "setup_success_emails", on: se.site_id == s.id,
+      from(s in Plausible.Auth.User,
+        left_join: se in "create_site_emails", on: se.user_id == s.id,
         where: is_nil(se.id),
-        where: s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval"),
-        preload: :members
+        where: s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval") and s.inserted_at < fragment("(now() at time zone 'utc') - '48 hours'::interval"),
+        preload: :sites
       )
 
-    for site <- Repo.all(q) do
-      owner = List.first(site.members)
-
-      if Plausible.Sites.has_pageviews?(site) do
-        send_setup_success_email(args, owner, site)
+    for user <- Repo.all(q) do
+      if Enum.count(user.sites) == 0 do
+        send_create_site_email(args, user)
       end
     end
   end
@@ -54,6 +53,38 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
         send_setup_help_email(args, owner, site)
       end
     end
+  end
+
+  defp send_setup_success_emails(args) do
+    q =
+      from(s in Plausible.Site,
+        left_join: se in "setup_success_emails", on: se.site_id == s.id,
+        where: is_nil(se.id),
+        where: s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval"),
+        preload: :members
+      )
+
+    for site <- Repo.all(q) do
+      owner = List.first(site.members)
+
+      if Plausible.Sites.has_pageviews?(site) do
+        send_setup_success_email(args, owner, site)
+      end
+    end
+  end
+
+  defp send_create_site_email(["--dry-run"], user) do
+    Logger.info("DRY RUN: create site email for #{user.name}")
+  end
+
+  defp send_create_site_email(_, user) do
+    PlausibleWeb.Email.create_site_email(user)
+    |> Plausible.Mailer.deliver_now()
+
+    Repo.insert_all("create_site_emails", [%{
+      user_id: user.id,
+      timestamp: NaiveDateTime.utc_now()
+    }])
   end
 
   defp send_setup_success_email(["--dry-run"], _, site) do

@@ -20,6 +20,15 @@ defmodule PlausibleWeb.Email do
     |> render("welcome_email.html", user: user)
   end
 
+  def create_site_email(user) do
+    new_email()
+    |> to(user)
+    |> from("Uku Taht <uku@plausible.io>")
+    |> tag("create-site-email")
+    |> subject("Your Plausible setup: Add your website details")
+    |> render("create_site_email.html", user: user)
+  end
+
   def site_setup_help(user, site) do
     new_email()
     |> to(user)
