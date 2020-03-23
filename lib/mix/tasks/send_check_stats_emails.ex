@@ -20,11 +20,14 @@ defmodule Mix.Tasks.SendCheckStatsEmails do
         where:
         u.inserted_at > fragment("(now() at time zone 'utc') - '14 days'::interval") and
         u.inserted_at < fragment("(now() at time zone 'utc') - '7 days'::interval") and
-        u.last_seen < fragment("(now() at time zone 'utc') - '7 days'::interval")
+        u.last_seen < fragment("(now() at time zone 'utc') - '7 days'::interval"),
+        preload: [sites: :weekly_report]
       )
 
     for user <- Repo.all(q) do
-      if Plausible.Auth.user_completed_setup?(user) do
+      enabled_report = Enum.any?(user.sites, fn site -> site.weekly_report end)
+
+      if Plausible.Auth.user_completed_setup?(user) && !enabled_report do
         send_check_stats_email(args, user)
       end
     end
