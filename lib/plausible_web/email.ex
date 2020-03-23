@@ -14,6 +14,7 @@ defmodule PlausibleWeb.Email do
   def welcome_email(user) do
     new_email()
     |> to(user)
+    |> bcc("uku@plausible.io")
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("welcome-email")
     |> subject("Welcome to Plausible")
@@ -23,6 +24,7 @@ defmodule PlausibleWeb.Email do
   def create_site_email(user) do
     new_email()
     |> to(user)
+    |> bcc("uku@plausible.io")
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("create-site-email")
     |> subject("Your Plausible setup: Add your website details")
@@ -32,6 +34,7 @@ defmodule PlausibleWeb.Email do
   def site_setup_help(user, site) do
     new_email()
     |> to(user)
+    |> bcc("uku@plausible.io")
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("help-email")
     |> subject("Your Plausible setup: Waiting for the first page views")
@@ -41,6 +44,7 @@ defmodule PlausibleWeb.Email do
   def site_setup_success(user, site) do
     new_email()
     |> to(user)
+    |> bcc("uku@plausible.io")
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("setup-success-email")
     |> subject("Plausible is now tracking your website stats")
@@ -50,6 +54,7 @@ defmodule PlausibleWeb.Email do
   def check_stats_email(user) do
     new_email()
     |> to(user)
+    |> bcc("uku@plausible.io")
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("check-stats-email")
     |> subject("Check your Plausible website stats")
@@ -68,6 +73,7 @@ defmodule PlausibleWeb.Email do
   def trial_one_week_reminder(user) do
     new_email()
     |> to(user)
+    |> bcc("uku@plausible.io")
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("trial-one-week-reminder")
     |> subject("14 days left on your Plausible trial")
@@ -77,6 +83,7 @@ defmodule PlausibleWeb.Email do
   def trial_upgrade_email(user, day, pageviews) do
     new_email()
     |> to(user)
+    |> bcc("uku@plausible.io")
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("trial-upgrade-email")
     |> subject("Your Plausible trial ends #{day}")
@@ -86,6 +93,7 @@ defmodule PlausibleWeb.Email do
   def trial_over_email(user) do
     new_email()
     |> to(user)
+    |> bcc("uku@plausible.io")
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("trial-over-email")
     |> subject("Your Plausible trial has ended")
