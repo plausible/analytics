@@ -33,6 +33,20 @@ defmodule Plausible.BillingTest do
     end
   end
 
+  describe "on_trial?" do
+    test "is true with >= 0 trial days left" do
+      user = insert(:user)
+
+      assert Billing.on_trial?(user)
+    end
+
+    test "is false with < 0 trial days left" do
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: -1))
+
+      refute Billing.on_trial?(user)
+    end
+  end
+
   describe "needs_to_upgrade?" do
     test "is false for a trial user" do
       user = insert(:user)
