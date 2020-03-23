@@ -1,7 +1,7 @@
 Hey <%= user_salutation(@user) %>,
 <br /><br />
-I’m thrilled to welcome you to Plausible! Plausible is here to provide you all the
-valuable website traffic insights at a glance while respecting the privacy of your visitors
+I'm building Plausible to provide a simple and ethical approach to tracking website visitors.
+I'm super excited to have you on board!
 <br /><br />
 To start collecting stats, you need to <%= link("add a site on Plausible", to: "https://plausible.io/sites/new") %>.
 <br /><br />
