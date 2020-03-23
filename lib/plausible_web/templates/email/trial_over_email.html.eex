@@ -1,10 +1,10 @@
 Hey <%= user_salutation(@user) %>,
 <br /><br />
-Your free 30-day trial has come to an end. Upgrade to a paid plan now to access to your stats again.<br /><br />
+Your free Plausible trial has now expired. Upgrade your account to continue receiving valuable website traffic insights at a glance while respecting the privacy of your visitors and still having a fast loading site. <br /><br />
 
-<%= link("Upgrade now", to: "https://plausible.io/billing/upgrade") %>
+<%= link("Upgrade now", to: "https://plausible.io/billing/upgrade") %> <br />
 
-We will keep recording stats for another month to give you time to upgrade. If you still haven't upgraded by then, we will stop recording.
+We will keep recording stats for another month to give you time to upgrade.
 
 <br /><br />
 Thanks,<br />

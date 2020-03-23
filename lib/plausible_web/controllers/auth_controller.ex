@@ -33,6 +33,9 @@ defmodule PlausibleWeb.AuthController do
       {:ok, %{name: name, email: email}} ->
         case Auth.create_user(name, email) do
           {:ok, user} ->
+            PlausibleWeb.Email.welcome_email(user)
+            |> Plausible.Mailer.deliver_now()
+
             conn
             |> put_session(:current_user_id, user.id)
             |> redirect(to: "/password")

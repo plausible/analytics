@@ -7,7 +7,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "shows the register form", %{conn: conn} do
       conn = get(conn, "/register")
 
-      assert html_response(conn, 200) =~ "Enter your details to get started"
+      assert html_response(conn, 200) =~ "Enter your details"
     end
 
     test "registering sends an activation link", %{conn: conn} do
@@ -16,7 +16,7 @@ defmodule PlausibleWeb.AuthControllerTest do
         email: "user@example.com"
       })
 
-      assert_email_delivered_with(subject: "Plausible activation link")
+      assert_email_delivered_with(subject: "Activate your Plausible free trial")
     end
 
     test "user sees success page after registering", %{conn: conn} do
@@ -35,6 +35,13 @@ defmodule PlausibleWeb.AuthControllerTest do
       get(conn, "/claim-activation?token=#{token}")
 
       assert Plausible.Auth.find_user_by(email: "user@example.com")
+    end
+
+    test "sends the welcome email", %{conn: conn} do
+      token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
+      get(conn, "/claim-activation?token=#{token}")
+
+      assert_email_delivered_with(subject: "Welcome to Plausible")
     end
 
     test "redirects new user to create a password", %{conn: conn} do

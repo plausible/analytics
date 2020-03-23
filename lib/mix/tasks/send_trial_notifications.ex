@@ -24,9 +24,9 @@ defmodule Mix.Tasks.SendTrialNotifications do
 
     for user <- users do
       case Timex.diff(user.trial_expiry_date, Timex.today(), :days) do
-       14 ->
+       7 ->
           if Plausible.Auth.user_completed_setup?(user) do
-            send_two_week_reminder(args, user)
+            send_one_week_reminder(args, user)
           end
        1 ->
           if Plausible.Auth.user_completed_setup?(user) do
@@ -46,12 +46,12 @@ defmodule Mix.Tasks.SendTrialNotifications do
     end
   end
 
-  defp send_two_week_reminder(["--dry-run"], user) do
-    Logger.info("DRY RUN: 2-week trial notification email to #{user.name} [inserted=#{user.inserted_at}]")
+  defp send_one_week_reminder(["--dry-run"], user) do
+    Logger.info("DRY RUN: one week trial notification email to #{user.name} [inserted=#{user.inserted_at}]")
   end
 
-  defp send_two_week_reminder(_, user) do
-    PlausibleWeb.Email.trial_two_week_reminder(user)
+  defp send_one_week_reminder(_, user) do
+    PlausibleWeb.Email.trial_one_week_reminder(user)
     |> Plausible.Mailer.deliver_now()
   end
 

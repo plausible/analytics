@@ -83,6 +83,8 @@ defmodule Plausible.Billing do
     end
   end
 
+  def on_trial?(user), do: trial_days_left(user) >= 0
+
   def trial_days_left(user) do
     Timex.diff(user.trial_expiry_date, Timex.today(), :days)
   end
