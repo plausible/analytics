@@ -4,7 +4,7 @@ defmodule Mix.Tasks.SendCheckStatsEmails do
   require Logger
 
   @doc """
-  This is scheduled to run every 6 hours.
+  This is scheduled to run daily.
   """
 
   def run(args) do
