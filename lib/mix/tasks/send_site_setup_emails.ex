@@ -18,7 +18,7 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
     send_setup_success_emails(args)
   end
 
-  defp send_create_site_emails(args \\ []) do
+  defp send_create_site_emails(args) do
     q =
       from(s in Plausible.Auth.User,
         left_join: se in "create_site_emails", on: se.user_id == s.id,

@@ -47,6 +47,15 @@ defmodule PlausibleWeb.Email do
     |> render("site_setup_success_email.html", user: user, site: site)
   end
 
+  def check_stats_email(user) do
+    new_email()
+    |> to(user)
+    |> from("Uku Taht <uku@plausible.io>")
+    |> tag("check-stats-email")
+    |> subject("Check your Plausible website stats")
+    |> render("check_stats_email.html", user: user)
+  end
+
   def password_reset_email(email, reset_link) do
     new_email()
     |> to(email)
