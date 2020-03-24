@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
 
     test "returns top referrer sources by user ids", %{conn: conn, site: site} do
       pageview1 = insert(:pageview, domain: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, domain: site.domain, referrer_source: "Google", user_id: pageview1.user_id, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, domain: site.domain, referrer_source: "Google", fingerprint: pageview1.fingerprint, timestamp: ~N[2019-01-01 02:00:00])
       insert(:pageview, domain: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
       insert(:pageview, domain: site.domain, referrer_source: "Bing", timestamp: ~N[2019-01-01 02:00:00])
 

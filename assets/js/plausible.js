@@ -4,9 +4,11 @@
   try {
     const scriptEl = window.document.querySelector('[src*="' + plausibleHost +'"]')
     const domainAttr = scriptEl && scriptEl.getAttribute('data-domain')
+    const trackAcquisitionAttr = scriptEl && scriptEl.getAttribute('data-track-acquisition')
 
     const CONFIG = {
-      domain: domainAttr || window.location.hostname
+      domain: domainAttr || window.location.hostname,
+      trackAcquisition: typeof(trackAcquisitionAttr) === 'string'
     }
 
     function setCookie(name,value) {
@@ -21,18 +23,6 @@
         "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
       ));
       return matches ? decodeURIComponent(matches[1]) : null;
-    }
-
-    function pseudoUUIDv4() {
-      var d = new Date().getTime();
-      if (typeof performance !== 'undefined' && typeof performance.now === 'function'){
-        d += performance.now(); //use high-precision timer if available
-      }
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        var r = (d + Math.random() * 16) % 16 | 0;
-        d = Math.floor(d / 16);
-        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-      });
     }
 
     function ignore(reason) {
@@ -52,30 +42,23 @@
       var userData = JSON.parse(getCookie('plausible_user'))
 
       if (userData) {
-        userData.new_visitor = false
-        if (userData.referrer) {
-          userData.initial_referrer = userData.referrer && decodeURIComponent(userData.referrer)
-        } else {
-          userData.initial_referrer = userData.initial_referrer && decodeURIComponent(userData.initial_referrer)
-          userData.initial_source = userData.initial_source && decodeURIComponent(userData.initial_source)
-        }
-        return userData
-      } else {
         return {
-          uid: pseudoUUIDv4(),
-          new_visitor: true,
-          initial_referrer: window.document.referrer,
+          initial_referrer: userData.initial_referrer && decodeURIComponent(userData.initial_referrer),
+          initial_source: userData.initial_source && decodeURIComponent(userData.initial_source)
+        }
+      } else {
+        userData = {
+          initial_referrer: window.document.referrer || null,
           initial_source: getSourceFromQueryParam(),
         }
-      }
-    }
 
-    function setUserData(payload) {
-      setCookie('plausible_user', JSON.stringify({
-        uid: payload.uid,
-        initial_referrer: payload.initial_referrer && encodeURIComponent(payload.initial_referrer),
-        initial_source: payload.initial_source && encodeURIComponent(payload.initial_source),
-      }))
+        setCookie('plausible_user', JSON.stringify({
+          initial_referrer: userData.initial_referrer && encodeURIComponent(userData.initial_referrer),
+          initial_source: userData.initial_source && encodeURIComponent(userData.initial_source),
+        }))
+
+        return userData
+      }
     }
 
     function trigger(eventName, options) {
@@ -83,11 +66,11 @@
       if (window.location.protocol === 'file:') return ignore('website is running locally');
       if (window.document.visibilityState === 'prerender') return ignore('document is prerendering');
 
-      var payload = getUserData()
+      var payload = CONFIG['trackAcquisition'] ? getUserData() : {}
       payload.name = eventName
       payload.url = getUrl()
       payload.domain = CONFIG['domain']
-      payload.referrer = window.document.referrer
+      payload.referrer = window.document.referrer || null
       payload.source = getSourceFromQueryParam()
       payload.user_agent = window.navigator.userAgent
       payload.screen_width = window.innerWidth
@@ -100,7 +83,6 @@
 
       request.onreadystatechange = function() {
         if (request.readyState == XMLHttpRequest.DONE) {
-          setUserData(payload)
           options && options.callback && options.callback()
         }
       }

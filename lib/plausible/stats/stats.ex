@@ -32,7 +32,7 @@ defmodule Plausible.Stats do
       from e in base_query(site, %{query | filters: %{}}),
       group_by: 1,
       order_by: 1,
-      select: {fragment("date_trunc('month', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.user_id, :distinct)}
+      select: {fragment("date_trunc('month', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.fingerprint, :distinct)}
     ) |> Enum.into(%{})
     |> transform_keys(fn dt -> NaiveDateTime.to_date(dt) end)
 
@@ -41,7 +41,7 @@ defmodule Plausible.Stats do
         from e in base_query(site, query),
         group_by: 1,
         order_by: 1,
-        select: {fragment("date_trunc('month', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.user_id, :distinct)}
+        select: {fragment("date_trunc('month', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.fingerprint, :distinct)}
       ) |> Enum.into(%{})
       |> transform_keys(fn dt -> NaiveDateTime.to_date(dt) end)
     end
@@ -61,7 +61,7 @@ defmodule Plausible.Stats do
       from e in base_query(site, %{ query | filters: %{} }),
       group_by: 1,
       order_by: 1,
-      select: {fragment("date_trunc('day', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.user_id, :distinct)}
+      select: {fragment("date_trunc('day', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.fingerprint, :distinct)}
     ) |> Enum.into(%{})
     |> transform_keys(fn dt -> NaiveDateTime.to_date(dt) end)
 
@@ -70,7 +70,7 @@ defmodule Plausible.Stats do
         from e in base_query(site, query),
         group_by: 1,
         order_by: 1,
-        select: {fragment("date_trunc('day', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.user_id, :distinct)}
+        select: {fragment("date_trunc('day', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.fingerprint, :distinct)}
       ) |> Enum.into(%{})
       |> transform_keys(fn dt -> NaiveDateTime.to_date(dt) end)
     end
@@ -98,7 +98,7 @@ defmodule Plausible.Stats do
       from e in base_query(site, %{query | filters: %{}}),
       group_by: 1,
       order_by: 1,
-      select: {fragment("date_trunc('hour', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.user_id, :distinct)}
+      select: {fragment("date_trunc('hour', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.fingerprint, :distinct)}
     )
     |> Enum.into(%{})
     |> transform_keys(fn dt -> NaiveDateTime.truncate(dt, :second) end)
@@ -108,7 +108,7 @@ defmodule Plausible.Stats do
         from e in base_query(site, query),
         group_by: 1,
         order_by: 1,
-        select: {fragment("date_trunc('hour', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.user_id, :distinct)}
+        select: {fragment("date_trunc('hour', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.fingerprint, :distinct)}
       )
       |> Enum.into(%{})
       |> transform_keys(fn dt -> NaiveDateTime.truncate(dt, :second) end)
@@ -125,7 +125,7 @@ defmodule Plausible.Stats do
   def bounce_rate(site, query) do
     {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
 
-    sessions_query = from(s in Plausible.Session,
+    sessions_query = from(s in Plausible.FingerprintSession,
       where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime
     )
@@ -141,20 +141,20 @@ defmodule Plausible.Stats do
   def pageviews_and_visitors(site, query) do
     Repo.one(from(
       e in base_query(site, query),
-      select: {count(e.id), count(e.user_id, :distinct)}
+      select: {count(e.id), count(e.fingerprint, :distinct)}
     ))
   end
 
   def unique_visitors(site, query) do
     Repo.one(from(
       e in base_query(site, query),
-      select: count(e.user_id, :distinct)
+      select: count(e.fingerprint, :distinct)
     ))
   end
 
   def top_referrers_for_goal(site, query, limit \\ 5) do
     Repo.all(from e in base_query(site, query),
-      select: %{name: e.initial_referrer_source, url: min(e.initial_referrer), count: count(e.user_id, :distinct)},
+      select: %{name: e.initial_referrer_source, url: min(e.initial_referrer), count: count(e.fingerprint, :distinct)},
       group_by: e.initial_referrer_source,
       where: not is_nil(e.initial_referrer_source),
       order_by: [desc: 3],
@@ -166,7 +166,7 @@ defmodule Plausible.Stats do
 
   def top_referrers(site, query, limit \\ 5, include \\ []) do
     referrers = Repo.all(from e in base_query(site, query),
-      select: %{name: e.referrer_source, url: min(e.referrer), count: count(e.user_id, :distinct)},
+      select: %{name: e.referrer_source, url: min(e.referrer), count: count(e.fingerprint, :distinct)},
       group_by: e.referrer_source,
       where: not is_nil(e.referrer_source),
       order_by: [desc: 3],
@@ -190,7 +190,7 @@ defmodule Plausible.Stats do
     {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
 
     total_sessions_by_referrer = Repo.all(
-      from s in Plausible.Session,
+      from s in Plausible.FingerprintSession,
       where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.referrer_source in ^referrers,
@@ -199,7 +199,7 @@ defmodule Plausible.Stats do
     ) |> Enum.into(%{})
 
     bounced_sessions_by_referrer = Repo.all(
-      from s in Plausible.Session,
+      from s in Plausible.FingerprintSession,
       where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.is_bounce,
@@ -223,7 +223,7 @@ defmodule Plausible.Stats do
   def visitors_from_referrer(site, query, referrer) do
     Repo.one(
       from e in base_query(site, query),
-      select: count(e.user_id, :distinct),
+      select: count(e.fingerprint, :distinct),
       where: e.referrer_source == ^referrer
     )
   end
@@ -231,7 +231,7 @@ defmodule Plausible.Stats do
   def conversions_from_referrer(site, query, referrer) do
     Repo.one(
       from e in base_query(site, query),
-      select: count(e.user_id, :distinct),
+      select: count(e.fingerprint, :distinct),
       where: e.initial_referrer_source == ^referrer
     )
   end
@@ -239,7 +239,7 @@ defmodule Plausible.Stats do
   def referrer_drilldown(site, query, referrer, include \\ []) do
     referring_urls = Repo.all(
       from e in base_query(site, query),
-      select: %{name: e.referrer, count: count(e.user_id, :distinct)},
+      select: %{name: e.referrer, count: count(e.fingerprint, :distinct)},
       group_by: e.referrer,
       where: e.referrer_source == ^referrer,
       order_by: [desc: 2],
@@ -275,7 +275,7 @@ defmodule Plausible.Stats do
   def referrer_drilldown_for_goal(site, query, referrer) do
     Repo.all(
       from e in base_query(site, query),
-      select: %{name: e.initial_referrer, count: count(e.user_id, :distinct)},
+      select: %{name: e.initial_referrer, count: count(e.fingerprint, :distinct)},
       group_by: e.initial_referrer,
       where: e.initial_referrer_source == ^referrer,
       order_by: [desc: 2],
@@ -287,7 +287,7 @@ defmodule Plausible.Stats do
     {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
 
     total_sessions_by_url = Repo.all(
-      from s in Plausible.Session,
+      from s in Plausible.FingerprintSession,
       where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.referrer in ^referring_urls,
@@ -296,7 +296,7 @@ defmodule Plausible.Stats do
     ) |> Enum.into(%{})
 
     bounced_sessions_by_url = Repo.all(
-      from s in Plausible.Session,
+      from s in Plausible.FingerprintSession,
       where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.is_bounce,
@@ -340,7 +340,7 @@ defmodule Plausible.Stats do
     {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
 
     total_sessions_by_url = Repo.all(
-      from s in Plausible.Session,
+      from s in Plausible.FingerprintSession,
       where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.entry_page in ^page_urls,
@@ -349,7 +349,7 @@ defmodule Plausible.Stats do
     ) |> Enum.into(%{})
 
     bounced_sessions_by_url = Repo.all(
-      from s in Plausible.Session,
+      from s in Plausible.FingerprintSession,
       where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: s.is_bounce,
@@ -381,7 +381,7 @@ defmodule Plausible.Stats do
 
   def top_screen_sizes(site, query) do
     Repo.all(from e in base_query(site, query),
-      select: %{name: e.screen_size, count: count(e.user_id, :distinct)},
+      select: %{name: e.screen_size, count: count(e.fingerprint, :distinct)},
       group_by: e.screen_size,
       where: not is_nil(e.screen_size)
     )
@@ -395,7 +395,7 @@ defmodule Plausible.Stats do
 
   def countries(site, query) do
      Repo.all(from e in base_query(site, query),
-      select: %{name: e.country_code, count: count(e.user_id, :distinct)},
+      select: %{name: e.country_code, count: count(e.fingerprint, :distinct)},
       group_by: e.country_code,
       where: not is_nil(e.country_code),
       order_by: [desc: 2]
@@ -411,7 +411,7 @@ defmodule Plausible.Stats do
 
   def browsers(site, query, limit \\ 5) do
     Repo.all(from e in base_query(site, query),
-      select: %{name: e.browser, count: count(e.user_id, :distinct)},
+      select: %{name: e.browser, count: count(e.fingerprint, :distinct)},
       group_by: e.browser,
       where: not is_nil(e.browser),
       order_by: [desc: 2]
@@ -422,7 +422,7 @@ defmodule Plausible.Stats do
 
   def operating_systems(site, query, limit \\ 5) do
     Repo.all(from e in base_query(site, query),
-      select: %{name: e.operating_system, count: count(e.user_id, :distinct)},
+      select: %{name: e.operating_system, count: count(e.fingerprint, :distinct)},
       group_by: e.operating_system,
       where: not is_nil(e.operating_system),
       order_by: [desc: 2]
@@ -436,13 +436,13 @@ defmodule Plausible.Stats do
       from e in Plausible.Event,
       where: e.timestamp >= fragment("(now() at time zone 'utc') - '5 minutes'::interval"),
       where: e.domain == ^site.domain,
-      select: count(e.user_id, :distinct)
+      select: count(e.fingerprint, :distinct)
     )
   end
 
   def goal_conversions(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
     Repo.all(from e in base_query(site, query),
-      select: count(e.user_id, :distinct),
+      select: count(e.fingerprint, :distinct),
       group_by: e.name,
       order_by: [desc: 1]
     ) |> Enum.map(fn count -> %{name: goal, count: count} end)
@@ -463,7 +463,7 @@ defmodule Plausible.Stats do
       Repo.all(
         from e in base_query(site, query, events),
         group_by: e.name,
-        select: %{name: e.name, count: count(e.user_id, :distinct)}
+        select: %{name: e.name, count: count(e.fingerprint, :distinct)}
       )
     else
       []
@@ -479,7 +479,7 @@ defmodule Plausible.Stats do
         from e in base_query(site, query),
         where: e.pathname in ^pages,
         group_by: e.pathname,
-        select: %{name: fragment("concat('Visit ', ?)", e.pathname), count: count(e.user_id, :distinct)}
+        select: %{name: fragment("concat('Visit ', ?)", e.pathname), count: count(e.fingerprint, :distinct)}
       )
     else
       []

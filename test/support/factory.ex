@@ -26,12 +26,11 @@ defmodule Plausible.Factory do
   def session_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 
-    %Plausible.Session{
+    %Plausible.FingerprintSession{
       hostname: hostname,
       domain: hostname,
-      new_visitor: true,
       entry_page: "/",
-      user_id: UUID.uuid4(),
+      fingerprint: UUID.uuid4(),
       start: Timex.now(),
       is_bounce: false
     }
@@ -53,7 +52,9 @@ defmodule Plausible.Factory do
       hostname: hostname,
       domain: hostname,
       pathname: "/",
-      new_visitor: true, user_id: UUID.uuid4(),
+      new_visitor: true,
+      user_id: UUID.uuid4(),
+      fingerprint: UUID.uuid4()
     }
   end
 
