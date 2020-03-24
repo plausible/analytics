@@ -76,7 +76,7 @@ defmodule PlausibleWeb.Email do
     |> bcc("uku@plausible.io")
     |> from("Uku Taht <uku@plausible.io>")
     |> tag("trial-one-week-reminder")
-    |> subject("14 days left on your Plausible trial")
+    |> subject("Your Plausible trial expires next week")
     |> render("trial_one_week_reminder.html", user: user)
   end
 
