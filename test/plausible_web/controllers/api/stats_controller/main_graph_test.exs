@@ -88,8 +88,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     setup [:create_user, :log_in, :create_site]
 
     test "unique users counts distinct user ids", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 00:00:00])
-      insert(:pageview, domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 23:59:00])
+      insert(:pageview, domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 00:00:00])
+      insert(:pageview, domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 23:59:00])
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
@@ -108,8 +108,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "counts total pageviews even from same user ids", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 00:00:00])
-      insert(:pageview, domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 23:59:00])
+      insert(:pageview, domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 00:00:00])
+      insert(:pageview, domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 23:59:00])
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
@@ -160,8 +160,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
     test "returns total unique visitors", %{conn: conn, site: site} do
       insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 01:00:00])
-      insert(:event, name: "Signup", domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "Signup", domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 02:00:00])
 
       filters = Jason.encode!(%{goal: "Signup"})
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01&filters=#{filters}")
