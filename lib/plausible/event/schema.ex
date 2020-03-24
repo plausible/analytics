@@ -7,8 +7,6 @@ defmodule Plausible.Event do
     field :domain, :string
     field :hostname, :string
     field :pathname, :string
-    field :new_visitor, :boolean
-    field :user_id, :binary_id
     field :fingerprint, :string
 
     field :referrer, :string
@@ -25,7 +23,7 @@ defmodule Plausible.Event do
 
   def changeset(pageview, attrs) do
     pageview
-    |> cast(attrs, [:name, :domain, :hostname, :pathname, :new_visitor, :user_id, :fingerprint, :operating_system, :browser, :referrer, :referrer_source, :initial_referrer, :initial_referrer_source, :country_code, :screen_size])
-    |> validate_required([:name, :domain, :hostname, :pathname, :new_visitor, :user_id, :fingerprint])
+    |> cast(attrs, [:name, :domain, :hostname, :pathname, :fingerprint, :operating_system, :browser, :referrer, :referrer_source, :initial_referrer, :initial_referrer_source, :country_code, :screen_size])
+    |> validate_required([:name, :domain, :hostname, :pathname, :fingerprint])
   end
 end
