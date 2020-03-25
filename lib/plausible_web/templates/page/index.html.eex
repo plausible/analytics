@@ -254,245 +254,340 @@
   </div>
 </div>
 
-<div class="bg-white">
-  <div class="container mx-auto text-center pt-12 pb-24">
-    <h2 class="text-3xl tracking-tight leading-10 font-extrabold text-gray-900 sm:text-4xl sm:leading-none md:text-5xl">
-    Fully open-source web analytics
-    </h2>
-    <p class="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-    Plausible is available on Github so you can check out the code. We welcome feedback, have a public roadmap and are available to you via email.
-    </p>
-    <div class="mt-8 flex justify-center">
-      <div class="inline-flex rounded-md shadow">
-        <a href="https://github.com/plausible-insights/plausible" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out">
-          Github repo
-        </a>
+<div class="py-12 bg-white overflow-hidden md:py-20 lg:py-24">
+  <div class="relative max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+    <svg class="absolute top-full right-full transform translate-x-1/3 -translate-y-1/4 lg:translate-x-1/2 xl:-translate-y-1/2" width="404" height="404" fill="none" viewBox="0 0 404 404">
+      <defs>
+        <pattern id="ad119f34-7694-4c31-947f-5c9d249b21f3" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect x="0" y="0" width="4" height="4" class="text-gray-200" fill="currentColor" />
+        </pattern>
+      </defs>
+      <rect width="404" height="404" fill="url(#ad119f34-7694-4c31-947f-5c9d249b21f3)" />
+    </svg>
+
+    <div class="relative">
+      <blockquote class="mt-8">
+        <div class="max-w-3xl mx-auto text-center text-2xl leading-9 font-medium text-gray-900">
+          <p>
+            &ldquo;Plausible is focused on exactly what I need: clear insights into my site visitors, without getting in my way.
+          </p>
+        </div>
+        <footer class="mt-8">
+          <div class="md:flex md:items-center md:justify-center">
+            <div class="md:flex-shrink-0">
+              <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/felipe.jpg"), class: "mx-auto h-10 w-10 rounded-full", alt: "Image of Felipe Sere") %>
+            </div>
+            <div class="mt-3 text-center md:mt-0 md:ml-4 md:flex md:items-center">
+              <div class="text-base leading-6 font-medium text-gray-900">Felipe Sere</div>
+
+              <svg class="hidden md:block mx-1 h-5 w-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M11 0h3L9 20H6l5-20z" />
+              </svg>
+
+              <div class="text-base leading-6 font-medium text-gray-500">Software Engineer, 8th Light</div>
+            </div>
+          </div>
+        </footer>
+      </blockquote>
+    </div>
+  </div>
+</div>
+
+<div class="bg-gray-900">
+  <div class="pt-12 sm:pt-16 lg:pt-24">
+    <div class="max-w-screen-xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mx-auto lg:max-w-none">
+        <h2 class="text-lg leading-6 font-semibold text-gray-300 uppercase tracking-wider">
+          Pricing
+        </h2>
+        <p class="mt-2 text-3xl leading-9 font-extrabold text-white sm:text-4xl sm:leading-10 lg:text-5xl lg:leading-none">
+          Simple, traffic-based pricing
+        </p>
+        <p class="mt-2 text-xl leading-7 text-gray-300">
+          Sign up for 30-day unlimited trial. No credit card required.
+        </p>
       </div>
-      <div class="ml-3 inline-flex">
-        <a href="https://feedback.plausible.io/roadmap" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:text-indigo-600 hover:bg-indigo-50 focus:outline-none focus:shadow-outline focus:border-indigo-300 transition duration-150 ease-in-out">
-          Open roadmap
-        </a>
+    </div>
+  </div>
+  <div class="mt-8 pb-12 bg-gray-50 sm:mt-12 sm:pb-16 lg:mt-16 lg:pb-24">
+    <div class="relative">
+      <div class="absolute inset-0 h-3/4 bg-gray-900"></div>
+      <div class="relative z-10 max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md mx-auto lg:max-w-5xl xl:max-w-6xl lg:grid lg:grid-cols-3 lg:gap-5">
+          <div class="rounded-lg shadow-lg overflow-hidden">
+            <div class="px-6 py-8 bg-white sm:p-10 sm:pb-6">
+              <div>
+                <span class="inline-flex px-4 py-1 rounded-full text-sm leading-5 font-semibold tracking-wide uppercase bg-indigo-100 text-indigo-600">
+                  Personal
+                </span>
+              </div>
+              <div class="mt-4 flex items-baseline text-6xl leading-none font-extrabold">
+                $6
+                <span class="ml-1 text-2xl leading-8 font-medium text-gray-500">
+                  /mo
+                </span>
+              </div>
+            </div>
+            <div class="px-6 pt-6 pb-8 bg-gray-50 sm:p-10 sm:pt-6">
+              <ul>
+                <li class="flex items-start">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-green-500" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                  <p class="ml-3 text-base leading-6 text-gray-700">
+                  Up to <b>10k pageviews per month</b>
+                  </p>
+                </li>
+                <li class="mt-4 flex items-start">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-green-500" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                  <p class="ml-3 text-base leading-6 text-gray-700">
+                    Unlimited websites
+                  </p>
+                </li>
+                <li class="mt-4 flex items-start">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-green-500" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                  <p class="ml-3 text-base leading-6 text-gray-700">
+                    100% Data ownership
+                  </p>
+                </li>
+                <li class="mt-4 flex items-start">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-green-500" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                  <p class="ml-3 text-base leading-6 text-gray-700">
+                    Email support
+                  </p>
+                </li>
+              </ul>
+              <div class="mt-6 rounded-md shadow">
+                <a href="/register" class="flex items-center justify-center px-5 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out">
+                  Get started
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 rounded-lg shadow-lg overflow-hidden lg:mt-0">
+            <div class="px-6 py-8 bg-white sm:p-10 sm:pb-6">
+              <div>
+                <span class="inline-flex px-4 py-1 rounded-full text-sm leading-5 font-semibold tracking-wide uppercase bg-indigo-100 text-indigo-600">
+                  Startup
+                </span>
+              </div>
+              <div class="mt-4 flex items-baseline text-6xl leading-none font-extrabold">
+                $12
+                <span class="ml-1 text-2xl leading-8 font-medium text-gray-500">
+                  /mo
+                </span>
+              </div>
+            </div>
+            <div class="px-6 pt-6 pb-8 bg-gray-50 sm:p-10 sm:pt-6">
+              <ul>
+                <li class="flex items-start">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-green-500" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                  <p class="ml-3 text-base leading-6 text-gray-700">
+                  Up to <b>100k pageviews per month</b>
+                  </p>
+                </li>
+                <li class="mt-4 flex items-start">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-green-500" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                  <p class="ml-3 text-base leading-6 text-gray-700">
+                    Unlimited websites
+                  </p>
+                </li>
+                <li class="mt-4 flex items-start">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-green-500" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                  <p class="ml-3 text-base leading-6 text-gray-700">
+                    100% data ownership
+                  </p>
+                </li>
+                <li class="mt-4 flex items-start">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-green-500" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                  <p class="ml-3 text-base leading-6 text-gray-700">
+                    Priority support
+                  </p>
+                </li>
+              </ul>
+              <div class="mt-6 rounded-md shadow">
+                <a href="/register" class="flex items-center justify-center px-5 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out">
+                  Get started
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 rounded-lg shadow-lg overflow-hidden lg:mt-0">
+            <div class="px-6 py-8 bg-white sm:p-10 sm:pb-6">
+              <div>
+                <span class="inline-flex px-4 py-1 rounded-full text-sm leading-5 font-semibold tracking-wide uppercase bg-indigo-100 text-indigo-600">
+                  Business
+                </span>
+              </div>
+              <div class="mt-4 flex items-baseline text-6xl leading-none font-extrabold">
+                $36
+                <span class="ml-1 text-2xl leading-8 font-medium text-gray-500">
+                  /mo
+                </span>
+              </div>
+            </div>
+            <div class="px-6 pt-6 pb-8 bg-gray-50 sm:p-10 sm:pt-6">
+              <ul>
+                <li class="flex items-start">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-green-500" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                  <p class="ml-3 text-base leading-6 text-gray-700">
+                  Up to <b>1m pageviews per month</b>
+                  </p>
+                </li>
+                <li class="mt-4 flex items-start">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-green-500" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                  <p class="ml-3 text-base leading-6 text-gray-700">
+                    Unlimited websites
+                  </p>
+                </li>
+                <li class="mt-4 flex items-start">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-green-500" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                  <p class="ml-3 text-base leading-6 text-gray-700">
+                    100% data ownership
+                  </p>
+                </li>
+                <li class="mt-4 flex items-start">
+                  <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-green-500" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                  <p class="ml-3 text-base leading-6 text-gray-700">
+                    Priority support
+                  </p>
+                </li>
+              </ul>
+              <div class="mt-6 rounded-md shadow">
+                <a href="/register" class="flex items-center justify-center px-5 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out">
+                  Get started
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-
-<div class="bg-gray-800">
-    <div class="container relative pt-16 mb-32">
-      <h2 class="text-center text-3xl tracking-tight leading-10 font-extrabold text-white sm:text-4xl sm:leading-none md:text-5xl">
-      Simple, traffic-based pricing
-      </h2>
-      <h2 class="text-white text-center text-2xl text-indigo-100 mb-12">Try Plausible free for 30 days</h2>
-      <div class="pt-32"></div>
-      <div class="pt-24"></div>
-    </div>
-  </div>
-  <div class="relative w-full pricing-table">
-    <div class="absolute w-full" style="top: -330px;">
-      <div class="container px-0 flex flex-col md:flex-row justify-between items-center">
-
-        <div class="flex-1 w-full my-4 md:w-auto px-4">
-          <div class="bg-white rounded-lg shadow-lg z-50">
-            <header class="bg-gray-100 p-5 rounded-t-lg">
-              <div class="uppercase font-bold text-indigo-600">Hobby</div>
-            </header>
-            <div class="rounded-b-lg p-5 text-gray-900">
-              <div class="pb-2">
-                <b class="text-3xl font-black">$6</b>
-                <div class="text-gray-600 text-lg font-bold">per month</div>
-              </div>
-              <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
-                <span>Up to 10k pageviews/mo</span>
-              </div>
-
-              <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
-                <span>Unlimited websites</span>
-              </div>
-
-              <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
-                <span>100% data ownership</span>
-              </div>
-
-              <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
-                <span>Email support</span>
-              </div>
-
-              <div class="w-full text-center">
-                <%= link("Start free trial →", to: "/register", class: "button mt-6 inline-block") %>
-                <div class="my-2 text-sm text-gray-700">No credit card required</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex-1 w-full my-4 md:w-auto px-4">
-          <div class="bg-white rounded-lg shadow-lg z-50">
-            <header class="bg-gray-100 p-5 rounded-t-lg">
-              <div class="uppercase font-bold text-indigo-600">Startup</div>
-            </header>
-            <div class="rounded-b-lg p-5 text-indigo-900">
-              <div class="pb-2">
-                <b class="text-3xl font-black">$12</b>
-                <div class="text-gray-600 text-lg font-bold">per month</div>
-              </div>
-              <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
-                <span>Up to 100k pageviews/mo</span>
-              </div>
-
-              <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
-                <span>Unlimited websites</span>
-              </div>
-
-              <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
-                <span>100% data ownership</span>
-              </div>
-
-              <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
-                <span>Priority support</span>
-              </div>
-
-              <div class="w-full text-center">
-                <%= link("Start free trial →", to: "/register", class: "button mt-6 inline-block") %>
-                <div class="my-2 text-sm text-gray-700">No credit card required</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex-1 w-full my-4 md:w-auto px-4">
-          <div class="bg-white rounded-lg shadow-lg z-50">
-            <header class="bg-gray-100 p-5 rounded-t-lg">
-              <div class="uppercase font-bold text-indigo-600">Business</div>
-            </header>
-            <div class="rounded-b-lg p-5 text-indigo-900">
-              <div class="pb-2">
-                <b class="text-3xl font-black">$36</b>
-                <div class="text-gray-600 text-lg font-bold">per month</div>
-              </div>
-              <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
-                <span>Up to 1m pageviews/mo</span>
-              </div>
-
-              <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
-                <span>Unlimited websites</span>
-              </div>
-
-              <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
-                <span>100% data ownership</span>
-              </div>
-
-              <div class="my-4 font-medium">
-                <svg class="feather mr-1 text-indigo-500"><use xlink:href="#feather-check-circle" /></svg>
-                <span>Priority support</span>
-              </div>
-
-              <div class="w-full text-center">
-                <%= link("Start free trial →", to: "/register", class: "button mt-6 inline-block") %>
-                <div class="my-2 text-sm text-gray-700">No credit card required</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="pt-32"></div>
-  <div class="container my-32">
-    <h3 class="font-black text-center text-2xl my-12">What people are saying</h3>
-    <div class="flex flex-col md:flex-row justify-between items-center">
-      <div class="w-full md:w-31percent bg-white shadow rounded p-6">
-        <svg class="w-8 h-8 text-gray-800">
-          <use xlink:href="#testimonial-quotemark" />
-        </svg>
-        <p class="text-lg">Plausible is focused on exactly what I need: clear insights into my site visitors, without getting in my way</p>
-        <div class="mt-2 md:mt-4 flex items-center justify-start">
-          <a href="https://www.felipesere.com/">
-            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/felipe.jpg"), class: "inline w-12 h-12 object-cover rounded-full mr-3", alt: "Image of Felipe Sere") %>
-          </a>
+<div class="bg-gray-50">
+  <div class="container mx-auto pt-12 pb-16 sm:pt-16 sm:pb-20 px-4 sm:px-6 lg:pt-20 lg:pb-28 lg:px-8">
+    <h2 class="text-3xl leading-9 font-extrabold text-gray-900">
+      Frequently asked questions
+    </h2>
+    <div class="mt-6 border-t-2 border-gray-100 pt-10">
+      <dl class="md:grid md:grid-cols-2 md:gap-8">
+        <div>
           <div>
-            <a href="https://www.felipesere.com/">
-              <h4>Felipe Sere</h4>
-            </a>
-            <%= link("@felipesere", to: "https://twitter.com/felipesere", class: "text-sm text-gray-600") %>
+            <dt class="text-lg leading-6 font-medium text-gray-900">
+            1. Can I use Plausible on more than one website?
+            </dt>
+            <dd class="mt-2">
+              <p class="text-base leading-6 text-gray-500">
+              Yes. You can add as many websites as you want under a single account. You will be charged for the total pageviews on all of your websites combined. For example, on the 10k plan you can either have 10 websites that each get 1000 pageviews per month, or one website that gets 10,000 pageviews per month.
+              </p>
+            </dd>
+          </div>
+          <div class="mt-12">
+            <dt class="text-lg leading-6 font-medium text-gray-900">
+            2. What happens if I go over my plan limit?
+            </dt>
+            <dd class="mt-2">
+              <p class="text-base leading-6 text-gray-500">
+              You don't have to pay for a one-time spike in traffic, but if you go over your plan limit for 2 months in a row, we will contact you to discuss upgrade options.
+              </p>
+            </dd>
           </div>
         </div>
-      </div>
+        <div class="mt-12 md:mt-0">
+          <div class="">
+            <dt class="text-lg leading-6 font-medium text-gray-900">
+            3. Why is Plausible not free like Google Analytics?
+            </dt>
+            <dd class="mt-2">
+              <p class="text-base leading-6 text-gray-500">
+              Google Analytics is free because Google has built their company and their wealth by collecting and analyzing huge amounts of personal information from web users and using these personal and behavioral insights to sell advertisements.<br /><br />
 
-      <div class="w-full md:w-31percent bg-white shadow rounded p-6 mt-16 md:mt-0">
-        <svg class="w-8 h-8 text-gray-800">
-          <use xlink:href="#testimonial-quotemark" />
-        </svg>
-        <p class="text-lg">All the stats you need in a single page. Plausible's user experience and user interface are the stark opposite of Google Analytics.</p>
-        <div class="mt-2 md:mt-4 flex items-center justify-start">
-          <a href="https://makisotman.com/">
-            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/makis.jpg"), class: "inline w-12 h-12 rounded-full mr-3", alt: "Image of Makis Otman") %>
-          </a>
-          <div>
-            <a href="https://makisotman.com/">
-              <h4>Makis Otman</h4>
-            </a>
-            <%= link("@makisotman", to: "https://twitter.com/makisotman", class: "text-sm text-gray-600") %>
+              With Plausible, you 100% own and control all of your website data. This data is not being shared with or sold to any third-parties. Since we don't make money from targeted advertisement, we must ask for a small fee to keep the servers running.
+              </p>
+            </dd>
+          </div>
+          <div class="mt-12">
+            <dt class="text-lg leading-6 font-medium text-gray-900">
+            4. How do you make sure my visitors' privacy is protected?
+            </dt>
+            <dd class="mt-2">
+              <p class="text-base leading-6 text-gray-500">
+              We take painstaking care to not collect or store any personal information that could be tied back to the visitor. You own your data and we will never sell it or use it in nefarious ways. <%= link("Read more about our data policy", to: "/data-policy", class: "text-indigo-600") %>.
+              </p>
+            </dd>
           </div>
         </div>
-      </div>
+      </dl>
+    </div>
+  </div>
+</div>
 
-      <div class="w-full md:w-31percent bg-white shadow rounded p-6 mt-16 md:mt-0">
-        <svg class="w-8 h-8 text-gray-800">
-          <use xlink:href="#testimonial-quotemark" />
-        </svg>
-        <p class="text-lg">I love Plausible because it is lightweight and looks beautiful. It shows me all the statistics that I need in a simple and unique style.</p>
-        <div class="mt-2 md:mt-4 flex items-center justify-start">
-          <a href="https://www.schranz.io/">
-            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/testimonials/markus.jpg"), class: "inline w-12 h-12 rounded-full mr-3", alt: "Image of Markus Schranz") %>
-          </a>
-          <div>
-            <a href="https://www.schranz.io/"><h4>Markus Schranz</h4></a>
-            <%= link("@ma_schranz", to: "https://twitter.com/ma_schranz", class: "text-sm text-gray-600") %>
-          </div>
-        </div>
+<div class="bg-white">
+  <div class="container mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
+    <h2 class="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10">
+      Ready to dive in?
+      <br />
+      <span class="text-indigo-600">Start your free trial today.</span>
+    </h2>
+    <div class="mt-8 flex lg:flex-shrink-0 lg:mt-0">
+      <div class="inline-flex rounded-md shadow">
+        <a href="/register" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out">
+          Get started
+        </a>
+      </div>
+      <div class="ml-3 inline-flex rounded-md shadow">
+        <a href="/plausible.io" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-indigo-600 bg-white hover:text-indigo-500 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out">
+          Live demo
+        </a>
       </div>
     </div>
   </div>
-
-  <div class="container my-32">
-    <h3 class="font-black text-center text-2xl my-12">Frequently asked questions</h3>
-
-    <div class="max-w-3xl mx-auto bg-white border rounded p-6">
-      <h4 class="font-bold">1. Can I use Plausible on more than one website?</h4>
-      <div class="mt-4 leading-normal">
-        Yes. You can add as many websites as you want under a single account. You will be charged for the total pageviews on all of your websites combined. For example, on the 10k plan you can either have 10 websites that each get 1000 pageviews per month, or one website that gets 10,000 pageviews per month.
-      </div>
-    </div>
-
-    <div class="max-w-3xl mx-auto bg-white border rounded p-6 my-6">
-      <h4 class="font-bold">2. What happens if I go over my plan limit?</h4>
-      <div class="mt-4 leading-normal">
-        You don't have to pay for a one-time spike in traffic, but if you go over your plan limit for 2 months in a row, we will
-        contact you to discuss upgrade options.
-      </div>
-    </div>
-
-    <div class="max-w-3xl mx-auto bg-white border rounded p-6 my-6">
-      <h4 class="font-bold">3. How do you make sure my visitors' privacy is protected?</h4>
-      <div class="mt-4 leading-normal">
-        We take painstaking care to not collect or store any personal information that could be tied back to the visitor. You own your data and we will never sell it or use it in nefarious ways. <%= link("Read more about our data policy", to: "/data-policy", class: "text-indigo-500") %>.
-      </div>
-    </div>
-
-    <div class="text-center">
-      <%= link("Ask a question to the founder", to: "mailto:uku@plausible.io", class: "text-indigo-500") %>
-    </div>
-  </div>
+</div>
