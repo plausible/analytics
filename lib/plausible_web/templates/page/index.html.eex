@@ -219,17 +219,99 @@
   </div>
 </div>
 
+<div class="py-16 bg-gray-50 overflow-hidden lg:py-24">
+  <div class="relative container mx-auto px-4 sm:px-6 lg:px-8">
+    <svg class="hidden lg:block absolute left-full transform -translate-x-1/2 -translate-y-1/4" width="404" height="784" fill="none" viewBox="0 0 404 784">
+      <defs>
+        <pattern id="b1e6e422-73f8-40a6-b5d9-c8586e37e0e7" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect x="0" y="0" width="4" height="4" class="text-gray-200" fill="currentColor" />
+        </pattern>
+      </defs>
+      <rect width="404" height="784" fill="url(#b1e6e422-73f8-40a6-b5d9-c8586e37e0e7)" />
+    </svg>
+
+    <div class="relative lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
+      <div class="relative">
+        <h4 class="text-2xl leading-8 font-extrabold text-gray-900 tracking-tight sm:text-3xl sm:leading-9">
+          Insightful website stats at a glance
+        </h4>
+        <p class="mt-3 text-lg leading-7 text-gray-500">
+        Google Analytics is overkill for most site owners. Plausible is easy to use and understand with no training or prior experience.
+        </p>
+
+        <ul class="mt-10">
+          <li>
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                  <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="ml-4">
+                <h5 class="text-lg leading-6 font-medium text-gray-900">Unique visitors, total page views and the bounce rate</h5>
+                <p class="mt-2 text-base leading-6 text-gray-500">
+                Choose the time range that you want to analyze. The visitor numbers are automatically presented on an hourly, daily or monthly graph.
+                </p>
+              </div>
+            </div>
+          </li>
+          <li class="mt-10">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                  <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="ml-4">
+                <h5 class="text-lg leading-6 font-medium text-gray-900">Top referral sources and most visited pages</h5>
+                <p class="mt-2 text-base leading-6 text-gray-500">
+                  Answer the most important question about your website – where are your visitors coming from and what are they viewing?
+                </p>
+              </div>
+            </div>
+          </li>
+          <li class="mt-10">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                  <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="ml-4">
+                <h5 class="text-lg leading-6 font-medium text-gray-900">Visitor location and device stats</h5>
+                <p class="mt-2 text-base leading-6 text-gray-500">
+                  Track the basics in a completely anonymous way.
+                </p>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="mt-10 -mx-4 relative lg:mt-0 lg:px-8">
+        <svg class="absolute left-1/2 transform -translate-x-1/2 translate-y-16 lg:hidden" width="784" height="404" fill="none" viewBox="0 0 784 404">
+          <defs>
+            <pattern id="ca9667ae-9f92-4be7-abcb-9e3d727f2941" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect x="0" y="0" width="4" height="4" class="text-gray-200" fill="currentColor" />
+            </pattern>
+          </defs>
+          <rect width="784" height="404" fill="url(#ca9667ae-9f92-4be7-abcb-9e3d727f2941)" />
+        </svg>
+        <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/screenshot-referrers.png"), class: "relative mx-auto", alt: "Screenshot of referrers") %>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="bg-white">
   <div class="container mx-auto py-12 lg:py-16">
     <div class="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
-      <div>
-        <h2 class="text-3xl leading-9 font-extrabold text-gray-900 sm:text-4xl sm:leading-10">
-          Easy to integrate with your other favorite tools
-        </h2>
-        <p class="mt-3 max-w-3xl text-lg leading-7 text-gray-500">
-        Plausible is simple to set up and integrate with popular tools such as WordPress, Ghost, Squarespace, Wix, Weebly and Google Search Console.
-        </p>
-      </div>
       <div class="mt-8 grid grid-cols-2 gap-0.5 md:grid-cols-3 lg:mt-0 lg:grid-cols-2">
         <div class="col-span-1 flex justify-center py-8 px-8 bg-gray-50">
           <img class="max-h-12" src="https://upload.wikimedia.org/wikipedia/commons/2/20/WordPress_logo.svg" alt="Wordpress" />
@@ -249,6 +331,14 @@
         <div class="col-span-1 flex justify-center py-8 px-8 bg-gray-50">
           <img class="max-h-12" src="https://upload.wikimedia.org/wikipedia/commons/e/e5/Google_Search_Console.svg" alt="Google Search Console" />
         </div>
+      </div>
+      <div class="mt-12 lg:mt-0 lg:px-8">
+        <h2 class="text-3xl leading-9 font-extrabold text-gray-900 sm:text-4xl sm:leading-10">
+          Easy to integrate with your other favorite tools
+        </h2>
+        <p class="mt-3 max-w-3xl text-lg leading-7 text-gray-500">
+        Plausible is simple to set up and integrate with popular tools such as WordPress, Ghost, Squarespace, Wix, Weebly and Google Search Console.
+        </p>
       </div>
     </div>
   </div>
