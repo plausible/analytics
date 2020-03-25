@@ -6,6 +6,7 @@
     "watch": "webpack --mode development --watch"
   },
   "dependencies": {
+    "@tailwindcss/ui": "^0.1.3",
     "autoprefixer": "^9.7.4",
     "chart.js": "^2.9.3",
     "datamaps": "^0.5.9",

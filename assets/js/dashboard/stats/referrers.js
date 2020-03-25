@@ -38,7 +38,7 @@ export default class Referrers extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={referrer.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-100" />
+          <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50" />
           <Link className="hover:underline block px-2" style={{marginTop: '-26px'}} to={`/${encodeURIComponent(this.props.site.domain)}/referrers/${referrer.name}${window.location.search}`}>
             <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} className="inline h-4 w-4 mr-2 align-middle -mt-px" />
             { referrer.name }

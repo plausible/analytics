@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.3/flatpickr.min.css">
     <%= render("_tracking.html", assigns) %>
   </head>
-  <body class="flex flex-col h-full bg-gray-100">
+  <body class="flex flex-col h-full bg-gray-50">
     <%= render("_svg_icons.html") %>
     <nav class="container flex items-center justify-between flex-wrap py-8">
       <div class="flex items-center flex-shrink-0">
@@ -72,5 +72,6 @@
     </main>
     <%= render("_footer.html", assigns) %>
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
   </body>
 </html>

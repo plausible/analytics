@@ -95,7 +95,7 @@ class DatePicker extends React.Component {
   renderArrow(period, prevDate, nextDate) {
     return (
       <div className="flex rounded shadow bg-white mr-4 cursor-pointer">
-        <Link to={{search: this.queryWithPeriod(period, {date: prevDate})}} className="flex items-center px-2 border-r border-gray-400">
+        <Link to={{search: this.queryWithPeriod(period, {date: prevDate})}} className="flex items-center px-2 border-r border-gray-300">
           <svg className="fill-current h-4 w-4">
             <use xlinkHref="#feather-chevron-left" />
           </svg>

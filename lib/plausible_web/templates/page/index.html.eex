@@ -1,133 +1,288 @@
-<div class="md:pt-12 bg-gray-100 w-screen overflow-hidden">
-  <div class="container flex flex-col md:flex-row-reverse">
-    <section class="hidden lg:block lg:w-2/5 relative">
-      <svg height="600" width="600" style="position: absolute; right: -380px; top: 100px; filter: drop-shadow(0 15px 30px rgba(0, 0, 0, .11));">
-        <circle cx="300" cy="300" r="300" fill="#6574cd" />
+<div class="relative bg-gray-50 overflow-hidden">
+  <div class="hidden sm:block sm:absolute sm:inset-y-0 sm:h-full sm:w-full">
+    <div class="relative h-full max-w-screen-xl mx-auto">
+      <svg class="absolute right-full transform translate-y-1/4 translate-x-1/4 lg:translate-x-1/2" width="404" height="784" fill="none" viewBox="0 0 404 784">
+        <defs>
+        <pattern id="f210dbf6-a58d-4871-961e-36d5016a0f49" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+        <rect x="0" y="0" width="4" height="4" class="text-gray-200" fill="currentColor" />
+        </pattern>
+        </defs>
+        <rect width="404" height="784" fill="url(#f210dbf6-a58d-4871-961e-36d5016a0f49)" />
       </svg>
-
-      <svg height="400" width="400" style="position: absolute; right: -60px; top: -30px; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .11));">
-        <circle cx="200" cy="200" r="200" fill="#b2b7ff" />
+      <svg class="absolute left-full transform -translate-y-3/4 -translate-x-1/4 md:-translate-y-1/2 lg:-translate-x-1/2" width="404" height="784" fill="none" viewBox="0 0 404 784">
+        <defs>
+        <pattern id="5d0dd344-b041-4d26-bec4-8d33ea57ec9b" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+        <rect x="0" y="0" width="4" height="4" class="text-gray-200" fill="currentColor" />
+        </pattern>
+        </defs>
+        <rect width="404" height="784" fill="url(#5d0dd344-b041-4d26-bec4-8d33ea57ec9b)" />
       </svg>
+    </div>
+  </div>
 
-      <div class="w-3/4 bg-white shadow-xl rounded m-4 p-4 absolute z-10" style="left: 75px;">
-        <h3 class="font-bold">Top Referrers</h3>
-        <div class="flex items-center mt-4 mb-2 justify-between text-gray-600 text-xs font-bold tracking-wide">
-          <span>Referrer</span>
-          <span>Visitors</span>
-        </div>
-
-        <%= for {referrer, count} <- @demo_referrers do %>
-          <div class="flex items-center justify-between my-1 text-sm">
-            <div class="w-full h-8" style="max-width: calc(100% - 3rem)">
-              <%= PlausibleWeb.StatsView.bar(count, @demo_referrers, :blue) %>
-              <span class="block px-2" style="margin-top: -23px"><%= referrer %></span>
-            </div>
-            <span className="font-medium"><%= count %></span>
+  <div class="relative container pb-12 lg:pb-16 xl:pb-20">
+    <div class="mt-10 mx-auto max-w-screen-xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 xl:mt-28">
+      <div class="text-center">
+        <h1 class="text-3xl tracking-tight leading-10 font-extrabold text-gray-900 sm:text-4xl sm:leading-none md:text-5xl">
+          Simple and privacy-friendly
+          <br class="xl:hidden" />
+          <span class="text-indigo-600">alternative to Google Analytics</span>
+        </h1>
+        <p class="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+        Plausible is a lightweight and open-source website analytics tool. It doesn’t use cookies and is fully compliant with GDPR, CCPA and PECR.
+        </p>
+        <div class="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
+          <div class="rounded-md shadow">
+            <a href="/register" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:shadow-outline-indigo transition duration-150 ease-in-out md:py-4 md:text-lg md:px-10">
+              Get started
+            </a>
           </div>
-        <% end %>
-      </div>
-
-      <div class="w-3/4 bg-white shadow-xl rounded m-4 p-4 absolute" style="left: calc(75%); top: 50px;">
-        <h3 class="font-bold">Top Pages</h3>
-        <div class="flex items-center mt-4 mb-2 justify-between text-gray-600 text-xs font-bold tracking-wide">
-          <span>Page</span>
-          <span>Visitors</span>
-        </div>
-        <%= for {country, count} <- @demo_pages do %>
-          <div class="flex items-center justify-between my-1 text-sm">
-            <div class="w-full h-8" style="max-width: calc(100% - 3rem)">
-              <%= PlausibleWeb.StatsView.bar(count, @demo_pages, :orange) %>
-              <span class="block px-2" style="margin-top: -23px"><%= Plausible.Stats.CountryName.from_iso3166(country) %></span>
-            </div>
-            <span className="font-medium"><%= count %></span>
+          <div class="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
+            <a href="/plausible.io" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-indigo-600 bg-white hover:text-indigo-500 focus:outline-none focus:shadow-outline-blue transition duration-150 ease-in-out md:py-4 md:text-lg md:px-10">
+              Live demo
+            </a>
           </div>
-        <% end %>
+        </div>
       </div>
-    </section>
-    <section class="w-full text-center lg:text-left lg:w-3/5">
-      <div class="pt-12 lg:pt-24"></div>
-      <h1 class="text-3xl lg:text-4xl font-black">
-        Simple analytics for your website
-      </h1>
-      <p class="font-normal text-gray-700 text-lg lg:text-2xl mt-3 leading-tight font-medium">
-        Plausible is a lightweight, fully open-source alternative to Google Analytics
+    </div>
+  </div>
+</div>
+
+<div class="relative">
+  <div class="max-w-5xl mx-auto rounded shadow-2xl" style="margin-bottom: -36rem">
+    <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/screenshot.png")) %>
+  </div>
+</div>
+
+<div class="py-24 bg-white">
+  <div style="padding-top: 36rem;"></div>
+  <div class="container mx-auto">
+    <div class="lg:text-center">
+      <h3 class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10">
+        Why use Plausible?
+      </h3>
+      <p class="mt-4 max-w-2xl text-xl leading-7 text-gray-500 lg:mx-auto">
+        Plausible is built by and for privacy-conscious website owners. Here’s what makes it a great Google Analytics alternative:
       </p>
-      <%= link("Start free trial", to: "/register", class: "button w-full sm:w-auto mt-6 mr-2") %>
-      <%= link("View live demo", to: "/plausible.io", class: "button button-outline w-full sm:w-auto mt-4 md:mt-0") %>
-    </section>
+    </div>
+
+    <div class="mt-16">
+      <ul class="md:grid md:grid-cols-2 md:col-gap-8 md:row-gap-16">
+        <li>
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                  <path d="M13 7H21M21 7V15M21 7L13 15L9 11L3 17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h5 class="text-lg leading-6 font-medium text-gray-900">Check website traffic and site analytics in 1 minute</h5>
+              <p class="mt-2 text-base leading-6 text-gray-500">
+              Plausible is simple and it cuts through the noise. No layers of menus, no need
+              for custom reports. Get all the important insights on one single page. No training necessary.
+              </p>
+            </div>
+          </div>
+        </li>
+
+        <li class="mt-10 md:mt-0">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                  <path d="M13 10V3L4 14H11L11 21L20 10L13 10Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h5 class="text-lg leading-6 font-medium text-gray-900">Lightweight script which keeps your site speed fast</h5>
+              <p class="mt-2 text-base leading-6 text-gray-500">
+              Plausible script is 14 times smaller than Google Analytics script. You will reduce your page weight and your site will load faster.
+              </p>
+            </div>
+          </div>
+        </li>
+
+        <li class="mt-10 md:mt-0">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                  <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h5 class="text-lg leading-6 font-medium text-gray-900">Doesn’t track nor collect any personally identifiable information</h5>
+              <p class="mt-2 text-base leading-6 text-gray-500">
+              Plausible respects the privacy of your visitors. Your traffic data is not used for any other purposes. You fully own and control it. See our data policy for details.
+              </p>
+            </div>
+          </div>
+        </li>
+
+        <li class="mt-10 md:mt-0">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                  <path d="M9 12L11 14L15 10M20.6179 5.98434C20.4132 5.99472 20.2072 5.99997 20 5.99997C16.9265 5.99997 14.123 4.84453 11.9999 2.94434C9.87691 4.84446 7.07339 5.99985 4 5.99985C3.79277 5.99985 3.58678 5.9946 3.38213 5.98422C3.1327 6.94783 3 7.95842 3 9.00001C3 14.5915 6.82432 19.2898 12 20.622C17.1757 19.2898 21 14.5915 21 9.00001C21 7.95847 20.8673 6.94791 20.6179 5.98434Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h5 class="text-lg leading-6 font-medium text-gray-900">Compatible with GDPR, CCPA, PECR and other privacy regulations</h5>
+              <p class="mt-2 text-base leading-6 text-gray-500">
+              No need to compromise the visitor experience by having annoying cookie banners, GDPR, CCPA and PECR consent notices.
+              </p>
+            </div>
+          </div>
+        </li>
+
+        <li class="mt-10 md:mt-0">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h5 class="text-lg leading-6 font-medium text-gray-900">Be transparent and open your web analytics to everyone</h5>
+              <p class="mt-2 text-base leading-6 text-gray-500">
+              Your stats are private by default but you can choose to be transparent and make them public so anyone with your custom link can view them.
+              </p>
+            </div>
+          </div>
+        </li>
+
+        <li class="mt-10 md:mt-0">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                  <path d="M12 15V17M6 21H18C19.1046 21 20 20.1046 20 19V13C20 11.8954 19.1046 11 18 11H6C4.89543 11 4 11.8954 4 13V19C4 20.1046 4.89543 21 6 21ZM16 11V7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7V11H16Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h5 class="text-lg leading-6 font-medium text-gray-900">Share the stats privately with your clients</h5>
+              <p class="mt-2 text-base leading-6 text-gray-500">
+              You can share your stats privately by generating a shared link. This link is impossible to guess but
+              you can add password protection for extra security.
+              </p>
+            </div>
+          </div>
+        </li>
+
+        <li class="mt-10 md:mt-0">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                  <path d="M3 21V17M3 17V5C3 3.89543 3.89543 3 5 3H11.5L12.5 4H21L18 10L21 16H12.5L11.5 15H5C3.89543 15 3 15.8954 3 17ZM12 3.5V9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h5 class="text-lg leading-6 font-medium text-gray-900">Define key goals and track conversions</h5>
+              <p class="mt-2 text-base leading-6 text-gray-500">
+              Set custom events or page URLs as your goals and see how they convert over time to understand and identify the trends that matter.
+              </p>
+            </div>
+          </div>
+        </li>
+
+        <li class="mt-10 md:mt-0">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                  <path d="M3 8L10.8906 13.2604C11.5624 13.7083 12.4376 13.7083 13.1094 13.2604L21 8M5 19H19C20.1046 19 21 18.1046 21 17V7C21 5.89543 20.1046 5 19 5H5C3.89543 5 3 5.89543 3 7V17C3 18.1046 3.89543 19 5 19Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h5 class="text-lg leading-6 font-medium text-gray-900">Get weekly or monthly reports directly into your inbox</h5>
+              <p class="mt-2 text-base leading-6 text-gray-500">
+              Keep an eye on your traffic with automated email reports. Email reports can be scheduled to be sent to multiple recipients.
+              </p>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
   </div>
-  <div class="pt-12 lg:pt-16"></div>
-  <div class="lg:pt-24"></div>
-  <div class="container relative mt-32">
-    <h2 class="text-2xl font-black">Why Plausible?</h2>
-    <p class="text-lg mt-2 leading-normal">
-    Plausible is built by and for privacy-conscious minimalists<br />
-    Here’s what makes it different from other solutions
+</div>
+
+<div class="bg-white">
+  <div class="container mx-auto py-12 lg:py-16">
+    <div class="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
+      <div>
+        <h2 class="text-3xl leading-9 font-extrabold text-gray-900 sm:text-4xl sm:leading-10">
+          Easy to integrate with your other favorite tools
+        </h2>
+        <p class="mt-3 max-w-3xl text-lg leading-7 text-gray-500">
+        Plausible is simple to set up and integrate with popular tools such as WordPress, Ghost, Squarespace, Wix, Weebly and Google Search Console.
+        </p>
+      </div>
+      <div class="mt-8 grid grid-cols-2 gap-0.5 md:grid-cols-3 lg:mt-0 lg:grid-cols-2">
+        <div class="col-span-1 flex justify-center py-8 px-8 bg-gray-50">
+          <img class="max-h-12" src="https://upload.wikimedia.org/wikipedia/commons/2/20/WordPress_logo.svg" alt="Wordpress" />
+        </div>
+        <div class="col-span-1 flex justify-center py-8 px-8 bg-gray-50">
+          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/ghost.svg"), class: "max-h-12", alt: "Ghost") %>
+        </div>
+        <div class="col-span-1 flex justify-center py-8 px-8 bg-gray-50">
+          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/squarespace.png"), class: "max-h-12", alt: "Squarespace") %>
+        </div>
+        <div class="col-span-1 flex justify-center py-8 px-8 bg-gray-50">
+          <img class="max-h-8 mt-2" src="https://upload.wikimedia.org/wikipedia/en/thumb/7/76/Wix.com_website_logo.svg/2880px-Wix.com_website_logo.svg.png" alt="Wix" />
+        </div>
+        <div class="col-span-1 flex justify-center py-8 px-8 bg-gray-50">
+          <img class="max-h-12" src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Weebly_logo.svg" alt="Weebly" />
+        </div>
+        <div class="col-span-1 flex justify-center py-8 px-8 bg-gray-50">
+          <img class="max-h-12" src="https://upload.wikimedia.org/wikipedia/commons/e/e5/Google_Search_Console.svg" alt="Google Search Console" />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bg-white">
+  <div class="container mx-auto text-center pt-12 pb-24">
+    <h2 class="text-3xl tracking-tight leading-10 font-extrabold text-gray-900 sm:text-4xl sm:leading-none md:text-5xl">
+    Fully open-source web analytics
+    </h2>
+    <p class="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+    Plausible is available on Github so you can check out the code. We welcome feedback, have a public roadmap and are available to you via email.
     </p>
-  </div>
-  <div class="container mt-12">
-    <div class="flex flex-col md:flex-row items-center justify-between mx-auto leading-normal">
-      <div class="w-full md:w-1/3 py-6 md:px-6 md:pl-0">
-        <svg class="inline w-6 h-6 mr-1 text-indigo-500 -mt-1"><use xlink:href="#feather-check-circle" /></svg>
-        <h3 class="inline text-lg font-bold">Clutter-free</h3>
-        <p class="text-lg mt-2">
-          Stop digging through complex reports to find what you’re looking for. Plausible presents the most important information to you on a single page.
-        </p>
+    <div class="mt-8 flex justify-center">
+      <div class="inline-flex rounded-md shadow">
+        <a href="https://github.com/plausible-insights/plausible" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out">
+          Github repo
+        </a>
       </div>
-
-      <div class="w-full md:w-1/3 py-6 md:px-6">
-        <svg class="inline w-6 h-6 mr-1 text-indigo-500 -mt-1"><use xlink:href="#feather-check-circle" /></svg>
-        <h3 class="inline text-lg font-bold">Lightweight</h3>
-        <p class="text-lg mt-2">
-          Plausible works by loading a script on your website, like Google Analytics. Our script is 14x smaller, making your website quicker to load.
-        </p>
+      <div class="ml-3 inline-flex">
+        <a href="https://feedback.plausible.io/roadmap" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:text-indigo-600 hover:bg-indigo-50 focus:outline-none focus:shadow-outline focus:border-indigo-300 transition duration-150 ease-in-out">
+          Open roadmap
+        </a>
       </div>
-
-      <div class="w-full md:w-1/3 py-6 md:px-6 md:pr-0">
-        <svg class="inline w-6 h-6 mr-1 text-indigo-500 -mt-1"><use xlink:href="#feather-check-circle" /></svg>
-        <h3 class="inline text-lg font-bold">Open source</h3>
-        <p class="text-lg mt-2">
-        Plausible is fully open source and <%= link("available on Github", to: "https://github.com/plausible-insights/plausible", class: "text-indigo-500") %>. Feel free to check out the code and <%= link("read in depth about our data policy", to: "/data-policy", class: "text-indigo-500") %>
-        </p>
-      </div>
-
     </div>
   </div>
-  <div class="container mt-6">
-    <div class="flex flex-col md:flex-row items-center justify-between mx-auto leading-normal">
-      <div class="w-full md:w-1/3 py-6 md:px-6 md:pl-0">
-        <svg class="inline w-6 h-6 mr-1 text-indigo-500 -mt-1"><use xlink:href="#feather-check-circle" /></svg>
-        <h3 class="inline text-lg font-bold">Goals & Conversions</h3>
-        <p class="text-lg mt-2">
-          Find out which referrers are driving the most conversions to your site. Works with custom events or page URLs you want your visitors to reach.
-        </p>
-      </div>
+</div>
 
-      <div class="w-full md:w-1/3 py-6 md:px-6">
-        <svg class="inline w-6 h-6 mr-1 text-indigo-500 -mt-1"><use xlink:href="#feather-check-circle" /></svg>
-        <h3 class="inline text-lg font-bold">Search keywords</h3>
-        <p class="text-lg mt-2">
-          Integrate your dashboard with Google Search Console to get the most accurate reporting on your search keywords.
-        </p>
-      </div>
 
-      <div class="w-full md:w-1/3 py-6 md:px-6 md:pr-0">
-        <svg class="inline w-6 h-6 mr-1 text-indigo-500 -mt-1"><use xlink:href="#feather-check-circle" /></svg>
-        <h3 class="inline text-lg font-bold">Email reports</h3>
-        <p class="text-lg mt-2">
-          Keep an eye on your traffic with a weekly email report including pageviews, visitor numbers, top pages and top referrers for the week.
-        </p>
-      </div>
-
-    </div>
-  </div>
-  <div class="container my-12 md:my-24 text-center relative">
-    <h2 class="text-xl font-black">Check out our analytics</h2>
-    <%= link("View live demo →", to: "/plausible.io", class: "button mt-6") %>
-  </div>
-  <div class="bg-gray-800">
+<div class="bg-gray-800">
     <div class="container relative pt-16 mb-32">
-      <h2 class="font-black text-white text-center text-3xl">Simple, traffic based pricing</h2>
+      <h2 class="text-center text-3xl tracking-tight leading-10 font-extrabold text-white sm:text-4xl sm:leading-none md:text-5xl">
+      Simple, traffic-based pricing
+      </h2>
       <h2 class="text-white text-center text-2xl text-indigo-100 mb-12">Try Plausible free for 30 days</h2>
       <div class="pt-32"></div>
       <div class="pt-24"></div>
@@ -142,7 +297,7 @@
             <header class="bg-gray-100 p-5 rounded-t-lg">
               <div class="uppercase font-bold text-indigo-600">Hobby</div>
             </header>
-            <div class="rounded-b-lg p-5 text-indigo-900">
+            <div class="rounded-b-lg p-5 text-gray-900">
               <div class="pb-2">
                 <b class="text-3xl font-black">$6</b>
                 <div class="text-gray-600 text-lg font-bold">per month</div>
@@ -341,4 +496,3 @@
       <%= link("Ask a question to the founder", to: "mailto:uku@plausible.io", class: "text-indigo-500") %>
     </div>
   </div>
-</div>
