@@ -72,6 +72,5 @@
     </main>
     <%= render("_footer.html", assigns) %>
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
-    <script async defer src="https://buttons.github.io/buttons.js"></script>
   </body>
 </html>
