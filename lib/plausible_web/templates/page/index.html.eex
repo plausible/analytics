@@ -116,7 +116,7 @@
               </div>
             </div>
             <div class="ml-4">
-              <h5 class="text-lg leading-6 font-medium text-gray-900">Doesn’t track nor collect any personally identifiable information</h5>
+              <h5 class="text-lg leading-6 font-medium text-gray-900">Doesn’t track nor collect any personal data</h5>
               <p class="mt-2 text-base leading-6 text-gray-500">
               Plausible respects the privacy of your visitors. Your traffic data is not used for any other purposes. You fully own and control it. See our data policy for details.
               </p>
@@ -134,46 +134,9 @@
               </div>
             </div>
             <div class="ml-4">
-              <h5 class="text-lg leading-6 font-medium text-gray-900">Compatible with GDPR, CCPA, PECR and other privacy regulations</h5>
+              <h5 class="text-lg leading-6 font-medium text-gray-900">No cookie banners needed</h5>
               <p class="mt-2 text-base leading-6 text-gray-500">
-              No need to compromise the visitor experience by having annoying cookie banners, GDPR, CCPA and PECR consent notices.
-              </p>
-            </div>
-          </div>
-        </li>
-
-        <li class="mt-10 md:mt-0">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
-                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-                </svg>
-              </div>
-            </div>
-            <div class="ml-4">
-              <h5 class="text-lg leading-6 font-medium text-gray-900">Be transparent and open your web analytics to everyone</h5>
-              <p class="mt-2 text-base leading-6 text-gray-500">
-              Your stats are private by default but you can choose to be transparent and make them public so anyone with your custom link can view them.
-              </p>
-            </div>
-          </div>
-        </li>
-
-        <li class="mt-10 md:mt-0">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
-                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                  <path d="M12 15V17M6 21H18C19.1046 21 20 20.1046 20 19V13C20 11.8954 19.1046 11 18 11H6C4.89543 11 4 11.8954 4 13V19C4 20.1046 4.89543 21 6 21ZM16 11V7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7V11H16Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-            </div>
-            <div class="ml-4">
-              <h5 class="text-lg leading-6 font-medium text-gray-900">Share the stats privately with your clients</h5>
-              <p class="mt-2 text-base leading-6 text-gray-500">
-              You can share your stats privately by generating a shared link. This link is impossible to guess but
-              you can add password protection for extra security.
+              Plausible does not use cookies and is fully compliant with GDPR, CCPA, PECR and other privacy regulations out of the box.
               </p>
             </div>
           </div>
@@ -214,6 +177,44 @@
             </div>
           </div>
         </li>
+
+        <li class="mt-10 md:mt-0">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h5 class="text-lg leading-6 font-medium text-gray-900">Open your web analytics to everyone</h5>
+              <p class="mt-2 text-base leading-6 text-gray-500">
+              Your stats are private by default but you can choose to be transparent and make them public so anyone with your custom link can view them.
+              </p>
+            </div>
+          </div>
+        </li>
+
+        <li class="mt-10 md:mt-0">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                  <path d="M12 15V17M6 21H18C19.1046 21 20 20.1046 20 19V13C20 11.8954 19.1046 11 18 11H6C4.89543 11 4 11.8954 4 13V19C4 20.1046 4.89543 21 6 21ZM16 11V7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7V11H16Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h5 class="text-lg leading-6 font-medium text-gray-900">Share the stats privately with your clients</h5>
+              <p class="mt-2 text-base leading-6 text-gray-500">
+              You can share your stats privately by generating a shared link. This link is impossible to guess but
+              you can add password protection for extra security.
+              </p>
+            </div>
+          </div>
+        </li>
+
       </ul>
     </div>
   </div>
@@ -245,7 +246,7 @@
               <div class="flex-shrink-0">
                 <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
                   <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                    <path d="M12 6V4M12 6C10.8954 6 10 6.89543 10 8C10 9.10457 10.8954 10 12 10M12 6C13.1046 6 14 6.89543 14 8C14 9.10457 13.1046 10 12 10M6 18C7.10457 18 8 17.1046 8 16C8 14.8954 7.10457 14 6 14M6 18C4.89543 18 4 17.1046 4 16C4 14.8954 4.89543 14 6 14M6 18V20M6 14V4M12 10V20M18 18C19.1046 18 20 17.1046 20 16C20 14.8954 19.1046 14 18 14M18 18C16.8954 18 16 17.1046 16 16C16 14.8954 16.8954 14 18 14M18 18V20M18 14V4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </div>
               </div>
@@ -262,7 +263,7 @@
               <div class="flex-shrink-0">
                 <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
                   <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
+                    <path d="M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15M9 5C9 6.10457 9.89543 7 11 7H13C14.1046 7 15 6.10457 15 5M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5M12 12H15M12 16H15M9 12H9.01M9 16H9.01" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </div>
               </div>
@@ -279,14 +280,15 @@
               <div class="flex-shrink-0">
                 <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
                   <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    <path d="M17.6569 16.6569C16.7202 17.5935 14.7616 19.5521 13.4138 20.8999C12.6327 21.681 11.3677 21.6814 10.5866 20.9003C9.26234 19.576 7.34159 17.6553 6.34315 16.6569C3.21895 13.5327 3.21895 8.46734 6.34315 5.34315C9.46734 2.21895 14.5327 2.21895 17.6569 5.34315C20.781 8.46734 20.781 13.5327 17.6569 16.6569Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15 11C15 12.6569 13.6569 14 12 14C10.3431 14 9 12.6569 9 11C9 9.34315 10.3431 8 12 8C13.6569 8 15 9.34315 15 11Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </div>
               </div>
               <div class="ml-4">
                 <h5 class="text-lg leading-6 font-medium text-gray-900">Visitor location and device stats</h5>
                 <p class="mt-2 text-base leading-6 text-gray-500">
-                  Track the basics in a completely anonymous way.
+                See the list of countries your traffic is coming from. See the device, browser and operating system your visitors are using. All the basics in a completely anonymous way.
                 </p>
               </div>
             </div>
@@ -294,7 +296,7 @@
         </ul>
       </div>
 
-      <div class="mt-10 -mx-4 relative lg:mt-0 lg:px-8">
+      <div class="mt-10 -mx-4 relative lg:mt-0 lg:pl-8">
         <svg class="absolute left-1/2 transform -translate-x-1/2 translate-y-16 lg:hidden" width="784" height="404" fill="none" viewBox="0 0 784 404">
           <defs>
             <pattern id="ca9667ae-9f92-4be7-abcb-9e3d727f2941" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -303,13 +305,13 @@
           </defs>
           <rect width="784" height="404" fill="url(#ca9667ae-9f92-4be7-abcb-9e3d727f2941)" />
         </svg>
-        <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/screenshot-referrers.png"), class: "relative mx-auto", alt: "Screenshot of referrers") %>
+        <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/screenshot-countries.png"), class: "relative mx-auto shadow-xl", alt: "Screenshot of referrers") %>
       </div>
     </div>
   </div>
 </div>
 
-<div class="bg-white">
+<div class="bg-white pt-12">
   <div class="container mx-auto py-12 lg:py-16">
     <div class="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
       <div class="mt-8 grid grid-cols-2 gap-0.5 md:grid-cols-3 lg:mt-0 lg:grid-cols-2">
@@ -630,11 +632,21 @@
               </p>
             </dd>
           </div>
+          <div class="mt-12">
+            <dt class="text-lg leading-6 font-medium text-gray-900">
+            3. Is Plausible open-source?
+            </dt>
+            <dd class="mt-2">
+              <p class="text-base leading-6 text-gray-500">
+              Plausible is fully open-source and available <%= link("on Github", to: "https://github.com/plausible-insights/plausible", class: "text-indigo-600") %> so you can check out the code. We welcome feedback, have a public roadmap and are available to you via email.
+              </p>
+            </dd>
+          </div>
         </div>
         <div class="mt-12 md:mt-0">
           <div class="">
             <dt class="text-lg leading-6 font-medium text-gray-900">
-            3. Why is Plausible not free like Google Analytics?
+            4. Why is Plausible not free like Google Analytics?
             </dt>
             <dd class="mt-2">
               <p class="text-base leading-6 text-gray-500">
@@ -646,7 +658,7 @@
           </div>
           <div class="mt-12">
             <dt class="text-lg leading-6 font-medium text-gray-900">
-            4. How do you make sure my visitors' privacy is protected?
+            5. How do you make sure my visitors' privacy is protected?
             </dt>
             <dd class="mt-2">
               <p class="text-base leading-6 text-gray-500">
