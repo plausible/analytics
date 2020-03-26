@@ -4,7 +4,7 @@
   <div class="mt-4 border-b border-gray-400"></div>
 
   <div class="flex flex-col items-center sm:flex-row sm:items-start justify-between mt-8">
-    <div class="text-center bg-gray-200 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
+    <div class="text-center bg-gray-100 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
       <h4 class="font-black">Current plan</h4>
       <%= if @subscription do %>
         <div class="text-xl py-2 font-medium"><%= subscription_name(@subscription) %></div>
@@ -14,7 +14,7 @@
         <%= link("Upgrade", to: "/billing/upgrade", class: "text-sm text-indigo-500 font-medium") %>
       <% end %>
     </div>
-    <div class="text-center bg-gray-200 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
+    <div class="text-center bg-gray-100 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
       <h4 class="font-black">Next bill amount</h4>
       <%= if @subscription do %>
         <div class="text-xl py-2 font-medium">$<%= @subscription.next_bill_amount %></div>
@@ -25,7 +25,7 @@
         <div class="text-xl py-2 font-medium">$0</div>
       <% end %>
     </div>
-    <div class="text-center bg-gray-200 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
+    <div class="text-center bg-gray-100 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
       <h4 class="font-black">Next bill date</h4>
 
       <%= if @subscription && @subscription.next_bill_date do %>
@@ -58,12 +58,12 @@
   <%= form_for @changeset, "/settings", [class: "max-w-sm"], fn f -> %>
     <div class="my-4">
       <%= label f, :name, class: "block text-gray-700 text-sm font-bold mb-2" %>
-      <%= text_input f, :name, class: "transition bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300" %>
+      <%= text_input f, :name, class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300" %>
       <%= error_tag f, :name %>
     </div>
     <div class="my-4">
       <%= label f, :email, class: "block text-gray-700 text-sm font-bold mb-2" %>
-      <%= email_input f, :email, class: "transition bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300" %>
+      <%= email_input f, :email, class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300" %>
       <%= error_tag f, :email %>
     </div>
     <%= submit "Save changes", class: "button mt-4" %>
@@ -80,7 +80,7 @@
   <p>Deleting your account removes all sites and stats you've collected</p>
 
   <%= if @subscription && @subscription.status == "active" do %>
-    <span class="button bg-gray-500 mt-6 hover:shadow-none">Delete my account</span>
+    <span class="button bg-gray-300 mt-6 hover:shadow-none">Delete my account</span>
     <p class="text-gray-600 text-sm mt-2">Your account cannot be deleted because you have an active subscription. If you want to delete your account, please cancel your subscription first.</p>
   <% else %>
     <%= link "Delete my account ", to: "/me", method: :delete, class: "button bg-red-600 mt-6", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"] %>

@@ -2,18 +2,18 @@
   <h2 class="text-xl font-black">Add goal for <%= @site.domain %></h2>
   <div class="mt-6 text-sm font-bold">Goal trigger</div>
   <div class="my-3 w-full flex rounded border border-gray-300">
-    <div class="w-1/2 text-center py-2 border-r border-gray-400 shadow-inner font-bold bg-gray-200 cursor-pointer" id="pageview-tab">Pageview</div>
-    <div class="w-1/2 text-center py-2 bg-gray-200 cursor-pointer" id="event-tab">Custom event</div>
+    <div class="w-1/2 text-center py-2 border-r border-gray-300 shadow-inner font-bold bg-gray-100 cursor-pointer" id="pageview-tab">Pageview</div>
+    <div class="w-1/2 text-center py-2 bg-gray-100 cursor-pointer" id="event-tab">Custom event</div>
   </div>
   <div class="my-6">
     <div id="pageview-fields">
       <%= label f, :page_path, class: "block text-sm font-bold" %>
-      <%= text_input f, :page_path, class: "transition mt-3 bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300", placeholder: "/success" %>
+      <%= text_input f, :page_path, class: "transition mt-3 bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300", placeholder: "/success" %>
       <%= error_tag f, :page_path %>
     </div>
     <div id="event-fields" class="hidden">
       <%= label f, :event_name, class: "block text-sm font-bold" %>
-      <%= text_input f, :event_name, class: "transition mt-3 bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300", placeholder: "Signup" %>
+      <%= text_input f, :event_name, class: "transition mt-3 bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300", placeholder: "Signup" %>
       <%= error_tag f, :event_name %>
     </div>
   </div>

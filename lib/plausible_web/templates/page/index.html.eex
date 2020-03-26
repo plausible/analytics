@@ -233,9 +233,9 @@
 
     <div class="relative lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
       <div class="relative">
-        <h4 class="text-2xl leading-8 font-extrabold text-gray-900 tracking-tight sm:text-3xl sm:leading-9">
-          Insightful website stats at a glance
-        </h4>
+        <h2 class="text-3xl leading-9 font-extrabold text-gray-900 tracking-tight sm:text-4xl sm:leading-10">
+          Simple analytics at a glance
+        </h2>
         <p class="mt-3 text-lg leading-7 text-gray-500">
         Google Analytics is overkill for most site owners. Plausible is easy to use and understand with no training or prior experience.
         </p>
@@ -335,7 +335,7 @@
         </div>
       </div>
       <div class="mt-12 lg:mt-0 lg:px-8">
-        <h2 class="text-3xl leading-9 font-extrabold text-gray-900 sm:text-4xl sm:leading-10">
+        <h2 class="text-3xl leading-9 font-extrabold text-gray-900 tracking-tight sm:text-4xl sm:leading-10">
           Integrates seamlessly with your favourite tools
         </h2>
         <p class="mt-3 max-w-3xl text-lg leading-7 text-gray-500">

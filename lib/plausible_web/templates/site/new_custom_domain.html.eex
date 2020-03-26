@@ -7,7 +7,7 @@
   </div>
   <div class="my-4">
     <%= label f, :domain, class: "block text-sm font-bold" %>
-    <%= text_input f, :domain, class: "transition mt-3 bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300", placeholder: "stats.[yourdomain].com" %>
+    <%= text_input f, :domain, class: "transition mt-3 bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300", placeholder: "stats.[yourdomain].com" %>
     <%= error_tag f, :domain %>
   </div>
 

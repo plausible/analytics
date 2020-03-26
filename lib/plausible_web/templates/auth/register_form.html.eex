@@ -8,13 +8,13 @@
     <h2 class="text-xl font-black">Enter your details</h2>
     <div class="my-4">
       <%= label f, :name, "Full name", class: "block text-gray-700 text-sm font-bold mb-2" %>
-      <%= text_input f, :name, class: "transition bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300", placeholder: "Jane Doe" %>
+      <%= text_input f, :name, class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300", placeholder: "Jane Doe" %>
       <%= error_tag f, :name %>
     </div>
     <div class="my-4">
       <%= label f, :email, class: "block text-gray-700 text-sm font-bold mb-2" %>
       <p class="text-gray-600 text-xs mt-1 mb-2">No spam, guaranteed.</p>
-      <%= email_input f, :email, class: "transition bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300", placeholder: "example@email.com" %>
+      <%= email_input f, :email, class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300", placeholder: "example@email.com" %>
       <%= error_tag f, :email %>
     </div>
 

@@ -3,7 +3,7 @@
   <div class="my-6">
     <%= label f, :domain, class: "block text-gray-700 text-sm font-bold" %>
     <p class="text-gray-600 text-xs mt-1 mb-2">Just the naked domain without <code>www</code> or <code>https://</code></p>
-    <%= text_input f, :domain, class: "transition bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-400", placeholder: "example.com" %>
+    <%= text_input f, :domain, class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-400", placeholder: "example.com" %>
     <%= error_tag f, :domain %>
   </div>
   <div class="my-6">
@@ -11,7 +11,7 @@
     <p class="text-gray-600 text-xs mt-1 mb-2">To make sure we agree on what 'today' means</p>
 
     <div class="inline-block relative w-full">
-      <%= select f, :timezone, Plausible.Timezones.options(), id: "tz-select", selected: "Etc/Greenwich", class: "block appearance-none w-full bg-gray-200 text-gray-700 cursor-pointer hover:border-gray-500 p-2 pr-8 rounded leading-normal focus:outline-none" %>
+      <%= select f, :timezone, Plausible.Timezones.options(), id: "tz-select", selected: "Etc/Greenwich", class: "block appearance-none w-full bg-gray-100 text-gray-700 cursor-pointer hover:border-gray-500 p-2 pr-8 rounded leading-normal focus:outline-none" %>
       <div class="pointer-events-none absolute top-0 right-0 flex items-center px-2 text-red">
         <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
       </div>

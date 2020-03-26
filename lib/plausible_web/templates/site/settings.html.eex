@@ -12,13 +12,13 @@
   <%= form_for @changeset, "/#{URI.encode_www_form(@site.domain)}/settings", [class: "max-w-xs"], fn f -> %>
     <div class="my-4">
       <%= label f, :domain, class: "block text-gray-700 text-sm font-bold mb-2" %>
-      <%= text_input f, :domain, class: "transition bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300 ", disabled: "disabled" %>
+      <%= text_input f, :domain, class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300 ", disabled: "disabled" %>
       <%= error_tag f, :domain %>
     </div>
     <div class="my-4">
       <%= label f, :timezone, "Reporting Timezone", class: "block text-gray-700 text-sm font-bold mb-2" %>
       <div class="inline-block relative w-full">
-        <%= select f, :timezone, Plausible.Timezones.options(), class: "block appearance-none w-full bg-gray-200 text-gray-700 cursor-pointer hover:border-gray-500 p-2 pr-8 rounded leading-normal focus:outline-none" %>
+        <%= select f, :timezone, Plausible.Timezones.options(), class: "block appearance-none w-full bg-gray-100 text-gray-700 cursor-pointer hover:border-gray-500 p-2 pr-8 rounded leading-normal focus:outline-none" %>
         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-pink-500">
           <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
         </div>
@@ -35,7 +35,7 @@
   <%= if @site.public do %>
       Stats for <%= @site.domain %> are currently <b>public</b>. Anyone with the following link can view the stats:
       <div class="relative text-sm mt-4">
-        <input type="text" id="public-link" value="https://plausible.io/<%= URI.encode_www_form(@site.domain)  %>" class="transition bg-gray-200 appearance-none border border-transparent rounded w-full p-2 pr-16 text-gray-700 appearance-none focus:outline-none" />
+        <input type="text" id="public-link" value="https://plausible.io/<%= URI.encode_www_form(@site.domain)  %>" class="transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 pr-16 text-gray-700 appearance-none focus:outline-none" />
         <a onclick="var input = document.getElementById('public-link'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="absolute right-0 text-indigo-700 font-bold p-2">
           <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
         </a>
@@ -61,11 +61,11 @@
 
     <%= for link <- @shared_links do %>
       <div class="flex relative w-full mt-2 text-sm">
-        <input type="text" id="<%= link.slug %>" readonly="readonly" value="<%= shared_link_dest(link) %>" class="transition bg-gray-200 appearance-none border border-transparent rounded rounded-r-none w-full p-2 text-gray-700 appearance-none focus:outline-none focus:border-gray-300" />
-        <button onclick="var input = document.getElementById('<%= link.slug %>'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="py-2 px-4 bg-gray-200 text-indigo-800 rounded-none border-r border-gray-300">
+        <input type="text" id="<%= link.slug %>" readonly="readonly" value="<%= shared_link_dest(link) %>" class="transition bg-gray-100 appearance-none border border-transparent rounded rounded-r-none w-full p-2 text-gray-700 appearance-none focus:outline-none focus:border-gray-300" />
+        <button onclick="var input = document.getElementById('<%= link.slug %>'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="py-2 px-4 bg-gray-100 text-indigo-800 rounded-none border-r border-gray-300">
           <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
         </button>
-        <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/shared-links/#{link.slug}", method: :delete, class: "py-2 px-4 bg-gray-200 text-red-600 rounded-l-none", data: [confirm: "Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."]) do %>
+        <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/shared-links/#{link.slug}", method: :delete, class: "py-2 px-4 bg-gray-100 text-red-600 rounded-l-none", data: [confirm: "Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."]) do %>
           <svg class="feather-sm"><use xlink:href="#feather-trash-2" /></svg>
         <% end %>
       </div>
@@ -119,7 +119,7 @@
       <%= form_for Plausible.Site.GoogleAuth.changeset(@site.google_auth), "/#{URI.encode_www_form(@site.domain)}/settings/google", [class: "max-w-xs"], fn f -> %>
         <div class="my-6">
           <div class="inline-block relative w-full">
-            <%= select f, :property, @search_console_domains, prompt: "(Choose property)", class: "block appearance-none w-full bg-gray-200 text-gray-700 cursor-pointer hover:border-gray-500 p-2 pr-8 rounded leading-normal focus:outline-none" %>
+            <%= select f, :property, @search_console_domains, prompt: "(Choose property)", class: "block appearance-none w-full bg-gray-100 text-gray-700 cursor-pointer hover:border-gray-500 p-2 pr-8 rounded leading-normal focus:outline-none" %>
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-pink-500">
               <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
             </div>
@@ -158,14 +158,14 @@
     <div class="text-sm text-gray-700 mt-6">
       <h4 class="font-bold my-2">Weekly report recipients</h4>
       <%= for recipient <- @weekly_report.recipients do %>
-        <div class="p-2 flex justify-between bg-gray-200 rounded my-2 max-w-md">
+        <div class="p-2 flex justify-between bg-gray-100 rounded my-2 max-w-md">
           <span><svg class="feather mr-1"><use xlink:href="#feather-mail" /></svg><%= recipient %></span>
           <%= button("❌", to: "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/recipients/#{recipient}", method: :delete) %>
         </div>
       <% end %>
       <%= form_for @conn, "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/recipients", fn f -> %>
         <div class="flex justify-between my-2 max-w-md">
-          <%= email_input f, :recipient, class: "transition bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300", style: "flex-grow: 2", placeholder: "recipient@example.com" %>
+          <%= email_input f, :recipient, class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300", style: "flex-grow: 2", placeholder: "recipient@example.com" %>
           <%= submit "Add recipient", class: "button rounded-l-none whitespace-no-wrap" %>
         </div>
       <% end %>
@@ -188,14 +188,14 @@
     <div class="text-sm text-gray-700 mt-6">
       <h4 class="font-bold my-2">Monthly report recipients</h4>
       <%= for recipient <- @monthly_report.recipients do %>
-        <div class="p-2 flex justify-between bg-gray-200 rounded my-2 max-w-md">
+        <div class="p-2 flex justify-between bg-gray-100 rounded my-2 max-w-md">
           <span><svg class="feather mr-1"><use xlink:href="#feather-mail" /></svg><%= recipient %></span>
           <%= button("❌", to: "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/recipients/#{recipient}", method: :delete) %>
         </div>
       <% end %>
       <%= form_for @conn, "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/recipients", fn f -> %>
         <div class="flex justify-between my-2 max-w-md">
-          <%= email_input f, :recipient, class: "transition bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300", style: "flex-grow: 2", placeholder: "recipient@example.com" %>
+          <%= email_input f, :recipient, class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300", style: "flex-grow: 2", placeholder: "recipient@example.com" %>
           <%= submit "Add recipient", class: "button rounded-l-none whitespace-no-wrap" %>
         </div>
       <% end %>
@@ -222,7 +222,7 @@
   <div class="my-4">
     <p>Include this snippet in the <code>&lt;head&gt;</code> of your website.</p>
     <div class="relative">
-      <%= textarea f, :domain, id: "snippet_code", class: "transition overflow-hidden bg-gray-200 appearance-none border border-transparent rounded w-full p-2 pr-6 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300 text-xs mt-2 resize-none", value: snippet(@site), rows: 2 %>
+      <%= textarea f, :domain, id: "snippet_code", class: "transition overflow-hidden bg-gray-100 appearance-none border border-transparent rounded w-full p-2 pr-6 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300 text-xs mt-2 resize-none", value: snippet(@site), rows: 2 %>
       <a onclick="var textarea = document.getElementById('snippet_code'); textarea.focus(); textarea.select(); document.execCommand('copy');" href="javascript:void(0)" class="no-underline text-indigo-500 text-sm hover:underline">
         <svg class="absolute text-indigo-500" style="top: 24px; right: 12px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-copy"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       </a>
