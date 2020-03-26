@@ -58,9 +58,9 @@
   <div style="padding-top: 36rem;"></div>
   <div class="container mx-auto">
     <div class="lg:text-center">
-      <h3 class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10">
+      <h2 class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10">
         Why use Plausible?
-      </h3>
+      </h2>
       <p class="mt-4 max-w-2xl text-xl leading-7 text-gray-500 lg:mx-auto">
         Plausible is built for privacy-conscious website owners. Here’s what makes it a great Google Analytics alternative
       </p>
@@ -78,7 +78,7 @@
               </div>
             </div>
             <div class="ml-4">
-              <h5 class="text-lg leading-6 font-medium text-gray-900">Check website traffic and site analytics in 1 minute</h5>
+              <h3 class="text-lg leading-6 font-medium text-gray-900">Check website traffic and site analytics in 1 minute</h3>
               <p class="mt-2 text-base leading-6 text-gray-500">
               Plausible is simple and it cuts through the noise. No layers of menus, no need
               for custom reports. Get all the important insights on one single page. No training necessary.
@@ -97,7 +97,7 @@
               </div>
             </div>
             <div class="ml-4">
-              <h5 class="text-lg leading-6 font-medium text-gray-900">Lightweight script which keeps your site speed fast</h5>
+              <h3 class="text-lg leading-6 font-medium text-gray-900">Lightweight script which keeps your site speed fast</h3>
               <p class="mt-2 text-base leading-6 text-gray-500">
               Plausible script is 14 times smaller than Google Analytics script. You will reduce your page weight and your site will load faster.
               </p>
@@ -116,7 +116,7 @@
               </div>
             </div>
             <div class="ml-4">
-              <h5 class="text-lg leading-6 font-medium text-gray-900">Doesn’t track nor collect any personal data</h5>
+              <h3 class="text-lg leading-6 font-medium text-gray-900">Doesn’t track nor collect any personal data</h3>
               <p class="mt-2 text-base leading-6 text-gray-500">
               Plausible respects the privacy of your visitors. Your traffic data is not used for any other purposes. You fully own and control it. See our data policy for details.
               </p>
@@ -134,7 +134,7 @@
               </div>
             </div>
             <div class="ml-4">
-              <h5 class="text-lg leading-6 font-medium text-gray-900">No cookie banners needed</h5>
+              <h3 class="text-lg leading-6 font-medium text-gray-900">No cookie banners needed</h3>
               <p class="mt-2 text-base leading-6 text-gray-500">
               Plausible does not use cookies and is fully compliant with GDPR, CCPA, PECR and other privacy regulations out of the box.
               </p>
@@ -152,7 +152,7 @@
               </div>
             </div>
             <div class="ml-4">
-              <h5 class="text-lg leading-6 font-medium text-gray-900">Define key goals and track conversions</h5>
+              <h3 class="text-lg leading-6 font-medium text-gray-900">Define key goals and track conversions</h3>
               <p class="mt-2 text-base leading-6 text-gray-500">
               Set custom events or page URLs as your goals and see how they convert over time to understand and identify the trends that matter.
               </p>
@@ -170,7 +170,7 @@
               </div>
             </div>
             <div class="ml-4">
-              <h5 class="text-lg leading-6 font-medium text-gray-900">Get weekly or monthly reports directly into your inbox</h5>
+              <h3 class="text-lg leading-6 font-medium text-gray-900">Get weekly or monthly reports directly into your inbox</h3>
               <p class="mt-2 text-base leading-6 text-gray-500">
               Keep an eye on your traffic with automated email reports. Email reports can be scheduled to be sent to multiple recipients.
               </p>
@@ -188,7 +188,7 @@
               </div>
             </div>
             <div class="ml-4">
-              <h5 class="text-lg leading-6 font-medium text-gray-900">Open your web analytics to everyone</h5>
+              <h3 class="text-lg leading-6 font-medium text-gray-900">Open your web analytics to everyone</h3>
               <p class="mt-2 text-base leading-6 text-gray-500">
               Your stats are private by default but you can choose to be transparent and make them public so anyone with your custom link can view them.
               </p>
@@ -206,7 +206,7 @@
               </div>
             </div>
             <div class="ml-4">
-              <h5 class="text-lg leading-6 font-medium text-gray-900">Share the stats privately with your clients</h5>
+              <h3 class="text-lg leading-6 font-medium text-gray-900">Share the stats privately with your clients</h3>
               <p class="mt-2 text-base leading-6 text-gray-500">
               You can share your stats privately by generating a shared link. This link is impossible to guess but
               you can add password protection for extra security.
@@ -251,7 +251,7 @@
                 </div>
               </div>
               <div class="ml-4">
-                <h5 class="text-lg leading-6 font-medium text-gray-900">Unique visitors, total page views and the bounce rate</h5>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Unique visitors, total page views and the bounce rate</h3>
                 <p class="mt-2 text-base leading-6 text-gray-500">
                 Choose the time range that you want to analyze. The visitor numbers are automatically presented on an hourly, daily or monthly graph.
                 </p>
@@ -268,7 +268,7 @@
                 </div>
               </div>
               <div class="ml-4">
-                <h5 class="text-lg leading-6 font-medium text-gray-900">Top referral sources and most visited pages</h5>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Top referral sources and most visited pages</h3>
                 <p class="mt-2 text-base leading-6 text-gray-500">
                   Answer the most important question about your website – where are your visitors coming from and what are they viewing?
                 </p>
@@ -286,7 +286,7 @@
                 </div>
               </div>
               <div class="ml-4">
-                <h5 class="text-lg leading-6 font-medium text-gray-900">Visitor location and device stats</h5>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Visitor location and device stats</h3>
                 <p class="mt-2 text-base leading-6 text-gray-500">
                 See the list of countries your traffic is coming from. See the device, browser and operating system your visitors are using. All the basics in a completely anonymous way.
                 </p>
@@ -389,12 +389,12 @@
   <div class="pt-12 sm:pt-16 lg:pt-24">
     <div class="max-w-screen-xl mx-auto text-center px-4 sm:px-6 lg:px-8">
       <div class="max-w-3xl mx-auto lg:max-w-none">
-        <h2 class="text-lg leading-6 font-semibold text-gray-300 uppercase tracking-wider">
+        <p class="text-lg leading-6 font-semibold text-gray-300 uppercase tracking-wider">
           Pricing
-        </h2>
-        <p class="mt-2 text-3xl leading-9 font-extrabold text-white sm:text-4xl sm:leading-10 lg:text-5xl lg:leading-none">
-          Simple, traffic-based pricing
         </p>
+        <h2 class="mt-2 text-3xl leading-9 font-extrabold text-white sm:text-4xl sm:leading-10 lg:text-5xl lg:leading-none">
+          Simple, traffic-based pricing
+        </h2>
         <p class="mt-2 text-xl leading-7 text-gray-300">
           Sign up for 30-day unlimited trial. No credit card required.
         </p>
@@ -613,58 +613,58 @@
       <dl class="md:grid md:grid-cols-2 md:gap-8">
         <div>
           <div>
-            <dt class="text-lg leading-6 font-medium text-gray-900">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
             1. Can I use Plausible on more than one website?
-            </dt>
-            <dd class="mt-2">
+            </h3>
+            <div class="mt-2">
               <p class="text-base leading-6 text-gray-500">
               Yes. You can add as many websites as you want under a single account. You will be charged for the total pageviews on all of your websites combined. For example, on the 10k plan you can either have 10 websites that each get 1000 pageviews per month, or one website that gets 10,000 pageviews per month.
               </p>
-            </dd>
+            </div>
           </div>
           <div class="mt-12">
-            <dt class="text-lg leading-6 font-medium text-gray-900">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
             2. What happens if I go over my plan limit?
-            </dt>
-            <dd class="mt-2">
+            </h3>
+            <div class="mt-2">
               <p class="text-base leading-6 text-gray-500">
               You don't have to pay for a one-time spike in traffic, but if you go over your plan limit for 2 months in a row, we will contact you to discuss upgrade options.
               </p>
-            </dd>
+            </div>
           </div>
           <div class="mt-12">
-            <dt class="text-lg leading-6 font-medium text-gray-900">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
             3. Is Plausible open-source?
-            </dt>
-            <dd class="mt-2">
+            </h3>
+            <div class="mt-2">
               <p class="text-base leading-6 text-gray-500">
               Plausible is fully open-source and available <%= link("on Github", to: "https://github.com/plausible-insights/plausible", class: "text-indigo-600") %> so you can check out the code. We welcome feedback, have a public roadmap and are available to you via email.
               </p>
-            </dd>
+            </div>
           </div>
         </div>
         <div class="mt-12 md:mt-0">
           <div class="">
-            <dt class="text-lg leading-6 font-medium text-gray-900">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
             4. Why is Plausible not free like Google Analytics?
-            </dt>
-            <dd class="mt-2">
+            </h3>
+            <div class="mt-2">
               <p class="text-base leading-6 text-gray-500">
               Google Analytics is free because Google has built their company and their wealth by collecting and analyzing huge amounts of personal information from web users and using these personal and behavioral insights to sell advertisements.<br /><br />
 
               With Plausible, you 100% own and control all of your website data. This data is not being shared with or sold to any third-parties. Since we don't make money from targeted advertisement, we must ask for a small fee to keep the servers running.
               </p>
-            </dd>
+            </div>
           </div>
           <div class="mt-12">
-            <dt class="text-lg leading-6 font-medium text-gray-900">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
             5. How do you make sure my visitors' privacy is protected?
-            </dt>
-            <dd class="mt-2">
+            </h3>
+            <div class="mt-2">
               <p class="text-base leading-6 text-gray-500">
               We take painstaking care to not collect or store any personal information that could be tied back to the visitor. You own your data and we will never sell it or use it in nefarious ways. <%= link("Read more about our data policy", to: "/data-policy", class: "text-indigo-600") %>.
               </p>
-            </dd>
+            </div>
           </div>
         </div>
       </dl>
@@ -674,11 +674,11 @@
 
 <div class="bg-white">
   <div class="container mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
-    <h2 class="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10">
+    <h3 class="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10">
       Ready to dive in?
       <br />
       <span class="text-indigo-600">Start your free trial today.</span>
-    </h2>
+    </h3>
     <div class="mt-8 flex lg:flex-shrink-0 lg:mt-0">
       <div class="inline-flex rounded-md shadow">
         <a href="/register" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out">
