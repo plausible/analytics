@@ -322,10 +322,10 @@
           <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/ghost.svg"), class: "max-h-12", alt: "Ghost") %>
         </div>
         <div class="col-span-1 flex justify-center py-8 px-8 bg-gray-50">
-          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/squarespace.png"), class: "max-h-12", alt: "Squarespace") %>
+          <img class="max-h-8 mt-2" src="https://static1.squarespace.com/static/ta/579a2a93c534a544b31573c3/30/assets/pages/logomark/images/icons/icon-squarespace.svg?20181219" alt="Wix" />
         </div>
         <div class="col-span-1 flex justify-center py-8 px-8 bg-gray-50">
-          <img class="max-h-8 mt-2" src="https://upload.wikimedia.org/wikipedia/en/thumb/7/76/Wix.com_website_logo.svg/2880px-Wix.com_website_logo.svg.png" alt="Wix" />
+          <img class="max-h-8 mt-2" src="https://upload.wikimedia.org/wikipedia/en/7/76/Wix.com_website_logo.svg" alt="Wix" />
         </div>
         <div class="col-span-1 flex justify-center py-8 px-8 bg-gray-50">
           <img class="max-h-12" src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Weebly_logo.svg" alt="Weebly" />
