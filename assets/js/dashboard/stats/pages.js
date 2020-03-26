@@ -35,7 +35,7 @@ export default class Pages extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={page.name}>
         <div className="w-full h-8 truncate" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={page.count} all={this.state.pages} bg="bg-orange-100" />
+          <Bar count={page.count} all={this.state.pages} bg="bg-orange-50" />
           <span className="block px-2" style={{marginTop: '-26px'}}>{page.name}</span>
         </div>
         <span className="font-medium">{numberFormatter(page.count)}</span>

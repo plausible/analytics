@@ -64,7 +64,7 @@ class ScreenSizes extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={size.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={size.count} all={this.state.sizes} bg="bg-green-100" />
+          <Bar count={size.count} all={this.state.sizes} bg="bg-green-50" />
           <span className="block px-2" style={{marginTop: '-26px'}}>{iconFor(size.name)} {size.name}</span>
         </div>
         <span className="font-medium">{size.percentage}%</span>
@@ -126,7 +126,7 @@ class Browsers extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={browser.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={browser.count} all={this.state.browsers} bg="bg-green-100" />
+          <Bar count={browser.count} all={this.state.browsers} bg="bg-green-50" />
           <span className="block px-2" style={{marginTop: '-26px'}}>{browser.name}</span>
         </div>
         <span className="font-medium">{browser.percentage}%</span>
@@ -188,7 +188,7 @@ class OperatingSystems extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={os.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={os.count} all={this.state.operatingSystems} bg="bg-green-100" />
+          <Bar count={os.count} all={this.state.operatingSystems} bg="bg-green-50" />
           <span className="block px-2" style={{marginTop: '-26px'}}>{os.name}</span>
         </div>
         <span className="font-medium">{os.percentage}%</span>
@@ -248,12 +248,12 @@ export default class Devices extends React.Component {
 
   renderPill(name, mode) {
     const isActive = this.state.mode === mode
-    const extraClass = name === 'OS' ? '' : ' border-r border-gray-400'
+    const extraClass = name === 'OS' ? '' : ' border-r border-gray-300'
 
     if (isActive) {
       return <span className={"inline-block shadow-inner text-sm font-bold py-1 px-4" + extraClass}>{name}</span>
     } else {
-      return <span className={"inline-block cursor-pointer bg-gray-200 text-sm font-bold py-1 px-4" + extraClass} onClick={this.setMode(mode)}>{name}</span>
+      return <span className={"inline-block cursor-pointer bg-gray-100 text-sm font-bold py-1 px-4" + extraClass} onClick={this.setMode(mode)}>{name}</span>
     }
   }
 
@@ -263,7 +263,7 @@ export default class Devices extends React.Component {
         <div className="bg-white shadow-xl rounded p-4 relative" style={{height: '436px'}}>
           <h3 className="font-bold">Devices</h3>
 
-          <div className="rounded border border-gray-400 absolute" style={{top: '1rem', right: '1rem'}}>
+          <div className="rounded border border-gray-300 absolute" style={{top: '1rem', right: '1rem'}}>
             { this.renderPill('Size', 'size') }
             { this.renderPill('Browser', 'browser') }
             { this.renderPill('OS', 'os') }

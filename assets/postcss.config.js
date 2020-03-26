@@ -4,7 +4,7 @@ const purgecss = require('@fullhuman/postcss-purgecss')({
     '../lib/plausible_web/templates/**/*.html.eex',
   ],
 
-  defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || []
+  defaultExtractor: content => content.match(/[\w-/.:]+(?<!:)/g) || []
 })
 
 module.exports = {

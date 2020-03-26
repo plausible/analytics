@@ -6,7 +6,7 @@
   </div>
   <div class="my-6">
     <%= label f, :password, "Password (optional)", class: "block text-sm font-bold" %>
-    <%= password_input f, :password, class: "transition mt-3 bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300" %>
+    <%= password_input f, :password, class: "transition mt-3 bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300" %>
     <%= error_tag f, :password %>
   </div>
 

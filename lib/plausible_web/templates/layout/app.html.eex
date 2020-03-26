@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.3/flatpickr.min.css">
     <%= render("_tracking.html", assigns) %>
   </head>
-  <body class="flex flex-col h-full bg-gray-100">
+  <body class="flex flex-col h-full bg-gray-50">
     <%= render("_svg_icons.html") %>
     <nav class="container flex items-center justify-between flex-wrap py-8">
       <div class="flex items-center flex-shrink-0">
@@ -38,9 +38,9 @@
                   <svg style="height: 18px; transform: translateY(2px); fill: #606f7b;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 512 640" enable-background="new 0 0 512 512" xml:space="preserve"><g><circle cx="256" cy="52.8" r="50.8"/><circle cx="256" cy="256" r="50.8"/><circle cx="256" cy="459.2" r="50.8"/></g></svg>
                 </div>
 
-                <div data-dropdown style="top: 42px; right: 0px; width: 185px;" class="dropdown-content hidden absolute right-0 bg-white border border-gray-400 rounded shadow-md z-10">
-                  <%= link("Settings", to: "/settings", class: "block py-2 px-2 border-b border-gray-400 hover:bg-gray-200") %>
-                  <%= link("Log out", to: "/logout", method: :post, class: "block py-2 px-2 hover:bg-gray-200") %>
+                <div data-dropdown style="top: 42px; right: 0px; width: 185px;" class="dropdown-content hidden absolute right-0 bg-white border border-gray-300 rounded shadow-md z-10">
+                  <%= link("Settings", to: "/settings", class: "block py-2 px-2 border-b border-gray-300 hover:bg-gray-100") %>
+                  <%= link("Log out", to: "/logout", method: :post, class: "block py-2 px-2 hover:bg-gray-100") %>
                 </div>
               </div>
             </li>
@@ -48,8 +48,12 @@
       <% true -> %>
         <ul class="flex">
           <li>
-            <%= link("Login", to: "/login", class: "font-bold rounded py-2 px-3 hover:bg-gray-200", style: "line-height: 33px;") %>
-            <%= link("Start free trial", to: "/register", class: "button button-md hidden sm:inline") %>
+            <div class="inline-flex rounded">
+              <%= link("Login", to: "/login", class: "inline-flex items-center justify-center px-5 py-2 border border-transparent text-base leading-6 font-medium rounded-md hover:bg-gray-200 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out") %>
+            </div>
+            <div class="inline-flex rounded shadow ml-3">
+              <%= link("Start free trial", to: "/register", class: "inline-flex items-center justify-center px-5 py-2 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out") %>
+            </div>
           </li>
         </ul>
       <% end %>

@@ -1,18 +1,18 @@
 <%= form_for @conn, "/login", [class: "w-full max-w-md mx-auto bg-white shadow-md rounded px-8 py-6 mt-8"], fn f -> %>
   <h1 class="text-xl font-black"><%= get_flash(@conn, :login_title) || "Enter your email and password" %></h1>
   <%= if get_flash(@conn, :login_instructions) do %>
-    <p class="text-gray-600 text-sm mt-1 mb-2"><%= get_flash(@conn, :login_instructions) %></p>
+    <p class="text-gray-500 text-sm mt-1 mb-2"><%= get_flash(@conn, :login_instructions) %></p>
   <% end %>
   <%= if @conn.assigns[:error] do %>
     <div class="text-red-500 text-xs italic mt-4"><%= @conn.assigns[:error] %></div>
   <% end %>
   <div class="my-4 mt-8">
     <%= label f, :email, class: "block text-gray-700 text-sm font-bold mb-2" %>
-    <%= email_input f, :email, class: "bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300", placeholder: "user@example.com" %>
+    <%= email_input f, :email, class: "bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300", placeholder: "user@example.com" %>
   </div>
   <div class="my-4">
     <%= label f, :password, class: "block text-gray-700 text-sm font-bold mb-2" %>
-    <%= password_input f, :password, class: "transition bg-gray-200 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300" %>
+    <%= password_input f, :password, class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300" %>
     <p class="text-gray-600 text-xs my-2">Forgot password? <a href="/password/request-reset" class="underline text-gray-800">Click here</a> to reset it.</p>
   </div>
   <%= submit "Login →", class: "button mt-4 w-full" %>
