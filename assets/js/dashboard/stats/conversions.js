@@ -54,7 +54,7 @@ export default class Conversions extends React.Component {
       return (
         <div className="w-full bg-white shadow-xl rounded p-4">
           <h3 className="font-bold">Goal Conversions</h3>
-          <div className="flex items-center mt-3 mb-2 justify-between text-gray-600 text-xs font-bold tracking-wide">
+          <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Goal</span>
             <span>Conversions</span>
           </div>

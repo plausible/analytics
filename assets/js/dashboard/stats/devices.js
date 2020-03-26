@@ -76,7 +76,7 @@ class ScreenSizes extends React.Component {
     if (this.state.sizes && this.state.sizes.length > 0) {
       return (
         <React.Fragment>
-          <div className="flex items-center mt-3 mb-2 justify-between text-gray-600 text-xs font-bold tracking-wide">
+          <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Screen size</span>
             <span>Visitors</span>
           </div>
@@ -84,7 +84,7 @@ class ScreenSizes extends React.Component {
         </React.Fragment>
       )
     } else {
-      return <div className="text-center mt-44 font-medium text-gray-600">No data yet</div>
+      return <div className="text-center mt-44 font-medium text-gray-500">No data yet</div>
     }
   }
 
@@ -138,7 +138,7 @@ class Browsers extends React.Component {
     if (this.state.browsers && this.state.browsers.length > 0) {
       return (
         <React.Fragment>
-          <div className="flex items-center mt-3 mb-2 justify-between text-gray-600 text-xs font-bold tracking-wide">
+          <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Browser</span>
             <span>Visitors</span>
           </div>
@@ -146,7 +146,7 @@ class Browsers extends React.Component {
         </React.Fragment>
       )
     } else {
-      return <div className="text-center mt-44 font-medium text-gray-600">No data yet</div>
+      return <div className="text-center mt-44 font-medium text-gray-500">No data yet</div>
     }
   }
 
@@ -200,7 +200,7 @@ class OperatingSystems extends React.Component {
     if (this.state.operatingSystems && this.state.operatingSystems.length > 0) {
       return (
         <React.Fragment>
-          <div className="flex items-center mt-3 mb-2 justify-between text-gray-600 text-xs font-bold tracking-wide">
+          <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Operating system</span>
             <span>Visitors</span>
           </div>
@@ -208,7 +208,7 @@ class OperatingSystems extends React.Component {
         </React.Fragment>
       )
     } else {
-      return <div className="text-center mt-44 font-medium text-gray-600">No data yet</div>
+      return <div className="text-center mt-44 font-medium text-gray-500">No data yet</div>
     }
   }
 

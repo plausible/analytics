@@ -60,7 +60,7 @@ class ReferrerDrilldownModal extends React.Component {
             <img className="rounded-full w-8" src={tweet.author_image} />
             <div className="ml-2 leading-tight">
               <div className="font-bold group-hover:text-blue-500">{tweet.author_name}</div>
-              <div className="text-xs text-gray-600">@{tweet.author_handle}</div>
+              <div className="text-xs text-gray-500">@{tweet.author_handle}</div>
             </div>
           </a>
           <a className="ml-auto twitter-icon" href={tweetUrl} target="_blank"></a>
@@ -80,7 +80,7 @@ class ReferrerDrilldownModal extends React.Component {
         <tr className="text-sm" key={referrer.name}>
           <td className="p-2">
             { this.renderReferrerName(referrer.name) }
-            <span className="text-gray-600 ml-2 text-xs">
+            <span className="text-gray-500 ml-2 text-xs">
               appears in {referrer.tweets.length} tweets
             </span>
             <div className="my-4 pl-4 border-l-2 border-gray-300">
@@ -107,7 +107,7 @@ class ReferrerDrilldownModal extends React.Component {
   renderGoalText() {
     if (this.state.query.filters.goal) {
       return (
-        <h1 className="text-xl font-semibold text-gray-600 leading-none">completed {this.state.query.filters.goal}</h1>
+        <h1 className="text-xl font-semibold text-gray-500 leading-none">completed {this.state.query.filters.goal}</h1>
       )
     }
   }
@@ -130,9 +130,9 @@ class ReferrerDrilldownModal extends React.Component {
             <table className="w-full table-striped table-fixed mt-4">
               <thead>
                 <tr>
-                  <th className="p-2 text-xs tracking-wide font-bold text-gray-600" align="left">Referrer</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-600" align="right">Visitors</th>
-                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-600" align="right">Bounce rate</th>}
+                  <th className="p-2 text-xs tracking-wide font-bold text-gray-500" align="left">Referrer</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Visitors</th>
+                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Bounce rate</th>}
                 </tr>
               </thead>
               <tbody>

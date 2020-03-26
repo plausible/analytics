@@ -244,7 +244,7 @@ class LineGraph extends React.Component {
 
       return (
         <div className={`px-8 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
-          <div className="text-gray-600 text-xs font-bold tracking-wide uppercase">{stat.name}</div>
+          <div className="text-gray-500 text-xs font-bold tracking-wide uppercase">{stat.name}</div>
           <div className="my-1 flex justify-between items-center">
             <b className="text-2xl mr-4">{ typeof(stat.count) == 'number' ? numberFormatter(stat.count) : stat.percentage + '%' }</b>
             {this.renderComparison(stat.name, stat.change)}

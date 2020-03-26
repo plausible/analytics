@@ -53,7 +53,7 @@ export default class Referrers extends React.Component {
     if (this.state.referrers.length > 0) {
       return (
         <React.Fragment>
-          <div className="flex items-center mt-3 mb-2 justify-between text-gray-600 text-xs font-bold tracking-wide">
+          <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Referrer</span>
             <span>Visitors</span>
           </div>
@@ -62,7 +62,7 @@ export default class Referrers extends React.Component {
         </React.Fragment>
       )
     } else {
-      return <div className="text-center mt-44 font-medium text-gray-600">No data yet</div>
+      return <div className="text-center mt-44 font-medium text-gray-500">No data yet</div>
     }
   }
 
