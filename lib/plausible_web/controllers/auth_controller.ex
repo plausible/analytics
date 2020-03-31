@@ -38,6 +38,7 @@ defmodule PlausibleWeb.AuthController do
 
             conn
             |> put_session(:current_user_id, user.id)
+            |> put_resp_cookie("logged_in", "true")
             |> redirect(to: "/password")
           {:error, changeset} ->
             send_resp(conn, 400, inspect(changeset.errors))
@@ -94,6 +95,7 @@ defmodule PlausibleWeb.AuthController do
             |> put_flash(:login_title, "Password updated successfully")
             |> put_flash(:login_instructions, "Please log in with your new credentials")
             |> put_session(:current_user_id, nil)
+            |> delete_resp_cookie("logged_in")
             |> redirect(to: "/login")
           {:error, changeset} ->
             render(conn, "password_reset_form.html", changeset: changeset, token: token, layout: {PlausibleWeb.LayoutView, "focus.html"})
@@ -119,6 +121,7 @@ defmodule PlausibleWeb.AuthController do
 
         conn
         |> put_session(:current_user_id, user.id)
+        |> put_resp_cookie("logged_in", "true")
         |> put_session(:login_dest, nil)
         |> redirect(to: login_dest)
       else
@@ -167,7 +170,7 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  def delete_me(conn, _params) do
+  def delete_me(conn, params) do
     user = conn.assigns[:current_user]
            |> Repo.preload(:sites)
            |> Repo.preload(:subscription)
@@ -183,14 +186,13 @@ defmodule PlausibleWeb.AuthController do
     Repo.delete!(user.subscription)
     Repo.delete!(user)
 
-    conn
-    |> configure_session(drop: true)
-    |> redirect(to: "/")
+    logout(conn, params)
   end
 
   def logout(conn, _params) do
     conn
     |> configure_session(drop: true)
+    |> delete_resp_cookie("logged_in")
     |> redirect(to: "/")
   end
 
