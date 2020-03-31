@@ -1,4 +1,6 @@
 defmodule PlausibleWeb.RequireLoggedOutPlug do
+  import Plug.Conn
+
   def init(options) do
     options
   end
@@ -7,8 +9,9 @@ defmodule PlausibleWeb.RequireLoggedOutPlug do
     cond do
       conn.assigns[:current_user] ->
         conn
+        |> put_resp_cookie("logged_in", "true")
         |> Phoenix.Controller.redirect(to: "/")
-        |> Plug.Conn.halt
+        |> halt
       :else ->
         conn
     end
