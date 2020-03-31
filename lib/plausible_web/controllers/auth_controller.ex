@@ -38,7 +38,7 @@ defmodule PlausibleWeb.AuthController do
 
             conn
             |> put_session(:current_user_id, user.id)
-            |> put_resp_cookie("logged_in", "true")
+            |> put_resp_cookie("logged_in", "true", http_only: false)
             |> redirect(to: "/password")
           {:error, changeset} ->
             send_resp(conn, 400, inspect(changeset.errors))
@@ -121,7 +121,7 @@ defmodule PlausibleWeb.AuthController do
 
         conn
         |> put_session(:current_user_id, user.id)
-        |> put_resp_cookie("logged_in", "true")
+        |> put_resp_cookie("logged_in", "true", http_only: false)
         |> put_session(:login_dest, nil)
         |> redirect(to: login_dest)
       else
