@@ -1,6 +1,14 @@
 defmodule PlausibleWeb.LayoutView do
   use PlausibleWeb, :view
 
+  def home_dest(conn) do
+    if conn.assigns[:current_user] do
+      "/sites"
+    else
+      "/"
+    end
+  end
+
   def trial_notificaton(user) do
     case Plausible.Billing.trial_days_left(user) do
       days when days > 1 ->
