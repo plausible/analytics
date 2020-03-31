@@ -13,50 +13,58 @@
   </head>
   <body class="flex flex-col h-full bg-gray-50">
     <%= render("_svg_icons.html") %>
-    <nav class="container flex items-center justify-between flex-wrap py-8">
-      <div class="flex items-center flex-shrink-0">
-        <a href="<%= home_dest(@conn) %>">
-          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), style: "height: 2.5rem;", alt: "Plausible logo") %>
-        </a>
-      </div>
-      <%= cond do %>
-        <% @conn.assigns[:current_user] -> %>
-          <ul class="flex">
-            <%= if @conn.assigns[:current_user].subscription == nil do %>
-              <li class="mr-6 hidden sm:block">
-                <%= link(trial_notificaton(@conn.assigns[:current_user]), to: "/settings", class: "font-bold text-orange-900 rounded p-2 bg-orange-200", style: "line-height: 40px;") %>
-              </li>
-            <% else %>
-              <li class="mr-6 hidden sm:block">
-                <%= link("Give feedback", to: "/feedback", class: "font-bold rounded p-2 hover:bg-gray-200", style: "line-height: 40px;") %>
-              </li>
-            <% end %>
-            <li>
-              <div class="relative font-bold rounded">
-                <div data-dropdown-trigger class="flex items-center hover:bg-gray-200 rounded p-2 cursor-pointer">
-                  <span class="mr-2"><%= @conn.assigns[:current_user].name || @conn.assigns[:current_user].email %></span>
-                  <svg style="height: 18px; transform: translateY(2px); fill: #606f7b;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 512 640" enable-background="new 0 0 512 512" xml:space="preserve"><g><circle cx="256" cy="52.8" r="50.8"/><circle cx="256" cy="256" r="50.8"/><circle cx="256" cy="459.2" r="50.8"/></g></svg>
-                </div>
 
-                <div data-dropdown style="top: 42px; right: 0px; width: 185px;" class="dropdown-content hidden absolute right-0 bg-white border border-gray-300 rounded shadow-md z-10">
-                  <%= link("Settings", to: "/settings", class: "block py-2 px-2 border-b border-gray-300 hover:bg-gray-100") %>
-                  <%= link("Log out", to: "/logout", method: :post, class: "block py-2 px-2 hover:bg-gray-100") %>
-                </div>
-              </div>
-            </li>
-          </ul>
-      <% true -> %>
-        <ul class="flex">
-          <li>
-            <div class="inline-flex rounded">
-              <%= link("Login", to: "/login", class: "inline-flex items-center justify-center px-5 py-2 border border-transparent text-base leading-6 font-medium rounded-md hover:bg-gray-200 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out") %>
+    <nav class="relative py-8 z-10">
+      <div class="container">
+        <nav class="relative flex items-center justify-between sm:h-10 md:justify-center">
+          <div class="flex items-center flex-1 md:absolute md:inset-y-0 md:left-0">
+            <div class="flex items-center justify-between">
+              <a href="/"><%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), class: "h-8 w-auto sm:h-10 -mt-2", alt: "Plausible logo") %></a>
             </div>
-            <div class="inline-flex rounded shadow ml-3">
-              <%= link("Start free trial", to: "/register", class: "inline-flex items-center justify-center px-5 py-2 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out") %>
-            </div>
-          </li>
-        </ul>
-      <% end %>
+          </div>
+          <div class="absolute flex items-center justify-end inset-y-0 right-0">
+            <%= cond do %>
+              <% @conn.assigns[:current_user] -> %>
+                <ul class="flex">
+                  <%= if @conn.assigns[:current_user].subscription == nil do %>
+                    <li class="mr-6 hidden sm:block">
+                      <%= link(trial_notificaton(@conn.assigns[:current_user]), to: "/settings", class: "font-bold text-orange-900 rounded p-2 bg-orange-200", style: "line-height: 40px;") %>
+                    </li>
+                  <% else %>
+                    <li class="mr-6 hidden sm:block">
+                      <%= link("Give feedback", to: "/feedback", class: "font-bold rounded p-2 hover:bg-gray-200", style: "line-height: 40px;") %>
+                    </li>
+                  <% end %>
+                  <li>
+                    <div class="relative font-bold rounded">
+                      <div data-dropdown-trigger class="flex items-center hover:bg-gray-200 rounded p-2 cursor-pointer">
+                        <span class="mr-2"><%= @conn.assigns[:current_user].name || @conn.assigns[:current_user].email %></span>
+                        <svg style="height: 18px; transform: translateY(2px); fill: #606f7b;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 512 640" enable-background="new 0 0 512 512" xml:space="preserve"><g><circle cx="256" cy="52
+                        .8" r="50.8"/><circle cx="256" cy="256" r="50.8"/><circle cx="256" cy="459.2" r="50.8"/></g></svg>
+                      </div>
+
+                      <div data-dropdown style="top: 42px; right: 0px; width: 185px;" class="dropdown-content hidden absolute right-0 bg-white border border-gray-300 rounded shadow-md z-10">
+                        <%= link("Settings", to: "/settings", class: "block py-2 px-2 border-b border-gray-300 hover:bg-gray-100") %>
+                        <%= link("Log out", to: "/logout", method: :post, class: "block py-2 px-2 hover:bg-gray-100") %>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+                <% true -> %>
+                  <ul class="flex" x-show="!document.cookie.includes('logged_in=true')">
+                    <li>
+                      <div class="inline-flex">
+                        <a href="/login" class="font-medium text-gray-500 hover:text-gray-900 focus:outline-none focus:text-gray-900 transition duration-150 ease-in-out">Login</a>
+                      </div>
+                      <div class="inline-flex rounded shadow ml-6">
+                        <a href="/register" class="inline-flex items-center justify-center px-5 py-2 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out">Start free trial</a>
+                      </div>
+                    </li>
+                  </ul>
+            <% end %>
+          </div>
+        </nav>
+      </div>
     </nav>
 
     <%= if get_flash(@conn, :success) do %>

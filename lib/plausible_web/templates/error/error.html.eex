@@ -13,7 +13,7 @@
     <div class="container text-center mt-24">
       <h1 class="text-5xl font-black"><%= @status %></h1>
       <div class="my-4 text-xl"><%= @message %></div>
-      <%= link("Go to the homepage", to: home_dest(@conn), class: "button mt-4") %>
+      <%= link("Go to the homepage", to: PlausibleWeb.LayoutView.home_dest(@conn), class: "button mt-4") %>
     </div>
   </body>
 </html>
