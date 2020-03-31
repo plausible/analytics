@@ -6,9 +6,9 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
     setup [:create_user, :log_in, :create_site]
 
     test "returns top browsers by new visitors", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, browser: "Chrome", new_visitor: true, timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, domain: site.domain, browser: "Chrome", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, browser: "Firefox", new_visitor: true, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, domain: site.domain, browser: "Chrome", timestamp: ~N[2019-01-01 01:00:00])
+      insert(:pageview, domain: site.domain, browser: "Chrome", timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, domain: site.domain, browser: "Firefox", timestamp: ~N[2019-01-01 02:00:00])
 
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&date=2019-01-01")
 

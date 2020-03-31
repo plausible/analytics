@@ -18,9 +18,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         name: "pageview",
         url: "http://gigride.live/",
         referrer: "http://m.facebook.com/",
-        new_visitor: true,
-        screen_width: 1440,
-        uid: UUID.uuid4()
+        screen_width: 1440
       }
 
       conn = conn
@@ -36,7 +34,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.hostname == "gigride.live"
       assert pageview.domain == "gigride.live"
       assert pageview.pathname == "/"
-      assert pageview.new_visitor == true
       assert pageview.country_code == @country_code
     end
 
@@ -402,10 +399,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
   end
 
   test "responds 400 when required fields are missing", %{conn: conn} do
-    params = %{
-      name: "pageview",
-      url: "http://gigride.live/",
-    }
+    params = %{}
 
     conn = conn
            |> put_req_header("content-type", "text/plain")

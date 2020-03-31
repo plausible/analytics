@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   defp create_event(conn, params) do
-    uri = URI.parse(params["url"])
+    uri = params["url"] && URI.parse(params["url"])
     country_code = Plug.Conn.get_req_header(conn, "cf-ipcountry") |> List.first
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first
     if UAInspector.bot?(user_agent) do
@@ -48,9 +48,9 @@ defmodule PlausibleWeb.Api.ExternalController do
 
       event_attrs = %{
         name: params["name"],
-        hostname: strip_www(uri.host),
-        domain: strip_www(params["domain"]) || strip_www(uri.host),
-        pathname: uri.path,
+        hostname: strip_www(uri && uri.host),
+        domain: strip_www(params["domain"]) || strip_www(uri && uri.host),
+        pathname: uri && uri.path,
         new_visitor: params["new_visitor"],
         country_code: country_code,
         user_id: params["uid"],

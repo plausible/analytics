@@ -52,8 +52,6 @@ defmodule Plausible.Factory do
       hostname: hostname,
       domain: hostname,
       pathname: "/",
-      new_visitor: true,
-      user_id: UUID.uuid4(),
       fingerprint: UUID.uuid4()
     }
   end

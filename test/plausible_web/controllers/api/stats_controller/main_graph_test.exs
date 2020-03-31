@@ -172,8 +172,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
     test "returns converted visitors", %{conn: conn, site: site} do
       insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 01:00:00])
-      insert(:event, name: "Signup", domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "Signup", domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
 
       filters = Jason.encode!(%{goal: "Signup"})
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2019-01-01&filters=#{filters}")
@@ -184,8 +184,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
     test "returns conversion rate", %{conn: conn, site: site} do
       insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 01:00:00])
-      insert(:event, name: "Signup", domain: site.domain, user_id: @user_id, timestamp: ~N[2019-01-01 02:00:00])
+      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 01:00:00])
+      insert(:event, name: "Signup", domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
 
       filters = Jason.encode!(%{goal: "Signup"})
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01&filters=#{filters}")

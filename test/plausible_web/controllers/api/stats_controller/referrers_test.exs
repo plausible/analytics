@@ -74,7 +74,6 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
         domain: site.domain,
         referrer: "10words.io/somepage",
         referrer_source: "10words",
-        new_visitor: true,
         timestamp: ~N[2019-01-01 01:00:00]
       })
 
@@ -82,7 +81,6 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
         domain: site.domain,
         referrer: "10words.io/somepage",
         referrer_source: "10words",
-        new_visitor: true,
         timestamp: ~N[2019-01-01 01:00:00]
       })
 
@@ -90,7 +88,6 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
         domain: site.domain,
         referrer: "10words.io/some_other_page",
         referrer_source: "10words",
-        new_visitor: true,
         timestamp: ~N[2019-01-01 01:00:00]
       })
 
