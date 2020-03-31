@@ -96,6 +96,7 @@ defmodule PlausibleWeb.Router do
     get "/billing/upgrade", BillingController, :upgrade
     get "/billing/success", BillingController, :success
 
+    get "/sites", SiteController, :index
     get "/sites/new", SiteController, :new
     post "/sites", SiteController, :create_site
     post "/sites/:website/make-public", SiteController, :make_public

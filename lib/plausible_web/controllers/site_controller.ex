@@ -5,6 +5,11 @@ defmodule PlausibleWeb.SiteController do
 
   plug PlausibleWeb.RequireAccountPlug
 
+  def index(conn, _params) do
+    user = conn.assigns[:current_user] |> Repo.preload(:sites)
+    render(conn, "index.html", sites: user.sites)
+  end
+
   def new(conn, _params) do
     changeset = Plausible.Site.changeset(%Plausible.Site{})
 
