@@ -75,7 +75,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = post(conn, "/login", email: user.email, password: "password")
 
       assert get_session(conn, :current_user_id) == user.id
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == "/sites"
     end
 
     test "email does not exist - renders login form again", %{conn: conn} do

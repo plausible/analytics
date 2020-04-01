@@ -117,7 +117,7 @@ defmodule PlausibleWeb.AuthController do
 
     if user do
       if Password.match?(password, user.password_hash || "") do
-        login_dest = get_session(conn, :login_dest) || "/"
+        login_dest = get_session(conn, :login_dest) || "/sites"
 
         conn
         |> put_session(:current_user_id, user.id)
