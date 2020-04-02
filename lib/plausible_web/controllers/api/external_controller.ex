@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   def event(conn, _params) do
     params = parse_body(conn)
-    IO.inspect(conn.req_headers)
 
     case create_event(conn, params) do
       {:ok, nil} ->
