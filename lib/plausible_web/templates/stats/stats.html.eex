@@ -1,4 +1,4 @@
-<div class="container pb-32" data-site-domain="<%= @site.domain %>">
+<div class="container pb-24" data-site-domain="<%= @site.domain %>">
   <%= if @offer_email_report do %>
     <div class="text-center bg-blue-200 text-blue-900 text-sm font-bold px-4 w-full rounded transition" style="top: 91px" role="alert">
       <%= link("Click here to enable weekly email reports →", to: "/#{URI.encode_www_form(@site.domain)}/settings#email-reports", class: "py-2 block") %>
@@ -7,5 +7,28 @@
   <div class="pt-6"></div>
   <div id="stats-react-container" data-domain="<%= @site.domain %>" data-offset="<%= Timex.Timezone.total_offset(Timex.Timezone.get(@site.timezone)) %>" data-has-goals="<%= @has_goals %>"></div>
   <div id="modal_root"></div>
+  <%= if !@conn.assigns[:current_user] && @conn.assigns[:demo] do %>
+    <div class="bg-gray-50">
+      <div class="py-12 lg:py-16 lg:flex lg:items-center lg:justify-between">
+        <h2 class="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10">
+          Want these stats for your website?
+          <br />
+          <span class="text-indigo-600">Start your free trial today.</span>
+        </h2>
+        <div class="mt-8 flex lg:flex-shrink-0 lg:mt-0">
+          <div class="inline-flex rounded-md shadow">
+            <a href="/register" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out">
+              Get started
+            </a>
+          </div>
+          <div class="ml-3 inline-flex rounded-md shadow">
+            <a href="#" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-indigo-600 bg-white hover:text-indigo-500 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out">
+              Learn more
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
   <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/dashboard.js") %>"></script>
 </div>

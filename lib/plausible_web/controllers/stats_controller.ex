@@ -23,7 +23,8 @@ defmodule PlausibleWeb.StatsController do
             site: site,
             has_goals: Plausible.Sites.has_goals?(site),
             title: "Plausible · " <> site.domain,
-            offer_email_report: offer_email_report
+            offer_email_report: offer_email_report,
+            demo: demo
           )
         else
           conn
