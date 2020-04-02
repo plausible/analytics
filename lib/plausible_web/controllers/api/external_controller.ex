@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp create_event(conn, params) do
     uri = params["url"] && URI.parse(params["url"])
-    country_code = Plug.Conn.get_req_header(conn, "cf-ipcountry") |> List.first
+    country_code = Plug.Conn.get_req_header(conn, "x-country") |> List.first
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first
     if UAInspector.bot?(user_agent) do
       {:ok, nil}
@@ -80,7 +80,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp calculate_fingerprint(conn, params) do
     user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
-    ip_address = List.first(Plug.Conn.get_req_header(conn, "cf-connecting-ip")) || ""
+    ip_address = List.first(Plug.Conn.get_req_header(conn, "x-bb-ip")) || "" # Netlify sets this header as the remote client IP
     domain = strip_www(params["domain"]) || ""
 
     :crypto.hash(:sha256, [user_agent, ip_address, domain])

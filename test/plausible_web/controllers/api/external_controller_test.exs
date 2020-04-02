@@ -24,7 +24,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn = conn
              |> put_req_header("content-type", "text/plain")
              |> put_req_header("user-agent", @user_agent)
-             |> put_req_header("cf-ipcountry", @country_code)
+             |> put_req_header("x-country", @country_code)
              |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
