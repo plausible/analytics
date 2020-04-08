@@ -1,6 +1,6 @@
 Hey <%= user_salutation(@user) %>,
 <br /><br />
-Congrats! The Plausible script has been installed correctly on <%= @site.domain %>. Your website traffic is now being tracked without compromising the user experience and the privacy of your visitors.
+Congrats! The Plausible script has been installed correctly on <%= link(@site.domain, to: "https://#{@site.domain}") %>. Your website traffic is now being tracked without compromising the user experience and the privacy of your visitors.
 <br /><br />
 <%= link("Check your stats", to: "https://plausible.io/#{URI.encode_www_form(@site.domain)}") %>
 <br /><br />
