@@ -37,9 +37,9 @@ config :phoenix, :plug_init_mode, :runtime
 
 config :plausible, Plausible.Repo,
   username: "postgres",
-  password: "postgres",
-  database: "plausible_dev",
-  hostname: "localhost",
+  password: System.get_env("PGPASSWORD") || "mysecretpassword",
+  database: "postgres",
+  hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 10
 
 config :plausible, Plausible.Mailer,

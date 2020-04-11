@@ -1,0 +1,52 @@
+version: '3.5'
+
+services:
+  plausible:
+    container_name: plausible
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        build_env: prod
+    ports:
+      - 4000:4000
+      - 8000:8000
+    environment:
+      # # Hostname of our Postgres container
+      POSTGRES_HOST: postgres
+      # Convenience variable for when running psql
+      PGPASSWORD: mysecretpassword
+      # Appliction environment variables
+      SECRET_KEY_BASE: /NJrhNtbyCVAsTyvtk1ZYCwfm981Vpo/0XrVwjJvemDaKC/vsvBRevLwsc6u8RCg
+      APP_ENV: prod
+      DATABASE_URL: postgres:mysecretpassword@postgres:5432/plausible_dev
+      AVIEN_DATABASE_URL: postgres:mysecretpassword@postgres:5432/plausible_dev
+      GOOGLE_CLIENT_ID: dummy-env-variable
+      GOOGLE_CLIENT_SECRET: dummy-env-variable
+      SLACK_WEBHOOK: dummy-env-variable
+      POSTMARK_API_KEY: dummy-env-variable
+      TWITTER_CONSUMER_KEY: dummy-env-variable
+      TWITTER_CONSUMER_SECRET: dummy-env-variable
+      TWITTER_ACCESS_TOKEN: dummy-env-variable
+      TWITTER_ACCESS_TOKEN_SECRET: dummy-env-variable
+      POOL_SIZE: 10
+      PORT: 4000
+    depends_on:
+      - postgres
+    links:
+      - postgres
+  postgres:
+    container_name: postgres_container
+    image: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mysecretpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-plausible_dev}
+      PGDATA: /data/postgres
+    volumes:
+       - pgdata:/data/postgres
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+volumes:
+ pgdata: {}
