@@ -17,7 +17,7 @@ defmodule PlausibleWeb.StatsController do
 
           conn
           |> assign(:skip_plausible_tracking, !demo)
-          |> put_session(site.domain <> "_offer_email_report", nil)
+          |> remove_email_report_banner(site)
           |> put_resp_header("x-robots-tag", "noindex")
           |> render("stats.html",
             site: site,
@@ -120,6 +120,14 @@ defmodule PlausibleWeb.StatsController do
     case conn.assigns[:current_user] do
       nil -> false
       user -> Plausible.Sites.is_owner?(user.id, site)
+    end
+  end
+
+  defp remove_email_report_banner(conn, site) do
+    if conn.assigns[:current_user] do
+      put_session(conn, site.domain <> "_offer_email_report", nil)
+    else
+      conn
     end
   end
 end
