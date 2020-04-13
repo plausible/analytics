@@ -50,18 +50,18 @@ defmodule PlausibleWeb.PageController do
   def feedback(conn, _params) do
     if conn.assigns[:current_user] do
       token = sign_token!(conn.assigns[:current_user])
-      redirect(conn, external: "https://feedback.plausible.io/sso/#{token}")
+      redirect(conn, external: "https://plausible.nolt.io/sso/#{token}")
     else
-      redirect(conn, external: "https://feedback.plausible.io")
+      redirect(conn, external: "https://plausible.nolt.io")
     end
   end
 
   def roadmap(conn, _params) do
     if conn.assigns[:current_user] do
       token = sign_token!(conn.assigns[:current_user])
-      redirect(conn, external: "https://feedback.plausible.io/sso/#{token}?returnUrl=https://feedback.plausible.io/roadmap")
+      redirect(conn, external: "https://plausible.nolt.io/sso/#{token}?returnUrl=https://plausible.nolt.io/roadmap")
     else
-      redirect(conn, external: "https://feedback.plausible.io/roadmap")
+      redirect(conn, external: "https://plausible.nolt.io/roadmap")
     end
   end
 

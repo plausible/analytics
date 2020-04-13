@@ -35,7 +35,7 @@ Plausible is a standard Elixir/Phoenix application backed by a PostgreSQL databa
 
 ### Feedback & Roadmap
 
-We have a [feedback board](https://feedback.plausible.io/) and a [public roadmap](https://feedback.plausible.io/roadmap).
+We have a [feedback board](https://plausible.io/feedback) and a [public roadmap](https://plausible.io/roadmap).
 Please let us know if you have any requests and vote on open issues so we can better prioritize.
 
 ### License
