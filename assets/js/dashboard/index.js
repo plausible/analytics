@@ -34,14 +34,6 @@ class Stats extends React.Component {
     }
   }
 
-  forgotten() {
-    return (
-      <div>
-      <OperatingSystems site={this.props.site} query={this.state.query} />
-      </div>
-    )
-  }
-
   render() {
     return (
       <div className="mb-12">
