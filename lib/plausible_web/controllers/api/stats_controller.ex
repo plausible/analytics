@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.StatsController do
   use Plausible.Repo
   alias Plausible.Stats
   alias Plausible.Stats.Query
-  plug :authorize
+  plug PlausibleWeb.AuthorizeStatsPlug
 
   def main_graph(conn, params) do
     site = conn.assigns[:site]

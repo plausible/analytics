@@ -141,7 +141,7 @@ defmodule PlausibleWeb.Router do
 
     get "/share/:slug", StatsController, :shared_link
     post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
-    get "/:website/visitors.csv", StatsController, :csv_export
-    get "/:website/*path", StatsController, :stats
+    get "/:domain/visitors.csv", StatsController, :csv_export
+    get "/:domain/*path", StatsController, :stats
   end
 end
