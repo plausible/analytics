@@ -95,7 +95,9 @@ defmodule PlausibleWeb.StatsController do
     shared_link_key = "shared_link_auth_" <> shared_link.site.domain
 
     conn
-    |> put_resp_cookie(shared_link_key, %{domain: shared_link.site.domain}, sign: true, max_age: 60 * 60) # 1 hour
+    |> put_session(shared_link_key, %{
+      valid_until: Timex.now() |> Timex.shift(hours: 1) |> DateTime.to_unix()
+    })
     |> redirect(to: "/#{shared_link.site.domain}")
   end
 
@@ -105,9 +107,8 @@ defmodule PlausibleWeb.StatsController do
 
   defp current_user_can_access?(conn, site) do
     shared_link_key = "shared_link_auth_" <> site.domain
-    conn = fetch_cookies(conn, signed: [shared_link_key])
-    valid_shared_link_auth = conn.cookies[shared_link_key] &&
-      conn.cookies[shared_link_key].domain == site.domain
+    shared_link_auth = get_session(conn, shared_link_key)
+    valid_shared_link_auth = shared_link_auth && shared_link_auth[:valid_until] > DateTime.to_unix(Timex.now())
 
     valid_shared_link_auth || current_user_is_owner?(conn, site)
   end
