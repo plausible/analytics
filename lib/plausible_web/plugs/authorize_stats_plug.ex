@@ -10,7 +10,7 @@ defmodule PlausibleWeb.AuthorizeStatsPlug do
     site = Repo.get_by(Plausible.Site, domain: conn.params["domain"])
 
     if !site do
-      PlausibleWeb.ControllerHelpers.render_error(conn, 404)
+      PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt
     else
       user_id = get_session(conn, :current_user_id)
       shared_link_key = "shared_link_auth_" <> site.domain
@@ -21,7 +21,7 @@ defmodule PlausibleWeb.AuthorizeStatsPlug do
         (shared_link_auth && shared_link_auth[:valid_until] > DateTime.to_unix(Timex.now()))
 
       if !can_access do
-        PlausibleWeb.ControllerHelpers.render_error(conn, 404)
+        PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt
       else
         assign(conn, :site, site)
       end

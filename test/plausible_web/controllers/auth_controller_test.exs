@@ -155,6 +155,17 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
+  describe "PUT /settings" do
+    setup [:create_user, :log_in]
+
+    test "updates user record", %{conn: conn, user: user} do
+       put(conn, "/settings", %{"user" => %{"name" => "New name"}})
+
+      user = Plausible.Repo.get(Plausible.Auth.User, user.id)
+      assert user.name == "New name"
+    end
+  end
+
   describe "DELETE /me" do
     setup [:create_user, :log_in, :create_site]
     use Plausible.Repo

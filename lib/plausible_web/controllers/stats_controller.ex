@@ -5,7 +5,7 @@ defmodule PlausibleWeb.StatsController do
 
   plug PlausibleWeb.AuthorizeStatsPlug when action in [:stats, :csv_export]
 
-  def stats(conn, %{"domain" => domain}) do
+  def stats(conn, _params) do
     site = conn.assigns[:site]
     user = conn.assigns[:current_user]
 
