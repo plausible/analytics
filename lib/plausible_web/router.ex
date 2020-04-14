@@ -8,11 +8,14 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_flash
-    plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
     plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.LastSeenPlug
+  end
+
+  pipeline :csrf do
+    plug :protect_from_forgery
   end
 
   pipeline :api do
@@ -67,11 +70,15 @@ defmodule PlausibleWeb.Router do
     get "/claim-activation", AuthController, :claim_activation_link
     get "/login", AuthController, :login_form
     post "/login", AuthController, :login
-    get "/claim-login", AuthController, :claim_login_link
     get "/password/request-reset", AuthController, :password_reset_request_form
     post "/password/request-reset", AuthController, :password_reset_request
     get "/password/reset", AuthController, :password_reset_form
     post "/password/reset", AuthController, :password_reset
+  end
+
+  scope "/", PlausibleWeb do
+    pipe_through [:browser, :csrf]
+
     get "/password", AuthController, :password_form
     post "/password", AuthController, :set_password
     post "/logout", AuthController, :logout
@@ -134,7 +141,7 @@ defmodule PlausibleWeb.Router do
 
     get "/share/:slug", StatsController, :shared_link
     post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
-    get "/:website/visitors.csv", StatsController, :csv_export
-    get "/:website/*path", StatsController, :stats
+    get "/:domain/visitors.csv", StatsController, :csv_export
+    get "/:domain/*path", StatsController, :stats
   end
 end
