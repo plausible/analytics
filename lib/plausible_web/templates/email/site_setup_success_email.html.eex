@@ -8,7 +8,7 @@ Congrats! The Plausible script has been installed correctly on <%= link(@site.do
   You're on a 30-day unlimited-use free trial with no obligations so do take your time to explore your simple and privacy-friendly website analytics dashboard.
   <br /><br />
 <% end %>
-PS: Plausible is fully open-source and our public roadmap is defined by the community. <%= link("Leave your feedback", to: "https://plausible.io/feedbacl") %> and have your say on metrics and features we should be adding next.
+PS: Plausible is fully open-source and our public roadmap is defined by the community. <%= link("Leave your feedback", to: "https://plausible.io/feedback") %> and have your say on metrics and features we should be adding next.
 <br /><br />
 Do reply back to this email if you have any questions.
 <br /></br>
