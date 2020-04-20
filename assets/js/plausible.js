@@ -62,7 +62,7 @@
     }
 
     function trigger(eventName, options) {
-      if (/localhost$/.test(window.location.hostname)) return ignore('website is running locally');
+      if (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(window.location.hostname)) return ignore('website is running locally');
       if (window.location.protocol === 'file:') return ignore('website is running locally');
       if (window.document.visibilityState === 'prerender') return ignore('document is prerendering');
 
