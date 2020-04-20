@@ -94,7 +94,7 @@ export default class Countries extends React.Component {
 
   render() {
     return (
-      <div className="stats-item bg-white shadow-xl rounded p-4" style={{height: '436px'}}>
+      <div className="stats-item relative bg-white shadow-xl rounded p-4" style={{height: '436px'}}>
         { this.state.loading && <div className="loading my-32 mx-auto"><div></div></div> }
         <FadeIn show={!this.state.loading}>
           { this.renderBody() }
