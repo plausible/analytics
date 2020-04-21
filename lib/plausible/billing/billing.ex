@@ -62,7 +62,7 @@ defmodule Plausible.Billing do
   def change_plan(user, new_plan_id) do
     subscription = active_subscription_for(user.id)
 
-    res = PaddleApi.update_subscription(subscription.paddle_subscription_id, %{
+    res = @paddle_api.update_subscription(subscription.paddle_subscription_id, %{
       plan_id: new_plan_id
     })
 
@@ -81,7 +81,6 @@ defmodule Plausible.Billing do
 
   def change_plan_preview(subscription, new_plan_id) do
     PaddleApi.update_subscription_preview(subscription.paddle_subscription_id, new_plan_id)
-    |> IO.inspect
   end
 
   def needs_to_upgrade?(user) do
