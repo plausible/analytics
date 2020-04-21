@@ -7,31 +7,31 @@
   },
   "dependencies": {
     "@tailwindcss/ui": "^0.1.3",
-    "autoprefixer": "^9.7.4",
+    "autoprefixer": "^9.7.6",
     "chart.js": "^2.9.3",
     "datamaps": "^0.5.9",
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html",
-    "react": "^16.12.0",
-    "react-dom": "^16.12.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
     "react-flatpickr": "^3.10.0",
     "react-router-dom": "^5.1.2",
     "url-search-params-polyfill": "^7.0.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.8.3",
-    "@babel/preset-env": "^7.8.3",
-    "@babel/preset-react": "^7.8.3",
-    "@fullhuman/postcss-purgecss": "^2.1.0",
-    "babel-loader": "^8.0.6",
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
+    "@babel/preset-react": "^7.9.4",
+    "@fullhuman/postcss-purgecss": "^2.1.2",
+    "babel-loader": "^8.1.0",
     "copy-webpack-plugin": "^5.1.1",
-    "css-loader": "^3.4.2",
+    "css-loader": "^3.5.2",
     "mini-css-extract-plugin": "^0.8.2",
     "optimize-css-assets-webpack-plugin": "^5.0.3",
     "postcss-loader": "^3.0.0",
-    "tailwindcss": "^1.2.0",
+    "tailwindcss": "^1.3.1",
     "uglifyjs-webpack-plugin": "^2.2.0",
     "webpack": "4.39.2",
-    "webpack-cli": "^3.3.10"
+    "webpack-cli": "^3.3.11"
   }
 }
