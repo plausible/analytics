@@ -2,14 +2,13 @@ defmodule PlausibleWeb.AuthView do
   use PlausibleWeb, :view
 
   @subscription_names %{
-    "558018" => "Personal",
-    "572810" => "Personal (A)",
-    "558745" => "Startup",
-    "558746" => "Business",
-    "558156" => "Personal (T)",
-    "558199" => "Startup (T)",
-    "558200" => "Business (T)",
-    "free_10k" => "Free 10k"
+    "558018" => "10k / monthly",
+    "558745" => "100k / monthly",
+    "558746" => "1m / monthly",
+    "572810" => "10k / yearly",
+    "590752" => "100k / yearly",
+    "590753" => "1m / yearly",
+    "free_10k" => "10k / free"
   }
 
   def subscription_name(subscription) do
