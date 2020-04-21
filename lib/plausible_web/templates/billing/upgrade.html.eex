@@ -1,56 +1,102 @@
-<div class="max-w-lg w-full mx-auto bg-white shadow-md rounded px-8 py-6 mb-4 mt-8">
-  <h2 class="text-xl font-black">Upgrade your free trial</h2>
+<script>
+  window.plans = <%= raw Jason.encode!(Plausible.Billing.Plans.plans()) %>
+</script>
 
-  <div class="mt-2">
-    <%= cond do %>
-      <% Timex.equal?(@user.trial_expiry_date, @today) ->  %>
-        Today is the last day of your trial. Please select a plan and enter
-        your billing info to access your stats after the trial ends.
-        <% Timex.after?(@user.trial_expiry_date, @today) ->  %>
-        <p class="py-2">
-        Your free trial ends on <b><%= Timex.format!(@user.trial_expiry_date, "{WDshort} {D} {Mshort}") %></b>. Please select a plan and enter
-        your billing info to access your stats after the trial ends.
-        </p>
-      <% Timex.before?(@user.trial_expiry_date, @today) ->  %>
-        <p class="py-2">
-        Your free trial ended on <%= Timex.format!(@user.trial_expiry_date, "{Mshort} {D}")%>. To access your stats going forward, please select a plan and enter your billing info.
-        </p>
-    <% end %>
-
-    <p class="py-2">
-      If you go over your limit in the future, we will contact you about upgrading.
-      Don't worry, we will never bill you unexpectedly or stop recording without telling you first.
-    </p>
-    <p class="py-2">
-      All plans are on a monthly basis, cancel any time.
-    </p>
-  </div>
-  <div class="pt-6"></div>
-
-  <div class="w-full flex justify-between items-center py-4 border-t">
-    <span><b>10,000</b> / mo</span>
-    <b class="bg-orange-200 text-orange-900 p-1 rounded-sm">$6 / mo</b>
-    <%= render("_checkout_button.html", conn: @conn, plan: :personal) %>
-  </div>
-  <div class="w-full flex justify-between items-center py-4 border-t">
-    <span><b>100,000</b> / mo</span>
-    <b class="bg-orange-200 text-orange-900 p-1 rounded-sm">$12 / mo</b>
-    <%= render("_checkout_button.html", conn: @conn, plan: :startup) %>
-  </div>
-  <div class="w-full flex justify-between items-center py-4 border-t">
-    <span><b>1,000,000</b> / mo</span>
-    <b class="bg-orange-200 text-orange-900 p-1 rounded-sm">$36 / mo</b>
-    <%= render("_checkout_button.html", conn: @conn, plan: :business) %>
-  </div>
-  <div class="w-full flex justify-between items-center py-4 border-t">
-    <span>Your usage: <b><%= PlausibleWeb.AuthView.delimit_integer(@usage) %></b> pageviews in the last 30 days</span>
-  </div>
-
-  <div class="text-center mt-8">
-    Questions? Contact <%= link("uku@plausible.io", to: "mailto: uku@plausible.io", class: "text-indigo-500") %>
-  </div>
-
-  <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js"></script>
-  <script>Paddle.Setup({vendor: 49430})</script>
-
+<div class="mx-auto mt-6 text-center">
+  <h1 class="text-3xl font-black">Upgrade your free trial</h1>
 </div>
+
+<div class="w-full max-w-4xl px-4 mt-4 mx-auto flex flex-col md:flex-row">
+  <div x-data="{planSize: '10k', billingCycle: 'monthly'}" class="flex-1 bg-white shadow-md rounded px-8 py-4 mb-4 mt-8">
+    <div class="w-full py-4">
+      <span>You've used <b><%= PlausibleWeb.AuthView.delimit_integer(@usage) %></b> pageviews in the last 30 days</span>
+    </div>
+
+    <div class="pt-2"></div>
+
+    <span class="relative z-0 inline-flex shadow-sm w-full">
+      <button type="button" @click="billingCycle = 'monthly'" :class="{'bg-indigo-600 text-white border-indigo-600': billingCycle === 'monthly', 'bg-white text-gray-700 hover:text-gray-500 border-gray-300': billingCycle === 'yearly'}" class="relative w-full text-center px-4 py-2 rounded-l-md border text-sm leading-5 font-medium focus:outline-none focus:border-blue-300 focus:shadow-outline-blue transition ease-in-out duration-150">
+        Monthly billing
+      </button>
+      <button type="button" @click="billingCycle = 'yearly'" :class="{'bg-indigo-600 text-white border-indigo-600': billingCycle === 'yearly', 'bg-white text-gray-700 hover:text-gray-500 border-gray-300': billingCycle === 'monthly'}" class="-ml-px relative w-full text-center px-4 py-2 rounded-r-md border text-sm leading-5 font-medium focus:outline-none focus:border-blue-300 focus:shadow-outline-blue transition ease-in-out duration-150">
+        Yearly billing
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium leading-4 bg-yellow-100 text-yellow-800">
+          -33%
+        </span>
+      </button>
+    </span>
+
+    <div class="pt-6"></div>
+
+    <div class="flex flex-col">
+      <div class="-my-2 py-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div class="align-middle inline-block min-w-full shadow overflow-hidden sm:rounded-lg border-b border-gray-200">
+          <table class="min-w-full">
+            <thead>
+              <tr>
+                <th class="px-6 py-3 border-b border-gray-200 bg-gray-100 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                  Monthly pageviews
+                </th>
+                <th class="px-6 py-3 border-b border-gray-200 bg-gray-100 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                  Price per month
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white">
+              <tr @click="planSize = '10k'" :class="{'border-2 border-green-300': planSize === '10k', 'border-b border-gray-200 cursor-pointer': planSize !== '10k'}">
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '10k'}">10k</td>
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '10k'}">
+                  <span x-show="billingCycle === 'monthly'">$6</span>
+                  <span x-show="billingCycle === 'yearly'">$4</span>
+                </td>
+              </tr>
+              <tr @click="planSize = '100k'" :class="{'border-2 border-green-300': planSize === '100k', 'border-b border-gray-200 cursor-pointer': planSize !== '100k'}">
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '100k'}">100k</td>
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '100k'}">
+                  <span x-show="billingCycle === 'monthly'">$12</span>
+                  <span x-show="billingCycle === 'yearly'">$8</span>
+                </td>
+              </tr>
+              <tr @click="planSize = '1m'" :class="{'border-2 border-green-300': planSize === '1m', 'border-b border-gray-200 cursor-pointer': planSize !== '1m'}">
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '1m'}">1m</td>
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '1m'}">
+                  <span x-show="billingCycle === 'monthly'">$36</span>
+                  <span x-show="billingCycle === 'yearly'">$24</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-right mt-6">
+      <div class="mb-4 text-sm font-medium">Due today: <b x-text="window.plans[billingCycle][planSize].due_now">$6</b></div>
+      <span class="inline-flex rounded-md shadow-sm">
+        <button type="button" data-theme="none" :data-product="window.plans[billingCycle][planSize].product_id" data-email="<%= @conn.assigns[:current_user].email %>" data-disable-logout="true" data-passthrough="<%= @conn.assigns[:current_user].id %>" data-success="/billing/success" class="paddle_button inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition ease-in-out duration-150">
+          <svg fill="currentColor" viewBox="0 0 20 20" class="w-4 h-4 inline mr-2"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+          Pay securely via Paddle
+        </button>
+      </span>
+    </div>
+  </div>
+
+  <div class="flex-1 pt-14 pl-8">
+    <h3 class="text-lg leading-6 font-medium text-gray-900">
+       What happens if I go over my page views limit?
+    </h3>
+    <div class="mt-2 text-base leading-6 text-gray-500">
+      You will never be charged extra for an occasional traffic spike. There are no surprise fees and your card will never be charged unexpectedly.<br /><br />
+      If your page views exceed your plan for two consecutive months, we will contact you to upgrade to a higher plan for the following month. You will have two weeks to make a decision. You can decide to continue with a higher plan or to cancel your account at that point.
+    </div>
+
+  </div>
+</div>
+
+<div class="text-center mt-8">
+  Questions? Contact <%= link("uku@plausible.io", to: "mailto: uku@plausible.io", class: "text-indigo-500") %>
+</div>
+
+<script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.0.1/dist/alpine.js" defer></script>
+<script>Paddle.Setup({vendor: 49430})</script>

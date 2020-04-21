@@ -4,6 +4,7 @@ Thanks for exploring Plausible, a simple and privacy-friendly alternative to Goo
 <br /><br />
 In the last month, your account has used <%= PlausibleWeb.AuthView.delimit_integer(@pageviews) %> pageviews.
 Based on that we recommend you select the <%= suggested_plan_name(@pageviews) %> plan which runs at <%= suggested_plan_cost(@pageviews) %>.
+You can also go with yealy billing to get 33% off on your plan.
 <br /><br />
 <%= link("Upgrade now", to: "https://plausible.io/billing/upgrade") %>
 <br /><br />

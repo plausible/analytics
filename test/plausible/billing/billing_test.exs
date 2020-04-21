@@ -198,4 +198,18 @@ defmodule Plausible.BillingTest do
       assert res == {:ok, nil}
     end
   end
+
+  describe "change_plan" do
+    test "sets the next bill amount and date" do
+      user = insert(:user)
+       insert(:subscription, user: user)
+
+      Billing.change_plan(user, "123123")
+
+      subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
+      assert subscription.paddle_plan_id == "123123"
+      assert subscription.next_bill_date == ~D[2019-07-10]
+      assert subscription.next_bill_amount == "6.00"
+    end
+  end
 end

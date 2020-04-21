@@ -48,6 +48,10 @@ config :plausible,
 config :plausible,
   session_timeout: 1000 * 60 * 30 # 30 minutes
 
+config :plausible, :paddle,
+  vendor_id: "49430",
+  vendor_auth_code: System.get_env("PADDLE_VENDOR_AUTH_CODE")
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"

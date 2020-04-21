@@ -1,56 +1,100 @@
-<div class="max-w-md w-full mx-auto bg-white shadow-md rounded px-8 py-6 mb-4 mt-8">
-  <h2 class="text-xl font-black">Change subscription plan</h2>
+<script>
+  window.plans = <%= raw Jason.encode!(Plausible.Billing.Plans.plans()) %>
+</script>
 
-  <div class="py-4">
-    If you choose to change your plan, your current subscription will
-    be prorated.
-  </div>
-
-  <div class="w-full flex justify-between items-center py-4 border-t">
-    <span><b>10,000</b> / mo</span>
-    <b class="bg-orange-200 text-orange-900 p-1 rounded-sm">$6 / mo</b>
-    <%= if Plausible.Billing.Plans.is?(@subscription, :personal) do %>
-      <div>
-        <svg class="feather text-green-500"><use xlink:href="#feather-check-circle" /></svg>
-        Selected
-      </div>
-    <% else %>
-      <%= button("Select", class: "button button-sm", method: :post, to: "/billing/change-plan/personal") %>
-    <% end %>
-  </div>
-  <div class="w-full flex justify-between items-center py-4 border-t">
-    <span><b>100,000</b> / mo</span>
-    <b class="bg-orange-200 text-orange-900 p-1 rounded-sm">$12 / mo</b>
-    <%= if Plausible.Billing.Plans.is?(@subscription, :startup) do %>
-      <div>
-        <svg class="feather text-green-500"><use xlink:href="#feather-check-circle" /></svg>
-        Selected
-      </div>
-    <% else %>
-      <%= button("Select", class: "button button-sm", method: :post, to: "/billing/change-plan/startup") %>
-    <% end %>
-  </div>
-  <div class="w-full flex justify-between items-center py-4 border-t">
-    <span><b>1,000,000</b> / mo</span>
-    <b class="bg-orange-200 text-orange-900 p-1 rounded-sm">$36 / mo</b>
-    <%= if Plausible.Billing.Plans.is?(@subscription, :business) do %>
-      <div>
-        <svg class="feather text-green-500"><use xlink:href="#feather-check-circle" /></svg>
-        Selected
-      </div>
-    <% else %>
-      <%= button("Select", class: "button button-sm", method: :post, to: "/billing/change-plan/business") %>
-    <% end %>
-  </div>
-
-  <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js"></script>
-  <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/checkout.js") %>"></script>
-  <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
-  <script>
-    window.Checkout.init(
-      <%= @conn.assigns[:current_user].id %>,
-      '<%= @conn.assigns[:current_user].email %>'
-    )
-  </script>
-
+<div class="mx-auto mt-6 text-center">
+  <h1 class="text-3xl font-black">Change subscription plan</h1>
 </div>
+
+<div class="w-full max-w-lg px-4 mt-4 mx-auto">
+  <div x-data="{volume: '10k', billingCycle: 'monthly'}" class="flex-1 bg-white shadow-md rounded px-8 py-4 mb-4 mt-8">
+    <div class="w-full pt-2 text-xl font-bold">
+      Select your new plan
+    </div>
+
+    <div class="w-full text-gray-500 text-sm">
+      Depending on which plan you choose, your card might be charged immediately and your
+      next payment date could change. You can preview these changes before committing.
+    </div>
+
+    <div class="pt-8"></div>
+
+    <span class="relative z-0 inline-flex shadow-sm w-full">
+      <button type="button" @click="billingCycle = 'monthly'" :class="{'bg-indigo-600 text-white border-indigo-600': billingCycle === 'monthly', 'bg-white text-gray-700 hover:text-gray-500 border-gray-300': billingCycle === 'yearly'}" class="relative w-full text-center px-4 py-2 rounded-l-md border text-sm leading-5 font-medium focus:outline-none focus:border-blue-300 focus:shadow-outline-blue transition ease-in-out duration-150">
+        Monthly billing
+      </button>
+      <button type="button" @click="billingCycle = 'yearly'" :class="{'bg-indigo-600 text-white border-indigo-600': billingCycle === 'yearly', 'bg-white text-gray-700 hover:text-gray-500 border-gray-300': billingCycle === 'monthly'}" class="-ml-px relative w-full text-center px-4 py-2 rounded-r-md border text-sm leading-5 font-medium focus:outline-none focus:border-blue-300 focus:shadow-outline-blue transition ease-in-out duration-150">
+        Yearly billing
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium leading-4 bg-yellow-100 text-yellow-800">
+          -33%
+        </span>
+      </button>
+    </span>
+
+    <div class="pt-6"></div>
+
+    <div class="flex flex-col">
+      <div class="-my-2 py-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div class="align-middle inline-block min-w-full shadow overflow-hidden sm:rounded-lg border-b border-gray-200">
+          <table class="min-w-full">
+            <thead>
+              <tr>
+                <th class="px-6 py-3 border-b border-gray-200 bg-gray-100 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                  Monthly pageviews
+                </th>
+                <th class="px-6 py-3 border-b border-gray-200 bg-gray-100 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                  Price per month
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white">
+              <tr @click="volume = '10k'" :class="{'border-2 border-green-300 bg-green-50': volume === '10k', 'border-b border-gray-200 cursor-pointer': volume !== '10k'}">
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '10k'}">10k</td>
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '10k'}">
+                  <span x-show="billingCycle === 'monthly'">$6</span>
+                  <span x-show="billingCycle === 'yearly'">$4</span>
+                </td>
+              </tr>
+              <tr @click="volume = '100k'" :class="{'border-2 border-green-300 bg-green-50': volume === '100k', 'border-b border-gray-200 cursor-pointer': volume !== '100k'}">
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '100k'}">100k</td>
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '100k'}">
+                  <span x-show="billingCycle === 'monthly'">$12</span>
+                  <span x-show="billingCycle === 'yearly'">$8</span>
+                </td>
+              </tr>
+              <tr @click="volume = '1m'" :class="{'border-2 border-green-300 bg-green-50': volume === '1m', 'border-b border-gray-200 cursor-pointer': volume !== '1m'}">
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '1m'}">1m</td>
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '1m'}">
+                  <span x-show="billingCycle === 'monthly'">$36</span>
+                  <span x-show="billingCycle === 'yearly'">$24</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-right mt-6">
+      <span class="inline-flex rounded-md shadow-sm">
+        <a x-show="window.plans[billingCycle][volume].product_id !== '<%= @subscription.paddle_plan_id %>'" style="display: none;" :href="'/billing/change-plan/preview/' + window.plans[billingCycle][volume].product_id" type="button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition ease-in-out duration-150">
+          <svg fill="currentColor" viewBox="0 0 20 20" class="w-4 h-4 inline mr-2"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path></svg>
+          Preview changes
+        </a>
+
+        <a x-show="window.plans[billingCycle][volume].product_id === '<%= @subscription.paddle_plan_id %>'" style="display: none;" tooltip="Select a different plan to continue" type="button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-gray-400">
+          <svg fill="currentColor" viewBox="0 0 20 20" class="w-4 h-4 inline mr-2"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path></svg>
+          Preview changes
+        </a>
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="text-center mt-8">
+  Questions? Contact <%= link("uku@plausible.io", to: "mailto: uku@plausible.io", class: "text-indigo-500") %>
+</div>
+
+<script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.0.1/dist/alpine.js" defer></script>
+<script>Paddle.Setup({vendor: 49430})</script>
