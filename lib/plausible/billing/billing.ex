@@ -1,6 +1,6 @@
 defmodule Plausible.Billing do
   use Plausible.Repo
-  alias Plausible.Billing.{Subscription, Plans, PaddleApi}
+  alias Plausible.Billing.{Subscription, PaddleApi}
   @paddle_api Application.fetch_env!(:plausible, :paddle_api)
 
   def active_subscription_for(user_id) do

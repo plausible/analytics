@@ -202,7 +202,7 @@ defmodule Plausible.BillingTest do
   describe "change_plan" do
     test "sets the next bill amount and date" do
       user = insert(:user)
-      subscription = insert(:subscription, user: user)
+       insert(:subscription, user: user)
 
       Billing.change_plan(user, 123123)
 

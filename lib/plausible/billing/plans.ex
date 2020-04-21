@@ -1,6 +1,4 @@
 defmodule Plausible.Billing.Plans do
-  @app_env System.get_env("APP_ENV") || "dev"
-
   @plans %{
     monthly: %{
       "10k": %{product_id: "558018", due_now: "$6"},
@@ -18,28 +16,17 @@ defmodule Plausible.Billing.Plans do
     @plans
   end
 
-  #def paddle_id_for_plan(plan) do
-  #  @plans[plan]
-  #end
+  def allowance(subscription) do
+    allowed_volume = %{
+      "free_10k" => 10_000,
+      "558018"   => 10_000,
+      "572810"   => 10_000,
+      "558745"   => 100_000,
+      "590752"   => 100_000,
+      "558746"   => 1_000_000,
+      "590753"   => 1_000_000,
+    }
 
-  #def is?(subscription, plan) do
-  #  paddle_id_for_plan(plan) == subscription.paddle_plan_id
-  #end
-
-  #def allowance(subscription) do
-  #  cond do
-  #    subscription.paddle_plan_id == "572810" -> # Personal annual
-  #      10_000
-  #    subscription.paddle_plan_id == "free_10k" ->
-  #      10_000
-  #    is?(subscription, :personal) ->
-  #      10_000
-  #    is?(subscription, :startup) ->
-  #      100_000
-  #    is?(subscription, :business) ->
-  #      1_000_000
-  #    true ->
-  #      raise "Subscription not found for #{subscription.paddle_plan_id}"
-  #  end
-  #end
+    allowed_volume[subscription.paddle_plan_id]
+  end
 end
