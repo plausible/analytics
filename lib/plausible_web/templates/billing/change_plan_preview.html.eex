@@ -1,0 +1,86 @@
+<div class="mx-auto mt-6 text-center">
+  <h1 class="text-3xl font-black">Confirm new subscription plan</h1>
+</div>
+
+<div class="w-full max-w-lg px-4 mt-4 mx-auto">
+  <div class="flex-1 bg-white shadow-md rounded px-8 py-4 mb-4 mt-8">
+    <div class="text-lg font-bold">Due now</div>
+    <div class="block text-gray-500 text-sm">
+      Your card will be charged a pro-rated amount for the current billing period
+    </div>
+
+    <div class="flex flex-col mt-4">
+      <div class="-my-2 py-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div class="align-middle inline-block min-w-full shadow overflow-hidden sm:rounded-lg border-b border-gray-200">
+          <table class="min-w-full">
+            <thead>
+              <tr>
+                <th class="px-6 py-3 border-b border-gray-200 bg-gray-100 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                  Amount
+                </th>
+                <th class="px-6 py-3 border-b border-gray-200 bg-gray-100 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white">
+              <tr class="border-b border-gray-200">
+                <td class="px-6 py-4 text-sm leading-5 font-bold">$<%= @preview_info["immediate_payment"]["amount"] %></td>
+                <td class="px-6 py-4 text-sm leading-5"><%= present_date(@preview_info["immediate_payment"]["date"]) %></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="pt-6"></div>
+
+    <div class="py-2 text-lg font-bold">Next payment</div>
+
+
+    <div class="flex flex-col">
+      <div class="-my-2 py-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div class="align-middle inline-block min-w-full shadow overflow-hidden sm:rounded-lg border-b border-gray-200">
+          <table class="min-w-full">
+            <thead>
+              <tr>
+                <th class="px-6 py-3 border-b border-gray-200 bg-gray-100 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                  Amount
+                </th>
+                <th class="px-6 py-3 border-b border-gray-200 bg-gray-100 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white">
+              <tr class="border-b border-gray-200">
+                <td class="px-6 py-4 text-sm leading-5 font-bold">$<%= @preview_info["next_payment"]["amount"] %></td>
+                <td class="px-6 py-4 text-sm leading-5"><%= present_date(@preview_info["next_payment"]["date"]) %></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between mt-10">
+      <span class="flex rounded-md shadow-sm">
+        <a href="/billing/change-plan" type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-gray-700 bg-white hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-gray-800 active:bg-gray-50 transition ease-in-out duration-150">
+          Back
+        </a>
+      </span>
+      <span class="flex space-betwee rounded-md shadow-sm">
+        <%= button("Confirm plan change", to: "/billing/change-plan/#{@preview_info["plan_id"]}", method: :post, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition ease-in-out duration-150") %>
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="text-center mt-8">
+  Questions? Contact <%= link("uku@plausible.io", to: "mailto: uku@plausible.io", class: "text-indigo-500") %>
+</div>
+
+<script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.0.1/dist/alpine.js" defer></script>
+<script>Paddle.Setup({vendor: 49430})</script>

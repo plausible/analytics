@@ -98,7 +98,8 @@ defmodule PlausibleWeb.Router do
     post "/contact", PageController, :submit_contact_form
 
     get "/billing/change-plan", BillingController, :change_plan_form
-    post "/billing/change-plan/:plan_name", BillingController, :change_plan
+    get "/billing/change-plan/preview/:plan_id", BillingController, :change_plan_preview
+    post "/billing/change-plan/:new_plan_id", BillingController, :change_plan
     get "/billing/upgrade", BillingController, :upgrade
     get "/billing/success", BillingController, :success
 

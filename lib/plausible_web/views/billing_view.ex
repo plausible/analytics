@@ -1,6 +1,11 @@
 defmodule PlausibleWeb.BillingView do
   use PlausibleWeb, :view
 
+  def present_date(date) do
+    Date.from_iso8601!(date)
+    |> Timex.format!("{D} {Mshort} {YYYY}")
+  end
+
   def reccommended_plan(usage) do
     cond do
       usage < 9000 ->

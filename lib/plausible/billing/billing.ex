@@ -59,20 +59,29 @@ defmodule Plausible.Billing do
     end
   end
 
-  def change_plan(user, new_plan) do
+  def change_plan(user, new_plan_id) do
     subscription = active_subscription_for(user.id)
 
     res = PaddleApi.update_subscription(subscription.paddle_subscription_id, %{
-      plan_id: Plans.paddle_id_for_plan(new_plan)
+      plan_id: new_plan_id
     })
 
     case res do
       {:ok, response} ->
+        amount = :erlang.float_to_binary(response["next_payment"]["amount"] / 1, decimals: 2)
+
         Subscription.changeset(subscription, %{
-          paddle_plan_id: Integer.to_string(response["plan_id"])
+          paddle_plan_id: Integer.to_string(response["plan_id"]),
+          next_bill_amount: amount,
+          next_bill_date: response["next_payment"]["date"],
         }) |> Repo.update
       e -> e
     end
+  end
+
+  def change_plan_preview(subscription, new_plan_id) do
+    PaddleApi.update_subscription_preview(subscription.paddle_subscription_id, new_plan_id)
+    |> IO.inspect
   end
 
   def needs_to_upgrade?(user) do
