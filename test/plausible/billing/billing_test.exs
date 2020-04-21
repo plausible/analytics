@@ -204,7 +204,7 @@ defmodule Plausible.BillingTest do
       user = insert(:user)
        insert(:subscription, user: user)
 
-      Billing.change_plan(user, 123123)
+      Billing.change_plan(user, "123123")
 
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
       assert subscription.paddle_plan_id == "123123"

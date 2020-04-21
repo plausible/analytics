@@ -22,8 +22,15 @@ defmodule PlausibleWeb.BillingControllerTest do
   describe "POST /change-plan" do
     setup [:create_user, :log_in]
 
-    test "calls Paddle API to update subscription" do
+    test "calls Paddle API to update subscription", %{conn: conn, user: user} do
+      insert(:subscription, user: user)
 
+      post(conn, "/billing/change-plan/123123")
+
+      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
+      assert subscription.paddle_plan_id == "123123"
+      assert subscription.next_bill_date == ~D[2019-07-10]
+      assert subscription.next_bill_amount == "6.00"
     end
   end
 end
