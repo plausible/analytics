@@ -77,12 +77,12 @@
 
     <div class="text-right mt-6">
       <span class="inline-flex rounded-md shadow-sm">
-        <a x-show="window.plans[billingCycle][volume].product_id !== '<%= @subscription.paddle_plan_id %>'" style="display: none;" :href="'/billing/change-plan/preview/' + window.plans[billingCycle][volume].product_id" type="button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition ease-in-out duration-150">
+        <a x-show="window.plans[billingCycle][volume].product_id !== '<%= @subscription.paddle_plan_id %>'" style="display: none;" :href="'/billing/change-plan/preview/' + window.plans[billingCycle][volume].product_id" class="inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition ease-in-out duration-150">
           <svg fill="currentColor" viewBox="0 0 20 20" class="w-4 h-4 inline mr-2"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path></svg>
           Preview changes
         </a>
 
-        <a x-show="window.plans[billingCycle][volume].product_id === '<%= @subscription.paddle_plan_id %>'" style="display: none;" tooltip="Select a different plan to continue" type="button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-gray-400">
+        <a x-show="window.plans[billingCycle][volume].product_id === '<%= @subscription.paddle_plan_id %>'" style="display: none;" tooltip="Select a different plan to continue" class="inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-gray-400">
           <svg fill="currentColor" viewBox="0 0 20 20" class="w-4 h-4 inline mr-2"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path></svg>
           Preview changes
         </a>
