@@ -46,8 +46,8 @@ export default class Conversions extends React.Component {
   render() {
     if (this.state.loading) {
       return (
-        <div className="w-full bg-white shadow-xl rounded p-4">
-          <div className="loading my-32 mx-auto"><div></div></div>
+        <div className="w-full bg-white shadow-xl rounded p-4" style={{height: '94px'}}>
+          <div className="loading my-2 mx-auto"><div></div></div>
         </div>
       )
     } else if (this.state.goals) {
