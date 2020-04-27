@@ -6,7 +6,8 @@ defmodule Plausible.Application do
   def start(_type, _args) do
     children = [
       Plausible.Repo,
-      PlausibleWeb.Endpoint
+      PlausibleWeb.Endpoint,
+      Clickhousex.child_spec([scheme: :http, hostname: "localhost", port: 8123, database: "plausible_dev", pool_size: 30, queue_target: 100, name: :clickhouse])
     ]
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]

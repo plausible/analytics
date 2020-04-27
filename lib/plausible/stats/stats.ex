@@ -21,6 +21,19 @@ defmodule Plausible.Stats do
   end
 
   def calculate_plot(site, %Query{step_type: "month"} = query) do
+    q = """
+    SELECT toStartOfMonth(timestamp) as month, uniq(user_id) as visitors
+    FROM events
+    WHERE name='pageview'
+    AND domain=?
+    AND timestamp BETWEEN ? and ?
+    GROUP BY month
+    ORDER BY month
+    """
+    res = query!(q, [site.domain] ++ date_range(site, query))
+          |> Enum.map(fn row -> {row["month"], row["visitors"]} end)
+          |> Enum.into(%{})
+
     steps = Enum.map((query.steps - 1)..0, fn shift ->
       Timex.now(site.timezone)
       |> Timex.beginning_of_month
@@ -28,26 +41,27 @@ defmodule Plausible.Stats do
       |> DateTime.to_date
     end)
 
-    groups = Repo.all(
-      from e in base_query(site, %{query | filters: %{}}),
-      group_by: 1,
-      order_by: 1,
-      select: {fragment("date_trunc('month', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.fingerprint, :distinct)}
-    ) |> Enum.into(%{})
-    |> transform_keys(fn dt -> NaiveDateTime.to_date(dt) end)
-
     compare_groups = if query.filters["goal"] do
-      Repo.all(
-        from e in base_query(site, query),
-        group_by: 1,
-        order_by: 1,
-        select: {fragment("date_trunc('month', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.fingerprint, :distinct)}
-      ) |> Enum.into(%{})
-      |> transform_keys(fn dt -> NaiveDateTime.to_date(dt) end)
+      {goal_event, path} = event_name_for_goal(query)
+
+      q = """
+      SELECT toStartOfMonth(timestamp) as month, uniq(user_id) as visitors
+      FROM events
+      WHERE name=?
+      AND domain=?
+      AND timestamp BETWEEN ? and ?
+      #{ if path, do: "AND pathname=?", else: "" }
+      GROUP BY month
+      ORDER BY month
+      """
+      params = Enum.filter([goal_event, site.domain] ++ date_range(site, query) ++ [path], &(!is_nil(&1)))
+      query!(q, params)
+          |> Enum.map(fn row -> {row["month"], row["visitors"]} end)
+          |> Enum.into(%{})
     end
 
     present_index = Enum.find_index(steps, fn step -> step == Timex.now(site.timezone) |> Timex.to_date |> Timex.beginning_of_month end)
-    plot = Enum.map(steps, fn step -> groups[step] || 0 end)
+    plot = Enum.map(steps, fn step -> res[step] || 0 end)
     compare_plot = compare_groups && Enum.map(steps, fn step -> compare_groups[step] || 0 end)
     labels = Enum.map(steps, fn step -> Timex.format!(step, "{ISOdate}") end)
 
@@ -57,13 +71,18 @@ defmodule Plausible.Stats do
   def calculate_plot(site, %Query{step_type: "date"} = query) do
     steps = Enum.into(query.date_range, [])
 
-    groups = Repo.all(
-      from e in base_query(site, %{ query | filters: %{} }),
-      group_by: 1,
-      order_by: 1,
-      select: {fragment("date_trunc('day', ? at time zone 'utc' at time zone ?)", e.timestamp, ^site.timezone), count(e.fingerprint, :distinct)}
-    ) |> Enum.into(%{})
-    |> transform_keys(fn dt -> NaiveDateTime.to_date(dt) end)
+    q = """
+    SELECT toDate(timestamp) as day, uniq(user_id) as visitors
+    FROM events
+    WHERE name='pageview'
+    AND domain=?
+    AND timestamp BETWEEN ? and ?
+    GROUP BY day
+    ORDER BY day
+    """
+    res = query!(q, [site.domain] ++ date_range(site, query))
+          |> Enum.map(fn row -> {row["day"], row["visitors"]} end)
+          |> Enum.into(%{})
 
     compare_groups = if query.filters["goal"] do
       Repo.all(
@@ -77,7 +96,7 @@ defmodule Plausible.Stats do
 
     present_index = Enum.find_index(steps, fn step -> step == Timex.now(site.timezone) |> Timex.to_date  end)
     steps_to_show = if present_index, do: present_index + 1, else: Enum.count(steps)
-    plot = Enum.map(steps, fn step -> groups[step] || 0 end) |> Enum.take(steps_to_show)
+    plot = Enum.map(steps, fn step -> res[step] || 0 end)
     compare_plot = compare_groups && Enum.map(steps, fn step -> compare_groups[step] || 0 end)
     labels = Enum.map(steps, fn step -> Timex.format!(step, "{ISOdate}") end)
 
@@ -123,63 +142,113 @@ defmodule Plausible.Stats do
   end
 
   def bounce_rate(site, query) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+    q = """
+    SELECT round(countIf(is_bounce = 1) / count(*) * 100) as bounce_rate
+    FROM sessions
+    WHERE domain=?
+    AND start BETWEEN ? and ?
+    """
 
-    sessions_query = from(s in Plausible.FingerprintSession,
-      where: s.domain == ^site.domain,
-      where: s.start >= ^first_datetime and s.start < ^last_datetime
-    )
-    total_sessions = Repo.one( from s in sessions_query, select: count(s))
-    bounced_sessions = Repo.one(from s in sessions_query, where: s.is_bounce, select: count(s))
+    [res] = query!(q, [site.domain] ++ date_range(site, query))
+    res["bounce_rate"] || 0
+  end
 
-    case total_sessions do
-      0 -> 0
-      total -> round(bounced_sessions / total * 100)
-    end
+  defp date_range(site, query) do
+    {:ok, first} = NaiveDateTime.new(query.date_range.first, ~T[00:00:00])
+    first_datetime = Timex.to_datetime(first, site.timezone)
+    |> Timex.Timezone.convert("UTC")
+
+    {:ok, last} = NaiveDateTime.new(query.date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
+    last_datetime = Timex.to_datetime(last, site.timezone)
+    |> Timex.Timezone.convert("UTC")
+
+    [first_datetime, last_datetime]
   end
 
   def pageviews_and_visitors(site, query) do
-    Repo.one(from(
-      e in base_query(site, query),
-      select: {count(e.id), count(e.fingerprint, :distinct)}
-    ))
+    q = """
+    SELECT count(*) as pageviews, uniq(user_id) as visitors
+    FROM events
+    WHERE name='pageview'
+    AND domain=?
+    AND timestamp BETWEEN ? and ?
+    """
+
+    [res] = query!(q, [site.domain] ++ date_range(site, query))
+    {res["pageviews"], res["visitors"]}
+  end
+
+  defp query!(q, args) do
+    res = Clickhousex.query!(:clickhouse, q, args, log: {Plausible.Stats, :log, []})
+    Enum.map(res.rows, fn row ->
+      Enum.zip(res.columns, row)
+      |> Enum.into(%{})
+    end)
+  end
+
+  def log(query) do
+    require Logger
+    timing = System.convert_time_unit(query.connection_time, :native, :millisecond)
+    statement = String.replace(query.query.statement, "\n", " ")
+    Logger.debug("Clickhouse query OK db=#{timing}ms\n#{statement} #{inspect query.params}")
   end
 
   def unique_visitors(site, query) do
-    Repo.one(from(
-      e in base_query(site, query),
-      select: count(e.fingerprint, :distinct)
-    ))
+    {goal_event, path} = event_name_for_goal(query)
+    event = goal_event || "pageview"
+
+    q = """
+    SELECT uniq(user_id) as visitors
+    FROM events
+    WHERE name=?
+    AND domain=?
+    AND timestamp BETWEEN ? and ?
+    #{ if path, do: "AND pathname=?", else: "" }
+    """
+    params = Enum.filter([event, site.domain] ++ date_range(site, query) ++ [path], &(!is_nil(&1)))
+    [res] = query!(q, params)
+    res["visitors"]
   end
 
   def top_referrers_for_goal(site, query, limit \\ 5) do
-    Repo.all(from e in base_query(site, query),
+    q = from(e in base_query(site, query),
       select: %{name: e.initial_referrer_source, url: min(e.initial_referrer), count: count(e.fingerprint, :distinct)},
       group_by: e.initial_referrer_source,
       where: not is_nil(e.initial_referrer_source),
       order_by: [desc: 3],
       limit: ^limit
-    ) |> Enum.map(fn ref ->
+    )
+    IO.inspect(Ecto.Adapters.SQL.to_sql(:all, Repo, q))
+    Repo.all(q) |> Enum.map(fn ref ->
       Map.update(ref, :url, nil, fn url -> url && URI.parse("http://" <> url).host end)
     end)
   end
 
   def top_referrers(site, query, limit \\ 5, include \\ []) do
-    referrers = Repo.all(from e in base_query(site, query),
-      select: %{name: e.referrer_source, url: min(e.referrer), count: count(e.fingerprint, :distinct)},
-      group_by: e.referrer_source,
-      where: not is_nil(e.referrer_source),
-      order_by: [desc: 3],
-      limit: ^limit
-    ) |> Enum.map(fn ref ->
-      Map.update(ref, :url, nil, fn url -> url && URI.parse("http://" <> url).host end)
-    end)
+    q = """
+    SELECT referrer_source, any(referrer) as url, uniq(user_id) as count
+    FROM events
+    WHERE name='pageview'
+    AND domain=?
+    AND timestamp BETWEEN ? and ?
+    AND isNotNull(referrer_source)
+    GROUP BY referrer_source
+    ORDER BY count DESC
+    LIMIT ?
+    """
+
+    referrers = query!(q, [site.domain] ++ date_range(site, query) ++ [limit])
+          |> Enum.map(fn ref ->
+            Map.update(ref, "url", nil, fn url -> url && URI.parse("http://" <> url).host end)
+            |> Map.put("name", ref["referrer_source"])
+            |> Map.delete("referrer_source")
+          end)
 
     if "bounce_rate" in include do
-      bounce_rates = bounce_rates_by_referrer_source(site, query, Enum.map(referrers, fn ref -> ref[:name] end))
+      bounce_rates = bounce_rates_by_referrer_source(site, query, Enum.map(referrers, fn ref -> ref["name"] end))
 
       Enum.map(referrers, fn referrer ->
-        Map.put(referrer, :bounce_rate, bounce_rates[referrer[:name]])
+        Map.put(referrer, "bounce_rate", bounce_rates[referrer["name"]])
       end)
     else
       referrers
@@ -187,45 +256,33 @@ defmodule Plausible.Stats do
   end
 
   defp bounce_rates_by_referrer_source(site, query, referrers) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+    q = """
+    SELECT referrer_source, count(*) as total, round(countIf(is_bounce = 1) / total * 100) as bounce_rate
+    FROM sessions
+    WHERE domain=?
+    AND start BETWEEN ? and ?
+    AND isNotNull(referrer_source)
+    GROUP BY referrer_source
+    ORDER BY total DESC
+    LIMIT 100
+    """
 
-    total_sessions_by_referrer = Repo.all(
-      from s in Plausible.FingerprintSession,
-      where: s.domain == ^site.domain,
-      where: s.start >= ^first_datetime and s.start < ^last_datetime,
-      where: s.referrer_source in ^referrers,
-      group_by: s.referrer_source,
-      select: {s.referrer_source, count(s.id)}
-    ) |> Enum.into(%{})
-
-    bounced_sessions_by_referrer = Repo.all(
-      from s in Plausible.FingerprintSession,
-      where: s.domain == ^site.domain,
-      where: s.start >= ^first_datetime and s.start < ^last_datetime,
-      where: s.is_bounce,
-      where: s.referrer_source in ^referrers,
-      group_by: s.referrer_source,
-      select: {s.referrer_source, count(s.id)}
-    ) |> Enum.into(%{})
-
-    Enum.reduce(referrers, %{}, fn referrer, acc ->
-      total_sessions = Map.get(total_sessions_by_referrer, referrer, 0)
-      bounced_sessions = Map.get(bounced_sessions_by_referrer, referrer, 0)
-
-      bounce_rate = if total_sessions > 0 do
-        round(bounced_sessions / total_sessions * 100)
-      end
-
-      Map.put(acc, referrer, bounce_rate)
-    end)
+    query!(q, [site.domain] ++ date_range(site, query))
+    |> Enum.map(fn row -> {row["referrer_source"], row["bounce_rate"]} end)
+    |> Enum.into(%{})
   end
 
   def visitors_from_referrer(site, query, referrer) do
-    Repo.one(
-      from e in base_query(site, query),
-      select: count(e.fingerprint, :distinct),
-      where: e.referrer_source == ^referrer
-    )
+    q = """
+    SELECT uniq(user_id) as count
+    FROM events
+    WHERE name='pageview'
+    AND domain=?
+    AND timestamp BETWEEN ? and ?
+    AND referrer_source=?
+    """
+    [res] = query!(q, [site.domain] ++ date_range(site, query) ++ [referrer])
+    res["count"]
   end
 
   def conversions_from_referrer(site, query, referrer) do
@@ -237,21 +294,27 @@ defmodule Plausible.Stats do
   end
 
   def referrer_drilldown(site, query, referrer, include \\ []) do
-    referring_urls = Repo.all(
-      from e in base_query(site, query),
-      select: %{name: e.referrer, count: count(e.fingerprint, :distinct)},
-      group_by: e.referrer,
-      where: e.referrer_source == ^referrer,
-      order_by: [desc: 2],
-      limit: 100
-    )
+    q = """
+    SELECT referrer, uniq(user_id) as count
+    FROM events
+    WHERE name='pageview'
+    AND domain=?
+    AND timestamp BETWEEN ? and ?
+    AND referrer_source=?
+    GROUP BY referrer
+    ORDER BY count DESC
+    LIMIT 100
+    """
+
+    referring_urls = query!(q, [site.domain] ++ date_range(site, query) ++ [referrer])
+          |> Enum.map(fn ref ->
+            Map.put(ref, "name", ref["referrer"])
+            |> Map.delete("referrer")
+          end)
 
     referring_urls = if "bounce_rate" in include do
-      bounce_rates = bounce_rates_by_referring_url(site, query, Enum.map(referring_urls, fn ref -> ref[:name] end))
-
-      Enum.map(referring_urls, fn url ->
-        Map.put(url, :bounce_rate, bounce_rates[url[:name]])
-      end)
+      bounce_rates = bounce_rates_by_referring_url(site, query)
+      Enum.map(referring_urls, fn url -> Map.put(url, "bounce_rate", bounce_rates[url["name"]]) end)
     else
       referring_urls
     end
@@ -283,109 +346,91 @@ defmodule Plausible.Stats do
     )
   end
 
-  defp bounce_rates_by_referring_url(site, query, referring_urls) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+  defp bounce_rates_by_referring_url(site, query) do
+    q = """
+    SELECT referrer, count(*) as total, round(countIf(is_bounce = 1) / total * 100) as bounce_rate
+    FROM sessions
+    WHERE domain=?
+    AND start BETWEEN ? and ?
+    AND isNotNull(referrer)
+    GROUP BY referrer
+    ORDER BY total DESC
+    LIMIT 100
+    """
 
-    total_sessions_by_url = Repo.all(
-      from s in Plausible.FingerprintSession,
-      where: s.domain == ^site.domain,
-      where: s.start >= ^first_datetime and s.start < ^last_datetime,
-      where: s.referrer in ^referring_urls,
-      group_by: s.referrer,
-      select: {s.referrer, count(s.id)}
-    ) |> Enum.into(%{})
-
-    bounced_sessions_by_url = Repo.all(
-      from s in Plausible.FingerprintSession,
-      where: s.domain == ^site.domain,
-      where: s.start >= ^first_datetime and s.start < ^last_datetime,
-      where: s.is_bounce,
-      where: s.referrer in ^referring_urls,
-      group_by: s.referrer,
-      select: {s.referrer, count(s.id)}
-    ) |> Enum.into(%{})
-
-    Enum.reduce(referring_urls, %{}, fn url, acc ->
-      total_sessions = Map.get(total_sessions_by_url, url, 0)
-      bounced_sessions = Map.get(bounced_sessions_by_url, url, 0)
-
-      bounce_rate = if total_sessions > 0 do
-        round(bounced_sessions / total_sessions * 100)
-      end
-
-      Map.put(acc, url, bounce_rate)
-    end)
+    query!(q, [site.domain] ++ date_range(site, query))
+    |> Enum.map(fn row -> {row["referrer"], row["bounce_rate"]} end)
+    |> Enum.into(%{})
   end
 
   def top_pages(site, query, limit \\ 5, include \\ []) do
-    pages = Repo.all(from e in base_query(site, query),
-      select: %{name: e.pathname, count: count(e.pathname)},
-      group_by: e.pathname,
-      order_by: [desc: count(e.pathname)],
-      limit: ^limit
-    )
+    q = """
+    SELECT pathname, count(*) as count
+    FROM events
+    WHERE name='pageview'
+    AND domain=?
+    AND timestamp BETWEEN ? and ?
+    GROUP BY pathname
+    ORDER BY count DESC
+    LIMIT ?
+    """
+
+    pages = query!(q, [site.domain] ++ date_range(site, query) ++ [limit])
+          |> Enum.map(fn page ->
+            Map.put(page, "name", page["pathname"])
+            |> Map.delete("pathname")
+          end)
 
     if "bounce_rate" in include do
-      bounce_rates = bounce_rates_by_page_url(site, query, Enum.map(pages, fn page -> page[:name] end))
-
-      Enum.map(pages, fn url ->
-        Map.put(url, :bounce_rate, bounce_rates[url[:name]])
-      end)
+      bounce_rates = bounce_rates_by_page_url(site, query)
+      Enum.map(pages, fn url -> Map.put(url, "bounce_rate", bounce_rates[url["name"]]) end)
     else
       pages
     end
   end
 
-  defp bounce_rates_by_page_url(site, query, page_urls) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+  defp bounce_rates_by_page_url(site, query) do
+    q = """
+    SELECT entry_page, count(*) as total, round(countIf(is_bounce = 1) / total * 100) as bounce_rate
+    FROM sessions
+    WHERE domain=?
+    AND start BETWEEN ? and ?
+    GROUP BY entry_page
+    ORDER BY total DESC
+    LIMIT 100
+    """
 
-    total_sessions_by_url = Repo.all(
-      from s in Plausible.FingerprintSession,
-      where: s.domain == ^site.domain,
-      where: s.start >= ^first_datetime and s.start < ^last_datetime,
-      where: s.entry_page in ^page_urls,
-      group_by: s.entry_page,
-      select: {s.entry_page, count(s.id)}
-    ) |> Enum.into(%{})
-
-    bounced_sessions_by_url = Repo.all(
-      from s in Plausible.FingerprintSession,
-      where: s.domain == ^site.domain,
-      where: s.start >= ^first_datetime and s.start < ^last_datetime,
-      where: s.is_bounce,
-      where: s.entry_page in ^page_urls,
-      group_by: s.entry_page,
-      select: {s.entry_page, count(s.id)}
-    ) |> Enum.into(%{})
-
-    Enum.reduce(page_urls, %{}, fn url, acc ->
-      total_sessions = Map.get(total_sessions_by_url, url, 0)
-      bounced_sessions = Map.get(bounced_sessions_by_url, url, 0)
-
-      bounce_rate = if total_sessions > 0 do
-        round(bounced_sessions / total_sessions * 100)
-      end
-
-      Map.put(acc, url, bounce_rate)
-    end)
+    query!(q, [site.domain] ++ date_range(site, query))
+    |> Enum.map(fn row -> {row["entry_page"], row["bounce_rate"]} end)
+    |> Enum.into(%{})
   end
 
   defp add_percentages(stat_list) do
-    total = Enum.reduce(stat_list, 0, fn %{count: count}, total -> total + count end)
+    total = Enum.reduce(stat_list, 0, fn %{"count" => count}, total -> total + count end)
     Enum.map(stat_list, fn stat ->
-      Map.put(stat, :percentage, round(stat[:count] / total * 100))
+      Map.put(stat, "percentage", round(stat["count"] / total * 100))
     end)
   end
 
   @available_screen_sizes ["Desktop", "Laptop", "Tablet", "Mobile"]
 
   def top_screen_sizes(site, query) do
-    Repo.all(from e in base_query(site, query),
-      select: %{name: e.screen_size, count: count(e.fingerprint, :distinct)},
-      group_by: e.screen_size,
-      where: not is_nil(e.screen_size)
-    )
-    |> Enum.sort(fn %{name: screen_size1}, %{name: screen_size2} ->
+    q = """
+    SELECT screen_size, uniq(user_id) as count
+    FROM events
+    WHERE name='pageview'
+    AND domain=?
+    AND timestamp BETWEEN ? and ?
+    AND isNotNull(screen_size)
+    GROUP BY screen_size
+    ORDER BY count DESC
+    """
+
+    query!(q, [site.domain] ++ date_range(site, query))
+    |> Enum.map(fn stat ->
+      Map.put(stat, "name", stat["screen_size"])
+      |> Map.delete("screen_size")
+    end) |> Enum.sort(fn %{"name" => screen_size1}, %{"name" => screen_size2} ->
       index1 = Enum.find_index(@available_screen_sizes, fn s -> s == screen_size1 end)
       index2 = Enum.find_index(@available_screen_sizes, fn s -> s == screen_size2 end)
       index2 > index1
@@ -394,39 +439,66 @@ defmodule Plausible.Stats do
   end
 
   def countries(site, query) do
-     Repo.all(from e in base_query(site, query),
-      select: %{name: e.country_code, count: count(e.fingerprint, :distinct)},
-      group_by: e.country_code,
-      where: not is_nil(e.country_code),
-      order_by: [desc: 2]
-    )
+    q = """
+    SELECT country_code, uniq(user_id) as count
+    FROM events
+    WHERE name='pageview'
+    AND domain=?
+    AND timestamp BETWEEN ? and ?
+    GROUP BY country_code
+    ORDER BY count DESC
+    """
+
+    query!(q, [site.domain] ++ date_range(site, query))
+    |> Enum.map(fn country ->
+      Map.put(country, "name", country["country_code"])
+      |> Map.delete("country_code")
+    end)
     |> Enum.map(fn stat ->
-      two_letter_code = stat[:name]
+      two_letter_code = stat["name"]
       stat
-      |> Map.put(:name, Plausible.Stats.CountryName.to_alpha3(two_letter_code))
-      |> Map.put(:full_country_name, Plausible.Stats.CountryName.from_iso3166(two_letter_code))
+      |> Map.put("name", Plausible.Stats.CountryName.to_alpha3(two_letter_code))
+      |> Map.put("full_country_name", Plausible.Stats.CountryName.from_iso3166(two_letter_code))
     end)
     |> add_percentages
   end
 
   def browsers(site, query, limit \\ 5) do
-    Repo.all(from e in base_query(site, query),
-      select: %{name: e.browser, count: count(e.fingerprint, :distinct)},
-      group_by: e.browser,
-      where: not is_nil(e.browser),
-      order_by: [desc: 2]
-    )
+    q = """
+    SELECT browser, uniq(user_id) as count
+    FROM events
+    WHERE name='pageview'
+    AND domain=?
+    AND timestamp BETWEEN ? and ?
+    AND isNotNull(browser)
+    GROUP BY browser
+    ORDER BY count DESC
+    """
+    query!(q, [site.domain] ++ date_range(site, query))
+    |> Enum.map(fn country ->
+      Map.put(country, "name", country["browser"])
+      |> Map.delete("browser")
+    end)
     |> add_percentages
     |> Enum.take(limit)
   end
 
   def operating_systems(site, query, limit \\ 5) do
-    Repo.all(from e in base_query(site, query),
-      select: %{name: e.operating_system, count: count(e.fingerprint, :distinct)},
-      group_by: e.operating_system,
-      where: not is_nil(e.operating_system),
-      order_by: [desc: 2]
-    )
+    q = """
+    SELECT operating_system, uniq(user_id) as count
+    FROM events
+    WHERE name='pageview'
+    AND domain=?
+    AND timestamp BETWEEN ? and ?
+    AND isNotNull(operating_system)
+    GROUP BY operating_system
+    ORDER BY count DESC
+    """
+    query!(q, [site.domain] ++ date_range(site, query))
+    |> Enum.map(fn country ->
+      Map.put(country, "name", country["operating_system"])
+      |> Map.delete("operating_system")
+    end)
     |> add_percentages
     |> Enum.take(limit)
   end
@@ -441,11 +513,7 @@ defmodule Plausible.Stats do
   end
 
   def goal_conversions(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
-    Repo.all(from e in base_query(site, query),
-      select: count(e.fingerprint, :distinct),
-      group_by: e.name,
-      order_by: [desc: 1]
-    ) |> Enum.map(fn count -> %{name: goal, count: count} end)
+    [%{name: goal, count: unique_visitors(site, query)}]
   end
 
   def goal_conversions(site, query) do
@@ -460,11 +528,15 @@ defmodule Plausible.Stats do
              |> Enum.filter(&(&1))
 
     if Enum.count(events) > 0 do
-      Repo.all(
-        from e in base_query(site, query, events),
-        group_by: e.name,
-        select: %{name: e.name, count: count(e.fingerprint, :distinct)}
-      )
+      q = """
+      SELECT name, uniq(user_id) as count
+      FROM events
+      WHERE domain=?
+      AND name IN ?
+      AND timestamp BETWEEN ? and ?
+      GROUP BY name
+      """
+      query!(q, [site.domain, events] ++ date_range(site, query))
     else
       []
     end
@@ -475,19 +547,27 @@ defmodule Plausible.Stats do
              |> Enum.filter(&(&1))
 
     if Enum.count(pages) > 0 do
-      Repo.all(
-        from e in base_query(site, query),
-        where: e.pathname in ^pages,
-        group_by: e.pathname,
-        select: %{name: fragment("concat('Visit ', ?)", e.pathname), count: count(e.fingerprint, :distinct)}
-      )
+      q = """
+      SELECT pathname, uniq(user_id) as count
+      FROM events
+      WHERE name='pageview'
+      AND domain=?
+      AND pathname IN ?
+      AND timestamp BETWEEN ? and ?
+      GROUP BY pathname
+      """
+      query!(q, [site.domain, pages] ++ date_range(site, query))
+          |> Enum.map(fn c ->
+            Map.put(c, "name", "Visit " <> c["pathname"])
+            |> Map.delete("pathname")
+          end)
     else
       []
     end
   end
 
   defp sort_conversions(conversions) do
-    Enum.sort_by(conversions, fn conversion -> -conversion[:count] end)
+    Enum.sort_by(conversions, fn conversion -> -conversion["count"] end)
   end
 
   defp base_query(site, query, events \\ ["pageview"]) do
