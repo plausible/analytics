@@ -50,6 +50,7 @@ test:ex_unit:
     - postgres
   stage: test
   variables:
+    POSTGRES_HOST: postgres
     MIX_HOME: $CI_PROJECT_DIR/.mix
     MIX_ENV: test
   script:
