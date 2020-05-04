@@ -46,11 +46,13 @@ compile:
 
 test:ex_unit:
   <<: *elixir-commons
+  services:
+    - postgres
   stage: test
   variables:
     MIX_HOME: $CI_PROJECT_DIR/.mix
+    MIX_ENV: test
   script:
+    - mix deps.get
     - mix test --cover
   coverage: '/\[TOTAL\]\s+(\d+\.\d+)%/'
-  dependencies:
-    - compile
