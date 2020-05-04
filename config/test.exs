@@ -14,10 +14,10 @@ config :bcrypt_elixir, :log_rounds, 4
 
 # Configure your database
 config :plausible, Plausible.Repo,
-  username: "postgres",
-  password: "postgres",
-  database: "plausible_test",
-  hostname: "localhost",
+  username: System.get_env("POSTGRES_USER") || "postgres",
+  password: System.get_env("POSTGRES_PASSWORD") || "postgres",
+  database: System.get_env("POSTGRES_DB") || "plausible_test",
+  hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :plausible, Plausible.Mailer,

@@ -36,10 +36,10 @@ config :phoenix, :stacktrace_depth, 20
 config :phoenix, :plug_init_mode, :runtime
 
 config :plausible, Plausible.Repo,
-  username: "postgres",
-  password: "postgres",
-  database: "plausible_dev",
-  hostname: "localhost",
+  username: System.get_env("POSTGRES_USER") || "postgres",
+  password: System.get_env("POSTGRES_PASSWORD") || "postgres",
+  database: System.get_env("POSTGRES_DB") || "plausible_dev",
+  hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 10
 
 config :plausible, Plausible.Mailer,
