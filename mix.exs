@@ -11,7 +11,17 @@ defmodule Plausible.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      test_coverage: [tool: ExCoveralls]
+      test_coverage: [
+        tool: ExCoveralls
+      ],
+      releases: [
+        plausible: [
+          include_executables_for: [:unix],
+          applications: [
+            plausible_web: :permanent
+          ]
+        ]
+      ]
     ]
   end
 
