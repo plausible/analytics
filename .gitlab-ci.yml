@@ -4,7 +4,7 @@ stages:
   - test
 
 .commons: &elixir-commons
-  image: elixir:1.10.2-slim
+  image: elixir:1.10.3
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
