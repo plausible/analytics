@@ -51,9 +51,11 @@ test:ex_unit:
   stage: test
   variables:
     POSTGRES_HOST: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_USER: postgres
     MIX_HOME: $CI_PROJECT_DIR/.mix
-    MIX_ENV: test
   script:
-    - mix deps.get
     - mix test --cover
   coverage: '/\[TOTAL\]\s+(\d+\.\d+)%/'
+  dependencies:
+    - compile
