@@ -21,7 +21,9 @@ defmodule Plausible.Site.SharedLink do
 
   defp hash_password(link) do
     case link.changes[:password] do
-      nil -> link
+      nil ->
+        link
+
       password ->
         hash = Plausible.Auth.Password.hash(password)
         change(link, password_hash: hash)

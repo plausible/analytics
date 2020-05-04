@@ -7,6 +7,7 @@ defmodule Plausible.Slack do
       case @app_env do
         "prod" ->
           HTTPoison.post!(webhook_url(), Poison.encode!(%{text: text}))
+
         _ ->
           Logger.debug(text)
       end

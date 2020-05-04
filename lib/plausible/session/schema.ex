@@ -26,7 +26,23 @@ defmodule Plausible.Session do
 
   def changeset(session, attrs) do
     session
-    |> cast(attrs, [:hostname, :domain, :entry_page, :exit_page, :referrer, :new_visitor, :user_id, :start, :length, :is_bounce, :operating_system, :browser, :referrer_source, :country_code, :screen_size])
+    |> cast(attrs, [
+      :hostname,
+      :domain,
+      :entry_page,
+      :exit_page,
+      :referrer,
+      :new_visitor,
+      :user_id,
+      :start,
+      :length,
+      :is_bounce,
+      :operating_system,
+      :browser,
+      :referrer_source,
+      :country_code,
+      :screen_size
+    ])
     |> validate_required([:hostname, :domain, :new_visitor, :user_id, :is_bounce, :start])
   end
 end

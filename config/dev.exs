@@ -42,8 +42,7 @@ config :plausible, Plausible.Repo,
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool_size: 10
 
-config :plausible, Plausible.Mailer,
-  adapter: Bamboo.LocalAdapter
+config :plausible, Plausible.Mailer, adapter: Bamboo.LocalAdapter
 
 if File.exists?("config/dev.secret.exs") do
   import_config "dev.secret.exs"

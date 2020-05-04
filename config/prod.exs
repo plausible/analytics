@@ -68,8 +68,7 @@ config :logger, level: :info
 
 # Finally import the config/prod.secret.exs which should be versioned
 # separately.
-config :plausible, PlausibleWeb.Endpoint,
-  secret_key_base: System.get_env("SECRET_KEY_BASE")
+config :plausible, PlausibleWeb.Endpoint, secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 # Configure your database
 config :plausible, Plausible.Repo,
@@ -83,16 +82,14 @@ config :plausible, :google,
   client_id: System.get_env("GOOGLE_CLIENT_ID"),
   client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
 
-config :plausible, :slack,
- webhook: System.get_env("SLACK_WEBHOOK")
+config :plausible, :slack, webhook: System.get_env("SLACK_WEBHOOK")
 
 config :plausible, Plausible.Mailer,
   adapter: Bamboo.PostmarkAdapter,
   api_key: System.get_env("POSTMARK_API_KEY")
 
-config :plausible, :twitter, [
-   consumer_key: System.get_env("TWITTER_CONSUMER_KEY"),
-   consumer_secret: System.get_env("TWITTER_CONSUMER_SECRET"),
-   token: System.get_env("TWITTER_ACCESS_TOKEN"),
-   token_secret: System.get_env("TWITTER_ACCESS_TOKEN_SECRET")
-]
+config :plausible, :twitter,
+  consumer_key: System.get_env("TWITTER_CONSUMER_KEY"),
+  consumer_secret: System.get_env("TWITTER_CONSUMER_SECRET"),
+  token: System.get_env("TWITTER_ACCESS_TOKEN"),
+  token_secret: System.get_env("TWITTER_ACCESS_TOKEN_SECRET")

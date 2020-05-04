@@ -19,7 +19,7 @@ defmodule Plausible.Factory do
 
     %Plausible.Site{
       domain: domain,
-      timezone: "UTC",
+      timezone: "UTC"
     }
   end
 

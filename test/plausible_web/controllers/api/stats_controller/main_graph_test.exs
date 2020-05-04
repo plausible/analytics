@@ -21,8 +21,10 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "displays hourly stats in configured timezone", %{conn: conn, user: user} do
-      site = insert(:site, members: [user], timezone: "CET") # UTC+1
-      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 00:00:00]) # Timestamp is in UTC
+      # UTC+1
+      site = insert(:site, members: [user], timezone: "CET")
+      # Timestamp is in UTC
+      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 00:00:00])
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
@@ -30,7 +32,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       zeroes = Stream.repeatedly(fn -> 0 end) |> Stream.take(22) |> Enum.into([])
 
-      assert plot == [0, 1] ++ zeroes # Expecting pageview to show at 1am CET
+      # Expecting pageview to show at 1am CET
+      assert plot == [0, 1] ++ zeroes
     end
 
     test "displays visitors for a month", %{conn: conn, site: site} do
@@ -88,8 +91,17 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     setup [:create_user, :log_in, :create_site]
 
     test "unique users counts distinct user ids", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 00:00:00])
-      insert(:pageview, domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 23:59:00])
+      insert(:pageview,
+        domain: site.domain,
+        fingerprint: @user_id,
+        timestamp: ~N[2019-01-01 00:00:00]
+      )
+
+      insert(:pageview,
+        domain: site.domain,
+        fingerprint: @user_id,
+        timestamp: ~N[2019-01-01 23:59:00]
+      )
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
@@ -108,8 +120,17 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "counts total pageviews even from same user ids", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 00:00:00])
-      insert(:pageview, domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 23:59:00])
+      insert(:pageview,
+        domain: site.domain,
+        fingerprint: @user_id,
+        timestamp: ~N[2019-01-01 00:00:00]
+      )
+
+      insert(:pageview,
+        domain: site.domain,
+        fingerprint: @user_id,
+        timestamp: ~N[2019-01-01 23:59:00]
+      )
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
@@ -154,17 +175,32 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
-
   describe "GET /api/stats/main-graph - filtered for goal" do
     setup [:create_user, :log_in, :create_site]
 
     test "returns total unique visitors", %{conn: conn, site: site} do
       insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 01:00:00])
-      insert(:event, name: "Signup", domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 02:00:00])
+
+      insert(:pageview,
+        domain: site.domain,
+        fingerprint: @user_id,
+        timestamp: ~N[2019-01-01 01:00:00]
+      )
+
+      insert(:event,
+        name: "Signup",
+        domain: site.domain,
+        fingerprint: @user_id,
+        timestamp: ~N[2019-01-01 02:00:00]
+      )
 
       filters = Jason.encode!(%{goal: "Signup"})
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01&filters=#{filters}")
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01&filters=#{filters}"
+        )
 
       res = json_response(conn, 200)
       assert %{"name" => "Total visitors", "count" => 2, "change" => 100} in res["top_stats"]
@@ -176,7 +212,12 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       insert(:event, name: "Signup", domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
 
       filters = Jason.encode!(%{goal: "Signup"})
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2019-01-01&filters=#{filters}")
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2019-01-01&filters=#{filters}"
+        )
 
       res = json_response(conn, 200)
       assert %{"name" => "Converted visitors", "count" => 1, "change" => 100} in res["top_stats"]
@@ -188,10 +229,18 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       insert(:event, name: "Signup", domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
 
       filters = Jason.encode!(%{goal: "Signup"})
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01&filters=#{filters}")
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01&filters=#{filters}"
+        )
 
       res = json_response(conn, 200)
-      assert %{"name" => "Conversion rate", "percentage" => 50.0, "change" => 100} in res["top_stats"]
+
+      assert %{"name" => "Conversion rate", "percentage" => 50.0, "change" => 100} in res[
+               "top_stats"
+             ]
     end
   end
 

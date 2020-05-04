@@ -3,7 +3,9 @@ defmodule Plausible.Repo.Migrations.DeleteIntroEmailsWhenUserIsDeleted do
 
   def change do
     alter table(:intro_emails) do
-      modify :user_id, references(:users, on_delete: :delete_all), null: false, from: references(:users)
+      modify :user_id, references(:users, on_delete: :delete_all),
+        null: false,
+        from: references(:users)
     end
   end
 end

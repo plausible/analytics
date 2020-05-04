@@ -25,7 +25,7 @@ config :sentry,
   included_environments: [:prod, :staging],
   environment_name: String.to_atom(Map.get(System.get_env(), "APP_ENV", "dev")),
   enable_source_code_context: true,
-  root_source_code_path: File.cwd!
+  root_source_code_path: File.cwd!()
 
 # Configures Elixir's Logger
 config :logger, :console,
@@ -46,7 +46,8 @@ config :plausible,
   google_api: Plausible.Google.Api
 
 config :plausible,
-  session_timeout: 1000 * 60 * 30 # 30 minutes
+  # 30 minutes
+  session_timeout: 1000 * 60 * 30
 
 config :plausible, :paddle,
   vendor_id: "49430",

@@ -54,13 +54,17 @@ defmodule PlausibleWeb.StatsControllerTest do
   describe "GET /share/:slug" do
     test "prompts a password for a password-protected link", %{conn: conn} do
       site = insert(:site)
-      link = insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
+
+      link =
+        insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
 
       conn = get(conn, "/share/#{link.slug}")
       assert response(conn, 200) =~ "Enter password"
     end
 
-    test "logs anonymous user in straight away if the link is not password-protected", %{conn: conn} do
+    test "logs anonymous user in straight away if the link is not password-protected", %{
+      conn: conn
+    } do
       site = insert(:site)
       link = insert(:shared_link, site: site)
       insert(:pageview, domain: site.domain)
@@ -76,7 +80,10 @@ defmodule PlausibleWeb.StatsControllerTest do
   describe "POST /share/:slug/authenticate" do
     test "logs anonymous user in with correct password", %{conn: conn} do
       site = insert(:site)
-      link = insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
+
+      link =
+        insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
+
       insert(:pageview, domain: site.domain)
 
       conn = post(conn, "/share/#{link.slug}/authenticate", %{password: "password"})
@@ -88,7 +95,9 @@ defmodule PlausibleWeb.StatsControllerTest do
 
     test "shows form again with wrong password", %{conn: conn} do
       site = insert(:site)
-      link = insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
+
+      link =
+        insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
 
       conn = post(conn, "/share/#{link.slug}/authenticate", %{password: "WRONG!"})
       assert html_response(conn, 200) =~ "Enter password"

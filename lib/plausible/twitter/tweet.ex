@@ -2,7 +2,15 @@ defmodule Plausible.Twitter.Tweet do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @required_fields [:link, :tweet_id, :author_handle, :author_name, :author_image, :text, :created]
+  @required_fields [
+    :link,
+    :tweet_id,
+    :author_handle,
+    :author_name,
+    :author_image,
+    :text,
+    :created
+  ]
 
   @derive {Jason.Encoder, only: @required_fields}
   schema "tweets" do

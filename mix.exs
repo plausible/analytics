@@ -6,7 +6,8 @@ defmodule Plausible.MixProject do
       app: :plausible,
       version: "0.1.0",
       elixir: "~> 1.5",
-      elixirc_paths: elixirc_paths(Mix.env()), compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      elixirc_paths: elixirc_paths(Mix.env()),
+      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
@@ -20,7 +21,15 @@ defmodule Plausible.MixProject do
   def application do
     [
       mod: {Plausible.Application, []},
-      extra_applications: [:logger, :sentry, :runtime_tools, :timex, :ua_inspector, :ref_inspector, :bamboo]
+      extra_applications: [
+        :logger,
+        :sentry,
+        :runtime_tools,
+        :timex,
+        :ua_inspector,
+        :ref_inspector,
+        :bamboo
+      ]
     ]
   end
 
@@ -33,7 +42,8 @@ defmodule Plausible.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:browser, "~> 0.4.3"}, # remove
+      # remove
+      {:browser, "~> 0.4.3"},
       {:bcrypt_elixir, "~> 2.0"},
       {:cors_plug, "~> 1.5"},
       {:ecto_sql, "~> 3.0"},
@@ -47,7 +57,8 @@ defmodule Plausible.MixProject do
       {:phoenix_pubsub, "~> 1.1"},
       {:plug_cowboy, "~> 2.0"},
       {:postgrex, ">= 0.0.0"},
-      {:poison, "~> 3.1"}, # Used in paddle_api, can remove
+      #  Used in paddle_api, can remove
+      {:poison, "~> 3.1"},
       {:ref_inspector, "~> 1.3"},
       {:timex, "~> 3.6"},
       {:ua_inspector, "~> 0.18"},

@@ -7,7 +7,9 @@ defmodule Plausible.Auth.Token do
   end
 
   def verify_password_reset(token) do
-    Phoenix.Token.verify(PlausibleWeb.Endpoint, "password-reset", token, max_age: @one_hour_in_seconds)
+    Phoenix.Token.verify(PlausibleWeb.Endpoint, "password-reset", token,
+      max_age: @one_hour_in_seconds
+    )
   end
 
   def sign_activation(name, email) do

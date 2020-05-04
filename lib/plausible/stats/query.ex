@@ -1,5 +1,5 @@
 defmodule Plausible.Stats.Query do
-  defstruct [date_range: nil, step_type: nil, period: nil, steps: nil, filters: %{}]
+  defstruct date_range: nil, step_type: nil, period: nil, steps: nil, filters: %{}
 
   def shift_back(%__MODULE__{period: "day"} = query) do
     new_date = query.date_range.first |> Timex.shift(days: -1)
@@ -72,7 +72,7 @@ defmodule Plausible.Stats.Query do
   end
 
   def from(_tz, %{"period" => "month", "date" => date} = params) do
-    start_date = Date.from_iso8601!(date) |> Timex.beginning_of_month
+    start_date = Date.from_iso8601!(date) |> Timex.beginning_of_month()
     end_date = Timex.end_of_month(start_date)
 
     %__MODULE__{
@@ -85,8 +85,9 @@ defmodule Plausible.Stats.Query do
   end
 
   def from(tz, %{"period" => "6mo"} = params) do
-    start_date = Timex.shift(today(tz), months: -5)
-                 |> Timex.beginning_of_month()
+    start_date =
+      Timex.shift(today(tz), months: -5)
+      |> Timex.beginning_of_month()
 
     %__MODULE__{
       period: "6mo",
@@ -98,8 +99,9 @@ defmodule Plausible.Stats.Query do
   end
 
   def from(tz, %{"period" => "12mo"} = params) do
-    start_date = Timex.shift(today(tz), months: -11)
-                 |> Timex.beginning_of_month()
+    start_date =
+      Timex.shift(today(tz), months: -11)
+      |> Timex.beginning_of_month()
 
     %__MODULE__{
       period: "12mo",
@@ -127,7 +129,7 @@ defmodule Plausible.Stats.Query do
   end
 
   defp today(tz) do
-    Timex.now(tz) |> Timex.to_date
+    Timex.now(tz) |> Timex.to_date()
   end
 
   defp parse_filters(params) do
@@ -136,4 +138,3 @@ defmodule Plausible.Stats.Query do
     end
   end
 end
-

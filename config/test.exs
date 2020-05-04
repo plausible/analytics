@@ -20,8 +20,7 @@ config :plausible, Plausible.Repo,
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
 
-config :plausible, Plausible.Mailer,
-  adapter: Bamboo.TestAdapter
+config :plausible, Plausible.Mailer, adapter: Bamboo.TestAdapter
 
 config :plausible,
   paddle_api: Plausible.PaddleApi.Mock,
