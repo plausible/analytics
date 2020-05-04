@@ -1,0 +1,60 @@
+stages:
+  - prepare
+  - build
+  - test
+
+.commons: &elixir-commons
+  image: elixir:1.10.3
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - $CI_PROJECT_DIR/.mix
+      - $CI_PROJECT_DIR/priv/plts
+      - ~/.hex/
+  before_script:
+    - mkdir -p $CI_PROJECT_DIR/priv/plts/
+    - mix local.hex --force &&  mix local.rebar --force
+    - chmod +x .gitlab/build-scripts/*
+    - source .gitlab/build-scripts/docker.gitlab.sh
+
+deps:
+  <<: *elixir-commons
+  stage: prepare
+  variables:
+    MIX_HOME: $CI_PROJECT_DIR/.mix
+  script:
+    - mix deps.get
+  dependencies: []
+  artifacts:
+    paths:
+      - mix.lock
+      - deps
+
+compile:
+  <<: *elixir-commons
+  stage: build
+  script:
+    - mix compile
+  dependencies:
+    - deps
+  artifacts:
+    paths:
+      - mix.lock
+      - _build
+      - deps
+
+test:ex_unit:
+  <<: *elixir-commons
+  services:
+    - postgres
+  stage: test
+  variables:
+    POSTGRES_HOST: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_USER: postgres
+    MIX_HOME: $CI_PROJECT_DIR/.mix
+  script:
+    - mix test --cover
+  coverage: '/\[TOTAL\]\s+(\d+\.\d+)%/'
+  dependencies:
+    - compile
