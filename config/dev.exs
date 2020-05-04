@@ -35,6 +35,11 @@ config :logger, :console, format: "[$level] $message\n"
 config :phoenix, :stacktrace_depth, 20
 config :phoenix, :plug_init_mode, :runtime
 
+config :plausible, :clickhouse,
+  hostname: "localhost",
+  database: "plausible_dev",
+  pool_size: 10
+
 config :plausible, Plausible.Repo,
   username: "postgres",
   password: "postgres",

@@ -71,6 +71,13 @@ config :logger, level: :info
 config :plausible, PlausibleWeb.Endpoint,
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
+config :plausible, :clickhouse,
+  hostname: System.get_env("CLICKHOUSE_DATABASE_HOST"),
+  database: System.get_env("CLICKHOUSE_DATABASE_NAME"),
+  username: System.get_env("CLICKHOUSE_DATABASE_USER"),
+  password: System.get_env("CLICKHOUSE_DATABASE_PASSWORD"),
+  pool_size: 30
+
 # Configure your database
 config :plausible, Plausible.Repo,
   adapter: Ecto.Adapters.Postgres,
