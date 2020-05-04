@@ -14,7 +14,6 @@ stages:
   before_script:
     - mkdir -p $CI_PROJECT_DIR/priv/plts/
     - mix local.hex --force &&  mix local.rebar --force
-    - mix deps.get
     - chmod +x .gitlab/build-scripts/*
     - source .gitlab/build-scripts/docker.gitlab.sh
 
