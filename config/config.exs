@@ -53,6 +53,12 @@ config :plausible, :paddle,
   vendor_id: "49430",
   vendor_auth_code: System.get_env("PADDLE_VENDOR_AUTH_CODE")
 
+config :plausible,
+       Plausible.Repo,
+       url:
+         System.get_env("DATABASE_URL") ||
+           "postgres://postgres:postgres@127.0.0.1:5432/plausible_test?currentSchema=default"
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"

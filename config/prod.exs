@@ -73,7 +73,6 @@ config :plausible, PlausibleWeb.Endpoint, secret_key_base: System.get_env("SECRE
 # Configure your database
 config :plausible, Plausible.Repo,
   adapter: Ecto.Adapters.Postgres,
-  url: System.get_env("AVIEN_DATABASE_URL"),
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
   timeout: 10_000,
   ssl: true
