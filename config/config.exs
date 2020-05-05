@@ -21,9 +21,9 @@ config :plausible, PlausibleWeb.Endpoint,
   pubsub: [name: Plausible.PubSub, adapter: Phoenix.PubSub.PG2]
 
 config :sentry,
-  dsn: "https://0350a42aa6234a2eaf1230866788598e@sentry.io/1382353",
+  dsn: System.get_env("SENTRY_DSN"),
   included_environments: [:prod, :staging],
-  environment_name: String.to_atom(Map.get(System.get_env(), "APP_ENV", "dev")),
+  environment_name: String.to_atom(Map.get(System.get_env(), "MIX_ENV", "dev")),
   enable_source_code_context: true,
   root_source_code_path: File.cwd!()
 
@@ -55,6 +55,7 @@ config :plausible, :paddle,
 
 config :plausible,
        Plausible.Repo,
+       pool_size: String.to_integer(System.get_env("DATABASE_POOL_SIZE") || "10"),
        url:
          System.get_env("DATABASE_URL") ||
            "postgres://postgres:postgres@127.0.0.1:5432/plausible_test?currentSchema=default"
