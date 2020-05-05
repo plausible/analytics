@@ -17,7 +17,7 @@ defmodule Mix.Tasks.HydrateClickhouse do
 
   def create_events() do
     ddl = """
-    CREATE TABLE IF NOT EXISTS plausible_dev.events (
+    CREATE TABLE IF NOT EXISTS events (
       timestamp DateTime,
       name String,
       domain String,
@@ -44,7 +44,7 @@ defmodule Mix.Tasks.HydrateClickhouse do
 
   def create_sessions() do
     ddl = """
-    CREATE TABLE IF NOT EXISTS plausible_dev.sessions (
+    CREATE TABLE IF NOT EXISTS sessions (
       domain String,
       user_id FixedString(64),
       hostname String,
@@ -76,7 +76,7 @@ defmodule Mix.Tasks.HydrateClickhouse do
 
     for chunk <- event_chunks do
       insert = """
-      INSERT INTO plausible_dev.events (name, timestamp, domain, user_id, hostname, pathname, referrer, referrer_source, initial_referrer, initial_referrer_source, country_code, screen_size, browser, operating_system)
+      INSERT INTO events (name, timestamp, domain, user_id, hostname, pathname, referrer, referrer_source, initial_referrer, initial_referrer_source, country_code, screen_size, browser, operating_system)
       VALUES
       """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", Enum.count(chunk))
 
@@ -97,7 +97,7 @@ defmodule Mix.Tasks.HydrateClickhouse do
 
     for chunk <- session_chunks do
       insert = """
-      INSERT INTO plausible_dev.sessions (domain, user_id, hostname, start, is_bounce, entry_page, exit_page, referrer, referrer_source, country_code, screen_size, browser, operating_system)
+      INSERT INTO sessions (domain, user_id, hostname, start, is_bounce, entry_page, exit_page, referrer, referrer_source, country_code, screen_size, browser, operating_system)
       VALUES
       """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", Enum.count(chunk))
 
