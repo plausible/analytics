@@ -55,10 +55,12 @@ config :plausible, :paddle,
 
 config :plausible,
        Plausible.Repo,
-       pool_size: String.to_integer(System.get_env("DATABASE_POOL_SIZE") || "10"),
+       pool_size: String.to_integer(System.get_env("DATABASE_POOL_SIZE", "10")),
        url:
-         System.get_env("DATABASE_URL") ||
+         System.get_env(
+           "DATABASE_URL",
            "postgres://postgres:postgres@127.0.0.1:5432/plausible_test?currentSchema=default"
+         )
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
