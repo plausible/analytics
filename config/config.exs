@@ -12,8 +12,18 @@ config :plausible,
 
 # Configures the endpoint
 config :plausible, PlausibleWeb.Endpoint,
-  url: [host: "localhost"],
-  secret_key_base: "/NJrhNtbyCVAsTyvtk1ZYCwfm981Vpo/0XrVwjJvemDaKC/vsvBRevLwsc6u8RCg",
+  url: [
+    host: System.get_env("HOST", "localhost"),
+    port: String.to_integer(System.get_env("PORT", "8000"))
+  ],
+  http: [
+    port: String.to_integer(System.get_env("PORT", "8000"))
+  ],
+  secret_key_base:
+    System.get_env(
+      "SECRET_KEY_BASE",
+      "/NJrhNtbyCVAsTyvtk1ZYCwfm981Vpo/0XrVwjJvemDaKC/vsvBRevLwsc6u8RCg"
+    ),
   render_errors: [
     view: PlausibleWeb.ErrorView,
     accepts: ~w(html json)
@@ -60,7 +70,24 @@ config :plausible,
          System.get_env(
            "DATABASE_URL",
            "postgres://postgres:postgres@127.0.0.1:5432/plausible_test?currentSchema=default"
-         )
+         ),
+       ssl: false
+
+config :plausible, :google,
+  client_id: System.get_env("GOOGLE_CLIENT_ID"),
+  client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
+
+config :plausible, :slack, webhook: System.get_env("SLACK_WEBHOOK")
+
+config :plausible, Plausible.Mailer,
+  adapter: Bamboo.PostmarkAdapter,
+  api_key: System.get_env("POSTMARK_API_KEY")
+
+config :plausible, :twitter,
+  consumer_key: System.get_env("TWITTER_CONSUMER_KEY"),
+  consumer_secret: System.get_env("TWITTER_CONSUMER_SECRET"),
+  token: System.get_env("TWITTER_ACCESS_TOKEN"),
+  token_secret: System.get_env("TWITTER_ACCESS_TOKEN_SECRET")
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

@@ -7,7 +7,7 @@ use Mix.Config
 # watchers to your application. For example, we use it
 # with webpack to recompile .js and .css sources.
 config :plausible, PlausibleWeb.Endpoint,
-  http: [port: 8000],
+  server: true,
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
@@ -40,3 +40,5 @@ config :plausible, Plausible.Mailer, adapter: Bamboo.LocalAdapter
 if File.exists?("config/dev.secret.exs") do
   import_config "dev.secret.exs"
 end
+
+config :logger, level: :debug
