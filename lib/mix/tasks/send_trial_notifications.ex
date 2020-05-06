@@ -15,7 +15,8 @@ defmodule Mix.Tasks.SendTrialNotifications do
   def execute(args \\ []) do
     base_query =
       from(u in Plausible.Auth.User,
-        left_join: s in Plausible.Billing.Subscription, on: s.user_id == u.id,
+        left_join: s in Plausible.Billing.Subscription,
+        on: s.user_id == u.id,
         where: is_nil(s.id),
         order_by: u.inserted_at
       )
@@ -24,22 +25,26 @@ defmodule Mix.Tasks.SendTrialNotifications do
 
     for user <- users do
       case Timex.diff(user.trial_expiry_date, Timex.today(), :days) do
-       7 ->
+        7 ->
           if Plausible.Auth.user_completed_setup?(user) do
             send_one_week_reminder(args, user)
           end
-       1 ->
+
+        1 ->
           if Plausible.Auth.user_completed_setup?(user) do
             send_tomorrow_reminder(args, user)
           end
-       0 ->
+
+        0 ->
           if Plausible.Auth.user_completed_setup?(user) do
             send_today_reminder(args, user)
           end
-       -1 ->
+
+        -1 ->
           if Plausible.Auth.user_completed_setup?(user) do
             send_over_reminder(args, user)
           end
+
         _ ->
           nil
       end
@@ -47,7 +52,9 @@ defmodule Mix.Tasks.SendTrialNotifications do
   end
 
   defp send_one_week_reminder(["--dry-run"], user) do
-    Logger.info("DRY RUN: one week trial notification email to #{user.name} [inserted=#{user.inserted_at}]")
+    Logger.info(
+      "DRY RUN: one week trial notification email to #{user.name} [inserted=#{user.inserted_at}]"
+    )
   end
 
   defp send_one_week_reminder(_, user) do
@@ -56,7 +63,9 @@ defmodule Mix.Tasks.SendTrialNotifications do
   end
 
   defp send_tomorrow_reminder(["--dry-run"], user) do
-    Logger.info("DRY RUN: tomorrow trial upgrade email to #{user.name} [inserted=#{user.inserted_at}]")
+    Logger.info(
+      "DRY RUN: tomorrow trial upgrade email to #{user.name} [inserted=#{user.inserted_at}]"
+    )
   end
 
   defp send_tomorrow_reminder(_, user) do
@@ -67,7 +76,9 @@ defmodule Mix.Tasks.SendTrialNotifications do
   end
 
   defp send_today_reminder(["--dry-run"], user) do
-    Logger.info("DRY RUN: today trial upgrade email to #{user.name} [inserted=#{user.inserted_at}]")
+    Logger.info(
+      "DRY RUN: today trial upgrade email to #{user.name} [inserted=#{user.inserted_at}]"
+    )
   end
 
   defp send_today_reminder(_, user) do
@@ -78,7 +89,9 @@ defmodule Mix.Tasks.SendTrialNotifications do
   end
 
   defp send_over_reminder(["--dry-run"], user) do
-    Logger.info("DRY RUN: over trial notification email to #{user.name} [inserted=#{user.inserted_at}]")
+    Logger.info(
+      "DRY RUN: over trial notification email to #{user.name} [inserted=#{user.inserted_at}]"
+    )
   end
 
   defp send_over_reminder(_, user) do

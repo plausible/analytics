@@ -23,7 +23,21 @@ defmodule Plausible.Event do
 
   def changeset(pageview, attrs) do
     pageview
-    |> cast(attrs, [:name, :domain, :hostname, :pathname, :fingerprint, :operating_system, :browser, :referrer, :referrer_source, :initial_referrer, :initial_referrer_source, :country_code, :screen_size])
+    |> cast(attrs, [
+      :name,
+      :domain,
+      :hostname,
+      :pathname,
+      :fingerprint,
+      :operating_system,
+      :browser,
+      :referrer,
+      :referrer_source,
+      :initial_referrer,
+      :initial_referrer_source,
+      :country_code,
+      :screen_size
+    ])
     |> validate_required([:name, :domain, :hostname, :pathname, :fingerprint])
   end
 end

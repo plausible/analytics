@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.SiteView do
   use PlausibleWeb, :view
 
-  def goal_name(%Plausible.Goal{page_path: page_path}) when is_binary(page_path)  do
+  def goal_name(%Plausible.Goal{page_path: page_path}) when is_binary(page_path) do
     "Visit " <> page_path
   end
 
@@ -14,11 +14,12 @@ defmodule PlausibleWeb.SiteView do
   end
 
   def snippet(site) do
-    tracker = if site.custom_domain do
-      "https://" <> site.custom_domain.domain <> "/js/index.js"
-    else
-      "https://plausible.io/js/plausible.js"
-    end
+    tracker =
+      if site.custom_domain do
+        "https://" <> site.custom_domain.domain <> "/js/index.js"
+      else
+        "https://plausible.io/js/plausible.js"
+      end
 
     """
     <script async defer data-domain="#{site.domain}" src="#{tracker}"></script>

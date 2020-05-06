@@ -11,6 +11,7 @@ defmodule PlausibleWeb.RequireAccountPlug do
         Plug.Conn.put_session(conn, :login_dest, conn.request_path)
         |> Phoenix.Controller.redirect(to: "/login")
         |> halt
+
       _email ->
         conn
     end

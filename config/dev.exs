@@ -7,7 +7,7 @@ use Mix.Config
 # watchers to your application. For example, we use it
 # with webpack to recompile .js and .css sources.
 config :plausible, PlausibleWeb.Endpoint,
-  http: [port: 8000],
+  server: true,
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
@@ -35,16 +35,10 @@ config :logger, :console, format: "[$level] $message\n"
 config :phoenix, :stacktrace_depth, 20
 config :phoenix, :plug_init_mode, :runtime
 
-config :plausible, Plausible.Repo,
-  username: System.get_env("POSTGRES_USER") || "postgres",
-  password: System.get_env("POSTGRES_PASSWORD") || "postgres",
-  database: System.get_env("POSTGRES_DB") || "plausible_dev",
-  hostname: System.get_env("POSTGRES_HOST") || "localhost",
-  pool_size: 10
-
-config :plausible, Plausible.Mailer,
-  adapter: Bamboo.LocalAdapter
+config :plausible, Plausible.Mailer, adapter: Bamboo.LocalAdapter
 
 if File.exists?("config/dev.secret.exs") do
   import_config "dev.secret.exs"
 end
+
+config :logger, level: :debug

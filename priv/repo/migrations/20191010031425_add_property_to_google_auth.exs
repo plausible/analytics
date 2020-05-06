@@ -12,8 +12,9 @@ defmodule Plausible.Repo.Migrations.AddPropertyToGoogleAuth do
     for auth <- Repo.all(Plausible.Site.GoogleAuth) do
       auth = Repo.preload(auth, :site)
       property = "https://#{auth.site.domain}"
+
       Plausible.Site.GoogleAuth.set_property(auth, %{property: property})
-      |> Repo.update!
+      |> Repo.update!()
     end
   end
 end

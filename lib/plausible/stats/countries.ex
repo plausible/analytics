@@ -491,7 +491,7 @@ defmodule Plausible.Stats.CountryName do
     "CU" => "CUB",
     "TF" => "ATF",
     "EH" => "ESH"
-    }
+  }
 
   def to_alpha3(code) do
     Map.get(@alpha3_codes, code, code)
