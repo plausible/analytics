@@ -4,7 +4,7 @@ defmodule Plausible.MixProject do
   def project do
     [
       app: :plausible,
-      version: "0.1.0",
+      version: System.get_env("APP_VERSION", "0.0.1"),
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -17,9 +17,7 @@ defmodule Plausible.MixProject do
       releases: [
         plausible: [
           include_executables_for: [:unix],
-          applications: [
-            plausible_web: :permanent
-          ]
+          applications: [plausible: :permanent]
         ]
       ]
     ]

@@ -1,7 +1,8 @@
 stages:
   - prepare
-  - build
+  - compile
   - test
+  - build
 
 .commons: &elixir-commons
   image: elixir:1.10.3
@@ -32,7 +33,7 @@ deps:
 
 compile:
   <<: *elixir-commons
-  stage: build
+  stage: compile
   script:
     - mix compile
   dependencies:
@@ -49,9 +50,9 @@ test:ex_unit:
     - postgres
   stage: test
   variables:
-    POSTGRES_HOST: postgres
     POSTGRES_PASSWORD: postgres
     POSTGRES_USER: postgres
+    DATABASE_URL: postgres://postgres:postgres@postgres:5432/plausible_test?currentSchema=default
     MIX_HOME: $CI_PROJECT_DIR/.mix
   script:
     - mix test --cover
@@ -59,18 +60,23 @@ test:ex_unit:
   dependencies:
     - compile
 
-test:ex_unit:
-  <<: *elixir-commons
-  services:
-    - postgres
-  stage: test
-  variables:
-    POSTGRES_HOST: postgres
-    POSTGRES_PASSWORD: postgres
-    POSTGRES_USER: postgres
-    MIX_HOME: $CI_PROJECT_DIR/.mix
-  script:
-    - mix test --cover
-  coverage: '/\[TOTAL\]\s+(\d+\.\d+)%/'
-  dependencies:
-    - compile
+#build:docker:
+#  <<: *elixir-commons
+#  image:
+#    name: gcr.io/kaniko-project/executor:debug
+#    entrypoint: [""]
+#  stage: build
+#  variables:
+#    MIX_ENV: prod
+#    MIX_HOME: $CI_PROJECT_DIR/.mix/
+#    APP_VERSION: $CI_COMMIT_SHORT_SHA
+#  before_script:
+#    - chmod +x .gitlab/build-scripts/*
+#    - source .gitlab/build-scripts/docker.gitlab.sh
+#    - docker_create_config
+#  script:
+#    - docker_build_image
+#  dependencies:
+#    - compile
+#  only:
+#    - master
