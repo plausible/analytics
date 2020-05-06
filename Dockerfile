@@ -17,7 +17,8 @@ WORKDIR /app
 # install build dependencies
 RUN apt-get update  && \
     apt-get install -y git build-essential nodejs yarn python npm --no-install-recommends && \
-    npm install npm@latest -g
+    npm install npm@latest -g && \
+    npm install webpack -g
 
 RUN apt-get install -y --no-install-recommends ca-certificates wget \
     && apt-get install -y --install-recommends gnupg2 dirmngr
@@ -57,7 +58,7 @@ RUN mix release plausible
 
 
 # Main Docker Image
-FROM debian:10-slim
+FROM debian:10
 LABEL maintainer="tckb <tckb@tgrthi.me"
 ENV LANG=C.UTF-8
 
