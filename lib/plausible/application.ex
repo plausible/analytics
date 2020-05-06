@@ -8,6 +8,8 @@ defmodule Plausible.Application do
     children = [
       Plausible.Repo,
       PlausibleWeb.Endpoint,
+      Plausible.WriteBuffer,
+      Plausible.Session.WriteBuffer,
       Clickhousex.child_spec(Keyword.merge([scheme: :http, port: 8123, name: :clickhouse], clickhouse_config))
     ]
 

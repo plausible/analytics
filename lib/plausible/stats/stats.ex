@@ -471,8 +471,11 @@ defmodule Plausible.Stats do
   def log(query) do
     require Logger
     timing = System.convert_time_unit(query.connection_time, :native, :millisecond)
-    statement = String.replace(query.query.statement, "\n", " ")
-    Logger.debug("Clickhouse query OK db=#{timing}ms\n#{statement} #{inspect query.params}")
+    Logger.info("Clickhouse query OK db=#{timing}ms")
+    Logger.debug(fn ->
+      statement = String.replace(query.query.statement, "\n", " ")
+      "#{statement} #{inspect query.params}"
+    end)
   end
 
   defp date_range_utc_boundaries(date_range, timezone) do

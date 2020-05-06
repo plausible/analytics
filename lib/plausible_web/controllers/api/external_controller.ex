@@ -46,14 +46,13 @@ defmodule PlausibleWeb.Api.ExternalController do
       ref = parse_referrer(uri, params["referrer"])
       initial_ref = parse_referrer(uri, params["initial_referrer"])
 
-      event_attrs = %{
+      event = %Plausible.Event{
         name: params["name"],
+        timestamp: NaiveDateTime.utc_now(),
         hostname: strip_www(uri && uri.host),
         domain: strip_www(params["domain"]) || strip_www(uri && uri.host),
-        pathname: uri && uri.path,
-        new_visitor: params["new_visitor"],
+        pathname: uri && escape_quote(uri.path),
         country_code: country_code,
-        user_id: params["uid"],
         fingerprint: calculate_fingerprint(conn, params),
         operating_system: ua && os_name(ua),
         browser: ua && browser_name(ua),
@@ -63,9 +62,10 @@ defmodule PlausibleWeb.Api.ExternalController do
         initial_referrer: clean_referrer(initial_ref),
         screen_size: calculate_screen_size(params["screen_width"])
       }
+      Plausible.WriteBuffer.insert(event)
 
-      Plausible.Event.changeset(%Plausible.Event{}, event_attrs)
-        |> Plausible.Repo.insert
+      #Plausible.Event.changeset(%Plausible.Event{}, event_attrs)
+      #  |> Plausible.Repo.insert
     end
   end
 
@@ -142,6 +142,8 @@ defmodule PlausibleWeb.Api.ExternalController do
         source
     end
   end
+
+  defp escape_quote(s), do: String.replace(s, "'", "''")
 
   defp clean_uri(uri) do
     uri = URI.parse(String.trim(uri))
