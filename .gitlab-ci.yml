@@ -78,5 +78,5 @@ build:docker:
     - docker_build_image
   dependencies:
     - compile
-#  only:
-#    - master
+  only:
+    - master

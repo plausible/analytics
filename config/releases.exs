@@ -5,10 +5,22 @@ import Config
 # params are made optional to facilitate smooth release
 
 port = System.get_env("PORT") || 8000
-host = System.get_env("HOST","localhost")
-secret_key_base = System.get_env("SECRET_KEY_BASE","/NJrhNtbyCVAsTyvtk1ZYCwfm981Vpo/0XrVwjJvemDaKC/vsvBRevLwsc6u8RCg")
+host = System.get_env("HOST", "localhost")
+
+secret_key_base =
+  System.get_env(
+    "SECRET_KEY_BASE",
+    "/NJrhNtbyCVAsTyvtk1ZYCwfm981Vpo/0XrVwjJvemDaKC/vsvBRevLwsc6u8RCg"
+  )
+
 db_pool_size = String.to_integer(System.get_env("DATABASE_POOL_SIZE", "10"))
-db_url = System.get_env("DATABASE_URL","postgres://postgres:postgres@127.0.0.1:5432/plausible_test?currentSchema=default")
+
+db_url =
+  System.get_env(
+    "DATABASE_URL",
+    "postgres://postgres:postgres@127.0.0.1:5432/plausible_test?currentSchema=default"
+  )
+
 db_tls_enabled? = String.to_existing_atom(System.get_env("DATABASE_TLS_ENABLED", "false"))
 ### Mandatory params End
 
