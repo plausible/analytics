@@ -60,23 +60,23 @@ test:ex_unit:
   dependencies:
     - compile
 
-#build:docker:
-#  <<: *elixir-commons
-#  image:
-#    name: gcr.io/kaniko-project/executor:debug
-#    entrypoint: [""]
-#  stage: build
-#  variables:
-#    MIX_ENV: prod
-#    MIX_HOME: $CI_PROJECT_DIR/.mix/
-#    APP_VERSION: $CI_COMMIT_SHORT_SHA
-#  before_script:
-#    - chmod +x .gitlab/build-scripts/*
-#    - source .gitlab/build-scripts/docker.gitlab.sh
-#    - docker_create_config
-#  script:
-#    - docker_build_image
-#  dependencies:
-#    - compile
+build:docker:
+  <<: *elixir-commons
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  stage: build
+  variables:
+    MIX_ENV: prod
+    MIX_HOME: $CI_PROJECT_DIR/.mix/
+    APP_VERSION: $CI_COMMIT_SHORT_SHA
+  before_script:
+    - chmod +x .gitlab/build-scripts/*
+    - source .gitlab/build-scripts/docker.gitlab.sh
+    - docker_create_config
+  script:
+    - docker_build_image
+  dependencies:
+    - compile
 #  only:
 #    - master
