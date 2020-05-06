@@ -68,11 +68,25 @@ defmodule Mix.Tasks.HydrateClickhouse do
     |> log
   end
 
+  def chunk_query(queryable, chunk_size) do
+    chunk_stream = Stream.unfold(0, fn page_number ->
+      offset = chunk_size * page_number
+      page = from(
+        q in queryable,
+        offset: ^offset,
+        limit: ^chunk_size
+      ) |> Repo.all(timeout: :infinity)
+      {page, page_number + 1}
+    end)
+    Stream.take_while(chunk_stream, fn [] -> false; _ -> true end)
+  end
+
+  def escape_quote(s) do
+    String.replace(s, "'", "''")
+  end
+
   def hydrate_events(_args \\ []) do
-    event_chunks = Repo.all(from e in Plausible.Event,
-      where: e.domain == "plausible.io",
-      order_by: e.timestamp
-    ) |> Enum.chunk_every(1000)
+    event_chunks = from(e in Plausible.Event, order_by: e.id) |> chunk_query(10_000)
 
     for chunk <- event_chunks do
       insert = """
@@ -81,7 +95,7 @@ defmodule Mix.Tasks.HydrateClickhouse do
       """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", Enum.count(chunk))
 
       args = Enum.reduce(chunk, [], fn event, acc ->
-        acc ++ [event.name, event.timestamp, event.domain, event.fingerprint, event.hostname, event.pathname, event.referrer, event.referrer_source, event.initial_referrer, event.initial_referrer_source, event.country_code, event.screen_size, event.browser, event.operating_system]
+        acc ++ [event.name, event.timestamp, event.domain, event.fingerprint, event.hostname, escape_quote(event.pathname), event.referrer, event.referrer_source, event.initial_referrer, event.initial_referrer_source, event.country_code, event.screen_size, event.browser, event.operating_system]
       end)
 
       Clickhousex.query(:clickhouse, insert, args)
@@ -90,10 +104,7 @@ defmodule Mix.Tasks.HydrateClickhouse do
   end
 
   def hydrate_sessions(_args \\ []) do
-    session_chunks = Repo.all(from e in Plausible.FingerprintSession,
-      where: e.domain == "plausible.io",
-      order_by: e.timestamp
-    ) |> Enum.chunk_every(1000)
+    session_chunks = Repo.all(from e in Plausible.FingerprintSession, order_by: e.id) |> chunk_query(10_000)
 
     for chunk <- session_chunks do
       insert = """
@@ -110,6 +121,6 @@ defmodule Mix.Tasks.HydrateClickhouse do
     end
   end
 
-  defp log({:ok, _}), do: nil
+  defp log({:ok, res}), do: Logger.info("#{inspect res}")
   defp log({:error, e}), do: Logger.error("[ERROR] #{inspect e}")
 end
