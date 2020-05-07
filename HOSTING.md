@@ -1,7 +1,22 @@
 # Plausible Insights
-Self-hosting is possible based on the docker images [Dockerfile](./Dockerfile). Images are automatically pushed into [Gitlab hosted docker](registry.gitlab.com/tckb-public/plausible) registry for all commits on `master` branch.    
-
+Self-hosting is possible based on the docker images and are automatically pushed into [Gitlab hosted docker](registry.gitlab.com/tckb-public/plausible) registry for all commits on `master` branch.    
 All `master-*` tags are considered to be stable and are persisted. Any other tag in the registry is considered to be for development purposes and/or unstable and are auto-deleted after a week.
+
+
+### Building Docker image
+Besides the GitlabCI, one can build docker image from [Dockerfile](./Dockerfile). 
+
+### Non-docker building
+It is possible to create a release artifact by running a release. 
+
+```elixir
+MIX_ENV=prod mix release plausible
+```
+the release will create the pre-packed artifact at `_build/prod/rel/plausible/bin/plausible`, the release will also create a tarball at `_build/prod/` for convenience. 
+
+Note, that you have to feed in the related environment variables (see below `Environment Variables`)
+## Database Migration
+
 
 ## Environment Variables
 Plausible relies on the several services for operating, the expected environment variables are explaiend below.  
