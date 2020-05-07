@@ -1,9 +1,13 @@
 # Plausible Insights
+Self-hosting is possible based on the docker images [Dockerfile](./Dockerfile). Images are automatically pushed into _Gitlab_ hosted docker registry for all commits on `master` branch.    
+
+All `master-*` tags are considered to be stable and are persisted. Any other tag in the registry is considered to be for development purposes and/or unstable. 
 
 
+**registry.gitlab.com/tckb-public/plausible** 
 
 
-## Envionment Variables
+## Environment Variables
 Plausible relies on the several services for operating, the expected environment variables are explaiend below.  
 
 ### Server
@@ -17,7 +21,7 @@ Following are the variables that can be used to configure the availability of th
     - An internal secret key used by [Phoenix Framework](https://www.phoenixframework.org/). Follow the [instructions](https://hexdocs.pm/phoenix/Mix.Tasks.Phx.Gen.Secret.html#content) to generate one. 
 
 ### Database
-PLausible uses postgresql as database for storing all the data. Use the following the variables to configure it.
+Plausible uses postgresql as database for storing all the data. Use the following the variables to configure it.
 
 - DATABASE_URL (*String*)
     - The repo Url as dictated [here](https://hexdocs.pm/ecto/Ecto.Repo.html#module-urls)
