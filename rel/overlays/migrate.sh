@@ -1,4 +1,5 @@
 #!/bin/sh
+# starts the db migration
 
 BIN_DIR=`dirname "$0"`
 

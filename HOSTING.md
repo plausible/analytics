@@ -15,7 +15,31 @@ MIX_ENV=prod mix release plausible
 the release will create the pre-packed artifact at `_build/prod/rel/plausible/bin/plausible`, the release will also create a tarball at `_build/prod/` for convenience. 
 
 Note, that you have to feed in the related environment variables (see below `Environment Variables`)
+
 ## Database Migration
+On the initial setup, a migration step is necessary to create database and table schemas needed for initial bootup. 
+Normally, this done by mix aliases like `ecto.setup` defined in the `mix.exs`. As this not available in "released" artifact,  `plausible_migration.ex` facilitates this process. 
+The overlay [scripts](./rel/overlays) take care of these.
+
+After the release, these are available under  `_build/prod/rel/plausible` --
+
+
+```bash
+_build/prod/rel/plausible/createdb.sh
+_build/prod/rel/plausible/migrate.sh
+_build/prod/rel/plausible/rollback.sh
+_build/prod/rel/plausible/seed=.sh
+...
+```
+
+the same is available in the docker images as follows --
+
+```bash
+docker run plausible:master-12add db createdb
+docker run plausible:master-12add db migrate
+docker run plausible:master-12add db rollback
+docker run plausible:master-12add db seed
+```
 
 
 ## Environment Variables
