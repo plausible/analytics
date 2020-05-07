@@ -1,11 +1,7 @@
 # Plausible Insights
-Self-hosting is possible based on the docker images [Dockerfile](./Dockerfile). Images are automatically pushed into _Gitlab_ hosted docker registry for all commits on `master` branch.    
+Self-hosting is possible based on the docker images [Dockerfile](./Dockerfile). Images are automatically pushed into [Gitlab hosted docker](registry.gitlab.com/tckb-public/plausible) registry for all commits on `master` branch.    
 
-All `master-*` tags are considered to be stable and are persisted. Any other tag in the registry is considered to be for development purposes and/or unstable. 
-
-
-**registry.gitlab.com/tckb-public/plausible** 
-
+All `master-*` tags are considered to be stable and are persisted. Any other tag in the registry is considered to be for development purposes and/or unstable and are auto-deleted after a week.
 
 ## Environment Variables
 Plausible relies on the several services for operating, the expected environment variables are explaiend below.  
