@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def main_graph(conn, params) do
     site = conn.assigns[:site]
-    query = Stats.Query.from(site.timezone, params)
+    query = Query.from(site.timezone, params)
 
     plot_task = Task.async(fn -> Stats.calculate_plot(site, query) end)
     top_stats = fetch_top_stats(site, query)
@@ -67,7 +67,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def referrers(conn, params) do
     site = conn.assigns[:site]
-    query = Stats.Query.from(site.timezone, params)
+    query = Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
     limit = if params["limit"], do: String.to_integer(params["limit"])
 
@@ -76,7 +76,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def referrers_for_goal(conn, params) do
     site = conn.assigns[:site]
-    query = Stats.Query.from(site.timezone, params)
+    query = Query.from(site.timezone, params)
 
     json(conn, Stats.top_referrers_for_goal(site, query, params["limit"] || 9))
   end
@@ -85,7 +85,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def referrer_drilldown(conn, %{"referrer" => "Google"} = params) do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
-    query = Stats.Query.from(site.timezone, params)
+    query = Query.from(site.timezone, params)
 
     search_terms = if site.google_auth && site.google_auth.property && !query.filters["goal"] do
       @google_api.fetch_stats(site.google_auth, query)
@@ -108,7 +108,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def referrer_drilldown(conn, %{"referrer" => referrer} = params) do
     site = conn.assigns[:site]
-    query = Stats.Query.from(site.timezone, params)
+    query = Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
 
     referrers = Stats.referrer_drilldown(site, query, referrer, include)
@@ -118,7 +118,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def referrer_drilldown_for_goal(conn, %{"referrer" => referrer} = params) do
     site = conn.assigns[:site]
-    query = Stats.Query.from(site.timezone, params)
+    query = Query.from(site.timezone, params)
 
     referrers = Stats.referrer_drilldown_for_goal(site, query, referrer)
     total_visitors = Stats.conversions_from_referrer(site, query, referrer)
@@ -127,7 +127,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def pages(conn, params) do
     site = conn.assigns[:site]
-    query = Stats.Query.from(site.timezone, params)
+    query = Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
     limit = if params["limit"], do: String.to_integer(params["limit"])
 
@@ -136,35 +136,35 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def countries(conn, params) do
     site = conn.assigns[:site]
-    query = Stats.Query.from(site.timezone, params)
+    query = Query.from(site.timezone, params)
 
     json(conn, Stats.countries(site, query))
   end
 
   def browsers(conn, params) do
     site = conn.assigns[:site]
-    query = Stats.Query.from(site.timezone, params)
+    query = Query.from(site.timezone, params)
 
     json(conn, Stats.browsers(site, query, parse_integer(params["limit"]) || 9))
   end
 
   def operating_systems(conn, params) do
     site = conn.assigns[:site]
-    query = Stats.Query.from(site.timezone, params)
+    query = Query.from(site.timezone, params)
 
     json(conn, Stats.operating_systems(site, query, parse_integer(params["limit"]) || 9))
   end
 
   def screen_sizes(conn, params) do
     site = conn.assigns[:site]
-    query = Stats.Query.from(site.timezone, params)
+    query = Query.from(site.timezone, params)
 
     json(conn, Stats.top_screen_sizes(site, query))
   end
 
   def conversions(conn, params) do
     site = conn.assigns[:site]
-    query = Stats.Query.from(site.timezone, params)
+    query = Query.from(site.timezone, params)
 
     json(conn, Stats.goal_conversions(site, query))
   end
