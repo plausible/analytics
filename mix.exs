@@ -62,7 +62,8 @@ defmodule Plausible.MixProject do
       {:php_serializer, "~> 0.9.0"},
       {:csv, "~> 2.3"},
       {:oauther, "~> 1.1"},
-      {:nanoid, "~> 2.0.2"}
+      {:nanoid, "~> 2.0.2"},
+      {:clickhousex, [git: "https://github.com/atlas-forks/clickhousex.git"]}
     ]
   end
 

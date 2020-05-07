@@ -4,9 +4,13 @@ defmodule Plausible.Application do
   use Application
 
   def start(_type, _args) do
+    clickhouse_config = Application.get_env(:plausible, :clickhouse)
     children = [
       Plausible.Repo,
-      PlausibleWeb.Endpoint
+      PlausibleWeb.Endpoint,
+      Plausible.Event.WriteBuffer,
+      Plausible.Session.WriteBuffer,
+      Clickhousex.child_spec(Keyword.merge([scheme: :http, port: 8123, name: :clickhouse], clickhouse_config))
     ]
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]

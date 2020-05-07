@@ -48,12 +48,11 @@ defmodule PlausibleWeb.Api.ExternalController do
 
       event_attrs = %{
         name: params["name"],
+        timestamp: NaiveDateTime.utc_now(),
         hostname: strip_www(uri && uri.host),
         domain: strip_www(params["domain"]) || strip_www(uri && uri.host),
-        pathname: uri && uri.path,
-        new_visitor: params["new_visitor"],
+        pathname: uri && escape_quote(uri.path),
         country_code: country_code,
-        user_id: params["uid"],
         fingerprint: calculate_fingerprint(conn, params),
         operating_system: ua && os_name(ua),
         browser: ua && browser_name(ua),
@@ -64,8 +63,9 @@ defmodule PlausibleWeb.Api.ExternalController do
         screen_size: calculate_screen_size(params["screen_width"])
       }
 
-      Plausible.Event.changeset(%Plausible.Event{}, event_attrs)
-        |> Plausible.Repo.insert
+      changeset = Plausible.Event.changeset(%Plausible.Event{}, event_attrs)
+      if changeset.valid? && changeset.data.domain in ["plausible.io", "localtest.me"], do: Plausible.Event.WriteBuffer.insert(changeset.data)
+      Plausible.Repo.insert(changeset)
     end
   end
 
@@ -142,6 +142,8 @@ defmodule PlausibleWeb.Api.ExternalController do
         source
     end
   end
+
+  defp escape_quote(s), do: String.replace(s, "'", "''")
 
   defp clean_uri(uri) do
     uri = URI.parse(String.trim(uri))

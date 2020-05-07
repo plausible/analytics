@@ -69,8 +69,9 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
+    limit = if params["limit"], do: String.to_integer(params["limit"])
 
-    json(conn, Stats.top_referrers(site, query, params["limit"] || 9, include))
+    json(conn, Stats.top_referrers(site, query, limit || 9, include))
   end
 
   def referrers_for_goal(conn, params) do
@@ -128,8 +129,9 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Stats.Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
+    limit = if params["limit"], do: String.to_integer(params["limit"])
 
-    json(conn, Stats.top_pages(site, query, params["limit"] || 9, include))
+    json(conn, Stats.top_pages(site, query, limit || 9, include))
   end
 
   def countries(conn, params) do
