@@ -461,7 +461,7 @@ defmodule Plausible.Clickhouse do
   defp clickhouse_all(query) do
     {q, params} = Ecto.Adapters.SQL.to_sql(:all, Repo, query)
     q = String.replace(q, ~r/\$[0-9]+/, "?")
-    res = Clickhousex.query!(:clickhouse, q, params, log: {Plausible.Stats, :log, []})
+    res = Clickhousex.query!(:clickhouse, q, params, log: {Plausible.Clickhouse, :log, []})
     Enum.map(res.rows, fn row ->
       Enum.zip(res.columns, row)
       |> Enum.into(%{})

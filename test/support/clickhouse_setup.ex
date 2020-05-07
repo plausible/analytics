@@ -27,7 +27,7 @@ defmodule Plausible.Test.ClickhouseSetup do
     SETTINGS index_granularity = 8192
     """
 
-    Clickhousex.query(:clickhouse, ddl, [],log: {Plausible.Stats, :log, []})
+    Clickhousex.query(:clickhouse, ddl, [],log: {Plausible.Clickhouse, :log, []})
   end
 
   def create_sessions() do
@@ -52,6 +52,6 @@ defmodule Plausible.Test.ClickhouseSetup do
     SETTINGS index_granularity = 8192
     """
 
-    Clickhousex.query(:clickhouse, ddl, [],log: {Plausible.Stats, :log, []})
+    Clickhousex.query(:clickhouse, ddl, [],log: {Plausible.Clickhouse, :log, []})
   end
 end

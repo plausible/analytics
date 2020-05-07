@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       }
 
       changeset = Plausible.Event.changeset(%Plausible.Event{}, event_attrs)
-      if changeset.valid?, do: Plausible.Event.WriteBuffer.insert(changeset.data)
+      if changeset.valid? && changeset.data.domain in ["plausible.io", "localtest.me"], do: Plausible.Event.WriteBuffer.insert(changeset.data)
       Plausible.Repo.insert(changeset)
     end
   end

@@ -62,7 +62,7 @@ defmodule Plausible.Ingest.FingerprintSession do
         start: first_event.timestamp
       })
 
-      if changeset.valid?, do: Plausible.Session.WriteBuffer.insert(changeset.data)
+      if changeset.valid? && changeset.data.domain in ["plausible.io", "localtest.me"], do: Plausible.Session.WriteBuffer.insert(changeset.data)
       Repo.insert!(changeset)
     end
 
