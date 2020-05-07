@@ -17,7 +17,8 @@ defmodule Plausible.MixProject do
       releases: [
         plausible: [
           include_executables_for: [:unix],
-          applications: [plausible: :permanent]
+          applications: [plausible: :permanent],
+          steps: [:assemble, :tar]
         ]
       ]
     ]
@@ -36,8 +37,7 @@ defmodule Plausible.MixProject do
         :timex,
         :ua_inspector,
         :ref_inspector,
-        :bamboo,
-        :bamboo_smtp
+        :bamboo
       ]
     ]
   end
