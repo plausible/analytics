@@ -56,6 +56,6 @@ defmodule Plausible.Event.WriteBuffer do
       [event.name, event.timestamp, event.domain, event.fingerprint, event.hostname, event.pathname, event.referrer, event.referrer_source, event.initial_referrer, event.initial_referrer_source, event.country_code, event.screen_size, event.browser, event.operating_system] ++ acc
     end)
 
-    Clickhousex.query(:clickhouse, insert, args, log: {Plausible.Stats, :log, []})
+    Clickhousex.query(:clickhouse, insert, args, log: {Plausible.Clickhouse, :log, []})
   end
 end

@@ -48,7 +48,6 @@ defmodule PlausibleWeb.Api.ExternalController do
 
       event_attrs = %{
         name: params["name"],
-        timestamp: NaiveDateTime.utc_now(),
         hostname: strip_www(uri && uri.host),
         domain: strip_www(params["domain"]) || strip_www(uri && uri.host),
         pathname: uri && escape_quote(uri.path),
@@ -64,7 +63,11 @@ defmodule PlausibleWeb.Api.ExternalController do
       }
 
       changeset = Plausible.Event.changeset(%Plausible.Event{}, event_attrs)
-      if changeset.valid? && changeset.data.domain in ["plausible.io", "localtest.me"], do: Plausible.Event.WriteBuffer.insert(changeset.data)
+      if changeset.valid? && changeset.changes[:domain] in ["plausible.io", "localtest.me"] do
+        Ecto.Changeset.apply_action!(changeset, :insert)
+        |> Map.put(:timestamp, NaiveDateTime.utc_now())
+        |> Plausible.Event.WriteBuffer.insert()
+      end
       Plausible.Repo.insert(changeset)
     end
   end

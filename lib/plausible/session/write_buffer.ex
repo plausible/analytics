@@ -56,6 +56,6 @@ defmodule Plausible.Session.WriteBuffer do
       [session.domain, session.fingerprint, session.hostname, session.start, session.is_bounce && 1 || 0, session.entry_page, session.exit_page, session.referrer, session.referrer_source,session.country_code, session.screen_size, session.browser, session.operating_system] ++ acc
     end)
 
-    Clickhousex.query(:clickhouse, insert, args, log: {Plausible.Stats, :log, []})
+    Clickhousex.query(:clickhouse, insert, args, log: {Plausible.Clickhouse, :log, []})
   end
 end
