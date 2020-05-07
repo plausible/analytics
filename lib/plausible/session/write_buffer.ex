@@ -22,7 +22,7 @@ defmodule Plausible.Session.WriteBuffer do
     new_buffer = [ session | buffer ]
 
     if length(new_buffer) >= @max_buffer_size do
-      Logger.debug("Buffer full, flushing to disk")
+      Logger.info("Buffer full, flushing to disk")
       Process.cancel_timer(state[:timer])
       flush(new_buffer)
       new_timer = Process.send_after(self(), :tick, @flush_interval_ms)
@@ -46,7 +46,7 @@ defmodule Plausible.Session.WriteBuffer do
   end
 
   defp insert_sessions(sessions) do
-    Logger.debug("Flushing #{length(sessions)} sessions")
+    Logger.info("Flushing #{length(sessions)} sessions")
     insert = """
     INSERT INTO sessions (domain, user_id, hostname, start, is_bounce, entry_page, exit_page, referrer, referrer_source, country_code, screen_size, browser, operating_system)
     VALUES

@@ -22,7 +22,7 @@ defmodule Plausible.Event.WriteBuffer do
     new_buffer = [ event | buffer ]
 
     if length(new_buffer) >= @max_buffer_size do
-      Logger.debug("Buffer full, flushing to disk")
+      Logger.info("Buffer full, flushing to disk")
       Process.cancel_timer(state[:timer])
       flush(new_buffer)
       new_timer = Process.send_after(self(), :tick, @flush_interval_ms)
@@ -46,7 +46,7 @@ defmodule Plausible.Event.WriteBuffer do
   end
 
   defp insert_events(events) do
-    Logger.debug("Flushing #{length(events)} events")
+    Logger.info("Flushing #{length(events)} events")
     insert = """
     INSERT INTO events (name, timestamp, domain, user_id, hostname, pathname, referrer, referrer_source, initial_referrer, initial_referrer_source, country_code, screen_size, browser, operating_system)
     VALUES
