@@ -20,6 +20,11 @@ config :plausible, Plausible.Repo,
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
 
+config :plausible, :clickhouse,
+  hostname: "localhost",
+  database: "plausible_test",
+  pool_size: 10
+
 config :plausible, Plausible.Mailer,
   adapter: Bamboo.TestAdapter
 
