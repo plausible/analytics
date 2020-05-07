@@ -1,4 +1,4 @@
-defmodule Plausible.WriteBuffer do
+defmodule Plausible.Event.WriteBuffer do
   use GenServer
   require Logger
   @flush_interval_ms 1000
@@ -33,14 +33,12 @@ defmodule Plausible.WriteBuffer do
   end
 
   def handle_info(:tick, %{buffer: buffer}) do
-    Logger.debug("Triggering periodic flush")
     flush(buffer)
     timer = Process.send_after(self(), :tick, @flush_interval_ms)
     {:noreply, %{buffer: [], timer: timer}}
   end
 
   defp flush(buffer) do
-    Logger.debug("Flushing #{length(buffer)} events")
     case buffer do
       [] -> nil
       events -> insert_events(events)
@@ -48,6 +46,7 @@ defmodule Plausible.WriteBuffer do
   end
 
   defp insert_events(events) do
+    Logger.debug("Flushing #{length(events)} events")
     insert = """
     INSERT INTO events (name, timestamp, domain, user_id, hostname, pathname, referrer, referrer_source, initial_referrer, initial_referrer_source, country_code, screen_size, browser, operating_system)
     VALUES

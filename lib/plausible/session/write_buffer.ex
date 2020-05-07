@@ -33,14 +33,12 @@ defmodule Plausible.Session.WriteBuffer do
   end
 
   def handle_info(:tick, %{buffer: buffer}) do
-    Logger.debug("Triggering periodic flush")
     flush(buffer)
     timer = Process.send_after(self(), :tick, @flush_interval_ms)
     {:noreply, %{buffer: [], timer: timer}}
   end
 
   defp flush(buffer) do
-    Logger.debug("Flushing #{length(buffer)} sessions")
     case buffer do
       [] -> nil
       sessions -> insert_sessions(sessions)
@@ -48,6 +46,7 @@ defmodule Plausible.Session.WriteBuffer do
   end
 
   defp insert_sessions(sessions) do
+    Logger.debug("Flushing #{length(sessions)} sessions")
     insert = """
     INSERT INTO sessions (domain, user_id, hostname, start, is_bounce, entry_page, exit_page, referrer, referrer_source, country_code, screen_size, browser, operating_system)
     VALUES

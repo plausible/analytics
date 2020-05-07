@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       ref = parse_referrer(uri, params["referrer"])
       initial_ref = parse_referrer(uri, params["initial_referrer"])
 
-      event = %Plausible.Event{
+      event_attrs = %{
         name: params["name"],
         timestamp: NaiveDateTime.utc_now(),
         hostname: strip_www(uri && uri.host),
@@ -62,10 +62,10 @@ defmodule PlausibleWeb.Api.ExternalController do
         initial_referrer: clean_referrer(initial_ref),
         screen_size: calculate_screen_size(params["screen_width"])
       }
-      Plausible.WriteBuffer.insert(event)
 
-      #Plausible.Event.changeset(%Plausible.Event{}, event_attrs)
-      #  |> Plausible.Repo.insert
+      changeset = Plausible.Event.changeset(%Plausible.Event{}, event_attrs)
+      if changeset.valid?, do: Plausible.Event.WriteBuffer.insert(changeset.data)
+      Plausible.Repo.insert(changeset)
     end
   end
 
