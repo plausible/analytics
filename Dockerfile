@@ -59,7 +59,7 @@ RUN mix release plausible
 
 # Main Docker Image
 FROM debian:10
-LABEL maintainer="tckb <tckb@tgrthi.me"
+LABEL maintainer="tckb <tckb@tgrthi.me>"
 ENV LANG=C.UTF-8
 
 RUN apt-get update && \

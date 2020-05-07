@@ -1,4 +1,6 @@
 #!/bin/sh
+# Creates the database if needed
+
 
 BIN_DIR=`dirname "$0"`
 
