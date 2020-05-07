@@ -18,7 +18,7 @@ Note, that you have to feed in the related environment variables (see below `Env
 
 ## Database Migration
 On the initial setup, a migration step is necessary to create database and table schemas needed for initial bootup. 
-Normally, this done by mix aliases like `ecto.setup` defined in the `mix.exs`. As this not available in "released" artifact,  `plausible_migration.ex` facilitates this process. 
+Normally, this done by mix aliases like `ecto.setup` defined in the `mix.exs`. As this not available in "released" artifact,  [`plausible_migration.ex`](./lib/plausible_migration.ex) facilitates this process. 
 The overlay [scripts](./rel/overlays) take care of these.
 
 After the release, these are available under  `_build/prod/rel/plausible` --
@@ -28,8 +28,7 @@ After the release, these are available under  `_build/prod/rel/plausible` --
 _build/prod/rel/plausible/createdb.sh
 _build/prod/rel/plausible/migrate.sh
 _build/prod/rel/plausible/rollback.sh
-_build/prod/rel/plausible/seed=.sh
-...
+_build/prod/rel/plausible/seed.sh
 ```
 
 the same is available in the docker images as follows --
