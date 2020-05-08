@@ -22,6 +22,9 @@ db_url =
   )
 
 db_tls_enabled? = String.to_existing_atom(System.get_env("DATABASE_TLS_ENABLED", "false"))
+admin_user = System.get_env("ADMIN_USER_NAME")
+admin_email = System.get_env("ADMIN_USER_EMAIL")
+admin_pwd = System.get_env("ADMIN_USER_PWD")
 ### Mandatory params End
 
 sentry_dsn = System.get_env("SENTRY_DSN")
@@ -34,6 +37,11 @@ twitter_consumer_secret = System.get_env("TWITTER_CONSUMER_SECRET")
 twitter_token = System.get_env("TWITTER_ACCESS_TOKEN")
 twitter_token_secret = System.get_env("TWITTER_ACCESS_TOKEN_SECRET")
 postmark_api_key = System.get_env("POSTMARK_API_KEY")
+
+config :plausible,
+  admin_user: admin_user,
+  admin_email: admin_email,
+  admin_pwd: admin_pwd
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [host: host, port: port],

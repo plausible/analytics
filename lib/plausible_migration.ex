@@ -1,13 +1,36 @@
 defmodule Plausible.Release do
+  use Plausible.Repo
   @app :plausible
   @start_apps [
     :postgrex,
     :ecto
   ]
 
+  def init_admin do
+    {admin_email, admin_user, admin_pwd} =
+      validate_admin(
+        {Application.get_env(:plausible, :admin_email),
+         Application.get_env(:plausible, :admin_user),
+         Application.get_env(:plausible, :admin_pwd)}
+      )
+
+    {:ok, admin} = Plausible.Auth.create_user(admin_user, admin_email)
+    # set the password
+    {:ok, admin} = Plausible.Auth.User.set_password(admin, admin_pwd) |> Repo.update()
+    # bump-up the trail period
+    admin
+    |> Ecto.Changeset.cast(%{trial_expiry_date: Timex.today() |> Timex.shift(years: 100)}, [
+      :trial_expiry_date
+    ])
+    |> Repo.update()
+
+    IO.puts("Admin user created successful!")
+  end
+
   def migrate do
     prepare()
     Enum.each(repos(), &run_migrations_for/1)
+    init_admin()
     IO.puts("Migrations successful!")
   end
 
@@ -45,6 +68,17 @@ defmodule Plausible.Release do
   end
 
   ##############################
+
+  defp validate_admin({nil, nil, nil}) do
+    random_user = :crypto.strong_rand_bytes(8) |> Base.encode64() |> binary_part(0, 8)
+    random_pwd = :crypto.strong_rand_bytes(20) |> Base.encode64() |> binary_part(0, 20)
+    IO.puts("generated admin user/password: #{random_user}@plausible.io / #{random_pwd}")
+    {"#{random_user}@plausible.io", random_user, random_pwd}
+  end
+
+  defp validate_admin({admin_email, admin_user, admin_password}) do
+    {admin_email, admin_user, admin_password}
+  end
 
   defp repos do
     Application.fetch_env!(@app, :ecto_repos)
