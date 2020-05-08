@@ -2,6 +2,7 @@ defmodule PlausibleWeb.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias Plausible.Stats
+  @host Application.get_env(:plausible,:base_domain)
 
   plug PlausibleWeb.AuthorizeStatsPlug when action in [:stats, :csv_export]
 
@@ -13,7 +14,7 @@ defmodule PlausibleWeb.StatsController do
       redirect(conn, to: "/billing/upgrade")
     else
       if Plausible.Sites.has_pageviews?(site) do
-        demo = site.domain == "plausible.io"
+        demo = site.domain == @host
         offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
 
         conn

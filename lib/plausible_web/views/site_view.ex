@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.SiteView do
   use PlausibleWeb, :view
+  @host Application.get_env(:plausible,:base_domain)
 
   def goal_name(%Plausible.Goal{page_path: page_path}) when is_binary(page_path) do
     "Visit " <> page_path
@@ -18,7 +19,7 @@ defmodule PlausibleWeb.SiteView do
       if site.custom_domain do
         "https://" <> site.custom_domain.domain <> "/js/index.js"
       else
-        "https://plausible.io/js/plausible.js"
+        "https:/#{@host}/js/plausible.js"
       end
 
     """
