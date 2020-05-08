@@ -2,7 +2,7 @@ defmodule PlausibleWeb.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias Plausible.Stats
-  @host PlausibleWeb.Endpoint.host()
+  @host Application.get_env(:plausible,:base_domain)
 
   plug PlausibleWeb.AuthorizeStatsPlug when action in [:stats, :csv_export]
 

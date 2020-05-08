@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.SiteView do
   use PlausibleWeb, :view
-  @host PlausibleWeb.Endpoint.host()
+  @host Application.get_env(:plausible,:base_domain)
 
   def goal_name(%Plausible.Goal{page_path: page_path}) when is_binary(page_path) do
     "Visit " <> page_path
