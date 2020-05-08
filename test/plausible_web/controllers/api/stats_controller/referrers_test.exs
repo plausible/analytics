@@ -1,15 +1,18 @@
 defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
   use PlausibleWeb.ConnCase
   import Plausible.TestUtils
+  @fingerprint UUID.uuid4()
 
   describe "GET /api/stats/:domain/referrers" do
     setup [:create_user, :log_in, :create_site]
 
     test "returns top referrer sources by user ids", %{conn: conn, site: site} do
-      pageview1 = insert(:pageview, domain: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, domain: site.domain, referrer_source: "Google", fingerprint: pageview1.fingerprint, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, referrer_source: "Bing", timestamp: ~N[2019-01-01 02:00:00])
+      create_pageviews([
+        %{domain: site.domain, fingerprint: @fingerprint, referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00]},
+        %{domain: site.domain, fingerprint: @fingerprint, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00]},
+        %{domain: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00]},
+        %{domain: site.domain, referrer_source: "Bing", timestamp: ~N[2019-01-01 02:00:00]}
+      ])
 
       conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01")
 
@@ -20,12 +23,16 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
     end
 
     test "calculates bounce rate for referrers", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, referrer_source: "Bing", timestamp: ~N[2019-01-01 02:00:00])
+      create_pageviews([
+        %{domain: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00]},
+        %{domain: site.domain, referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00]},
+        %{domain: site.domain, referrer_source: "Bing", timestamp: ~N[2019-01-01 02:00:00]}
+      ])
 
-      insert(:session, domain: site.domain, referrer_source: "Google", is_bounce: true, start: ~N[2019-01-01 02:00:00])
-      insert(:session, domain: site.domain, referrer_source: "Google", is_bounce: false, start: ~N[2019-01-01 02:00:00])
+      create_sessions([
+        %{domain: site.domain, referrer_source: "Google", is_bounce: true, start: ~N[2019-01-01 02:00:00]},
+        %{domain: site.domain, referrer_source: "Google", is_bounce: false, start: ~N[2019-01-01 02:00:00]}
+      ])
 
       conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01&include=bounce_rate")
 
@@ -40,9 +47,11 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
     setup [:create_user, :log_in, :create_site]
 
     test "returns top referrers for a custom goal", %{conn: conn, site: site} do
-      insert(:event, name: "Signup", domain: site.domain, initial_referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00])
-      insert(:event, name: "Signup", domain: site.domain, initial_referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, initial_referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
+      create_events([
+        %{name: "Signup", domain: site.domain, initial_referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00]},
+        %{name: "Signup", domain: site.domain, initial_referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00]},
+        %{name: "pageview", domain: site.domain, initial_referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00]}
+      ])
 
       filters = Jason.encode!(%{goal: "Signup"})
       conn = get(conn, "/api/stats/#{site.domain}/goal/referrers?period=day&date=2019-01-01&filters=#{filters}")
@@ -53,9 +62,11 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
     end
 
     test "returns top referrers for a pageview goal", %{conn: conn, site: site} do
-      insert(:pageview, pathname: "/register", domain: site.domain, initial_referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, pathname: "/register", domain: site.domain, initial_referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, pathname: "/irrelevant", domain: site.domain, initial_referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
+      create_pageviews([
+        %{pathname: "/register", domain: site.domain, initial_referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00]},
+        %{pathname: "/register", domain: site.domain, initial_referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00]},
+        %{pathname: "/irrelevant", domain: site.domain, initial_referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00]}
+      ])
 
       filters = Jason.encode!(%{goal: "Visit /register"})
       conn = get(conn, "/api/stats/#{site.domain}/goal/referrers?period=day&date=2019-01-01&filters=#{filters}")
@@ -70,26 +81,11 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
     setup [:create_user, :log_in, :create_site]
 
     test "returns top referrers for a particular source", %{conn: conn, site: site} do
-      insert(:pageview, %{
-        domain: site.domain,
-        referrer: "10words.io/somepage",
-        referrer_source: "10words",
-        timestamp: ~N[2019-01-01 01:00:00]
-      })
-
-      insert(:pageview, %{
-        domain: site.domain,
-        referrer: "10words.io/somepage",
-        referrer_source: "10words",
-        timestamp: ~N[2019-01-01 01:00:00]
-      })
-
-      insert(:pageview, %{
-        domain: site.domain,
-        referrer: "10words.io/some_other_page",
-        referrer_source: "10words",
-        timestamp: ~N[2019-01-01 01:00:00]
-      })
+      create_pageviews([
+        %{domain: site.domain, referrer: "10words.io/somepage", referrer_source: "10words", timestamp: ~N[2019-01-01 01:00:00]},
+        %{domain: site.domain, referrer: "10words.io/somepage", referrer_source: "10words", timestamp: ~N[2019-01-01 01:00:00]},
+        %{domain: site.domain, referrer: "10words.io/some_other_page", referrer_source: "10words", timestamp: ~N[2019-01-01 01:00:00]}
+      ])
 
       conn = get(conn, "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01")
 
@@ -103,12 +99,16 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
     end
 
     test "calculates bounce rate for referrer urls", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, referrer_source: "10words", referrer: "10words.io/hello", timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, referrer_source: "10words", referrer: "10words.io/hello", timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, referrer_source: "10words", referrer: "10words.io/", timestamp: ~N[2019-01-01 02:00:00])
+      create_pageviews([
+        %{domain: site.domain, referrer_source: "10words", referrer: "10words.io/hello", timestamp: ~N[2019-01-01 02:00:00]},
+        %{domain: site.domain, referrer_source: "10words", referrer: "10words.io/hello", timestamp: ~N[2019-01-01 02:00:00]},
+        %{domain: site.domain, referrer_source: "10words", referrer: "10words.io/", timestamp: ~N[2019-01-01 02:00:00]}
+      ])
 
-      insert(:session, domain: site.domain, referrer_source: "10words", referrer: "10words.io/hello", is_bounce: true, start: ~N[2019-01-01 02:00:00])
-      insert(:session, domain: site.domain, referrer_source: "10words", referrer: "10words.io/hello",is_bounce: false, start: ~N[2019-01-01 02:00:00])
+      create_sessions([
+        %{domain: site.domain, referrer_source: "10words", referrer: "10words.io/hello", is_bounce: true, start: ~N[2019-01-01 02:00:00]},
+        %{domain: site.domain, referrer_source: "10words", referrer: "10words.io/hello",is_bounce: false, start: ~N[2019-01-01 02:00:00]}
+      ])
 
       conn = get(conn, "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&include=bounce_rate")
 
@@ -123,8 +123,10 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
 
     test "gets keywords from Google", %{conn: conn, user: user, site: site} do
       insert(:google_auth, user: user, user: user,site: site, property: "sc-domain:example.com")
-      insert(:pageview, domain: site.domain, referrer: "google.com", referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, domain: site.domain, referrer: "google.com", referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00])
+      create_pageviews([
+        %{domain: site.domain, referrer: "google.com", referrer_source: "Google", timestamp: ~N[2019-01-01 01:00:00]},
+        %{domain: site.domain, referrer: "google.com", referrer_source: "Google", timestamp: ~N[2019-01-01 02:00:00]}
+      ])
 
       conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day&date=2019-01-01")
       {:ok, terms} = Plausible.Google.Api.Mock.fetch_stats(nil, nil)
@@ -136,9 +138,11 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
     end
 
     test "enriches twitter referrers with tweets if available", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, referrer: "t.co/some-link", referrer_source: "Twitter", timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, domain: site.domain, referrer: "t.co/some-link", referrer_source: "Twitter", timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, domain: site.domain, referrer: "t.co/nonexistent-link", referrer_source: "Twitter", timestamp: ~N[2019-01-01 02:00:00])
+      create_pageviews([
+        %{domain: site.domain, referrer: "t.co/some-link", referrer_source: "Twitter", timestamp: ~N[2019-01-01 01:00:00]},
+        %{domain: site.domain, referrer: "t.co/some-link", referrer_source: "Twitter", timestamp: ~N[2019-01-01 01:00:00]},
+        %{domain: site.domain, referrer: "t.co/nonexistent-link", referrer_source: "Twitter", timestamp: ~N[2019-01-01 02:00:00]}
+      ])
 
       insert(:tweet, link: "t.co/some-link", text: "important tweet")
 
@@ -156,9 +160,11 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
     setup [:create_user, :log_in, :create_site]
 
     test "returns top referring urls for a custom goal", %{conn: conn, site: site} do
-      insert(:event, name: "Signup", domain: site.domain, initial_referrer_source: "Twitter", initial_referrer: "a", timestamp: ~N[2019-01-01 01:00:00])
-      insert(:event, name: "Signup", domain: site.domain, initial_referrer_source: "Twitter", initial_referrer: "a", timestamp: ~N[2019-01-01 02:00:00])
-      insert(:event, name: "Signup", domain: site.domain, initial_referrer_source: "Twitter", initial_referrer: "b", timestamp: ~N[2019-01-01 02:00:00])
+      create_events([
+        %{name: "Signup", domain: site.domain, initial_referrer_source: "Twitter", initial_referrer: "a", timestamp: ~N[2019-01-01 01:00:00]},
+        %{name: "Signup", domain: site.domain, initial_referrer_source: "Twitter", initial_referrer: "a", timestamp: ~N[2019-01-01 02:00:00]},
+        %{name: "Signup", domain: site.domain, initial_referrer_source: "Twitter", initial_referrer: "b", timestamp: ~N[2019-01-01 02:00:00]}
+      ])
 
       filters = Jason.encode!(%{goal: "Signup"})
       conn = get(conn, "/api/stats/#{site.domain}/goal/referrers/Twitter?period=day&date=2019-01-01&filters=#{filters}")
@@ -173,9 +179,11 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
     end
 
     test "returns top referring urls for a pageview goal", %{conn: conn, site: site} do
-      insert(:pageview, pathname: "/register", domain: site.domain, initial_referrer_source: "Twitter", initial_referrer: "a", timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, pathname: "/register", domain: site.domain, initial_referrer_source: "Twitter", initial_referrer: "b", timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, pathname: "/irrelevant", domain: site.domain, initial_referrer_source: "Twitter", initial_referrer: "c", timestamp: ~N[2019-01-01 02:00:00])
+      create_pageviews([
+        %{pathname: "/register", domain: site.domain, initial_referrer_source: "Twitter", initial_referrer: "a", timestamp: ~N[2019-01-01 01:00:00]},
+        %{pathname: "/register", domain: site.domain, initial_referrer_source: "Twitter", initial_referrer: "b", timestamp: ~N[2019-01-01 01:00:00]},
+        %{pathname: "/irrelevant", domain: site.domain, initial_referrer_source: "Twitter", initial_referrer: "c", timestamp: ~N[2019-01-01 02:00:00]}
+      ])
 
       filters = Jason.encode!(%{goal: "Visit /register"})
       conn = get(conn, "/api/stats/#{site.domain}/goal/referrers/Twitter?period=day&date=2019-01-01&filters=#{filters}")

@@ -29,6 +29,7 @@ defmodule PlausibleWeb.ConnCase do
 
   setup tags do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plausible.Repo)
+    Plausible.Clickhouse.clear()
 
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, {:shared, self()})

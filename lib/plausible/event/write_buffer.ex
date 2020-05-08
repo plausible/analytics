@@ -1,6 +1,7 @@
 defmodule Plausible.Event.WriteBuffer do
   use GenServer
   require Logger
+  alias Plausible.Clickhouse
   @flush_interval_ms 1000
   @max_buffer_size 10_000
 
@@ -41,21 +42,9 @@ defmodule Plausible.Event.WriteBuffer do
   defp flush(buffer) do
     case buffer do
       [] -> nil
-      events -> insert_events(events)
+      events ->
+        Logger.info("Flushing #{length(events)} events")
+        Clickhouse.insert_events(events)
     end
-  end
-
-  defp insert_events(events) do
-    Logger.info("Flushing #{length(events)} events")
-    insert = """
-    INSERT INTO events (name, timestamp, domain, user_id, hostname, pathname, referrer, referrer_source, initial_referrer, initial_referrer_source, country_code, screen_size, browser, operating_system)
-    VALUES
-    """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", length(events))
-
-    args = Enum.reduce(events, [], fn event, acc ->
-      [event.name, event.timestamp, event.domain, event.fingerprint, event.hostname, event.pathname, event.referrer, event.referrer_source, event.initial_referrer, event.initial_referrer_source, event.country_code, event.screen_size, event.browser, event.operating_system] ++ acc
-    end)
-
-    Clickhousex.query(:clickhouse, insert, args, log: {Plausible.Clickhouse, :log, []})
   end
 end

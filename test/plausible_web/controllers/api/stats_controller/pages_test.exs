@@ -6,9 +6,11 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
     setup [:create_user, :log_in, :create_site]
 
     test "returns top pages sources by pageviews", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, pathname: "/", timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, domain: site.domain, pathname: "/", timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, domain: site.domain, pathname: "/contact", timestamp: ~N[2019-01-01 01:00:00])
+      create_pageviews([
+        %{domain: site.domain, pathname: "/", timestamp: ~N[2019-01-01 01:00:00]},
+        %{domain: site.domain, pathname: "/", timestamp: ~N[2019-01-01 01:00:00]},
+        %{domain: site.domain, pathname: "/contact", timestamp: ~N[2019-01-01 01:00:00]}
+      ])
 
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&date=2019-01-01")
 
@@ -19,12 +21,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
     end
 
     test "calculates bounce rate for pages", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, pathname: "/", timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, pathname: "/", timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, pathname: "/contact", timestamp: ~N[2019-01-01 02:00:00])
+      create_pageviews([
+        %{domain: site.domain, pathname: "/", timestamp: ~N[2019-01-01 02:00:00]},
+        %{domain: site.domain, pathname: "/", timestamp: ~N[2019-01-01 02:00:00]},
+        %{domain: site.domain, pathname: "/contact", timestamp: ~N[2019-01-01 02:00:00]}
+      ])
 
-      insert(:session, domain: site.domain, entry_page: "/", is_bounce: true, start: ~N[2019-01-01 02:00:00])
-      insert(:session, domain: site.domain, entry_page: "/", is_bounce: false, start: ~N[2019-01-01 02:00:00])
+      create_sessions([
+        %{domain: site.domain, entry_page: "/", is_bounce: true, start: ~N[2019-01-01 02:00:00]},
+        %{domain: site.domain, entry_page: "/", is_bounce: false, start: ~N[2019-01-01 02:00:00]}
+      ])
 
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&date=2019-01-01&include=bounce_rate")
 

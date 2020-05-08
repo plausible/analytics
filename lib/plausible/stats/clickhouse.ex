@@ -1,4 +1,4 @@
-defmodule Plausible.Clickhouse do
+defmodule Plausible.Stats.Clickhouse do
   use Plausible.Repo
   alias Plausible.Stats.Query
 
@@ -234,7 +234,7 @@ defmodule Plausible.Clickhouse do
     end
 
     if referrer == "Twitter" do
-      urls = Enum.map(referring_urls, &(&1[:name]))
+      urls = Enum.map(referring_urls, &(&1["name"]))
 
       tweets = Repo.all(
         from t in Plausible.Twitter.Tweet,
@@ -242,7 +242,7 @@ defmodule Plausible.Clickhouse do
       ) |> Enum.group_by(&(&1.link))
 
       Enum.map(referring_urls, fn url ->
-        Map.put(url, :tweets, tweets[url[:name]])
+        Map.put(url, "tweets", tweets[url["name"]])
       end)
     else
       referring_urls
@@ -424,7 +424,7 @@ defmodule Plausible.Clickhouse do
       clickhouse_all(
         from e in base_query(site, query),
         select: {fragment("concat('Visit ', ?) as name", e.pathname), fragment("uniq(user_id) as count")},
-        where: fragment("? in ?", e.pathname, ^pages),
+        where: fragment("? IN tuple(?)", e.pathname, ^pages),
         group_by: e.pathname
       )
     else
@@ -454,7 +454,7 @@ defmodule Plausible.Clickhouse do
     if goal_event do
       from(e in q, where: e.name == ^goal_event)
     else
-      from(e in q, where: fragment("? IN ?", e.name, ^events))
+      from(e in q, where: fragment("? IN tuple(?)", e.name, ^events))
     end
   end
 
@@ -465,16 +465,6 @@ defmodule Plausible.Clickhouse do
     Enum.map(res.rows, fn row ->
       Enum.zip(res.columns, row)
       |> Enum.into(%{})
-    end)
-  end
-
-  def log(query) do
-    require Logger
-    timing = System.convert_time_unit(query.connection_time, :native, :millisecond)
-    Logger.info("Clickhouse query OK db=#{timing}ms")
-    Logger.debug(fn ->
-      statement = String.replace(query.query.statement, "\n", " ")
-      "#{statement} #{inspect query.params}"
     end)
   end
 

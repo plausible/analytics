@@ -1,7 +1,8 @@
 defmodule PlausibleWeb.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.Clickhouse, as: Stats
+  alias Plausible.Stats.Query
+  alias Plausible.Stats.Clickhouse, as: Stats
 
   plug PlausibleWeb.AuthorizeStatsPlug when action in [:stats, :csv_export]
 
@@ -38,7 +39,7 @@ defmodule PlausibleWeb.StatsController do
   def csv_export(conn, %{"domain" => domain}) do
     site = conn.assigns[:site]
 
-    query = Stats.Query.from(site.timezone, conn.params)
+    query = Query.from(site.timezone, conn.params)
     {plot, _, labels, _} = Stats.calculate_plot(site, query)
     csv_content = Enum.zip(labels, plot)
                   |> Enum.map(fn {k, v} -> [k, v] end)

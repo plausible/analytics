@@ -11,6 +11,24 @@ defmodule Plausible.TestUtils do
     {:ok, site: site}
   end
 
+  def create_pageviews(pageviews) do
+     Enum.map(pageviews, fn pageview ->
+      Factory.build(:pageview, pageview)
+    end) |> Plausible.Clickhouse.insert_events
+  end
+
+  def create_events(events) do
+     Enum.map(events, fn event ->
+      Factory.build(:event, event)
+    end) |> Plausible.Clickhouse.insert_events
+  end
+
+  def create_sessions(sessions) do
+     Enum.map(sessions, fn session ->
+      Factory.build(:session, session)
+    end) |> Plausible.Clickhouse.insert_sessions
+  end
+
   def log_in(%{user: user, conn: conn}) do
     conn = init_session(conn)
     |> Plug.Conn.put_session(:current_user_id, user.id)

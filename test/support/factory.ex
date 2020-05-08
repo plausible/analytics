@@ -52,6 +52,7 @@ defmodule Plausible.Factory do
       hostname: hostname,
       domain: hostname,
       pathname: "/",
+      timestamp: Timex.now(),
       fingerprint: UUID.uuid4()
     }
   end

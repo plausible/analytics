@@ -41,21 +41,9 @@ defmodule Plausible.Session.WriteBuffer do
   defp flush(buffer) do
     case buffer do
       [] -> nil
-      sessions -> insert_sessions(sessions)
+      sessions ->
+        Logger.info("Flushing #{length(sessions)} sessions")
+        Plausible.Clickhouse.insert_sessions(sessions)
     end
-  end
-
-  defp insert_sessions(sessions) do
-    Logger.info("Flushing #{length(sessions)} sessions")
-    insert = """
-    INSERT INTO sessions (domain, user_id, hostname, start, is_bounce, entry_page, exit_page, referrer, referrer_source, country_code, screen_size, browser, operating_system)
-    VALUES
-    """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", Enum.count(sessions))
-
-    args = Enum.reduce(sessions, [], fn session, acc ->
-      [session.domain, session.fingerprint, session.hostname, session.start, session.is_bounce && 1 || 0, session.entry_page, session.exit_page, session.referrer, session.referrer_source,session.country_code, session.screen_size, session.browser, session.operating_system] ++ acc
-    end)
-
-    Clickhousex.query(:clickhouse, insert, args, log: {Plausible.Clickhouse, :log, []})
   end
 end

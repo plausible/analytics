@@ -6,14 +6,14 @@ defmodule PlausibleWeb.StatsControllerTest do
   describe "GET /:website - anonymous user" do
     test "public site - shows site stats", %{conn: conn} do
       insert(:site, domain: "public-site.io", public: true)
-      insert(:pageview, domain: "public-site.io")
+      create_pageviews([%{domain: "public-site.io"}])
 
       conn = get(conn, "/public-site.io")
       assert html_response(conn, 200) =~ "stats-react-container"
     end
 
     test "can not view stats of a private website", %{conn: conn} do
-      insert(:pageview, domain: "some-other-site.com")
+      create_pageviews([%{domain: "some-other-site.com"}])
 
       conn = get(conn, "/some-other-site.com")
       assert html_response(conn, 404) =~ "There&#39;s nothing here"
@@ -24,14 +24,14 @@ defmodule PlausibleWeb.StatsControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "can view stats of a website I've created", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain)
+      create_pageviews([%{domain: site.domain}])
 
       conn = get(conn, "/" <> site.domain)
       assert html_response(conn, 200) =~ "stats-react-container"
     end
 
     test "can not view stats of someone else's website", %{conn: conn} do
-      insert(:pageview, domain: "some-other-site.com")
+      create_pageviews([%{domain: "some-other-site.com"}])
 
       conn = get(conn, "/some-other-site.com")
       assert html_response(conn, 404) =~ "There&#39;s nothing here"
@@ -42,7 +42,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "exports graph as csv", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain)
+      create_pageviews([%{domain: site.domain}])
       today = Timex.today() |> Timex.format!("{ISOdate}")
 
       conn = get(conn, "/" <> site.domain <> "/visitors.csv")
