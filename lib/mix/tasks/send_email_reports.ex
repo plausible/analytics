@@ -75,6 +75,8 @@ defmodule Mix.Tasks.SendEmailReports do
     change_bounce_rate = if prev_bounce_rate > 0, do: bounce_rate - prev_bounce_rate
     referrers = Stats.top_referrers(site, query)
     pages = Stats.top_pages(site, query)
+    user = Plausible.Auth.find_user_by(email: email)
+    login_link = user && Plausible.Sites.is_owner?(user.id, site)
 
     PlausibleWeb.Email.weekly_report(email, site,
       unique_visitors: unique_visitors,
@@ -85,7 +87,7 @@ defmodule Mix.Tasks.SendEmailReports do
       change_bounce_rate: change_bounce_rate,
       referrers: referrers,
       unsubscribe_link: unsubscribe_link,
-      view_link: view_link(site, query),
+      login_link: login_link,
       pages: pages,
       query: query,
       name: name
@@ -112,14 +114,5 @@ defmodule Mix.Tasks.SendEmailReports do
       month: date.month,
       timestamp: Timex.now()
     }])
-  end
-
-  defp view_link(site, %Plausible.Stats.Query{period: "7d"}) do
-    PlausibleWeb.Endpoint.url() <> "/#{URI.encode_www_form(site.domain)}?period=7d"
-  end
-
-  defp view_link(site, %Plausible.Stats.Query{period: "month", date_range: range}) do
-    month = Timex.format!(range.first, "{ISOdate}")
-    PlausibleWeb.Endpoint.url() <> "/#{URI.encode_www_form(site.domain)}?period=month&date=#{month}"
   end
 end
