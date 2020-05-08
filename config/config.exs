@@ -1,6 +1,9 @@
 use Mix.Config
 
 config :plausible,
+  admin_user: System.get_env("ADMIN_USER_NAME", "admin"),
+  admin_email: System.get_env("ADMIN_USER_EMAIL", "admin@plausible.local"),
+  admin_pwd: System.get_env("ADMIN_USER_PWD", "!@d3in"),
   ecto_repos: [Plausible.Repo]
 
 # Configures the endpoint
