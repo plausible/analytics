@@ -41,7 +41,9 @@ postmark_api_key = System.get_env("POSTMARK_API_KEY")
 config :plausible,
   admin_user: admin_user,
   admin_email: admin_email,
-  admin_pwd: admin_pwd
+  admin_pwd: admin_pwd,
+  base_domain: host
+
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [host: host, port: port],
