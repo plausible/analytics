@@ -34,7 +34,7 @@ config :sentry,
   environment_name: String.to_atom(Map.get(System.get_env(), "MIX_ENV", "dev")),
   enable_source_code_context: true,
   root_source_code_path: File.cwd!(),
-  tags: %{my_app_version: System.get_env("APP_VERSION", "0.0.1")}
+  tags: %{app_version: System.get_env("APP_VERSION", "0.0.1")}
 
 # Configures Elixir's Logger
 config :logger, :console,

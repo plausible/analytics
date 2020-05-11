@@ -28,6 +28,7 @@ admin_pwd = System.get_env("ADMIN_USER_PWD")
 env = System.get_env("ENVIRONMENT", "prod")
 mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.PostmarkAdapter")
 mailer_email = System.get_env("MAILER_EMAIL", "hello@plausible.local")
+app_version = System.get_env("APP_VERSION", "0.0.1")
 ### Mandatory params End
 
 sentry_dsn = System.get_env("SENTRY_DSN")
@@ -69,7 +70,9 @@ config :plausible,
        ssl: db_tls_enabled?
 
 config :sentry,
-  dsn: sentry_dsn
+  dsn: sentry_dsn,
+  environment_name: env,
+  tags: %{app_version: app_version}
 
 config :plausible, :paddle, vendor_auth_code: paddle_auth_code
 

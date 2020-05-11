@@ -5,10 +5,13 @@ defmodule Plausible.Mailer do
     try do
       Plausible.Mailer.deliver_now(email)
     rescue
-      error  ->
-        Sentry.capture_exception(error, [stacktrace: __STACKTRACE__, extra: %{extra: "Error while sending email"}])
+      error ->
+        Sentry.capture_exception(error,
+          stacktrace: __STACKTRACE__,
+          extra: %{extra: "Error while sending email"}
+        )
+
         raise error
     end
   end
-
 end
