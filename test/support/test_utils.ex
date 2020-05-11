@@ -7,7 +7,7 @@ defmodule Plausible.TestUtils do
   end
 
   def create_site(%{user: user}) do
-    site = Factory.insert(:site, members: [user])
+    site = Factory.insert(:site, domain: "test-site.com", members: [user])
     {:ok, site: site}
   end
 

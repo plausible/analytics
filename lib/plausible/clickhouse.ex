@@ -25,16 +25,6 @@ defmodule Plausible.Clickhouse do
     Clickhousex.query(:clickhouse, insert, args, log: {Plausible.Clickhouse, :log, []})
   end
 
-  @doc """
-  Clickhouse does not support a standard DELETE operation. They do support a ALTER TABLE <table> DELETE WHERE ..;
-  However, that query is async and we can't rely on the data being cleared for the next test. At the moment, this is
-  the best way I've found to clear data but we have to hardcode the months(partitions) to delete.
-  """
-  def clear() do
-    Clickhousex.query(:clickhouse, "ALTER TABLE events DROP PARTITION 201901", [], log: {Plausible.Clickhouse, :log, []})
-    Clickhousex.query(:clickhouse, "ALTER TABLE sessions DROP PARTITION 201901", [], log: {Plausible.Clickhouse, :log, []})
-  end
-
   def log(query) do
     require Logger
     timing = System.convert_time_unit(query.connection_time, :native, :millisecond)
@@ -51,5 +41,4 @@ defmodule Plausible.Clickhouse do
       "#{statement} #{inspect query.params}"
     end)
   end
-
 end
