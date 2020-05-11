@@ -13,7 +13,7 @@ defmodule PlausibleWeb.StatsController do
     if user && Plausible.Billing.needs_to_upgrade?(conn.assigns[:current_user]) do
       redirect(conn, to: "/billing/upgrade")
     else
-      if Plausible.Sites.has_pageviews?(site) do
+      if Stats.has_pageviews?(site) do
         demo = site.domain == "plausible.io"
         offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
 

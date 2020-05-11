@@ -385,6 +385,16 @@ defmodule Plausible.Stats.Clickhouse do
     res["visitors"]
   end
 
+  def has_pageviews?(site) do
+    res = clickhouse_all(
+      from e in "events",
+      select: e.timestamp,
+      where: e.domain == ^site.domain,
+      limit: 1
+    )
+    !Enum.empty?(res)
+  end
+
   def goal_conversions(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
     clickhouse_all(
       from e in base_query(site, query),

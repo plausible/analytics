@@ -63,7 +63,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "logs anonymous user in straight away if the link is not password-protected", %{conn: conn} do
       site = insert(:site)
       link = insert(:shared_link, site: site)
-      insert(:pageview, domain: site.domain)
+      create_pageviews([%{domain: site.domain}])
 
       conn = get(conn, "/share/#{link.slug}")
       assert redirected_to(conn, 302) == "/#{site.domain}"
@@ -77,7 +77,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "logs anonymous user in with correct password", %{conn: conn} do
       site = insert(:site)
       link = insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
-      insert(:pageview, domain: site.domain)
+      create_pageviews([%{domain: site.domain}])
 
       conn = post(conn, "/share/#{link.slug}/authenticate", %{password: "password"})
       assert redirected_to(conn, 302) == "/#{site.domain}"
