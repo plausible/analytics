@@ -29,8 +29,6 @@ config :logger, :console, format: "[$level] $message\n"
 config :phoenix, :stacktrace_depth, 20
 config :phoenix, :plug_init_mode, :runtime
 
-config :plausible, Plausible.Mailer, adapter: Bamboo.LocalAdapter
-
 if File.exists?("config/dev.secret.exs") do
   import_config "dev.secret.exs"
 end

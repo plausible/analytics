@@ -1,6 +1,6 @@
 defmodule Plausible.Repo.Migrations.AddPublicSites do
   use Ecto.Migration
-  @host Application.get_env(:plausible,:url,:host)
+  @host Application.get_env(:plausible, :url, :host)
 
   def change do
     alter table(:sites) do
