@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Endpoint do
   def clean_url() do
     url = PlausibleWeb.Endpoint.url()
 
-    if Mix.env() == :prod do
+    if Application.get_env(:plausible, :environment) == "prod" do
       URI.parse(url) |> Map.put(:port, nil) |> URI.to_string()
     else
       url
