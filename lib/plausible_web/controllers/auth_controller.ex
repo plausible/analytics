@@ -28,7 +28,7 @@ defmodule PlausibleWeb.AuthController do
         url = PlausibleWeb.Endpoint.clean_url() <> "/claim-activation?token=#{token}"
         Logger.info(url)
         email_template = PlausibleWeb.Email.activation_email(user, url)
-        Plausible.Mailer.deliver_now(email_template)
+        Plausible.Mailer.send_email(email_template)
 
         conn
         |> render("register_success.html",
@@ -50,7 +50,7 @@ defmodule PlausibleWeb.AuthController do
         case Auth.create_user(name, email) do
           {:ok, user} ->
             PlausibleWeb.Email.welcome_email(user)
-            |> Plausible.Mailer.deliver_now()
+            |> Plausible.Mailer.send_email()
 
             conn
             |> put_session(:current_user_id, user.id)
@@ -90,7 +90,7 @@ defmodule PlausibleWeb.AuthController do
       url = PlausibleWeb.Endpoint.clean_url() <> "/password/reset?token=#{token}"
       Logger.debug("PASSWORD RESET LINK: " <> url)
       email_template = PlausibleWeb.Email.password_reset_email(email, url)
-      Plausible.Mailer.deliver_now(email_template)
+      Plausible.Mailer.send_email(email_template)
 
       render(conn, "password_reset_request_success.html",
         email: email,
