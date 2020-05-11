@@ -43,6 +43,7 @@ config :plausible,
   admin_email: admin_email,
   admin_pwd: admin_pwd
 
+
 config :plausible, PlausibleWeb.Endpoint,
   url: [host: host, port: port],
   http: [
