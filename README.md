@@ -24,9 +24,12 @@ Interested? [Read more on our website](https://plausible.io)
 
 ### Can Plausible be self-hosted?
 
-At the moment we don't provide support for easily self-hosting the code. Currently, the purpose of
-keeping the code open-source is to be transparent with the community about how we
-collect and process data.
+At the moment we don't provide support for easily self-hosting the code. Please read [hosting setup](./HOSTING.md) documentation for more details on this. 
+Note that this setup is still work-in-progress and should not be used for any production environment.   
+ 
+ 
+Currently, the purpose of keeping the code open-source is to be transparent with the community about how we
+collect and process data.  
 
 ### Technology
 

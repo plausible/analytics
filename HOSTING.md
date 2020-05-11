@@ -52,9 +52,38 @@ Following are the variables that can be used to configure the availability of th
 - PORT (*Number*)
     - The port on which the server is available. 
 - SECRET_KEY_BASE (*String*)
-    - An internal secret key used by [Phoenix Framework](https://www.phoenixframework.org/). Follow the [instructions](https://hexdocs.pm/phoenix/Mix.Tasks.Phx.Gen.Secret.html#content) to generate one. 
+    - An internal secret key used by [Phoenix Framework](https://www.phoenixframework.org/). Follow the [instructions](https://hexdocs.pm/phoenix/Mix.Tasks.Phx.Gen.Secret.html#content) to generate one.
+- ENVIRONMENT (*String*)
+    - The current running environment. _defaults to **prod**_ 
+- APP_VERSION (*String*)
+    - The version of the app running. _defaults to current docker tag_ 
+    
+### Mailer/SMTP Setup
+
+- MAILER_ADAPTER (*String*)
+    - The adapter used for sending out e-mails. Available: `Bamboo.PostmarkAdapter` / `Bamboo.SMTPAdapter`
+- MAILER_EMAIL (*String*)
+    - The email id to use for as _from_ address of all communications from Plausible. 
+
+In case of `Bamboo.SMTPAdapter` you need to supply the following variables: 
+    
+- SMTP_HOST_ADDR (*String*)
+    - The host address of your smtp server.
+- SMTP_HOST_PORT (*Number*)
+    - The port of your smtp server. 
+- SMTP_USER_NAME (*String*)
+    - The username/email for smtp auth.
+- SMTP_USER_PWD (*String*)
+    - The password for smtp auth.
+- SMTP_HOST_SSL_ENABLED (*Boolean String*)
+    - If ssl is enabled for connecting to Smtp, _defaults to `false`_
+- SMTP_RETRIES (*Number*)
+    - Number of retries to make until mailer gives up. _defaults to `2`_
+- SMTP_MX_LOOKUPS_ENABLED (*Boolean String*)
+    - If MX lookups should be done before sending out emails. _defaults to `false`_ 
 
 ### Database
+
 Plausible uses postgresql as database for storing all the data. Use the following the variables to configure it.
 
 - DATABASE_URL (*String*)
@@ -73,7 +102,7 @@ Plausible uses postgresql as database for storing all the data. Use the followin
     - SENTRY_DSN
 - [Paddle](https://paddle.com/)
     - PADDLE_VENDOR_AUTH_CODE
-- [PostMark](https://postmarkapp.com/)
+- [PostMark](https://postmarkapp.com/), only in case of `Bamboo.PostmarkAdapter` mail adapter.
     - POSTMARK_API_KEY
 
 Apart from these, there are also the following integrations 

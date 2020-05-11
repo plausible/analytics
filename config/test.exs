@@ -25,3 +25,10 @@ config :plausible,
 
 config :plausible,
   session_timeout: 0
+
+config :junit_formatter,
+  report_file: "report.xml",
+  report_dir: File.cwd!(),
+  print_report_file: true,
+  prepend_project_name?: true,
+  include_filename?: true

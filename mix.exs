@@ -80,6 +80,7 @@ defmodule Plausible.MixProject do
       {:ex_machina, "~> 2.3", only: :test},
       {:excoveralls, "~> 0.10", only: :test},
       {:double, "~> 0.7.0", only: :test},
+      {:junit_formatter, "~> 3.1", only: [:test]},
       {:joken, "~> 2.0"},
       {:php_serializer, "~> 0.9.0"},
       {:csv, "~> 2.3"},
