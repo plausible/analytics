@@ -1,6 +1,10 @@
 defmodule PlausibleWeb.LayoutView do
   use PlausibleWeb, :view
 
+  def base_domain() do
+    PlausibleWeb.Endpoint.host()
+  end
+
   def home_dest(conn) do
     if conn.assigns[:current_user] do
       "/sites"
