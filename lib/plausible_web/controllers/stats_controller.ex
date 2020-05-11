@@ -3,7 +3,6 @@ defmodule PlausibleWeb.StatsController do
   use Plausible.Repo
   alias Plausible.Stats
 
-
   plug PlausibleWeb.AuthorizeStatsPlug when action in [:stats, :csv_export]
 
   def base_domain() do

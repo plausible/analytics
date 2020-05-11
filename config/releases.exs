@@ -26,6 +26,9 @@ admin_user = System.get_env("ADMIN_USER_NAME")
 admin_email = System.get_env("ADMIN_USER_EMAIL")
 admin_pwd = System.get_env("ADMIN_USER_PWD")
 env = System.get_env("ENVIRONMENT", "prod")
+mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.PostmarkAdapter")
+mailer_email = System.get_env("MAILER_EMAIL", "hello@plausible.local")
+app_version = System.get_env("APP_VERSION", "0.0.1")
 ### Mandatory params End
 
 sentry_dsn = System.get_env("SENTRY_DSN")
@@ -43,7 +46,8 @@ config :plausible,
   admin_user: admin_user,
   admin_email: admin_email,
   admin_pwd: admin_pwd,
-  environment: env
+  environment: env,
+  mailer_email: mailer_email
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [host: host, port: port],
@@ -66,7 +70,9 @@ config :plausible,
        ssl: db_tls_enabled?
 
 config :sentry,
-  dsn: sentry_dsn
+  dsn: sentry_dsn,
+  environment_name: env,
+  tags: %{app_version: app_version}
 
 config :plausible, :paddle, vendor_auth_code: paddle_auth_code
 
@@ -76,9 +82,30 @@ config :plausible, :google,
 
 config :plausible, :slack, webhook: slack_hook_url
 
-config :plausible, Plausible.Mailer,
-  adapter: Bamboo.PostmarkAdapter,
-  api_key: postmark_api_key
+case mailer_adapter do
+  "Bamboo.PostmarkAdapter" ->
+    config :plausible, Plausible.Mailer,
+      adapter: :"Elixir.#{mailer_adapter}",
+      api_key: System.get_env("POSTMARK_API_KEY")
+
+  "Bamboo.SMTPAdapter" ->
+    config :plausible, Plausible.Mailer,
+      adapter: :"Elixir.#{mailer_adapter}",
+      server: System.fetch_env!("SMTP_HOST_ADDR"),
+      hostname: System.get_env("HOST", "localhost"),
+      port: System.fetch_env!("SMTP_HOST_PORT"),
+      username: System.fetch_env!("SMTP_USER_NAME"),
+      password: System.fetch_env!("SMTP_USER_PWD"),
+      tls: :if_available,
+      allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
+      ssl: System.get_env("SMTP_HOST_SSL_ENABLED") || true,
+      retries: System.get_env("SMTP_RETRIES") || 2,
+      no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true,
+      auth: :always
+
+  _ ->
+    raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
+end
 
 config :plausible, :twitter,
   consumer_key: twitter_consumer_key,

@@ -3,6 +3,7 @@ use Mix.Config
 config :plausible,
   admin_user: System.get_env("ADMIN_USER_NAME", "admin"),
   admin_email: System.get_env("ADMIN_USER_EMAIL", "admin@plausible.local"),
+  mailer_email: System.get_env("MAILER_EMAIL", "hello@plausible.local"),
   admin_pwd: System.get_env("ADMIN_USER_PWD", "!@d3in"),
   ecto_repos: [Plausible.Repo],
   environment: System.get_env(Atom.to_string(Mix.env()), "dev")
@@ -32,7 +33,8 @@ config :sentry,
   included_environments: [:prod, :staging],
   environment_name: String.to_atom(Map.get(System.get_env(), "MIX_ENV", "dev")),
   enable_source_code_context: true,
-  root_source_code_path: File.cwd!()
+  root_source_code_path: File.cwd!(),
+  tags: %{app_version: System.get_env("APP_VERSION", "0.0.1")}
 
 # Configures Elixir's Logger
 config :logger, :console,
@@ -76,9 +78,32 @@ config :plausible, :google,
 
 config :plausible, :slack, webhook: System.get_env("SLACK_WEBHOOK")
 
-config :plausible, Plausible.Mailer,
-  adapter: Bamboo.PostmarkAdapter,
-  api_key: System.get_env("POSTMARK_API_KEY")
+mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.PostmarkAdapter")
+
+case mailer_adapter do
+  "Bamboo.PostmarkAdapter" ->
+    config :plausible, Plausible.Mailer,
+      adapter: :"Elixir.#{mailer_adapter}",
+      api_key: System.get_env("POSTMARK_API_KEY")
+
+  "Bamboo.SMTPAdapter" ->
+    config :plausible, Plausible.Mailer,
+      adapter: :"Elixir.#{mailer_adapter}",
+      server: System.fetch_env!("SMTP_HOST_ADDR"),
+      hostname: System.get_env("HOST", "localhost"),
+      port: System.fetch_env!("SMTP_HOST_PORT"),
+      username: System.fetch_env!("SMTP_USER_NAME"),
+      password: System.fetch_env!("SMTP_USER_PWD"),
+      tls: :if_available,
+      allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
+      ssl: System.get_env("SMTP_HOST_SSL_ENABLED") || true,
+      retries: System.get_env("SMTP_RETRIES") || 2,
+      no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true,
+      auth: :always
+
+  _ ->
+    raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
+end
 
 config :plausible, :twitter,
   consumer_key: System.get_env("TWITTER_CONSUMER_KEY"),

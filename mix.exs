@@ -37,7 +37,8 @@ defmodule Plausible.MixProject do
         :timex,
         :ua_inspector,
         :ref_inspector,
-        :bamboo
+        :bamboo,
+        :bamboo_smtp
       ]
     ]
   end
@@ -73,6 +74,7 @@ defmodule Plausible.MixProject do
       {:ua_inspector, "~> 0.18"},
       {:bamboo, "~> 1.3"},
       {:bamboo_postmark, "~> 0.5"},
+      {:bamboo_smtp, "~> 2.1.0"},
       {:sentry, "~> 7.0"},
       {:httpoison, "~> 1.4"},
       {:ex_machina, "~> 2.3", only: :test},
