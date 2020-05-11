@@ -59,6 +59,9 @@ test:ex_unit:
   coverage: '/\[TOTAL\]\s+(\d+\.\d+)%/'
   dependencies:
     - compile
+  artifacts:
+    reports:
+      junit: plausible-report.xml
 
 build:docker:
   <<: *elixir-commons

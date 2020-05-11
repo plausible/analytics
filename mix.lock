@@ -32,6 +32,7 @@
   "jason": {:hex, :jason, "1.1.2", "b03dedea67a99223a2eaf9f1264ce37154564de899fd3d8b9a21b1a6fd64afe7", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm", "fdf843bca858203ae1de16da2ee206f53416bbda5dc8c9e78f43243de4bc3afe"},
   "joken": {:hex, :joken, "2.2.0", "2daa1b12be05184aff7b5ace1d43ca1f81345962285fff3f88db74927c954d3a", [:mix], [{:jose, "~> 1.9", [hex: :jose, repo: "hexpm", optional: false]}], "hexpm", "b4f92e30388206f869dd25d1af628a1d99d7586e5cf0672f64d4df84c4d2f5e9"},
   "jose": {:hex, :jose, "1.10.1", "16d8e460dae7203c6d1efa3f277e25b5af8b659febfc2f2eb4bacf87f128b80a", [:mix, :rebar3], [], "hexpm", "3c7ddc8a9394b92891db7c2771da94bf819834a1a4c92e30857b7d582e2f8257"},
+  "junit_formatter": {:hex, :junit_formatter, "3.1.0", "3f69c61c5413750f9c45e367d77aabbeac9b395acf478d8e70b4ee9d1989c709", [:mix], [], "hexpm", "da52401a93f711fc4f77ffabdda68f9a16fcad5d96f5fce4ae606ab1d73b72f4"},
   "metrics": {:hex, :metrics, "1.0.1", "25f094dea2cda98213cecc3aeff09e940299d950904393b2a29d191c346a8486", [:rebar3], [], "hexpm", "69b09adddc4f74a40716ae54d140f93beb0fb8978d8636eaded0c31b6f099f16"},
   "mime": {:hex, :mime, "1.3.1", "30ce04ab3175b6ad0bdce0035cba77bba68b813d523d1aac73d9781b4d193cf8", [:mix], [], "hexpm", "6cbe761d6a0ca5a31a0931bf4c63204bceb64538e664a8ecf784a9a6f3b875f1"},
   "mimerl": {:hex, :mimerl, "1.2.0", "67e2d3f571088d5cfd3e550c383094b47159f3eee8ffa08e64106cdf5e981be3", [:rebar3], [], "hexpm", "f278585650aa581986264638ebf698f8bb19df297f66ad91b18910dfc6e19323"},
