@@ -8,7 +8,6 @@ config :plausible, PlausibleWeb.Endpoint,
 # Do not print debug messages in production
 config :logger, level: :info
 
-
 # For the actual-production deployments we will use releases,
 # i.e., "releases.exs" is the _actual_ production config
 # see "releases.exs"

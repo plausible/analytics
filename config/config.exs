@@ -4,7 +4,8 @@ config :plausible,
   admin_user: System.get_env("ADMIN_USER_NAME", "admin"),
   admin_email: System.get_env("ADMIN_USER_EMAIL", "admin@plausible.local"),
   admin_pwd: System.get_env("ADMIN_USER_PWD", "!@d3in"),
-  ecto_repos: [Plausible.Repo]
+  ecto_repos: [Plausible.Repo],
+  environment: System.get_env(Atom.to_string(Mix.env()), "dev")
 
 # Configures the endpoint
 config :plausible, PlausibleWeb.Endpoint,
