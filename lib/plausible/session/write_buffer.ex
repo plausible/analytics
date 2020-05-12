@@ -13,13 +13,13 @@ defmodule Plausible.Session.WriteBuffer do
     {:ok, %{buffer: buffer, timer: timer}}
   end
 
-  def insert(session) do
-    GenServer.cast(__MODULE__, {:insert, session})
-    {:ok, session}
+  def insert(sessions) do
+    GenServer.cast(__MODULE__, {:insert, sessions})
+    {:ok, sessions}
   end
 
-  def handle_cast({:insert, session}, %{buffer: buffer} = state) do
-    new_buffer = [ session | buffer ]
+  def handle_cast({:insert, sessions}, %{buffer: buffer} = state) do
+    new_buffer = sessions ++ buffer
 
     if length(new_buffer) >= @max_buffer_size do
       Logger.info("Buffer full, flushing to disk")

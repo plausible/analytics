@@ -8,10 +8,13 @@ defmodule Plausible.FingerprintSession do
     field :fingerprint, :string
 
     field :start, :naive_datetime, null: false
-    field :length, :integer
+    field :duration, :integer
     field :is_bounce, :boolean
     field :entry_page, :string
     field :exit_page, :string
+    field :pageviews, :integer
+    field :events, :integer
+    field :sign, :integer
 
     field :referrer, :string
     field :referrer_source, :string
