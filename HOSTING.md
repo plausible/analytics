@@ -58,6 +58,16 @@ Following are the variables that can be used to configure the availability of th
 - APP_VERSION (*String*)
     - The version of the app running. _defaults to current docker tag_ 
     
+### Default User Generation
+For self-hosting, a default user is generated during the [Database Migration](#Database Migration) to access Plausible. To be noted that, a default user is a user whose trial period expires in 100 Years ;). 
+
+- ADMIN_USER_NAME
+    - The default ("admin") username. _if not provided, one will be generated for you_    
+- ADMIN_USER_EMAIL
+    - The default ("admin") user email. _if not provided, one will be generated for you_   
+- ADMIN_USER_PWD
+    - The default ("admin") user password. _if not provided, one will be generated for you_           
+
 ### Mailer/SMTP Setup
 
 - MAILER_ADAPTER (*String*)
