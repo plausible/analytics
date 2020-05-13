@@ -87,6 +87,8 @@ build:docker:
     - docker_build_image
   dependencies:
     - compile
+  only:
+    - master  
 
 license_scanning:
   stage: compile
