@@ -18,7 +18,7 @@ WORKDIR /app
 RUN apt-get update  && \
     apt-get install -y git build-essential nodejs yarn python npm --no-install-recommends && \
     npm install npm@latest -g && \
-    npm install -g webpack webpack-cli
+    npm install -g webpack
 
 RUN apt-get install -y --no-install-recommends ca-certificates wget \
     && apt-get install -y --install-recommends gnupg2 dirmngr
