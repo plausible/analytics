@@ -72,8 +72,9 @@ defmodule Plausible.Release do
   defp validate_admin({nil, nil, nil}) do
     random_user = :crypto.strong_rand_bytes(8) |> Base.encode64() |> binary_part(0, 8)
     random_pwd = :crypto.strong_rand_bytes(20) |> Base.encode64() |> binary_part(0, 20)
-    IO.puts("generated admin user/password: #{random_user}@plausible.io / #{random_pwd}")
-    {"#{random_user}@plausible.io", random_user, random_pwd}
+    random_email = "#{random_user}@#{System.get_env("HOST")}"
+    IO.puts("generated admin user/password: #{random_email} / #{random_pwd}")
+    {random_email, random_user, random_pwd}
   end
 
   defp validate_admin({admin_email, admin_user, admin_password}) do

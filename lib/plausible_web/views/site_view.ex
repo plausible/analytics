@@ -1,6 +1,14 @@
 defmodule PlausibleWeb.SiteView do
   use PlausibleWeb, :view
 
+  def admin_email do
+    Application.get_env(:plausible, :admin_email)
+  end
+
+  def plausible_url do
+    "https://#{PlausibleWeb.Endpoint.clean_url()}"
+  end
+
   def base_domain() do
     PlausibleWeb.Endpoint.host()
   end

@@ -6,6 +6,10 @@ defmodule PlausibleWeb.BillingController do
 
   plug PlausibleWeb.RequireAccountPlug
 
+  def admin_email do
+    Application.get_env(:plausible, :admin_email)
+  end
+
   def change_plan_form(conn, _params) do
     subscription = Billing.active_subscription_for(conn.assigns[:current_user].id)
 
@@ -54,7 +58,7 @@ defmodule PlausibleWeb.BillingController do
         conn
         |> put_flash(
           :error,
-          "Something went wrong. Please try again or contact support at uku@plausible.io"
+          "Something went wrong. Please try again or contact support at #{admin_email()}"
         )
         |> redirect(to: "/settings")
     end
