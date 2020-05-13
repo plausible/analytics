@@ -66,12 +66,12 @@ config :plausible,
        pool_size: db_pool_size,
        url: db_url,
        adapter: Ecto.Adapters.Postgres,
-       timeout: 10_000,
        ssl: db_tls_enabled?
 
 config :sentry,
   dsn: sentry_dsn,
   environment_name: env,
+  release: app_version,
   tags: %{app_version: app_version}
 
 config :plausible, :paddle, vendor_auth_code: paddle_auth_code
