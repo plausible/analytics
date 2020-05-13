@@ -6,8 +6,8 @@
     </div>
     <ul class="text-center md:text-left my-4 md:m-0">
       <li>Read our <a href="/blog/" class="light-text font-medium mr-4 underline">Blog</a></li>
-      <li>Study the <a href="https://docs.plausible.io" target="_blank" class="light-text font-medium mr-4 underline">Documentation</a></li>
-      <li>Check out the <a href="/plausible.io" class="light-text font-medium underline">Live Demo</a></li>
+      <li>Study the <%= link("Documentation", to: "https://docs.#{base_domain()}",target: "_blank",class: "light-text font-medium mr-4 underline") %></li>
+      <li>Check out the <%= link("Live Demo", to: "/plausible.io",class: "light-text font-medium underline") %></li>
     </ul>
     <ul class="text-center md:text-left my-4 md:m-0">
       <li>Give us <a href="/feedback" target="_blank" class="light-text font-medium mr-4 underline">Feedback</a></li>

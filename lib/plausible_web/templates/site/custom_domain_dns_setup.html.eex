@@ -3,7 +3,7 @@
   <ol class="list-disc pl-4 my-4">
     <li>Go to your DNS provider’s website</li>
     <li class="mt-4">Create a new CNAME record for <code><%= @site.custom_domain.domain %></code></li>
-    <li class="mt-4">Point the record to <code>custom.plausible.io.</code> (including the dot)</li>
+    <li class="mt-4">Point the record to <code>custom.<%= plausible_url() %>.</code> (including the dot)</li>
   </ol>
 
   <%= link("Done ->", to: "/sites/#{URI.encode_www_form(@site.domain)}/custom-domains/snippet", class: "button w-full mt-6") %>

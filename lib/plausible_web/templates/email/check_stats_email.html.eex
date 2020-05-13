@@ -11,4 +11,4 @@ Uku Taht
 <br /><br />
 --
 <br /><br />
-https://plausible.io
+<%= plausible_url() %>

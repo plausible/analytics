@@ -60,6 +60,7 @@ Following are the variables that can be used to configure the availability of th
     
 ### Default User Generation
 For self-hosting, a default user is generated during the [Database Migration](#Database Migration) to access Plausible. To be noted that, a default user is a user whose trial period expires in 100 Years ;). 
+It is *highly* recommended that you configure these parameters.
 
 - ADMIN_USER_NAME
     - The default ("admin") username. _if not provided, one will be generated for you_    
