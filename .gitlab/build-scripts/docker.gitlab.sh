@@ -26,6 +26,7 @@ function docker_build_image() {
       --context ${CI_PROJECT_DIR} \
       --dockerfile ${CI_PROJECT_DIR}/Dockerfile \
       --destination ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}  \
+      --destination ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}-latest  \
       \
       "$@"
 

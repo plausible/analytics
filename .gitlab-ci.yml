@@ -1,8 +1,14 @@
+include:
+  - template: Container-Scanning.gitlab-ci.yml
+  - template: License-Scanning.gitlab-ci.yml
+  - template: SAST.gitlab-ci.yml
+   
 stages:
   - prepare
   - compile
   - test
   - build
+  - postbuild
 
 .commons: &elixir-commons
   image: elixir:1.10.3
@@ -81,5 +87,23 @@ build:docker:
     - docker_build_image
   dependencies:
     - compile
-  only:
-    - master
+
+license_scanning:
+  stage: compile
+  dependencies:
+    - deps  
+
+sast:
+  stage: compile    
+
+
+container_scanning:
+  stage: postbuild
+  image: registry.gitlab.com/gitlab-org/security-products/analyzers/klar:$CS_MAJOR_VERSION
+  variables:
+    CS_MAJOR_VERSION: 2
+    KLAR_TRACE: "true"
+    CLAIR_TRACE: "true"
+    CLAIR_OUTPUT: "medium"
+    CI_APPLICATION_REPOSITORY: $CI_REGISTRY_IMAGE
+    CI_APPLICATION_TAG: ${CI_COMMIT_REF_SLUG}-$CI_COMMIT_SHORT_SHA
