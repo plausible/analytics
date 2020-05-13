@@ -102,10 +102,12 @@ sast:
 container_scanning:
   stage: postbuild
   image: registry.gitlab.com/gitlab-org/security-products/analyzers/klar:$CS_MAJOR_VERSION
+  only:
+    - master
   variables:
     CS_MAJOR_VERSION: 2
     KLAR_TRACE: "true"
     CLAIR_TRACE: "true"
     CLAIR_OUTPUT: "medium"
     CI_APPLICATION_REPOSITORY: $CI_REGISTRY_IMAGE
-    CI_APPLICATION_TAG: ${CI_COMMIT_REF_SLUG}-$CI_COMMIT_SHORT_SHA
+    CI_APPLICATION_TAG: ${CI_COMMIT_REF_SLUG}-$CI_COMMIT_SHORT_SHA  

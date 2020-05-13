@@ -65,6 +65,9 @@ config :plausible, :paddle,
 config :plausible,
        Plausible.Repo,
        pool_size: String.to_integer(System.get_env("DATABASE_POOL_SIZE", "10")),
+       ownership_timeout: 60_000,
+       timeout: 60_000,
+       pool_timeout: 60_000,
        url:
          System.get_env(
            "DATABASE_URL",
