@@ -58,7 +58,7 @@ RUN mix release plausible
 
 
 # Main Docker Image
-FROM debian:10
+FROM debian:bullseye
 LABEL maintainer="tckb <tckb@tgrthi.me>"
 ENV LANG=C.UTF-8
 
