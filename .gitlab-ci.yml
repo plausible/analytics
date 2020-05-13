@@ -2,13 +2,24 @@ include:
   - template: Container-Scanning.gitlab-ci.yml
   - template: License-Scanning.gitlab-ci.yml
   - template: SAST.gitlab-ci.yml
-   
+
 stages:
   - prepare
   - compile
   - test
   - build
   - postbuild
+
+.elixirsrc: &onlyelixir-srcs
+  only:
+    changes:
+      - .gitlab
+      - assets
+      - config
+      - lib
+      - priv
+      - rel
+      - test
 
 .commons: &elixir-commons
   image: elixir:1.10.3
@@ -26,6 +37,7 @@ stages:
 
 deps:
   <<: *elixir-commons
+  <<: *onlyelixir-srcs
   stage: prepare
   variables:
     MIX_HOME: $CI_PROJECT_DIR/.mix
@@ -39,6 +51,7 @@ deps:
 
 compile:
   <<: *elixir-commons
+  <<: *onlyelixir-srcs
   stage: compile
   script:
     - mix compile
@@ -61,6 +74,7 @@ sast:
 
 test:ex_unit:
   <<: *elixir-commons
+  <<: *onlyelixir-srcs
   services:
     - postgres
   stage: test
@@ -97,7 +111,10 @@ build:docker:
   dependencies:
     - compile
   only:
-    - master
+    changes:
+      - Dockerfile
+    refs:
+      - master
 
 deploy:plausible:
   stage: postbuild
