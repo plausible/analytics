@@ -34,7 +34,8 @@ config :sentry,
   environment_name: String.to_atom(Map.get(System.get_env(), "MIX_ENV", "dev")),
   enable_source_code_context: true,
   root_source_code_path: File.cwd!(),
-  tags: %{app_version: System.get_env("APP_VERSION", "0.0.1")}
+  tags: %{app_version: System.get_env("APP_VERSION", "0.0.1")},
+  context_lines: 5
 
 # Configures Elixir's Logger
 config :logger, :console,
@@ -65,9 +66,9 @@ config :plausible, :paddle,
 config :plausible,
        Plausible.Repo,
        pool_size: String.to_integer(System.get_env("DATABASE_POOL_SIZE", "10")),
-       ownership_timeout: 60_000,
        timeout: 60_000,
-       pool_timeout: 60_000,
+       connect_timeout: 60_000,
+       handshake_timeout: 60_000,
        url:
          System.get_env(
            "DATABASE_URL",
