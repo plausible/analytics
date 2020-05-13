@@ -102,7 +102,7 @@ build:docker:
 deploy:plausible:
   stage: postbuild
   script:
-    - "curl -X POST -F token=$PLAUSIBLE_DEPLOY_TOKEN -F ref=master -F variables[IMAGE_TAG]=$CI_COMMIT_SHORT_SHA $PLAUSIBLE_DEPLOY_PROJECT"
+    - "curl -X POST -F token=$PLAUSIBLE_DEPLOY_TOKEN -F ref=master -F variables[IMAGE_TAG]=${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA} $PLAUSIBLE_DEPLOY_PROJECT"
   only:
     - master
 
