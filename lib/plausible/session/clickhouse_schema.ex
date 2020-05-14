@@ -1,14 +1,14 @@
-defmodule Plausible.Session do
+defmodule Plausible.ClickhouseSession do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @primary_key false
+  @primary_key {:session_id, :binary_id, autogenerate: false}
   schema "sessions" do
     field :hostname, :string
     field :domain, :string
     field :user_id, :string
 
-    field :start, :naive_datetime, null: false
+    field :start, :naive_datetime
     field :duration, :integer
     field :is_bounce, :boolean
     field :entry_page, :string
@@ -23,13 +23,12 @@ defmodule Plausible.Session do
     field :screen_size, :string
     field :operating_system, :string
     field :browser, :string
-
-    timestamps(inserted_at: :timestamp, updated_at: false)
+    field :timestamp, :naive_datetime
   end
 
   def changeset(session, attrs) do
     session
-    |> cast(attrs, [:hostname, :domain, :entry_page, :exit_page, :referrer, :new_visitor, :user_id, :start, :length, :is_bounce, :operating_system, :browser, :referrer_source, :country_code, :screen_size])
-    |> validate_required([:hostname, :domain, :new_visitor, :user_id, :is_bounce, :start])
+    |> cast(attrs, [:hostname, :domain, :entry_page, :exit_page, :referrer, :fingerprint, :start, :length, :is_bounce, :operating_system, :browser, :referrer_source, :country_code, :screen_size])
+    |> validate_required([:hostname, :domain, :fingerprint, :is_bounce, :start])
   end
 end

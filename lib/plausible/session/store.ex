@@ -2,6 +2,7 @@ defmodule Plausible.Session.Store do
   use GenServer
   use Plausible.Repo
   alias Plausible.Session.WriteBuffer
+  import Ecto.Query, only: [from: 1]
   require Logger
 
   @session_length_seconds Application.get_env(:plausible, :session_length_minutes) * 60
@@ -14,7 +15,25 @@ defmodule Plausible.Session.Store do
 
   def init(_opts) do
     timer = Process.send_after(self(), :garbage_collect, @garbage_collect_interval_milliseconds)
-    {:ok, %{timer: timer, sessions: %{}}}
+
+    latest_sessions = from(
+      s in "sessions",
+      where: s.timestamp >= fragment("now() - INTERVAL ? SECOND", @forget_session_after),
+      group_by: s.session_id,
+      select: %{session_id: s.session_id, timestamp: max(s.timestamp)}
+    )
+
+    sessions = Plausible.Clickhouse.all(
+      from s in Plausible.ClickhouseSession,
+      join: ls in subquery(latest_sessions),
+      on: s.session_id == ls.session_id and s.timestamp == ls.timestamp,
+      order_by: s.timestamp
+    )
+    |> Enum.map(fn s -> Map.new(s, fn {k, v} -> {String.to_atom(k), v} end) end)
+    |> Enum.map(fn s -> {s[:user_id], struct(Plausible.ClickhouseSession, s)} end)
+    |> Enum.into(%{})
+
+    {:ok, %{timer: timer, sessions: sessions}}
   end
 
   def on_event(event) do
@@ -59,11 +78,12 @@ defmodule Plausible.Session.Store do
   end
 
   defp new_session_from_event(event) do
-    %Plausible.FingerprintSession{
+    %Plausible.ClickhouseSession{
       sign: 1,
+      session_id: UUID.uuid4(),
       hostname: event.hostname,
       domain: event.domain,
-      fingerprint: event.fingerprint,
+      user_id: event.fingerprint,
       entry_page: event.pathname,
       exit_page: event.pathname,
       is_bounce: true,

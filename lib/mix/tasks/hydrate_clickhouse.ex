@@ -44,6 +44,7 @@ defmodule Mix.Tasks.HydrateClickhouse do
   def create_sessions() do
     ddl = """
     CREATE TABLE IF NOT EXISTS sessions (
+      session_id UUID,
       sign Int8,
       domain String,
       user_id FixedString(64),
@@ -64,7 +65,7 @@ defmodule Mix.Tasks.HydrateClickhouse do
       browser Nullable(String)
     ) ENGINE = CollapsingMergeTree(sign)
     PARTITION BY toYYYYMM(start)
-    ORDER BY (domain, start, user_id)
+    ORDER BY (domain, start, user_id, session_id)
     SETTINGS index_granularity = 8192
     """
 
@@ -133,11 +134,12 @@ defmodule Mix.Tasks.HydrateClickhouse do
   end
 
   defp new_session_from_event(event) do
-    %Plausible.FingerprintSession{
+    %Plausible.ClickhouseSession{
       sign: 1,
+      session_id: UUID.uuid4(),
       hostname: event.hostname,
       domain: event.domain,
-      fingerprint: event.fingerprint,
+      user_id: event.fingerprint,
       entry_page: event.pathname,
       exit_page: event.pathname,
       is_bounce: true,
