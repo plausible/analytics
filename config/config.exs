@@ -66,9 +66,9 @@ config :plausible, :paddle,
 config :plausible,
        Plausible.Repo,
        pool_size: String.to_integer(System.get_env("DATABASE_POOL_SIZE", "10")),
-       timeout: 60_000,
-       connect_timeout: 60_000,
-       handshake_timeout: 60_000,
+       timeout: 300_000,
+       connect_timeout: 300_000,
+       handshake_timeout: 300_000,
        url:
          System.get_env(
            "DATABASE_URL",
