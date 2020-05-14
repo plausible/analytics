@@ -2,7 +2,7 @@ defmodule Plausible.Event.WriteBuffer do
   use GenServer
   require Logger
   alias Plausible.Clickhouse
-  @flush_interval_ms 1000
+  @flush_interval_ms 10_000
   @max_buffer_size 10_000
 
   def start_link(_opts) do
@@ -10,6 +10,7 @@ defmodule Plausible.Event.WriteBuffer do
   end
 
   def init(buffer) do
+    Process.flag(:trap_exit, true)
     timer = Process.send_after(self(), :tick, @flush_interval_ms)
     {:ok, %{buffer: buffer, timer: timer}}
   end
@@ -37,6 +38,15 @@ defmodule Plausible.Event.WriteBuffer do
     flush(buffer)
     timer = Process.send_after(self(), :tick, @flush_interval_ms)
     {:noreply, %{buffer: [], timer: timer}}
+  end
+
+  def handle_info({:EXIT, _from, reason}, state) do
+    IO.puts("TRAP EXIT")
+  end
+
+  def terminate(_reason, %{buffer: buffer}) do
+    IO.puts("TERMINATING")
+    flush(buffer)
   end
 
   defp flush(buffer) do
