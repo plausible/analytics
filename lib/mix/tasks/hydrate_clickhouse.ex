@@ -4,14 +4,19 @@ defmodule Mix.Tasks.HydrateClickhouse do
   require Logger
 
   def run(args) do
-    Application.ensure_all_started(:plausible)
-    execute(args)
+    Application.ensure_all_started(:db_connection)
+    Application.ensure_all_started(:hackney)
+    clickhouse_config = Application.get_env(:plausible, :clickhouse)
+    Clickhousex.start_link(Keyword.merge([scheme: :http, port: 8123, name: :clickhouse], clickhouse_config))
+    Ecto.Migrator.with_repo(Plausible.Repo, fn repo ->
+      execute(repo, args)
+    end)
   end
 
-  def execute(_args \\ []) do
+  def execute(repo, _args \\ []) do
     create_events()
     create_sessions()
-    hydrate_events()
+    hydrate_events(repo)
   end
 
   def create_events() do
@@ -73,14 +78,14 @@ defmodule Mix.Tasks.HydrateClickhouse do
     |> log
   end
 
-  def chunk_query(queryable, chunk_size) do
+  def chunk_query(queryable, chunk_size, repo) do
     chunk_stream = Stream.unfold(0, fn page_number ->
       offset = chunk_size * page_number
       page = from(
         q in queryable,
         offset: ^offset,
         limit: ^chunk_size
-      ) |> Repo.all(timeout: :infinity)
+      ) |> repo.all(timeout: :infinity)
       {page, page_number + 1}
     end)
     Stream.take_while(chunk_stream, fn [] -> false; _ -> true end)
@@ -90,8 +95,8 @@ defmodule Mix.Tasks.HydrateClickhouse do
     String.replace(s, "'", "''")
   end
 
-  def hydrate_events(_args \\ []) do
-    event_chunks = from(e in Plausible.Event, where: e.domain == "plausible.io", order_by: e.id) |> chunk_query(10_000)
+  def hydrate_events(repo, _args \\ []) do
+    event_chunks = from(e in Plausible.Event, where: e.domain == "plausible.io", order_by: e.id) |> chunk_query(10_000, repo)
 
     Enum.reduce(event_chunks, %{}, fn events, session_cache ->
       {session_cache, sessions} = Enum.reduce(events, {session_cache, []}, fn event, {session_cache, sessions} ->

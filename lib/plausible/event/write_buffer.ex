@@ -2,7 +2,7 @@ defmodule Plausible.Event.WriteBuffer do
   use GenServer
   require Logger
   alias Plausible.Clickhouse
-  @flush_interval_ms 10_000
+  @flush_interval_ms 5_000
   @max_buffer_size 10_000
 
   def start_link(_opts) do
