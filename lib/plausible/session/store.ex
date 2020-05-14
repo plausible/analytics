@@ -2,7 +2,7 @@ defmodule Plausible.Session.Store do
   use GenServer
   use Plausible.Repo
   alias Plausible.Session.WriteBuffer
-  import Ecto.Query, only: [from: 1]
+  import Ecto.Query, only: [from: 2]
   require Logger
 
   @session_length_seconds Application.get_env(:plausible, :session_length_minutes) * 60

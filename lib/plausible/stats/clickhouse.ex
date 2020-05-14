@@ -127,7 +127,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     [res] = Clickhouse.all(
       from s in "sessions",
-      select: {fragment("round(countIf(is_bounce = 1) / count(*) * 100) as bounce_rate")},
+      select: {fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate")},
       where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime
     )
@@ -188,7 +188,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     Clickhouse.all(
       from s in "sessions",
-      select: {s.referrer_source, fragment("count(*) as total"), fragment("round(countIf(is_bounce = 1) / total * 100) as bounce_rate")},
+      select: {s.referrer_source, fragment("count(*) as total"), fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate")},
       where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: not is_nil(s.referrer_source),
@@ -266,7 +266,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     Clickhouse.all(
       from s in "sessions",
-      select: {s.referrer, fragment("count(*) as total"), fragment("round(countIf(is_bounce = 1) / total * 100) as bounce_rate")},
+      select: {s.referrer, fragment("count(*) as total"), fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate")},
       where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: not is_nil(s.referrer),
@@ -299,7 +299,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     Clickhouse.all(
       from s in "sessions",
-      select: {s.entry_page, fragment("count(*) as total"), fragment("round(countIf(is_bounce = 1) / total * 100) as bounce_rate")},
+      select: {s.entry_page, fragment("count(*) as total"), fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate")},
       where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
       where: not is_nil(s.entry_page),
