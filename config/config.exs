@@ -47,7 +47,7 @@ config :plausible,
 
 config :plausible,
   session_timeout: 1000 * 60 * 30, # 30 minutes
-  session_length_minutes: 1
+  session_length_minutes: 30
 
 config :plausible, :paddle,
   vendor_id: "49430",
