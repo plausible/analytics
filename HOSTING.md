@@ -1,4 +1,4 @@
-# Plausible Insights
+# Plausible Analytics
 Self-hosting is possible based on the docker images and are automatically pushed into [Gitlab hosted docker](registry.gitlab.com/tckb-public/plausible) registry for all commits on `master` branch.    
 All `master-*` tags are considered to be stable and are persisted. Any other tag in the registry is considered to be for development purposes and/or unstable and are auto-deleted after a week.
 
