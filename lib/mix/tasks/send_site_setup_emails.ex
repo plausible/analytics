@@ -21,12 +21,9 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
   defp send_create_site_emails(args) do
     q =
       from(s in Plausible.Auth.User,
-        left_join: se in "create_site_emails",
-        on: se.user_id == s.id,
+        left_join: se in "create_site_emails", on: se.user_id == s.id,
         where: is_nil(se.id),
-        where:
-          s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval") and
-            s.inserted_at < fragment("(now() at time zone 'utc') - '48 hours'::interval"),
+        where: s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval") and s.inserted_at < fragment("(now() at time zone 'utc') - '48 hours'::interval"),
         preload: :sites
       )
 
@@ -40,8 +37,7 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
   defp send_setup_help_emails(args) do
     q =
       from(s in Plausible.Site,
-        left_join: se in "setup_help_emails",
-        on: se.site_id == s.id,
+        left_join: se in "setup_help_emails", on: se.site_id == s.id,
         where: is_nil(se.id),
         where: s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval"),
         preload: :members
@@ -62,8 +58,7 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
   defp send_setup_success_emails(args) do
     q =
       from(s in Plausible.Site,
-        left_join: se in "setup_success_emails",
-        on: se.site_id == s.id,
+        left_join: se in "setup_success_emails", on: se.site_id == s.id,
         where: is_nil(se.id),
         where: s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval"),
         preload: :members
@@ -86,12 +81,10 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
     PlausibleWeb.Email.create_site_email(user)
     |> Plausible.Mailer.send_email()
 
-    Repo.insert_all("create_site_emails", [
-      %{
-        user_id: user.id,
-        timestamp: NaiveDateTime.utc_now()
-      }
-    ])
+    Repo.insert_all("create_site_emails", [%{
+      user_id: user.id,
+      timestamp: NaiveDateTime.utc_now()
+    }])
   end
 
   defp send_setup_success_email(["--dry-run"], _, site) do
@@ -102,12 +95,10 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
     PlausibleWeb.Email.site_setup_success(user, site)
     |> Plausible.Mailer.send_email()
 
-    Repo.insert_all("setup_success_emails", [
-      %{
-        site_id: site.id,
-        timestamp: NaiveDateTime.utc_now()
-      }
-    ])
+    Repo.insert_all("setup_success_emails", [%{
+      site_id: site.id,
+      timestamp: NaiveDateTime.utc_now()
+    }])
   end
 
   defp send_setup_help_email(["--dry-run"], _, site) do
@@ -118,11 +109,9 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
     PlausibleWeb.Email.site_setup_help(user, site)
     |> Plausible.Mailer.send_email()
 
-    Repo.insert_all("setup_help_emails", [
-      %{
-        site_id: site.id,
-        timestamp: NaiveDateTime.utc_now()
-      }
-    ])
+    Repo.insert_all("setup_help_emails", [%{
+      site_id: site.id,
+      timestamp: NaiveDateTime.utc_now()
+    }])
   end
 end

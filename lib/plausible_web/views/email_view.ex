@@ -15,7 +15,7 @@ defmodule PlausibleWeb.EmailView do
 
   def user_salutation(user) do
     if user.name do
-      String.split(user.name) |> List.first()
+      String.split(user.name) |> List.first
     else
       ""
     end
@@ -25,15 +25,13 @@ defmodule PlausibleWeb.EmailView do
     cond do
       usage < 9_000 ->
         "Personal"
-
       usage < 90_000 ->
         "Startup"
-
       usage < 900_000 ->
         "Business"
-
       true ->
-        throw("Huge account")
+        throw "Huge account"
+
     end
   end
 
@@ -41,15 +39,13 @@ defmodule PlausibleWeb.EmailView do
     cond do
       usage < 9_000 ->
         "$6/mo"
-
       usage < 90_000 ->
         "$12/mo"
-
       usage < 900_000 ->
         "$32/mo"
-
       true ->
-        throw("Huge account")
+        throw "Huge account"
+
     end
   end
 end

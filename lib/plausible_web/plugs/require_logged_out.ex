@@ -12,7 +12,6 @@ defmodule PlausibleWeb.RequireLoggedOutPlug do
         |> put_resp_cookie("logged_in", "true", http_only: false)
         |> Phoenix.Controller.redirect(to: "/sites")
         |> halt
-
       :else ->
         conn
     end

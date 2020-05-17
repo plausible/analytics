@@ -21,12 +21,11 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         screen_width: 1440
       }
 
-      conn =
-        conn
-        |> put_req_header("content-type", "text/plain")
-        |> put_req_header("user-agent", @user_agent)
-        |> put_req_header("x-country", @country_code)
-        |> post("/api/event", Jason.encode!(params))
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> put_req_header("x-country", @country_code)
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
       finalize_session(pageview.fingerprint)
@@ -47,11 +46,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         uid: UUID.uuid4()
       }
 
-      conn =
-        conn
-        |> put_req_header("content-type", "text/plain")
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", Jason.encode!(params))
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/event", Jason.encode!(params))
 
       event = Repo.one(Plausible.Event)
       finalize_session(event.fingerprint)
@@ -122,11 +120,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         uid: UUID.uuid4()
       }
 
-      conn =
-        conn
-        |> put_req_header("content-type", "text/plain")
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", Jason.encode!(params))
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
       finalize_session(pageview.fingerprint)
@@ -146,11 +143,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         uid: UUID.uuid4()
       }
 
-      conn =
-        conn
-        |> put_req_header("content-type", "text/plain")
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", Jason.encode!(params))
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
       finalize_session(pageview.fingerprint)
@@ -170,11 +166,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         uid: UUID.uuid4()
       }
 
-      conn =
-        conn
-        |> put_req_header("content-type", "text/plain")
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", Jason.encode!(params))
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
       finalize_session(pageview.fingerprint)
@@ -196,11 +191,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         uid: UUID.uuid4()
       }
 
-      conn =
-        conn
-        |> put_req_header("content-type", "text/plain")
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", Jason.encode!(params))
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
       finalize_session(pageview.fingerprint)
@@ -220,11 +214,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         uid: UUID.uuid4()
       }
 
-      conn =
-        conn
-        |> put_req_header("content-type", "text/plain")
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", Jason.encode!(params))
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
       finalize_session(pageview.fingerprint)
@@ -244,11 +237,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         uid: UUID.uuid4()
       }
 
-      conn =
-        conn
-        |> put_req_header("content-type", "text/plain")
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", Jason.encode!(params))
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
       finalize_session(pageview.fingerprint)
@@ -310,11 +302,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         uid: UUID.uuid4()
       }
 
-      conn =
-        conn
-        |> put_req_header("content-type", "text/plain")
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", Jason.encode!(params))
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
       finalize_session(pageview.fingerprint)
@@ -332,11 +323,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         uid: UUID.uuid4()
       }
 
-      conn =
-        conn
-        |> put_req_header("content-type", "text/plain")
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", Jason.encode!(params))
+      conn = conn
+             |> put_req_header("content-type", "text/plain")
+             |> put_req_header("user-agent", @user_agent)
+             |> post("/api/event", Jason.encode!(params))
 
       pageview = Repo.one(Plausible.Event)
       finalize_session(pageview.fingerprint)
@@ -344,6 +334,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == ""
       assert is_nil(pageview.referrer_source)
     end
+
   end
 
   test "screen size is calculated from screen_width", %{conn: conn} do
@@ -355,11 +346,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       uid: UUID.uuid4()
     }
 
-    conn =
-      conn
-      |> put_req_header("content-type", "text/plain")
-      |> put_req_header("user-agent", @user_agent)
-      |> post("/api/event", Jason.encode!(params))
+    conn = conn
+           |> put_req_header("content-type", "text/plain")
+           |> put_req_header("user-agent", @user_agent)
+           |> post("/api/event", Jason.encode!(params))
 
     pageview = Repo.one(Plausible.Event)
     finalize_session(pageview.fingerprint)
@@ -376,11 +366,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       uid: UUID.uuid4()
     }
 
-    conn =
-      conn
-      |> put_req_header("content-type", "text/plain")
-      |> put_req_header("user-agent", @user_agent)
-      |> post("/api/event", Jason.encode!(params))
+    conn = conn
+           |> put_req_header("content-type", "text/plain")
+           |> put_req_header("user-agent", @user_agent)
+           |> post("/api/event", Jason.encode!(params))
 
     pageview = Repo.one(Plausible.Event)
     finalize_session(pageview.fingerprint)
@@ -397,11 +386,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       uid: UUID.uuid4()
     }
 
-    conn =
-      conn
-      |> put_req_header("content-type", "text/plain")
-      |> put_req_header("user-agent", @user_agent)
-      |> post("/api/event", Jason.encode!(params))
+    conn = conn
+           |> put_req_header("content-type", "text/plain")
+           |> put_req_header("user-agent", @user_agent)
+           |> post("/api/event", Jason.encode!(params))
 
     event = Repo.one(Plausible.Event)
     finalize_session(event.fingerprint)
@@ -413,11 +401,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
   test "responds 400 when required fields are missing", %{conn: conn} do
     params = %{}
 
-    conn =
-      conn
-      |> put_req_header("content-type", "text/plain")
-      |> put_req_header("user-agent", @user_agent)
-      |> post("/api/event", Jason.encode!(params))
+    conn = conn
+           |> put_req_header("content-type", "text/plain")
+           |> put_req_header("user-agent", @user_agent)
+           |> post("/api/event", Jason.encode!(params))
 
     assert response(conn, 400) == ""
   end

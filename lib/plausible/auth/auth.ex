@@ -5,7 +5,7 @@ defmodule Plausible.Auth do
   def create_user(name, email) do
     %Auth.User{}
     |> Auth.User.new(%{name: name, email: email})
-    |> Repo.insert()
+    |> Repo.insert
   end
 
   def find_user_by(opts) do

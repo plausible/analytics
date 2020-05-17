@@ -32,13 +32,12 @@ defmodule Plausible.Billing.PaddleApi do
   end
 
   def update_subscription(paddle_subscription_id, params) do
-    params =
-      Map.merge(params, %{
-        vendor_id: @vendor_id,
-        vendor_auth_code: @vendor_auth_code,
-        subscription_id: paddle_subscription_id,
-        quantity: 1
-      })
+    params = Map.merge(params, %{
+      vendor_id: @vendor_id,
+      vendor_auth_code: @vendor_auth_code,
+      subscription_id: paddle_subscription_id,
+      quantity: 1
+    })
 
     {:ok, response} = HTTPoison.post(@update_endpoint, Poison.encode!(params), @headers)
     body = Poison.decode!(response.body)

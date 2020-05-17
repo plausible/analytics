@@ -12,9 +12,8 @@ defmodule Plausible.TestUtils do
   end
 
   def log_in(%{user: user, conn: conn}) do
-    conn =
-      init_session(conn)
-      |> Plug.Conn.put_session(:current_user_id, user.id)
+    conn = init_session(conn)
+    |> Plug.Conn.put_session(:current_user_id, user.id)
 
     {:ok, conn: conn}
   end
@@ -31,7 +30,7 @@ defmodule Plausible.TestUtils do
       )
 
     conn
-    |> Plug.Session.call(opts)
-    |> Plug.Conn.fetch_session()
+      |> Plug.Session.call(opts)
+      |> Plug.Conn.fetch_session()
   end
 end
