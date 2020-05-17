@@ -1,4 +1,4 @@
-defmodule Plausible.Migration do
+defmodule Plausible.Release do
   use Plausible.Repo
   @app :plausible
   @start_apps [
