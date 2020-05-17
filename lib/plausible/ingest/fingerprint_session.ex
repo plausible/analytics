@@ -24,9 +24,7 @@ defmodule Plausible.Ingest.FingerprintSession do
 
   def init(event) do
     timer = Process.send_after(self(), :finalize, @session_timeout)
-
-    {:ok,
-     %{first_event: event, last_event: event, timer: timer, is_bounce: true, last_unload: nil}}
+    {:ok, %{first_event: event, last_event: event, timer: timer, is_bounce: true, last_unload: nil}}
   end
 
   def handle_cast({:on_event, event}, state) do
@@ -44,10 +42,9 @@ defmodule Plausible.Ingest.FingerprintSession do
     last_event = state[:last_event]
 
     if !is_potential_leftover?(first_event) do
-      length =
-        if state[:last_unload] do
-          Timex.diff(state[:last_unload], first_event.timestamp, :seconds)
-        end
+      length = if state[:last_unload] do
+        Timex.diff(state[:last_unload], first_event.timestamp, :seconds)
+      end
 
       Plausible.FingerprintSession.changeset(%Plausible.FingerprintSession{}, %{
         hostname: first_event.hostname,
@@ -63,8 +60,7 @@ defmodule Plausible.Ingest.FingerprintSession do
         operating_system: first_event.operating_system,
         browser: first_event.browser,
         start: first_event.timestamp
-      })
-      |> Repo.insert!()
+      }) |> Repo.insert!
     end
 
     {:stop, :normal, state}
@@ -74,4 +70,5 @@ defmodule Plausible.Ingest.FingerprintSession do
     server_start_time = Application.get_env(:plausible, :server_start)
     Timex.diff(timestamp, server_start_time, :milliseconds) < @session_timeout
   end
+
 end

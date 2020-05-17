@@ -8,13 +8,12 @@ defmodule Plausible.Billing do
   end
 
   def subscription_created(params) do
-    params =
-      if present?(params["passthrough"]) do
-        params
-      else
-        user = Repo.get_by(Plausible.Auth.User, email: params["email"])
-        Map.put(params, "passthrough", user && user.id)
-      end
+    params = if present?(params["passthrough"]) do
+      params
+    else
+      user = Repo.get_by(Plausible.Auth.User, email: params["email"])
+      Map.put(params, "passthrough", user && user.id)
+    end
 
     changeset = Subscription.changeset(%Subscription{}, format_subscription(params))
 
@@ -32,10 +31,9 @@ defmodule Plausible.Billing do
     subscription = Repo.get_by(Subscription, paddle_subscription_id: params["subscription_id"])
 
     if subscription do
-      changeset =
-        Subscription.changeset(subscription, %{
-          status: params["status"]
-        })
+      changeset = Subscription.changeset(subscription, %{
+        status: params["status"]
+      })
 
       Repo.update(changeset)
     else
@@ -48,15 +46,12 @@ defmodule Plausible.Billing do
 
     if subscription do
       {:ok, api_subscription} = @paddle_api.get_subscription(subscription.paddle_subscription_id)
+      amount = :erlang.float_to_binary(api_subscription["next_payment"]["amount"] / 1, decimals: 2)
 
-      amount =
-        :erlang.float_to_binary(api_subscription["next_payment"]["amount"] / 1, decimals: 2)
-
-      changeset =
-        Subscription.changeset(subscription, %{
-          next_bill_amount: amount,
-          next_bill_date: api_subscription["next_payment"]["date"]
-        })
+      changeset = Subscription.changeset(subscription, %{
+        next_bill_amount: amount,
+        next_bill_date: api_subscription["next_payment"]["date"]
+      })
 
       Repo.update(changeset)
     else
@@ -67,10 +62,9 @@ defmodule Plausible.Billing do
   def change_plan(user, new_plan_id) do
     subscription = active_subscription_for(user.id)
 
-    res =
-      @paddle_api.update_subscription(subscription.paddle_subscription_id, %{
-        plan_id: new_plan_id
-      })
+    res = @paddle_api.update_subscription(subscription.paddle_subscription_id, %{
+      plan_id: new_plan_id
+    })
 
     case res do
       {:ok, response} ->
@@ -79,12 +73,9 @@ defmodule Plausible.Billing do
         Subscription.changeset(subscription, %{
           paddle_plan_id: Integer.to_string(response["plan_id"]),
           next_bill_amount: amount,
-          next_bill_date: response["next_payment"]["date"]
-        })
-        |> Repo.update()
-
-      e ->
-        e
+          next_bill_date: response["next_payment"]["date"],
+        }) |> Repo.update
+      e -> e
     end
   end
 
@@ -108,22 +99,17 @@ defmodule Plausible.Billing do
 
   def usage(user) do
     user = Repo.preload(user, :sites)
-
     Enum.reduce(user.sites, 0, fn site, total ->
       total + site_usage(site)
     end)
   end
 
   defp site_usage(site) do
-    Repo.aggregate(
-      from(
-        e in Plausible.Event,
-        where: e.domain == ^site.domain,
-        where: e.timestamp >= fragment("now() - '30 days'::interval")
-      ),
-      :count,
-      :id
-    )
+    Repo.aggregate(from(
+      e in Plausible.Event,
+      where: e.domain == ^site.domain,
+      where: e.timestamp >= fragment("now() - '30 days'::interval")
+    ), :count, :id)
   end
 
   defp format_subscription(params) do
@@ -142,4 +128,5 @@ defmodule Plausible.Billing do
   defp present?(""), do: false
   defp present?(nil), do: false
   defp present?(_), do: true
+
 end

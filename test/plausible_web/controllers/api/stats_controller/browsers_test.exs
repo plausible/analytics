@@ -7,21 +7,15 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
 
     test "returns top browsers by new visitors", %{conn: conn, site: site} do
       insert(:pageview, domain: site.domain, browser: "Chrome", timestamp: ~N[2019-01-01 01:00:00])
-
       insert(:pageview, domain: site.domain, browser: "Chrome", timestamp: ~N[2019-01-01 02:00:00])
-
-      insert(:pageview,
-        domain: site.domain,
-        browser: "Firefox",
-        timestamp: ~N[2019-01-01 02:00:00]
-      )
+      insert(:pageview, domain: site.domain, browser: "Firefox", timestamp: ~N[2019-01-01 02:00:00])
 
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
-               %{"name" => "Chrome", "count" => 2, "percentage" => 67},
-               %{"name" => "Firefox", "count" => 1, "percentage" => 33}
-             ]
+        %{"name" => "Chrome",  "count" => 2, "percentage" => 67},
+        %{"name" => "Firefox", "count" => 1, "percentage" => 33},
+      ]
     end
   end
 end

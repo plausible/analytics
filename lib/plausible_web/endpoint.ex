@@ -35,15 +35,15 @@ defmodule PlausibleWeb.Endpoint do
     store: :cookie,
     key: "_plausible_key",
     signing_salt: "3IL0ob4k",
-    # 5 years, this is super long but the SlidingSessionTimeout will log people out if they don't return for 2 weeks
-    max_age: 60 * 60 * 24 * 365 * 5,
+    max_age: 60*60*24*365*5, # 5 years, this is super long but the SlidingSessionTimeout will log people out if they don't return for 2 weeks
     extra: "SameSite=Lax"
+
 
   plug CORSPlug
   plug PlausibleWeb.Router
 
   def clean_url() do
-    url = PlausibleWeb.Endpoint.url()
+    url = PlausibleWeb.Endpoint.url
 
     if Application.get_env(:plausible, :environment) == "prod" do
       URI.parse(url) |> Map.put(:port, nil) |> URI.to_string()

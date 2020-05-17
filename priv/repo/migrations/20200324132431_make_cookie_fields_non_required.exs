@@ -9,5 +9,6 @@ defmodule Plausible.Repo.Migrations.MakeCookieFieldsNonRequired do
   end
 
   def down do
+
   end
 end
