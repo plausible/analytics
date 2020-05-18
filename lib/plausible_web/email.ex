@@ -96,7 +96,7 @@ defmodule PlausibleWeb.Email do
     from = if from == "", do: "anonymous@plausible.io", else: from
 
     base_email()
-    |> to("uku@plausible.io")
+    |> to("hello@plausible.io")
     |> from("feedback@plausible.io")
     |> put_param("ReplyTo", from)
     |> tag("feedback")

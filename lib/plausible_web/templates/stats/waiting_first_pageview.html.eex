@@ -21,7 +21,7 @@
       <div class="block pulsating-circle"></div>
       <p class="text-gray-600 text-sm absolute left-0 bottom-0 mb-6 w-full text-center leading-normal">
         Need to see the snippet again? <%= link("Click here", to: "/#{URI.encode_www_form(@site.domain)}/snippet")%><br />
-        Not working? Contact <a href="mailto:uku@plausible.io">uku@plausible.io</a> to get set up
+        Not working? Contact <a href="mailto:support@plausible.io">support@plausible.io</a> to get set up
       </p>
     </div>
   </div>

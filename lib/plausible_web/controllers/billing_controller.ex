@@ -36,7 +36,7 @@ defmodule PlausibleWeb.BillingController do
       {:error, e} ->
         Sentry.capture_message("Error changing plans", extra: %{errors: inspect(e), new_plan_id: new_plan_id, user_id: conn.assigns[:current_user].id})
         conn
-        |> put_flash(:error, "Something went wrong. Please try again or contact support at uku@plausible.io")
+        |> put_flash(:error, "Something went wrong. Please try again or contact support at support@plausible.io")
         |> redirect(to: "/settings")
     end
   end

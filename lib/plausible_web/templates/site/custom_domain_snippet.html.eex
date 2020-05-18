@@ -20,6 +20,6 @@
   </div>
   <%= link("Back to settings →", class: "button mt-4 w-full", to: "/#{URI.encode_www_form(@site.domain)}/settings#custom-domain") %>
   <p class="mt-4 text-gray-600 text-sm">
-  Problems? <%= link("Get help via email", to: "mailto:uku@plausible.io", class: "text-indigo-800 underline") %>
+  Problems? <%= link("Get help via email", to: "mailto:support@plausible.io", class: "text-indigo-800 underline") %>
   </p>
 <% end %>
