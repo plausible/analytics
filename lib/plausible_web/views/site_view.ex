@@ -6,7 +6,7 @@ defmodule PlausibleWeb.SiteView do
   end
 
   def plausible_url do
-    "https://#{PlausibleWeb.Endpoint.clean_url()}"
+    PlausibleWeb.Endpoint.clean_url()
   end
 
   def base_domain() do
@@ -30,7 +30,7 @@ defmodule PlausibleWeb.SiteView do
       if site.custom_domain do
         "https://" <> site.custom_domain.domain <> "/js/index.js"
       else
-        "https:/#{base_domain()}/js/plausible.js"
+        "#{plausible_url()}/js/plausible.js"
       end
 
     """

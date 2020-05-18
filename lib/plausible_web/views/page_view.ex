@@ -10,6 +10,6 @@ defmodule PlausibleWeb.PageView do
   end
 
   def plausible_url do
-    "https://#{PlausibleWeb.Endpoint.clean_url()}"
+    PlausibleWeb.Endpoint.clean_url()
   end
 end

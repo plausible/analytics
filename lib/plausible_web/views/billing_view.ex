@@ -10,7 +10,7 @@ defmodule PlausibleWeb.BillingView do
   end
 
   def plausible_url do
-    "https://#{PlausibleWeb.Endpoint.clean_url()}"
+    PlausibleWeb.Endpoint.clean_url()
   end
 
   def present_date(date) do
