@@ -6,6 +6,22 @@ All `master-*` tags are considered to be stable and are persisted. Any other tag
 ### Building Docker image
 Besides the GitlabCI, one can build docker image from [Dockerfile](./Dockerfile). 
 
+#### Up and Running
+The repo supplies with a [Docker Compose](./docker-compose.yml) file, this serves as a sample for running Plausible with Docker. 
+In this sample, the db migration is done by default on startup, so you need to clean the data up every time you run:  
+
+First run
+```bash
+$ docker-compose up
+```
+
+subsequent runs--
+```bash
+$ docker-compose down
+$ docker volume rm plausible_db-data -f
+$ docker-compose up
+```
+
 ### Non-docker building
 It is possible to create a release artifact by running a release. 
 
