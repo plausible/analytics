@@ -20,7 +20,7 @@ defmodule PlausibleWeb.AuthView do
   end
 
   def plausible_url do
-    "https://#{PlausibleWeb.Endpoint.clean_url()}"
+    PlausibleWeb.Endpoint.clean_url()
   end
 
   def subscription_name(subscription) do
