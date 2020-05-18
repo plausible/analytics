@@ -161,24 +161,6 @@ defmodule Mix.Tasks.HydrateClickhouse do
     }
   end
 
-  #def hydrate_sessions(_args \\ []) do
-  #  session_chunks = from(e in Plausible.FingerprintSession, order_by: e.id) |> chunk_query(10_000)
-
-  #  for chunk <- session_chunks do
-  #    insert = """
-  #    INSERT INTO sessions (domain, user_id, hostname, start, is_bounce, entry_page, exit_page, referrer, referrer_source, country_code, screen_size, browser, operating_system)
-  #    VALUES
-  #    """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", Enum.count(chunk))
-
-  #    args = Enum.reduce(chunk, [], fn session, acc ->
-  #      acc ++ [session.domain, session.fingerprint, session.hostname, session.start, session.is_bounce && 1 || 0, session.entry_page, session.exit_page, session.referrer, session.referrer_source,session.country_code, session.screen_size, session.browser, session.operating_system]
-  #    end)
-
-  #    Clickhousex.query(:clickhouse, insert, args)
-  #    |> log
-  #  end
-  #end
-
   defp log({:ok, res}), do: Logger.info("#{inspect res}")
   defp log({:error, e}), do: Logger.error("[ERROR] #{inspect e}")
 end
