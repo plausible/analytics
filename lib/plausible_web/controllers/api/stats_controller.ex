@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Api.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.Stats
+  alias Plausible.Stats.Clickhouse, as: Stats
   alias Plausible.Stats.Query
   plug PlausibleWeb.AuthorizeStatsPlug
 
