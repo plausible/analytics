@@ -64,9 +64,10 @@ defmodule PlausibleWeb.Api.ExternalController do
 
       changeset = Plausible.Event.changeset(%Plausible.Event{}, event_attrs)
       if changeset.valid? && changeset.changes[:domain] in ["plausible.io", "localtest.me"] do
-        Ecto.Changeset.apply_action!(changeset, :insert)
+        {:ok, event} = Ecto.Changeset.apply_action!(changeset, :insert)
         |> Map.put(:timestamp, NaiveDateTime.utc_now())
         |> Plausible.Event.WriteBuffer.insert()
+        Plausible.Session.Store.on_event(event)
       end
       Plausible.Repo.insert(changeset)
     end

@@ -4,15 +4,19 @@ defmodule Mix.Tasks.HydrateClickhouse do
   require Logger
 
   def run(args) do
-    Application.ensure_all_started(:plausible)
-    execute(args)
+    Application.ensure_all_started(:db_connection)
+    Application.ensure_all_started(:hackney)
+    clickhouse_config = Application.get_env(:plausible, :clickhouse)
+    Clickhousex.start_link(Keyword.merge([scheme: :http, port: 8123, name: :clickhouse], clickhouse_config))
+    Ecto.Migrator.with_repo(Plausible.Repo, fn repo ->
+      execute(repo, args)
+    end)
   end
 
-  def execute(_args \\ []) do
+  def execute(repo, _args \\ []) do
     create_events()
     create_sessions()
-    hydrate_sessions()
-    hydrate_events()
+    hydrate_events(repo)
   end
 
   def create_events() do
@@ -45,22 +49,28 @@ defmodule Mix.Tasks.HydrateClickhouse do
   def create_sessions() do
     ddl = """
     CREATE TABLE IF NOT EXISTS sessions (
+      session_id UUID,
+      sign Int8,
       domain String,
       user_id FixedString(64),
       hostname String,
+      timestamp DateTime,
       start DateTime,
       is_bounce UInt8,
       entry_page Nullable(String),
       exit_page Nullable(String),
+      pageviews Int32,
+      events Int32,
+      duration UInt32,
       referrer Nullable(String),
       referrer_source Nullable(String),
       country_code Nullable(FixedString(2)),
       screen_size Nullable(String),
       operating_system Nullable(String),
       browser Nullable(String)
-    ) ENGINE = MergeTree()
+    ) ENGINE = CollapsingMergeTree(sign)
     PARTITION BY toYYYYMM(start)
-    ORDER BY (domain, start, user_id)
+    ORDER BY (domain, start, user_id, session_id)
     SETTINGS index_granularity = 8192
     """
 
@@ -68,14 +78,14 @@ defmodule Mix.Tasks.HydrateClickhouse do
     |> log
   end
 
-  def chunk_query(queryable, chunk_size) do
+  def chunk_query(queryable, chunk_size, repo) do
     chunk_stream = Stream.unfold(0, fn page_number ->
       offset = chunk_size * page_number
       page = from(
         q in queryable,
         offset: ^offset,
         limit: ^chunk_size
-      ) |> Repo.all(timeout: :infinity)
+      ) |> repo.all(timeout: :infinity)
       {page, page_number + 1}
     end)
     Stream.take_while(chunk_stream, fn [] -> false; _ -> true end)
@@ -85,40 +95,70 @@ defmodule Mix.Tasks.HydrateClickhouse do
     String.replace(s, "'", "''")
   end
 
-  def hydrate_events(_args \\ []) do
-    event_chunks = from(e in Plausible.Event, order_by: e.id) |> chunk_query(10_000)
+  def hydrate_events(repo, _args \\ []) do
+    event_chunks = from(e in Plausible.Event, where: e.domain == "plausible.io", order_by: e.id) |> chunk_query(10_000, repo)
 
-    for chunk <- event_chunks do
-      insert = """
-      INSERT INTO events (name, timestamp, domain, user_id, hostname, pathname, referrer, referrer_source, initial_referrer, initial_referrer_source, country_code, screen_size, browser, operating_system)
-      VALUES
-      """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", Enum.count(chunk))
-
-      args = Enum.reduce(chunk, [], fn event, acc ->
-        acc ++ [event.name, event.timestamp, event.domain, event.fingerprint, event.hostname, escape_quote(event.pathname), event.referrer, event.referrer_source, event.initial_referrer, event.initial_referrer_source, event.country_code, event.screen_size, event.browser, event.operating_system]
+    Enum.reduce(event_chunks, %{}, fn events, session_cache ->
+      {session_cache, sessions} = Enum.reduce(events, {session_cache, []}, fn event, {session_cache, sessions} ->
+        found_session = session_cache[event.fingerprint]
+        active = is_active?(found_session, event)
+        cond do
+          found_session && active ->
+            new_session = update_session(found_session, event)
+            {
+              Map.put(session_cache, event.fingerprint, new_session),
+              [%{new_session | sign: 1}, %{found_session | sign: -1} | sessions]
+            }
+          found_session && !active ->
+            new_session = new_session_from_event(event)
+            {
+              Map.put(session_cache, event.fingerprint, new_session),
+              [new_session | sessions]
+            }
+          true ->
+            new_session = new_session_from_event(event)
+            {
+              Map.put(session_cache, event.fingerprint, new_session),
+              [new_session | sessions]
+            }
+        end
       end)
 
-      Clickhousex.query(:clickhouse, insert, args)
-      |> log
-    end
+      Plausible.Clickhouse.insert_events(events)
+      Plausible.Clickhouse.insert_sessions(sessions)
+      session_cache
+    end)
   end
 
-  def hydrate_sessions(_args \\ []) do
-    session_chunks = Repo.all(from e in Plausible.FingerprintSession, order_by: e.id) |> chunk_query(10_000)
+  defp is_active?(session, event) do
+    session && Timex.diff(event.timestamp, session.timestamp, :minute) <= 29
+  end
 
-    for chunk <- session_chunks do
-      insert = """
-      INSERT INTO sessions (domain, user_id, hostname, start, is_bounce, entry_page, exit_page, referrer, referrer_source, country_code, screen_size, browser, operating_system)
-      VALUES
-      """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", Enum.count(chunk))
+  defp update_session(session, event) do
+    %{session | timestamp: event.timestamp, exit_page: event.pathname, is_bounce: false, duration: Timex.diff(event.timestamp, session.start, :second), pageviews: (if event.name == "pageview", do: session.pageviews + 1, else: session.pageviews), events: session.events + 1}
+  end
 
-      args = Enum.reduce(chunk, [], fn session, acc ->
-        acc ++ [session.domain, session.fingerprint, session.hostname, session.start, session.is_bounce && 1 || 0, session.entry_page, session.exit_page, session.referrer, session.referrer_source,session.country_code, session.screen_size, session.browser, session.operating_system]
-      end)
-
-      Clickhousex.query(:clickhouse, insert, args)
-      |> log
-    end
+  defp new_session_from_event(event) do
+    %Plausible.ClickhouseSession{
+      sign: 1,
+      session_id: UUID.uuid4(),
+      hostname: event.hostname,
+      domain: event.domain,
+      user_id: event.fingerprint,
+      entry_page: event.pathname,
+      exit_page: event.pathname,
+      is_bounce: true,
+      duration: 0,
+      pageviews: (if event.name == "pageview", do: 1, else: 0),
+      events: 1,
+      referrer: event.referrer,
+      referrer_source: event.referrer_source,
+      country_code: event.country_code,
+      operating_system: event.operating_system,
+      browser: event.browser,
+      timestamp: event.timestamp,
+      start: event.timestamp
+    }
   end
 
   defp log({:ok, res}), do: Logger.info("#{inspect res}")

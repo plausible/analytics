@@ -46,7 +46,8 @@ config :plausible,
   google_api: Plausible.Google.Api
 
 config :plausible,
-  session_timeout: 1000 * 60 * 30 # 30 minutes
+  session_timeout: 1000 * 60 * 30, # 30 minutes
+  session_length_minutes: 30
 
 config :plausible, :paddle,
   vendor_id: "49430",

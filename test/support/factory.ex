@@ -23,6 +23,25 @@ defmodule Plausible.Factory do
     }
   end
 
+  def ch_session_factory do
+    hostname = sequence(:domain, &"example-#{&1}.com")
+
+    %Plausible.ClickhouseSession{
+      sign: 1,
+      session_id: UUID.uuid4(),
+      hostname: hostname,
+      domain: hostname,
+      entry_page: "/",
+      pageviews: 1,
+      events: 1,
+      duration: 0,
+      user_id: UUID.uuid4(),
+      start: Timex.now(),
+      timestamp: Timex.now(),
+      is_bounce: false
+    }
+  end
+
   def session_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 
@@ -52,6 +71,7 @@ defmodule Plausible.Factory do
       hostname: hostname,
       domain: hostname,
       pathname: "/",
+      timestamp: Timex.now(),
       fingerprint: UUID.uuid4()
     }
   end

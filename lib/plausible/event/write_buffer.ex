@@ -1,7 +1,8 @@
 defmodule Plausible.Event.WriteBuffer do
   use GenServer
   require Logger
-  @flush_interval_ms 1000
+  alias Plausible.Clickhouse
+  @flush_interval_ms 5_000
   @max_buffer_size 10_000
 
   def start_link(_opts) do
@@ -9,6 +10,7 @@ defmodule Plausible.Event.WriteBuffer do
   end
 
   def init(buffer) do
+    Process.flag(:trap_exit, true)
     timer = Process.send_after(self(), :tick, @flush_interval_ms)
     {:ok, %{buffer: buffer, timer: timer}}
   end
@@ -38,24 +40,17 @@ defmodule Plausible.Event.WriteBuffer do
     {:noreply, %{buffer: [], timer: timer}}
   end
 
+  def terminate(_reason, %{buffer: buffer}) do
+    Logger.info("Flushing event buffer before shutdown...")
+    flush(buffer)
+  end
+
   defp flush(buffer) do
     case buffer do
       [] -> nil
-      events -> insert_events(events)
+      events ->
+        Logger.info("Flushing #{length(events)} events")
+        Clickhouse.insert_events(events)
     end
-  end
-
-  defp insert_events(events) do
-    Logger.info("Flushing #{length(events)} events")
-    insert = """
-    INSERT INTO events (name, timestamp, domain, user_id, hostname, pathname, referrer, referrer_source, initial_referrer, initial_referrer_source, country_code, screen_size, browser, operating_system)
-    VALUES
-    """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", length(events))
-
-    args = Enum.reduce(events, [], fn event, acc ->
-      [event.name, event.timestamp, event.domain, event.fingerprint, event.hostname, event.pathname, event.referrer, event.referrer_source, event.initial_referrer, event.initial_referrer_source, event.country_code, event.screen_size, event.browser, event.operating_system] ++ acc
-    end)
-
-    Clickhousex.query(:clickhouse, insert, args, log: {Plausible.Clickhouse, :log, []})
   end
 end

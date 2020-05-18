@@ -2,6 +2,7 @@ defmodule PlausibleWeb.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias Plausible.Stats
+  alias Plausible.Stats.Query
 
   plug PlausibleWeb.AuthorizeStatsPlug when action in [:stats, :csv_export]
 
@@ -12,7 +13,7 @@ defmodule PlausibleWeb.StatsController do
     if user && Plausible.Billing.needs_to_upgrade?(conn.assigns[:current_user]) do
       redirect(conn, to: "/billing/upgrade")
     else
-      if Plausible.Sites.has_pageviews?(site) do
+      if Stats.has_pageviews?(site) do
         demo = site.domain == "plausible.io"
         offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
 
@@ -38,7 +39,7 @@ defmodule PlausibleWeb.StatsController do
   def csv_export(conn, %{"domain" => domain}) do
     site = conn.assigns[:site]
 
-    query = Stats.Query.from(site.timezone, conn.params)
+    query = Query.from(site.timezone, conn.params)
     {plot, _, labels, _} = Stats.calculate_plot(site, query)
     csv_content = Enum.zip(labels, plot)
                   |> Enum.map(fn {k, v} -> [k, v] end)

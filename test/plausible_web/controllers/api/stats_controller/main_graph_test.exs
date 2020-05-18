@@ -1,15 +1,11 @@
 defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   use PlausibleWeb.ConnCase
   import Plausible.TestUtils
-  @user_id UUID.uuid4()
 
   describe "GET /api/stats/main-graph - plot" do
     setup [:create_user, :log_in, :create_site]
 
     test "displays visitors for a day", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 00:00:00])
-      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 23:59:00])
-
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
       assert %{"plot" => plot} = json_response(conn, 200)
@@ -17,12 +13,11 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       zeroes = Stream.repeatedly(fn -> 0 end) |> Stream.take(22) |> Enum.into([])
 
       assert Enum.count(plot) == 24
-      assert plot == [1] ++ zeroes ++ [1]
+      assert plot == [3] ++ zeroes ++ [3]
     end
 
     test "displays hourly stats in configured timezone", %{conn: conn, user: user} do
-      site = insert(:site, members: [user], timezone: "CET") # UTC+1
-      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 00:00:00]) # Timestamp is in UTC
+      site = insert(:site, domain: "tz-test.com", members: [user], timezone: "CET") # UTC+1
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
@@ -34,30 +29,16 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "displays visitors for a month", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 12:00:00])
-      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-31 12:00:00])
-
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2019-01-01")
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
       assert Enum.count(plot) == 31
-      assert List.first(plot) == 1
+      assert List.first(plot) == 6
       assert List.last(plot) == 1
     end
 
-    test "displays visitors for 6 months", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain)
-      insert(:pageview, domain: site.domain, timestamp: months_ago(5))
-
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=6mo")
-
-      assert %{"plot" => plot} = json_response(conn, 200)
-
-      assert plot == [1, 0, 0, 0, 0, 1]
-    end
-
-    # TODO: missing 12 months, 7 days, 30 days
+    # TODO: missing 6, 12 months, 30 days
   end
 
   describe "GET /api/stats/main-graph - labels" do
@@ -87,70 +68,25 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   describe "GET /api/stats/main-graph - top stats" do
     setup [:create_user, :log_in, :create_site]
 
-    test "unique users counts distinct user ids", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 00:00:00])
-      insert(:pageview, domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 23:59:00])
-
+    test "counts distinct user ids", %{conn: conn, site: site} do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
       res = json_response(conn, 200)
-      assert %{"name" => "Unique visitors", "count" => 1, "change" => 100} in res["top_stats"]
+      assert %{"name" => "Unique visitors", "count" => 6, "change" => 100} in res["top_stats"]
     end
 
-    test "does not count custom events in custom user ids", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 00:00:00])
-      insert(:event, name: "Custom", domain: site.domain, timestamp: ~N[2019-01-01 00:00:00])
-
+    test "counts total pageviews", %{conn: conn, site: site} do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
       res = json_response(conn, 200)
-      assert %{"name" => "Unique visitors", "count" => 1, "change" => 100} in res["top_stats"]
-    end
-
-    test "counts total pageviews even from same user ids", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 00:00:00])
-      insert(:pageview, domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 23:59:00])
-
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
-
-      res = json_response(conn, 200)
-      assert %{"name" => "Total pageviews", "count" => 2, "change" => 100} in res["top_stats"]
-    end
-
-    test "compares pageviews with previous time period", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 01:00:00])
-      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
-
-      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-02 02:00:00])
-
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-02")
-
-      res = json_response(conn, 200)
-      assert %{"name" => "Total pageviews", "count" => 1, "change" => -50} in res["top_stats"]
+      assert %{"name" => "Total pageviews", "count" => 6, "change" => 100} in res["top_stats"]
     end
 
     test "calculates bounce rate", %{conn: conn, site: site} do
-      insert(:session, domain: site.domain, is_bounce: true, start: ~N[2019-01-01 01:00:00])
-      insert(:session, domain: site.domain, is_bounce: false, start: ~N[2019-01-01 02:00:00])
-
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
       res = json_response(conn, 200)
-      assert %{"name" => "Bounce rate", "percentage" => 50, "change" => nil} in res["top_stats"]
-    end
-
-    test "calculates change in bounce rate", %{conn: conn, site: site} do
-      insert(:session, domain: site.domain, is_bounce: true, start: ~N[2019-01-01 01:00:00])
-      insert(:session, domain: site.domain, is_bounce: false, start: ~N[2019-01-01 02:00:00])
-
-      insert(:session, domain: site.domain, is_bounce: true, start: ~N[2019-01-02 01:00:00])
-      insert(:session, domain: site.domain, is_bounce: true, start: ~N[2019-01-02 01:00:00])
-      insert(:session, domain: site.domain, is_bounce: false, start: ~N[2019-01-02 02:00:00])
-
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-02")
-
-      res = json_response(conn, 200)
-      assert %{"name" => "Bounce rate", "percentage" => 67, "change" => 17} in res["top_stats"]
+      assert %{"name" => "Bounce rate", "percentage" => 50.0, "change" => nil} in res["top_stats"]
     end
   end
 
@@ -159,43 +95,27 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     setup [:create_user, :log_in, :create_site]
 
     test "returns total unique visitors", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 01:00:00])
-      insert(:event, name: "Signup", domain: site.domain, fingerprint: @user_id, timestamp: ~N[2019-01-01 02:00:00])
-
       filters = Jason.encode!(%{goal: "Signup"})
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01&filters=#{filters}")
 
       res = json_response(conn, 200)
-      assert %{"name" => "Total visitors", "count" => 2, "change" => 100} in res["top_stats"]
+      assert %{"name" => "Total visitors", "count" => 6, "change" => 100} in res["top_stats"]
     end
 
     test "returns converted visitors", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 01:00:00])
-      insert(:event, name: "Signup", domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
-
       filters = Jason.encode!(%{goal: "Signup"})
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2019-01-01&filters=#{filters}")
 
       res = json_response(conn, 200)
-      assert %{"name" => "Converted visitors", "count" => 1, "change" => 100} in res["top_stats"]
+      assert %{"name" => "Converted visitors", "count" => 3, "change" => 100} in res["top_stats"]
     end
 
     test "returns conversion rate", %{conn: conn, site: site} do
-      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
-      insert(:pageview, domain: site.domain, timestamp: ~N[2019-01-01 01:00:00])
-      insert(:event, name: "Signup", domain: site.domain, timestamp: ~N[2019-01-01 02:00:00])
-
       filters = Jason.encode!(%{goal: "Signup"})
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01&filters=#{filters}")
 
       res = json_response(conn, 200)
       assert %{"name" => "Conversion rate", "percentage" => 50.0, "change" => 100} in res["top_stats"]
     end
-  end
-
-  defp months_ago(months) do
-    Timex.now() |> Timex.shift(months: -months)
   end
 end
