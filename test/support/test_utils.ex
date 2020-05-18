@@ -25,7 +25,7 @@ defmodule Plausible.TestUtils do
 
   def create_sessions(sessions) do
      Enum.map(sessions, fn session ->
-      Factory.build(:session, session)
+      Factory.build(:ch_session, session)
     end) |> Plausible.Clickhouse.insert_sessions
   end
 

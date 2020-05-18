@@ -37,20 +37,26 @@ defmodule Plausible.Test.ClickhouseSetup do
     drop = "DROP TABLE sessions"
     create = """
     CREATE TABLE sessions (
+      session_id UUID,
+      sign Int8,
       domain String,
       user_id FixedString(64),
       hostname String,
+      timestamp DateTime,
       start DateTime,
       is_bounce UInt8,
       entry_page Nullable(String),
       exit_page Nullable(String),
+      pageviews Int32,
+      events Int32,
+      duration UInt32,
       referrer Nullable(String),
       referrer_source Nullable(String),
       country_code Nullable(FixedString(2)),
       screen_size Nullable(String),
       operating_system Nullable(String),
       browser Nullable(String)
-    ) ENGINE = MergeTree()
+    ) ENGINE = CollapsingMergeTree(sign)
     PARTITION BY toYYYYMM(start)
     ORDER BY (domain, start, user_id)
     SETTINGS index_granularity = 8192

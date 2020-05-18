@@ -23,15 +23,19 @@ defmodule Plausible.Session.Store do
       select: %{session_id: s.session_id, timestamp: max(s.timestamp)}
     )
 
-    sessions = Plausible.Clickhouse.all(
-      from s in Plausible.ClickhouseSession,
-      join: ls in subquery(latest_sessions),
-      on: s.session_id == ls.session_id and s.timestamp == ls.timestamp,
-      order_by: s.timestamp
-    )
-    |> Enum.map(fn s -> Map.new(s, fn {k, v} -> {String.to_atom(k), v} end) end)
-    |> Enum.map(fn s -> {s[:user_id], struct(Plausible.ClickhouseSession, s)} end)
-    |> Enum.into(%{})
+    sessions = try do
+      Plausible.Clickhouse.all(
+        from s in Plausible.ClickhouseSession,
+        join: ls in subquery(latest_sessions),
+        on: s.session_id == ls.session_id and s.timestamp == ls.timestamp,
+        order_by: s.timestamp
+      )
+      |> Enum.map(fn s -> Map.new(s, fn {k, v} -> {String.to_atom(k), v} end) end)
+      |> Enum.map(fn s -> {s[:user_id], struct(Plausible.ClickhouseSession, s)} end)
+      |> Enum.into(%{})
+    rescue
+      e -> %{}
+    end
 
     {:ok, %{timer: timer, sessions: sessions}}
   end
