@@ -9,6 +9,7 @@ defmodule Plausible.Session.WriteBuffer do
   end
 
   def init(buffer) do
+    Process.flag(:trap_exit, true)
     timer = Process.send_after(self(), :tick, @flush_interval_ms)
     {:ok, %{buffer: buffer, timer: timer}}
   end
@@ -36,6 +37,11 @@ defmodule Plausible.Session.WriteBuffer do
     flush(buffer)
     timer = Process.send_after(self(), :tick, @flush_interval_ms)
     {:noreply, %{buffer: [], timer: timer}}
+  end
+
+  def terminate(_reason, %{buffer: buffer}) do
+    Logger.info("Flushing session buffer before shutdown...")
+    flush(buffer)
   end
 
   defp flush(buffer) do

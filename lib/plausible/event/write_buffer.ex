@@ -40,12 +40,8 @@ defmodule Plausible.Event.WriteBuffer do
     {:noreply, %{buffer: [], timer: timer}}
   end
 
-  def handle_info({:EXIT, _from, reason}, state) do
-    IO.puts("TRAP EXIT")
-  end
-
   def terminate(_reason, %{buffer: buffer}) do
-    IO.puts("TERMINATING")
+    Logger.info("Flushing event buffer before shutdown...")
     flush(buffer)
   end
 
