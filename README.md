@@ -1,44 +1,51 @@
-# Plausible Insights
+# Plausible Analytics
 
 [![Build Status](https://travis-ci.org/plausible-insights/plausible.svg?branch=master)](https://travis-ci.org/plausible-insights/plausible)
 
-Plausible is a simple, lightweight web analytics service that provides the most
-important traffic stats without intruding on your visitors' privacy. It collects
-unique visitors, referrers, top pages, countries, and device information using a
-lightweight script.
+Plausible Analytics is a simple, lightweight, open-source and privacy-friendly alternative to Google Analytics. It doesn’t use cookies and is fully compliant with GDPR, CCPA and PECR. 
 
-![](https://i.ibb.co/wzWYMYb/screenshot.png)
+![](https://plausible.io/assets/images/privacy-focused-web-analytics.png)
 
 [View live demo of our own analytics](https://plausible.io/plausible.io)
 
 ### Why Plausible?
 
-- **Clutter Free**: Stop digging through complex reports to find what you’re looking for. Plausible presents the most important information to you on a single page.
-- **Anonymous**: Measure traffic, not individuals. No personal data or IP addresses are ever stored in our database. [Read more about our data policy](https://plausible.io/data-policy)
-- **Lightweight**: Plausible works by loading a script on your website, like Google Analytics. Our script is 14x smaller, making your website quicker to load.
-- **Email reports**: Keep an eye on your traffic with a weekly email report including pageviews, visitor numbers, top pages and top referrers for the week.
+- **Clutter Free**: Plausible Analytics provides [simple web analytics](https://plausible.io/simple-web-analytics) and it cuts through the noise. No layers of menus, no need for custom reports. Get all the important insights on one single page. No training necessary.
+- **GDPR/CCPA/PECR compliant**: Measure traffic, not individuals. No personal data or IP addresses are ever stored in our database. We don't use cookies either. [Read more about our data policy](https://plausible.io/data-policy)
+- **Lightweight**: Plausible Analytics works by loading a script on your website, like Google Analytics. Our script is [33x smaller](https://plausible.io/lightweight-web-analytics), making your website quicker to load.
+- **Email reports**: Keep an eye on your traffic with weekly and/or monthly email reports. All the stats are embedded directly in the email and there’s no need to go to any website. No attachments, no PDFs and no links to click on.
+- **Open website stats**: You have the option to be transparent and open your web analytics to everyone. Your website stats are private by default but you can choose to make them public so anyone with your custom link can view them.
+- **Define key goals and track conversions**: Set custom events or page URLs as your goals and see how they convert over time to understand and identify the trends that matter. 
 - **Search keywords**: Integrate your dashboard with Google Search Console to get the most accurate reporting on your search keywords.
-- **SPA support**: Plausible is built with modern web frameworks in mind and it works automatically with any pushState based router on the frontend.
+- **SPA support**: Plausible Analytics is built with modern web frameworks in mind and it works automatically with any pushState based router on the frontend.
 
 Interested? [Read more on our website](https://plausible.io)
 
-### Can Plausible be self-hosted?
+### Can Plausible Analytics be self-hosted?
 
-At the moment we don't provide support for easily self-hosting the code. Currently, the purpose of
-keeping the code open-source is to be transparent with the community about how we
-collect and process data.
+At the moment we don't provide support for easily self-hosting the code. Currently, the purpose of keeping the code open-source is to be transparent with the community about how we collect and process data.
+
+Making Plausible Analytics easy to self-host, providing full documentation and support for the process is something we want to see happening in the future. There is [a GitHub thread](https://github.com/plausible-insights/plausible/issues/26) you can join and engage with to follow our progress in making Plausible Analytics easy to self-host.
+
+### Why is Plausible Analytics not free like Google Analytics?
+
+Plausible Analytics is an independently owned and actively developed project. To keep the project development going, to stay in business, to continue putting effort into building a better product and to cover our costs, we need to charge a fee.
+
+Google Analytics is free because Google has built their company and their wealth by collecting and analyzing huge amounts of personal information from web users and using these personal and behavioral insights to sell advertisements.
+
+Plausible has no part in that business model. No personal data is being collected and analyzed either. With Plausible, you 100% own and control all of your website data. This data is not being shared with or sold to any third-parties.
+
+We choose the subscription business model rather than the business model of surveillance capitalism. See reasons why we believe you should [stop using Google Analytics on your website](https://plausible.io/blog/remove-google-analytics).
 
 ### Technology
 
-Plausible is a standard Elixir/Phoenix application backed by a PostgreSQL database. On the frontend we use
+Plausible Analytics is a standard Elixir/Phoenix application backed by a PostgreSQL database. On the frontend we use
 [TailwindCSS](https://tailwindcss.com/) for styling and some vanilla Javascript for interactive bits.
 
 ### Feedback & Roadmap
 
-We have a [feedback board](https://plausible.io/feedback) and a [public roadmap](https://plausible.io/roadmap).
-Please let us know if you have any requests and vote on open issues so we can better prioritize.
+We welcome feedback from our community. We have a public roadmap driven by the features suggested by the community members. Take a look at our [feedback board](https://plausible.io/feedback) and our [public roadmap](https://plausible.io/roadmap). Please let us know if you have any requests and vote on open issues so we can better prioritize.
 
 ### License
 
-Plausible is open-source under the most permissive MIT license. There are no restrictions on redistributing,
-modifying or using this software for any reason.
+Plausible is open-source under the most permissive Massachusetts Institute of Technology (MIT) license. This means that there are no restrictions on redistributing, modifying or using Plausible software for any reason. You can take it and use it any way that you wish.
