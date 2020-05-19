@@ -2,6 +2,7 @@ defmodule Mix.Tasks.HydrateClickhouse do
   use Mix.Task
   use Plausible.Repo
   require Logger
+  @hash_key Keyword.fetch!(Application.get_env(:plausible, PlausibleWeb.Endpoint), :secret_key_base) |> binary_part(0, 16)
 
   def run(args) do
     Application.ensure_all_started(:db_connection)
@@ -21,24 +22,25 @@ defmodule Mix.Tasks.HydrateClickhouse do
 
   def create_events() do
     ddl = """
-    CREATE TABLE IF NOT EXISTS events (
+    CREATE TABLE events (
       timestamp DateTime,
       name String,
       domain String,
-      user_id FixedString(64),
+      user_id UInt64,
+      session_id UInt64,
       hostname String,
       pathname String,
-      referrer Nullable(String),
-      referrer_source Nullable(String),
-      initial_referrer Nullable(String),
-      initial_referrer_source Nullable(String),
-      country_code Nullable(FixedString(2)),
-      screen_size Nullable(String),
-      operating_system Nullable(String),
-      browser Nullable(String)
+      referrer String,
+      referrer_source String,
+      initial_referrer String,
+      initial_referrer_source String,
+      country_code LowCardinality(FixedString(2)),
+      screen_size LowCardinality(String),
+      operating_system LowCardinality(String),
+      browser LowCardinality(String)
     ) ENGINE = MergeTree()
     PARTITION BY toYYYYMM(timestamp)
-    ORDER BY (name, domain, timestamp, user_id)
+    ORDER BY (name, domain, user_id, timestamp)
     SETTINGS index_granularity = 8192
     """
 
@@ -48,29 +50,29 @@ defmodule Mix.Tasks.HydrateClickhouse do
 
   def create_sessions() do
     ddl = """
-    CREATE TABLE IF NOT EXISTS sessions (
-      session_id UUID,
+    CREATE TABLE sessions (
+      session_id UInt64,
       sign Int8,
       domain String,
-      user_id FixedString(64),
+      user_id UInt64,
       hostname String,
       timestamp DateTime,
       start DateTime,
       is_bounce UInt8,
-      entry_page Nullable(String),
-      exit_page Nullable(String),
+      entry_page String,
+      exit_page String,
       pageviews Int32,
       events Int32,
       duration UInt32,
-      referrer Nullable(String),
-      referrer_source Nullable(String),
-      country_code Nullable(FixedString(2)),
-      screen_size Nullable(String),
-      operating_system Nullable(String),
-      browser Nullable(String)
+      referrer String,
+      referrer_source String,
+      country_code LowCardinality(FixedString(2)),
+      screen_size LowCardinality(String),
+      operating_system LowCardinality(String),
+      browser LowCardinality(String)
     ) ENGINE = CollapsingMergeTree(sign)
     PARTITION BY toYYYYMM(start)
-    ORDER BY (domain, start, user_id, session_id)
+    ORDER BY (domain, user_id, session_id, start)
     SETTINGS index_granularity = 8192
     """
 
@@ -99,27 +101,33 @@ defmodule Mix.Tasks.HydrateClickhouse do
     event_chunks = from(e in Plausible.Event, where: e.domain == "plausible.io", order_by: e.id) |> chunk_query(10_000, repo)
 
     Enum.reduce(event_chunks, %{}, fn events, session_cache ->
-      {session_cache, sessions} = Enum.reduce(events, {session_cache, []}, fn event, {session_cache, sessions} ->
+      {session_cache, sessions, events} = Enum.reduce(events, {session_cache, [], []}, fn event, {session_cache, sessions, new_events} ->
         found_session = session_cache[event.fingerprint]
         active = is_active?(found_session, event)
+        user_id = SipHash.hash!(@hash_key, event.fingerprint)
+        clickhouse_event = struct(Plausible.ClickhouseEvent, Map.from_struct(event) |> Map.put(:user_id, user_id))
+
         cond do
           found_session && active ->
-            new_session = update_session(found_session, event)
+            new_session = update_session(found_session, clickhouse_event)
             {
               Map.put(session_cache, event.fingerprint, new_session),
-              [%{new_session | sign: 1}, %{found_session | sign: -1} | sessions]
+              [%{new_session | sign: 1}, %{found_session | sign: -1} | sessions],
+              new_events ++ [%{clickhouse_event | session_id: new_session.session_id}]
             }
           found_session && !active ->
-            new_session = new_session_from_event(event)
+            new_session = new_session_from_event(clickhouse_event)
             {
               Map.put(session_cache, event.fingerprint, new_session),
-              [new_session | sessions]
+              [new_session | sessions],
+              new_events ++ [%{clickhouse_event | session_id: new_session.session_id}]
             }
           true ->
-            new_session = new_session_from_event(event)
+            new_session = new_session_from_event(clickhouse_event)
             {
               Map.put(session_cache, event.fingerprint, new_session),
-              [new_session | sessions]
+              [new_session | sessions],
+              new_events ++ [%{clickhouse_event | session_id: new_session.session_id}]
             }
         end
       end)
@@ -141,10 +149,10 @@ defmodule Mix.Tasks.HydrateClickhouse do
   defp new_session_from_event(event) do
     %Plausible.ClickhouseSession{
       sign: 1,
-      session_id: UUID.uuid4(),
+      session_id: Plausible.ClickhouseSession.random_uint64(),
       hostname: event.hostname,
       domain: event.domain,
-      user_id: event.fingerprint,
+      user_id: event.user_id,
       entry_page: event.pathname,
       exit_page: event.pathname,
       is_bounce: true,
