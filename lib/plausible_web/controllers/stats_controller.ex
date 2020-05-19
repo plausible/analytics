@@ -81,7 +81,9 @@ defmodule PlausibleWeb.StatsController do
       if Plausible.Auth.Password.match?(password, shared_link.password_hash) do
         shared_link_auth_success(conn, shared_link)
       else
-        render(conn, "shared_link_password.html", link: shared_link, error: "Incorrect password. Please try again.", layout: {PlausibleWeb.LayoutView, "focus.html"})
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("shared_link_password.html", link: shared_link, error: "Incorrect password. Please try again.", layout: {PlausibleWeb.LayoutView, "focus.html"})
       end
     else
       render_error(conn, 404)
