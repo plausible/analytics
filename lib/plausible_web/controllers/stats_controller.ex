@@ -62,7 +62,9 @@ defmodule PlausibleWeb.StatsController do
 
     if shared_link do
       if shared_link.password_hash do
-        render(conn, "shared_link_password.html", link: shared_link, layout: {PlausibleWeb.LayoutView, "focus.html"})
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("shared_link_password.html", link: shared_link, layout: {PlausibleWeb.LayoutView, "focus.html"})
       else
         shared_link_auth_success(conn, shared_link)
       end
