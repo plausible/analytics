@@ -98,13 +98,12 @@ defmodule Mix.Tasks.HydrateClickhouse do
   end
 
   def hydrate_events(repo, _args \\ []) do
-    start_time = ~N[2020-05-01 00:00:00]
     end_time = ~N[2020-05-21 10:46:51]
-    total = Repo.aggregate(from(e in Plausible.Event, where: e.timestamp < ^end_time and e.timestamp >= ^start_time), :count, :id)
+    total = Repo.aggregate(from(e in Plausible.Event, where: e.timestamp < ^end_time), :count, :id)
 
     event_chunks = from(
       e in Plausible.Event,
-      where: e.timestamp < ^end_time and e.timestamp >= ^start_time,
+      where: e.timestamp < ^end_time,
       order_by: e.id
     ) |> chunk_query(50_000, repo)
 

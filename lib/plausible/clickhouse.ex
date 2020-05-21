@@ -16,7 +16,7 @@ defmodule Plausible.Clickhouse do
     """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", length(events))
 
     args = Enum.reduce(events, [], fn event, acc ->
-      [event.name, event.timestamp, event.domain, event.user_id, event.session_id, event.hostname, escape_quote(event.pathname), escape_quote(event.referrer || ""), escape_quote(event.referrer_source || ""), escape_quote(event.initial_referrer || ""), escape_quote(event.initial_referrer_source || ""), event.country_code || "", event.screen_size || "", event.browser || "", event.operating_system || ""] ++ acc
+      [escape_quote(event.name), event.timestamp, event.domain, event.user_id, event.session_id, event.hostname, escape_quote(event.pathname), escape_quote(event.referrer || ""), escape_quote(event.referrer_source || ""), escape_quote(event.initial_referrer || ""), escape_quote(event.initial_referrer_source || ""), event.country_code || "", event.screen_size || "", event.browser || "", event.operating_system || ""] ++ acc
     end)
 
     Clickhousex.query(:clickhouse, insert, args, log: {Plausible.Clickhouse, :log, []})
