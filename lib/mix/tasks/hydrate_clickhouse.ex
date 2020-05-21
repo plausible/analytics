@@ -99,13 +99,15 @@ defmodule Mix.Tasks.HydrateClickhouse do
 
   def hydrate_events(repo, _args \\ []) do
     end_time = ~N[2020-05-21 10:46:51]
+    total = Repo.aggregate(from(e in Plausible.Event, where: e.timestamp < ^end_time), :count, :id)
+
     event_chunks = from(
       e in Plausible.Event,
       where: e.timestamp < ^end_time,
       order_by: e.id
     ) |> chunk_query(10_000, repo)
 
-    Enum.reduce(event_chunks, %{}, fn events, session_cache ->
+    Enum.reduce(event_chunks, {%{}, 0}, fn events, {session_cache, processed_events} ->
       {session_cache, sessions, events} = Enum.reduce(events, {session_cache, [], []}, fn event, {session_cache, sessions, new_events} ->
         found_session = session_cache[event.fingerprint]
         active = is_active?(found_session, event)
@@ -139,7 +141,9 @@ defmodule Mix.Tasks.HydrateClickhouse do
 
       Plausible.Clickhouse.insert_events(events)
       Plausible.Clickhouse.insert_sessions(sessions)
-      session_cache
+      new_processed_count = processed_events + Enum.count(events)
+      IO.puts("Processed #{new_processed_count} out of #{total} (#{round(new_processed_count / total * 100)}%)")
+      {session_cache, processed_events + Enum.count(events)}
     end)
   end
 
