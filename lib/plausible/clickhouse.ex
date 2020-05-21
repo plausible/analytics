@@ -11,12 +11,12 @@ defmodule Plausible.Clickhouse do
 
   def insert_events(events) do
     insert = """
-    INSERT INTO events (name, timestamp, domain, user_id, hostname, pathname, referrer, referrer_source, initial_referrer, initial_referrer_source, country_code, screen_size, browser, operating_system)
+    INSERT INTO events (name, timestamp, domain, user_id, session_id, hostname, pathname, referrer, referrer_source, initial_referrer, initial_referrer_source, country_code, screen_size, browser, operating_system)
     VALUES
-    """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", length(events))
+    """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", length(events))
 
     args = Enum.reduce(events, [], fn event, acc ->
-      [event.name, event.timestamp, event.domain, event.user_id, event.hostname, escape_quote(event.pathname), event.referrer || "", event.referrer_source || "", event.initial_referrer || "", event.initial_referrer_source || "", event.country_code || "", event.screen_size || "", event.browser || "", event.operating_system || ""] ++ acc
+      [event.name, event.timestamp, event.domain, event.user_id, event.session_id, event.hostname, escape_quote(event.pathname), event.referrer || "", event.referrer_source || "", event.initial_referrer || "", event.initial_referrer_source || "", event.country_code || "", event.screen_size || "", event.browser || "", event.operating_system || ""] ++ acc
     end)
 
     Clickhousex.query(:clickhouse, insert, args, log: {Plausible.Clickhouse, :log, []})

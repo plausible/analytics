@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.Api.ExternalController do
   use PlausibleWeb, :controller
   require Logger
+  @hash_key Keyword.fetch!(Application.get_env(:plausible, PlausibleWeb.Endpoint), :secret_key_base) |> binary_part(0, 16)
 
   def event(conn, _params) do
     params = parse_body(conn)
@@ -63,11 +64,15 @@ defmodule PlausibleWeb.Api.ExternalController do
       }
 
       changeset = Plausible.Event.changeset(%Plausible.Event{}, event_attrs)
-      if changeset.valid? && changeset.changes[:domain] in ["plausible.io", "localtest.me"] do
-        {:ok, event} = Ecto.Changeset.apply_action!(changeset, :insert)
+      if changeset.valid? do
+        event = struct(Plausible.ClickhouseEvent, event_attrs)
         |> Map.put(:timestamp, NaiveDateTime.utc_now())
+        |> Map.put(:user_id, generate_user_id(conn, params))
+
+        session_id = Plausible.Session.Store.on_event(event)
+
+        Map.put(event, :session_id, session_id)
         |> Plausible.Event.WriteBuffer.insert()
-        Plausible.Session.Store.on_event(event)
       end
       Plausible.Repo.insert(changeset)
     end
@@ -90,6 +95,14 @@ defmodule PlausibleWeb.Api.ExternalController do
     :crypto.hash(:sha256, [user_agent, ip_address, domain])
     |> Base.encode16
     |> String.downcase
+  end
+
+  defp generate_user_id(conn, params) do
+    user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
+    ip_address = List.first(Plug.Conn.get_req_header(conn, "x-bb-ip")) || "" # Netlify sets this header as the remote client IP
+    domain = strip_www(params["domain"]) || ""
+
+    SipHash.hash!(@hash_key, user_agent <> ip_address <> domain)
   end
 
   defp calculate_screen_size(nil) , do: nil

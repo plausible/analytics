@@ -34,36 +34,37 @@ defmodule Plausible.Session.Store do
       |> Enum.map(fn s -> {s[:user_id], struct(Plausible.ClickhouseSession, s)} end)
       |> Enum.into(%{})
     rescue
-      e -> %{}
+      _e -> %{}
     end
 
     {:ok, %{timer: timer, sessions: sessions}}
   end
 
   def on_event(event) do
-    GenServer.cast(__MODULE__, {:on_event, event})
+    GenServer.call(__MODULE__, {:on_event, event})
   end
 
-  def handle_cast({:on_event, event}, %{sessions: sessions} = state) do
-    found_session = sessions[event.fingerprint]
+  def handle_call({:on_event, event}, _from, %{sessions: sessions} = state) do
+    found_session = sessions[event.user_id]
     active = is_active?(found_session, event)
 
     updated_sessions = cond do
       found_session && active ->
         new_session = update_session(found_session, event)
         WriteBuffer.insert([%{new_session | sign: 1}, %{found_session | sign: -1}])
-        Map.put(sessions, event.fingerprint, new_session)
+        Map.put(sessions, event.user_id, new_session)
       found_session && !active ->
         new_session = new_session_from_event(event)
         WriteBuffer.insert([new_session])
-        Map.put(sessions, event.fingerprint, new_session)
+        Map.put(sessions, event.user_id, new_session)
       true ->
         new_session = new_session_from_event(event)
         WriteBuffer.insert([new_session])
-        Map.put(sessions, event.fingerprint, new_session)
+        Map.put(sessions, event.user_id, new_session)
     end
 
-    {:noreply, %{ state | sessions: updated_sessions }}
+    session_id = updated_sessions[event.user_id].session_id
+    {:reply, session_id, %{ state | sessions: updated_sessions }}
   end
 
   defp is_active?(session, event) do
@@ -84,10 +85,10 @@ defmodule Plausible.Session.Store do
   defp new_session_from_event(event) do
     %Plausible.ClickhouseSession{
       sign: 1,
-      session_id: UUID.uuid4(),
+      session_id: Plausible.ClickhouseSession.random_uint64(),
       hostname: event.hostname,
       domain: event.domain,
-      user_id: event.fingerprint,
+      user_id: event.user_id,
       entry_page: event.pathname,
       exit_page: event.pathname,
       is_bounce: true,
