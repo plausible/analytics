@@ -78,7 +78,7 @@
 </div>
 
 <div class="text-center mt-8">
-  Questions? Contact <%= link("uku@plausible.io", to: "mailto: uku@plausible.io", class: "text-indigo-500") %>
+  Questions? Contact <%= link("support@plausible.io", to: "mailto: support@plausible.io", class: "text-indigo-500") %>
 </div>
 
 <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js"></script>

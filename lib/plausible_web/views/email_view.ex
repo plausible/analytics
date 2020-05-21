@@ -30,7 +30,7 @@ defmodule PlausibleWeb.EmailView do
       usage < 90_000 ->
         "$12/mo"
       usage < 900_000 ->
-        "$32/mo"
+        "$36/mo"
       true ->
         throw "Huge account"
 
