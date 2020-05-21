@@ -22,7 +22,7 @@ defmodule Mix.Tasks.HydrateClickhouse do
 
   def create_events() do
     ddl = """
-    CREATE TABLE events (
+    CREATE TABLE IF NOT EXISTS events (
       timestamp DateTime,
       name String,
       domain String,
@@ -50,7 +50,7 @@ defmodule Mix.Tasks.HydrateClickhouse do
 
   def create_sessions() do
     ddl = """
-    CREATE TABLE sessions (
+    CREATE TABLE IF NOT EXISTS sessions (
       session_id UInt64,
       sign Int8,
       domain String,
@@ -98,7 +98,12 @@ defmodule Mix.Tasks.HydrateClickhouse do
   end
 
   def hydrate_events(repo, _args \\ []) do
-    event_chunks = from(e in Plausible.Event, where: e.domain == "plausible.io", order_by: e.id) |> chunk_query(10_000, repo)
+    end_time = ~N[2020-05-21 10:46:51]
+    event_chunks = from(
+      e in Plausible.Event,
+      where: e.timestamp < ^end_time,
+      order_by: e.id
+    ) |> chunk_query(10_000, repo)
 
     Enum.reduce(event_chunks, %{}, fn events, session_cache ->
       {session_cache, sessions, events} = Enum.reduce(events, {session_cache, [], []}, fn event, {session_cache, sessions, new_events} ->
