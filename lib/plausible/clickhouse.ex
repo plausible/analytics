@@ -29,7 +29,7 @@ defmodule Plausible.Clickhouse do
     """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", Enum.count(sessions))
 
     args = Enum.reduce(sessions, [], fn session, acc ->
-      [session.sign, session.session_id, session.domain, session.user_id, session.timestamp, session.hostname, session.start, session.is_bounce && 1 || 0, session.entry_page, session.exit_page, session.events, session.pageviews, session.duration, session.referrer || "", session.referrer_source || "", session.country_code || "", session.screen_size || "", session.browser || "", session.operating_system || ""] ++ acc
+      [session.sign, session.session_id, session.domain, session.user_id, session.timestamp, session.hostname, session.start, session.is_bounce && 1 || 0, escape_quote(session.entry_page), escape_quote(session.exit_page), session.events, session.pageviews, session.duration, session.referrer || "", session.referrer_source || "", session.country_code || "", session.screen_size || "", session.browser || "", session.operating_system || ""] ++ acc
     end)
 
     Clickhousex.query(:clickhouse, insert, args, log: {Plausible.Clickhouse, :log, []})
