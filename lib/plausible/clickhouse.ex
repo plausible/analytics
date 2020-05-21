@@ -16,7 +16,7 @@ defmodule Plausible.Clickhouse do
     """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", length(events))
 
     args = Enum.reduce(events, [], fn event, acc ->
-      [event.name, event.timestamp, event.domain, event.user_id, event.session_id, event.hostname, escape_quote(event.pathname), event.referrer || "", event.referrer_source || "", event.initial_referrer || "", event.initial_referrer_source || "", event.country_code || "", event.screen_size || "", event.browser || "", event.operating_system || ""] ++ acc
+      [event.name, event.timestamp, event.domain, event.user_id, event.session_id, event.hostname, escape_quote(event.pathname), escape_quote(event.referrer || ""), escape_quote(event.referrer_source || ""), escape_quote(event.initial_referrer || ""), escape_quote(event.initial_referrer_source || ""), event.country_code || "", event.screen_size || "", event.browser || "", event.operating_system || ""] ++ acc
     end)
 
     Clickhousex.query(:clickhouse, insert, args, log: {Plausible.Clickhouse, :log, []})
@@ -29,7 +29,7 @@ defmodule Plausible.Clickhouse do
     """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", Enum.count(sessions))
 
     args = Enum.reduce(sessions, [], fn session, acc ->
-      [session.sign, session.session_id, session.domain, session.user_id, session.timestamp, session.hostname, session.start, session.is_bounce && 1 || 0, escape_quote(session.entry_page), escape_quote(session.exit_page), session.events, session.pageviews, session.duration, session.referrer || "", session.referrer_source || "", session.country_code || "", session.screen_size || "", session.browser || "", session.operating_system || ""] ++ acc
+      [session.sign, session.session_id, session.domain, session.user_id, session.timestamp, session.hostname, session.start, session.is_bounce && 1 || 0, escape_quote(session.entry_page), escape_quote(session.exit_page), session.events, session.pageviews, session.duration, escape_quote(session.referrer || ""), escape_quote(session.referrer_source || ""), session.country_code || "", session.screen_size || "", session.browser || "", session.operating_system || ""] ++ acc
     end)
 
     Clickhousex.query(:clickhouse, insert, args, log: {Plausible.Clickhouse, :log, []})
