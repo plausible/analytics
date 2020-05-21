@@ -2,11 +2,12 @@ defmodule Plausible.ClickhouseSession do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @primary_key {:session_id, :binary_id, autogenerate: false}
+  @primary_key false
   schema "sessions" do
     field :hostname, :string
     field :domain, :string
-    field :user_id, :string
+    field :user_id, :integer
+    field :session_id, :integer
 
     field :start, :naive_datetime
     field :duration, :integer
@@ -24,6 +25,10 @@ defmodule Plausible.ClickhouseSession do
     field :operating_system, :string
     field :browser, :string
     field :timestamp, :naive_datetime
+  end
+
+  def random_uint64() do
+    :crypto.strong_rand_bytes(8) |> :binary.decode_unsigned()
   end
 
   def changeset(session, attrs) do

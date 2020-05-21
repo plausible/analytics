@@ -1,5 +1,6 @@
 defmodule Plausible.Factory do
   use ExMachina.Ecto, repo: Plausible.Repo
+  @hash_key Keyword.fetch!(Application.get_env(:plausible, PlausibleWeb.Endpoint), :secret_key_base) |> binary_part(0, 16)
 
   def user_factory(attrs) do
     pw = Map.get(attrs, :password, "password")
@@ -67,12 +68,12 @@ defmodule Plausible.Factory do
   def event_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 
-    %Plausible.Event{
+    %Plausible.ClickhouseEvent{
       hostname: hostname,
       domain: hostname,
       pathname: "/",
       timestamp: Timex.now(),
-      fingerprint: UUID.uuid4()
+      user_id: SipHash.hash!(@hash_key, UUID.uuid4())
     }
   end
 

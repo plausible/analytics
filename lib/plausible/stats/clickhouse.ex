@@ -155,24 +155,28 @@ defmodule Plausible.Stats.Clickhouse do
       from e in base_query(site, query),
       select: {fragment("? as name", e.initial_referrer_source), fragment("min(?) as url", e.initial_referrer), fragment("uniq(user_id) as count")},
       group_by: e.initial_referrer_source,
-      where: not is_nil(e.initial_referrer_source),
+      where: e.initial_referrer_source != "",
       order_by: [desc: fragment("count")],
       limit: ^limit
     ) |> Enum.map(fn ref ->
-      Map.update(ref, :url, nil, fn url -> url && URI.parse("http://" <> url).host end)
+      ref
+      |> Map.update("url", nil, fn url -> url && URI.parse("http://" <> url).host end)
+      |> Map.update("name", nil, fn name -> if name == "", do: "(no referrer)", else: name end)
     end)
   end
 
   def top_referrers(site, query, limit \\ 5, include \\ []) do
     referrers = Clickhouse.all(
       from e in base_query(site, query),
-      select: {fragment("? as name", e.referrer_source), fragment("min(?) as url", e.referrer), fragment("uniq(user_id) as count")},
+      select: {fragment("? as name", e.referrer_source), fragment("any(?) as url", e.referrer), fragment("uniq(user_id) as count")},
       group_by: e.referrer_source,
-      where: not is_nil(e.referrer_source),
+      where: e.referrer_source != "",
       order_by: [desc: fragment("count")],
       limit: ^limit
     ) |> Enum.map(fn ref ->
-      Map.update(ref, :url, nil, fn url -> url && URI.parse("http://" <> url).host end)
+      ref
+      |> Map.update("url", nil, fn url -> url && URI.parse("http://" <> url).host end)
+      |> Map.update("name", nil, fn name -> if name == "", do: "(no referrer)", else: name end)
     end)
 
     if "bounce_rate" in include do
@@ -191,7 +195,7 @@ defmodule Plausible.Stats.Clickhouse do
       select: {s.referrer_source, fragment("count(*) as total"), fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate")},
       where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
-      where: not is_nil(s.referrer_source),
+      where: s.referrer_source != "",
       group_by: s.referrer_source,
       order_by: [desc: fragment("total")],
       limit: 100
@@ -269,7 +273,7 @@ defmodule Plausible.Stats.Clickhouse do
       select: {s.referrer, fragment("count(*) as total"), fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate")},
       where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
-      where: not is_nil(s.referrer),
+      where: s.referrer != "",
       group_by: s.referrer,
       order_by: [desc: fragment("total")],
       limit: 100
@@ -302,7 +306,6 @@ defmodule Plausible.Stats.Clickhouse do
       select: {s.entry_page, fragment("count(*) as total"), fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate")},
       where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime,
-      where: not is_nil(s.entry_page),
       group_by: s.entry_page,
       order_by: [desc: fragment("total")],
       limit: 100
@@ -324,7 +327,7 @@ defmodule Plausible.Stats.Clickhouse do
       from e in base_query(site, query),
       select: {fragment("? as name", e.screen_size), fragment("uniq(user_id) as count")},
       group_by: e.screen_size,
-      where: not is_nil(e.screen_size)
+      where: e.screen_size != ""
     )
     |> Enum.sort(fn %{"name" => screen_size1}, %{"name" => screen_size2} ->
       index1 = Enum.find_index(@available_screen_sizes, fn s -> s == screen_size1 end)
@@ -339,7 +342,7 @@ defmodule Plausible.Stats.Clickhouse do
       from e in base_query(site, query),
       select: {fragment("? as name", e.country_code), fragment("uniq(user_id) as count")},
       group_by: e.country_code,
-      where: not is_nil(e.country_code),
+      where: e.country_code != "",
       order_by: [desc: fragment("count")]
     )
     |> Enum.map(fn stat ->
@@ -356,7 +359,7 @@ defmodule Plausible.Stats.Clickhouse do
       from e in base_query(site, query),
       select: {fragment("? as name", e.browser), fragment("uniq(user_id) as count")},
       group_by: e.browser,
-      where: not is_nil(e.browser),
+      where: e.browser != "",
       order_by: [desc: fragment("count")]
     )
     |> add_percentages
@@ -368,7 +371,7 @@ defmodule Plausible.Stats.Clickhouse do
       from e in base_query(site, query),
       select: {fragment("? as name", e.operating_system), fragment("uniq(user_id) as count")},
       group_by: e.operating_system,
-      where: not is_nil(e.operating_system),
+      where: e.operating_system != "",
       order_by: [desc: fragment("count")]
     )
     |> add_percentages
