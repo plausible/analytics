@@ -105,7 +105,7 @@ defmodule Mix.Tasks.HydrateClickhouse do
       e in Plausible.Event,
       where: e.timestamp < ^end_time,
       order_by: e.id
-    ) |> chunk_query(10_000, repo)
+    ) |> chunk_query(50_000, repo)
 
     Enum.reduce(event_chunks, {%{}, 0}, fn events, {session_cache, processed_events} ->
       {session_cache, sessions, events} = Enum.reduce(events, {session_cache, [], []}, fn event, {session_cache, sessions, new_events} ->
@@ -141,10 +141,27 @@ defmodule Mix.Tasks.HydrateClickhouse do
 
       Plausible.Clickhouse.insert_events(events)
       Plausible.Clickhouse.insert_sessions(sessions)
+      session_cache = clean(session_cache, List.last(events).timestamp)
       new_processed_count = processed_events + Enum.count(events)
       IO.puts("Processed #{new_processed_count} out of #{total} (#{round(new_processed_count / total * 100)}%)")
       {session_cache, processed_events + Enum.count(events)}
     end)
+  end
+
+  defp clean(session_cache, latest_timestamp) do
+     cleaned = Enum.reduce(session_cache, %{}, fn {key, session}, acc ->
+      if Timex.diff(latest_timestamp, session.timestamp, :second) <= 3600 do
+        Map.put(acc, key, session)
+      else
+        acc # forget the session
+      end
+    end)
+
+    n_old = Enum.count(session_cache)
+    n_new = Enum.count(cleaned)
+
+    IO.puts("Removed #{n_old - n_new} sessions from store")
+    cleaned
   end
 
   defp is_active?(session, event) do
