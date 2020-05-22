@@ -2,6 +2,7 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
   use Mix.Task
   use Plausible.Repo
   require Logger
+  alias Plausible.Stats.Clickhouse, as: Stats
 
   @doc """
   This is scheduled to run every 6 hours.
@@ -46,7 +47,7 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
     for site <- Repo.all(q) do
       owner = List.first(site.members)
 
-      setup_completed = Plausible.Sites.has_pageviews?(site)
+      setup_completed = Stats.has_pageviews?(site)
       hours_passed = Timex.diff(Timex.now(), site.inserted_at, :hours)
 
       if !setup_completed && hours_passed > 47 do
@@ -67,7 +68,7 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
     for site <- Repo.all(q) do
       owner = List.first(site.members)
 
-      if Plausible.Sites.has_pageviews?(site) do
+      if Stats.has_pageviews?(site) do
         send_setup_success_email(args, owner, site)
       end
     end

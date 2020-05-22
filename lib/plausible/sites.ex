@@ -12,13 +12,6 @@ defmodule Plausible.Sites do
     )
   end
 
-  def has_pageviews?(site) do
-    Repo.exists?(
-      from e in Plausible.Event,
-      where: e.domain == ^site.domain
-    )
-  end
-
   def has_goals?(site) do
     Repo.exists?(
       from g in Plausible.Goal,

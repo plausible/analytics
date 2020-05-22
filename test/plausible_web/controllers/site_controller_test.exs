@@ -133,15 +133,13 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "DELETE /:website" do
     setup [:create_user, :log_in, :create_site]
 
-    test "deletes the site and all pageviews", %{conn: conn, user: user, site: site} do
-      pageview = insert(:pageview, domain: site.domain)
+    test "deletes the site", %{conn: conn, user: user, site: site} do
       insert(:google_auth, user: user, site: site)
       insert(:custom_domain, site: site)
 
       delete(conn, "/#{site.domain}")
 
       refute Repo.exists?(from s in Plausible.Site, where: s.id == ^site.id)
-      refute Repo.exists?(from e in Plausible.Event, where: e.id == ^pageview.id)
     end
   end
 

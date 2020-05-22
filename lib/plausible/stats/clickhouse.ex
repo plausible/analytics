@@ -342,7 +342,7 @@ defmodule Plausible.Stats.Clickhouse do
       from e in base_query(site, query),
       select: {fragment("? as name", e.country_code), fragment("uniq(user_id) as count")},
       group_by: e.country_code,
-      where: e.country_code != "",
+      where: e.country_code != "\0\0",
       order_by: [desc: fragment("count")]
     )
     |> Enum.map(fn stat ->
@@ -387,6 +387,16 @@ defmodule Plausible.Stats.Clickhouse do
     )
 
     res["visitors"]
+  end
+
+  def has_pageviews?(domains) when is_list(domains) do
+    res = Clickhouse.all(
+      from e in "events",
+      select: e.timestamp,
+      where: fragment("? IN tuple(?)", e.domain, ^domains),
+      limit: 1
+    )
+    !Enum.empty?(res)
   end
 
   def has_pageviews?(site) do

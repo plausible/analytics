@@ -105,11 +105,9 @@ defmodule Plausible.Billing do
   end
 
   defp site_usage(site) do
-    Repo.aggregate(from(
-      e in Plausible.Event,
-      where: e.domain == ^site.domain,
-      where: e.timestamp >= fragment("now() - '30 days'::interval")
-    ), :count, :id)
+    q = Plausible.Stats.Query.from(site.timezone, %{"period" => "30d"})
+    {pageviews, _} = Plausible.Stats.Clickhouse.pageviews_and_visitors(site, q)
+    pageviews
   end
 
   defp format_subscription(params) do

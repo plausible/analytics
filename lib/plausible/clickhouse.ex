@@ -35,9 +35,8 @@ defmodule Plausible.Clickhouse do
     Clickhousex.query(:clickhouse, insert, args, log: {Plausible.Clickhouse, :log, []})
   end
 
-  def escape_quote(s) do
-    String.replace(s, "'", "''")
-  end
+  def escape_quote(nil), do: nil
+  def escape_quote(s), do: String.replace(s, "'", "''")
 
   def log(query) do
     require Logger
