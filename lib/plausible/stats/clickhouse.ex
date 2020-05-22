@@ -151,17 +151,22 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def top_referrers_for_goal(site, query, limit \\ 5) do
-    Clickhouse.all(
+    converted_sessions = from(
       from e in base_query(site, query),
-      select: {fragment("? as name", e.initial_referrer_source), fragment("min(?) as url", e.initial_referrer), fragment("uniq(user_id) as count")},
-      group_by: e.initial_referrer_source,
-      where: e.initial_referrer_source != "",
+      select: %{session_id: e.session_id}
+    )
+
+    Plausible.Clickhouse.all(
+      from s in Plausible.ClickhouseSession,
+      join: cs  in subquery(converted_sessions),
+      on: s.session_id == cs.session_id,
+      select: {fragment("? as name", s.referrer_source), fragment("any(?) as url", s.referrer), fragment("uniq(user_id) as count")},
+      where: s.referrer_source != "",
+      group_by: s.referrer_source,
       order_by: [desc: fragment("count")],
       limit: ^limit
     ) |> Enum.map(fn ref ->
-      ref
-      |> Map.update("url", nil, fn url -> url && URI.parse("http://" <> url).host end)
-      |> Map.update("name", nil, fn name -> if name == "", do: "(no referrer)", else: name end)
+      Map.update(ref, "url", nil, fn url -> url && URI.parse("http://" <> url).host end)
     end)
   end
 
@@ -174,9 +179,7 @@ defmodule Plausible.Stats.Clickhouse do
       order_by: [desc: fragment("count")],
       limit: ^limit
     ) |> Enum.map(fn ref ->
-      ref
-      |> Map.update("url", nil, fn url -> url && URI.parse("http://" <> url).host end)
-      |> Map.update("name", nil, fn name -> if name == "", do: "(no referrer)", else: name end)
+      Map.update(ref, "url", nil, fn url -> url && URI.parse("http://" <> url).host end)
     end)
 
     if "bounce_rate" in include do
