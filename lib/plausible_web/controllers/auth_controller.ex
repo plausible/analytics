@@ -183,7 +183,7 @@ defmodule PlausibleWeb.AuthController do
       Repo.delete!(site)
     end
 
-    Repo.delete!(user.subscription)
+    if user.subscription, do: Repo.delete!(user.subscription)
     Repo.delete!(user)
 
     logout(conn, params)

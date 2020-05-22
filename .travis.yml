@@ -3,6 +3,11 @@ elixir: '1.7.4'
 otp_release: '21.1'
 services:
   - postgresql
+  - docker
+before_install:
+  - echo "CREATE DATABASE plausible_test" > $HOME/init.sql
+  - docker pull yandex/clickhouse-server
+  - docker run -d -p 8123:8123 --ulimit nofile=262144:262144 --volume=$HOME/init.sql:/docker-entrypoint-initdb.d/init.sql yandex/clickhouse-server
 env:
   - MIX_ENV=test
 script: mix coveralls.travis
