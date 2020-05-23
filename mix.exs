@@ -87,8 +87,7 @@ defmodule Plausible.MixProject do
       {:oauther, "~> 1.1"},
       {:nanoid, "~> 2.0.2"},
       {:siphash, "~> 3.2"},
-      #{:clickhousex, [git: "https://github.com/atlas-forks/clickhousex.git"]},
-      {:clickhouse_ecto, [git: "https://github.com/appodeal/clickhouse_ecto.git"]}
+      {:clickhousex, [git: "https://github.com/atlas-forks/clickhousex.git"]}
     ]
   end
 

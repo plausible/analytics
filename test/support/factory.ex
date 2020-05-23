@@ -29,14 +29,14 @@ defmodule Plausible.Factory do
 
     %Plausible.ClickhouseSession{
       sign: 1,
-      session_id: UUID.uuid4(),
+      session_id: SipHash.hash!(@hash_key, UUID.uuid4()),
+      user_id: SipHash.hash!(@hash_key, UUID.uuid4()),
       hostname: hostname,
       domain: hostname,
       entry_page: "/",
       pageviews: 1,
       events: 1,
       duration: 0,
-      user_id: UUID.uuid4(),
       start: Timex.now(),
       timestamp: Timex.now(),
       is_bounce: false
@@ -53,6 +53,27 @@ defmodule Plausible.Factory do
       fingerprint: UUID.uuid4(),
       start: Timex.now(),
       is_bounce: false
+    }
+  end
+
+  def pg_pageview_factory do
+    struct!(
+      pg_event_factory(),
+      %{
+        name: "pageview"
+      }
+    )
+  end
+
+  def pg_event_factory do
+    hostname = sequence(:domain, &"example-#{&1}.com")
+
+    %Plausible.Event{
+      hostname: hostname,
+      domain: hostname,
+      pathname: "/",
+      timestamp: Timex.now(),
+      fingerprint: UUID.uuid4()
     }
   end
 
@@ -73,7 +94,8 @@ defmodule Plausible.Factory do
       domain: hostname,
       pathname: "/",
       timestamp: Timex.now(),
-      user_id: SipHash.hash!(@hash_key, UUID.uuid4())
+      user_id: SipHash.hash!(@hash_key, UUID.uuid4()),
+      session_id: SipHash.hash!(@hash_key, UUID.uuid4())
     }
   end
 

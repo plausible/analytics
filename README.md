@@ -21,12 +21,11 @@ Interested? [Read more on our website](https://plausible.io)
 
 ### Can Plausible Analytics be self-hosted?
 
-At the moment we don't provide support for easily self-hosting the code. Please read [hosting setup](./HOSTING.md) documentation for more details on this. 
-Note that this setup is still work-in-progress and should not be used for any production environment.   
- 
- 
-Currently, the purpose of keeping the code open-source is to be transparent with the community about how we
-collect and process data.  
+At the moment we don't provide support for easily self-hosting the code. Currently, the purpose of keeping the code open-source is to be transparent with the community about how we collect and process data.
+
+Making Plausible Analytics easy to self-host, providing full documentation and support for the process is something we want to see happening in the future. There is [a GitHub thread](https://github.com/plausible-insights/plausible/issues/26) you can join and engage with to follow our progress in making Plausible Analytics easy to self-host.
+
+### Why is Plausible Analytics not free like Google Analytics?
 
 Plausible Analytics is an independently owned and actively developed project. To keep the project development going, to stay in business, to continue putting effort into building a better product and to cover our costs, we need to charge a fee.
 

@@ -1,6 +1,7 @@
 defmodule Mix.Tasks.SendSiteSetupEmailsTest do
   use Plausible.DataCase
   use Bamboo.Test
+  import Plausible.TestUtils
 
   describe "when user has not managed to set up the site" do
     test "does not send an email 47 hours after site creation" do
@@ -37,8 +38,7 @@ defmodule Mix.Tasks.SendSiteSetupEmailsTest do
   describe "when user has managed to set up their site" do
     test "sends the setup completed email as soon as possible" do
       user = insert(:user)
-      site = insert(:site, members: [user])
-      insert(:pageview, domain: site.domain)
+       insert(:site, members: [user], domain: "test-site.com")
 
       Mix.Tasks.SendSiteSetupEmails.execute()
 
@@ -59,7 +59,7 @@ defmodule Mix.Tasks.SendSiteSetupEmailsTest do
         subject: "Your Plausible setup: Waiting for the first page views"
       )
 
-      insert(:pageview, domain: site.domain)
+      create_pageviews([%{domain: site.domain}])
       Mix.Tasks.SendSiteSetupEmails.execute()
 
       assert_email_delivered_with(

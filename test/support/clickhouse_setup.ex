@@ -12,20 +12,21 @@ defmodule Plausible.Test.ClickhouseSetup do
       timestamp DateTime,
       name String,
       domain String,
-      user_id FixedString(64),
+      user_id UInt64,
+      session_id UInt64,
       hostname String,
       pathname String,
-      referrer Nullable(String),
-      referrer_source Nullable(String),
-      initial_referrer Nullable(String),
-      initial_referrer_source Nullable(String),
-      country_code Nullable(FixedString(2)),
-      screen_size Nullable(String),
-      operating_system Nullable(String),
-      browser Nullable(String)
+      referrer String,
+      referrer_source String,
+      initial_referrer String,
+      initial_referrer_source String,
+      country_code LowCardinality(FixedString(2)),
+      screen_size LowCardinality(String),
+      operating_system LowCardinality(String),
+      browser LowCardinality(String)
     ) ENGINE = MergeTree()
     PARTITION BY toYYYYMM(timestamp)
-    ORDER BY (name, domain, timestamp, user_id)
+    ORDER BY (name, domain, user_id, timestamp)
     SETTINGS index_granularity = 8192
     """
 
@@ -37,28 +38,28 @@ defmodule Plausible.Test.ClickhouseSetup do
     drop = "DROP TABLE sessions"
     create = """
     CREATE TABLE sessions (
-      session_id UUID,
+      session_id UInt64,
       sign Int8,
       domain String,
-      user_id FixedString(64),
+      user_id UInt64,
       hostname String,
       timestamp DateTime,
       start DateTime,
       is_bounce UInt8,
-      entry_page Nullable(String),
-      exit_page Nullable(String),
+      entry_page String,
+      exit_page String,
       pageviews Int32,
       events Int32,
       duration UInt32,
-      referrer Nullable(String),
-      referrer_source Nullable(String),
-      country_code Nullable(FixedString(2)),
-      screen_size Nullable(String),
-      operating_system Nullable(String),
-      browser Nullable(String)
+      referrer String,
+      referrer_source String,
+      country_code LowCardinality(FixedString(2)),
+      screen_size LowCardinality(String),
+      operating_system LowCardinality(String),
+      browser LowCardinality(String)
     ) ENGINE = CollapsingMergeTree(sign)
     PARTITION BY toYYYYMM(start)
-    ORDER BY (domain, start, user_id)
+    ORDER BY (domain, user_id, session_id, start)
     SETTINGS index_granularity = 8192
     """
 
@@ -98,8 +99,8 @@ defmodule Plausible.Test.ClickhouseSetup do
     ])
 
     Plausible.TestUtils.create_sessions([
-      %{domain: "test-site.com", entry_page: "/", referrer_source: "10words", referrer: "10words.com/page1", is_bounce: true, start: ~N[2019-01-01 02:00:00]},
-      %{domain: "test-site.com", entry_page: "/", referrer_source: "10words", referrer: "10words.com/page1", is_bounce: false, start: ~N[2019-01-01 02:00:00]}
+      %{domain: "test-site.com", entry_page: "/", exit_page: "/", referrer_source: "10words", referrer: "10words.com/page1", is_bounce: true, start: ~N[2019-01-01 02:00:00]},
+      %{domain: "test-site.com", entry_page: "/", exit_page: "/", referrer_source: "10words", referrer: "10words.com/page1", is_bounce: false, start: ~N[2019-01-01 02:00:00]}
     ])
   end
 end

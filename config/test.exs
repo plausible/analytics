@@ -30,3 +30,6 @@ config :junit_formatter,
   print_report_file: true,
   prepend_project_name?: true,
   include_filename?: true
+
+config :plausible,
+       session_timeout: 0

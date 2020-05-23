@@ -9,8 +9,8 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
-        %{"name" => "10words", "count" => 2, "url" => nil},
-        %{"name" => "Bing", "count" => 1, "url" => nil},
+        %{"name" => "10words", "count" => 2, "url" => "10words.com"},
+        %{"name" => "Bing", "count" => 1, "url" => ""},
       ]
     end
 
@@ -18,8 +18,8 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01&include=bounce_rate")
 
       assert json_response(conn, 200) == [
-        %{"name" => "10words", "count" => 2, "bounce_rate" => 50, "url" => nil},
-        %{"name" => "Bing", "count" => 1, "bounce_rate" => nil, "url" => nil},
+        %{"name" => "10words", "count" => 2, "bounce_rate" => 50.0, "url" => "10words.com"},
+        %{"name" => "Bing", "count" => 1, "bounce_rate" => nil, "url" => ""},
       ]
     end
   end
@@ -32,7 +32,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       conn = get(conn, "/api/stats/#{site.domain}/goal/referrers?period=day&date=2019-01-01&filters=#{filters}")
 
       assert json_response(conn, 200) == [
-        %{"name" => "Google", "count" => 3, "url" => nil},
+        %{"name" => "Google", "count" => 3, "url" => "google.com"},
       ]
     end
 
@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       conn = get(conn, "/api/stats/#{site.domain}/goal/referrers?period=day&date=2019-01-01&filters=#{filters}")
 
       assert json_response(conn, 200) == [
-        %{"name" => "Google", "count" => 2, "url" => nil},
+        %{"name" => "Google", "count" => 2, "url" => "google.com"},
       ]
     end
   end
@@ -55,8 +55,8 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       assert json_response(conn, 200) == %{
         "total_visitors" => 2,
         "referrers" => [
-          %{"name" => "10words.com/page1", "count" => 1},
           %{"name" => "10words.com/page2", "count" => 1},
+          %{"name" => "10words.com/page1", "count" => 1},
         ]
       }
     end
@@ -67,8 +67,8 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       assert json_response(conn, 200) == %{
         "total_visitors" => 2,
         "referrers" => [
-          %{"name" => "10words.com/page1", "count" => 1, "bounce_rate" => 50},
           %{"name" => "10words.com/page2", "count" => 1, "bounce_rate" => nil},
+          %{"name" => "10words.com/page1", "count" => 1, "bounce_rate" => 50.0},
         ]
       }
     end

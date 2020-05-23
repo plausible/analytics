@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def activation_email(user, link) do
-    new_email()
+    base_email()
     |> to(user.email)
     |> from(mailer_email_from())
     |> tag("activation-email")
@@ -20,7 +20,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def welcome_email(user) do
-    new_email()
+    base_email()
     |> to(user)
     |> from(mailer_email_from())
     |> tag("welcome-email")
@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def create_site_email(user) do
-    new_email()
+    base_email()
     |> to(user)
     |> from(mailer_email_from())
     |> tag("create-site-email")
@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def site_setup_help(user, site) do
-    new_email()
+    base_email()
     |> to(user)
     |> from(mailer_email_from())
     |> tag("help-email")
@@ -47,7 +47,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def site_setup_success(user, site) do
-    new_email()
+    base_email()
     |> to(user)
     |> from(mailer_email_from())
     |> tag("setup-success-email")
@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def check_stats_email(user) do
-    new_email()
+    base_email()
     |> to(user)
     |> from(mailer_email_from())
     |> tag("check-stats-email")
@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def password_reset_email(email, reset_link) do
-    new_email()
+    base_email()
     |> to(email)
     |> from(mailer_email_from())
     |> tag("password-reset-email")
@@ -74,7 +74,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def trial_one_week_reminder(user) do
-    new_email()
+    base_email()
     |> to(user)
     |> from(mailer_email_from())
     |> tag("trial-one-week-reminder")
@@ -83,7 +83,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def trial_upgrade_email(user, day, pageviews) do
-    new_email()
+    base_email()
     |> to(user)
     |> from(mailer_email_from())
     |> tag("trial-upgrade-email")
@@ -92,7 +92,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def trial_over_email(user) do
-    new_email()
+    base_email()
     |> to(user)
     |> from(mailer_email_from())
     |> tag("trial-over-email")
@@ -103,9 +103,9 @@ defmodule PlausibleWeb.Email do
   def feedback(from, text) do
     from = if from == "", do: "anonymous@plausible.io", else: from
 
-    new_email()
-    |> to(admin_email())
-    |> from(mailer_email_from())
+    base_email()
+    |> to("hello@plausible.io")
+    |> from("feedback@plausible.io")
     |> put_param("ReplyTo", from)
     |> tag("feedback")
     |> subject("New feedback submission")
@@ -113,11 +113,16 @@ defmodule PlausibleWeb.Email do
   end
 
   def weekly_report(email, site, assigns) do
-    new_email()
+    base_email()
     |> to(email)
-    |> from(mailer_email_from())
+    |> from("Plausible Insights <info@plausible.io>")
     |> tag("weekly-report")
     |> subject("#{assigns[:name]} report for #{site.domain}")
     |> render("weekly_report.html", Keyword.put(assigns, :site, site))
+  end
+
+  defp base_email() do
+    new_email()
+    |> put_param("TrackOpens", false)
   end
 end
