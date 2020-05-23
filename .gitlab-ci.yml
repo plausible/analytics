@@ -63,11 +63,14 @@ test:ex_unit:
   <<: *elixir-commons
   services:
     - postgres
+    - name: yandex/clickhouse-server:20.3.9.70
+      alias: clickhouse
   stage: test
   variables:
     POSTGRES_PASSWORD: postgres
     POSTGRES_USER: postgres
     DATABASE_URL: postgres://postgres:postgres@postgres:5432/plausible_test?currentSchema=default
+    CLICKHOUSE_DATABASE_HOST: clickhouse
     MIX_HOME: $CI_PROJECT_DIR/.mix
   script:
     - mix test --cover
