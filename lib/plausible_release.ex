@@ -5,6 +5,7 @@ defmodule Plausible.Release do
     :postgrex,
     :ecto
   ]
+  alias Mix.Tasks.HydrateClickhouse, as: Clickhouse
 
   def init_admin do
     {admin_email, admin_user, admin_pwd} =
@@ -105,6 +106,10 @@ defmodule Plausible.Release do
     for repo <- repos() do
       :ok = ensure_repo_created(repo)
     end
+    # hydrate clickhouse
+    Clickhouse.create_db()
+    Clickhouse.create_events()
+    Clickhouse.create_sessions()
   end
 
   defp ensure_repo_created(repo) do
@@ -133,10 +138,16 @@ defmodule Plausible.Release do
     IO.puts("Starting dependencies..")
     # Start apps necessary for executing migrations
     Enum.each(@start_apps, &Application.ensure_all_started/1)
+    prepare_clickhouse()
 
     # Start the Repo(s) for myapp
     IO.puts("Starting repos..")
     Enum.each(repos(), & &1.start_link(pool_size: 2))
+  end
+
+  defp prepare_clickhouse do
+    clickhouse_config = Application.get_env(:plausible, :clickhouse)
+    Clickhousex.start_link(Keyword.merge([scheme: :http, port: 8123, name: :clickhouse], clickhouse_config))
   end
 
   defp seeds_path(repo), do: priv_path_for(repo, "seeds.exs")

@@ -71,7 +71,11 @@ test:ex_unit:
     POSTGRES_USER: postgres
     DATABASE_URL: postgres://postgres:postgres@postgres:5432/plausible_test?currentSchema=default
     CLICKHOUSE_DATABASE_HOST: clickhouse
+    CLICKHOUSE_DATABASE_NAME: plausible_test
     MIX_HOME: $CI_PROJECT_DIR/.mix
+  before_script:
+    - apt update && apt install -y clickhouse-client
+    - clickhouse-client --host clickhouse --query "CREATE DATABASE IF NOT EXISTS plausible_test"
   script:
     - mix test --cover
   coverage: '/\[TOTAL\]\s+(\d+\.\d+)%/'
