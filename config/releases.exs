@@ -33,7 +33,7 @@ ck_host = System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost")
 ck_db = System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_dev")
 ck_db_user = System.get_env("CLICKHOUSE_DATABASE_USER")
 ck_db_pwd = System.get_env("CLICKHOUSE_DATABASE_PASSWORD")
-ck_db_pool = System.get_env("CLICKHOUSE_DATABASE_POOLSIZE",30)
+ck_db_pool = System.get_env("CLICKHOUSE_DATABASE_POOLSIZE") || 10
 ### Mandatory params End
 
 sentry_dsn = System.get_env("SENTRY_DSN")

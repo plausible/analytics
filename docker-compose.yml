@@ -29,6 +29,12 @@ services:
     ports:
       - 5432:5432
 
+  plausible_events_db:
+    container_name: plausible_events_db
+    image: yandex/clickhouse-server
+    ports:
+    - 8123:8123
+
   plausible:
     container_name: plausible
     build:
@@ -54,13 +60,17 @@ services:
       - SMTP_USER_PWD=password
       - SMTP_HOST_SSL_ENABLED=false
       - SMTP_MX_LOOKUPS_ENABLED=false
+      - CLICKHOUSE_DATABASE_HOST=plausible_events_db
+      - CLICKHOUSE_DATABASE_NAME=plausible_events_db
     depends_on:
+      - plausible_events_db
       - plausible_db
       - fakesmtp_server
     ports:
       - 80:8080
     links:
       - plausible_db
+      - plausible_events_db
       - fakesmtp_server
 
 

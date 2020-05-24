@@ -111,7 +111,7 @@ In case of `Bamboo.SMTPAdapter` you need to supply the following variables:
 
 ### Database
 
-Plausible uses postgresql as database for storing all the data. Use the following the variables to configure it.
+Plausible uses postgresql as database for storing all the user-data. Use the following the variables to configure it.
 
 - DATABASE_URL (*String*)
     - The repo Url as dictated [here](https://hexdocs.pm/ecto/Ecto.Repo.html#module-urls)
@@ -119,6 +119,15 @@ Plausible uses postgresql as database for storing all the data. Use the followin
     -  A default pool size for connecting to the database, defaults to *10*, a higher number is recommended for a production system.
 - DATABASE_TLS_ENABLED (*Boolean String*)
     - A flag that says whether to connect to the database via TLS, read [here](https://www.postgresql.org/docs/10/ssl-tcp.html)
+
+For performance reasons, all the analytics events are stored in clickhouse:
+
+- CLICKHOUSE_DATABASE_HOST (*String*)
+- CLICKHOUSE_DATABASE_NAME (*String*)
+- CLICKHOUSE_DATABASE_USER (*String*)
+- CLICKHOUSE_DATABASE_PASSWORD (*String*)
+- CLICKHOUSE_DATABASE_POOLSIZE (*Number*)
+    - A default pool size for connecting to the database, defaults to *10*, a higher number is recommended for a production system.
 
 ### External Services
 
