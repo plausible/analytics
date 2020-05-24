@@ -23,8 +23,6 @@ config :plausible,
   paddle_api: Plausible.PaddleApi.Mock,
   google_api: Plausible.Google.Api.Mock
 
-config :plausible,
-  session_timeout: 0
 
 config :junit_formatter,
   report_file: "report.xml",
@@ -32,3 +30,6 @@ config :junit_formatter,
   print_report_file: true,
   prepend_project_name?: true,
   include_filename?: true
+
+config :plausible,
+       session_timeout: 0

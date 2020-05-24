@@ -16,8 +16,7 @@ defmodule Mix.Tasks.SendTrialNotificationsTest do
   describe "with site and pageviews" do
     test "sends a reminder 7 days before trial ends (16 days after user signed up)" do
       user = insert(:user, trial_expiry_date: Timex.now |> Timex.shift(days: 7))
-      site = insert(:site, members: [user])
-      insert(:pageview, domain: site.domain)
+      insert(:site, domain: "test-site.com", members: [user])
 
       Mix.Tasks.SendTrialNotifications.execute()
 
@@ -26,28 +25,25 @@ defmodule Mix.Tasks.SendTrialNotificationsTest do
 
     test "sends an upgrade email the day before the trial ends" do
       user = insert(:user, trial_expiry_date: Timex.now |> Timex.shift(days: 1))
-      site = insert(:site, members: [user])
-      insert(:pageview, domain: site.domain)
+      insert(:site, domain: "test-site.com", members: [user])
 
       Mix.Tasks.SendTrialNotifications.execute()
 
-      assert_delivered_email(PlausibleWeb.Email.trial_upgrade_email(user, "tomorrow", 1))
+      assert_delivered_email(PlausibleWeb.Email.trial_upgrade_email(user, "tomorrow", 3))
     end
 
     test "sends an upgrade email the day the trial ends" do
       user = insert(:user, trial_expiry_date: Timex.today())
-      site = insert(:site, members: [user])
-      insert(:pageview, domain: site.domain)
+      insert(:site, domain: "test-site.com", members: [user])
 
       Mix.Tasks.SendTrialNotifications.execute()
 
-      assert_delivered_email(PlausibleWeb.Email.trial_upgrade_email(user, "today", 1))
+      assert_delivered_email(PlausibleWeb.Email.trial_upgrade_email(user, "today", 3))
     end
 
     test "sends a trial over email the day after the trial ends" do
       user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
-      site = insert(:site, members: [user])
-      insert(:pageview, domain: site.domain)
+      insert(:site, domain: "test-site.com", members: [user])
 
       Mix.Tasks.SendTrialNotifications.execute()
 
@@ -55,15 +51,9 @@ defmodule Mix.Tasks.SendTrialNotificationsTest do
     end
 
     test "does not send a notification if user has a subscription" do
-      user1 = insert(:user, trial_expiry_date: Timex.now |> Timex.shift(days: 7))
-      site1 = insert(:site, members: [user1])
-      insert(:pageview, domain: site1.domain)
-      user2 = insert(:user, trial_expiry_date: Timex.now |> Timex.shift(days: 1))
-      site2 = insert(:site, members: [user2])
-      insert(:pageview, domain: site2.domain)
-
-      insert(:subscription, user: user1)
-      insert(:subscription, user: user2)
+      user = insert(:user, trial_expiry_date: Timex.now |> Timex.shift(days: 7))
+      insert(:site, domain: "test-site.com", members: [user])
+      insert(:subscription, user: user)
 
       Mix.Tasks.SendTrialNotifications.execute()
 

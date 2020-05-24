@@ -46,7 +46,7 @@ defmodule Plausible.Ingest.FingerprintSession do
         Timex.diff(state[:last_unload], first_event.timestamp, :seconds)
       end
 
-      Plausible.FingerprintSession.changeset(%Plausible.FingerprintSession{}, %{
+      changeset = Plausible.FingerprintSession.changeset(%Plausible.FingerprintSession{}, %{
         hostname: first_event.hostname,
         domain: first_event.domain,
         fingerprint: first_event.fingerprint,
@@ -60,7 +60,9 @@ defmodule Plausible.Ingest.FingerprintSession do
         operating_system: first_event.operating_system,
         browser: first_event.browser,
         start: first_event.timestamp
-      }) |> Repo.insert!
+      })
+
+      Repo.insert!(changeset)
     end
 
     {:stop, :normal, state}

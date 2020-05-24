@@ -41,4 +41,5 @@ npm-debug.log
 # variables.
 /config/*.secret.exs
 
-*-report.xml
+# Ignore Elixir Language Server files
+.elixir_ls

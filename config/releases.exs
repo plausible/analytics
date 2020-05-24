@@ -29,6 +29,11 @@ env = System.get_env("ENVIRONMENT", "prod")
 mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.PostmarkAdapter")
 mailer_email = System.get_env("MAILER_EMAIL", "hello@plausible.local")
 app_version = System.get_env("APP_VERSION", "0.0.1")
+ck_host = System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost")
+ck_db = System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_dev")
+ck_db_user = System.get_env("CLICKHOUSE_DATABASE_USER")
+ck_db_pwd = System.get_env("CLICKHOUSE_DATABASE_PASSWORD")
+ck_db_pool = System.get_env("CLICKHOUSE_DATABASE_POOLSIZE") || 10
 ### Mandatory params End
 
 sentry_dsn = System.get_env("SENTRY_DSN")
@@ -81,6 +86,13 @@ config :plausible, :google,
   client_secret: google_secret
 
 config :plausible, :slack, webhook: slack_hook_url
+
+config :plausible, :clickhouse,
+       hostname: ck_host,
+       database: ck_db,
+       username: ck_db_user,
+       password: ck_db_pwd,
+       pool_size: ck_db_pool
 
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->

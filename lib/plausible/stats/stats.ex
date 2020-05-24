@@ -440,6 +440,13 @@ defmodule Plausible.Stats do
     )
   end
 
+  def has_pageviews?(site) do
+    Repo.exists?(
+      from e in Plausible.Event,
+      where: e.domain == ^site.domain
+    )
+  end
+
   def goal_conversions(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
     Repo.all(from e in base_query(site, query),
       select: count(e.fingerprint, :distinct),

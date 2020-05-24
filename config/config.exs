@@ -8,6 +8,13 @@ config :plausible,
   ecto_repos: [Plausible.Repo],
   environment: System.get_env(Atom.to_string(Mix.env()), "dev")
 
+config :plausible, :clickhouse,
+       hostname: System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost"),
+       database: System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_test"),
+       username: System.get_env("CLICKHOUSE_DATABASE_USER"),
+       password: System.get_env("CLICKHOUSE_DATABASE_PASSWORD"),
+       pool_size: 10
+
 # Configures the endpoint
 config :plausible, PlausibleWeb.Endpoint,
   url: [
@@ -57,7 +64,8 @@ config :plausible,
 
 config :plausible,
   # 30 minutes
-  session_timeout: 1000 * 60 * 30
+  session_timeout: 1000 * 60 * 30, # 30 minutes
+  session_length_minutes: 30
 
 config :plausible, :paddle,
   vendor_id: "49430",

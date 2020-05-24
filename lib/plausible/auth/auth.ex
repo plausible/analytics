@@ -1,6 +1,7 @@
 defmodule Plausible.Auth do
   use Plausible.Repo
   alias Plausible.Auth
+  alias Plausible.Stats.Clickhouse, as: Stats
 
   def create_user(name, email) do
     %Auth.User{}
@@ -13,18 +14,15 @@ defmodule Plausible.Auth do
   end
 
   def user_completed_setup?(user) do
-    query =
-      from(
-        e in Plausible.Event,
-        join: s in Plausible.Site,
-        on: s.domain == e.domain,
-        join: sm in Plausible.Site.Membership,
-        on: sm.site_id == s.id,
-        join: u in Plausible.Auth.User,
-        on: sm.user_id == u.id,
-        where: u.id == ^user.id
-      )
-
-    Repo.exists?(query)
+    domains = Repo.all(
+      from u in Plausible.Auth.User,
+      where: u.id == ^user.id,
+      join: sm in Plausible.Site.Membership,
+      on: sm.user_id == u.id,
+      join: s in Plausible.Site,
+      on: s.id == sm.site_id,
+      select: s.domain
+    )
+    Stats.has_pageviews?(domains)
   end
 end

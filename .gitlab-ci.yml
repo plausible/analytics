@@ -63,12 +63,19 @@ test:ex_unit:
   <<: *elixir-commons
   services:
     - postgres
+    - name: yandex/clickhouse-server:20.3.9.70
+      alias: clickhouse
   stage: test
   variables:
     POSTGRES_PASSWORD: postgres
     POSTGRES_USER: postgres
     DATABASE_URL: postgres://postgres:postgres@postgres:5432/plausible_test?currentSchema=default
+    CLICKHOUSE_DATABASE_HOST: clickhouse
+    CLICKHOUSE_DATABASE_NAME: plausible_test
     MIX_HOME: $CI_PROJECT_DIR/.mix
+  before_script:
+    - apt update && apt install -y clickhouse-client
+    - clickhouse-client --host clickhouse --query "CREATE DATABASE IF NOT EXISTS plausible_test"
   script:
     - mix test --cover
   coverage: '/\[TOTAL\]\s+(\d+\.\d+)%/'

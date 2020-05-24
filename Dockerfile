@@ -72,7 +72,6 @@ RUN apt-get update && \
 COPY .gitlab/build-scripts/docker-entrypoint.sh /entrypoint.sh
 
 RUN chmod a+x /entrypoint.sh && \
-    export TZ="Europe/Berlin" && \
     useradd -d /app -u 1000 -s /bin/bash -m plausibleuser
 
 COPY --from=buildcontainer /usr/local/bin/gosu /usr/local/bin/gosu

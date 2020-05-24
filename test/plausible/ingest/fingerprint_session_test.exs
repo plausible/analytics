@@ -13,7 +13,7 @@ defmodule Plausible.Ingest.FingerprintSessionTest do
 
   describe "on_event/1" do
     test "starts a new session if there is no session for user id" do
-      pageview = insert(:pageview)
+      pageview = insert(:pg_pageview)
 
       refute is_pid(:global.whereis_name(pageview.fingerprint))
 
@@ -23,7 +23,7 @@ defmodule Plausible.Ingest.FingerprintSessionTest do
     end
 
     test "copies event data to session" do
-      pageview = insert(:pageview)
+      pageview = insert(:pg_pageview)
 
       Ingest.FingerprintSession.on_event(pageview)
 
@@ -34,7 +34,7 @@ defmodule Plausible.Ingest.FingerprintSessionTest do
     end
 
     test "inserts bounced session when timeout fires after one pageview" do
-      pageview = insert(:pageview)
+      pageview = insert(:pg_pageview)
 
       Ingest.FingerprintSession.on_event(pageview)
 
@@ -43,8 +43,8 @@ defmodule Plausible.Ingest.FingerprintSessionTest do
     end
 
     test "session with two events is not a bounce" do
-      pageview = insert(:pageview)
-      pageview2 = insert(:pageview, fingerprint: pageview.fingerprint)
+      pageview = insert(:pg_pageview)
+      pageview2 = insert(:pg_pageview, fingerprint: pageview.fingerprint)
 
       Ingest.FingerprintSession.on_event(pageview)
       Ingest.FingerprintSession.on_event(pageview2)
@@ -54,8 +54,8 @@ defmodule Plausible.Ingest.FingerprintSessionTest do
     end
 
     test "captures the exit page" do
-      pageview = insert(:pageview)
-      pageview2 = insert(:pageview, fingerprint: pageview.fingerprint, pathname: "/exit")
+      pageview = insert(:pg_pageview)
+      pageview2 = insert(:pg_pageview, fingerprint: pageview.fingerprint, pathname: "/exit")
 
       Ingest.FingerprintSession.on_event(pageview)
       Ingest.FingerprintSession.on_event(pageview2)
@@ -67,7 +67,7 @@ defmodule Plausible.Ingest.FingerprintSessionTest do
 
   describe "on_unload/1" do
     test "uses the unload timestamp to calculate session length" do
-      pageview = insert(:pageview)
+      pageview = insert(:pg_pageview)
       unload_timestamp = Timex.shift(pageview.timestamp, seconds: 30)
 
       Ingest.FingerprintSession.on_event(pageview)
