@@ -216,11 +216,19 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def conversions_from_referrer(site, query, referrer) do
-    [res] = Clickhouse.all(
+    converted_sessions = from(
       from e in base_query(site, query),
-      select: fragment("uniq(user_id) as visitors"),
-      where: e.initial_referrer_source == ^referrer
+      select: %{session_id: e.session_id}
     )
+
+    [res] = Plausible.Clickhouse.all(
+      from s in Plausible.ClickhouseSession,
+      join: cs  in subquery(converted_sessions),
+      on: s.session_id == cs.session_id,
+      where: s.referrer_source == ^referrer,
+      select: fragment("uniq(user_id) as visitors")
+    )
+
     res["visitors"]
   end
 
@@ -258,11 +266,18 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def referrer_drilldown_for_goal(site, query, referrer) do
-    Clickhouse.all(
+    converted_sessions = from(
       from e in base_query(site, query),
-      select: {fragment("? as name", e.initial_referrer), fragment("uniq(user_id) as count")},
-      group_by: e.initial_referrer,
-      where: e.initial_referrer_source == ^referrer,
+      select: %{session_id: e.session_id}
+    )
+
+    Plausible.Clickhouse.all(
+      from s in Plausible.ClickhouseSession,
+      join: cs  in subquery(converted_sessions),
+      on: s.session_id == cs.session_id,
+      select: {fragment("? as name", s.referrer), fragment("uniq(user_id) as count")},
+      where: s.referrer_source == ^referrer,
+      group_by: s.referrer,
       order_by: [desc: fragment("count")],
       limit: 100
     )
