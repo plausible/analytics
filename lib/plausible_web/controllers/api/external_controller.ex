@@ -51,7 +51,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         name: params["name"],
         hostname: strip_www(uri && uri.host),
         domain: strip_www(params["domain"]) || strip_www(uri && uri.host),
-        pathname: uri && escape_quote(uri.path),
+        pathname: uri && (uri.path || "/"),
         country_code: country_code,
         fingerprint: calculate_fingerprint(conn, params),
         operating_system: ua && os_name(ua),
@@ -159,8 +159,6 @@ defmodule PlausibleWeb.Api.ExternalController do
         source
     end
   end
-
-  defp escape_quote(s), do: String.replace(s, "'", "''")
 
   defp clean_uri(uri) do
     uri = URI.parse(String.trim(uri))

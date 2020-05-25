@@ -80,9 +80,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "www. is stripped from hostname", %{conn: conn} do
       params = %{
         name: "pageview",
-        url: "http://www.example.com/",
-        uid: UUID.uuid4(),
-        new_visitor: true
+        url: "http://www.example.com/"
       }
 
       conn
@@ -93,6 +91,22 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       finalize_session(pageview.fingerprint)
 
       assert pageview.hostname == "example.com"
+    end
+
+    test "empty path defaults to /", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://www.example.com"
+      }
+
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> post("/api/event", Jason.encode!(params))
+
+      pageview = Repo.one(Plausible.Event)
+      finalize_session(pageview.fingerprint)
+
+      assert pageview.pathname == "/"
     end
 
     test "bots and crawlers are ignored", %{conn: conn} do
