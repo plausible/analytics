@@ -22,5 +22,9 @@ export function serializeQuery(query, extraQuery=[]) {
 
 export function get(url, query, ...extraQuery) {
   url = url + serializeQuery(query, extraQuery)
-  return fetch(url).then(res => res.json())
+  return fetch(url)
+    .then( response => {
+      if (!response.ok) { throw response }
+      return response.json()
+    })
 }
