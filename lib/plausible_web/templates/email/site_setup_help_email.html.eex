@@ -4,7 +4,7 @@ Hey <%= user_salutation(@user) %>,
   You signed up for a free 30-day trial of Plausible, a simple and privacy-friendly website analytics tool.
   <br /><br />
 <% end %>
-To finish your setup for <%= @site.domain %>, you need to install <%= link("this lightweight line of JavaScript code", to: "https://plausible.io/#{URI.encode_www_form(@site.domain)}/snippet") %> into your site to start collecting visitor statistics.
+To finish your setup for <%= @site.domain %>, you need to install <%= link("this lightweight line of JavaScript code", to: "#{plausible_url()}/#{URI.encode_www_form(@site.domain)}/snippet") %> into your site to start collecting visitor statistics.
 <br /><br />
 This Plausible script is 14 times smaller than Google Analytics script so you’ll have a fast loading site while getting all the important traffic insights on one single page.
 <br /><br />
@@ -15,4 +15,4 @@ Uku Taht
 <br /><br />
 --
 <br /><br />
-https://plausible.io
+<%= plausible_url() %>

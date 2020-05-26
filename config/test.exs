@@ -13,24 +13,23 @@ config :logger, level: :warn
 config :bcrypt_elixir, :log_rounds, 4
 
 # Configure your database
-config :plausible, Plausible.Repo,
-  username: "postgres",
-  password: "postgres",
-  database: "plausible_test",
-  hostname: "localhost",
-  pool: Ecto.Adapters.SQL.Sandbox
+config :plausible,
+       Plausible.Repo,
+       pool: Ecto.Adapters.SQL.Sandbox
 
-config :plausible, :clickhouse,
-  hostname: "localhost",
-  database: "plausible_test",
-  pool_size: 10
-
-config :plausible, Plausible.Mailer,
-  adapter: Bamboo.TestAdapter
+config :plausible, Plausible.Mailer, adapter: Bamboo.TestAdapter
 
 config :plausible,
   paddle_api: Plausible.PaddleApi.Mock,
   google_api: Plausible.Google.Api.Mock
 
+
+config :junit_formatter,
+  report_file: "report.xml",
+  report_dir: File.cwd!(),
+  print_report_file: true,
+  prepend_project_name?: true,
+  include_filename?: true
+
 config :plausible,
-  session_timeout: 0
+       session_timeout: 0

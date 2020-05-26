@@ -1,0 +1,79 @@
+# NOTE:
+# This Docker-compose file is created as a sample and should not be used directly for production
+# You can adjust the settings as-per your environment
+version: "3.3"
+services:
+
+# As it says, this service is a fake smtp server which accepts SMTP connections
+# the inbox is available at localhost:8025, in actuality, you need to use a proper smtp server
+  fakesmtp_server:
+    container_name: fakesmtp_server
+    image: mailhog/mailhog:v1.0.0
+    ports:
+    - 1025:1025
+    - 8025:8025
+    healthcheck:
+      test: echo | telnet 127.0.0.1 1025
+
+
+  plausible_db:
+    container_name: plausible_db
+    image: postgres:9.4
+    command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=plausible_db
+      - POSTGRES_USER=postgres
+    ports:
+      - 5432:5432
+
+  plausible_events_db:
+    container_name: plausible_events_db
+    image: yandex/clickhouse-server
+    ports:
+    - 8123:8123
+
+  plausible:
+    container_name: plausible
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: sh -c "sleep 10 && /entrypoint.sh db createdb && /entrypoint.sh db migrate &&/entrypoint.sh run"
+    environment:
+      - ENVIRONMENT=production
+      - PORT=8080
+      - SECRET_KEY_BASE=iYb1mP5cnmY+gUxo7C/h6XMigossPhzwd8/ic6LFnQ9Y58Fl1xduSWaPq0fHDdbn
+      - SIGNING_SALT=PL/THF0VMOzuv1bOcldjDzYFBLryvXNs
+      - HOST=localhost
+      - DATABASE_URL=postgres://postgres:postgres@plausible_db:5432/plausible
+      - DATABASE_TLS_ENABLED=false
+      - ADMIN_USER_NAME=admin
+      - ADMIN_USER_EMAIL=admin@plausible.local
+      - ADMIN_USER_PWD=admin@1234!
+      - APP_VERSION=test
+      - MAILER_ADAPTER=Bamboo.SMTPAdapter
+      - SMTP_HOST_ADDR=fakesmtp_server
+      - SMTP_HOST_PORT=1025
+      - SMTP_USER_NAME=fakeuser@plausible.local
+      - SMTP_USER_PWD=password
+      - SMTP_HOST_SSL_ENABLED=false
+      - SMTP_MX_LOOKUPS_ENABLED=false
+      - CLICKHOUSE_DATABASE_HOST=plausible_events_db
+      - CLICKHOUSE_DATABASE_NAME=plausible_events_db
+    depends_on:
+      - plausible_events_db
+      - plausible_db
+      - fakesmtp_server
+    ports:
+      - 80:8080
+    links:
+      - plausible_db
+      - plausible_events_db
+      - fakesmtp_server
+
+
+volumes:
+  db-data:
+    driver: local

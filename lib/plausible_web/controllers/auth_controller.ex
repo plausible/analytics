@@ -21,7 +21,7 @@ defmodule PlausibleWeb.AuthController do
         url = PlausibleWeb.Endpoint.clean_url() <> "/claim-activation?token=#{token}"
         Logger.info(url)
         email_template = PlausibleWeb.Email.activation_email(user, url)
-        Plausible.Mailer.deliver_now(email_template)
+        Plausible.Mailer.send_email(email_template)
         conn |> render("register_success.html", email: user.email, layout: {PlausibleWeb.LayoutView, "focus.html"})
       {:error, changeset} ->
         render(conn, "register_form.html", changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
@@ -34,7 +34,7 @@ defmodule PlausibleWeb.AuthController do
         case Auth.create_user(name, email) do
           {:ok, user} ->
             PlausibleWeb.Email.welcome_email(user)
-            |> Plausible.Mailer.deliver_now()
+            |> Plausible.Mailer.send_email()
 
             conn
             |> put_session(:current_user_id, user.id)

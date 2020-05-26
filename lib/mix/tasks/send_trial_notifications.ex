@@ -52,7 +52,7 @@ defmodule Mix.Tasks.SendTrialNotifications do
 
   defp send_one_week_reminder(_, user) do
     PlausibleWeb.Email.trial_one_week_reminder(user)
-    |> Plausible.Mailer.deliver_now()
+    |> Plausible.Mailer.send_email()
   end
 
   defp send_tomorrow_reminder(["--dry-run"], user) do
@@ -63,7 +63,7 @@ defmodule Mix.Tasks.SendTrialNotifications do
     usage = Plausible.Billing.usage(user)
 
     PlausibleWeb.Email.trial_upgrade_email(user, "tomorrow", usage)
-    |> Plausible.Mailer.deliver_now()
+    |> Plausible.Mailer.send_email()
   end
 
   defp send_today_reminder(["--dry-run"], user) do
@@ -74,7 +74,7 @@ defmodule Mix.Tasks.SendTrialNotifications do
     usage = Plausible.Billing.usage(user)
 
     PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)
-    |> Plausible.Mailer.deliver_now()
+    |> Plausible.Mailer.send_email()
   end
 
   defp send_over_reminder(["--dry-run"], user) do

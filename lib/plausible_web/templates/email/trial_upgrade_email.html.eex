@@ -6,11 +6,11 @@ In the last month, your account has used <%= PlausibleWeb.AuthView.delimit_integ
 Based on that we recommend you select the <%= suggested_plan_name(@pageviews) %> plan which runs at <%= suggested_plan_cost(@pageviews) %>.
 You can also go with yearly billing to get 33% off on your plan.
 <br /><br />
-<%= link("Upgrade now", to: "https://plausible.io/billing/upgrade") %>
+<%= link("Upgrade now", to: "#{plausible_url()}/billing/upgrade") %>
 <br /><br />
 Have a question, feedback or need some guidance? Just reply to this email to get in touch!
 <br /><br />
 <br /><br />
 Thanks,<br />
 Uku Taht<br />
-https://plausible.io
+<%= plausible_url() %>

@@ -80,7 +80,7 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
 
   defp send_create_site_email(_, user) do
     PlausibleWeb.Email.create_site_email(user)
-    |> Plausible.Mailer.deliver_now()
+    |> Plausible.Mailer.send_email()
 
     Repo.insert_all("create_site_emails", [%{
       user_id: user.id,
@@ -94,7 +94,7 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
 
   defp send_setup_success_email(_, user, site) do
     PlausibleWeb.Email.site_setup_success(user, site)
-    |> Plausible.Mailer.deliver_now()
+    |> Plausible.Mailer.send_email()
 
     Repo.insert_all("setup_success_emails", [%{
       site_id: site.id,
@@ -108,7 +108,7 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
 
   defp send_setup_help_email(_, user, site) do
     PlausibleWeb.Email.site_setup_help(user, site)
-    |> Plausible.Mailer.deliver_now()
+    |> Plausible.Mailer.send_email()
 
     Repo.insert_all("setup_help_emails", [%{
       site_id: site.id,

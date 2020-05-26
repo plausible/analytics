@@ -1,6 +1,18 @@
 defmodule PlausibleWeb.StatsView do
   use PlausibleWeb, :view
 
+  def admin_email do
+    Application.get_env(:plausible, :admin_email)
+  end
+
+  def base_domain do
+    PlausibleWeb.Endpoint.host()
+  end
+
+  def plausible_url do
+    PlausibleWeb.Endpoint.clean_url()
+  end
+
   def large_number_format(n) do
     cond do
       n >= 1_000 && n < 1_000_000 ->

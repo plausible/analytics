@@ -4,13 +4,23 @@ defmodule Plausible.MixProject do
   def project do
     [
       app: :plausible,
-      version: "0.1.0",
-      elixir: "~> 1.5",
-      elixirc_paths: elixirc_paths(Mix.env()), compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      version: System.get_env("APP_VERSION", "0.0.1"),
+      elixir: "~> 1.10",
+      elixirc_paths: elixirc_paths(Mix.env()),
+      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      test_coverage: [tool: ExCoveralls]
+      test_coverage: [
+        tool: ExCoveralls
+      ],
+      releases: [
+        plausible: [
+          include_executables_for: [:unix],
+          applications: [plausible: :permanent],
+          steps: [:assemble, :tar]
+        ]
+      ]
     ]
   end
 
@@ -20,7 +30,16 @@ defmodule Plausible.MixProject do
   def application do
     [
       mod: {Plausible.Application, []},
-      extra_applications: [:logger, :sentry, :runtime_tools, :timex, :ua_inspector, :ref_inspector, :bamboo]
+      extra_applications: [
+        :logger,
+        :sentry,
+        :runtime_tools,
+        :timex,
+        :ua_inspector,
+        :ref_inspector,
+        :bamboo,
+        :bamboo_smtp
+      ]
     ]
   end
 
@@ -33,7 +52,8 @@ defmodule Plausible.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:browser, "~> 0.4.3"}, # remove
+      # remove
+      {:browser, "~> 0.4.3"},
       {:bcrypt_elixir, "~> 2.0"},
       {:cors_plug, "~> 1.5"},
       {:ecto_sql, "~> 3.0"},
@@ -47,17 +67,20 @@ defmodule Plausible.MixProject do
       {:phoenix_pubsub, "~> 1.1"},
       {:plug_cowboy, "~> 2.0"},
       {:postgrex, ">= 0.0.0"},
-      {:poison, "~> 3.1"}, # Used in paddle_api, can remove
+      #  Used in paddle_api, can remove
+      {:poison, "~> 3.1"},
       {:ref_inspector, "~> 1.3"},
       {:timex, "~> 3.6"},
       {:ua_inspector, "~> 0.18"},
       {:bamboo, "~> 1.3"},
       {:bamboo_postmark, "~> 0.5"},
+      {:bamboo_smtp, "~> 2.1.0"},
       {:sentry, "~> 7.0"},
       {:httpoison, "~> 1.4"},
       {:ex_machina, "~> 2.3", only: :test},
       {:excoveralls, "~> 0.10", only: :test},
       {:double, "~> 0.7.0", only: :test},
+      {:junit_formatter, "~> 3.1", only: [:test]},
       {:joken, "~> 2.0"},
       {:php_serializer, "~> 0.9.0"},
       {:csv, "~> 2.3"},

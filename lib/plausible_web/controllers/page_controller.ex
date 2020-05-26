@@ -70,7 +70,7 @@ defmodule PlausibleWeb.PageController do
   end
 
   def submit_contact_form(conn, %{"text" => text, "email" => email}) do
-    PlausibleWeb.Email.feedback(email, text) |> Plausible.Mailer.deliver_now
+    PlausibleWeb.Email.feedback(email, text) |> Plausible.Mailer.send_email()
     render(conn, "contact_thanks.html")
   end
 

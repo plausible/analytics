@@ -2,13 +2,13 @@ Hey <%= user_salutation(@user) %>,
 <br /><br />
 Congrats! The Plausible script has been installed correctly on <%= link(@site.domain, to: "https://#{@site.domain}") %>. Your website traffic is now being tracked without compromising the user experience and the privacy of your visitors.
 <br /><br />
-<%= link("Check your stats", to: "https://plausible.io/#{URI.encode_www_form(@site.domain)}") %>
+<%= link("Check your stats", to: "#{plausible_url()}/#{URI.encode_www_form(@site.domain)}") %>
 <br /><br />
 <%= if Plausible.Billing.on_trial?(@user) do %>
   You're on a 30-day unlimited-use free trial with no obligations so do take your time to explore your simple and privacy-friendly website analytics dashboard.
   <br /><br />
 <% end %>
-PS: Plausible is fully open-source and our public roadmap is defined by the community. <%= link("Leave your feedback", to: "https://plausible.io/feedback") %> and have your say on metrics and features we should be adding next.
+PS: Plausible is fully open-source and our public roadmap is defined by the community. <%= link("Leave your feedback", to: "#{plausible_url()}/feedback") %> and have your say on metrics and features we should be adding next.
 <br /><br />
 Do reply back to this email if you have any questions.
 <br /></br>
@@ -17,4 +17,5 @@ Uku Taht
 <br /><br />
 --
 <br /><br />
-https://plausible.io
+<%= plausible_url() %>
+

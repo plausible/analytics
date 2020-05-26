@@ -11,6 +11,18 @@ defmodule PlausibleWeb.AuthView do
     "free_10k" => "10k / free"
   }
 
+  def admin_email do
+    Application.get_env(:plausible, :admin_email)
+  end
+
+  def base_domain do
+    PlausibleWeb.Endpoint.host()
+  end
+
+  def plausible_url do
+    PlausibleWeb.Endpoint.clean_url()
+  end
+
   def subscription_name(subscription) do
     @subscription_names[subscription.paddle_plan_id]
   end

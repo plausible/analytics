@@ -35,7 +35,7 @@
   <%= if @site.public do %>
       Stats for <%= @site.domain %> are currently <b>public</b>. Anyone with the following link can view the stats:
       <div class="relative text-sm mt-4">
-        <input type="text" id="public-link" value="https://plausible.io/<%= URI.encode_www_form(@site.domain)  %>" class="transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 pr-16 text-gray-700 appearance-none focus:outline-none" />
+        <input type="text" id="public-link" value="<%= base_domain() <> "/" <> URI.encode_www_form(@site.domain)%>" class="transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 pr-16 text-gray-700 appearance-none focus:outline-none" />
         <a onclick="var input = document.getElementById('public-link'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="absolute right-0 text-indigo-700 font-bold p-2">
           <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
         </a>
@@ -112,7 +112,7 @@
         </p>
       <% else %>
         <p class="text-gray-700 mt-6">
-        Select the Google Search Console property you would like to pull keyword data from. If you don't see your domain, <%= link("set it up and verify", to: "https://docs.plausible.io/google-search-console-integration#1-add-your-site-on-the-search-console", class: "text-indigo-500") %> on Search Console first.
+        Select the Google Search Console property you would like to pull keyword data from. If you don't see your domain, <%= link("set it up and verify", to: "https://docs.#{base_domain()}/google-search-console-integration#1-add-your-site-on-the-search-console", class: "text-indigo-500") %> on Search Console first.
         </p>
       <% end %>
 
@@ -132,7 +132,7 @@
       <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(@site.id), class: "button mt-4") %>
 
       <div class="text-gray-700 mt-8">
-        NB: You also need to set up your site on <%= link("Google Search Console", to: "https://search.google.com/search-console/about") %> for the integration to work. <%= link("Read the docs", to: "https://docs.plausible.io/google-search-console-integration", class: "text-indigo-500") %>
+        NB: You also need to set up your site on <%= link("Google Search Console", to: "https://search.google.com/search-console/about") %> for the integration to work. <%= link("Read the docs", to: "https://docs.#{base_domain()}/google-search-console-integration", class: "text-indigo-500") %>
       </div>
     <% end %>
 </div>

@@ -1,6 +1,18 @@
 defmodule PlausibleWeb.LayoutView do
   use PlausibleWeb, :view
 
+  def admin_email do
+    Application.get_env(:plausible, :admin_email)
+  end
+
+  def base_domain do
+    PlausibleWeb.Endpoint.host()
+  end
+
+  def plausible_url do
+    PlausibleWeb.Endpoint.clean_url()
+  end
+
   def home_dest(conn) do
     if conn.assigns[:current_user] do
       "/sites"

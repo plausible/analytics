@@ -3,7 +3,7 @@ Hey <%= user_salutation(@user) %>,
 I'm building Plausible to provide a simple and ethical approach to tracking website visitors.
 I'm super excited to have you on board!
 <br /><br />
-To start collecting stats, you need to <%= link("add a site on Plausible", to: "https://plausible.io/sites/new") %>.
+To start collecting stats, you need to <%= link("add a site on Plausible", to: "#{plausible_url()}/sites/new") %>.
 <br /><br />
 Have a question, feedback or need some guidance? Do reply back to this email.
 <br /><br />
@@ -12,4 +12,4 @@ Uku Taht
 <br /><br />
 --
 <br /><br />
-https://plausible.io
+<%= plausible_url() %>

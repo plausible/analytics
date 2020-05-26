@@ -6,6 +6,10 @@ defmodule PlausibleWeb.StatsController do
 
   plug PlausibleWeb.AuthorizeStatsPlug when action in [:stats, :csv_export]
 
+  def base_domain() do
+    PlausibleWeb.Endpoint.host()
+  end
+
   def stats(conn, _params) do
     site = conn.assigns[:site]
     user = conn.assigns[:current_user]
@@ -14,7 +18,7 @@ defmodule PlausibleWeb.StatsController do
       redirect(conn, to: "/billing/upgrade")
     else
       if Stats.has_pageviews?(site) do
-        demo = site.domain == "plausible.io"
+        demo = site.domain == base_domain()
         offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
 
         conn
@@ -108,4 +112,3 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 end
-

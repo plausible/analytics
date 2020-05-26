@@ -20,6 +20,7 @@ defmodule Mix.Tasks.HydrateClickhouse do
     hydrate_events(repo)
   end
 
+
   def create_events() do
     ddl = """
     CREATE TABLE IF NOT EXISTS events (

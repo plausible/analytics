@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Router do
     plug :fetch_session
   end
 
-  if Mix.env == :dev do
+  if Application.get_env(:plausible, :environment) == "dev" do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
   end
 

@@ -91,7 +91,8 @@ defmodule Mix.Tasks.SendEmailReports do
       pages: pages,
       query: query,
       name: name
-    ) |> Plausible.Mailer.deliver_now()
+    )
+    |> Plausible.Mailer.send_email()
   end
 
   defp weekly_report_sent(site, time) do

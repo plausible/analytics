@@ -39,7 +39,7 @@ defmodule Mix.Tasks.SendCheckStatsEmails do
 
   defp send_check_stats_email(_, user) do
     PlausibleWeb.Email.check_stats_email(user)
-    |> Plausible.Mailer.deliver_now()
+    |> Plausible.Mailer.send_email()
 
     Repo.insert_all("check_stats_emails", [%{
       user_id: user.id,
