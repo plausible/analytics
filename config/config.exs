@@ -82,7 +82,7 @@ config :plausible,
            "DATABASE_URL",
            "postgres://postgres:postgres@127.0.0.1:5432/plausible_test?currentSchema=default"
          ),
-       ssl: false
+       ssl: String.to_existing_atom(System.get_env("DATABASE_TLS_ENABLED", "false"))
 
 config :plausible, :google,
   client_id: System.get_env("GOOGLE_CLIENT_ID"),
