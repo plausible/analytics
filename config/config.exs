@@ -90,7 +90,7 @@ config :plausible, :google,
 
 config :plausible, :slack, webhook: System.get_env("SLACK_WEBHOOK")
 
-mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.PostmarkAdapter")
+mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.LocalAdapter")
 
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
@@ -113,6 +113,9 @@ case mailer_adapter do
       no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true,
       auth: :always
 
+  "Bamboo.LocalAdapter" ->
+    config :plausible, Plausible.Mailer,
+      adapter: :"Elixir.#{mailer_adapter}"
   _ ->
     raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
 end
