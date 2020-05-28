@@ -30,7 +30,7 @@ defmodule PlausibleWeb.SiteView do
       if site.custom_domain do
         "https://" <> site.custom_domain.domain <> "/js/index.js"
       else
-        "https://plausible.io/js/plausible.js"
+        "#{plausible_url()}/js/plausible.js"
       end
 
     """
