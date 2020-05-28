@@ -19,7 +19,7 @@ config :plausible, :clickhouse,
 config :plausible, PlausibleWeb.Endpoint,
   url: [
     host: System.get_env("HOST", "localhost"),
-    port: String.to_integer(System.get_env("PORT", "8000"))
+    scheme: System.get_env("SCHEME", "http")
   ],
   http: [
     port: String.to_integer(System.get_env("PORT", "8000"))

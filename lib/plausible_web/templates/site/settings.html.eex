@@ -35,7 +35,7 @@
   <%= if @site.public do %>
       Stats for <%= @site.domain %> are currently <b>public</b>. Anyone with the following link can view the stats:
       <div class="relative text-sm mt-4">
-        <input type="text" id="public-link" value="<%= base_domain() <> "/" <> URI.encode_www_form(@site.domain)%>" class="transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 pr-16 text-gray-700 appearance-none focus:outline-none" />
+        <input type="text" id="public-link" value="<%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%>" class="transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 pr-16 text-gray-700 appearance-none focus:outline-none" />
         <a onclick="var input = document.getElementById('public-link'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="absolute right-0 text-indigo-700 font-bold p-2">
           <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
         </a>
