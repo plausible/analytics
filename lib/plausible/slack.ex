@@ -1,5 +1,5 @@
 defmodule Plausible.Slack do
-  @app_env System.get_env("APP_ENV") || "dev"
+  @app_env System.get_env("ENVIRONMENT") || "dev"
   require Logger
 
   def notify(text) do
