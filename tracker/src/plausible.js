@@ -1,33 +1,35 @@
 (function(window, plausibleHost){
   'use strict';
 
-  var scriptEl = window.document.querySelector('[src*="' + plausibleHost +'"]')
+  var location = window.location
+  var document = window.document
+
+  var scriptEl = document.querySelector('[src*="' + plausibleHost +'"]')
   var domainAttr = scriptEl && scriptEl.getAttribute('data-domain')
-  var CONFIG = {domain: domainAttr || window.location.hostname}
+  var CONFIG = {domain: domainAttr || location.hostname}
 
   function ignore(reason) {
-    console.warn('[Plausible] Ignoring event because ' + reason);
+    console.warn('[Plausible] Ignore event: ' + reason);
   }
 
   function getUrl() {
-    return window.location.protocol + '//' + window.location.hostname + window.location.pathname + window.location.search;
+    return location.protocol + '//' + location.hostname + location.pathname + location.search;
   }
 
   function getSourceFromQueryParam() {
-    var result = window.location.search.match(/[?&](ref|source|utm_source)=([^?&]+)/);
+    var result = location.search.match(/[?&](ref|source|utm_source)=([^?&]+)/);
     return result ? result[2] : null
   }
 
   function trigger(eventName, options) {
-    if (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(window.location.hostname)) return ignore('website is running locally');
-    if (window.location.protocol === 'file:') return ignore('website is running locally');
-    if (window.document.visibilityState === 'prerender') return ignore('document is prerendering');
+    if (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(location.hostname) || location.protocol === 'file:') return ignore('running locally');
+    if (document.visibilityState === 'prerender') return ignore('prerendering');
 
     var payload = {}
     payload.name = eventName
     payload.url = getUrl()
     payload.domain = CONFIG['domain']
-    payload.referrer = window.document.referrer || null
+    payload.referrer = document.referrer || null
     payload.source = getSourceFromQueryParam()
     payload.user_agent = window.navigator.userAgent
     payload.screen_width = window.innerWidth
