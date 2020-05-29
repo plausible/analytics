@@ -1,12 +1,9 @@
-defmodule Mix.Tasks.ObtainSslCertificates do
+defmodule Plausible.Workers.ProvisionSslCertificates do
   use Plausible.Repo
+  use Oban.Worker, queue: :provision_ssl_certificates
 
-  def run(_args) do
-    Application.ensure_all_started(:plausible)
-    execute()
-  end
-
-  def execute(system \\ System) do
+  @impl Oban.Worker
+  def perform(_args, _job, system \\ System) do
     recent_custom_domains = Repo.all(
       from cd in Plausible.Site.CustomDomain,
       where: cd.updated_at > fragment("now() - '3 days'::interval"),
@@ -22,9 +19,11 @@ defmodule Mix.Tasks.ObtainSslCertificates do
   defp report_result({_, 0}, domain) do
     Ecto.Changeset.change(domain, has_ssl_certificate: true) |> Repo.update!
     Plausible.Slack.notify("Obtained SSL cert for #{domain.domain}")
+    :ok
   end
 
   defp report_result({error_msg, error_code}, domain) do
     Sentry.capture_message("Error obtaining SSL certificate", extra: %{error_msg: error_msg, error_code: error_code, domain: domain.domain})
+    :ok # Failing to obtain is expected, not a failure for the job queue
   end
 end

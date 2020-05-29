@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.EmailReportsTest do
+defmodule Plausible.Workers.EmailReportsTest do
   use Plausible.DataCase
   use Bamboo.Test
   alias Plausible.Workers.SendEmailReports

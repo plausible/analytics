@@ -1,6 +1,6 @@
-defmodule Mix.Tasks.FetchTweetsTest do
+defmodule Plausible.Workers.FetchTweetsTest do
   use Plausible.DataCase
-  alias Mix.Tasks.FetchTweets
+  alias Plausible.Workers.FetchTweets
 
   describe "processing tweet entities" do
     test "inlines links to the body" do
