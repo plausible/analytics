@@ -1,5 +1,5 @@
 language: elixir
-elixir: '1.7.4'
+elixir: '1.10.3'
 otp_release: '21.1'
 services:
   - postgresql
