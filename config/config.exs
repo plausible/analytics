@@ -85,7 +85,15 @@ config :plausible, Plausible.Repo,
 
 config :plausible, Oban,
   repo: Plausible.Repo,
-  queues: [default: 10]
+  queues: [default: 10],
+  crontab: [
+    {"@hourly", Plausible.Workers.SendSiteSetupEmails},
+    {"@hourly", Plausible.Workers.SendEmailReports},
+    {"@daily", Plausible.Workers.FetchTweets},
+    {"0 12 * * *", Plausible.Workers.SendTrialNotifications}, # Daily at midday
+    {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails}, # Daily at midday
+    {"* /10 * * *", Plausible.Workers.ProvisionSslCertificates}, # Every 10 minutes
+  ]
 
 config :plausible, :google,
   client_id: System.get_env("GOOGLE_CLIENT_ID"),
