@@ -2,7 +2,8 @@ defmodule Plausible.Workers.SendEmailReports do
   use Plausible.Repo
   use Oban.Worker, queue: :email_reports
   require Logger
-  alias Plausible.Stats
+  alias Plausible.Stats.Query
+  alias Plausible.Stats.Clickhouse, as: Stats
 
   @impl Oban.Worker
   @doc"""
@@ -30,7 +31,7 @@ defmodule Plausible.Workers.SendEmailReports do
     )
 
     for site <- sites do
-      query = Stats.Query.from(site.timezone, %{"period" => "7d"})
+      query = Query.from(site.timezone, %{"period" => "7d"})
 
       for email <- site.weekly_report.recipients do
         Logger.info("Sending weekly report for #{URI.encode_www_form(site.domain)} to #{email}")
@@ -55,7 +56,7 @@ defmodule Plausible.Workers.SendEmailReports do
 
     for site <- sites do
       last_month = job_start |> Timex.Timezone.convert(site.timezone) |> Timex.shift(months: -1) |> Timex.beginning_of_month
-      query = Stats.Query.from(site.timezone, %{"period" => "month", "date" => Timex.format!(last_month, "{ISOdate}")})
+      query = Query.from(site.timezone, %{"period" => "month", "date" => Timex.format!(last_month, "{ISOdate}")})
 
       for email <- site.monthly_report.recipients do
         Logger.info("Sending monthly report for #{site.domain} to #{email}")
@@ -71,7 +72,7 @@ defmodule Plausible.Workers.SendEmailReports do
     {pageviews, unique_visitors} = Stats.pageviews_and_visitors(site, query)
     {change_pageviews, change_visitors} = Stats.compare_pageviews_and_visitors(site, query, {pageviews, unique_visitors})
     bounce_rate = Stats.bounce_rate(site, query)
-    prev_bounce_rate = Stats.bounce_rate(site, Stats.Query.shift_back(query))
+    prev_bounce_rate = Stats.bounce_rate(site, Query.shift_back(query))
     change_bounce_rate = if prev_bounce_rate > 0, do: bounce_rate - prev_bounce_rate
     referrers = Stats.top_referrers(site, query)
     pages = Stats.top_pages(site, query)
