@@ -83,10 +83,9 @@ config :plausible, Plausible.Repo,
          ),
        ssl: String.to_existing_atom(System.get_env("DATABASE_TLS_ENABLED", "false"))
 
-config :plausible, Oban,
-  repo: Plausible.Repo,
-  queues: [default: 10],
-  crontab: [
+
+crontab = if String.to_existing_atom(System.get_env("CRON_ENABLED", "false")) do
+  [
     {"@hourly", Plausible.Workers.SendSiteSetupEmails},
     {"@hourly", Plausible.Workers.SendEmailReports},
     {"@daily", Plausible.Workers.FetchTweets},
@@ -94,6 +93,14 @@ config :plausible, Oban,
     {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails}, # Daily at midday
     {"* /10 * * *", Plausible.Workers.ProvisionSslCertificates}, # Every 10 minutes
   ]
+else
+  false
+end
+
+config :plausible, Oban,
+  repo: Plausible.Repo,
+  queues: [default: 10],
+  crontab: crontab
 
 config :plausible, :google,
   client_id: System.get_env("GOOGLE_CLIENT_ID"),
