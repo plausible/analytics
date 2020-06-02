@@ -22,7 +22,7 @@ defmodule PlausibleWeb.SiteView do
   end
 
   def shared_link_dest(link) do
-    PlausibleWeb.Endpoint.url() <> "/share/" <> link.slug
+    plausible_url() <> "/share/" <> link.slug
   end
 
   def snippet(site) do
