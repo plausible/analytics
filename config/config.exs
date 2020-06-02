@@ -86,12 +86,12 @@ config :plausible, Plausible.Repo,
 
 crontab = if String.to_existing_atom(System.get_env("CRON_ENABLED", "false")) do
   [
-    {"@hourly", Plausible.Workers.SendSiteSetupEmails},
-    {"@hourly", Plausible.Workers.SendEmailReports},
-    {"@daily", Plausible.Workers.FetchTweets},
+    {"0 * * * *", Plausible.Workers.SendSiteSetupEmails}, # hourly
+    {"0 * * * *", Plausible.Workers.SendEmailReports}, # hourly
+    {"0 0 * * *", Plausible.Workers.FetchTweets},
     {"0 12 * * *", Plausible.Workers.SendTrialNotifications}, # Daily at midday
     {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails}, # Daily at midday
-    {"* /10 * * *", Plausible.Workers.ProvisionSslCertificates}, # Every 10 minutes
+    {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}, # Every 10 minutes
   ]
 else
   false
