@@ -4,7 +4,7 @@
     We've sent an activation link to <b><%= @email %></b>. Please click on the link to activate your account.
   </div>
   <div class="mt-8 text-sm">
-    Didn't recieve an email?
+    Didn't receive an email?
   </div>
   <div class="mt-2 text-sm text-gray-600 leading-tight">
     Please check your spam folder and contact <a href="mailto:support@plausible.io">support@plausible.io</a> if the problem persists

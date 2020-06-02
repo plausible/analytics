@@ -1,18 +1,9 @@
-defmodule Mix.Tasks.SendCheckStatsEmails do
-  use Mix.Task
+defmodule Plausible.Workers.SendCheckStatsEmails do
   use Plausible.Repo
-  require Logger
+  use Oban.Worker, queue: :check_stats_emails
 
-  @doc """
-  This is scheduled to run daily.
-  """
-
-  def run(args) do
-    Application.ensure_all_started(:plausible)
-    execute(args)
-  end
-
-  def execute(args \\ []) do
+  @impl Oban.Worker
+  def perform(_args, _job) do
     q =
       from(u in Plausible.Auth.User,
         left_join: ce in "check_stats_emails", on: ce.user_id == u.id,
@@ -28,16 +19,14 @@ defmodule Mix.Tasks.SendCheckStatsEmails do
       enabled_report = Enum.any?(user.sites, fn site -> site.weekly_report end)
 
       if Plausible.Auth.user_completed_setup?(user) && !enabled_report do
-        send_check_stats_email(args, user)
+        send_check_stats_email(user)
       end
     end
+
+    :ok
   end
 
-  defp send_check_stats_email(["--dry-run"], user) do
-    Logger.info("DRY RUN: check stats email to #{user.name}")
-  end
-
-  defp send_check_stats_email(_, user) do
+  defp send_check_stats_email(user) do
     PlausibleWeb.Email.check_stats_email(user)
     |> Plausible.Mailer.send_email()
 

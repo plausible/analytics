@@ -4,6 +4,8 @@ defmodule Mix.Tasks.HydrateClickhouse do
   require Logger
   @hash_key Keyword.fetch!(Application.get_env(:plausible, PlausibleWeb.Endpoint), :secret_key_base) |> binary_part(0, 16)
 
+  # coveralls-ignore-start
+
   def run(args) do
     Application.ensure_all_started(:db_connection)
     Application.ensure_all_started(:hackney)

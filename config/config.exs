@@ -6,7 +6,7 @@ config :plausible,
   mailer_email: System.get_env("MAILER_EMAIL", "hello@plausible.local"),
   admin_pwd: System.get_env("ADMIN_USER_PWD", "!@d3in"),
   ecto_repos: [Plausible.Repo],
-  environment: System.get_env(Atom.to_string(Mix.env()), "dev")
+  environment: System.get_env("ENVIRONMENT", "dev")
 
 config :plausible, :clickhouse,
        hostname: System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost"),
@@ -38,7 +38,7 @@ config :plausible, PlausibleWeb.Endpoint,
 config :sentry,
   dsn: System.get_env("SENTRY_DSN"),
   included_environments: [:prod, :staging],
-  environment_name: String.to_atom(Map.get(System.get_env(), "ENVIRONMENT", "dev")),
+  environment_name: String.to_atom(System.get_env("ENVIRONMENT", "dev")),
   enable_source_code_context: true,
   root_source_code_path: File.cwd!(),
   tags: %{app_version: System.get_env("APP_VERSION", "0.0.1")},
@@ -71,8 +71,7 @@ config :plausible, :paddle,
   vendor_id: "49430",
   vendor_auth_code: System.get_env("PADDLE_VENDOR_AUTH_CODE")
 
-config :plausible,
-       Plausible.Repo,
+config :plausible, Plausible.Repo,
        pool_size: String.to_integer(System.get_env("DATABASE_POOL_SIZE", "10")),
        timeout: 300_000,
        connect_timeout: 300_000,
@@ -80,9 +79,35 @@ config :plausible,
        url:
          System.get_env(
            "DATABASE_URL",
-           "postgres://postgres:postgres@127.0.0.1:5432/plausible_test?currentSchema=default"
+           "postgres://postgres:postgres@127.0.0.1:5432/plausible_dev?currentSchema=default"
          ),
        ssl: String.to_existing_atom(System.get_env("DATABASE_TLS_ENABLED", "false"))
+
+
+crontab = if String.to_existing_atom(System.get_env("CRON_ENABLED", "false")) do
+  [
+    {"0 * * * *", Plausible.Workers.SendSiteSetupEmails}, # hourly
+    {"0 * * * *", Plausible.Workers.SendEmailReports}, # hourly
+    {"0 0 * * *", Plausible.Workers.FetchTweets},
+    {"0 12 * * *", Plausible.Workers.SendTrialNotifications}, # Daily at midday
+    {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails}, # Daily at midday
+    {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}, # Every 10 minutes
+  ]
+else
+  false
+end
+
+config :plausible, Oban,
+  repo: Plausible.Repo,
+  queues: [
+    provision_ssl_certificates: 1,
+    fetch_tweets: 1,
+    check_stats_emails: 1,
+    email_reports: 1,
+    site_setup_emails: 1,
+    trial_notification_emails: 1
+  ],
+  crontab: crontab
 
 config :plausible, :google,
   client_id: System.get_env("GOOGLE_CLIENT_ID"),
