@@ -407,6 +407,7 @@ defmodule Plausible.Stats.Clickhouse do
     res["visitors"]
   end
 
+  def has_pageviews?([]), do: false
   def has_pageviews?(domains) when is_list(domains) do
     res = Clickhouse.all(
       from e in "events",
