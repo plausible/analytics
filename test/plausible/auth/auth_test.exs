@@ -3,6 +3,12 @@ defmodule Plausible.AuthTest do
   alias Plausible.Auth
 
   describe "user_completed_setup?" do
+    test "is false if user does not have any sites" do
+      user = insert(:user)
+
+      refute Auth.user_completed_setup?(user)
+    end
+
     test "is false if user does not have any events" do
       user = insert(:user)
       insert(:site, members: [user])
