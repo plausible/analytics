@@ -6,7 +6,7 @@ config :plausible,
   mailer_email: System.get_env("MAILER_EMAIL", "hello@plausible.local"),
   admin_pwd: System.get_env("ADMIN_USER_PWD", "!@d3in"),
   ecto_repos: [Plausible.Repo],
-  environment: System.get_env(Atom.to_string(Mix.env()), "dev")
+  environment: System.get_env("ENVIRONMENT", "dev")
 
 config :plausible, :clickhouse,
        hostname: System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost"),
