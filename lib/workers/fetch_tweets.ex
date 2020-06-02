@@ -1,14 +1,11 @@
-defmodule Mix.Tasks.FetchTweets do
+defmodule Plausible.Workers.FetchTweets do
   use Plausible.Repo
+  use Oban.Worker, queue: :fetch_tweets
   alias Plausible.Twitter.Tweet
 	@oauth_credentials Application.get_env(:plausible, :twitter, %{}) |> OAuther.credentials()
 
-  def run(_args) do
-    Application.ensure_all_started(:plausible)
-    execute()
-  end
-
-  def execute() do
+  @impl Oban.Worker
+  def perform(_args, _job) do
     new_links = Repo.all(
       from e in Plausible.Event,
       where: e.timestamp > fragment("(now() - '6 days'::interval)") and e.timestamp < fragment("(now() - '5 days'::interval)"),
@@ -36,6 +33,7 @@ defmodule Mix.Tasks.FetchTweets do
         }) |> Repo.insert!(on_conflict: :nothing)
       end
     end
+    :ok
   end
 
   def html_body(tweet) do

@@ -1,21 +1,22 @@
-defmodule Mix.Tasks.SendEmailReports do
-  use Mix.Task
+defmodule Plausible.Workers.SendEmailReports do
   use Plausible.Repo
+  use Oban.Worker, queue: :email_reports
   require Logger
-  alias Plausible.Stats
+  alias Plausible.Stats.Query
+  alias Plausible.Stats.Clickhouse, as: Stats
 
-  def run(_args) do
-    Application.ensure_all_started(:plausible)
-    execute(Timex.now())
-  end
-
+  @impl Oban.Worker
   @doc"""
     The email report should be sent on Monday at 9am according to the timezone
     of the site. This job runs every hour to be able to send it with hourly precision.
   """
-  def execute(job_start) do
-    send_weekly_emails(job_start)
-    send_monthly_emails(job_start)
+  def perform(args, _job) do
+    current_time = if args["current_time"], do: Timex.parse!(args["current_time"], "{ISO:Extended}"), else: Timex.now()
+
+    send_weekly_emails(current_time)
+    send_monthly_emails(current_time)
+
+    :ok
   end
 
   defp send_weekly_emails(job_start) do
@@ -30,7 +31,7 @@ defmodule Mix.Tasks.SendEmailReports do
     )
 
     for site <- sites do
-      query = Stats.Query.from(site.timezone, %{"period" => "7d"})
+      query = Query.from(site.timezone, %{"period" => "7d"})
 
       for email <- site.weekly_report.recipients do
         Logger.info("Sending weekly report for #{URI.encode_www_form(site.domain)} to #{email}")
@@ -55,7 +56,7 @@ defmodule Mix.Tasks.SendEmailReports do
 
     for site <- sites do
       last_month = job_start |> Timex.Timezone.convert(site.timezone) |> Timex.shift(months: -1) |> Timex.beginning_of_month
-      query = Stats.Query.from(site.timezone, %{"period" => "month", "date" => Timex.format!(last_month, "{ISOdate}")})
+      query = Query.from(site.timezone, %{"period" => "month", "date" => Timex.format!(last_month, "{ISOdate}")})
 
       for email <- site.monthly_report.recipients do
         Logger.info("Sending monthly report for #{site.domain} to #{email}")
@@ -71,7 +72,7 @@ defmodule Mix.Tasks.SendEmailReports do
     {pageviews, unique_visitors} = Stats.pageviews_and_visitors(site, query)
     {change_pageviews, change_visitors} = Stats.compare_pageviews_and_visitors(site, query, {pageviews, unique_visitors})
     bounce_rate = Stats.bounce_rate(site, query)
-    prev_bounce_rate = Stats.bounce_rate(site, Stats.Query.shift_back(query))
+    prev_bounce_rate = Stats.bounce_rate(site, Query.shift_back(query))
     change_bounce_rate = if prev_bounce_rate > 0, do: bounce_rate - prev_bounce_rate
     referrers = Stats.top_referrers(site, query)
     pages = Stats.top_pages(site, query)

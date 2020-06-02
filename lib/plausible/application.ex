@@ -11,7 +11,8 @@ defmodule Plausible.Application do
       Plausible.Event.WriteBuffer,
       Plausible.Session.WriteBuffer,
       Clickhousex.child_spec(Keyword.merge([scheme: :http, port: 8123, name: :clickhouse], clickhouse_config)),
-      Plausible.Session.Store
+      Plausible.Session.Store,
+      {Oban, Application.get_env(:plausible, Oban)}
     ]
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]

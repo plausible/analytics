@@ -71,8 +71,7 @@ config :plausible, :paddle,
   vendor_id: "49430",
   vendor_auth_code: System.get_env("PADDLE_VENDOR_AUTH_CODE")
 
-config :plausible,
-       Plausible.Repo,
+config :plausible, Plausible.Repo,
        pool_size: String.to_integer(System.get_env("DATABASE_POOL_SIZE", "10")),
        timeout: 300_000,
        connect_timeout: 300_000,
@@ -80,9 +79,28 @@ config :plausible,
        url:
          System.get_env(
            "DATABASE_URL",
-           "postgres://postgres:postgres@127.0.0.1:5432/plausible_test?currentSchema=default"
+           "postgres://postgres:postgres@127.0.0.1:5432/plausible_dev?currentSchema=default"
          ),
        ssl: String.to_existing_atom(System.get_env("DATABASE_TLS_ENABLED", "false"))
+
+
+crontab = if String.to_existing_atom(System.get_env("CRON_ENABLED", "false")) do
+  [
+    {"@hourly", Plausible.Workers.SendSiteSetupEmails},
+    {"@hourly", Plausible.Workers.SendEmailReports},
+    {"@daily", Plausible.Workers.FetchTweets},
+    {"0 12 * * *", Plausible.Workers.SendTrialNotifications}, # Daily at midday
+    {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails}, # Daily at midday
+    {"* /10 * * *", Plausible.Workers.ProvisionSslCertificates}, # Every 10 minutes
+  ]
+else
+  false
+end
+
+config :plausible, Oban,
+  repo: Plausible.Repo,
+  queues: [default: 10],
+  crontab: crontab
 
 config :plausible, :google,
   client_id: System.get_env("GOOGLE_CLIENT_ID"),
