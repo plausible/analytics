@@ -16,9 +16,7 @@
     "react-dom": "^16.13.1",
     "react-flatpickr": "^3.10.0",
     "react-router-dom": "^5.1.2",
-    "url-search-params-polyfill": "^7.0.1"
-  },
-  "devDependencies": {
+    "url-search-params-polyfill": "^7.0.1",
     "@babel/core": "^7.9.0",
     "@babel/preset-env": "^7.9.5",
     "@babel/preset-react": "^7.9.4",
