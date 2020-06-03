@@ -2,8 +2,8 @@
   "repository": {},
   "license": "MIT",
   "scripts": {
-    "deploy": "webpack --mode production",
-    "watch": "webpack --mode development --watch"
+    "deploy": "$(npm bin)/webpack --mode production",
+    "watch": "$(npm bin)/webpack --mode development --watch"
   },
   "dependencies": {
     "@tailwindcss/ui": "^0.1.3",
