@@ -76,6 +76,7 @@ config :plausible,
 config :sentry,
   dsn: sentry_dsn,
   environment_name: env,
+  included_environments: ["prod", "staging"],
   release: app_version,
   tags: %{app_version: app_version}
 
