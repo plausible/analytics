@@ -46,6 +46,7 @@ twitter_consumer_secret = System.get_env("TWITTER_CONSUMER_SECRET")
 twitter_token = System.get_env("TWITTER_ACCESS_TOKEN")
 twitter_token_secret = System.get_env("TWITTER_ACCESS_TOKEN_SECRET")
 postmark_api_key = System.get_env("POSTMARK_API_KEY")
+cron_enabled = String.to_existing_atom(System.get_env("CRON_ENABLED", "false"))
 
 config :plausible,
   admin_user: admin_user,
@@ -125,5 +126,26 @@ config :plausible, :twitter,
   consumer_secret: twitter_consumer_secret,
   token: twitter_token,
   token_secret: twitter_token_secret
+
+crontab = [
+  {"0 * * * *", Plausible.Workers.SendSiteSetupEmails}, # hourly
+  {"0 * * * *", Plausible.Workers.SendEmailReports}, # hourly
+  {"0 0 * * *", Plausible.Workers.FetchTweets}, # Daily at midnight
+  {"0 12 * * *", Plausible.Workers.SendTrialNotifications}, # Daily at midday
+  {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails}, # Daily at midday
+  {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}, # Every 10 minutes
+]
+
+config :plausible, Oban,
+  repo: Plausible.Repo,
+  queues: [
+    provision_ssl_certificates: 1,
+    fetch_tweets: 1,
+    check_stats_emails: 1,
+    email_reports: 1,
+    site_setup_emails: 1,
+    trial_notification_emails: 1
+  ],
+  crontab: if cron_enabled, do: crontab, else: false
 
 config :logger, level: :warn
