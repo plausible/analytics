@@ -9,7 +9,7 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
     {:ok, conn} = ssh.connect(
       ip: to_charlist(@custom_domain_server[:ip]),
       user: to_charlist(@custom_domain_server[:user]),
-      user_dir: '/root/.ssh'
+      user_dir: '/app/.ssh'
     )
 
     recent_custom_domains = Repo.all(
@@ -19,7 +19,7 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
     )
 
     for domain <- recent_custom_domains do
-      {:ok, res, code} = ssh.run(conn, 'sudo certbot certonly --nginx -n -d #{domain.domain}')
+      {:ok, res, code} = ssh.run(conn, 'sudo certbot certonly --nginx -n -d \"#{domain.domain}\"')
       report_result({res, code}, domain)
     end
   end
