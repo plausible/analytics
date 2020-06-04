@@ -153,6 +153,7 @@ config :plausible, :twitter,
 
 config :plausible, :custom_domain_server,
   user: System.get_env("CUSTOM_DOMAIN_SERVER_USER"),
+  password: System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD"),
   ip: System.get_env("CUSTOM_DOMAIN_SERVER_IP")
 
 # Import environment specific config. This must remain at the bottom

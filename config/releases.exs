@@ -49,6 +49,7 @@ postmark_api_key = System.get_env("POSTMARK_API_KEY")
 cron_enabled = String.to_existing_atom(System.get_env("CRON_ENABLED", "false"))
 custom_domain_server_ip = System.get_env("CUSTOM_DOMAIN_SERVER_IP")
 custom_domain_server_user = System.get_env("CUSTOM_DOMAIN_SERVER_USER")
+custom_domain_server_password = System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD")
 
 config :plausible,
   admin_user: admin_user,
@@ -131,6 +132,7 @@ config :plausible, :twitter,
 
 config :plausible, :custom_domain_server,
   user: custom_domain_server_user,
+  password: custom_domain_server_password,
   ip: custom_domain_server_ip
 
 crontab = [

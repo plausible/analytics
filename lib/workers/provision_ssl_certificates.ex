@@ -1,15 +1,15 @@
 defmodule Plausible.Workers.ProvisionSslCertificates do
   use Plausible.Repo
   use Oban.Worker, queue: :provision_ssl_certificates
-	@custom_domain_server Application.get_env(:plausible, :custom_domain_server)
 
   @impl Oban.Worker
   def perform(_args, _job, ssh \\ SSHEx) do
-    IO.inspect(@custom_domain_server)
+    config = get_config()
+
     {:ok, conn} = ssh.connect(
-      ip: to_charlist(@custom_domain_server[:ip]),
-      user: to_charlist(@custom_domain_server[:user]),
-      user_dir: '/app/.ssh'
+      ip: to_charlist(config[:ip]),
+      user: to_charlist(config[:user]),
+      password: to_charlist(config[:password])
     )
 
     recent_custom_domains = Repo.all(
@@ -22,6 +22,7 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
       {:ok, res, code} = ssh.run(conn, 'sudo certbot certonly --nginx -n -d \"#{domain.domain}\"')
       report_result({res, code}, domain)
     end
+    :ok
   end
 
   defp report_result({_, 0}, domain) do
@@ -33,5 +34,9 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
   defp report_result({error_msg, error_code}, domain) do
     Sentry.capture_message("Error obtaining SSL certificate", extra: %{error_msg: error_msg, error_code: error_code, domain: domain.domain})
     :ok # Failing to obtain is expected, not a failure for the job queue
+  end
+
+  defp get_config() do
+    Application.get_env(:plausible, :custom_domain_server)
   end
 end
