@@ -1,9 +1,12 @@
 defmodule Plausible.Workers.ProvisionSslCertificates do
   use Plausible.Repo
   use Oban.Worker, queue: :provision_ssl_certificates
+	@custom_domain_server Application.get_env(:plausible, :custom_domain_server)
 
   @impl Oban.Worker
-  def perform(_args, _job, system \\ System) do
+  def perform(_args, _job, ssh \\ SSHEx) do
+    {:ok, conn} = ssh.connect(ip: to_charlist(@custom_domain_server[:ip]), user: to_charlist(@custom_domain_server[:user]))
+
     recent_custom_domains = Repo.all(
       from cd in Plausible.Site.CustomDomain,
       where: cd.updated_at > fragment("now() - '3 days'::interval"),
@@ -11,8 +14,8 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
     )
 
     for domain <- recent_custom_domains do
-      system.cmd("ssh", ["-t", "ubuntu@custom.plausible.io", "sudo certbot certonly --nginx -n -d #{domain.domain}"])
-      |> report_result(domain)
+      {:ok, res, code} = ssh.run(conn, 'sudo certbot certonly --nginx -n -d #{domain.domain}')
+      report_result({res, code}, domain)
     end
   end
 
