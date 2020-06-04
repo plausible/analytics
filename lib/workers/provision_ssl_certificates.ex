@@ -5,7 +5,12 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
 
   @impl Oban.Worker
   def perform(_args, _job, ssh \\ SSHEx) do
-    {:ok, conn} = ssh.connect(ip: to_charlist(@custom_domain_server[:ip]), user: to_charlist(@custom_domain_server[:user]))
+    IO.inspect(@custom_domain_server)
+    {:ok, conn} = ssh.connect(
+      ip: to_charlist(@custom_domain_server[:ip]),
+      user: to_charlist(@custom_domain_server[:user]),
+      user_dir: '/root/.ssh'
+    )
 
     recent_custom_domains = Repo.all(
       from cd in Plausible.Site.CustomDomain,
