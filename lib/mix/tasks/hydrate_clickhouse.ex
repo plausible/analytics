@@ -2,7 +2,6 @@ defmodule Mix.Tasks.HydrateClickhouse do
   use Mix.Task
   use Plausible.Repo
   require Logger
-  @hash_key Keyword.fetch!(Application.get_env(:plausible, PlausibleWeb.Endpoint), :secret_key_base) |> binary_part(0, 16)
 
   # coveralls-ignore-start
 
@@ -101,6 +100,7 @@ defmodule Mix.Tasks.HydrateClickhouse do
   end
 
   def hydrate_events(repo, _args \\ []) do
+    hash_key = Keyword.fetch!(Application.get_env(:plausible, PlausibleWeb.Endpoint), :secret_key_base) |> binary_part(0, 16)
     end_time = ~N[2020-05-21 10:46:51]
     total = Repo.aggregate(from(e in Plausible.Event, where: e.timestamp < ^end_time), :count, :id)
 
@@ -114,7 +114,7 @@ defmodule Mix.Tasks.HydrateClickhouse do
       {session_cache, sessions, events} = Enum.reduce(events, {session_cache, [], []}, fn event, {session_cache, sessions, new_events} ->
         found_session = session_cache[event.fingerprint]
         active = is_active?(found_session, event)
-        user_id = SipHash.hash!(@hash_key, event.fingerprint)
+        user_id = SipHash.hash!(hash_key, event.fingerprint)
         clickhouse_event = struct(Plausible.ClickhouseEvent, Map.from_struct(event) |> Map.put(:user_id, user_id))
 
         cond do

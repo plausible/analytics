@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Api.ExternalController do
   use PlausibleWeb, :controller
   require Logger
-  @hash_key Keyword.fetch!(Application.get_env(:plausible, PlausibleWeb.Endpoint), :secret_key_base) |> binary_part(0, 16)
 
   def event(conn, _params) do
     params = parse_body(conn)
@@ -98,11 +97,12 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   defp generate_user_id(conn, params) do
+    hash_key = Keyword.fetch!(Application.get_env(:plausible, PlausibleWeb.Endpoint), :secret_key_base) |> binary_part(0, 16)
     user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
     ip_address = List.first(Plug.Conn.get_req_header(conn, "x-bb-ip")) || "" # Netlify sets this header as the remote client IP
     domain = strip_www(params["domain"]) || ""
 
-    SipHash.hash!(@hash_key, user_agent <> ip_address <> domain)
+    SipHash.hash!(hash_key, user_agent <> ip_address <> domain)
   end
 
   defp calculate_screen_size(nil) , do: nil
