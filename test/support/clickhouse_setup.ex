@@ -98,7 +98,9 @@ defmodule Plausible.Test.ClickhouseSetup do
       %{name: "pageview", domain: "test-site.com", timestamp: Timex.now() |> Timex.shift(minutes: -6)},
 
       %{name: "pageview", domain: "tz-test.com", timestamp: ~N[2019-01-01 00:00:00]},
-      %{name: "pageview", domain: "public-site.io"}
+      %{name: "pageview", domain: "public-site.io"},
+      %{name: "pageview", domain: "fetch-tweets-test.com", referrer: "t.co/a-link", referrer_source: "Twitter"},
+      %{name: "pageview", domain: "fetch-tweets-test.com", referrer: "t.co/b-link", referrer_source: "Twitter", timestamp: Timex.now() |> Timex.shift(days: -5)}
     ])
 
     Plausible.TestUtils.create_sessions([
