@@ -1,23 +1,23 @@
 defmodule Plausible.Workers.FetchTweets do
   use Plausible.Repo
-  use Oban.Worker, queue: :fetch_tweets
+  alias Plausible.Clickhouse
   alias Plausible.Twitter.Tweet
-	@oauth_credentials Application.get_env(:plausible, :twitter, %{}) |> OAuther.credentials()
+  use Oban.Worker, queue: :fetch_tweets
 
   @impl Oban.Worker
-  def perform(_args, _job) do
-    new_links = Repo.all(
-      from e in Plausible.Event,
-      where: e.timestamp > fragment("(now() - '6 days'::interval)") and e.timestamp < fragment("(now() - '5 days'::interval)"),
-      or_where: e.timestamp > fragment("(now() - '1 days'::interval)"),
+  def perform(_args, _job, twitter_api \\ Plausible.Twitter.Api) do
+    new_links = Clickhouse.all(
+      from e in Plausible.ClickhouseEvent,
+      where: e.timestamp > fragment("(now() - INTERVAL 6 day)") and e.timestamp < fragment("(now() - INTERVAL 5 day)"),
+      or_where: e.timestamp > fragment("(now() - INTERVAL 1 day)"),
       where: e.referrer_source == "Twitter",
       where: e.referrer not in ["t.co", "t.co/"],
       distinct: true,
       select: e.referrer
-    )
+    ) |> Enum.map(fn event -> event["referrer"] end)
 
     for link <- new_links do
-      results = search(link)
+      results = twitter_api.search(link)
 
       for tweet <- results do
         {:ok, created} = Timex.parse(tweet["created_at"], "{WDshort} {Mshort} {D} {ISOtime} {Z} {YYYY}")
@@ -47,14 +47,5 @@ defmodule Plausible.Workers.FetchTweets do
       html = "<a href=\"#{link}\" target=\"_blank\">@#{mention["screen_name"]}</a>"
       String.replace(text, "@" <> mention["screen_name"], html)
     end)
-  end
-
-  defp search(link) do
-    params = [{"count", 5}, {"tweet_mode", "extended"}, {"q", "https://#{link} -filter:retweets"}]
-    params = OAuther.sign("get", "https://api.twitter.com/1.1/search/tweets.json", params, @oauth_credentials)
-		uri = "https://api.twitter.com/1.1/search/tweets.json?" <> URI.encode_query(params)
-    response = HTTPoison.get!(uri)
-    Jason.decode!(response.body)
-    |> Map.get("statuses")
   end
 end
