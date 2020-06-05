@@ -2,6 +2,7 @@ defmodule Plausible.ClickhouseEvent do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @primary_key false
   schema "events" do
     field :name, :string
     field :domain, :string
