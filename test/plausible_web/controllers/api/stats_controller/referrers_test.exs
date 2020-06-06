@@ -32,7 +32,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       conn = get(conn, "/api/stats/#{site.domain}/goal/referrers?period=day&date=2019-01-01&filters=#{filters}")
 
       assert json_response(conn, 200) == [
-        %{"name" => "Google", "count" => 3, "url" => "google.com"},
+        %{"name" => "10words", "count" => 2, "url" => "10words.com"},
       ]
     end
 
@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       conn = get(conn, "/api/stats/#{site.domain}/goal/referrers?period=day&date=2019-01-01&filters=#{filters}")
 
       assert json_response(conn, 200) == [
-        %{"name" => "Google", "count" => 2, "url" => "google.com"},
+        %{"name" => "10words", "count" => 2, "url" => "10words.com"},
       ]
     end
   end
@@ -102,26 +102,24 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
 
     test "returns top referring urls for a custom goal", %{conn: conn, site: site} do
       filters = Jason.encode!(%{goal: "Signup"})
-      conn = get(conn, "/api/stats/#{site.domain}/goal/referrers/Google?period=day&date=2019-01-01&filters=#{filters}")
+      conn = get(conn, "/api/stats/#{site.domain}/goal/referrers/10words?period=day&date=2019-01-01&filters=#{filters}")
 
       assert json_response(conn, 200) == %{
-        "total_visitors" => 3,
+        "total_visitors" => 2,
         "referrers" => [
-          %{"name" => "google.com/a", "count" => 2},
-          %{"name" => "google.com/b", "count" => 1}
+          %{"name" => "10words.com/page1", "count" => 2}
         ]
       }
     end
 
     test "returns top referring urls for a pageview goal", %{conn: conn, site: site} do
       filters = Jason.encode!(%{goal: "Visit /register"})
-      conn = get(conn, "/api/stats/#{site.domain}/goal/referrers/Google?period=day&date=2019-01-01&filters=#{filters}")
+      conn = get(conn, "/api/stats/#{site.domain}/goal/referrers/10words?period=day&date=2019-01-01&filters=#{filters}")
 
       assert json_response(conn, 200) == %{
         "total_visitors" => 2,
         "referrers" => [
-          %{"name" => "google.com/a", "count" => 1},
-          %{"name" => "google.com/b", "count" => 1}
+          %{"name" => "10words.com/page1", "count" => 2},
         ]
       }
     end

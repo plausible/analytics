@@ -43,40 +43,6 @@ defmodule Plausible.Factory do
     }
   end
 
-  def session_factory do
-    hostname = sequence(:domain, &"example-#{&1}.com")
-
-    %Plausible.FingerprintSession{
-      hostname: hostname,
-      domain: hostname,
-      entry_page: "/",
-      fingerprint: UUID.uuid4(),
-      start: Timex.now(),
-      is_bounce: false
-    }
-  end
-
-  def pg_pageview_factory do
-    struct!(
-      pg_event_factory(),
-      %{
-        name: "pageview"
-      }
-    )
-  end
-
-  def pg_event_factory do
-    hostname = sequence(:domain, &"example-#{&1}.com")
-
-    %Plausible.Event{
-      hostname: hostname,
-      domain: hostname,
-      pathname: "/",
-      timestamp: Timex.now(),
-      fingerprint: UUID.uuid4()
-    }
-  end
-
   def pageview_factory do
     struct!(
       event_factory(),

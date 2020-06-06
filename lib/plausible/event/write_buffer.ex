@@ -20,13 +20,18 @@ defmodule Plausible.Event.WriteBuffer do
     {:ok, event}
   end
 
+  def flush() do
+    GenServer.call(__MODULE__, :flush, :infinity)
+    :ok
+  end
+
   def handle_cast({:insert, event}, %{buffer: buffer} = state) do
     new_buffer = [ event | buffer ]
 
     if length(new_buffer) >= @max_buffer_size do
       Logger.info("Buffer full, flushing to disk")
       Process.cancel_timer(state[:timer])
-      flush(new_buffer)
+      do_flush(new_buffer)
       new_timer = Process.send_after(self(), :tick, @flush_interval_ms)
       {:noreply, %{buffer: [], timer: new_timer}}
     else
@@ -35,17 +40,24 @@ defmodule Plausible.Event.WriteBuffer do
   end
 
   def handle_info(:tick, %{buffer: buffer}) do
-    flush(buffer)
+    do_flush(buffer)
     timer = Process.send_after(self(), :tick, @flush_interval_ms)
     {:noreply, %{buffer: [], timer: timer}}
   end
 
-  def terminate(_reason, %{buffer: buffer}) do
-    Logger.info("Flushing event buffer before shutdown...")
-    flush(buffer)
+  def handle_call(:flush, _from, %{buffer: buffer} = state) do
+    Process.cancel_timer(state[:timer])
+    do_flush(buffer)
+    new_timer = Process.send_after(self(), :tick, @flush_interval_ms)
+    {:reply, nil, %{buffer: [], timer: new_timer}}
   end
 
-  defp flush(buffer) do
+  def terminate(_reason, %{buffer: buffer}) do
+    Logger.info("Flushing event buffer before shutdown...")
+    do_flush(buffer)
+  end
+
+  defp do_flush(buffer) do
     case buffer do
       [] -> nil
       events ->

@@ -1,25 +1,19 @@
-defmodule Mix.Tasks.SendSiteSetupEmails do
-  use Mix.Task
+defmodule Plausible.Workers.SendSiteSetupEmails do
   use Plausible.Repo
+  use Oban.Worker, queue: :site_setup_emails
   require Logger
   alias Plausible.Stats.Clickhouse, as: Stats
 
-  @doc """
-  This is scheduled to run every 6 hours.
-  """
+  @impl Oban.Worker
+  def perform(_args, _job) do
+    send_create_site_emails()
+    send_setup_help_emails()
+    send_setup_success_emails()
 
-  def run(args) do
-    Application.ensure_all_started(:plausible)
-    execute(args)
+    :ok
   end
 
-  def execute(args \\ []) do
-    send_create_site_emails(args)
-    send_setup_help_emails(args)
-    send_setup_success_emails(args)
-  end
-
-  defp send_create_site_emails(args) do
+  defp send_create_site_emails() do
     q =
       from(s in Plausible.Auth.User,
         left_join: se in "create_site_emails", on: se.user_id == s.id,
@@ -30,12 +24,12 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
 
     for user <- Repo.all(q) do
       if Enum.count(user.sites) == 0 do
-        send_create_site_email(args, user)
+        send_create_site_email(user)
       end
     end
   end
 
-  defp send_setup_help_emails(args) do
+  defp send_setup_help_emails() do
     q =
       from(s in Plausible.Site,
         left_join: se in "setup_help_emails", on: se.site_id == s.id,
@@ -51,12 +45,12 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
       hours_passed = Timex.diff(Timex.now(), site.inserted_at, :hours)
 
       if !setup_completed && hours_passed > 47 do
-        send_setup_help_email(args, owner, site)
+        send_setup_help_email(owner, site)
       end
     end
   end
 
-  defp send_setup_success_emails(args) do
+  defp send_setup_success_emails() do
     q =
       from(s in Plausible.Site,
         left_join: se in "setup_success_emails", on: se.site_id == s.id,
@@ -69,16 +63,12 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
       owner = List.first(site.members)
 
       if Stats.has_pageviews?(site) do
-        send_setup_success_email(args, owner, site)
+        send_setup_success_email(owner, site)
       end
     end
   end
 
-  defp send_create_site_email(["--dry-run"], user) do
-    Logger.info("DRY RUN: create site email for #{user.name}")
-  end
-
-  defp send_create_site_email(_, user) do
+  defp send_create_site_email(user) do
     PlausibleWeb.Email.create_site_email(user)
     |> Plausible.Mailer.send_email()
 
@@ -88,11 +78,7 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
     }])
   end
 
-  defp send_setup_success_email(["--dry-run"], _, site) do
-    Logger.info("DRY RUN: setup success email for #{site.domain}")
-  end
-
-  defp send_setup_success_email(_, user, site) do
+  defp send_setup_success_email(user, site) do
     PlausibleWeb.Email.site_setup_success(user, site)
     |> Plausible.Mailer.send_email()
 
@@ -102,11 +88,7 @@ defmodule Mix.Tasks.SendSiteSetupEmails do
     }])
   end
 
-  defp send_setup_help_email(["--dry-run"], _, site) do
-    Logger.info("DRY RUN: setup help email for #{site.domain}")
-  end
-
-  defp send_setup_help_email(_, user, site) do
+  defp send_setup_help_email(user, site) do
     PlausibleWeb.Email.site_setup_help(user, site)
     |> Plausible.Mailer.send_email()
 

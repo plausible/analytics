@@ -2,12 +2,12 @@
   "repository": {},
   "license": "MIT",
   "scripts": {
-    "deploy": "webpack --mode production",
-    "watch": "webpack --mode development --watch"
+    "deploy": "$(npm bin)/webpack --mode production",
+    "watch": "$(npm bin)/webpack --mode development --watch"
   },
   "dependencies": {
     "@tailwindcss/ui": "^0.1.3",
-    "autoprefixer": "^9.7.6",
+    "autoprefixer": "^9.8.0",
     "chart.js": "^2.9.3",
     "datamaps": "^0.5.9",
     "phoenix": "file:../deps/phoenix",
@@ -16,9 +16,7 @@
     "react-dom": "^16.13.1",
     "react-flatpickr": "^3.10.0",
     "react-router-dom": "^5.1.2",
-    "url-search-params-polyfill": "^7.0.1"
-  },
-  "devDependencies": {
+    "url-search-params-polyfill": "^7.0.1",
     "@babel/core": "^7.9.0",
     "@babel/preset-env": "^7.9.5",
     "@babel/preset-react": "^7.9.4",
