@@ -33,10 +33,12 @@ defmodule PlausibleWeb.Api.PaddleController do
 
   def verify_signature(conn, _opts) do
     signature = Base.decode64!(conn.params["p_signature"])
-    msg = Map.delete(conn.params, "p_signature")
-             |> Enum.map(fn {key, val} -> {key, "#{val}"} end)
-             |> List.keysort(0)
-             |> PhpSerializer.serialize()
+
+    msg =
+      Map.delete(conn.params, "p_signature")
+      |> Enum.map(fn {key, val} -> {key, "#{val}"} end)
+      |> List.keysort(0)
+      |> PhpSerializer.serialize()
 
     [key_entry] = :public_key.pem_decode(@paddle_key)
     public_key = :public_key.pem_entry_decode(key_entry)
@@ -50,10 +52,12 @@ defmodule PlausibleWeb.Api.PaddleController do
 
   def verified_signature?(params) do
     signature = Base.decode64!(params["p_signature"])
-    msg = Map.delete(params, "p_signature")
-             |> Enum.map(fn {key, val} -> {key, "#{val}"} end)
-             |> List.keysort(0)
-             |> PhpSerializer.serialize()
+
+    msg =
+      Map.delete(params, "p_signature")
+      |> Enum.map(fn {key, val} -> {key, "#{val}"} end)
+      |> List.keysort(0)
+      |> PhpSerializer.serialize()
 
     [key_entry] = :public_key.pem_decode(@paddle_key)
     public_key = :public_key.pem_entry_decode(key_entry)
@@ -66,7 +70,11 @@ defmodule PlausibleWeb.Api.PaddleController do
 
   defp webhook_response({:error, changeset}, conn, params) do
     request = Sentry.Plug.build_request_interface_data(conn, [])
-    Sentry.capture_message("Error processing Paddle webhook", extra: %{errors: inspect(changeset.errors), params: params, request: request})
+
+    Sentry.capture_message("Error processing Paddle webhook",
+      extra: %{errors: inspect(changeset.errors), params: params, request: request}
+    )
+
     Logger.error("Error processing Paddle webhook: #{inspect(changeset)}")
 
     conn |> send_resp(400, "") |> halt

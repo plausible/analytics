@@ -5,12 +5,14 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
   defp get_event(domain) do
     Plausible.Event.WriteBuffer.flush()
 
-    events = Plausible.Clickhouse.all(
-      from e in Plausible.ClickhouseEvent,
-      where: e.domain ==^domain,
-      order_by: [desc: e.timestamp],
-      limit: 1
-    )
+    events =
+      Plausible.Clickhouse.all(
+        from e in Plausible.ClickhouseEvent,
+          where: e.domain == ^domain,
+          order_by: [desc: e.timestamp],
+          limit: 1
+      )
+
     List.first(events)
   end
 
@@ -27,11 +29,12 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         screen_width: 1440
       }
 
-      conn = conn
-             |> put_req_header("content-type", "text/plain")
-             |> put_req_header("user-agent", @user_agent)
-             |> put_req_header("x-country", @country_code)
-             |> post("/api/event", Jason.encode!(params))
+      conn =
+        conn
+        |> put_req_header("content-type", "text/plain")
+        |> put_req_header("user-agent", @user_agent)
+        |> put_req_header("x-country", @country_code)
+        |> post("/api/event", Jason.encode!(params))
 
       pageview = get_event("external-controller-test-1.com")
 
@@ -112,10 +115,11 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         domain: "external-controller-test-6.com"
       }
 
-      conn = conn
-             |> put_req_header("content-type", "text/plain")
-             |> put_req_header("user-agent", @user_agent)
-             |> post("/api/event", Jason.encode!(params))
+      conn =
+        conn
+        |> put_req_header("content-type", "text/plain")
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", Jason.encode!(params))
 
       pageview = get_event("external-controller-test-6.com")
 
@@ -132,10 +136,11 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         domain: "external-controller-test-7.com"
       }
 
-      conn = conn
-             |> put_req_header("content-type", "text/plain")
-             |> put_req_header("user-agent", @user_agent)
-             |> post("/api/event", Jason.encode!(params))
+      conn =
+        conn
+        |> put_req_header("content-type", "text/plain")
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", Jason.encode!(params))
 
       pageview = get_event("external-controller-test-7.com")
 
@@ -151,10 +156,11 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         domain: "external-controller-test-8.com"
       }
 
-      conn = conn
-             |> put_req_header("content-type", "text/plain")
-             |> put_req_header("user-agent", @user_agent)
-             |> post("/api/event", Jason.encode!(params))
+      conn =
+        conn
+        |> put_req_header("content-type", "text/plain")
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", Jason.encode!(params))
 
       pageview = get_event("external-controller-test-8.com")
 
@@ -171,10 +177,11 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         domain: "external-controller-test-9.com"
       }
 
-      conn = conn
-             |> put_req_header("content-type", "text/plain")
-             |> put_req_header("user-agent", @user_agent)
-             |> post("/api/event", Jason.encode!(params))
+      conn =
+        conn
+        |> put_req_header("content-type", "text/plain")
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", Jason.encode!(params))
 
       pageview = get_event("external-controller-test-9.com")
 
@@ -190,10 +197,11 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         domain: "external-controller-test-10.com"
       }
 
-      conn = conn
-             |> put_req_header("content-type", "text/plain")
-             |> put_req_header("user-agent", @user_agent)
-             |> post("/api/event", Jason.encode!(params))
+      conn =
+        conn
+        |> put_req_header("content-type", "text/plain")
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", Jason.encode!(params))
 
       pageview = get_event("external-controller-test-10.com")
 
@@ -209,10 +217,11 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         domain: "external-controller-test-11.com"
       }
 
-      conn = conn
-             |> put_req_header("content-type", "text/plain")
-             |> put_req_header("user-agent", @user_agent)
-             |> post("/api/event", Jason.encode!(params))
+      conn =
+        conn
+        |> put_req_header("content-type", "text/plain")
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", Jason.encode!(params))
 
       pageview = get_event("external-controller-test-11.com")
 
@@ -263,10 +272,11 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         domain: "external-controller-test-14.com"
       }
 
-      conn = conn
-             |> put_req_header("content-type", "text/plain")
-             |> put_req_header("user-agent", @user_agent)
-             |> post("/api/event", Jason.encode!(params))
+      conn =
+        conn
+        |> put_req_header("content-type", "text/plain")
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", Jason.encode!(params))
 
       pageview = get_event("external-controller-test-14.com")
 
@@ -282,17 +292,17 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         domain: "external-controller-test-15.com"
       }
 
-      conn = conn
-             |> put_req_header("content-type", "text/plain")
-             |> put_req_header("user-agent", @user_agent)
-             |> post("/api/event", Jason.encode!(params))
+      conn =
+        conn
+        |> put_req_header("content-type", "text/plain")
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", Jason.encode!(params))
 
       pageview = get_event("external-controller-test-15.com")
 
       assert response(conn, 202) == ""
       assert pageview["referrer_source"] == ""
     end
-
   end
 
   test "screen size is calculated from screen_width", %{conn: conn} do
@@ -303,10 +313,11 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       domain: "external-controller-test-16.com"
     }
 
-    conn = conn
-           |> put_req_header("content-type", "text/plain")
-           |> put_req_header("user-agent", @user_agent)
-           |> post("/api/event", Jason.encode!(params))
+    conn =
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> put_req_header("user-agent", @user_agent)
+      |> post("/api/event", Jason.encode!(params))
 
     pageview = get_event("external-controller-test-16.com")
 
@@ -321,10 +332,11 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       domain: "external-controller-test-17.com"
     }
 
-    conn = conn
-           |> put_req_header("content-type", "text/plain")
-           |> put_req_header("user-agent", @user_agent)
-           |> post("/api/event", Jason.encode!(params))
+    conn =
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> put_req_header("user-agent", @user_agent)
+      |> post("/api/event", Jason.encode!(params))
 
     pageview = get_event("external-controller-test-17.com")
 
@@ -339,10 +351,11 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       domain: "external-controller-test-18.com"
     }
 
-    conn = conn
-           |> put_req_header("content-type", "text/plain")
-           |> put_req_header("user-agent", @user_agent)
-           |> post("/api/event", Jason.encode!(params))
+    conn =
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> put_req_header("user-agent", @user_agent)
+      |> post("/api/event", Jason.encode!(params))
 
     event = get_event("external-controller-test-18.com")
 
@@ -353,10 +366,11 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
   test "responds 400 when required fields are missing", %{conn: conn} do
     params = %{}
 
-    conn = conn
-           |> put_req_header("content-type", "text/plain")
-           |> put_req_header("user-agent", @user_agent)
-           |> post("/api/event", Jason.encode!(params))
+    conn =
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> put_req_header("user-agent", @user_agent)
+      |> post("/api/event", Jason.encode!(params))
 
     assert response(conn, 400) == ""
   end

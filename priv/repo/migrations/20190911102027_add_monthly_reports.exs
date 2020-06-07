@@ -60,7 +60,6 @@ defmodule Plausible.Repo.Migrations.AddMonthlyReports do
     execute "ALTER SEQUENCE weekly_reports_id_seq RENAME TO email_settings_id_seq;"
     create unique_index(:email_settings, :site_id)
 
-
     drop constraint(:sent_weekly_reports, "sent_weekly_reports_site_id_fkey")
     drop constraint(:sent_weekly_reports, "sent_weekly_reports_pkey")
 

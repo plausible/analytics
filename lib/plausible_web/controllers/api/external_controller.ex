@@ -8,9 +8,14 @@ defmodule PlausibleWeb.Api.ExternalController do
     case create_event(conn, params) do
       {:ok, _} ->
         conn |> send_resp(202, "")
+
       {:error, changeset} ->
         request = Sentry.Plug.build_request_interface_data(conn, [])
-        Sentry.capture_message("Error processing event", extra: %{errors: inspect(changeset.errors), params: params, request: request})
+
+        Sentry.capture_message("Error processing event",
+          extra: %{errors: inspect(changeset.errors), params: params, request: request}
+        )
+
         Logger.info("Error processing event: #{inspect(changeset)}")
         conn |> send_resp(400, "")
     end
@@ -24,14 +29,16 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp create_event(conn, params) do
     uri = params["url"] && URI.parse(params["url"])
-    country_code = Plug.Conn.get_req_header(conn, "x-country") |> List.first
-    user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first
+    country_code = Plug.Conn.get_req_header(conn, "x-country") |> List.first()
+    user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
+
     if UAInspector.bot?(user_agent) do
       {:ok, nil}
     else
-      ua = if user_agent do
-        UAInspector.Parser.parse(user_agent)
-      end
+      ua =
+        if user_agent do
+          UAInspector.Parser.parse(user_agent)
+        end
 
       ref = parse_referrer(uri, params["referrer"])
       initial_ref = parse_referrer(uri, params["initial_referrer"])
@@ -54,6 +61,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       }
 
       changeset = Plausible.ClickhouseEvent.changeset(%Plausible.ClickhouseEvent{}, event_attrs)
+
       if changeset.valid? do
         event = struct(Plausible.ClickhouseEvent, event_attrs)
         session_id = Plausible.Session.Store.on_event(event)
@@ -67,6 +75,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   defp parse_referrer(_, nil), do: nil
+
   defp parse_referrer(uri, referrer_str) do
     referrer_uri = URI.parse(referrer_str)
 
@@ -76,21 +85,26 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   defp generate_user_id(conn, params) do
-    hash_key = Keyword.fetch!(Application.get_env(:plausible, PlausibleWeb.Endpoint), :secret_key_base) |> binary_part(0, 16)
+    hash_key =
+      Keyword.fetch!(Application.get_env(:plausible, PlausibleWeb.Endpoint), :secret_key_base)
+      |> binary_part(0, 16)
+
     user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
-    ip_address = List.first(Plug.Conn.get_req_header(conn, "x-bb-ip")) || "" # Netlify sets this header as the remote client IP
+    # Netlify sets this header as the remote client IP
+    ip_address = List.first(Plug.Conn.get_req_header(conn, "x-bb-ip")) || ""
     domain = strip_www(params["domain"]) || ""
 
     SipHash.hash!(hash_key, user_agent <> ip_address <> domain)
   end
 
-  defp calculate_screen_size(nil) , do: nil
+  defp calculate_screen_size(nil), do: nil
   defp calculate_screen_size(width) when width < 576, do: "Mobile"
   defp calculate_screen_size(width) when width < 992, do: "Tablet"
   defp calculate_screen_size(width) when width < 1440, do: "Laptop"
   defp calculate_screen_size(width) when width >= 1440, do: "Desktop"
 
   defp clean_referrer(nil), do: nil
+
   defp clean_referrer(ref) do
     uri = URI.parse(ref.referer)
 
@@ -107,6 +121,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   defp strip_www(nil), do: nil
+
   defp strip_www(hostname) do
     String.replace_prefix(hostname, "www.", "")
   end
@@ -130,10 +145,12 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   defp referrer_source(nil), do: nil
+
   defp referrer_source(ref) do
     case ref.source do
       :unknown ->
         clean_uri(ref.referer)
+
       source ->
         source
     end
@@ -141,6 +158,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp clean_uri(uri) do
     uri = URI.parse(String.trim(uri))
+
     if uri.scheme in ["http", "https"] do
       String.replace_leading(uri.host, "www.", "")
     end

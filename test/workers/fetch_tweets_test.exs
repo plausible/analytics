@@ -4,14 +4,14 @@ defmodule Plausible.Workers.FetchTweetsTest do
   import Double
 
   test "fetches Twitter referrals from the last day" do
-    twitter_mock = stub(Plausible.Twitter.Api, :search, fn(_link) -> [] end)
+    twitter_mock = stub(Plausible.Twitter.Api, :search, fn _link -> [] end)
     FetchTweets.perform(nil, nil, twitter_mock)
 
     assert_receive({Plausible.Twitter.Api, :search, ["t.co/a-link"]})
   end
 
   test "fetches Twitter referrals from 5-6 days ago" do
-    twitter_mock = stub(Plausible.Twitter.Api, :search, fn(_link) -> [] end)
+    twitter_mock = stub(Plausible.Twitter.Api, :search, fn _link -> [] end)
     FetchTweets.perform(nil, nil, twitter_mock)
 
     assert_receive({Plausible.Twitter.Api, :search, ["t.co/b-link"]})
@@ -33,13 +33,15 @@ defmodule Plausible.Workers.FetchTweetsTest do
       }
     }
 
-    twitter_mock = stub(Plausible.Twitter.Api, :search, fn
-      ("t.co/a-link") -> [tweet]
-      (_link) -> []
-    end)
+    twitter_mock =
+      stub(Plausible.Twitter.Api, :search, fn
+        "t.co/a-link" -> [tweet]
+        _link -> []
+      end)
+
     FetchTweets.perform(nil, nil, twitter_mock)
 
-    [found_tweet] = Repo.all(from t in Plausible.Twitter.Tweet)
+    [found_tweet] = Repo.all(from(t in Plausible.Twitter.Tweet))
     assert found_tweet.tweet_id == "the_tweet_id"
     assert found_tweet.text == "a Tweet body"
     assert found_tweet.author_handle == "twitter_author"
@@ -54,13 +56,16 @@ defmodule Plausible.Workers.FetchTweetsTest do
         "full_text" => "asd https://t.co/somelink",
         "entities" => %{
           "user_mentions" => [],
-          "urls" => [%{
-            "display_url" => "plausible.io",
-            "indices" => [4, 17],
-            "url" => "https://t.co/somelink"
-          }]
+          "urls" => [
+            %{
+              "display_url" => "plausible.io",
+              "indices" => [4, 17],
+              "url" => "https://t.co/somelink"
+            }
+          ]
         }
       }
+
       body = FetchTweets.html_body(tweet)
 
       assert body == "asd <a href=\"https://t.co/somelink\" target=\"_blank\">plausible.io</a>"
@@ -70,17 +75,19 @@ defmodule Plausible.Workers.FetchTweetsTest do
       tweet = %{
         "full_text" => "asd @hello",
         "entities" => %{
-          "user_mentions" => [%{
-            "screen_name" => "hello",
-            "id_str" => "123123"
-          }],
+          "user_mentions" => [
+            %{
+              "screen_name" => "hello",
+              "id_str" => "123123"
+            }
+          ],
           "urls" => []
         }
       }
+
       body = FetchTweets.html_body(tweet)
 
       assert body == "asd <a href=\"https://twitter.com/hello\" target=\"_blank\">@hello</a>"
     end
   end
-
 end

@@ -9,7 +9,7 @@ defmodule Plausible.Repo.Migrations.AddTzToSites do
 
     flush()
 
-    Repo.update_all(Plausible.Site, [set: [timezone: "UTC"]])
+    Repo.update_all(Plausible.Site, set: [timezone: "UTC"])
 
     alter table(:sites) do
       modify :timezone, :string, null: false

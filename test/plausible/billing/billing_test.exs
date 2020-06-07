@@ -76,10 +76,10 @@ defmodule Plausible.BillingTest do
   @subscription_id "subscription-123"
   @plan_id "plan-123"
 
-
   describe "subscription_created" do
     test "creates a subscription" do
       user = insert(:user)
+
       Billing.subscription_created(%{
         "alert_name" => "subscription_created",
         "subscription_id" => @subscription_id,
@@ -160,11 +160,12 @@ defmodule Plausible.BillingTest do
     end
 
     test "ignores if the subscription cannot be found" do
-      res = Billing.subscription_cancelled(%{
-        "alert_name" => "subscription_cancelled",
-        "subscription_id" => "some_nonexistent_id",
-        "status" => "deleted"
-      })
+      res =
+        Billing.subscription_cancelled(%{
+          "alert_name" => "subscription_cancelled",
+          "subscription_id" => "some_nonexistent_id",
+          "status" => "deleted"
+        })
 
       assert res == {:ok, nil}
     end
@@ -186,12 +187,13 @@ defmodule Plausible.BillingTest do
     end
 
     test "ignores if the subscription cannot be found" do
-      res = Billing.subscription_payment_succeeded(%{
-        "alert_name" => "subscription_payment_succeeded",
-        "subscription_id" => "nonexistent_subscription_id",
-        "next_bill_date" => Timex.shift(Timex.today(), days: 30),
-        "unit_price" => "12.00"
-      })
+      res =
+        Billing.subscription_payment_succeeded(%{
+          "alert_name" => "subscription_payment_succeeded",
+          "subscription_id" => "nonexistent_subscription_id",
+          "next_bill_date" => Timex.shift(Timex.today(), days: 30),
+          "unit_price" => "12.00"
+        })
 
       assert res == {:ok, nil}
     end
@@ -200,7 +202,7 @@ defmodule Plausible.BillingTest do
   describe "change_plan" do
     test "sets the next bill amount and date" do
       user = insert(:user)
-       insert(:subscription, user: user)
+      insert(:subscription, user: user)
 
       Billing.change_plan(user, "123123")
 

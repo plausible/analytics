@@ -46,7 +46,9 @@ defmodule Plausible.Session.WriteBuffer do
 
   defp flush(buffer) do
     case buffer do
-      [] -> nil
+      [] ->
+        nil
+
       sessions ->
         Logger.info("Flushing #{length(sessions)} sessions")
         Plausible.Clickhouse.insert_sessions(sessions)

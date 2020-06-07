@@ -17,7 +17,7 @@ defmodule Mix.Tasks.CreateFreeSubscription do
     user = Repo.get(Plausible.Auth.User, user_id)
 
     Subscription.free(%{user_id: user_id})
-    |> Repo.insert!
+    |> Repo.insert!()
 
     IO.puts("Created a free subscription for user: #{user.name}")
   end

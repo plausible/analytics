@@ -12,9 +12,9 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
-        %{"name" => "Signup",  "count" => 3},
-        %{"name" => "Visit /register", "count" => 2}
-      ]
+               %{"name" => "Signup", "count" => 3},
+               %{"name" => "Visit /register", "count" => 2}
+             ]
     end
   end
 
@@ -26,11 +26,16 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{domain: site.domain, event_name: "Signup"})
 
       filters = Jason.encode!(%{goal: "Signup"})
-      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&date=2019-01-01&filters=#{filters}")
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&date=2019-01-01&filters=#{filters}"
+        )
 
       assert json_response(conn, 200) == [
-        %{"name" => "Signup", "count" => 3},
-      ]
+               %{"name" => "Signup", "count" => 3}
+             ]
     end
   end
 end

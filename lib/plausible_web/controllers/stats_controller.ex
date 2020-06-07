@@ -45,30 +45,39 @@ defmodule PlausibleWeb.StatsController do
 
     query = Query.from(site.timezone, conn.params)
     {plot, _, labels, _} = Stats.calculate_plot(site, query)
-    csv_content = Enum.zip(labels, plot)
-                  |> Enum.map(fn {k, v} -> [k, v] end)
-                  |> (fn data -> [["Date", "Visitors"] | data] end).()
-                  |> CSV.encode
-                  |> Enum.into([])
-                  |> Enum.join()
 
-    filename = "Visitors #{domain} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.csv"
+    csv_content =
+      Enum.zip(labels, plot)
+      |> Enum.map(fn {k, v} -> [k, v] end)
+      |> (fn data -> [["Date", "Visitors"] | data] end).()
+      |> CSV.encode()
+      |> Enum.into([])
+      |> Enum.join()
+
+    filename =
+      "Visitors #{domain} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{
+        Timex.format!(query.date_range.last, "{ISOdate} ")
+      }.csv"
 
     conn
     |> put_resp_content_type("text/csv")
     |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
-      |> send_resp(200, csv_content)
+    |> send_resp(200, csv_content)
   end
 
   def shared_link(conn, %{"slug" => slug}) do
-    shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug)
-                  |> Repo.preload(:site)
+    shared_link =
+      Repo.get_by(Plausible.Site.SharedLink, slug: slug)
+      |> Repo.preload(:site)
 
     if shared_link do
       if shared_link.password_hash do
         conn
         |> assign(:skip_plausible_tracking, true)
-        |> render("shared_link_password.html", link: shared_link, layout: {PlausibleWeb.LayoutView, "focus.html"})
+        |> render("shared_link_password.html",
+          link: shared_link,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
       else
         shared_link_auth_success(conn, shared_link)
       end
@@ -78,8 +87,9 @@ defmodule PlausibleWeb.StatsController do
   end
 
   def authenticate_shared_link(conn, %{"slug" => slug, "password" => password}) do
-    shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug)
-                  |> Repo.preload(:site)
+    shared_link =
+      Repo.get_by(Plausible.Site.SharedLink, slug: slug)
+      |> Repo.preload(:site)
 
     if shared_link do
       if Plausible.Auth.Password.match?(password, shared_link.password_hash) do
@@ -87,7 +97,11 @@ defmodule PlausibleWeb.StatsController do
       else
         conn
         |> assign(:skip_plausible_tracking, true)
-        |> render("shared_link_password.html", link: shared_link, error: "Incorrect password. Please try again.", layout: {PlausibleWeb.LayoutView, "focus.html"})
+        |> render("shared_link_password.html",
+          link: shared_link,
+          error: "Incorrect password. Please try again.",
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
       end
     else
       render_error(conn, 404)

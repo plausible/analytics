@@ -110,11 +110,21 @@ defmodule PlausibleWeb.Router do
     post "/sites/:website/weekly-report/enable", SiteController, :enable_weekly_report
     post "/sites/:website/weekly-report/disable", SiteController, :disable_weekly_report
     post "/sites/:website/weekly-report/recipients", SiteController, :add_weekly_report_recipient
-    delete "/sites/:website/weekly-report/recipients/:recipient", SiteController, :remove_weekly_report_recipient
+
+    delete "/sites/:website/weekly-report/recipients/:recipient",
+           SiteController,
+           :remove_weekly_report_recipient
+
     post "/sites/:website/monthly-report/enable", SiteController, :enable_monthly_report
     post "/sites/:website/monthly-report/disable", SiteController, :disable_monthly_report
-    post "/sites/:website/monthly-report/recipients", SiteController, :add_monthly_report_recipient
-    delete "/sites/:website/monthly-report/recipients/:recipient", SiteController, :remove_monthly_report_recipient
+
+    post "/sites/:website/monthly-report/recipients",
+         SiteController,
+         :add_monthly_report_recipient
+
+    delete "/sites/:website/monthly-report/recipients/:recipient",
+           SiteController,
+           :remove_monthly_report_recipient
 
     get "/sites/:website/shared-links/new", SiteController, :new_shared_link
     post "/sites/:website/shared-links", SiteController, :create_shared_link
@@ -127,7 +137,6 @@ defmodule PlausibleWeb.Router do
 
     get "/sites/:website/weekly-report/unsubscribe", UnsubscribeController, :weekly_report
     get "/sites/:website/monthly-report/unsubscribe", UnsubscribeController, :monthly_report
-
 
     get "/:website/snippet", SiteController, :add_snippet
     get "/:website/settings", SiteController, :settings

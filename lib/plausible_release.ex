@@ -106,72 +106,71 @@ defmodule Plausible.Release do
     for repo <- repos() do
       :ok = ensure_repo_created(repo)
     end
+
     do_create_ch_db()
   end
 
-
   defp do_create_ch_db() do
-    db_to_create = Keyword.get(Application.get_env(:plausible, :clickhouse),:database)
+    db_to_create = Keyword.get(Application.get_env(:plausible, :clickhouse), :database)
 
     IO.puts("create #{inspect(db_to_create)} clickhouse database/tables if it doesn't exist")
 
     Clickhousex.query(:clickhouse, "CREATE DATABASE IF NOT EXISTS #{db_to_create}", [])
 
-      tb_events = """
-      CREATE TABLE IF NOT EXISTS #{db_to_create}.events (
-        timestamp DateTime,
-        name String,
-        domain String,
-        user_id UInt64,
-        session_id UInt64,
-        hostname String,
-        pathname String,
-        referrer String,
-        referrer_source String,
-        initial_referrer String,
-        initial_referrer_source String,
-        country_code LowCardinality(FixedString(2)),
-        screen_size LowCardinality(String),
-        operating_system LowCardinality(String),
-        browser LowCardinality(String)
-      ) ENGINE = MergeTree()
-      PARTITION BY toYYYYMM(timestamp)
-      ORDER BY (name, domain, user_id, timestamp)
-      SETTINGS index_granularity = 8192
-      """
+    tb_events = """
+    CREATE TABLE IF NOT EXISTS #{db_to_create}.events (
+      timestamp DateTime,
+      name String,
+      domain String,
+      user_id UInt64,
+      session_id UInt64,
+      hostname String,
+      pathname String,
+      referrer String,
+      referrer_source String,
+      initial_referrer String,
+      initial_referrer_source String,
+      country_code LowCardinality(FixedString(2)),
+      screen_size LowCardinality(String),
+      operating_system LowCardinality(String),
+      browser LowCardinality(String)
+    ) ENGINE = MergeTree()
+    PARTITION BY toYYYYMM(timestamp)
+    ORDER BY (name, domain, user_id, timestamp)
+    SETTINGS index_granularity = 8192
+    """
 
     Clickhousex.query(:clickhouse, tb_events, [])
 
     tb_sessions = """
-      CREATE TABLE IF NOT EXISTS #{db_to_create}.sessions (
-        session_id UInt64,
-        sign Int8,
-        domain String,
-        user_id UInt64,
-        hostname String,
-        timestamp DateTime,
-        start DateTime,
-        is_bounce UInt8,
-        entry_page String,
-        exit_page String,
-        pageviews Int32,
-        events Int32,
-        duration UInt32,
-        referrer String,
-        referrer_source String,
-        country_code LowCardinality(FixedString(2)),
-        screen_size LowCardinality(String),
-        operating_system LowCardinality(String),
-        browser LowCardinality(String)
-      ) ENGINE = CollapsingMergeTree(sign)
-      PARTITION BY toYYYYMM(start)
-      ORDER BY (domain, user_id, session_id, start)
-      SETTINGS index_granularity = 8192
-      """
+    CREATE TABLE IF NOT EXISTS #{db_to_create}.sessions (
+      session_id UInt64,
+      sign Int8,
+      domain String,
+      user_id UInt64,
+      hostname String,
+      timestamp DateTime,
+      start DateTime,
+      is_bounce UInt8,
+      entry_page String,
+      exit_page String,
+      pageviews Int32,
+      events Int32,
+      duration UInt32,
+      referrer String,
+      referrer_source String,
+      country_code LowCardinality(FixedString(2)),
+      screen_size LowCardinality(String),
+      operating_system LowCardinality(String),
+      browser LowCardinality(String)
+    ) ENGINE = CollapsingMergeTree(sign)
+    PARTITION BY toYYYYMM(start)
+    ORDER BY (domain, user_id, session_id, start)
+    SETTINGS index_granularity = 8192
+    """
 
-      Clickhousex.query(:clickhouse, tb_sessions, [])
+    Clickhousex.query(:clickhouse, tb_sessions, [])
   end
-
 
   defp ensure_repo_created(repo) do
     IO.puts("create #{inspect(repo)} database if it doesn't exist")
@@ -202,23 +201,22 @@ defmodule Plausible.Release do
     # Start apps necessary for executing migrations
     Enum.each(@start_apps, &Application.ensure_all_started/1)
 
-
     # Start the Repo(s) for myapp
     IO.puts("Starting repos..")
     Enum.each(repos(), & &1.start_link(pool_size: 2))
-
   end
 
   defp prepare_clickhouse do
     Application.ensure_all_started(:db_connection)
     Application.ensure_all_started(:hackney)
-    Clickhousex.start_link([
+
+    Clickhousex.start_link(
       scheme: :http,
       port: 8123,
       name: :clickhouse,
       database: "default",
-      hostname: Keyword.get(Application.get_env(:plausible,:clickhouse),:hostname)
-    ])
+      hostname: Keyword.get(Application.get_env(:plausible, :clickhouse), :hostname)
+    )
   end
 
   defp seeds_path(repo), do: priv_path_for(repo, "seeds.exs")

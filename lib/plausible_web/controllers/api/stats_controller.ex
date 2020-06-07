@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Api.StatsController do
       labels: labels,
       present_index: present_index,
       top_stats: top_stats,
-      interval: query.step_type,
+      interval: query.step_type
     })
   end
 
@@ -29,13 +29,33 @@ defmodule PlausibleWeb.Api.StatsController do
     prev_total_visitors = Stats.unique_visitors(site, %{prev_query | filters: %{}})
     converted_visitors = Stats.unique_visitors(site, query)
     prev_converted_visitors = Stats.unique_visitors(site, prev_query)
-    conversion_rate = if total_visitors > 0, do: Float.round(converted_visitors / total_visitors * 100, 1), else: 0.0
-    prev_conversion_rate = if prev_total_visitors > 0, do: Float.round(prev_converted_visitors / prev_total_visitors * 100, 1), else: 0.0
+
+    conversion_rate =
+      if total_visitors > 0,
+        do: Float.round(converted_visitors / total_visitors * 100, 1),
+        else: 0.0
+
+    prev_conversion_rate =
+      if prev_total_visitors > 0,
+        do: Float.round(prev_converted_visitors / prev_total_visitors * 100, 1),
+        else: 0.0
 
     [
-      %{name: "Total visitors", count: total_visitors, change: percent_change(prev_total_visitors, total_visitors)},
-      %{name: "Converted visitors", count: converted_visitors, change: percent_change(prev_converted_visitors, converted_visitors)},
-      %{name: "Conversion rate", percentage: conversion_rate, change: percent_change(prev_conversion_rate, conversion_rate)},
+      %{
+        name: "Total visitors",
+        count: total_visitors,
+        change: percent_change(prev_total_visitors, total_visitors)
+      },
+      %{
+        name: "Converted visitors",
+        count: converted_visitors,
+        change: percent_change(prev_converted_visitors, converted_visitors)
+      },
+      %{
+        name: "Conversion rate",
+        percentage: conversion_rate,
+        change: percent_change(prev_conversion_rate, conversion_rate)
+      }
     ]
   end
 
@@ -48,9 +68,17 @@ defmodule PlausibleWeb.Api.StatsController do
     change_bounce_rate = if prev_bounce_rate > 0, do: bounce_rate - prev_bounce_rate
 
     [
-      %{name: "Unique visitors", count: visitors, change: percent_change(prev_visitors, visitors)},
-      %{name: "Total pageviews", count: pageviews, change: percent_change(prev_pageviews, pageviews)},
-      %{name: "Bounce rate", percentage: bounce_rate, change: change_bounce_rate},
+      %{
+        name: "Unique visitors",
+        count: visitors,
+        change: percent_change(prev_visitors, visitors)
+      },
+      %{
+        name: "Total pageviews",
+        count: pageviews,
+        change: percent_change(prev_pageviews, pageviews)
+      },
+      %{name: "Bounce rate", percentage: bounce_rate, change: change_bounce_rate}
     ]
   end
 
@@ -58,8 +86,10 @@ defmodule PlausibleWeb.Api.StatsController do
     cond do
       old_count == 0 and new_count > 0 ->
         100
+
       old_count == 0 and new_count == 0 ->
         0
+
       true ->
         round((new_count - old_count) / old_count * 100)
     end
@@ -87,9 +117,10 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
     query = Query.from(site.timezone, params)
 
-    search_terms = if site.google_auth && site.google_auth.property && !query.filters["goal"] do
-      @google_api.fetch_stats(site.google_auth, query)
-    end
+    search_terms =
+      if site.google_auth && site.google_auth.property && !query.filters["goal"] do
+        @google_api.fetch_stats(site.google_auth, query)
+      end
 
     case search_terms do
       nil ->
@@ -97,9 +128,11 @@ defmodule PlausibleWeb.Api.StatsController do
         user_id = get_session(conn, :current_user_id)
         is_owner = user_id && Plausible.Sites.is_owner?(user_id, site)
         json(conn, %{not_configured: true, is_owner: is_owner, total_visitors: total_visitors})
+
       {:ok, terms} ->
         total_visitors = Stats.visitors_from_referrer(site, query, "Google")
         json(conn, %{search_terms: terms, total_visitors: total_visitors})
+
       {:error, e} ->
         put_status(conn, 500)
         |> json(%{error: e})
