@@ -97,16 +97,22 @@ else
   false
 end
 
-config :plausible, Oban,
-  repo: Plausible.Repo,
-  queues: [
+queues = if String.to_existing_atom(System.get_env("CRON_ENABLED", "false")) do
+  [
     provision_ssl_certificates: 1,
     fetch_tweets: 1,
     check_stats_emails: 1,
     email_reports: 1,
     site_setup_emails: 1,
     trial_notification_emails: 1
-  ],
+  ]
+else
+  []
+end
+
+config :plausible, Oban,
+  repo: Plausible.Repo,
+  queues: queues,
   crontab: crontab
 
 config :plausible, :google,
