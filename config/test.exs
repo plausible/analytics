@@ -15,9 +15,16 @@ config :bcrypt_elixir, :log_rounds, 4
 # Configure your database
 config :plausible,
        Plausible.Repo,
+       url:
+       System.get_env(
+         "DATABASE_URL",
+         "postgres://postgres:postgres@127.0.0.1:5432/plausible_test=default"
+       ),
        pool: Ecto.Adapters.SQL.Sandbox
 
 config :plausible, Plausible.Mailer, adapter: Bamboo.TestAdapter
+
+config :plausible, Oban, crontab: false, queues: false
 
 config :plausible,
   paddle_api: Plausible.PaddleApi.Mock,

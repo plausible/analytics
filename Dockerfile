@@ -39,6 +39,7 @@ RUN set -x \
 
 COPY config ./config
 COPY assets ./assets
+COPY tracker ./tracker
 COPY priv ./priv
 COPY lib ./lib
 COPY mix.exs ./
@@ -51,6 +52,8 @@ RUN mix local.hex --force && \
 RUN npm audit fix --prefix ./assets && \
     npm install --prefix ./assets && \
     npm run deploy --prefix ./assets && \
+    npm install --prefix ./tracker && \
+    npm run deploy --prefix ./tracker && \
     mix phx.digest priv/static
 
 WORKDIR /app

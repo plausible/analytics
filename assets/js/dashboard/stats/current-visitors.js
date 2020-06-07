@@ -20,7 +20,10 @@ export default class CurrentVisitors extends React.Component {
 
   updateCount() {
     return fetch(`/api/stats/${encodeURIComponent(this.props.site.domain)}/current-visitors`)
-      .then(res => res.json())
+      .then( response => {
+        if (!response.ok) { throw response }
+        return response.json()
+      })
       .then((res) => this.setState({currentVisitors: res}))
   }
 

@@ -1,12 +1,17 @@
-defmodule Mix.Tasks.SendCheckStatsEmailsTest do
+defmodule Plausible.Workers.SendCheckStatsEmailsTest do
   use Plausible.DataCase
   use Bamboo.Test
+
+  defp perform() do
+    Plausible.Workers.SendCheckStatsEmails.new(%{}) |> Oban.insert!()
+    Oban.drain_queue(:check_stats_emails)
+  end
 
   test "does not send an email before a week has passed" do
     user = insert(:user, inserted_at: days_ago(6), last_seen: days_ago(6))
     insert(:site, domain: "test-site.com", members: [user])
 
-    Mix.Tasks.SendCheckStatsEmails.execute()
+    perform()
 
     assert_no_emails_delivered()
   end
@@ -15,7 +20,7 @@ defmodule Mix.Tasks.SendCheckStatsEmailsTest do
     user = insert(:user, inserted_at: days_ago(9), last_seen: days_ago(6))
     insert(:site, domain: "test-site.com", members: [user])
 
-    Mix.Tasks.SendCheckStatsEmails.execute()
+    perform()
 
     assert_no_emails_delivered()
   end
@@ -25,7 +30,7 @@ defmodule Mix.Tasks.SendCheckStatsEmailsTest do
     site = insert(:site, domain: "test-site.com", members: [user])
     insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
-    Mix.Tasks.SendCheckStatsEmails.execute()
+    perform()
 
     assert_no_emails_delivered()
   end
@@ -34,7 +39,7 @@ defmodule Mix.Tasks.SendCheckStatsEmailsTest do
     user = insert(:user, inserted_at: days_ago(8), last_seen: days_ago(8))
     insert(:site, domain: "test-site.com", members: [user])
 
-    Mix.Tasks.SendCheckStatsEmails.execute()
+    perform()
 
     assert_email_delivered_with(
       to: [{user.name, user.email}],

@@ -2,17 +2,17 @@ defmodule Plausible.Billing.PaddleApi do
   @update_preview_endpoint "https://vendors.paddle.com/api/2.0/subscription/preview_update"
   @update_endpoint "https://vendors.paddle.com/api/2.0/subscription/users/update"
   @get_endpoint "https://vendors.paddle.com/api/2.0/subscription/users"
-  @vendor_id Keyword.fetch!(Application.get_env(:plausible, :paddle), :vendor_id)
-  @vendor_auth_code Keyword.fetch!(Application.get_env(:plausible, :paddle), :vendor_auth_code)
   @headers [
     {"Content-type", "application/json"},
     {"Accept", "application/json"}
   ]
 
   def update_subscription_preview(paddle_subscription_id, new_plan_id) do
+    config = get_config()
+
     params = %{
-      vendor_id: @vendor_id,
-      vendor_auth_code: @vendor_auth_code,
+      vendor_id: config[:vendor_id],
+      vendor_auth_code: config[:vendor_auth_code],
       subscription_id: paddle_subscription_id,
       plan_id: new_plan_id,
       prorate: true,
@@ -32,9 +32,11 @@ defmodule Plausible.Billing.PaddleApi do
   end
 
   def update_subscription(paddle_subscription_id, params) do
+    config = get_config()
+
     params = Map.merge(params, %{
-      vendor_id: @vendor_id,
-      vendor_auth_code: @vendor_auth_code,
+      vendor_id: config[:vendor_id],
+      vendor_auth_code: config[:vendor_auth_code],
       subscription_id: paddle_subscription_id,
       quantity: 1
     })
@@ -50,9 +52,10 @@ defmodule Plausible.Billing.PaddleApi do
   end
 
   def get_subscription(paddle_subscription_id) do
+    config = get_config()
     params = %{
-      vendor_id: @vendor_id,
-      vendor_auth_code: @vendor_auth_code,
+      vendor_id: config[:vendor_id],
+      vendor_auth_code: config[:vendor_auth_code],
       subscription_id: paddle_subscription_id
     }
 
@@ -65,5 +68,9 @@ defmodule Plausible.Billing.PaddleApi do
     else
       {:error, body["error"]}
     end
+  end
+
+  defp get_config() do
+    Application.get_env(:plausible, :paddle)
   end
 end

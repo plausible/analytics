@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "deploy": "node compile.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "uglify-js": "^3.9.4"
+  }
+}

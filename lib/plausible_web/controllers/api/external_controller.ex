@@ -1,16 +1,12 @@
 defmodule PlausibleWeb.Api.ExternalController do
   use PlausibleWeb, :controller
   require Logger
-  @hash_key Keyword.fetch!(Application.get_env(:plausible, PlausibleWeb.Endpoint), :secret_key_base) |> binary_part(0, 16)
 
   def event(conn, _params) do
     params = parse_body(conn)
 
     case create_event(conn, params) do
-      {:ok, nil} ->
-        conn |> send_resp(202, "")
-      {:ok, event} ->
-        Plausible.Ingest.FingerprintSession.on_event(event)
+      {:ok, _} ->
         conn |> send_resp(202, "")
       {:error, changeset} ->
         request = Sentry.Plug.build_request_interface_data(conn, [])
@@ -18,13 +14,6 @@ defmodule PlausibleWeb.Api.ExternalController do
         Logger.info("Error processing event: #{inspect(changeset)}")
         conn |> send_resp(400, "")
     end
-  end
-
-  def unload(conn, _params) do
-    params = parse_body(conn)
-    fingerprint = calculate_fingerprint(conn, params)
-    Plausible.Ingest.FingerprintSession.on_unload(fingerprint, Timex.now())
-    conn |> send_resp(202, "")
   end
 
   def error(conn, _params) do
@@ -48,12 +37,13 @@ defmodule PlausibleWeb.Api.ExternalController do
       initial_ref = parse_referrer(uri, params["initial_referrer"])
 
       event_attrs = %{
+        timestamp: NaiveDateTime.utc_now(),
         name: params["name"],
         hostname: strip_www(uri && uri.host),
         domain: strip_www(params["domain"]) || strip_www(uri && uri.host),
-        pathname: uri && escape_quote(uri.path),
+        pathname: uri && (uri.path || "/"),
+        user_id: generate_user_id(conn, params),
         country_code: country_code,
-        fingerprint: calculate_fingerprint(conn, params),
         operating_system: ua && os_name(ua),
         browser: ua && browser_name(ua),
         referrer_source: params["source"] || referrer_source(ref),
@@ -63,18 +53,16 @@ defmodule PlausibleWeb.Api.ExternalController do
         screen_size: calculate_screen_size(params["screen_width"])
       }
 
-      changeset = Plausible.Event.changeset(%Plausible.Event{}, event_attrs)
+      changeset = Plausible.ClickhouseEvent.changeset(%Plausible.ClickhouseEvent{}, event_attrs)
       if changeset.valid? do
         event = struct(Plausible.ClickhouseEvent, event_attrs)
-        |> Map.put(:timestamp, NaiveDateTime.utc_now())
-        |> Map.put(:user_id, generate_user_id(conn, params))
-
         session_id = Plausible.Session.Store.on_event(event)
 
         Map.put(event, :session_id, session_id)
         |> Plausible.Event.WriteBuffer.insert()
+      else
+        {:error, changeset}
       end
-      Plausible.Repo.insert(changeset)
     end
   end
 
@@ -87,22 +75,13 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp calculate_fingerprint(conn, params) do
-    user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
-    ip_address = List.first(Plug.Conn.get_req_header(conn, "x-bb-ip")) || "" # Netlify sets this header as the remote client IP
-    domain = strip_www(params["domain"]) || ""
-
-    :crypto.hash(:sha256, [user_agent, ip_address, domain])
-    |> Base.encode16
-    |> String.downcase
-  end
-
   defp generate_user_id(conn, params) do
+    hash_key = Keyword.fetch!(Application.get_env(:plausible, PlausibleWeb.Endpoint), :secret_key_base) |> binary_part(0, 16)
     user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
     ip_address = List.first(Plug.Conn.get_req_header(conn, "x-bb-ip")) || "" # Netlify sets this header as the remote client IP
     domain = strip_www(params["domain"]) || ""
 
-    SipHash.hash!(@hash_key, user_agent <> ip_address <> domain)
+    SipHash.hash!(hash_key, user_agent <> ip_address <> domain)
   end
 
   defp calculate_screen_size(nil) , do: nil
@@ -159,8 +138,6 @@ defmodule PlausibleWeb.Api.ExternalController do
         source
     end
   end
-
-  defp escape_quote(s), do: String.replace(s, "'", "''")
 
   defp clean_uri(uri) do
     uri = URI.parse(String.trim(uri))

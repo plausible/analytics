@@ -1,14 +1,20 @@
-defmodule Mix.Tasks.SendSiteSetupEmailsTest do
+defmodule Plausible.Workers.SendSiteSetupEmailsTest do
   use Plausible.DataCase
   use Bamboo.Test
   import Plausible.TestUtils
+  alias Plausible.Workers.SendSiteSetupEmails
+
+  defp perform() do
+    SendSiteSetupEmails.new(%{}) |> Oban.insert!()
+    Oban.drain_queue(:site_setup_emails)
+  end
 
   describe "when user has not managed to set up the site" do
     test "does not send an email 47 hours after site creation" do
       user = insert(:user)
       insert(:site, members: [user], inserted_at: hours_ago(47))
 
-      Mix.Tasks.SendSiteSetupEmails.execute()
+      perform()
 
       assert_no_emails_delivered()
     end
@@ -17,7 +23,7 @@ defmodule Mix.Tasks.SendSiteSetupEmailsTest do
       user = insert(:user)
       insert(:site, members: [user], inserted_at: hours_ago(49))
 
-      Mix.Tasks.SendSiteSetupEmails.execute()
+      perform()
 
       assert_email_delivered_with(
         to: [{user.name, user.email}],
@@ -29,7 +35,7 @@ defmodule Mix.Tasks.SendSiteSetupEmailsTest do
       user = insert(:user)
       insert(:site, members: [user], inserted_at: hours_ago(73))
 
-      Mix.Tasks.SendSiteSetupEmails.execute()
+      perform()
 
       assert_no_emails_delivered()
     end
@@ -40,7 +46,7 @@ defmodule Mix.Tasks.SendSiteSetupEmailsTest do
       user = insert(:user)
        insert(:site, members: [user], domain: "test-site.com")
 
-      Mix.Tasks.SendSiteSetupEmails.execute()
+      perform()
 
       assert_email_delivered_with(
         to: [{user.name, user.email}],
@@ -52,7 +58,7 @@ defmodule Mix.Tasks.SendSiteSetupEmailsTest do
       user = insert(:user)
       site = insert(:site, members: [user], inserted_at: hours_ago(49))
 
-      Mix.Tasks.SendSiteSetupEmails.execute()
+      perform()
 
       assert_email_delivered_with(
         to: [{user.name, user.email}],
@@ -60,7 +66,7 @@ defmodule Mix.Tasks.SendSiteSetupEmailsTest do
       )
 
       create_pageviews([%{domain: site.domain}])
-      Mix.Tasks.SendSiteSetupEmails.execute()
+      perform()
 
       assert_email_delivered_with(
         to: [{user.name, user.email}],
@@ -73,7 +79,7 @@ defmodule Mix.Tasks.SendSiteSetupEmailsTest do
     test "does not send an email before 48h have passed" do
       insert(:user, inserted_at: hours_ago(47))
 
-      Mix.Tasks.SendSiteSetupEmails.execute()
+      perform()
 
       assert_no_emails_delivered()
     end
@@ -81,7 +87,7 @@ defmodule Mix.Tasks.SendSiteSetupEmailsTest do
     test "sends the create site email after 48h" do
       user = insert(:user, inserted_at: hours_ago(49))
 
-      Mix.Tasks.SendSiteSetupEmails.execute()
+      perform()
 
       assert_email_delivered_with(
         to: [{user.name, user.email}],

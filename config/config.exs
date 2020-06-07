@@ -6,7 +6,7 @@ config :plausible,
   mailer_email: System.get_env("MAILER_EMAIL", "hello@plausible.local"),
   admin_pwd: System.get_env("ADMIN_USER_PWD", "!@d3in"),
   ecto_repos: [Plausible.Repo],
-  environment: System.get_env(Atom.to_string(Mix.env()), "dev")
+  environment: System.get_env("ENVIRONMENT", "dev")
 
 config :plausible, :clickhouse,
        hostname: System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost"),
@@ -19,7 +19,7 @@ config :plausible, :clickhouse,
 config :plausible, PlausibleWeb.Endpoint,
   url: [
     host: System.get_env("HOST", "localhost"),
-    port: String.to_integer(System.get_env("PORT", "8000"))
+    scheme: System.get_env("SCHEME", "http")
   ],
   http: [
     port: String.to_integer(System.get_env("PORT", "8000"))
@@ -38,7 +38,7 @@ config :plausible, PlausibleWeb.Endpoint,
 config :sentry,
   dsn: System.get_env("SENTRY_DSN"),
   included_environments: [:prod, :staging],
-  environment_name: String.to_atom(Map.get(System.get_env(), "MIX_ENV", "dev")),
+  environment_name: String.to_atom(System.get_env("ENVIRONMENT", "dev")),
   enable_source_code_context: true,
   root_source_code_path: File.cwd!(),
   tags: %{app_version: System.get_env("APP_VERSION", "0.0.1")},
@@ -82,7 +82,34 @@ config :plausible,
            "DATABASE_URL",
            "postgres://postgres:postgres@127.0.0.1:5432/plausible_test?currentSchema=default"
          ),
-       ssl: false
+       ssl: String.to_existing_atom(System.get_env("DATABASE_TLS_ENABLED", "false"))
+
+
+
+crontab = if String.to_existing_atom(System.get_env("CRON_ENABLED", "false")) do
+  [
+    {"0 * * * *", Plausible.Workers.SendSiteSetupEmails}, # hourly
+    {"0 * * * *", Plausible.Workers.SendEmailReports}, # hourly
+    {"0 0 * * *", Plausible.Workers.FetchTweets},
+    {"0 12 * * *", Plausible.Workers.SendTrialNotifications}, # Daily at midday
+    {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails}, # Daily at midday
+    {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}, # Every 10 minutes
+  ]
+else
+  false
+end
+
+config :plausible, Oban,
+       repo: Plausible.Repo,
+       queues: [
+         provision_ssl_certificates: 1,
+         fetch_tweets: 1,
+         check_stats_emails: 1,
+         email_reports: 1,
+         site_setup_emails: 1,
+         trial_notification_emails: 1
+       ],
+       crontab: crontab
 
 config :plausible, :google,
   client_id: System.get_env("GOOGLE_CLIENT_ID"),
@@ -90,7 +117,7 @@ config :plausible, :google,
 
 config :plausible, :slack, webhook: System.get_env("SLACK_WEBHOOK")
 
-mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.PostmarkAdapter")
+mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.LocalAdapter")
 
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
@@ -113,6 +140,9 @@ case mailer_adapter do
       no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true,
       auth: :always
 
+  "Bamboo.LocalAdapter" ->
+    config :plausible, Plausible.Mailer,
+           adapter: :"Elixir.#{mailer_adapter}"
   _ ->
     raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
 end
@@ -122,6 +152,11 @@ config :plausible, :twitter,
   consumer_secret: System.get_env("TWITTER_CONSUMER_SECRET"),
   token: System.get_env("TWITTER_ACCESS_TOKEN"),
   token_secret: System.get_env("TWITTER_ACCESS_TOKEN_SECRET")
+
+config :plausible, :custom_domain_server,
+  user: System.get_env("CUSTOM_DOMAIN_SERVER_USER"),
+  password: System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD"),
+  ip: System.get_env("CUSTOM_DOMAIN_SERVER_IP")
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

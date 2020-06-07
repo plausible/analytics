@@ -18,14 +18,25 @@ class GoogleKeywordsModal extends React.Component {
   }
 
   componentDidMount() {
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/Google`, this.state.query, {limit: 100})
-      .then((res) => this.setState({
-        loading: false,
-        searchTerms: res.search_terms,
-        totalVisitors: res.total_visitors,
-        notConfigured: res.not_configured,
-        isOwner: res.is_owner
-      }))
+    if (this.state.query.filters.goal) {
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers/Google`, this.state.query, {limit: 100})
+        .then((res) => this.setState({
+          loading: false,
+          searchTerms: res.search_terms,
+          totalVisitors: res.total_visitors,
+          notConfigured: res.not_configured,
+          isOwner: res.is_owner
+        }))
+    } else {
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/Google`, this.state.query, {limit: 100})
+        .then((res) => this.setState({
+          loading: false,
+          searchTerms: res.search_terms,
+          totalVisitors: res.total_visitors,
+          notConfigured: res.not_configured,
+          isOwner: res.is_owner
+        }))
+    }
   }
 
   renderTerm(term) {
@@ -92,6 +103,14 @@ class GoogleKeywordsModal extends React.Component {
     }
   }
 
+  renderGoalText() {
+    if (this.state.query.filters.goal) {
+      return (
+        <h1 className="text-xl font-semibold text-gray-500 leading-none">completed {this.state.query.filters.goal}</h1>
+      )
+    }
+  }
+
   renderBody() {
     if (this.state.loading) {
       return (
@@ -104,8 +123,11 @@ class GoogleKeywordsModal extends React.Component {
 
           <div className="my-4 border-b border-gray-300"></div>
           <main className="modal__content">
-            <h1 className="text-xl font-semibold">{this.state.totalVisitors} new visitors from Google</h1>
-            <h1 className="text-xl font-semibold text-gray-700 mt-2" style={{transform: 'translateY(-1rem)'}}>{toHuman(this.state.query)}</h1>
+            <h1 className="text-xl font-semibold mb-0 leading-none">
+              {this.state.totalVisitors} visitors from Google<br />
+              {toHuman(this.state.query)}
+            </h1>
+            {this.renderGoalText()}
             { this.renderKeywords() }
           </main>
         </React.Fragment>

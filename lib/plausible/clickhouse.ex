@@ -40,11 +40,11 @@ defmodule Plausible.Clickhouse do
 
   def log(query) do
     require Logger
-    timing = System.convert_time_unit(query.connection_time, :native, :millisecond)
     case query.result do
       {:ok, _q, _res} ->
+        timing = System.convert_time_unit(query.connection_time, :native, :millisecond)
         Logger.info("Clickhouse query OK db=#{timing}ms")
-      {:error, e} ->
+      e ->
         Logger.error("Clickhouse query ERROR")
         Logger.error(inspect e)
     end

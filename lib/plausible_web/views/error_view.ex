@@ -1,16 +1,10 @@
 defmodule PlausibleWeb.ErrorView do
   use PlausibleWeb, :view
 
-  def render("500.json", assigns) do
-    message = if assigns[:reason] do
-      assigns[:reason].message
-    else
-      "Something went wrong"
-    end
-
+  def render("500.json", _assigns) do
     %{
       status: 500,
-      message: message
+      message: "Server error"
     }
   end
 
