@@ -80,7 +80,7 @@ config :plausible,
        url:
          System.get_env(
            "DATABASE_URL",
-           "postgres://postgres:postgres@127.0.0.1:5432/plausible_test?currentSchema=default"
+           "postgres://postgres:postgres@127.0.0.1:5432/plausible_dev?currentSchema=default"
          ),
        ssl: String.to_existing_atom(System.get_env("DATABASE_TLS_ENABLED", "false"))
 
