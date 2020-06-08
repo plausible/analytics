@@ -6,12 +6,15 @@ defmodule Plausible.Workers.SendEmailReports do
   alias Plausible.Stats.Clickhouse, as: Stats
 
   @impl Oban.Worker
-  @doc"""
+  @doc """
     The email report should be sent on Monday at 9am according to the timezone
     of the site. This job runs every hour to be able to send it with hourly precision.
   """
   def perform(args, _job) do
-    current_time = if args["current_time"], do: Timex.parse!(args["current_time"], "{ISO:Extended}"), else: Timex.now()
+    current_time =
+      if args["current_time"],
+        do: Timex.parse!(args["current_time"], "{ISO:Extended}"),
+        else: Timex.now()
 
     send_weekly_emails(current_time)
     send_monthly_emails(current_time)
@@ -20,22 +23,36 @@ defmodule Plausible.Workers.SendEmailReports do
   end
 
   defp send_weekly_emails(job_start) do
-    sites = Repo.all(
-      from s in Plausible.Site,
-      join: wr in Plausible.Site.WeeklyReport, on: wr.site_id == s.id,
-      left_join: se in "sent_weekly_reports", on: se.site_id == s.id and se.year == fragment("EXTRACT(isoyear from (? at time zone ?))", ^job_start, s.timezone) and se.week == fragment("EXTRACT(week from (? at time zone ?))", ^job_start, s.timezone),
-      where: is_nil(se), # We haven't sent a report for this site on this week
-      where: fragment("EXTRACT(dow from (? at time zone ?))", ^job_start, s.timezone) == 1, # It's monday in the local timezone
-      where: fragment("EXTRACT(hour from (? at time zone ?))", ^job_start, s.timezone) >= 9, # It's after 9am
-      preload: [weekly_report: wr]
-    )
+    sites =
+      Repo.all(
+        from s in Plausible.Site,
+          join: wr in Plausible.Site.WeeklyReport,
+          on: wr.site_id == s.id,
+          left_join: se in "sent_weekly_reports",
+          on:
+            se.site_id == s.id and
+              se.year ==
+                fragment("EXTRACT(isoyear from (? at time zone ?))", ^job_start, s.timezone) and
+              se.week == fragment("EXTRACT(week from (? at time zone ?))", ^job_start, s.timezone),
+          # We haven't sent a report for this site on this week
+          where: is_nil(se),
+          # It's monday in the local timezone
+          where: fragment("EXTRACT(dow from (? at time zone ?))", ^job_start, s.timezone) == 1,
+          # It's after 9am
+          where: fragment("EXTRACT(hour from (? at time zone ?))", ^job_start, s.timezone) >= 9,
+          preload: [weekly_report: wr]
+      )
 
     for site <- sites do
       query = Query.from(site.timezone, %{"period" => "7d"})
 
       for email <- site.weekly_report.recipients do
         Logger.info("Sending weekly report for #{URI.encode_www_form(site.domain)} to #{email}")
-        unsubscribe_link = PlausibleWeb.Endpoint.url() <> "/sites/#{URI.encode_www_form(site.domain)}/weekly-report/unsubscribe?email=#{email}"
+
+        unsubscribe_link =
+          PlausibleWeb.Endpoint.url() <>
+            "/sites/#{URI.encode_www_form(site.domain)}/weekly-report/unsubscribe?email=#{email}"
+
         send_report(email, site, "Weekly", unsubscribe_link, query)
       end
 
@@ -44,23 +61,46 @@ defmodule Plausible.Workers.SendEmailReports do
   end
 
   defp send_monthly_emails(job_start) do
-    sites = Repo.all(
-      from s in Plausible.Site,
-      join: mr in Plausible.Site.MonthlyReport, on: mr.site_id == s.id,
-      left_join: se in "sent_monthly_reports", on: se.site_id == s.id and se.year == fragment("EXTRACT(year from (? at time zone ?))", ^job_start, s.timezone) and se.month == fragment("EXTRACT(month from (? at time zone ?))", ^job_start, s.timezone),
-      where: is_nil(se), # We haven't sent a report for this site this month
-      where: fragment("EXTRACT(day from (? at time zone ?))", ^job_start, s.timezone) == 1, # It's the 1st of the month in the local timezone
-      where: fragment("EXTRACT(hour from (? at time zone ?))", ^job_start, s.timezone) >= 9, # It's after 9am
-      preload: [monthly_report: mr]
-    )
+    sites =
+      Repo.all(
+        from s in Plausible.Site,
+          join: mr in Plausible.Site.MonthlyReport,
+          on: mr.site_id == s.id,
+          left_join: se in "sent_monthly_reports",
+          on:
+            se.site_id == s.id and
+              se.year == fragment("EXTRACT(year from (? at time zone ?))", ^job_start, s.timezone) and
+              se.month ==
+                fragment("EXTRACT(month from (? at time zone ?))", ^job_start, s.timezone),
+          # We haven't sent a report for this site this month
+          where: is_nil(se),
+          # It's the 1st of the month in the local timezone
+          where: fragment("EXTRACT(day from (? at time zone ?))", ^job_start, s.timezone) == 1,
+          # It's after 9am
+          where: fragment("EXTRACT(hour from (? at time zone ?))", ^job_start, s.timezone) >= 9,
+          preload: [monthly_report: mr]
+      )
 
     for site <- sites do
-      last_month = job_start |> Timex.Timezone.convert(site.timezone) |> Timex.shift(months: -1) |> Timex.beginning_of_month
-      query = Query.from(site.timezone, %{"period" => "month", "date" => Timex.format!(last_month, "{ISOdate}")})
+      last_month =
+        job_start
+        |> Timex.Timezone.convert(site.timezone)
+        |> Timex.shift(months: -1)
+        |> Timex.beginning_of_month()
+
+      query =
+        Query.from(site.timezone, %{
+          "period" => "month",
+          "date" => Timex.format!(last_month, "{ISOdate}")
+        })
 
       for email <- site.monthly_report.recipients do
         Logger.info("Sending monthly report for #{site.domain} to #{email}")
-        unsubscribe_link = PlausibleWeb.Endpoint.url() <> "/sites/#{URI.encode_www_form(site.domain)}/monthly-report/unsubscribe?email=#{email}"
+
+        unsubscribe_link =
+          PlausibleWeb.Endpoint.url() <>
+            "/sites/#{URI.encode_www_form(site.domain)}/monthly-report/unsubscribe?email=#{email}"
+
         send_report(email, site, Timex.format!(last_month, "{Mfull}"), unsubscribe_link, query)
       end
 
@@ -70,7 +110,10 @@ defmodule Plausible.Workers.SendEmailReports do
 
   defp send_report(email, site, name, unsubscribe_link, query) do
     {pageviews, unique_visitors} = Stats.pageviews_and_visitors(site, query)
-    {change_pageviews, change_visitors} = Stats.compare_pageviews_and_visitors(site, query, {pageviews, unique_visitors})
+
+    {change_pageviews, change_visitors} =
+      Stats.compare_pageviews_and_visitors(site, query, {pageviews, unique_visitors})
+
     bounce_rate = Stats.bounce_rate(site, query)
     prev_bounce_rate = Stats.bounce_rate(site, Query.shift_back(query))
     change_bounce_rate = if prev_bounce_rate > 0, do: bounce_rate - prev_bounce_rate
@@ -97,24 +140,28 @@ defmodule Plausible.Workers.SendEmailReports do
   end
 
   defp weekly_report_sent(site, time) do
-    {year, week} = time |> DateTime.to_date |> Timex.iso_week
+    {year, week} = time |> DateTime.to_date() |> Timex.iso_week()
 
-    Repo.insert_all("sent_weekly_reports", [%{
-      site_id: site.id,
-      year: year,
-      week: week,
-      timestamp: Timex.now()
-    }])
+    Repo.insert_all("sent_weekly_reports", [
+      %{
+        site_id: site.id,
+        year: year,
+        week: week,
+        timestamp: Timex.now()
+      }
+    ])
   end
 
   defp monthly_report_sent(site, time) do
     date = DateTime.to_date(time)
 
-    Repo.insert_all("sent_monthly_reports", [%{
-      site_id: site.id,
-      year: date.year,
-      month: date.month,
-      timestamp: Timex.now()
-    }])
+    Repo.insert_all("sent_monthly_reports", [
+      %{
+        site_id: site.id,
+        year: date.year,
+        month: date.month,
+        timestamp: Timex.now()
+      }
+    ])
   end
 end

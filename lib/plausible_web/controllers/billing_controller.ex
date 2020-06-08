@@ -14,7 +14,10 @@ defmodule PlausibleWeb.BillingController do
     subscription = Billing.active_subscription_for(conn.assigns[:current_user].id)
 
     if subscription do
-      render(conn, "change_plan.html", subscription: subscription, layout: {PlausibleWeb.LayoutView, "focus.html"})
+      render(conn, "change_plan.html",
+        subscription: subscription,
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
+      )
     else
       redirect(conn, to: "/billing/upgrade")
     end
@@ -25,7 +28,12 @@ defmodule PlausibleWeb.BillingController do
 
     if subscription do
       {:ok, preview_info} = Billing.change_plan_preview(subscription, new_plan_id)
-      render(conn, "change_plan_preview.html", subscription: subscription, preview_info: preview_info, layout: {PlausibleWeb.LayoutView, "focus.html"})
+
+      render(conn, "change_plan_preview.html",
+        subscription: subscription,
+        preview_info: preview_info,
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
+      )
     else
       redirect(conn, to: "/billing/upgrade")
     end
@@ -37,10 +45,21 @@ defmodule PlausibleWeb.BillingController do
         conn
         |> put_flash(:success, "Plan changed successfully")
         |> redirect(to: "/settings")
+
       {:error, e} ->
-        Sentry.capture_message("Error changing plans", extra: %{errors: inspect(e), new_plan_id: new_plan_id, user_id: conn.assigns[:current_user].id})
+        Sentry.capture_message("Error changing plans",
+          extra: %{
+            errors: inspect(e),
+            new_plan_id: new_plan_id,
+            user_id: conn.assigns[:current_user].id
+          }
+        )
+
         conn
-        |> put_flash(:error, "Something went wrong. Please try again or contact support at support@plausible.io")
+        |> put_flash(
+          :error,
+          "Something went wrong. Please try again or contact support at support@plausible.io"
+        )
         |> redirect(to: "/settings")
     end
   end
@@ -49,7 +68,12 @@ defmodule PlausibleWeb.BillingController do
     usage = Plausible.Billing.usage(conn.assigns[:current_user])
     today = Timex.today()
 
-    render(conn, "upgrade.html", usage: usage, today: today, user: conn.assigns[:current_user], layout: {PlausibleWeb.LayoutView, "focus.html"})
+    render(conn, "upgrade.html",
+      usage: usage,
+      today: today,
+      user: conn.assigns[:current_user],
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
   end
 
   def success(conn, _params) do

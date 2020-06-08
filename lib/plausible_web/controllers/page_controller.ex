@@ -9,17 +9,17 @@ defmodule PlausibleWeb.PageController do
     {"Reddit", 8},
     {"Google", 6},
     {"DuckDuckGo", 4},
-    {"Bing", 2},
+    {"Bing", 2}
   ]
 
-   @demo_pages [
-     {"/", 140},
-     {"/plausible.io", 63},
-     {"/blog", 41},
-     {"/register", 13},
-     {"/login", 7},
-     {"/blog/google-analytics-and-privacy", 4},
-     {"/blog/launching-plausible", 2}
+  @demo_pages [
+    {"/", 140},
+    {"/plausible.io", 63},
+    {"/blog", 41},
+    {"/register", 13},
+    {"/login", 7},
+    {"/blog/google-analytics-and-privacy", 4},
+    {"/blog/launching-plausible", 2}
   ]
 
   def index(conn, _params) do
@@ -27,7 +27,11 @@ defmodule PlausibleWeb.PageController do
       user = conn.assigns[:current_user] |> Repo.preload(:sites)
       render(conn, "sites.html", sites: user.sites)
     else
-      render(conn, "index.html", demo_referrers: @demo_referrers, demo_pages: @demo_pages, landing_nav: true)
+      render(conn, "index.html",
+        demo_referrers: @demo_referrers,
+        demo_pages: @demo_pages,
+        landing_nav: true
+      )
     end
   end
 
@@ -39,7 +43,7 @@ defmodule PlausibleWeb.PageController do
     claims = %{
       id: user.id,
       email: user.email,
-      name: user.name,
+      name: user.name
     }
 
     signer = Joken.Signer.create("HS256", "4d1d2ae6-4595-4d0b-b98a-8ca5b1f2095a")
@@ -59,7 +63,11 @@ defmodule PlausibleWeb.PageController do
   def roadmap(conn, _params) do
     if conn.assigns[:current_user] do
       token = sign_token!(conn.assigns[:current_user])
-      redirect(conn, external: "https://plausible.nolt.io/sso/#{token}?returnUrl=https://plausible.nolt.io/roadmap")
+
+      redirect(conn,
+        external:
+          "https://plausible.nolt.io/sso/#{token}?returnUrl=https://plausible.nolt.io/roadmap"
+      )
     else
       redirect(conn, external: "https://plausible.nolt.io/roadmap")
     end

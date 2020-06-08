@@ -11,19 +11,24 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "registering sends an activation link", %{conn: conn} do
-      post(conn, "/register", user: %{
-        name: "Jane Doe",
-        email: "user@example.com"
-      })
+      post(conn, "/register",
+        user: %{
+          name: "Jane Doe",
+          email: "user@example.com"
+        }
+      )
 
       assert_email_delivered_with(subject: "Activate your Plausible free trial")
     end
 
     test "user sees success page after registering", %{conn: conn} do
-      conn = post(conn, "/register", user: %{
-        name: "Jane Doe",
-        email: "user@example.com"
-      })
+      conn =
+        post(conn, "/register",
+          user: %{
+            name: "Jane Doe",
+            email: "user@example.com"
+          }
+        )
 
       assert html_response(conn, 200) =~ "Success!"
     end
@@ -79,7 +84,6 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "email does not exist - renders login form again", %{conn: conn} do
-
       conn = post(conn, "/login", email: "user@example.com", password: "password")
 
       assert get_session(conn, :current_user_id) == nil
@@ -159,7 +163,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     setup [:create_user, :log_in]
 
     test "updates user record", %{conn: conn, user: user} do
-       put(conn, "/settings", %{"user" => %{"name" => "New name"}})
+      put(conn, "/settings", %{"user" => %{"name" => "New name"}})
 
       user = Plausible.Repo.get(Plausible.Auth.User, user.id)
       assert user.name == "New name"
@@ -171,15 +175,19 @@ defmodule PlausibleWeb.AuthControllerTest do
     use Plausible.Repo
 
     test "deletes the user", %{conn: conn, user: user, site: site} do
-      Repo.insert_all("intro_emails", [%{
-        user_id: user.id,
-        timestamp: NaiveDateTime.utc_now()
-      }])
+      Repo.insert_all("intro_emails", [
+        %{
+          user_id: user.id,
+          timestamp: NaiveDateTime.utc_now()
+        }
+      ])
 
-      Repo.insert_all("feedback_emails", [%{
-        user_id: user.id,
-        timestamp: NaiveDateTime.utc_now()
-      }])
+      Repo.insert_all("feedback_emails", [
+        %{
+          user_id: user.id,
+          timestamp: NaiveDateTime.utc_now()
+        }
+      ])
 
       insert(:google_auth, site: site, user: user)
       insert(:subscription, user: user, status: "deleted")

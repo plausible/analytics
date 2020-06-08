@@ -33,7 +33,22 @@ defmodule Plausible.ClickhouseSession do
 
   def changeset(session, attrs) do
     session
-    |> cast(attrs, [:hostname, :domain, :entry_page, :exit_page, :referrer, :fingerprint, :start, :length, :is_bounce, :operating_system, :browser, :referrer_source, :country_code, :screen_size])
+    |> cast(attrs, [
+      :hostname,
+      :domain,
+      :entry_page,
+      :exit_page,
+      :referrer,
+      :fingerprint,
+      :start,
+      :length,
+      :is_bounce,
+      :operating_system,
+      :browser,
+      :referrer_source,
+      :country_code,
+      :screen_size
+    ])
     |> validate_required([:hostname, :domain, :fingerprint, :is_bounce, :start])
   end
 end

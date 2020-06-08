@@ -6,21 +6,26 @@ defmodule Plausible.Workers.FetchTweets do
 
   @impl Oban.Worker
   def perform(_args, _job, twitter_api \\ Plausible.Twitter.Api) do
-    new_links = Clickhouse.all(
-      from e in Plausible.ClickhouseEvent,
-      where: e.timestamp > fragment("(now() - INTERVAL 6 day)") and e.timestamp < fragment("(now() - INTERVAL 5 day)"),
-      or_where: e.timestamp > fragment("(now() - INTERVAL 1 day)"),
-      where: e.referrer_source == "Twitter",
-      where: e.referrer not in ["t.co", "t.co/"],
-      distinct: true,
-      select: e.referrer
-    ) |> Enum.map(fn event -> event["referrer"] end)
+    new_links =
+      Clickhouse.all(
+        from e in Plausible.ClickhouseEvent,
+          where:
+            e.timestamp > fragment("(now() - INTERVAL 6 day)") and
+              e.timestamp < fragment("(now() - INTERVAL 5 day)"),
+          or_where: e.timestamp > fragment("(now() - INTERVAL 1 day)"),
+          where: e.referrer_source == "Twitter",
+          where: e.referrer not in ["t.co", "t.co/"],
+          distinct: true,
+          select: e.referrer
+      )
+      |> Enum.map(fn event -> event["referrer"] end)
 
     for link <- new_links do
       results = twitter_api.search(link)
 
       for tweet <- results do
-        {:ok, created} = Timex.parse(tweet["created_at"], "{WDshort} {Mshort} {D} {ISOtime} {Z} {YYYY}")
+        {:ok, created} =
+          Timex.parse(tweet["created_at"], "{WDshort} {Mshort} {D} {ISOtime} {Z} {YYYY}")
 
         Tweet.changeset(%Tweet{}, %{
           link: link,
@@ -30,17 +35,20 @@ defmodule Plausible.Workers.FetchTweets do
           author_image: tweet["user"]["profile_image_url_https"],
           text: html_body(tweet),
           created: created
-        }) |> Repo.insert!(on_conflict: :nothing)
+        })
+        |> Repo.insert!(on_conflict: :nothing)
       end
     end
+
     :ok
   end
 
   def html_body(tweet) do
-    body = Enum.reduce(tweet["entities"]["urls"], tweet["full_text"], fn url, text ->
-      html = "<a href=\"#{url["url"]}\" target=\"_blank\">#{url["display_url"]}</a>"
-      String.replace(text, url["url"], html)
-    end)
+    body =
+      Enum.reduce(tweet["entities"]["urls"], tweet["full_text"], fn url, text ->
+        html = "<a href=\"#{url["url"]}\" target=\"_blank\">#{url["display_url"]}</a>"
+        String.replace(text, url["url"], html)
+      end)
 
     Enum.reduce(tweet["entities"]["user_mentions"], body, fn mention, text ->
       link = "https://twitter.com/#{mention["screen_name"]}"

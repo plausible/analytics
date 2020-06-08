@@ -16,35 +16,38 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in]
 
     test "creates the site with valid params", %{conn: conn} do
-      conn = post(conn, "/sites", %{
-        "site" => %{
-          "domain" => "example.com",
-          "timezone" => "Europe/London"
-        }
-      })
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
 
       assert redirected_to(conn) == "/example.com/snippet"
       assert Repo.exists?(Plausible.Site, domain: "example.com")
     end
 
     test "cleans up the url", %{conn: conn} do
-      conn = post(conn, "/sites", %{
-        "site" => %{
-          "domain" => "https://www.Example.com/",
-          "timezone" => "Europe/London"
-        }
-      })
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => "https://www.Example.com/",
+            "timezone" => "Europe/London"
+          }
+        })
 
       assert redirected_to(conn) == "/example.com/snippet"
       assert Repo.exists?(Plausible.Site, domain: "example.com")
     end
 
     test "renders form again when domain is missing", %{conn: conn} do
-      conn = post(conn, "/sites", %{
-        "site" => %{
-          "timezone" => "Europe/London"
-        }
-      })
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "timezone" => "Europe/London"
+          }
+        })
 
       assert html_response(conn, 200) =~ "can&#39;t be blank"
     end
@@ -52,12 +55,13 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "renders form again when it is a duplicate domain", %{conn: conn} do
       insert(:site, domain: "example.com")
 
-      conn = post(conn, "/sites", %{
-        "site" => %{
-          "domain" => "example.com",
-          "timezone" => "Europe/London"
-        }
-      })
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
 
       assert html_response(conn, 200) =~ "has already been taken"
     end
@@ -200,7 +204,11 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "POST /sites/:website/weekly-report/enable" do
     setup [:create_user, :log_in, :create_site]
 
-    test "creates a weekly report record with the user email", %{conn: conn, site: site, user: user} do
+    test "creates a weekly report record with the user email", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
       post(conn, "/sites/#{site.domain}/weekly-report/enable")
 
       report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
@@ -249,7 +257,11 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "POST /sites/:website/monthly-report/enable" do
     setup [:create_user, :log_in, :create_site]
 
-    test "creates a monthly report record with the user email", %{conn: conn, site: site, user: user} do
+    test "creates a monthly report record with the user email", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
       post(conn, "/sites/#{site.domain}/monthly-report/enable")
 
       report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
@@ -356,7 +368,10 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "creates a custom domain", %{conn: conn, site: site} do
-      conn = post(conn, "/sites/#{site.domain}/custom-domains", %{"custom_domain" => %{"domain" => "plausible.example.com"}})
+      conn =
+        post(conn, "/sites/#{site.domain}/custom-domains", %{
+          "custom_domain" => %{"domain" => "plausible.example.com"}
+        })
 
       domain = Repo.one(Plausible.Site.CustomDomain)
 
@@ -365,14 +380,18 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "validates presence of domain name", %{conn: conn, site: site} do
-      conn = post(conn, "/sites/#{site.domain}/custom-domains", %{"custom_domain" => %{"domain" => ""}})
+      conn =
+        post(conn, "/sites/#{site.domain}/custom-domains", %{"custom_domain" => %{"domain" => ""}})
 
       refute Repo.one(Plausible.Site.CustomDomain)
       assert html_response(conn, 200) =~ "Setup custom domain"
     end
 
     test "validates format of domain name", %{conn: conn, site: site} do
-      conn = post(conn, "/sites/#{site.domain}/custom-domains", %{"custom_domain" => %{"domain" => "ASD?/not-domain"}})
+      conn =
+        post(conn, "/sites/#{site.domain}/custom-domains", %{
+          "custom_domain" => %{"domain" => "ASD?/not-domain"}
+        })
 
       refute Repo.one(Plausible.Site.CustomDomain)
       assert html_response(conn, 200) =~ "Setup custom domain"

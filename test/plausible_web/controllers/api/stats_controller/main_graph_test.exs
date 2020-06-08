@@ -17,7 +17,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "displays hourly stats in configured timezone", %{conn: conn, user: user} do
-      site = insert(:site, domain: "tz-test.com", members: [user], timezone: "CET") # UTC+1
+      # UTC+1
+      site = insert(:site, domain: "tz-test.com", members: [user], timezone: "CET")
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
@@ -25,7 +26,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       zeroes = Stream.repeatedly(fn -> 0 end) |> Stream.take(22) |> Enum.into([])
 
-      assert plot == [0, 1] ++ zeroes # Expecting pageview to show at 1am CET
+      # Expecting pageview to show at 1am CET
+      assert plot == [0, 1] ++ zeroes
     end
 
     test "displays visitors for a month", %{conn: conn, site: site} do
@@ -90,13 +92,17 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
-
   describe "GET /api/stats/main-graph - filtered for goal" do
     setup [:create_user, :log_in, :create_site]
 
     test "returns total unique visitors", %{conn: conn, site: site} do
       filters = Jason.encode!(%{goal: "Signup"})
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01&filters=#{filters}")
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01&filters=#{filters}"
+        )
 
       res = json_response(conn, 200)
       assert %{"name" => "Total visitors", "count" => 6, "change" => 100} in res["top_stats"]
@@ -104,7 +110,12 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
     test "returns converted visitors", %{conn: conn, site: site} do
       filters = Jason.encode!(%{goal: "Signup"})
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2019-01-01&filters=#{filters}")
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2019-01-01&filters=#{filters}"
+        )
 
       res = json_response(conn, 200)
       assert %{"name" => "Converted visitors", "count" => 3, "change" => 100} in res["top_stats"]
@@ -112,10 +123,18 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
     test "returns conversion rate", %{conn: conn, site: site} do
       filters = Jason.encode!(%{goal: "Signup"})
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01&filters=#{filters}")
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01&filters=#{filters}"
+        )
 
       res = json_response(conn, 200)
-      assert %{"name" => "Conversion rate", "percentage" => 50.0, "change" => 100} in res["top_stats"]
+
+      assert %{"name" => "Conversion rate", "percentage" => 50.0, "change" => 100} in res[
+               "top_stats"
+             ]
     end
   end
 end

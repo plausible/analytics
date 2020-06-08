@@ -16,10 +16,10 @@ config :bcrypt_elixir, :log_rounds, 4
 config :plausible,
        Plausible.Repo,
        url:
-       System.get_env(
-         "DATABASE_URL",
-         "postgres://postgres:postgres@127.0.0.1:5432/plausible_test=default"
-       ),
+         System.get_env(
+           "DATABASE_URL",
+           "postgres://postgres:postgres@127.0.0.1:5432/plausible_test=default"
+         ),
        pool: Ecto.Adapters.SQL.Sandbox
 
 config :plausible, Plausible.Mailer, adapter: Bamboo.TestAdapter
@@ -30,7 +30,6 @@ config :plausible,
   paddle_api: Plausible.PaddleApi.Mock,
   google_api: Plausible.Google.Api.Mock
 
-
 config :junit_formatter,
   report_file: "report.xml",
   report_dir: File.cwd!(),
@@ -39,4 +38,4 @@ config :junit_formatter,
   include_filename?: true
 
 config :plausible,
-       session_timeout: 0
+  session_timeout: 0

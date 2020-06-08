@@ -1,6 +1,11 @@
 defmodule Plausible.Factory do
   use ExMachina.Ecto, repo: Plausible.Repo
-  @hash_key Keyword.fetch!(Application.get_env(:plausible, PlausibleWeb.Endpoint), :secret_key_base) |> binary_part(0, 16)
+
+  @hash_key Keyword.fetch!(
+              Application.get_env(:plausible, PlausibleWeb.Endpoint),
+              :secret_key_base
+            )
+            |> binary_part(0, 16)
 
   def user_factory(attrs) do
     pw = Map.get(attrs, :password, "password")
@@ -20,7 +25,7 @@ defmodule Plausible.Factory do
 
     %Plausible.Site{
       domain: domain,
-      timezone: "UTC",
+      timezone: "UTC"
     }
   end
 

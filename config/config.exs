@@ -9,11 +9,11 @@ config :plausible,
   environment: System.get_env("ENVIRONMENT", "dev")
 
 config :plausible, :clickhouse,
-       hostname: System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost"),
-       database: System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_test"),
-       username: System.get_env("CLICKHOUSE_DATABASE_USER"),
-       password: System.get_env("CLICKHOUSE_DATABASE_PASSWORD"),
-       pool_size: 10
+  hostname: System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost"),
+  database: System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_test"),
+  username: System.get_env("CLICKHOUSE_DATABASE_USER"),
+  password: System.get_env("CLICKHOUSE_DATABASE_PASSWORD"),
+  pool_size: 10
 
 # Configures the endpoint
 config :plausible, PlausibleWeb.Endpoint,
@@ -64,14 +64,16 @@ config :plausible,
 
 config :plausible,
   # 30 minutes
-  session_timeout: 1000 * 60 * 30, # 30 minutes
+  # 30 minutes
+  session_timeout: 1000 * 60 * 30,
   session_length_minutes: 30
 
 config :plausible, :paddle,
   vendor_id: "49430",
   vendor_auth_code: System.get_env("PADDLE_VENDOR_AUTH_CODE")
 
-config :plausible, Plausible.Repo,
+config :plausible,
+       Plausible.Repo,
        pool_size: String.to_integer(System.get_env("DATABASE_POOL_SIZE", "10")),
        timeout: 300_000,
        connect_timeout: 300_000,
@@ -83,19 +85,24 @@ config :plausible, Plausible.Repo,
          ),
        ssl: String.to_existing_atom(System.get_env("DATABASE_TLS_ENABLED", "false"))
 
-
-crontab = if String.to_existing_atom(System.get_env("CRON_ENABLED", "false")) do
-  [
-    {"0 * * * *", Plausible.Workers.SendSiteSetupEmails}, # hourly
-    {"0 * * * *", Plausible.Workers.SendEmailReports}, # hourly
-    {"0 0 * * *", Plausible.Workers.FetchTweets},
-    {"0 12 * * *", Plausible.Workers.SendTrialNotifications}, # Daily at midday
-    {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails}, # Daily at midday
-    {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}, # Every 10 minutes
-  ]
-else
-  false
-end
+crontab =
+  if String.to_existing_atom(System.get_env("CRON_ENABLED", "false")) do
+    [
+      # hourly
+      {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
+      #  hourly
+      {"0 * * * *", Plausible.Workers.SendEmailReports},
+      {"0 0 * * *", Plausible.Workers.FetchTweets},
+      # Daily at midday
+      {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
+      # Daily at midday
+      {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
+      # Every 10 minutes
+      {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}
+    ]
+  else
+    false
+  end
 
 config :plausible, Oban,
   repo: Plausible.Repo,
@@ -139,8 +146,8 @@ case mailer_adapter do
       auth: :always
 
   "Bamboo.LocalAdapter" ->
-    config :plausible, Plausible.Mailer,
-      adapter: :"Elixir.#{mailer_adapter}"
+    config :plausible, Plausible.Mailer, adapter: :"Elixir.#{mailer_adapter}"
+
   _ ->
     raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
 end

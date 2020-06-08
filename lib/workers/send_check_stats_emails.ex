@@ -6,12 +6,13 @@ defmodule Plausible.Workers.SendCheckStatsEmails do
   def perform(_args, _job) do
     q =
       from(u in Plausible.Auth.User,
-        left_join: ce in "check_stats_emails", on: ce.user_id == u.id,
+        left_join: ce in "check_stats_emails",
+        on: ce.user_id == u.id,
         where: is_nil(ce.id),
         where:
-        u.inserted_at > fragment("(now() at time zone 'utc') - '14 days'::interval") and
-        u.inserted_at < fragment("(now() at time zone 'utc') - '7 days'::interval") and
-        u.last_seen < fragment("(now() at time zone 'utc') - '7 days'::interval"),
+          u.inserted_at > fragment("(now() at time zone 'utc') - '14 days'::interval") and
+            u.inserted_at < fragment("(now() at time zone 'utc') - '7 days'::interval") and
+            u.last_seen < fragment("(now() at time zone 'utc') - '7 days'::interval"),
         preload: [sites: :weekly_report]
       )
 
@@ -30,9 +31,11 @@ defmodule Plausible.Workers.SendCheckStatsEmails do
     PlausibleWeb.Email.check_stats_email(user)
     |> Plausible.Mailer.send_email()
 
-    Repo.insert_all("check_stats_emails", [%{
-      user_id: user.id,
-      timestamp: NaiveDateTime.utc_now()
-    }])
+    Repo.insert_all("check_stats_emails", [
+      %{
+        user_id: user.id,
+        timestamp: NaiveDateTime.utc_now()
+      }
+    ])
   end
 end

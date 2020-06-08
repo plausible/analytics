@@ -9,9 +9,19 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
       conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
-        %{"name" => "EST", "full_country_name" => "Estonia", "count" => 2, "percentage" => 67},
-        %{"name" => "GBR", "full_country_name" => "United Kingdom", "count" => 1, "percentage" => 33},
-      ]
+               %{
+                 "name" => "EST",
+                 "full_country_name" => "Estonia",
+                 "count" => 2,
+                 "percentage" => 67
+               },
+               %{
+                 "name" => "GBR",
+                 "full_country_name" => "United Kingdom",
+                 "count" => 1,
+                 "percentage" => 33
+               }
+             ]
     end
   end
 end

@@ -93,11 +93,11 @@ config :plausible, :google,
 config :plausible, :slack, webhook: slack_hook_url
 
 config :plausible, :clickhouse,
-       hostname: ck_host,
-       database: ck_db,
-       username: ck_db_user,
-       password: ck_db_pwd,
-       pool_size: ck_db_pool
+  hostname: ck_host,
+  database: ck_db,
+  username: ck_db_user,
+  password: ck_db_pwd,
+  pool_size: ck_db_pool
 
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
@@ -136,12 +136,18 @@ config :plausible, :custom_domain_server,
   ip: custom_domain_server_ip
 
 crontab = [
-  {"0 * * * *", Plausible.Workers.SendSiteSetupEmails}, # hourly
-  {"0 * * * *", Plausible.Workers.SendEmailReports}, # hourly
-  {"0 0 * * *", Plausible.Workers.FetchTweets}, # Daily at midnight
-  {"0 12 * * *", Plausible.Workers.SendTrialNotifications}, # Daily at midday
-  {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails}, # Daily at midday
-  {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}, # Every 10 minutes
+  # hourly
+  {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
+  #  hourly
+  {"0 * * * *", Plausible.Workers.SendEmailReports},
+  # Daily at midnight
+  {"0 0 * * *", Plausible.Workers.FetchTweets},
+  # Daily at midday
+  {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
+  # Daily at midday
+  {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
+  # Every 10 minutes
+  {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}
 ]
 
 config :plausible, Oban,
@@ -154,6 +160,6 @@ config :plausible, Oban,
     site_setup_emails: 1,
     trial_notification_emails: 1
   ],
-  crontab: if cron_enabled, do: crontab, else: false
+  crontab: if(cron_enabled, do: crontab, else: false)
 
 config :logger, level: :warn

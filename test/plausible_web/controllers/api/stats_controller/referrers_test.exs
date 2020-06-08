@@ -9,18 +9,27 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
-        %{"name" => "10words", "count" => 2, "url" => "10words.com"},
-        %{"name" => "Bing", "count" => 1, "url" => ""},
-      ]
+               %{"name" => "10words", "count" => 2, "url" => "10words.com"},
+               %{"name" => "Bing", "count" => 1, "url" => ""}
+             ]
     end
 
     test "calculates bounce rate for referrers", %{conn: conn, site: site} do
-      conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01&include=bounce_rate")
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01&include=bounce_rate"
+        )
 
       assert json_response(conn, 200) == [
-        %{"name" => "10words", "count" => 2, "bounce_rate" => 50.0, "url" => "10words.com"},
-        %{"name" => "Bing", "count" => 1, "bounce_rate" => nil, "url" => ""},
-      ]
+               %{
+                 "name" => "10words",
+                 "count" => 2,
+                 "bounce_rate" => 50.0,
+                 "url" => "10words.com"
+               },
+               %{"name" => "Bing", "count" => 1, "bounce_rate" => nil, "url" => ""}
+             ]
     end
   end
 
@@ -29,20 +38,30 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
 
     test "returns top referrers for a custom goal", %{conn: conn, site: site} do
       filters = Jason.encode!(%{goal: "Signup"})
-      conn = get(conn, "/api/stats/#{site.domain}/goal/referrers?period=day&date=2019-01-01&filters=#{filters}")
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/goal/referrers?period=day&date=2019-01-01&filters=#{filters}"
+        )
 
       assert json_response(conn, 200) == [
-        %{"name" => "10words", "count" => 2, "url" => "10words.com"},
-      ]
+               %{"name" => "10words", "count" => 2, "url" => "10words.com"}
+             ]
     end
 
     test "returns top referrers for a pageview goal", %{conn: conn, site: site} do
       filters = Jason.encode!(%{goal: "Visit /register"})
-      conn = get(conn, "/api/stats/#{site.domain}/goal/referrers?period=day&date=2019-01-01&filters=#{filters}")
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/goal/referrers?period=day&date=2019-01-01&filters=#{filters}"
+        )
 
       assert json_response(conn, 200) == [
-        %{"name" => "10words", "count" => 2, "url" => "10words.com"},
-      ]
+               %{"name" => "10words", "count" => 2, "url" => "10words.com"}
+             ]
     end
   end
 
@@ -53,35 +72,39 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       conn = get(conn, "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == %{
-        "total_visitors" => 2,
-        "referrers" => [
-          %{"name" => "10words.com/page2", "count" => 1},
-          %{"name" => "10words.com/page1", "count" => 1},
-        ]
-      }
+               "total_visitors" => 2,
+               "referrers" => [
+                 %{"name" => "10words.com/page2", "count" => 1},
+                 %{"name" => "10words.com/page1", "count" => 1}
+               ]
+             }
     end
 
     test "calculates bounce rate for referrer urls", %{conn: conn, site: site} do
-      conn = get(conn, "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&include=bounce_rate")
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&include=bounce_rate"
+        )
 
       assert json_response(conn, 200) == %{
-        "total_visitors" => 2,
-        "referrers" => [
-          %{"name" => "10words.com/page2", "count" => 1, "bounce_rate" => nil},
-          %{"name" => "10words.com/page1", "count" => 1, "bounce_rate" => 50.0},
-        ]
-      }
+               "total_visitors" => 2,
+               "referrers" => [
+                 %{"name" => "10words.com/page2", "count" => 1, "bounce_rate" => nil},
+                 %{"name" => "10words.com/page1", "count" => 1, "bounce_rate" => 50.0}
+               ]
+             }
     end
 
     test "gets keywords from Google", %{conn: conn, user: user, site: site} do
-      insert(:google_auth, user: user, user: user,site: site, property: "sc-domain:example.com")
+      insert(:google_auth, user: user, user: user, site: site, property: "sc-domain:example.com")
       conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day&date=2019-02-01")
       {:ok, terms} = Plausible.Google.Api.Mock.fetch_stats(nil, nil)
 
       assert json_response(conn, 200) == %{
-        "total_visitors" => 2,
-        "search_terms" => terms
-      }
+               "total_visitors" => 2,
+               "search_terms" => terms
+             }
     end
 
     test "enriches twitter referrers with tweets if available", %{conn: conn, site: site} do
@@ -92,7 +115,13 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       res = json_response(conn, 200)
       assert res["total_visitors"] == 3
       assert [tweet1, tweet2] = res["referrers"]
-      assert %{"name" => "t.co/some-link", "count" => 2, "tweets" => [%{"text" => "important tweet"}]} = tweet1
+
+      assert %{
+               "name" => "t.co/some-link",
+               "count" => 2,
+               "tweets" => [%{"text" => "important tweet"}]
+             } = tweet1
+
       assert %{"name" => "t.co/nonexistent-link", "count" => 1, "tweets" => nil} = tweet2
     end
   end
@@ -102,26 +131,40 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
 
     test "returns top referring urls for a custom goal", %{conn: conn, site: site} do
       filters = Jason.encode!(%{goal: "Signup"})
-      conn = get(conn, "/api/stats/#{site.domain}/goal/referrers/10words?period=day&date=2019-01-01&filters=#{filters}")
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/goal/referrers/10words?period=day&date=2019-01-01&filters=#{
+            filters
+          }"
+        )
 
       assert json_response(conn, 200) == %{
-        "total_visitors" => 2,
-        "referrers" => [
-          %{"name" => "10words.com/page1", "count" => 2}
-        ]
-      }
+               "total_visitors" => 2,
+               "referrers" => [
+                 %{"name" => "10words.com/page1", "count" => 2}
+               ]
+             }
     end
 
     test "returns top referring urls for a pageview goal", %{conn: conn, site: site} do
       filters = Jason.encode!(%{goal: "Visit /register"})
-      conn = get(conn, "/api/stats/#{site.domain}/goal/referrers/10words?period=day&date=2019-01-01&filters=#{filters}")
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/goal/referrers/10words?period=day&date=2019-01-01&filters=#{
+            filters
+          }"
+        )
 
       assert json_response(conn, 200) == %{
-        "total_visitors" => 2,
-        "referrers" => [
-          %{"name" => "10words.com/page1", "count" => 2},
-        ]
-      }
+               "total_visitors" => 2,
+               "referrers" => [
+                 %{"name" => "10words.com/page1", "count" => 2}
+               ]
+             }
     end
   end
 end
