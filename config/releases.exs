@@ -150,16 +150,18 @@ crontab = [
   {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}
 ]
 
+queues = [
+  provision_ssl_certificates: 1,
+  fetch_tweets: 1,
+  check_stats_emails: 1,
+  email_reports: 1,
+  site_setup_emails: 1,
+  trial_notification_emails: 1
+]
+
 config :plausible, Oban,
   repo: Plausible.Repo,
-  queues: [
-    provision_ssl_certificates: 1,
-    fetch_tweets: 1,
-    check_stats_emails: 1,
-    email_reports: 1,
-    site_setup_emails: 1,
-    trial_notification_emails: 1
-  ],
+  queues: if(cron_enabled, do: queues, else: []),
   crontab: if(cron_enabled, do: crontab, else: false)
 
 config :logger, level: :warn

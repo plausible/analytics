@@ -85,36 +85,36 @@ config :plausible,
          ),
        ssl: String.to_existing_atom(System.get_env("DATABASE_TLS_ENABLED", "false"))
 
-crontab =
-  if String.to_existing_atom(System.get_env("CRON_ENABLED", "false")) do
-    [
-      # hourly
-      {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
-      #  hourly
-      {"0 * * * *", Plausible.Workers.SendEmailReports},
-      {"0 0 * * *", Plausible.Workers.FetchTweets},
-      # Daily at midday
-      {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
-      # Daily at midday
-      {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
-      # Every 10 minutes
-      {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}
-    ]
-  else
-    false
-  end
+cron_enabled = String.to_existing_atom(System.get_env("CRON_ENABLED", "false"))
+
+crontab = [
+  # hourly
+  {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
+  #  hourly
+  {"0 * * * *", Plausible.Workers.SendEmailReports},
+  # Daily at midnight
+  {"0 0 * * *", Plausible.Workers.FetchTweets},
+  # Daily at midday
+  {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
+  # Daily at midday
+  {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
+  # Every 10 minutes
+  {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}
+]
+
+queues = [
+  provision_ssl_certificates: 1,
+  fetch_tweets: 1,
+  check_stats_emails: 1,
+  email_reports: 1,
+  site_setup_emails: 1,
+  trial_notification_emails: 1
+]
 
 config :plausible, Oban,
   repo: Plausible.Repo,
-  queues: [
-    provision_ssl_certificates: 1,
-    fetch_tweets: 1,
-    check_stats_emails: 1,
-    email_reports: 1,
-    site_setup_emails: 1,
-    trial_notification_emails: 1
-  ],
-  crontab: crontab
+  queues: if(cron_enabled, do: queues, else: []),
+  crontab: if(cron_enabled, do: crontab, else: false)
 
 config :plausible, :google,
   client_id: System.get_env("GOOGLE_CLIENT_ID"),
