@@ -155,7 +155,7 @@ queues = [
 
 config :plausible, Oban,
   repo: Plausible.Repo,
-  queues: if cron_enabled, do: queues, else: []
-  crontab: if cron_enabled, do: crontab, else: false
+  queues: (if cron_enabled, do: queues, else: false),
+  crontab: (if cron_enabled, do: crontab, else: false)
 
 config :logger, level: :warn
