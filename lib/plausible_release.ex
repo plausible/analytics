@@ -210,12 +210,10 @@ defmodule Plausible.Release do
     Application.ensure_all_started(:db_connection)
     Application.ensure_all_started(:hackney)
 
+    clickhouse_config = Application.get_env(:plausible, :clickhouse)
+
     Clickhousex.start_link(
-      scheme: :http,
-      port: 8123,
-      name: :clickhouse,
-      database: "default",
-      hostname: Keyword.get(Application.get_env(:plausible, :clickhouse), :hostname)
+      Keyword.merge([scheme: :http, port: 8123, name: :clickhouse], clickhouse_config)
     )
   end
 
