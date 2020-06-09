@@ -6,6 +6,7 @@ import Config
 
 port = System.get_env("PORT") || 8000
 host = System.get_env("HOST", "localhost")
+scheme = System.get_env("SCHEME", "http")
 
 secret_key_base =
   System.get_env(
@@ -59,7 +60,7 @@ config :plausible,
   mailer_email: mailer_email
 
 config :plausible, PlausibleWeb.Endpoint,
-  url: [host: host, port: port],
+  url: [host: host, scheme: scheme],
   http: [
     port: port
   ],
