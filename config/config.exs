@@ -64,7 +64,6 @@ config :plausible,
 
 config :plausible,
   # 30 minutes
-  # 30 minutes
   session_timeout: 1000 * 60 * 30,
   session_length_minutes: 30
 
