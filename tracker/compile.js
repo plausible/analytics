@@ -2,8 +2,8 @@ const uglify = require("uglify-js");
 const fs = require('fs')
 const path = require('path')
 
-const scheme = process.env.SCHEME || "http"
-const host = process.env.HOST || "localhost"
+const scheme = process.env.SCHEME || "https"
+const host = process.env.HOST || "plausible.io"
 const baseUrl = scheme + "://" + host
 
 function relPath(segment) {
