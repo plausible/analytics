@@ -6,6 +6,7 @@ import Config
 
 port = System.get_env("PORT") || 8000
 host = System.get_env("HOST", "localhost")
+scheme = System.get_env("SCHEME", "http")
 
 secret_key_base =
   System.get_env(
@@ -59,7 +60,7 @@ config :plausible,
   mailer_email: mailer_email
 
 config :plausible, PlausibleWeb.Endpoint,
-  url: [host: host, port: port],
+  url: [host: host, scheme: scheme],
   http: [
     port: port
   ],
@@ -150,16 +151,18 @@ crontab = [
   {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}
 ]
 
+queues = [
+  provision_ssl_certificates: 1,
+  fetch_tweets: 1,
+  check_stats_emails: 1,
+  email_reports: 1,
+  site_setup_emails: 1,
+  trial_notification_emails: 1
+]
+
 config :plausible, Oban,
   repo: Plausible.Repo,
-  queues: [
-    provision_ssl_certificates: 1,
-    fetch_tweets: 1,
-    check_stats_emails: 1,
-    email_reports: 1,
-    site_setup_emails: 1,
-    trial_notification_emails: 1
-  ],
+  queues: if(cron_enabled, do: queues, else: []),
   crontab: if(cron_enabled, do: crontab, else: false)
 
 config :logger, level: :warn
