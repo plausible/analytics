@@ -181,7 +181,6 @@ defmodule Plausible.Release do
     Clickhousex.query(:clickhouse, tb_sessions, [])
   end
 
-
   defp ensure_repo_created(repo) do
     IO.puts("create #{inspect(repo)} database if it doesn't exist")
 
