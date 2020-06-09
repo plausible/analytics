@@ -165,4 +165,10 @@ config :plausible, Oban,
   queues: if(cron_enabled, do: queues, else: []),
   crontab: if(cron_enabled, do: crontab, else: false)
 
+config :ref_inspector,
+  init: {Plausible.Release, :configure_ref_inspector}
+
+config :ua_inspector,
+  init: {Plausible.Release, :configure_ua_inspector}
+
 config :logger, level: :warn
