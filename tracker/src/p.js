@@ -124,4 +124,4 @@
   } catch (e) {
     new Image().src = plausibleHost + '/api/error?message=' +  encodeURIComponent(e.message);
   }
-})(window, "https://plausible.io");
+})(window, '<%= base_url %>');
