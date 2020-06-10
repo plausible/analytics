@@ -1,6 +1,6 @@
 # Plausible Analytics
 
-[![Build Status](https://travis-ci.org/plausible-insights/plausible.svg?branch=master)](https://travis-ci.org/plausible-insights/plausible)
+[![Build Status](https://travis-ci.org/plausible/analytics.svg?branch=master)](https://travis-ci.org/plausible/analytics)
 
 Plausible Analytics is a simple, lightweight, open-source and privacy-friendly alternative to Google Analytics. It doesn’t use cookies and is fully compliant with GDPR, CCPA and PECR. You can [view the live demo of our own website stats](https://plausible.io/plausible.io).
 
@@ -13,7 +13,7 @@ Plausible Analytics is a simple, lightweight, open-source and privacy-friendly a
 - **Lightweight**: Plausible Analytics works by loading a script on your website, like Google Analytics. Our script is [33x smaller](https://plausible.io/lightweight-web-analytics), making your website quicker to load.
 - **Email reports**: Keep an eye on your traffic with weekly and/or monthly email reports. All the stats are embedded directly in the email and there’s no need to go to any website. No attachments, no PDFs and no links to click on.
 - **Open website stats**: You have the option to be transparent and open your web analytics to everyone. Your website stats are private by default but you can choose to make them public so anyone with your custom link can view them.
-- **Define key goals and track conversions**: Set custom events or page URLs as your goals and see how they convert over time to understand and identify the trends that matter. 
+- **Define key goals and track conversions**: Set custom events or page URLs as your goals and see how they convert over time to understand and identify the trends that matter.
 - **Search keywords**: Integrate your dashboard with Google Search Console to get the most accurate reporting on your search keywords.
 - **SPA support**: Plausible Analytics is built with modern web frameworks in mind and it works automatically with any pushState based router on the frontend.
 
@@ -21,7 +21,7 @@ Interested? [Read more on our website](https://plausible.io)
 
 ### Can Plausible Analytics be self-hosted?
 
-The purpose of keeping the code open-source is to be transparent with the community about how we collect and process however, we do provide an experimental [docker-based self hosting](./HOSTING.md) setup. Please note that this is still in *alpha* stage and care should be taken while using it for production system. 
+The purpose of keeping the code open-source is to be transparent with the community about how we collect and process however, we do provide an experimental [docker-based self hosting](./HOSTING.md) setup. Please note that this is still in *alpha* stage and care should be taken while using it for production system.
 
 ### Why is Plausible Analytics not free like Google Analytics?
 
