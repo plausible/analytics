@@ -35,8 +35,8 @@ We choose the subscription business model rather than the business model of surv
 
 ### Technology
 
-Plausible Analytics is a standard Elixir/Phoenix application backed by a PostgreSQL database. On the frontend we use
-[TailwindCSS](https://tailwindcss.com/) for styling and some vanilla Javascript for interactive bits.
+Plausible Analytics is a standard Elixir/Phoenix application backed by a PostgreSQL database for general data and a Clickhouse
+database for stats. On the frontend we use [TailwindCSS](https://tailwindcss.com/) for styling and React to make the dashboard interactive.
 
 ### Feedback & Roadmap
 
