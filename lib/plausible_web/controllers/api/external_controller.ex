@@ -41,7 +41,6 @@ defmodule PlausibleWeb.Api.ExternalController do
         end
 
       ref = parse_referrer(uri, params["referrer"])
-      initial_ref = parse_referrer(uri, params["initial_referrer"])
 
       event_attrs = %{
         timestamp: NaiveDateTime.utc_now(),
@@ -55,8 +54,6 @@ defmodule PlausibleWeb.Api.ExternalController do
         browser: ua && browser_name(ua),
         referrer_source: params["source"] || referrer_source(ref),
         referrer: clean_referrer(ref),
-        initial_referrer_source: params["initial_source"] || referrer_source(initial_ref),
-        initial_referrer: clean_referrer(initial_ref),
         screen_size: calculate_screen_size(params["screen_width"])
       }
 

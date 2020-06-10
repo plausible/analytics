@@ -19,8 +19,6 @@ defmodule Plausible.Test.ClickhouseSetup do
       pathname String,
       referrer String,
       referrer_source String,
-      initial_referrer String,
-      initial_referrer_source String,
       country_code LowCardinality(FixedString(2)),
       screen_size LowCardinality(String),
       operating_system LowCardinality(String),

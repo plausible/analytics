@@ -13,9 +13,9 @@ defmodule Plausible.Clickhouse do
   def insert_events(events) do
     insert =
       """
-      INSERT INTO events (name, timestamp, domain, user_id, session_id, hostname, pathname, referrer, referrer_source, initial_referrer, initial_referrer_source, country_code, screen_size, browser, operating_system)
+      INSERT INTO events (name, timestamp, domain, user_id, session_id, hostname, pathname, referrer, referrer_source, country_code, screen_size, browser, operating_system)
       VALUES
-      """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", length(events))
+      """ <> String.duplicate(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),", length(events))
 
     args =
       Enum.reduce(events, [], fn event, acc ->
@@ -29,8 +29,6 @@ defmodule Plausible.Clickhouse do
           escape_quote(event.pathname),
           escape_quote(event.referrer || ""),
           escape_quote(event.referrer_source || ""),
-          escape_quote(event.initial_referrer || ""),
-          escape_quote(event.initial_referrer_source || ""),
           event.country_code || "",
           event.screen_size || "",
           event.browser || "",
