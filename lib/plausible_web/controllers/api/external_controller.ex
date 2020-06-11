@@ -32,6 +32,8 @@ defmodule PlausibleWeb.Api.ExternalController do
     country_code = Plug.Conn.get_req_header(conn, "x-country") |> List.first()
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
 
+    debug_country(conn)
+
     if UAInspector.bot?(user_agent) do
       {:ok, nil}
     else
@@ -69,6 +71,15 @@ defmodule PlausibleWeb.Api.ExternalController do
         {:error, changeset}
       end
     end
+  end
+
+  defp debug_country(conn) do
+    forwarded_for = List.first(Plug.Conn.get_req_header(conn, "x-forwarded-for"))
+    remote_ip = to_string(:inet_parse.ntoa(conn.remote_ip))
+    country = Geolix.lookup(remote_ip)
+    IO.puts("X-Forwarded-For: #{inspect forwarded_for}")
+    IO.puts("Remote ip: #{inspect remote_ip}")
+    IO.puts("Country: #{inspect country}")
   end
 
   defp parse_referrer(_, nil), do: nil

@@ -163,6 +163,15 @@ config :plausible, :custom_domain_server,
   password: System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD"),
   ip: System.get_env("CUSTOM_DOMAIN_SERVER_IP")
 
+config :geolix,
+  databases: [
+    %{
+      id: :geolite2_country,
+      adapter: Geolix.Adapter.MMDB2,
+      source: "priv/geolix/GeoLite2-Country.mmdb"
+    }
+  ]
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
