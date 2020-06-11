@@ -8,9 +8,10 @@ config :plausible,
   ecto_repos: [Plausible.Repo],
   environment: System.get_env("ENVIRONMENT", "dev")
 
+
 config :plausible, :clickhouse,
   hostname: System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost"),
-  database: System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_test"),
+  database: System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_dev"),
   username: System.get_env("CLICKHOUSE_DATABASE_USER"),
   password: System.get_env("CLICKHOUSE_DATABASE_PASSWORD"),
   pool_size: 10

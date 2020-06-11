@@ -72,4 +72,4 @@
   } catch (e) {
     new Image().src = plausibleHost + '/api/error?message=' +  encodeURIComponent(e.message);
   }
-})(window, BASE_URL);
+})(window, '<%= base_url %>');
