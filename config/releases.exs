@@ -51,7 +51,7 @@ cron_enabled = String.to_existing_atom(System.get_env("CRON_ENABLED", "false"))
 custom_domain_server_ip = System.get_env("CUSTOM_DOMAIN_SERVER_IP")
 custom_domain_server_user = System.get_env("CUSTOM_DOMAIN_SERVER_USER")
 custom_domain_server_password = System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD")
-geolite2_country_db = System.get_env("geolite2_country_db")
+geolite2_country_db = System.get_env("GEOLITE2_COUNTRY_DB")
 
 config :plausible,
   admin_user: admin_user,
