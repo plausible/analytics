@@ -44,5 +44,14 @@ config :junit_formatter,
   prepend_project_name?: true,
   include_filename?: true
 
+config :geolix,
+  databases: [
+    %{
+      id: :geolite2_country,
+      adapter: Geolix.Adapter.Fake,
+      data: %{{1, 1, 1, 1} => %{country: %{iso_code: "US"}}}
+    }
+  ]
+
 config :plausible,
   session_timeout: 0

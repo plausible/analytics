@@ -29,7 +29,6 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp create_event(conn, params) do
     uri = params["url"] && URI.parse(params["url"])
-    country_code = Plug.Conn.get_req_header(conn, "x-country") |> List.first()
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
 
     if UAInspector.bot?(user_agent) do
@@ -41,6 +40,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         end
 
       ref = parse_referrer(uri, params["referrer"])
+      country_code = visitor_country(conn)
 
       event_attrs = %{
         timestamp: NaiveDateTime.utc_now(),
@@ -71,6 +71,28 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
+  defp get_ip(conn) do
+    forwarded_for = List.first(Plug.Conn.get_req_header(conn, "x-forwarded-for"))
+
+    if forwarded_for do
+      String.split(forwarded_for, ",")
+      |> Enum.map(&String.trim/1)
+      |> List.first
+    else
+      to_string(:inet_parse.ntoa(conn.remote_ip))
+    end
+  end
+
+  defp visitor_country(conn) do
+    result = get_ip(conn)
+    |> Geolix.lookup()
+    |> Map.get(:geolite2_country)
+
+    if result do
+      result.country.iso_code
+    end
+  end
+
   defp parse_referrer(_, nil), do: nil
 
   defp parse_referrer(uri, referrer_str) do
@@ -87,8 +109,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       |> binary_part(0, 16)
 
     user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
-    # Netlify sets this header as the remote client IP
-    ip_address = List.first(Plug.Conn.get_req_header(conn, "x-bb-ip")) || ""
+    ip_address = get_ip(conn)
     domain = strip_www(params["domain"]) || ""
 
     SipHash.hash!(hash_key, user_agent <> ip_address <> domain)

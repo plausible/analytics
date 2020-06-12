@@ -51,6 +51,7 @@ cron_enabled = String.to_existing_atom(System.get_env("CRON_ENABLED", "false"))
 custom_domain_server_ip = System.get_env("CUSTOM_DOMAIN_SERVER_IP")
 custom_domain_server_user = System.get_env("CUSTOM_DOMAIN_SERVER_USER")
 custom_domain_server_password = System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD")
+geolite2_country_db = System.get_env("GEOLITE2_COUNTRY_DB")
 
 config :plausible,
   admin_user: admin_user,
@@ -170,5 +171,16 @@ config :ref_inspector,
 
 config :ua_inspector,
   init: {Plausible.Release, :configure_ua_inspector}
+
+if geolite2_country_db do
+  config :geolix,
+    databases: [
+      %{
+        id: :country,
+        adapter: Geolix.Adapter.MMDB2,
+        source: geolite2_country_db
+      }
+    ]
+end
 
 config :logger, level: :warn
