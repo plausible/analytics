@@ -149,6 +149,17 @@ For performance reasons, all the analytics events are stored in clickhouse:
 - CLICKHOUSE_DATABASE_POOLSIZE (*Number*)
     - A default pool size for connecting to the database, defaults to *10*, a higher number is recommended for a production system.
 
+### IP Geolocation
+
+Plausible uses the GeoLite2 database created by [MaxMind](https://www.maxmind.com) for enriching analytics data with visitor countries. Their
+end-user license does not make it very easy to just package the database along with an open-source product. This is why, if you want
+to get country data for your analytics, you need to create an account and download their **GeoLite2 Country** database.
+
+Once you have the database, mount it on the Plausible docker image and configure the path of the database file:
+- GEOLITE2_COUNTRY_DB (*String*)
+
+If the Geolite database is not configured, no country data will be captured.
+
 ### External Services
 
 - [Google Client](https://developers.google.com/api-client-library)
