@@ -88,7 +88,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     |> Geolix.lookup()
     |> Map.get(:country)
 
-    if result do
+    if result && result.country do
       result.country.iso_code
     end
   end
