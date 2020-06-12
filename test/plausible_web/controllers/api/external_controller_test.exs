@@ -17,7 +17,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
   end
 
   @user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
-  @country_code "EE"
 
   describe "POST /api/event" do
     test "records the event", %{conn: conn} do
@@ -33,7 +32,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         conn
         |> put_req_header("content-type", "text/plain")
         |> put_req_header("user-agent", @user_agent)
-        |> put_req_header("x-country", @country_code)
         |> post("/api/event", Jason.encode!(params))
 
       pageview = get_event("external-controller-test-1.com")
@@ -42,7 +40,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview["hostname"] == "gigride.live"
       assert pageview["domain"] == "external-controller-test-1.com"
       assert pageview["pathname"] == "/"
-      assert pageview["country_code"] == @country_code
     end
 
     test "www. is stripped from domain", %{conn: conn} do
@@ -362,6 +359,25 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert response(conn, 202) == ""
     assert event["name"] == "custom event"
   end
+
+  # Fake data is set up in config/test.exs
+  test "looks up the country from the ip address", %{conn: conn} do
+    params = %{
+      name: "pageview",
+      domain: "external-controller-test-19.com",
+      url: "http://gigride.live/"
+    }
+
+    conn
+    |> put_req_header("content-type", "text/plain")
+    |> put_req_header("x-forwarded-for", "1.1.1.1")
+    |> post("/api/event", Jason.encode!(params))
+
+    pageview = get_event("external-controller-test-19.com")
+
+    assert pageview["country_code"] == "US"
+  end
+
 
   test "responds 400 when required fields are missing", %{conn: conn} do
     params = %{}

@@ -29,7 +29,6 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp create_event(conn, params) do
     uri = params["url"] && URI.parse(params["url"])
-    country_code = Plug.Conn.get_req_header(conn, "x-country") |> List.first()
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
 
     if UAInspector.bot?(user_agent) do
@@ -41,7 +40,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         end
 
       ref = parse_referrer(uri, params["referrer"])
-      initial_ref = parse_referrer(uri, params["initial_referrer"])
+      country_code = visitor_country(conn)
 
       event_attrs = %{
         timestamp: NaiveDateTime.utc_now(),
@@ -55,8 +54,6 @@ defmodule PlausibleWeb.Api.ExternalController do
         browser: ua && browser_name(ua),
         referrer_source: params["source"] || referrer_source(ref),
         referrer: clean_referrer(ref),
-        initial_referrer_source: params["initial_source"] || referrer_source(initial_ref),
-        initial_referrer: clean_referrer(initial_ref),
         screen_size: calculate_screen_size(params["screen_width"])
       }
 
@@ -71,6 +68,28 @@ defmodule PlausibleWeb.Api.ExternalController do
       else
         {:error, changeset}
       end
+    end
+  end
+
+  defp get_ip(conn) do
+    forwarded_for = List.first(Plug.Conn.get_req_header(conn, "x-forwarded-for"))
+
+    if forwarded_for do
+      String.split(forwarded_for, ",")
+      |> Enum.map(&String.trim/1)
+      |> List.first
+    else
+      to_string(:inet_parse.ntoa(conn.remote_ip))
+    end
+  end
+
+  defp visitor_country(conn) do
+    result = get_ip(conn)
+    |> Geolix.lookup()
+    |> Map.get(:country)
+
+    if result && result.country do
+      result.country.iso_code
     end
   end
 
@@ -90,8 +109,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       |> binary_part(0, 16)
 
     user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
-    # Netlify sets this header as the remote client IP
-    ip_address = List.first(Plug.Conn.get_req_header(conn, "x-bb-ip")) || ""
+    ip_address = get_ip(conn)
     domain = strip_www(params["domain"]) || ""
 
     SipHash.hash!(hash_key, user_agent <> ip_address <> domain)

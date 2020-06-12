@@ -22,6 +22,13 @@ config :plausible,
          ),
        pool: Ecto.Adapters.SQL.Sandbox
 
+config :plausible, :clickhouse,
+  hostname: System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost"),
+  database: System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_test"),
+  username: System.get_env("CLICKHOUSE_DATABASE_USER"),
+  password: System.get_env("CLICKHOUSE_DATABASE_PASSWORD"),
+  pool_size: 10
+
 config :plausible, Plausible.Mailer, adapter: Bamboo.TestAdapter
 
 config :plausible, Oban, crontab: false, queues: false
@@ -36,6 +43,15 @@ config :junit_formatter,
   print_report_file: true,
   prepend_project_name?: true,
   include_filename?: true
+
+config :geolix,
+  databases: [
+    %{
+      id: :country,
+      adapter: Geolix.Adapter.Fake,
+      data: %{{1, 1, 1, 1} => %{country: %{iso_code: "US"}}}
+    }
+  ]
 
 config :plausible,
   session_timeout: 0

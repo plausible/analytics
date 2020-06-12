@@ -89,6 +89,8 @@ defmodule Plausible.MixProject do
       {:siphash, "~> 3.2"},
       {:oban, "~> 1.2"},
       {:sshex, "2.2.1"},
+      {:geolix, "~> 1.0"},
+      {:geolix_adapter_mmdb2, "~> 0.5.0"},
       {:clickhousex, [git: "https://github.com/atlas-forks/clickhousex.git"]}
     ]
   end

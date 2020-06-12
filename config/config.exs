@@ -8,9 +8,10 @@ config :plausible,
   ecto_repos: [Plausible.Repo],
   environment: System.get_env("ENVIRONMENT", "dev")
 
+
 config :plausible, :clickhouse,
   hostname: System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost"),
-  database: System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_test"),
+  database: System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_dev"),
   username: System.get_env("CLICKHOUSE_DATABASE_USER"),
   password: System.get_env("CLICKHOUSE_DATABASE_PASSWORD"),
   pool_size: 10
@@ -161,6 +162,15 @@ config :plausible, :custom_domain_server,
   user: System.get_env("CUSTOM_DOMAIN_SERVER_USER"),
   password: System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD"),
   ip: System.get_env("CUSTOM_DOMAIN_SERVER_IP")
+
+config :geolix,
+  databases: [
+    %{
+      id: :country,
+      adapter: Geolix.Adapter.MMDB2,
+      source: "priv/geolix/GeoLite2-Country.mmdb"
+    }
+  ]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

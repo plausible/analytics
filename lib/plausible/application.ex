@@ -5,7 +5,6 @@ defmodule Plausible.Application do
 
   def start(_type, _args) do
     clickhouse_config = Application.get_env(:plausible, :clickhouse)
-
     children = [
       Plausible.Repo,
       PlausibleWeb.Endpoint,
