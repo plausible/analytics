@@ -1,3 +1,7 @@
+---
+status: Beta
+---
+
 # Plausible Analytics
 
 Self-hosting is possible based on the docker images and are automatically pushed into [Dockerhub](https://hub.docker.com/r/plausible/analytics) registry for all commits on `master` branch. At the moment, `latest` is the only tag on DockerHub as we haven't reached a stable release of self-hosted Plausible yet.
