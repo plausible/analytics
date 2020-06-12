@@ -1,7 +1,23 @@
 # Plausible Analytics
 
-Self-hosting is possible based on the docker images and are automatically pushed into [Dockerhub](https://hub.docker.com/r/plausible/analytics) registry for all commits on `master` branch. At the moment, `latest` is the only tag on DockerHub as we haven't reached a stable
-release of self-hosted Plausible yet.
+Self-hosting is possible based on the docker images and are automatically pushed into [Dockerhub](https://hub.docker.com/r/plausible/analytics) registry for all commits on `master` branch. At the moment, `latest` is the only tag on DockerHub as we haven't reached a stable release of self-hosted Plausible yet.
+
+### Architecture & Requirements
+
+Plausible runs as a single server, backed by two databases: PostgreSQL for user data and ClickhouseDB for the stats. When you
+download and run the docker image you also need to provide connection details for these two databases.
+
+Most hosting providers will offer a managed PostgreSQL instance, but it's not as simple with Clickhouse.
+You can [install Clickhouse on a VPS](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-clickhouse-on-ubuntu-18-04),
+run it using their [official Docker image](https://hub.docker.com/r/yandex/clickhouse-server/), or use a managed service provided by
+[Yandex Cloud](https://cloud.yandex.com/services/managed-clickhousec). [Aiven has announced](https://landing.aiven.io/2020-upcoming-aiven-services-webinar) that they are planning offer a managed ClickHouse service in the future and more hosting providers are following suit.
+
+As of June 2020, here's the setup of the official cloud version of Plausible for reference:
+* Web server: Digital Ocean Droplet w/ 1vCPU & 2GB RAM. Managed via the [official Docker app](https://marketplace.digitalocean.com/apps/docke://marketplace.digitalocean.com/apps/docker).
+* User database: Digital Ocean Managed PostgreSQL w/ 1vCPU & 1GB RAM.
+* Stats database: Digital Ocean Droplet w/ 6vCPU & 16GB RAM. Installed on Ubuntu 18.04 using the [official tutorial](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-clickhouse-on-ubuntu-18-04)
+
+Total cost: $105/mo
 
 ### Building Docker image
 Besides the DockerHub registry, one can build docker image from [Dockerfile](./Dockerfile).
