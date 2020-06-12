@@ -86,7 +86,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp visitor_country(conn) do
     result = get_ip(conn)
     |> Geolix.lookup()
-    |> Map.get(:geolite2_country)
+    |> Map.get(:country)
 
     if result do
       result.country.iso_code

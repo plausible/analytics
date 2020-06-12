@@ -47,7 +47,7 @@ config :junit_formatter,
 config :geolix,
   databases: [
     %{
-      id: :geolite2_country,
+      id: :country,
       adapter: Geolix.Adapter.Fake,
       data: %{{1, 1, 1, 1} => %{country: %{iso_code: "US"}}}
     }

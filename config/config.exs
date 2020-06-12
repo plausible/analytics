@@ -166,7 +166,7 @@ config :plausible, :custom_domain_server,
 config :geolix,
   databases: [
     %{
-      id: :geolite2_country,
+      id: :country,
       adapter: Geolix.Adapter.MMDB2,
       source: "priv/geolix/GeoLite2-Country.mmdb"
     }
