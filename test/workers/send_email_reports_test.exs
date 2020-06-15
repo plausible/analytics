@@ -10,7 +10,7 @@ defmodule Plausible.Workers.EmailReportsTest do
 
   describe "weekly reports" do
     test "sends weekly report on Monday 9am local timezone" do
-      site = insert(:site, timezone: "US/Eastern")
+      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
       # 2pm UTC is 10am EST
       time = Timex.now() |> Timex.beginning_of_week() |> Timex.shift(hours: 14)
