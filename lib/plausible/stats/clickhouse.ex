@@ -216,7 +216,7 @@ defmodule Plausible.Stats.Clickhouse do
   def top_referrers(site, query, limit \\ 5, include \\ []) do
     referrers =
       Clickhouse.all(
-        from e in base_query(site, query),
+        from e in base_session_query(site, query),
           select:
             {fragment("? as name", e.referrer_source), fragment("any(?) as url", e.referrer),
              fragment("uniq(user_id) as count")},
@@ -563,6 +563,15 @@ defmodule Plausible.Stats.Clickhouse do
 
   defp sort_conversions(conversions) do
     Enum.sort_by(conversions, fn conversion -> -conversion["count"] end)
+  end
+
+  defp base_session_query(site, query) do
+    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+
+    q = from(s in "sessions",
+      where: s.domain == ^site.domain,
+      where: s.start >= ^first_datetime and s.start < ^last_datetime
+    )
   end
 
   defp base_query(site, query, events \\ ["pageview"]) do
