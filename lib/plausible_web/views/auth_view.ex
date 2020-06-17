@@ -5,9 +5,13 @@ defmodule PlausibleWeb.AuthView do
     "558018" => "10k / monthly",
     "558745" => "100k / monthly",
     "558746" => "1m / monthly",
+    "597309" => "2m / monthly",
+    "597311" => "5m / monthly",
     "572810" => "10k / yearly",
     "590752" => "100k / yearly",
     "590753" => "1m / yearly",
+    "597310" => "2m / yearly",
+    "597312" => "5m / yearly",
     "free_10k" => "10k / free"
   }
 

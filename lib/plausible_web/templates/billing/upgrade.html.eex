@@ -64,6 +64,20 @@
                   <span x-show="billingCycle === 'yearly'">$24</span>
                 </td>
               </tr>
+              <tr @click="planSize = '2m'" :class="{'border-2 border-green-300': planSize === '2m', 'border-b border-gray-200 cursor-pointer': planSize !== '2m'}">
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '2m'}">2m</td>
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '2m'}">
+                  <span x-show="billingCycle === 'monthly'">$69</span>
+                  <span x-show="billingCycle === 'yearly'">$46</span>
+                </td>
+              </tr>
+              <tr @click="planSize = '5m'" :class="{'border-2 border-green-300': planSize === '5m', 'border-b border-gray-200 cursor-pointer': planSize !== '5m'}">
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '5m'}">5m</td>
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '5m'}">
+                  <span x-show="billingCycle === 'monthly'">$99</span>
+                  <span x-show="billingCycle === 'yearly'">$66</span>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
