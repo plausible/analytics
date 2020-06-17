@@ -28,7 +28,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
                  "bounce_rate" => 50.0,
                  "url" => "10words.com"
                },
-               %{"name" => "Bing", "count" => 1, "bounce_rate" => nil, "url" => ""}
+               %{"name" => "Bing", "count" => 1, "bounce_rate" => 0, "url" => ""}
              ]
     end
   end

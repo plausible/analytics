@@ -568,7 +568,7 @@ defmodule Plausible.Stats.Clickhouse do
   defp base_session_query(site, query) do
     {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
 
-    q = from(s in "sessions",
+    from(s in "sessions",
       where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime
     )
