@@ -62,6 +62,20 @@
                   <span x-show="billingCycle === 'yearly'">$8</span>
                 </td>
               </tr>
+              <tr @click="volume = '200k'" :class="{'border-2 border-green-300 bg-green-50': volume === '200k', 'border-b border-gray-200 cursor-pointer': volume !== '200k'}">
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '200k'}">200k</td>
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '200k'}">
+                  <span x-show="billingCycle === 'monthly'">$18</span>
+                  <span x-show="billingCycle === 'yearly'">$12</span>
+                </td>
+              </tr>
+              <tr @click="volume = '500k'" :class="{'border-2 border-green-300 bg-green-50': volume === '500k', 'border-b border-gray-200 cursor-pointer': volume !== '500k'}">
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '500k'}">500k</td>
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '500k'}">
+                  <span x-show="billingCycle === 'monthly'">$27</span>
+                  <span x-show="billingCycle === 'yearly'">$18</span>
+                </td>
+              </tr>
               <tr @click="volume = '1m'" :class="{'border-2 border-green-300 bg-green-50': volume === '1m', 'border-b border-gray-200 cursor-pointer': volume !== '1m'}">
                 <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '1m'}">1m</td>
                 <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '1m'}">

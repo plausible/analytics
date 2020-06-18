@@ -57,6 +57,20 @@
                   <span x-show="billingCycle === 'yearly'">$8</span>
                 </td>
               </tr>
+              <tr @click="planSize = '200k'" :class="{'border-2 border-green-300': planSize === '200k', 'border-b border-gray-200 cursor-pointer': planSize !== '200k'}">
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '200k'}">200k</td>
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '200k'}">
+                  <span x-show="billingCycle === 'monthly'">$18</span>
+                  <span x-show="billingCycle === 'yearly'">$12</span>
+                </td>
+              </tr>
+              <tr @click="planSize = '500k'" :class="{'border-2 border-green-300': planSize === '500k', 'border-b border-gray-200 cursor-pointer': planSize !== '500k'}">
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '500k'}">500k</td>
+                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '500k'}">
+                  <span x-show="billingCycle === 'monthly'">$27</span>
+                  <span x-show="billingCycle === 'yearly'">$18</span>
+                </td>
+              </tr>
               <tr @click="planSize = '1m'" :class="{'border-2 border-green-300': planSize === '1m', 'border-b border-gray-200 cursor-pointer': planSize !== '1m'}">
                 <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '1m'}">1m</td>
                 <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '1m'}">
