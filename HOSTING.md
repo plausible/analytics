@@ -27,21 +27,29 @@ Total cost: $105/mo
 Besides the DockerHub registry, one can build docker image from [Dockerfile](./Dockerfile).
 
 #### Up and Running
-The repo supplies with a [Docker Compose](./docker-compose.yml) file, this serves as a sample for running Plausible with Docker.
-In this sample, the db migration is done by default on startup, so you need to clean the data up every time you run:
+The repo supplies with a [Docker Compose](./docker-compose.yml) file and the sample [environment variables](./plausible-variables.sample.env) , this serves as a sample for running Plausible with Docker.
 
-First run
-```bash
-$ docker-compose up
-```
+-  Running the setup takes care of the initial migration steps, this needs to be executed only once, on the first run.
+    ```bash
+    docker-compose run --rm setup
+    ```
 
-subsequent runs--
-```bash
-$ docker-compose down
-$ docker volume rm plausible_db-data -f
-$ docker-compose up
-```
-
+- After the setup, you can start plausible as -- 
+    ```bash
+    docker-compose up -d plausible
+    ```
+     after a successful startup, `plausible` is available at port `80`, navigate to [`http://localhost`](http://localhost). 
+ 
+- stopping plausible --  
+    ```bash
+    docker-compose down
+    ```
+- purging and removing everything --
+    ```bash
+    docker-compose down
+    docker volume rm plausible_event-data -f
+    docker volume rm plausible_db-data -f
+    ```
 ### Non-docker building
 It is possible to create a release artifact by running a release.
 
