@@ -18,7 +18,7 @@ services:
 
   plausible_db:
     container_name: plausible_db
-    image: postgres:9.4
+    image: postgres:12
     command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
     volumes:
       - db-data:/var/lib/postgresql/data
