@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   def event(conn, _params) do
     params = parse_body(conn)
+    Sentry.Context.set_extra_context(%{request: params})
 
     case create_event(conn, params) do
       {:ok, _} ->

@@ -4,10 +4,20 @@ defmodule PlausibleWeb.AuthView do
   @subscription_names %{
     "558018" => "10k / monthly",
     "558745" => "100k / monthly",
-    "558746" => "1m / monthly",
+    "597485" => "200k / monthly",
+    "597487" => "500k / monthly",
+    "597642" => "1m / monthly",
+    "558746" => "1m / monthly / grandfathered",
+    "597309" => "2m / monthly",
+    "597311" => "5m / monthly",
     "572810" => "10k / yearly",
     "590752" => "100k / yearly",
-    "590753" => "1m / yearly",
+    "597486" => "200k / yearly",
+    "597488" => "500k / yearly",
+    "597643" => "1m / yearly",
+    "590753" => "1m / yearly / grandfathered",
+    "597310" => "2m / yearly",
+    "597312" => "5m / yearly",
     "free_10k" => "10k / free"
   }
 

@@ -85,6 +85,8 @@ Following are the variables that can be used to configure the availability of th
 
 - HOST (*String*)
     - The hosting address of the server. For running on local system, this can be set to **localhost**. In production systems, this can be your ingress host.
+- SCHEME (*String*)
+    - The scheme of the URL, either `http` or `https`. When using a reverse proxy with https, it'll be required to set this. _defaults to `http`_
 - PORT (*Number*)
     - The port on which the server is available.
 - SECRET_KEY_BASE (*String*)

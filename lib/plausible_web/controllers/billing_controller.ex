@@ -79,6 +79,6 @@ defmodule PlausibleWeb.BillingController do
   def success(conn, _params) do
     conn
     |> put_flash(:success, "Subscription created successfully")
-    |> redirect(to: "/")
+    |> redirect(to: "/settings")
   end
 end

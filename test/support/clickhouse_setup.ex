@@ -228,7 +228,16 @@ defmodule Plausible.Test.ClickhouseSetup do
         session_id: @conversion_2_session_id,
         is_bounce: false,
         start: ~N[2019-01-01 02:00:00]
-      }
+      },
+      %{
+        domain: "test-site.com",
+        entry_page: "/",
+        exit_page: "/",
+        referrer_source: "Bing",
+        referrer: "",
+        is_bounce: false,
+        start: ~N[2019-01-01 03:00:00]
+      },
     ])
   end
 end

@@ -20,7 +20,7 @@
 
     <%= render @view_module, @view_template, assigns %>
 
-    <p class="text-center text-gray-500 text-xs mt-4">
+    <p class="text-center text-gray-500 text-xs py-8">
       ©2020 Plausible Insights. All rights reserved.
     </p>
 
