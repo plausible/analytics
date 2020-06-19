@@ -79,8 +79,8 @@
               <tr @click="volume = '1m'" :class="{'border-2 border-green-300 bg-green-50': volume === '1m', 'border-b border-gray-200 cursor-pointer': volume !== '1m'}">
                 <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '1m'}">1m</td>
                 <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '1m'}">
-                  <span x-show="billingCycle === 'monthly'">$36</span>
-                  <span x-show="billingCycle === 'yearly'">$24</span>
+                  <span x-show="billingCycle === 'monthly'">$48</span>
+                  <span x-show="billingCycle === 'yearly'">$32</span>
                 </td>
               </tr>
               <tr @click="volume = '2m'" :class="{'border-2 border-green-300 bg-green-50': volume === '2m', 'border-b border-gray-200 cursor-pointer': volume !== '1m'}">

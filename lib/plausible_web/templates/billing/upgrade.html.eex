@@ -74,8 +74,8 @@
               <tr @click="planSize = '1m'" :class="{'border-2 border-green-300': planSize === '1m', 'border-b border-gray-200 cursor-pointer': planSize !== '1m'}">
                 <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '1m'}">1m</td>
                 <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': planSize === '1m'}">
-                  <span x-show="billingCycle === 'monthly'">$36</span>
-                  <span x-show="billingCycle === 'yearly'">$24</span>
+                  <span x-show="billingCycle === 'monthly'">$48</span>
+                  <span x-show="billingCycle === 'yearly'">$32</span>
                 </td>
               </tr>
               <tr @click="planSize = '2m'" :class="{'border-2 border-green-300': planSize === '2m', 'border-b border-gray-200 cursor-pointer': planSize !== '2m'}">
