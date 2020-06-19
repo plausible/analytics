@@ -32,6 +32,8 @@ services:
   plausible_events_db:
     container_name: plausible_events_db
     image: yandex/clickhouse-server
+    volumes:
+      - event-data:/var/lib/clickhouse
     ports:
     - 8123:8123
 
@@ -76,4 +78,6 @@ services:
 
 volumes:
   db-data:
+    driver: local
+  event-data:
     driver: local
