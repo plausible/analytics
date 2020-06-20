@@ -16,7 +16,9 @@
     <p class="text-gray-500 text-xs my-2">Forgot password? <a href="/password/request-reset" class="underline text-gray-800">Click here</a> to reset it.</p>
   </div>
   <%= submit "Login →", class: "button mt-4 w-full" %>
-  <p class="text-center text-gray-500 text-xs mt-4">
-  Don't have an account? <%= link("Register", to: "/register") %> instead.
-  </p>
+  <%= if !Keyword.fetch!(Application.get_env(:plausible, :selfhost),:disable_registration) do %>
+     <p class="text-center text-gray-500 text-xs mt-4">
+      Don't have an account? <%= link("Register", to: "/register") %> instead.
+      </p>
+  <% end %>
 <% end %>

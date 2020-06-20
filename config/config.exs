@@ -8,6 +8,16 @@ config :plausible,
   ecto_repos: [Plausible.Repo],
   environment: System.get_env("ENVIRONMENT", "dev")
 
+disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
+
+config :plausible, :selfhost,
+  disable_landing_page: String.to_existing_atom(System.get_env("DISABLE_LANDING_PAGE", "false")),
+  disable_authentication: disable_auth,
+  disable_registration:
+    if(!disable_auth,
+      do: String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false")),
+      else: false
+    )
 
 config :plausible, :clickhouse,
   hostname: System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost"),

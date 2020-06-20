@@ -32,13 +32,14 @@ The repo supplies with a [Docker Compose](./docker-compose.yml) file and the sam
 -  Running the setup takes care of the initial migration steps, this needs to be executed only once, on the first run.
     ```bash
     docker-compose run --rm setup
+    docker-compose down
     ```
 
 - After the setup, you can start plausible as -- 
     ```bash
-    docker-compose up -d plausible
+    docker-compose up -d plausible 
     ```
-     after a successful startup, `plausible` is available at port `80`, navigate to [`http://localhost`](http://localhost). 
+     after a successful startup (can take upto 5 mins), `plausible` is available at port `80`, navigate to [`http://localhost`](http://localhost). 
  
 - stopping plausible --  
     ```bash
@@ -50,6 +51,8 @@ The repo supplies with a [Docker Compose](./docker-compose.yml) file and the sam
     docker volume rm plausible_event-data -f
     docker volume rm plausible_db-data -f
     ```
+
+Note, you need to stop plausible and restart plausible  if you change the environment variables.
 ### Non-docker building
 It is possible to create a release artifact by running a release.
 
@@ -103,6 +106,13 @@ Following are the variables that can be used to configure the availability of th
     - The current running environment. _defaults to **prod**_
 - APP_VERSION (*String*)
     - The version of the app running. _defaults to current docker tag_
+- DISABLE_AUTH  (*Boolean String*)
+    - Disables authentication completely, no registration, login or landing page will be shown. _defaults to `false`_
+    - Note: This option is **not recommended** for production deployments. 
+- DISABLE_LANDING_PAGE
+  - Disables landing page from plausible.io, One can change the [default landing page](./lib/plausible_web/templates/page/index.html.eex) as per need _defaults to `false`_
+- DISABLE_REGISTRATION
+  - Disables registration of new users, keep your admin credentials handy ;)  _defaults to `false`_
 
 ### Default User Generation
 For self-hosting, a default user is generated during the [Database Migration](#Database Migration) to access Plausible. To be noted that, a default user is a user whose trial period expires in 100 Years ;).

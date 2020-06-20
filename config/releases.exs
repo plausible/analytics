@@ -52,6 +52,7 @@ custom_domain_server_ip = System.get_env("CUSTOM_DOMAIN_SERVER_IP")
 custom_domain_server_user = System.get_env("CUSTOM_DOMAIN_SERVER_USER")
 custom_domain_server_password = System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD")
 geolite2_country_db = System.get_env("GEOLITE2_COUNTRY_DB")
+disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
 
 config :plausible,
   admin_user: admin_user,
@@ -59,6 +60,15 @@ config :plausible,
   admin_pwd: admin_pwd,
   environment: env,
   mailer_email: mailer_email
+
+config :plausible, :selfhost,
+  disable_landing_page: String.to_existing_atom(System.get_env("DISABLE_LANDING_PAGE", "false")),
+  disable_authentication: disable_auth,
+  disable_registration:
+    if(!disable_auth,
+      do: String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false")),
+      else: false
+    )
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [host: host, scheme: scheme],

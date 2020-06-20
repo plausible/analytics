@@ -22,6 +22,8 @@ defmodule PlausibleWeb.PageController do
     {"/blog/launching-plausible", 2}
   ]
 
+  plug PlausibleWeb.AutoAuthPlug
+
   def index(conn, _params) do
     if conn.assigns[:current_user] do
       user = conn.assigns[:current_user] |> Repo.preload(:sites)

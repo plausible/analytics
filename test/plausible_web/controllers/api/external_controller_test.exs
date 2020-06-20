@@ -378,7 +378,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert pageview["country_code"] == "US"
   end
 
-
   test "responds 400 when required fields are missing", %{conn: conn} do
     params = %{}
 

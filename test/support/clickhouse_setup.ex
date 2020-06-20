@@ -237,7 +237,7 @@ defmodule Plausible.Test.ClickhouseSetup do
         referrer: "",
         is_bounce: false,
         start: ~N[2019-01-01 03:00:00]
-      },
+      }
     ])
   end
 end
