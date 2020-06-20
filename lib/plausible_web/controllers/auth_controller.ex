@@ -11,12 +11,17 @@ defmodule PlausibleWeb.AuthController do
        when action in [:user_settings, :save_settings, :delete_me, :password_form, :set_password]
 
   def register_form(conn, _params) do
-    changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
+    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) do
+      conn
+      |> redirect(to: "/login")
+    else
+      changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
 
-    render(conn, "register_form.html",
-      changeset: changeset,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
+      render(conn, "register_form.html",
+        changeset: changeset,
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
+      )
+    end
   end
 
   def register(conn, %{"user" => params}) do

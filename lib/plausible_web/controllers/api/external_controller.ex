@@ -78,16 +78,17 @@ defmodule PlausibleWeb.Api.ExternalController do
     if forwarded_for do
       String.split(forwarded_for, ",")
       |> Enum.map(&String.trim/1)
-      |> List.first
+      |> List.first()
     else
       to_string(:inet_parse.ntoa(conn.remote_ip))
     end
   end
 
   defp visitor_country(conn) do
-    result = get_ip(conn)
-    |> Geolix.lookup()
-    |> Map.get(:country)
+    result =
+      get_ip(conn)
+      |> Geolix.lookup()
+      |> Map.get(:country)
 
     if result && result.country do
       result.country.iso_code
