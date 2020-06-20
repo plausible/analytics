@@ -1,6 +1,8 @@
 defmodule Plausible.Workers.SendTrialNotifications do
   use Plausible.Repo
-  use Oban.Worker, queue: :trial_notification_emails
+  use Oban.Worker,
+    queue: :trial_notification_emails,
+    max_attempts: 1
   require Logger
 
   @impl Oban.Worker
