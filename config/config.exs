@@ -153,7 +153,7 @@ case mailer_adapter do
       ssl: System.get_env("SMTP_HOST_SSL_ENABLED") || true,
       retries: System.get_env("SMTP_RETRIES") || 2,
       no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true,
-      auth: :always
+      auth: :if_available
 
   "Bamboo.LocalAdapter" ->
     config :plausible, Plausible.Mailer, adapter: :"Elixir.#{mailer_adapter}"
