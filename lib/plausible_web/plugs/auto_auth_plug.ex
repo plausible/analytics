@@ -14,6 +14,7 @@ defmodule PlausibleWeb.AutoAuthPlug do
           "email" => Application.fetch_env!(:plausible, :admin_email),
           "password" => Application.fetch_env!(:plausible, :admin_pwd)
         })
+        |> halt
 
       Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_landing_page) ->
         Plug.Conn.put_session(conn, :login_dest, conn.request_path)

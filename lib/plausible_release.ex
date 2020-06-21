@@ -14,17 +14,23 @@ defmodule Plausible.Release do
          Application.get_env(:plausible, :admin_pwd)}
       )
 
-    {:ok, admin} = Plausible.Auth.create_user(admin_user, admin_email)
-    # set the password
-    {:ok, admin} = Plausible.Auth.User.set_password(admin, admin_pwd) |> Repo.update()
-    # bump-up the trail period
-    admin
-    |> Ecto.Changeset.cast(%{trial_expiry_date: Timex.today() |> Timex.shift(years: 100)}, [
-      :trial_expiry_date
-    ])
-    |> Repo.update()
+    case Plausible.Auth.find_user_by(email: admin_email) do
+      nil ->
+        {:ok, admin} = Plausible.Auth.create_user(admin_user, admin_email)
+        # set the password
+        {:ok, admin} = Plausible.Auth.User.set_password(admin, admin_pwd) |> Repo.update()
+        # bump-up the trail period
+        admin
+        |> Ecto.Changeset.cast(%{trial_expiry_date: Timex.today() |> Timex.shift(years: 100)}, [
+          :trial_expiry_date
+        ])
+        |> Repo.update()
 
-    IO.puts("Admin user created successful!")
+        IO.puts("Admin user created successful!")
+
+      _ ->
+        IO.puts("Admin user already exists. I won't override, bailing")
+    end
   end
 
   def migrate do
