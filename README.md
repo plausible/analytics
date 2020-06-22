@@ -40,7 +40,7 @@ database for stats. On the frontend we use [TailwindCSS](https://tailwindcss.com
 
 ### Feedback & Roadmap
 
-We welcome feedback from our community. We have a public roadmap driven by the features suggested by the community members. Take a look at our [feedback board](https://plausible.io/feedback) and our [public roadmap](https://plausible.io/roadmap). Please let us know if you have any requests and vote on open issues so we can better prioritize.
+We welcome feedback from our community. We have a public roadmap driven by the features suggested by the community members. Take a look at our [feedback board](https://github.com/plausible/analytics/issues) and our [public roadmap](https://github.com/plausible/analytics/issues?q=is%3Aopen+is%3Aissue+label%3A%22on+the+roadmap%22+sort%3Areactions-%2B1-desc) directly here on GitHub. Please let us know if you have any requests and vote on open issues so we can better prioritize.
 
 ### License
 
