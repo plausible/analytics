@@ -360,11 +360,32 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert event["name"] == "custom event"
   end
 
+  test "ignores a malformed referrer URL", %{conn: conn} do
+    params = %{
+      name: "pageview",
+      url: "http://gigride.live/",
+      referrer: "https:://twitter.com",
+      domain: "external-controller-test-19.com"
+    }
+
+    conn =
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> put_req_header("user-agent", @user_agent)
+      |> post("/api/event", Jason.encode!(params))
+
+    event = get_event("external-controller-test-19.com")
+
+    assert response(conn, 202) == ""
+    assert event["referrer"] == ""
+  end
+
+
   # Fake data is set up in config/test.exs
   test "looks up the country from the ip address", %{conn: conn} do
     params = %{
       name: "pageview",
-      domain: "external-controller-test-19.com",
+      domain: "external-controller-test-20.com",
       url: "http://gigride.live/"
     }
 
@@ -373,7 +394,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     |> put_req_header("x-forwarded-for", "1.1.1.1")
     |> post("/api/event", Jason.encode!(params))
 
-    pageview = get_event("external-controller-test-19.com")
+    pageview = get_event("external-controller-test-20.com")
 
     assert pageview["country_code"] == "US"
   end

@@ -128,7 +128,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp clean_referrer(ref) do
     uri = URI.parse(ref.referer)
 
-    if uri && uri.scheme in ["http", "https"] do
+    if uri && uri.host && uri.scheme in ["http", "https"] do
       host = String.replace_prefix(uri.host, "www.", "")
       path = uri.path || ""
       host <> String.trim_trailing(path, "/")
@@ -179,7 +179,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp clean_uri(uri) do
     uri = URI.parse(String.trim(uri))
 
-    if uri.scheme in ["http", "https"] do
+    if uri && uri.host && uri.scheme in ["http", "https"] do
       String.replace_leading(uri.host, "www.", "")
     end
   end

@@ -65,4 +65,62 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
       assert_no_emails_delivered()
     end
   end
+
+  describe "Suggested plans" do
+    test "suggests 10k/mo plan" do
+      user = insert(:user)
+
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", 9_000)
+      assert email.html_body =~ "we recommend you select the 10k/mo plan which runs at $6/mo."
+    end
+
+    test "suggests 100k/mo plan" do
+      user = insert(:user)
+
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", 90_000)
+      assert email.html_body =~ "we recommend you select the 100k/mo plan which runs at $12/mo."
+    end
+
+    test "suggests 200k/mo plan" do
+      user = insert(:user)
+
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", 180_000)
+      assert email.html_body =~ "we recommend you select the 200k/mo plan which runs at $18/mo."
+    end
+
+    test "suggests 500k/mo plan" do
+      user = insert(:user)
+
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", 450_000)
+      assert email.html_body =~ "we recommend you select the 500k/mo plan which runs at $27/mo."
+    end
+
+    test "suggests 1m/mo plan" do
+      user = insert(:user)
+
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", 900_000)
+      assert email.html_body =~ "we recommend you select the 1m/mo plan which runs at $48/mo."
+    end
+
+    test "suggests 2m/mo plan" do
+      user = insert(:user)
+
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", 1_800_000)
+      assert email.html_body =~ "we recommend you select the 2m/mo plan which runs at $69/mo."
+    end
+
+    test "suggests 5m/mo plan" do
+      user = insert(:user)
+
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", 4_500_000)
+      assert email.html_body =~ "we recommend you select the 5m/mo plan which runs at $99/mo."
+    end
+
+    test "does not suggest a plan above that" do
+      user = insert(:user)
+
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", 10_000_000)
+      assert email.html_body =~ "please reply back to this email to get a quote for your volume"
+    end
+  end
 end
