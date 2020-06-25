@@ -3,14 +3,17 @@ Hey <%= user_salutation(@user) %>,
 Thanks for exploring Plausible, a simple and privacy-friendly alternative to Google Analytics. Your free 30-day trial is ending <%= @day %>, but you can keep using Plausible by upgrading to a paid plan.
 <br /><br />
 In the last month, your account has used <%= PlausibleWeb.AuthView.delimit_integer(@pageviews) %> pageviews.
-<%= if @pageviews < 900_000 do %>
-  Based on that we recommend you select the <%= suggested_plan_name(@pageviews) %> plan which runs at <%= suggested_plan_cost(@pageviews) %>.
-  You can also go with yearly billing to get 33% off on your plan.
-<% end %>
+<%= if @pageviews <= 4_500_000 do %>
+Based on that we recommend you select the <%= suggested_plan_name(@pageviews) %> plan which runs at <%= suggested_plan_cost(@pageviews) %>.
+
+You can also go with yearly billing to get 33% off on your plan.
 <br /><br />
 <%= link("Upgrade now", to: "#{plausible_url()}/billing/upgrade") %>
 <br /><br />
 Have a question, feedback or need some guidance? Just reply to this email to get in touch!
+<% else %>
+This is more than our standard plans, so please reply back to this email to get a quote for your volume.
+<% end %>
 <br /><br />
 <br /><br />
 Thanks,<br />
