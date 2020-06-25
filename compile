@@ -1,5 +1,0 @@
-cd $phoenix_dir
-NODE_ENV=production npm --prefix ./assets run deploy
-npm --prefix ./tracker install && npm --prefix ./tracker run deploy
-mix "${phoenix_ex}.digest"
-mix "${phoenix_ex}.digest.clean"
