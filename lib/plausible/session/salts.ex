@@ -41,6 +41,6 @@ defmodule Plausible.Session.Salts do
   end
 
   defp clean_old_salts() do
-    Repo.delete_all(from s in "salts")
+    Repo.delete_all(from s in "salts", where: s.inserted_at < fragment("now() - '48 hours'::interval"))
   end
 end
