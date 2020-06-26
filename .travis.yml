@@ -13,6 +13,10 @@ env:
 script: mix coveralls.travis
 addons:
   postgresql: '12'
+cache:
+  directories:
+    - _build
+    - deps
 deploy:
   provider: script
   script: bash docker_push
