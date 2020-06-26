@@ -11,6 +11,8 @@ before_install:
 env:
   - MIX_ENV=test
 script: mix coveralls.travis
+addons:
+  postgresql: '12'
 deploy:
   provider: script
   script: bash docker_push
