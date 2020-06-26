@@ -91,7 +91,7 @@ crontab = [
   # hourly
   {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
   #  hourly
-  {"0 * * * *", Plausible.Workers.SendEmailReports},
+  {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
   # Daily at midnight
   {"0 0 * * *", Plausible.Workers.FetchTweets},
   # Daily at midday
