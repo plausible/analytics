@@ -11,7 +11,7 @@ before_install:
   # setting up postgres 12 is quite a pain, see:
   # https://travis-ci.community/t/test-against-postgres-12/6768/8
   - sudo sed -i 's/port = 5433/port = 5432/' /etc/postgresql/12/main/postgresql.conf
-  - sudo cp /etc/postgresql/{9.3,12}/main/pg_hba.conf
+  - sudo cp /etc/postgresql/{9.4,12}/main/pg_hba.conf
   - sudo pg_ctlcluster 12 main restart
 env:
   - MIX_ENV=test PGVER=12
