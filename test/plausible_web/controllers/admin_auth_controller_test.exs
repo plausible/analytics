@@ -1,10 +1,9 @@
 defmodule PlausibleWeb.AdminAuthControllerTest do
   use PlausibleWeb.ConnCase
-  import Plausible.TestUtils
 
   describe "GET /" do
-    test "disable landing page", %{conn: conn} do
-      set_config(disable_landing_page: true)
+    test "no landing page", %{conn: conn} do
+      set_config(disable_authentication: false)
       conn = get(conn, "/")
       assert redirected_to(conn) == "/login"
     end
@@ -34,15 +33,10 @@ defmodule PlausibleWeb.AdminAuthControllerTest do
     end
   end
 
-  def reset_config do
-    [disable_landing_page: false, disable_authentication: false, disable_registration: false]
-    |> set_config()
-  end
-
   def set_config(config) do
     updated_config =
       Keyword.merge(
-        [disable_landing_page: false, disable_authentication: false, disable_registration: false],
+        [disable_authentication: false, disable_registration: false],
         config
       )
 

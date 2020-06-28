@@ -51,8 +51,13 @@ The repo supplies with a [Docker Compose](./docker-compose.yml) file and the sam
     docker volume rm plausible_event-data -f
     docker volume rm plausible_db-data -f
     ```
-
-Note, you need to stop plausible and restart plausible  if you change the environment variables.
+Note: 
+- #1 you need to stop plausible and restart plausible  if you change the environment variables.
+- #2 With docker-compose, you need to remove the existing container and rebuild if you want your changes need to be reflected:
+    ```bash
+    docker rmi -f  plausible_plausible:latest
+    docker-compose up -d plausible 
+    ```
 ### Non-docker building
 It is possible to create a release artifact by running a release.
 
@@ -107,10 +112,8 @@ Following are the variables that can be used to configure the availability of th
 - APP_VERSION (*String*)
     - The version of the app running. _defaults to current docker tag_
 - DISABLE_AUTH  (*Boolean String*)
-    - Disables authentication completely, no registration, login or landing page will be shown. _defaults to `false`_
-    - Note: This option is **not recommended** for production deployments. 
-- DISABLE_LANDING_PAGE
-  - Disables landing page from plausible.io, One can change the [default landing page](./lib/plausible_web/templates/page/index.html.eex) as per need _defaults to `false`_
+    - Disables authentication completely, no registration, login will be shown. _defaults to `false`_
+    - Note: This option is **not recommended** for production deployments.
 - DISABLE_REGISTRATION
   - Disables registration of new users, keep your admin credentials handy ;)  _defaults to `false`_
 

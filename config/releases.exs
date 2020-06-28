@@ -62,7 +62,6 @@ config :plausible,
   mailer_email: mailer_email
 
 config :plausible, :selfhost,
-  disable_landing_page: String.to_existing_atom(System.get_env("DISABLE_LANDING_PAGE", "false")),
   disable_authentication: disable_auth,
   disable_registration:
     if(!disable_auth,

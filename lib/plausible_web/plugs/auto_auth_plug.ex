@@ -16,13 +16,11 @@ defmodule PlausibleWeb.AutoAuthPlug do
         })
         |> halt
 
-      Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_landing_page) ->
+      true ->
         Plug.Conn.put_session(conn, :login_dest, conn.request_path)
         |> Phoenix.Controller.redirect(to: "/login")
         |> halt
 
-      true ->
-        conn
     end
   end
 end
