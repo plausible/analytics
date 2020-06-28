@@ -91,7 +91,7 @@ crontab = [
   # hourly
   {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
   #  hourly
-  {"0 * * * *", Plausible.Workers.SendEmailReports},
+  {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
   # Daily at midnight
   {"0 0 * * *", Plausible.Workers.FetchTweets},
   # Daily at midday
@@ -106,9 +106,10 @@ queues = [
   provision_ssl_certificates: 1,
   fetch_tweets: 1,
   check_stats_emails: 1,
-  email_reports: 1,
   site_setup_emails: 1,
-  trial_notification_emails: 1
+  trial_notification_emails: 1,
+  schedule_email_reports: 1,
+  send_email_reports: 1
 ]
 
 config :plausible, Oban,
