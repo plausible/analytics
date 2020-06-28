@@ -92,13 +92,6 @@ defmodule PlausibleWeb.Router do
     get "/auth/google/callback", AuthController, :google_auth_callback
 
     get "/", PageController, :index
-    get "/privacy", PageController, :privacy
-    get "/terms", PageController, :terms
-    get "/data-policy", PageController, :data_policy
-    get "/feedback", PageController, :feedback
-    get "/roadmap", PageController, :roadmap
-    get "/contact", PageController, :contact_form
-    post "/contact", PageController, :submit_contact_form
 
     get "/billing/change-plan", BillingController, :change_plan_form
     get "/billing/change-plan/preview/:plan_id", BillingController, :change_plan_preview
