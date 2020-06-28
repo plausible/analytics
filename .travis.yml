@@ -10,9 +10,15 @@ before_install:
   - docker run -d -p 8123:8123 --ulimit nofile=262144:262144 --volume=$HOME/init.sql:/docker-entrypoint-initdb.d/init.sql yandex/clickhouse-server
 env:
   - MIX_ENV=test
+  - PGVER=12
+  - PGPORT=5433
 script: mix coveralls.travis
 addons:
-  postgresql: '12'
+    postgresql: '12'
+    apt:
+      packages:
+        - postgresql-12
+        - postgresql-client-12
 cache:
   directories:
     - _build
