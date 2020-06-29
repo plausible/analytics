@@ -162,7 +162,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Site deleted succesfully along with all pageviews")
-    |> redirect(to: "/")
+    |> redirect(to: "/sites")
   end
 
   def make_public(conn, %{"website" => website}) do
