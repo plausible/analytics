@@ -42,7 +42,10 @@ defmodule PlausibleWeb.Api.ExternalController do
 
       ref = parse_referrer(uri, params["referrer"])
       country_code = visitor_country(conn)
-      salts = Plausible.Session.Salts.fetch()
+      rotating_salts = Plausible.Session.Salts.fetch()
+      static_salt =
+        Keyword.fetch!(Application.get_env(:plausible, PlausibleWeb.Endpoint), :secret_key_base)
+        |> binary_part(0, 16)
 
       event_attrs = %{
         timestamp: NaiveDateTime.utc_now(),
@@ -50,7 +53,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         hostname: strip_www(uri && uri.host),
         domain: strip_www(params["domain"]) || strip_www(uri && uri.host),
         pathname: uri && (uri.path || "/"),
-        user_id: generate_user_id(conn, params, salts[:current]),
+        user_id: generate_user_id(conn, params, static_salt),
         country_code: country_code,
         operating_system: ua && os_name(ua),
         browser: ua && browser_name(ua),
@@ -63,11 +66,21 @@ defmodule PlausibleWeb.Api.ExternalController do
 
       if changeset.valid? do
         event = struct(Plausible.ClickhouseEvent, event_attrs)
-        previous_user_id = salts[:previous] && generate_user_id(conn, params, salts[:previous])
-        session_id = Plausible.Session.Store.on_event(event, previous_user_id)
+        session_id = Plausible.Session.Store.on_event(event, nil)
 
-        Map.put(event, :session_id, session_id)
+        res = Map.put(event, :session_id, session_id)
         |> Plausible.Event.WriteBuffer.insert()
+
+        if params["domain"] == "plausible.io" do # Test salt rotation
+          user_id = generate_user_id(conn, params, rotating_salts[:current])
+          previous_user_id = rotating_salts[:previous] && generate_user_id(conn, params, rotating_salts[:previous])
+          event = %{event | domain: "plausible-test.io", user_id: user_id}
+          session_id = Plausible.Session.Store.on_event(event, previous_user_id)
+
+          Map.put(event, :session_id, session_id)
+          |> Plausible.Event.WriteBuffer.insert()
+        end
+        res
       else
         {:error, changeset}
       end
