@@ -21,7 +21,9 @@ config :plausible, PlausibleWeb.Endpoint,
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
       ~r{priv/gettext/.*(po)$},
       ~r{lib/plausible_web/views/.*(ex)$},
-      ~r{lib/plausible_web/templates/.*(eex)$}
+      ~r{lib/plausible_web/templates/.*(eex)$},
+      ~r{lib/plausible_web/controllers/.*(ex)$},
+      ~r{lib/plausible_web/plugs/.*(ex)$}
     ]
   ]
 
