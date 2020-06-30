@@ -39,7 +39,7 @@ class Stats extends React.Component {
       <div className="mb-12">
         <div className="w-full sm:flex justify-between items-center">
           <div className="w-full flex items-center">
-            <h2 className="text-left mr-8 font-semibold text-xl">Analytics for <a href={`//${this.props.site.domain}`} target="_blank">{this.props.site.domain}</a></h2>
+            <h2 className="text-left mr-8 font-semibold text-xl">Analytics for <a href={`http://${this.props.site.domain}`} target="_blank">{this.props.site.domain}</a></h2>
             <CurrentVisitors site={this.props.site}  />
           </div>
           <Datepicker site={this.props.site} query={this.state.query} />
