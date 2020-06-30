@@ -138,6 +138,7 @@ defmodule PlausibleWeb.Router do
     get "/sites/:website/custom-domains/dns-setup", SiteController, :custom_domain_dns_setup
     get "/sites/:website/custom-domains/snippet", SiteController, :custom_domain_snippet
     post "/sites/:website/custom-domains", SiteController, :add_custom_domain
+    delete "/sites/:website/custom-domains/:id", SiteController, :delete_custom_domain
 
     get "/sites/:website/weekly-report/unsubscribe", UnsubscribeController, :weekly_report
     get "/sites/:website/monthly-report/unsubscribe", UnsubscribeController, :monthly_report

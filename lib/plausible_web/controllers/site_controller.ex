@@ -393,6 +393,17 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
+  def delete_custom_domain(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+           |> Repo.preload(:custom_domain)
+
+    Repo.delete!(site.custom_domain)
+
+    conn
+    |> put_flash(:success, "Custom domain deleted succesfully")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings")
+  end
+
   defp insert_site(user_id, params) do
     site_changeset = Plausible.Site.changeset(%Plausible.Site{}, params)
 

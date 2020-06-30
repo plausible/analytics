@@ -408,4 +408,16 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~ "DNS for #{domain.domain}"
     end
   end
+
+  describe "DELETE sites/:website/custom-domains/:id" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "lists goals for the site", %{conn: conn, site: site} do
+      domain = insert(:custom_domain, site: site)
+
+      delete(conn, "/sites/#{site.domain}/custom-domains/#{domain.id}")
+
+      assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 0
+    end
+  end
 end
