@@ -14,7 +14,7 @@ secret_key_base =
     "/NJrhNtbyCVAsTyvtk1ZYCwfm981Vpo/0XrVwjJvemDaKC/vsvBRevLwsc6u8RCg"
   )
 
-db_pool_size = String.to_integer(System.get_env("DATABASE_POOL_SIZE", "10"))
+db_pool_size = String.to_integer(System.get_env("DATABASE_POOLSIZE", "10"))
 
 db_url =
   System.get_env(
@@ -34,7 +34,7 @@ ck_host = System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost")
 ck_db = System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_dev")
 ck_db_user = System.get_env("CLICKHOUSE_DATABASE_USER")
 ck_db_pwd = System.get_env("CLICKHOUSE_DATABASE_PASSWORD")
-ck_db_pool = System.get_env("CLICKHOUSE_DATABASE_POOLSIZE") || 10
+ck_db_pool =  String.to_integer(System.get_env("CLICKHOUSE_DATABASE_POOLSIZE", "10"))
 ### Mandatory params End
 
 sentry_dsn = System.get_env("SENTRY_DSN")

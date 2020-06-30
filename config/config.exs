@@ -13,9 +13,9 @@ disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
 config :plausible, :selfhost,
   disable_authentication: disable_auth,
   disable_registration:
-    if(!disable_auth,
-      do: String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false")),
-      else: false
+    if(disable_auth,
+      do: true,
+      else: String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false"))
     )
 
 config :plausible, :clickhouse,
@@ -83,7 +83,7 @@ config :plausible, :paddle,
 
 config :plausible,
        Plausible.Repo,
-       pool_size: String.to_integer(System.get_env("DATABASE_POOL_SIZE", "10")),
+       pool_size: String.to_integer(System.get_env("DATABASE_POOLSIZE", "10")),
        timeout: 300_000,
        connect_timeout: 300_000,
        handshake_timeout: 300_000,
