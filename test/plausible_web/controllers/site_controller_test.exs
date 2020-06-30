@@ -147,6 +147,29 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
+  describe "PUT /:website/settings/google" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "updates google auth property", %{conn: conn, user: user, site: site} do
+      insert(:google_auth, user: user, site: site)
+      put(conn, "/#{site.domain}/settings/google", %{"google_auth" => %{"property" => "some-new-property.com"}})
+
+      updated_auth = Repo.one(Plausible.Site.GoogleAuth)
+      assert updated_auth.property == "some-new-property.com"
+    end
+  end
+
+  describe "DELETE /:website/settings/google" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "deletes associated google auth", %{conn: conn, user: user, site: site} do
+      insert(:google_auth, user: user, site: site)
+      delete(conn, "/#{site.domain}/settings/google")
+
+      refute Repo.exists?(Plausible.Site.GoogleAuth)
+    end
+  end
+
   describe "GET /:website/goals/new" do
     setup [:create_user, :log_in, :create_site]
 

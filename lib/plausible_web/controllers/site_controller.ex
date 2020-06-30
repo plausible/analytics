@@ -128,6 +128,18 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings#google-auth")
   end
 
+  def delete_google_auth(conn, %{"website" => website}) do
+    site =
+      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      |> Repo.preload(:google_auth)
+
+    Repo.delete!(site.google_auth)
+
+    conn
+    |> put_flash(:success, "Google account unlinked succesfully")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings#google-auth")
+  end
+
   def update_settings(conn, %{"website" => website, "site" => site_params}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
     changeset = site |> Plausible.Site.changeset(site_params)

@@ -104,7 +104,9 @@
 
     <%= if @site.google_auth do %>
       <div class="py-2"></div>
-      <span class="text-gray-700">Connected Google account: <b><%= @site.google_auth.email %></b></span>
+      <span class="text-gray-700">Linked Google account: <b><%= @site.google_auth.email %></b></span>
+
+      <%= link("Unlink Google account", to: "/#{URI.encode_www_form(@site.domain)}/settings/google", class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
 
       <%= if @site.google_auth.property && !(@site.google_auth.property in @search_console_domains) do %>
         <p class="text-gray-700 mt-6 font-bold">
@@ -112,7 +114,7 @@
         </p>
       <% else %>
         <p class="text-gray-700 mt-6">
-        Select the Google Search Console property you would like to pull keyword data from. If you don't see your domain, <%= link("set it up and verify", to: "https://docs.#{base_domain()}/google-search-console-integration#1-add-your-site-on-the-search-console", class: "text-indigo-500") %> on Search Console first.
+        Select the Google Search Console property you would like to pull keyword data from. If you don't see your domain, <%= link("set it up and verify", to: "https://docs.#{base_domain()}/google-search-console-integration", class: "text-indigo-500") %> on Search Console first.
         </p>
       <% end %>
 

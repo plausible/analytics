@@ -151,6 +151,7 @@ defmodule PlausibleWeb.Router do
     delete "/:website/goals/:id", SiteController, :delete_goal
     put "/:website/settings", SiteController, :update_settings
     put "/:website/settings/google", SiteController, :update_google_auth
+    delete "/:website/settings/google", SiteController, :delete_google_auth
     delete "/:website", SiteController, :delete_site
 
     get "/share/:slug", StatsController, :shared_link
