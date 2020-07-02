@@ -14,7 +14,7 @@ secret_key_base =
     "/NJrhNtbyCVAsTyvtk1ZYCwfm981Vpo/0XrVwjJvemDaKC/vsvBRevLwsc6u8RCg"
   )
 
-db_pool_size = String.to_integer(System.get_env("DATABASE_POOL_SIZE", "10"))
+db_pool_size = String.to_integer(System.get_env("DATABASE_POOLSIZE", "10"))
 
 db_url =
   System.get_env(
@@ -34,7 +34,7 @@ ck_host = System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost")
 ck_db = System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_dev")
 ck_db_user = System.get_env("CLICKHOUSE_DATABASE_USER")
 ck_db_pwd = System.get_env("CLICKHOUSE_DATABASE_PASSWORD")
-ck_db_pool = System.get_env("CLICKHOUSE_DATABASE_POOLSIZE") || 10
+ck_db_pool =  String.to_integer(System.get_env("CLICKHOUSE_DATABASE_POOLSIZE", "10"))
 ### Mandatory params End
 
 sentry_dsn = System.get_env("SENTRY_DSN")
@@ -52,6 +52,7 @@ custom_domain_server_ip = System.get_env("CUSTOM_DOMAIN_SERVER_IP")
 custom_domain_server_user = System.get_env("CUSTOM_DOMAIN_SERVER_USER")
 custom_domain_server_password = System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD")
 geolite2_country_db = System.get_env("GEOLITE2_COUNTRY_DB")
+disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
 
 config :plausible,
   admin_user: admin_user,
@@ -59,6 +60,14 @@ config :plausible,
   admin_pwd: admin_pwd,
   environment: env,
   mailer_email: mailer_email
+
+config :plausible, :selfhost,
+  disable_authentication: disable_auth,
+  disable_registration:
+    if(!disable_auth,
+      do: String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false")),
+      else: false
+    )
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [host: host, scheme: scheme],

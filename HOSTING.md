@@ -27,21 +27,37 @@ Total cost: $105/mo
 Besides the DockerHub registry, one can build docker image from [Dockerfile](./Dockerfile).
 
 #### Up and Running
-The repo supplies with a [Docker Compose](./docker-compose.yml) file, this serves as a sample for running Plausible with Docker.
-In this sample, the db migration is done by default on startup, so you need to clean the data up every time you run:
+The repo supplies with a [Docker Compose](./docker-compose.yml) file and the sample [environment variables](./plausible-variables.sample.env) , this serves as a sample for running Plausible with Docker.
 
-First run
-```bash
-$ docker-compose up
-```
+-  Running the setup takes care of the initial migration steps, this needs to be executed only once, on the first run.
+    ```bash
+    docker-compose run --rm setup
+    docker-compose down
+    ```
 
-subsequent runs--
-```bash
-$ docker-compose down
-$ docker volume rm plausible_db-data -f
-$ docker-compose up
-```
-
+- After the setup, you can start plausible as -- 
+    ```bash
+    docker-compose up -d plausible 
+    ```
+     after a successful startup (can take upto 5 mins), `plausible` is available at port `80`, navigate to [`http://localhost`](http://localhost). 
+ 
+- stopping plausible --  
+    ```bash
+    docker-compose down
+    ```
+- purging and removing everything --
+    ```bash
+    docker-compose down
+    docker volume rm plausible_event-data -f
+    docker volume rm plausible_db-data -f
+    ```
+Note: 
+- #1 you need to stop plausible and restart plausible  if you change the environment variables.
+- #2 With docker-compose, you need to remove the existing container and rebuild if you want your changes need to be reflected:
+    ```bash
+    docker rmi -f  plausible_plausible:latest
+    docker-compose up -d plausible 
+    ```
 ### Non-docker building
 It is possible to create a release artifact by running a release.
 
@@ -95,6 +111,11 @@ Following are the variables that can be used to configure the availability of th
     - The current running environment. _defaults to **prod**_
 - APP_VERSION (*String*)
     - The version of the app running. _defaults to current docker tag_
+- DISABLE_AUTH  (*Boolean String*)
+    - Disables authentication completely, no registration, login will be shown. _defaults to `false`_
+    - Note: This option is **not recommended** for production deployments.
+- DISABLE_REGISTRATION
+  - Disables registration of new users, keep your admin credentials handy ;)  _defaults to `false`_
 
 ### Default User Generation
 For self-hosting, a default user is generated during the [Database Migration](#Database Migration) to access Plausible. To be noted that, a default user is a user whose trial period expires in 100 Years ;).

@@ -100,18 +100,6 @@ defmodule PlausibleWeb.Email do
     |> render("trial_over_email.html", user: user)
   end
 
-  def feedback(from, text) do
-    from = if from == "", do: "anonymous@plausible.io", else: from
-
-    base_email()
-    |> to("hello@plausible.io")
-    |> from("feedback@plausible.io")
-    |> put_param("ReplyTo", from)
-    |> tag("feedback")
-    |> subject("New feedback submission")
-    |> text_body(text)
-  end
-
   def weekly_report(email, site, assigns) do
     base_email()
     |> to(email)

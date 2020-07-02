@@ -1,6 +1,7 @@
 {:ok, _} = Application.ensure_all_started(:ex_machina)
 ExUnit.configure(formatters: [JUnitFormatter, ExUnit.CLIFormatter])
 Plausible.Test.ClickhouseSetup.run()
+Plausible.Release.init_admin()
 ExUnit.start()
 Application.ensure_all_started(:double)
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)

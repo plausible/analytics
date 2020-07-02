@@ -8,6 +8,15 @@ config :plausible,
   ecto_repos: [Plausible.Repo],
   environment: System.get_env("ENVIRONMENT", "dev")
 
+disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
+
+config :plausible, :selfhost,
+  disable_authentication: disable_auth,
+  disable_registration:
+    if(disable_auth,
+      do: true,
+      else: String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false"))
+    )
 
 config :plausible, :clickhouse,
   hostname: System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost"),
@@ -74,7 +83,7 @@ config :plausible, :paddle,
 
 config :plausible,
        Plausible.Repo,
-       pool_size: String.to_integer(System.get_env("DATABASE_POOL_SIZE", "10")),
+       pool_size: String.to_integer(System.get_env("DATABASE_POOLSIZE", "10")),
        timeout: 300_000,
        connect_timeout: 300_000,
        handshake_timeout: 300_000,
@@ -144,7 +153,7 @@ case mailer_adapter do
       ssl: System.get_env("SMTP_HOST_SSL_ENABLED") || true,
       retries: System.get_env("SMTP_RETRIES") || 2,
       no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true,
-      auth: :always
+      auth: :if_available
 
   "Bamboo.LocalAdapter" ->
     config :plausible, Plausible.Mailer, adapter: :"Elixir.#{mailer_adapter}"
