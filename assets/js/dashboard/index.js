@@ -11,6 +11,7 @@ import Countries from './stats/countries'
 import Devices from './stats/devices'
 import Conversions from './stats/conversions'
 import {parseQuery} from './query'
+import * as api from './api'
 
 class Stats extends React.Component {
   constructor(props) {
@@ -20,6 +21,7 @@ class Stats extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.location.search !== this.props.location.search) {
+      api.cancelAll()
       this.setState({query: parseQuery(this.props.location.search, this.props.site)})
     }
   }

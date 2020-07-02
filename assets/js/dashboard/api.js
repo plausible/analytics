@@ -1,5 +1,7 @@
 import {formatISO} from './date'
 
+let abortController = new AbortController()
+
 function serialize(obj) {
   var str = [];
   for (var p in obj)
@@ -7,6 +9,11 @@ function serialize(obj) {
       str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
     }
   return str.join("&");
+}
+
+export function cancelAll() {
+  abortController.abort()
+  abortController = new AbortController()
 }
 
 export function serializeQuery(query, extraQuery=[]) {
@@ -22,7 +29,7 @@ export function serializeQuery(query, extraQuery=[]) {
 
 export function get(url, query, ...extraQuery) {
   url = url + serializeQuery(query, extraQuery)
-  return fetch(url)
+  return fetch(url, {signal: abortController.signal})
     .then( response => {
       if (!response.ok) { throw response }
       return response.json()
