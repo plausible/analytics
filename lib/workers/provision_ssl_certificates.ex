@@ -1,6 +1,6 @@
 defmodule Plausible.Workers.ProvisionSslCertificates do
   use Plausible.Repo
-  use Oban.Worker, queue: :provision_ssl_certificates
+  use Oban.Worker, queue: :provision_ssl_certificates, max_attempts: 1
   require Logger
 
   @impl Oban.Worker
