@@ -46,15 +46,16 @@ defmodule Plausible.Workers.SendEmailReports do
     for site <- sites do
       query = Query.from(site.timezone, %{"period" => "7d"})
 
-      sent = Enum.map(site.weekly_report.recipients, fn email ->
-        Logger.info("Sending weekly report for #{URI.encode_www_form(site.domain)} to #{email}")
+      sent =
+        Enum.map(site.weekly_report.recipients, fn email ->
+          Logger.info("Sending weekly report for #{URI.encode_www_form(site.domain)} to #{email}")
 
-        unsubscribe_link =
-          PlausibleWeb.Endpoint.url() <>
-            "/sites/#{URI.encode_www_form(site.domain)}/weekly-report/unsubscribe?email=#{email}"
+          unsubscribe_link =
+            PlausibleWeb.Endpoint.url() <>
+              "/sites/#{URI.encode_www_form(site.domain)}/weekly-report/unsubscribe?email=#{email}"
 
-        send_report(email, site, "Weekly", unsubscribe_link, query)
-      end)
+          send_report(email, site, "Weekly", unsubscribe_link, query)
+        end)
 
       if Enum.all?(sent), do: weekly_report_sent(site, job_start)
     end
@@ -94,15 +95,18 @@ defmodule Plausible.Workers.SendEmailReports do
           "date" => Timex.format!(last_month, "{ISOdate}")
         })
 
-      sent = Enum.map(site.monthly_report.recipients, fn email ->
-        Logger.info("Sending monthly report for #{site.domain} to #{email}")
+      sent =
+        Enum.map(site.monthly_report.recipients, fn email ->
+          Logger.info("Sending monthly report for #{site.domain} to #{email}")
 
-        unsubscribe_link =
-          PlausibleWeb.Endpoint.url() <>
-            "/sites/#{URI.encode_www_form(site.domain)}/monthly-report/unsubscribe?email=#{email}"
+          unsubscribe_link =
+            PlausibleWeb.Endpoint.url() <>
+              "/sites/#{URI.encode_www_form(site.domain)}/monthly-report/unsubscribe?email=#{
+                email
+              }"
 
-        send_report(email, site, Timex.format!(last_month, "{Mfull}"), unsubscribe_link, query)
-      end)
+          send_report(email, site, Timex.format!(last_month, "{Mfull}"), unsubscribe_link, query)
+        end)
 
       if Enum.all?(sent), do: monthly_report_sent(site, job_start)
     end
@@ -122,20 +126,21 @@ defmodule Plausible.Workers.SendEmailReports do
     user = Plausible.Auth.find_user_by(email: email)
     login_link = user && Plausible.Sites.is_owner?(user.id, site)
 
-    template = PlausibleWeb.Email.weekly_report(email, site,
-      unique_visitors: unique_visitors,
-      change_visitors: change_visitors,
-      pageviews: pageviews,
-      change_pageviews: change_pageviews,
-      bounce_rate: bounce_rate,
-      change_bounce_rate: change_bounce_rate,
-      referrers: referrers,
-      unsubscribe_link: unsubscribe_link,
-      login_link: login_link,
-      pages: pages,
-      query: query,
-      name: name
-    )
+    template =
+      PlausibleWeb.Email.weekly_report(email, site,
+        unique_visitors: unique_visitors,
+        change_visitors: change_visitors,
+        pageviews: pageviews,
+        change_pageviews: change_pageviews,
+        bounce_rate: bounce_rate,
+        change_bounce_rate: change_bounce_rate,
+        referrers: referrers,
+        unsubscribe_link: unsubscribe_link,
+        login_link: login_link,
+        pages: pages,
+        query: query,
+        name: name
+      )
 
     try do
       Plausible.Mailer.send_email(template)

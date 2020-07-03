@@ -37,6 +37,8 @@ defmodule Plausible.Release do
     prepare()
     Enum.each(repos(), &run_migrations_for/1)
     init_admin()
+    prepare_clickhouse()
+    run_migrations_for_ch()
     IO.puts("Migrations successful!")
   end
 
@@ -44,7 +46,6 @@ defmodule Plausible.Release do
     prepare()
     # Run seed script
     Enum.each(repos(), &run_seeds_for/1)
-
     # Signal shutdown
     IO.puts("Success!")
   end
@@ -52,6 +53,8 @@ defmodule Plausible.Release do
   def createdb do
     prepare()
     do_create_db()
+    prepare_clickhouse(:default_db)
+    do_create_ch_db()
     IO.puts("Creation of Db successful!")
   end
 
@@ -117,23 +120,11 @@ defmodule Plausible.Release do
     {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
   end
 
-  defp do_create_db do
-    for repo <- repos() do
-      :ok = ensure_repo_created(repo)
-    end
-
-    do_create_ch_db()
-  end
-
-  defp do_create_ch_db() do
-    db_to_create = Keyword.get(Application.get_env(:plausible, :clickhouse), :database)
-
-    IO.puts("create #{inspect(db_to_create)} clickhouse database/tables if it doesn't exist")
-
-    Clickhousex.query(:clickhouse, "CREATE DATABASE IF NOT EXISTS #{db_to_create}", [])
+  defp run_migrations_for_ch() do
+    db = Keyword.get(Application.get_env(:plausible, :clickhouse), :database)
 
     tb_events = """
-    CREATE TABLE IF NOT EXISTS #{db_to_create}.events (
+    CREATE TABLE IF NOT EXISTS #{db}.events (
       timestamp DateTime,
       name String,
       domain String,
@@ -156,7 +147,7 @@ defmodule Plausible.Release do
     Clickhousex.query(:clickhouse, tb_events, [])
 
     tb_sessions = """
-    CREATE TABLE IF NOT EXISTS #{db_to_create}.sessions (
+    CREATE TABLE IF NOT EXISTS #{db}.sessions (
       session_id UInt64,
       sign Int8,
       domain String,
@@ -185,6 +176,18 @@ defmodule Plausible.Release do
     Clickhousex.query(:clickhouse, tb_sessions, [])
   end
 
+  defp do_create_db do
+    for repo <- repos() do
+      :ok = ensure_repo_created(repo)
+    end
+  end
+
+  defp do_create_ch_db() do
+    db_to_create = Keyword.get(Application.get_env(:plausible, :clickhouse), :database)
+    IO.puts("create #{inspect(db_to_create)} clickhouse database/tables if it doesn't exist")
+    Clickhousex.query(:clickhouse, "CREATE DATABASE IF NOT EXISTS #{db_to_create}", [])
+  end
+
   defp ensure_repo_created(repo) do
     IO.puts("create #{inspect(repo)} database if it doesn't exist")
 
@@ -208,8 +211,6 @@ defmodule Plausible.Release do
     # Load the code for myapp, but don't start it
     :ok = Application.load(@app)
 
-    prepare_clickhouse()
-
     IO.puts("Starting dependencies..")
     # Start apps necessary for executing migrations
     Enum.each(@start_apps, &Application.ensure_all_started/1)
@@ -219,7 +220,8 @@ defmodule Plausible.Release do
     Enum.each(repos(), & &1.start_link(pool_size: 2))
   end
 
-  defp prepare_clickhouse do
+  # connect to the default db for creating the required db
+  defp prepare_clickhouse(:default_db) do
     Application.ensure_all_started(:db_connection)
     Application.ensure_all_started(:hackney)
 
@@ -228,7 +230,24 @@ defmodule Plausible.Release do
       port: 8123,
       name: :clickhouse,
       database: "default",
-      hostname: Keyword.get(Application.get_env(:plausible, :clickhouse), :hostname)
+      username: "default",
+      hostname: Keyword.get(Application.get_env(:plausible, :clickhouse), :hostname),
+      password: Keyword.get(Application.get_env(:plausible, :clickhouse), :password)
+    )
+  end
+
+  defp prepare_clickhouse() do
+    Application.ensure_all_started(:db_connection)
+    Application.ensure_all_started(:hackney)
+
+    Clickhousex.start_link(
+      scheme: :http,
+      port: 8123,
+      name: :clickhouse,
+      username: Keyword.get(Application.get_env(:plausible, :clickhouse), :username),
+      database: Keyword.get(Application.get_env(:plausible, :clickhouse), :database),
+      hostname: Keyword.get(Application.get_env(:plausible, :clickhouse), :hostname),
+      password: Keyword.get(Application.get_env(:plausible, :clickhouse), :password)
     )
   end
 
