@@ -36,7 +36,7 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
   end
 
   defp report_result({error_msg, error_code}, domain) do
-    Logger.error("Error obtaining SSL certificate for #{domain}: #{error_msg}")
+    Logger.error("Error obtaining SSL certificate for #{domain.domain}: #{error_msg}")
 
     Sentry.capture_message("Error obtaining SSL certificate",
       extra: %{error_msg: error_msg, error_code: error_code, domain: domain.domain}
