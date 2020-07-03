@@ -1,6 +1,7 @@
 defmodule Plausible.Workers.ProvisionSslCertificates do
   use Plausible.Repo
   use Oban.Worker, queue: :provision_ssl_certificates
+  require Logger
 
   @impl Oban.Worker
   def perform(_args, _job, ssh \\ SSHEx) do
