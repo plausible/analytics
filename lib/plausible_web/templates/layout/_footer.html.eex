@@ -10,7 +10,8 @@
       <li>Check out the <%= link("Live Demo", to: "https://plausible.io/plausible.io",class: "light-text font-medium underline") %></li>
     </ul>
     <ul class="text-center md:text-left my-4 md:m-0">
-      <li>Having trouble? Raise an <a href="https://github.com/plausible/analytics/issues" target="_blank" class="light-text font-medium mr-4 underline">issue</a></li>
+       <li>Give us <a href="/feedback" target="_blank" class="light-text font-medium mr-4 underline">Feedback</a></li>
+       <li>We have a <a href="/roadmap" target="_blank" class="light-text font-medium mr-4 underline">Public roadmap</a></li>
       <li>Contact us via <a href="https://plausible.io/contact" class="light-text font-medium mr-4 underline">form</a></li>
     </ul>
   </div>
