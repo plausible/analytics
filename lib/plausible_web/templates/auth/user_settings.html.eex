@@ -20,6 +20,7 @@
             <%= link("Change plan", to: "/billing/change-plan", class: "text-sm text-indigo-500 font-medium") %>
           <% "past_due" -> %>
             <span class="text-sm text-gray-600 font-medium" tooltip="Please update your billing details before changing plans">Change plan</span>
+          <% _ -> %>
         <% end %>
       <% else %>
         <div class="text-xl py-2 font-medium">Free trial</div>
@@ -28,22 +29,22 @@
     </div>
     <div class="text-center bg-gray-100 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
       <h4 class="font-black">Next bill amount</h4>
-      <%= if @subscription do %>
+      <%= if @subscription && @subscription.status in ["active", "past_due"] do %>
         <div class="text-xl py-2 font-medium">$<%= @subscription.next_bill_amount %></div>
         <%= if @subscription.update_url do %>
           <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo-500 font-medium") %>
         <% end %>
       <% else %>
-        <div class="text-xl py-2 font-medium">$0</div>
+        <div class="text-xl py-2 font-medium">---</div>
       <% end %>
     </div>
     <div class="text-center bg-gray-100 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
       <h4 class="font-black">Next bill date</h4>
 
-      <%= if @subscription && @subscription.next_bill_date do %>
+      <%= if @subscription && @subscription.next_bill_date && @subscription.status in ["active", "past_due"] do %>
         <div class="text-xl py-2 font-medium"><%= Timex.format!(@subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %></div>
       <% else %>
-        <div class="text-xl py-2 font-medium">–</div>
+        <div class="text-xl py-2 font-medium">---</div>
       <% end %>
     </div>
   </div>
@@ -55,10 +56,15 @@
     pageviews in the last 30 days
   </div>
 
-  <%= if @subscription && @subscription.cancel_url do %>
-    <div class="mt-8">
-      <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
-    </div>
+  <%= cond do %>
+    <% @subscription && @subscription.status in ["active", "past_due", "paused"] && @subscription.cancel_url -> %>
+      <div class="mt-8">
+        <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
+      </div>
+    <% true -> %>
+      <div class="mt-8">
+        <%= link("Upgrade", to: "/billing/upgrade", class: "inline-block px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition ease-in-out duration-150") %>
+      </div>
   <% end %>
 </div>
 

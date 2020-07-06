@@ -60,5 +60,7 @@ defmodule PlausibleWeb.AuthView do
 
   def subscription_colors("active"), do: "bg-green-100 text-green-800"
   def subscription_colors("past_due"), do: "bg-yellow-100 text-yellow-800"
+  def subscription_colors("paused"), do: "bg-red-100 text-red-800"
+  def subscription_colors("deleted"), do: "bg-red-100 text-red-800"
   def subscription_colors(_), do: ""
 end
