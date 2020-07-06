@@ -1,5 +1,12 @@
 <div class="max-w-2xl mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-orange-200 px-8 pt-6 pb-8 mt-24">
-  <h2 class="text-xl font-black">Subscription Plan</h2>
+  <div class="flex justify-between">
+    <h2 class="text-xl font-black">Subscription Plan</h2>
+    <%= if @subscription do %>
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-bold leading-5 <%= subscription_colors(@subscription.status) %>">
+        <%= present_subscription_status(@subscription.status) %>
+      </span>
+    <% end %>
+  </div>
 
   <div class="mt-4 border-b border-gray-400"></div>
 
@@ -8,7 +15,12 @@
       <h4 class="font-black">Current plan</h4>
       <%= if @subscription do %>
         <div class="text-xl py-2 font-medium"><%= subscription_name(@subscription) %></div>
-        <%= link("Change plan", to: "/billing/change-plan", class: "text-sm text-indigo-500 font-medium") %>
+        <%= case @subscription.status do %>
+          <% "active" -> %>
+            <%= link("Change plan", to: "/billing/change-plan", class: "text-sm text-indigo-500 font-medium") %>
+          <% "past_due" -> %>
+            <span class="text-sm text-gray-600 font-medium" tooltip="Please update your billing details before changing plans">Change plan</span>
+        <% end %>
       <% else %>
         <div class="text-xl py-2 font-medium">Free trial</div>
         <%= link("Upgrade", to: "/billing/upgrade", class: "text-sm text-indigo-500 font-medium") %>
@@ -45,7 +57,7 @@
 
   <%= if @subscription && @subscription.cancel_url do %>
     <div class="mt-8">
-      <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "text-indigo-500 text-sm") %>
+      <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
     </div>
   <% end %>
 </div>
@@ -83,6 +95,6 @@
     <span class="button bg-gray-300 mt-6 hover:shadow-none">Delete my account</span>
     <p class="text-gray-600 text-sm mt-2">Your account cannot be deleted because you have an active subscription. If you want to delete your account, please cancel your subscription first.</p>
   <% else %>
-    <%= link "Delete my account ", to: "/me", method: :delete, class: "button bg-red-600 mt-6", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"] %>
+    <%= link("Delete my account", to: "/me", class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"]) %>
   <% end %>
 </div>
