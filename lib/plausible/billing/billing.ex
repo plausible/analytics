@@ -94,7 +94,8 @@ defmodule Plausible.Billing do
 
   def needs_to_upgrade?(user) do
     if Timex.before?(user.trial_expiry_date, Timex.today()) do
-      !active_subscription_for(user.id)
+      active = user.subscription && (user.subscription.status in ["active", "past_due"])
+      !active
     else
       false
     end
