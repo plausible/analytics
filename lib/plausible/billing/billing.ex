@@ -103,7 +103,7 @@ defmodule Plausible.Billing do
   defp subscription_is_active?(%Subscription{status: "active"}), do: true
   defp subscription_is_active?(%Subscription{status: "past_due"}), do: true
   defp subscription_is_active?(%Subscription{status: "deleted"} = subscription) do
-    !Timex.before?(subscription.next_bill_date, Timex.today())
+    subscription.next_bill_date && !Timex.before?(subscription.next_bill_date, Timex.today())
   end
   defp subscription_is_active?(_), do: false
 

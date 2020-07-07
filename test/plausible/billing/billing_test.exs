@@ -84,6 +84,13 @@ defmodule Plausible.BillingTest do
       assert Billing.needs_to_upgrade?(user)
     end
 
+    test "is false for a deleted subscription if not next_bill_date specified" do
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
+      insert(:subscription, user: user, status: "deleted", next_bill_date: nil)
+      user = Repo.preload(user, :subscription)
+
+      assert Billing.needs_to_upgrade?(user)
+    end
   end
 
   @subscription_id "subscription-123"
