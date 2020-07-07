@@ -8,7 +8,26 @@
     <% end %>
   </div>
 
-  <div class="mt-4 border-b border-gray-400"></div>
+  <div class="my-4 border-b border-gray-400"></div>
+
+  <%= if @subscription && @subscription.status == "deleted" do %>
+    <div class="p-2 rounded-lg bg-red-100 sm:p-3">
+      <div class="flex items-center justify-between flex-wrap">
+        <div class="w-0 flex-1 flex items-center">
+          <svg class="h-6 w-6 text-red-800" viewBox="0 0 24 24" stroke="currentColor" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33978 16C2.56998 17.3333 3.53223 19 5.07183 19Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p class="ml-3 font-medium text-red-800">
+          <%= if Timex.before?(@subscription.next_bill_date, Timex.today()) do %>
+            Your subscription is cancelled. Upgrade below to get access to your stats again.
+          <% else %>
+            Your subscription is cancelled but you have access to your stats until <%= Timex.format!(@subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %>. Upgrade below to make sure you don't lose access.
+          <% end %>
+          </p>
+        </div>
+      </div>
+    </div>
+  <% end %>
 
   <div class="flex flex-col items-center sm:flex-row sm:items-start justify-between mt-8">
     <div class="text-center bg-gray-100 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">

@@ -68,13 +68,22 @@ defmodule Plausible.BillingTest do
       refute Billing.needs_to_upgrade?(user)
     end
 
-    test "is true for a user with an expired trial and a non-active subscription" do
+    test "is false for a user with a cancelled subscription IF the billing cycle isn't completed yet" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
-      insert(:subscription, user: user, status: "deleted")
+      insert(:subscription, user: user, status: "deleted", next_bill_date: Timex.today())
+      user = Repo.preload(user, :subscription)
+
+      refute Billing.needs_to_upgrade?(user)
+    end
+
+    test "is true for a user with a cancelled subscription IF the billing cycle is complete" do
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
+      insert(:subscription, user: user, status: "deleted", next_bill_date: Timex.shift(Timex.today(), days: -1))
       user = Repo.preload(user, :subscription)
 
       assert Billing.needs_to_upgrade?(user)
     end
+
   end
 
   @subscription_id "subscription-123"
