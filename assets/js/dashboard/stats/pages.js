@@ -10,13 +10,12 @@ import * as api from '../api'
 export default class Pages extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {
-      loading: true
-    }
+    this.state = {loading: true}
   }
 
   componentDidMount() {
     this.fetchPages()
+    if (this.props.timer) this.props.timer.addEventListener('tick', this.fetchPages.bind(this))
   }
 
   componentDidUpdate(prevProps) {

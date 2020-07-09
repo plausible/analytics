@@ -1,6 +1,6 @@
 import {formatDay, formatMonthYYYY, nowInOffset, parseUTCDate} from './date'
 
-const PERIODS = ['day', 'month', '7d', '30d', '60d', '6mo', '12mo', 'custom']
+const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '60d', '6mo', '12mo', 'custom']
 
 export function parseQuery(querystring, site) {
   const q = new URLSearchParams(querystring)

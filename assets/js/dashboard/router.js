@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import Realtime from './realtime'
 import Dash from './index'
 import Modal from './stats/modals/modal'
 import ReferrersModal from './stats/modals/referrers'
@@ -24,6 +25,9 @@ function ScrollToTop() {
 export default function Router({site}) {
   return (
     <BrowserRouter>
+      <Route path="/:domain/realtime">
+        <Realtime site={site} />
+      </Route>
       <Route path="/:domain">
         <ScrollToTop />
         <Dash site={site} />

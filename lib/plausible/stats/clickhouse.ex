@@ -367,7 +367,17 @@ defmodule Plausible.Stats.Clickhouse do
     |> Enum.into(%{})
   end
 
-  def top_pages(site, query, limit \\ 5, include \\ []) do
+  def top_pages(site, %Query{period: "realtime"} = query, limit, _include) do
+    Clickhouse.all(
+      from s in base_session_query(site, query),
+      select: {fragment("? as name", s.exit_page), fragment("uniq(?) as count", s.user_id)},
+      group_by: s.exit_page,
+      order_by: [desc: fragment("count")],
+      limit: ^limit
+      )
+  end
+
+  def top_pages(site, query, limit, include) do
     pages =
       Clickhouse.all(
         from e in base_query(site, query),
@@ -565,6 +575,15 @@ defmodule Plausible.Stats.Clickhouse do
     Enum.sort_by(conversions, fn conversion -> -conversion["count"] end)
   end
 
+  defp base_session_query(site, %Query{period: "realtime"}) do
+    first_datetime = Timex.now(site.timezone) |> Timex.shift(minutes: -5) |> Timex.Timezone.convert("UTC")
+
+    from(s in "sessions",
+      where: s.domain == ^site.domain,
+      where: s.timestamp >= ^first_datetime
+    )
+  end
+
   defp base_session_query(site, query) do
     {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
 
@@ -572,6 +591,16 @@ defmodule Plausible.Stats.Clickhouse do
       where: s.domain == ^site.domain,
       where: s.start >= ^first_datetime and s.start < ^last_datetime
     )
+  end
+
+  defp base_query(site, %Query{period: "realtime"}) do
+    first_datetime = Timex.now(site.timezone) |> Timex.shift(minutes: -5) |> Timex.Timezone.convert("UTC")
+
+    q =
+      from(e in "events",
+        where: e.domain == ^site.domain,
+        where: e.timestamp >= ^first_datetime
+      )
   end
 
   defp base_query(site, query, events \\ ["pageview"]) do

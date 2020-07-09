@@ -13,6 +13,15 @@ defmodule Plausible.Stats.Query do
     Map.put(query, :date_range, Date.range(new_first, new_last))
   end
 
+  def from(tz, %{"period" => "realtime"} = params) do
+    date = today(tz)
+
+    %__MODULE__{
+      period: "realtime",
+      date_range: Date.range(date, date)
+    }
+  end
+
   def from(_tz, %{"period" => "day", "date" => date} = params) do
     date = Date.from_iso8601!(date)
 
