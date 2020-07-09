@@ -147,6 +147,29 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
+  describe "PUT /:website/settings/google" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "updates google auth property", %{conn: conn, user: user, site: site} do
+      insert(:google_auth, user: user, site: site)
+      put(conn, "/#{site.domain}/settings/google", %{"google_auth" => %{"property" => "some-new-property.com"}})
+
+      updated_auth = Repo.one(Plausible.Site.GoogleAuth)
+      assert updated_auth.property == "some-new-property.com"
+    end
+  end
+
+  describe "DELETE /:website/settings/google" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "deletes associated google auth", %{conn: conn, user: user, site: site} do
+      insert(:google_auth, user: user, site: site)
+      delete(conn, "/#{site.domain}/settings/google")
+
+      refute Repo.exists?(Plausible.Site.GoogleAuth)
+    end
+  end
+
   describe "GET /:website/goals/new" do
     setup [:create_user, :log_in, :create_site]
 
@@ -406,6 +429,18 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/sites/#{site.domain}/custom-domains/dns-setup")
 
       assert html_response(conn, 200) =~ "DNS for #{domain.domain}"
+    end
+  end
+
+  describe "DELETE sites/:website/custom-domains/:id" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "lists goals for the site", %{conn: conn, site: site} do
+      domain = insert(:custom_domain, site: site)
+
+      delete(conn, "/sites/#{site.domain}/custom-domains/#{domain.id}")
+
+      assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 0
     end
   end
 end

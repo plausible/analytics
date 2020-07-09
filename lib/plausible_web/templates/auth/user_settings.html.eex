@@ -1,14 +1,46 @@
 <div class="max-w-2xl mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-orange-200 px-8 pt-6 pb-8 mt-24">
-  <h2 class="text-xl font-black">Subscription Plan</h2>
+  <div class="flex justify-between">
+    <h2 class="text-xl font-black">Subscription Plan</h2>
+    <%= if @subscription do %>
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-bold leading-5 <%= subscription_colors(@subscription.status) %>">
+        <%= present_subscription_status(@subscription.status) %>
+      </span>
+    <% end %>
+  </div>
 
-  <div class="mt-4 border-b border-gray-400"></div>
+  <div class="my-4 border-b border-gray-400"></div>
+
+  <%= if @subscription && @subscription.status == "deleted" do %>
+    <div class="p-2 rounded-lg bg-red-100 sm:p-3">
+      <div class="flex items-center justify-between flex-wrap">
+        <div class="w-0 flex-1 flex items-center">
+          <svg class="h-6 w-6 text-red-800" viewBox="0 0 24 24" stroke="currentColor" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33978 16C2.56998 17.3333 3.53223 19 5.07183 19Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p class="ml-3 font-medium text-red-800">
+          <%= if @subscription.next_bill_date && Timex.compare(@subscription.next_bill_date, Timex.today()) >= 0 do %>
+            Your subscription is cancelled but you have access to your stats until <%= Timex.format!(@subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %>. Upgrade below to make sure you don't lose access.
+          <% else %>
+            Your subscription is cancelled. Upgrade below to get access to your stats again.
+          <% end %>
+          </p>
+        </div>
+      </div>
+    </div>
+  <% end %>
 
   <div class="flex flex-col items-center sm:flex-row sm:items-start justify-between mt-8">
     <div class="text-center bg-gray-100 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
       <h4 class="font-black">Current plan</h4>
       <%= if @subscription do %>
         <div class="text-xl py-2 font-medium"><%= subscription_name(@subscription) %></div>
-        <%= link("Change plan", to: "/billing/change-plan", class: "text-sm text-indigo-500 font-medium") %>
+        <%= case @subscription.status do %>
+          <% "active" -> %>
+            <%= link("Change plan", to: "/billing/change-plan", class: "text-sm text-indigo-500 font-medium") %>
+          <% "past_due" -> %>
+            <span class="text-sm text-gray-600 font-medium" tooltip="Please update your billing details before changing plans">Change plan</span>
+          <% _ -> %>
+        <% end %>
       <% else %>
         <div class="text-xl py-2 font-medium">Free trial</div>
         <%= link("Upgrade", to: "/billing/upgrade", class: "text-sm text-indigo-500 font-medium") %>
@@ -16,22 +48,22 @@
     </div>
     <div class="text-center bg-gray-100 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
       <h4 class="font-black">Next bill amount</h4>
-      <%= if @subscription do %>
+      <%= if @subscription && @subscription.status in ["active", "past_due"] do %>
         <div class="text-xl py-2 font-medium">$<%= @subscription.next_bill_amount %></div>
         <%= if @subscription.update_url do %>
           <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo-500 font-medium") %>
         <% end %>
       <% else %>
-        <div class="text-xl py-2 font-medium">$0</div>
+        <div class="text-xl py-2 font-medium">---</div>
       <% end %>
     </div>
     <div class="text-center bg-gray-100 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
       <h4 class="font-black">Next bill date</h4>
 
-      <%= if @subscription && @subscription.next_bill_date do %>
+      <%= if @subscription && @subscription.next_bill_date && @subscription.status in ["active", "past_due"] do %>
         <div class="text-xl py-2 font-medium"><%= Timex.format!(@subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %></div>
       <% else %>
-        <div class="text-xl py-2 font-medium">–</div>
+        <div class="text-xl py-2 font-medium">---</div>
       <% end %>
     </div>
   </div>
@@ -43,10 +75,15 @@
     pageviews in the last 30 days
   </div>
 
-  <%= if @subscription && @subscription.cancel_url do %>
-    <div class="mt-8">
-      <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "text-indigo-500 text-sm") %>
-    </div>
+  <%= cond do %>
+    <% @subscription && @subscription.status in ["active", "past_due", "paused"] && @subscription.cancel_url -> %>
+      <div class="mt-8">
+        <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
+      </div>
+    <% true -> %>
+      <div class="mt-8">
+        <%= link("Upgrade", to: "/billing/upgrade", class: "inline-block px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition ease-in-out duration-150") %>
+      </div>
   <% end %>
 </div>
 
@@ -83,6 +120,6 @@
     <span class="button bg-gray-300 mt-6 hover:shadow-none">Delete my account</span>
     <p class="text-gray-600 text-sm mt-2">Your account cannot be deleted because you have an active subscription. If you want to delete your account, please cancel your subscription first.</p>
   <% else %>
-    <%= link "Delete my account ", to: "/me", method: :delete, class: "button bg-red-600 mt-6", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"] %>
+    <%= link("Delete my account", to: "/me", class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"]) %>
   <% end %>
 </div>

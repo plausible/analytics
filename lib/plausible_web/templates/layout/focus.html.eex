@@ -21,7 +21,7 @@
     <%= render @view_module, @view_template, assigns %>
 
     <p class="text-center text-gray-500 text-xs py-8">
-      ©2020 Plausible Insights. All rights reserved.
+      ©2020 Plausible Analytics. All rights reserved.
     </p>
 
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>

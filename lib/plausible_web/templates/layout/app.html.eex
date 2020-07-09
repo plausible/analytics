@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content="Plausible is a lightweight and open-source web analytics tool. Your website data is 100% yours and the privacy of your visitors is respected."/>
     <link rel="icon" type="image/png" sizes="32x32" href="<%= PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_favicon.png") %>">
+    <link rel="apple-touch-icon" href="/images/icon/apple-touch-icon.png">
     <title><%= assigns[:title] || "Plausible · Simple, privacy-friendly alternative to Google Analytics" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.3/flatpickr.min.css">
@@ -91,6 +92,50 @@
     <%= if get_flash(@conn, :error) do %>
       <div id="flash" class="text-center bg-red-dark-500 text-red-100 text-sm font-bold px-4 absolute w-full transition overflow-hidden" style="top: 91px" role="alert">
         <p class="py-3 "><%= get_flash(@conn, :error) %></p>
+      </div>
+    <% end %>
+
+    <%= if @conn.assigns[:current_user] && @conn.assigns[:current_user].subscription && @conn.assigns[:current_user].subscription.status == "past_due" do %>
+      <div class="container">
+        <div class="p-2 rounded-lg bg-yellow-100 sm:p-3">
+          <div class="flex items-center justify-between flex-wrap">
+            <div class="w-0 flex-1 flex items-center">
+              <svg class="h-6 w-6 text-yellow-800" viewBox="0 0 24 24" stroke="currentColor" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33978 16C2.56998 17.3333 3.53223 19 5.07183 19Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <p class="ml-3 font-medium text-yellow-800">
+              Your latest payment failed. Please provide valid payment details to keep using Plausible.
+              </p>
+            </div>
+            <div class="order-3 mt-2 flex-shrink-0 w-full sm:order-2 sm:mt-0 sm:w-auto">
+              <div class="rounded-md shadow-sm">
+                <%= link("Update billing info", to: @conn.assigns[:current_user].subscription.update_url, class: "flex items-center justify-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-gray-600 bg-white hover:text-gray-500 focus:outline-none focus:shadow-outline transition ease-in-out duration-150") %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <%= if @conn.assigns[:current_user] && @conn.assigns[:current_user].subscription && @conn.assigns[:current_user].subscription.status == "paused" do %>
+      <div class="container">
+        <div class="p-2 rounded-lg bg-red-100 sm:p-3">
+          <div class="flex items-center justify-between flex-wrap">
+            <div class="w-0 flex-1 flex items-center">
+              <svg class="h-6 w-6 text-red-800" viewBox="0 0 24 24" stroke="currentColor" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33978 16C2.56998 17.3333 3.53223 19 5.07183 19Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <p class="ml-3 font-medium text-red-800">
+              Your subscription is paused due to failed payments. Please provide valid payment details to keep using Plausible.
+              </p>
+            </div>
+            <div class="order-3 mt-2 flex-shrink-0 w-full sm:order-2 sm:mt-0 sm:w-auto">
+              <div class="rounded-md shadow-sm">
+                <%= link("Update billing info", to: @conn.assigns[:current_user].subscription.update_url, class: "flex items-center justify-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-gray-600 bg-white hover:text-gray-500 focus:outline-none focus:shadow-outline transition ease-in-out duration-150") %>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     <% end %>
 

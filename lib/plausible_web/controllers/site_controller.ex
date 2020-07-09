@@ -128,6 +128,18 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings#google-auth")
   end
 
+  def delete_google_auth(conn, %{"website" => website}) do
+    site =
+      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      |> Repo.preload(:google_auth)
+
+    Repo.delete!(site.google_auth)
+
+    conn
+    |> put_flash(:success, "Google account unlinked succesfully")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings#google-auth")
+  end
+
   def update_settings(conn, %{"website" => website, "site" => site_params}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
     changeset = site |> Plausible.Site.changeset(site_params)
@@ -162,7 +174,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Site deleted succesfully along with all pageviews")
-    |> redirect(to: "/")
+    |> redirect(to: "/sites")
   end
 
   def make_public(conn, %{"website" => website}) do
@@ -391,6 +403,17 @@ defmodule PlausibleWeb.SiteController do
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
     end
+  end
+
+  def delete_custom_domain(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+           |> Repo.preload(:custom_domain)
+
+    Repo.delete!(site.custom_domain)
+
+    conn
+    |> put_flash(:success, "Custom domain deleted succesfully")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings")
   end
 
   defp insert_site(user_id, params) do

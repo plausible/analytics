@@ -1,5 +1,6 @@
 import css from "../css/app.css"
 import "./polyfills/closest"
+import 'abortcontroller-polyfill/dist/polyfill-patch-fetch'
 import "phoenix_html"
 
 const triggers = document.querySelectorAll('[data-dropdown-trigger]')
