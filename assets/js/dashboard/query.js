@@ -8,7 +8,7 @@ export function parseQuery(querystring, site) {
   const periodKey = 'period__' + site.domain
 
   if (PERIODS.includes(period)) {
-    if (period !== 'custom') window.localStorage[periodKey] = period
+    if (period !== 'custom' && period !== 'realtime') window.localStorage[periodKey] = period
   } else {
     if (window.localStorage[periodKey]) {
       period = window.localStorage[periodKey]
