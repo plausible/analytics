@@ -15,6 +15,7 @@ defmodule PlausibleWeb.AuthPlugTest do
   test "looks up current user if they are logged in" do
     user = insert(:user)
     subscription = insert(:subscription, user: user)
+
     conn =
       conn(:get, "/")
       |> init_test_session(%{current_user_id: user.id})
@@ -26,7 +27,10 @@ defmodule PlausibleWeb.AuthPlugTest do
 
   test "looks up the latest subscription" do
     user = insert(:user)
-    _old_subscription = insert(:subscription, user: user, inserted_at: Timex.now() |> Timex.shift(days: -1))
+
+    _old_subscription =
+      insert(:subscription, user: user, inserted_at: Timex.now() |> Timex.shift(days: -1))
+
     subscription = insert(:subscription, user: user, inserted_at: Timex.now())
 
     conn =

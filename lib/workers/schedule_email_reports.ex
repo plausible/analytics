@@ -16,26 +16,31 @@ defmodule Plausible.Workers.ScheduleEmailReports do
   end
 
   defp schedule_weekly_emails() do
-    weekly_jobs = from(
-      j in Oban.Job,
-      where: j.worker == "Plausible.Workers.SendEmailReport"
-      and fragment("(? ->> 'interval')", j.args) == "weekly"
-    )
+    weekly_jobs =
+      from(
+        j in Oban.Job,
+        where:
+          j.worker == "Plausible.Workers.SendEmailReport" and
+            fragment("(? ->> 'interval')", j.args) == "weekly"
+      )
 
     sites =
       Repo.all(
         from s in Plausible.Site,
-        join: wr in Plausible.Site.WeeklyReport,
-        on: wr.site_id == s.id,
-        left_join: job in subquery(weekly_jobs),
-        on: fragment("(? -> 'site_id')::int", job.args) == s.id and
-          job.state not in ["completed", "discarded"],
+          join: wr in Plausible.Site.WeeklyReport,
+          on: wr.site_id == s.id,
+          left_join: job in subquery(weekly_jobs),
+          on:
+            fragment("(? -> 'site_id')::int", job.args) == s.id and
+              job.state not in ["completed", "discarded"],
           where: is_nil(job),
           preload: [weekly_report: wr]
       )
 
     for site <- sites do
-      SendEmailReport.new(%{site_id: site.id, interval: "weekly"}, scheduled_at: monday_9am(site.timezone))
+      SendEmailReport.new(%{site_id: site.id, interval: "weekly"},
+        scheduled_at: monday_9am(site.timezone)
+      )
       |> Oban.insert!()
     end
 
@@ -50,11 +55,13 @@ defmodule Plausible.Workers.ScheduleEmailReports do
   end
 
   defp schedule_monthly_emails() do
-    monthly_jobs = from(
-      j in Oban.Job,
-      where: j.worker == "Plausible.Workers.SendEmailReport"
-      and fragment("(? ->> 'interval')", j.args) == "monthly"
-    )
+    monthly_jobs =
+      from(
+        j in Oban.Job,
+        where:
+          j.worker == "Plausible.Workers.SendEmailReport" and
+            fragment("(? ->> 'interval')", j.args) == "monthly"
+      )
 
     sites =
       Repo.all(
@@ -70,7 +77,9 @@ defmodule Plausible.Workers.ScheduleEmailReports do
       )
 
     for site <- sites do
-      SendEmailReport.new(%{site_id: site.id, interval: "monthly"}, scheduled_at: first_of_month_9am(site.timezone))
+      SendEmailReport.new(%{site_id: site.id, interval: "monthly"},
+        scheduled_at: first_of_month_9am(site.timezone)
+      )
       |> Oban.insert!()
     end
 

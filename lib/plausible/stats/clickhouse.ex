@@ -2,6 +2,7 @@ defmodule Plausible.Stats.Clickhouse do
   use Plausible.Repo
   alias Plausible.Stats.Query
   alias Plausible.Clickhouse
+  @no_ref "Direct Traffic (no referrers)"
 
   def compare_pageviews_and_visitors(site, query, {pageviews, visitors}) do
     query = Query.shift_back(query)
@@ -213,7 +214,7 @@ defmodule Plausible.Stats.Clickhouse do
     end)
   end
 
-  def top_referrers(site, query, limit \\ 5, include \\ []) do
+  def top_referrers(site, query, limit \\ 5, show_noref \\ false,  include \\ []) do
     referrers =
       Clickhouse.all(
         from e in base_session_query(site, query),
@@ -228,6 +229,20 @@ defmodule Plausible.Stats.Clickhouse do
       |> Enum.map(fn ref ->
         Map.update(ref, "url", nil, fn url -> url && URI.parse("http://" <> url).host end)
       end)
+
+    show_noref = if length(referrers) == 0, do: true, else: show_noref
+    referrers = if show_noref do
+      no_referrers = Clickhouse.all(
+        from e in base_session_query(site, query),
+          select:
+            {fragment("? as name", @no_ref), fragment("any(?) as url", e.referrer),
+             fragment("uniq(user_id) as count")},
+          where: e.referrer_source == ""
+      )
+      referrers ++ no_referrers
+    else
+      referrers
+    end
 
     if "bounce_rate" in include do
       bounce_rates = bounce_rates_by_referrer_source(site, query)
@@ -290,6 +305,8 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def referrer_drilldown(site, query, referrer, include \\ []) do
+    referrer  = if referrer ==  @no_ref, do: "", else: referrer
+
     referring_urls =
       Clickhouse.all(
         from e in base_query(site, query),
