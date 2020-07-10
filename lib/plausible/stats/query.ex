@@ -18,6 +18,7 @@ defmodule Plausible.Stats.Query do
 
     %__MODULE__{
       period: "realtime",
+      step_type: "minute",
       date_range: Date.range(date, date)
     }
   end

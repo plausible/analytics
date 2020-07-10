@@ -95,9 +95,8 @@ blockquote {
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translateX(-50%) translateY(-50%);
-  width: 20px;
-  height: 20px;
+  width: 10px;
+  height: 10px;
 }
 
 .pulsating-circle:before {
@@ -110,8 +109,8 @@ blockquote {
   margin-left: -100%;
   margin-top: -100%;
   border-radius: 45px;
-  background-color: #01a4e9;
-  animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  background-color: #9ae6b4;
+  animation: pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
   @apply bg-green-500;
 }
 .pulsating-circle:after {
@@ -124,7 +123,7 @@ blockquote {
   height: 100%;
   background-color: white;
   border-radius: 15px;
-  animation: pulse-dot 1.25s cubic-bezier(0.455, 0.03, 0.515, 0.955) -.4s infinite;
+  animation: pulse-dot 3s cubic-bezier(0.455, 0.03, 0.515, 0.955) -.4s infinite;
   @apply bg-green-500;
 }
 
@@ -133,7 +132,10 @@ blockquote {
   0% {
     transform: scale(.33);
   }
-  80%, 100% {
+  50% {
+    transform: scale(1);
+  }
+  40%, 100% {
     opacity: 0;
   }
 }
@@ -142,10 +144,10 @@ blockquote {
   0% {
     transform: scale(.8);
   }
-  50% {
+  25% {
     transform: scale(1);
   }
-  100% {
+  50%, 100% {
     transform: scale(.8);
   }
 }

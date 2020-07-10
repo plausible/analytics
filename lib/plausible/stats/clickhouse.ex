@@ -155,6 +155,28 @@ defmodule Plausible.Stats.Clickhouse do
     {plot, compare_plot, labels, present_index}
   end
 
+  def calculate_plot(site, %Query{period: "realtime"} = query) do
+    groups =
+      Clickhouse.all(
+        from e in "events",
+        where: e.domain == ^site.domain,
+        where: e.timestamp >= fragment("now() - INTERVAL 31 MINUTE"),
+          select:
+        {
+          fragment("dateDiff('minute', now(), ?) as relativeMinute", e.timestamp),
+          fragment("count(*) as pageviews")
+        },
+          group_by: fragment("relativeMinute"),
+          order_by: fragment("relativeMinute")
+      )
+      |> Enum.map(fn row -> {row["relativeMinute"], row["pageviews"]} end)
+      |> Enum.into(%{})
+
+    labels = Enum.into(-30..-1, [])
+    plot = Enum.map(labels, fn label -> groups[label] || 0 end)
+    {plot, nil, labels, nil}
+  end
+
   def bounce_rate(site, query) do
     {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
 

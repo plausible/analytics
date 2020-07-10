@@ -1,4 +1,5 @@
 import React from 'react';
+import FlipMove from 'react-flip-move';
 
 import FadeIn from '../fade-in'
 import Bar from './bar'
@@ -48,10 +49,12 @@ export default class Pages extends React.Component {
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Page url</span>
-            <span>Pageviews</span>
+            <span>Active Visitors</span>
           </div>
 
-          { this.state.pages.map(this.renderPage.bind(this)) }
+          <FlipMove>
+            { this.state.pages.map(this.renderPage.bind(this)) }
+          </FlipMove>
         </React.Fragment>
       )
     } else {
