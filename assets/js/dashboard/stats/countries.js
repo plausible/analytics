@@ -65,6 +65,7 @@ export default class Countries extends React.Component {
 
   drawMap() {
     var dataset = this.getDataset();
+    const label = this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
 
     this.map = new Datamap({
       element: document.getElementById('map-container'),
@@ -83,7 +84,7 @@ export default class Countries extends React.Component {
           if (!data) { return ; }
           return ['<div class="hoverinfo">',
             '<strong>', geo.properties.name, '</strong>',
-            '<br><strong>', data.numberOfThings, '</strong> Visitors',
+            '<br><strong>', data.numberOfThings, '</strong> ' + label,
             '</div>'].join('');
         }
       }

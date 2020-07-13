@@ -122,8 +122,12 @@ function dateFormatter(interval, longForm) {
       hours = hours ? hours : 12; // the hour '0' should be '12'
       return hours + ampm;
     } else if (interval === 'minute') {
-      if (longForm) return Math.abs(isoDate) + ' minutes ago'
-      return isoDate + 'm'
+      if (longForm) {
+        const minutesAgo = Math.abs(isoDate)
+        return minutesAgo === 1 ? '1 minute ago' : minutesAgo + ' minutes ago'
+      } else {
+        return isoDate + 'm'
+      }
     }
   }
 }

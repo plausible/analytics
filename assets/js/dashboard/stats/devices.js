@@ -73,13 +73,17 @@ class ScreenSizes extends React.Component {
     )
   }
 
+  label() {
+    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+  }
+
   renderList() {
     if (this.state.sizes && this.state.sizes.length > 0) {
       return (
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Screen size</span>
-            <span>Visitors</span>
+            <span>{ this.label() }</span>
           </div>
           { this.state.sizes && this.state.sizes.map(this.renderScreenSize.bind(this)) }
         </React.Fragment>
@@ -136,13 +140,17 @@ class Browsers extends React.Component {
     )
   }
 
+  label() {
+    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+  }
+
   renderList() {
     if (this.state.browsers && this.state.browsers.length > 0) {
       return (
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Browser</span>
-            <span>Visitors</span>
+            <span>{ this.label() }</span>
           </div>
           { this.state.browsers && this.state.browsers.map(this.renderBrowser.bind(this)) }
         </React.Fragment>
@@ -199,13 +207,17 @@ class OperatingSystems extends React.Component {
     )
   }
 
+  label() {
+    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+  }
+
   renderList() {
     if (this.state.operatingSystems && this.state.operatingSystems.length > 0) {
       return (
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Operating system</span>
-            <span>Visitors</span>
+            <span>{ this.label() }</span>
           </div>
           { this.state.operatingSystems && this.state.operatingSystems.map(this.renderOperatingSystem.bind(this)) }
         </React.Fragment>
