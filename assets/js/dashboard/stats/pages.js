@@ -43,13 +43,17 @@ export default class Pages extends React.Component {
     )
   }
 
+  label() {
+    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Pageviews'
+  }
+
   renderList() {
     if (this.state.pages.length > 0) {
       return (
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Page url</span>
-            <span>Active Visitors</span>
+            <span>{ this.label() }</span>
           </div>
 
           <FlipMove>

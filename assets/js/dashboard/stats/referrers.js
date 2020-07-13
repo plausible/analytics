@@ -51,13 +51,17 @@ export default class Referrers extends React.Component {
     )
   }
 
+  label() {
+    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+  }
+
   renderList() {
     if (this.state.referrers.length > 0) {
       return (
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Referrer</span>
-            <span>Active visitors</span>
+            <span>{ this.label() }</span>
           </div>
 
           <FlipMove>
