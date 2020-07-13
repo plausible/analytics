@@ -31,6 +31,15 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
                %{"name" => "Bing", "count" => 1, "bounce_rate" => 0, "url" => ""}
              ]
     end
+
+    test "returns top referrer sources in realtime report", %{conn: conn, site: site} do
+      conn = get(conn, "/api/stats/#{site.domain}/referrers?period=realtime")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "10words", "count" => 2, "url" => "10words.com"},
+               %{"name" => "Bing", "count" => 1, "url" => ""}
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/goal/referrers" do
