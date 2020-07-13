@@ -133,7 +133,7 @@ class DatePicker extends React.Component {
 
   renderDropDown() {
     return (
-      <div className="relative z-50" style={{height: '35.5px', width: '190px'}}  ref={node => this.dropDownNode = node}>
+      <div className="relative" style={{height: '35.5px', width: '190px'}}  ref={node => this.dropDownNode = node}>
         <div onClick={this.open.bind(this)} className="flex items-center justify-between rounded bg-white shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800 h-full">
           <span className="mr-2">{this.timeFrameText()}</span>
           <svg className="text-pink-500 fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
