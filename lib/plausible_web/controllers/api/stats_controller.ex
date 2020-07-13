@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Api.StatsController do
       },
       %{
         name: "Pageviews (last 30 min)",
-        count: 45,
+        count: Stats.total_pageviews(site, query),
       }
     ]
   end

@@ -191,6 +191,18 @@ defmodule Plausible.Stats.Clickhouse do
     res["bounce_rate"] || 0
   end
 
+  def total_pageviews(site, %Query{period: "realtime"} = query) do
+    [res] =
+      Clickhouse.all(
+        from e in "events",
+          select: fragment("count(*) as pageviews"),
+          where: e.timestamp >= fragment("now() - INTERVAL 30 MINUTE"),
+          where: e.domain == ^site.domain
+      )
+
+    res["pageviews"]
+  end
+
   def pageviews_and_visitors(site, query) do
     [res] =
       Clickhouse.all(
