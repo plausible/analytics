@@ -27,8 +27,8 @@ export default class Stats extends React.Component {
           <Pages site={this.props.site} query={this.props.query} timer={this.props.timer} />
         </div>
         <div className="w-full block md:flex items-start justify-between">
-          <Countries site={this.props.site} query={this.props.query} />
-          <Devices site={this.props.site} query={this.props.query} />
+          <Countries site={this.props.site} query={this.props.query} timer={this.props.timer} />
+          <Devices site={this.props.site} query={this.props.query} timer={this.props.timer} />
         </div>
       </div>
     )

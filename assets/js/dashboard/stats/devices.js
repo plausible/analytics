@@ -46,6 +46,7 @@ class ScreenSizes extends React.Component {
 
   componentDidMount() {
     this.fetchScreenSizes()
+    if (this.props.timer) this.props.timer.addEventListener('tick', this.fetchScreenSizes.bind(this))
   }
 
   componentDidUpdate(prevProps) {
@@ -108,6 +109,7 @@ class Browsers extends React.Component {
 
   componentDidMount() {
     this.fetchBrowsers()
+    if (this.props.timer) this.props.timer.addEventListener('tick', this.fetchBrowsers.bind(this))
   }
 
   componentDidUpdate(prevProps) {
@@ -170,6 +172,7 @@ class OperatingSystems extends React.Component {
 
   componentDidMount() {
     this.fetchOperatingSystems()
+    if (this.props.timer) this.props.timer.addEventListener('tick', this.fetchOperatingSystems.bind(this))
   }
 
   componentDidUpdate(prevProps) {
@@ -232,11 +235,11 @@ export default class Devices extends React.Component {
 
   renderContent() {
     if (this.state.mode === 'size') {
-      return <ScreenSizes site={this.props.site} query={this.props.query} />
+      return <ScreenSizes site={this.props.site} query={this.props.query} timer={this.props.timer} />
     } else if (this.state.mode === 'browser') {
-      return <Browsers site={this.props.site} query={this.props.query} />
+      return <Browsers site={this.props.site} query={this.props.query} timer={this.props.timer} />
     } else if (this.state.mode === 'os') {
-      return <OperatingSystems site={this.props.site} query={this.props.query} />
+      return <OperatingSystems site={this.props.site} query={this.props.query} timer={this.props.timer} />
     }
   }
 
