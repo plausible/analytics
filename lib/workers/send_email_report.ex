@@ -52,8 +52,8 @@ defmodule Plausible.Workers.SendEmailReport do
     bounce_rate = Stats.bounce_rate(site, query)
     prev_bounce_rate = Stats.bounce_rate(site, Query.shift_back(query))
     change_bounce_rate = if prev_bounce_rate > 0, do: bounce_rate - prev_bounce_rate
-    referrers = Stats.top_referrers(site, query)
-    pages = Stats.top_pages(site, query)
+    referrers = Stats.top_referrers(site, query, 5, [])
+    pages = Stats.top_pages(site, query, 5, [])
     user = Plausible.Auth.find_user_by(email: email)
     login_link = user && Plausible.Sites.is_owner?(user.id, site)
 

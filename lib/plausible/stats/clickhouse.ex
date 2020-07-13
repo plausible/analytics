@@ -155,7 +155,7 @@ defmodule Plausible.Stats.Clickhouse do
     {plot, compare_plot, labels, present_index}
   end
 
-  def calculate_plot(site, %Query{period: "realtime"} = query) do
+  def calculate_plot(site, %Query{period: "realtime"}) do
     groups =
       Clickhouse.all(
         from e in "events",
@@ -191,7 +191,7 @@ defmodule Plausible.Stats.Clickhouse do
     res["bounce_rate"] || 0
   end
 
-  def total_pageviews(site, %Query{period: "realtime"} = query) do
+  def total_pageviews(site, %Query{period: "realtime"}) do
     [res] =
       Clickhouse.all(
         from e in "events",
@@ -247,7 +247,7 @@ defmodule Plausible.Stats.Clickhouse do
     end)
   end
 
-  def top_referrers(site, query, limit \\ 5, include \\ []) do
+  def top_referrers(site, query, limit, include) do
     referrers =
       Clickhouse.all(
         from e in base_session_query(site, query),
