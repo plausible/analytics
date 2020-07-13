@@ -6,7 +6,7 @@ import { eventName } from '../query'
 import numberFormatter from '../number-formatter'
 import * as api from '../api'
 
-function mainSet(plot, present_index, ctx) {
+function mainSet(plot, present_index, ctx, label) {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
   gradient.addColorStop(0, 'rgba(101,116,205, 0.2)');
   gradient.addColorStop(1, 'rgba(101,116,205, 0)');
@@ -19,7 +19,7 @@ function mainSet(plot, present_index, ctx) {
     }
 
     return [{
-        label: 'Visitors',
+        label: label,
         data: plot,
         borderWidth: 3,
         borderColor: 'rgba(101,116,205)',
@@ -27,7 +27,7 @@ function mainSet(plot, present_index, ctx) {
         backgroundColor: gradient,
       },
       {
-        label: 'Visitors',
+        label: label,
         data: dashedPlot,
         borderWidth: 3,
         borderDash: [5, 10],
@@ -37,7 +37,7 @@ function mainSet(plot, present_index, ctx) {
     }]
   } else {
     return [{
-      label: 'Pageviews',
+      label: label,
       data: plot,
       borderWidth: 3,
       borderColor: 'rgba(101,116,205)',
@@ -89,7 +89,7 @@ function compareSet(plot, present_index, ctx) {
 }
 
 function dataSets(graphData, ctx) {
-  const dataSets = mainSet(graphData.plot, graphData.present_index, ctx)
+  const dataSets = mainSet(graphData.plot, graphData.present_index, ctx, graphData.interval === 'minute' ? 'Pageviews' : 'Visitors')
 
   if (graphData.compare_plot) {
     return dataSets.concat(compareSet(graphData.compare_plot, graphData.present_index, ctx))
