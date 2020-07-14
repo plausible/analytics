@@ -103,7 +103,7 @@ defmodule PlausibleWeb.Email do
   def weekly_report(email, site, assigns) do
     base_email()
     |> to(email)
-    |> from("Plausible Analytics <info@plausible.io>")
+    |> from(mailer_email_from())
     |> tag("weekly-report")
     |> subject("#{assigns[:name]} report for #{site.domain}")
     |> render("weekly_report.html", Keyword.put(assigns, :site, site))

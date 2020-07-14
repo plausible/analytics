@@ -29,7 +29,7 @@ class ReferrersModal extends React.Component {
   }
 
   showBounceRate() {
-    return !this.state.query.filters.goal
+    return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
   }
 
   formatBounceRate(page) {
@@ -53,6 +53,10 @@ class ReferrersModal extends React.Component {
     )
   }
 
+  label() {
+    return this.state.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+  }
+
   renderBody() {
     if (this.state.loading) {
       return (
@@ -69,7 +73,7 @@ class ReferrersModal extends React.Component {
               <thead>
                 <tr>
                   <th className="p-2 text-xs tracking-wide font-bold text-gray-500" align="left">Referrer</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Visitors</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">{this.label()}</th>
                   {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Bounce rate</th>}
                 </tr>
               </thead>

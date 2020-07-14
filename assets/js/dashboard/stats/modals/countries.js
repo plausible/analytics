@@ -10,13 +10,14 @@ import {parseQuery} from '../../query'
 class CountriesModal extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {loading: true}
+    this.state = {
+      loading: true,
+      query: parseQuery(props.location.search, props.site)
+    }
   }
 
   componentDidMount() {
-    const query = parseQuery(this.props.location.search, this.props.site)
-
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/countries`, query, {limit: 100})
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/countries`, this.state.query, {limit: 100})
       .then((res) => this.setState({loading: false, countries: res}))
   }
 
@@ -27,6 +28,10 @@ class CountriesModal extends React.Component {
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(country.percentage)}%</td>
       </tr>
     )
+  }
+
+  label() {
+    return this.state.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
   }
 
   renderBody() {
@@ -45,7 +50,7 @@ class CountriesModal extends React.Component {
               <thead>
                 <tr>
                   <th className="p-2 text-xs tracking-wide font-bold text-gray-500" align="left">Country</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Visitors</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">{this.label()}</th>
                 </tr>
               </thead>
               <tbody>

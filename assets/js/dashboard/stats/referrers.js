@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
+import FlipMove from 'react-flip-move';
 
 import FadeIn from '../fade-in'
 import Bar from './bar'
@@ -15,6 +16,7 @@ export default class Referrers extends React.Component {
 
   componentDidMount() {
     this.fetchReferrers()
+    if (this.props.timer) this.props.timer.onTick(this.fetchReferrers.bind(this))
   }
 
   componentDidUpdate(prevProps) {
@@ -49,16 +51,22 @@ export default class Referrers extends React.Component {
     )
   }
 
+  label() {
+    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+  }
+
   renderList() {
     if (this.state.referrers.length > 0) {
       return (
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Referrer</span>
-            <span>Visitors</span>
+            <span>{ this.label() }</span>
           </div>
 
-          {this.state.referrers.map(this.renderReferrer.bind(this))}
+          <FlipMove>
+            {this.state.referrers.map(this.renderReferrer.bind(this))}
+          </FlipMove>
         </React.Fragment>
       )
     } else {

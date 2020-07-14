@@ -5,7 +5,7 @@
     Allow up to 4 hours for DNS changes to propagate and for us to obtain an SSL certificate for <code><%= @site.custom_domain.domain %></code>
     </p>
     <p class="mt-4">
-    The setup is working when <a href="//<%= @site.custom_domain.domain %>/js/plausible.js" target="_blank" class="text-indigo-500"><%= @site.custom_domain.domain %>/js/plausible.js</a> loads the javascript tracker.
+    The setup is working when <a href="//<%= @site.custom_domain.domain %>/js/index.js" target="_blank" class="text-indigo-500"><%= @site.custom_domain.domain %>/js/index.js</a> loads the javascript tracker.
     </p>
     <p class="mt-4">
     To finish your setup, please replace the tracking snippet on your site with the following.

@@ -5,6 +5,15 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   describe "GET /api/stats/main-graph - plot" do
     setup [:create_user, :log_in, :create_site]
 
+    test "displays pageviews for the last 30 minutes in realtime graph", %{conn: conn, site: site} do
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=realtime")
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 30
+      assert Enum.any?(plot, fn pageviews -> pageviews > 0 end)
+    end
+
     test "displays visitors for a day", %{conn: conn, site: site} do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
