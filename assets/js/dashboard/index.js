@@ -7,7 +7,7 @@ import {parseQuery} from './query'
 import * as api from './api'
 
 
-const THIRTY_SECONDS = 5000
+const THIRTY_SECONDS = 30000
 
 class Timer extends EventTarget {
   constructor() {

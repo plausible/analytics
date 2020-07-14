@@ -8,9 +8,19 @@ import Referrers from './stats/referrers'
 import Pages from './stats/pages'
 import Countries from './stats/countries'
 import Devices from './stats/devices'
-import * as api from './api'
+import Conversions from './stats/conversions'
 
 export default class Stats extends React.Component {
+  renderConversions() {
+    if (this.props.site.hasGoals) {
+      return (
+        <div className="w-full block md:flex items-start justify-between mt-6">
+          <Conversions site={this.props.site} query={this.props.query} title="Goal Conversions (last 30 min)" />
+        </div>
+      )
+    }
+  }
+
   render() {
     return (
       <div className="mb-12">
@@ -30,6 +40,8 @@ export default class Stats extends React.Component {
           <Countries site={this.props.site} query={this.props.query} timer={this.props.timer} />
           <Devices site={this.props.site} query={this.props.query} timer={this.props.timer} />
         </div>
+
+        { this.renderConversions() }
       </div>
     )
   }

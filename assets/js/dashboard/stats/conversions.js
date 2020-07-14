@@ -28,15 +28,27 @@ export default class Conversions extends React.Component {
       .then((res) => this.setState({loading: false, goals: res}))
   }
 
-  renderGoal(goal) {
-    const query = new URLSearchParams(window.location.search)
-    query.set('goal', goal.name)
+  renderGoalText(goalName) {
+    if (this.props.query.period === 'realtime') {
+      return <span className="block px-2" style={{marginTop: '-26px'}}>{goalName}</span>
+    } else {
+      const query = new URLSearchParams(window.location.search)
+      query.set('goal', goalName)
 
+      return (
+        <Link to={{search: query.toString(), state: {scrollTop: true}}} style={{marginTop: '-26px'}} className="hover:underline block px-2">
+          { goalName }
+        </Link>
+      )
+    }
+  }
+
+  renderGoal(goal) {
     return (
       <div className="flex items-center justify-between my-2 text-sm" key={goal.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
           <Bar count={goal.count} all={this.state.goals} bg="bg-red-50" />
-          <Link to={{search: query.toString(), state: {scrollTop: true}}} style={{marginTop: '-26px'}} className="hover:underline block px-2">{ goal.name }</Link>
+          {this.renderGoalText(goal.name)}
         </div>
         <span className="font-medium">{numberFormatter(goal.count)}</span>
       </div>
@@ -53,7 +65,7 @@ export default class Conversions extends React.Component {
     } else if (this.state.goals) {
       return (
         <div className="w-full bg-white shadow-xl rounded p-4">
-          <h3 className="font-bold">Goal Conversions</h3>
+          <h3 className="font-bold">{this.props.title || "Goal Conversions"}</h3>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Goal</span>
             <span>Conversions</span>

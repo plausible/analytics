@@ -178,7 +178,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def bounce_rate(site, query) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
     [res] =
       Clickhouse.all(
@@ -275,7 +275,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp bounce_rates_by_referrer_source(site, query) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
     Clickhouse.all(
       from s in "sessions",
@@ -383,7 +383,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp bounce_rates_by_referring_url(site, query) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
     Clickhouse.all(
       from s in "sessions",
@@ -430,7 +430,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp bounce_rates_by_page_url(site, query) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
     Clickhouse.all(
       from s in "sessions",
@@ -564,6 +564,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def goal_conversions(site, query) do
     goals = Repo.all(from g in Plausible.Goal, where: g.domain == ^site.domain)
+    query = if query.period == "realtime", do: %Query{query | period: "30m"}, else: query
 
     (fetch_pageview_goals(goals, site, query) ++
        fetch_event_goals(goals, site, query))
@@ -619,7 +620,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp base_session_query(site, query) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
     from(s in "sessions",
       where: s.domain == ^site.domain,
@@ -627,18 +628,8 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
-  defp base_query(site, %Query{period: "realtime"}) do
-    first_datetime = Timex.now(site.timezone) |> Timex.shift(minutes: -5) |> Timex.Timezone.convert("UTC")
-
-    q =
-      from(e in "events",
-        where: e.domain == ^site.domain,
-        where: e.timestamp >= ^first_datetime
-      )
-  end
-
   defp base_query(site, query, events \\ ["pageview"]) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
     {goal_event, path} = event_name_for_goal(query)
 
     q =
@@ -661,7 +652,19 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  defp date_range_utc_boundaries(date_range, timezone) do
+  defp utc_boundaries(%Query{period: "30m"}, timezone) do
+    last_datetime = NaiveDateTime.utc_now() |> Timex.to_datetime(timezone) |> Timex.Timezone.convert("UTC")
+    first_datetime = last_datetime |> Timex.shift(minutes: -30)
+    {first_datetime, last_datetime}
+  end
+
+  defp utc_boundaries(%Query{period: "realtime"}, timezone) do
+    last_datetime = NaiveDateTime.utc_now() |> Timex.to_datetime(timezone) |> Timex.Timezone.convert("UTC")
+    first_datetime = last_datetime |> Timex.shift(minutes: -5)
+    {first_datetime, last_datetime}
+  end
+
+  defp utc_boundaries(%Query{date_range: date_range}, timezone) do
     {:ok, first} = NaiveDateTime.new(date_range.first, ~T[00:00:00])
 
     first_datetime =
