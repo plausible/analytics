@@ -107,14 +107,15 @@ const MONTHS = [
 
 function dateFormatter(graphData) {
   return function(isoDate) {
-    const parts = isoDate.split(/[^0-9]/);
-    const date = new Date(parts[0],parts[1]-1,parts[2],parts[3],parts[4],parts[5])
+    let date = new Date(isoDate)
 
     if (graphData.interval === 'month') {
       return MONTHS[date.getUTCMonth()];
     } else if (graphData.interval === 'date') {
       return date.getUTCDate() + ' ' + MONTHS[date.getUTCMonth()];
     } else if (graphData.interval === 'hour') {
+      const parts = isoDate.split(/[^0-9]/);
+      date = new Date(parts[0],parts[1]-1,parts[2],parts[3],parts[4],parts[5])
       var hours = date.getHours(); // Not sure why getUTCHours doesn't work here
       var ampm = hours >= 12 ? 'pm' : 'am';
       hours = hours % 12;
