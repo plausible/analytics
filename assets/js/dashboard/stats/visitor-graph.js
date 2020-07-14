@@ -113,7 +113,7 @@ function dateFormatter(interval, longForm) {
       return MONTHS[date.getUTCMonth()];
     } else if (interval === 'date') {
       return date.getUTCDate() + ' ' + MONTHS[date.getUTCMonth()];
-    } else if (graphData.interval === 'hour') {
+    } else if (interval === 'hour') {
       const parts = isoDate.split(/[^0-9]/);
       date = new Date(parts[0],parts[1]-1,parts[2],parts[3],parts[4],parts[5])
       var hours = date.getHours(); // Not sure why getUTCHours doesn't work here
