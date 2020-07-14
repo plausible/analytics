@@ -296,7 +296,7 @@ defmodule Plausible.Stats.Clickhouse do
   def visitors_from_referrer(site, query, referrer) do
     [res] =
       Clickhouse.all(
-        from e in base_query(site, query),
+        from e in base_session_query(site, query),
           select: fragment("uniq(user_id) as visitors"),
           where: e.referrer_source == ^referrer
       )
@@ -326,7 +326,7 @@ defmodule Plausible.Stats.Clickhouse do
   def referrer_drilldown(site, query, referrer, include \\ []) do
     referring_urls =
       Clickhouse.all(
-        from e in base_query(site, query),
+        from e in base_session_query(site, query),
           select: {fragment("? as name", e.referrer), fragment("uniq(user_id) as count")},
           group_by: e.referrer,
           where: e.referrer_source == ^referrer,
