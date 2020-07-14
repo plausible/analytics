@@ -46,7 +46,7 @@ class ScreenSizes extends React.Component {
 
   componentDidMount() {
     this.fetchScreenSizes()
-    if (this.props.timer) this.props.timer.addEventListener('tick', this.fetchScreenSizes.bind(this))
+    if (this.props.timer) this.props.timer.onTick(this.fetchScreenSizes.bind(this))
   }
 
   componentDidUpdate(prevProps) {
@@ -113,7 +113,7 @@ class Browsers extends React.Component {
 
   componentDidMount() {
     this.fetchBrowsers()
-    if (this.props.timer) this.props.timer.addEventListener('tick', this.fetchBrowsers.bind(this))
+    if (this.props.timer) this.props.timer.onTick(this.fetchBrowsers.bind(this))
   }
 
   componentDidUpdate(prevProps) {
@@ -180,7 +180,7 @@ class OperatingSystems extends React.Component {
 
   componentDidMount() {
     this.fetchOperatingSystems()
-    if (this.props.timer) this.props.timer.addEventListener('tick', this.fetchOperatingSystems.bind(this))
+    if (this.props.timer) this.props.timer.onTick(this.fetchOperatingSystems.bind(this))
   }
 
   componentDidUpdate(prevProps) {

@@ -16,7 +16,7 @@ export default class Countries extends React.Component {
   componentDidMount() {
     this.fetchCountries().then(this.drawMap.bind(this))
     window.addEventListener('resize', this.resizeMap);
-    if (this.props.timer) this.props.timer.addEventListener('tick', this.updateCountries.bind(this))
+    if (this.props.timer) this.props.timer.onTick(this.updateCountries.bind(this))
   }
 
   componentWillUnmount() {

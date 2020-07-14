@@ -16,7 +16,7 @@ export default class Referrers extends React.Component {
 
   componentDidMount() {
     this.fetchReferrers()
-    if (this.props.timer) this.props.timer.addEventListener('tick', this.fetchReferrers.bind(this))
+    if (this.props.timer) this.props.timer.onTick(this.fetchReferrers.bind(this))
   }
 
   componentDidUpdate(prevProps) {

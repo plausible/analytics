@@ -16,7 +16,7 @@ export default class Pages extends React.Component {
 
   componentDidMount() {
     this.fetchPages()
-    if (this.props.timer) this.props.timer.addEventListener('tick', this.fetchPages.bind(this))
+    if (this.props.timer) this.props.timer.onTick(this.fetchPages.bind(this))
   }
 
   componentDidUpdate(prevProps) {

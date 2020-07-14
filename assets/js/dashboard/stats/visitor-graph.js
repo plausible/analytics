@@ -320,7 +320,7 @@ export default class VisitorGraph extends React.Component {
 
   componentDidMount() {
     this.fetchGraphData()
-    if (this.props.timer) this.props.timer.addEventListener('tick', this.fetchGraphData.bind(this))
+    if (this.props.timer) this.props.timer.onTick(this.fetchGraphData.bind(this))
   }
 
   componentDidUpdate(prevProps) {

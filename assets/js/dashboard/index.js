@@ -9,14 +9,20 @@ import * as api from './api'
 
 const THIRTY_SECONDS = 30000
 
-class Timer extends EventTarget {
+class Timer {
   constructor() {
-    super()
+    this.listeners = []
     this.intervalId = setInterval(this.dispatchTick.bind(this), THIRTY_SECONDS)
   }
 
+  onTick(listener) {
+    this.listeners.push(listener)
+  }
+
   dispatchTick() {
-    this.dispatchEvent(new Event('tick'));
+    for (const listener of this.listeners) {
+      listener()
+    }
   }
 }
 
