@@ -83,8 +83,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       assert json_response(conn, 200) == %{
                "total_visitors" => 2,
                "referrers" => [
-                 %{"name" => "10words.com/page2", "count" => 1},
-                 %{"name" => "10words.com/page1", "count" => 1}
+                 %{"name" => "10words.com/page1", "count" => 2}
                ]
              }
     end
@@ -99,8 +98,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       assert json_response(conn, 200) == %{
                "total_visitors" => 2,
                "referrers" => [
-                 %{"name" => "10words.com/page2", "count" => 1, "bounce_rate" => nil},
-                 %{"name" => "10words.com/page1", "count" => 1, "bounce_rate" => 50.0}
+                 %{"name" => "10words.com/page1", "count" => 2, "bounce_rate" => 50.0}
                ]
              }
     end
