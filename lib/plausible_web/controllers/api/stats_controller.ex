@@ -23,6 +23,19 @@ defmodule PlausibleWeb.Api.StatsController do
     })
   end
 
+  defp fetch_top_stats(site, %Query{period: "realtime"} = query) do
+    [
+      %{
+        name: "Active visitors",
+        count: Stats.current_visitors(site),
+      },
+      %{
+        name: "Pageviews (last 30 min)",
+        count: Stats.total_pageviews(site, query),
+      }
+    ]
+  end
+
   defp fetch_top_stats(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
     prev_query = Query.shift_back(query)
     total_visitors = Stats.unique_visitors(site, %{query | filters: %{}})

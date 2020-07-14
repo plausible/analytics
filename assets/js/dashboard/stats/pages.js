@@ -1,4 +1,5 @@
 import React from 'react';
+import FlipMove from 'react-flip-move';
 
 import FadeIn from '../fade-in'
 import Bar from './bar'
@@ -10,13 +11,12 @@ import * as api from '../api'
 export default class Pages extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {
-      loading: true
-    }
+    this.state = {loading: true}
   }
 
   componentDidMount() {
     this.fetchPages()
+    if (this.props.timer) this.props.timer.onTick(this.fetchPages.bind(this))
   }
 
   componentDidUpdate(prevProps) {
@@ -43,16 +43,22 @@ export default class Pages extends React.Component {
     )
   }
 
+  label() {
+    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Pageviews'
+  }
+
   renderList() {
     if (this.state.pages.length > 0) {
       return (
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Page url</span>
-            <span>Pageviews</span>
+            <span>{ this.label() }</span>
           </div>
 
-          { this.state.pages.map(this.renderPage.bind(this)) }
+          <FlipMove>
+            { this.state.pages.map(this.renderPage.bind(this)) }
+          </FlipMove>
         </React.Fragment>
       )
     } else {

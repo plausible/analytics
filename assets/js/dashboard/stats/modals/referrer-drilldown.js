@@ -29,7 +29,7 @@ class ReferrerDrilldownModal extends React.Component {
   }
 
   showBounceRate() {
-    return !this.state.query.filters.goal
+    return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
   }
 
   formatBounceRate(ref) {

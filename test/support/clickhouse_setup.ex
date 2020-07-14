@@ -237,7 +237,54 @@ defmodule Plausible.Test.ClickhouseSetup do
         referrer: "",
         is_bounce: false,
         start: ~N[2019-01-01 03:00:00]
-      }
+      },
+      %{
+        domain: "test-site.com",
+        entry_page: "/",
+        exit_page: "/",
+        referrer_source: "Google",
+        referrer: "",
+        is_bounce: false,
+        start: ~N[2019-02-01 01:00:00],
+        timestamp: ~N[2019-02-01 01:00:00]
+      },
+      %{
+        domain: "test-site.com",
+        entry_page: "/",
+        exit_page: "/",
+        referrer_source: "Google",
+        referrer: "",
+        is_bounce: false,
+        start: ~N[2019-02-01 02:00:00],
+        timestamp: ~N[2019-02-01 02:00:00]
+      },
+      %{
+        domain: "test-site.com",
+        entry_page: "/",
+        exit_page: "/",
+        referrer: "t.co/some-link",
+        referrer_source: "Twitter",
+        start: ~N[2019-03-01 01:00:00],
+        timestamp: ~N[2019-03-01 01:00:00]
+      },
+      %{
+        domain: "test-site.com",
+        entry_page: "/",
+        exit_page: "/",
+        referrer: "t.co/some-link",
+        referrer_source: "Twitter",
+        start: ~N[2019-03-01 01:00:00],
+        timestamp: ~N[2019-03-01 01:00:00]
+      },
+      %{
+        domain: "test-site.com",
+        entry_page: "/",
+        exit_page: "/",
+        referrer: "t.co/nonexistent-link",
+        referrer_source: "Twitter",
+        start: ~N[2019-03-01 02:00:00],
+        timestamp: ~N[2019-03-01 02:00:00]
+      },
     ])
   end
 end

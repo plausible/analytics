@@ -10,14 +10,13 @@ export default class Countries extends React.Component {
   constructor(props) {
     super(props)
     this.resizeMap = this.resizeMap.bind(this)
-    this.state = {
-      loading: true
-    }
+    this.state = {loading: true}
   }
 
   componentDidMount() {
-    this.fetchCountries()
+    this.fetchCountries().then(this.drawMap.bind(this))
     window.addEventListener('resize', this.resizeMap);
+    if (this.props.timer) this.props.timer.onTick(this.updateCountries.bind(this))
   }
 
   componentWillUnmount() {
@@ -31,17 +30,7 @@ export default class Countries extends React.Component {
     }
   }
 
-  fetchCountries() {
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/countries`, this.props.query)
-      .then((res) => this.setState({loading: false, countries: res}))
-      .then(() => this.drawMap())
-  }
-
-  resizeMap() {
-    this.map && this.map.resize()
-  }
-
-  drawMap() {
+  getDataset() {
     var dataset = {};
 
     var onlyValues = this.state.countries.map(function(obj){ return obj.count });
@@ -55,6 +44,28 @@ export default class Countries extends React.Component {
     this.state.countries.forEach(function(item){
       dataset[item.name] = {numberOfThings: item.count, fillColor: paletteScale(item.count)};
     });
+
+    return dataset
+  }
+
+  updateCountries() {
+    this.fetchCountries().then(() => {
+      this.map.updateChoropleth(this.getDataset(), {reset: true})
+    })
+  }
+
+  fetchCountries() {
+    return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/countries`, this.props.query)
+      .then((res) => this.setState({loading: false, countries: res}))
+  }
+
+  resizeMap() {
+    this.map && this.map.resize()
+  }
+
+  drawMap() {
+    var dataset = this.getDataset();
+    const label = this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
 
     this.map = new Datamap({
       element: document.getElementById('map-container'),
@@ -73,7 +84,7 @@ export default class Countries extends React.Component {
           if (!data) { return ; }
           return ['<div class="hoverinfo">',
             '<strong>', geo.properties.name, '</strong>',
-            '<br><strong>', data.numberOfThings, '</strong> Visitors',
+            '<br><strong>', data.numberOfThings, '</strong> ' + label,
             '</div>'].join('');
         }
       }

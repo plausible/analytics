@@ -155,8 +155,30 @@ defmodule Plausible.Stats.Clickhouse do
     {plot, compare_plot, labels, present_index}
   end
 
+  def calculate_plot(site, %Query{period: "realtime"}) do
+    groups =
+      Clickhouse.all(
+        from e in "events",
+        where: e.domain == ^site.domain,
+        where: e.timestamp >= fragment("now() - INTERVAL 31 MINUTE"),
+          select:
+        {
+          fragment("dateDiff('minute', now(), ?) as relativeMinute", e.timestamp),
+          fragment("count(*) as pageviews")
+        },
+          group_by: fragment("relativeMinute"),
+          order_by: fragment("relativeMinute")
+      )
+      |> Enum.map(fn row -> {row["relativeMinute"], row["pageviews"]} end)
+      |> Enum.into(%{})
+
+    labels = Enum.into(-30..-1, [])
+    plot = Enum.map(labels, fn label -> groups[label] || 0 end)
+    {plot, nil, labels, nil}
+  end
+
   def bounce_rate(site, query) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
     [res] =
       Clickhouse.all(
@@ -167,6 +189,18 @@ defmodule Plausible.Stats.Clickhouse do
       )
 
     res["bounce_rate"] || 0
+  end
+
+  def total_pageviews(site, %Query{period: "realtime"}) do
+    [res] =
+      Clickhouse.all(
+        from e in "events",
+          select: fragment("count(*) as pageviews"),
+          where: e.timestamp >= fragment("now() - INTERVAL 30 MINUTE"),
+          where: e.domain == ^site.domain
+      )
+
+    res["pageviews"]
   end
 
   def pageviews_and_visitors(site, query) do
@@ -213,7 +247,7 @@ defmodule Plausible.Stats.Clickhouse do
     end)
   end
 
-  def top_referrers(site, query, limit \\ 5, include \\ []) do
+  def top_referrers(site, query, limit, include) do
     referrers =
       Clickhouse.all(
         from e in base_session_query(site, query),
@@ -241,7 +275,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp bounce_rates_by_referrer_source(site, query) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
     Clickhouse.all(
       from s in "sessions",
@@ -262,7 +296,7 @@ defmodule Plausible.Stats.Clickhouse do
   def visitors_from_referrer(site, query, referrer) do
     [res] =
       Clickhouse.all(
-        from e in base_query(site, query),
+        from e in base_session_query(site, query),
           select: fragment("uniq(user_id) as visitors"),
           where: e.referrer_source == ^referrer
       )
@@ -292,7 +326,7 @@ defmodule Plausible.Stats.Clickhouse do
   def referrer_drilldown(site, query, referrer, include \\ []) do
     referring_urls =
       Clickhouse.all(
-        from e in base_query(site, query),
+        from e in base_session_query(site, query),
           select: {fragment("? as name", e.referrer), fragment("uniq(user_id) as count")},
           group_by: e.referrer,
           where: e.referrer_source == ^referrer,
@@ -349,7 +383,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp bounce_rates_by_referring_url(site, query) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
     Clickhouse.all(
       from s in "sessions",
@@ -367,7 +401,17 @@ defmodule Plausible.Stats.Clickhouse do
     |> Enum.into(%{})
   end
 
-  def top_pages(site, query, limit \\ 5, include \\ []) do
+  def top_pages(site, %Query{period: "realtime"} = query, limit, _include) do
+    Clickhouse.all(
+      from s in base_session_query(site, query),
+      select: {fragment("? as name", s.exit_page), fragment("uniq(?) as count", s.user_id)},
+      group_by: s.exit_page,
+      order_by: [desc: fragment("count")],
+      limit: ^limit
+      )
+  end
+
+  def top_pages(site, query, limit, include) do
     pages =
       Clickhouse.all(
         from e in base_query(site, query),
@@ -386,7 +430,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp bounce_rates_by_page_url(site, query) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
     Clickhouse.all(
       from s in "sessions",
@@ -520,6 +564,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def goal_conversions(site, query) do
     goals = Repo.all(from g in Plausible.Goal, where: g.domain == ^site.domain)
+    query = if query.period == "realtime", do: %Query{query | period: "30m"}, else: query
 
     (fetch_pageview_goals(goals, site, query) ++
        fetch_event_goals(goals, site, query))
@@ -565,8 +610,17 @@ defmodule Plausible.Stats.Clickhouse do
     Enum.sort_by(conversions, fn conversion -> -conversion["count"] end)
   end
 
+  defp base_session_query(site, %Query{period: "realtime"}) do
+    first_datetime = Timex.now(site.timezone) |> Timex.shift(minutes: -5) |> Timex.Timezone.convert("UTC")
+
+    from(s in "sessions",
+      where: s.domain == ^site.domain,
+      where: s.timestamp >= ^first_datetime
+    )
+  end
+
   defp base_session_query(site, query) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
     from(s in "sessions",
       where: s.domain == ^site.domain,
@@ -575,7 +629,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp base_query(site, query, events \\ ["pageview"]) do
-    {first_datetime, last_datetime} = date_range_utc_boundaries(query.date_range, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
     {goal_event, path} = event_name_for_goal(query)
 
     q =
@@ -598,7 +652,19 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  defp date_range_utc_boundaries(date_range, timezone) do
+  defp utc_boundaries(%Query{period: "30m"}, timezone) do
+    last_datetime = NaiveDateTime.utc_now() |> Timex.to_datetime(timezone) |> Timex.Timezone.convert("UTC")
+    first_datetime = last_datetime |> Timex.shift(minutes: -30)
+    {first_datetime, last_datetime}
+  end
+
+  defp utc_boundaries(%Query{period: "realtime"}, timezone) do
+    last_datetime = NaiveDateTime.utc_now() |> Timex.to_datetime(timezone) |> Timex.Timezone.convert("UTC")
+    first_datetime = last_datetime |> Timex.shift(minutes: -5)
+    {first_datetime, last_datetime}
+  end
+
+  defp utc_boundaries(%Query{date_range: date_range}, timezone) do
     {:ok, first} = NaiveDateTime.new(date_range.first, ~T[00:00:00])
 
     first_datetime =

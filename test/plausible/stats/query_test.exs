@@ -20,6 +20,14 @@ defmodule Plausible.Stats.QueryTest do
     assert q.step_type == "hour"
   end
 
+  test "parses realtime format" do
+    q = Query.from(@tz, %{"period" => "realtime"})
+
+    assert q.date_range.first == Timex.today()
+    assert q.date_range.last == Timex.today()
+    assert q.period == "realtime"
+  end
+
   test "parses month format" do
     q = Query.from(@tz, %{"period" => "month", "date" => "2019-01-01"})
 

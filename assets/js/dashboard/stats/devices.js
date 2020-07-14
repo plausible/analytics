@@ -46,6 +46,7 @@ class ScreenSizes extends React.Component {
 
   componentDidMount() {
     this.fetchScreenSizes()
+    if (this.props.timer) this.props.timer.onTick(this.fetchScreenSizes.bind(this))
   }
 
   componentDidUpdate(prevProps) {
@@ -72,13 +73,17 @@ class ScreenSizes extends React.Component {
     )
   }
 
+  label() {
+    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+  }
+
   renderList() {
     if (this.state.sizes && this.state.sizes.length > 0) {
       return (
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Screen size</span>
-            <span>Visitors</span>
+            <span>{ this.label() }</span>
           </div>
           { this.state.sizes && this.state.sizes.map(this.renderScreenSize.bind(this)) }
         </React.Fragment>
@@ -108,6 +113,7 @@ class Browsers extends React.Component {
 
   componentDidMount() {
     this.fetchBrowsers()
+    if (this.props.timer) this.props.timer.onTick(this.fetchBrowsers.bind(this))
   }
 
   componentDidUpdate(prevProps) {
@@ -134,13 +140,17 @@ class Browsers extends React.Component {
     )
   }
 
+  label() {
+    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+  }
+
   renderList() {
     if (this.state.browsers && this.state.browsers.length > 0) {
       return (
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Browser</span>
-            <span>Visitors</span>
+            <span>{ this.label() }</span>
           </div>
           { this.state.browsers && this.state.browsers.map(this.renderBrowser.bind(this)) }
         </React.Fragment>
@@ -170,6 +180,7 @@ class OperatingSystems extends React.Component {
 
   componentDidMount() {
     this.fetchOperatingSystems()
+    if (this.props.timer) this.props.timer.onTick(this.fetchOperatingSystems.bind(this))
   }
 
   componentDidUpdate(prevProps) {
@@ -196,13 +207,17 @@ class OperatingSystems extends React.Component {
     )
   }
 
+  label() {
+    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+  }
+
   renderList() {
     if (this.state.operatingSystems && this.state.operatingSystems.length > 0) {
       return (
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Operating system</span>
-            <span>Visitors</span>
+            <span>{ this.label() }</span>
           </div>
           { this.state.operatingSystems && this.state.operatingSystems.map(this.renderOperatingSystem.bind(this)) }
         </React.Fragment>
@@ -232,11 +247,11 @@ export default class Devices extends React.Component {
 
   renderContent() {
     if (this.state.mode === 'size') {
-      return <ScreenSizes site={this.props.site} query={this.props.query} />
+      return <ScreenSizes site={this.props.site} query={this.props.query} timer={this.props.timer} />
     } else if (this.state.mode === 'browser') {
-      return <Browsers site={this.props.site} query={this.props.query} />
+      return <Browsers site={this.props.site} query={this.props.query} timer={this.props.timer} />
     } else if (this.state.mode === 'os') {
-      return <OperatingSystems site={this.props.site} query={this.props.query} />
+      return <OperatingSystems site={this.props.site} query={this.props.query} timer={this.props.timer} />
     }
   }
 

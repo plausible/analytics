@@ -87,6 +87,8 @@ class DatePicker extends React.Component {
       return 'Last 6 months'
     } else if (query.period === '12mo') {
       return 'Last 12 months'
+    } else if (query.period === 'realtime') {
+      return 'Realtime'
     } else if (query.period === 'custom') {
       return `${formatDayShort(query.from)} - ${formatDayShort(query.to)}`
     }
@@ -171,6 +173,7 @@ class DatePicker extends React.Component {
           <div className="rounded bg-white shadow-xs font-medium text-gray-800">
             <div className="py-1">
               { this.renderLink('day', 'Today') }
+              { this.renderLink('realtime', 'Realtime') }
             </div>
             <div className="border-t border-gray-200"></div>
             <div className="py-1">

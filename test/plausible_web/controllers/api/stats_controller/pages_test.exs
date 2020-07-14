@@ -30,5 +30,13 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                %{"bounce_rate" => nil, "count" => 1, "name" => "/irrelevant"}
              ]
     end
+
+    test "returns top pages in realtime report", %{conn: conn, site: site} do
+      conn = get(conn, "/api/stats/#{site.domain}/pages?period=realtime")
+
+      assert json_response(conn, 200) == [
+               %{"count" => 3, "name" => "/"}
+             ]
+    end
   end
 end
