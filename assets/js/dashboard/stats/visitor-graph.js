@@ -107,7 +107,8 @@ const MONTHS = [
 
 function dateFormatter(graphData) {
   return function(isoDate) {
-    const date = new Date(isoDate)
+    const parts = isoDate.split(/[^0-9]/);
+    const date = new Date(parts[0],parts[1]-1,parts[2],parts[3],parts[4],parts[5])
 
     if (graphData.interval === 'month') {
       return MONTHS[date.getUTCMonth()];
