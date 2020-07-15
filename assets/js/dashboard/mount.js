@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import 'url-search-params-polyfill';
 
 import Router from './router'
+import ErrorBoundary from './error-boundary'
 
 const container = document.getElementById('stats-react-container')
 
@@ -13,5 +14,11 @@ if (container) {
     hasGoals: container.dataset.hasGoals === 'true'
   }
 
-  ReactDOM.render(<Router site={site} />, container);
+  const app = (
+    <ErrorBoundary>
+      <Router site={site} />
+    </ErrorBoundary>
+  )
+
+  ReactDOM.render(app, container);
 }
