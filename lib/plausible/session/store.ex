@@ -6,7 +6,6 @@ defmodule Plausible.Session.Store do
   require Logger
 
   @session_length_seconds Application.get_env(:plausible, :session_length_minutes) * 60
-  # Remember session for longer in case of upstream latency
   @forget_session_after @session_length_seconds * 2
   @garbage_collect_interval_milliseconds 60 * 1000
 
@@ -43,12 +42,12 @@ defmodule Plausible.Session.Store do
     {:ok, %{timer: timer, sessions: sessions}}
   end
 
-  def on_event(event) do
-    GenServer.call(__MODULE__, {:on_event, event})
+  def on_event(event, prev_user_id) do
+    GenServer.call(__MODULE__, {:on_event, event, prev_user_id})
   end
 
-  def handle_call({:on_event, event}, _from, %{sessions: sessions} = state) do
-    found_session = sessions[event.user_id]
+  def handle_call({:on_event, event, prev_user_id}, _from, %{sessions: sessions} = state) do
+    found_session = sessions[event.user_id] || (prev_user_id && sessions[prev_user_id])
     active = is_active?(found_session, event)
 
     updated_sessions =
@@ -80,7 +79,8 @@ defmodule Plausible.Session.Store do
   defp update_session(session, event) do
     %{
       session
-      | timestamp: event.timestamp,
+      | user_id: event.user_id,
+        timestamp: event.timestamp,
         exit_page: event.pathname,
         is_bounce: false,
         duration: Timex.diff(event.timestamp, session.start, :second),
