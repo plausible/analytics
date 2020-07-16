@@ -4,7 +4,7 @@ import { Link, withRouter } from 'react-router-dom'
 import FadeIn from '../../fade-in'
 import Modal from './modal'
 import * as api from '../../api'
-import numberFormatter from '../../number-formatter'
+import numberFormatter, {durationFormatter} from '../../number-formatter'
 import {parseQuery} from '../../query'
 
 class ReferrersModal extends React.Component {
@@ -40,7 +40,16 @@ class ReferrersModal extends React.Component {
     }
   }
 
+  formatDuration(referrer) {
+    if (typeof(referrer.visit_duration) === 'number') {
+      return durationFormatter(referrer.visit_duration)
+    } else {
+      return '-'
+    }
+  }
+
   renderReferrer(referrer) {
+    this.formatDuration({visit_duration: 12233})
     return (
       <tr className="text-sm" key={referrer.name}>
         <td className="p-2">
@@ -49,6 +58,7 @@ class ReferrersModal extends React.Component {
         </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.count)}</td>
         {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td> }
+        {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatDuration(referrer)}</td> }
       </tr>
     )
   }
@@ -75,6 +85,7 @@ class ReferrersModal extends React.Component {
                   <th className="p-2 text-xs tracking-wide font-bold text-gray-500" align="left">Referrer</th>
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">{this.label()}</th>
                   {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Bounce rate</th>}
+                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Visit duration</th>}
                 </tr>
               </thead>
               <tbody>
