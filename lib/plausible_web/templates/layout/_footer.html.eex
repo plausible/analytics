@@ -1,18 +1,117 @@
-<footer class="w-full text-center text-gray-500 p-8 bottom-0" style="background: #191e38;">
-  <div class="container flex items-center justify-between flex-col md:flex-row py-4">
-    <div class="text-center md:text-left">
-      <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo_inverted.png"), style: "height: 2.5rem;", alt: "Plausible logo") %>
-      <p class="mt-2">Made by <a href="https://twitter.com/ukutaht" class="light-text underline">@ukutaht</a> in London, UK</p>
+<div class="bg-gray-800">
+  <div class="container py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
+    <div class="xl:grid xl:grid-cols-3 xl:gap-8">
+      <div class="my-8 xl:my-0">
+        <h4 class="leading-5 font-semibold tracking-wider text-gray-300">
+          <img src="/images/icon/plausible_logo_sm.png" class="inline-block w-6 mr-1" />
+          Plausible Analytics
+        </h4>
+        <p class="mt-4 text-gray-400 text-base leading-6">
+        Made and hosted in the EU <span class="text-lg">🇪🇺</span><br />
+        100% self-funded and independent <br />
+        Built by <a class="text-gray-300 hover:text-white" href="https://twitter.com/ukutaht">@ukutaht</a> and <a class="text-gray-300 hover:text-white" href="https://twitter.com/markosaric">@markosaric</a>
+        </p>
+      </div>
+      <div class="grid grid-cols-2 gap-8 xl:col-span-2">
+        <div class="md:grid md:grid-cols-2 md:gap-8">
+          <div>
+            <h4 class="text-sm leading-5 font-semibold tracking-wider text-gray-400 uppercase">
+              Why Plausible?
+            </h4>
+            <ul class="mt-4">
+              <li>
+                <a href="/simple-web-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                  Simple Metrics
+                </a>
+              </li>
+              <li class="mt-4">
+                <a href="/lightweight-web-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                  Lightweight script
+                </a>
+              </li>
+              <li class="mt-4">
+                <a href="/data-policy" class="text-base leading-6 text-gray-300 hover:text-white">
+                  GDPR Compliant
+                </a>
+              </li>
+              <li class="mt-4">
+                <a href="/open-source-website-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                  Open source
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div class="mt-12 md:mt-0">
+            <h4 class="text-sm leading-5 font-semibold tracking-wider text-gray-400 uppercase">
+              Comparisons
+            </h4>
+            <ul class="mt-4">
+              <li>
+                <a href="/vs-google-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                  vs Google Analytics
+                </a>
+              </li>
+              <li class="mt-4">
+                <a href="/vs-matomo" class="text-base leading-6 text-gray-300 hover:text-white">
+                  vs Matomo
+                </a>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+        <div class="md:grid md:grid-cols-2 md:gap-8">
+          <div class="mt-12 md:mt-0">
+            <h4 class="text-sm leading-5 font-semibold tracking-wider text-gray-400 uppercase">
+              Community
+            </h4>
+            <ul class="mt-4">
+              <li>
+                <a target="_blank" href="https://docs.plausible.io/" class="text-base leading-6 text-gray-300 hover:text-white">
+                  Documentation
+                </a>
+              </li>
+              <li class="mt-4">
+                <a target="_blank" href="https://github.com/plausible/analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                  Github Repo
+                </a>
+              </li>
+              <li class="mt-4">
+                <a target="_blank" href="https://twitter.com/plausiblehq" class="text-base leading-6 text-gray-300 hover:text-white">
+                  Twitter
+                </a>
+              </li>
+              <li class="mt-4">
+                <a target="_blank" href="https://fosstodon.org/@plausible" class="text-base leading-6 text-gray-300 hover:text-white">
+                  Fosstodon
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-sm leading-5 font-semibold tracking-wider text-gray-400 uppercase">
+              Company
+            </h4>
+            <ul class="mt-4">
+              <li class="mt-4">
+                <a href="/blog" class="text-base leading-6 text-gray-300 hover:text-white">
+                  Blog
+                </a>
+              </li>
+              <li class="mt-4">
+                <a href="/contact" class="text-base leading-6 text-gray-300 hover:text-white">
+                  Contact
+                </a>
+              </li>
+              <li class="mt-4">
+                <a href="/privacy" class="text-base leading-6 text-gray-300 hover:text-white">
+                  Privacy
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
-    <ul class="text-center md:text-left my-4 md:m-0">
-      <li>Read our <a href="https://plausible.io/blog" class="light-text font-medium mr-4 underline">Blog</a></li>
-      <li>Study the <%= link("Documentation", to: "https://docs.plausible.io/",target: "_blank",class: "light-text font-medium mr-4 underline") %></li>
-      <li>Check out the <%= link("Live Demo", to: "https://plausible.io/plausible.io",class: "light-text font-medium underline") %></li>
-    </ul>
-    <ul class="text-center md:text-left my-4 md:m-0">
-       <li>Give us <a href="/feedback" target="_blank" class="light-text font-medium mr-4 underline">Feedback</a></li>
-       <li>We have a <a href="/roadmap" target="_blank" class="light-text font-medium mr-4 underline">Public roadmap</a></li>
-      <li>Contact us via <a href="https://plausible.io/contact" class="light-text font-medium mr-4 underline">form</a></li>
-    </ul>
   </div>
-</footer>
+</div>
