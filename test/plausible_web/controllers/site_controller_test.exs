@@ -137,7 +137,8 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "DELETE /:website" do
     setup [:create_user, :log_in, :create_site]
 
-    test "deletes the site", %{conn: conn, user: user, site: site} do
+    test "deletes the site", %{conn: conn, user: user} do
+      site = insert(:site, members: [user])
       insert(:google_auth, user: user, site: site)
       insert(:custom_domain, site: site)
 

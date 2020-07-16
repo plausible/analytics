@@ -234,10 +234,15 @@
 <% end %>
 
 <div class="max-w-xl mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-red-600 px-8 pt-6 pb-8 mt-16 mb-24">
-  <h2 class="text-xl font-black">Delete site data</h2>
+  <h2 class="text-xl font-black">Danger zone</h2>
 
   <div class="my-4 border-b border-gray-300"></div>
 
-  <p class="text-lg">Deleting the site removes all stats you've collected</p>
-  <%= link "Delete #{@site.domain}", to: "/#{URI.encode_www_form(@site.domain)}", method: :delete, class: "button bg-red-600 mt-6", data: [confirm: "Deleting the site data cannot be reversed. Are you sure?"] %>
+  <p class="text-gray-700">Resetting the stats removes all pageviews but keeps the site configuration</p>
+  <%= link("Reset #{@site.domain} stats", to: "/#{URI.encode_www_form(@site.domain)}/stats", method: :delete, class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", data: [confirm: "Resetting the stats cannot be reversed. Are you sure?"]) %>
+
+  <div class="mt-6">
+    <p class="text-gray-700">Deleting the site removes all stats along with the site configuration</p>
+    <%= link "Delete #{@site.domain}", to: "/#{URI.encode_www_form(@site.domain)}", method: :delete, class: "inline-block mt-4 px-4 py-2 border border-transparent font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-50 focus:outline-none focus:border-red-300 focus:shadow-outline-red active:bg-red-200 transition ease-in-out duration-150 sm:text-sm sm:leading-5", data: [confirm: "Deleting the site data cannot be reversed. Are you sure?"] %>
+  </div>
 </div>

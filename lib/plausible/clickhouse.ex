@@ -10,6 +10,14 @@ defmodule Plausible.Clickhouse do
     end)
   end
 
+  def delete_stats!(site) do
+    delete_events = "ALTER TABLE events DELETE WHERE domain = ?"
+    delete_sessions = "ALTER TABLE sessions DELETE WHERE domain = ?"
+
+    Clickhousex.query!(:clickhouse, delete_events, [site.domain], log: {Plausible.Clickhouse, :log, []})
+    Clickhousex.query!(:clickhouse, delete_sessions, [site.domain], log: {Plausible.Clickhouse, :log, []})
+  end
+
   def insert_events(events) do
     insert =
       """
