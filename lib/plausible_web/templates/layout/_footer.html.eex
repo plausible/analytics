@@ -94,6 +94,11 @@
             </h4>
             <ul class="mt-4">
               <li class="mt-4">
+                <a href="/about" class="text-base leading-6 text-gray-300 hover:text-white">
+                  About
+                </a>
+              </li>
+              <li class="mt-4">
                 <a href="/blog" class="text-base leading-6 text-gray-300 hover:text-white">
                   Blog
                 </a>
