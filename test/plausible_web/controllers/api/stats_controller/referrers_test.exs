@@ -89,17 +89,17 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
              }
     end
 
-    test "calculates bounce rate for referrer urls", %{conn: conn, site: site} do
+    test "calculates bounce rate and visit duration for referrer urls", %{conn: conn, site: site} do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&include=bounce_rate"
+          "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&include=bounce_rate,visit_duration"
         )
 
       assert json_response(conn, 200) == %{
                "total_visitors" => 2,
                "referrers" => [
-                 %{"name" => "10words.com/page1", "count" => 2, "bounce_rate" => 50.0}
+                 %{"name" => "10words.com/page1", "count" => 2, "bounce_rate" => 50.0, "visit_duration" => 50.0}
                ]
              }
     end
