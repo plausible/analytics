@@ -258,7 +258,7 @@ class LineGraph extends React.Component {
   }
 
   renderTopStatNumber(stat) {
-    if (stat.name === 'Visit Duration') {
+    if (stat.name === 'Visit duration') {
       return durationFormatter(stat.count)
     } else if (typeof(stat.count) == 'number') {
       return numberFormatter(stat.count)
