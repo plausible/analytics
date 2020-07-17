@@ -13,8 +13,6 @@
     <%= render("_tracking.html", assigns) %>
   </head>
   <body class="flex flex-col h-full bg-gray-50">
-    <%= render("_svg_icons.html") %>
-
     <nav class="relative py-8 z-10">
       <div class="container">
         <nav class="relative flex items-center justify-between sm:h-10 md:justify-center">

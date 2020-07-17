@@ -37,7 +37,7 @@
       <div class="relative text-sm mt-4">
         <input type="text" id="public-link" value="<%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%>" class="transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 pr-16 text-gray-700 appearance-none focus:outline-none" />
         <a onclick="var input = document.getElementById('public-link'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="absolute right-0 text-indigo-700 font-bold p-2">
-          <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
+          <svg class="feather-sm" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
         </a>
       </div>
     <%= button("Make stats private", to: "/sites/#{URI.encode_www_form(@site.domain)}/make-private", method: "POST", class: "button mt-8") %>
@@ -63,10 +63,10 @@
       <div class="flex relative w-full mt-2 text-sm">
         <input type="text" id="<%= link.slug %>" readonly="readonly" value="<%= shared_link_dest(link) %>" class="transition bg-gray-100 appearance-none border border-transparent rounded rounded-r-none w-full p-2 text-gray-700 appearance-none focus:outline-none focus:border-gray-300" />
         <button onclick="var input = document.getElementById('<%= link.slug %>'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="py-2 px-4 bg-gray-100 text-indigo-800 rounded-none border-r border-gray-300">
-          <svg class="feather-sm"><use xlink:href="#feather-copy" /></svg>
+          <svg class="feather-sm" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
         </button>
         <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/shared-links/#{link.slug}", method: :delete, class: "py-2 px-4 bg-gray-100 text-red-600 rounded-l-none", data: [confirm: "Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."]) do %>
-          <svg class="feather-sm"><use xlink:href="#feather-trash-2" /></svg>
+          <svg class="feather feather-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
         <% end %>
       </div>
     <% end %>
@@ -161,7 +161,9 @@
       <h4 class="font-bold my-2">Weekly report recipients</h4>
       <%= for recipient <- @weekly_report.recipients do %>
         <div class="p-2 flex justify-between bg-gray-100 rounded my-2 max-w-md">
-          <span><svg class="feather mr-1"><use xlink:href="#feather-mail" /></svg><%= recipient %></span>
+          <span>
+            <svg class="feather mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg><%= recipient %>
+          </span>
           <%= button("❌", to: "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/recipients/#{recipient}", method: :delete) %>
         </div>
       <% end %>
@@ -191,7 +193,9 @@
       <h4 class="font-bold my-2">Monthly report recipients</h4>
       <%= for recipient <- @monthly_report.recipients do %>
         <div class="p-2 flex justify-between bg-gray-100 rounded my-2 max-w-md">
-          <span><svg class="feather mr-1"><use xlink:href="#feather-mail" /></svg><%= recipient %></span>
+          <span>
+            <svg class="feather mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg><%= recipient %>
+          </span>
           <%= button("❌", to: "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/recipients/#{recipient}", method: :delete) %>
         </div>
       <% end %>
@@ -227,7 +231,7 @@
     <div class="relative">
       <%= textarea f, :domain, id: "snippet_code", class: "transition overflow-hidden bg-gray-100 appearance-none border border-transparent rounded w-full p-2 pr-6 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300 text-xs mt-2 resize-none", value: snippet(@site), rows: 2 %>
       <a onclick="var textarea = document.getElementById('snippet_code'); textarea.focus(); textarea.select(); document.execCommand('copy');" href="javascript:void(0)" class="no-underline text-indigo-500 text-sm hover:underline">
-        <svg class="absolute text-indigo-500" style="top: 24px; right: 12px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-copy"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <svg class="absolute text-indigo-500" style="top: 24px; right: 12px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       </a>
     </div>
   </div>

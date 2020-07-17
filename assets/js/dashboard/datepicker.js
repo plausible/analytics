@@ -98,14 +98,10 @@ class DatePicker extends React.Component {
     return (
       <div className="flex rounded shadow bg-white mr-4 cursor-pointer">
         <Link to={{search: this.queryWithPeriod(period, {date: prevDate})}} className="flex items-center px-2 border-r border-gray-300">
-          <svg className="fill-current h-4 w-4">
-            <use xlinkHref="#feather-chevron-left" />
-          </svg>
+          <svg className="feather h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
         </Link>
         <Link to={{search: this.queryWithPeriod(period, {date: nextDate})}} className="flex items-center px-2">
-          <svg className="fill-current h-4 w-4">
-            <use xlinkHref="#feather-chevron-right" />
-          </svg>
+          <svg class="feather h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </Link>
       </div>
     )
@@ -136,9 +132,9 @@ class DatePicker extends React.Component {
       <div className="relative" style={{height: '35.5px', width: '190px'}}  ref={node => this.dropDownNode = node}>
         <div onClick={this.open.bind(this)} className="flex items-center justify-between rounded bg-white shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800 h-full">
           <span className="mr-2">{this.timeFrameText()}</span>
-          <svg className="text-pink-500 fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-            <use xlinkHref="#feather-chevron-down" />
-          </svg>
+            <svg class="text-pink-500 h-4 w-4" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
         </div>
 
         {this.renderDropDownContent()}
