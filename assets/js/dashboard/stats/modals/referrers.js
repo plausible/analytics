@@ -21,14 +21,14 @@ class ReferrersModal extends React.Component {
       api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers`, this.state.query, {limit: 100})
         .then((res) => this.setState({loading: false, referrers: res}))
     } else {
-      const include = this.showBounceRate() ? 'bounce_rate' : null
+      const include = this.showExtra() ? 'bounce_rate,visit_duration' : null
 
       api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers`, this.state.query, {limit: 100, include: include})
         .then((res) => this.setState({loading: false, referrers: res}))
     }
   }
 
-  showBounceRate() {
+  showExtra() {
     return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
   }
 
@@ -49,7 +49,6 @@ class ReferrersModal extends React.Component {
   }
 
   renderReferrer(referrer) {
-    this.formatDuration({visit_duration: 12233})
     return (
       <tr className="text-sm" key={referrer.name}>
         <td className="p-2">
@@ -57,8 +56,8 @@ class ReferrersModal extends React.Component {
           <Link className="hover:underline truncate" style={{maxWidth: '80%'}} to={`/${encodeURIComponent(this.props.site.domain)}/referrers/${referrer.name}${window.location.search}`}>{ referrer.name }</Link>
         </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.count)}</td>
-        {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td> }
-        {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatDuration(referrer)}</td> }
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td> }
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatDuration(referrer)}</td> }
       </tr>
     )
   }
@@ -84,8 +83,8 @@ class ReferrersModal extends React.Component {
                 <tr>
                   <th className="p-2 text-xs tracking-wide font-bold text-gray-500" align="left">Referrer</th>
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">{this.label()}</th>
-                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Bounce rate</th>}
-                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Visit duration</th>}
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Bounce rate</th>}
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Visit duration</th>}
                 </tr>
               </thead>
               <tbody>

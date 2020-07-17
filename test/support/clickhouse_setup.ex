@@ -217,6 +217,7 @@ defmodule Plausible.Test.ClickhouseSetup do
         referrer: "10words.com/page1",
         session_id: @conversion_1_session_id,
         is_bounce: true,
+        duration: 100,
         start: ~N[2019-01-01 02:00:00]
       },
       %{
@@ -227,6 +228,7 @@ defmodule Plausible.Test.ClickhouseSetup do
         referrer: "10words.com/page1",
         session_id: @conversion_2_session_id,
         is_bounce: false,
+        duration: 0,
         start: ~N[2019-01-01 02:00:00]
       },
       %{
@@ -236,6 +238,7 @@ defmodule Plausible.Test.ClickhouseSetup do
         referrer_source: "Bing",
         referrer: "",
         is_bounce: false,
+        duration: 100,
         start: ~N[2019-01-01 03:00:00]
       },
       %{

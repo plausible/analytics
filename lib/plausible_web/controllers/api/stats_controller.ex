@@ -94,7 +94,7 @@ defmodule PlausibleWeb.Api.StatsController do
         change: percent_change(prev_pageviews, pageviews)
       },
       %{name: "Bounce rate", percentage: bounce_rate, change: change_bounce_rate},
-      %{name: "Visit Duration", count: visit_duration, change: percent_change(prev_visit_duration, visit_duration)}
+      %{name: "Visit duration", count: visit_duration, change: percent_change(prev_visit_duration, visit_duration)}
     ]
   end
 
