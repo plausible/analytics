@@ -159,13 +159,12 @@ defmodule Plausible.Stats.Clickhouse do
     groups =
       Clickhouse.all(
         from e in "events",
-        where: e.domain == ^site.domain,
-        where: e.timestamp >= fragment("now() - INTERVAL 31 MINUTE"),
-          select:
-        {
-          fragment("dateDiff('minute', now(), ?) as relativeMinute", e.timestamp),
-          fragment("count(*) as pageviews")
-        },
+          where: e.domain == ^site.domain,
+          where: e.timestamp >= fragment("now() - INTERVAL 31 MINUTE"),
+          select: {
+            fragment("dateDiff('minute', now(), ?) as relativeMinute", e.timestamp),
+            fragment("count(*) as pageviews")
+          },
           group_by: fragment("relativeMinute"),
           order_by: fragment("relativeMinute")
       )
@@ -189,6 +188,16 @@ defmodule Plausible.Stats.Clickhouse do
       )
 
     res["bounce_rate"] || 0
+  end
+
+  def visit_duration(site, query) do
+    [res] =
+      Clickhouse.all(
+        from s in base_session_query(site, query),
+          select: {fragment("round(avg(duration * sign)) as visit_duration")}
+      )
+
+    res["visit_duration"] || 0
   end
 
   def total_pageviews(site, %Query{period: "realtime"}) do
@@ -248,49 +257,37 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def top_referrers(site, query, limit, include) do
-    referrers =
-      Clickhouse.all(
-        from e in base_session_query(site, query),
-          select:
-            {fragment("? as name", e.referrer_source), fragment("any(?) as url", e.referrer),
-             fragment("uniq(user_id) as count")},
-          group_by: e.referrer_source,
-          where: e.referrer_source != "",
-          order_by: [desc: fragment("count")],
-          limit: ^limit
+    q =
+      from(e in base_session_query(site, query),
+        group_by: e.referrer_source,
+        where: e.referrer_source != "",
+        order_by: [desc: fragment("count")],
+        limit: ^limit
       )
-      |> Enum.map(fn ref ->
-        Map.update(ref, "url", nil, fn url -> url && URI.parse("http://" <> url).host end)
-      end)
 
-    if "bounce_rate" in include do
-      bounce_rates = bounce_rates_by_referrer_source(site, query)
+    q =
+      if "bounce_rate" in include do
+        from(
+          s in q,
+          select:
+            {fragment("? as name", s.referrer_source), fragment("any(?) as url", s.referrer),
+             fragment("uniq(user_id) as count"),
+             fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate"),
+             fragment("round(avg(duration * sign)) as visit_duration")}
+        )
+      else
+        from(
+          s in q,
+          select:
+            {fragment("? as name", s.referrer_source), fragment("any(?) as url", s.referrer),
+             fragment("uniq(user_id) as count")}
+        )
+      end
 
-      Enum.map(referrers, fn referrer ->
-        Map.put(referrer, "bounce_rate", bounce_rates[referrer["name"]])
-      end)
-    else
-      referrers
-    end
-  end
-
-  defp bounce_rates_by_referrer_source(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
-
-    Clickhouse.all(
-      from s in "sessions",
-        select:
-          {s.referrer_source, fragment("count(*) as total"),
-           fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate")},
-        where: s.domain == ^site.domain,
-        where: s.start >= ^first_datetime and s.start < ^last_datetime,
-        where: s.referrer_source != "",
-        group_by: s.referrer_source,
-        order_by: [desc: fragment("total")],
-        limit: 100
-    )
-    |> Enum.map(fn row -> {row["referrer_source"], row["bounce_rate"]} end)
-    |> Enum.into(%{})
+    Clickhouse.all(q)
+    |> Enum.map(fn ref ->
+      Map.update(ref, "url", nil, fn url -> url && URI.parse("http://" <> url).host end)
+    end)
   end
 
   def visitors_from_referrer(site, query, referrer) do
@@ -404,11 +401,11 @@ defmodule Plausible.Stats.Clickhouse do
   def top_pages(site, %Query{period: "realtime"} = query, limit, _include) do
     Clickhouse.all(
       from s in base_session_query(site, query),
-      select: {fragment("? as name", s.exit_page), fragment("uniq(?) as count", s.user_id)},
-      group_by: s.exit_page,
-      order_by: [desc: fragment("count")],
-      limit: ^limit
-      )
+        select: {fragment("? as name", s.exit_page), fragment("uniq(?) as count", s.user_id)},
+        group_by: s.exit_page,
+        order_by: [desc: fragment("count")],
+        limit: ^limit
+    )
   end
 
   def top_pages(site, query, limit, include) do
@@ -611,7 +608,8 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp base_session_query(site, %Query{period: "realtime"}) do
-    first_datetime = Timex.now(site.timezone) |> Timex.shift(minutes: -5) |> Timex.Timezone.convert("UTC")
+    first_datetime =
+      Timex.now(site.timezone) |> Timex.shift(minutes: -5) |> Timex.Timezone.convert("UTC")
 
     from(s in "sessions",
       where: s.domain == ^site.domain,
@@ -653,13 +651,17 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp utc_boundaries(%Query{period: "30m"}, timezone) do
-    last_datetime = NaiveDateTime.utc_now() |> Timex.to_datetime(timezone) |> Timex.Timezone.convert("UTC")
+    last_datetime =
+      NaiveDateTime.utc_now() |> Timex.to_datetime(timezone) |> Timex.Timezone.convert("UTC")
+
     first_datetime = last_datetime |> Timex.shift(minutes: -30)
     {first_datetime, last_datetime}
   end
 
   defp utc_boundaries(%Query{period: "realtime"}, timezone) do
-    last_datetime = NaiveDateTime.utc_now() |> Timex.to_datetime(timezone) |> Timex.Timezone.convert("UTC")
+    last_datetime =
+      NaiveDateTime.utc_now() |> Timex.to_datetime(timezone) |> Timex.Timezone.convert("UTC")
+
     first_datetime = last_datetime |> Timex.shift(minutes: -5)
     {first_datetime, last_datetime}
   end

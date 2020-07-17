@@ -3,7 +3,7 @@ import { withRouter } from 'react-router-dom'
 import Chart from 'chart.js'
 import FadeIn from '../fade-in'
 import { eventName } from '../query'
-import numberFormatter from '../number-formatter'
+import numberFormatter, {durationFormatter} from '../number-formatter'
 import * as api from '../api'
 
 function mainSet(plot, present_index, ctx, label) {
@@ -257,6 +257,16 @@ class LineGraph extends React.Component {
     }
   }
 
+  renderTopStatNumber(stat) {
+    if (stat.name === 'Visit Duration') {
+      return durationFormatter(stat.count)
+    } else if (typeof(stat.count) == 'number') {
+      return numberFormatter(stat.count)
+    } else {
+      return stat.percentage + '%'
+    }
+  }
+
   renderTopStats() {
     const {graphData} = this.props
     const stats = this.props.graphData.top_stats.map((stat, index) => {
@@ -267,7 +277,7 @@ class LineGraph extends React.Component {
         <div className={`px-8 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
           <div className="text-gray-500 text-xs font-bold tracking-wide uppercase">{stat.name}</div>
           <div className="my-1 flex justify-between items-center">
-            <b className="text-2xl mr-4">{ typeof(stat.count) == 'number' ? numberFormatter(stat.count) : stat.percentage + '%' }</b>
+            <b className="text-2xl mr-4">{ this.renderTopStatNumber(stat) }</b>
             {this.renderComparison(stat.name, stat.change)}
           </div>
         </div>
