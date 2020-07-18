@@ -146,7 +146,12 @@ config :plausible, :custom_domain_server,
   password: custom_domain_server_password,
   ip: custom_domain_server_ip
 
-crontab = [
+base_cron = [
+  # Daily at midnight
+  {"0 0 * * *", Plausible.Workers.RotateSalts},
+]
+
+extra_cron = [
   # hourly
   {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
   #  hourly
@@ -161,7 +166,8 @@ crontab = [
   {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}
 ]
 
-queues = [
+base_queues = [rotate_salts: 1]
+extra_queues = [
   provision_ssl_certificates: 1,
   fetch_tweets: 1,
   check_stats_emails: 1,
@@ -173,8 +179,8 @@ queues = [
 
 config :plausible, Oban,
   repo: Plausible.Repo,
-  queues: if(cron_enabled, do: queues, else: []),
-  crontab: if(cron_enabled, do: crontab, else: false)
+  queues: if(cron_enabled, do: base_queues ++ extra_queues, else: base_queues),
+  crontab: if(cron_enabled, do: base_cron ++ extra_cron, else: base_cron)
 
 config :ref_inspector,
   init: {Plausible.Release, :configure_ref_inspector}

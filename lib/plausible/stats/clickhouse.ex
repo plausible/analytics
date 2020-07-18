@@ -192,6 +192,16 @@ defmodule Plausible.Stats.Clickhouse do
     res["bounce_rate"] || 0
   end
 
+  def visit_duration(site, query) do
+    [res] =
+      Clickhouse.all(
+        from s in base_session_query(site, query),
+          select: {fragment("round(avg(duration * sign)) as visit_duration")}
+      )
+
+    res["visit_duration"] || 0
+  end
+
   def total_pageviews(site, %Query{period: "realtime"}) do
     [res] =
       Clickhouse.all(
@@ -248,45 +258,52 @@ defmodule Plausible.Stats.Clickhouse do
     end)
   end
 
-def top_referrers(site, query, limit \\ 5, show_noref \\ false,  include \\ []) do
-    referrers =
-      Clickhouse.all(
-        from e in base_session_query(site, query),
-          select:
-            {fragment("? as name", e.referrer_source), fragment("any(?) as url", e.referrer),
-             fragment("uniq(user_id) as count")},
-          group_by: e.referrer_source,
-          where: e.referrer_source != "",
-          order_by: [desc: fragment("count")],
-          limit: ^limit
+  def top_referrers(site, query, limit, include) do
+    q =
+      from(s in base_session_query(site, query),
+        group_by: s.referrer_source,
+        where: s.referrer_source != "",
+        order_by: [desc: fragment("count")],
+        limit: ^limit
       )
-      |> Enum.map(fn ref ->
-        Map.update(ref, "url", nil, fn url -> url && URI.parse("http://" <> url).host end)
-      end)
 
-    show_noref = if length(referrers) == 0, do: true, else: show_noref
-    referrers = if show_noref do
+    q = if "bounce_rate" in include do
+      from(
+        s in q,
+        select:
+          {fragment("? as name", s.referrer_source), fragment("any(?) as url", s.referrer),
+          fragment("uniq(user_id) as count"),
+          fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate"),
+          fragment("round(avg(duration * sign)) as visit_duration")}
+      )
+    else
+      from(
+        s in q,
+        select:
+          {fragment("? as name", s.referrer_source), fragment("any(?) as url", s.referrer),
+          fragment("uniq(user_id) as count")}
+      )
+    end
+
+    show_noref = if length(q) == 0, do: true, else: show_noref
+    q = if show_noref do
       no_referrers = Clickhouse.all(
         from e in base_session_query(site, query),
-          select:
-            {fragment("? as name", @no_ref), fragment("any(?) as url", e.referrer),
-             fragment("uniq(user_id) as count")},
-          where: e.referrer_source == ""
+        select:
+          {fragment("? as name", @no_ref), fragment("any(?) as url", e.referrer),
+          fragment("uniq(user_id) as count")},
+        where: e.referrer_source == ""
       )
       referrers ++ no_referrers
     else
       referrers
     end
 
-    if "bounce_rate" in include do
-      bounce_rates = bounce_rates_by_referrer_source(site, query)
+    Clickhouse.all(q)
+    |> Enum.map(fn ref ->
+      Map.update(ref, "url", nil, fn url -> url && URI.parse("http://" <> url).host end)
+    end)
 
-      Enum.map(referrers, fn referrer ->
-        Map.put(referrer, "bounce_rate", bounce_rates[referrer["name"]])
-      end)
-    else
-      referrers
-    end
   end
 
   defp bounce_rates_by_referrer_source(site, query) do
@@ -350,17 +367,28 @@ def top_referrers(site, query, limit \\ 5, show_noref \\ false,  include \\ []) 
           order_by: [desc: fragment("count")],
           limit: 100
       )
+    q = from(
+      s in base_session_query(site, query),
+      group_by: s.referrer,
+      where: s.referrer_source == ^referrer,
+      order_by: [desc: fragment("count")],
+      limit: 100
+    )
 
-    referring_urls =
-      if "bounce_rate" in include do
-        bounce_rates = bounce_rates_by_referring_url(site, query)
-
-        Enum.map(referring_urls, fn url ->
-          Map.put(url, "bounce_rate", bounce_rates[url["name"]])
-        end)
+    q = if "bounce_rate" in include do
+        from(
+          s in q,
+          select:
+            {fragment("? as name", s.referrer),
+             fragment("uniq(user_id) as count"),
+             fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate"),
+             fragment("round(avg(duration * sign)) as visit_duration")}
+        )
       else
-        referring_urls
+        from(s in q, select: {fragment("? as name", s.referrer), fragment("uniq(user_id) as count")})
       end
+
+    referring_urls = Clickhouse.all(q)
 
     if referrer == "Twitter" do
       urls = Enum.map(referring_urls, & &1["name"])
@@ -399,33 +427,14 @@ def top_referrers(site, query, limit \\ 5, show_noref \\ false,  include \\ []) 
     )
   end
 
-  defp bounce_rates_by_referring_url(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
-
-    Clickhouse.all(
-      from s in "sessions",
-        select:
-          {s.referrer, fragment("count(*) as total"),
-           fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate")},
-        where: s.domain == ^site.domain,
-        where: s.start >= ^first_datetime and s.start < ^last_datetime,
-        where: s.referrer != "",
-        group_by: s.referrer,
-        order_by: [desc: fragment("total")],
-        limit: 100
-    )
-    |> Enum.map(fn row -> {row["referrer"], row["bounce_rate"]} end)
-    |> Enum.into(%{})
-  end
-
   def top_pages(site, %Query{period: "realtime"} = query, limit, _include) do
     Clickhouse.all(
       from s in base_session_query(site, query),
-      select: {fragment("? as name", s.exit_page), fragment("uniq(?) as count", s.user_id)},
-      group_by: s.exit_page,
-      order_by: [desc: fragment("count")],
-      limit: ^limit
-      )
+        select: {fragment("? as name", s.exit_page), fragment("uniq(?) as count", s.user_id)},
+        group_by: s.exit_page,
+        order_by: [desc: fragment("count")],
+        limit: ^limit
+    )
   end
 
   def top_pages(site, query, limit, include) do
@@ -628,7 +637,8 @@ def top_referrers(site, query, limit \\ 5, show_noref \\ false,  include \\ []) 
   end
 
   defp base_session_query(site, %Query{period: "realtime"}) do
-    first_datetime = Timex.now(site.timezone) |> Timex.shift(minutes: -5) |> Timex.Timezone.convert("UTC")
+    first_datetime =
+      Timex.now(site.timezone) |> Timex.shift(minutes: -5) |> Timex.Timezone.convert("UTC")
 
     from(s in "sessions",
       where: s.domain == ^site.domain,
@@ -670,13 +680,17 @@ def top_referrers(site, query, limit \\ 5, show_noref \\ false,  include \\ []) 
   end
 
   defp utc_boundaries(%Query{period: "30m"}, timezone) do
-    last_datetime = NaiveDateTime.utc_now() |> Timex.to_datetime(timezone) |> Timex.Timezone.convert("UTC")
+    last_datetime =
+      NaiveDateTime.utc_now() |> Timex.to_datetime(timezone) |> Timex.Timezone.convert("UTC")
+
     first_datetime = last_datetime |> Timex.shift(minutes: -30)
     {first_datetime, last_datetime}
   end
 
   defp utc_boundaries(%Query{period: "realtime"}, timezone) do
-    last_datetime = NaiveDateTime.utc_now() |> Timex.to_datetime(timezone) |> Timex.Timezone.convert("UTC")
+    last_datetime =
+      NaiveDateTime.utc_now() |> Timex.to_datetime(timezone) |> Timex.Timezone.convert("UTC")
+
     first_datetime = last_datetime |> Timex.shift(minutes: -5)
     {first_datetime, last_datetime}
   end

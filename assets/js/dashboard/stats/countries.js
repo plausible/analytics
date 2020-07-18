@@ -26,7 +26,7 @@ export default class Countries extends React.Component {
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
       this.setState({loading: true, countries: null})
-      this.fetchCountries()
+      this.fetchCountries().then(this.drawMap.bind(this))
     }
   }
 

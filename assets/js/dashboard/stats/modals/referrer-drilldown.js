@@ -3,7 +3,7 @@ import { Link, withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import * as api from '../../api'
-import numberFormatter from '../../number-formatter'
+import numberFormatter, {durationFormatter} from '../../number-formatter'
 import {parseQuery, toHuman} from '../../query'
 import {formatFullDate} from '../../date'
 
@@ -21,20 +21,28 @@ class ReferrerDrilldownModal extends React.Component {
       api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100})
         .then((res) => this.setState({loading: false, referrers: res.referrers, totalVisitors: res.total_visitors}))
     } else {
-      const include = this.showBounceRate() ? 'bounce_rate' : null
+      const include = this.showExtra() ? 'bounce_rate,visit_duration' : null
 
       api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100, include: include})
         .then((res) => this.setState({loading: false, referrers: res.referrers, totalVisitors: res.total_visitors}))
     }
   }
 
-  showBounceRate() {
+  showExtra() {
     return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
   }
 
   formatBounceRate(ref) {
     if (typeof(ref.bounce_rate) === 'number') {
       return ref.bounce_rate + '%'
+    } else {
+      return '-'
+    }
+  }
+
+  formatDuration(referrer) {
+    if (typeof(referrer.visit_duration) === 'number') {
+      return durationFormatter(referrer.visit_duration)
     } else {
       return '-'
     }
@@ -88,7 +96,8 @@ class ReferrerDrilldownModal extends React.Component {
             </div>
           </td>
           <td className="p-2 w-32 font-medium" align="right" valign="top">{numberFormatter(referrer.count)}</td>
-          {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right" valign="top">{this.formatBounceRate(referrer)}</td> }
+          {this.showExtra() && <td className="p-2 w-32 font-medium" align="right" valign="top">{this.formatBounceRate(referrer)}</td> }
+          {this.showExtra() && <td className="p-2 w-32 font-medium" align="right" valign="top">{this.formatDuration(referrer)}</td> }
         </tr>
       )
     } else {
@@ -98,7 +107,8 @@ class ReferrerDrilldownModal extends React.Component {
             { this.renderReferrerName(referrer.name) }
           </td>
           <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.count)}</td>
-          {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td> }
+          {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td> }
+          {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatDuration(referrer)}</td> }
         </tr>
       )
     }
@@ -132,7 +142,8 @@ class ReferrerDrilldownModal extends React.Component {
                 <tr>
                   <th className="p-2 text-xs tracking-wide font-bold text-gray-500" align="left">Referrer</th>
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Visitors</th>
-                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Bounce rate</th>}
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Bounce rate</th>}
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Visit duration</th>}
                 </tr>
               </thead>
               <tbody>

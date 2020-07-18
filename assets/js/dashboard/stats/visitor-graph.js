@@ -3,7 +3,7 @@ import { withRouter } from 'react-router-dom'
 import Chart from 'chart.js'
 import FadeIn from '../fade-in'
 import { eventName } from '../query'
-import numberFormatter from '../number-formatter'
+import numberFormatter, {durationFormatter} from '../number-formatter'
 import * as api from '../api'
 
 function mainSet(plot, present_index, ctx, label) {
@@ -257,6 +257,16 @@ class LineGraph extends React.Component {
     }
   }
 
+  renderTopStatNumber(stat) {
+    if (stat.name === 'Visit duration') {
+      return durationFormatter(stat.count)
+    } else if (typeof(stat.count) == 'number') {
+      return numberFormatter(stat.count)
+    } else {
+      return stat.percentage + '%'
+    }
+  }
+
   renderTopStats() {
     const {graphData} = this.props
     const stats = this.props.graphData.top_stats.map((stat, index) => {
@@ -267,7 +277,7 @@ class LineGraph extends React.Component {
         <div className={`px-8 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
           <div className="text-gray-500 text-xs font-bold tracking-wide uppercase">{stat.name}</div>
           <div className="my-1 flex justify-between items-center">
-            <b className="text-2xl mr-4">{ typeof(stat.count) == 'number' ? numberFormatter(stat.count) : stat.percentage + '%' }</b>
+            <b className="text-2xl mr-4">{ this.renderTopStatNumber(stat) }</b>
             {this.renderComparison(stat.name, stat.change)}
           </div>
         </div>
@@ -286,9 +296,7 @@ class LineGraph extends React.Component {
 
     return (
       <a href={endpoint} download>
-        <svg className="w-4 h-5 absolute text-gray-700" style={{right: '2rem', top: '-2rem'}}>
-          <use xlinkHref="#feather-download" />
-        </svg>
+        <svg className="feather w-4 h-5 absolute text-gray-700" style={{right: '2rem', top: '-2rem'}} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
       </a>
     )
   }

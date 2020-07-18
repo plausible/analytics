@@ -28,19 +28,31 @@
     <div class="pt-12 pl-8 hidden md:block">
       <ul class="mt-2 leading-loose">
         <li>
-          <svg class="feather text-indigo-600 mr-1"><use xlink:href="#feather-check-circle" /></svg>
+          <svg class="feather text-indigo-600 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
           Quick and easy to set up
         </li>
         <li>
-          <svg class="feather text-indigo-600 mr-1"><use xlink:href="#feather-check-circle" /></svg>
+          <svg class="feather text-indigo-600 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
           No credit card required
         </li>
         <li>
-          <svg class="feather text-indigo-600 mr-1"><use xlink:href="#feather-check-circle" /></svg>
+          <svg class="feather text-indigo-600 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
           Unlimited use during the trial
         </li>
         <li>
-          <svg class="feather text-indigo-600 mr-1"><use xlink:href="#feather-check-circle" /></svg>
+          <svg class="feather text-indigo-600 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
           From just $6/mo after the trial
         </li>
       </ul>

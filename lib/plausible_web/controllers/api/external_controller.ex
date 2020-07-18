@@ -42,6 +42,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
       ref = parse_referrer(uri, params["referrer"])
       country_code = visitor_country(conn)
+      salts = Plausible.Session.Salts.fetch()
 
       event_attrs = %{
         timestamp: NaiveDateTime.utc_now(),
@@ -49,7 +50,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         hostname: strip_www(uri && uri.host),
         domain: strip_www(params["domain"]) || strip_www(uri && uri.host),
         pathname: uri && (uri.path || "/"),
-        user_id: generate_user_id(conn, params),
+        user_id: generate_user_id(conn, params, salts[:current]),
         country_code: country_code,
         operating_system: ua && os_name(ua),
         browser: ua && browser_name(ua),
@@ -61,8 +62,9 @@ defmodule PlausibleWeb.Api.ExternalController do
       changeset = Plausible.ClickhouseEvent.changeset(%Plausible.ClickhouseEvent{}, event_attrs)
 
       if changeset.valid? do
+        previous_user_id = salts[:previous] && generate_user_id(conn, params, salts[:previous])
         event = struct(Plausible.ClickhouseEvent, event_attrs)
-        session_id = Plausible.Session.Store.on_event(event)
+        session_id = Plausible.Session.Store.on_event(event, previous_user_id)
 
         Map.put(event, :session_id, session_id)
         |> Plausible.Event.WriteBuffer.insert()
@@ -105,16 +107,12 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp generate_user_id(conn, params) do
-    hash_key =
-      Keyword.fetch!(Application.get_env(:plausible, PlausibleWeb.Endpoint), :secret_key_base)
-      |> binary_part(0, 16)
-
+  defp generate_user_id(conn, params, salt) do
     user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
     ip_address = get_ip(conn)
     domain = strip_www(params["domain"]) || ""
 
-    SipHash.hash!(hash_key, user_agent <> ip_address <> domain)
+    SipHash.hash!(salt, user_agent <> ip_address <> domain)
   end
 
   defp calculate_screen_size(nil), do: nil

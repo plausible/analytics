@@ -99,6 +99,13 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       res = json_response(conn, 200)
       assert %{"name" => "Bounce rate", "percentage" => 33.0, "change" => nil} in res["top_stats"]
     end
+
+    test "calculates average visit duration", %{conn: conn, site: site} do
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
+
+      res = json_response(conn, 200)
+      assert %{"name" => "Visit duration", "count" => 67.0, "change" => 100} in res["top_stats"]
+    end
   end
 
   describe "GET /api/stats/main-graph - filtered for goal" do
