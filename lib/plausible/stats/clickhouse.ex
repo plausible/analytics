@@ -2,7 +2,7 @@ defmodule Plausible.Stats.Clickhouse do
   use Plausible.Repo
   alias Plausible.Stats.Query
   alias Plausible.Clickhouse
-  @no_ref "Direct Traffic (no referrers)"
+  @no_ref "Direct Traffic"
 
   def compare_pageviews_and_visitors(site, query, {pageviews, visitors}) do
     query = Query.shift_back(query)
@@ -302,8 +302,7 @@ defmodule Plausible.Stats.Clickhouse do
                fragment("uniq(user_id) as count")},
             where: e.referrer_source == ""
         )
-
-      referrers ++ no_referrers
+      if no_referrers|> hd |> Map.get("count") > 0, do: referrers ++ no_referrers, else: []
     else
       referrers
     end
