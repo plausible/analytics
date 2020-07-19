@@ -11,7 +11,6 @@
     <%= render("_tracking.html", assigns) %>
   </head>
   <body class="flex flex-col h-full bg-gray-100">
-    <%= render("_svg_icons.html") %>
     <div class="text-center w-full my-8">
         <a href="<%= home_dest(@conn) %>">
           <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), class: "inline", style: "height: 2.5rem;", alt: "Plausible logo") %>
