@@ -12,6 +12,7 @@ disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
 
 config :plausible, :selfhost,
   disable_authentication: disable_auth,
+  disable_subscription: String.to_existing_atom(System.get_env("DISABLE_SUBSCRIPTION", "false")),
   disable_registration:
     if(disable_auth,
       do: true,

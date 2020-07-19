@@ -1,3 +1,4 @@
+<%= if  !Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_subscription) do %>
 <div class="max-w-2xl mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-orange-200 px-8 pt-6 pb-8 mt-24">
   <div class="flex justify-between">
     <h2 class="text-xl font-black">Subscription Plan</h2>
@@ -86,6 +87,7 @@
       </div>
   <% end %>
 </div>
+<% end %>
 
 <div class="max-w-2xl mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-100 px-8 pt-6 pb-8 mt-16">
   <h2 class="text-xl font-black">Account settings</h2>

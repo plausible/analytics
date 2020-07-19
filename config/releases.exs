@@ -63,6 +63,7 @@ config :plausible,
 
 config :plausible, :selfhost,
   disable_authentication: disable_auth,
+  disable_subscription: String.to_existing_atom(System.get_env("DISABLE_SUBSCRIPTION", "false")),
   disable_registration:
     if(!disable_auth,
       do: String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false")),
