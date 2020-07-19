@@ -160,8 +160,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def reset_stats(conn, %{"website" => website}) do
-    site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
     Plausible.Clickhouse.delete_stats!(site)
 
     conn

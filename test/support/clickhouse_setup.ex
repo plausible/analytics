@@ -287,7 +287,7 @@ defmodule Plausible.Test.ClickhouseSetup do
         referrer_source: "Twitter",
         start: ~N[2019-03-01 02:00:00],
         timestamp: ~N[2019-03-01 02:00:00]
-      },
+      }
     ])
   end
 end

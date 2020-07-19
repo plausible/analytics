@@ -149,7 +149,7 @@ config :plausible, :custom_domain_server,
 
 base_cron = [
   # Daily at midnight
-  {"0 0 * * *", Plausible.Workers.RotateSalts},
+  {"0 0 * * *", Plausible.Workers.RotateSalts}
 ]
 
 extra_cron = [
@@ -168,6 +168,7 @@ extra_cron = [
 ]
 
 base_queues = [rotate_salts: 1]
+
 extra_queues = [
   provision_ssl_certificates: 1,
   fetch_tweets: 1,
