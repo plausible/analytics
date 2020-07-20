@@ -391,14 +391,23 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def top_pages(site, query, limit, include) do
-    pages =
-      Clickhouse.all(
-        from e in base_query(site, query),
-          select: {fragment("? as name", e.pathname), fragment("count(?) as count", e.pathname)},
-          group_by: e.pathname,
-          order_by: [desc: fragment("count")],
-          limit: ^limit
+    q = from(
+      e in base_query(site, query),
+      group_by: e.pathname,
+      order_by: [desc: fragment("count")],
+      limit: ^limit
+    )
+
+    q = if "unique_visitors" in include do
+      from(
+        e in q,
+        select: {fragment("? as name", e.pathname), fragment("count(?) as count", e.pathname), fragment("uniq(?) as unique_visitors", e.user_id)}
       )
+    else
+      from(e in q, select: {fragment("? as name", e.pathname), fragment("count(?) as count", e.pathname)})
+    end
+
+    pages = Clickhouse.all(q)
 
     if "bounce_rate" in include do
       bounce_rates = bounce_rates_by_page_url(site, query)
