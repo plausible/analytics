@@ -29,25 +29,28 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   def health(conn, _params) do
-    postgres_health = case Ecto.Adapters.SQL.query(Plausible.Repo, "SELECT 1", []) do
-      {:ok, _} -> "ok"
-      e -> "error: #{inspect e}"
-    end
+    postgres_health =
+      case Ecto.Adapters.SQL.query(Plausible.Repo, "SELECT 1", []) do
+        {:ok, _} -> "ok"
+        e -> "error: #{inspect(e)}"
+      end
 
-    clickhouse_health = case Clickhousex.query(:clickhouse, "SELECT 1", []) do
-      {:ok, _} -> "ok"
-      e -> "error: #{inspect e}"
-    end
+    clickhouse_health =
+      case Clickhousex.query(:clickhouse, "SELECT 1", []) do
+        {:ok, _} -> "ok"
+        e -> "error: #{inspect(e)}"
+      end
 
-    status = case {postgres_health, clickhouse_health} do
-      {"ok", "ok"} ->200
-      _ -> 500
-    end
+    status =
+      case {postgres_health, clickhouse_health} do
+        {"ok", "ok"} -> 200
+        _ -> 500
+      end
 
     put_status(conn, status)
     |> json(%{
       postgres: postgres_health,
-      clickhouse: clickhouse_health,
+      clickhouse: clickhouse_health
     })
   end
 
