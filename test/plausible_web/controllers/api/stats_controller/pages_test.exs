@@ -16,18 +16,18 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    test "calculates bounce rate for pages", %{conn: conn, site: site} do
+    test "calculates bounce rate and unique visitors for pages", %{conn: conn, site: site} do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/pages?period=day&date=2019-01-01&include=bounce_rate"
+          "/api/stats/#{site.domain}/pages?period=day&date=2019-01-01&include=bounce_rate,unique_visitors"
         )
 
       assert json_response(conn, 200) == [
-               %{"count" => 2, "name" => "/", "bounce_rate" => 33.0},
-               %{"bounce_rate" => nil, "count" => 2, "name" => "/register"},
-               %{"bounce_rate" => nil, "count" => 1, "name" => "/contact"},
-               %{"bounce_rate" => nil, "count" => 1, "name" => "/irrelevant"}
+               %{"bounce_rate" => 33.0, "count" => 2, "unique_visitors" => 2, "name" => "/"},
+               %{"bounce_rate" => nil, "count" => 2, "unique_visitors" => 2, "name" => "/register"},
+               %{"bounce_rate" => nil, "count" => 1, "unique_visitors" => 1, "name" => "/contact"},
+               %{"bounce_rate" => nil, "count" => 1, "unique_visitors" => 1, "name" => "/irrelevant"}
              ]
     end
 

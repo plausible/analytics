@@ -16,13 +16,13 @@ class PagesModal extends React.Component {
   }
 
   componentDidMount() {
-    const include = this.showBounceRate() ? 'bounce_rate' : null
+    const include = this.showExtra() ? 'bounce_rate,unique_visitors' : null
 
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, this.state.query, {limit: 100, include: include})
       .then((res) => this.setState({loading: false, pages: res}))
   }
 
-  showBounceRate() {
+  showExtra() {
     return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
   }
 
@@ -39,7 +39,8 @@ class PagesModal extends React.Component {
       <tr className="text-sm" key={page.name}>
         <td className="p-2 truncate">{page.name}</td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
-        {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td> }
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.unique_visitors)}</td> }
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td> }
       </tr>
     )
   }
@@ -65,7 +66,8 @@ class PagesModal extends React.Component {
                 <tr>
                   <th className="p-2 text-xs tracking-wide font-bold text-gray-500" align="left">Page url</th>
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">{ this.label() }</th>
-                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Bounce rate</th>}
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Unique visitors</th>}
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Bounce rate</th>}
                 </tr>
               </thead>
               <tbody>
