@@ -135,7 +135,6 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp parse_body(conn) do
     {:ok, body, _conn} = Plug.Conn.read_body(conn)
-    IO.inspect(body)
     Jason.decode!(body)
   end
 
