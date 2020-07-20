@@ -59,6 +59,7 @@ defmodule PlausibleWeb.Router do
 
     post "/event", Api.ExternalController, :event
     get "/error", Api.ExternalController, :error
+    get "/health", Api.ExternalController, :health
 
     post "/paddle/webhook", Api.PaddleController, :webhook
 

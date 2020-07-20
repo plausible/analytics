@@ -410,4 +410,12 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     assert response(conn, 400) == ""
   end
+
+  describe "GET /api/health" do
+    test "returns 200 OK", %{conn: conn} do
+      conn = get(conn, "/api/health")
+
+      assert conn.status == 200
+    end
+  end
 end
