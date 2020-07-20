@@ -74,7 +74,7 @@ class ReferrersModal extends React.Component {
     } else if (this.state.referrers) {
       return (
         <React.Fragment>
-          <h1 className="text-xl font-bold">Top Referrers</h1>
+          <h1 className="text-xl font-bold">Top Sources</h1>
 
           <div className="my-4 border-b border-gray-300"></div>
           <main className="modal__content">

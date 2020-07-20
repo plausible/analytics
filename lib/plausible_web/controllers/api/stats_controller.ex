@@ -26,7 +26,7 @@ defmodule PlausibleWeb.Api.StatsController do
     [
       %{
         name: "Active visitors",
-        count: Stats.current_visitors(site)
+        count: Stats.current_visitors(site, query)
       },
       %{
         name: "Pageviews (last 30 min)",
@@ -162,8 +162,9 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
+    limit = parse_integer(params["limit"]) || 9
 
-    referrers = Stats.referrer_drilldown(site, query, referrer, include)
+    referrers = Stats.referrer_drilldown(site, query, referrer, include, limit)
     total_visitors = Stats.visitors_from_referrer(site, query, referrer)
     json(conn, %{referrers: referrers, total_visitors: total_visitors})
   end
@@ -222,7 +223,9 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def current_visitors(conn, _) do
-    json(conn, Stats.current_visitors(conn.assigns[:site]))
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, %{"period" => "realtime"})
+    json(conn, Stats.current_visitors(site, query))
   end
 
   defp parse_integer(nil), do: nil
