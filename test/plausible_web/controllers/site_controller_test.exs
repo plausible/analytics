@@ -153,7 +153,10 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     test "updates google auth property", %{conn: conn, user: user, site: site} do
       insert(:google_auth, user: user, site: site)
-      put(conn, "/#{site.domain}/settings/google", %{"google_auth" => %{"property" => "some-new-property.com"}})
+
+      put(conn, "/#{site.domain}/settings/google", %{
+        "google_auth" => %{"property" => "some-new-property.com"}
+      })
 
       updated_auth = Repo.one(Plausible.Site.GoogleAuth)
       assert updated_auth.property == "some-new-property.com"

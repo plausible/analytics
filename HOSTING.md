@@ -116,6 +116,8 @@ Following are the variables that can be used to configure the availability of th
     - Note: This option is **not recommended** for production deployments.
 - DISABLE_REGISTRATION
   - Disables registration of new users, keep your admin credentials handy ;)  _defaults to `false`_
+- DISABLE_SUBSCRIPTION
+  - Disables changing of subscription and removes the trial notice banner (use with caution!) _defaults to `false`_
 
 ### Default User Generation
 For self-hosting, a default user is generated during the [Database Migration](#Database Migration) to access Plausible. To be noted that, a default user is a user whose trial period expires in 100 Years ;).
@@ -154,7 +156,7 @@ In case of `Bamboo.SMTPAdapter` you need to supply the following variables:
 
 ### Database
 
-Plausible uses postgresql as database for storing all the user-data. Use the following the variables to configure it.
+Plausible uses [postgresql as database](https://www.tutorialspoint.com/postgresql/postgresql_environment.htm) for storing all the user-data. Use the following the variables to configure it.
 
 - DATABASE_URL (*String*)
     - The repo Url as dictated [here](https://hexdocs.pm/ecto/Ecto.Repo.html#module-urls)
@@ -163,7 +165,7 @@ Plausible uses postgresql as database for storing all the user-data. Use the fol
 - DATABASE_TLS_ENABLED (*Boolean String*)
     - A flag that says whether to connect to the database via TLS, read [here](https://www.postgresql.org/docs/10/ssl-tcp.html)
 
-For performance reasons, all the analytics events are stored in clickhouse:
+For performance reasons, all the analytics events are stored in [clickhouse](https://clickhouse.tech/docs/en/getting-started/tutorial/):
 
 - CLICKHOUSE_DATABASE_HOST (*String*)
 - CLICKHOUSE_DATABASE_NAME (*String*)

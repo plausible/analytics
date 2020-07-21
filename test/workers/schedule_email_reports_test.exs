@@ -15,7 +15,11 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
 
       perform(%{})
 
-      assert_enqueued worker: SendEmailReport, args: %{site_id: site.id, interval: "weekly"}, scheduled_at: ScheduleEmailReports.monday_9am(site.timezone)
+      assert_enqueued(
+        worker: SendEmailReport,
+        args: %{site_id: site.id, interval: "weekly"},
+        scheduled_at: ScheduleEmailReports.monday_9am(site.timezone)
+      )
     end
 
     test "does not schedule more than one weekly report at a time" do
@@ -33,11 +37,10 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       perform(%{})
-      Repo.update_all("oban_jobs", [set: [state: "completed"]])
+      Repo.update_all("oban_jobs", set: [state: "completed"])
       assert Enum.count(all_enqueued(worker: SendEmailReport)) == 0
       perform(%{})
       assert Enum.count(all_enqueued(worker: SendEmailReport)) == 1
-
     end
   end
 
@@ -48,7 +51,11 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
 
       perform(%{})
 
-      assert_enqueued worker: SendEmailReport, args: %{site_id: site.id, interval: "monthly"}, scheduled_at: ScheduleEmailReports.first_of_month_9am(site.timezone)
+      assert_enqueued(
+        worker: SendEmailReport,
+        args: %{site_id: site.id, interval: "monthly"},
+        scheduled_at: ScheduleEmailReports.first_of_month_9am(site.timezone)
+      )
     end
 
     test "does not schedule more than one monthly report at a time" do
@@ -66,11 +73,10 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
       insert(:monthly_report, site: site, recipients: ["user@email.com"])
 
       perform(%{})
-      Repo.update_all("oban_jobs", [set: [state: "completed"]])
+      Repo.update_all("oban_jobs", set: [state: "completed"])
       assert Enum.count(all_enqueued(worker: SendEmailReport)) == 0
       perform(%{})
       assert Enum.count(all_enqueued(worker: SendEmailReport)) == 1
-
     end
   end
 end

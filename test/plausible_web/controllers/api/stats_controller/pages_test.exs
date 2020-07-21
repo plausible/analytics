@@ -25,9 +25,24 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       assert json_response(conn, 200) == [
                %{"bounce_rate" => 33.0, "count" => 2, "unique_visitors" => 2, "name" => "/"},
-               %{"bounce_rate" => nil, "count" => 2, "unique_visitors" => 2, "name" => "/register"},
-               %{"bounce_rate" => nil, "count" => 1, "unique_visitors" => 1, "name" => "/contact"},
-               %{"bounce_rate" => nil, "count" => 1, "unique_visitors" => 1, "name" => "/irrelevant"}
+               %{
+                 "bounce_rate" => nil,
+                 "count" => 2,
+                 "unique_visitors" => 2,
+                 "name" => "/register"
+               },
+               %{
+                 "bounce_rate" => nil,
+                 "count" => 1,
+                 "unique_visitors" => 1,
+                 "name" => "/contact"
+               },
+               %{
+                 "bounce_rate" => nil,
+                 "count" => 1,
+                 "unique_visitors" => 1,
+                 "name" => "/irrelevant"
+               }
              ]
     end
 

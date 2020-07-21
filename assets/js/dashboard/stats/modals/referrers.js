@@ -23,7 +23,7 @@ class ReferrersModal extends React.Component {
     } else {
       const include = this.showExtra() ? 'bounce_rate,visit_duration' : null
 
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers`, this.state.query, {limit: 100, include: include})
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers`, this.state.query, { limit: 100, include: include, show_noref: true})
         .then((res) => this.setState({loading: false, referrers: res}))
     }
   }

@@ -380,7 +380,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert event["referrer"] == ""
   end
 
-
   # Fake data is set up in config/test.exs
   test "looks up the country from the ip address", %{conn: conn} do
     params = %{

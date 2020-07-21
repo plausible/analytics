@@ -12,6 +12,7 @@ disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
 
 config :plausible, :selfhost,
   disable_authentication: disable_auth,
+  disable_subscription: String.to_existing_atom(System.get_env("DISABLE_SUBSCRIPTION", "false")),
   disable_registration:
     if(disable_auth,
       do: true,
@@ -98,7 +99,7 @@ cron_enabled = String.to_existing_atom(System.get_env("CRON_ENABLED", "false"))
 
 base_cron = [
   # Daily at midnight
-  {"0 0 * * *", Plausible.Workers.RotateSalts},
+  {"0 0 * * *", Plausible.Workers.RotateSalts}
 ]
 
 extra_cron = [
@@ -117,6 +118,7 @@ extra_cron = [
 ]
 
 base_queues = [rotate_salts: 1]
+
 extra_queues = [
   provision_ssl_certificates: 1,
   fetch_tweets: 1,

@@ -8,7 +8,7 @@ defmodule PlausibleWeb.PageController do
       user = conn.assigns[:current_user] |> Repo.preload(:sites)
       render(conn, "sites.html", sites: user.sites)
     else
-      render(conn, "index.html" )
+      render(conn, "index.html")
     end
   end
 end

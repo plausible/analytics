@@ -31,7 +31,12 @@ defmodule Plausible.Workers.SendEmailReportTest do
     test "sends monthly report to all recipients" do
       site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
       insert(:monthly_report, site: site, recipients: ["user@email.com", "user2@email.com"])
-      last_month = Timex.now(site.timezone) |> Timex.shift(months: -1) |> Timex.beginning_of_month() |> Timex.format!("{Mfull}")
+
+      last_month =
+        Timex.now(site.timezone)
+        |> Timex.shift(months: -1)
+        |> Timex.beginning_of_month()
+        |> Timex.format!("{Mfull}")
 
       perform(%{"site_id" => site.id, "interval" => "monthly"})
 

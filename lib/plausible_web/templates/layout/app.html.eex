@@ -25,7 +25,7 @@
             <%= cond do %>
               <% @conn.assigns[:current_user] -> %>
                 <ul class="flex">
-                  <%= if @conn.assigns[:current_user].subscription == nil do %>
+                  <%= if  !Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_subscription) && @conn.assigns[:current_user].subscription == nil  do %>
                     <li class="mr-6 hidden sm:block">
                       <%= link(trial_notificaton(@conn.assigns[:current_user]), to: "/settings", class: "font-bold text-orange-900 rounded p-2 bg-orange-200", style: "line-height: 40px;") %>
                     </li>

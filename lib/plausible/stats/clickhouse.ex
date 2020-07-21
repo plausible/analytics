@@ -2,6 +2,7 @@ defmodule Plausible.Stats.Clickhouse do
   use Plausible.Repo
   alias Plausible.Stats.Query
   alias Plausible.Clickhouse
+  @no_ref "Direct Traffic"
 
   def compare_pageviews_and_visitors(site, query, {pageviews, visitors}) do
     query = Query.shift_back(query)
@@ -256,8 +257,8 @@ defmodule Plausible.Stats.Clickhouse do
     end)
   end
 
-  def top_referrers(site, query, limit, include) do
-    q =
+  def top_referrers(site, query, limit \\ 5, show_noref \\ false, include \\ []) do
+    referrers =
       from(s in base_session_query(site, query),
         group_by: s.referrer_source,
         where: s.referrer_source != "",
@@ -265,9 +266,10 @@ defmodule Plausible.Stats.Clickhouse do
         limit: ^limit
       )
 
-    q = if "bounce_rate" in include do
+    referrers =
+      if "bounce_rate" in include do
         from(
-          s in q,
+          s in referrers,
           select:
             {fragment("? as name", s.referrer_source), fragment("any(?) as url", s.referrer),
              fragment("uniq(user_id) as count"),
@@ -276,17 +278,35 @@ defmodule Plausible.Stats.Clickhouse do
         )
       else
         from(
-          s in q,
+          s in referrers,
           select:
-          {fragment("? as name", s.referrer_source), fragment("any(?) as url", s.referrer),
-            fragment("uniq(user_id) as count")}
+            {fragment("? as name", s.referrer_source), fragment("any(?) as url", s.referrer),
+             fragment("uniq(user_id) as count")}
         )
       end
 
-    Clickhouse.all(q)
-    |> Enum.map(fn ref ->
-      Map.update(ref, "url", nil, fn url -> url && URI.parse("http://" <> url).host end)
-    end)
+    referrers =
+      Clickhouse.all(referrers)
+      |> Enum.map(fn ref ->
+        Map.update(ref, "url", nil, fn url -> url && URI.parse("http://" <> url).host end)
+      end)
+
+    show_noref = if length(referrers) == 0, do: true, else: show_noref
+
+    if show_noref do
+      no_referrers =
+        Clickhouse.all(
+          from e in base_session_query(site, query),
+            select:
+              {fragment("? as name", @no_ref), fragment("any(?) as url", e.referrer),
+               fragment("uniq(user_id) as count")},
+            where: e.referrer_source == ""
+        )
+
+      if no_referrers |> hd |> Map.get("count") > 0, do: referrers ++ no_referrers, else: []
+    else
+      referrers
+    end
   end
 
   def visitors_from_referrer(site, query, referrer) do
@@ -320,25 +340,40 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def referrer_drilldown(site, query, referrer, include \\ []) do
-    q = from(
-      s in base_session_query(site, query),
-      group_by: s.referrer,
-      where: s.referrer_source == ^referrer,
-      order_by: [desc: fragment("count")],
-      limit: 100
-    )
+    referrer = if referrer == @no_ref, do: "", else: referrer
 
-    q = if "bounce_rate" in include do
+    referring_urls =
+      Clickhouse.all(
+        from e in base_session_query(site, query),
+          select: {fragment("? as name", e.referrer), fragment("uniq(user_id) as count")},
+          group_by: e.referrer,
+          where: e.referrer_source == ^referrer,
+          order_by: [desc: fragment("count")],
+          limit: 100
+      )
+
+    q =
+      from(
+        s in base_session_query(site, query),
+        group_by: s.referrer,
+        where: s.referrer_source == ^referrer,
+        order_by: [desc: fragment("count")],
+        limit: 100
+      )
+
+    q =
+      if "bounce_rate" in include do
         from(
           s in q,
           select:
-            {fragment("? as name", s.referrer),
-             fragment("uniq(user_id) as count"),
+            {fragment("? as name", s.referrer), fragment("uniq(user_id) as count"),
              fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate"),
              fragment("round(avg(duration * sign)) as visit_duration")}
         )
       else
-        from(s in q, select: {fragment("? as name", s.referrer), fragment("uniq(user_id) as count")})
+        from(s in q,
+          select: {fragment("? as name", s.referrer), fragment("uniq(user_id) as count")}
+        )
       end
 
     referring_urls = Clickhouse.all(q)
@@ -391,21 +426,27 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def top_pages(site, query, limit, include) do
-    q = from(
-      e in base_query(site, query),
-      group_by: e.pathname,
-      order_by: [desc: fragment("count")],
-      limit: ^limit
-    )
-
-    q = if "unique_visitors" in include do
+    q =
       from(
-        e in q,
-        select: {fragment("? as name", e.pathname), fragment("count(?) as count", e.pathname), fragment("uniq(?) as unique_visitors", e.user_id)}
+        e in base_query(site, query),
+        group_by: e.pathname,
+        order_by: [desc: fragment("count")],
+        limit: ^limit
       )
-    else
-      from(e in q, select: {fragment("? as name", e.pathname), fragment("count(?) as count", e.pathname)})
-    end
+
+    q =
+      if "unique_visitors" in include do
+        from(
+          e in q,
+          select:
+            {fragment("? as name", e.pathname), fragment("count(?) as count", e.pathname),
+             fragment("uniq(?) as unique_visitors", e.user_id)}
+        )
+      else
+        from(e in q,
+          select: {fragment("? as name", e.pathname), fragment("count(?) as count", e.pathname)}
+        )
+      end
 
     pages = Clickhouse.all(q)
 

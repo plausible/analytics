@@ -27,11 +27,11 @@ defmodule PlausibleWeb.Api.StatsController do
     [
       %{
         name: "Active visitors",
-        count: Stats.current_visitors(site),
+        count: Stats.current_visitors(site)
       },
       %{
         name: "Pageviews (last 30 min)",
-        count: Stats.total_pageviews(site, query),
+        count: Stats.total_pageviews(site, query)
       }
     ]
   end
@@ -94,7 +94,11 @@ defmodule PlausibleWeb.Api.StatsController do
         change: percent_change(prev_pageviews, pageviews)
       },
       %{name: "Bounce rate", percentage: bounce_rate, change: change_bounce_rate},
-      %{name: "Visit duration", count: visit_duration, change: percent_change(prev_visit_duration, visit_duration)}
+      %{
+        name: "Visit duration",
+        count: visit_duration,
+        change: percent_change(prev_visit_duration, visit_duration)
+      }
     ]
   end
 
@@ -116,8 +120,8 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
     limit = if params["limit"], do: String.to_integer(params["limit"])
-
-    json(conn, Stats.top_referrers(site, query, limit || 9, include))
+    show_noref = if params["show_noref"], do: "true", else: false
+    json(conn, Stats.top_referrers(site, query, limit || 9, show_noref, include))
   end
 
   def referrers_for_goal(conn, params) do
