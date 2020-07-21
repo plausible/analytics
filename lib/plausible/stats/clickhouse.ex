@@ -34,7 +34,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     groups =
       Clickhouse.all(
-        from e in base_query(site, %{query | filters: %{}}),
+        from e in base_query(site, query),
           select:
             {fragment("toStartOfMonth(toTimeZone(?, ?)) as month", e.timestamp, ^site.timezone),
              fragment("uniq(?) as visitors", e.user_id)},
@@ -44,30 +44,15 @@ defmodule Plausible.Stats.Clickhouse do
       |> Enum.map(fn row -> {row["month"], row["visitors"]} end)
       |> Enum.into(%{})
 
-    compare_groups =
-      if query.filters["goal"] do
-        Clickhouse.all(
-          from e in base_query(site, query),
-            select:
-              {fragment("toStartOfMonth(toTimeZone(?, ?)) as month", e.timestamp, ^site.timezone),
-               fragment("uniq(?) as visitors", e.user_id)},
-            group_by: fragment("month"),
-            order_by: fragment("month")
-        )
-        |> Enum.map(fn row -> {row["month"], row["visitors"]} end)
-        |> Enum.into(%{})
-      end
-
     present_index =
       Enum.find_index(steps, fn step ->
         step == Timex.now(site.timezone) |> Timex.to_date() |> Timex.beginning_of_month()
       end)
 
     plot = Enum.map(steps, fn step -> groups[step] || 0 end)
-    compare_plot = compare_groups && Enum.map(steps, fn step -> compare_groups[step] || 0 end)
     labels = Enum.map(steps, fn step -> Timex.format!(step, "{ISOdate}") end)
 
-    {plot, compare_plot, labels, present_index}
+    {plot, labels, present_index}
   end
 
   def calculate_plot(site, %Query{step_type: "date"} = query) do
@@ -75,7 +60,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     groups =
       Clickhouse.all(
-        from e in base_query(site, %{query | filters: %{}}),
+        from e in base_query(site, query),
           select:
             {fragment("toDate(toTimeZone(?, ?)) as day", e.timestamp, ^site.timezone),
              fragment("uniq(?) as visitors", e.user_id)},
@@ -85,29 +70,14 @@ defmodule Plausible.Stats.Clickhouse do
       |> Enum.map(fn row -> {row["day"], row["visitors"]} end)
       |> Enum.into(%{})
 
-    compare_groups =
-      if query.filters["goal"] do
-        Clickhouse.all(
-          from e in base_query(site, query),
-            select:
-              {fragment("toDate(toTimeZone(?, ?)) as day", e.timestamp, ^site.timezone),
-               fragment("uniq(?) as visitors", e.user_id)},
-            group_by: fragment("day"),
-            order_by: fragment("day")
-        )
-        |> Enum.map(fn row -> {row["day"], row["visitors"]} end)
-        |> Enum.into(%{})
-      end
-
     present_index =
       Enum.find_index(steps, fn step -> step == Timex.now(site.timezone) |> Timex.to_date() end)
 
     steps_to_show = if present_index, do: present_index + 1, else: Enum.count(steps)
     plot = Enum.map(steps, fn step -> groups[step] || 0 end) |> Enum.take(steps_to_show)
-    compare_plot = compare_groups && Enum.map(steps, fn step -> compare_groups[step] || 0 end)
     labels = Enum.map(steps, fn step -> Timex.format!(step, "{ISOdate}") end)
 
-    {plot, compare_plot, labels, present_index}
+    {plot, labels, present_index}
   end
 
   def calculate_plot(site, %Query{step_type: "hour"} = query) do
@@ -115,7 +85,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     groups =
       Clickhouse.all(
-        from e in base_query(site, %{query | filters: %{}}),
+        from e in base_query(site, query),
           select:
             {fragment("toHour(toTimeZone(?, ?)) as hour", e.timestamp, ^site.timezone),
              fragment("uniq(?) as visitors", e.user_id)},
@@ -124,20 +94,6 @@ defmodule Plausible.Stats.Clickhouse do
       )
       |> Enum.map(fn row -> {row["hour"], row["visitors"]} end)
       |> Enum.into(%{})
-
-    compare_groups =
-      if query.filters["goal"] do
-        Clickhouse.all(
-          from e in base_query(site, query),
-            select:
-              {fragment("toHour(toTimeZone(?, ?)) as hour", e.timestamp, ^site.timezone),
-               fragment("uniq(?) as visitors", e.user_id)},
-            group_by: fragment("hour"),
-            order_by: fragment("hour")
-        )
-        |> Enum.map(fn row -> {row["hour"], row["visitors"]} end)
-        |> Enum.into(%{})
-      end
 
     now = Timex.now(site.timezone)
     is_today = Timex.to_date(now) == query.date_range.first
@@ -152,8 +108,7 @@ defmodule Plausible.Stats.Clickhouse do
       end)
 
     plot = Enum.map(steps, fn step -> groups[step] || 0 end) |> Enum.take(steps_to_show)
-    compare_plot = compare_groups && Enum.map(steps, fn step -> compare_groups[step] || 0 end)
-    {plot, compare_plot, labels, present_index}
+    {plot, labels, present_index}
   end
 
   def calculate_plot(site, %Query{period: "realtime"}) do
@@ -174,7 +129,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     labels = Enum.into(-30..-1, [])
     plot = Enum.map(labels, fn label -> groups[label] || 0 end)
-    {plot, nil, labels, nil}
+    {plot, labels, nil}
   end
 
   def bounce_rate(site, query) do

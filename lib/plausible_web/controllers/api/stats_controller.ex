@@ -11,11 +11,10 @@ defmodule PlausibleWeb.Api.StatsController do
 
     plot_task = Task.async(fn -> Stats.calculate_plot(site, query) end)
     top_stats = fetch_top_stats(site, query)
-    {plot, compare_plot, labels, present_index} = Task.await(plot_task)
+    {plot, labels, present_index} = Task.await(plot_task)
 
     json(conn, %{
       plot: plot,
-      compare_plot: compare_plot,
       labels: labels,
       present_index: present_index,
       top_stats: top_stats,
