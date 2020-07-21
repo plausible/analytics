@@ -11,10 +11,10 @@ assignees: ''
 
 Please note that this tracker is only for bugs. Do not use the issue tracker for help or support. [Our docs](https://docs.plausible.io/) are a great place for most answers, but if you can’t find your answer there, you can [contact us](https://plausible.io/contact). Thanks!
 
-## Prerequisites 
+## Prerequisites
 - [ ] I have searched open and closed issues to make sure that the bug has not yet been reported.
 
-##Bug report
+## Bug report
 **Describe the bug**
 A clear and concise description of what the bug is.
 
