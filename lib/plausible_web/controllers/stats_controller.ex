@@ -44,7 +44,7 @@ defmodule PlausibleWeb.StatsController do
     site = conn.assigns[:site]
 
     query = Query.from(site.timezone, conn.params)
-    {plot, _, labels, _} = Stats.calculate_plot(site, query)
+    {plot, labels, _} = Stats.calculate_plot(site, query)
 
     csv_content =
       Enum.zip(labels, plot)

@@ -6,7 +6,7 @@ import { eventName } from '../query'
 import numberFormatter, {durationFormatter} from '../number-formatter'
 import * as api from '../api'
 
-function mainSet(plot, present_index, ctx, label) {
+function buildDataSet(plot, present_index, ctx, label) {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
   gradient.addColorStop(0, 'rgba(101,116,205, 0.2)');
   gradient.addColorStop(1, 'rgba(101,116,205, 0)');
@@ -44,57 +44,6 @@ function mainSet(plot, present_index, ctx, label) {
       pointBackgroundColor: 'rgba(101,116,205)',
       backgroundColor: gradient,
     }]
-  }
-}
-
-function compareSet(plot, present_index, ctx) {
-  var gradient = ctx.createLinearGradient(0, 0, 0, 300);
-  gradient.addColorStop(0, 'rgba(255, 68, 87, .2)');
-  gradient.addColorStop(1, 'rgba(255, 68, 87, 0)');
-
-  if (present_index) {
-    var dashedPart = plot.slice(present_index - 1);
-    var dashedPlot = (new Array(plot.length - dashedPart.length)).concat(dashedPart)
-    for(var i = present_index; i < plot.length; i++) {
-      plot[i] = undefined
-    }
-
-    return [{
-        label: 'Conversions',
-        data: plot,
-        borderWidth: 3,
-        borderColor: 'rgba(255, 68, 87, 1)',
-        pointBackgroundColor: 'rgba(255, 68, 87, 1)',
-        backgroundColor: gradient,
-      },
-      {
-        label: 'Conversions',
-        data: dashedPlot,
-        borderWidth: 3,
-        borderDash: [5, 10],
-        borderColor: 'rgba(255, 68, 87, 1)',
-        pointBackgroundColor: 'rgba(255, 68, 87, 1)',
-        backgroundColor: gradient,
-    }]
-  } else {
-    return [{
-      label: 'Conversions',
-      data: plot,
-      borderWidth: 3,
-      borderColor: 'rgba(255, 68, 87, 1)',
-      pointBackgroundColor: 'rgba(255, 68, 87, 1)',
-      backgroundColor: gradient,
-    }]
-  }
-}
-
-function dataSets(graphData, ctx) {
-  const dataSets = mainSet(graphData.plot, graphData.present_index, ctx, graphData.interval === 'minute' ? 'Pageviews' : 'Visitors')
-
-  if (graphData.compare_plot) {
-    return dataSets.concat(compareSet(graphData.compare_plot, graphData.present_index, ctx))
-  } else {
-    return dataSets
   }
 }
 
@@ -136,12 +85,14 @@ class LineGraph extends React.Component {
   componentDidMount() {
     const {graphData} = this.props
     this.ctx = document.getElementById("main-graph-canvas").getContext('2d');
+    const label = this.props.query.filters.goal ? 'Converted visitors' : graphData.interval === 'minute' ? 'Pageviews' : 'Visitors'
+    const dataSet = buildDataSet(graphData.plot, graphData.present_index, this.ctx, label)
 
     this.chart = new Chart(this.ctx, {
       type: 'line',
       data: {
         labels: graphData.labels,
-        datasets: dataSets(graphData, this.ctx)
+        datasets: dataSet
       },
       options: {
         animation: false,
