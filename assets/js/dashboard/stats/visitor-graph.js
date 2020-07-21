@@ -169,7 +169,8 @@ class LineGraph extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (this.props.graphData !== prevProps.graphData) {
-      const newDataset = dataSets(this.props.graphData, this.ctx)
+      const label = this.props.query.filters.goal ? 'Converted visitors' : this.props.graphData.interval === 'minute' ? 'Pageviews' : 'Visitors'
+      const newDataset = buildDataSet(this.props.graphData.plot, this.props.graphData.present_index, this.ctx, label)
 
       for (let i = 0; i < newDataset[0].data.length; i++) {
         this.chart.data.datasets[0].data[i] = newDataset[0].data[i]
