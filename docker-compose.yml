@@ -38,7 +38,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    command: sh -c "sleep 10 && /entrypoint.sh run"
+    command: sh -c "sleep 10 && /entrypoint.sh db migrate && /entrypoint.sh run"
     depends_on:
       - plausible_db
       - plausible_events_db
@@ -57,7 +57,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    command: sh -c "sleep 10 && /entrypoint.sh db createdb && /entrypoint.sh db migrate"
+    command: sh -c "sleep 10 && /entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh db init-admin"
     depends_on:
       - plausible_db
       - plausible_events_db
