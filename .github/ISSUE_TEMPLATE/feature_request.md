@@ -14,7 +14,7 @@ Please note that this tracker is only for feature requests. Do not use the issue
 ## Prerequisites
 - [ ] I have searched open and closed issues to make sure that the feature has not yet been requested.
 
-##Feature request
+## Feature request
 **Is your feature request related to a problem? Please describe.**
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 
