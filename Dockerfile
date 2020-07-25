@@ -65,7 +65,6 @@ RUN mix release plausible
 FROM debian:bullseye
 LABEL maintainer="tckb <tckb@tgrthi.me>"
 ENV LANG=C.UTF-8
-ENV PORT=8080
 
 RUN apt-get update && \
     apt-get install -y bash openssl --no-install-recommends&& \
@@ -83,5 +82,5 @@ COPY --from=buildcontainer /app/_build/prod/rel/plausible /app
 RUN chown -R plausibleuser:plausibleuser /app
 WORKDIR /app
 ENTRYPOINT ["/entrypoint.sh"]
-EXPOSE 8080
+EXPOSE 8000
 CMD ["run"]
