@@ -104,7 +104,7 @@ Following are the variables that can be used to configure the availability of th
 - SCHEME (*String*)
     - The scheme of the URL, either `http` or `https`. When using a reverse proxy with https, it'll be required to set this. _defaults to `http`_
 - PORT (*Number*)
-    - The port on which the server is available.
+    - The port on which the server is available (default `8000`).
 - SECRET_KEY_BASE (*String*)
     - An internal secret key used by [Phoenix Framework](https://www.phoenixframework.org/). Follow the [instructions](https://hexdocs.pm/phoenix/Mix.Tasks.Phx.Gen.Secret.html#content) to generate one.
 - ENVIRONMENT (*String*)
