@@ -448,7 +448,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def countries(site, query) do
     Clickhouse.all(
-      from e in base_session_query(site, query),
+      from e in base_query(site, query),
         select: {fragment("? as name", e.country_code), fragment("uniq(user_id) as count")},
         group_by: e.country_code,
         where: e.country_code != "\0\0",
@@ -466,7 +466,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def browsers(site, query, limit \\ 5) do
     Clickhouse.all(
-      from e in base_session_query(site, query),
+      from e in base_query(site, query),
         select: {fragment("? as name", e.browser), fragment("uniq(user_id) as count")},
         group_by: e.browser,
         where: e.browser != "",
@@ -478,7 +478,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def operating_systems(site, query, limit \\ 5) do
     Clickhouse.all(
-      from e in base_session_query(site, query),
+      from e in base_query(site, query),
         select: {fragment("? as name", e.operating_system), fragment("uniq(user_id) as count")},
         group_by: e.operating_system,
         where: e.operating_system != "",
