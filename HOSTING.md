@@ -35,13 +35,13 @@ The repo supplies with a [Docker Compose](./docker-compose.yml) file and the sam
     docker-compose down
     ```
 
-- After the setup, you can start plausible as -- 
+- After the setup, you can start plausible as --
     ```bash
-    docker-compose up -d plausible 
+    docker-compose up -d plausible
     ```
-     after a successful startup (can take upto 5 mins), `plausible` is available at port `80`, navigate to [`http://localhost`](http://localhost). 
- 
-- stopping plausible --  
+     after a successful startup (can take upto 5 mins), `plausible` is available at port `80`, navigate to [`http://localhost`](http://localhost).
+
+- stopping plausible --
     ```bash
     docker-compose down
     ```
@@ -51,12 +51,12 @@ The repo supplies with a [Docker Compose](./docker-compose.yml) file and the sam
     docker volume rm plausible_event-data -f
     docker volume rm plausible_db-data -f
     ```
-Note: 
+Note:
 - #1 you need to stop plausible and restart plausible  if you change the environment variables.
 - #2 With docker-compose, you need to remove the existing container and rebuild if you want your changes need to be reflected:
     ```bash
     docker rmi -f  plausible_plausible:latest
-    docker-compose up -d plausible 
+    docker-compose up -d plausible
     ```
 ### Non-docker building
 It is possible to create a release artifact by running a release.
@@ -78,6 +78,7 @@ After the release, these are available under  `_build/prod/rel/plausible` --
 
 ```bash
 _build/prod/rel/plausible/createdb.sh
+_build/prod/rel/plausible/init-admin.sh
 _build/prod/rel/plausible/migrate.sh
 _build/prod/rel/plausible/rollback.sh
 _build/prod/rel/plausible/seed.sh
@@ -87,6 +88,7 @@ the same is available in the docker images as follows --
 
 ```bash
 docker run plausible:master-12add db createdb
+docker run plausible:master-12add db init-admin
 docker run plausible:master-12add db migrate
 docker run plausible:master-12add db rollback
 docker run plausible:master-12add db seed
@@ -120,7 +122,7 @@ Following are the variables that can be used to configure the availability of th
   - Disables changing of subscription and removes the trial notice banner (use with caution!) _defaults to `false`_
 
 ### Default User Generation
-For self-hosting, a default user is generated during the [Database Migration](#Database Migration) to access Plausible. To be noted that, a default user is a user whose trial period expires in 100 Years ;).
+For self-hosting, a default user can be generated using the `db init-admin` command. To be noted that, a default user is a user whose trial period expires in 100 Years ;).
 It is *highly* recommended that you configure these parameters.
 
 - ADMIN_USER_NAME

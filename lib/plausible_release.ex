@@ -36,7 +36,6 @@ defmodule Plausible.Release do
   def migrate do
     prepare()
     Enum.each(repos(), &run_migrations_for/1)
-    init_admin()
     prepare_clickhouse()
     run_migrations_for_ch()
     IO.puts("Migrations successful!")
