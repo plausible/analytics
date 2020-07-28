@@ -66,11 +66,16 @@ export default class Pages extends React.Component {
     }
   }
 
+  title() {
+    const filters = this.props.query.filters
+    return filters['source'] || filters['referrer'] ? 'Entry Pages' : 'Top Pages'
+  }
+
   renderContent() {
     if (this.state.pages) {
       return (
         <React.Fragment>
-          <h3 className="font-bold">Top Pages</h3>
+          <h3 className="font-bold">{this.title()}</h3>
           { this.renderList() }
           <MoreLink site={this.props.site} list={this.state.pages} endpoint="pages" />
         </React.Fragment>

@@ -404,15 +404,11 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp bounce_rates_by_page_url(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
-
     Clickhouse.all(
-      from s in "sessions",
+      from s in base_session_query(site, query),
         select:
           {s.entry_page, fragment("count(*) as total"),
            fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate")},
-        where: s.domain == ^site.domain,
-        where: s.start >= ^first_datetime and s.start < ^last_datetime,
         group_by: s.entry_page,
         order_by: [desc: fragment("total")],
         limit: 100
