@@ -144,7 +144,7 @@ class ReferrerDrilldownModal extends React.Component {
     } else if (this.state.referrers) {
       return (
         <React.Fragment>
-          <Link to={`/${encodeURIComponent(this.props.site.domain)}/referrers${window.location.search}`} className="font-bold text-gray-700 hover:underline">← All referrers</Link>
+          <h1 className="text-xl font-bold">Referrer drilldown</h1>
 
           <div className="my-4 border-b border-gray-300"></div>
           <main className="modal__content mt-0">
