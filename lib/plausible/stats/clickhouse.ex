@@ -177,9 +177,9 @@ defmodule Plausible.Stats.Clickhouse do
   def pageviews_and_visitors(site, query) do
     [res] =
       Clickhouse.all(
-        from e in base_session_query(site, query),
+        from e in base_query(site, query),
           select:
-            {fragment("sum(sign * pageviews) as pageviews"),
+            {fragment("count(*) as pageviews"),
              fragment("uniq(user_id) as visitors")}
       )
 
