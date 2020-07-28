@@ -41,7 +41,7 @@ defmodule Plausible.Google.Api do
     |> Enum.map(fn url -> String.trim_trailing(url, "/") end)
   end
 
-  def fetch_stats(auth, query) do
+  def fetch_stats(auth, query, limit) do
     auth = refresh_if_needed(auth)
     property = URI.encode_www_form(auth.property)
 
@@ -52,7 +52,7 @@ defmodule Plausible.Google.Api do
           startDate: Date.to_iso8601(query.date_range.first),
           endDate: Date.to_iso8601(query.date_range.last),
           dimensions: ["query"],
-          rowLimit: 20
+          rowLimit: limit
         }),
         "Content-Type": "application/json",
         Authorization: "Bearer #{auth.access_token}"

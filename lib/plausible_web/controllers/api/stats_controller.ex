@@ -138,7 +138,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     search_terms =
       if site.google_auth && site.google_auth.property && !query.filters["goal"] do
-        @google_api.fetch_stats(site.google_auth, query)
+        @google_api.fetch_stats(site.google_auth, query, params["limit"] || 9)
       end
 
     case search_terms do

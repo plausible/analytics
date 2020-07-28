@@ -38,7 +38,7 @@ export default class Referrers extends React.Component {
   fetchReferrers() {
     if (this.props.query.filters.source) {
       api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${this.props.query.filters.source}`, this.props.query)
-        .then((res) => res.referrers)
+        .then((res) => res.search_terms || res.referrers)
         .then((referrers) => this.setState({loading: false, referrers: referrers}))
     } else if (this.props.query.filters.goal) {
       api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers`, this.props.query)
@@ -50,7 +50,7 @@ export default class Referrers extends React.Component {
   }
 
   renderExternalLink(referrer) {
-    if (this.props.query.filters.source) {
+    if (this.props.query.filters.source && this.props.query.filters.source !== 'Google') {
       return (
         <a target="_blank" href={'//' + referrer.name}>
           <svg className="inline h-4 w-4 ml-1 -mt-1 text-gray-600" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
@@ -58,6 +58,14 @@ export default class Referrers extends React.Component {
       )
     }
     return null
+  }
+
+  renderFavicon(referrer) {
+    if (referrer.url) {
+      return (
+        <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} className="inline h-4 w-4 mr-2 align-middle -mt-px" />
+      )
+    }
   }
 
   renderReferrer(referrer) {
@@ -74,8 +82,8 @@ export default class Referrers extends React.Component {
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
           <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50" />
           <span className="flex px-2" style={{marginTop: '-26px'}} >
-            <LinkOption className="block truncate" to={{search: query.toString()}} disabled={this.props.query.filters.goal}>
-              <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} className="inline h-4 w-4 mr-2 align-middle -mt-px" />
+            <LinkOption className="block truncate" to={{search: query.toString()}} disabled={this.props.query.filters.goal || this.props.query.filters.source === 'Google'}>
+              { this.renderFavicon(referrer) }
               { referrer.name === '' ? '(no referrer)' : referrer.name }
             </LinkOption>
             { this.renderExternalLink(referrer) }
@@ -114,7 +122,7 @@ export default class Referrers extends React.Component {
 
   renderContent() {
     const source = this.props.query.filters.source
-    const title = source ? 'Top Referrers' : 'Top Sources'
+    const title = source === 'Google' ? 'Search terms' : source ? 'Top Referrers' : 'Top Sources'
     const endpoint = source ? 'referrers/' + source : 'referrers'
 
     if (this.state.referrers) {
