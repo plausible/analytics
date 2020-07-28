@@ -136,7 +136,7 @@ defmodule Plausible.Stats.Clickhouse do
     [res] =
       Clickhouse.all(
         from s in base_session_query(site, query),
-        select: {fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate")}
+          select: {fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate")}
       )
 
     res["bounce_rate"] || 0
@@ -158,7 +158,7 @@ defmodule Plausible.Stats.Clickhouse do
     [res] =
       Clickhouse.all(
         from e in base_session_query(site, query),
-        select: fragment("sum(sign * pageviews) as pageviews")
+          select: fragment("sum(sign * pageviews) as pageviews")
       )
 
     res["pageviews"]
@@ -168,7 +168,7 @@ defmodule Plausible.Stats.Clickhouse do
     [res] =
       Clickhouse.all(
         from e in base_query(site, query),
-        select: fragment("count(*) as events")
+          select: fragment("count(*) as events")
       )
 
     res["events"]
@@ -178,7 +178,9 @@ defmodule Plausible.Stats.Clickhouse do
     [res] =
       Clickhouse.all(
         from e in base_session_query(site, query),
-          select: {fragment("sum(sign * pageviews) as pageviews"), fragment("uniq(user_id) as visitors")}
+          select:
+            {fragment("sum(sign * pageviews) as pageviews"),
+             fragment("uniq(user_id) as visitors")}
       )
 
     {res["pageviews"], res["visitors"]}
@@ -264,7 +266,9 @@ defmodule Plausible.Stats.Clickhouse do
             where: e.referrer_source == ""
         )
 
-      if no_referrers |> hd |> Map.get("count") > 0, do: referrers ++ no_referrers, else: referrers
+      if no_referrers |> hd |> Map.get("count") > 0,
+        do: referrers ++ no_referrers,
+        else: referrers
     else
       referrers
     end
@@ -327,11 +331,12 @@ defmodule Plausible.Stats.Clickhouse do
         )
       end
 
-    referring_urls = Clickhouse.all(q)
-    |> Enum.map(fn ref ->
-      url = if ref["name"] !== "", do: URI.parse("http://" <> ref["name"]).host
-      Map.put(ref, "url", url)
-    end)
+    referring_urls =
+      Clickhouse.all(q)
+      |> Enum.map(fn ref ->
+        url = if ref["name"] !== "", do: URI.parse("http://" <> ref["name"]).host
+        Map.put(ref, "url", url)
+      end)
 
     if referrer == "Twitter" do
       urls = Enum.map(referring_urls, & &1["name"])
@@ -498,7 +503,7 @@ defmodule Plausible.Stats.Clickhouse do
     [res] =
       Clickhouse.all(
         from s in base_query(site, query),
-        select: fragment("uniq(user_id) as visitors")
+          select: fragment("uniq(user_id) as visitors")
       )
 
     res["visitors"]
@@ -557,26 +562,29 @@ defmodule Plausible.Stats.Clickhouse do
     if Enum.count(events) > 0 do
       {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
-      q = from(
-        e in "events",
-        where: e.domain == ^site.domain,
-        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
-        where: fragment("? IN tuple(?)", e.name, ^events),
-        select: {e.name, fragment("uniq(user_id) as count")},
-        group_by: e.name
-      )
-
-      q = if query.filters["source"] do
-        filtered_sessions = from(s in base_session_query(site, query), select: %{session_id: s.session_id})
-
+      q =
         from(
-          e in q,
-          join: cs in subquery(filtered_sessions),
-          on: e.session_id == cs.session_id,
+          e in "events",
+          where: e.domain == ^site.domain,
+          where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
+          where: fragment("? IN tuple(?)", e.name, ^events),
+          select: {e.name, fragment("uniq(user_id) as count")},
+          group_by: e.name
         )
-      else
-        q
-      end
+
+      q =
+        if query.filters["source"] do
+          filtered_sessions =
+            from(s in base_session_query(site, query), select: %{session_id: s.session_id})
+
+          from(
+            e in q,
+            join: cs in subquery(filtered_sessions),
+            on: e.session_id == cs.session_id
+          )
+        else
+          q
+        end
 
       Clickhouse.all(q)
     else
@@ -592,28 +600,31 @@ defmodule Plausible.Stats.Clickhouse do
     if Enum.count(pages) > 0 do
       {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
-      q = from(
-        e in "events",
-        where: e.domain == ^site.domain,
-        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
-        where: fragment("? IN tuple(?)", e.pathname, ^pages),
-        group_by: e.pathname,
-        select:
-        {fragment("concat('Visit ', ?) as name", e.pathname),
-          fragment("uniq(user_id) as count")}
-      )
-
-      q = if query.filters["source"] do
-        filtered_sessions = from(s in base_session_query(site, query), select: %{session_id: s.session_id})
-
+      q =
         from(
-          e in q,
-          join: cs in subquery(filtered_sessions),
-          on: e.session_id == cs.session_id,
+          e in "events",
+          where: e.domain == ^site.domain,
+          where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
+          where: fragment("? IN tuple(?)", e.pathname, ^pages),
+          group_by: e.pathname,
+          select:
+            {fragment("concat('Visit ', ?) as name", e.pathname),
+             fragment("uniq(user_id) as count")}
         )
-      else
-        q
-      end
+
+      q =
+        if query.filters["source"] do
+          filtered_sessions =
+            from(s in base_session_query(site, query), select: %{session_id: s.session_id})
+
+          from(
+            e in q,
+            join: cs in subquery(filtered_sessions),
+            on: e.session_id == cs.session_id
+          )
+        else
+          q
+        end
 
       Clickhouse.all(q)
     else
@@ -628,17 +639,19 @@ defmodule Plausible.Stats.Clickhouse do
   defp base_session_query(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
-    q = from(s in "sessions",
-      where: s.domain == ^site.domain,
-      where: s.start >= ^first_datetime and s.start < ^last_datetime
-    )
+    q =
+      from(s in "sessions",
+        where: s.domain == ^site.domain,
+        where: s.start >= ^first_datetime and s.start < ^last_datetime
+      )
 
-    q = if query.filters["source"] do
-      source = query.filters["source"]
-      from(e in q, where: e.referrer_source == ^source)
-    else
-      q
-    end
+    q =
+      if query.filters["source"] do
+        source = query.filters["source"]
+        from(e in q, where: e.referrer_source == ^source)
+      else
+        q
+      end
 
     if query.filters["referrer"] do
       ref = query.filters["referrer"]
@@ -658,19 +671,21 @@ defmodule Plausible.Stats.Clickhouse do
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
       )
 
-    q = if query.filters["source"] do
-      source = query.filters["source"]
-      from(e in q, where: e.referrer_source == ^source)
-    else
-      q
-    end
+    q =
+      if query.filters["source"] do
+        source = query.filters["source"]
+        from(e in q, where: e.referrer_source == ^source)
+      else
+        q
+      end
 
-    q = if query.filters["referrer"] do
-      ref = query.filters["referrer"]
-      from(e in q, where: e.referrer == ^ref)
-    else
-      q
-    end
+    q =
+      if query.filters["referrer"] do
+        ref = query.filters["referrer"]
+        from(e in q, where: e.referrer == ^ref)
+      else
+        q
+      end
 
     q =
       if path do
