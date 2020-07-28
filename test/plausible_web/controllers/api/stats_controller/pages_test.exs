@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
   describe "GET /api/stats/:domain/pages" do
     setup [:create_user, :log_in, :create_site]
 
-    test "returns top pages sources by pageviews", %{conn: conn, site: site} do
+    test "returns top pages by pageviews", %{conn: conn, site: site} do
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
@@ -50,7 +50,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=realtime")
 
       assert json_response(conn, 200) == [
-               %{"count" => 3, "name" => "/"}
+               %{"count" => 2, "name" => "/exit"},
+               %{"count" => 1, "name" => "/"}
              ]
     end
   end

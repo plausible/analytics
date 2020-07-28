@@ -287,6 +287,33 @@ defmodule Plausible.Test.ClickhouseSetup do
         referrer_source: "Twitter",
         start: ~N[2019-03-01 02:00:00],
         timestamp: ~N[2019-03-01 02:00:00]
+      },
+      %{
+        domain: "test-site.com",
+        entry_page: "/",
+        exit_page: "/",
+        referrer_source: "Bing",
+        referrer: "bing.com",
+        start: Timex.now() |> Timex.shift(minutes: -1),
+        timestamp: Timex.now() |> Timex.shift(minutes: -1)
+      },
+      %{
+        domain: "test-site.com",
+        entry_page: "/",
+        exit_page: "/exit",
+        referrer_source: "10words",
+        referrer: "10words.com",
+        start: Timex.now() |> Timex.shift(minutes: -2),
+        timestamp: Timex.now() |> Timex.shift(minutes: -2)
+      },
+      %{
+        domain: "test-site.com",
+        entry_page: "/",
+        exit_page: "/exit",
+        referrer_source: "10words",
+        referrer: "10words.com",
+        start: Timex.now() |> Timex.shift(minutes: -3),
+        timestamp: Timex.now() |> Timex.shift(minutes: -3)
       }
     ])
   end

@@ -164,6 +164,16 @@ defmodule Plausible.Stats.Clickhouse do
     res["pageviews"]
   end
 
+  def total_events(site, query) do
+    [res] =
+      Clickhouse.all(
+        from e in base_query(site, query),
+        select: fragment("count(*) as events")
+      )
+
+    res["events"]
+  end
+
   def pageviews_and_visitors(site, query) do
     [res] =
       Clickhouse.all(
@@ -672,7 +682,7 @@ defmodule Plausible.Stats.Clickhouse do
     if goal_event do
       from(e in q, where: e.name == ^goal_event)
     else
-      q
+      from(e in q, where: e.name == "pageview")
     end
   end
 
