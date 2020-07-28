@@ -162,7 +162,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
-    limit = parse_integer(params["limit"]) || 9
+    limit = params["limit"] || 9
 
     referrers = Stats.referrer_drilldown(site, query, referrer, include, limit)
     total_visitors = Stats.visitors_from_referrer(site, query, referrer)
@@ -198,14 +198,14 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
 
-    json(conn, Stats.browsers(site, query, parse_integer(params["limit"]) || 9))
+    json(conn, Stats.browsers(site, query, params["limit"] || 9))
   end
 
   def operating_systems(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
 
-    json(conn, Stats.operating_systems(site, query, parse_integer(params["limit"]) || 9))
+    json(conn, Stats.operating_systems(site, query, params["limit"] || 9))
   end
 
   def screen_sizes(conn, params) do
@@ -226,14 +226,5 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, %{"period" => "realtime"})
     json(conn, Stats.current_visitors(site, query))
-  end
-
-  defp parse_integer(nil), do: nil
-
-  defp parse_integer(nr) do
-    case Integer.parse(nr) do
-      {number, ""} -> number
-      _ -> nil
-    end
   end
 end
