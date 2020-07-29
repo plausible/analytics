@@ -49,6 +49,11 @@ class PagesModal extends React.Component {
     return this.state.query.period === 'realtime' ? 'Active visitors' : 'Pageviews'
   }
 
+  title() {
+    const {filters} = this.state.query
+    return (filters.source || filters.referrer) ? 'Entry Pages' : 'Top Pages'
+  }
+
   renderBody() {
     if (this.state.loading) {
       return (
@@ -57,7 +62,7 @@ class PagesModal extends React.Component {
     } else if (this.state.pages) {
       return (
         <React.Fragment>
-          <h1 className="text-xl font-bold">Top pages</h1>
+          <h1 className="text-xl font-bold">{this.title()}</h1>
 
           <div className="my-4 border-b border-gray-300"></div>
           <main className="modal__content">
