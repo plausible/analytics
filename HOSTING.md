@@ -186,8 +186,8 @@ Once you have the database, mount it on the Plausible docker image and configure
 - GEOLITE2_COUNTRY_DB (*String*)
 
 To make this as easy as possible you can use the [`maxmindinc/geoipupdate`](https://hub.docker.com/r/maxmindinc/geoipupdate) Docker image.
-You just need to add your account details, mount the database in the `plausible` container and let the image update the database automatically. 
-For more information see [`docker-compose.yml`](docker-compose.yml#L35).
+You just need to add your account details, mount the database in the `plausible` container and let the image update the database automatically.
+To run the complete setup including geoip see [`docker-compose-geoip.yml`](docker-compose-geoip.yml#L35).
 
 If the Geolite database is not configured, no country data will be captured.
 
