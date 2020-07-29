@@ -375,6 +375,24 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
+  def entry_pages(site, query, limit, include) do
+    pages = Clickhouse.all(
+      from s in base_session_query(site, query),
+      group_by: s.entry_page,
+      order_by: [desc: fragment("count")],
+      limit: ^limit,
+      select:
+      {fragment("? as name", s.entry_page), fragment("uniq(?) as count", s.user_id)}
+    )
+
+    if "bounce_rate" in include do
+      bounce_rates = bounce_rates_by_page_url(site, query)
+      Enum.map(pages, fn url -> Map.put(url, "bounce_rate", bounce_rates[url["name"]]) end)
+    else
+      pages
+    end
+  end
+
   def top_pages(site, %Query{period: "realtime"} = query, limit, _include) do
     Clickhouse.all(
       from s in base_session_query(site, query),
@@ -391,22 +409,11 @@ defmodule Plausible.Stats.Clickhouse do
         e in base_query(site, query),
         group_by: e.pathname,
         order_by: [desc: fragment("count")],
-        limit: ^limit
+        limit: ^limit,
+        select:
+        {fragment("? as name", e.pathname), fragment("uniq(?) as count", e.user_id),
+          fragment("count(*) as pageviews")}
       )
-
-    q =
-      if "unique_visitors" in include do
-        from(
-          e in q,
-          select:
-            {fragment("? as name", e.pathname), fragment("count(?) as count", e.pathname),
-             fragment("uniq(?) as unique_visitors", e.user_id)}
-        )
-      else
-        from(e in q,
-          select: {fragment("? as name", e.pathname), fragment("count(?) as count", e.pathname)}
-        )
-      end
 
     pages = Clickhouse.all(q)
 

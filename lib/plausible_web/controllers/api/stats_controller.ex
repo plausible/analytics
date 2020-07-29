@@ -187,6 +187,15 @@ defmodule PlausibleWeb.Api.StatsController do
     json(conn, Stats.top_pages(site, query, limit || 9, include))
   end
 
+  def entry_pages(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, params)
+    include = if params["include"], do: String.split(params["include"], ","), else: []
+    limit = if params["limit"], do: String.to_integer(params["limit"])
+
+    json(conn, Stats.entry_pages(site, query, limit || 9, include))
+  end
+
   def countries(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)

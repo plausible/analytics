@@ -27,8 +27,14 @@ export default class Pages extends React.Component {
   }
 
   fetchPages() {
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, this.props.query)
-      .then((res) => this.setState({loading: false, pages: res}))
+    const {filters} = this.props.query
+    if (filters.source || filters.referrer) {
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`, this.props.query)
+        .then((res) => this.setState({loading: false, pages: res}))
+    } else {
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, this.props.query)
+        .then((res) => this.setState({loading: false, pages: res}))
+    }
   }
 
   renderPage(page) {
@@ -44,7 +50,7 @@ export default class Pages extends React.Component {
   }
 
   label() {
-    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Pageviews'
+    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
   }
 
   renderList() {
