@@ -126,7 +126,8 @@ class LineGraph extends React.Component {
               const dataset = this._data.datasets[item.datasetIndex]
               if (!this.drawnLabels[dataset.label]) {
                 this.drawnLabels[dataset.label] = true
-                return ` ${item.yLabel} ${dataset.label}`
+                const pluralizedLabel = item.yLabel === 1 ? dataset.label.slice(0, -1) : dataset.label
+                return ` ${item.yLabel} ${pluralizedLabel}`
               }
             },
             footer: function(dataPoints) {

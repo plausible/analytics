@@ -82,9 +82,10 @@ export default class Countries extends React.Component {
         highlightBorderColor: '#a779e9',
         popupTemplate: function(geo, data) {
           if (!data) { return ; }
+          const pluralizedLabel = data.numberOfThings === 1 ? label.slice(0, -1) : label
           return ['<div class="hoverinfo">',
             '<strong>', geo.properties.name, '</strong>',
-            '<br><strong>', data.numberOfThings, '</strong> ' + label,
+            '<br><strong>', data.numberOfThings, '</strong> ' + pluralizedLabel,
             '</div>'].join('');
         }
       }
