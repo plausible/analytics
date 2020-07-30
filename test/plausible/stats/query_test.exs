@@ -83,5 +83,12 @@ defmodule Plausible.Stats.QueryTest do
 
       assert q.filters["goal"] == "Signup"
     end
+
+    test "parses source filter" do
+      filters = Jason.encode!(%{"source" => "Twitter"})
+      q = Query.from(@tz, %{"period" => "6mo", "filters" => filters})
+
+      assert q.filters["source"] == "Twitter"
+    end
   end
 end

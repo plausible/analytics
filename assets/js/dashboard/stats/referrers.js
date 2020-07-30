@@ -8,6 +8,15 @@ import MoreLink from './more-link'
 import numberFormatter from '../number-formatter'
 import * as api from '../api'
 
+function LinkOption(props) {
+  if (props.disabled) {
+    return <span {...props}>{props.children}</span>
+  } else {
+    props = Object.assign({}, props, {className: props.className + ' hover:underline'})
+    return <Link {...props}>{props.children}</Link>
+  }
+}
+
 export default class Referrers extends React.Component {
   constructor(props) {
     super(props)
@@ -27,7 +36,11 @@ export default class Referrers extends React.Component {
   }
 
   fetchReferrers() {
-    if (this.props.query.filters.goal) {
+    if (this.props.query.filters.source) {
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${this.props.query.filters.source}`, this.props.query)
+        .then((res) => res.search_terms || res.referrers)
+        .then((referrers) => this.setState({loading: false, referrers: referrers}))
+    } else if (this.props.query.filters.goal) {
       api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers`, this.props.query)
         .then((res) => this.setState({loading: false, referrers: res}))
     } else {
@@ -36,15 +49,45 @@ export default class Referrers extends React.Component {
     }
   }
 
+  renderExternalLink(referrer) {
+    if (this.props.query.filters.source && this.props.query.filters.source !== 'Google') {
+      return (
+        <a target="_blank" href={'//' + referrer.name}>
+          <svg className="inline h-4 w-4 ml-1 -mt-1 text-gray-600" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
+        </a>
+      )
+    }
+    return null
+  }
+
+  renderFavicon(referrer) {
+    if (referrer.url) {
+      return (
+        <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} className="inline h-4 w-4 mr-2 align-middle -mt-px" />
+      )
+    }
+  }
+
   renderReferrer(referrer) {
+    const query = new URLSearchParams(window.location.search)
+
+    if (this.props.query.filters.source) {
+      query.set('referrer', referrer.name)
+    } else {
+      query.set('source', referrer.name)
+    }
+
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={referrer.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
           <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50" />
-          <Link className="hover:underline block px-2" style={{marginTop: '-26px'}} to={`/${encodeURIComponent(this.props.site.domain)}/referrers/${referrer.name}${window.location.search}`}>
-            <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} className="inline h-4 w-4 mr-2 align-middle -mt-px" />
-            { referrer.name }
-          </Link>
+          <span className="flex px-2" style={{marginTop: '-26px'}} >
+            <LinkOption className="block truncate" to={{search: query.toString()}} disabled={this.props.query.filters.goal || this.props.query.filters.source === 'Google'}>
+              { this.renderFavicon(referrer) }
+              { referrer.name === '' ? '(no referrer)' : referrer.name }
+            </LinkOption>
+            { this.renderExternalLink(referrer) }
+          </span>
         </div>
         <span className="font-medium">{numberFormatter(referrer.count)}</span>
       </div>
@@ -57,11 +100,15 @@ export default class Referrers extends React.Component {
 
   renderList() {
     if (this.state.referrers.length > 0) {
+      const source = this.props.query.filters.source
+      const keyLabel = source === 'Google' ? 'Search term' : source ? 'Referrer' : 'Source'
+      const valLabel = this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+
       return (
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
-            <span>Referrer</span>
-            <span>{ this.label() }</span>
+            <span>{ keyLabel }</span>
+            <span>{ valLabel }</span>
           </div>
 
           <FlipMove>
@@ -75,12 +122,16 @@ export default class Referrers extends React.Component {
   }
 
   renderContent() {
+    const source = this.props.query.filters.source
+    const title = source === 'Google' ? 'Search terms' : source ? 'Top Referrers' : 'Top Sources'
+    const endpoint = source ? 'referrers/' + source : 'referrers'
+
     if (this.state.referrers) {
       return (
         <React.Fragment>
-          <h3 className="font-bold">Top Referrers</h3>
+          <h3 className="font-bold">{title}</h3>
           { this.renderList() }
-          <MoreLink site={this.props.site} list={this.state.referrers} endpoint="referrers" />
+          <MoreLink site={this.props.site} list={this.state.referrers} endpoint={endpoint} />
         </React.Fragment>
       )
     }

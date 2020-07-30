@@ -16,14 +16,19 @@ class PagesModal extends React.Component {
   }
 
   componentDidMount() {
-    const include = this.showExtra() ? 'bounce_rate,unique_visitors' : null
+    const include = this.showBounceRate() ? 'bounce_rate' : null
 
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, this.state.query, {limit: 100, include: include})
       .then((res) => this.setState({loading: false, pages: res}))
   }
 
-  showExtra() {
+  showBounceRate() {
     return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
+  }
+
+  showPageviews() {
+    const {filters} = this.state.query
+    return this.state.query.period !== 'realtime' && !(filters.goal || filters.source || filters.referrer)
   }
 
   formatBounceRate(page) {
@@ -39,14 +44,19 @@ class PagesModal extends React.Component {
       <tr className="text-sm" key={page.name}>
         <td className="p-2 truncate">{page.name}</td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.unique_visitors)}</td> }
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td> }
+        {this.showPageviews() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.pageviews)}</td> }
+        {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td> }
       </tr>
     )
   }
 
   label() {
-    return this.state.query.period === 'realtime' ? 'Active visitors' : 'Pageviews'
+    return this.state.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+  }
+
+  title() {
+    const {filters} = this.state.query
+    return (filters.source || filters.referrer) ? 'Entry Pages' : 'Top Pages'
   }
 
   renderBody() {
@@ -57,7 +67,7 @@ class PagesModal extends React.Component {
     } else if (this.state.pages) {
       return (
         <React.Fragment>
-          <h1 className="text-xl font-bold">Top pages</h1>
+          <h1 className="text-xl font-bold">{this.title()}</h1>
 
           <div className="my-4 border-b border-gray-300"></div>
           <main className="modal__content">
@@ -66,8 +76,8 @@ class PagesModal extends React.Component {
                 <tr>
                   <th className="p-2 text-xs tracking-wide font-bold text-gray-500" align="left">Page url</th>
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">{ this.label() }</th>
-                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Unique visitors</th>}
-                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Bounce rate</th>}
+                  {this.showPageviews() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Pageviews</th>}
+                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Bounce rate</th>}
                 </tr>
               </thead>
               <tbody>

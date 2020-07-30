@@ -1,7 +1,6 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
 import Chart from 'chart.js'
-import FadeIn from '../fade-in'
 import { eventName } from '../query'
 import numberFormatter, {durationFormatter} from '../number-formatter'
 import * as api from '../api'
@@ -310,9 +309,7 @@ export default class VisitorGraph extends React.Component {
     return (
       <div className="w-full relative bg-white shadow-xl rounded mt-6 main-graph">
         { this.state.loading && <div className="loading pt-24 sm:pt-32 md:pt-48 mx-auto"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
-          { this.renderInner() }
-        </FadeIn>
+        { this.renderInner() }
       </div>
     )
   }
