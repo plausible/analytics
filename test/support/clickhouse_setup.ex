@@ -218,7 +218,8 @@ defmodule Plausible.Test.ClickhouseSetup do
         session_id: @conversion_1_session_id,
         is_bounce: true,
         duration: 100,
-        start: ~N[2019-01-01 02:00:00]
+        start: ~N[2019-01-01 02:00:00],
+        timestamp: ~N[2019-01-01 02:00:00]
       },
       %{
         domain: "test-site.com",
@@ -229,7 +230,8 @@ defmodule Plausible.Test.ClickhouseSetup do
         session_id: @conversion_2_session_id,
         is_bounce: false,
         duration: 0,
-        start: ~N[2019-01-01 02:00:00]
+        start: ~N[2019-01-01 02:00:00],
+        timestamp: ~N[2019-01-01 02:00:00]
       },
       %{
         domain: "test-site.com",
@@ -239,7 +241,8 @@ defmodule Plausible.Test.ClickhouseSetup do
         referrer: "",
         is_bounce: false,
         duration: 100,
-        start: ~N[2019-01-01 03:00:00]
+        start: ~N[2019-01-01 03:00:00],
+        timestamp: ~N[2019-01-01 03:00:00]
       },
       %{
         domain: "test-site.com",
