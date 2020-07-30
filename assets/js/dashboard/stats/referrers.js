@@ -100,7 +100,8 @@ export default class Referrers extends React.Component {
 
   renderList() {
     if (this.state.referrers.length > 0) {
-      const keyLabel = this.props.query.filters.source ? 'Referrer' : 'Source'
+      const source = this.props.query.filters.source
+      const keyLabel = source === 'Google' ? 'Search term' : source ? 'Referrer' : 'Source'
       const valLabel = this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
 
       return (
