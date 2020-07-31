@@ -7,6 +7,7 @@ defmodule Plausible.Release do
   ]
 
   def init_admin do
+    prepare()
     {admin_email, admin_user, admin_pwd} =
       validate_admin(
         {Application.get_env(:plausible, :admin_email),
