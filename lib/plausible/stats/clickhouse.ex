@@ -649,7 +649,7 @@ defmodule Plausible.Stats.Clickhouse do
     q =
       from(s in "sessions",
         where: s.domain == ^site.domain,
-        where: s.start >= ^first_datetime and s.start < ^last_datetime
+        where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
       )
 
     q =
@@ -708,17 +708,15 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  defp utc_boundaries(%Query{period: "30m"}, timezone) do
-    last_datetime =
-      NaiveDateTime.utc_now() |> Timex.to_datetime(timezone) |> Timex.Timezone.convert("UTC")
+  defp utc_boundaries(%Query{period: "30m"}, _timezone) do
+    last_datetime = NaiveDateTime.utc_now()
 
     first_datetime = last_datetime |> Timex.shift(minutes: -30)
     {first_datetime, last_datetime}
   end
 
-  defp utc_boundaries(%Query{period: "realtime"}, timezone) do
-    last_datetime =
-      NaiveDateTime.utc_now() |> Timex.to_datetime(timezone) |> Timex.Timezone.convert("UTC")
+  defp utc_boundaries(%Query{period: "realtime"}, _timezone) do
+    last_datetime = NaiveDateTime.utc_now()
 
     first_datetime = last_datetime |> Timex.shift(minutes: -5)
     {first_datetime, last_datetime}
