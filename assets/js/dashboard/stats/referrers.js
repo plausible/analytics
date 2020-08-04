@@ -35,16 +35,20 @@ export default class Referrers extends React.Component {
     }
   }
 
+  showNoRef() {
+    return this.props.query.period === 'realtime'
+  }
+
   fetchReferrers() {
     if (this.props.query.filters.source) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${this.props.query.filters.source}`, this.props.query)
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${this.props.query.filters.source}`, this.props.query, {show_noref: this.showNoRef()})
         .then((res) => res.search_terms || res.referrers)
         .then((referrers) => this.setState({loading: false, referrers: referrers}))
     } else if (this.props.query.filters.goal) {
       api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers`, this.props.query)
         .then((res) => this.setState({loading: false, referrers: res}))
     } else {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers`, this.props.query)
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers`, this.props.query, {show_noref: this.showNoRef()})
         .then((res) => this.setState({loading: false, referrers: res}))
     }
   }

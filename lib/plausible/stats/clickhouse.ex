@@ -224,17 +224,22 @@ defmodule Plausible.Stats.Clickhouse do
     referrers =
       from(s in base_session_query(site, query),
         group_by: s.referrer_source,
-        where: s.referrer_source != "",
         order_by: [desc: fragment("count")],
         limit: ^limit
       )
+
+    referrers = if show_noref do
+      referrers
+    else
+      from(s in referrers, where: s.referrer_source != "")
+    end
 
     referrers =
       if "bounce_rate" in include do
         from(
           s in referrers,
           select:
-            {fragment("? as name", s.referrer_source), fragment("any(?) as url", s.referrer),
+            {fragment("if(empty(?), ?, ?) as name", s.referrer_source, @no_ref, s.referrer_source), fragment("any(?) as url", s.referrer),
              fragment("uniq(user_id) as count"),
              fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate"),
              fragment("round(avg(duration * sign)) as visit_duration")}
@@ -243,35 +248,15 @@ defmodule Plausible.Stats.Clickhouse do
         from(
           s in referrers,
           select:
-            {fragment("? as name", s.referrer_source), fragment("any(?) as url", s.referrer),
+            {fragment("if(empty(?), ?, ?) as name", s.referrer_source, @no_ref, s.referrer_source), fragment("any(?) as url", s.referrer),
              fragment("uniq(user_id) as count")}
         )
       end
 
-    referrers =
       Clickhouse.all(referrers)
       |> Enum.map(fn ref ->
         Map.update(ref, "url", nil, fn url -> url && URI.parse("http://" <> url).host end)
       end)
-
-    show_noref = if length(referrers) == 0, do: true, else: show_noref
-
-    if show_noref do
-      no_referrers =
-        Clickhouse.all(
-          from e in base_session_query(site, query),
-            select:
-              {fragment("? as name", @no_ref), fragment("any(?) as url", e.referrer),
-               fragment("uniq(user_id) as count")},
-            where: e.referrer_source == ""
-        )
-
-      if no_referrers |> hd |> Map.get("count") > 0,
-        do: referrers ++ no_referrers,
-        else: referrers
-    else
-      referrers
-    end
   end
 
   def visitors_from_referrer(site, query, referrer) do
