@@ -18,4 +18,5 @@ This is more than our standard plans, so please reply back to this email to get 
 <br /><br />
 Thanks,<br />
 Uku Taht<br />
-<%= plausible_url() %>
+<%= plausible_url() %><br />
+{{{ pm:unsubscribe }}}
