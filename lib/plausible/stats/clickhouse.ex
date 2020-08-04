@@ -452,7 +452,7 @@ defmodule Plausible.Stats.Clickhouse do
       from e in base_query(site, query),
         select: {fragment("? as name", e.screen_size), fragment("uniq(user_id) as count")},
         group_by: e.screen_size,
-        where: e.screen_size != ""
+        where: e.screen_size != "",
         order_by: [desc: fragment("count")]
     )
     |> add_percentages
