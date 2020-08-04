@@ -8,11 +8,12 @@ defmodule PlausibleWeb.AdminAuthControllerTest do
       assert redirected_to(conn) == "/login"
     end
 
-    test "disable authentication", %{conn: conn} do
+    test "logs admin user in automatically when authentication is disabled", %{conn: conn} do
       set_config(disable_authentication: true)
-
-      admin_user =
-        Plausible.Auth.find_user_by(email: Application.get_env(:plausible, :admin_email))
+      admin_user = insert(:user,
+        email: Application.get_env(:plausible, :admin_email),
+        password: Application.get_env(:plausible, :admin_pwd)
+      )
 
       # goto landing page
       conn = get(conn, "/")
