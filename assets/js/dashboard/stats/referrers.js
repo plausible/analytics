@@ -64,14 +64,6 @@ export default class Referrers extends React.Component {
     return null
   }
 
-  renderFavicon(referrer) {
-    if (referrer.url) {
-      return (
-        <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} className="inline h-4 w-4 mr-2 align-middle -mt-px" />
-      )
-    }
-  }
-
   renderReferrer(referrer) {
     const query = new URLSearchParams(window.location.search)
 
@@ -87,7 +79,7 @@ export default class Referrers extends React.Component {
           <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50" />
           <span className="flex px-2" style={{marginTop: '-26px'}} >
             <LinkOption className="block truncate" to={{search: query.toString()}} disabled={this.props.query.filters.goal || this.props.query.filters.source === 'Google'}>
-              { this.renderFavicon(referrer) }
+              <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} className="inline h-4 w-4 mr-2 align-middle -mt-px" />
               { referrer.name === '' ? '(no referrer)' : referrer.name }
             </LinkOption>
             { this.renderExternalLink(referrer) }
