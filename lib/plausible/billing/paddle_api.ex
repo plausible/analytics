@@ -39,6 +39,9 @@ defmodule Plausible.Billing.PaddleApi do
         vendor_id: config[:vendor_id],
         vendor_auth_code: config[:vendor_auth_code],
         subscription_id: paddle_subscription_id,
+        prorate: true,
+        keep_modifiers: true,
+        bill_immediately: true,
         quantity: 1
       })
 
