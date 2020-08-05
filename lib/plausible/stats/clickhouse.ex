@@ -2,7 +2,7 @@ defmodule Plausible.Stats.Clickhouse do
   use Plausible.Repo
   alias Plausible.Stats.Query
   alias Plausible.Clickhouse
-  @no_ref "Direct Traffic"
+  @no_ref "Direct / None"
 
   def compare_pageviews_and_visitors(site, query, {pageviews, visitors}) do
     query = Query.shift_back(query)
@@ -259,17 +259,6 @@ defmodule Plausible.Stats.Clickhouse do
       end)
   end
 
-  def visitors_from_referrer(site, query, referrer) do
-    [res] =
-      Clickhouse.all(
-        from e in base_session_query(site, query),
-          select: fragment("uniq(user_id) as visitors"),
-          where: e.referrer_source == ^referrer
-      )
-
-    res["visitors"]
-  end
-
   def conversions_from_referrer(site, query, referrer) do
     converted_sessions =
       from(
@@ -306,13 +295,14 @@ defmodule Plausible.Stats.Clickhouse do
         from(
           s in q,
           select:
-            {fragment("? as name", s.referrer), fragment("uniq(user_id) as count"),
+          {fragment("if(empty(?), ?, ?) as name", s.referrer, @no_ref, s.referrer),
+            fragment("uniq(user_id) as count"),
              fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate"),
              fragment("round(avg(duration * sign)) as visit_duration")}
         )
       else
         from(s in q,
-          select: {fragment("? as name", s.referrer), fragment("uniq(user_id) as count")}
+          select: {fragment("if(empty(?), ?, ?) as name", s.referrer, @no_ref, s.referrer), fragment("uniq(user_id) as count")}
         )
       end
 
@@ -640,6 +630,7 @@ defmodule Plausible.Stats.Clickhouse do
     q =
       if query.filters["source"] do
         source = query.filters["source"]
+        source = if source == @no_ref, do: "", else: source
         from(e in q, where: e.referrer_source == ^source)
       else
         q
@@ -666,6 +657,7 @@ defmodule Plausible.Stats.Clickhouse do
     q =
       if query.filters["source"] do
         source = query.filters["source"]
+        source = if source == @no_ref, do: "", else: source
         from(e in q, where: e.referrer_source == ^source)
       else
         q

@@ -143,13 +143,13 @@ defmodule PlausibleWeb.Api.StatsController do
 
     case search_terms do
       nil ->
-        total_visitors = Stats.visitors_from_referrer(site, query, "Google")
+        {_, total_visitors} = Stats.pageviews_and_visitors(site, query)
         user_id = get_session(conn, :current_user_id)
         is_owner = user_id && Plausible.Sites.is_owner?(user_id, site)
         json(conn, %{not_configured: true, is_owner: is_owner, total_visitors: total_visitors})
 
       {:ok, terms} ->
-        total_visitors = Stats.visitors_from_referrer(site, query, "Google")
+        {_, total_visitors} = Stats.pageviews_and_visitors(site, query)
         json(conn, %{search_terms: terms, total_visitors: total_visitors})
 
       {:error, e} ->
@@ -165,7 +165,7 @@ defmodule PlausibleWeb.Api.StatsController do
     limit = params["limit"] || 9
 
     referrers = Stats.referrer_drilldown(site, query, referrer, include, limit)
-    total_visitors = Stats.visitors_from_referrer(site, query, referrer)
+    {_, total_visitors} = Stats.pageviews_and_visitors(site, query)
     json(conn, %{referrers: referrers, total_visitors: total_visitors})
   end
 
