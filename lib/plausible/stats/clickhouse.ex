@@ -422,20 +422,14 @@ defmodule Plausible.Stats.Clickhouse do
     end)
   end
 
-  @available_screen_sizes ["Desktop", "Laptop", "Tablet", "Mobile"]
-
   def top_screen_sizes(site, query) do
     Clickhouse.all(
       from e in base_query(site, query),
         select: {fragment("? as name", e.screen_size), fragment("uniq(user_id) as count")},
         group_by: e.screen_size,
-        where: e.screen_size != ""
+        where: e.screen_size != "",
+        order_by: [desc: fragment("count")]
     )
-    |> Enum.sort(fn %{"name" => screen_size1}, %{"name" => screen_size2} ->
-      index1 = Enum.find_index(@available_screen_sizes, fn s -> s == screen_size1 end)
-      index2 = Enum.find_index(@available_screen_sizes, fn s -> s == screen_size2 end)
-      index2 > index1
-    end)
     |> add_percentages
   end
 
