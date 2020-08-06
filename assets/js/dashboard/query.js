@@ -25,7 +25,8 @@ export function parseQuery(querystring, site) {
     filters: {
       'goal': q.get('goal'),
       'source': q.get('source'),
-      'referrer': q.get('referrer')
+      'referrer': q.get('referrer'),
+      'page': q.get('page')
     }
   }
 }
