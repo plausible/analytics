@@ -569,6 +569,14 @@ defmodule Plausible.Stats.Clickhouse do
           q
         end
 
+      q =
+        if query.filters["page"] do
+          page = query.filters["page"]
+          from(e in q, where: e.pathname == ^page)
+        else
+          q
+        end
+
       Clickhouse.all(q)
     else
       []
@@ -609,6 +617,14 @@ defmodule Plausible.Stats.Clickhouse do
           q
         end
 
+      q =
+        if query.filters["page"] do
+          page = query.filters["page"]
+          from(e in q, where: e.pathname == ^page)
+        else
+          q
+        end
+
       Clickhouse.all(q)
     else
       []
@@ -633,6 +649,14 @@ defmodule Plausible.Stats.Clickhouse do
         source = query.filters["source"]
         source = if source == @no_ref, do: "", else: source
         from(e in q, where: e.referrer_source == ^source)
+      else
+        q
+      end
+
+    q =
+      if query.filters["page"] do
+        page = query.filters["page"]
+        from(e in q, where: e.entry_page == ^page)
       else
         q
       end
