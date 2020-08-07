@@ -44,6 +44,12 @@ defmodule Plausible.Google.Api do
   def fetch_stats(auth, query, limit) do
     auth = refresh_if_needed(auth)
     property = URI.encode_www_form(auth.property)
+    filter_groups = if query.filters["page"] do
+      [%{filters: [%{
+        dimension: "page",
+        expression: query.filters["page"]
+      }]}]
+    end
 
     res =
       HTTPoison.post!(
@@ -51,7 +57,7 @@ defmodule Plausible.Google.Api do
         Jason.encode!(%{
           startDate: Date.to_iso8601(query.date_range.first),
           endDate: Date.to_iso8601(query.date_range.last),
-          dimensions: ["query"],
+          dimensions: ["query", "page"],
           rowLimit: limit
         }),
         "Content-Type": "application/json",
@@ -64,6 +70,7 @@ defmodule Plausible.Google.Api do
           (Jason.decode!(res.body)["rows"] || [])
           |> Enum.filter(fn row -> row["clicks"] > 0 end)
           |> Enum.map(fn row -> %{name: row["keys"], count: round(row["clicks"])} end)
+          |> IO.inspect
 
         {:ok, terms}
 

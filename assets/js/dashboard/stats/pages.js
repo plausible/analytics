@@ -54,7 +54,14 @@ export default class Pages extends React.Component {
   }
 
   label() {
-    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+    const filters = this.props.query.filters
+    if (this.props.query.period === 'realtime') {
+      return 'Active visitors'
+    } else if (filters['source'] || filters['referrer']) {
+      return 'Entrances'
+    } else {
+      return 'Visitors'
+    }
   }
 
   renderList() {
