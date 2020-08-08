@@ -3,17 +3,15 @@
 # You can adjust the settings as-per your environment
 version: "3.3"
 services:
-
-# As it says, this service is a fake smtp server which accepts SMTP connections
-# the inbox is available at localhost:8025, in actuality, you need to use a proper smtp server
+  # As it says, this service is a fake smtp server which accepts SMTP connections
+  # the inbox is available at localhost:8025, in actuality, you need to use a proper smtp server
   fake_smtp:
     image: mailhog/mailhog:v1.0.0
     ports:
-    - 1025:1025
-    - 8025:8025
+      - 1025:1025
+      - 8025:8025
     healthcheck:
       test: echo | telnet 127.0.0.1 1025
-
 
   plausible_db:
     image: postgres:12
@@ -32,7 +30,20 @@ services:
     volumes:
       - event-data:/var/lib/clickhouse
     ports:
-    - 8123:8123
+      - 8123:8123
+
+  # optional, if you want to setup a geoip database and let it update automatically
+  # this requires an account at maxmind.com (https://www.maxmind.com/en/geolite2/signup)
+  geoip:
+    image: maxmindinc/geoipupdate
+    environment:
+      - GEOIPUPDATE_ACCOUNT_ID=<your-account-id>
+      - GEOIPUPDATE_LICENSE_KEY=<your-license-key>
+      - GEOIPUPDATE_EDITION_IDS=GeoLite2-Country
+      # update every 7 days
+      - GEOIPUPDATE_FREQUENCY=168
+    volumes:
+      - geoip:/usr/share/GeoIP
 
   plausible:
     build:
@@ -51,8 +62,11 @@ services:
       - fake_smtp
     env_file:
       - plausible-variables.sample.env
+    # only if you use the geioip container
+    volumes:
+      - geoip:/geoip:ro
     environment:
-      - GEOLITE2_COUNTRY_DB=/geoip/GeoLite2-Country.mmdb
+      -
 
   setup:
     build:
@@ -66,11 +80,12 @@ services:
       - plausible_db
       - plausible_events_db
     env_file:
-       - plausible-variables.sample.env
-
+      - plausible-variables.sample.env
 
 volumes:
   db-data:
     driver: local
   event-data:
+    driver: local
+  geoip:
     driver: local

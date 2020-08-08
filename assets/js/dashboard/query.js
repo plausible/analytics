@@ -22,7 +22,11 @@ export function parseQuery(querystring, site) {
     date: q.get('date') ? parseUTCDate(q.get('date')) : nowInOffset(site.offset),
     from: q.get('from') ? parseUTCDate(q.get('from')) : undefined,
     to: q.get('to') ? parseUTCDate(q.get('to')) : undefined,
-    filters: {'goal': q.get('goal')}
+    filters: {
+      'goal': q.get('goal'),
+      'source': q.get('source'),
+      'referrer': q.get('referrer')
+    }
   }
 }
 

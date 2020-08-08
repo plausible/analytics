@@ -125,8 +125,7 @@ defmodule Plausible.Billing do
 
   defp site_usage(site) do
     q = Plausible.Stats.Query.from(site.timezone, %{"period" => "30d"})
-    {pageviews, _} = Plausible.Stats.Clickhouse.pageviews_and_visitors(site, q)
-    pageviews
+    Plausible.Stats.Clickhouse.total_events(site, q)
   end
 
   defp format_subscription(params) do

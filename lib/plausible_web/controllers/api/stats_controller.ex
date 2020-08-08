@@ -11,11 +11,10 @@ defmodule PlausibleWeb.Api.StatsController do
 
     plot_task = Task.async(fn -> Stats.calculate_plot(site, query) end)
     top_stats = fetch_top_stats(site, query)
-    {plot, compare_plot, labels, present_index} = Task.await(plot_task)
+    {plot, labels, present_index} = Task.await(plot_task)
 
     json(conn, %{
       plot: plot,
-      compare_plot: compare_plot,
       labels: labels,
       present_index: present_index,
       top_stats: top_stats,
@@ -27,7 +26,7 @@ defmodule PlausibleWeb.Api.StatsController do
     [
       %{
         name: "Active visitors",
-        count: Stats.current_visitors(site)
+        count: Stats.current_visitors(site, query)
       },
       %{
         name: "Pageviews (last 30 min)",
@@ -120,7 +119,7 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
     limit = if params["limit"], do: String.to_integer(params["limit"])
-    show_noref = if params["show_noref"], do: "true", else: false
+    show_noref = params["show_noref"] == "true"
     json(conn, Stats.top_referrers(site, query, limit || 9, show_noref, include))
   end
 
@@ -139,18 +138,18 @@ defmodule PlausibleWeb.Api.StatsController do
 
     search_terms =
       if site.google_auth && site.google_auth.property && !query.filters["goal"] do
-        @google_api.fetch_stats(site.google_auth, query)
+        @google_api.fetch_stats(site.google_auth, query, params["limit"] || 9)
       end
 
     case search_terms do
       nil ->
-        total_visitors = Stats.visitors_from_referrer(site, query, "Google")
+        {_, total_visitors} = Stats.pageviews_and_visitors(site, query)
         user_id = get_session(conn, :current_user_id)
         is_owner = user_id && Plausible.Sites.is_owner?(user_id, site)
         json(conn, %{not_configured: true, is_owner: is_owner, total_visitors: total_visitors})
 
       {:ok, terms} ->
-        total_visitors = Stats.visitors_from_referrer(site, query, "Google")
+        {_, total_visitors} = Stats.pageviews_and_visitors(site, query)
         json(conn, %{search_terms: terms, total_visitors: total_visitors})
 
       {:error, e} ->
@@ -163,9 +162,10 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
+    limit = params["limit"] || 9
 
-    referrers = Stats.referrer_drilldown(site, query, referrer, include)
-    total_visitors = Stats.visitors_from_referrer(site, query, referrer)
+    referrers = Stats.referrer_drilldown(site, query, referrer, include, limit)
+    {_, total_visitors} = Stats.pageviews_and_visitors(site, query)
     json(conn, %{referrers: referrers, total_visitors: total_visitors})
   end
 
@@ -187,6 +187,15 @@ defmodule PlausibleWeb.Api.StatsController do
     json(conn, Stats.top_pages(site, query, limit || 9, include))
   end
 
+  def entry_pages(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, params)
+    include = if params["include"], do: String.split(params["include"], ","), else: []
+    limit = if params["limit"], do: String.to_integer(params["limit"])
+
+    json(conn, Stats.entry_pages(site, query, limit || 9, include))
+  end
+
   def countries(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
@@ -198,14 +207,14 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
 
-    json(conn, Stats.browsers(site, query, parse_integer(params["limit"]) || 9))
+    json(conn, Stats.browsers(site, query, params["limit"] || 9))
   end
 
   def operating_systems(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
 
-    json(conn, Stats.operating_systems(site, query, parse_integer(params["limit"]) || 9))
+    json(conn, Stats.operating_systems(site, query, params["limit"] || 9))
   end
 
   def screen_sizes(conn, params) do
@@ -223,15 +232,8 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def current_visitors(conn, _) do
-    json(conn, Stats.current_visitors(conn.assigns[:site]))
-  end
-
-  defp parse_integer(nil), do: nil
-
-  defp parse_integer(nr) do
-    case Integer.parse(nr) do
-      {number, ""} -> number
-      _ -> nil
-    end
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, %{"period" => "realtime"})
+    json(conn, Stats.current_visitors(site, query))
   end
 end

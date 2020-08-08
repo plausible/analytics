@@ -7,6 +7,7 @@ defmodule Plausible.Release do
   ]
 
   def init_admin do
+    prepare()
     {admin_email, admin_user, admin_pwd} =
       validate_admin(
         {Application.get_env(:plausible, :admin_email),
@@ -36,7 +37,6 @@ defmodule Plausible.Release do
   def migrate do
     prepare()
     Enum.each(repos(), &run_migrations_for/1)
-    init_admin()
     prepare_clickhouse()
     run_migrations_for_ch()
     IO.puts("Migrations successful!")

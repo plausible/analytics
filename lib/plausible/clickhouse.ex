@@ -1,6 +1,7 @@
 defmodule Plausible.Clickhouse do
   def all(query) do
     {q, params} = Ecto.Adapters.SQL.to_sql(:all, Plausible.Repo, query)
+    params = Enum.map(params, &escape_quote/1)
     q = String.replace(q, ~r/\$[0-9]+/, "?")
     res = Clickhousex.query!(:clickhouse, q, params, log: {Plausible.Clickhouse, :log, []})
 
@@ -91,8 +92,9 @@ defmodule Plausible.Clickhouse do
     Clickhousex.query(:clickhouse, insert, args, log: {Plausible.Clickhouse, :log, []})
   end
 
-  def escape_quote(nil), do: nil
-  def escape_quote(s), do: String.replace(s, "'", "''")
+  def escape_quote(l) when is_list(l), do: Enum.map(l, &escape_quote/1)
+  def escape_quote(s) when is_binary(s), do: String.replace(s, "'", "''")
+  def escape_quote(thing), do: thing
 
   def log(query) do
     require Logger
