@@ -41,13 +41,21 @@ defmodule Plausible.Google.Api do
     |> Enum.map(fn url -> String.trim_trailing(url, "/") end)
   end
 
+  defp property_base_url(property) do
+    case property do
+      "sc-domain:" <> domain -> "https://" <> domain
+        url -> url
+    end
+  end
+
   def fetch_stats(site, query, limit) do
     auth = refresh_if_needed(site.google_auth)
     property = URI.encode_www_form(site.google_auth.property)
+    base_url = property_base_url(site.google_auth.property)
     filter_groups = if query.filters["page"] do
       [%{filters: [%{
         dimension: "page",
-        expression: "https://#{site.domain}#{query.filters["page"]}"
+        expression: "https://#{base_url}#{query.filters["page"]}"
       }]}]
     end
 
@@ -71,7 +79,6 @@ defmodule Plausible.Google.Api do
           (Jason.decode!(res.body)["rows"] || [])
           |> Enum.filter(fn row -> row["clicks"] > 0 end)
           |> Enum.map(fn row -> %{name: row["keys"], count: round(row["clicks"])} end)
-          |> IO.inspect
 
         {:ok, terms}
 
