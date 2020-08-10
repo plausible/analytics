@@ -177,9 +177,9 @@ defmodule Plausible.Stats.Clickhouse do
   def pageviews_and_visitors(site, query) do
     [res] =
       Clickhouse.all(
-        from e in base_session_query(site, query),
+        from e in base_query_w_sessions(site, query),
           select:
-            {fragment("sum(sign * pageviews) as pageviews"),
+            {fragment("count(*) as pageviews"),
              fragment("uniq(user_id) as visitors")}
       )
 
@@ -644,6 +644,56 @@ defmodule Plausible.Stats.Clickhouse do
     Enum.sort_by(conversions, fn conversion -> -conversion["count"] end)
   end
 
+  defp base_query_w_sessions(site, query) do
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
+
+    sessions_q = from(s in "sessions",
+      where: s.domain == ^site.domain,
+      where: s.timestamp >= ^first_datetime and s.start < ^last_datetime,
+      select: %{session_id: s.session_id}
+    )
+
+    sessions_q =
+      if query.filters["source"] do
+        source = query.filters["source"]
+        source = if source == @no_ref, do: "", else: source
+        from(s in sessions_q, where: s.referrer_source == ^source)
+      else
+        sessions_q
+      end
+
+    sessions_q = if query.filters["referrer"] do
+      ref = query.filters["referrer"]
+      from(s in sessions_q, where: s.referrer == ^ref)
+    else
+      sessions_q
+    end
+
+    q =
+      from(e in "events",
+        where: e.domain == ^site.domain,
+        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
+      )
+
+    q = if query.filters["source"] || query.filters['referrer'] do
+      from(
+        e in q,
+        join: sq in subquery(sessions_q),
+        on: e.session_id == sq.session_id,
+      )
+    else
+      q
+    end
+
+    q =
+      if query.filters["page"] do
+        page = query.filters["page"]
+        from(e in q, where: e.pathname == ^page)
+      else
+        q
+      end
+  end
+
   defp base_session_query(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
@@ -657,7 +707,7 @@ defmodule Plausible.Stats.Clickhouse do
       if query.filters["source"] do
         source = query.filters["source"]
         source = if source == @no_ref, do: "", else: source
-        from(e in q, where: e.referrer_source == ^source)
+        from(s in q, where: s.referrer_source == ^source)
       else
         q
       end
@@ -665,11 +715,7 @@ defmodule Plausible.Stats.Clickhouse do
     q =
       if query.filters["page"] do
         page = query.filters["page"]
-        events_q = from(e in base_query(site, query), select: %{session_id: e.session_id})
-        from(
-          s in q, join: eq in subquery(events_q),
-          on: s.session_id == eq.session_id,
-        )
+        from(s in q, where: s.entry_page == ^page)
       else
         q
       end
