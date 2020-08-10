@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/plausible/analytics.svg?branch=master)](https://travis-ci.org/plausible/analytics)
 
-Plausible Analytics is a simple, lightweight, open-source and privacy-friendly alternative to Google Analytics. It doesn’t use cookies and is fully compliant with GDPR, CCPA and PECR. You can [view the live demo of our own website stats](https://plausible.io/plausible.io).
+[Plausible Analytics](https://plausible.io/) is a simple, lightweight, open-source and privacy-friendly alternative to Google Analytics. It doesn’t use cookies and is fully compliant with GDPR, CCPA and PECR. You can [view the live demo of our own website stats](https://plausible.io/plausible.io).
 
 ![](https://docs.plausible.io/img/plausible-analytics.png)
 
