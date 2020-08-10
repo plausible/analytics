@@ -358,14 +358,23 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def entry_pages(site, query, limit, include) do
-    pages = Clickhouse.all(
-      from s in base_session_query(site, query),
+    q = from(
+      s in base_session_query(site, query),
       group_by: s.entry_page,
       order_by: [desc: fragment("count")],
       limit: ^limit,
       select:
       {fragment("? as name", s.entry_page), fragment("uniq(?) as count", s.user_id)}
     )
+
+    q = if query.filters["page"] do
+      page = query.filters["page"]
+      from(s in q, where: s.entry_page == ^page)
+    else
+      q
+    end
+
+    pages = Clickhouse.all(q)
 
     if "bounce_rate" in include do
       bounce_rates = bounce_rates_by_page_url(site, query)

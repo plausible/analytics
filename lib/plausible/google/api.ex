@@ -41,13 +41,13 @@ defmodule Plausible.Google.Api do
     |> Enum.map(fn url -> String.trim_trailing(url, "/") end)
   end
 
-  def fetch_stats(auth, query, limit) do
-    auth = refresh_if_needed(auth)
-    property = URI.encode_www_form(auth.property)
+  def fetch_stats(site, query, limit) do
+    auth = refresh_if_needed(site.google_auth)
+    property = URI.encode_www_form(site.google_auth.property)
     filter_groups = if query.filters["page"] do
       [%{filters: [%{
         dimension: "page",
-        expression: query.filters["page"]
+        expression: "https://#{site.domain}#{query.filters["page"]}"
       }]}]
     end
 
@@ -57,11 +57,12 @@ defmodule Plausible.Google.Api do
         Jason.encode!(%{
           startDate: Date.to_iso8601(query.date_range.first),
           endDate: Date.to_iso8601(query.date_range.last),
-          dimensions: ["query", "page"],
-          rowLimit: limit
+          dimensions: ["query"],
+          rowLimit: limit,
+          dimensionFilterGroups: filter_groups || %{}
         }),
         "Content-Type": "application/json",
-        Authorization: "Bearer #{auth.access_token}"
+        Authorization: "Bearer #{site.google_auth.access_token}"
       )
 
     case res.status_code do
