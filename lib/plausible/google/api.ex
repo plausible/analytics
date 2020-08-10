@@ -50,8 +50,8 @@ defmodule Plausible.Google.Api do
 
   def fetch_stats(site, query, limit) do
     auth = refresh_if_needed(site.google_auth)
-    property = URI.encode_www_form(site.google_auth.property)
-    base_url = property_base_url(site.google_auth.property)
+    property = URI.encode_www_form(auth.property)
+    base_url = property_base_url(auth.property)
     filter_groups = if query.filters["page"] do
       [%{filters: [%{
         dimension: "page",

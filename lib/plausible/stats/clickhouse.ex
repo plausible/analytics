@@ -679,19 +679,18 @@ defmodule Plausible.Stats.Clickhouse do
       from(
         e in q,
         join: sq in subquery(sessions_q),
-        on: e.session_id == sq.session_id,
+        on: e.session_id == sq.session_id
       )
     else
       q
     end
 
-    q =
-      if query.filters["page"] do
-        page = query.filters["page"]
-        from(e in q, where: e.pathname == ^page)
-      else
-        q
-      end
+    if query.filters["page"] do
+      page = query.filters["page"]
+      from(e in q, where: e.pathname == ^page)
+    else
+      q
+    end
   end
 
   defp base_session_query(site, query) do
