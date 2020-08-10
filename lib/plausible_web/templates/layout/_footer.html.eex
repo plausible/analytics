@@ -20,22 +20,22 @@
             </h4>
             <ul class="mt-4">
               <li>
-                <a href="/simple-web-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/simple-web-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
                   Simple Metrics
                 </a>
               </li>
               <li class="mt-4">
-                <a href="/lightweight-web-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/lightweight-web-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
                   Lightweight script
                 </a>
               </li>
               <li class="mt-4">
-                <a href="/data-policy" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/data-policy" class="text-base leading-6 text-gray-300 hover:text-white">
                   GDPR Compliant
                 </a>
               </li>
               <li class="mt-4">
-                <a href="/open-source-website-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/open-source-website-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
                   Open source
                 </a>
               </li>
@@ -47,12 +47,12 @@
             </h4>
             <ul class="mt-4">
               <li>
-                <a href="/vs-google-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/vs-google-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
                   vs Google Analytics
                 </a>
               </li>
               <li class="mt-4">
-                <a href="/vs-matomo" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/vs-matomo" class="text-base leading-6 text-gray-300 hover:text-white">
                   vs Matomo
                 </a>
               </li>
@@ -94,22 +94,22 @@
             </h4>
             <ul class="mt-4">
               <li class="mt-4">
-                <a href="/about" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/about" class="text-base leading-6 text-gray-300 hover:text-white">
                   About
                 </a>
               </li>
               <li class="mt-4">
-                <a href="/blog" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/blog" class="text-base leading-6 text-gray-300 hover:text-white">
                   Blog
                 </a>
               </li>
               <li class="mt-4">
-                <a href="/contact" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/contact" class="text-base leading-6 text-gray-300 hover:text-white">
                   Contact
                 </a>
               </li>
               <li class="mt-4">
-                <a href="/privacy" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/privacy" class="text-base leading-6 text-gray-300 hover:text-white">
                   Privacy
                 </a>
               </li>
