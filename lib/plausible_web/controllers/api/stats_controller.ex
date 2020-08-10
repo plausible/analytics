@@ -78,8 +78,16 @@ defmodule PlausibleWeb.Api.StatsController do
     bounce_rate = Stats.bounce_rate(site, query)
     prev_bounce_rate = Stats.bounce_rate(site, prev_query)
     change_bounce_rate = if prev_bounce_rate > 0, do: bounce_rate - prev_bounce_rate
-    visit_duration = Stats.visit_duration(site, query)
-    prev_visit_duration = Stats.visit_duration(site, prev_query)
+    visit_duration = if !query.filters["page"] do
+      duration = Stats.visit_duration(site, query)
+      prev_duration = Stats.visit_duration(site, prev_query)
+
+      %{
+        name: "Visit duration",
+        count: duration,
+        change: percent_change(prev_duration, duration)
+      }
+    end
 
     [
       %{
@@ -93,12 +101,8 @@ defmodule PlausibleWeb.Api.StatsController do
         change: percent_change(prev_pageviews, pageviews)
       },
       %{name: "Bounce rate", percentage: bounce_rate, change: change_bounce_rate},
-      %{
-        name: "Visit duration",
-        count: visit_duration,
-        change: percent_change(prev_visit_duration, visit_duration)
-      }
-    ]
+      visit_duration
+    ] |> Enum.filter(&(&1))
   end
 
   defp percent_change(old_count, new_count) do
@@ -138,7 +142,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     search_terms =
       if site.google_auth && site.google_auth.property && !query.filters["goal"] do
-        @google_api.fetch_stats(site.google_auth, query, params["limit"] || 9)
+        @google_api.fetch_stats(site, query, params["limit"] || 9)
       end
 
     case search_terms do

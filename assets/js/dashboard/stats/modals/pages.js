@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from 'react-router-dom'
 import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
@@ -18,8 +19,14 @@ class PagesModal extends React.Component {
   componentDidMount() {
     const include = this.showBounceRate() ? 'bounce_rate' : null
 
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, this.state.query, {limit: 100, include: include})
-      .then((res) => this.setState({loading: false, pages: res}))
+    const {filters} = this.state.query
+    if (filters.source || filters.referrer) {
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`, this.state.query, {limit: 100, include: include})
+        .then((res) => this.setState({loading: false, pages: res}))
+    } else {
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, this.state.query, {limit: 100, include: include})
+        .then((res) => this.setState({loading: false, pages: res}))
+    }
   }
 
   showBounceRate() {
@@ -40,9 +47,14 @@ class PagesModal extends React.Component {
   }
 
   renderPage(page) {
+    const query = new URLSearchParams(window.location.search)
+    query.set('page', page.name)
+
     return (
       <tr className="text-sm" key={page.name}>
-        <td className="p-2 truncate">{page.name}</td>
+        <td className="p-2 truncate">
+          <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline">{page.name}</Link>
+        </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
         {this.showPageviews() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.pageviews)}</td> }
         {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td> }

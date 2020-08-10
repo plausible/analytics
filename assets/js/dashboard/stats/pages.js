@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom'
 import FlipMove from 'react-flip-move';
 
 import FadeIn from '../fade-in'
@@ -38,11 +39,14 @@ export default class Pages extends React.Component {
   }
 
   renderPage(page) {
+    const query = new URLSearchParams(window.location.search)
+    query.set('page', page.name)
+
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={page.name}>
         <div className="w-full h-8 truncate" style={{maxWidth: 'calc(100% - 4rem)'}}>
           <Bar count={page.count} all={this.state.pages} bg="bg-orange-50" />
-          <span className="block px-2" style={{marginTop: '-26px'}}>{page.name}</span>
+          <Link to={{search: query.toString()}} className="block px-2 hover:underline" style={{marginTop: '-26px'}}>{page.name}</Link>
         </div>
         <span className="font-medium">{numberFormatter(page.count)}</span>
       </div>
@@ -50,7 +54,14 @@ export default class Pages extends React.Component {
   }
 
   label() {
-    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+    const filters = this.props.query.filters
+    if (this.props.query.period === 'realtime') {
+      return 'Active visitors'
+    } else if (filters['source'] || filters['referrer']) {
+      return 'Entrances'
+    } else {
+      return 'Visitors'
+    }
   }
 
   renderList() {
