@@ -12,7 +12,7 @@ defmodule Plausible.Billing.Plans do
     yearly: %{
       "10k": %{product_id: "572810", due_now: "$48"},
       "100k": %{product_id: "590752", due_now: "$96"},
-      "200k": %{product_id: "597486", due_now: "$114"},
+      "200k": %{product_id: "597486", due_now: "$144"},
       "500k": %{product_id: "597488", due_now: "$216"},
       "1m": %{product_id: "597643", due_now: "$384"},
       "2m": %{product_id: "597310", due_now: "$552"},
