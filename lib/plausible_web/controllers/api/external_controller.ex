@@ -100,21 +100,9 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp get_ip(conn) do
-    forwarded_for = List.first(Plug.Conn.get_req_header(conn, "x-forwarded-for"))
-
-    if forwarded_for do
-      String.split(forwarded_for, ",")
-      |> Enum.map(&String.trim/1)
-      |> List.first()
-    else
-      to_string(:inet_parse.ntoa(conn.remote_ip))
-    end
-  end
-
   defp visitor_country(conn) do
     result =
-      get_ip(conn)
+      PlausibleWeb.RemoteIp.get(conn)
       |> Geolix.lookup()
       |> Map.get(:country)
 
@@ -135,7 +123,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp generate_user_id(conn, params, salt) do
     user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
-    ip_address = get_ip(conn)
+    ip_address = PlausibleWeb.RemoteIp.get(conn)
     domain = strip_www(params["domain"]) || ""
 
     SipHash.hash!(salt, user_agent <> ip_address <> domain)

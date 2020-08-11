@@ -147,6 +147,9 @@ config :plausible, :custom_domain_server,
   password: custom_domain_server_password,
   ip: custom_domain_server_ip
 
+config :plausible, PlausibleWeb.Firewall,
+  blocklist: System.get_env("IP_BLOCKLIST", "")
+
 base_cron = [
   # Daily at midnight
   {"0 0 * * *", Plausible.Workers.RotateSalts}

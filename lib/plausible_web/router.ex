@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Router do
 
   pipeline :browser do
     plug :accepts, ["html"]
+    plug PlausibleWeb.Firewall
     plug :fetch_session
     plug :fetch_flash
     plug :put_secure_browser_headers
@@ -20,12 +21,14 @@ defmodule PlausibleWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug PlausibleWeb.Firewall
     plug :fetch_session
     plug PlausibleWeb.AuthPlug
   end
 
   pipeline :stats_api do
     plug :accepts, ["json"]
+    plug PlausibleWeb.Firewall
     plug :fetch_session
   end
 

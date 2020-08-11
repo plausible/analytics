@@ -181,6 +181,9 @@ config :plausible, :custom_domain_server,
   password: System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD"),
   ip: System.get_env("CUSTOM_DOMAIN_SERVER_IP")
 
+config :plausible, PlausibleWeb.Firewall,
+  blocklist: System.get_env("IP_BLOCKLIST", "")
+
 config :geolix,
   databases: [
     %{
