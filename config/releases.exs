@@ -148,7 +148,7 @@ config :plausible, :custom_domain_server,
   ip: custom_domain_server_ip
 
 config :plausible, PlausibleWeb.Firewall,
-  blocklist: System.get_env("IP_BLOCKLIST", "")
+  blocklist: System.get_env("IP_BLOCKLIST", "") |> String.split(",") |> Enum.map(&String.trim/1)
 
 base_cron = [
   # Daily at midnight
