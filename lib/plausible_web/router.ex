@@ -68,6 +68,7 @@ defmodule PlausibleWeb.Router do
     post "/paddle/webhook", Api.PaddleController, :webhook
 
     get "/:domain/status", Api.InternalController, :domain_status
+    get "/sites", Api.InternalController, :sites
   end
 
   scope "/", PlausibleWeb do
