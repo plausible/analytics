@@ -1,6 +1,7 @@
 import React from 'react';
 
 import Datepicker from './datepicker'
+import SiteSwitcher from './site-switcher'
 import Filters from './filters'
 import CurrentVisitors from './stats/current-visitors'
 import VisitorGraph from './stats/visitor-graph'
@@ -26,7 +27,7 @@ export default class Historical extends React.Component {
       <div className="mb-12">
         <div className="w-full sm:flex justify-between items-center">
           <div className="w-full flex items-center">
-            <h2 className="text-left mr-8 font-semibold text-xl">Analytics for <a href={`http://${this.props.site.domain}`} target="_blank">{this.props.site.domain}</a></h2>
+            <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} />
             <CurrentVisitors timer={this.props.timer} site={this.props.site}  />
           </div>
           <Datepicker site={this.props.site} query={this.props.query} />

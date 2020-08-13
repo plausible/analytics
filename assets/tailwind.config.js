@@ -14,7 +14,8 @@ module.exports = {
     },
   },
   variants: {
-    textColor: ['responsive', 'hover', 'focus', 'group-hover']
+    textColor: ['responsive', 'hover', 'focus', 'group-hover'],
+    display: ['responsive', 'hover', 'focus', 'group-hover']
   },
   corePlugins: {},
   plugins: [

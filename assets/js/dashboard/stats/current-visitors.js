@@ -25,7 +25,7 @@ export default class CurrentVisitors extends React.Component {
     const { currentVisitors } = this.state;
     if (currentVisitors !== null) {
       return (
-        <Link to={`/${encodeURIComponent(this.props.site.domain)}?period=realtime`} className="block text-sm font-bold text-gray-500 mt-1">
+        <Link to={`/${encodeURIComponent(this.props.site.domain)}?period=realtime`} className="block text-sm font-bold text-gray-500">
           <svg className="w-2 mr-2 fill-current text-green-500 inline" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
             <circle cx="8" cy="8" r="8"/>
           </svg>

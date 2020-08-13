@@ -4,6 +4,11 @@
   animation: loaderFadein .2s ease-in;
 }
 
+.loading.sm {
+  width: 25px;
+  height: 25px;
+}
+
 .loading div {
   display: inline-block;
   width: 50px;
@@ -14,6 +19,12 @@
   animation: spin 1s ease-in-out infinite;
   -webkit-animation: spin 1s ease-in-out infinite;
 }
+
+.loading.sm div {
+  width: 25px;
+  height: 25px;
+}
+
 
 @keyframes spin {
   to { -webkit-transform: rotate(360deg); }
