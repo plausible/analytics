@@ -70,7 +70,7 @@ defmodule Plausible.Google.Api do
           dimensionFilterGroups: filter_groups || %{}
         }),
         "Content-Type": "application/json",
-        Authorization: "Bearer #{site.google_auth.access_token}"
+        Authorization: "Bearer #{auth.access_token}"
       )
 
     case res.status_code do
