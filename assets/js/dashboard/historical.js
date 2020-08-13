@@ -27,7 +27,7 @@ export default class Historical extends React.Component {
       <div className="mb-12">
         <div className="w-full sm:flex justify-between items-center">
           <div className="w-full flex items-center">
-            <SiteSwitcher site={this.props.site}  />
+            <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} />
             <CurrentVisitors timer={this.props.timer} site={this.props.site}  />
           </div>
           <Datepicker site={this.props.site} query={this.props.query} />

@@ -44,9 +44,9 @@ class Dashboard extends React.Component {
 
   render() {
     if (this.state.query.period === 'realtime') {
-      return <Realtime timer={this.state.timer} site={this.props.site} query={this.state.query} />
+      return <Realtime timer={this.state.timer} site={this.props.site} loggedIn={this.props.loggedIn} query={this.state.query} />
     } else {
-      return <Historical timer={this.state.timer} site={this.props.site} query={this.state.query} />
+      return <Historical timer={this.state.timer} site={this.props.site} loggedIn={this.props.loggedIn} query={this.state.query} />
     }
   }
 }

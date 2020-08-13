@@ -5,7 +5,7 @@
     </div>
   <% end %>
   <div class="pt-6"></div>
-  <div id="stats-react-container" data-domain="<%= @site.domain %>" data-offset="<%= Timex.Timezone.total_offset(Timex.Timezone.get(@site.timezone)) %>" data-has-goals="<%= @has_goals %>"></div>
+  <div id="stats-react-container" data-domain="<%= @site.domain %>" data-offset="<%= Timex.Timezone.total_offset(Timex.Timezone.get(@site.timezone)) %>" data-has-goals="<%= @has_goals %>" data-logged-in="<%= !!@conn.assigns[:current_user] %>"></div>
   <div id="modal_root"></div>
   <%= if !@conn.assigns[:current_user] && @conn.assigns[:demo] do %>
     <div class="bg-gray-50">

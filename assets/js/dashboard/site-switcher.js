@@ -29,7 +29,10 @@ export default class SiteSwitcher extends React.Component {
   }
 
   toggle() {
+    if (!this.props.loggedIn) return;
+
     this.setState({open: !this.state.open})
+
     if (!this.state.sites) {
       fetch('/api/sites')
         .then( response => {
@@ -74,16 +77,26 @@ export default class SiteSwitcher extends React.Component {
     }
   }
 
+  renderArrow() {
+    if (this.props.loggedIn) {
+      return (
+        <svg className="-mr-1 ml-2 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+        </svg>
+      )
+    }
+  }
+
   render() {
+    const hoverClass = this.props.loggedIn ? 'hover:text-gray-500' : 'cursor-default'
+
     return (
       <div className="relative inline-block text-left z-10 mr-8">
-        <button onClick={this.toggle.bind(this)} className="inline-flex items-center text-lg w-full rounded-md py-2 leading-5 font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue transition ease-in-out duration-150" id="options-menu" aria-haspopup="true" aria-expanded="true">
+        <button onClick={this.toggle.bind(this)} className={`inline-flex items-center text-lg w-full rounded-md py-2 leading-5 font-bold text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue transition ease-in-out duration-150 ${hoverClass}`}>
 
           <img src={`https://icons.duckduckgo.com/ip3/${this.props.site.domain}.ico`} className="inline w-4 mr-2 align-middle" />
           {this.props.site.domain}
-          <svg className="-mr-1 ml-2 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
+          {this.renderArrow()}
         </button>
 
         <Transition

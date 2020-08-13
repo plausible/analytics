@@ -21,12 +21,12 @@ function ScrollToTop() {
   return null;
 }
 
-export default function Router({site}) {
+export default function Router({site, loggedIn}) {
   return (
     <BrowserRouter>
       <Route path="/:domain">
         <ScrollToTop />
-        <Dash site={site} />
+        <Dash site={site} loggedIn={loggedIn} />
         <Switch>
           <Route exact path="/:domain/referrers">
             <ReferrersModal site={site} />

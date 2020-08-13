@@ -14,9 +14,11 @@ if (container) {
     hasGoals: container.dataset.hasGoals === 'true'
   }
 
+  const loggedIn = container.dataset.loggedIn === 'true'
+
   const app = (
     <ErrorBoundary>
-      <Router site={site} />
+      <Router site={site} loggedIn={loggedIn} />
     </ErrorBoundary>
   )
 
