@@ -88,11 +88,11 @@ export default class SiteSwitcher extends React.Component {
   }
 
   render() {
-    const hoverClass = this.props.loggedIn ? 'hover:text-gray-500' : 'cursor-default'
+    const hoverClass = this.props.loggedIn ? 'hover:text-gray-500 focus:border-blue-300 focus:shadow-outline-blue ' : 'cursor-default'
 
     return (
       <div className="relative inline-block text-left z-10 mr-8">
-        <button onClick={this.toggle.bind(this)} className={`inline-flex items-center text-lg w-full rounded-md py-2 leading-5 font-bold text-gray-700 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue transition ease-in-out duration-150 ${hoverClass}`}>
+        <button onClick={this.toggle.bind(this)} className={`inline-flex items-center text-lg w-full rounded-md py-2 leading-5 font-bold text-gray-700 focus:outline-none transition ease-in-out duration-150 ${hoverClass}`}>
 
           <img src={`https://icons.duckduckgo.com/ip3/${this.props.site.domain}.ico`} className="inline w-4 mr-2 align-middle" />
           {this.props.site.domain}
