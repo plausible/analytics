@@ -42,8 +42,9 @@ export default class SiteSwitcher extends React.Component {
   }
 
   renderSiteLink(domain) {
+    const extraClass = domain === this.props.site.domain ? 'font-medium text-gray-900' : 'hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-100 focus:text-gray-900'
     return (
-      <a href={`/${encodeURIComponent(domain)}`} key={domain} className="block truncate px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-100 focus:text-gray-900">
+      <a href={`/${encodeURIComponent(domain)}`} key={domain} className={`block truncate px-4 py-2 text-sm leading-5 text-gray-700 ${extraClass}`}>
         <img src={`https://icons.duckduckgo.com/ip3/${domain}.ico`} className="inline w-4 mr-2 align-middle" />
         <span>{domain}</span>
       </a>
