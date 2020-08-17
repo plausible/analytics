@@ -121,7 +121,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
 
       res = json_response(conn, 200)
-      assert %{"name" => "Total visitors", "count" => 6, "change" => 100} in res["top_stats"]
+      assert %{"name" => "Unique visitors", "count" => 6, "change" => 100} in res["top_stats"]
     end
 
     test "returns converted visitors", %{conn: conn, site: site} do

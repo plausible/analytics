@@ -37,26 +37,26 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp fetch_top_stats(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
     prev_query = Query.shift_back(query)
-    total_visitors = Stats.unique_visitors(site, %{query | filters: %{}})
-    prev_total_visitors = Stats.unique_visitors(site, %{prev_query | filters: %{}})
+    unique_visitors = Stats.unique_visitors(site, %{query | filters: %{}})
+    prev_unique_visitors = Stats.unique_visitors(site, %{prev_query | filters: %{}})
     converted_visitors = Stats.unique_visitors(site, query)
     prev_converted_visitors = Stats.unique_visitors(site, prev_query)
 
     conversion_rate =
-      if total_visitors > 0,
-        do: Float.round(converted_visitors / total_visitors * 100, 1),
+      if unique_visitors > 0,
+        do: Float.round(converted_visitors / unique_visitors * 100, 1),
         else: 0.0
 
     prev_conversion_rate =
-      if prev_total_visitors > 0,
-        do: Float.round(prev_converted_visitors / prev_total_visitors * 100, 1),
+      if prev_unique_visitors > 0,
+        do: Float.round(prev_converted_visitors / prev_unique_visitors * 100, 1),
         else: 0.0
 
     [
       %{
-        name: "Total visitors",
-        count: total_visitors,
-        change: percent_change(prev_total_visitors, total_visitors)
+        name: "Unique visitors",
+        count: unique_visitors,
+        change: percent_change(prev_unique_visitors, unique_visitors)
       },
       %{
         name: "Converted visitors",
