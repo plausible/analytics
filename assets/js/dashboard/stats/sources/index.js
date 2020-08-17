@@ -4,7 +4,6 @@ import SourceList from './source-list'
 import ReferrerList from './referrer-list'
 
 export default function Sources(props) {
-  console.log(props.query)
   if (props.query.filters.source === 'Google') {
     return <SearchTerms {...props} />
   } else if (props.query.filters.source) {
