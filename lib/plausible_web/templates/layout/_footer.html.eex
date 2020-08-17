@@ -77,6 +77,11 @@
                 </a>
               </li>
               <li class="mt-4">
+                <a target="_blank" href="https://plausible.io/forum" class="text-base leading-6 text-gray-300 hover:text-white">
+                  Forum
+                </a>
+              </li>
+              <li class="mt-4">
                 <a target="_blank" href="https://twitter.com/plausiblehq" class="text-base leading-6 text-gray-300 hover:text-white">
                   Twitter
                 </a>
@@ -101,6 +106,11 @@
               <li class="mt-4">
                 <a href="https://plausible.io/blog" class="text-base leading-6 text-gray-300 hover:text-white">
                   Blog
+                </a>
+              </li>
+              <li class="mt-4">
+                <a href="https://plausible.io/status" class="text-base leading-6 text-gray-300 hover:text-white">
+                  Status
                 </a>
               </li>
               <li class="mt-4">
