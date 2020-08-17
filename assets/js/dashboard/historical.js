@@ -5,7 +5,7 @@ import SiteSwitcher from './site-switcher'
 import Filters from './filters'
 import CurrentVisitors from './stats/current-visitors'
 import VisitorGraph from './stats/visitor-graph'
-import Referrers from './stats/referrers'
+import Sources from './stats/sources'
 import Pages from './stats/pages'
 import Countries from './stats/countries'
 import Devices from './stats/devices'
@@ -35,7 +35,7 @@ export default class Historical extends React.Component {
         <Filters query={this.props.query} history={this.props.history} />
         <VisitorGraph site={this.props.site} query={this.props.query} />
         <div className="w-full block md:flex items-start justify-between">
-          <Referrers site={this.props.site} query={this.props.query} />
+          <Sources site={this.props.site} query={this.props.query} />
           <Pages site={this.props.site} query={this.props.query} />
         </div>
         <div className="w-full block md:flex items-start justify-between">
