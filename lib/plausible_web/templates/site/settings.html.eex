@@ -123,7 +123,7 @@
           <%= form_for Plausible.Site.GoogleAuth.changeset(@site.google_auth), "/#{URI.encode_www_form(@site.domain)}/settings/google", [class: "max-w-xs"], fn f -> %>
             <div class="my-6">
               <div class="inline-block relative w-full">
-                <%= select f, :property, @domains, prompt: "(Choose property)", class: "block appearance-none w-full bg-gray-100 text-gray-700 cursor-pointer hover:border-gray-500 p-2 pr-8 rounded leading-normal focus:outline-none" %>
+                <%= select f, :property, domains, prompt: "(Choose property)", class: "block appearance-none w-full bg-gray-100 text-gray-700 cursor-pointer hover:border-gray-500 p-2 pr-8 rounded leading-normal focus:outline-none" %>
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-pink-500">
                   <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                 </div>
