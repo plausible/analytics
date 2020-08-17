@@ -26,19 +26,23 @@ defmodule Plausible.Google.Api do
   end
 
   def fetch_verified_properties(auth) do
-    auth = refresh_if_needed(auth)
+    with {:ok, auth} <- refresh_if_needed(auth) do
+      res =
+        HTTPoison.get!("https://www.googleapis.com/webmasters/v3/sites",
+          "Content-Type": "application/json",
+          Authorization: "Bearer #{auth.access_token}"
+        )
 
-    res =
-      HTTPoison.get!("https://www.googleapis.com/webmasters/v3/sites",
-        "Content-Type": "application/json",
-        Authorization: "Bearer #{auth.access_token}"
-      )
+      domains = Jason.decode!(res.body)
+      |> Map.get("siteEntry", [])
+      |> Enum.filter(fn site -> site["permissionLevel"] in @verified_permission_levels end)
+      |> Enum.map(fn site -> site["siteUrl"] end)
+      |> Enum.map(fn url -> String.trim_trailing(url, "/") end)
 
-    Jason.decode!(res.body)
-    |> Map.get("siteEntry", [])
-    |> Enum.filter(fn site -> site["permissionLevel"] in @verified_permission_levels end)
-    |> Enum.map(fn site -> site["siteUrl"] end)
-    |> Enum.map(fn url -> String.trim_trailing(url, "/") end)
+      {:ok, domains}
+    else
+      err -> err
+    end
   end
 
   defp property_base_url(property) do
@@ -49,7 +53,14 @@ defmodule Plausible.Google.Api do
   end
 
   def fetch_stats(site, query, limit) do
-    auth = refresh_if_needed(site.google_auth)
+    with {:ok, auth} <- refresh_if_needed(site.google_auth) do
+      do_fetch_stats(auth, query, limit)
+    else
+      err -> err
+    end
+  end
+
+  defp do_fetch_stats(auth, query, limit) do
     property = URI.encode_www_form(auth.property)
     base_url = property_base_url(auth.property)
     filter_groups = if query.filters["page"] do
@@ -101,7 +112,7 @@ defmodule Plausible.Google.Api do
     if Timex.before?(auth.expires, Timex.now() |> Timex.shift(seconds: 30)) do
       refresh_token(auth)
     else
-      auth
+      {:ok, auth}
     end
   end
 
@@ -117,11 +128,15 @@ defmodule Plausible.Google.Api do
 
     body = Jason.decode!(res.body)
 
-    Plausible.Site.GoogleAuth.changeset(auth, %{
-      access_token: body["access_token"],
-      expires: NaiveDateTime.utc_now() |> NaiveDateTime.add(body["expires_in"])
-    })
-    |> Plausible.Repo.update!()
+    if res.status_code == 200 do
+      Plausible.Site.GoogleAuth.changeset(auth, %{
+        access_token: body["access_token"],
+        expires: NaiveDateTime.utc_now() |> NaiveDateTime.add(body["expires_in"])
+      })
+      |> Plausible.Repo.update()
+    else
+      {:error, body["error"]}
+    end
   end
 
   defp client_id() do
