@@ -1,24 +1,27 @@
 defmodule PlausibleWeb.AuthView do
   use PlausibleWeb, :view
 
-  @subscription_names %{
-    "558018" => "10k / monthly",
-    "558745" => "100k / monthly",
-    "597485" => "200k / monthly",
-    "597487" => "500k / monthly",
-    "597642" => "1m / monthly",
-    "558746" => "1m / monthly / grandfathered",
-    "597309" => "2m / monthly",
-    "597311" => "5m / monthly",
-    "572810" => "10k / yearly",
-    "590752" => "100k / yearly",
-    "597486" => "200k / yearly",
-    "597488" => "500k / yearly",
-    "597643" => "1m / yearly",
-    "590753" => "1m / yearly / grandfathered",
-    "597310" => "2m / yearly",
-    "597312" => "5m / yearly",
-    "free_10k" => "10k / free"
+  @monthly_plans ["558018", "558745", "597485", "597487", "597642", "558746", "597309", "597311"]
+  @yearly_plans ["572810", "590752", "597486", "597488", "597643", "590753", "597310", "597312"]
+
+  @subscription_quotas %{
+    "558018" => "10k",
+    "558745" => "100k",
+    "597485" => "200k",
+    "597487" => "500k",
+    "597642" => "1m",
+    "558746" => "1m",
+    "597309" => "2m",
+    "597311" => "5m",
+    "572810" => "10k",
+    "590752" => "100k",
+    "597486" => "200k",
+    "597488" => "500k",
+    "597643" => "1m",
+    "590753" => "1m",
+    "597310" => "2m",
+    "597312" => "5m",
+    "free_10k" => "10k"
   }
 
   def admin_email do
@@ -33,8 +36,16 @@ defmodule PlausibleWeb.AuthView do
     PlausibleWeb.Endpoint.clean_url()
   end
 
-  def subscription_name(subscription) do
-    @subscription_names[subscription.paddle_plan_id]
+  def subscription_quota(subscription) do
+    @subscription_quotas[subscription.paddle_plan_id]
+  end
+
+  def subscription_interval(subscription) do
+    cond do
+      subscription.paddle_plan_id in @monthly_plans -> "monthly"
+      subscription.paddle_plan_id in @yearly_plans -> "yeary"
+      true -> raise "Unknown interval for subscription #{subscription.paddle_plan_id}"
+    end
   end
 
   def delimit_integer(number) do

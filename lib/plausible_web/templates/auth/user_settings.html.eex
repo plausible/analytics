@@ -32,9 +32,9 @@
 
   <div class="flex flex-col items-center sm:flex-row sm:items-start justify-between mt-8">
     <div class="text-center bg-gray-100 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
-      <h4 class="font-black">Current plan</h4>
+      <h4 class="font-black">Monthly quota</h4>
       <%= if @subscription do %>
-        <div class="text-xl py-2 font-medium"><%= subscription_name(@subscription) %></div>
+        <div class="text-xl py-2 font-medium"><%= subscription_quota(@subscription) %> pageviews</div>
         <%= case @subscription.status do %>
           <% "active" -> %>
             <%= link("Change plan", to: "/billing/change-plan", class: "text-sm text-indigo-500 font-medium") %>
@@ -63,6 +63,7 @@
 
       <%= if @subscription && @subscription.next_bill_date && @subscription.status in ["active", "past_due"] do %>
         <div class="text-xl py-2 font-medium"><%= Timex.format!(@subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %></div>
+        <div class="text-sm text-gray-600 font-medium">(<%= subscription_interval(@subscription) %> billing)</div>
       <% else %>
         <div class="text-xl py-2 font-medium">---</div>
       <% end %>
