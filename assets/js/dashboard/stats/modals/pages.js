@@ -52,7 +52,7 @@ class PagesModal extends React.Component {
 
     return (
       <tr className="text-sm" key={page.name}>
-        <td className="p-2 truncate">
+        <td className="p-2">
           <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline">{page.name}</Link>
         </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
