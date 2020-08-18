@@ -25,7 +25,7 @@ defmodule PlausibleWeb.Api.StatsController do
   defp fetch_top_stats(site, %Query{period: "realtime"} = query) do
     [
       %{
-        name: "Active visitors",
+        name: "Current visitors",
         count: Stats.current_visitors(site, query)
       },
       %{

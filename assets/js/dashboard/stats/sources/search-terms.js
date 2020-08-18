@@ -70,7 +70,7 @@ export default class SearchTerms extends React.Component {
         </div>
       )
     } else if (this.state.searchTerms.length > 0) {
-      const valLabel = this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+      const valLabel = this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
 
       return (
         <React.Fragment>

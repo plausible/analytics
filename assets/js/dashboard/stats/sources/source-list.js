@@ -61,7 +61,7 @@ export default class Referrers extends React.Component {
   }
 
   label() {
-    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+    return this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
   }
 
   renderList() {

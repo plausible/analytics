@@ -56,7 +56,7 @@ export default class Pages extends React.Component {
   label() {
     const filters = this.props.query.filters
     if (this.props.query.period === 'realtime') {
-      return 'Active visitors'
+      return 'Current visitors'
     } else if (filters['source'] || filters['referrer']) {
       return 'Entrances'
     } else {

@@ -65,7 +65,7 @@ export default class Countries extends React.Component {
 
   drawMap() {
     var dataset = this.getDataset();
-    const label = this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+    const label = this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
 
     this.map = new Datamap({
       element: document.getElementById('map-container'),

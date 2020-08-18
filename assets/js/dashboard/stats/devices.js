@@ -74,7 +74,7 @@ class ScreenSizes extends React.Component {
   }
 
   label() {
-    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+    return this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
   }
 
   renderList() {
@@ -141,7 +141,7 @@ class Browsers extends React.Component {
   }
 
   label() {
-    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+    return this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
   }
 
   renderList() {
@@ -208,7 +208,7 @@ class OperatingSystems extends React.Component {
   }
 
   label() {
-    return this.props.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+    return this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
   }
 
   renderList() {

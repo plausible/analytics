@@ -31,7 +31,7 @@ class CountriesModal extends React.Component {
   }
 
   label() {
-    return this.state.query.period === 'realtime' ? 'Active visitors' : 'Visitors'
+    return this.state.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
   }
 
   renderBody() {
