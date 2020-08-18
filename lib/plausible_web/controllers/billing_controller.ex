@@ -76,9 +76,7 @@ defmodule PlausibleWeb.BillingController do
     )
   end
 
-  def success(conn, _params) do
-    conn
-    |> put_flash(:success, "Subscription created successfully")
-    |> redirect(to: "/settings")
+  def upgrade_success(conn, _params) do
+    render(conn, "upgrade_success.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 end

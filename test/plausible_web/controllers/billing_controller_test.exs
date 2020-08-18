@@ -33,4 +33,14 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert subscription.next_bill_amount == "6.00"
     end
   end
+
+  describe "GET /billing/upgrade-success" do
+    setup [:create_user, :log_in]
+
+    test "shows success page after user subscribes", %{conn: conn} do
+      conn = get(conn, "/billing/upgrade-success")
+
+      assert html_response(conn, 200) =~ "Subscription created succesfully"
+    end
+  end
 end
