@@ -1,0 +1,18 @@
+<div class="w-full max-w-lg px-4 mt-4 mx-auto">
+  <div x-data="{volume: '10k', billingCycle: 'monthly'}" class="flex-1 bg-white shadow-md rounded px-8 py-4 mb-4 mt-8">
+    <div class="w-full pt-2 text-xl font-bold">
+      Subscription created succesfully
+    </div>
+
+    <div class="w-full text-gray-500 text-sm py-4">
+      Thank you for upgrading your subscription. You will be redirected to your
+      account within 5 seconds.
+    </div>
+
+    <div class="loading my-12 mx-auto"><div></div></div>
+
+    <script>
+      setTimeout(function() {window.location='/settings'}, 3500);
+    </script>
+  </div>
+</div>
