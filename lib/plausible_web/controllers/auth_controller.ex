@@ -253,7 +253,10 @@ defmodule PlausibleWeb.AuthController do
         |> redirect(to: "/settings")
 
       {:error, changeset} ->
-        render(conn, "user_settings.html", changeset: changeset)
+        render(conn, "user_settings.html",
+          changeset: changeset,
+          subscription: conn.assigns[:current_user].subscription
+        )
     end
   end
 
