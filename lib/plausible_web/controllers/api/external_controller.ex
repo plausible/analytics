@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   defp create_event(conn, params) do
-    uri = params["url"] && URI.parse(params["url"])
+    uri = params["url"] && URI.parse(URI.decode(params["url"]))
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
 
     if UAInspector.bot?(user_agent) do
@@ -69,6 +69,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       ref = parse_referrer(uri, params["referrer"])
       country_code = visitor_country(conn)
       salts = Plausible.Session.Salts.fetch()
+      referrer_source = if params["source"], do: URI.decode(params["source"]), else: get_referrer_source(ref)
 
       event_attrs = %{
         timestamp: NaiveDateTime.utc_now(),
@@ -80,7 +81,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         country_code: country_code,
         operating_system: ua && os_name(ua),
         browser: ua && browser_name(ua),
-        referrer_source: params["source"] || referrer_source(ref),
+        referrer_source: referrer_source,
         referrer: clean_referrer(ref),
         screen_size: calculate_screen_size(params["screen_width"])
       }
@@ -176,9 +177,9 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp referrer_source(nil), do: nil
+  defp get_referrer_source(nil), do: nil
 
-  defp referrer_source(ref) do
+  defp get_referrer_source(ref) do
     case ref.source do
       :unknown ->
         clean_uri(ref.referer)

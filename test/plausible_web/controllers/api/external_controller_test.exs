@@ -398,6 +398,25 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert pageview["country_code"] == "US"
   end
 
+    test "URL and source are decoded", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://www.example.com/opportunity/category/%D8%AC%D9%88%D8%A7%D8%A6%D8%B2-%D9%88%D9%85%D8%B3%D8%A7%D8%A8%D9%82%D8%A7%D8%AA",
+        source: "Hello%20World",
+        domain: "external-controller-test-21.com"
+      }
+
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> post("/api/event", Jason.encode!(params))
+
+      pageview = get_event("external-controller-test-21.com")
+
+      assert pageview["pathname"] == "/opportunity/category/جوائز-ومسابقات"
+      assert pageview["referrer_source"] == "Hello World"
+    end
+
+
   test "responds 400 when required fields are missing", %{conn: conn} do
     params = %{}
 
