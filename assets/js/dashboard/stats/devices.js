@@ -64,11 +64,11 @@ class ScreenSizes extends React.Component {
   renderScreenSize(size) {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={size.name}>
-        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
+        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
           <Bar count={size.count} all={this.state.sizes} bg="bg-green-50" />
           <span tooltip={EXPLANATION[size.name]} className="block px-2" style={{marginTop: '-26px'}}>{iconFor(size.name)} {size.name}</span>
         </div>
-        <span className="font-medium">{size.percentage}%</span>
+        <span className="font-medium">{size.count} <span className="inline-block text-xs w-8 text-right">({size.percentage}%)</span></span>
       </div>
     )
   }
@@ -131,11 +131,11 @@ class Browsers extends React.Component {
   renderBrowser(browser) {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={browser.name}>
-        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
+        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
           <Bar count={browser.count} all={this.state.browsers} bg="bg-green-50" />
           <span className="block px-2" style={{marginTop: '-26px'}}>{browser.name}</span>
         </div>
-        <span className="font-medium">{browser.percentage}%</span>
+        <span className="font-medium">{browser.count} <span className="inline-block text-xs w-8 text-right">({browser.percentage}%)</span></span>
       </div>
     )
   }
@@ -198,11 +198,11 @@ class OperatingSystems extends React.Component {
   renderOperatingSystem(os) {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={os.name}>
-        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
+        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
           <Bar count={os.count} all={this.state.operatingSystems} bg="bg-green-50" />
           <span className="block px-2" style={{marginTop: '-26px'}}>{os.name}</span>
         </div>
-        <span className="font-medium">{os.percentage}%</span>
+        <span className="font-medium">{os.count} <span className="inline-block text-xs w-8 text-right">({os.percentage}%)</span></span>
       </div>
     )
   }
