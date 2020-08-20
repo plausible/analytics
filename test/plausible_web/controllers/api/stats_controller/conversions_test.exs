@@ -12,8 +12,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
-               %{"name" => "Signup", "count" => 3},
-               %{"name" => "Visit /register", "count" => 2}
+               %{"name" => "Signup", "count" => 3, "total_count" => 3},
+               %{"name" => "Visit /register", "count" => 2, "total_count" => 2}
              ]
     end
   end
@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "Signup", "count" => 3}
+               %{"name" => "Signup", "count" => 3, "total_count" => 3}
              ]
     end
   end

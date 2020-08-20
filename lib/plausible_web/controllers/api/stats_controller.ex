@@ -41,6 +41,8 @@ defmodule PlausibleWeb.Api.StatsController do
     prev_unique_visitors = Stats.unique_visitors(site, %{prev_query | filters: %{}})
     converted_visitors = Stats.unique_visitors(site, query)
     prev_converted_visitors = Stats.unique_visitors(site, prev_query)
+    completions = Stats.total_events(site, query)
+    prev_completions = Stats.total_events(site, prev_query)
 
     conversion_rate =
       if unique_visitors > 0,
@@ -59,9 +61,14 @@ defmodule PlausibleWeb.Api.StatsController do
         change: percent_change(prev_unique_visitors, unique_visitors)
       },
       %{
-        name: "Converted visitors",
+        name: "Unique conversions",
         count: converted_visitors,
         change: percent_change(prev_converted_visitors, converted_visitors)
+      },
+      %{
+        name: "Total conversions",
+        count: completions,
+        change: percent_change(prev_completions, completions)
       },
       %{
         name: "Conversion rate",

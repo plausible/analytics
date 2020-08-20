@@ -530,11 +530,10 @@ defmodule Plausible.Stats.Clickhouse do
   def goal_conversions(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
     Clickhouse.all(
       from e in base_query(site, query),
-        select: {e.name, fragment("uniq(user_id) as count")},
+        select: {e.name, fragment("uniq(user_id) as count"), fragment("count(*) as total_count")},
         group_by: e.name,
         order_by: [desc: fragment("count")]
     )
-    |> Enum.map(fn row -> %{"name" => goal, "count" => row["count"]} end)
   end
 
   def goal_conversions(site, query) do
@@ -560,7 +559,7 @@ defmodule Plausible.Stats.Clickhouse do
           where: e.domain == ^site.domain,
           where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
           where: fragment("? IN tuple(?)", e.name, ^events),
-          select: {e.name, fragment("uniq(user_id) as count")},
+          select: {e.name, fragment("uniq(user_id) as count"), fragment("count(*) as total_count")},
           group_by: e.name
         )
 
@@ -609,7 +608,8 @@ defmodule Plausible.Stats.Clickhouse do
           group_by: e.pathname,
           select:
             {fragment("concat('Visit ', ?) as name", e.pathname),
-             fragment("uniq(user_id) as count")}
+              fragment("uniq(user_id) as count"),
+              fragment("count(*) as total_count") }
         )
 
       q =
