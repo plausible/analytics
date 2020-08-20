@@ -25,7 +25,9 @@ class CountriesModal extends React.Component {
     return (
       <tr className="text-sm" key={country.name}>
         <td className="p-2">{country.full_country_name}</td>
-        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(country.percentage)}%</td>
+        <td className="p-2 w-32 font-medium" align="right">
+          {country.count} <span className="inline-block text-xs w-8 text-right">({country.percentage}%)</span>
+        </td>
       </tr>
     )
   }
