@@ -57,13 +57,12 @@
     if (window.document.visibilityState === 'prerender') return ignore('document is prerendering');
 
     var payload = CONFIG['trackAcquisition'] ? getUserData() : {}
-    payload.name = eventName
-    payload.url = getUrl()
-    payload.domain = CONFIG['domain']
-    payload.referrer = window.document.referrer || null
-    payload.source = getSourceFromQueryParam()
-    payload.user_agent = window.navigator.userAgent
-    payload.screen_width = window.innerWidth
+    payload.n = eventName
+    payload.u = getUrl()
+    payload.d = CONFIG['domain']
+    payload.r = window.document.referrer || null
+    payload.s = getSourceFromQueryParam()
+    payload.w = window.innerWidth
 
     var request = new XMLHttpRequest();
     request.open('POST', plausibleHost + '/api/event', true);

@@ -55,6 +55,15 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   defp create_event(conn, params) do
+    params = %{
+      "name" => params["n"] || params["name"],
+      "url" => params["u"] || params["url"],
+      "referrer" => params["r"] || params["referrer"],
+      "source" => params["s"] || params["source"],
+      "domain" => params["d"] || params["domain"],
+      "screen_width" => params["w"] || params["screen_width"],
+    }
+
     uri = params["url"] && URI.parse(URI.decode(params["url"]))
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
 
