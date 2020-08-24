@@ -59,7 +59,6 @@ defmodule PlausibleWeb.Api.ExternalController do
       "name" => params["n"] || params["name"],
       "url" => params["u"] || params["url"],
       "referrer" => params["r"] || params["referrer"],
-      "source" => params["s"] || params["source"],
       "domain" => params["d"] || params["domain"],
       "screen_width" => params["w"] || params["screen_width"],
     }
@@ -78,7 +77,6 @@ defmodule PlausibleWeb.Api.ExternalController do
       ref = parse_referrer(uri, params["referrer"])
       country_code = visitor_country(conn)
       salts = Plausible.Session.Salts.fetch()
-      referrer_source = if params["source"], do: URI.decode(params["source"]), else: get_referrer_source(ref)
 
       event_attrs = %{
         timestamp: NaiveDateTime.utc_now(),
@@ -90,7 +88,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         country_code: country_code,
         operating_system: ua && os_name(ua),
         browser: ua && browser_name(ua),
-        referrer_source: referrer_source,
+        referrer_source: get_referrer_source(uri, ref),
         referrer: clean_referrer(ref),
         screen_size: calculate_screen_size(params["screen_width"])
       }
@@ -186,9 +184,15 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp get_referrer_source(nil), do: nil
+  defp get_referrer_source(uri, ref) do
+    query = if uri && uri.query, do: URI.decode_query(uri.query), else: %{}
+    source = query["utm_source"] || query["source"] || query["ref"]
+    source || get_source_from_referrer(ref)
+  end
 
-  defp get_referrer_source(ref) do
+  defp get_source_from_referrer(nil), do: nil
+
+  defp get_source_from_referrer(ref) do
     case ref.source do
       :unknown ->
         clean_uri(ref.referer)

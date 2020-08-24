@@ -243,12 +243,11 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview["referrer"] == "indiehackers.com/page"
     end
 
-    test "source param controls the referrer source", %{conn: conn} do
+    test "utm_source overrides referrer source", %{conn: conn} do
       params = %{
         name: "pageview",
-        url: "http://www.example.com/",
+        url: "http://www.example.com/?utm_source=betalist",
         referrer: "https://betalist.com/my-produxct",
-        source: "betalist",
         domain: "external-controller-test-13.com"
       }
 
@@ -398,11 +397,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert pageview["country_code"] == "US"
   end
 
-  test "URL and source are decoded", %{conn: conn} do
+  test "URL is decoded", %{conn: conn} do
     params = %{
       name: "pageview",
       url: "http://www.example.com/opportunity/category/%D8%AC%D9%88%D8%A7%D8%A6%D8%B2-%D9%88%D9%85%D8%B3%D8%A7%D8%A8%D9%82%D8%A7%D8%AA",
-      source: "Hello%20World",
       domain: "external-controller-test-21.com"
     }
 
@@ -413,14 +411,12 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     pageview = get_event("external-controller-test-21.com")
 
     assert pageview["pathname"] == "/opportunity/category/جوائز-ومسابقات"
-    assert pageview["referrer_source"] == "Hello World"
   end
 
   test "accepts shorthand map keys", %{conn: conn} do
     params = %{
       n: "pageview",
       u: "http://www.example.com/opportunity",
-      s: "Hello%20World",
       d: "external-controller-test-22.com",
       r: "https://facebook.com/page",
       w: 300
@@ -433,7 +429,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     pageview = get_event("external-controller-test-22.com")
 
     assert pageview["pathname"] == "/opportunity"
-    assert pageview["referrer_source"] == "Hello World"
+    assert pageview["referrer_source"] == "Facebook"
     assert pageview["referrer"] == "facebook.com/page"
     assert pageview["screen_size"] == "Mobile"
   end
