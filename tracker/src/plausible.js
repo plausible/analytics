@@ -12,11 +12,6 @@
     console.warn('[Plausible] Ignore event: ' + reason);
   }
 
-  function getSourceFromQueryParam() {
-    var result = location.search.match(/[?&](ref|source|utm_source)=([^?&]+)/);
-    return result ? result[2] : null
-  }
-
   function trigger(eventName, options) {
     if (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(location.hostname) || location.protocol === 'file:') return ignore('running locally');
     if (document.visibilityState === 'prerender') return ignore('prerendering');
@@ -26,7 +21,6 @@
     payload.u = location.href
     payload.d = CONFIG['domain']
     payload.r = document.referrer || null
-    payload.s = getSourceFromQueryParam()
     payload.w = window.innerWidth
 
     var request = new XMLHttpRequest();

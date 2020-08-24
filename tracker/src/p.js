@@ -19,15 +19,6 @@
     console.warn('[Plausible] Ignoring event because ' + reason);
   }
 
-  function getUrl() {
-    return window.location.protocol + '//' + window.location.hostname + window.location.pathname + window.location.search;
-  }
-
-  function getSourceFromQueryParam() {
-    var result = window.location.search.match(/[?&](ref|source|utm_source)=([^?&]+)/);
-    return result ? result[2] : null
-  }
-
   function getUserData() {
     var userData = JSON.parse(getCookie('plausible_user'))
 
@@ -58,10 +49,9 @@
 
     var payload = CONFIG['trackAcquisition'] ? getUserData() : {}
     payload.n = eventName
-    payload.u = getUrl()
+    payload.u = window.location.href
     payload.d = CONFIG['domain']
     payload.r = window.document.referrer || null
-    payload.s = getSourceFromQueryParam()
     payload.w = window.innerWidth
 
     var request = new XMLHttpRequest();
