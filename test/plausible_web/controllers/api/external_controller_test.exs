@@ -434,6 +434,23 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert pageview["screen_size"] == "Mobile"
   end
 
+  test "records hash when in hash mode", %{conn: conn} do
+    params = %{
+      n: "pageview",
+      u: "http://www.example.com/#page-a",
+      d: "external-controller-test-23.com",
+      h: 1
+    }
+
+    conn
+    |> put_req_header("content-type", "text/plain")
+    |> post("/api/event", Jason.encode!(params))
+
+    pageview = get_event("external-controller-test-23.com")
+
+    assert pageview["pathname"] == "/#page-a"
+  end
+
   test "responds 400 when required fields are missing", %{conn: conn} do
     params = %{}
 

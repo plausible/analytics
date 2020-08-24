@@ -5,8 +5,7 @@
   var document = window.document
 
   var scriptEl = document.querySelector('[src*="' + plausibleHost +'"]')
-  var domainAttr = scriptEl && scriptEl.getAttribute('data-domain')
-  var CONFIG = {domain: domainAttr || location.hostname}
+  var domain = scriptEl && scriptEl.getAttribute('data-domain')
 
   function ignore(reason) {
     console.warn('[Plausible] Ignore event: ' + reason);
@@ -19,7 +18,7 @@
     var payload = {}
     payload.n = eventName
     payload.u = location.href
-    payload.d = CONFIG['domain']
+    payload.d = domain
     payload.r = document.referrer || null
     payload.w = window.innerWidth
     {{#if hashMode}}
