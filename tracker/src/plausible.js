@@ -12,10 +12,6 @@
     console.warn('[Plausible] Ignore event: ' + reason);
   }
 
-  function getUrl() {
-    return location.protocol + '//' + location.hostname + location.pathname + location.search;
-  }
-
   function getSourceFromQueryParam() {
     var result = location.search.match(/[?&](ref|source|utm_source)=([^?&]+)/);
     return result ? result[2] : null
@@ -26,13 +22,12 @@
     if (document.visibilityState === 'prerender') return ignore('prerendering');
 
     var payload = {}
-    payload.name = eventName
-    payload.url = getUrl()
-    payload.domain = CONFIG['domain']
-    payload.referrer = document.referrer || null
-    payload.source = getSourceFromQueryParam()
-    payload.user_agent = window.navigator.userAgent
-    payload.screen_width = window.innerWidth
+    payload.n = eventName
+    payload.u = location.href
+    payload.d = CONFIG['domain']
+    payload.r = document.referrer || null
+    payload.s = getSourceFromQueryParam()
+    payload.w = window.innerWidth
 
     var request = new XMLHttpRequest();
     request.open('POST', plausibleHost + '/api/event', true);
