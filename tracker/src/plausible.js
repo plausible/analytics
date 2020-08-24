@@ -22,6 +22,9 @@
     payload.d = CONFIG['domain']
     payload.r = document.referrer || null
     payload.w = window.innerWidth
+    {{#if hashMode}}
+    payload.h = 1
+    {{/if}}
 
     var request = new XMLHttpRequest();
     request.open('POST', plausibleHost + '/api/event', true);
@@ -50,6 +53,10 @@
       }
       window.addEventListener('popstate', page)
     }
+
+    {{#if hashMode}}
+    window.addEventListener('hashchange', page)
+    {{/if}}
 
     var queue = (window.plausible && window.plausible.q) || []
     window.plausible = trigger
