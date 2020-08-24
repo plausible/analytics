@@ -59,7 +59,6 @@ defmodule PlausibleWeb.Api.ExternalController do
       "name" => params["n"] || params["name"],
       "url" => params["u"] || params["url"],
       "referrer" => params["r"] || params["referrer"],
-      "source" => params["s"] || params["source"],
       "domain" => params["d"] || params["domain"],
       "screen_width" => params["w"] || params["screen_width"],
     }
