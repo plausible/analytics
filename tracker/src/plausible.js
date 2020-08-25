@@ -5,8 +5,7 @@
   var document = window.document
 
   var scriptEl = document.querySelector('[src*="' + plausibleHost +'"]')
-  var domainAttr = scriptEl && scriptEl.getAttribute('data-domain')
-  var CONFIG = {domain: domainAttr || location.hostname}
+  var domain = scriptEl && scriptEl.getAttribute('data-domain')
 
   function ignore(reason) {
     console.warn('[Plausible] Ignore event: ' + reason);
@@ -19,9 +18,12 @@
     var payload = {}
     payload.n = eventName
     payload.u = location.href
-    payload.d = CONFIG['domain']
+    payload.d = domain
     payload.r = document.referrer || null
     payload.w = window.innerWidth
+    {{#if hashMode}}
+    payload.h = 1
+    {{/if}}
 
     var request = new XMLHttpRequest();
     request.open('POST', plausibleHost + '/api/event', true);
@@ -50,6 +52,10 @@
       }
       window.addEventListener('popstate', page)
     }
+
+    {{#if hashMode}}
+    window.addEventListener('hashchange', page)
+    {{/if}}
 
     var queue = (window.plausible && window.plausible.q) || []
     window.plausible = trigger
