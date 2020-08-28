@@ -95,9 +95,8 @@ defmodule PlausibleWeb.AuthController do
     )
   end
 
-  def password_reset_request(conn, %{"email" => email, "h-captcha-response" => captcha_token}) do
-
-    if PlausibleWeb.Captcha.verify(captcha_token) do
+  def password_reset_request(conn, %{"email" => email} = params) do
+    if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
       user = Repo.get_by(Plausible.Auth.User, email: email)
 
       if user do
