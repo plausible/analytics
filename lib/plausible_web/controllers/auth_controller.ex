@@ -95,23 +95,31 @@ defmodule PlausibleWeb.AuthController do
     )
   end
 
-  def password_reset_request(conn, %{"email" => email}) do
-    user = Repo.get_by(Plausible.Auth.User, email: email)
+  def password_reset_request(conn, %{"email" => email, "h-captcha-response" => captcha_token}) do
 
-    if user do
-      token = Auth.Token.sign_password_reset(email)
-      url = PlausibleWeb.Endpoint.clean_url() <> "/password/reset?token=#{token}"
-      Logger.debug("PASSWORD RESET LINK: " <> url)
-      email_template = PlausibleWeb.Email.password_reset_email(email, url)
-      Plausible.Mailer.deliver_now(email_template)
+    if PlausibleWeb.Captcha.verify(captcha_token) do
+      user = Repo.get_by(Plausible.Auth.User, email: email)
 
-      render(conn, "password_reset_request_success.html",
-        email: email,
-        layout: {PlausibleWeb.LayoutView, "focus.html"}
-      )
+      if user do
+        token = Auth.Token.sign_password_reset(email)
+        url = PlausibleWeb.Endpoint.clean_url() <> "/password/reset?token=#{token}"
+        Logger.debug("PASSWORD RESET LINK: " <> url)
+        email_template = PlausibleWeb.Email.password_reset_email(email, url)
+        Plausible.Mailer.deliver_now(email_template)
+
+        render(conn, "password_reset_request_success.html",
+          email: email,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+      else
+        render(conn, "password_reset_request_success.html",
+          email: email,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+      end
     else
-      render(conn, "password_reset_request_success.html",
-        email: email,
+      render(conn, "password_reset_request_form.html",
+        error: "Please complete the captcha to reset your password",
         layout: {PlausibleWeb.LayoutView, "focus.html"}
       )
     end
