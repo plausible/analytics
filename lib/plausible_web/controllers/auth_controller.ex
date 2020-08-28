@@ -24,28 +24,36 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  def register(conn, %{"user" => params}) do
-    user = Plausible.Auth.User.changeset(%Plausible.Auth.User{}, params)
+  def register(conn, params) do
+    user = Plausible.Auth.User.changeset(%Plausible.Auth.User{}, params["user"])
 
-    case Ecto.Changeset.apply_action(user, :insert) do
-      {:ok, user} ->
-        token = Auth.Token.sign_activation(user.name, user.email)
-        url = PlausibleWeb.Endpoint.clean_url() <> "/claim-activation?token=#{token}"
-        Logger.info(url)
-        email_template = PlausibleWeb.Email.activation_email(user, url)
-        Plausible.Mailer.send_email(email_template)
+    if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
+      case Ecto.Changeset.apply_action(user, :insert) do
+        {:ok, user} ->
+          token = Auth.Token.sign_activation(user.name, user.email)
+          url = PlausibleWeb.Endpoint.clean_url() <> "/claim-activation?token=#{token}"
+          Logger.info(url)
+          email_template = PlausibleWeb.Email.activation_email(user, url)
+          Plausible.Mailer.send_email(email_template)
 
-        conn
-        |> render("register_success.html",
-          email: user.email,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
+          conn
+          |> render("register_success.html",
+            email: user.email,
+            layout: {PlausibleWeb.LayoutView, "focus.html"}
+          )
 
-      {:error, changeset} ->
-        render(conn, "register_form.html",
-          changeset: changeset,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
+        {:error, changeset} ->
+          render(conn, "register_form.html",
+            changeset: changeset,
+            layout: {PlausibleWeb.LayoutView, "focus.html"}
+          )
+      end
+    else
+      render(conn, "register_form.html",
+        changeset: user,
+        captcha_error: "Please complete the captcha to register",
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
+      )
     end
   end
 

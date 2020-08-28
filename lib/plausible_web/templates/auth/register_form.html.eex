@@ -19,6 +19,16 @@
         <%= error_tag f, :email %>
       </div>
 
+      <%= if PlausibleWeb.Captcha.enabled?() do %>
+        <div class="mt-4">
+          <div class="h-captcha" data-sitekey="<%= PlausibleWeb.Captcha.sitekey() %>"></div>
+          <%= if assigns[:captcha_error] do %>
+            <div class="text-red-500 text-xs italic mt-3"><%= @captcha_error %></div>
+          <% end %>
+          <script src="https://hcaptcha.com/1/api.js" async defer></script>
+        </div>
+      <% end %>
+
       <%= submit "Start my free trial →", class: "button mt-4 w-full" %>
 
       <p class="text-center text-gray-600 text-xs mt-4">

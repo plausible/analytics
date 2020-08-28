@@ -184,6 +184,10 @@ config :plausible, :custom_domain_server,
 config :plausible, PlausibleWeb.Firewall,
   blocklist: System.get_env("IP_BLOCKLIST", "") |> String.split(",") |> Enum.map(&String.trim/1)
 
+config :plausible, :hcaptcha,
+  sitekey: System.get_env("HCAPTCHA_SITEKEY"),
+  secret: System.get_env("HCAPTCHA_SECRET")
+
 config :geolix,
   databases: [
     %{
