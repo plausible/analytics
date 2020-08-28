@@ -53,6 +53,9 @@ custom_domain_server_user = System.get_env("CUSTOM_DOMAIN_SERVER_USER")
 custom_domain_server_password = System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD")
 geolite2_country_db = System.get_env("GEOLITE2_COUNTRY_DB")
 disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
+hcaptcha_sitekey = System.get_env("HCAPTCHA_SITEKEY")
+hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
+
 
 config :plausible,
   admin_user: admin_user,
@@ -186,6 +189,10 @@ config :plausible, Oban,
   repo: Plausible.Repo,
   queues: if(cron_enabled, do: base_queues ++ extra_queues, else: base_queues),
   crontab: if(cron_enabled, do: base_cron ++ extra_cron, else: base_cron)
+
+config :plausible, :hcaptcha,
+  sitekey: hcaptcha_sitekey,
+  secret: hcaptcha_secret
 
 config :ref_inspector,
   init: {Plausible.Release, :configure_ref_inspector}
