@@ -36,6 +36,8 @@ services:
   # this requires an account at maxmind.com (https://www.maxmind.com/en/geolite2/signup)
   geoip:
     image: maxmindinc/geoipupdate
+    ports:
+      - 1080:1080
     environment:
       - GEOIPUPDATE_ACCOUNT_ID=<your-account-id>
       - GEOIPUPDATE_LICENSE_KEY=<your-license-key>
@@ -53,12 +55,14 @@ services:
     depends_on:
       - plausible_db
       - plausible_events_db
+      - geoip
       - fake_smtp
     ports:
       - 80:8080
     links:
       - plausible_db
       - plausible_events_db
+      - geoip
       - fake_smtp
     env_file:
       - plausible-variables.sample.env
