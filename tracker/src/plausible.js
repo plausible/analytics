@@ -6,14 +6,10 @@
 
   var scriptEl = document.querySelector('[src*="' + plausibleHost +'"]')
   var domain = scriptEl && scriptEl.getAttribute('data-domain')
-
-  function ignore(reason) {
-    console.warn('[Plausible] Ignore event: ' + reason);
-  }
+  var pageVisible = false
 
   function trigger(eventName, options) {
-    if (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(location.hostname) || location.protocol === 'file:') return ignore('running locally');
-    if (document.visibilityState === 'prerender') return ignore('prerendering');
+    if (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(location.hostname) || location.protocol === 'file:') return console.warn('Ignoring event on localhost');
 
     var payload = {}
     payload.n = eventName
@@ -42,6 +38,13 @@
     trigger('pageview')
   }
 
+  function handleVisibilityChange() {
+    if (!pageVisible && document.visibilityState === 'visible') {
+      pageVisible = true
+      page()
+    }
+  }
+
   try {
     var his = window.history
     if (his.pushState) {
@@ -57,13 +60,18 @@
     window.addEventListener('hashchange', page)
     {{/if}}
 
+
     var queue = (window.plausible && window.plausible.q) || []
     window.plausible = trigger
     for (var i = 0; i < queue.length; i++) {
       trigger.apply(this, queue[i])
     }
 
-    page()
+    if (document.visibilityState === 'prerender') {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+    } else {
+      page()
+    }
   } catch (e) {
     new Image().src = plausibleHost + '/api/error?message=' +  encodeURIComponent(e.message);
   }
