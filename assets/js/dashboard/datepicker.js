@@ -1,7 +1,7 @@
 import React from 'react';
 import { withRouter, Link } from 'react-router-dom'
 import Flatpickr from "react-flatpickr";
-import {shiftDays, shiftMonths, formatDay, formatDayShort, formatMonthYYYY, formatISO, isToday} from './date'
+import {shiftDays, shiftMonths, formatDay, formatDayShort, formatMonthYYYY, formatISO, isToday, lastMonth, nowForSite, isSameMonth} from './date'
 
 
 class DatePicker extends React.Component {
@@ -79,8 +79,6 @@ class DatePicker extends React.Component {
       return 'Last 7 days'
     } else if (query.period === '30d') {
       return 'Last 30 days'
-    } else if (query.period === '60d') {
-      return 'Last 60 days'
     } else if (query.period === 'month') {
       return formatMonthYYYY(query.date)
     } else if (query.period === '6mo') {
@@ -146,17 +144,22 @@ class DatePicker extends React.Component {
     this.setState({mode: 'closed'})
   }
 
-  renderLink(period, text) {
+  renderLink(period, text, opts = {}) {
     const {query, site} = this.props
     let boldClass;
     if (query.period === 'day' && period === 'day') {
       boldClass = isToday(site, query.date) ? 'font-bold' : ''
+    } else if (query.period === 'month' && period === 'month') {
+      const linkDate = opts.date || nowForSite(site)
+      boldClass = isSameMonth(linkDate, query.date) ? 'font-bold' : ''
     } else {
       boldClass = query.period === period ? 'font-bold' : ''
     }
 
+    if (opts.date) { opts.date = formatISO(opts.date) }
+
     return (
-      <Link to={{search: this.queryWithPeriod(period)}} onClick={this.close.bind(this)} className={boldClass + ' block px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900'}>
+      <Link to={{search: this.queryWithPeriod(period, opts)}} onClick={this.close.bind(this)} className={boldClass + ' block px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900'}>
         {text}
       </Link>
     )
@@ -175,7 +178,11 @@ class DatePicker extends React.Component {
             <div className="py-1">
               { this.renderLink('7d', 'Last 7 days') }
               { this.renderLink('30d', 'Last 30 days') }
-              { this.renderLink('60d', 'Last 60 days') }
+            </div>
+            <div className="border-t border-gray-200"></div>
+            <div className="py-1">
+              { this.renderLink('month', 'This month') }
+              { this.renderLink('month', 'Last month', {date: lastMonth(this.props.site)}) }
             </div>
             <div className="border-t border-gray-200"></div>
             <div className="py-1">

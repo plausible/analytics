@@ -1,4 +1,4 @@
-import {formatDay, formatMonthYYYY, nowInOffset, parseUTCDate} from './date'
+import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './date'
 
 const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '60d', '6mo', '12mo', 'custom']
 
@@ -19,7 +19,7 @@ export function parseQuery(querystring, site) {
 
   return {
     period: period,
-    date: q.get('date') ? parseUTCDate(q.get('date')) : nowInOffset(site.offset),
+    date: q.get('date') ? parseUTCDate(q.get('date')) : nowForSite(site),
     from: q.get('from') ? parseUTCDate(q.get('from')) : undefined,
     to: q.get('to') ? parseUTCDate(q.get('to')) : undefined,
     filters: {

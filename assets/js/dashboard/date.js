@@ -51,11 +51,19 @@ export function parseUTCDate(dateString) {
 }
 
 // https://stackoverflow.com/a/11124448
-export function nowInOffset(siteOffset) {
+export function nowForSite(site) {
   const browserOffset = (new Date()).getTimezoneOffset() * 60
-  return new Date(new Date().getTime() + (siteOffset * 1000) + (browserOffset * 1000))
+  return new Date(new Date().getTime() + (site.offset * 1000) + (browserOffset * 1000))
+}
+
+export function lastMonth(site) {
+  return shiftMonths(nowForSite(site), -1)
+}
+
+export function isSameMonth(date1, date2) {
+  return formatMonthYYYY(date1) === formatMonthYYYY(date2)
 }
 
 export function isToday(site, date) {
-  return formatISO(date) === formatISO(nowInOffset(site.offset))
+  return formatISO(date) === formatISO(nowForSite(site))
 }
