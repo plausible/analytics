@@ -1,6 +1,6 @@
 import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './date'
 
-const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '60d', '6mo', '12mo', 'custom']
+const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'custom']
 
 export function parseQuery(querystring, site) {
   const q = new URLSearchParams(querystring)
@@ -40,8 +40,6 @@ export function toHuman(query) {
     return 'in the last 7 days'
   } else if (query.period === '30d') {
     return 'in the last 30 days'
-  } else if (query.period === '60d') {
-    return 'in the last 60 days'
   } else if (query.period === '6mo') {
     return 'in the last 6 months'
   } else if (query.period === '12mo') {

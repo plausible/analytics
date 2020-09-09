@@ -60,14 +60,6 @@ defmodule Plausible.Stats.QueryTest do
     assert Query.from(@tz, %{}) == Query.from(@tz, %{"period" => "30d"})
   end
 
-  test "parses 60d format" do
-    q = Query.from(@tz, %{"period" => "60d"})
-
-    assert q.date_range.last == Timex.today()
-    assert Timex.diff(q.date_range.last, q.date_range.first, :days) == 60
-    assert q.step_type == "date"
-  end
-
   test "parses custom format" do
     q = Query.from(@tz, %{"period" => "custom", "from" => "2019-01-01", "to" => "2019-01-15"})
 
