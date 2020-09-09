@@ -1,7 +1,8 @@
 import React from 'react';
+import Transition from "../transition.js";
 import { withRouter, Link } from 'react-router-dom'
 import Flatpickr from "react-flatpickr";
-import {shiftDays, shiftMonths, formatDay, formatDayShort, formatMonthYYYY, formatISO, isToday} from './date'
+import {shiftDays, shiftMonths, formatDay, formatDayShort, formatMonthYYYY, formatISO, isToday, lastMonth, nowForSite, isSameMonth} from './date'
 
 
 class DatePicker extends React.Component {
@@ -9,7 +10,7 @@ class DatePicker extends React.Component {
     super(props)
     this.handleKeyup = this.handleKeyup.bind(this)
     this.handleClick = this.handleClick.bind(this)
-    this.state = {mode: 'closed'}
+    this.state = {mode: 'menu', open: false}
   }
 
   componentDidMount() {
@@ -63,7 +64,7 @@ class DatePicker extends React.Component {
   handleClick(e) {
     if (this.dropDownNode && this.dropDownNode.contains(e.target)) return;
 
-    this.setState({mode: 'closed'})
+    this.setState({open: false})
   }
 
   timeFrameText() {
@@ -79,8 +80,6 @@ class DatePicker extends React.Component {
       return 'Last 7 days'
     } else if (query.period === '30d') {
       return 'Last 30 days'
-    } else if (query.period === '60d') {
-      return 'Last 60 days'
     } else if (query.period === 'month') {
       return formatMonthYYYY(query.date)
     } else if (query.period === '6mo') {
@@ -124,46 +123,62 @@ class DatePicker extends React.Component {
   }
 
   open() {
-    this.setState({mode: 'open'})
+    this.setState({mode: 'menu', open: true})
   }
 
   renderDropDown() {
+    console.log(this.state)
     return (
       <div className="relative" style={{height: '35.5px', width: '190px'}}  ref={node => this.dropDownNode = node}>
         <div onClick={this.open.bind(this)} className="flex items-center justify-between rounded bg-white shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800 h-full">
           <span className="mr-2">{this.timeFrameText()}</span>
-            <svg className="text-pink-500 h-4 w-4" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
+          <svg className="text-pink-500 h-4 w-4" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
         </div>
 
-        {this.renderDropDownContent()}
+        <Transition
+          show={this.state.open}
+          enter="transition ease-out duration-100 transform"
+          enterFrom="opacity-0 scale-95"
+          enterTo="opacity-100 scale-100"
+          leave="transition ease-in duration-75 transform"
+          leaveFrom="opacity-100 scale-100"
+          leaveTo="opacity-0 scale-95"
+        >
+          {this.renderDropDownContent()}
+        </Transition>
       </div>
     )
   }
 
   close() {
-    this.setState({mode: 'closed'})
+    this.setState({open: false})
   }
 
-  renderLink(period, text) {
+  renderLink(period, text, opts = {}) {
     const {query, site} = this.props
     let boldClass;
     if (query.period === 'day' && period === 'day') {
       boldClass = isToday(site, query.date) ? 'font-bold' : ''
+    } else if (query.period === 'month' && period === 'month') {
+      const linkDate = opts.date || nowForSite(site)
+      boldClass = isSameMonth(linkDate, query.date) ? 'font-bold' : ''
     } else {
       boldClass = query.period === period ? 'font-bold' : ''
     }
 
+    if (opts.date) { opts.date = formatISO(opts.date) }
+
     return (
-      <Link to={{search: this.queryWithPeriod(period)}} onClick={this.close.bind(this)} className={boldClass + ' block px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900'}>
+      <Link to={{search: this.queryWithPeriod(period, opts)}} onClick={this.close.bind(this)} className={boldClass + ' block px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900'}>
         {text}
       </Link>
     )
   }
 
   renderDropDownContent() {
-    if (this.state.mode === 'open') {
+    if (this.state.mode === 'menu') {
       return (
         <div className="absolute mt-2 rounded shadow-md z-10" style={{width: '235px', right: '-14px'}}>
           <div className="rounded bg-white shadow-xs font-medium text-gray-800">
@@ -175,7 +190,11 @@ class DatePicker extends React.Component {
             <div className="py-1">
               { this.renderLink('7d', 'Last 7 days') }
               { this.renderLink('30d', 'Last 30 days') }
-              { this.renderLink('60d', 'Last 60 days') }
+            </div>
+            <div className="border-t border-gray-200"></div>
+            <div className="py-1">
+              { this.renderLink('month', 'This month') }
+              { this.renderLink('month', 'Last month', {date: lastMonth(this.props.site)}) }
             </div>
             <div className="border-t border-gray-200"></div>
             <div className="py-1">
@@ -198,6 +217,7 @@ class DatePicker extends React.Component {
     if (dates.length === 2) {
       const [from, to] = dates
       this.props.history.push({search: this.queryWithPeriod('custom', {from: formatISO(from), to: formatISO(to)})})
+      this.close()
     }
   }
 
