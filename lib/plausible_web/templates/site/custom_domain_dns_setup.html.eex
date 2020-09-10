@@ -4,6 +4,10 @@
     <li>Go to your DNS provider’s website</li>
     <li class="mt-4">Create a new CNAME record for <code><%= @site.custom_domain.domain %></code></li>
     <li class="mt-4">Point the record to <code>custom.<%= base_domain() %>.</code> (including the dot)</li>
+    <li class="mt-4">If you're using Cloudflare, make sure to disable the orange cloud proxy:</li>
+    <%= img_tag(Routes.static_path(@conn, "/images/cloudflare_orange_cloud.png"), class: "w-36 my-4 inline") %>
+    <span class="text-lg font-bold">&rarr;</span>
+    <%= img_tag(Routes.static_path(@conn, "/images/cloudflare_gray_cloud.png"), class: "w-36 my-4 inline") %>
   </ol>
 
   <%= link("Done ->", to: "/sites/#{URI.encode_www_form(@site.domain)}/custom-domains/snippet", class: "button w-full mt-6") %>
