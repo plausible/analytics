@@ -196,13 +196,14 @@ defmodule Plausible.Stats.Clickhouse do
     res["visitors"]
   end
 
-  def top_referrers_for_goal(site, query, limit \\ 5) do
+  def top_referrers_for_goal(site, query, limit, page) do
     converted_sessions =
       from(
         from e in base_query(site, query),
           select: %{session_id: e.session_id}
       )
 
+    offset = (page - 1) * limit
     Plausible.Clickhouse.all(
       from s in Plausible.ClickhouseSession,
         join: cs in subquery(converted_sessions),
@@ -213,19 +214,22 @@ defmodule Plausible.Stats.Clickhouse do
         where: s.referrer_source != "",
         group_by: s.referrer_source,
         order_by: [desc: fragment("count")],
-        limit: ^limit
+      limit: ^limit,
+      offset: ^offset
     )
     |> Enum.map(fn ref ->
       Map.update(ref, "url", nil, fn url -> url && URI.parse("http://" <> url).host end)
     end)
   end
 
-  def top_referrers(site, query, limit \\ 5, show_noref \\ false, include \\ []) do
+  def top_referrers(site, query, limit, page, show_noref \\ false, include \\ []) do
+    offset = (page - 1) * limit
     referrers =
       from(s in base_session_query(site, query),
         group_by: s.referrer_source,
-        order_by: [desc: fragment("count")],
-        limit: ^limit
+        order_by: [desc: fragment("count"), asc: fragment("min(start)")],
+        limit: ^limit,
+        offset: ^offset
       )
 
     referrers = if show_noref do
