@@ -220,12 +220,14 @@ defmodule Plausible.Stats.Clickhouse do
     end)
   end
 
-  def top_referrers(site, query, limit \\ 5, show_noref \\ false, include \\ []) do
+  def top_referrers(site, query, limit, page, show_noref \\ false, include \\ []) do
+    offset = (page - 1) * limit
     referrers =
       from(s in base_session_query(site, query),
         group_by: s.referrer_source,
-        order_by: [desc: fragment("count")],
-        limit: ^limit
+        order_by: [desc: fragment("count"), asc: fragment("min(start)")],
+        limit: ^limit,
+        offset: ^offset
       )
 
     referrers = if show_noref do

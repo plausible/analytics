@@ -47,7 +47,16 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
                %{"name" => "Bing", "count" => 1, "url" => "bing.com"}
              ]
     end
+
+    test "can paginate the results", %{conn: conn, site: site} do
+      conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01&limit=1&page=2")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Bing", "count" => 1, "url" => ""}
+             ]
+    end
   end
+
 
   describe "GET /api/stats/:domain/goal/referrers" do
     setup [:create_user, :log_in, :create_site]

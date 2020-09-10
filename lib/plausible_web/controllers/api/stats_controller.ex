@@ -130,8 +130,9 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
     limit = if params["limit"], do: String.to_integer(params["limit"])
+    page = if params["page"], do: String.to_integer(params["page"])
     show_noref = params["show_noref"] == "true"
-    json(conn, Stats.top_referrers(site, query, limit || 9, show_noref, include))
+    json(conn, Stats.top_referrers(site, query, limit || 9, page || 1, show_noref, include))
   end
 
   def referrers_for_goal(conn, params) do
