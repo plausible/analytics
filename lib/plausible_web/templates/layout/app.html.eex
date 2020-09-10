@@ -9,7 +9,6 @@
     <link rel="apple-touch-icon" href="/images/icon/apple-touch-icon.png">
     <title><%= assigns[:title] || "Plausible · Simple, privacy-friendly alternative to Google Analytics" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.3/flatpickr.min.css">
     <%= render("_tracking.html", assigns) %>
   </head>
   <body class="flex flex-col h-full bg-gray-50">

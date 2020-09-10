@@ -127,7 +127,6 @@ class DatePicker extends React.Component {
   }
 
   renderDropDown() {
-    console.log(this.state)
     return (
       <div className="relative" style={{height: '35.5px', width: '190px'}}  ref={node => this.dropDownNode = node}>
         <div onClick={this.open.bind(this)} className="flex items-center justify-between rounded bg-white shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800 h-full">
