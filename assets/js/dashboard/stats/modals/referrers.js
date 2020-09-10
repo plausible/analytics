@@ -84,7 +84,7 @@ class ReferrersModal extends React.Component {
 
   renderLoading() {
     if (this.state.loading) {
-      return <div className="loading mt-32 mx-auto"><div></div></div>
+      return <div className="loading my-16 mx-auto"><div></div></div>
     } else if (this.state.moreResultsAvailable) {
       return (
         <div className="w-full text-center my-4">
