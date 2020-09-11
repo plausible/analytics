@@ -109,7 +109,10 @@ defmodule Plausible.Billing do
 
   defp subscription_is_active?(_), do: false
 
-  def on_trial?(user), do: trial_days_left(user) >= 0
+  def on_trial?(user) do
+    user = Repo.preload(user, :subscription)
+    !subscription_is_active?(user.subscription) && trial_days_left(user) >= 0
+  end
 
   def trial_days_left(user) do
     Timex.diff(user.trial_expiry_date, Timex.today(), :days)

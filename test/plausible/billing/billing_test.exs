@@ -43,6 +43,12 @@ defmodule Plausible.BillingTest do
 
       refute Billing.on_trial?(user)
     end
+
+    test "is false if user has subscription" do
+      user = insert(:user, subscription: build(:subscription))
+
+      refute Billing.on_trial?(user)
+    end
   end
 
   describe "needs_to_upgrade?" do
