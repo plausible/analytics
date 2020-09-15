@@ -89,8 +89,9 @@ defmodule Plausible.MixProject do
       {:oban, "~> 1.2"},
       {:sshex, "2.2.1"},
       {:geolix, "~> 1.0"},
+      {:clickhouse_ecto, path: "/Users/ukutaht/dev/plausible/clickhouse_ecto"},
       {:geolix_adapter_mmdb2, "~> 0.5.0"},
-      {:clickhousex, [git: "https://github.com/atlas-forks/clickhousex.git"]}
+      {:clickhousex, git: "https://github.com/atlas-forks/clickhousex.git", override: true}
     ]
   end
 
