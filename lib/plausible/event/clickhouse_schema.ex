@@ -11,12 +11,12 @@ defmodule Plausible.ClickhouseEvent do
     field :user_id, :integer
     field :session_id, :integer
 
-    field :referrer, :string
-    field :referrer_source, :string
-    field :country_code, :string
-    field :screen_size, :string
-    field :operating_system, :string
-    field :browser, :string
+    field :referrer, :string, default: ""
+    field :referrer_source, :string, default: ""
+    field :country_code, :string, default: ""
+    field :screen_size, :string, default: ""
+    field :operating_system, :string, default: ""
+    field :browser, :string, default: ""
 
     timestamps(inserted_at: :timestamp, updated_at: false)
   end

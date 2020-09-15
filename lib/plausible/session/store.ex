@@ -26,14 +26,13 @@ defmodule Plausible.Session.Store do
 
     sessions =
       try do
-        Plausible.Clickhouse.all(
+        Plausible.ClickhouseRepo.all(
           from s in Plausible.ClickhouseSession,
             join: ls in subquery(latest_sessions),
             on: s.session_id == ls.session_id and s.timestamp == ls.timestamp,
             order_by: s.timestamp
         )
-        |> Enum.map(fn s -> Map.new(s, fn {k, v} -> {String.to_atom(k), v} end) end)
-        |> Enum.map(fn s -> {s[:user_id], struct(Plausible.ClickhouseSession, s)} end)
+        |> Enum.map(fn s -> {s.user_id, s} end)
         |> Enum.into(%{})
       rescue
         _e -> %{}
@@ -106,6 +105,7 @@ defmodule Plausible.Session.Store do
       referrer: event.referrer,
       referrer_source: event.referrer_source,
       country_code: event.country_code,
+      screen_size: event.screen_size,
       operating_system: event.operating_system,
       browser: event.browser,
       timestamp: event.timestamp,

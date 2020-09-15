@@ -98,7 +98,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       conn = get(conn, "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&filters=#{filters}")
 
       assert json_response(conn, 200) == %{
-               "total_visitors" => 6,
+               "total_visitors" => 2,
                "referrers" => [
                  %{"name" => "10words.com/page1", "url" => "10words.com", "count" => 2}
                ]
@@ -114,7 +114,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
         )
 
       assert json_response(conn, 200) == %{
-               "total_visitors" => 6,
+               "total_visitors" => 2,
                "referrers" => [
                  %{
                    "name" => "10words.com/page1",

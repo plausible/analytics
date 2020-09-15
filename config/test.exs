@@ -18,16 +18,17 @@ config :plausible,
        url:
          System.get_env(
            "DATABASE_URL",
-           "postgres://postgres:postgres@127.0.0.1:5432/plausible_test=default"
+           "postgres://postgres:postgres@127.0.0.1:5432/plausible_test"
          ),
        pool: Ecto.Adapters.SQL.Sandbox
 
-config :plausible, :clickhouse,
-  hostname: System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost"),
-  database: System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_test"),
-  username: System.get_env("CLICKHOUSE_DATABASE_USER"),
-  password: System.get_env("CLICKHOUSE_DATABASE_PASSWORD"),
-  pool_size: 10
+config :plausible, Plausible.ClickhouseRepo,
+  loggers: [Ecto.LogEntry],
+  pool_size: String.to_integer(System.get_env("CLICKHOUSE_DATABASE_POOLSIZE", "5")),
+  url: System.get_env(
+    "CLICKHOUSE_DATABASE_URL",
+    "http://127.0.0.1:8123/plausible_test"
+  )
 
 config :plausible, Plausible.Mailer, adapter: Bamboo.TestAdapter
 

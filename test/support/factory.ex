@@ -44,7 +44,11 @@ defmodule Plausible.Factory do
       duration: 0,
       start: Timex.now(),
       timestamp: Timex.now(),
-      is_bounce: false
+      is_bounce: false,
+      browser: "",
+      country_code: "",
+      screen_size: "",
+      operating_system: ""
     }
   end
 

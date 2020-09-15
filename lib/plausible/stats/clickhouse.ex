@@ -328,13 +328,16 @@ defmodule Plausible.Stats.Clickhouse do
 
     Plausible.ClickhouseRepo.all(
       from s in Plausible.ClickhouseSession,
-        join: cs in subquery(converted_sessions),
-        on: s.session_id == cs.session_id,
-        select: {fragment("? as name", s.referrer), fragment("uniq(user_id) as count")},
-        where: s.referrer_source == ^referrer,
-        group_by: s.referrer,
-        order_by: [desc: fragment("count")],
-        limit: 100
+      join: cs in subquery(converted_sessions),
+      on: s.session_id == cs.session_id,
+      where: s.referrer_source == ^referrer,
+      group_by: s.referrer,
+      order_by: [desc: fragment("count")],
+      limit: 100,
+      select: %{
+        name: s.referrer,
+        count: fragment("uniq(user_id) as count")
+      }
     )
   end
 

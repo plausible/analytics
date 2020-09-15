@@ -1,19 +1,15 @@
 defmodule PlausibleWeb.Api.ExternalControllerTest do
   use PlausibleWeb.ConnCase
-  use Plausible.Repo
+  use Plausible.ClickhouseRepo
 
   defp get_event(domain) do
     Plausible.Event.WriteBuffer.flush()
 
-    events =
-      Plausible.Clickhouse.all(
-        from e in Plausible.ClickhouseEvent,
-          where: e.domain == ^domain,
-          order_by: [desc: e.timestamp],
-          limit: 1
-      )
-
-    List.first(events)
+    ClickhouseRepo.one(
+      from e in Plausible.ClickhouseEvent,
+      where: e.domain == ^domain,
+      order_by: [desc: e.timestamp]
+    )
   end
 
   @user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
@@ -37,9 +33,9 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = get_event("external-controller-test-1.com")
 
       assert response(conn, 202) == ""
-      assert pageview["hostname"] == "gigride.live"
-      assert pageview["domain"] == "external-controller-test-1.com"
-      assert pageview["pathname"] == "/"
+      assert pageview.hostname == "gigride.live"
+      assert pageview.domain == "external-controller-test-1.com"
+      assert pageview.pathname == "/"
     end
 
     test "www. is stripped from domain", %{conn: conn} do
@@ -55,7 +51,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-2.com")
 
-      assert pageview["domain"] == "external-controller-test-2.com"
+      assert pageview.domain == "external-controller-test-2.com"
     end
 
     test "www. is stripped from hostname", %{conn: conn} do
@@ -71,7 +67,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-3.com")
 
-      assert pageview["hostname"] == "example.com"
+      assert pageview.hostname == "example.com"
     end
 
     test "empty path defaults to /", %{conn: conn} do
@@ -87,7 +83,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-4.com")
 
-      assert pageview["pathname"] == "/"
+      assert pageview.pathname == "/"
     end
 
     test "bots and crawlers are ignored", %{conn: conn} do
@@ -121,8 +117,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = get_event("external-controller-test-6.com")
 
       assert response(conn, 202) == ""
-      assert pageview["operating_system"] == "Mac"
-      assert pageview["browser"] == "Chrome"
+      assert pageview.operating_system == "Mac"
+      assert pageview.browser == "Chrome"
     end
 
     test "parses referrer", %{conn: conn} do
@@ -142,7 +138,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = get_event("external-controller-test-7.com")
 
       assert response(conn, 202) == ""
-      assert pageview["referrer_source"] == "Facebook"
+      assert pageview.referrer_source == "Facebook"
     end
 
     test "strips trailing slash from referrer", %{conn: conn} do
@@ -162,8 +158,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = get_event("external-controller-test-8.com")
 
       assert response(conn, 202) == ""
-      assert pageview["referrer"] == "facebook.com/page"
-      assert pageview["referrer_source"] == "Facebook"
+      assert pageview.referrer == "facebook.com/page"
+      assert pageview.referrer_source == "Facebook"
     end
 
     test "ignores when referrer is internal", %{conn: conn} do
@@ -183,7 +179,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = get_event("external-controller-test-9.com")
 
       assert response(conn, 202) == ""
-      assert pageview["referrer_source"] == ""
+      assert pageview.referrer_source == ""
     end
 
     test "ignores localhost referrer", %{conn: conn} do
@@ -203,7 +199,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = get_event("external-controller-test-10.com")
 
       assert response(conn, 202) == ""
-      assert pageview["referrer_source"] == ""
+      assert pageview.referrer_source == ""
     end
 
     test "parses subdomain referrer", %{conn: conn} do
@@ -223,7 +219,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = get_event("external-controller-test-11.com")
 
       assert response(conn, 202) == ""
-      assert pageview["referrer_source"] == "blog.gigride.live"
+      assert pageview.referrer_source == "blog.gigride.live"
     end
 
     test "referrer is cleaned", %{conn: conn} do
@@ -240,7 +236,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-12.com")
 
-      assert pageview["referrer"] == "indiehackers.com/page"
+      assert pageview.referrer == "indiehackers.com/page"
     end
 
     test "utm_source overrides referrer source", %{conn: conn} do
@@ -257,7 +253,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-13.com")
 
-      assert pageview["referrer_source"] == "betalist"
+      assert pageview.referrer_source == "betalist"
     end
 
     test "if it's an :unknown referrer, just the domain is used", %{conn: conn} do
@@ -277,7 +273,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = get_event("external-controller-test-14.com")
 
       assert response(conn, 202) == ""
-      assert pageview["referrer_source"] == "indiehackers.com"
+      assert pageview.referrer_source == "indiehackers.com"
     end
 
     test "if the referrer is not http or https, it is ignored", %{conn: conn} do
@@ -297,7 +293,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = get_event("external-controller-test-15.com")
 
       assert response(conn, 202) == ""
-      assert pageview["referrer_source"] == ""
+      assert pageview.referrer_source == ""
     end
   end
 
@@ -318,7 +314,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     pageview = get_event("external-controller-test-16.com")
 
     assert response(conn, 202) == ""
-    assert pageview["screen_size"] == "Mobile"
+    assert pageview.screen_size == "Mobile"
   end
 
   test "screen size is nil if screen_width is missing", %{conn: conn} do
@@ -337,7 +333,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     pageview = get_event("external-controller-test-17.com")
 
     assert response(conn, 202) == ""
-    assert pageview["screen_size"] == ""
+    assert pageview.screen_size == ""
   end
 
   test "can trigger a custom event", %{conn: conn} do
@@ -356,7 +352,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     event = get_event("external-controller-test-18.com")
 
     assert response(conn, 202) == ""
-    assert event["name"] == "custom event"
+    assert event.name == "custom event"
   end
 
   test "ignores a malformed referrer URL", %{conn: conn} do
@@ -376,7 +372,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     event = get_event("external-controller-test-19.com")
 
     assert response(conn, 202) == ""
-    assert event["referrer"] == ""
+    assert event.referrer == ""
   end
 
   # Fake data is set up in config/test.exs
@@ -394,7 +390,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     pageview = get_event("external-controller-test-20.com")
 
-    assert pageview["country_code"] == "US"
+    assert pageview.country_code == "US"
   end
 
   test "URL is decoded", %{conn: conn} do
@@ -410,7 +406,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     pageview = get_event("external-controller-test-21.com")
 
-    assert pageview["pathname"] == "/opportunity/category/جوائز-ومسابقات"
+    assert pageview.pathname == "/opportunity/category/جوائز-ومسابقات"
   end
 
   test "accepts shorthand map keys", %{conn: conn} do
@@ -428,10 +424,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     pageview = get_event("external-controller-test-22.com")
 
-    assert pageview["pathname"] == "/opportunity"
-    assert pageview["referrer_source"] == "Facebook"
-    assert pageview["referrer"] == "facebook.com/page"
-    assert pageview["screen_size"] == "Mobile"
+    assert pageview.pathname == "/opportunity"
+    assert pageview.referrer_source == "Facebook"
+    assert pageview.referrer == "facebook.com/page"
+    assert pageview.screen_size == "Mobile"
   end
 
   test "records hash when in hash mode", %{conn: conn} do
@@ -448,7 +444,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     pageview = get_event("external-controller-test-23.com")
 
-    assert pageview["pathname"] == "/#page-a"
+    assert pageview.pathname == "/#page-a"
   end
 
   test "responds 400 when required fields are missing", %{conn: conn} do
