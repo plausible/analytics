@@ -169,12 +169,10 @@ Plausible uses [postgresql as database](https://www.tutorialspoint.com/postgresq
 
 For performance reasons, all the analytics events are stored in [clickhouse](https://clickhouse.tech/docs/en/getting-started/tutorial/):
 
-- CLICKHOUSE_DATABASE_HOST (*String*)
-- CLICKHOUSE_DATABASE_NAME (*String*)
-- CLICKHOUSE_DATABASE_USER (*String*)
-- CLICKHOUSE_DATABASE_PASSWORD (*String*)
+- CLICKHOUSE_DATABASE_URL (*String*)
+  - Connection string for Clickhouse. The protocol is either `http` or `https` depending on your setup.
 - CLICKHOUSE_DATABASE_POOLSIZE (*Number*)
-    - A default pool size for connecting to the database, defaults to *10*, a higher number is recommended for a production system.
+  - A default pool size for connecting to the database, defaults to *10*, a higher number is recommended for a production system.
 
 ### IP Geolocation
 
