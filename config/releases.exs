@@ -83,12 +83,11 @@ config :plausible, PlausibleWeb.Endpoint,
   code_reloader: false
 
 config :plausible,
-       Plausible.Repo,
-       pool_size: db_pool_size,
-       url: db_url,
-       adapter: Ecto.Adapters.Postgres,
-      ssl: db_tls_enabled?,
-      show_sensitive_data_on_connection_error: true
+  Plausible.Repo,
+  pool_size: db_pool_size,
+  url: db_url,
+  adapter: Ecto.Adapters.Postgres,
+  ssl: db_tls_enabled?
 
 config :sentry,
   dsn: sentry_dsn,
@@ -108,8 +107,7 @@ config :plausible, :slack, webhook: slack_hook_url
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
   url: ch_db_url,
-  pool_size: ch_db_pool,
-  show_sensitive_data_on_connection_error: true
+  pool_size: ch_db_pool
 
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
