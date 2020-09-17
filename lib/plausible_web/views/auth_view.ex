@@ -43,7 +43,7 @@ defmodule PlausibleWeb.AuthView do
   def subscription_interval(subscription) do
     cond do
       subscription.paddle_plan_id in @monthly_plans -> "monthly"
-      subscription.paddle_plan_id in @yearly_plans -> "yeary"
+      subscription.paddle_plan_id in @yearly_plans -> "yearly"
       true -> raise "Unknown interval for subscription #{subscription.paddle_plan_id}"
     end
   end
