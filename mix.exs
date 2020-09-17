@@ -89,8 +89,8 @@ defmodule Plausible.MixProject do
       {:oban, "~> 1.2"},
       {:sshex, "2.2.1"},
       {:geolix, "~> 1.0"},
-      {:geolix_adapter_mmdb2, "~> 0.5.0"},
-      {:clickhousex, [git: "https://github.com/atlas-forks/clickhousex.git"]}
+      {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
+      {:geolix_adapter_mmdb2, "~> 0.5.0"}
     ]
   end
 
@@ -104,7 +104,7 @@ defmodule Plausible.MixProject do
     [
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate", "test"]
+      test: ["ecto.create --quiet", "ecto.migrate", "test", "clean_clickhouse"]
     ]
   end
 end

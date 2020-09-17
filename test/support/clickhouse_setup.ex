@@ -1,76 +1,8 @@
 defmodule Plausible.Test.ClickhouseSetup do
-  def run() do
-    create_events()
-    create_sessions()
-    load_fixtures()
-  end
-
-  def create_events() do
-    drop = "DROP TABLE events"
-
-    create = """
-    CREATE TABLE events (
-      timestamp DateTime,
-      name String,
-      domain String,
-      user_id UInt64,
-      session_id UInt64,
-      hostname String,
-      pathname String,
-      referrer String,
-      referrer_source String,
-      country_code LowCardinality(FixedString(2)),
-      screen_size LowCardinality(String),
-      operating_system LowCardinality(String),
-      browser LowCardinality(String)
-    ) ENGINE = MergeTree()
-    PARTITION BY toYYYYMM(timestamp)
-    ORDER BY (name, domain, user_id, timestamp)
-    SETTINGS index_granularity = 8192
-    """
-
-    Clickhousex.query(:clickhouse, drop, [], log: {Plausible.Clickhouse, :log, []})
-    Clickhousex.query(:clickhouse, create, [], log: {Plausible.Clickhouse, :log, []})
-  end
-
-  def create_sessions() do
-    drop = "DROP TABLE sessions"
-
-    create = """
-    CREATE TABLE sessions (
-      session_id UInt64,
-      sign Int8,
-      domain String,
-      user_id UInt64,
-      hostname String,
-      timestamp DateTime,
-      start DateTime,
-      is_bounce UInt8,
-      entry_page String,
-      exit_page String,
-      pageviews Int32,
-      events Int32,
-      duration UInt32,
-      referrer String,
-      referrer_source String,
-      country_code LowCardinality(FixedString(2)),
-      screen_size LowCardinality(String),
-      operating_system LowCardinality(String),
-      browser LowCardinality(String)
-    ) ENGINE = CollapsingMergeTree(sign)
-    PARTITION BY toYYYYMM(start)
-    ORDER BY (domain, user_id, session_id, start)
-    SETTINGS index_granularity = 8192
-    """
-
-    Clickhousex.query(:clickhouse, drop, [], log: {Plausible.Clickhouse, :log, []})
-    Clickhousex.query(:clickhouse, create, [], log: {Plausible.Clickhouse, :log, []})
-  end
-
   @conversion_1_session_id 123
   @conversion_2_session_id 234
 
-  def load_fixtures() do
+  def run() do
     Plausible.TestUtils.create_events([
       %{
         name: "pageview",

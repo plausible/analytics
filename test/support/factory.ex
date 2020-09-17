@@ -38,13 +38,19 @@ defmodule Plausible.Factory do
       user_id: SipHash.hash!(@hash_key, UUID.uuid4()),
       hostname: hostname,
       domain: hostname,
+      referrer: "",
+      referrer_source: "",
       entry_page: "/",
       pageviews: 1,
       events: 1,
       duration: 0,
       start: Timex.now(),
       timestamp: Timex.now(),
-      is_bounce: false
+      is_bounce: false,
+      browser: "",
+      country_code: "",
+      screen_size: "",
+      operating_system: ""
     }
   end
 
@@ -66,7 +72,13 @@ defmodule Plausible.Factory do
       pathname: "/",
       timestamp: Timex.now(),
       user_id: SipHash.hash!(@hash_key, UUID.uuid4()),
-      session_id: SipHash.hash!(@hash_key, UUID.uuid4())
+      session_id: SipHash.hash!(@hash_key, UUID.uuid4()),
+      referrer: "",
+      referrer_source: "",
+      browser: "",
+      country_code: "",
+      screen_size: "",
+      operating_system: ""
     }
   end
 

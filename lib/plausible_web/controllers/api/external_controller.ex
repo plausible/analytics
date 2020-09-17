@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       end
 
     clickhouse_health =
-      case Clickhousex.query(:clickhouse, "SELECT 1", []) do
+      case Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, "SELECT 1", []) do
         {:ok, _} -> "ok"
         e -> "error: #{inspect(e)}"
       end
@@ -80,18 +80,18 @@ defmodule PlausibleWeb.Api.ExternalController do
       salts = Plausible.Session.Salts.fetch()
 
       event_attrs = %{
-        timestamp: NaiveDateTime.utc_now(),
+        timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
         name: params["name"],
         hostname: strip_www(uri && uri.host),
         domain: strip_www(params["domain"]) || strip_www(uri && uri.host),
         pathname: get_pathname(uri, params["hash_mode"]),
         user_id: generate_user_id(conn, params, salts[:current]),
-        country_code: country_code,
-        operating_system: ua && os_name(ua),
-        browser: ua && browser_name(ua),
-        referrer_source: get_referrer_source(uri, ref),
-        referrer: clean_referrer(ref),
-        screen_size: calculate_screen_size(params["screen_width"])
+        country_code: country_code || "",
+        operating_system: ua && os_name(ua) || "",
+        browser: ua && browser_name(ua) || "",
+        referrer_source: get_referrer_source(uri, ref) || "",
+        referrer: clean_referrer(ref) || "",
+        screen_size: calculate_screen_size(params["screen_width"]) || ""
       }
 
       changeset = Plausible.ClickhouseEvent.changeset(%Plausible.ClickhouseEvent{}, event_attrs)

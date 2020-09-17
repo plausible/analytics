@@ -19,7 +19,7 @@ db_pool_size = String.to_integer(System.get_env("DATABASE_POOLSIZE", "10"))
 db_url =
   System.get_env(
     "DATABASE_URL",
-    "postgres://postgres:postgres@127.0.0.1:5432/plausible_test?currentSchema=default"
+    "postgres://postgres:postgres@127.0.0.1:5432/plausible_dev"
   )
 
 db_tls_enabled? = String.to_existing_atom(System.get_env("DATABASE_TLS_ENABLED", "false"))
@@ -30,11 +30,8 @@ env = System.get_env("ENVIRONMENT", "prod")
 mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.PostmarkAdapter")
 mailer_email = System.get_env("MAILER_EMAIL", "hello@plausible.local")
 app_version = System.get_env("APP_VERSION", "0.0.1")
-ck_host = System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost")
-ck_db = System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_dev")
-ck_db_user = System.get_env("CLICKHOUSE_DATABASE_USER")
-ck_db_pwd = System.get_env("CLICKHOUSE_DATABASE_PASSWORD")
-ck_db_pool = String.to_integer(System.get_env("CLICKHOUSE_DATABASE_POOLSIZE", "10"))
+ch_db_url = System.get_env("CLICKHOUSE_DATABASE_URL", "http://localhost:8123/plausible_dev")
+ch_db_pool = String.to_integer(System.get_env("CLICKHOUSE_DATABASE_POOLSIZE", "10"))
 ### Mandatory params End
 
 sentry_dsn = System.get_env("SENTRY_DSN")
@@ -86,11 +83,11 @@ config :plausible, PlausibleWeb.Endpoint,
   code_reloader: false
 
 config :plausible,
-       Plausible.Repo,
-       pool_size: db_pool_size,
-       url: db_url,
-       adapter: Ecto.Adapters.Postgres,
-       ssl: db_tls_enabled?
+  Plausible.Repo,
+  pool_size: db_pool_size,
+  url: db_url,
+  adapter: Ecto.Adapters.Postgres,
+  ssl: db_tls_enabled?
 
 config :sentry,
   dsn: sentry_dsn,
@@ -107,12 +104,10 @@ config :plausible, :google,
 
 config :plausible, :slack, webhook: slack_hook_url
 
-config :plausible, :clickhouse,
-  hostname: ck_host,
-  database: ck_db,
-  username: ck_db_user,
-  password: ck_db_pwd,
-  pool_size: ck_db_pool
+config :plausible, Plausible.ClickhouseRepo,
+  loggers: [Ecto.LogEntry],
+  url: ch_db_url,
+  pool_size: ch_db_pool
 
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->

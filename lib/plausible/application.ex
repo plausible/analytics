@@ -4,16 +4,12 @@ defmodule Plausible.Application do
   use Application
 
   def start(_type, _args) do
-    clickhouse_config = Application.get_env(:plausible, :clickhouse)
-
     children = [
       Plausible.Repo,
+      Plausible.ClickhouseRepo,
       PlausibleWeb.Endpoint,
       Plausible.Event.WriteBuffer,
       Plausible.Session.WriteBuffer,
-      Clickhousex.child_spec(
-        Keyword.merge([scheme: :http, port: 8123, name: :clickhouse], clickhouse_config)
-      ),
       Plausible.Session.Store,
       Plausible.Session.Salts,
       {Oban, Application.get_env(:plausible, Oban)}

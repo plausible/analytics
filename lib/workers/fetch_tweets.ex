@@ -1,13 +1,12 @@
 defmodule Plausible.Workers.FetchTweets do
   use Plausible.Repo
-  alias Plausible.Clickhouse
   alias Plausible.Twitter.Tweet
   use Oban.Worker, queue: :fetch_tweets
 
   @impl Oban.Worker
   def perform(_args, _job, twitter_api \\ Plausible.Twitter.Api) do
     new_links =
-      Clickhouse.all(
+      Plausible.ClickhouseRepo.all(
         from e in Plausible.ClickhouseEvent,
           where:
             e.timestamp > fragment("(now() - INTERVAL 6 day)") and
@@ -18,7 +17,6 @@ defmodule Plausible.Workers.FetchTweets do
           distinct: true,
           select: e.referrer
       )
-      |> Enum.map(fn event -> event["referrer"] end)
 
     for link <- new_links do
       results = twitter_api.search(link)

@@ -12,24 +12,27 @@ defmodule Plausible.TestUtils do
   end
 
   def create_pageviews(pageviews) do
-    Enum.map(pageviews, fn pageview ->
-      Factory.build(:pageview, pageview)
+    pageviews = Enum.map(pageviews, fn pageview ->
+      Factory.build(:pageview, pageview) |> Map.from_struct() |> Map.delete(:__meta__)
     end)
-    |> Plausible.Clickhouse.insert_events()
+
+    Plausible.ClickhouseRepo.insert_all("events", pageviews)
   end
 
   def create_events(events) do
-    Enum.map(events, fn event ->
-      Factory.build(:event, event)
+    events = Enum.map(events, fn event ->
+      Factory.build(:event, event) |> Map.from_struct() |> Map.delete(:__meta__)
     end)
-    |> Plausible.Clickhouse.insert_events()
+
+    Plausible.ClickhouseRepo.insert_all("events", events)
   end
 
   def create_sessions(sessions) do
-    Enum.map(sessions, fn session ->
-      Factory.build(:ch_session, session)
+    sessions = Enum.map(sessions, fn session ->
+      Factory.build(:ch_session, session) |> Map.from_struct() |> Map.delete(:__meta__)
     end)
-    |> Plausible.Clickhouse.insert_sessions()
+
+    Plausible.ClickhouseRepo.insert_all("sessions", sessions)
   end
 
   def log_in(%{user: user, conn: conn}) do

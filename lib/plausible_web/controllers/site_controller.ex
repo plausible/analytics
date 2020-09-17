@@ -161,7 +161,7 @@ defmodule PlausibleWeb.SiteController do
 
   def reset_stats(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
-    Plausible.Clickhouse.delete_stats!(site)
+    Plausible.ClickhouseRepo.clear_stats_for(site.domain)
 
     conn
     |> put_flash(:success, "#{site.domain} stats will be reset in a few minutes")
@@ -180,7 +180,7 @@ defmodule PlausibleWeb.SiteController do
     end
 
     Repo.delete!(site)
-    Plausible.Clickhouse.delete_stats!(site)
+    Plausible.ClickhouseRepo.clear_stats_for(site.domain)
 
     conn
     |> put_flash(:success, "Site deleted succesfully along with all pageviews")

@@ -5,7 +5,7 @@ config :plausible,
   admin_email: System.get_env("ADMIN_USER_EMAIL", "admin@plausible.local"),
   mailer_email: System.get_env("MAILER_EMAIL", "hello@plausible.local"),
   admin_pwd: System.get_env("ADMIN_USER_PWD", "!@d3in"),
-  ecto_repos: [Plausible.Repo],
+  ecto_repos: [Plausible.Repo, Plausible.ClickhouseRepo],
   environment: System.get_env("ENVIRONMENT", "dev")
 
 disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
@@ -18,13 +18,6 @@ config :plausible, :selfhost,
       do: true,
       else: String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false"))
     )
-
-config :plausible, :clickhouse,
-  hostname: System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost"),
-  database: System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_dev"),
-  username: System.get_env("CLICKHOUSE_DATABASE_USER"),
-  password: System.get_env("CLICKHOUSE_DATABASE_PASSWORD"),
-  pool_size: 10
 
 # Configures the endpoint
 config :plausible, PlausibleWeb.Endpoint,
@@ -81,6 +74,14 @@ config :plausible,
 config :plausible, :paddle,
   vendor_id: "49430",
   vendor_auth_code: System.get_env("PADDLE_VENDOR_AUTH_CODE")
+
+config :plausible, Plausible.ClickhouseRepo,
+  loggers: [Ecto.LogEntry],
+  pool_size: String.to_integer(System.get_env("CLICKHOUSE_DATABASE_POOLSIZE", "5")),
+  url: System.get_env(
+    "CLICKHOUSE_DATABASE_URL",
+    "http://127.0.0.1:8123/plausible_test"
+  )
 
 config :plausible,
        Plausible.Repo,
