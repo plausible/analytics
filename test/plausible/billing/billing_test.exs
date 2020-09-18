@@ -1,5 +1,6 @@
 defmodule Plausible.BillingTest do
   use Plausible.DataCase
+  use Bamboo.Test, shared: true
   alias Plausible.Billing
 
   describe "usage" do
@@ -200,6 +201,19 @@ defmodule Plausible.BillingTest do
         })
 
       assert res == {:ok, nil}
+    end
+
+    test "sends an email to confirm cancellation" do
+      user = insert(:user)
+      subscription = insert(:subscription, status: "active", user: user)
+
+      Billing.subscription_cancelled(%{
+        "alert_name" => "subscription_cancelled",
+        "subscription_id" => subscription.paddle_subscription_id,
+        "status" => "deleted"
+      })
+
+      assert_email_delivered_with(subject: "Your Plausible Analytics subscription has been canceled")
     end
   end
 

@@ -30,6 +30,7 @@ defmodule Plausible.Billing do
 
   def subscription_cancelled(params) do
     subscription = Repo.get_by(Subscription, paddle_subscription_id: params["subscription_id"])
+                   |> Repo.preload(:user)
 
     if subscription do
       changeset =
@@ -37,7 +38,13 @@ defmodule Plausible.Billing do
           status: params["status"]
         })
 
-      Repo.update(changeset)
+      case Repo.update(changeset) do
+        {:ok, updated} ->
+          PlausibleWeb.Email.cancellation_email(subscription.user)
+          |> Plausible.Mailer.send_email()
+          {:ok, updated}
+        err -> err
+      end
     else
       {:ok, nil}
     end
