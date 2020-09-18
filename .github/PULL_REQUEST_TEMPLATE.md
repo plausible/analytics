@@ -1,6 +1,8 @@
 ### Changes
 
-Please describe the changes made in the pull request here. Below you'll find a checklist, please make sure to fill out each section.
+Please describe the changes made in the pull request here.
+
+Below you'll find a checklist. For each item on the list, check one option and delete the other.
 
 ### Tests
 - [ ] Automated tests have been added
