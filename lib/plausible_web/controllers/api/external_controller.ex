@@ -70,6 +70,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     if UAInspector.bot?(user_agent) do
       {:ok, nil}
     else
+      query = if uri && uri.query, do: URI.decode_query(uri.query), else: %{}
       ua =
         if user_agent do
           UAInspector.Parser.parse(user_agent)
@@ -86,11 +87,14 @@ defmodule PlausibleWeb.Api.ExternalController do
         domain: strip_www(params["domain"]) || strip_www(uri && uri.host),
         pathname: get_pathname(uri, params["hash_mode"]),
         user_id: generate_user_id(conn, params, salts[:current]),
+        referrer_source: get_referrer_source(query, ref) || "",
+        referrer: clean_referrer(ref) || "",
+        utm_medium: query["utm_medium"] || "",
+        utm_source: query["utm_source"] || "",
+        utm_campaign: query["utm_campaign"] || "",
         country_code: country_code || "",
         operating_system: ua && os_name(ua) || "",
         browser: ua && browser_name(ua) || "",
-        referrer_source: get_referrer_source(uri, ref) || "",
-        referrer: clean_referrer(ref) || "",
         screen_size: calculate_screen_size(params["screen_width"]) || ""
       }
 
@@ -195,8 +199,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp get_referrer_source(uri, ref) do
-    query = if uri && uri.query, do: URI.decode_query(uri.query), else: %{}
+  defp get_referrer_source(query, ref) do
     source = query["utm_source"] || query["source"] || query["ref"]
     source || get_source_from_referrer(ref)
   end
