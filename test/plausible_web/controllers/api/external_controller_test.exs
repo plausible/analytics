@@ -256,6 +256,24 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.referrer_source == "betalist"
     end
 
+    test "utm tags are stored", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://www.example.com/?utm_medium=ads&utm_source=instagram&utm_campaign=video_story",
+        domain: "external-controller-test-utm-tags.com"
+      }
+
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> post("/api/event", Jason.encode!(params))
+
+      pageview = get_event("external-controller-test-utm-tags.com")
+
+      assert pageview.utm_medium == "ads"
+      assert pageview.utm_source == "instagram"
+      assert pageview.utm_campaign == "video_story"
+    end
+
     test "if it's an :unknown referrer, just the domain is used", %{conn: conn} do
       params = %{
         name: "pageview",

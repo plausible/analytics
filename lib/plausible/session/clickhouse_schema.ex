@@ -18,8 +18,12 @@ defmodule Plausible.ClickhouseSession do
     field :events, :integer
     field :sign, :integer
 
+    field :utm_medium, :string
+    field :utm_source, :string
+    field :utm_campaign, :string
     field :referrer, :string
     field :referrer_source, :string
+
     field :country_code, :string
     field :screen_size, :string
     field :operating_system, :string
@@ -38,14 +42,17 @@ defmodule Plausible.ClickhouseSession do
       :domain,
       :entry_page,
       :exit_page,
-      :referrer,
       :fingerprint,
       :start,
       :length,
       :is_bounce,
       :operating_system,
       :browser,
+      :referrer,
       :referrer_source,
+      :utm_medium,
+      :utm_source,
+      :utm_campaign,
       :country_code,
       :screen_size
     ])

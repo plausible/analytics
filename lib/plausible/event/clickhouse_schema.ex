@@ -13,6 +13,10 @@ defmodule Plausible.ClickhouseEvent do
 
     field :referrer, :string
     field :referrer_source, :string
+    field :utm_medium, :string
+    field :utm_source, :string
+    field :utm_campaign, :string
+
     field :country_code, :string
     field :screen_size, :string
     field :operating_system, :string
@@ -33,6 +37,9 @@ defmodule Plausible.ClickhouseEvent do
       :browser,
       :referrer,
       :referrer_source,
+      :utm_medium,
+      :utm_source,
+      :utm_campaign,
       :country_code,
       :screen_size
     ])
