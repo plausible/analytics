@@ -12,4 +12,4 @@ Please describe the changes made in the pull request here. Below you'll find a c
 
 ### Documentation
 - [ ] [Docs](https://github.com/plausible/docs) have been updated
-- [ ] This change does not need a documenetation update
+- [ ] This change does not need a documentation update
