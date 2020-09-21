@@ -194,7 +194,7 @@ defmodule Plausible.Stats.Clickhouse do
     end)
   end
 
-  def top_referrers(site, query, limit, page, show_noref \\ false, include \\ []) do
+  def top_sources(site, query, limit, page, show_noref \\ false, include \\ []) do
     offset = (page - 1) * limit
 
     referrers =
@@ -245,6 +245,63 @@ defmodule Plausible.Stats.Clickhouse do
       |> Enum.map(fn ref ->
         Map.update(ref, :url, nil, fn url -> url && URI.parse("http://" <> url).host end)
       end)
+  end
+
+  def utm_mediums(site, query, page) do
+    limit = 100
+    offset = (page - 1) * limit
+
+    from(
+      s in base_session_query(site, query),
+      group_by: s.utm_medium,
+      order_by: [desc: fragment("count"), asc: fragment("min(start)")],
+      limit: ^limit,
+      offset: ^offset,
+      select: %{
+        name: fragment("if(empty(?), ?, ?) as name", s.utm_medium, @no_ref, s.utm_medium),
+        count: fragment("uniq(user_id) as count"),
+        bounce_rate: fragment("round(sum(is_bounce * sign) / sum(sign) * 100)"),
+        visit_duration: fragment("round(avg(duration * sign))")
+      }
+    ) |> ClickhouseRepo.all
+  end
+
+  def utm_campaigns(site, query, page) do
+    limit = 100
+    offset = (page - 1) * limit
+
+    from(
+      s in base_session_query(site, query),
+      group_by: s.utm_campaign,
+      order_by: [desc: fragment("count"), asc: fragment("min(start)")],
+      limit: ^limit,
+      offset: ^offset,
+      select: %{
+        name: fragment("if(empty(?), ?, ?) as name", s.utm_campaign, @no_ref, s.utm_campaign),
+        count: fragment("uniq(user_id) as count"),
+        bounce_rate: fragment("round(sum(is_bounce * sign) / sum(sign) * 100)"),
+        visit_duration: fragment("round(avg(duration * sign))")
+      }
+    ) |> ClickhouseRepo.all
+  end
+
+  def utm_sources(site, query, page) do
+    limit = 100
+    offset = (page - 1) * limit
+
+    from(
+      s in base_session_query(site, query),
+      group_by: s.utm_source,
+      order_by: [desc: fragment("count"), asc: fragment("min(start)")],
+      limit: ^limit,
+      offset: ^offset,
+      select: %{
+        name: fragment("if(empty(?), ?, ?) as name", s.utm_source, @no_ref, s.utm_source),
+        count: fragment("uniq(user_id) as count"),
+        bounce_rate: fragment("round(sum(is_bounce * sign) / sum(sign) * 100)"),
+        visit_duration: fragment("round(avg(duration * sign))")
+      }
+    ) |> ClickhouseRepo.all
   end
 
   def conversions_from_referrer(site, query, referrer) do

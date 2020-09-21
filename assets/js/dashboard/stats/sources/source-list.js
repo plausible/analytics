@@ -35,7 +35,7 @@ export default class Referrers extends React.Component {
       api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers`, this.props.query)
         .then((res) => this.setState({loading: false, referrers: res}))
     } else {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers`, this.props.query, {show_noref: this.showNoRef()})
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/sources`, this.props.query, {show_noref: this.showNoRef()})
         .then((res) => this.setState({loading: false, referrers: res}))
     }
   }
@@ -89,7 +89,7 @@ export default class Referrers extends React.Component {
         <React.Fragment>
           <h3 className="font-bold">Top sources</h3>
           { this.renderList() }
-          <MoreLink site={this.props.site} list={this.state.referrers} endpoint="referrers" />
+          <MoreLink site={this.props.site} list={this.state.referrers} endpoint="sources" />
         </React.Fragment>
       )
     }

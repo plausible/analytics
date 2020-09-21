@@ -125,14 +125,35 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  def referrers(conn, params) do
+  def sources(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
     limit = if params["limit"], do: String.to_integer(params["limit"])
     page = if params["page"], do: String.to_integer(params["page"])
     show_noref = params["show_noref"] == "true"
-    json(conn, Stats.top_referrers(site, query, limit || 9, page || 1, show_noref, include))
+    json(conn, Stats.top_sources(site, query, limit || 9, page || 1, show_noref, include))
+  end
+
+  def utm_mediums(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, params)
+    page = if params["page"], do: String.to_integer(params["page"])
+    json(conn, Stats.utm_mediums(site, query, page || 1))
+  end
+
+  def utm_campaigns(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, params)
+    page = if params["page"], do: String.to_integer(params["page"])
+    json(conn, Stats.utm_campaigns(site, query, page || 1))
+  end
+
+  def utm_sources(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, params)
+    page = if params["page"], do: String.to_integer(params["page"])
+    json(conn, Stats.utm_sources(site, query, page || 1))
   end
 
   def referrers_for_goal(conn, params) do
