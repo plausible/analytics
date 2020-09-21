@@ -521,7 +521,7 @@ defmodule Plausible.Stats.Clickhouse do
       group_by: e.name,
       order_by: [desc: fragment("count")],
       select: %{
-        name: e.name,
+        name: ^goal,
         count: fragment("uniq(user_id) as count"),
         total_count: fragment("count(*) as total_count")
       }
