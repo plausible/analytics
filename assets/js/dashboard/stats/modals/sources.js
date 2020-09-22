@@ -19,13 +19,14 @@ class SourcesModal extends React.Component {
   constructor(props) {
     super(props)
     this.handleClick = this.handleClick.bind(this)
+    const urlparts = this.props.location.pathname.split('/')
     this.state = {
       loading: true,
       selectorOpen: false,
       sources: [],
       query: parseQuery(props.location.search, props.site),
       page: 1,
-      filter: 'sources',
+      filter: urlparts[urlparts.length - 1],
       moreResultsAvailable: false
     }
   }
@@ -122,6 +123,10 @@ class SourcesModal extends React.Component {
     }
   }
 
+  filterURL(filter) {
+    return `/${encodeURIComponent(this.props.site.domain)}/${filter}${window.location.search}`
+  }
+
   selectFilter(filter) {
     this.setState({filter, sources: [], loading: true, selectorOpen: false}, this.loadSources.bind(this))
   }
@@ -152,10 +157,10 @@ class SourcesModal extends React.Component {
           <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg" ref={node => this.dropDownNode = node}>
             <div className="rounded-md bg-white shadow-xs">
               <div className="py-1">
-                <a onClick={this.selectFilter.bind(this, 'sources')} className="block px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-100 focus:text-gray-900 cursor-pointer">Combined source</a>
-                <a onClick={this.selectFilter.bind(this, 'utm_mediums')} className="block px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-100 focus:text-gray-900 cursor-pointer">UTM medium</a>
-                <a onClick={this.selectFilter.bind(this, 'utm_sources')} className="block px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-100 focus:text-gray-900 cursor-pointer">UTM source</a>
-                <a onClick={this.selectFilter.bind(this, 'utm_campaigns')} className="block px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-100 focus:text-gray-900 cursor-pointer">UTM campaign</a>
+                <Link to={this.filterURL('sources')} replace className="block px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-100 focus:text-gray-900 cursor-pointer">Combined source</Link>
+                <Link to={this.filterURL('utm_mediums')} replace className="block px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-100 focus:text-gray-900 cursor-pointer">UTM medium</Link>
+                <Link to={this.filterURL('utm_sources')} replace className="block px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-100 focus:text-gray-900 cursor-pointer">UTM source</Link>
+                <Link to={this.filterURL('utm_campaigns')} replace className="block px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-100 focus:text-gray-900 cursor-pointer">UTM campaign</Link>
               </div>
             </div>
           </div>
