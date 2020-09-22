@@ -86,7 +86,10 @@ class SourcesModal extends React.Component {
 
   renderSource(source) {
     const query = new URLSearchParams(window.location.search)
-    query.set('source', source.name)
+    if (this.state.filter === 'sources') query.set('source', source.name)
+    if (this.state.filter === 'utm_mediums') query.set('utm_medium', source.name)
+    if (this.state.filter === 'utm_sources') query.set('utm_source', source.name)
+    if (this.state.filter === 'utm_campaigns') query.set('utm_campaign', source.name)
 
     return (
       <tr className="text-sm" key={source.name}>
