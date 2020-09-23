@@ -257,6 +257,7 @@ defmodule Plausible.Stats.Clickhouse do
       order_by: [desc: fragment("count"), asc: fragment("min(start)")],
       limit: ^limit,
       offset: ^offset,
+      where: s.utm_medium != "",
       select: %{
         name: fragment("if(empty(?), ?, ?) as name", s.utm_medium, @no_ref, s.utm_medium),
         count: fragment("uniq(user_id) as count"),
@@ -274,6 +275,7 @@ defmodule Plausible.Stats.Clickhouse do
       s in base_session_query(site, query),
       group_by: s.utm_campaign,
       order_by: [desc: fragment("count"), asc: fragment("min(start)")],
+      where: s.utm_campaign != "",
       limit: ^limit,
       offset: ^offset,
       select: %{
@@ -293,6 +295,7 @@ defmodule Plausible.Stats.Clickhouse do
       s in base_session_query(site, query),
       group_by: s.utm_source,
       order_by: [desc: fragment("count"), asc: fragment("min(start)")],
+      where: s.utm_source != "",
       limit: ^limit,
       offset: ^offset,
       select: %{
