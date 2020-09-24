@@ -21,7 +21,7 @@
             <ul class="mt-4">
               <li>
                 <a href="https://plausible.io/simple-web-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
-                  Simple Metrics
+                  Simple metrics
                 </a>
               </li>
               <li class="mt-4">
@@ -30,8 +30,8 @@
                 </a>
               </li>
               <li class="mt-4">
-                <a href="https://plausible.io/data-policy" class="text-base leading-6 text-gray-300 hover:text-white">
-                  GDPR Compliant
+                <a href="https://plausible.io/privacy-focused-web-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                  Privacy focused
                 </a>
               </li>
               <li class="mt-4">
@@ -67,13 +67,18 @@
             </h4>
             <ul class="mt-4">
               <li>
+                <a href="https://plausible.io/blog" class="text-base leading-6 text-gray-300 hover:text-white">
+                  Blog
+                </a>
+              </li>
+            <li class="mt-4">
                 <a target="_blank" href="https://docs.plausible.io/" class="text-base leading-6 text-gray-300 hover:text-white">
                   Documentation
                 </a>
               </li>
               <li class="mt-4">
                 <a target="_blank" href="https://github.com/plausible/analytics" class="text-base leading-6 text-gray-300 hover:text-white">
-                  Github Repo
+                  GitHub
                 </a>
               </li>
               <li class="mt-4">
@@ -104,11 +109,6 @@
                 </a>
               </li>
               <li class="mt-4">
-                <a href="https://plausible.io/blog" class="text-base leading-6 text-gray-300 hover:text-white">
-                  Blog
-                </a>
-              </li>
-              <li class="mt-4">
                 <a href="https://plausible.io/status" class="text-base leading-6 text-gray-300 hover:text-white">
                   Status
                 </a>
@@ -121,6 +121,16 @@
               <li class="mt-4">
                 <a href="https://plausible.io/privacy" class="text-base leading-6 text-gray-300 hover:text-white">
                   Privacy
+                </a>
+              </li>
+              <li class="mt-4">
+                <a href="https://plausible.io/data-policy" class="text-base leading-6 text-gray-300 hover:text-white">
+                  Data policy
+                </a>
+              </li>
+              <li class="mt-4">
+                <a href="https://plausible.io/imprint" class="text-base leading-6 text-gray-300 hover:text-white">
+                  Imprint
                 </a>
               </li>
             </ul>
