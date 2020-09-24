@@ -218,6 +218,19 @@ defmodule Plausible.Stats.Clickhouse do
       referrers
     end
 
+    referrers = if query.filters["goal"] do
+      converted_sessions =
+        from(e in base_query(site, query),
+          select: %{session_id: e.session_id})
+
+      from( s in referrers,
+        join: cs in subquery(converted_sessions),
+        on: s.session_id == cs.session_id,
+      )
+    else
+      referrers
+    end
+
     referrers =
       if "bounce_rate" in include do
         from(

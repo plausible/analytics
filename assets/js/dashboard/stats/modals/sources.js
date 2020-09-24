@@ -31,14 +31,9 @@ class SourcesModal extends React.Component {
     const {site} = this.props
     const {query, page, sources} = this.state
 
-    if (query.filters.goal) {
-      api.get(`/api/stats/${encodeURIComponent(site.domain)}/goal/referrers`, query, {limit: 100, page: page})
-        .then((res) => this.setState({loading: false, sources: sources.concat(res), moreResultsAvailable: res.length === 100}))
-    } else {
-      const include = this.showExtra() ? 'bounce_rate,visit_duration' : null
-      api.get(`/api/stats/${encodeURIComponent(site.domain)}/${this.currentFilter()}`, query, {limit: 100, page: page, include: include, show_noref: true})
-        .then((res) => this.setState({loading: false, sources: sources.concat(res), moreResultsAvailable: res.length === 100}))
-    }
+    const include = this.showExtra() ? 'bounce_rate,visit_duration' : null
+    api.get(`/api/stats/${encodeURIComponent(site.domain)}/${this.currentFilter()}`, query, {limit: 100, page: page, include: include, show_noref: true})
+      .then((res) => this.setState({loading: false, sources: sources.concat(res), moreResultsAvailable: res.length === 100}))
   }
 
   componentDidMount() {

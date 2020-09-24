@@ -31,13 +31,8 @@ class AllSources extends React.Component {
   }
 
   fetchReferrers() {
-    if (this.props.query.filters.goal) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers`, this.props.query)
-        .then((res) => this.setState({loading: false, referrers: res}))
-    } else {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/sources`, this.props.query, {show_noref: this.showNoRef()})
-        .then((res) => this.setState({loading: false, referrers: res}))
-    }
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/sources`, this.props.query, {show_noref: this.showNoRef()})
+      .then((res) => this.setState({loading: false, referrers: res}))
   }
 
   renderReferrer(referrer) {
