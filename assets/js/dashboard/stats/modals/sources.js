@@ -8,20 +8,18 @@ import * as api from '../../api'
 import numberFormatter, {durationFormatter} from '../../number-formatter'
 import {parseQuery} from '../../query'
 
-const FILTERS = {
-  sources: 'Combined source',
-  utm_mediums: 'UTM medium',
-  utm_sources: 'UTM source',
-  utm_campaigns: 'UTM campaign'
+const TITLES = {
+  sources: 'Top sources',
+  utm_mediums: 'Top UTM mediums',
+  utm_sources: 'Top UTM sources',
+  utm_campaigns: 'Top UTM campaigns'
 }
 
 class SourcesModal extends React.Component {
   constructor(props) {
     super(props)
-    this.handleClick = this.handleClick.bind(this)
     this.state = {
       loading: true,
-      selectorOpen: false,
       sources: [],
       query: parseQuery(props.location.search, props.site),
       page: 1,
@@ -45,29 +43,17 @@ class SourcesModal extends React.Component {
 
   componentDidMount() {
     this.loadSources()
-    document.addEventListener('mousedown', this.handleClick, false);
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener('mousedown', this.handleClick, false);
   }
 
   componentDidUpdate(prevProps) {
     if (this.props.location.pathname !== prevProps.location.pathname) {
-      this.setState({sources: [], loading: true, selectorOpen: false}, this.loadSources.bind(this))
+      this.setState({sources: [], loading: true}, this.loadSources.bind(this))
     }
   }
 
   currentFilter() {
     const urlparts = this.props.location.pathname.split('/')
     return urlparts[urlparts.length - 1]
-  }
-
-  handleClick(e) {
-    if (this.dropDownNode && this.dropDownNode.contains(e.target)) return;
-    if (!this.state.selectorOpen) return;
-
-    this.setState({selectorOpen: false})
   }
 
   showExtra() {
@@ -133,56 +119,14 @@ class SourcesModal extends React.Component {
     }
   }
 
-  filterURL(filter) {
-    return `/${encodeURIComponent(this.props.site.domain)}/${filter}${window.location.search}`
-  }
-
-  renderSelector() {
-    return (
-      <div className="relative inline-block text-left">
-        <div>
-          <span className="rounded-md shadow-sm">
-            <button type="button" onClick={() => this.setState({selectorOpen: true})} className="inline-flex justify-center w-full rounded-md border border-gray-300 px-4 py-2 bg-white text-sm leading-5 font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50 active:text-gray-800 transition ease-in-out duration-150">
-              { FILTERS[this.currentFilter()] }
-              <svg className="-mr-1 ml-2 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </span>
-        </div>
-
-        <Transition
-          show={this.state.selectorOpen}
-          enter="transition ease-out duration-100 transform"
-          enterFrom="opacity-0 scale-95"
-          enterTo="opacity-100 scale-100"
-          leave="transition ease-in duration-75 transform"
-          leaveFrom="opacity-100 scale-100"
-          leaveTo="opacity-0 scale-95"
-        >
-          <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg" ref={node => this.dropDownNode = node}>
-            <div className="rounded-md bg-white shadow-xs">
-              <div className="py-1">
-                <Link to={this.filterURL('sources')} className="block px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-100 focus:text-gray-900 cursor-pointer">Combined source</Link>
-                <Link to={this.filterURL('utm_mediums')} className="block px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-100 focus:text-gray-900 cursor-pointer">UTM medium</Link>
-                <Link to={this.filterURL('utm_sources')} className="block px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-100 focus:text-gray-900 cursor-pointer">UTM source</Link>
-                <Link to={this.filterURL('utm_campaigns')} className="block px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-100 focus:text-gray-900 cursor-pointer">UTM campaign</Link>
-              </div>
-            </div>
-          </div>
-        </Transition>
-      </div>
-    )
+  title() {
+    return TITLES[this.currentFilter()]
   }
 
   render() {
     return (
       <Modal site={this.props.site}>
-        <header className="flex justify-between">
-          <h1 className="text-xl font-bold">Top Sources</h1>
-
-          { this.renderSelector() }
-        </header>
+        <h1 className="text-xl font-bold">{this.title()}</h1>
 
         <div className="my-4 border-b border-gray-300"></div>
 
