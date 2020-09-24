@@ -134,14 +134,9 @@ class UTMSources extends React.Component {
   }
 
   fetchReferrers() {
-    if (this.props.query.filters.goal) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers`, this.props.query)
-        .then((res) => this.setState({loading: false, referrers: res}))
-    } else {
-      const endpoint = UTM_TAGS[this.props.tab].endpoint
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/${endpoint}`, this.props.query, {show_noref: this.showNoRef()})
-        .then((res) => this.setState({loading: false, referrers: res}))
-    }
+    const endpoint = UTM_TAGS[this.props.tab].endpoint
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/${endpoint}`, this.props.query, {show_noref: this.showNoRef()})
+      .then((res) => this.setState({loading: false, referrers: res}))
   }
 
   renderReferrer(referrer) {

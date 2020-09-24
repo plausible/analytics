@@ -203,7 +203,7 @@ defmodule Plausible.Stats.Clickhouse do
         order_by: [desc: fragment("count"), asc: fragment("min(start)")],
         limit: ^limit,
         offset: ^offset
-      )
+      ) |> filter_converted_sessions(site, query)
 
     referrers = if show_noref do
       referrers
@@ -214,19 +214,6 @@ defmodule Plausible.Stats.Clickhouse do
     referrers = if query.filters["page"] do
       page = query.filters["page"]
       from(s in referrers, where: s.entry_page == ^page)
-    else
-      referrers
-    end
-
-    referrers = if query.filters["goal"] do
-      converted_sessions =
-        from(e in base_query(site, query),
-          select: %{session_id: e.session_id})
-
-      from( s in referrers,
-        join: cs in subquery(converted_sessions),
-        on: s.session_id == cs.session_id,
-      )
     else
       referrers
     end
@@ -260,10 +247,22 @@ defmodule Plausible.Stats.Clickhouse do
       end)
   end
 
+  defp filter_converted_sessions(db_query, _site, %Query{filters: %{"goal" => nil}}), do: db_query
+  defp filter_converted_sessions(db_query, site, %Query{filters: %{"goal" => goal}} = query) do
+    converted_sessions =
+      from(e in base_query(site, query),
+        select: %{session_id: e.session_id})
+
+    from(s in db_query,
+      join: cs in subquery(converted_sessions),
+      on: s.session_id == cs.session_id,
+    )
+  end
+
   def utm_mediums(site, query, limit \\ 9, page \\ 1) do
     offset = (page - 1) * limit
 
-    from(
+    q = from(
       s in base_session_query(site, query),
       group_by: s.utm_medium,
       order_by: [desc: fragment("count"), asc: fragment("min(start)")],
@@ -276,7 +275,8 @@ defmodule Plausible.Stats.Clickhouse do
         bounce_rate: fragment("round(sum(is_bounce * sign) / sum(sign) * 100)"),
         visit_duration: fragment("round(avg(duration * sign))")
       }
-    ) |> ClickhouseRepo.all
+    ) |> filter_converted_sessions(site, query)
+    |> ClickhouseRepo.all()
   end
 
   def utm_campaigns(site, query, limit \\ 9, page \\ 1) do
@@ -295,7 +295,8 @@ defmodule Plausible.Stats.Clickhouse do
         bounce_rate: fragment("round(sum(is_bounce * sign) / sum(sign) * 100)"),
         visit_duration: fragment("round(avg(duration * sign))")
       }
-    ) |> ClickhouseRepo.all
+    ) |> filter_converted_sessions(site, query)
+    |> ClickhouseRepo.all()
   end
 
   def utm_sources(site, query, limit \\ 9, page \\ 1) do
@@ -314,7 +315,8 @@ defmodule Plausible.Stats.Clickhouse do
         bounce_rate: fragment("round(sum(is_bounce * sign) / sum(sign) * 100)"),
         visit_duration: fragment("round(avg(duration * sign))")
       }
-    ) |> ClickhouseRepo.all
+    ) |> filter_converted_sessions(site, query)
+    |> ClickhouseRepo.all()
   end
 
   def conversions_from_referrer(site, query, referrer) do
