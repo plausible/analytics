@@ -138,22 +138,22 @@ defmodule PlausibleWeb.Api.StatsController do
   def utm_mediums(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
-    page = if params["page"], do: String.to_integer(params["page"])
-    json(conn, Stats.utm_mediums(site, query, page || 1))
+    limit = if params["limit"], do: String.to_integer(params["limit"])
+    json(conn, Stats.utm_mediums(site, query, limit || 9))
   end
 
   def utm_campaigns(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
-    page = if params["page"], do: String.to_integer(params["page"])
-    json(conn, Stats.utm_campaigns(site, query, page || 1))
+    limit = if params["limit"], do: String.to_integer(params["limit"])
+    json(conn, Stats.utm_campaigns(site, query, limit || 9))
   end
 
   def utm_sources(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
-    page = if params["page"], do: String.to_integer(params["page"])
-    json(conn, Stats.utm_sources(site, query, page || 1))
+    limit = if params["limit"], do: String.to_integer(params["limit"])
+    json(conn, Stats.utm_sources(site, query, limit || 9))
   end
 
   def referrers_for_goal(conn, params) do

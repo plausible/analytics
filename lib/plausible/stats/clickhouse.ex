@@ -247,16 +247,12 @@ defmodule Plausible.Stats.Clickhouse do
       end)
   end
 
-  def utm_mediums(site, query, page) do
-    limit = 100
-    offset = (page - 1) * limit
-
+  def utm_mediums(site, query, limit \\ 9) do
     from(
       s in base_session_query(site, query),
       group_by: s.utm_medium,
       order_by: [desc: fragment("count"), asc: fragment("min(start)")],
       limit: ^limit,
-      offset: ^offset,
       where: s.utm_medium != "",
       select: %{
         name: fragment("if(empty(?), ?, ?) as name", s.utm_medium, @no_ref, s.utm_medium),
@@ -267,17 +263,13 @@ defmodule Plausible.Stats.Clickhouse do
     ) |> ClickhouseRepo.all
   end
 
-  def utm_campaigns(site, query, page) do
-    limit = 100
-    offset = (page - 1) * limit
-
+  def utm_campaigns(site, query, limit \\ 9) do
     from(
       s in base_session_query(site, query),
       group_by: s.utm_campaign,
       order_by: [desc: fragment("count"), asc: fragment("min(start)")],
       where: s.utm_campaign != "",
       limit: ^limit,
-      offset: ^offset,
       select: %{
         name: fragment("if(empty(?), ?, ?) as name", s.utm_campaign, @no_ref, s.utm_campaign),
         count: fragment("uniq(user_id) as count"),
@@ -287,17 +279,13 @@ defmodule Plausible.Stats.Clickhouse do
     ) |> ClickhouseRepo.all
   end
 
-  def utm_sources(site, query, page) do
-    limit = 100
-    offset = (page - 1) * limit
-
+  def utm_sources(site, query, limit \\ 9) do
     from(
       s in base_session_query(site, query),
       group_by: s.utm_source,
       order_by: [desc: fragment("count"), asc: fragment("min(start)")],
       where: s.utm_source != "",
       limit: ^limit,
-      offset: ^offset,
       select: %{
         name: fragment("if(empty(?), ?, ?) as name", s.utm_source, @no_ref, s.utm_source),
         count: fragment("uniq(user_id) as count"),
