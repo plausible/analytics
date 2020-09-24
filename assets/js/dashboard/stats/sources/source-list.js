@@ -200,7 +200,7 @@ class UTMSources extends React.Component {
             { this.props.renderTabs() }
           </div>
           { this.renderList() }
-          <MoreLink site={this.props.site} list={this.state.referrers} endpoint="sources" />
+          <MoreLink site={this.props.site} list={this.state.referrers} endpoint={UTM_TAGS[this.props.tab].endpoint} />
         </React.Fragment>
       )
     }
