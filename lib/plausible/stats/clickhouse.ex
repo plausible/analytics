@@ -247,17 +247,17 @@ defmodule Plausible.Stats.Clickhouse do
       end)
   end
 
-  defp filter_converted_sessions(db_query, _site, %Query{filters: %{"goal" => nil}}), do: db_query
-  defp filter_converted_sessions(db_query, site, %Query{filters: %{"goal" => goal}} = query) do
+  defp filter_converted_sessions(db_query, site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
     converted_sessions =
       from(e in base_query(site, query),
         select: %{session_id: e.session_id})
 
     from(s in db_query,
       join: cs in subquery(converted_sessions),
-      on: s.session_id == cs.session_id,
+      on: s.session_id == cs.session_id
     )
   end
+  defp filter_converted_sessions(db_query, _site, _query), do: db_query
 
   def utm_mediums(site, query, limit \\ 9, page \\ 1, show_noref \\ false) do
     offset = (page - 1) * limit
