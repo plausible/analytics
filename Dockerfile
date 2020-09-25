@@ -82,4 +82,5 @@ COPY --from=buildcontainer /app/_build/prod/rel/plausible /app
 RUN chown -R plausibleuser:plausibleuser /app
 WORKDIR /app
 ENTRYPOINT ["/entrypoint.sh"]
+EXPOSE 8080
 CMD ["run"]
