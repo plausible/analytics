@@ -211,11 +211,16 @@ class UTMSources extends React.Component {
 export default class SourceList extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {tab: 'all'}
+    this.tabKey = 'sourceTab__' + props.site.domain
+    const storedTab = window.localStorage[this.tabKey]
+    this.state = {
+      tab: storedTab || 'all'
+    }
   }
 
   setTab(tab) {
     return () => {
+      window.localStorage[this.tabKey] = tab
       this.setState({tab})
     }
   }
