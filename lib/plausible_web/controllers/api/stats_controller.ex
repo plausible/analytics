@@ -140,7 +140,8 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params)
     limit = if params["limit"], do: String.to_integer(params["limit"])
     page = if params["page"], do: String.to_integer(params["page"])
-    json(conn, Stats.utm_mediums(site, query, limit || 9, page || 1))
+    show_noref = params["show_noref"] == "true"
+    json(conn, Stats.utm_mediums(site, query, limit || 9, page || 1, show_noref))
   end
 
   def utm_campaigns(conn, params) do
@@ -148,7 +149,8 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params)
     limit = if params["limit"], do: String.to_integer(params["limit"])
     page = if params["page"], do: String.to_integer(params["page"])
-    json(conn, Stats.utm_campaigns(site, query, limit || 9, page || 1))
+    show_noref = params["show_noref"] == "true"
+    json(conn, Stats.utm_campaigns(site, query, limit || 9, page || 1, show_noref))
   end
 
   def utm_sources(conn, params) do
@@ -156,7 +158,8 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params)
     limit = if params["limit"], do: String.to_integer(params["limit"])
     page = if params["page"], do: String.to_integer(params["page"])
-    json(conn, Stats.utm_sources(site, query, limit || 9, page || 1))
+    show_noref = params["show_noref"] == "true"
+    json(conn, Stats.utm_sources(site, query, limit || 9, page || 1, show_noref))
   end
 
   @google_api Application.fetch_env!(:plausible, :google_api)

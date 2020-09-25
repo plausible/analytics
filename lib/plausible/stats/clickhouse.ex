@@ -259,7 +259,7 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
-  def utm_mediums(site, query, limit \\ 9, page \\ 1) do
+  def utm_mediums(site, query, limit \\ 9, page \\ 1, show_noref \\ false) do
     offset = (page - 1) * limit
 
     q = from(
@@ -268,25 +268,32 @@ defmodule Plausible.Stats.Clickhouse do
       order_by: [desc: fragment("count"), asc: fragment("min(start)")],
       limit: ^limit,
       offset: ^offset,
-      where: s.utm_medium != "",
       select: %{
         name: fragment("if(empty(?), ?, ?) as name", s.utm_medium, @no_ref, s.utm_medium),
         count: fragment("uniq(user_id) as count"),
         bounce_rate: fragment("round(sum(is_bounce * sign) / sum(sign) * 100)"),
         visit_duration: fragment("round(avg(duration * sign))")
       }
-    ) |> filter_converted_sessions(site, query)
+    )
+
+    q = if show_noref do
+      q
+    else
+      from(s in q, where: s.utm_medium != "")
+    end
+
+    q
+    |> filter_converted_sessions(site, query)
     |> ClickhouseRepo.all()
   end
 
-  def utm_campaigns(site, query, limit \\ 9, page \\ 1) do
+  def utm_campaigns(site, query, limit \\ 9, page \\ 1, show_noref \\ false) do
     offset = (page - 1) * limit
 
-    from(
+    q = from(
       s in base_session_query(site, query),
       group_by: s.utm_campaign,
       order_by: [desc: fragment("count"), asc: fragment("min(start)")],
-      where: s.utm_campaign != "",
       limit: ^limit,
       offset: ^offset,
       select: %{
@@ -295,18 +302,26 @@ defmodule Plausible.Stats.Clickhouse do
         bounce_rate: fragment("round(sum(is_bounce * sign) / sum(sign) * 100)"),
         visit_duration: fragment("round(avg(duration * sign))")
       }
-    ) |> filter_converted_sessions(site, query)
+    )
+
+    q = if show_noref do
+      q
+    else
+      from(s in q, where: s.utm_campaign != "")
+    end
+
+    q
+    |> filter_converted_sessions(site, query)
     |> ClickhouseRepo.all()
   end
 
-  def utm_sources(site, query, limit \\ 9, page \\ 1) do
+  def utm_sources(site, query, limit \\ 9, page \\ 1, show_noref \\ false) do
     offset = (page - 1) * limit
 
-    from(
+    q = from(
       s in base_session_query(site, query),
       group_by: s.utm_source,
       order_by: [desc: fragment("count"), asc: fragment("min(start)")],
-      where: s.utm_source != "",
       limit: ^limit,
       offset: ^offset,
       select: %{
@@ -315,7 +330,16 @@ defmodule Plausible.Stats.Clickhouse do
         bounce_rate: fragment("round(sum(is_bounce * sign) / sum(sign) * 100)"),
         visit_duration: fragment("round(avg(duration * sign))")
       }
-    ) |> filter_converted_sessions(site, query)
+    )
+
+    q = if show_noref do
+      q
+    else
+      from(s in q, where: s.utm_source != "")
+    end
+
+    q
+    |> filter_converted_sessions(site, query)
     |> ClickhouseRepo.all()
   end
 
