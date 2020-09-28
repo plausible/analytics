@@ -9,6 +9,15 @@ function filterText(key, value) {
   if (key === "source") {
     return <span className="inline-block max-w-sm truncate">Source: <b>{value}</b></span>
   }
+  if (key === "utm_medium") {
+    return <span className="inline-block max-w-sm truncate">UTM medium: <b>{value}</b></span>
+  }
+  if (key === "utm_source") {
+    return <span className="inline-block max-w-sm truncate">UTM source: <b>{value}</b></span>
+  }
+  if (key === "utm_campaign") {
+    return <span className="inline-block max-w-sm truncate">UTM campaign: <b>{value}</b></span>
+  }
   if (key === "referrer") {
     return <span className="inline-block max-w-sm truncate">Referrer: <b>{value}</b></span>
   }

@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import Dash from './index'
-import Modal from './stats/modals/modal'
-import ReferrersModal from './stats/modals/referrers'
+import SourcesModal from './stats/modals/sources'
 import ReferrersDrilldownModal from './stats/modals/referrer-drilldown'
 import GoogleKeywordsModal from './stats/modals/google-keywords'
 import PagesModal from './stats/modals/pages'
@@ -28,8 +27,8 @@ export default function Router({site, loggedIn}) {
         <ScrollToTop />
         <Dash site={site} loggedIn={loggedIn} />
         <Switch>
-          <Route exact path="/:domain/referrers">
-            <ReferrersModal site={site} />
+          <Route exact path={["/:domain/sources", "/:domain/utm_mediums", "/:domain/utm_sources", "/:domain/utm_campaigns"]}>
+            <SourcesModal site={site} />
           </Route>
           <Route exact path="/:domain/referrers/Google">
             <GoogleKeywordsModal site={site} />

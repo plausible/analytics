@@ -46,8 +46,10 @@ defmodule PlausibleWeb.Router do
 
     get "/:domain/current-visitors", StatsController, :current_visitors
     get "/:domain/main-graph", StatsController, :main_graph
-    get "/:domain/referrers", StatsController, :referrers
-    get "/:domain/goal/referrers", StatsController, :referrers_for_goal
+    get "/:domain/sources", StatsController, :sources
+    get "/:domain/utm_mediums", StatsController, :utm_mediums
+    get "/:domain/utm_sources", StatsController, :utm_sources
+    get "/:domain/utm_campaigns", StatsController, :utm_campaigns
     get "/:domain/referrers/:referrer", StatsController, :referrer_drilldown
     get "/:domain/goal/referrers/:referrer", StatsController, :referrer_drilldown_for_goal
     get "/:domain/pages", StatsController, :pages

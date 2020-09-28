@@ -242,7 +242,11 @@ class OperatingSystems extends React.Component {
 export default class Devices extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {mode: 'size'}
+    this.tabKey = 'deviceTab__' + props.site.domain
+    const storedTab = window.localStorage[this.tabKey]
+    this.state = {
+      mode: storedTab || 'size'
+    }
   }
 
   renderContent() {
@@ -257,6 +261,7 @@ export default class Devices extends React.Component {
 
   setMode(mode) {
     return () => {
+      window.localStorage[this.tabKey] = mode
       this.setState({mode})
     }
   }
@@ -266,9 +271,9 @@ export default class Devices extends React.Component {
     const extraClass = name === 'OS' ? '' : ' border-r border-gray-300'
 
     if (isActive) {
-      return <span className={"inline-block shadow-inner text-sm font-bold py-1 px-4" + extraClass}>{name}</span>
+      return <li className="inline-block h-5 text-indigo-700 font-bold border-b-2 border-indigo-700" onClick={this.setMode(mode)}>{name}</li>
     } else {
-      return <span className={"inline-block cursor-pointer bg-gray-100 text-sm font-bold py-1 px-4" + extraClass} onClick={this.setMode(mode)}>{name}</span>
+      return <li className="hover:text-indigo-700 cursor-pointer" onClick={this.setMode(mode)}>{name}</li>
     }
   }
 
@@ -276,12 +281,15 @@ export default class Devices extends React.Component {
     return (
       <div className="stats-item">
         <div className="bg-white shadow-xl rounded p-4 relative" style={{height: '436px'}}>
-          <h3 className="font-bold">Devices</h3>
 
-          <div className="rounded border border-gray-300 absolute" style={{top: '1rem', right: '1rem'}}>
-            { this.renderPill('Size', 'size') }
-            { this.renderPill('Browser', 'browser') }
-            { this.renderPill('OS', 'os') }
+          <div className="w-full flex justify-between">
+            <h3 className="font-bold">Devices</h3>
+
+            <ul className="flex font-medium text-xs text-gray-500 space-x-2">
+              { this.renderPill('Size', 'size') }
+              { this.renderPill('Browser', 'browser') }
+              { this.renderPill('OS', 'os') }
+            </ul>
           </div>
 
           { this.renderContent() }

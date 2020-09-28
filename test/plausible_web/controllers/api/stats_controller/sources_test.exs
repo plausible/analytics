@@ -1,12 +1,12 @@
-defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
+defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   use PlausibleWeb.ConnCase
   import Plausible.TestUtils
 
-  describe "GET /api/stats/:domain/referrers" do
+  describe "GET /api/stats/:domain/sources" do
     setup [:create_user, :log_in, :create_site]
 
-    test "returns top referrer sources by user ids", %{conn: conn, site: site} do
-      conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01")
+    test "returns top sources by unique user ids", %{conn: conn, site: site} do
+      conn = get(conn, "/api/stats/#{site.domain}/sources?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
                %{"name" => "10words", "count" => 2, "url" => "10words.com"},
@@ -14,11 +14,11 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
              ]
     end
 
-    test "calculates bounce rate and visit duration for referrers", %{conn: conn, site: site} do
+    test "calculates bounce rate and visit duration for sources", %{conn: conn, site: site} do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01&include=bounce_rate,visit_duration"
+          "/api/stats/#{site.domain}/sources?period=day&date=2019-01-01&include=bounce_rate,visit_duration"
         )
 
       assert json_response(conn, 200) == [
@@ -39,8 +39,8 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
              ]
     end
 
-    test "returns top referrer sources in realtime report", %{conn: conn, site: site} do
-      conn = get(conn, "/api/stats/#{site.domain}/referrers?period=realtime")
+    test "returns top sources in realtime report", %{conn: conn, site: site} do
+      conn = get(conn, "/api/stats/#{site.domain}/sources?period=realtime")
 
       assert json_response(conn, 200) == [
                %{"name" => "10words", "count" => 2, "url" => "10words.com"},
@@ -49,7 +49,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
     end
 
     test "can paginate the results", %{conn: conn, site: site} do
-      conn = get(conn, "/api/stats/#{site.domain}/referrers?period=day&date=2019-01-01&limit=1&page=2")
+      conn = get(conn, "/api/stats/#{site.domain}/sources?period=day&date=2019-01-01&limit=1&page=2")
 
       assert json_response(conn, 200) == [
                %{"name" => "Bing", "count" => 1, "url" => ""}
@@ -57,6 +57,18 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
     end
   end
 
+  describe "GET /api/stats/:domain/utm_mediums" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "returns top utm_mediums by unique user ids", %{conn: conn, site: site} do
+      conn = get(conn, "/api/stats/#{site.domain}/utm_mediums?period=day&date=2019-01-01")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "listing", "count" => 2, "bounce_rate" => 50.0, "visit_duration" => 50.0},
+               %{"name" => "search", "count" => 1, "bounce_rate" => 0.0, "visit_duration" => 100.0}
+             ]
+    end
+  end
 
   describe "GET /api/stats/:domain/goal/referrers" do
     setup [:create_user, :log_in, :create_site]
@@ -67,7 +79,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/goal/referrers?period=day&date=2019-01-01&filters=#{filters}"
+          "/api/stats/#{site.domain}/sources?period=day&date=2019-01-01&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -81,7 +93,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/goal/referrers?period=day&date=2019-01-01&filters=#{filters}"
+          "/api/stats/#{site.domain}/sources?period=day&date=2019-01-01&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -98,7 +110,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
       conn = get(conn, "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&filters=#{filters}")
 
       assert json_response(conn, 200) == %{
-               "total_visitors" => 2,
+               "total_visitors" => 6,
                "referrers" => [
                  %{"name" => "10words.com/page1", "url" => "10words.com", "count" => 2}
                ]
@@ -114,7 +126,7 @@ defmodule PlausibleWeb.Api.StatsController.ReferrersTest do
         )
 
       assert json_response(conn, 200) == %{
-               "total_visitors" => 2,
+               "total_visitors" => 6,
                "referrers" => [
                  %{
                    "name" => "10words.com/page1",

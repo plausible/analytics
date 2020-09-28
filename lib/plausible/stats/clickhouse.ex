@@ -194,7 +194,7 @@ defmodule Plausible.Stats.Clickhouse do
     end)
   end
 
-  def top_referrers(site, query, limit, page, show_noref \\ false, include \\ []) do
+  def top_sources(site, query, limit, page, show_noref \\ false, include \\ []) do
     offset = (page - 1) * limit
 
     referrers =
@@ -203,7 +203,7 @@ defmodule Plausible.Stats.Clickhouse do
         order_by: [desc: fragment("count"), asc: fragment("min(start)")],
         limit: ^limit,
         offset: ^offset
-      )
+      ) |> filter_converted_sessions(site, query)
 
     referrers = if show_noref do
       referrers
@@ -245,6 +245,102 @@ defmodule Plausible.Stats.Clickhouse do
       |> Enum.map(fn ref ->
         Map.update(ref, :url, nil, fn url -> url && URI.parse("http://" <> url).host end)
       end)
+  end
+
+  defp filter_converted_sessions(db_query, site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
+    converted_sessions =
+      from(e in base_query(site, query),
+        select: %{session_id: e.session_id})
+
+    from(s in db_query,
+      join: cs in subquery(converted_sessions),
+      on: s.session_id == cs.session_id
+    )
+  end
+  defp filter_converted_sessions(db_query, _site, _query), do: db_query
+
+  def utm_mediums(site, query, limit \\ 9, page \\ 1, show_noref \\ false) do
+    offset = (page - 1) * limit
+
+    q = from(
+      s in base_session_query(site, query),
+      group_by: s.utm_medium,
+      order_by: [desc: fragment("count"), asc: fragment("min(start)")],
+      limit: ^limit,
+      offset: ^offset,
+      select: %{
+        name: fragment("if(empty(?), ?, ?) as name", s.utm_medium, @no_ref, s.utm_medium),
+        count: fragment("uniq(user_id) as count"),
+        bounce_rate: fragment("round(sum(is_bounce * sign) / sum(sign) * 100)"),
+        visit_duration: fragment("round(avg(duration * sign))")
+      }
+    )
+
+    q = if show_noref do
+      q
+    else
+      from(s in q, where: s.utm_medium != "")
+    end
+
+    q
+    |> filter_converted_sessions(site, query)
+    |> ClickhouseRepo.all()
+  end
+
+  def utm_campaigns(site, query, limit \\ 9, page \\ 1, show_noref \\ false) do
+    offset = (page - 1) * limit
+
+    q = from(
+      s in base_session_query(site, query),
+      group_by: s.utm_campaign,
+      order_by: [desc: fragment("count"), asc: fragment("min(start)")],
+      limit: ^limit,
+      offset: ^offset,
+      select: %{
+        name: fragment("if(empty(?), ?, ?) as name", s.utm_campaign, @no_ref, s.utm_campaign),
+        count: fragment("uniq(user_id) as count"),
+        bounce_rate: fragment("round(sum(is_bounce * sign) / sum(sign) * 100)"),
+        visit_duration: fragment("round(avg(duration * sign))")
+      }
+    )
+
+    q = if show_noref do
+      q
+    else
+      from(s in q, where: s.utm_campaign != "")
+    end
+
+    q
+    |> filter_converted_sessions(site, query)
+    |> ClickhouseRepo.all()
+  end
+
+  def utm_sources(site, query, limit \\ 9, page \\ 1, show_noref \\ false) do
+    offset = (page - 1) * limit
+
+    q = from(
+      s in base_session_query(site, query),
+      group_by: s.utm_source,
+      order_by: [desc: fragment("count"), asc: fragment("min(start)")],
+      limit: ^limit,
+      offset: ^offset,
+      select: %{
+        name: fragment("if(empty(?), ?, ?) as name", s.utm_source, @no_ref, s.utm_source),
+        count: fragment("uniq(user_id) as count"),
+        bounce_rate: fragment("round(sum(is_bounce * sign) / sum(sign) * 100)"),
+        visit_duration: fragment("round(avg(duration * sign))")
+      }
+    )
+
+    q = if show_noref do
+      q
+    else
+      from(s in q, where: s.utm_source != "")
+    end
+
+    q
+    |> filter_converted_sessions(site, query)
+    |> ClickhouseRepo.all()
   end
 
   def conversions_from_referrer(site, query, referrer) do
@@ -543,43 +639,16 @@ defmodule Plausible.Stats.Clickhouse do
       |> Enum.filter(& &1)
 
     if Enum.count(events) > 0 do
-      {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
-
-      q =
-        from(
-          e in "events",
-          where: e.domain == ^site.domain,
-          where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
-          where: fragment("? IN tuple(?)", e.name, ^events),
-          group_by: e.name,
-          select: %{
-            name: e.name,
-            count: fragment("uniq(user_id) as count"),
-            total_count: fragment("count(*) as total_count")
-          }
-        )
-
-      q =
-        if query.filters["source"] do
-          filtered_sessions =
-            from(s in base_session_query(site, query), select: %{session_id: s.session_id})
-
-          from(
-            e in q,
-            join: cs in subquery(filtered_sessions),
-            on: e.session_id == cs.session_id
-          )
-        else
-          q
-        end
-
-      q =
-        if query.filters["page"] do
-          page = query.filters["page"]
-          from(e in q, where: e.pathname == ^page)
-        else
-          q
-        end
+      q = from(
+        e in base_query_w_sessions(site, query),
+        where: fragment("? IN tuple(?)", e.name, ^events),
+        group_by: e.name,
+        select: %{
+          name: e.name,
+          count: fragment("uniq(user_id) as count"),
+          total_count: fragment("count(*) as total_count")
+        }
+      )
 
       ClickhouseRepo.all(q)
     else
@@ -593,43 +662,16 @@ defmodule Plausible.Stats.Clickhouse do
       |> Enum.filter(& &1)
 
     if Enum.count(pages) > 0 do
-      {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
-
-      q =
-        from(
-          e in "events",
-          where: e.domain == ^site.domain,
-          where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
-          where: fragment("? IN tuple(?)", e.pathname, ^pages),
-          group_by: e.pathname,
-          select: %{
-            name: fragment("concat('Visit ', ?) as name", e.pathname),
-            count: fragment("uniq(user_id) as count"),
-            total_count: fragment("count(*) as total_count")
-          }
-        )
-
-      q =
-        if query.filters["source"] do
-          filtered_sessions =
-            from(s in base_session_query(site, query), select: %{session_id: s.session_id})
-
-          from(
-            e in q,
-            join: cs in subquery(filtered_sessions),
-            on: e.session_id == cs.session_id
-          )
-        else
-          q
-        end
-
-      q =
-        if query.filters["page"] do
-          page = query.filters["page"]
-          from(e in q, where: e.pathname == ^page)
-        else
-          q
-        end
+      q = from(
+        e in base_query_w_sessions(site, query),
+        where: fragment("? IN tuple(?)", e.pathname, ^pages),
+        group_by: e.pathname,
+        select: %{
+          name: fragment("concat('Visit ', ?) as name", e.pathname),
+          count: fragment("uniq(user_id) as count"),
+          total_count: fragment("count(*) as total_count")
+        }
+      )
 
       ClickhouseRepo.all(q)
     else
@@ -659,6 +701,30 @@ defmodule Plausible.Stats.Clickhouse do
         sessions_q
       end
 
+    sessions_q =
+      if query.filters["utm_medium"] do
+        utm_medium = query.filters["utm_medium"]
+        from(s in sessions_q, where: s.utm_medium == ^utm_medium)
+      else
+        sessions_q
+      end
+
+    sessions_q =
+      if query.filters["utm_source"] do
+        utm_source = query.filters["utm_source"]
+        from(s in sessions_q, where: s.utm_source == ^utm_source)
+      else
+        sessions_q
+      end
+
+    sessions_q =
+      if query.filters["utm_campaign"] do
+        utm_campaign = query.filters["utm_campaign"]
+        from(s in sessions_q, where: s.utm_campaign == ^utm_campaign)
+      else
+        sessions_q
+      end
+
     sessions_q = if query.filters["referrer"] do
       ref = query.filters["referrer"]
       from(s in sessions_q, where: s.referrer == ^ref)
@@ -672,7 +738,7 @@ defmodule Plausible.Stats.Clickhouse do
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
       )
 
-    q = if query.filters["source"] || query.filters['referrer'] do
+    q = if query.filters["source"] || query.filters['referrer'] || query.filters["utm_medium"] || query.filters["utm_source"] || query.filters["utm_campaign"] do
       from(
         e in q,
         join: sq in subquery(sessions_q),
@@ -709,6 +775,30 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     q =
+      if query.filters["utm_medium"] do
+        utm_medium = query.filters["utm_medium"]
+        from(s in q, where: s.utm_medium == ^utm_medium)
+      else
+        q
+      end
+
+    q =
+      if query.filters["utm_source"] do
+        utm_source = query.filters["utm_source"]
+        from(s in q, where: s.utm_source == ^utm_source)
+      else
+        q
+      end
+
+    q =
+      if query.filters["utm_campaign"] do
+        utm_campaign = query.filters["utm_campaign"]
+        from(s in q, where: s.utm_campaign == ^utm_campaign)
+      else
+        q
+      end
+
+    q =
       if query.filters["page"] do
         page = query.filters["page"]
         from(s in q, where: s.entry_page == ^page)
@@ -718,7 +808,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     if query.filters["referrer"] do
       ref = query.filters["referrer"]
-      from(e in q, where: e.referrer == ^ref)
+      from(s in q, where: s.referrer == ^ref)
     else
       q
     end
@@ -739,6 +829,30 @@ defmodule Plausible.Stats.Clickhouse do
         source = query.filters["source"]
         source = if source == @no_ref, do: "", else: source
         from(e in q, where: e.referrer_source == ^source)
+      else
+        q
+      end
+
+    q =
+      if query.filters["utm_medium"] do
+        utm_medium = query.filters["utm_medium"]
+        from(e in q, where: e.utm_medium == ^utm_medium)
+      else
+        q
+      end
+
+    q =
+      if query.filters["utm_source"] do
+        utm_source = query.filters["utm_source"]
+        from(e in q, where: e.utm_source == ^utm_source)
+      else
+        q
+      end
+
+    q =
+      if query.filters["utm_campaign"] do
+        utm_campaign = query.filters["utm_campaign"]
+        from(e in q, where: e.utm_campaign == ^utm_campaign)
       else
         q
       end
