@@ -158,7 +158,7 @@ In case of `Bamboo.SMTPAdapter` you need to supply the following variables:
 
 ### Database
 
-Plausible uses [postgresql as database](https://www.tutorialspoint.com/postgresql/postgresql_environment.htm) for storing all the user-data. Use the following the variables to configure it.
+Plausible uses [postgresql as database](https://www.tutorialspoint.com/postgresql/postgresql_environment.htm) for storing all the user-data. Use the following variables to configure it.
 
 - DATABASE_URL (*String*)
     - The repo Url as dictated [here](https://hexdocs.pm/ecto/Ecto.Repo.html#module-urls)
