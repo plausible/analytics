@@ -63,7 +63,7 @@ config :plausible,
 
 config :plausible, :selfhost,
   disable_authentication: disable_auth,
-  disable_subscription: String.to_existing_atom(System.get_env("DISABLE_SUBSCRIPTION", "false")),
+  disable_subscription: String.to_existing_atom(System.get_env("DISABLE_SUBSCRIPTION", "true")),
   disable_registration:
     if(!disable_auth,
       do: String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false")),
@@ -72,9 +72,7 @@ config :plausible, :selfhost,
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [host: host, scheme: scheme],
-  http: [
-    port: port
-  ],
+  http: [port: port],
   secret_key_base: secret_key_base,
   cache_static_manifest: "priv/static/cache_manifest.json",
   check_origin: false,
@@ -120,15 +118,15 @@ case mailer_adapter do
       adapter: :"Elixir.#{mailer_adapter}",
       server: System.fetch_env!("SMTP_HOST_ADDR"),
       hostname: System.get_env("HOST", "localhost"),
-      port: System.fetch_env!("SMTP_HOST_PORT"),
-      username: System.fetch_env!("SMTP_USER_NAME"),
-      password: System.fetch_env!("SMTP_USER_PWD"),
+      port: System.get_env("SMTP_HOST_PORT", "25"),
+      username: System.get_env("SMTP_USER_NAME"),
+      password: System.get_env("SMTP_USER_PWD"),
       tls: :if_available,
       allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
-      ssl: System.get_env("SMTP_HOST_SSL_ENABLED") || true,
+      ssl: System.get_env("SMTP_HOST_SSL_ENABLED") || false,
       retries: System.get_env("SMTP_RETRIES") || 2,
       no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true,
-      auth: :always
+      auth: :if_available
 
   _ ->
     raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
