@@ -116,7 +116,7 @@ case mailer_adapter do
   "Bamboo.SMTPAdapter" ->
     config :plausible, Plausible.Mailer,
       adapter: :"Elixir.#{mailer_adapter}",
-      server: System.fetch_env!("SMTP_HOST_ADDR"),
+      server: System.get_env("SMTP_HOST_ADDR", "localhost"),
       hostname: System.get_env("HOST", "localhost"),
       port: System.get_env("SMTP_HOST_PORT", "25"),
       username: System.get_env("SMTP_USER_NAME"),
@@ -125,8 +125,7 @@ case mailer_adapter do
       allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
       ssl: System.get_env("SMTP_HOST_SSL_ENABLED") || false,
       retries: System.get_env("SMTP_RETRIES") || 2,
-      no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true,
-      auth: :if_available
+      no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true
 
   _ ->
     raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
