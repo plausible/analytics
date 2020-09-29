@@ -8,30 +8,22 @@ port = System.get_env("PORT") || 8000
 host = System.get_env("HOST", "localhost")
 scheme = System.get_env("SCHEME", "http")
 
-secret_key_base =
-  System.get_env(
-    "SECRET_KEY_BASE",
-    "/NJrhNtbyCVAsTyvtk1ZYCwfm981Vpo/0XrVwjJvemDaKC/vsvBRevLwsc6u8RCg"
-  )
-
-db_pool_size = String.to_integer(System.get_env("DATABASE_POOLSIZE", "10"))
+secret_key_base = System.get_env("SECRET_KEY_BASE")
 
 db_url =
   System.get_env(
     "DATABASE_URL",
-    "postgres://postgres:postgres@127.0.0.1:5432/plausible_dev"
+    "postgres://postgres:postgres@plausible_db:5432/plausible_db"
   )
 
-db_tls_enabled? = String.to_existing_atom(System.get_env("DATABASE_TLS_ENABLED", "false"))
 admin_user = System.get_env("ADMIN_USER_NAME")
 admin_email = System.get_env("ADMIN_USER_EMAIL")
 admin_pwd = System.get_env("ADMIN_USER_PWD")
 env = System.get_env("ENVIRONMENT", "prod")
-mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.PostmarkAdapter")
+mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.SMTPAdapter")
 mailer_email = System.get_env("MAILER_EMAIL", "hello@plausible.local")
 app_version = System.get_env("APP_VERSION", "0.0.1")
-ch_db_url = System.get_env("CLICKHOUSE_DATABASE_URL", "http://localhost:8123/plausible_dev")
-ch_db_pool = String.to_integer(System.get_env("CLICKHOUSE_DATABASE_POOLSIZE", "10"))
+ch_db_url = System.get_env("CLICKHOUSE_DATABASE_URL", "http://default:@plausible_events_db:8123/plausible_events_db")
 ### Mandatory params End
 
 sentry_dsn = System.get_env("SENTRY_DSN")
@@ -82,10 +74,8 @@ config :plausible, PlausibleWeb.Endpoint,
 
 config :plausible,
   Plausible.Repo,
-  pool_size: db_pool_size,
   url: db_url,
-  adapter: Ecto.Adapters.Postgres,
-  ssl: db_tls_enabled?
+  adapter: Ecto.Adapters.Postgres
 
 config :sentry,
   dsn: sentry_dsn,
@@ -104,8 +94,7 @@ config :plausible, :slack, webhook: slack_hook_url
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
-  url: ch_db_url,
-  pool_size: ch_db_pool
+  url: ch_db_url
 
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
@@ -116,7 +105,7 @@ case mailer_adapter do
   "Bamboo.SMTPAdapter" ->
     config :plausible, Plausible.Mailer,
       adapter: :"Elixir.#{mailer_adapter}",
-      server: System.get_env("SMTP_HOST_ADDR", "localhost"),
+      server: System.get_env("SMTP_HOST_ADDR", "mail"),
       hostname: System.get_env("HOST", "localhost"),
       port: System.get_env("SMTP_HOST_PORT", "25"),
       username: System.get_env("SMTP_USER_NAME"),
