@@ -11,12 +11,8 @@ Following are the variables that can be used to configure the availability of th
 | SCHEME               | http        | The scheme of the URL, either `http` or `https`. When using a reverse proxy with https, it'll be required to set this                                                                               |
 | PORT                 | 8000        | The port on which the server is available.                                                                                                                                                          |
 | SECRET_KEY_BASE      | --          | An internal secret key used by [Phoenix Framework](https://www.phoenixframework.org/). Follow the [instructions](https://hexdocs.pm/phoenix/Mix.Tasks.Phx.Gen.Secret.html#content) to generate one. |
-| ENVIRONMENT          | prod        | The current running environment.                                                                                                                                                                    |
-| APP_VERSION          | Release tag | The version of the app running. Used for debugging purposes.                                                                                                                                        |
 | DISABLE_AUTH         | false       | Disables authentication completely, no registration, login will be shown.                                                                                                                           |
 | DISABLE_REGISTRATION | false       | Disables registration of new users, keep your admin credentials handy ;)                                                                                                                            |
-| DISABLE_SUBSCRIPTION | true        | Disables changing of subscription and removes the trial notice banner. Subscriptions are only used in the cloud version.                                                                            |
-
 
 ### Default User Generation
 For self-hosting, a default user can be generated using the `db init-admin` command. To be noted that, a default user is a user whose trial period expires in 100 Years ;).
