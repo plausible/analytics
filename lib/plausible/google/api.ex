@@ -148,6 +148,6 @@ defmodule Plausible.Google.Api do
   end
 
   defp redirect_uri() do
-    PlausibleWeb.Endpoint.clean_url() <> "/auth/google/callback"
+    PlausibleWeb.Endpoint.url() <> "/auth/google/callback"
   end
 end

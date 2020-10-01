@@ -1,5 +1,8 @@
 use Mix.Config
 
+base_url = System.get_env("BASE_URL", "http://localhost:8000")
+           |> URI.parse
+
 config :plausible,
   admin_user: System.get_env("ADMIN_USER_NAME", "admin"),
   admin_email: System.get_env("ADMIN_USER_EMAIL", "admin@plausible.local"),
@@ -22,8 +25,9 @@ config :plausible, :selfhost,
 # Configures the endpoint
 config :plausible, PlausibleWeb.Endpoint,
   url: [
-    host: System.get_env("HOST", "localhost"),
-    scheme: System.get_env("SCHEME", "http")
+    host: base_url.host,
+    scheme: base_url.scheme,
+    port: base_url.port
   ],
   http: [
     port: String.to_integer(System.get_env("PORT", "8000"))

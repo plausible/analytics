@@ -5,8 +5,8 @@ import Config
 # params are made optional to facilitate smooth release
 
 port = System.get_env("PORT") || 8000
-host = System.get_env("HOST", "localhost")
-scheme = System.get_env("SCHEME", "http")
+base_url = System.get_env("BASE_URL", "http://localhost:8000")
+           |> URI.parse
 
 secret_key_base = System.get_env("SECRET_KEY_BASE")
 
@@ -63,7 +63,7 @@ config :plausible, :selfhost,
     )
 
 config :plausible, PlausibleWeb.Endpoint,
-  url: [host: host, scheme: scheme],
+  url: [host: base_url.host, scheme: base_url.scheme, base_url.port],
   http: [port: port],
   secret_key_base: secret_key_base,
   cache_static_manifest: "priv/static/cache_manifest.json",
@@ -106,7 +106,7 @@ case mailer_adapter do
     config :plausible, Plausible.Mailer,
       adapter: :"Elixir.#{mailer_adapter}",
       server: System.get_env("SMTP_HOST_ADDR", "mail"),
-      hostname: System.get_env("HOST", "localhost"),
+      hostname: base_url.host,
       port: System.get_env("SMTP_HOST_PORT", "25"),
       username: System.get_env("SMTP_USER_NAME"),
       password: System.get_env("SMTP_USER_PWD"),
