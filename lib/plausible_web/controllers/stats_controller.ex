@@ -11,28 +11,22 @@ defmodule PlausibleWeb.StatsController do
     PlausibleWeb.Endpoint.host()
   end
 
-  def stats(%{assigns: %{site: site, has_pageviews: true}} = conn, _params) do
-    demo = site.domain == base_domain()
-    offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
-
-    conn
-    |> assign(:skip_plausible_tracking, !demo)
-    |> remove_email_report_banner(site)
-    |> put_resp_header("x-robots-tag", "noindex")
-    |> render("stats.html",
-      site: site,
-      has_goals: Plausible.Sites.has_goals?(site),
-      title: "Plausible · " <> site.domain,
-      offer_email_report: offer_email_report,
-      demo: demo
-    )
-  end
-
-  def stats(%{assigns: %{site: site}} = conn, params) do
+  def stats(%{assigns: %{site: site}} = conn, _params) do
     if Stats.has_pageviews?(site) do
+      demo = site.domain == base_domain()
+      offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
+
       conn
-      |> assign(:has_pageviews, true)
-      |> stats(params)
+      |> assign(:skip_plausible_tracking, !demo)
+      |> remove_email_report_banner(site)
+      |> put_resp_header("x-robots-tag", "noindex")
+      |> render("stats.html",
+        site: site,
+        has_goals: Plausible.Sites.has_goals?(site),
+        title: "Plausible · " <> site.domain,
+        offer_email_report: offer_email_report,
+        demo: demo
+      )
     else
       conn
       |> assign(:skip_plausible_tracking, true)
