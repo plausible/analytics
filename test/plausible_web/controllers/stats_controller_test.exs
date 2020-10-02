@@ -11,6 +11,13 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert html_response(conn, 200) =~ "stats-react-container"
     end
 
+    test "public site - shows waiting for first pageview", %{conn: conn} do
+      insert(:site, domain: "some-other-public-site.io", public: true)
+
+      conn = get(conn, "/some-other-public-site.io")
+      assert html_response(conn, 200) =~ "Need to see the snippet again?"
+    end
+
     test "can not view stats of a private website", %{conn: conn} do
       conn = get(conn, "/test-site.com")
       assert html_response(conn, 404) =~ "There&#39;s nothing here"

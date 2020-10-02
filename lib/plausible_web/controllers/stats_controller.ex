@@ -5,38 +5,32 @@ defmodule PlausibleWeb.StatsController do
   alias Plausible.Stats.Query
 
   plug PlausibleWeb.AuthorizeStatsPlug when action in [:stats, :csv_export]
+  plug PlausibleWeb.UpgradeBillingPlug when action in [:stats]
 
   def base_domain() do
     PlausibleWeb.Endpoint.host()
   end
 
-  def stats(conn, _params) do
-    site = conn.assigns[:site]
-    user = conn.assigns[:current_user]
+  def stats(%{assigns: %{site: site}} = conn, _params) do
+    if Stats.has_pageviews?(site) do
+      demo = site.domain == base_domain()
+      offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
 
-    if user && Plausible.Billing.needs_to_upgrade?(conn.assigns[:current_user]) do
-      redirect(conn, to: "/settings")
+      conn
+      |> assign(:skip_plausible_tracking, !demo)
+      |> remove_email_report_banner(site)
+      |> put_resp_header("x-robots-tag", "noindex")
+      |> render("stats.html",
+        site: site,
+        has_goals: Plausible.Sites.has_goals?(site),
+        title: "Plausible · " <> site.domain,
+        offer_email_report: offer_email_report,
+        demo: demo
+      )
     else
-      if Stats.has_pageviews?(site) do
-        demo = site.domain == base_domain()
-        offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
-
-        conn
-        |> assign(:skip_plausible_tracking, !demo)
-        |> remove_email_report_banner(site)
-        |> put_resp_header("x-robots-tag", "noindex")
-        |> render("stats.html",
-          site: site,
-          has_goals: Plausible.Sites.has_goals?(site),
-          title: "Plausible · " <> site.domain,
-          offer_email_report: offer_email_report,
-          demo: demo
-        )
-      else
-        conn
-        |> assign(:skip_plausible_tracking, true)
-        |> render("waiting_first_pageview.html", site: site)
-      end
+      conn
+      |> assign(:skip_plausible_tracking, true)
+      |> render("waiting_first_pageview.html", site: site)
     end
   end
 
