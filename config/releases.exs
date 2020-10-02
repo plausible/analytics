@@ -63,7 +63,7 @@ config :plausible, :selfhost,
     )
 
 config :plausible, PlausibleWeb.Endpoint,
-  url: [host: base_url.host, scheme: base_url.scheme, base_url.port],
+  url: [host: base_url.host, scheme: base_url.scheme, port: base_url.port],
   http: [port: port],
   secret_key_base: secret_key_base,
   cache_static_manifest: "priv/static/cache_manifest.json",

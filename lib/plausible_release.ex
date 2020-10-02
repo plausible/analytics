@@ -50,6 +50,8 @@ defmodule Plausible.Release do
   end
 
   def createdb do
+    :ok = Application.load(@app)
+
     for repo <- repos() do
       :ok = ensure_repo_created(repo)
     end
