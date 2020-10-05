@@ -23,7 +23,7 @@ env = System.get_env("ENVIRONMENT", "prod")
 mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.SMTPAdapter")
 mailer_email = System.get_env("MAILER_EMAIL", "hello@plausible.local")
 app_version = System.get_env("APP_VERSION", "0.0.1")
-ch_db_url = System.get_env("CLICKHOUSE_DATABASE_URL", "http://default:@plausible_events_db:8123/plausible_events_db")
+ch_db_url = System.get_env("CLICKHOUSE_DATABASE_URL", "http://plausible_events_db:8123/plausible_events_db")
 ### Mandatory params End
 
 sentry_dsn = System.get_env("SENTRY_DSN")

@@ -12,3 +12,4 @@ All notable changes to this project will be documented in this file.
 - Remove `CLICKHOUSE_DATABASE_POOLSIZE`, `DATABASE_POOLSIZE` and `DATABASE_TLS_ENABLED` parameters. Use query parameters in `CLICKHOUSE_DATABASE_URL` and `DATABASE_URL` instead.
 - Remove `HOST` and `SCHEME` parameters in favor of a single `BASE_URL` parameter.
 - Make `Bamboo.SMTPAdapter` the default as opposed to `Bamboo.PostmarkAdapter`
+- Disable subscription flow by default
