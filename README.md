@@ -21,7 +21,7 @@ Interested to learn more? [Read more on our website](https://plausible.io), lear
 
 ### Can Plausible Analytics be self-hosted?
 
-Yes, Plausible is fully [open source web analytics](https://plausible.io/open-source-website-analytics). We have a free as in beer Plausible Analytics Self-Hosted solution. It’s exactly the same product as our Cloud solution, only the self-hosted version you have to install, host and manage yourself on your own server. Take a look at our [docker-based self hosting](./HOSTING.md) setup. Please note that this is still in *beta* stage and care should be taken while using it for production system.
+Yes, Plausible is fully [open source web analytics](https://plausible.io/open-source-website-analytics). We have a free as in beer Plausible Analytics Self-Hosted solution. It’s exactly the same product as our Cloud solution, only the self-hosted version you have to install, host and manage yourself on your own server. Take a look at our [self-hosting installation instructions](https://docs.plausible.io/self-hosting).
 
 ### Why is Plausible Analytics Cloud not free like Google Analytics?
 
