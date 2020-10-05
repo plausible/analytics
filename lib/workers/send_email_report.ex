@@ -11,7 +11,7 @@ defmodule Plausible.Workers.SendEmailReport do
 
     for email <- site.weekly_report.recipients do
       unsubscribe_link =
-        PlausibleWeb.Endpoint.clean_url() <>
+        PlausibleWeb.Endpoint.url() <>
           "/sites/#{URI.encode_www_form(site.domain)}/weekly-report/unsubscribe?email=#{email}"
 
       send_report(email, site, "Weekly", unsubscribe_link, query)
@@ -37,7 +37,7 @@ defmodule Plausible.Workers.SendEmailReport do
 
     for email <- site.monthly_report.recipients do
       unsubscribe_link =
-        PlausibleWeb.Endpoint.clean_url() <>
+        PlausibleWeb.Endpoint.url() <>
           "/sites/#{URI.encode_www_form(site.domain)}/monthly-report/unsubscribe?email=#{email}"
 
       send_report(email, site, Timex.format!(last_month, "{Mfull}"), unsubscribe_link, query)

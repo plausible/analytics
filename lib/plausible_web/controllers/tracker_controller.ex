@@ -50,6 +50,6 @@ defmodule PlausibleWeb.TrackerController do
   end
 
   defp base_url() do
-    PlausibleWeb.Endpoint.clean_url()
+    PlausibleWeb.Endpoint.url()
   end
 end

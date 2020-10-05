@@ -41,15 +41,4 @@ defmodule PlausibleWeb.Endpoint do
 
   plug CORSPlug
   plug PlausibleWeb.Router
-
-  def clean_url() do
-    url = PlausibleWeb.Endpoint.url()
-
-    case Application.get_env(:plausible, :environment) do
-      # do not truncate the port in case of dev or test environment
-      env when env in ["dev", "test"] -> url
-      # in most deployments, there's a layer above the above
-      _ -> URI.parse(url) |> Map.put(:port, nil) |> URI.to_string()
-    end
-  end
 end

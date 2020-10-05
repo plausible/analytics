@@ -31,7 +31,7 @@ defmodule PlausibleWeb.AuthController do
       case Ecto.Changeset.apply_action(user, :insert) do
         {:ok, user} ->
           token = Auth.Token.sign_activation(user.name, user.email)
-          url = PlausibleWeb.Endpoint.clean_url() <> "/claim-activation?token=#{token}"
+          url = PlausibleWeb.Endpoint.url() <> "/claim-activation?token=#{token}"
           Logger.info(url)
           email_template = PlausibleWeb.Email.activation_email(user, url)
           Plausible.Mailer.send_email(email_template)
@@ -101,7 +101,7 @@ defmodule PlausibleWeb.AuthController do
 
       if user do
         token = Auth.Token.sign_password_reset(email)
-        url = PlausibleWeb.Endpoint.clean_url() <> "/password/reset?token=#{token}"
+        url = PlausibleWeb.Endpoint.url() <> "/password/reset?token=#{token}"
         Logger.debug("PASSWORD RESET LINK: " <> url)
         email_template = PlausibleWeb.Email.password_reset_email(email, url)
         Plausible.Mailer.deliver_now(email_template)

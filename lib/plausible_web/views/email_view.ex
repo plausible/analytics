@@ -6,7 +6,7 @@ defmodule PlausibleWeb.EmailView do
   end
 
   def plausible_url do
-    PlausibleWeb.Endpoint.clean_url()
+    PlausibleWeb.Endpoint.url()
   end
 
   def base_domain() do

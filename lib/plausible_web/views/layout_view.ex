@@ -10,7 +10,7 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def plausible_url do
-    PlausibleWeb.Endpoint.clean_url()
+    PlausibleWeb.Endpoint.url()
   end
 
   def home_dest(conn) do

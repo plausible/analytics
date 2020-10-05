@@ -50,8 +50,11 @@ defmodule Plausible.Release do
   end
 
   def createdb do
-    prepare()
-    do_create_db()
+    :ok = Application.load(@app)
+
+    for repo <- repos() do
+      :ok = ensure_repo_created(repo)
+    end
     IO.puts("Creation of Db successful!")
   end
 
@@ -114,12 +117,6 @@ defmodule Plausible.Release do
   defp run_migrations_for(repo) do
     IO.puts("Running migrations for #{repo}")
     {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
-  end
-
-  defp do_create_db do
-    for repo <- repos() do
-      :ok = ensure_repo_created(repo)
-    end
   end
 
   defp ensure_repo_created(repo) do

@@ -1,5 +1,8 @@
 use Mix.Config
 
+base_url = System.get_env("BASE_URL", "http://localhost:8000")
+           |> URI.parse
+
 config :plausible,
   admin_user: System.get_env("ADMIN_USER_NAME", "admin"),
   admin_email: System.get_env("ADMIN_USER_EMAIL", "admin@plausible.local"),
@@ -22,8 +25,9 @@ config :plausible, :selfhost,
 # Configures the endpoint
 config :plausible, PlausibleWeb.Endpoint,
   url: [
-    host: System.get_env("HOST", "localhost"),
-    scheme: System.get_env("SCHEME", "http")
+    host: base_url.host,
+    scheme: base_url.scheme,
+    port: base_url.port
   ],
   http: [
     port: String.to_integer(System.get_env("PORT", "8000"))
@@ -77,7 +81,6 @@ config :plausible, :paddle,
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
-  pool_size: String.to_integer(System.get_env("CLICKHOUSE_DATABASE_POOLSIZE", "5")),
   url: System.get_env(
     "CLICKHOUSE_DATABASE_URL",
     "http://127.0.0.1:8123/plausible_test"
@@ -85,7 +88,6 @@ config :plausible, Plausible.ClickhouseRepo,
 
 config :plausible,
        Plausible.Repo,
-       pool_size: String.to_integer(System.get_env("DATABASE_POOLSIZE", "10")),
        timeout: 300_000,
        connect_timeout: 300_000,
        handshake_timeout: 300_000,
@@ -93,8 +95,7 @@ config :plausible,
          System.get_env(
            "DATABASE_URL",
            "postgres://postgres:postgres@127.0.0.1:5432/plausible_dev?currentSchema=default"
-         ),
-       ssl: String.to_existing_atom(System.get_env("DATABASE_TLS_ENABLED", "false"))
+         )
 
 cron_enabled = String.to_existing_atom(System.get_env("CRON_ENABLED", "false"))
 
@@ -159,7 +160,7 @@ case mailer_adapter do
       password: System.fetch_env!("SMTP_USER_PWD"),
       tls: :if_available,
       allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
-      ssl: System.get_env("SMTP_HOST_SSL_ENABLED") || true,
+      ssl: System.get_env("SMTP_HOST_SSL_ENABLED") || false,
       retries: System.get_env("SMTP_RETRIES") || 2,
       no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true,
       auth: :if_available
