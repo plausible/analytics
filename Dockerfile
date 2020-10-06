@@ -49,7 +49,7 @@ COPY tracker/package.json tracker/package-lock.json ./tracker/
 
 RUN npm audit fix --prefix ./assets && \
     npm install --prefix ./assets && \
-    npm install --prefix ./trackerc
+    npm install --prefix ./tracker
 
 COPY assets ./assets
 COPY tracker ./tracker
