@@ -27,6 +27,8 @@ ch_db_url = System.get_env("CLICKHOUSE_DATABASE_URL", "http://plausible_events_d
 ### Mandatory params End
 
 sentry_dsn = System.get_env("SENTRY_DSN")
+logflare_api_key = System.get_env("LOGFLARE_API_KEY")
+logflare_source_id = System.get_env("LOGFLARE_SOURCE_ID")
 paddle_auth_code = System.get_env("PADDLE_VENDOR_AUTH_CODE")
 google_cid = System.get_env("GOOGLE_CLIENT_ID")
 google_secret = System.get_env("GOOGLE_CLIENT_SECRET")
@@ -192,4 +194,17 @@ if geolite2_country_db do
     ]
 end
 
-config :logger, level: :warn
+logger_backends = case logflare_api_key do
+  api_key when is_binary(api_key) -> [LogflareLogger.HttpBackend]
+  _ -> [:console]
+end
+
+config :logger,
+  level: :warn,
+  backends: logger_backends
+
+if logflare_api_key do
+  config :logflare_logger_backend,
+    api_key: logflare_api_key,
+    source_id: logflare_source_id,
+end
