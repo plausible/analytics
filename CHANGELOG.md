@@ -1,7 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.0.0] - Unreleased
+## [1.1.0] - Unreleased
+
+### Added
+- Linkify top pages [plausible/analytics#91](https://github.com/plausible/analytics/issues/91)
+
+## [1.0.0] - 2020-10-06
 
 ### Added
 - Collect and present link tags (`utm_medium`, `utm_source`, `utm_campaign`) in the dashboard

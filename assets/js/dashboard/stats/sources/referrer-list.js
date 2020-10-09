@@ -56,7 +56,7 @@ export default class Referrers extends React.Component {
   renderExternalLink(referrer) {
     if (this.props.query.filters.source && this.props.query.filters.source !== 'Google' && referrer.name !== 'Direct / None') {
       return (
-        <a target="_blank" href={'//' + referrer.name}>
+        <a target="_blank" href={'//' + referrer.name} className="hidden group-hover:block">
           <svg className="inline h-4 w-4 ml-1 -mt-1 text-gray-600" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
         </a>
       )
@@ -72,7 +72,7 @@ export default class Referrers extends React.Component {
       <div className="flex items-center justify-between my-1 text-sm" key={referrer.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
           <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50" />
-          <span className="flex px-2" style={{marginTop: '-26px'}} >
+          <span className="flex px-2 group" style={{marginTop: '-26px'}} >
             <LinkOption className="block truncate" to={{search: query.toString()}} disabled={referrer.name === 'Direct / None'}>
               <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} className="inline h-4 w-4 mr-2 align-middle -mt-px" />
               { referrer.name }
