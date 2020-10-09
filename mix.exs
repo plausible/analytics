@@ -89,6 +89,7 @@ defmodule Plausible.MixProject do
       {:oban, "~> 1.2"},
       {:sshex, "2.2.1"},
       {:geolix, "~> 1.0"},
+      {:logflare_logger_backend, "~> 0.7.6"},
       {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
       {:geolix_adapter_mmdb2, "~> 0.5.0"}
     ]
