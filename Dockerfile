@@ -2,7 +2,7 @@
 # platform specific, it makes sense to build it in the docker
 
 #### Builder
-FROM elixir:1.10.3 as buildcontainer
+FROM elixir:1.10.4-alpine as buildcontainer
 
 # preparation
 ARG APP_VER=0.0.1
@@ -14,13 +14,9 @@ RUN mkdir /app
 WORKDIR /app
 
 # install build dependencies
-RUN apt-get update  && \
-    apt-get install -y git build-essential nodejs yarn python npm --no-install-recommends && \
+RUN apk add --no-cache git nodejs yarn python npm ca-certificates wget gnupg make erlang gcc libc-dev && \
     npm install npm@latest -g && \
     npm install -g webpack
-
-RUN apt-get install -y --no-install-recommends ca-certificates wget \
-    && apt-get install -y --install-recommends gnupg2 dirmngr
 
 COPY mix.exs ./
 COPY mix.lock ./
@@ -51,20 +47,16 @@ COPY rel rel
 RUN mix release plausible
 
 # Main Docker Image
-FROM debian:bullseye
+FROM alpine:3.11
 LABEL maintainer="tckb <tckb@tgrthi.me>"
 ENV LANG=C.UTF-8
 
-RUN apt-get update && \
-    apt-get install -y bash openssl --no-install-recommends&& \
-    apt-get clean autoclean && \
-    apt-get autoremove --yes && \
-    rm -rf /var/lib/{apt,dpkg,cache,log}/
+RUN apk add --no-cache openssl ncurses
 
 COPY .gitlab/build-scripts/docker-entrypoint.sh /entrypoint.sh
 
 RUN chmod a+x /entrypoint.sh && \
-    useradd -d /app -u 1000 -s /bin/bash -m plausibleuser
+    adduser -h /app -u 1000 -s /bin/sh -D plausibleuser
 
 COPY --from=buildcontainer /app/_build/prod/rel/plausible /app
 RUN chown -R plausibleuser:plausibleuser /app
