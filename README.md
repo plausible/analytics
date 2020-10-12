@@ -44,4 +44,4 @@ We welcome feedback from our community. We have a public roadmap driven by the f
 
 ### License
 
-Plausible is open-source under the most permissive Massachusetts Institute of Technology (MIT) license. This means that there are no restrictions on redistributing, modifying or using Plausible software for any reason. You can take it and use it any way that you wish.
+Plausible is open-source under the GNU Affero General Public License Version 3 (AGPLv3). You can [find it here](https://github.com/plausible/analytics/blob/master/LICENSE.md).
