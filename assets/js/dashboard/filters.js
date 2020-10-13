@@ -21,6 +21,9 @@ function filterText(key, value) {
   if (key === "referrer") {
     return <span className="inline-block max-w-sm truncate">Referrer: <b>{value}</b></span>
   }
+  if (key === "screen") {
+    return <span className="inline-block max-w-sm truncate">Screen size: <b>{value}</b></span>
+  }
   if (key === "page") {
     return <span className="inline-block max-w-sm truncate">Page: <b>{value}</b></span>
   }

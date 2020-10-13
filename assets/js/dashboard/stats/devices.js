@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom'
 
 import numberFormatter from '../number-formatter'
 import Bar from './bar'
@@ -63,11 +64,18 @@ class ScreenSizes extends React.Component {
   }
 
   renderScreenSize(size) {
+    const query = new URLSearchParams(window.location.search)
+    query.set('screen', size.name)
+
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={size.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
           <Bar count={size.count} all={this.state.sizes} bg="bg-green-50" />
-          <span tooltip={EXPLANATION[size.name]} className="block px-2" style={{marginTop: '-26px'}}>{iconFor(size.name)} {size.name}</span>
+          <span tooltip={EXPLANATION[size.name]} className="flex px-2" style={{marginTop: '-26px'}} >
+            <Link className="block truncate hover:underline" to={{search: query.toString()}}>
+              {iconFor(size.name)} {size.name}
+            </Link>
+          </span>
         </div>
         <span className="font-medium">{numberFormatter(size.count)} <span className="inline-block text-xs w-8 text-right">({size.percentage}%)</span></span>
       </div>

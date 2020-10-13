@@ -29,6 +29,7 @@ export function parseQuery(querystring, site) {
       'utm_source': q.get('utm_source'),
       'utm_campaign': q.get('utm_campaign'),
       'referrer': q.get('referrer'),
+      'screen': q.get('screen'),
       'page': q.get('page')
     }
   }
