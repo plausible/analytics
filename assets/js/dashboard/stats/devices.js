@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom'
 
 import numberFormatter from '../number-formatter'
 import Bar from './bar'
@@ -63,11 +64,18 @@ class ScreenSizes extends React.Component {
   }
 
   renderScreenSize(size) {
+    const query = new URLSearchParams(window.location.search)
+    query.set('screen', size.name)
+
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={size.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
           <Bar count={size.count} all={this.state.sizes} bg="bg-green-50" />
-          <span tooltip={EXPLANATION[size.name]} className="block px-2" style={{marginTop: '-26px'}}>{iconFor(size.name)} {size.name}</span>
+          <span tooltip={EXPLANATION[size.name]} className="flex px-2" style={{marginTop: '-26px'}} >
+            <Link className="block truncate hover:underline" to={{search: query.toString()}}>
+              {iconFor(size.name)} {size.name}
+            </Link>
+          </span>
         </div>
         <span className="font-medium">{numberFormatter(size.count)} <span className="inline-block text-xs w-8 text-right">({size.percentage}%)</span></span>
       </div>
@@ -130,11 +138,18 @@ class Browsers extends React.Component {
   }
 
   renderBrowser(browser) {
+    const query = new URLSearchParams(window.location.search)
+    query.set('browser', browser.name)
+
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={browser.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
           <Bar count={browser.count} all={this.state.browsers} bg="bg-green-50" />
-          <span className="block px-2" style={{marginTop: '-26px'}}>{browser.name}</span>
+          <span className="flex px-2" style={{marginTop: '-26px'}} >
+            <Link className="block truncate hover:underline" to={{search: query.toString()}}>
+              {browser.name}
+            </Link>
+          </span>
         </div>
         <span className="font-medium">{numberFormatter(browser.count)} <span className="inline-block text-xs w-8 text-right">({browser.percentage}%)</span></span>
       </div>
@@ -197,11 +212,18 @@ class OperatingSystems extends React.Component {
   }
 
   renderOperatingSystem(os) {
+    const query = new URLSearchParams(window.location.search)
+    query.set('os', os.name)
+
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={os.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
           <Bar count={os.count} all={this.state.operatingSystems} bg="bg-green-50" />
-          <span className="block px-2" style={{marginTop: '-26px'}}>{os.name}</span>
+          <span className="flex px-2" style={{marginTop: '-26px'}}>
+            <Link className="block truncate hover:underline" to={{search: query.toString()}}>
+              {os.name}
+            </Link>
+          </span>
         </div>
         <span className="font-medium">{numberFormatter(os.count)} <span className="inline-block text-xs w-8 text-right">({os.percentage}%)</span></span>
       </div>

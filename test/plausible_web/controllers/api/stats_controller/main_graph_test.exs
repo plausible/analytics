@@ -153,4 +153,60 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
              ]
     end
   end
+
+  describe "GET /api/stats/main-graph - top stats - filters" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "returns only visitors from a country based on alpha3 code", %{conn: conn, site: site} do
+      filters = Jason.encode!(%{country: "USA"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2019-01-01&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+      assert %{"name" => "Unique visitors", "count" => 4, "change" => 100} in res["top_stats"]
+    end
+
+    test "returns only visitors with specific screen size", %{conn: conn, site: site} do
+      filters = Jason.encode!(%{screen: "Desktop"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2019-01-01&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+      assert %{"name" => "Unique visitors", "count" => 4, "change" => 100} in res["top_stats"]
+    end
+
+    test "returns only visitors with specific browser", %{conn: conn, site: site} do
+      filters = Jason.encode!(%{browser: "Chrome"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2019-01-01&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+      assert %{"name" => "Unique visitors", "count" => 4, "change" => 100} in res["top_stats"]
+    end
+
+    test "returns only visitors with specific operating system", %{conn: conn, site: site} do
+      filters = Jason.encode!(%{os: "Mac"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2019-01-01&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+      assert %{"name" => "Unique visitors", "count" => 4, "change" => 100} in res["top_stats"]
+    end
+  end
 end

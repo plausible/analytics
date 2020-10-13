@@ -1,6 +1,7 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
 import {removeQueryParam} from './query'
+import Datamap from 'datamaps'
 
 function filterText(key, value) {
   if (key === "goal") {
@@ -20,6 +21,20 @@ function filterText(key, value) {
   }
   if (key === "referrer") {
     return <span className="inline-block max-w-sm truncate">Referrer: <b>{value}</b></span>
+  }
+  if (key === "screen") {
+    return <span className="inline-block max-w-sm truncate">Screen size: <b>{value}</b></span>
+  }
+  if (key === "browser") {
+    return <span className="inline-block max-w-sm truncate">Browser: <b>{value}</b></span>
+  }
+  if (key === "os") {
+    return <span className="inline-block max-w-sm truncate">Operating System: <b>{value}</b></span>
+  }
+  if (key === "country") {
+    const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
+    const selectedCountry = allCountries.find((c) => c.id === value)
+    return <span className="inline-block max-w-sm truncate">Country: <b>{selectedCountry.properties.name}</b></span>
   }
   if (key === "page") {
     return <span className="inline-block max-w-sm truncate">Page: <b>{value}</b></span>

@@ -256,3 +256,7 @@ blockquote {
   right: 2px;
   top: calc(100% - 12px);
 }
+
+.datamaps-subunit {
+  cursor: pointer;
+}
