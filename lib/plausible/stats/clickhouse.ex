@@ -718,6 +718,14 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     sessions_q =
+      if query.filters["os"] do
+        os = query.filters["os"]
+        from(s in sessions_q, where: s.operating_system == ^os)
+      else
+        sessions_q
+      end
+
+    sessions_q =
       if query.filters["utm_medium"] do
         utm_medium = query.filters["utm_medium"]
         from(s in sessions_q, where: s.utm_medium == ^utm_medium)
@@ -807,6 +815,14 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     q =
+      if query.filters["os"] do
+        os = query.filters["os"]
+        from(s in q, where: s.operating_system == ^os)
+      else
+        q
+      end
+
+    q =
       if query.filters["utm_medium"] do
         utm_medium = query.filters["utm_medium"]
         from(s in q, where: s.utm_medium == ^utm_medium)
@@ -877,6 +893,14 @@ defmodule Plausible.Stats.Clickhouse do
       if query.filters["browser"] do
         browser = query.filters["browser"]
         from(s in q, where: s.browser == ^browser)
+      else
+        q
+      end
+
+    q =
+      if query.filters["os"] do
+        os = query.filters["os"]
+        from(s in q, where: s.operating_system == ^os)
       else
         q
       end

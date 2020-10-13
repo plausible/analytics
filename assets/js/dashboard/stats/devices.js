@@ -212,11 +212,18 @@ class OperatingSystems extends React.Component {
   }
 
   renderOperatingSystem(os) {
+    const query = new URLSearchParams(window.location.search)
+    query.set('os', os.name)
+
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={os.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
           <Bar count={os.count} all={this.state.operatingSystems} bg="bg-green-50" />
-          <span className="block px-2" style={{marginTop: '-26px'}}>{os.name}</span>
+          <span className="flex px-2" style={{marginTop: '-26px'}}>
+            <Link className="block truncate hover:underline" to={{search: query.toString()}}>
+              {os.name}
+            </Link>
+          </span>
         </div>
         <span className="font-medium">{numberFormatter(os.count)} <span className="inline-block text-xs w-8 text-right">({os.percentage}%)</span></span>
       </div>
