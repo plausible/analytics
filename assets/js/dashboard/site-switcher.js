@@ -48,7 +48,7 @@ export default class SiteSwitcher extends React.Component {
     const extraClass = domain === this.props.site.domain ? 'font-medium text-gray-900' : 'hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:bg-gray-100 focus:text-gray-900'
     return (
       <a href={`/${encodeURIComponent(domain)}`} key={domain} className={`block truncate px-4 py-2 text-sm leading-5 text-gray-700 ${extraClass}`}>
-        <img src={`https://icons.duckduckgo.com/ip3/${domain}.ico`} className="inline w-4 mr-2 align-middle" />
+        <img src={`https://icons.duckduckgo.com/ip3/${domain}.ico`} referrerPolicy="no-referrer" className="inline w-4 mr-2 align-middle" />
         <span>{domain}</span>
       </a>
     )
@@ -94,7 +94,7 @@ export default class SiteSwitcher extends React.Component {
       <div className="relative inline-block text-left z-10 mr-8">
         <button onClick={this.toggle.bind(this)} className={`inline-flex items-center text-lg w-full rounded-md py-2 leading-5 font-bold text-gray-700 focus:outline-none transition ease-in-out duration-150 ${hoverClass}`}>
 
-          <img src={`https://icons.duckduckgo.com/ip3/${this.props.site.domain}.ico`} className="inline w-4 mr-2 align-middle" />
+          <img src={`https://icons.duckduckgo.com/ip3/${this.props.site.domain}.ico`} referrerPolicy="no-referrer" className="inline w-4 mr-2 align-middle" />
           {this.props.site.domain}
           {this.renderArrow()}
         </button>

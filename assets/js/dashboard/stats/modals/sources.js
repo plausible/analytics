@@ -86,7 +86,7 @@ class SourcesModal extends React.Component {
     return (
       <tr className="text-sm" key={source.name}>
         <td className="p-2">
-          <img src={`https://icons.duckduckgo.com/ip3/${source.url}.ico`} className="h-4 w-4 mr-2 align-middle inline" />
+          <img src={`https://icons.duckduckgo.com/ip3/${source.url}.ico`} referrerPolicy="no-referrer" className="h-4 w-4 mr-2 align-middle inline" />
           <Link className="hover:underline" to={{search: query.toString(), pathname: '/' + encodeURIComponent(this.props.site.domain)}}>{ source.name }</Link>
         </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(source.count)}</td>

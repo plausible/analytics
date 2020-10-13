@@ -45,7 +45,7 @@ class AllSources extends React.Component {
           <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50" />
           <span className="flex px-2" style={{marginTop: '-26px'}} >
             <Link className="block truncate hover:underline" to={{search: query.toString()}}>
-              <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} className="inline h-4 w-4 mr-2 align-middle -mt-px" />
+              <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} referrerPolicy="no-referrer" className="inline h-4 w-4 mr-2 align-middle -mt-px" />
               { referrer.name }
             </Link>
           </span>
