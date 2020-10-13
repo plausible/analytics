@@ -40,7 +40,6 @@ export default class SearchTerms extends React.Component {
           <Bar count={term.count} all={this.state.searchTerms} bg="bg-blue-50" />
           <span className="flex px-2" style={{marginTop: '-26px'}} >
             <span className="block truncate">
-              <img src={`https://icons.duckduckgo.com/ip3/${term.url}.ico`} className="inline h-4 w-4 mr-2 align-middle -mt-px" />
               { term.name }
             </span>
           </span>
