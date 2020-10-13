@@ -1,6 +1,7 @@
 import React from 'react';
 import Datamap from 'datamaps'
 
+import numberFormatter from '../number-formatter'
 import FadeIn from '../fade-in'
 import Bar from './bar'
 import MoreLink from './more-link'
@@ -85,7 +86,7 @@ export default class Countries extends React.Component {
           const pluralizedLabel = data.numberOfThings === 1 ? label.slice(0, -1) : label
           return ['<div class="hoverinfo">',
             '<strong>', geo.properties.name, '</strong>',
-            '<br><strong>', data.numberOfThings, '</strong> ' + pluralizedLabel,
+            '<br><strong>', numberFormatter(data.numberOfThings), '</strong> ' + pluralizedLabel,
             '</div>'].join('');
         }
       }
