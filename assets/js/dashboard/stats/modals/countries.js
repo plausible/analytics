@@ -1,5 +1,5 @@
 import React from "react";
-import { withRouter } from 'react-router-dom'
+import { Link, withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import * as api from '../../api'
@@ -22,9 +22,16 @@ class CountriesModal extends React.Component {
   }
 
   renderCountry(country) {
+    const query = new URLSearchParams(window.location.search)
+    query.set('country', country.name)
+
     return (
       <tr className="text-sm" key={country.name}>
-        <td className="p-2">{country.full_country_name}</td>
+        <td className="p-2">
+          <Link className="hover:underline" to={{search: query.toString(), pathname: '/' + encodeURIComponent(this.props.site.domain)}}>
+            {country.full_country_name}
+          </Link>
+        </td>
         <td className="p-2 w-32 font-medium" align="right">
           {numberFormatter(country.count)} <span className="inline-block text-xs w-8 text-right">({country.percentage}%)</span>
         </td>

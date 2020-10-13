@@ -1,5 +1,6 @@
 import React from 'react';
 import Datamap from 'datamaps'
+import { withRouter } from 'react-router-dom'
 
 import numberFormatter from '../number-formatter'
 import FadeIn from '../fade-in'
@@ -7,7 +8,7 @@ import Bar from './bar'
 import MoreLink from './more-link'
 import * as api from '../api'
 
-export default class Countries extends React.Component {
+class Countries extends React.Component {
   constructor(props) {
     super(props)
     this.resizeMap = this.resizeMap.bind(this)
@@ -89,6 +90,13 @@ export default class Countries extends React.Component {
             '<br><strong>', numberFormatter(data.numberOfThings), '</strong> ' + pluralizedLabel,
             '</div>'].join('');
         }
+      },
+      done: (datamap) => {
+        datamap.svg.selectAll('.datamaps-subunit').on('click', (geography) => {
+          const query = new URLSearchParams(window.location.search)
+          query.set('country', geography.id)
+          this.props.history.push({search: query.toString()})
+        })
       }
     });
   }
@@ -116,3 +124,5 @@ export default class Countries extends React.Component {
     )
   }
 }
+
+export default withRouter(Countries)
