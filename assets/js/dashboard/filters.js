@@ -24,6 +24,9 @@ function filterText(key, value) {
   if (key === "screen") {
     return <span className="inline-block max-w-sm truncate">Screen size: <b>{value}</b></span>
   }
+  if (key === "browser") {
+    return <span className="inline-block max-w-sm truncate">Browser: <b>{value}</b></span>
+  }
   if (key === "page") {
     return <span className="inline-block max-w-sm truncate">Page: <b>{value}</b></span>
   }

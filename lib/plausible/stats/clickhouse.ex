@@ -710,6 +710,14 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     sessions_q =
+      if query.filters["browser"] do
+        browser = query.filters["browser"]
+        from(s in sessions_q, where: s.browser == ^browser)
+      else
+        sessions_q
+      end
+
+    sessions_q =
       if query.filters["utm_medium"] do
         utm_medium = query.filters["utm_medium"]
         from(s in sessions_q, where: s.utm_medium == ^utm_medium)
@@ -746,7 +754,7 @@ defmodule Plausible.Stats.Clickhouse do
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
       )
 
-    q = if query.filters["source"] || query.filters['referrer'] || query.filters["utm_medium"] || query.filters["utm_source"] || query.filters["utm_campaign"] || query.filters["screen"] do
+    q = if query.filters["source"] || query.filters['referrer'] || query.filters["utm_medium"] || query.filters["utm_source"] || query.filters["utm_campaign"] || query.filters["screen"] || query.filters["browser"] do
       from(
         e in q,
         join: sq in subquery(sessions_q),
@@ -786,6 +794,14 @@ defmodule Plausible.Stats.Clickhouse do
       if query.filters["screen"] do
         size = query.filters["screen"]
         from(s in q, where: s.screen_size == ^size)
+      else
+        q
+      end
+
+    q =
+      if query.filters["browser"] do
+        browser = query.filters["browser"]
+        from(s in q, where: s.browser == ^browser)
       else
         q
       end
@@ -853,6 +869,14 @@ defmodule Plausible.Stats.Clickhouse do
       if query.filters["screen"] do
         size = query.filters["screen"]
         from(e in q, where: e.screen_size == ^size)
+      else
+        q
+      end
+
+    q =
+      if query.filters["browser"] do
+        browser = query.filters["browser"]
+        from(s in q, where: s.browser == ^browser)
       else
         q
       end

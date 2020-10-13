@@ -138,11 +138,18 @@ class Browsers extends React.Component {
   }
 
   renderBrowser(browser) {
+    const query = new URLSearchParams(window.location.search)
+    query.set('browser', browser.name)
+
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={browser.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
           <Bar count={browser.count} all={this.state.browsers} bg="bg-green-50" />
-          <span className="block px-2" style={{marginTop: '-26px'}}>{browser.name}</span>
+          <span className="flex px-2" style={{marginTop: '-26px'}} >
+            <Link className="block truncate hover:underline" to={{search: query.toString()}}>
+              {browser.name}
+            </Link>
+          </span>
         </div>
         <span className="font-medium">{numberFormatter(browser.count)} <span className="inline-block text-xs w-8 text-right">({browser.percentage}%)</span></span>
       </div>
