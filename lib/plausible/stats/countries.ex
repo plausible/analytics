@@ -493,8 +493,16 @@ defmodule Plausible.Stats.CountryName do
     "EH" => "ESH"
   }
 
+  @alpha2_codes @alpha3_codes
+  |> Enum.map(fn {k, v} -> {v, k} end)
+  |> Enum.into(%{})
+
   def to_alpha3(code) do
     Map.get(@alpha3_codes, code, code)
+  end
+
+  def to_alpha2(code) do
+    Map.get(@alpha2_codes, code, code)
   end
 
   def from_iso3166(code) do

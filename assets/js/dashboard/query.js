@@ -32,6 +32,7 @@ export function parseQuery(querystring, site) {
       'screen': q.get('screen'),
       'browser': q.get('browser'),
       'os': q.get('os'),
+      'country': q.get('country'),
       'page': q.get('page')
     }
   }

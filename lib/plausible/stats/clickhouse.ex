@@ -726,6 +726,14 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     sessions_q =
+      if query.filters["country"] do
+        country = Plausible.Stats.CountryName.to_alpha2(query.filters["country"])
+        from(s in sessions_q, where: s.country_code == ^country)
+      else
+        sessions_q
+      end
+
+    sessions_q =
       if query.filters["utm_medium"] do
         utm_medium = query.filters["utm_medium"]
         from(s in sessions_q, where: s.utm_medium == ^utm_medium)
@@ -762,7 +770,7 @@ defmodule Plausible.Stats.Clickhouse do
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
       )
 
-    q = if query.filters["source"] || query.filters['referrer'] || query.filters["utm_medium"] || query.filters["utm_source"] || query.filters["utm_campaign"] || query.filters["screen"] || query.filters["browser"] do
+    q = if query.filters["source"] || query.filters['referrer'] || query.filters["utm_medium"] || query.filters["utm_source"] || query.filters["utm_campaign"] || query.filters["screen"] || query.filters["browser"] || query.filters["os"] || query.filters["country"] do
       from(
         e in q,
         join: sq in subquery(sessions_q),
@@ -818,6 +826,14 @@ defmodule Plausible.Stats.Clickhouse do
       if query.filters["os"] do
         os = query.filters["os"]
         from(s in q, where: s.operating_system == ^os)
+      else
+        q
+      end
+
+    q =
+      if query.filters["country"] do
+        country = Plausible.Stats.CountryName.to_alpha2(query.filters["country"])
+        from(s in q, where: s.country_code == ^country)
       else
         q
       end
@@ -901,6 +917,14 @@ defmodule Plausible.Stats.Clickhouse do
       if query.filters["os"] do
         os = query.filters["os"]
         from(s in q, where: s.operating_system == ^os)
+      else
+        q
+      end
+
+    q =
+      if query.filters["country"] do
+        country = Plausible.Stats.CountryName.to_alpha2(query.filters["country"])
+        from(s in q, where: s.country_code == ^country)
       else
         q
       end
