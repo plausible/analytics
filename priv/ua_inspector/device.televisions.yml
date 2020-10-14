@@ -1,7 +1,7 @@
 ###############
 # Device Detector - The Universal Device Detection library for parsing User Agents
 #
-# @link http://piwik.org
+# @link https://matomo.org
 # @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
 #
 #  ATTENTION: This file may only include tv user agents that contain 'HbbTV/([1-9]{1}(\.[0-9]{1}){1,2})'
@@ -258,14 +258,28 @@ TCL:
   regex: 'TCL'
   device: 'tv'
   models:
+    - regex: '(32D1820)'
+      model: '$1'
     - regex: '(LF1V[0-9]{3})'
       model: '$1'
 
 # Thomson
 Thomson:
-  regex: 'THOMSON|THOM'
+  regex: 'THOMSON[,]?|THOM'
   device: 'tv'
   models:
+    - regex: '(TB28D19DHS-01|T28D18SFS-01B)'
+      model: '$1 28.0"'
+    - regex: '(T32RTM5040|T32D18SFS-01B)'
+      model: '$1 32.0"'
+    - regex: '(T43FSL5031|T43D18SFS-01B)'
+      model: '$1 43.0"'
+    - regex: '(T40D18SFS-01B)'
+      model: '$1 40.0"'
+    - regex: '(T49D18SFS-01B)'
+      model: '$1 49.0"'
+    - regex: '(T55D18[SD]FS-01B)'
+      model: '$1 55.0"'
     - regex: '(LF1V[0-9]{3})'
       model: '$1'
 

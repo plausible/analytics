@@ -1,7 +1,7 @@
 ###############
 # Device Detector - The Universal Device Detection library for parsing User Agents
 #
-# @link http://piwik.org
+# @link https://matomo.org
 # @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
 ###############
 
@@ -31,7 +31,7 @@
 ##########
 # Windows Mobile
 ##########
-- regex: 'Windows Phone (?:OS)?[ ]?(\d+[\.\d]+)'
+- regex: '(?:Windows Phone (?:OS)?|wds)[ ]?(\d+[\.\d]+)'
   name: 'Windows Phone'
   version: '$1'
   
@@ -98,16 +98,23 @@
 ##########
 # Android
 ##########
+- regex: '[ ]([\d\.]+)\) AppleWebKit.*ROBLOX Android App'
+  name: 'Android'
+  version: '$1'
+
 - regex: '(?:(?:Orca-)?Android|Adr)[ /](?:[a-z]+ )?(\d+[\.\d]*)'
   name: 'Android'
   version: '$1'
-  
   
 - regex: 'Android|Silk-Accelerated=[a-z]{4,5}'
   name: 'Android'
   version: ''
 
 - regex: '(?:TwitterAndroid).*[ /](?:[a-z]+ )?(\d+[\.\d]*)'
+  name: 'Android'
+  version: '$1'
+
+- regex: 'FB4A.*FBSV/(\d+[\.\d]*);'
   name: 'Android'
   version: '$1'
 
@@ -147,6 +154,14 @@
 ##########
 # Linux
 ##########
+- regex: '(Ordissimo|webissimo3)'
+  name: 'Ordissimo'
+  version: ''
+
+- regex: 'TOS; Linux'
+  name: 'TmaxOS'
+  version: ''
+
 - regex: 'Maemo'
   name: 'Maemo'
   version: ''
@@ -172,7 +187,7 @@
 ##########
 # webOS
 ##########
-- regex: '(?:webOS|Palm webOS)(?:/(\d+[\.\d]+))?'
+- regex: '(?:webOS|web0S|Palm webOS)(?:/(\d+[\.\d]+))?'
   name: 'webOS'
   version: '$1'
 
@@ -197,70 +212,62 @@
   name: 'Windows'
   version: '10'
 
-- regex: 'CYGWIN_NT-6.4|Windows NT 6.4|Windows 10'
+- regex: 'CYGWIN_NT-6.4|Windows NT 6.4|Windows 10|win10'
   name: 'Windows'
   version: '10'
-  
+
 - regex: 'CYGWIN_NT-6.3|Windows NT 6.3|Windows 8.1'
   name: 'Windows'
   version: '8.1'
 
-
 - regex: 'CYGWIN_NT-6.2|Windows NT 6.2|Windows 8'
   name: 'Windows'
   version: '8'
-  
-  
-- regex: 'CYGWIN_NT-6.1|Windows NT 6.1|Windows 7'
+
+- regex: 'CYGWIN_NT-6.1|Windows NT 6.1|Windows 7|win7'
   name: 'Windows'
   version: '7'
-  
-  
+
 - regex: 'CYGWIN_NT-6.0|Windows NT 6.0|Windows Vista'
   name: 'Windows'
   version: 'Vista'
-  
-  
+
 - regex: 'CYGWIN_NT-5.2|Windows NT 5.2|Windows Server 2003 / XP x64'
   name: 'Windows'
   version: 'Server 2003'
-  
-  
+
 - regex: 'CYGWIN_NT-5.1|Windows NT 5.1|Windows XP'
   name: 'Windows'
   version: 'XP'
-  
-  
+
 - regex: 'CYGWIN_NT-5.0|Windows NT 5.0|Windows 2000'
   name: 'Windows'
   version: '2000'
-  
-  
+
 - regex: 'CYGWIN_NT-4.0|Windows NT 4.0|WinNT|Windows NT'
   name: 'Windows'
   version: 'NT'
-  
-  
+
 - regex: 'CYGWIN_ME-4.90|Win 9x 4.90|Windows ME'
   name: 'Windows'
   version: 'ME'
-  
-  
+
 - regex: 'CYGWIN_98-4.10|Win98|Windows 98'
   name: 'Windows'
   version: '98'
-  
-  
+
 - regex: 'CYGWIN_95-4.0|Win32|Win95|Windows 95|Windows_95'
   name: 'Windows'
   version: '95'
-  
-  
+
 - regex: 'Windows 3.1'
   name: 'Windows'
   version: '3.1'
-  
-  
+
+- regex: 'FBW.*FBSV/(\d+[\.\d]*);'
+  name: 'Windows'
+  version: '$1'
+
 - regex: 'Windows'
   name: 'Windows'
   version: ''
@@ -413,11 +420,15 @@
   name: 'iOS'
   version: '$1'
 
+- regex: 'FBIOS.*FBSV/(\d+[\.\d]*);'
+  name: 'iOS'
+  version: '$1'
+
 - regex: '(?:Apple-)?(?:iPhone|iPad|iPod)(?:.*Mac OS X.*Version/(\d+\.\d+)|; Opera)?'
   name: 'iOS'
   version: '$1'
 
-- regex: 'Podcasts/(?:[\d\.]+)|Instacast(?:HD)?/(?:\d\.[\d\.abc]+)|Pocket Casts, iOS|Overcast|Castro|Podcat|i[cC]atcher'
+- regex: 'Podcasts/(?:[\d\.]+)|Instacast(?:HD)?/(?:\d\.[\d\.abc]+)|Pocket Casts, iOS|Overcast|Castro|Podcat|i[cC]atcher|RSSRadio/'
   name: 'iOS'
   version: ''
 
@@ -724,11 +735,10 @@
 ##########
 # Gaming Console
 ##########
-- regex: 'Nintendo Wii'
+- regex: 'Nintendo (Wii|Switch)'
   name: 'Nintendo'
-  version: 'Wii'
-  
-  
+  version: '$1'
+
 - regex: 'PlayStation ?([3|4])'
   name: 'PlayStation'
   version: '$1'
