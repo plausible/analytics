@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.1.0] - Unreleased
+## [1.1.0] - 2020-10-14
 
 ### Added
 - Linkify top pages [plausible/analytics#91](https://github.com/plausible/analytics/issues/91)
@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fix issue with creating a PostgreSQL database when `?ssl=true` [plausible/analytics#347](https://github.com/plausible/analytics/issues/347)
 - Do no disclose current URL to DuckDuckGo's favicon service [plausible/analytics#343](https://github.com/plausible/analytics/issues/343)
+- Updated UAInspector database to detect newer devices [plausible/analytics#309](https://github.com/plausible/analytics/issues/309)
 
 ## [1.0.0] - 2020-10-06
 
