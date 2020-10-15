@@ -46,6 +46,7 @@ geolite2_country_db = System.get_env("GEOLITE2_COUNTRY_DB")
 disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
 hcaptcha_sitekey = System.get_env("HCAPTCHA_SITEKEY")
 hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
+log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
 
 
 config :plausible,
@@ -200,11 +201,11 @@ logger_backends = case logflare_api_key do
 end
 
 config :logger,
-  level: :warn,
+  level: log_level,
   backends: logger_backends
 
 if logflare_api_key do
   config :logflare_logger_backend,
     api_key: logflare_api_key,
-    source_id: logflare_source_id,
+    source_id: logflare_source_id
 end
