@@ -45,3 +45,6 @@ We welcome feedback from our community. We have a public roadmap driven by the f
 ### License
 
 Plausible is open-source under the GNU Affero General Public License Version 3 (AGPLv3) or any later version. You can [find it here](https://github.com/plausible/analytics/blob/master/LICENSE.md).
+
+The only exception is our javascript tracker which gets included on your website. To avoid issues with AGPL virality, we've
+released the tracker under the MIT license. You can [find it here](https://github.com/plausible/analytics/blob/master/tracker/LICENSE.md).
