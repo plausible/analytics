@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2020-10-14
+
+### Fixed
+- Do not error when activating an already activated account plausible/analytics#370
+
 ## [1.1.1] - 2020-10-14
 
 ### Fixed
