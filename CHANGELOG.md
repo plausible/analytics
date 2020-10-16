@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370
+- Ignore arrow keys when modifier keys are pressed plausible/analytics#363
 
 ### Security
 - Do not run the plausible Docker container as root plausible/analytics#362

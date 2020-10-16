@@ -42,6 +42,8 @@ class DatePicker extends React.Component {
   handleKeyup(e) {
     const {query, history} = this.props
 
+    if (e.ctrlKey || e.ctrlKey || e.altKey) return
+
     if (e.key === 'ArrowLeft') {
       if (query.period === 'day') {
         const prevDate = formatISO(shiftDays(query.date, -1))
