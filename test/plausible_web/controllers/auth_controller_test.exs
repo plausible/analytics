@@ -56,13 +56,13 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn) == "/password"
     end
 
-    test "shows error when user with that email already exists", %{conn: conn} do
+    test "redirects existing user to create a password", %{conn: conn} do
       token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
 
       conn = get(conn, "/claim-activation?token=#{token}")
       conn = get(conn, "/claim-activation?token=#{token}")
 
-      assert conn.status == 400
+      assert redirected_to(conn) == "/password"
     end
   end
 
