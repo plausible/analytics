@@ -36,11 +36,10 @@ class Countries extends React.Component {
     var dataset = {};
 
     var onlyValues = this.state.countries.map(function(obj){ return obj.count });
-    var minValue = Math.min.apply(null, onlyValues),
-      maxValue = Math.max.apply(null, onlyValues);
+    var maxValue = Math.max.apply(null, onlyValues);
 
     var paletteScale = d3.scale.linear()
-      .domain([minValue,maxValue])
+      .domain([0,maxValue])
       .range(["#f3ebff","#a779e9"]);
 
     this.state.countries.forEach(function(item){
