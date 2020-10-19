@@ -17,15 +17,10 @@ class ReferrerDrilldownModal extends React.Component {
   }
 
   componentDidMount() {
-    if (this.state.query.filters.goal) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100})
-        .then((res) => this.setState({loading: false, referrers: res.referrers, totalVisitors: res.total_visitors}))
-    } else {
-      const include = this.showExtra() ? 'bounce_rate,visit_duration' : null
+    const include = this.showExtra() ? 'bounce_rate,visit_duration' : null
 
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100, include: include})
-        .then((res) => this.setState({loading: false, referrers: res.referrers, totalVisitors: res.total_visitors}))
-    }
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100, include: include})
+      .then((res) => this.setState({loading: false, referrers: res.referrers, totalVisitors: res.total_visitors}))
   }
 
   showExtra() {
@@ -58,14 +53,15 @@ class ReferrerDrilldownModal extends React.Component {
     }
   }
 
-  renderReferrerName(name) {
+  renderReferrerName(referrer) {
     const query = new URLSearchParams(window.location.search)
-    query.set('referrer', name)
+    query.set('referrer', referrer.name)
 
     return (
-      <span className="flex group">
-        <Link className="block truncate hover:underline" to={{search: query.toString(), pathname: '/' + this.props.site.domain}} title={name}>
-          {name}
+      <span className="flex group items-center">
+        <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} referrerPolicy="no-referrer" className="h-4 w-4 mr-2 inline" />
+        <Link className="block truncate hover:underline" to={{search: query.toString(), pathname: '/' + this.props.site.domain}} title={referrer.name}>
+          {referrer.name}
         </Link>
         { this.renderExternalLink(name) }
       </span>
@@ -103,7 +99,7 @@ class ReferrerDrilldownModal extends React.Component {
       return (
         <tr className="text-sm" key={referrer.name}>
           <td className="p-2">
-            { this.renderReferrerName(referrer.name) }
+            { this.renderReferrerName(referrer) }
             <span className="text-gray-500 ml-2 text-xs">
               appears in {referrer.tweets.length} tweets
             </span>
@@ -119,8 +115,8 @@ class ReferrerDrilldownModal extends React.Component {
     } else {
       return (
         <tr className="text-sm" key={referrer.name}>
-          <td className="p-2 truncate">
-            { this.renderReferrerName(referrer.name) }
+          <td className="p-2">
+            { this.renderReferrerName(referrer) }
           </td>
           <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.count)}</td>
           {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td> }

@@ -29,7 +29,7 @@ export default class Conversions extends React.Component {
   }
 
   renderGoalText(goalName) {
-    if (this.props.query.period === 'realtime' || this.props.query.filters['source'] || this.props.query.filters['referrer']) {
+    if (this.props.query.period === 'realtime') {
       return <span className="block px-2" style={{marginTop: '-26px'}}>{goalName}</span>
     } else {
       const query = new URLSearchParams(window.location.search)
