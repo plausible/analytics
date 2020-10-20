@@ -34,7 +34,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     groups =
       ClickhouseRepo.all(
-        from e in base_query(site, query),
+        from e in base_query_w_sessions(site, query),
           select:
             {fragment("toStartOfMonth(toTimeZone(?, ?)) as month", e.timestamp, ^site.timezone),
              fragment("uniq(?)", e.user_id)},
@@ -58,7 +58,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     groups =
       ClickhouseRepo.all(
-        from e in base_query(site, query),
+        from e in base_query_w_sessions(site, query),
           select:
             {fragment("toDate(toTimeZone(?, ?)) as day", e.timestamp, ^site.timezone),
              fragment("uniq(?)", e.user_id)},
@@ -81,7 +81,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     groups =
       ClickhouseRepo.all(
-        from e in base_query(site, query),
+        from e in base_query_w_sessions(site, query),
           select:
             {fragment("toHour(toTimeZone(?, ?)) as hour", e.timestamp, ^site.timezone),
              fragment("uniq(?)", e.user_id)},
@@ -110,7 +110,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     groups =
       ClickhouseRepo.all(
-        from e in base_query(site, query),
+        from e in base_query_w_sessions(site, query),
           select: {
             fragment("dateDiff('minute', now(), ?) as relativeMinute", e.timestamp),
             fragment("count(*)")
@@ -149,7 +149,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def total_events(site, query) do
     ClickhouseRepo.one(
-      from e in base_query(site, query),
+      from e in base_query_w_sessions(site, query),
       select: fragment("count(*) as events")
     )
   end
@@ -163,7 +163,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def unique_visitors(site, query) do
     ClickhouseRepo.one(
-      from e in base_query(site, query),
+      from e in base_query_w_sessions(site, query),
       select: fragment("uniq(user_id)")
     )
   end
@@ -369,7 +369,8 @@ defmodule Plausible.Stats.Clickhouse do
         where: s.referrer_source == ^referrer,
         order_by: [desc: fragment("count")],
         limit: ^limit
-      )
+      ) |> filter_converted_sessions(site, query)
+    IO.inspect(q)
 
     q =
       if "bounce_rate" in include do
@@ -416,16 +417,8 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def referrer_drilldown_for_goal(site, query, referrer) do
-    converted_sessions =
-      from(
-        from e in base_query(site, query),
-          select: %{session_id: e.session_id}
-      )
-
     Plausible.ClickhouseRepo.all(
-      from s in Plausible.ClickhouseSession,
-      join: cs in subquery(converted_sessions),
-      on: s.session_id == cs.session_id,
+      from s in base_query_w_sessions(site, query),
       where: s.referrer_source == ^referrer,
       group_by: s.referrer,
       order_by: [desc: fragment("count")],
@@ -529,7 +522,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def top_screen_sizes(site, query) do
     ClickhouseRepo.all(
-      from e in base_query(site, query),
+      from e in base_query_w_sessions(site, query),
       group_by: e.screen_size,
       where: e.screen_size != "",
       order_by: [desc: fragment("count")],
@@ -542,7 +535,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def countries(site, query) do
     ClickhouseRepo.all(
-      from e in base_query(site, query),
+      from e in base_query_w_sessions(site, query),
       group_by: e.country_code,
       where: e.country_code != "\0\0",
       order_by: [desc: fragment("count")],
@@ -562,7 +555,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def browsers(site, query, limit \\ 5) do
     ClickhouseRepo.all(
-      from e in base_query(site, query),
+      from e in base_query_w_sessions(site, query),
       group_by: e.browser,
       where: e.browser != "",
       order_by: [desc: fragment("count")],
@@ -577,7 +570,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def operating_systems(site, query, limit \\ 5) do
     ClickhouseRepo.all(
-      from e in base_query(site, query),
+      from e in base_query_w_sessions(site, query),
       group_by: e.operating_system,
       where: e.operating_system != "",
       order_by: [desc: fragment("count")],
@@ -613,7 +606,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def goal_conversions(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
     ClickhouseRepo.all(
-      from e in base_query(site, query),
+      from e in base_query_w_sessions(site, query),
       group_by: e.name,
       order_by: [desc: fragment("count")],
       select: %{
@@ -640,7 +633,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     if Enum.count(events) > 0 do
       q = from(
-        e in base_query_w_sessions(site, query),
+        e in base_query_w_sessions_bare(site, query),
         where: fragment("? IN tuple(?)", e.name, ^events),
         group_by: e.name,
         select: %{
@@ -683,7 +676,7 @@ defmodule Plausible.Stats.Clickhouse do
     Enum.sort_by(conversions, fn conversion -> -conversion[:count] end)
   end
 
-  defp base_query_w_sessions(site, query) do
+  defp base_query_w_sessions_bare(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
     sessions_q = from(s in "sessions",
@@ -788,6 +781,25 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
+  defp base_query_w_sessions(site, query) do
+    q = base_query_w_sessions_bare(site, query)
+
+    {goal_event, path} = event_name_for_goal(query)
+
+    q = if goal_event do
+      from(e in q, where: e.name == ^goal_event)
+    else
+      from(e in q, where: e.name == "pageview")
+    end
+
+    if path do
+      from(e in q, where: e.pathname == ^path)
+    else
+      q
+    end
+  end
+
+
   defp base_session_query(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
@@ -887,15 +899,6 @@ defmodule Plausible.Stats.Clickhouse do
         where: e.domain == ^site.domain,
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
       )
-
-    q =
-      if query.filters["source"] do
-        source = query.filters["source"]
-        source = if source == @no_ref, do: "", else: source
-        from(e in q, where: e.referrer_source == ^source)
-      else
-        q
-      end
 
     q =
       if query.filters["screen"] do
