@@ -604,6 +604,32 @@ defmodule Plausible.Stats.Clickhouse do
     ClickhouseRepo.exists?(from e in "events", where: e.domain == ^site.domain)
   end
 
+  def all_seen_metadata_keys(site, query) do
+    ClickhouseRepo.all(
+      from e in base_query_w_sessions_bare(site, query),
+      inner_lateral_join: meta in fragment("meta as m"),
+      select: {e.name, meta.key},
+      distinct: true
+    ) |> Enum.reduce(%{}, fn {goal_name, meta_key}, acc ->
+      Map.update(acc, goal_name, [meta_key], fn list -> [meta_key | list] end)
+    end)
+  end
+
+  def metadata_breakdown(site, query, key) do
+    ClickhouseRepo.all(
+      from e in base_query_w_sessions(site, query),
+      inner_lateral_join: meta in fragment("meta as m"),
+      where: meta.key == ^key,
+      group_by: meta.value,
+      order_by: [desc: fragment("count")],
+      select: %{
+        name: meta.value,
+        count: fragment("uniq(user_id) as count"),
+        total_count: fragment("count(*) as total_count")
+      }
+    )
+  end
+
   def goal_conversions(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
     ClickhouseRepo.all(
       from e in base_query_w_sessions(site, query),

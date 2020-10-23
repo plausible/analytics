@@ -56,6 +56,6 @@ if (registerForm) {
       }
     }
 
-    plausible('Signup', {callback: submitForm});
+    plausible('Signup', {callback: submitForm, meta: {variant: "A"}});
   })
 }

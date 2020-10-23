@@ -22,6 +22,9 @@ defmodule Plausible.ClickhouseEvent do
     field :operating_system, :string
     field :browser, :string
 
+    field :"meta.key", {:array, :string}
+    field :"meta.value", {:array, :string}
+
     timestamps(inserted_at: :timestamp, updated_at: false)
   end
 

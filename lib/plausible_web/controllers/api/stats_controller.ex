@@ -260,8 +260,18 @@ defmodule PlausibleWeb.Api.StatsController do
   def conversions(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
+    metadata_keys = Stats.all_seen_metadata_keys(site, query)
+    conversions = Stats.goal_conversions(site, query)
+                  |> Enum.map(fn goal -> Map.put(goal, :meta_keys, metadata_keys[goal[:name]]) end)
 
-    json(conn, Stats.goal_conversions(site, query))
+    json(conn, conversions)
+  end
+
+  def meta_breakdown(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, params)
+
+    json(conn, Stats.metadata_breakdown(site, query, params["meta_key"]))
   end
 
   def current_visitors(conn, _) do

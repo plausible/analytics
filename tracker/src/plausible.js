@@ -17,6 +17,9 @@
     payload.d = domain
     payload.r = document.referrer || null
     payload.w = window.innerWidth
+    if (options && options.meta) {
+      payload.m = JSON.stringify(options.meta)
+    }
     {{#if hashMode}}
     payload.h = 1
     {{/if}}
@@ -73,6 +76,7 @@
       page()
     }
   } catch (e) {
+    console.error(e)
     new Image().src = plausibleHost + '/api/error?message=' +  encodeURIComponent(e.message);
   }
 })(window, '<%= base_url %>');
