@@ -8,6 +8,7 @@ import * as api from '../../api'
 export default class MetaBreakdown extends React.Component {
   constructor(props) {
     super(props)
+    this.handleClick = this.handleClick.bind(this)
     this.state = {
       loading: true,
       dropdownOpen: false,
@@ -17,6 +18,18 @@ export default class MetaBreakdown extends React.Component {
 
   componentDidMount() {
     this.fetchMetaBreakdown()
+    document.addEventListener('mousedown', this.handleClick, false);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('mousedown', this.handleClick, false);
+  }
+
+  handleClick(e) {
+    if (this.dropDownNode && this.dropDownNode.contains(e.target)) return;
+    if (!this.state.dropdownOpen) return;
+
+    this.setState({dropdownOpen: false})
   }
 
   fetchMetaBreakdown() {
