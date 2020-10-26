@@ -616,7 +616,17 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def metadata_breakdown(site, query, key) do
-    ClickhouseRepo.all(
+    none = ClickhouseRepo.all(
+      from e in base_query_w_sessions(site, query),
+      where: fragment("not has(meta.key, ?)", ^key),
+      select: %{
+        name: "(none)",
+        count: fragment("uniq(?) as count", e.user_id),
+        total_count: fragment("count(*) as total_count")
+      }
+    )
+
+    values = ClickhouseRepo.all(
       from e in base_query_w_sessions(site, query),
       inner_lateral_join: meta in fragment("meta as m"),
       where: meta.key == ^key,
@@ -628,6 +638,8 @@ defmodule Plausible.Stats.Clickhouse do
         total_count: fragment("count(*) as total_count")
       }
     )
+
+    Enum.sort(values ++ none, fn row1, row2 -> row1[:count] >= row2[:count] end)
   end
 
   def goal_conversions(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
