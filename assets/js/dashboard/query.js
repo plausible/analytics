@@ -24,6 +24,7 @@ export function parseQuery(querystring, site) {
     to: q.get('to') ? parseUTCDate(q.get('to')) : undefined,
     filters: {
       'goal': q.get('goal'),
+      'meta': JSON.parse(q.get('meta')),
       'source': q.get('source'),
       'utm_medium': q.get('utm_medium'),
       'utm_source': q.get('utm_source'),

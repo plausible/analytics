@@ -16,15 +16,22 @@ export function cancelAll() {
   abortController = new AbortController()
 }
 
-export function serializeQuery(query, extraQuery=[]) {
-  query = Object.assign({}, query, {
-    date: query.date ? formatISO(query.date) : undefined,
-    from: query.from ? formatISO(query.from) : undefined,
-    to: query.to ? formatISO(query.to) : undefined,
-    filters: query.filters ? JSON.stringify(query.filters) : undefined
-  }, ...extraQuery)
+function serializeFilters(filters) {
+  const cleaned = {}
+  Object.entries(filters).forEach(([key, val]) => val ? cleaned[key] = val : null);
+  return JSON.stringify(cleaned)
+}
 
-  return '?' + serialize(query)
+export function serializeQuery(query, extraQuery=[]) {
+  const queryObj = {}
+  if (query.period)  { queryObj.period = query.period  }
+  if (query.date)    { queryObj.date = formatISO(query.date)  }
+  if (query.from)    { queryObj.from = formatISO(query.from)  }
+  if (query.to)      { queryObj.to = formatISO(query.to)  }
+  if (query.filters) { queryObj.filters = serializeFilters(query.filters)  }
+  Object.assign(queryObj, ...extraQuery)
+
+  return '?' + serialize(queryObj)
 }
 
 export function get(url, query, ...extraQuery) {

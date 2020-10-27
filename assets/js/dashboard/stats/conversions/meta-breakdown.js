@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom'
 
 import Transition from "../../../transition.js";
 import Bar from '../bar'
@@ -9,10 +10,13 @@ export default class MetaBreakdown extends React.Component {
   constructor(props) {
     super(props)
     this.handleClick = this.handleClick.bind(this)
+    const metaFilter = props.query.filters['meta']
+    console.log(metaFilter)
+    const metaKey = metaFilter ? Object.keys(metaFilter)[0] : props.goal.meta_keys[0]
     this.state = {
       loading: true,
       dropdownOpen: false,
-      metaKey: props.goal.meta_keys[0]
+      metaKey: metaKey
     }
   }
 
@@ -40,11 +44,16 @@ export default class MetaBreakdown extends React.Component {
   }
 
   renderMetadataValue(value) {
+    const query = new URLSearchParams(window.location.search)
+    query.set('meta', JSON.stringify({[this.state.metaKey]: value.name}))
+
     return (
       <div className="flex items-center justify-between my-2" key={value.name}>
         <div className="w-full h-8 relative" style={{maxWidth: 'calc(100% - 14rem)'}}>
           <Bar count={value.count} all={this.state.breakdown} bg="bg-red-50" />
-          <span className="block px-2" style={{marginTop: '-26px'}}>{value.name}</span>
+          <Link to={{search: query.toString()}} style={{marginTop: '-26px'}} className="hover:underline block px-2">
+            { value.name }
+          </Link>
         </div>
         <div>
           <span className="font-medium inline-block w-20 text-right">{numberFormatter(value.count)}</span>

@@ -7,6 +7,10 @@ function filterText(key, value) {
   if (key === "goal") {
     return <span className="inline-block max-w-sm truncate">Completed goal <b>{value}</b></span>
   }
+  if (key === "meta") {
+    const [metaKey, metaValue] = Object.entries(value)[0]
+    return <span className="inline-block max-w-sm truncate">meta.{metaKey} is <b>{metaValue}</b></span>
+  }
   if (key === "source") {
     return <span className="inline-block max-w-sm truncate">Source: <b>{value}</b></span>
   }
