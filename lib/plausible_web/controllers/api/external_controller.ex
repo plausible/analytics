@@ -62,6 +62,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       "domain" => params["d"] || params["domain"],
       "screen_width" => params["w"] || params["screen_width"],
       "hash_mode" => params["h"] || params["hashMode"],
+      "meta" => parse_meta(params)
     }
 
     uri = params["url"] && URI.parse(URI.decode(params["url"]))
@@ -95,7 +96,9 @@ defmodule PlausibleWeb.Api.ExternalController do
         country_code: country_code || "",
         operating_system: ua && os_name(ua) || "",
         browser: ua && browser_name(ua) || "",
-        screen_size: calculate_screen_size(params["screen_width"]) || ""
+        screen_size: calculate_screen_size(params["screen_width"]) || "",
+        "meta.key": Map.keys(params["meta"]),
+        "meta.value": Map.values(params["meta"])
       }
 
       changeset = Plausible.ClickhouseEvent.changeset(%Plausible.ClickhouseEvent{}, event_attrs)
@@ -110,6 +113,15 @@ defmodule PlausibleWeb.Api.ExternalController do
       else
         {:error, changeset}
       end
+    end
+  end
+
+  defp parse_meta(params) do
+    raw_meta = params["m"] || params["meta"]
+    if raw_meta do
+      Jason.decode!(raw_meta)
+    else
+      %{}
     end
   end
 

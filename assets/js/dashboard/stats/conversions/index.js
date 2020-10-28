@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
 
-import Bar from './bar'
-import MoreLink from './more-link'
-import numberFormatter from '../number-formatter'
-import * as api from '../api'
+import Bar from '../bar'
+import MoreLink from '../more-link'
+import MetaBreakdown from './meta-breakdown'
+import numberFormatter from '../../number-formatter'
+import * as api from '../../api'
 
 export default class Conversions extends React.Component {
   constructor(props) {
@@ -36,7 +37,7 @@ export default class Conversions extends React.Component {
       query.set('goal', goalName)
 
       return (
-        <Link to={{search: query.toString(), state: {scrollTop: true}}} style={{marginTop: '-26px'}} className="hover:underline block px-2">
+        <Link to={{search: query.toString()}} style={{marginTop: '-26px'}} className="hover:underline block px-2">
           { goalName }
         </Link>
       )
@@ -44,16 +45,21 @@ export default class Conversions extends React.Component {
   }
 
   renderGoal(goal) {
+    const renderMeta = this.props.query.filters['goal'] == goal.name && goal.meta_keys
+
     return (
-      <div className="flex items-center justify-between my-2 text-sm" key={goal.name}>
-        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 14rem)'}}>
-          <Bar count={goal.count} all={this.state.goals} bg="bg-red-50" />
-          {this.renderGoalText(goal.name)}
+      <div className="my-2 text-sm" key={goal.name}>
+        <div className="flex items-center justify-between my-2">
+          <div className="w-full h-8 relative" style={{maxWidth: 'calc(100% - 14rem)'}}>
+            <Bar count={goal.count} all={this.state.goals} bg="bg-red-50" />
+            {this.renderGoalText(goal.name)}
+          </div>
+          <div>
+            <span className="font-medium inline-block w-20 text-right">{numberFormatter(goal.count)}</span>
+            <span className="font-medium inline-block w-36 text-right">{numberFormatter(goal.total_count)}</span>
+          </div>
         </div>
-        <div>
-          <span className="font-medium inline-block w-20 text-right">{numberFormatter(goal.count)}</span>
-          <span className="font-medium inline-block w-36 text-right">{numberFormatter(goal.total_count)}</span>
-        </div>
+        { renderMeta && <MetaBreakdown site={this.props.site} query={this.props.query} goal={goal} /> }
       </div>
     )
   }

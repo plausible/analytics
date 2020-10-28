@@ -44,19 +44,25 @@ defmodule Plausible.Test.ClickhouseSetup do
         name: "Signup",
         domain: "test-site.com",
         session_id: @conversion_1_session_id,
-        timestamp: ~N[2019-01-01 01:00:00]
+        timestamp: ~N[2019-01-01 01:00:00],
+        "meta.key": ["variant"],
+        "meta.value": ["A"]
       },
       %{
         name: "Signup",
         domain: "test-site.com",
         session_id: @conversion_1_session_id,
-        timestamp: ~N[2019-01-01 02:00:00]
+        timestamp: ~N[2019-01-01 02:00:00],
+        "meta.key": ["variant"],
+        "meta.value": ["B"]
       },
       %{
         name: "Signup",
         domain: "test-site.com",
         session_id: @conversion_2_session_id,
-        timestamp: ~N[2019-01-01 02:00:00]
+        timestamp: ~N[2019-01-01 02:00:00],
+        "meta.key": ["variant"],
+        "meta.value": ["B"]
       },
       %{
         name: "pageview",

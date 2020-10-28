@@ -370,7 +370,6 @@ defmodule Plausible.Stats.Clickhouse do
         order_by: [desc: fragment("count")],
         limit: ^limit
       ) |> filter_converted_sessions(site, query)
-    IO.inspect(q)
 
     q =
       if "bounce_rate" in include do
@@ -604,6 +603,91 @@ defmodule Plausible.Stats.Clickhouse do
     ClickhouseRepo.exists?(from e in "events", where: e.domain == ^site.domain)
   end
 
+  def all_seen_metadata_keys(site, %Query{filters: %{"meta" => meta}} = query) when is_map(meta) do
+    [{key, val}] = meta |> Enum.into([])
+
+    if val == "(none)" do
+      goal = query.filters["goal"]
+      %{goal => [key]}
+    else
+      ClickhouseRepo.all(
+        from [e, meta] in base_query_w_sessions_bare(site, query),
+        select: {e.name, meta.key},
+        distinct: true
+      ) |> Enum.reduce(%{}, fn {goal_name, meta_key}, acc ->
+        Map.update(acc, goal_name, [meta_key], fn list -> [meta_key | list] end)
+      end)
+    end
+  end
+
+  def all_seen_metadata_keys(site, query) do
+    ClickhouseRepo.all(
+      from e in base_query_w_sessions_bare(site, query),
+      inner_lateral_join: meta in fragment("meta as m"),
+      select: {e.name, meta.key},
+      distinct: true
+    ) |> Enum.reduce(%{}, fn {goal_name, meta_key}, acc ->
+      Map.update(acc, goal_name, [meta_key], fn list -> [meta_key | list] end)
+    end)
+  end
+
+  def metadata_breakdown(site, %Query{filters: %{"meta" => meta}} = query, key) when is_map(meta) do
+    [{_key, val}] = meta |> Enum.into([])
+
+    if val == "(none)" do
+     ClickhouseRepo.all(
+      from e in base_query_w_sessions(site, query),
+      where: fragment("not has(meta.key, ?)", ^key),
+      order_by: [desc: fragment("count")],
+      select: %{
+        name: "(none)",
+        count: fragment("uniq(user_id) as count"),
+        total_count: fragment("count(*) as total_count")
+      }
+    )
+    else
+     ClickhouseRepo.all(
+      from [e, meta] in base_query_w_sessions(site, query),
+      group_by: meta.value,
+      order_by: [desc: fragment("count")],
+      select: %{
+        name: meta.value,
+        count: fragment("uniq(user_id) as count"),
+        total_count: fragment("count(*) as total_count")
+      }
+    )
+    end
+  end
+
+  def metadata_breakdown(site, query, key) do
+    none = ClickhouseRepo.all(
+      from e in base_query_w_sessions(site, query),
+      where: fragment("not has(meta.key, ?)", ^key),
+      select: %{
+        name: "(none)",
+        count: fragment("uniq(?) as count", e.user_id),
+        total_count: fragment("count(*) as total_count")
+      }
+    )
+
+    values = ClickhouseRepo.all(
+      from e in base_query_w_sessions(site, query),
+      inner_lateral_join: meta in fragment("meta as m"),
+      where: meta.key == ^key,
+      group_by: meta.value,
+      order_by: [desc: fragment("count")],
+      select: %{
+        name: meta.value,
+        count: fragment("uniq(user_id) as count"),
+        total_count: fragment("count(*) as total_count")
+      }
+    )
+
+    values ++ none
+    |> Enum.sort(fn row1, row2 -> row1[:count] >= row2[:count] end)
+    |> Enum.filter(fn row -> row[:count] > 0 end)
+  end
+
   def goal_conversions(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
     ClickhouseRepo.all(
       from e in base_query_w_sessions(site, query),
@@ -776,6 +860,25 @@ defmodule Plausible.Stats.Clickhouse do
     if query.filters["page"] do
       page = query.filters["page"]
       from(e in q, where: e.pathname == ^page)
+    else
+      q
+    end
+
+    if query.filters["meta"] do
+      [{key, val}] = query.filters["meta"] |> Enum.into([])
+
+      if val == "(none)" do
+        from(
+          e in q,
+          where: fragment("not has(meta.key, ?)", ^key)
+        )
+      else
+        from(
+          e in q,
+          inner_lateral_join: meta in fragment("meta as m"),
+          where: meta.key == ^key and meta.value == ^val,
+        )
+      end
     else
       q
     end

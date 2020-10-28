@@ -84,7 +84,9 @@ defmodule Plausible.Factory do
       browser: "",
       country_code: "",
       screen_size: "",
-      operating_system: ""
+      operating_system: "",
+      "meta.key": [],
+      "meta.value": []
     }
   end
 

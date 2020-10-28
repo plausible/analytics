@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 
 ## [1.1.2] - Unreleased
 
+### Added
+- Ability to add event metadata plausible/analytics#381
+
 ### Changed
 - Use alpine as base image to decrease Docker image size plausible/analytics#353
 

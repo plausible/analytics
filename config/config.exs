@@ -83,7 +83,7 @@ config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
   url: System.get_env(
     "CLICKHOUSE_DATABASE_URL",
-    "http://127.0.0.1:8123/plausible_test"
+    "http://127.0.0.1:8123/plausible_dev"
   )
 
 config :plausible,

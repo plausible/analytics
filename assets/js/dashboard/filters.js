@@ -3,9 +3,14 @@ import { withRouter } from 'react-router-dom'
 import {removeQueryParam} from './query'
 import Datamap from 'datamaps'
 
-function filterText(key, value) {
+function filterText(key, value, query) {
   if (key === "goal") {
     return <span className="inline-block max-w-sm truncate">Completed goal <b>{value}</b></span>
+  }
+  if (key === "meta") {
+    const [metaKey, metaValue] = Object.entries(value)[0]
+    const eventName = query.filters["goal"] ? query.filters["goal"] : 'event'
+    return <span className="inline-block max-w-sm truncate">{eventName}.{metaKey} is <b>{metaValue}</b></span>
   }
   if (key === "source") {
     return <span className="inline-block max-w-sm truncate">Source: <b>{value}</b></span>
@@ -41,14 +46,14 @@ function filterText(key, value) {
   }
 }
 
-function renderFilter(history, [key, value]) {
+function renderFilter(history, [key, value], query) {
   function removeFilter() {
     history.push({search: removeQueryParam(location.search, key)})
   }
 
   return (
     <span key={key} title={value} className="inline-flex bg-white text-gray-700 shadow text-sm rounded py-2 px-3 mr-4">
-      {filterText(key, value)} <b className="ml-1 cursor-pointer" onClick={removeFilter}>✕</b>
+      {filterText(key, value, query)} <b className="ml-1 cursor-pointer" onClick={removeFilter}>✕</b>
     </span>
   )
 }
@@ -61,7 +66,7 @@ function Filters({query, history, location}) {
   if (appliedFilters.length > 0) {
     return (
       <div className="mt-4">
-        { appliedFilters.map((filter) => renderFilter(history, filter)) }
+        { appliedFilters.map((filter) => renderFilter(history, filter, query)) }
       </div>
     )
   }
