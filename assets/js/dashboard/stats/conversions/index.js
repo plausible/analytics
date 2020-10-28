@@ -45,7 +45,7 @@ export default class Conversions extends React.Component {
   }
 
   renderGoal(goal) {
-    const renderMeta = this.props.query.filters['goal'] == goal.name
+    const renderMeta = this.props.query.filters['goal'] == goal.name && goal.meta_keys
 
     return (
       <div className="my-2 text-sm" key={goal.name}>

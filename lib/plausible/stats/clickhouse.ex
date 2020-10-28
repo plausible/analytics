@@ -370,7 +370,6 @@ defmodule Plausible.Stats.Clickhouse do
         order_by: [desc: fragment("count")],
         limit: ^limit
       ) |> filter_converted_sessions(site, query)
-    IO.inspect(q)
 
     q =
       if "bounce_rate" in include do
@@ -633,7 +632,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def metadata_breakdown(site, %Query{filters: %{"meta" => meta}} = query, key) when is_map(meta) do
-    [{key, val}] = meta |> Enum.into([])
+    [{_key, val}] = meta |> Enum.into([])
 
     if val == "(none)" do
      ClickhouseRepo.all(
@@ -684,7 +683,9 @@ defmodule Plausible.Stats.Clickhouse do
       }
     )
 
-    Enum.sort(values ++ none, fn row1, row2 -> row1[:count] >= row2[:count] end)
+    values ++ none
+    |> Enum.sort(fn row1, row2 -> row1[:count] >= row2[:count] end)
+    |> Enum.filter(fn row -> row[:count] > 0 end)
   end
 
   def goal_conversions(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
@@ -881,10 +882,6 @@ defmodule Plausible.Stats.Clickhouse do
     else
       q
     end
-  end
-
-  defp base_query_w_sessions_ignore_meta(site, query) do
-    q = base_query_w_sessions_bare(site, query)
   end
 
   defp base_query_w_sessions(site, query) do
