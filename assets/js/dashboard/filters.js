@@ -48,7 +48,9 @@ function filterText(key, value, query) {
 
 function renderFilter(history, [key, value], query) {
   function removeFilter() {
-    history.push({search: removeQueryParam(location.search, key)})
+    let newQuery = removeQueryParam(location.search, key)
+    if (key === 'goal') { newQuery = removeQueryParam(newQuery, 'meta')  }
+    history.push({search: newQuery})
   }
 
   return (
