@@ -53,6 +53,14 @@ const MONTHS = [
   "November", "December"
 ]
 
+const MONTHS_ABBREV = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+]
+
+const DAYS_ABBREV = [
+  "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+]
+
 function dateFormatter(interval, longForm) {
   return function(isoDate) {
     let date = new Date(isoDate)
@@ -60,7 +68,10 @@ function dateFormatter(interval, longForm) {
     if (interval === 'month') {
       return MONTHS[date.getUTCMonth()];
     } else if (interval === 'date') {
-      return date.getUTCDate() + ' ' + MONTHS[date.getUTCMonth()];
+      var day = DAYS_ABBREV[date.getUTCDay()];
+      var date_ = date.getUTCDate();
+      var month = MONTHS_ABBREV[date.getUTCMonth()];
+      return day + ', ' + date_ + ' ' + month;
     } else if (interval === 'hour') {
       const parts = isoDate.split(/[^0-9]/);
       date = new Date(parts[0],parts[1]-1,parts[2],parts[3],parts[4],parts[5])

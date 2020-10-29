@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Ability to add event metadata plausible/analytics#381
+- Display weekday on the visitor graph plausible/analytics#175
 
 ### Changed
 - Use alpine as base image to decrease Docker image size plausible/analytics#353
