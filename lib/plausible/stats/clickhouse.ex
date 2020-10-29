@@ -171,14 +171,8 @@ defmodule Plausible.Stats.Clickhouse do
   def top_referrers_for_goal(site, query, limit, page) do
     offset = (page - 1) * limit
 
-    converted_sessions =
-        from(e in base_query(site, query),
-          select: %{session_id: e.session_id})
-
     ClickhouseRepo.all(
-      from s in Plausible.ClickhouseSession,
-      join: cs in subquery(converted_sessions),
-      on: s.session_id == cs.session_id,
+      from s in base_query_w_sessions(site, query),
       where: s.referrer_source != "",
       group_by: s.referrer_source,
       order_by: [desc: fragment("count")],
