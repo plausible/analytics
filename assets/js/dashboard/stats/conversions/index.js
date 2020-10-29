@@ -50,13 +50,13 @@ export default class Conversions extends React.Component {
     return (
       <div className="my-2 text-sm" key={goal.name}>
         <div className="flex items-center justify-between my-2">
-          <div className="w-full h-8 relative" style={{maxWidth: 'calc(100% - 14rem)'}}>
+          <div className="w-full h-8 relative" style={{maxWidth: 'calc(100% - 10rem)'}}>
             <Bar count={goal.count} all={this.state.goals} bg="bg-red-50" />
             {this.renderGoalText(goal.name)}
           </div>
           <div>
             <span className="font-medium inline-block w-20 text-right">{numberFormatter(goal.count)}</span>
-            <span className="font-medium inline-block w-36 text-right">{numberFormatter(goal.total_count)}</span>
+            <span className="font-medium inline-block w-20 text-right">{numberFormatter(goal.total_count)}</span>
           </div>
         </div>
         { renderMeta && <MetaBreakdown site={this.props.site} query={this.props.query} goal={goal} /> }
@@ -79,7 +79,7 @@ export default class Conversions extends React.Component {
             <span>Goal</span>
             <div className="text-right">
               <span className="inline-block w-20">Uniques</span>
-              <span className="inline-block w-36">Total conversions</span>
+              <span className="inline-block w-20">Total</span>
             </div>
           </div>
 
