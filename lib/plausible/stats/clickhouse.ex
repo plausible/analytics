@@ -605,7 +605,7 @@ defmodule Plausible.Stats.Clickhouse do
       %{goal => [key]}
     else
       ClickhouseRepo.all(
-        from [e, meta] in base_query_w_sessions_bare(site, query),
+        from [e, meta: meta] in base_query_w_sessions_bare(site, query),
         select: {e.name, meta.key},
         distinct: true
       ) |> Enum.reduce(%{}, fn {goal_name, meta_key}, acc ->
@@ -641,7 +641,7 @@ defmodule Plausible.Stats.Clickhouse do
     )
     else
      ClickhouseRepo.all(
-      from [e, meta] in base_query_w_sessions(site, query),
+      from [e, meta: meta] in base_query_w_sessions(site, query),
       group_by: meta.value,
       order_by: [desc: fragment("count")],
       select: %{
@@ -851,7 +851,7 @@ defmodule Plausible.Stats.Clickhouse do
       q
     end
 
-    if query.filters["page"] do
+    q = if query.filters["page"] do
       page = query.filters["page"]
       from(e in q, where: e.pathname == ^page)
     else
@@ -870,6 +870,7 @@ defmodule Plausible.Stats.Clickhouse do
         from(
           e in q,
           inner_lateral_join: meta in fragment("meta as m"),
+          as: :meta,
           where: meta.key == ^key and meta.value == ^val,
         )
       end
