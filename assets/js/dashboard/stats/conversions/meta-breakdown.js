@@ -8,8 +8,16 @@ import * as api from '../../api'
 export default class MetaBreakdown extends React.Component {
   constructor(props) {
     super(props)
-    const metaFilter = props.query.filters['meta']
-    const metaKey = metaFilter ? Object.keys(metaFilter)[0] : props.goal.meta_keys[0]
+    let metaKey = props.goal.meta_keys[0]
+    this.storageKey = 'goalMetaTab__' + props.site.domain + props.goal.name
+    const storedKey = window.localStorage[this.storageKey]
+    if (props.goal.meta_keys.includes(storedKey)) {
+      metaKey = storedKey
+    }
+    if (props.query.filters['meta']) {
+      metaKey = Object.keys(props.query.filters['meta'])[0]
+    }
+
     this.state = {
       loading: true,
       metaKey: metaKey
@@ -48,6 +56,7 @@ export default class MetaBreakdown extends React.Component {
   }
 
   changeMetaKey(newKey) {
+    window.localStorage[this.storageKey] = newKey
     this.setState({metaKey: newKey, loading: true}, this.fetchMetaBreakdown)
   }
 
