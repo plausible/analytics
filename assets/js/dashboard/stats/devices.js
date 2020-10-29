@@ -291,10 +291,9 @@ export default class Devices extends React.Component {
 
   renderPill(name, mode) {
     const isActive = this.state.mode === mode
-    const extraClass = name === 'OS' ? '' : ' border-r border-gray-300'
 
     if (isActive) {
-      return <li className="inline-block h-5 text-indigo-700 font-bold border-b-2 border-indigo-700" onClick={this.setMode(mode)}>{name}</li>
+      return <li className="inline-block h-5 text-indigo-700 font-bold border-b-2 border-indigo-700">{name}</li>
     } else {
       return <li className="hover:text-indigo-700 cursor-pointer" onClick={this.setMode(mode)}>{name}</li>
     }
