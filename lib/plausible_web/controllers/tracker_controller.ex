@@ -18,6 +18,13 @@ defmodule PlausibleWeb.TrackerController do
 
   EEx.function_from_file(
     :defp,
+    :render_plausible_outbound_links,
+    Application.app_dir(:plausible, "priv/tracker/js/plausible.outbound-links.js"),
+    [:base_url]
+  )
+
+  EEx.function_from_file(
+    :defp,
     :render_p,
     Application.app_dir(:plausible, "priv/tracker/js/p.js"),
     [:base_url]
@@ -32,6 +39,10 @@ defmodule PlausibleWeb.TrackerController do
 
   def plausible_hash(conn, _params) do
     send_js(conn, render_plausible_hash(base_url()))
+  end
+
+  def plausible_outbound_links(conn, _params) do
+    send_js(conn, render_plausible_outbound_links(base_url()))
   end
 
   def analytics(conn, _params) do

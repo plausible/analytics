@@ -1,4 +1,4 @@
 <%= if !@conn.assigns[:skip_plausible_tracking] do %>
-  <script async defer src="<%="#{plausible_url()}/js/plausible.js"%>"></script>
+  <script async defer src="<%="#{plausible_url()}/js/plausible.outbound-links.js"%>"></script>
   <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
 <% end %>
