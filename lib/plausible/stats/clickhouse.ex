@@ -1075,6 +1075,26 @@ defmodule Plausible.Stats.Clickhouse do
         q
       end
 
+    q = if query.filters["meta"] do
+      [{key, val}] = query.filters["meta"] |> Enum.into([])
+
+      if val == "(none)" do
+        from(
+          e in q,
+          where: fragment("not has(meta.key, ?)", ^key)
+        )
+      else
+        from(
+          e in q,
+          inner_lateral_join: meta in fragment("meta as m"),
+          where: meta.key == ^key and meta.value == ^val,
+        )
+      end
+    else
+      q
+    end
+
+
     q =
       if path do
         from(e in q, where: e.pathname == ^path)
