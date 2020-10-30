@@ -7,7 +7,7 @@ function filterText(key, value, query) {
   if (key === "goal") {
     return <span className="inline-block max-w-sm truncate">Completed goal <b>{value}</b></span>
   }
-  if (key === "meta") {
+  if (key === "props") {
     const [metaKey, metaValue] = Object.entries(value)[0]
     const eventName = query.filters["goal"] ? query.filters["goal"] : 'event'
     return <span className="inline-block max-w-sm truncate">{eventName}.{metaKey} is <b>{metaValue}</b></span>
@@ -49,7 +49,7 @@ function filterText(key, value, query) {
 function renderFilter(history, [key, value], query) {
   function removeFilter() {
     let newQuery = removeQueryParam(location.search, key)
-    if (key === 'goal') { newQuery = removeQueryParam(newQuery, 'meta')  }
+    if (key === 'goal') { newQuery = removeQueryParam(newQuery, 'props')  }
     history.push({search: newQuery})
   }
 

@@ -597,7 +597,7 @@ defmodule Plausible.Stats.Clickhouse do
     ClickhouseRepo.exists?(from e in "events", where: e.domain == ^site.domain)
   end
 
-  def all_seen_metadata_keys(site, %Query{filters: %{"meta" => meta}} = query) when is_map(meta) do
+  def all_props(site, %Query{filters: %{"props" => meta}} = query) when is_map(meta) do
     [{key, val}] = meta |> Enum.into([])
 
     if val == "(none)" do
@@ -614,7 +614,7 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  def all_seen_metadata_keys(site, query) do
+  def all_props(site, query) do
     ClickhouseRepo.all(
       from e in base_query_w_sessions_bare(site, query),
       inner_lateral_join: meta in fragment("meta as m"),
@@ -625,7 +625,7 @@ defmodule Plausible.Stats.Clickhouse do
     end)
   end
 
-  def metadata_breakdown(site, %Query{filters: %{"meta" => meta}} = query, key) when is_map(meta) do
+  def property_breakdown(site, %Query{filters: %{"props" => meta}} = query, key) when is_map(meta) do
     [{_key, val}] = meta |> Enum.into([])
 
     if val == "(none)" do
@@ -653,7 +653,7 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  def metadata_breakdown(site, query, key) do
+  def property_breakdown(site, query, key) do
     none = ClickhouseRepo.all(
       from e in base_query_w_sessions(site, query),
       where: fragment("not has(meta.key, ?)", ^key),
@@ -858,8 +858,8 @@ defmodule Plausible.Stats.Clickhouse do
       q
     end
 
-    if query.filters["meta"] do
-      [{key, val}] = query.filters["meta"] |> Enum.into([])
+    if query.filters["props"] do
+      [{key, val}] = query.filters["props"] |> Enum.into([])
 
       if val == "(none)" do
         from(
@@ -1070,8 +1070,8 @@ defmodule Plausible.Stats.Clickhouse do
         q
       end
 
-    q = if query.filters["meta"] do
-      [{key, val}] = query.filters["meta"] |> Enum.into([])
+    q = if query.filters["props"] do
+      [{key, val}] = query.filters["props"] |> Enum.into([])
 
       if val == "(none)" do
         from(

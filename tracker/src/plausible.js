@@ -20,6 +20,9 @@
     if (options && options.meta) {
       payload.m = JSON.stringify(options.meta)
     }
+    if (options && options.props) {
+      payload.p = JSON.stringify(options.props)
+    }
     {{#if hashMode}}
     payload.h = 1
     {{/if}}

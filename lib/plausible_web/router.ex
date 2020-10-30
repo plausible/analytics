@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Router do
     get "/:domain/operating-systems", StatsController, :operating_systems
     get "/:domain/screen-sizes", StatsController, :screen_sizes
     get "/:domain/conversions", StatsController, :conversions
-    get "/:domain/meta-breakdown/:meta_key", StatsController, :meta_breakdown
+    get "/:domain/property/:prop_name", StatsController, :prop_breakdown
   end
 
   scope "/api", PlausibleWeb do
