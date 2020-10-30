@@ -12,8 +12,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
-               %{"name" => "Signup", "count" => 3, "total_count" => 3, "meta_keys" => ["variant"]},
-               %{"name" => "Visit /register", "count" => 2, "total_count" => 2, "meta_keys" => nil}
+               %{"name" => "Signup", "count" => 3, "total_count" => 3, "prop_names" => ["variant"]},
+               %{"name" => "Visit /register", "count" => 2, "total_count" => 2, "prop_names" => nil}
              ]
     end
   end
@@ -34,23 +34,23 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "Signup", "count" => 3, "total_count" => 3, "meta_keys" => ["variant"]}
+               %{"name" => "Signup", "count" => 3, "total_count" => 3, "prop_names" => ["variant"]}
              ]
     end
   end
 
-  describe "GET /api/stats/:domain/meta-breakdown/:key" do
+  describe "GET /api/stats/:domain/property/:key" do
     setup [:create_user, :log_in, :create_site]
 
     test "returns metadata breakdown for goal", %{conn: conn, site: site} do
       insert(:goal, %{domain: site.domain, event_name: "Signup"})
       filters = Jason.encode!(%{goal: "Signup"})
-      meta_key = "variant"
+      prop_key = "variant"
 
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/meta-breakdown/#{meta_key}?period=day&date=2019-01-01&filters=#{filters}"
+          "/api/stats/#{site.domain}/property/#{prop_key}?period=day&date=2019-01-01&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
