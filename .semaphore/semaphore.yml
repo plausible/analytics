@@ -26,26 +26,6 @@ blocks:
       secrets:
         - name: docker-hub
     dependencies: []
-  - name: Scan
-    skip:
-      when: branch != 'master' OR tag =~ '.*'
-    task:
-      env_vars:
-        - name: APP_ENV
-          value: prod
-      jobs:
-        - name: Clair Scan
-          commands:
-            - checkout
-            - cache restore docker-$SEMAPHORE_GIT_BRANCH-$SEMAPHORE_WORKFLOW_NUMBER
-            - docker load -i caches/$SEMAPHORE_GIT_DIR.tar
-            - './payout_clair.sh payout1/$SEMAPHORE_GIT_DIR:latest'
-      agent:
-        machine:
-          type: e1-standard-4
-          os_image: ubuntu1804
-    dependencies:
-      - Build
   - name: Push
     skip:
       when: branch != 'master' OR tag =~ '.*'
@@ -57,7 +37,7 @@ blocks:
             - checkout
             - echo $DOCKER_PASSWORD | docker login --username "$DOCKER_USERNAME" --password-stdin
             - cache restore docker-$SEMAPHORE_GIT_BRANCH-$SEMAPHORE_WORKFLOW_NUMBER
-            - lib/plausible/stats/clickhouse.ex:1085 docker load -i caches/$SEMAPHORE_GIT_DIR.tar &>/dev/null
+            - docker load -i caches/$SEMAPHORE_GIT_DIR.tar &>/dev/null
             - 'docker tag payout1/$SEMAPHORE_GIT_DIR:latest payout1/$SEMAPHORE_GIT_DIR:1.1.$SEMAPHORE_WORKFLOW_NUMBER'
             - 'docker push payout1/$SEMAPHORE_GIT_DIR:1.1.$SEMAPHORE_WORKFLOW_NUMBER'
             - 'docker push payout1/$SEMAPHORE_GIT_DIR:latest'
@@ -71,7 +51,6 @@ blocks:
         machine:
           type: e1-standard-2
           os_image: ubuntu1804
-    dependencies:
-      - Scan
+    dependencies: []
 execution_time_limit:
   minutes: 25
