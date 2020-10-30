@@ -41,9 +41,6 @@ blocks:
             - 'docker tag payout1/$SEMAPHORE_GIT_DIR:latest payout1/$SEMAPHORE_GIT_DIR:1.1.$SEMAPHORE_WORKFLOW_NUMBER'
             - 'docker push payout1/$SEMAPHORE_GIT_DIR:1.1.$SEMAPHORE_WORKFLOW_NUMBER'
             - 'docker push payout1/$SEMAPHORE_GIT_DIR:latest'
-        - name: Create Git Tag
-          commands:
-            - 'curl -s -X POST https://api.github.com/repos/$SEMAPHORE_GIT_REPO_SLUG/git/refs -H "Authorization: token $GITHUB_TOKEN" -d "{\"ref\":\"refs/tags/1.1.$SEMAPHORE_WORKFLOW_NUMBER\",\"sha\":\"$SEMAPHORE_GIT_SHA\"}"'
       secrets:
         - name: github_token
         - name: docker-hub
