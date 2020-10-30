@@ -51,6 +51,7 @@ blocks:
         machine:
           type: e1-standard-2
           os_image: ubuntu1804
-    dependencies: []
+    dependencies:
+      - Build
 execution_time_limit:
   minutes: 25
