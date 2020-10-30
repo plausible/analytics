@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 import Bar from '../bar'
 import MoreLink from '../more-link'
-import MetaBreakdown from './meta-breakdown'
+import PropBreakdown from './prop-breakdown'
 import numberFormatter from '../../number-formatter'
 import * as api from '../../api'
 
@@ -45,7 +45,7 @@ export default class Conversions extends React.Component {
   }
 
   renderGoal(goal) {
-    const renderMeta = this.props.query.filters['goal'] == goal.name && goal.meta_keys
+    const renderProps = this.props.query.filters['goal'] == goal.name && goal.prop_names
 
     return (
       <div className="my-2 text-sm" key={goal.name}>
@@ -59,7 +59,7 @@ export default class Conversions extends React.Component {
             <span className="font-medium inline-block w-20 text-right">{numberFormatter(goal.total_count)}</span>
           </div>
         </div>
-        { renderMeta && <MetaBreakdown site={this.props.site} query={this.props.query} goal={goal} /> }
+        { renderProps && <PropBreakdown site={this.props.site} query={this.props.query} goal={goal} /> }
       </div>
     )
   }

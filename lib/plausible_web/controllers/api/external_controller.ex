@@ -117,7 +117,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   defp parse_meta(params) do
-    raw_meta = params["m"] || params["meta"]
+    raw_meta = params["m"] || params["meta"] || params["p"] || params["props"]
     if raw_meta do
       Jason.decode!(raw_meta)
     else

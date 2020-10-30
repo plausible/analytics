@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_top_stats(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
-    total_filter = Map.merge(query.filters, %{"goal" => nil, "meta" => nil})
+    total_filter = Map.merge(query.filters, %{"goal" => nil, "props" => nil})
     prev_query = Query.shift_back(query)
     unique_visitors = Stats.unique_visitors(site, %{query | filters: total_filter})
     prev_unique_visitors = Stats.unique_visitors(site, %{prev_query | filters: total_filter})
@@ -260,18 +260,18 @@ defmodule PlausibleWeb.Api.StatsController do
   def conversions(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
-    metadata_keys = Stats.all_seen_metadata_keys(site, query)
+    prop_names = Stats.all_props(site, query)
     conversions = Stats.goal_conversions(site, query)
-                  |> Enum.map(fn goal -> Map.put(goal, :meta_keys, metadata_keys[goal[:name]]) end)
+                  |> Enum.map(fn goal -> Map.put(goal, :prop_names, prop_names[goal[:name]]) end)
 
     json(conn, conversions)
   end
 
-  def meta_breakdown(conn, params) do
+  def prop_breakdown(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
 
-    json(conn, Stats.metadata_breakdown(site, query, params["meta_key"]))
+    json(conn, Stats.property_breakdown(site, query, params["prop_name"]))
   end
 
   def current_visitors(conn, _) do
