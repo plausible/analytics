@@ -123,6 +123,10 @@ config :plausible, Plausible.ClickhouseRepo,
   url: ch_db_url
 
 case mailer_adapter do
+  "Bamboo.SendGridAdapter" ->
+    config :plausible, Plausible.Mailer,
+      adapter: Bamboo.SendGridAdapter,
+      api_key: System.get_env("EMAIL_SENDGRID_API_KEY")
   "Bamboo.PostmarkAdapter" ->
     config :plausible, Plausible.Mailer,
       adapter: :"Elixir.#{mailer_adapter}",
