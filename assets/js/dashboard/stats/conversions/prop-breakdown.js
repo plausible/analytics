@@ -41,7 +41,7 @@ export default class PropertyBreakdown extends React.Component {
 
     return (
       <div className="flex items-center justify-between my-2" key={value.name}>
-        <div className="w-full h-8 relative" style={{maxWidth: 'calc(100% - 10rem)'}}>
+        <div className="w-full h-8 relative" style={{maxWidth: 'calc(100% - 16rem)'}}>
           <Bar count={value.count} all={this.state.breakdown} bg="bg-red-50" />
           <Link to={{search: query.toString()}} style={{marginTop: '-26px'}} className="hover:underline block px-2">
             { value.name }
@@ -50,6 +50,7 @@ export default class PropertyBreakdown extends React.Component {
         <div>
           <span className="font-medium inline-block w-20 text-right">{numberFormatter(value.count)}</span>
           <span className="font-medium inline-block w-20 text-right">{numberFormatter(value.total_count)}</span>
+          <span className="font-medium inline-block w-20 text-right">{numberFormatter(value.conversion_rate)}%</span>
         </div>
       </div>
     )

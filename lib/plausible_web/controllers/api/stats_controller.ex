@@ -45,15 +45,8 @@ defmodule PlausibleWeb.Api.StatsController do
     completions = Stats.total_events(site, query)
     prev_completions = Stats.total_events(site, prev_query)
 
-    conversion_rate =
-      if unique_visitors > 0,
-        do: Float.round(converted_visitors / unique_visitors * 100, 1),
-        else: 0.0
-
-    prev_conversion_rate =
-      if prev_unique_visitors > 0,
-        do: Float.round(prev_converted_visitors / prev_unique_visitors * 100, 1),
-        else: 0.0
+    conversion_rate = calculate_cr(unique_visitors, converted_visitors)
+    prev_conversion_rate = calculate_cr(prev_unique_visitors, prev_converted_visitors)
 
     [
       %{
@@ -257,12 +250,24 @@ defmodule PlausibleWeb.Api.StatsController do
     json(conn, Stats.top_screen_sizes(site, query))
   end
 
+  defp calculate_cr(unique_visitors, converted_visitors) do
+    if unique_visitors > 0,
+      do: Float.round(converted_visitors / unique_visitors * 100, 1),
+        else: 0.0
+  end
+
   def conversions(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
+    total_filter = Map.merge(query.filters, %{"goal" => nil, "props" => nil})
+    unique_visitors = Stats.unique_visitors(site, %{query | filters: total_filter})
     prop_names = Stats.all_props(site, query)
     conversions = Stats.goal_conversions(site, query)
-                  |> Enum.map(fn goal -> Map.put(goal, :prop_names, prop_names[goal[:name]]) end)
+                  |> Enum.map(fn goal ->
+                    goal
+                    |> Map.put(:prop_names, prop_names[goal[:name]])
+                    |> Map.put(:conversion_rate, calculate_cr(unique_visitors, goal[:count]))
+                  end)
 
     json(conn, conversions)
   end
@@ -270,8 +275,14 @@ defmodule PlausibleWeb.Api.StatsController do
   def prop_breakdown(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
+    total_filter = Map.merge(query.filters, %{"goal" => nil, "props" => nil})
+    unique_visitors = Stats.unique_visitors(site, %{query | filters: total_filter})
+    props = Stats.property_breakdown(site, query, params["prop_name"])
+            |> Enum.map(fn prop ->
+              Map.put(prop, :conversion_rate, calculate_cr(unique_visitors, prop[:count]))
+            end)
 
-    json(conn, Stats.property_breakdown(site, query, params["prop_name"]))
+    json(conn, props)
   end
 
   def current_visitors(conn, _) do

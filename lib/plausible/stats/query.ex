@@ -134,6 +134,8 @@ defmodule Plausible.Stats.Query do
   defp parse_filters(params) do
     if params["filters"] do
       Jason.decode!(params["filters"])
+    else
+      %{}
     end
   end
 end
