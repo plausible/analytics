@@ -1,0 +1,86 @@
+version: v1.0
+name: Build Flow
+agent:
+  machine:
+    type: e1-standard-8
+    os_image: ubuntu1804
+blocks:
+  - name: Build
+    skip:
+      when: branch != 'master' OR tag =~ '.*'
+    task:
+      env_vars:
+        - name: APP_ENV
+          value: prod
+      jobs:
+        - name: Docker build
+          commands:
+            - checkout
+            - echo $DOCKER_PASSWORD | docker login --username "$DOCKER_USERNAME" --password-stdin
+            - cache restore docker-$SEMAPHORE_GIT_BRANCH
+            - docker load -i caches/$SEMAPHORE_GIT_DIR.tar &>/dev/null | true
+            - docker build -f Dockerfile --build-arg APP_VER=1.0.$SEMAPHORE_WORKFLOW_NUMBER -t payout1/$SEMAPHORE_GIT_DIR:latest .
+            - mkdir -p caches
+            - docker save -o caches/$SEMAPHORE_GIT_DIR.tar payout1/$SEMAPHORE_GIT_DIR:latest
+            - cache store docker-$SEMAPHORE_GIT_BRANCH-$SEMAPHORE_WORKFLOW_NUMBER caches
+      secrets:
+        - name: docker-hub
+    dependencies: []
+  - name: Scan
+    skip:
+      when: branch != 'master' OR tag =~ '.*'
+    task:
+      env_vars:
+        - name: APP_ENV
+          value: prod
+      jobs:
+        - name: Clair Scan
+          commands:
+            - checkout
+            - cache restore docker-$SEMAPHORE_GIT_BRANCH-$SEMAPHORE_WORKFLOW_NUMBER
+            - docker load -i caches/$SEMAPHORE_GIT_DIR.tar
+            - './payout_clair.sh payout1/$SEMAPHORE_GIT_DIR:latest'
+      agent:
+        machine:
+          type: e1-standard-4
+          os_image: ubuntu1804
+    dependencies:
+      - Build
+  - name: Push
+    skip:
+      when: branch != 'master' OR tag =~ '.*'
+    task:
+      env_vars: []
+      jobs:
+        - name: Docker Tag&Push
+          commands:
+            - checkout
+            - echo $DOCKER_PASSWORD | docker login --username "$DOCKER_USERNAME" --password-stdin
+            - cache restore docker-$SEMAPHORE_GIT_BRANCH-$SEMAPHORE_WORKFLOW_NUMBER
+            - docker load -i caches/$SEMAPHORE_GIT_DIR.tar &>/dev/null
+            - 'docker tag payout1/$SEMAPHORE_GIT_DIR:latest payout1/$SEMAPHORE_GIT_DIR:1.0.$SEMAPHORE_WORKFLOW_NUMBER'
+            - 'docker push payout1/$SEMAPHORE_GIT_DIR:1.0.$SEMAPHORE_WORKFLOW_NUMBER'
+            - 'docker push payout1/$SEMAPHORE_GIT_DIR:latest'
+        - name: Create Git Tag
+          commands:
+            - 'curl -s -X POST https://api.github.com/repos/$SEMAPHORE_GIT_REPO_SLUG/git/refs -H "Authorization: token $GITHUB_TOKEN" -d "{\"ref\":\"refs/tags/1.0.$SEMAPHORE_WORKFLOW_NUMBER\",\"sha\":\"$SEMAPHORE_GIT_SHA\"}"'
+      secrets:
+        - name: github_token
+        - name: docker-hub
+      agent:
+        machine:
+          type: e1-standard-2
+          os_image: ubuntu1804
+    dependencies:
+      - Scan
+promotions:
+  - name: Deployment to Test
+    pipeline_file: deployment_test.yml
+    auto_promote:
+      when: result = 'passed' AND branch = 'master'
+  - name: Deployment to QA
+    pipeline_file: deployment_qa.yml
+    auto_promote:
+      when: result = 'passed' AND tag =~ '^qa\.'
+execution_time_limit:
+  minutes: 25

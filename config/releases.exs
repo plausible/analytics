@@ -5,8 +5,10 @@ import Config
 # params are made optional to facilitate smooth release
 
 port = System.get_env("PORT") || 8000
-base_url = System.get_env("BASE_URL", "http://localhost:8000")
-           |> URI.parse
+
+base_url =
+  System.get_env("BASE_URL", "http://localhost:8000")
+  |> URI.parse()
 
 secret_key_base = System.get_env("SECRET_KEY_BASE")
 
@@ -23,7 +25,10 @@ env = System.get_env("ENVIRONMENT", "prod")
 mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.SMTPAdapter")
 mailer_email = System.get_env("MAILER_EMAIL", "hello@plausible.local")
 app_version = System.get_env("APP_VERSION", "0.0.1")
-ch_db_url = System.get_env("CLICKHOUSE_DATABASE_URL", "http://plausible_events_db:8123/plausible_events_db")
+
+ch_db_url =
+  System.get_env("CLICKHOUSE_DATABASE_URL", "http://plausible_events_db:8123/plausible_events_db")
+
 ### Mandatory params End
 
 sentry_dsn = System.get_env("SENTRY_DSN")
@@ -74,10 +79,29 @@ config :plausible, PlausibleWeb.Endpoint,
   server: true,
   code_reloader: false
 
-config :plausible,
-  Plausible.Repo,
-  url: db_url,
-  adapter: Ecto.Adapters.Postgres
+if System.get_env("PG_BINDING") do
+  %{
+    "certificate" => %{"certificate_base64" => cacert},
+    "hosts" => [%{"hostname" => hostname, "port" => port}],
+    "authentication" => %{"password" => password, "username" => username}
+  } =
+    System.get_env("PG_BINDING")
+    |> Jason.decode!()
+    |> Map.get("connection")
+    |> Map.get("postgres")
+
+  config :plausible, Plausible.Repo,
+    hostname: hostname,
+    port: port,
+    ssl: true,
+    username: username,
+    password: password,
+    database: username,
+    ssl_options: [
+      cacert: cacert |> :base64.decode()
+    ],
+    adapter: Ecto.Adapters.Postgres
+end
 
 config :sentry,
   dsn: sentry_dsn,
