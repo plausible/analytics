@@ -19,7 +19,7 @@ blocks:
             - echo $DOCKER_PASSWORD | docker login --username "$DOCKER_USERNAME" --password-stdin
             - cache restore docker-$SEMAPHORE_GIT_BRANCH
             - docker load -i caches/$SEMAPHORE_GIT_DIR.tar &>/dev/null | true
-            - docker build -f Dockerfile --build-arg APP_VER=1.0.$SEMAPHORE_WORKFLOW_NUMBER -t payout1/$SEMAPHORE_GIT_DIR:latest .
+            - docker build -f Dockerfile --build-arg APP_VER=1.1.1.$SEMAPHORE_WORKFLOW_NUMBER -t payout1/$SEMAPHORE_GIT_DIR:latest .
             - mkdir -p caches
             - docker save -o caches/$SEMAPHORE_GIT_DIR.tar payout1/$SEMAPHORE_GIT_DIR:latest
             - cache store docker-$SEMAPHORE_GIT_BRANCH-$SEMAPHORE_WORKFLOW_NUMBER caches
@@ -58,12 +58,12 @@ blocks:
             - echo $DOCKER_PASSWORD | docker login --username "$DOCKER_USERNAME" --password-stdin
             - cache restore docker-$SEMAPHORE_GIT_BRANCH-$SEMAPHORE_WORKFLOW_NUMBER
             - docker load -i caches/$SEMAPHORE_GIT_DIR.tar &>/dev/null
-            - 'docker tag payout1/$SEMAPHORE_GIT_DIR:latest payout1/$SEMAPHORE_GIT_DIR:1.0.$SEMAPHORE_WORKFLOW_NUMBER'
-            - 'docker push payout1/$SEMAPHORE_GIT_DIR:1.0.$SEMAPHORE_WORKFLOW_NUMBER'
+            - 'docker tag payout1/$SEMAPHORE_GIT_DIR:latest payout1/$SEMAPHORE_GIT_DIR:1.1.1.$SEMAPHORE_WORKFLOW_NUMBER'
+            - 'docker push payout1/$SEMAPHORE_GIT_DIR:1.1.1.$SEMAPHORE_WORKFLOW_NUMBER'
             - 'docker push payout1/$SEMAPHORE_GIT_DIR:latest'
         - name: Create Git Tag
           commands:
-            - 'curl -s -X POST https://api.github.com/repos/$SEMAPHORE_GIT_REPO_SLUG/git/refs -H "Authorization: token $GITHUB_TOKEN" -d "{\"ref\":\"refs/tags/1.0.$SEMAPHORE_WORKFLOW_NUMBER\",\"sha\":\"$SEMAPHORE_GIT_SHA\"}"'
+            - 'curl -s -X POST https://api.github.com/repos/$SEMAPHORE_GIT_REPO_SLUG/git/refs -H "Authorization: token $GITHUB_TOKEN" -d "{\"ref\":\"refs/tags/1.1.1.$SEMAPHORE_WORKFLOW_NUMBER\",\"sha\":\"$SEMAPHORE_GIT_SHA\"}"'
       secrets:
         - name: github_token
         - name: docker-hub
