@@ -2,6 +2,7 @@ defmodule Plausible.Release do
   use Plausible.Repo
   @app :plausible
   @start_apps [
+    :ssl,
     :postgrex,
     :clickhousex,
     :ecto

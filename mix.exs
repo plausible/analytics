@@ -38,7 +38,8 @@ defmodule Plausible.MixProject do
         :ua_inspector,
         :ref_inspector,
         :bamboo,
-        :bamboo_smtp
+§        :bamboo_smtp,
+        :ssl
       ]
     ]
   end

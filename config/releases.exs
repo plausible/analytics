@@ -12,12 +12,6 @@ base_url =
 
 secret_key_base = System.get_env("SECRET_KEY_BASE")
 
-db_url =
-  System.get_env(
-    "DATABASE_URL",
-    "postgres://postgres:postgres@plausible_db:5432/plausible_db"
-  )
-
 admin_user = System.get_env("ADMIN_USER_NAME")
 admin_email = System.get_env("ADMIN_USER_EMAIL")
 admin_pwd = System.get_env("ADMIN_USER_PWD")
@@ -79,7 +73,6 @@ config :plausible, PlausibleWeb.Endpoint,
   server: true,
   code_reloader: false
 
-if System.get_env("PG_BINDING") do
   %{
     "certificate" => %{"certificate_base64" => cacert},
     "hosts" => [%{"hostname" => hostname, "port" => port}],
@@ -91,17 +84,12 @@ if System.get_env("PG_BINDING") do
     |> Map.get("postgres")
 
   config :plausible, Plausible.Repo,
-    hostname: hostname,
-    port: port,
+    url: "postgres://#{username}:#{password}@#{hostname}:#{port}/#{username}",
     ssl: true,
-    username: username,
-    password: password,
-    database: username,
     ssl_options: [
       cacert: cacert |> :base64.decode()
     ],
     adapter: Ecto.Adapters.Postgres
-end
 
 config :sentry,
   dsn: sentry_dsn,
@@ -120,13 +108,15 @@ config :plausible, :slack, webhook: slack_hook_url
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
-  url: ch_db_url
+  url: ch_db_url,
+  show_sensitive_data_on_connection_error: true
 
 case mailer_adapter do
   "Bamboo.SendGridAdapter" ->
     config :plausible, Plausible.Mailer,
       adapter: Bamboo.SendGridAdapter,
       api_key: System.get_env("EMAIL_SENDGRID_API_KEY")
+
   "Bamboo.PostmarkAdapter" ->
     config :plausible, Plausible.Mailer,
       adapter: :"Elixir.#{mailer_adapter}",
@@ -222,10 +212,11 @@ if geolite2_country_db do
     ]
 end
 
-logger_backends = case logflare_api_key do
-  api_key when is_binary(api_key) -> [LogflareLogger.HttpBackend]
-  _ -> [:console]
-end
+logger_backends =
+  case logflare_api_key do
+    api_key when is_binary(api_key) -> [LogflareLogger.HttpBackend]
+    _ -> [:console]
+  end
 
 config :logger,
   level: log_level,

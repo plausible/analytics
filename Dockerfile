@@ -54,12 +54,17 @@ ENV LANG=C.UTF-8
 RUN apk add --no-cache openssl ncurses
 
 COPY .gitlab/build-scripts/docker-entrypoint.sh /entrypoint.sh
+COPY .gitlab/build-scripts/kubernetes-entrypoint.sh /kubernetes.sh
 
 RUN chmod a+x /entrypoint.sh && \
+	chmod a+x /kubernetes.sh && \
     adduser -h /app -u 1000 -s /bin/sh -D plausibleuser
 
 COPY --from=buildcontainer /app/_build/prod/rel/plausible /app
-RUN chown -R plausibleuser:plausibleuser /app
+RUN chown -R plausibleuser:plausibleuser /app && \
+	chown plausibleuser:plausibleuser /entrypoint.sh && \
+	chown plausibleuser:plausibleuser /kubernetes.sh
+
 USER plausibleuser
 WORKDIR /app
 ENTRYPOINT ["/entrypoint.sh"]
