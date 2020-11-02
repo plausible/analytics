@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Tracker do
     "p.js"
   ]
   @aliases %{
-    "plausuble.js" => ["analytics.js"],
+    "plausible.js" => ["analytics.js"],
     "plausible.hash.outbound-links.js" => ["plausible.outbound-links.hash.js"]
   }
 
@@ -19,8 +19,8 @@ defmodule PlausibleWeb.Tracker do
     templates = Enum.reduce(@templates, %{}, fn template_filename, rendered_templates ->
       rendered = EEx.eval_file("priv/tracker/js/" <> template_filename, base_url: PlausibleWeb.Endpoint.url())
       aliases = Map.get(@aliases, template_filename, [])
-      filenames = [template_filename] ++ aliases
-      Enum.map(filenames, fn filename -> {"/js/" <> filename, rendered} end)
+      [template_filename | aliases]
+      |> Enum.map(fn filename -> {"/js/" <> filename, rendered} end)
       |> Enum.into(%{})
       |> Map.merge(rendered_templates)
     end)
@@ -40,5 +40,6 @@ defmodule PlausibleWeb.Tracker do
     |> put_resp_header("cache-control", "max-age=#{@max_age},public")
     |> put_resp_header("content-type", "application/javascript")
     |> send_resp(200, file)
+    |> halt()
   end
 end

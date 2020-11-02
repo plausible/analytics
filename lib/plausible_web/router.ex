@@ -36,8 +36,6 @@ defmodule PlausibleWeb.Router do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
   end
 
-  get "/js/analytics.js", PlausibleWeb.TrackerController, :plausible
-
   scope "/api/stats", PlausibleWeb.Api do
     pipe_through :stats_api
 
