@@ -213,7 +213,9 @@ defmodule Plausible.BillingTest do
         "status" => "deleted"
       })
 
-      assert_email_delivered_with(subject: "Your Plausible Analytics subscription has been canceled")
+      assert_email_delivered_with(
+        subject: "Your Plausible Analytics subscription has been canceled"
+      )
     end
   end
 

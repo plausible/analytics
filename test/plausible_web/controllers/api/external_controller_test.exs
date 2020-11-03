@@ -7,8 +7,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     ClickhouseRepo.one(
       from e in Plausible.ClickhouseEvent,
-      where: e.domain == ^domain,
-      order_by: [desc: e.timestamp]
+        where: e.domain == ^domain,
+        order_by: [desc: e.timestamp]
     )
   end
 
@@ -259,7 +259,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "utm tags are stored", %{conn: conn} do
       params = %{
         name: "pageview",
-        url: "http://www.example.com/?utm_medium=ads&utm_source=instagram&utm_campaign=video_story",
+        url:
+          "http://www.example.com/?utm_medium=ads&utm_source=instagram&utm_campaign=video_story",
         domain: "external-controller-test-utm-tags.com"
       }
 
@@ -414,7 +415,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
   test "URL is decoded", %{conn: conn} do
     params = %{
       name: "pageview",
-      url: "http://www.example.com/opportunity/category/%D8%AC%D9%88%D8%A7%D8%A6%D8%B2-%D9%88%D9%85%D8%B3%D8%A7%D8%A8%D9%82%D8%A7%D8%AA",
+      url:
+        "http://www.example.com/opportunity/category/%D8%AC%D9%88%D8%A7%D8%A6%D8%B2-%D9%88%D9%85%D8%B3%D8%A7%D8%A8%D9%82%D8%A7%D8%AA",
       domain: "external-controller-test-21.com"
     }
 

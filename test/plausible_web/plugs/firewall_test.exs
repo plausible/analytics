@@ -8,7 +8,7 @@ defmodule PlausibleWeb.FirewallTest do
   @opts [blocklist: [@blocked_ip]]
 
   setup do
-    Application.put_env(:plausible, PlausibleWeb.Firewall, [blocklist: [@blocked_ip]])
+    Application.put_env(:plausible, PlausibleWeb.Firewall, blocklist: [@blocked_ip])
     :ok
   end
 

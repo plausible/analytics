@@ -33,11 +33,12 @@ defmodule Plausible.Google.Api do
           Authorization: "Bearer #{auth.access_token}"
         )
 
-      domains = Jason.decode!(res.body)
-      |> Map.get("siteEntry", [])
-      |> Enum.filter(fn site -> site["permissionLevel"] in @verified_permission_levels end)
-      |> Enum.map(fn site -> site["siteUrl"] end)
-      |> Enum.map(fn url -> String.trim_trailing(url, "/") end)
+      domains =
+        Jason.decode!(res.body)
+        |> Map.get("siteEntry", [])
+        |> Enum.filter(fn site -> site["permissionLevel"] in @verified_permission_levels end)
+        |> Enum.map(fn site -> site["siteUrl"] end)
+        |> Enum.map(fn url -> String.trim_trailing(url, "/") end)
 
       {:ok, domains}
     else
@@ -48,7 +49,7 @@ defmodule Plausible.Google.Api do
   defp property_base_url(property) do
     case property do
       "sc-domain:" <> domain -> "https://" <> domain
-        url -> url
+      url -> url
     end
   end
 
@@ -63,12 +64,20 @@ defmodule Plausible.Google.Api do
   defp do_fetch_stats(auth, query, limit) do
     property = URI.encode_www_form(auth.property)
     base_url = property_base_url(auth.property)
-    filter_groups = if query.filters["page"] do
-      [%{filters: [%{
-        dimension: "page",
-        expression: "https://#{base_url}#{query.filters["page"]}"
-      }]}]
-    end
+
+    filter_groups =
+      if query.filters["page"] do
+        [
+          %{
+            filters: [
+              %{
+                dimension: "page",
+                expression: "https://#{base_url}#{query.filters["page"]}"
+              }
+            ]
+          }
+        ]
+      end
 
     res =
       HTTPoison.post!(

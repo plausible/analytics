@@ -12,7 +12,9 @@ defmodule PlausibleWeb.Captcha do
 
   def verify(token) do
     if enabled?() do
-      res = HTTPoison.post!(@verify_endpoint, {:form, [{"response", token}, {"secret", secret()}]})
+      res =
+        HTTPoison.post!(@verify_endpoint, {:form, [{"response", token}, {"secret", secret()}]})
+
       json = Jason.decode!(res.body)
       json["success"]
     else

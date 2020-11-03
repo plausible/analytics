@@ -9,6 +9,7 @@ defmodule Plausible.Release do
 
   def init_admin do
     prepare()
+
     {admin_email, admin_user, admin_pwd} =
       validate_admin(
         {Application.get_env(:plausible, :admin_email),
@@ -55,6 +56,7 @@ defmodule Plausible.Release do
     for repo <- repos() do
       :ok = ensure_repo_created(repo)
     end
+
     IO.puts("Creation of Db successful!")
   end
 

@@ -79,16 +79,18 @@ defmodule PlausibleWeb.Api.StatsController do
     bounce_rate = Stats.bounce_rate(site, query)
     prev_bounce_rate = Stats.bounce_rate(site, prev_query)
     change_bounce_rate = if prev_bounce_rate > 0, do: bounce_rate - prev_bounce_rate
-    visit_duration = if !query.filters["page"] do
-      duration = Stats.visit_duration(site, query)
-      prev_duration = Stats.visit_duration(site, prev_query)
 
-      %{
-        name: "Visit duration",
-        count: duration,
-        change: percent_change(prev_duration, duration)
-      }
-    end
+    visit_duration =
+      if !query.filters["page"] do
+        duration = Stats.visit_duration(site, query)
+        prev_duration = Stats.visit_duration(site, prev_query)
+
+        %{
+          name: "Visit duration",
+          count: duration,
+          change: percent_change(prev_duration, duration)
+        }
+      end
 
     [
       %{
@@ -103,7 +105,8 @@ defmodule PlausibleWeb.Api.StatsController do
       },
       %{name: "Bounce rate", percentage: bounce_rate, change: change_bounce_rate},
       visit_duration
-    ] |> Enum.filter(&(&1))
+    ]
+    |> Enum.filter(& &1)
   end
 
   defp percent_change(old_count, new_count) do
@@ -253,7 +256,7 @@ defmodule PlausibleWeb.Api.StatsController do
   defp calculate_cr(unique_visitors, converted_visitors) do
     if unique_visitors > 0,
       do: Float.round(converted_visitors / unique_visitors * 100, 1),
-        else: 0.0
+      else: 0.0
   end
 
   def conversions(conn, params) do
@@ -262,12 +265,14 @@ defmodule PlausibleWeb.Api.StatsController do
     total_filter = Map.merge(query.filters, %{"goal" => nil, "props" => nil})
     unique_visitors = Stats.unique_visitors(site, %{query | filters: total_filter})
     prop_names = Stats.all_props(site, query)
-    conversions = Stats.goal_conversions(site, query)
-                  |> Enum.map(fn goal ->
-                    goal
-                    |> Map.put(:prop_names, prop_names[goal[:name]])
-                    |> Map.put(:conversion_rate, calculate_cr(unique_visitors, goal[:count]))
-                  end)
+
+    conversions =
+      Stats.goal_conversions(site, query)
+      |> Enum.map(fn goal ->
+        goal
+        |> Map.put(:prop_names, prop_names[goal[:name]])
+        |> Map.put(:conversion_rate, calculate_cr(unique_visitors, goal[:count]))
+      end)
 
     json(conn, conversions)
   end
@@ -277,10 +282,12 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params)
     total_filter = Map.merge(query.filters, %{"goal" => nil, "props" => nil})
     unique_visitors = Stats.unique_visitors(site, %{query | filters: total_filter})
-    props = Stats.property_breakdown(site, query, params["prop_name"])
-            |> Enum.map(fn prop ->
-              Map.put(prop, :conversion_rate, calculate_cr(unique_visitors, prop[:count]))
-            end)
+
+    props =
+      Stats.property_breakdown(site, query, params["prop_name"])
+      |> Enum.map(fn prop ->
+        Map.put(prop, :conversion_rate, calculate_cr(unique_visitors, prop[:count]))
+      end)
 
     json(conn, props)
   end

@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Firewall do
 
   def call(conn, _opts) do
     blocklist = Keyword.fetch!(Application.get_env(:plausible, __MODULE__), :blocklist)
+
     if PlausibleWeb.RemoteIp.get(conn) in blocklist do
       send_resp(conn, 404, "Not found") |> halt
     else

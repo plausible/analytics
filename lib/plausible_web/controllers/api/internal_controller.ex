@@ -13,6 +13,6 @@ defmodule PlausibleWeb.Api.InternalController do
 
   def sites(conn, _) do
     user = Repo.preload(conn.assigns[:current_user], :sites)
-    json(conn, Enum.map(user.sites, &(&1.domain)))
+    json(conn, Enum.map(user.sites, & &1.domain))
   end
 end
