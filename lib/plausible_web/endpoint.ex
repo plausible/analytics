@@ -40,5 +40,6 @@ defmodule PlausibleWeb.Endpoint do
     extra: "SameSite=Lax"
 
   plug CORSPlug
+  plug PlausibleWeb.Tracker
   plug PlausibleWeb.Router
 end

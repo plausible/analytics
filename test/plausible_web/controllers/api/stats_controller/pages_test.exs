@@ -24,30 +24,31 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
 
       assert json_response(conn, 200) == [
-        %{
-          "bounce_rate" => 33.0,
-          "count" => 2,
-          "pageviews" => 2,
-          "name" => "/"},
-        %{
-          "bounce_rate" => nil,
-          "count" => 2,
-          "pageviews" => 2,
-          "name" => "/register"
-        },
-        %{
-          "bounce_rate" => nil,
-          "count" => 1,
-          "pageviews" => 1,
-          "name" => "/contact"
-        },
-        %{
-          "bounce_rate" => nil,
-          "count" => 1,
-          "pageviews" => 1,
-          "name" => "/irrelevant"
-        }
-      ]
+               %{
+                 "bounce_rate" => 33.0,
+                 "count" => 2,
+                 "pageviews" => 2,
+                 "name" => "/"
+               },
+               %{
+                 "bounce_rate" => nil,
+                 "count" => 2,
+                 "pageviews" => 2,
+                 "name" => "/register"
+               },
+               %{
+                 "bounce_rate" => nil,
+                 "count" => 1,
+                 "pageviews" => 1,
+                 "name" => "/contact"
+               },
+               %{
+                 "bounce_rate" => nil,
+                 "count" => 1,
+                 "pageviews" => 1,
+                 "name" => "/irrelevant"
+               }
+             ]
     end
 
     test "returns top pages in realtime report", %{conn: conn, site: site} do
@@ -67,7 +68,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/entry-pages?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
-               %{"count" => 3, "name" => "/"},
+               %{"count" => 3, "name" => "/"}
              ]
     end
 
@@ -79,12 +80,12 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
 
       assert json_response(conn, 200) == [
-        %{
-          "bounce_rate" => 33.0,
-          "count" => 3,
-          "name" => "/"
-        }
-      ]
+               %{
+                 "bounce_rate" => 33.0,
+                 "count" => 3,
+                 "name" => "/"
+               }
+             ]
     end
   end
 end

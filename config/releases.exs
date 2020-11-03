@@ -12,6 +12,12 @@ base_url =
 
 secret_key_base = System.get_env("SECRET_KEY_BASE")
 
+db_url =
+  System.get_env(
+    "DATABASE_URL",
+    "postgres://postgres:postgres@plausible_db:5432/plausible_db"
+  )
+
 admin_user = System.get_env("ADMIN_USER_NAME")
 admin_email = System.get_env("ADMIN_USER_EMAIL")
 admin_pwd = System.get_env("ADMIN_USER_PWD")
@@ -108,8 +114,7 @@ config :plausible, :slack, webhook: slack_hook_url
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
-  url: ch_db_url,
-  show_sensitive_data_on_connection_error: true
+  url: ch_db_url
 
 case mailer_adapter do
   "Bamboo.SendGridAdapter" ->

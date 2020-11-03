@@ -72,6 +72,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       {:ok, nil}
     else
       query = if uri && uri.query, do: URI.decode_query(uri.query), else: %{}
+
       ua =
         if user_agent do
           UAInspector.Parser.parse(user_agent)
@@ -94,8 +95,8 @@ defmodule PlausibleWeb.Api.ExternalController do
         utm_source: query["utm_source"] || "",
         utm_campaign: query["utm_campaign"] || "",
         country_code: country_code || "",
-        operating_system: ua && os_name(ua) || "",
-        browser: ua && browser_name(ua) || "",
+        operating_system: (ua && os_name(ua)) || "",
+        browser: (ua && browser_name(ua)) || "",
         screen_size: calculate_screen_size(params["screen_width"]) || "",
         "meta.key": Map.keys(params["meta"]),
         "meta.value": Map.values(params["meta"])
@@ -118,6 +119,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp parse_meta(params) do
     raw_meta = params["m"] || params["meta"] || params["p"] || params["props"]
+
     if raw_meta do
       Jason.decode!(raw_meta)
     else
@@ -126,8 +128,10 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   defp get_pathname(nil, _), do: "/"
+
   defp get_pathname(uri, hash_mode) do
     pathname = uri.path || "/"
+
     if hash_mode && uri.fragment do
       pathname <> "#" <> uri.fragment
     else

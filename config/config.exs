@@ -1,7 +1,8 @@
 use Mix.Config
 
-base_url = System.get_env("BASE_URL", "http://localhost:8000")
-           |> URI.parse
+base_url =
+  System.get_env("BASE_URL", "http://localhost:8000")
+  |> URI.parse()
 
 config :plausible,
   admin_user: System.get_env("ADMIN_USER_NAME", "admin"),
@@ -81,10 +82,11 @@ config :plausible, :paddle,
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
-  url: System.get_env(
-    "CLICKHOUSE_DATABASE_URL",
-    "http://127.0.0.1:8123/plausible_dev"
-  )
+  url:
+    System.get_env(
+      "CLICKHOUSE_DATABASE_URL",
+      "http://127.0.0.1:8123/plausible_dev"
+    )
 
 config :plausible,
        Plausible.Repo,

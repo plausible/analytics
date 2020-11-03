@@ -51,6 +51,38 @@
     }
   }
 
+  {{#if outboundLinks}}
+  function trackOutboundLink(event) {
+    var link = event.target;
+    while (link && (typeof link.tagName == 'undefined' || link.tagName.toLowerCase() != 'a' || !link.href)) {
+     link = link.parentNode;
+    }
+
+    if (link && link.href) {
+      plausible('Outbound Link: Click', {meta: {url: link.href}})
+    }
+
+    // Delay navigation so that Plausible is notified of the click
+    if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
+      setTimeout(function() { location.href = link.href; }, 150);
+      event.preventDefault();
+    }
+  }
+
+  function registerOutboundLinkEvents() {
+    window.addEventListener('load', function() {
+      var links = document.getElementsByTagName('a')
+
+      for (var i = 0; i < links.length; ++i) {
+        var link = links[i]
+        if (link.host !== location.host) {
+          link.addEventListener('click', trackOutboundLink);
+        }
+      }
+    });
+  }
+  {{/if}}
+
   try {
     var his = window.history
     if (his.pushState) {
@@ -64,6 +96,9 @@
 
     {{#if hashMode}}
     window.addEventListener('hashchange', page)
+    {{/if}}
+    {{#if outboundLinks}}
+    registerOutboundLinkEvents()
     {{/if}}
 
 

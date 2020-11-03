@@ -66,9 +66,11 @@ defmodule PlausibleWeb.AuthController do
             |> Plausible.Mailer.send_email()
 
             user_activated_account(conn, user)
+
           {:error, %Ecto.Changeset{errors: [email: {"has already been taken", _}]}} ->
             user = Auth.find_user_by(email: email)
             user_activated_account(conn, user)
+
           {:error, changeset} ->
             send_resp(conn, 400, inspect(changeset.errors))
         end

@@ -49,7 +49,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     end
 
     test "can paginate the results", %{conn: conn, site: site} do
-      conn = get(conn, "/api/stats/#{site.domain}/sources?period=day&date=2019-01-01&limit=1&page=2")
+      conn =
+        get(conn, "/api/stats/#{site.domain}/sources?period=day&date=2019-01-01&limit=1&page=2")
 
       assert json_response(conn, 200) == [
                %{"name" => "Bing", "count" => 1, "url" => ""}
@@ -64,8 +65,18 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn = get(conn, "/api/stats/#{site.domain}/utm_mediums?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
-               %{"name" => "listing", "count" => 2, "bounce_rate" => 50.0, "visit_duration" => 50.0},
-               %{"name" => "search", "count" => 1, "bounce_rate" => 0.0, "visit_duration" => 100.0}
+               %{
+                 "name" => "listing",
+                 "count" => 2,
+                 "bounce_rate" => 50.0,
+                 "visit_duration" => 50.0
+               },
+               %{
+                 "name" => "search",
+                 "count" => 1,
+                 "bounce_rate" => 0.0,
+                 "visit_duration" => 100.0
+               }
              ]
     end
   end
@@ -107,7 +118,14 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
     test "returns top referrers for a particular source", %{conn: conn, site: site} do
       filters = Jason.encode!(%{source: "10words"})
-      conn = get(conn, "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&filters=#{filters}")
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&filters=#{
+            filters
+          }"
+        )
 
       assert json_response(conn, 200) == %{
                "total_visitors" => 3,
@@ -119,10 +137,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
     test "calculates bounce rate and visit duration for referrer urls", %{conn: conn, site: site} do
       filters = Jason.encode!(%{source: "10words"})
+
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&filters=#{filters}&include=bounce_rate,visit_duration"
+          "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&filters=#{
+            filters
+          }&include=bounce_rate,visit_duration"
         )
 
       assert json_response(conn, 200) == %{
