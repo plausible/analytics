@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Tracker do
   import Plug.Conn
+  use Agent
 
   @templates [
     "plausible.js",
@@ -20,9 +21,7 @@ defmodule PlausibleWeb.Tracker do
     templates =
       Enum.reduce(@templates, %{}, fn template_filename, rendered_templates ->
         rendered =
-          EEx.eval_file("priv/tracker/js/" <> template_filename,
-            base_url: PlausibleWeb.Endpoint.url()
-          )
+          EEx.compile_file("priv/tracker/js/" <> template_filename)
 
         aliases = Map.get(@aliases, template_filename, [])
 
@@ -37,8 +36,10 @@ defmodule PlausibleWeb.Tracker do
 
   def call(conn, templates: templates) do
     case templates[conn.request_path] do
-      found when is_binary(found) -> send_js(conn, found)
       nil -> conn
+      found ->
+        {js, _} = Code.eval_quoted(found, base_url: PlausibleWeb.Endpoint.url())
+        send_js(conn, js)
     end
   end
 
