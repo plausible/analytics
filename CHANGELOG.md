@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Ability to add event metadata plausible/analytics#381
+- Add tracker module to automatically track outbound links  plausible/analytics#389
 - Display weekday on the visitor graph plausible/analytics#175
 
 ### Changed
