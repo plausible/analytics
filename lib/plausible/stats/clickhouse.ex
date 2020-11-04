@@ -722,6 +722,14 @@ defmodule Plausible.Stats.Clickhouse do
     (values ++ none)
     |> Enum.sort(fn row1, row2 -> row1[:count] >= row2[:count] end)
     |> Enum.filter(fn row -> row[:count] > 0 end)
+    |> Enum.map(fn row ->
+      uri = URI.parse(row[:name])
+      if uri.host && uri.scheme do
+        Map.put(row, :is_url, true)
+      else
+        row
+      end
+    end)
   end
 
   def goal_conversions(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
