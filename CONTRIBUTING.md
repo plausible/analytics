@@ -9,7 +9,7 @@ The easiest way to get up and running is to [install](https://docs.docker.com/ge
 1. Run both `make postgres` and `make clickhouse`.
 2. Run `mix ecto.create`. This will create the required databases in both Postgres and Clickhouse.
 3. Run `mix ecto.migrate` to build the database schema.
-4. `cd` into `/assets` using `cd /assets` and run `npm ci` to install the required node dependencies.
+4. Run `npm ci --prefix assets` to install the required node dependencies.
 5. Run `mix phx.server` to start the Phoenix server.
 6. The system is now available on `localhost:8000`.
 
