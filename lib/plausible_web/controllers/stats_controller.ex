@@ -114,7 +114,7 @@ defmodule PlausibleWeb.StatsController do
 
   defp remove_email_report_banner(conn, site) do
     if conn.assigns[:current_user] do
-      put_session(conn, site.domain <> "_offer_email_report", nil)
+      delete_session(conn, site.domain <> "_offer_email_report")
     else
       conn
     end
