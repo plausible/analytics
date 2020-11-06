@@ -697,7 +697,7 @@ defmodule Plausible.Stats.Clickhouse do
     none =
       ClickhouseRepo.all(
         from e in base_query_w_sessions(site, query),
-          where: fragment("not has(meta.key, ?)", ^key),
+          where: fragment("not has(?.key, ?)", e.meta, ^key),
           select: %{
             name: "(none)",
             count: fragment("uniq(?) as count", e.user_id),
