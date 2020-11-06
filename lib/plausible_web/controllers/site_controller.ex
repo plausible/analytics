@@ -87,6 +87,10 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings(conn, %{"website" => website}) do
+    redirect(conn, to: "/#{URI.encode_www_form(website)}/settings/general")
+  end
+
+  def settings_general(conn, %{"website" => website}) do
     site =
       Sites.get_for_user!(conn.assigns[:current_user].id, website)
       |> Repo.preload(:google_auth)
@@ -99,8 +103,8 @@ defmodule PlausibleWeb.SiteController do
 
     weekly_report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
     monthly_report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
-    goals = Goals.for_site(site.domain)
     shared_links = Repo.all(from l in Plausible.Site.SharedLink, where: l.site_id == ^site.id)
+    goals = Goals.for_site(site.domain)
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -112,6 +116,18 @@ defmodule PlausibleWeb.SiteController do
       goals: goals,
       shared_links: shared_links,
       changeset: Plausible.Site.changeset(site, %{})
+    )
+  end
+
+  def settings_goals(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    goals = Goals.for_site(site.domain)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_goals.html",
+      site: site,
+      goals: goals
     )
   end
 

@@ -1,0 +1,25 @@
+<div class="py-6 px-2 sm:px-6 lg:py-0 lg:px-0 lg:col-span-3">
+  <div class="lg:hidden">
+    <select class="mt-1 form-select block w-full pl-3 pr-10 py-2 text-base leading-6 border-gray-300 focus:outline-none focus:shadow-outline-blue focus:border-blue-300 sm:text-sm sm:leading-5 transition ease-in-out duration-150">
+      <option selected>General</option>
+
+      <option>Password</option>
+
+      <option>Notifications</option>
+
+      <option>Plan</option>
+
+      <option>Billing</option>
+
+      <option>Team Members</option>
+    </select>
+  </div>
+  <div class="hidden lg:block">
+    <%= render("_settings_tab.html", current_tab: @tab, this_tab: "general", text: "General", site: @site) %>
+    <%= render("_settings_tab.html", current_tab: @tab, this_tab: "goals", text: "Goals", site: @site) %>
+    <%= render("_settings_tab.html", current_tab: @tab, this_tab: "search-console", text: "Search Console", site: @site) %>
+    <%= render("_settings_tab.html", current_tab: @tab, this_tab: "email-reports", text: "Email reports", site: @site) %>
+    <%= render("_settings_tab.html", current_tab: @tab, this_tab: "custom-domain", text: "Custom domain", site: @site) %>
+    <%= render("_settings_tab.html", current_tab: @tab, this_tab: "js-snippet", text: "JS snippet", site: @site) %>
+  </div>
+</div>

@@ -7,15 +7,19 @@
 @import "tooltip.css";
 
 .button {
-  @apply inline-block bg-indigo-600 text-white text-center font-bold tracking-wide py-2 px-5 rounded no-underline;
+  @apply bg-indigo-600 border border-transparent rounded-md py-2 px-4 inline-flex justify-center text-sm leading-5 font-medium text-white transition-all duration-150 ease-in-out;
 }
 
 .button:hover {
-  @apply shadow;
+  @apply bg-gray-700;
 }
 
 .button:focus {
-  @apply outline-none;
+  @apply outline-none border-gray-900 shadow-outline-gray;
+}
+
+.button:active {
+  @apply bg-gray-900;
 }
 
 .button-outline {

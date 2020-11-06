@@ -145,7 +145,8 @@ defmodule PlausibleWeb.Router do
 
     get "/:website/snippet", SiteController, :add_snippet
     get "/:website/settings", SiteController, :settings
-    get "/:website/goals", SiteController, :goals
+    get "/:website/settings/general", SiteController, :settings_general
+    get "/:website/settings/goals", SiteController, :settings_goals
     get "/:website/goals/new", SiteController, :new_goal
     post "/:website/goals", SiteController, :create_goal
     delete "/:website/goals/:id", SiteController, :delete_goal
