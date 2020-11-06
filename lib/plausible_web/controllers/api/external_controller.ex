@@ -72,11 +72,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       {:ok, nil}
     else
       query = if uri && uri.query, do: URI.decode_query(uri.query), else: %{}
-
-      ua =
-        if user_agent do
-          UAInspector.Parser.parse(user_agent)
-        end
+      ua = user_agent && UAInspector.Parser.parse_client(user_agent)
 
       ref = parse_referrer(uri, params["referrer"])
       country_code = visitor_country(conn)
@@ -96,7 +92,9 @@ defmodule PlausibleWeb.Api.ExternalController do
         utm_campaign: query["utm_campaign"] || "",
         country_code: country_code || "",
         operating_system: (ua && os_name(ua)) || "",
+        operating_system_version: (ua && os_version(ua)) || "",
         browser: (ua && browser_name(ua)) || "",
+        browser_version: (ua && browser_version(ua)) || "",
         screen_size: calculate_screen_size(params["screen_width"]) || "",
         "meta.key": Map.keys(params["meta"]),
         "meta.value": Map.values(params["meta"])
@@ -199,12 +197,17 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp browser_name(ua) do
     case ua.client do
-      %UAInspector.Result.Client{name: "Mobile Safari"} -> "Safari"
-      %UAInspector.Result.Client{name: "Chrome Mobile"} -> "Chrome"
-      %UAInspector.Result.Client{name: "Chrome Mobile iOS"} -> "Chrome"
-      %UAInspector.Result.Client{type: "mobile app"} -> "Mobile App"
       :unknown -> nil
+      %UAInspector.Result.Client{type: "mobile app"} -> "Mobile App"
       client -> client.name
+    end
+  end
+
+  defp browser_version(ua) do
+    case ua.client do
+      :unknown -> nil
+      %UAInspector.Result.Client{type: "mobile app"} -> ""
+      client -> if client.version == :unknown, do: nil, else: client.version
     end
   end
 
@@ -212,6 +215,13 @@ defmodule PlausibleWeb.Api.ExternalController do
     case ua.os do
       :unknown -> nil
       os -> os.name
+    end
+  end
+
+  defp os_version(ua) do
+    case ua.os do
+      :unknown -> nil
+      os -> os.version
     end
   end
 
