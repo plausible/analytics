@@ -2,7 +2,7 @@
 
 ## Development setup
 
-The easiest way to get up and running is to [install](https://docs.docker.com/get-docker/) and use Docker for running both Postgres and Clickhouse.
+The easiest way to get up and running is to [install](https://docs.docker.com/get-docker/) Docker and [install](https://docs.docker.com/compose/install/) Docker Compose for running both Postgres and Clickhouse.
 
 Make sure Docker, Elixir, Erlang and Node.js are all installed on your development machine.
 

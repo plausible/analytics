@@ -1,0 +1,22 @@
+version: "3"
+services:
+
+  postgres:
+    image: "postgres" # use latest official postgres version
+    env_file: './database.env'
+    volumes:
+      - plausible_postgres_data:/var/lib/postgresql/data/ # persist data even if container shuts down
+    ports:
+      - 5432:5432
+
+    # docker run -p 8123:8123 --ulimit nofile=262144:262144 --volume=$$HOME/clickhouse_db_vol:/var/lib/clickhouse yandex/clickhouse-server
+  clickhouse:
+    image: "yandex/clickhouse-server" # use latest official postgres version
+    volumes:
+      - plausible_clickhouse_data:/var/lib/clickhouse
+    ports:
+      - 8123:8123
+
+volumes:
+  plausible_postgres_data:
+  plausible_clickhouse_data:
