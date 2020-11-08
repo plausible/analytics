@@ -11,14 +11,14 @@ defmodule Plausible.AuthTest do
 
     test "is false if user does not have any events" do
       user = insert(:user)
-      insert(:site, members: [user])
+      insert(:site, members: [user], owner_id: user.id)
 
       refute Auth.user_completed_setup?(user)
     end
 
     test "is true if user does have events" do
       user = insert(:user)
-      insert(:site, members: [user], domain: "test-site.com")
+      insert(:site, members: [user], domain: "test-site.com", owner_id: user.id)
 
       assert Auth.user_completed_setup?(user)
     end

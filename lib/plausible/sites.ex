@@ -22,8 +22,8 @@ defmodule Plausible.Sites do
 
   def is_owner?(user_id, site) do
     Repo.exists?(
-      from sm in Plausible.Site.Membership,
-        where: sm.user_id == ^user_id and sm.site_id == ^site.id
+      from s in Plausible.Site,
+        where: s.owner_id == ^user_id and s.id == ^site.id
     )
   end
 

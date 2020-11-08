@@ -65,7 +65,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "renders form again when it is a duplicate domain", %{conn: conn} do
-      insert(:site, domain: "example.com")
+      create_site(domain: "example.com")
 
       conn =
         post(conn, "/sites", %{
@@ -150,7 +150,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "deletes the site", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
+      site = insert(:site, members: [user], owner_id: user.id)
       insert(:google_auth, user: user, site: site)
       insert(:custom_domain, site: site)
 

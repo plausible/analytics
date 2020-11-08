@@ -21,7 +21,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
   describe "with site and pageviews" do
     test "sends a reminder 7 days before trial ends (16 days after user signed up)" do
       user = insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 7))
-      insert(:site, domain: "test-site.com", members: [user])
+      insert(:site, domain: "test-site.com", members: [user], owner_id: user.id)
 
       perform()
 
@@ -30,7 +30,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
 
     test "sends an upgrade email the day before the trial ends" do
       user = insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 1))
-      insert(:site, domain: "test-site.com", members: [user])
+      insert(:site, domain: "test-site.com", members: [user], owner_id: user.id)
 
       perform()
 
@@ -39,7 +39,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
 
     test "sends an upgrade email the day the trial ends" do
       user = insert(:user, trial_expiry_date: Timex.today())
-      insert(:site, domain: "test-site.com", members: [user])
+      insert(:site, domain: "test-site.com", members: [user], owner_id: user.id)
 
       perform()
 
@@ -48,7 +48,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
 
     test "sends a trial over email the day after the trial ends" do
       user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
-      insert(:site, domain: "test-site.com", members: [user])
+      insert(:site, domain: "test-site.com", members: [user], owner_id: user.id)
 
       perform()
 
@@ -57,7 +57,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
 
     test "does not send a notification if user has a subscription" do
       user = insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 7))
-      insert(:site, domain: "test-site.com", members: [user])
+      insert(:site, domain: "test-site.com", members: [user], owner_id: user.id)
       insert(:subscription, user: user)
 
       perform()

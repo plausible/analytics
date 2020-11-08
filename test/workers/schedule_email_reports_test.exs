@@ -10,7 +10,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
 
   describe "weekly reports" do
     test "schedules weekly report on Monday 9am local timezone" do
-      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
+      site = Plausible.TestUtils.create_site(domain: "test-site.com", timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       perform(%{})
@@ -23,7 +23,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
     end
 
     test "does not schedule more than one weekly report at a time" do
-      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
+      site = Plausible.TestUtils.create_site(domain: "test-site.com", timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       perform(%{})
@@ -33,7 +33,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
     end
 
     test "schedules a new report as soon as a previous one is completed" do
-      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
+      site = Plausible.TestUtils.create_site(domain: "test-site.com", timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       perform(%{})
@@ -46,7 +46,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
 
   describe "monthly_reports" do
     test "schedules monthly report on first of the next month at 9am local timezone" do
-      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
+      site = Plausible.TestUtils.create_site(domain: "test-site.com", timezone: "US/Eastern")
       insert(:monthly_report, site: site, recipients: ["user@email.com"])
 
       perform(%{})
@@ -59,7 +59,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
     end
 
     test "does not schedule more than one monthly report at a time" do
-      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
+      site = Plausible.TestUtils.create_site(domain: "test-site.com", timezone: "US/Eastern")
       insert(:monthly_report, site: site, recipients: ["user@email.com"])
 
       perform(%{})
@@ -69,7 +69,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
     end
 
     test "schedules a new report as soon as a previous one is completed" do
-      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
+      site = Plausible.TestUtils.create_site(domain: "test-site.com", timezone: "US/Eastern")
       insert(:monthly_report, site: site, recipients: ["user@email.com"])
 
       perform(%{})

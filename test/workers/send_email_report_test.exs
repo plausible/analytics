@@ -10,7 +10,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
   describe "weekly reports" do
     test "sends weekly report to all recipients" do
-      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
+      site = Plausible.TestUtils.create_site(domain: "test-site.com", timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com", "user2@email.com"])
 
       perform(%{"site_id" => site.id, "interval" => "weekly"})
@@ -29,7 +29,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
   describe "monthly_reports" do
     test "sends monthly report to all recipients" do
-      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
+      site = Plausible.TestUtils.create_site(domain: "test-site.com", timezone: "US/Eastern")
       insert(:monthly_report, site: site, recipients: ["user@email.com", "user2@email.com"])
 
       last_month =

@@ -8,6 +8,7 @@ defmodule Plausible.Site do
     field :domain, :string
     field :timezone, :string
     field :public, :boolean
+    field :owner_id, :integer
 
     many_to_many :members, User, join_through: Plausible.Site.Membership
     has_one :google_auth, GoogleAuth
@@ -25,6 +26,10 @@ defmodule Plausible.Site do
     |> validate_format(:domain, ~r/^[a-zA-z0-9\-\.\/\:]*$/, message: "only letters, numbers, slashes and period allowed")
     |> unique_constraint(:domain)
     |> clean_domain
+  end
+
+  def make_owner(site, user_id) do
+    change(site, owner_id: user_id)
   end
 
   def make_public(site) do

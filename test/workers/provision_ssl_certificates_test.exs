@@ -4,7 +4,7 @@ defmodule Plausible.Workers.SslCertificatesTest do
   import Double
 
   test "makes ssh call to certbot" do
-    site = insert(:site)
+    site = Plausible.TestUtils.create_site([])
     insert(:custom_domain, site: site, domain: "custom-site.com")
 
     ssh_stub =
@@ -17,7 +17,7 @@ defmodule Plausible.Workers.SslCertificatesTest do
   end
 
   test "sets has_ssl_certficate=true if the ssh command is succesful" do
-    site = insert(:site)
+    site = Plausible.TestUtils.create_site([])
     insert(:custom_domain, site: site, domain: "custom-site.com")
 
     ssh_stub =
@@ -31,7 +31,7 @@ defmodule Plausible.Workers.SslCertificatesTest do
   end
 
   test "does not set has_ssl_certficate=true if the ssh command fails" do
-    site = insert(:site)
+    site = Plausible.TestUtils.create_site([])
     insert(:custom_domain, site: site, domain: "custom-site.com")
 
     ssh_stub =

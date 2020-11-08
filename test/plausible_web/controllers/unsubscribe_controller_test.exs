@@ -4,7 +4,8 @@ defmodule PlausibleWeb.UnsubscribeControllerTest do
 
   describe "GET /sites/:website/weekly-report/unsubscribe" do
     test "removes a recipient from the weekly report without them having to log in", %{conn: conn} do
-      site = insert(:site)
+      owner = insert(:user)
+      site = insert(:site, owner_id: owner.id)
       insert(:weekly_report, site: site, recipients: ["recipient@email.com"])
 
       conn =
@@ -19,7 +20,8 @@ defmodule PlausibleWeb.UnsubscribeControllerTest do
 
   describe "GET /sites/:website/monthly-report/unsubscribe" do
     test "removes a recipient from the weekly report without them having to log in", %{conn: conn} do
-      site = insert(:site)
+      owner = insert(:user)
+      site = insert(:site, owner_id: owner.id)
       insert(:monthly_report, site: site, recipients: ["recipient@email.com"])
 
       conn =

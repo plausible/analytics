@@ -7,8 +7,21 @@ defmodule Plausible.TestUtils do
   end
 
   def create_site(%{user: user}) do
-    site = Factory.insert(:site, domain: "test-site.com", members: [user])
+    site = Factory.insert(:site, domain: "test-site.com", members: [user], owner_id: user.id)
     {:ok, site: site}
+  end
+
+  def create_site(kw \\ [], owner \\ nil) when is_list(kw) do
+    owner = owner || Factory.insert(:user)
+
+    properties =
+      kw
+      |> Keyword.put(:owner_id, owner.id)
+      # |> Keyword.update(:members, [owner], fn members ->
+      #   members ++ [owner]
+      # end)
+
+    Factory.insert(:site, properties)
   end
 
   def create_pageviews(pageviews) do

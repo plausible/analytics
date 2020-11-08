@@ -493,7 +493,10 @@ defmodule PlausibleWeb.SiteController do
   end
 
   defp insert_site(user_id, params) do
-    site_changeset = Plausible.Site.changeset(%Plausible.Site{}, params)
+    site_changeset =
+      %Plausible.Site{}
+      |> Plausible.Site.changeset(params)
+      |> Plausible.Site.make_owner(user_id)
 
     Ecto.Multi.new()
     |> Ecto.Multi.insert(:site, site_changeset)

@@ -9,7 +9,7 @@ defmodule Plausible.Workers.SendCheckStatsEmailsTest do
 
   test "does not send an email before a week has passed" do
     user = insert(:user, inserted_at: days_ago(6), last_seen: days_ago(6))
-    insert(:site, domain: "test-site.com", members: [user])
+    insert(:site, domain: "test-site.com", members: [user], owner_id: user.id)
 
     perform()
 
@@ -18,7 +18,7 @@ defmodule Plausible.Workers.SendCheckStatsEmailsTest do
 
   test "does not send an email if the user has logged in recently" do
     user = insert(:user, inserted_at: days_ago(9), last_seen: days_ago(6))
-    insert(:site, domain: "test-site.com", members: [user])
+    insert(:site, domain: "test-site.com", members: [user], owner_id: user.id)
 
     perform()
 
@@ -27,7 +27,7 @@ defmodule Plausible.Workers.SendCheckStatsEmailsTest do
 
   test "does not send an email if the user has configured a weekly report" do
     user = insert(:user, inserted_at: days_ago(9), last_seen: days_ago(7))
-    site = insert(:site, domain: "test-site.com", members: [user])
+    site = insert(:site, domain: "test-site.com", members: [user], owner_id: user.id)
     insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
     perform()
@@ -37,7 +37,7 @@ defmodule Plausible.Workers.SendCheckStatsEmailsTest do
 
   test "sends an email after a week of signup if the user hasn't logged in" do
     user = insert(:user, inserted_at: days_ago(8), last_seen: days_ago(8))
-    insert(:site, domain: "test-site.com", members: [user])
+    insert(:site, domain: "test-site.com", members: [user], owner_id: user.id)
 
     perform()
 

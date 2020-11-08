@@ -12,7 +12,8 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
 
     test "Sends 404 Not found for private site", %{conn: conn} do
       conn = init_session(conn)
-      site = insert(:site, public: false)
+      owner = insert(:user)
+      site = insert(:site, public: false, owner_id: owner.id)
       conn = get(conn, "/api/stats/#{site.domain}/main-graph")
 
       assert conn.status == 404
@@ -20,7 +21,8 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
 
     test "returns stats for public site", %{conn: conn} do
       conn = init_session(conn)
-      site = insert(:site, public: true)
+      owner = insert(:user)
+      site = insert(:site, public: true, owner_id: owner.id)
       conn = get(conn, "/api/stats/#{site.domain}/main-graph")
 
       assert %{"plot" => _any} = json_response(conn, 200)
@@ -38,21 +40,23 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
     end
 
     test "Sends 404 Not found when user does not have access to site", %{conn: conn} do
-      site = insert(:site)
+      owner = insert(:user)
+      site = insert(:site, owner_id: owner.id)
       conn = get(conn, "/api/stats/#{site.domain}/main-graph")
 
       assert conn.status == 404
     end
 
     test "returns stats for public site", %{conn: conn} do
-      site = insert(:site, public: true)
+      owner = insert(:user)
+      site = insert(:site, public: true, owner_id: owner.id)
       conn = get(conn, "/api/stats/#{site.domain}/main-graph")
 
       assert %{"plot" => _any} = json_response(conn, 200)
     end
 
     test "returns stats for a private site that the user owns", %{conn: conn, user: user} do
-      site = insert(:site, public: false, members: [user])
+      site = insert(:site, public: false, members: [user], owner_id: user.id)
       conn = get(conn, "/api/stats/#{site.domain}/main-graph")
 
       assert %{"plot" => _any} = json_response(conn, 200)

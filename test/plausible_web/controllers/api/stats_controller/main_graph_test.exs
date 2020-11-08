@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
     test "displays hourly stats in configured timezone", %{conn: conn, user: user} do
       # UTC+1
-      site = insert(:site, domain: "tz-test.com", members: [user], timezone: "CET")
+      site = insert(:site, domain: "tz-test.com", members: [user], timezone: "CET", owner_id: user.id)
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 

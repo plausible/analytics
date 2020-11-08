@@ -12,7 +12,7 @@ defmodule Plausible.Workers.SendSiteSetupEmailsTest do
   describe "when user has not managed to set up the site" do
     test "does not send an email 47 hours after site creation" do
       user = insert(:user)
-      insert(:site, members: [user], inserted_at: hours_ago(47))
+      insert(:site, members: [user], inserted_at: hours_ago(47), owner_id: user.id)
 
       perform()
 
@@ -21,7 +21,7 @@ defmodule Plausible.Workers.SendSiteSetupEmailsTest do
 
     test "sends a setup help email 48 hours after site has been created" do
       user = insert(:user)
-      insert(:site, members: [user], inserted_at: hours_ago(49))
+      insert(:site, members: [user], inserted_at: hours_ago(49), owner_id: user.id)
 
       perform()
 
@@ -33,7 +33,7 @@ defmodule Plausible.Workers.SendSiteSetupEmailsTest do
 
     test "does not send an email more than 72 hours after signup" do
       user = insert(:user)
-      insert(:site, members: [user], inserted_at: hours_ago(73))
+      insert(:site, members: [user], inserted_at: hours_ago(73), owner_id: user.id)
 
       perform()
 
@@ -44,7 +44,7 @@ defmodule Plausible.Workers.SendSiteSetupEmailsTest do
   describe "when user has managed to set up their site" do
     test "sends the setup completed email as soon as possible" do
       user = insert(:user)
-      insert(:site, members: [user], domain: "test-site.com")
+      insert(:site, members: [user], domain: "test-site.com", owner_id: user.id)
 
       perform()
 
@@ -56,7 +56,7 @@ defmodule Plausible.Workers.SendSiteSetupEmailsTest do
 
     test "sends the setup completed email after the help email has been sent" do
       user = insert(:user)
-      site = insert(:site, members: [user], inserted_at: hours_ago(49))
+      site = insert(:site, members: [user], inserted_at: hours_ago(49), owner_id: user.id)
 
       perform()
 

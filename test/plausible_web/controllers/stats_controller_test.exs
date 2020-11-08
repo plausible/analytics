@@ -5,14 +5,14 @@ defmodule PlausibleWeb.StatsControllerTest do
 
   describe "GET /:website - anonymous user" do
     test "public site - shows site stats", %{conn: conn} do
-      insert(:site, domain: "public-site.io", public: true)
+      create_site(domain: "public-site.io", public: true)
 
       conn = get(conn, "/public-site.io")
       assert html_response(conn, 200) =~ "stats-react-container"
     end
 
     test "public site - shows waiting for first pageview", %{conn: conn} do
-      insert(:site, domain: "some-other-public-site.io", public: true)
+      create_site(domain: "some-other-public-site.io", public: true)
 
       conn = get(conn, "/some-other-public-site.io")
       assert html_response(conn, 200) =~ "Need to see the snippet again?"
@@ -52,7 +52,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
   describe "GET /share/:slug" do
     test "prompts a password for a password-protected link", %{conn: conn} do
-      site = insert(:site)
+      site = create_site([])
 
       link =
         insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
@@ -64,7 +64,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "logs anonymous user in straight away if the link is not password-protected", %{
       conn: conn
     } do
-      site = insert(:site, domain: "test-site.com")
+      site = create_site(domain: "test-site.com")
       link = insert(:shared_link, site: site)
 
       conn = get(conn, "/share/#{link.slug}")
@@ -77,7 +77,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
   describe "POST /share/:slug/authenticate" do
     test "logs anonymous user in with correct password", %{conn: conn} do
-      site = insert(:site, domain: "test-site.com")
+      site = create_site(domain: "test-site.com")
 
       link =
         insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
@@ -90,7 +90,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "shows form again with wrong password", %{conn: conn} do
-      site = insert(:site, domain: "test-site.com")
+      site = create_site(domain: "test-site.com")
 
       link =
         insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
