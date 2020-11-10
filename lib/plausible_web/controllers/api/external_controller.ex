@@ -202,7 +202,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp browser_name(ua) do
     case ua.client do
-      :unknown -> nil
+      :unknown -> ""
       %UAInspector.Result.Client{name: "Mobile Safari"} -> "Safari"
       %UAInspector.Result.Client{name: "Chrome Mobile"} -> "Chrome"
       %UAInspector.Result.Client{name: "Chrome Mobile iOS"} -> "Chrome"
