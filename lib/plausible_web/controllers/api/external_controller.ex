@@ -65,14 +65,14 @@ defmodule PlausibleWeb.Api.ExternalController do
       "meta" => parse_meta(params)
     }
 
-    uri = params["url"] && URI.parse(URI.decode(params["url"]))
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
+    ua = user_agent && UAInspector.parse(user_agent)
 
-    if UAInspector.bot?(user_agent) do
+    if is_bot?(ua) do
       {:ok, nil}
     else
+      uri = params["url"] && URI.parse(URI.decode(params["url"]))
       query = if uri && uri.query, do: URI.decode_query(uri.query), else: %{}
-      ua = user_agent && UAInspector.Parser.parse_client(user_agent)
 
       ref = parse_referrer(uri, params["referrer"])
       country_code = visitor_country(conn)
@@ -114,6 +114,11 @@ defmodule PlausibleWeb.Api.ExternalController do
       end
     end
   end
+
+
+  defp is_bot?(%UAInspector.Result.Bot{}), do: true
+  defp is_bot?(%UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}}), do: true
+  defp is_bot?(_), do: false
 
   defp parse_meta(params) do
     raw_meta = params["m"] || params["meta"] || params["p"] || params["props"]
@@ -211,23 +216,23 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp browser_version(ua) do
     case ua.client do
-      :unknown -> nil
+      :unknown -> ""
       %UAInspector.Result.Client{type: "mobile app"} -> ""
-      client -> if client.version == :unknown, do: nil, else: client.version
+      client -> if client.version == :unknown, do: "", else: client.version
     end
   end
 
   defp os_name(ua) do
     case ua.os do
-      :unknown -> nil
+      :unknown -> ""
       os -> os.name
     end
   end
 
   defp os_version(ua) do
     case ua.os do
-      :unknown -> nil
-      os -> os.version
+      :unknown -> ""
+      os -> if os.version == :unknown, do: "", else: os.version
     end
   end
 
