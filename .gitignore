@@ -25,6 +25,9 @@ plausible-*.tar
 # If NPM crashes, it generates a log, let's ignore it too.
 npm-debug.log
 
+# If running Clickhouse through the Makefile, its data is written here
+/.clickhouse_db_vol/
+
 # The directory NPM downloads your dependencies sources to.
 /assets/node_modules/
 /tracker/node_modules/

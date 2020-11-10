@@ -1,5 +1,5 @@
 clickhouse:
-	docker run --detach -p 8123:8123 --ulimit nofile=262144:262144 --volume=$$HOME/clickhouse_db_vol:/var/lib/clickhouse yandex/clickhouse-server
+	docker run --detach -p 8123:8123 --ulimit nofile=262144:262144 --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse yandex/clickhouse-server
 
 postgres:
 	docker run --detach -e POSTGRES_PASSWORD="postgres" -p 5432:5432 postgres
