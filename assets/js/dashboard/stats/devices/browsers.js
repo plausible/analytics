@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import FadeIn from '../../fade-in'
 import numberFormatter from '../../number-formatter'
 import Bar from '../bar'
-import MoreLink from '../more-link'
 import * as api from '../../api'
 
 export default class Browsers extends React.Component {

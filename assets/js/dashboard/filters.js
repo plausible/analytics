@@ -40,6 +40,10 @@ function filterText(key, value, query) {
   if (key === "os") {
     return <span className="inline-block max-w-sm truncate">Operating System: <b>{value}</b></span>
   }
+  if (key === "os_version") {
+    const osName = query.filters["os"] ? query.filters["os"] : 'OS'
+    return <span className="inline-block max-w-sm truncate">{osName}.Version: <b>{value}</b></span>
+  }
   if (key === "country") {
     const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
     const selectedCountry = allCountries.find((c) => c.id === value)

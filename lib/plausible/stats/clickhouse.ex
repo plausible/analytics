@@ -628,6 +628,21 @@ defmodule Plausible.Stats.Clickhouse do
     |> Enum.take(limit)
   end
 
+  def operating_system_versions(site, query, limit \\ 5) do
+    ClickhouseRepo.all(
+      from e in base_query_w_sessions(site, query),
+        group_by: e.operating_system_version,
+        where: e.operating_system_version != "",
+        order_by: [desc: fragment("count")],
+        select: %{
+          name: e.operating_system_version,
+          count: fragment("uniq(user_id) as count")
+        }
+    )
+    |> add_percentages
+    |> Enum.take(limit)
+  end
+
   def current_visitors(site, query) do
     Plausible.ClickhouseRepo.one(
       from s in base_query(site, query),
@@ -873,6 +888,14 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     sessions_q =
+      if query.filters["os_version"] do
+        version = query.filters["os_version"]
+        from(s in sessions_q, where: s.operating_system_version == ^version)
+      else
+        sessions_q
+      end
+
+    sessions_q =
       if query.filters["country"] do
         country = Plausible.Stats.CountryName.to_alpha2(query.filters["country"])
         from(s in sessions_q, where: s.country_code == ^country)
@@ -921,7 +944,8 @@ defmodule Plausible.Stats.Clickhouse do
     q =
       if query.filters["source"] || query.filters['referrer'] || query.filters["utm_medium"] ||
            query.filters["utm_source"] || query.filters["utm_campaign"] || query.filters["screen"] ||
-           query.filters["browser"] || query.filters["browser_version"] || query.filters["os"] || query.filters["country"] do
+             query.filters["browser"] || query.filters["browser_version"] || query.filters["os"] ||
+               query.filters["os_version"] || query.filters["country"] do
         from(
           e in q,
           join: sq in subquery(sessions_q),
@@ -1030,6 +1054,14 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     q =
+      if query.filters["os_version"] do
+        version = query.filters["os_version"]
+        from(s in q, where: s.operating_system_version == ^version)
+      else
+        q
+      end
+
+    q =
       if query.filters["country"] do
         country = Plausible.Stats.CountryName.to_alpha2(query.filters["country"])
         from(s in q, where: s.country_code == ^country)
@@ -1115,6 +1147,14 @@ defmodule Plausible.Stats.Clickhouse do
       if query.filters["os"] do
         os = query.filters["os"]
         from(s in q, where: s.operating_system == ^os)
+      else
+        q
+      end
+
+    q =
+      if query.filters["os_version"] do
+        version = query.filters["os_version"]
+        from(s in q, where: s.operating_system_version == ^version)
       else
         q
       end
