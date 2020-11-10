@@ -239,6 +239,13 @@ defmodule PlausibleWeb.Api.StatsController do
     json(conn, Stats.browsers(site, query, params["limit"] || 9))
   end
 
+  def browser_versions(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, params)
+
+    json(conn, Stats.browser_versions(site, query, params["limit"] || 9))
+  end
+
   def operating_systems(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)

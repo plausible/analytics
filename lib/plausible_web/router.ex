@@ -51,6 +51,7 @@ defmodule PlausibleWeb.Router do
     get "/:domain/entry-pages", StatsController, :entry_pages
     get "/:domain/countries", StatsController, :countries
     get "/:domain/browsers", StatsController, :browsers
+    get "/:domain/browser-versions", StatsController, :browser_versions
     get "/:domain/operating-systems", StatsController, :operating_systems
     get "/:domain/screen-sizes", StatsController, :screen_sizes
     get "/:domain/conversions", StatsController, :conversions

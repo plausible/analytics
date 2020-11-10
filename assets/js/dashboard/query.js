@@ -32,6 +32,7 @@ export function parseQuery(querystring, site) {
       'referrer': q.get('referrer'),
       'screen': q.get('screen'),
       'browser': q.get('browser'),
+      'browser_version': q.get('browser_version'),
       'os': q.get('os'),
       'country': q.get('country'),
       'page': q.get('page')

@@ -33,6 +33,10 @@ function filterText(key, value, query) {
   if (key === "browser") {
     return <span className="inline-block max-w-sm truncate">Browser: <b>{value}</b></span>
   }
+  if (key === "browser_version") {
+    const browserName = query.filters["browser"] ? query.filters["browser"] : 'Browser'
+    return <span className="inline-block max-w-sm truncate">{browserName}.Version: <b>{value}</b></span>
+  }
   if (key === "os") {
     return <span className="inline-block max-w-sm truncate">Operating System: <b>{value}</b></span>
   }
