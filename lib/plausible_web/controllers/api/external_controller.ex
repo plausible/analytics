@@ -65,18 +65,14 @@ defmodule PlausibleWeb.Api.ExternalController do
       "meta" => parse_meta(params)
     }
 
-    uri = params["url"] && URI.parse(URI.decode(params["url"]))
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
+    ua = user_agent && UAInspector.parse(user_agent)
 
-    if UAInspector.bot?(user_agent) do
+    if is_bot?(ua) do
       {:ok, nil}
     else
+      uri = params["url"] && URI.parse(URI.decode(params["url"]))
       query = if uri && uri.query, do: URI.decode_query(uri.query), else: %{}
-
-      ua =
-        if user_agent do
-          UAInspector.Parser.parse(user_agent)
-        end
 
       ref = parse_referrer(uri, params["referrer"])
       country_code = visitor_country(conn)
@@ -96,7 +92,9 @@ defmodule PlausibleWeb.Api.ExternalController do
         utm_campaign: query["utm_campaign"] || "",
         country_code: country_code || "",
         operating_system: (ua && os_name(ua)) || "",
+        operating_system_version: (ua && os_version(ua)) || "",
         browser: (ua && browser_name(ua)) || "",
+        browser_version: (ua && browser_version(ua)) || "",
         screen_size: calculate_screen_size(params["screen_width"]) || "",
         "meta.key": Map.keys(params["meta"]),
         "meta.value": Map.values(params["meta"])
@@ -116,6 +114,11 @@ defmodule PlausibleWeb.Api.ExternalController do
       end
     end
   end
+
+
+  defp is_bot?(%UAInspector.Result.Bot{}), do: true
+  defp is_bot?(%UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}}), do: true
+  defp is_bot?(_), do: false
 
   defp parse_meta(params) do
     raw_meta = params["m"] || params["meta"] || params["p"] || params["props"]
@@ -199,19 +202,45 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp browser_name(ua) do
     case ua.client do
+      :unknown -> ""
       %UAInspector.Result.Client{name: "Mobile Safari"} -> "Safari"
       %UAInspector.Result.Client{name: "Chrome Mobile"} -> "Chrome"
       %UAInspector.Result.Client{name: "Chrome Mobile iOS"} -> "Chrome"
+      %UAInspector.Result.Client{name: "Firefox Mobile"} -> "Firefox"
+      %UAInspector.Result.Client{name: "Firefox Mobile iOS"} -> "Firefox"
+      %UAInspector.Result.Client{name: "Chrome Webview"} -> "Mobile App"
       %UAInspector.Result.Client{type: "mobile app"} -> "Mobile App"
-      :unknown -> nil
       client -> client.name
+    end
+  end
+
+  defp major_minor(:unknown), do: ""
+  defp major_minor(version) do
+    version
+    |> String.split(".")
+    |> Enum.take(2)
+    |> Enum.join(".")
+  end
+
+  defp browser_version(ua) do
+    case ua.client do
+      :unknown -> ""
+      %UAInspector.Result.Client{type: "mobile app"} -> ""
+      client -> major_minor(client.version)
     end
   end
 
   defp os_name(ua) do
     case ua.os do
-      :unknown -> nil
+      :unknown -> ""
       os -> os.name
+    end
+  end
+
+  defp os_version(ua) do
+    case ua.os do
+      :unknown -> ""
+      os -> major_minor(os.version)
     end
   end
 

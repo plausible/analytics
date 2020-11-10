@@ -7,9 +7,11 @@ All notable changes to this project will be documented in this file.
 - Ability to add event metadata plausible/analytics#381
 - Add tracker module to automatically track outbound links  plausible/analytics#389
 - Display weekday on the visitor graph plausible/analytics#175
+- Collect and display browser & OS versions plausible/analytics#397
 
 ### Changed
 - Use alpine as base image to decrease Docker image size plausible/analytics#353
+- Ignore automated browsers (Phantom, Selenium, Headless Chrome, etc)
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370

@@ -110,7 +110,9 @@ defmodule Plausible.Session.Store do
       country_code: event.country_code,
       screen_size: event.screen_size,
       operating_system: event.operating_system,
+      operating_system_version: event.operating_system_version,
       browser: event.browser,
+      browser_version: event.browser_version,
       timestamp: event.timestamp,
       start: event.timestamp
     }

@@ -27,7 +27,9 @@ defmodule Plausible.ClickhouseSession do
     field :country_code, :string
     field :screen_size, :string
     field :operating_system, :string
+    field :operating_system_version, :string
     field :browser, :string
+    field :browser_version, :string
     field :timestamp, :naive_datetime
   end
 
@@ -47,7 +49,8 @@ defmodule Plausible.ClickhouseSession do
       :length,
       :is_bounce,
       :operating_system,
-      :browser,
+      :operating_system_version,
+      :browser_version,
       :referrer,
       :referrer_source,
       :utm_medium,

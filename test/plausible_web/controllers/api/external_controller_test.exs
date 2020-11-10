@@ -101,6 +101,21 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert get_event("external-controller-test-5.com") == nil
     end
 
+    test "Headless Chrome is ignored", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://www.example.com/",
+        domain: "headless-chrome-test.com"
+      }
+
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> put_req_header("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/85.0.4183.83 Safari/537.36")
+      |> post("/api/event", Jason.encode!(params))
+
+      assert get_event("headless-chrome-test.com") == nil
+    end
+
     test "parses user_agent", %{conn: conn} do
       params = %{
         name: "pageview",
@@ -118,7 +133,9 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == ""
       assert pageview.operating_system == "Mac"
+      assert pageview.operating_system_version == "10.13"
       assert pageview.browser == "Chrome"
+      assert pageview.browser_version == "70.0"
     end
 
     test "parses referrer", %{conn: conn} do

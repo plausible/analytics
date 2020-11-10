@@ -20,7 +20,9 @@ defmodule Plausible.ClickhouseEvent do
     field :country_code, :string
     field :screen_size, :string
     field :operating_system, :string
+    field :operating_system_version, :string
     field :browser, :string
+    field :browser_version, :string
 
     field :"meta.key", {:array, :string}
     field :"meta.value", {:array, :string}
@@ -37,7 +39,9 @@ defmodule Plausible.ClickhouseEvent do
       :pathname,
       :user_id,
       :operating_system,
+      :operating_system_version,
       :browser,
+      :browser_version,
       :referrer,
       :referrer_source,
       :utm_medium,
