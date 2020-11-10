@@ -198,6 +198,12 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp browser_name(ua) do
     case ua.client do
       :unknown -> nil
+      %UAInspector.Result.Client{name: "Mobile Safari"} -> "Safari"
+      %UAInspector.Result.Client{name: "Chrome Mobile"} -> "Chrome"
+      %UAInspector.Result.Client{name: "Chrome Mobile iOS"} -> "Chrome"
+      %UAInspector.Result.Client{name: "Firefox Mobile"} -> "Firefox"
+      %UAInspector.Result.Client{name: "Firefox Mobile iOS"} -> "Firefox"
+      %UAInspector.Result.Client{name: "Chrome Webview"} -> "Mobile App"
       %UAInspector.Result.Client{type: "mobile app"} -> "Mobile App"
       client -> client.name
     end
