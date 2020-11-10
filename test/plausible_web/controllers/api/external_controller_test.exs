@@ -133,7 +133,9 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == ""
       assert pageview.operating_system == "Mac"
+      assert pageview.operating_system_version == "10.13"
       assert pageview.browser == "Chrome"
+      assert pageview.browser_version == "70.0"
     end
 
     test "parses referrer", %{conn: conn} do

@@ -214,11 +214,19 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
+  defp major_minor(:unknown), do: ""
+  defp major_minor(version) do
+    version
+    |> String.split(".")
+    |> Enum.take(2)
+    |> Enum.join(".")
+  end
+
   defp browser_version(ua) do
     case ua.client do
       :unknown -> ""
       %UAInspector.Result.Client{type: "mobile app"} -> ""
-      client -> if client.version == :unknown, do: "", else: client.version
+      client -> major_minor(client.version)
     end
   end
 
@@ -232,7 +240,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp os_version(ua) do
     case ua.os do
       :unknown -> ""
-      os -> if os.version == :unknown, do: "", else: os.version
+      os -> major_minor(os.version)
     end
   end
 
