@@ -4,9 +4,12 @@
 
 The easiest way to get up and running is to [install](https://docs.docker.com/get-docker/) and use Docker for running both Postgres and Clickhouse.
 
+Make sure Docker, Elixir, Erlang and Node.js are all installed on your development machine.
+
 ### Start the environment:
 
 1. Run both `make postgres` and `make clickhouse`.
+2. Run `mix deps.get`. This will download the required Elixir dependencies.
 2. Run `mix ecto.create`. This will create the required databases in both Postgres and Clickhouse.
 3. Run `mix ecto.migrate` to build the database schema.
 4. Run `npm ci --prefix assets` to install the required node dependencies.
