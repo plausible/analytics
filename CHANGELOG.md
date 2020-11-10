@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - Use alpine as base image to decrease Docker image size plausible/analytics#353
+- Ignore automated browsers (Phantom, Selenium, Headless Chrome, etc)
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370
