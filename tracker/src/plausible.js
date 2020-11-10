@@ -10,6 +10,7 @@
 
   function trigger(eventName, options) {
     if (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(location.hostname) || location.protocol === 'file:') return console.warn('Ignoring event on localhost');
+    if (window.phantom || window._phantom || window.__nightmare || window.navigator.webdriver) return;
 
     var payload = {}
     payload.n = eventName
