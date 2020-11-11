@@ -1,6 +1,6 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
-import {removeQueryParam} from './query'
+import {navigateToQuery, removeQueryParam} from './query'
 import Datamap from 'datamaps'
 
 function filterText(key, value, query) {
@@ -56,9 +56,15 @@ function filterText(key, value, query) {
 
 function renderFilter(history, [key, value], query) {
   function removeFilter() {
-    let newQuery = removeQueryParam(location.search, key)
-    if (key === 'goal') { newQuery = removeQueryParam(newQuery, 'props')  }
-    history.push({search: newQuery})
+    const newOpts = {
+      [key]: false
+    }
+    if (key === 'goal') { newOpts.props = false }
+    navigateToQuery(
+      history,
+      query,
+      newOpts
+    )
   }
 
   return (
