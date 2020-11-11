@@ -7,6 +7,7 @@ import FadeIn from '../fade-in'
 import Bar from './bar'
 import MoreLink from './more-link'
 import * as api from '../api'
+import { navigateToQuery } from '../query';
 
 class Countries extends React.Component {
   constructor(props) {
@@ -92,9 +93,13 @@ class Countries extends React.Component {
       },
       done: (datamap) => {
         datamap.svg.selectAll('.datamaps-subunit').on('click', (geography) => {
-          const query = new URLSearchParams(window.location.search)
-          query.set('country', geography.id)
-          this.props.history.push({search: query.toString()})
+          navigateToQuery(
+            this.props.history,
+            this.props.query,
+            {
+              country: geography.id
+            }
+          )
         })
       }
     });
