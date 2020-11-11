@@ -7,7 +7,7 @@ import FadeIn from '../fade-in'
 import Bar from './bar'
 import MoreLink from './more-link'
 import * as api from '../api'
-import { navigateToQuery } from '../query';
+import { navigateToQuery } from '../query'
 
 class Countries extends React.Component {
   constructor(props) {

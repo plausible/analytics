@@ -3,7 +3,7 @@ import Transition from "../transition.js";
 import { withRouter, Link } from 'react-router-dom'
 import Flatpickr from "react-flatpickr";
 import {shiftDays, shiftMonths, formatDay, formatDayShort, formatMonthYYYY, formatISO, isToday, lastMonth, nowForSite, isSameMonth} from './date'
-import { navigateToQuery } from './query.js';
+import { navigateToQuery } from './query.js'
 
 
 class DatePicker extends React.Component {
