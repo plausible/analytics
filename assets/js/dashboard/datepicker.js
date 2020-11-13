@@ -3,7 +3,7 @@ import Transition from "../transition.js";
 import { withRouter, Link } from 'react-router-dom'
 import Flatpickr from "react-flatpickr";
 import {shiftDays, shiftMonths, formatDay, formatDayShort, formatMonthYYYY, formatISO, isToday, lastMonth, nowForSite, isSameMonth} from './date'
-import { navigateToQuery } from './query.js'
+import { navigateToQuery, QueryLink } from './query.js'
 
 
 class DatePicker extends React.Component {
@@ -116,25 +116,14 @@ class DatePicker extends React.Component {
   }
 
   renderArrow(period, prevDate, nextDate) {
-    const navigateGenerator = data => {
-      return e => {
-        e.preventDefault()
-        navigateToQuery(
-          this.props.history,
-          this.props.query,
-          data
-        )
-      }
-    }
-
     return (
       <div className="flex rounded shadow bg-white mr-4 cursor-pointer">
-        <Link to={{search: this.queryWithPeriod(period, {date: prevDate})}} onClick={navigateGenerator({date: prevDate})} className="flex items-center px-2 border-r border-gray-300">
+        <QueryLink history={this.props.history} query={this.props.query} data={{date: prevDate}}  className="flex items-center px-2 border-r border-gray-300">
           <svg className="feather h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </Link>
-        <Link to={{search: this.queryWithPeriod(period, {date: nextDate})}} onClick={navigateGenerator({date: nextDate})} className="flex items-center px-2">
+        </QueryLink>
+        <QueryLink history={this.props.history} query={this.props.query} data={{date: nextDate}} className="flex items-center px-2">
           <svg className="feather h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </Link>
+        </QueryLink>
       </div>
     )
   }
@@ -202,23 +191,10 @@ class DatePicker extends React.Component {
 
     if (opts.date) { opts.date = formatISO(opts.date) }
 
-    const onClick = e => {
-      e.preventDefault()
-      navigateToQuery(
-        this.props.history,
-        this.props.query,
-        {
-          period,
-          ...opts
-        }
-      )
-      this.close()
-    }
-
     return (
-      <Link to={{search: this.queryWithPeriod(period, opts)}} onClick={onClick} className={boldClass + ' block px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900'}>
+      <QueryLink history={this.props.history} query={this.props.query} data={{period, ...opts}} onClick={this.close.bind(this)} className={boldClass + ' block px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900'}>
         {text}
-      </Link>
+      </QueryLink>
     )
   }
 

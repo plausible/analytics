@@ -1,3 +1,5 @@
+import React from 'react'
+import { Link } from 'react-router-dom'
 import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './date'
 
 const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'custom']
@@ -41,6 +43,19 @@ export function parseQuery(querystring, site) {
   }
 }
 
+function generateQueryString(data) {
+  const query = new URLSearchParams(window.location.search)
+  Object.keys(data).forEach(key => {
+    if (!data[key]) {
+      query.delete(key)
+      return
+    }
+
+    query.set(key, data[key])
+  })
+  return query.toString()
+}
+
 export function navigateToQuery(history, queryFrom, newData) {
   // if we update any data that we store in localstorage, make sure going back in history will revert them
   if (newData.period && newData.period !== queryFrom.period) {
@@ -50,16 +65,25 @@ export function navigateToQuery(history, queryFrom, newData) {
   }
 
   // then push the new query to the history
-  const query = new URLSearchParams(window.location.search)
-  Object.keys(newData).forEach(key => {
-    if (!newData[key]) {
-      query.delete(key)
-      return
-    }
+  history.push({ search: generateQueryString(newData) })
+}
 
-    query.set(key, newData[key])
-  })
-  history.push({ search: query.toString() })
+export class QueryLink extends React.Component {
+  constructor() {
+    super()
+    this.onClick = this.onClick.bind(this)
+  }
+
+  onClick(e) {
+    e.preventDefault()
+    navigateToQuery(this.props.history, this.props.query, this.props.data)
+    if (this.props.onClick) this.props.onClick(e)
+  }
+
+  render() {
+    const { history, query, data, ...props } = this.props
+    return <Link {...props} to={generateQueryString(data)} onClick={this.onClick} />
+  }
 }
 
 export function toHuman(query) {
