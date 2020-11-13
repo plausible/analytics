@@ -82,7 +82,11 @@ class QueryLink extends React.Component {
 
   render() {
     const { history, query, to, ...props } = this.props
-    return <Link {...props} to={generateQueryString(to)} onClick={this.onClick} />
+    return <Link
+      {...props}
+      to={{ pathname: window.location.pathname, search: generateQueryString(to) }}
+      onClick={this.onClick}
+    />
   }
 }
 const QueryLinkWithRouter = withRouter(QueryLink)
