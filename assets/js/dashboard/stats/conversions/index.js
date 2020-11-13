@@ -37,7 +37,7 @@ export default class Conversions extends React.Component {
       query.set('goal', goalName)
 
       return (
-        <Link to={{search: query.toString()}} style={{marginTop: '-26px'}} className="hover:underline block px-2">
+        <Link to={{pathname: window.location.pathname, search: query.toString()}} style={{marginTop: '-26px'}} className="hover:underline block px-2">
           { goalName }
         </Link>
       )
