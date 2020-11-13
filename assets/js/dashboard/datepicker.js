@@ -24,22 +24,6 @@ class DatePicker extends React.Component {
     document.removeEventListener('mousedown', this.handleClick, false);
   }
 
-  queryWithPeriod(period, dates) {
-    const query = new URLSearchParams(window.location.search)
-    query.set('period', period)
-    query.delete('date'); query.delete('from'); query.delete('to')
-
-    if (dates) {
-      for (const key of Object.keys(dates)) {
-        query.set(key, dates[key])
-      }
-    } else {
-      query.delete('date')
-    }
-
-    return query.toString()
-  }
-
   handleKeyup(e) {
     const {query, history} = this.props
 
