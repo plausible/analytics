@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, withRouter } from 'react-router-dom'
 import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './date'
 
 const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'custom']
@@ -68,7 +68,7 @@ export function navigateToQuery(history, queryFrom, newData) {
   history.push({ search: generateQueryString(newData) })
 }
 
-export class QueryLink extends React.Component {
+class QueryLink extends React.Component {
   constructor() {
     super()
     this.onClick = this.onClick.bind(this)
@@ -85,6 +85,8 @@ export class QueryLink extends React.Component {
     return <Link {...props} to={generateQueryString(data)} onClick={this.onClick} />
   }
 }
+const QueryLinkWithRouter = withRouter(QueryLink)
+export { QueryLinkWithRouter as QueryLink };
 
 export function toHuman(query) {
   if (query.period === 'day') {
