@@ -118,10 +118,10 @@ class DatePicker extends React.Component {
   renderArrow(period, prevDate, nextDate) {
     return (
       <div className="flex rounded shadow bg-white mr-4 cursor-pointer">
-        <QueryLink query={this.props.query} to={{date: prevDate}}  className="flex items-center px-2 border-r border-gray-300">
+        <QueryLink to={{date: prevDate}} query={this.props.query} className="flex items-center px-2 border-r border-gray-300">
           <svg className="feather h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
         </QueryLink>
-        <QueryLink query={this.props.query} to={{date: nextDate}} className="flex items-center px-2">
+        <QueryLink to={{date: nextDate}} query={this.props.query} className="flex items-center px-2">
           <svg className="feather h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </QueryLink>
       </div>
@@ -192,7 +192,7 @@ class DatePicker extends React.Component {
     if (opts.date) { opts.date = formatISO(opts.date) }
 
     return (
-      <QueryLink query={this.props.query} to={{period, ...opts}} onClick={this.close.bind(this)} className={boldClass + ' block px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900'}>
+      <QueryLink to={{period, ...opts}} onClick={this.close.bind(this)} query={this.props.query} className={boldClass + ' block px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900'}>
         {text}
       </QueryLink>
     )
