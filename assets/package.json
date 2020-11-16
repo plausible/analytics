@@ -12,6 +12,7 @@
     "@fullhuman/postcss-purgecss": "^2.3.0",
     "@tailwindcss/ui": "^0.1.4",
     "abortcontroller-polyfill": "^1.5.0",
+    "alpinejs": "^2.7.3",
     "autoprefixer": "^9.8.6",
     "babel-loader": "^8.1.0",
     "chart.js": "^2.9.3",

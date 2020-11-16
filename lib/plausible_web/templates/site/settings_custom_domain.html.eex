@@ -1,0 +1,14 @@
+<div class="shadow bg-white sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
+  <header>
+    <h2 class="text-lg leading-6 font-medium text-gray-900">Custom domain</h2>
+    <p class="mt-1 text-sm leading-5 text-gray-500">Serve the tracking script from your domain name as a first-party resource instead of loading the script from our domain.</p>
+  </header>
+  <div class="mt-6">
+    <%= if @site.custom_domain do %>
+      Configured domain: <b><%= @site.custom_domain.domain %></b>
+      <%= link("Remove custom domain", to: "/sites/#{URI.encode_www_form(@site.domain)}/custom-domains/#{@site.custom_domain.id}", class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
+    <% else %>
+      <%= link("Add custom domain", to: "/sites/#{URI.encode_www_form(@site.domain)}/custom-domains/new", class: "button") %>
+    <% end %>
+  </div>
+</div>

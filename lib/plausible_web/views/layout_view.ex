@@ -36,4 +36,13 @@ defmodule PlausibleWeb.LayoutView do
         "Trial over, upgrade now"
     end
   end
+
+  @doc "http://blog.plataformatec.com.br/2018/05/nested-layouts-with-phoenix/"
+  def render_layout(layout, assigns, do: content) do
+    render(layout, Map.put(assigns, :inner_layout, content))
+  end
+
+  def is_current_tab(conn, tab) do
+    List.last(conn.path_info) == tab
+  end
 end

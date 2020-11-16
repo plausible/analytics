@@ -1,0 +1,41 @@
+<%= render_layout "app.html", assigns do %>
+  <div class="container pt-6">
+    <%= link("← Back to stats", to: "/#{URI.encode_www_form(@site.domain)}", class: "text-sm text-indigo-600 font-bold") %>
+    <div class="pb-5 border-b border-gray-200">
+      <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:leading-9 sm:truncate">
+        Settings for <%= @site.domain %>
+      </h2>
+    </div>
+    <div class="lg:grid lg:grid-cols-12 lg:gap-x-5 mt-6">
+      <div class="py-6 px-2 sm:px-6 lg:py-0 lg:px-0 lg:col-span-3">
+        <div class="lg:hidden">
+          <select class="mt-1 form-select block w-full pl-3 pr-10 py-2 text-base leading-6 border-gray-300 focus:outline-none focus:shadow-outline-blue focus:border-blue-300 sm:text-sm sm:leading-5 transition ease-in-out duration-150">
+            <option selected>General</option>
+
+            <option>Password</option>
+
+            <option>Notifications</option>
+
+            <option>Plan</option>
+
+            <option>Billing</option>
+
+            <option>Team Members</option>
+          </select>
+        </div>
+        <div class="hidden lg:block">
+          <%= render("_settings_tab.html", this_tab: "general", text: "General", site: @site, conn: @conn) %>
+          <%= render("_settings_tab.html", this_tab: "goals", text: "Goals", site: @site, conn: @conn) %>
+          <%= render("_settings_tab.html", this_tab: "search-console", text: "Search Console", site: @site, conn: @conn) %>
+          <%= render("_settings_tab.html", this_tab: "email-reports", text: "Email reports", site: @site, conn: @conn) %>
+          <%= render("_settings_tab.html", this_tab: "custom-domain", text: "Custom domain", site: @site, conn: @conn) %>
+          <%= render("_settings_tab.html", this_tab: "js-snippet", text: "JS snippet", site: @site, conn: @conn) %>
+        </div>
+      </div>
+
+      <div class="space-y-6 sm:px-6 lg:px-0 lg:col-span-9">
+        <%= render @view_module, @view_template, assigns %>
+      </div>
+    </div>
+  </div>
+<% end %>

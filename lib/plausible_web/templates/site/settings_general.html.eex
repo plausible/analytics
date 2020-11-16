@@ -1,0 +1,106 @@
+<%= form_for @changeset, "/#{URI.encode_www_form(@site.domain)}/settings", fn f -> %>
+  <div class="shadow sm:rounded-md sm:overflow-hidden">
+    <div class="bg-white py-6 px-4 space-y-6 sm:p-6">
+      <div>
+        <h2 class="text-lg leading-6 font-medium text-gray-900">General information</h2>
+        <p class="mt-1 text-sm leading-5 text-gray-500">Update your billing information. Please note that updating your location could affect your tax rates.</p>
+      </div>
+
+      <div class="grid grid-cols-4 gap-6">
+        <div class="col-span-4 sm:col-span-2">
+          <%= label f, :domain, class: "block text-sm font-medium leading-5 text-gray-700" %>
+          <%= text_input f, :domain, class: "form-input mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:shadow-outline-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5", disabled: "disabled" %>
+        </div>
+
+        <div class="col-span-4 sm:col-span-2">
+          <%= label f, :timezone, "Reporting Timezone", class: "block text-sm font-medium leading-5 text-gray-700" %>
+          <%= select f, :timezone, Plausible.Timezones.options(), class: "form-select mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:shadow-outline-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5" %>
+        </div>
+      </div>
+    </div>
+    <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+      <span class="inline-flex rounded-md shadow-sm">
+        <%= submit "Save", class: "bg-indigo-600 border border-transparent rounded-md py-2 px-4 inline-flex justify-center text-sm leading-5 font-medium text-white hover:bg-gray-700 focus:outline-none focus:border-gray-900 focus:shadow-outline-gray active:bg-gray-900 transition duration-150 ease-in-out" %>
+      </span>
+    </div>
+  </div>
+<% end %>
+
+<div class="shadow bg-white sm:rounded-md sm:overflow-hidden mt-12 py-6 px-4 sm:p-6">
+  <div>
+    <h2 class="text-lg leading-6 font-medium text-gray-900">Dashboard visibility</h2>
+    <p class="mt-1 text-sm leading-5 text-gray-500">Share your stats publicly or keep them private</p>
+  </div>
+
+	<%= if @site.public do %>
+		<div class="flex items-center space-x-3 mt-4">
+			<%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/make-private", method: "POST", class: "bg-indigo-600 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:shadow-outline") do %>
+				<span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white shadow transform transition ease-in-out duration-200"></span>
+			<% end %>
+			<span class="text-sm leading-5 font-medium text-gray-900">Make stats publicly available on <a href="<%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%>" class="text-indigo-500"><%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%></a></span>
+		</div>
+	<% else %>
+		<div class="flex items-center space-x-3 mt-4">
+			<%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/make-public", method: "POST", class: "bg-gray-200 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:shadow-outline") do %>
+				<span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-white shadow transform transition ease-in-out duration-200"></span>
+			<% end %>
+			<span class="text-sm leading-5 font-medium text-gray-900">Make stats publicly available on <a href="<%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%>" class="text-indigo-500"><%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%></a></span>
+		</div>
+	<% end %>
+
+  <div class="mt-8">
+    <div>
+      <h2 class="text-lg leading-6 font-medium text-gray-900">Shared links</h2>
+      <p class="mt-1 text-sm leading-5 text-gray-500">You can share your stats privately by generating a shared link. The links are impossible to guess and you can add password protection for extra security.</p>
+    </div>
+
+    <div class="mt-6">
+      <%= for link <- @shared_links do %>
+        <div class="flex relative w-full max-w-xl mt-2 text-sm">
+          <input type="text" id="<%= link.slug %>" readonly="readonly" value="<%= shared_link_dest(link) %>" class="transition bg-gray-100 appearance-none border border-transparent rounded rounded-r-none w-full p-2 text-gray-700 appearance-none focus:outline-none focus:border-gray-300" />
+          <button onclick="var input = document.getElementById('<%= link.slug %>'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="py-2 px-4 bg-gray-100 text-indigo-800 rounded-none border-r border-gray-300">
+            <svg class="feather-sm" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
+          <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/shared-links/#{link.slug}", method: :delete, class: "py-2 px-4 bg-gray-100 text-red-600 rounded-l-none", data: [confirm: "Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."]) do %>
+            <svg class="feather feather-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+          <% end %>
+        </div>
+      <% end %>
+
+      <%= link("+ New link", to: "/sites/#{URI.encode_www_form(@site.domain)}/shared-links/new", class: "button mt-4") %>
+    </div>
+  </div>
+</div>
+
+<div class="sm:rounded-md sm:overflow-hidden mt-12 border border-red-400">
+  <div class="bg-white py-6 px-4 space-y-6 sm:p-6">
+    <div>
+      <h2 class="text-lg leading-6 font-medium text-gray-900">Danger zone</h2>
+      <p class="mt-1 text-sm leading-5 text-gray-500">Desctructive actions below can result in irrecoverable data loss. Be careful.</p>
+    </div>
+    <li class="py-4 flex items-center justify-between space-x-4">
+      <div class="flex flex-col">
+        <p class="text-sm leading-5 font-medium text-gray-900">
+        Reset stats
+        </p>
+        <p class="text-sm leading-5 text-gray-500">
+        Removes all pageviews but keeps the site configuration
+        </p>
+      </div>
+      <%= link("Reset #{@site.domain} stats", to: "/#{URI.encode_www_form(@site.domain)}/stats", method: :delete, class: "inline-block px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", data: [confirm: "Resetting the stats cannot be reversed. Are you sure?"]) %>
+    </li>
+    <div class="border-b border-gray-200"></div>
+
+    <li class="py-4 flex items-center justify-between space-x-4">
+      <div class="flex flex-col">
+        <p class="text-sm leading-5 font-medium text-gray-900">
+        Delete site
+        </p>
+        <p class="text-sm leading-5 text-gray-500">
+        Removes all stats along with the site configuration
+        </p>
+      </div>
+      <%= link "Delete #{@site.domain}", to: "/#{URI.encode_www_form(@site.domain)}", method: :delete, class: "inline-block px-4 py-2 border border-transparent font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-50 focus:outline-none focus:border-red-300 focus:shadow-outline-red active:bg-red-200 transition ease-in-out duration-150 sm:text-sm sm:leading-5", data: [confirm: "Deleting the site data cannot be reversed. Are you sure?"] %>
+    </li>
+  </div>
+</div>

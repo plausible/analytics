@@ -1,0 +1,48 @@
+<div class="shadow bg-white sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
+  <header>
+    <h2 class="text-lg leading-6 font-medium text-gray-900">Google Search Console integration</h2>
+    <p class="mt-1 text-sm leading-5 text-gray-500">You can integrate with Google Search Console to get all of your important search results stats such as keyword phrases people find your site with.</p>
+  </header>
+
+  <%= if @site.google_auth do %>
+    <div class="py-2"></div>
+    <span class="text-gray-700">Linked Google account: <b><%= @site.google_auth.email %></b></span>
+
+    <%= link("Unlink Google account", to: "/#{URI.encode_www_form(@site.domain)}/settings/google", class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
+
+    <%= case @search_console_domains do %>
+      <% {:ok, domains} -> %>
+        <%= if @site.google_auth.property && !(@site.google_auth.property in domains) do %>
+          <p class="text-gray-700 mt-6 font-bold">
+          NB: Your Google account does not have access to your currently configured property, <%= @site.google_auth.property %>. Please select a verified property from the list below.
+          </p>
+        <% else %>
+          <p class="text-gray-700 mt-6">
+          Select the Google Search Console property you would like to pull keyword data from. If you don't see your domain, <%= link("set it up and verify", to: "https://docs.plausible.io/google-search-console-integration", class: "text-indigo-500") %> on Search Console first.
+          </p>
+        <% end %>
+
+        <%= form_for Plausible.Site.GoogleAuth.changeset(@site.google_auth), "/#{URI.encode_www_form(@site.domain)}/settings/google", [class: "max-w-xs"], fn f -> %>
+          <div class="my-6">
+            <div class="inline-block relative w-full">
+              <%= select f, :property, domains, prompt: "(Choose property)", class: "block appearance-none w-full bg-gray-100 text-gray-700 cursor-pointer hover:border-gray-500 p-2 pr-8 rounded leading-normal focus:outline-none" %>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-pink-500">
+                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <%= submit "Save", class: "button" %>
+        <% end %>
+        <% {:error, error} -> %>
+          <p class="text-gray-700 mt-6">The following error happened when fetching your Google Search Console domains.</p>
+          <p class="text-red-700 font-medium mt-3"><%= error %></p>
+        <% end %>
+      <% else %>
+        <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(@site.id), class: "button mt-8") %>
+
+        <div class="text-gray-700 mt-8">
+          NB: You also need to set up your site on <%= link("Google Search Console", to: "https://search.google.com/search-console/about") %> for the integration to work. <%= link("Read the docs", to: "https://docs.plausible.io/google-search-console-integration", class: "text-indigo-500") %>
+        </div>
+      <% end %>
+</div>

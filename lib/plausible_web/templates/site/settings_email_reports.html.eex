@@ -1,0 +1,70 @@
+<div class="shadow bg-white sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
+  <header>
+    <h2 class="text-lg leading-6 font-medium text-gray-900">Email reports</h2>
+    <p class="mt-1 text-sm leading-5 text-gray-500">Send weekly/monthly analytics reports to as many addresses as you wish</p>
+  </header>
+
+  <div class="my-8 flex items-center">
+    <%= if @weekly_report do %>
+      <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/disable", method: :post, class: "bg-indigo-600 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:shadow-outline") do %>
+        <span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white shadow transform transition ease-in-out duration-200"></span>
+      <% end %>
+    <% else %>
+      <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/enable", method: :post, class: "bg-gray-200 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:shadow-outline") do %>
+        <span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-white shadow transform transition ease-in-out duration-200"></span>
+      <% end %>
+    <% end %>
+    <span class="ml-2">Send a weekly email report every Monday</span>
+  </div>
+  <%= if @weekly_report do %>
+    <div class="text-sm text-gray-700 mt-6">
+      <h4 class="font-bold my-2">Weekly report recipients</h4>
+      <%= for recipient <- @weekly_report.recipients do %>
+        <div class="p-2 flex justify-between bg-gray-100 rounded my-2 max-w-md">
+          <span>
+            <svg class="feather mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg><%= recipient %>
+          </span>
+          <%= button("❌", to: "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/recipients/#{recipient}", method: :delete) %>
+        </div>
+      <% end %>
+      <%= form_for @conn, "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/recipients", fn f -> %>
+        <div class="flex justify-between my-2 max-w-md">
+          <%= email_input f, :recipient, class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300", style: "flex-grow: 2", placeholder: "recipient@example.com" %>
+          <%= submit "Add recipient", class: "button rounded-l-none whitespace-no-wrap" %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+  <div class="my-8 border-b border-gray-300"></div>
+  <div class="my-8 flex items-center">
+    <%= if @monthly_report do %>
+      <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/disable", method: :post, class: "bg-indigo-600 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:shadow-outline") do %>
+        <span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white shadow transform transition ease-in-out duration-200"></span>
+      <% end %>
+    <% else %>
+      <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/enable", method: :post, class: "bg-gray-200 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:shadow-outline") do %>
+				<span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-white shadow transform transition ease-in-out duration-200"></span>
+      <% end %>
+    <% end %>
+    <span class="ml-2">Send a monthly email report on 1st of the month</span>
+  </div>
+  <%= if @monthly_report do %>
+    <div class="text-sm text-gray-700 mt-6">
+      <h4 class="font-bold my-2">Monthly report recipients</h4>
+      <%= for recipient <- @monthly_report.recipients do %>
+        <div class="p-2 flex justify-between bg-gray-100 rounded my-2 max-w-md">
+          <span>
+            <svg class="feather mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg><%= recipient %>
+          </span>
+          <%= button("❌", to: "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/recipients/#{recipient}", method: :delete) %>
+        </div>
+      <% end %>
+      <%= form_for @conn, "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/recipients", fn f -> %>
+        <div class="flex justify-between my-2 max-w-md">
+          <%= email_input f, :recipient, class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300", style: "flex-grow: 2", placeholder: "recipient@example.com" %>
+          <%= submit "Add recipient", class: "button rounded-l-none whitespace-no-wrap" %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

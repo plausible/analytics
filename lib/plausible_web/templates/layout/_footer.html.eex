@@ -1,4 +1,4 @@
-<div class="bg-gray-800">
+<div class="bg-gray-800 mt-12">
   <div class="container py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
     <div class="xl:grid xl:grid-cols-3 xl:gap-8">
       <div class="my-8 xl:my-0">

@@ -80,11 +80,7 @@
       </div>
     </nav>
 
-    <%= if get_flash(@conn, :success) do %>
-      <div id="flash" class="text-center bg-green-500 text-green-100 text-sm font-bold px-4 absolute w-full transition overflow-hidden" style="top: 91px" role="alert">
-        <p class="py-3 "><%= get_flash(@conn, :success) %></p>
-      </div>
-    <% end %>
+    <%= render("_flash.html", assigns) %>
 
     <%= if get_flash(@conn, :error) do %>
       <div id="flash" class="text-center bg-red-dark-500 text-red-100 text-sm font-bold px-4 absolute w-full transition overflow-hidden" style="top: 91px" role="alert">
@@ -137,7 +133,7 @@
     <% end %>
 
     <main class="flex-1">
-    <%= render @view_module, @view_template, assigns %>
+    <%= Map.get(assigns, :inner_layout) || render @view_module, @view_template, assigns %>
     </main>
     <%= render("_footer.html", assigns) %>
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
