@@ -6,7 +6,7 @@
 
   var scriptEl = document.querySelector('[src*="' + plausibleHost +'"]')
   var domain = scriptEl && scriptEl.getAttribute('data-domain')
-  var pageVisible = false
+  var lastPage;
 
   function trigger(eventName, options) {
     if (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(location.hostname) || location.protocol === 'file:') return console.warn('Ignoring event on localhost');
@@ -42,12 +42,13 @@
   }
 
   function page() {
+    if (lastPage === location.pathname) return;
+    lastPage = location.pathname
     trigger('pageview')
   }
 
   function handleVisibilityChange() {
-    if (!pageVisible && document.visibilityState === 'visible') {
-      pageVisible = true
+    if (!lastPage && document.visibilityState === 'visible') {
       page()
     }
   }
