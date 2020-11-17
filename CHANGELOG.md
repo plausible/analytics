@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - Use alpine as base image to decrease Docker image size plausible/analytics#353
 - Ignore automated browsers (Phantom, Selenium, Headless Chrome, etc)
 - Display domain's favicon on the home page
+- Ignore consecutive pageviews on same pathname plausible/analytics#417
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370
