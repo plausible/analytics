@@ -20,7 +20,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
 
     test "returns top browser versions by unique visitors", %{conn: conn, site: site} do
       filters = Jason.encode!(%{browser: "Chrome"})
-      conn = get(conn, "/api/stats/#{site.domain}/browser-versions?period=day&date=2019-01-01")
+      conn = get(conn, "/api/stats/#{site.domain}/browser-versions?period=day&date=2019-01-01&filters=#{filters}")
 
       assert json_response(conn, 200) == [
                %{"name" => "78.0", "count" => 2, "percentage" => 100}
