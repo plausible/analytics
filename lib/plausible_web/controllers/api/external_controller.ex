@@ -71,7 +71,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     if is_bot?(ua) do
       {:ok, nil}
     else
-      uri = params["url"] && URI.parse(URI.decode(params["url"]))
+      uri = params["url"] && URI.parse(params["url"])
       query = if uri && uri.query, do: URI.decode_query(uri.query), else: %{}
 
       ref = parse_referrer(uri, params["referrer"])
@@ -133,10 +133,11 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp get_pathname(nil, _), do: "/"
 
   defp get_pathname(uri, hash_mode) do
-    pathname = uri.path || "/"
+    pathname = (uri.path || "/")
+               |> URI.decode
 
     if hash_mode && uri.fragment do
-      pathname <> "#" <> uri.fragment
+      pathname <> "#" <> URI.decode(uri.fragment)
     else
       pathname
     end

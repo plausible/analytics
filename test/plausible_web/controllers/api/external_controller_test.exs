@@ -484,6 +484,25 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert pageview.pathname == "/#page-a"
   end
 
+  test "decodes URL pathname, fragment and search", %{conn: conn} do
+    params = %{
+      n: "pageview",
+      u: "https://test.com/%EF%BA%9D%EF%BB%AD%EF%BA%8E%EF%BA%8B%EF%BA%AF-%EF%BB%AE%EF%BB%A4%EF%BA%B3%EF%BA%8E%EF%BA%92%EF%BB%97%EF%BA%8E%EF%BA%97?utm_source=%25balle%25",
+      d: "url-decode-test.com",
+      h: 1
+    }
+
+    conn
+    |> put_req_header("content-type", "text/plain")
+    |> post("/api/event", Jason.encode!(params))
+
+    pageview = get_event("url-decode-test.com")
+
+    assert pageview.hostname == "test.com"
+    assert pageview.pathname == "/ﺝﻭﺎﺋﺯ-ﻮﻤﺳﺎﺒﻗﺎﺗ"
+    assert pageview.utm_source == "%balle%"
+  end
+
   test "responds 400 when required fields are missing", %{conn: conn} do
     params = %{}
 

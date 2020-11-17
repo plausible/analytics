@@ -167,7 +167,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
 
       res = json_response(conn, 200)
-      assert %{"name" => "Unique visitors", "count" => 2, "change" => 100} in res["top_stats"]
+      assert %{"name" => "Unique visitors", "count" => 3, "change" => 100} in res["top_stats"]
     end
 
     test "returns only visitors with specific screen size", %{conn: conn, site: site} do
@@ -180,7 +180,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
 
       res = json_response(conn, 200)
-      assert %{"name" => "Unique visitors", "count" => 2, "change" => 100} in res["top_stats"]
+      assert %{"name" => "Unique visitors", "count" => 3, "change" => 100} in res["top_stats"]
     end
 
     test "returns only visitors with specific browser", %{conn: conn, site: site} do
@@ -193,7 +193,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
 
       res = json_response(conn, 200)
-      assert %{"name" => "Unique visitors", "count" => 2, "change" => 100} in res["top_stats"]
+      assert %{"name" => "Unique visitors", "count" => 3, "change" => 100} in res["top_stats"]
     end
 
     test "returns only visitors with specific operating system", %{conn: conn, site: site} do
@@ -206,7 +206,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
 
       res = json_response(conn, 200)
-      assert %{"name" => "Unique visitors", "count" => 2, "change" => 100} in res["top_stats"]
+      assert %{"name" => "Unique visitors", "count" => 3, "change" => 100} in res["top_stats"]
     end
   end
 end
