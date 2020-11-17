@@ -31,9 +31,11 @@
     "react-router-dom": "^5.2.0",
     "react-transition-group": "^4.4.1",
     "tailwindcss": "^1.9.6",
-    "uglifyjs-webpack-plugin": "^2.2.0",
     "url-search-params-polyfill": "^8.0.0",
     "webpack": "4.39.2",
     "webpack-cli": "^3.3.12"
+  },
+  "devDependencies": {
+    "terser-webpack-plugin": "^4.2.3"
   }
 }
