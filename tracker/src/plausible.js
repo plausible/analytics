@@ -63,8 +63,8 @@
         link = link.parentNode
       }
 
-      if (link && link.href && link.host !== location.host) {
-        plausible('Outbound Link: Click', {meta: {url: link.href}})
+      if (link && link.href && link.host && link.host !== location.host) {
+        plausible('Outbound Link: Click', {props: {url: link.href}})
 
         // Delay navigation so that Plausible is notified of the click
         if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
