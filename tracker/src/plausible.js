@@ -42,7 +42,9 @@
   }
 
   function page() {
+    {{#unless hashMode}}
     if (lastPage === location.pathname) return;
+    {{/unless}}
     lastPage = location.pathname
     trigger('pageview')
   }
@@ -86,6 +88,9 @@
   {{/if}}
 
   try {
+    {{#if hashMode}}
+    window.addEventListener('hashchange', page)
+    {{else}}
     var his = window.history
     if (his.pushState) {
       var originalPushState = his['pushState']
@@ -96,8 +101,6 @@
       window.addEventListener('popstate', page)
     }
 
-    {{#if hashMode}}
-    window.addEventListener('hashchange', page)
     {{/if}}
     {{#if outboundLinks}}
     registerOutboundLinkEvents()
