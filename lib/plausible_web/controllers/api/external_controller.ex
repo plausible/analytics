@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         browser_version: (ua && browser_version(ua)) || "",
         screen_size: calculate_screen_size(params["screen_width"]) || "",
         "meta.key": Map.keys(params["meta"]),
-        "meta.value": Map.values(params["meta"])
+        "meta.value": Map.values(params["meta"]) |> Enum.map(&Kernel.to_string/1)
       }
 
       changeset = Plausible.ClickhouseEvent.changeset(%Plausible.ClickhouseEvent{}, event_attrs)

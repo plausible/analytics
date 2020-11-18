@@ -391,6 +391,27 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert event.name == "custom event"
   end
 
+  test "casts custom props to string", %{conn: conn} do
+    params = %{
+      name: "Signup",
+      url: "http://gigride.live/",
+      domain: "custom-prop-test.com",
+      props: Jason.encode!(%{
+        bool_test: true,
+        number_test: 12
+      })
+    }
+
+    conn
+    |> put_req_header("content-type", "text/plain")
+    |> post("/api/event", Jason.encode!(params))
+
+    event = get_event("custom-prop-test.com")
+
+    assert Map.get(event, :"meta.key") == ["bool_test", "number_test"]
+    assert Map.get(event, :"meta.value") == ["true", "12"]
+  end
+
   test "ignores a malformed referrer URL", %{conn: conn} do
     params = %{
       name: "pageview",
