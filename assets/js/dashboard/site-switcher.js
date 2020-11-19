@@ -88,7 +88,7 @@ export default class SiteSwitcher extends React.Component {
   }
 
   render() {
-    const hoverClass = this.props.loggedIn ? 'hover:text-gray-500 focus:border-blue-300 focus:shadow-outline-blue ' : 'cursor-default'
+    const hoverClass = this.props.loggedIn ? 'hover:text-gray-500 focus:border-blue-300 focus:ring ' : 'cursor-default'
 
     return (
       <div className="relative inline-block text-left z-10 mr-8">
@@ -109,7 +109,7 @@ export default class SiteSwitcher extends React.Component {
           leaveTo="opacity-0 scale-95"
         >
         <div className="origin-top-left absolute left-0 mt-2 w-64 rounded-md shadow-lg" ref={node => this.dropDownNode = node} >
-          <div className="rounded-md bg-white shadow-xs">
+          <div className="rounded-md bg-white ring-1 ring-black ring-opacity-5">
             { this.renderDropdown() }
           </div>
         </div>

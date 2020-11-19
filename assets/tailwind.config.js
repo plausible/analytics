@@ -1,4 +1,9 @@
 module.exports = {
+  purge: [
+    './js/**/*.js',
+    '../lib/plausible_web/templates/**/*.html.eex',
+  ],
+  darkMode: false,
   theme: {
     container: {
       center: true,
@@ -17,8 +22,9 @@ module.exports = {
     textColor: ['responsive', 'hover', 'focus', 'group-hover'],
     display: ['responsive', 'hover', 'focus', 'group-hover']
   },
-  corePlugins: {},
   plugins: [
-    require('@tailwindcss/ui')
-  ],
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+    require('@tailwindcss/aspect-ratio'),
+  ]
 }

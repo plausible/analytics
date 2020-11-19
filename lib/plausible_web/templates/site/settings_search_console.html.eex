@@ -8,7 +8,7 @@
     <div class="py-2"></div>
     <span class="text-gray-700">Linked Google account: <b><%= @site.google_auth.email %></b></span>
 
-    <%= link("Unlink Google account", to: "/#{URI.encode_www_form(@site.domain)}/settings/google", class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
+    <%= link("Unlink Google account", to: "/#{URI.encode_www_form(@site.domain)}/settings/google", class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
 
     <%= case @search_console_domains do %>
       <% {:ok, domains} -> %>
@@ -25,10 +25,7 @@
         <%= form_for Plausible.Site.GoogleAuth.changeset(@site.google_auth), "/#{URI.encode_www_form(@site.domain)}/settings/google", [class: "max-w-xs"], fn f -> %>
           <div class="my-6">
             <div class="inline-block relative w-full">
-              <%= select f, :property, domains, prompt: "(Choose property)", class: "block appearance-none w-full bg-gray-100 text-gray-700 cursor-pointer hover:border-gray-500 p-2 pr-8 rounded leading-normal focus:outline-none" %>
-              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-pink-500">
-                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-              </div>
+              <%= select f, :property, domains, prompt: "(Choose property)", class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
             </div>
           </div>
 

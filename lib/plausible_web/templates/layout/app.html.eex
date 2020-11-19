@@ -51,7 +51,7 @@
                   <ul class="flex" x-show="!document.cookie.includes('logged_in=true')">
                     <li>
                         <div class="inline-flex rounded shadow ml-6">
-                          <a href="/" class="inline-flex items-center justify-center px-5 py-2 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out">My Sites</a>
+                          <a href="/" class="inline-flex items-center justify-center px-5 py-2 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring transition duration-150 ease-in-out">My Sites</a>
                         </div>
                     </li>
                   </ul>
@@ -70,7 +70,7 @@
                           <a href="/login" class="font-medium text-gray-500 hover:text-gray-900 focus:outline-none focus:text-gray-900 transition duration-150 ease-in-out">Login</a>
                         </div>
                         <div class="inline-flex rounded shadow ml-6">
-                          <a href="/register" class="inline-flex items-center justify-center px-5 py-2 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:shadow-outline transition duration-150 ease-in-out">Sign up</a>
+                          <a href="/register" class="inline-flex items-center justify-center px-5 py-2 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring transition duration-150 ease-in-out">Sign up</a>
                         </div>
                     </li>
                   </ul>
@@ -102,7 +102,7 @@
             </div>
             <div class="order-3 mt-2 flex-shrink-0 w-full sm:order-2 sm:mt-0 sm:w-auto">
               <div class="rounded-md shadow-sm">
-                <%= link("Update billing info", to: @conn.assigns[:current_user].subscription.update_url, class: "flex items-center justify-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-gray-600 bg-white hover:text-gray-500 focus:outline-none focus:shadow-outline transition ease-in-out duration-150") %>
+                <%= link("Update billing info", to: @conn.assigns[:current_user].subscription.update_url, class: "flex items-center justify-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-gray-600 bg-white hover:text-gray-500 focus:outline-none focus:ring transition ease-in-out duration-150") %>
               </div>
             </div>
           </div>
@@ -124,7 +124,7 @@
             </div>
             <div class="order-3 mt-2 flex-shrink-0 w-full sm:order-2 sm:mt-0 sm:w-auto">
               <div class="rounded-md shadow-sm">
-                <%= link("Update billing info", to: @conn.assigns[:current_user].subscription.update_url, class: "flex items-center justify-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-gray-600 bg-white hover:text-gray-500 focus:outline-none focus:shadow-outline transition ease-in-out duration-150") %>
+                <%= link("Update billing info", to: @conn.assigns[:current_user].subscription.update_url, class: "flex items-center justify-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-gray-600 bg-white hover:text-gray-500 focus:outline-none focus:ring transition ease-in-out duration-150") %>
               </div>
             </div>
           </div>

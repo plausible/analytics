@@ -9,18 +9,18 @@
       <div class="grid grid-cols-4 gap-6">
         <div class="col-span-4 sm:col-span-2">
           <%= label f, :domain, class: "block text-sm font-medium leading-5 text-gray-700" %>
-          <%= text_input f, :domain, class: "form-input mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:shadow-outline-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5", disabled: "disabled" %>
+          <%= text_input f, :domain, class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:max-w-xs sm:text-sm border-gray-300 rounded-md", disabled: "disabled" %>
         </div>
 
         <div class="col-span-4 sm:col-span-2">
           <%= label f, :timezone, "Reporting Timezone", class: "block text-sm font-medium leading-5 text-gray-700" %>
-          <%= select f, :timezone, Plausible.Timezones.options(), class: "form-select mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:shadow-outline-blue focus:border-blue-300 transition duration-150 ease-in-out sm:text-sm sm:leading-5" %>
+          <%= select f, :timezone, Plausible.Timezones.options(), class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
         </div>
       </div>
     </div>
     <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
       <span class="inline-flex rounded-md shadow-sm">
-        <%= submit "Save", class: "bg-indigo-600 border border-transparent rounded-md py-2 px-4 inline-flex justify-center text-sm leading-5 font-medium text-white hover:bg-gray-700 focus:outline-none focus:border-gray-900 focus:shadow-outline-gray active:bg-gray-900 transition duration-150 ease-in-out" %>
+        <%= submit "Save", class: "bg-indigo-600 border border-transparent rounded-md py-2 px-4 inline-flex justify-center text-sm leading-5 font-medium text-white hover:bg-gray-700 focus:outline-none focus:border-gray-900 focus:ring active:bg-gray-900 transition duration-150 ease-in-out" %>
       </span>
     </div>
   </div>
@@ -34,14 +34,14 @@
 
 	<%= if @site.public do %>
 		<div class="flex items-center space-x-3 mt-4">
-			<%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/make-private", method: "POST", class: "bg-indigo-600 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:shadow-outline") do %>
+			<%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/make-private", method: "POST", class: "bg-indigo-600 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
 				<span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white shadow transform transition ease-in-out duration-200"></span>
 			<% end %>
 			<span class="text-sm leading-5 font-medium text-gray-900">Make stats publicly available on <a href="<%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%>" class="text-indigo-500"><%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%></a></span>
 		</div>
 	<% else %>
 		<div class="flex items-center space-x-3 mt-4">
-			<%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/make-public", method: "POST", class: "bg-gray-200 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:shadow-outline") do %>
+			<%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/make-public", method: "POST", class: "bg-gray-200 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
 				<span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-white shadow transform transition ease-in-out duration-200"></span>
 			<% end %>
 			<span class="text-sm leading-5 font-medium text-gray-900">Make stats publicly available on <a href="<%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%>" class="text-indigo-500"><%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%></a></span>
@@ -87,7 +87,7 @@
         Removes all pageviews but keeps the site configuration
         </p>
       </div>
-      <%= link("Reset #{@site.domain} stats", to: "/#{URI.encode_www_form(@site.domain)}/stats", method: :delete, class: "inline-block px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", data: [confirm: "Resetting the stats cannot be reversed. Are you sure?"]) %>
+      <%= link("Reset #{@site.domain} stats", to: "/#{URI.encode_www_form(@site.domain)}/stats", method: :delete, class: "inline-block px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", data: [confirm: "Resetting the stats cannot be reversed. Are you sure?"]) %>
     </li>
     <div class="border-b border-gray-200"></div>
 
@@ -100,7 +100,7 @@
         Removes all stats along with the site configuration
         </p>
       </div>
-      <%= link "Delete #{@site.domain}", to: "/#{URI.encode_www_form(@site.domain)}", method: :delete, class: "inline-block px-4 py-2 border border-transparent font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-50 focus:outline-none focus:border-red-300 focus:shadow-outline-red active:bg-red-200 transition ease-in-out duration-150 sm:text-sm sm:leading-5", data: [confirm: "Deleting the site data cannot be reversed. Are you sure?"] %>
+      <%= link "Delete #{@site.domain}", to: "/#{URI.encode_www_form(@site.domain)}", method: :delete, class: "inline-block px-4 py-2 border border-transparent font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-50 focus:outline-none focus:border-red-300 focus:ring active:bg-red-200 transition ease-in-out duration-150 sm:text-sm sm:leading-5", data: [confirm: "Deleting the site data cannot be reversed. Are you sure?"] %>
     </li>
   </div>
 </div>
