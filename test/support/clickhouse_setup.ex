@@ -16,7 +16,8 @@ defmodule Plausible.Test.ClickhouseSetup do
         screen_size: "Desktop",
         referrer_source: "10words",
         referrer: "10words.com/page1",
-        timestamp: ~N[2019-01-01 00:00:00]
+        timestamp: ~N[2019-01-01 00:00:00],
+        session_id: @conversion_1_session_id,
       },
       %{
         name: "pageview",
@@ -161,7 +162,9 @@ defmodule Plausible.Test.ClickhouseSetup do
         country_code: "US",
         screen_size: "Desktop",
         browser: "Chrome",
+        browser_version: "78.0",
         operating_system: "Mac",
+        operating_system_version: "10.15",
         session_id: @conversion_1_session_id,
         is_bounce: true,
         duration: 100,

@@ -12,12 +12,16 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Use alpine as base image to decrease Docker image size plausible/analytics#353
 - Ignore automated browsers (Phantom, Selenium, Headless Chrome, etc)
+- Display domain's favicon on the home page
+- Ignore consecutive pageviews on same pathname plausible/analytics#417
+- Validate domain format on site creation plausible/analytics#427
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370
 - Ignore arrow keys when modifier keys are pressed plausible/analytics#363
 - Show correct stats when goal filter is combined with source plausible/analytics#374
 - Going back in history now correctly resets the period filter plausible/analytics#408
+- Fix URL decoding in query parameters plausible/analytics#416
 
 ### Security
 - Do not run the plausible Docker container as root plausible/analytics#362

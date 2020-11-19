@@ -391,6 +391,27 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert event.name == "custom event"
   end
 
+  test "casts custom props to string", %{conn: conn} do
+    params = %{
+      name: "Signup",
+      url: "http://gigride.live/",
+      domain: "custom-prop-test.com",
+      props: Jason.encode!(%{
+        bool_test: true,
+        number_test: 12
+      })
+    }
+
+    conn
+    |> put_req_header("content-type", "text/plain")
+    |> post("/api/event", Jason.encode!(params))
+
+    event = get_event("custom-prop-test.com")
+
+    assert Map.get(event, :"meta.key") == ["bool_test", "number_test"]
+    assert Map.get(event, :"meta.value") == ["true", "12"]
+  end
+
   test "ignores a malformed referrer URL", %{conn: conn} do
     params = %{
       name: "pageview",
@@ -482,6 +503,25 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     pageview = get_event("external-controller-test-23.com")
 
     assert pageview.pathname == "/#page-a"
+  end
+
+  test "decodes URL pathname, fragment and search", %{conn: conn} do
+    params = %{
+      n: "pageview",
+      u: "https://test.com/%EF%BA%9D%EF%BB%AD%EF%BA%8E%EF%BA%8B%EF%BA%AF-%EF%BB%AE%EF%BB%A4%EF%BA%B3%EF%BA%8E%EF%BA%92%EF%BB%97%EF%BA%8E%EF%BA%97?utm_source=%25balle%25",
+      d: "url-decode-test.com",
+      h: 1
+    }
+
+    conn
+    |> put_req_header("content-type", "text/plain")
+    |> post("/api/event", Jason.encode!(params))
+
+    pageview = get_event("url-decode-test.com")
+
+    assert pageview.hostname == "test.com"
+    assert pageview.pathname == "/ﺝﻭﺎﺋﺯ-ﻮﻤﺳﺎﺒﻗﺎﺗ"
+    assert pageview.utm_source == "%balle%"
   end
 
   test "responds 400 when required fields are missing", %{conn: conn} do

@@ -8,7 +8,8 @@
     <div class="overflow-hidden bg-white rounded max-w-xl w-full shadow-md leading-normal">
       <%= for site <- @sites do %>
         <div class="w-full relative">
-          <a href="/<%= URI.encode_www_form(site.domain) %>" class="block hover:bg-gray-100 group p-4 border-b no-underline flex justify-between transition">
+          <a href="/<%= URI.encode_www_form(site.domain) %>" class="block hover:bg-gray-100 group p-4 border-b no-underline flex justify-between transition items-center">
+            <img src="https://icons.duckduckgo.com/ip3/<%= site.domain %>.ico" referrerpolicy="no-referrer" class="inline mb-1 mr-2 w-4">
             <p class="w-full font-bold text-lg mb-1 text-gray-800"><%= site.domain %></p>
           </a>
           <%= link(to: "/#{URI.encode_www_form(site.domain)}/settings", class: "flex absolute hover:bg-gray-100 transition rounded py-2 px-5", style: "top: 12px; right: 6px;") do %>

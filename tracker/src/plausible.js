@@ -6,7 +6,7 @@
 
   var scriptEl = document.querySelector('[src*="' + plausibleHost +'"]')
   var domain = scriptEl && scriptEl.getAttribute('data-domain')
-  var pageVisible = false
+  var lastPage;
 
   function trigger(eventName, options) {
     if (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(location.hostname) || location.protocol === 'file:') return console.warn('Ignoring event on localhost');
@@ -42,49 +42,44 @@
   }
 
   function page() {
+    {{#unless hashMode}}
+    if (lastPage === location.pathname) return;
+    {{/unless}}
+    lastPage = location.pathname
     trigger('pageview')
   }
 
   function handleVisibilityChange() {
-    if (!pageVisible && document.visibilityState === 'visible') {
-      pageVisible = true
+    if (!lastPage && document.visibilityState === 'visible') {
       page()
     }
   }
 
   {{#if outboundLinks}}
-  function trackOutboundLink(event) {
-    var link = event.target;
-    while (link && (typeof link.tagName == 'undefined' || link.tagName.toLowerCase() != 'a' || !link.href)) {
-     link = link.parentNode;
-    }
-
-    if (link && link.href) {
-      plausible('Outbound Link: Click', {meta: {url: link.href}})
-    }
-
-    // Delay navigation so that Plausible is notified of the click
-    if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
-      setTimeout(function() { location.href = link.href; }, 150);
-      event.preventDefault();
-    }
-  }
-
   function registerOutboundLinkEvents() {
-    window.addEventListener('load', function() {
-      var links = document.getElementsByTagName('a')
+    document.addEventListener('click', function (event) {
+      var link = event.target;
+      while(link && (typeof link.tagName == 'undefined' || link.tagName.toLowerCase() != 'a' || !link.href)) {
+        link = link.parentNode
+      }
 
-      for (var i = 0; i < links.length; ++i) {
-        var link = links[i]
-        if (link.host !== location.host) {
-          link.addEventListener('click', trackOutboundLink);
+      if (link && link.href && link.host && link.host !== location.host) {
+        plausible('Outbound Link: Click', {props: {url: link.href}})
+
+        // Delay navigation so that Plausible is notified of the click
+        if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
+          setTimeout(function() { location.href = link.href; }, 150);
+          event.preventDefault();
         }
       }
-    });
+    })
   }
   {{/if}}
 
   try {
+    {{#if hashMode}}
+    window.addEventListener('hashchange', page)
+    {{else}}
     var his = window.history
     if (his.pushState) {
       var originalPushState = his['pushState']
@@ -95,8 +90,6 @@
       window.addEventListener('popstate', page)
     }
 
-    {{#if hashMode}}
-    window.addEventListener('hashchange', page)
     {{/if}}
     {{#if outboundLinks}}
     registerOutboundLinkEvents()

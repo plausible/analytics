@@ -47,6 +47,7 @@ defmodule PlausibleWeb.Tracker do
     conn
     |> put_resp_header("cache-control", "max-age=#{@max_age},public")
     |> put_resp_header("content-type", "application/javascript")
+    |> put_resp_header("cross-origin-resource-policy", "cross-origin")
     |> send_resp(200, file)
     |> halt()
   end

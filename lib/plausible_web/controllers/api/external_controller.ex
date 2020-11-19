@@ -71,7 +71,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     if is_bot?(ua) do
       {:ok, nil}
     else
-      uri = params["url"] && URI.parse(URI.decode(params["url"]))
+      uri = params["url"] && URI.parse(params["url"])
       query = if uri && uri.query, do: URI.decode_query(uri.query), else: %{}
 
       ref = parse_referrer(uri, params["referrer"])
@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         browser_version: (ua && browser_version(ua)) || "",
         screen_size: calculate_screen_size(params["screen_width"]) || "",
         "meta.key": Map.keys(params["meta"]),
-        "meta.value": Map.values(params["meta"])
+        "meta.value": Map.values(params["meta"]) |> Enum.map(&Kernel.to_string/1)
       }
 
       changeset = Plausible.ClickhouseEvent.changeset(%Plausible.ClickhouseEvent{}, event_attrs)
@@ -133,10 +133,11 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp get_pathname(nil, _), do: "/"
 
   defp get_pathname(uri, hash_mode) do
-    pathname = uri.path || "/"
+    pathname = (uri.path || "/")
+               |> URI.decode
 
     if hash_mode && uri.fragment do
-      pathname <> "#" <> uri.fragment
+      pathname <> "#" <> URI.decode(uri.fragment)
     else
       pathname
     end

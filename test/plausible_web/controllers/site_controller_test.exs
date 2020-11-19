@@ -52,6 +52,18 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~ "can&#39;t be blank"
     end
 
+    test "only alphanumeric characters and slash allowed in domain", %{conn: conn} do
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "timezone" => "Europe/London",
+            "domain" => "!@£.com"
+          }
+        })
+
+      assert html_response(conn, 200) =~ "only letters, numbers, slashes and period allowed"
+    end
+
     test "renders form again when it is a duplicate domain", %{conn: conn} do
       insert(:site, domain: "example.com")
 
