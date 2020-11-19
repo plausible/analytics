@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Ignore automated browsers (Phantom, Selenium, Headless Chrome, etc)
 - Display domain's favicon on the home page
 - Ignore consecutive pageviews on same pathname plausible/analytics#417
+- Validate domain format on site creation plausible/analytics#427
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370
