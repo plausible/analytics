@@ -20,17 +20,36 @@
     <div class="text-sm text-gray-700 mt-6">
       <h4 class="font-bold my-2">Weekly report recipients</h4>
       <%= for recipient <- @weekly_report.recipients do %>
-        <div class="p-2 flex justify-between bg-gray-100 rounded my-2 max-w-md">
+        <div class="p-2 pl-3 flex justify-between bg-gray-100 rounded my-2 max-w-md">
           <span>
-            <svg class="feather mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg><%= recipient %>
+            <svg class="h-5 w-5 text-gray-400 inline mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+            </svg><%= recipient %>
           </span>
-          <%= button("❌", to: "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/recipients/#{recipient}", method: :delete) %>
+          <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/recipients/#{recipient}", method: :delete) do %>
+            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          <% end %>
         </div>
       <% end %>
       <%= form_for @conn, "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/recipients", fn f -> %>
-        <div class="flex justify-between my-2 max-w-md">
-          <%= email_input f, :recipient, class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300", style: "flex-grow: 2", placeholder: "recipient@example.com" %>
-          <%= submit "Add recipient", class: "button rounded-l-none whitespace-nowrap" %>
+        <div class="max-w-md mt-4">
+          <div class="mt-1 flex rounded-md shadow-sm">
+            <div class="relative flex items-stretch flex-grow focus-within:z-10">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                </svg>
+              </div>
+              <%= email_input f, :recipient, class: "focus:ring-indigo-500 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300", placeholder: "recipient@example.com" %>
+            </div>
+
+            <%= submit class: "-ml-px relative button rounded-l-none" do %>
+              <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"></path></svg>
+              <span>Add recipient</span>
+            <% end %>
+          </div>
         </div>
       <% end %>
     </div>
@@ -52,17 +71,36 @@
     <div class="text-sm text-gray-700 mt-6">
       <h4 class="font-bold my-2">Monthly report recipients</h4>
       <%= for recipient <- @monthly_report.recipients do %>
-        <div class="p-2 flex justify-between bg-gray-100 rounded my-2 max-w-md">
+        <div class="p-2 pl-3 flex justify-between bg-gray-100 rounded my-2 max-w-md">
           <span>
-            <svg class="feather mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg><%= recipient %>
+            <svg class="h-5 w-5 text-gray-400 inline mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+            </svg><%= recipient %>
           </span>
-          <%= button("❌", to: "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/recipients/#{recipient}", method: :delete) %>
+          <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/recipients/#{recipient}", method: :delete) do %>
+            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          <% end %>
         </div>
       <% end %>
       <%= form_for @conn, "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/recipients", fn f -> %>
-        <div class="flex justify-between my-2 max-w-md">
-          <%= email_input f, :recipient, class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300", style: "flex-grow: 2", placeholder: "recipient@example.com" %>
-          <%= submit "Add recipient", class: "button rounded-l-none whitespace-nowrap" %>
+        <div class="max-w-md mt-4">
+          <div class="mt-1 flex rounded-md shadow-sm">
+            <div class="relative flex items-stretch flex-grow focus-within:z-10">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                </svg>
+              </div>
+              <%= email_input f, :recipient, class: "focus:ring-indigo-500 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300", placeholder: "recipient@example.com" %>
+            </div>
+
+            <%= submit class: "-ml-px relative button rounded-l-none" do %>
+              <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"></path></svg>
+              <span>Add recipient</span>
+            <% end %>
+          </div>
         </div>
       <% end %>
     </div>

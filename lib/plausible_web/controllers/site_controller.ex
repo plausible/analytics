@@ -91,17 +91,26 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_general(conn, %{"website" => website}) do
-    site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
-
-    shared_links = Repo.all(from l in Plausible.Site.SharedLink, where: l.site_id == ^site.id)
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_general.html",
       site: site,
-      shared_links: shared_links,
       changeset: Plausible.Site.changeset(site, %{}),
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
+  end
+
+  def settings_visibility(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    shared_links = Repo.all(from l in Plausible.Site.SharedLink, where: l.site_id == ^site.id)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_visibility.html",
+      site: site,
+      shared_links: shared_links,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -166,6 +175,17 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_snippet.html", site: site, layout: {PlausibleWeb.LayoutView, "site_settings.html"})
+  end
+
+  def settings_danger_zone(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_danger_zone.html",
+      site: site,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
   end
 
   def update_google_auth(conn, %{"website" => website, "google_auth" => attrs}) do
