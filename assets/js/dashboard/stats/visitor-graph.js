@@ -1,7 +1,7 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
 import Chart from 'chart.js'
-import { eventName } from '../query'
+import { eventName, navigateToQuery } from '../query'
 import numberFormatter, {durationFormatter} from '../number-formatter'
 import * as api from '../api'
 
@@ -192,17 +192,26 @@ class LineGraph extends React.Component {
   }
 
   onClick(e) {
-    const query = new URLSearchParams(window.location.search)
     const element = this.chart.getElementsAtEventForMode(e, 'index', {intersect: false})[0]
     const date = element._chart.config.data.labels[element._index]
     if (this.props.graphData.interval === 'month') {
-      query.set('period', 'month')
-      query.set('date', date)
-      this.props.history.push({search: query.toString()})
+      navigateToQuery(
+        this.props.history,
+        this.props.query,
+        {
+          period: 'month',
+          date,
+        }
+      )
     } else if (this.props.graphData.interval === 'date') {
-      query.set('period', 'day')
-      query.set('date', date)
-      this.props.history.push({search: query.toString()})
+      navigateToQuery(
+        this.props.history,
+        this.props.query,
+        {
+          period: 'day',
+          date,
+        }
+      )
     }
   }
 

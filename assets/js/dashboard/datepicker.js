@@ -3,6 +3,7 @@ import Transition from "../transition.js";
 import { withRouter, Link } from 'react-router-dom'
 import Flatpickr from "react-flatpickr";
 import {shiftDays, shiftMonths, formatDay, formatDayShort, formatMonthYYYY, formatISO, isToday, lastMonth, nowForSite, isSameMonth} from './date'
+import { navigateToQuery, QueryLink } from './query.js'
 
 
 class DatePicker extends React.Component {
@@ -23,43 +24,46 @@ class DatePicker extends React.Component {
     document.removeEventListener('mousedown', this.handleClick, false);
   }
 
-  queryWithPeriod(period, dates) {
-    const query = new URLSearchParams(window.location.search)
-    query.set('period', period)
-    query.delete('date'); query.delete('from'); query.delete('to')
-
-    if (dates) {
-      for (const key of Object.keys(dates)) {
-        query.set(key, dates[key])
-      }
-    } else {
-      query.delete('date')
-    }
-
-    return query.toString()
-  }
-
   handleKeyup(e) {
     const {query, history} = this.props
 
     if (e.ctrlKey || e.ctrlKey || e.altKey) return
 
+    const newSearch = {
+      period: false,
+      from: false,
+      to: false,
+      date: false
+    }
+
     if (e.key === 'ArrowLeft') {
       if (query.period === 'day') {
         const prevDate = formatISO(shiftDays(query.date, -1))
-        history.push({search: this.queryWithPeriod('day', {date: prevDate})})
+        newSearch.period = 'day'
+        newSearch.date = prevDate
       } else if (query.period === 'month') {
         const prevMonth = formatISO(shiftMonths(query.date, -1))
-        history.push({search: this.queryWithPeriod('month', {date: prevMonth})})
+        newSearch.period = 'month'
+        newSearch.date = prevMonth
       }
     } else if (e.key === 'ArrowRight') {
       if (query.period === 'day') {
         const nextDate = formatISO(shiftDays(query.date, 1))
-        history.push({search: this.queryWithPeriod('day', {date: nextDate})})
+        newSearch.period = 'day'
+        newSearch.date = nextDate
       } else if (query.period === 'month') {
         const nextMonth = formatISO(shiftMonths(query.date, 1))
-        history.push({search: this.queryWithPeriod('month', {date: nextMonth})})
+        newSearch.period = 'month'
+        newSearch.date = nextMonth
       }
+    }
+
+    if (newSearch.date) {
+      navigateToQuery(
+        history,
+        query,
+        newSearch
+      )
     }
   }
 
@@ -98,12 +102,12 @@ class DatePicker extends React.Component {
   renderArrow(period, prevDate, nextDate) {
     return (
       <div className="flex rounded shadow bg-white mr-4 cursor-pointer">
-        <Link to={{search: this.queryWithPeriod(period, {date: prevDate})}} className="flex items-center px-2 border-r border-gray-300">
+        <QueryLink to={{date: prevDate}} query={this.props.query} className="flex items-center px-2 border-r border-gray-300">
           <svg className="feather h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </Link>
-        <Link to={{search: this.queryWithPeriod(period, {date: nextDate})}} className="flex items-center px-2">
+        </QueryLink>
+        <QueryLink to={{date: nextDate}} query={this.props.query} className="flex items-center px-2">
           <svg className="feather h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </Link>
+        </QueryLink>
       </div>
     )
   }
@@ -172,9 +176,9 @@ class DatePicker extends React.Component {
     if (opts.date) { opts.date = formatISO(opts.date) }
 
     return (
-      <Link to={{search: this.queryWithPeriod(period, opts)}} onClick={this.close.bind(this)} className={boldClass + ' block px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900'}>
+      <QueryLink to={{period, ...opts}} onClick={this.close.bind(this)} query={this.props.query} className={boldClass + ' block px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900'}>
         {text}
-      </Link>
+      </QueryLink>
     )
   }
 
@@ -217,7 +221,16 @@ class DatePicker extends React.Component {
   setCustomDate(dates) {
     if (dates.length === 2) {
       const [from, to] = dates
-      this.props.history.push({search: this.queryWithPeriod('custom', {from: formatISO(from), to: formatISO(to)})})
+      navigateToQuery(
+        this.props.history,
+        this.props.query,
+        {
+          period: 'custom',
+          date: false,
+          from: formatISO(from),
+          to: formatISO(to),
+        }
+      )
       this.close()
     }
   }

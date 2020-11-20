@@ -54,7 +54,7 @@ export default class PropertyBreakdown extends React.Component {
         <div className="w-full h-8 relative" style={{maxWidth: 'calc(100% - 16rem)'}}>
           <Bar count={value.count} all={this.state.breakdown} bg="bg-red-50" />
           <span className="flex px-2 group" style={{marginTop: '-26px'}}>
-            <Link to={{search: query.toString()}} className="hover:underline block truncate">
+            <Link to={{pathname: window.location.pathname, search: query.toString()}} className="hover:underline block truncate">
               { value.name }
             </Link>
             { this.renderUrl(value) }
