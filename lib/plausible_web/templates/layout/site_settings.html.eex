@@ -30,7 +30,6 @@
           <%= render("_settings_tab.html", this_tab: "search-console", text: "Search Console", site: @site, conn: @conn) %>
           <%= render("_settings_tab.html", this_tab: "email-reports", text: "Email reports", site: @site, conn: @conn) %>
           <%= render("_settings_tab.html", this_tab: "custom-domain", text: "Custom domain", site: @site, conn: @conn) %>
-          <%= render("_settings_tab.html", this_tab: "js-snippet", text: "JS snippet", site: @site, conn: @conn) %>
           <%= render("_settings_tab.html", this_tab: "danger-zone", text: "Danger zone", site: @site, conn: @conn) %>
         </div>
       </div>

@@ -151,7 +151,6 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/search-console", SiteController, :settings_search_console
     get "/:website/settings/email-reports", SiteController, :settings_email_reports
     get "/:website/settings/custom-domain", SiteController, :settings_custom_domain
-    get "/:website/settings/js-snippet", SiteController, :settings_snippet
     get "/:website/settings/danger-zone", SiteController, :settings_danger_zone
     get "/:website/goals/new", SiteController, :new_goal
     post "/:website/goals", SiteController, :create_goal

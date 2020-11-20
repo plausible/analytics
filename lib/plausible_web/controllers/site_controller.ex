@@ -92,6 +92,7 @@ defmodule PlausibleWeb.SiteController do
 
   def settings_general(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+           |> Repo.preload(:custom_domain)
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -166,15 +167,6 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_custom_domain.html", site: site, layout: {PlausibleWeb.LayoutView, "site_settings.html"})
-  end
-
-  def settings_snippet(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
-      |> Repo.preload(:custom_domain)
-
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> render("settings_snippet.html", site: site, layout: {PlausibleWeb.LayoutView, "site_settings.html"})
   end
 
   def settings_danger_zone(conn, %{"website" => website}) do
