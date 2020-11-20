@@ -186,7 +186,7 @@ class DatePicker extends React.Component {
     if (this.state.mode === 'menu') {
       return (
         <div className="absolute mt-2 rounded shadow-md z-10" style={{width: '235px', right: '-14px'}}>
-          <div className="rounded bg-white shadow-xs font-medium text-gray-800">
+          <div className="rounded bg-white ring-1 ring-black ring-opacity-5 font-medium text-gray-800">
             <div className="py-1">
               { this.renderLink('day', 'Today') }
               { this.renderLink('realtime', 'Realtime') }

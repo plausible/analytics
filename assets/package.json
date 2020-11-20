@@ -9,9 +9,11 @@
     "@babel/core": "^7.11.1",
     "@babel/preset-env": "^7.11.0",
     "@babel/preset-react": "^7.10.4",
-    "@fullhuman/postcss-purgecss": "^2.3.0",
-    "@tailwindcss/ui": "^0.1.4",
+    "@tailwindcss/aspect-ratio": "^0.2.0",
+    "@tailwindcss/forms": "^0.2.1",
+    "@tailwindcss/typography": "^0.3.1",
     "abortcontroller-polyfill": "^1.5.0",
+    "alpinejs": "^2.7.3",
     "autoprefixer": "^9.8.6",
     "babel-loader": "^8.1.0",
     "chart.js": "^2.9.3",
@@ -22,17 +24,20 @@
     "optimize-css-assets-webpack-plugin": "^5.0.3",
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html",
-    "postcss-loader": "^3.0.0",
+    "postcss": "^7.0.35",
+    "postcss-loader": "^4.0.4",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-flatpickr": "^3.10.5",
     "react-flip-move": "^3.0.4",
     "react-router-dom": "^5.2.0",
     "react-transition-group": "^4.4.1",
-    "tailwindcss": "^1.6.2",
-    "uglifyjs-webpack-plugin": "^2.2.0",
+    "tailwindcss": "^2.0.1-compat",
     "url-search-params-polyfill": "^8.0.0",
     "webpack": "4.39.2",
     "webpack-cli": "^3.3.12"
+  },
+  "devDependencies": {
+    "terser-webpack-plugin": "^4.2.3"
   }
 }

@@ -20,10 +20,10 @@
     <div class="pt-8"></div>
 
     <span class="relative z-0 inline-flex shadow-sm w-full">
-      <button type="button" @click="billingCycle = 'monthly'" :class="{'bg-indigo-600 text-white border-indigo-600': billingCycle === 'monthly', 'bg-white text-gray-700 hover:text-gray-500 border-gray-300': billingCycle === 'yearly'}" class="relative w-full text-center px-4 py-2 rounded-l-md border text-sm leading-5 font-medium focus:outline-none focus:border-blue-300 focus:shadow-outline-blue transition ease-in-out duration-150">
+      <button type="button" @click="billingCycle = 'monthly'" :class="{'bg-indigo-600 text-white border-indigo-600': billingCycle === 'monthly', 'bg-white text-gray-700 hover:text-gray-500 border-gray-300': billingCycle === 'yearly'}" class="relative w-full text-center px-4 py-2 rounded-l-md border text-sm leading-5 font-medium focus:outline-none focus:border-blue-300 focus:ring transition ease-in-out duration-150">
         Monthly billing
       </button>
-      <button type="button" @click="billingCycle = 'yearly'" :class="{'bg-indigo-600 text-white border-indigo-600': billingCycle === 'yearly', 'bg-white text-gray-700 hover:text-gray-500 border-gray-300': billingCycle === 'monthly'}" class="-ml-px relative w-full text-center px-4 py-2 rounded-r-md border text-sm leading-5 font-medium focus:outline-none focus:border-blue-300 focus:shadow-outline-blue transition ease-in-out duration-150">
+      <button type="button" @click="billingCycle = 'yearly'" :class="{'bg-indigo-600 text-white border-indigo-600': billingCycle === 'yearly', 'bg-white text-gray-700 hover:text-gray-500 border-gray-300': billingCycle === 'monthly'}" class="-ml-px relative w-full text-center px-4 py-2 rounded-r-md border text-sm leading-5 font-medium focus:outline-none focus:border-blue-300 focus:ring transition ease-in-out duration-150">
         Yearly billing
         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium leading-4 bg-yellow-100 text-yellow-800">
           -33%
@@ -105,7 +105,7 @@
 
     <div class="text-right mt-6">
       <span class="inline-flex rounded-md shadow-sm">
-        <a x-show="window.plans[billingCycle][volume].product_id !== '<%= @subscription.paddle_plan_id %>'" style="display: none;" :href="'/billing/change-plan/preview/' + window.plans[billingCycle][volume].product_id" class="inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition ease-in-out duration-150">
+        <a x-show="window.plans[billingCycle][volume].product_id !== '<%= @subscription.paddle_plan_id %>'" style="display: none;" :href="'/billing/change-plan/preview/' + window.plans[billingCycle][volume].product_id" class="inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150">
           <svg fill="currentColor" viewBox="0 0 20 20" class="w-4 h-4 inline mr-2"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path></svg>
           Preview changes
         </a>
@@ -124,5 +124,4 @@
 </div>
 
 <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.0.1/dist/alpine.js" defer></script>
 <script>Paddle.Setup({vendor: 49430})</script>

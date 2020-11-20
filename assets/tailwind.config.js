@@ -1,10 +1,20 @@
+const colors = require('tailwindcss/colors')
+
 module.exports = {
+  purge: [
+    './js/**/*.js',
+    '../lib/plausible_web/templates/**/*.html.eex',
+  ],
+  darkMode: false,
   theme: {
     container: {
       center: true,
       padding: '1rem',
     },
     extend: {
+      colors: {
+        orange: colors.orange,
+      },
       spacing: {
         '44': '11rem'
       },
@@ -17,8 +27,9 @@ module.exports = {
     textColor: ['responsive', 'hover', 'focus', 'group-hover'],
     display: ['responsive', 'hover', 'focus', 'group-hover']
   },
-  corePlugins: {},
   plugins: [
-    require('@tailwindcss/ui')
-  ],
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+    require('@tailwindcss/aspect-ratio'),
+  ]
 }

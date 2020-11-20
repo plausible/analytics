@@ -65,7 +65,7 @@ defmodule PlausibleWeb.SiteController do
       {:ok, _} ->
         conn
         |> put_flash(:success, "Goal created succesfully")
-        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings")
+        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/goals")
 
       {:error, :goal, changeset, _} ->
         conn
@@ -83,35 +83,100 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Goal deleted succesfully")
-    |> redirect(to: "/#{URI.encode_www_form(website)}/settings")
+    |> redirect(to: "/#{URI.encode_www_form(website)}/settings/goals")
   end
 
   def settings(conn, %{"website" => website}) do
-    site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    redirect(conn, to: "/#{URI.encode_www_form(website)}/settings/general")
+  end
+
+  def settings_general(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+           |> Repo.preload(:custom_domain)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_general.html",
+      site: site,
+      changeset: Plausible.Site.changeset(site, %{}),
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
+  end
+
+  def settings_visibility(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    shared_links = Repo.all(from l in Plausible.Site.SharedLink, where: l.site_id == ^site.id)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_visibility.html",
+      site: site,
+      shared_links: shared_links,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
+  end
+
+  def settings_goals(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    goals = Goals.for_site(site.domain)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_goals.html",
+      site: site,
+      goals: goals,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
+  end
+
+  def settings_search_console(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
       |> Repo.preload(:google_auth)
-      |> Repo.preload(:custom_domain)
 
     search_console_domains =
       if site.google_auth do
         Plausible.Google.Api.fetch_verified_properties(site.google_auth)
       end
 
-    weekly_report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
-    monthly_report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
-    goals = Goals.for_site(site.domain)
-    shared_links = Repo.all(from l in Plausible.Site.SharedLink, where: l.site_id == ^site.id)
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_search_console.html",
+      site: site,
+      search_console_domains: search_console_domains,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
+  end
+
+  def settings_email_reports(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
 
     conn
     |> assign(:skip_plausible_tracking, true)
-    |> render("settings.html",
+    |> render("settings_email_reports.html",
       site: site,
-      weekly_report: weekly_report,
-      monthly_report: monthly_report,
-      search_console_domains: search_console_domains,
-      goals: goals,
-      shared_links: shared_links,
-      changeset: Plausible.Site.changeset(site, %{})
+      weekly_report: Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id),
+      monthly_report: Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id),
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
+  end
+
+  def settings_custom_domain(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      |> Repo.preload(:custom_domain)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_custom_domain.html", site: site, layout: {PlausibleWeb.LayoutView, "site_settings.html"})
+  end
+
+  def settings_danger_zone(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_danger_zone.html",
+      site: site,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
 
@@ -125,7 +190,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Google integration saved succesfully")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings#google-auth")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/search-console")
   end
 
   def delete_google_auth(conn, %{"website" => website}) do
@@ -136,8 +201,8 @@ defmodule PlausibleWeb.SiteController do
     Repo.delete!(site.google_auth)
 
     conn
-    |> put_flash(:success, "Google account unlinked succesfully")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings#google-auth")
+    |> put_flash(:success, "Google account unlinked from Plausible")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/search-console")
   end
 
   def update_settings(conn, %{"website" => website, "site" => site_params}) do
@@ -151,11 +216,11 @@ defmodule PlausibleWeb.SiteController do
 
         conn
         |> put_session(site_session_key, nil)
-        |> put_flash(:success, "Site settings saved succesfully")
-        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings")
+        |> put_flash(:success, "Your site settings have been saved")
+        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
 
       {:error, changeset} ->
-        render("settings.html", site: site, changeset: changeset)
+        render("settings_general.html", site: site, changeset: changeset)
     end
   end
 
@@ -165,7 +230,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "#{site.domain} stats will be reset in a few minutes")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/danger-zone")
   end
 
   def delete_site(conn, %{"website" => website}) do
@@ -194,8 +259,8 @@ defmodule PlausibleWeb.SiteController do
       |> Repo.update!()
 
     conn
-    |> put_flash(:success, "Congrats! Stats for #{site.domain} are now public.")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings")
+    |> put_flash(:success, "Stats for #{site.domain} are now public.")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
   end
 
   def make_private(conn, %{"website" => website}) do
@@ -206,7 +271,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Stats for #{site.domain} are now private.")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
   end
 
   def enable_weekly_report(conn, %{"website" => website}) do
@@ -219,8 +284,8 @@ defmodule PlausibleWeb.SiteController do
     |> Repo.insert!()
 
     conn
-    |> put_flash(:success, "Success! You will receive an email report every Monday going forward")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings#email-reports")
+    |> put_flash(:success, "You will receive an email report every Monday going forward")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def disable_weekly_report(conn, %{"website" => website}) do
@@ -228,8 +293,8 @@ defmodule PlausibleWeb.SiteController do
     Repo.delete_all(from wr in Plausible.Site.WeeklyReport, where: wr.site_id == ^site.id)
 
     conn
-    |> put_flash(:success, "Success! You will not receive weekly email reports going forward")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings#email-reports")
+    |> put_flash(:success, "You will not receive weekly email reports going forward")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def add_weekly_report_recipient(conn, %{"website" => website, "recipient" => recipient}) do
@@ -240,8 +305,8 @@ defmodule PlausibleWeb.SiteController do
     |> Repo.update!()
 
     conn
-    |> put_flash(:success, "Succesfully added #{recipient} as a recipient for the weekly report")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings#email-reports")
+    |> put_flash(:success, "Added #{recipient} as a recipient for the weekly report")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def remove_weekly_report_recipient(conn, %{"website" => website, "recipient" => recipient}) do
@@ -254,9 +319,9 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> put_flash(
       :success,
-      "Succesfully removed #{recipient} as a recipient for the weekly report"
+      "Removed #{recipient} as a recipient for the weekly report"
     )
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings#email-reports")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def enable_monthly_report(conn, %{"website" => website}) do
@@ -269,8 +334,8 @@ defmodule PlausibleWeb.SiteController do
     |> Repo.insert!()
 
     conn
-    |> put_flash(:success, "Success! You will receive an email report every month going forward")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings#email-reports")
+    |> put_flash(:success, "You will receive an email report every month going forward")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def disable_monthly_report(conn, %{"website" => website}) do
@@ -278,8 +343,8 @@ defmodule PlausibleWeb.SiteController do
     Repo.delete_all(from mr in Plausible.Site.MonthlyReport, where: mr.site_id == ^site.id)
 
     conn
-    |> put_flash(:success, "Success! You will not receive monthly email reports going forward")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings#email-reports")
+    |> put_flash(:success, "You will not receive monthly email reports going forward")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def add_monthly_report_recipient(conn, %{"website" => website, "recipient" => recipient}) do
@@ -290,8 +355,8 @@ defmodule PlausibleWeb.SiteController do
     |> Repo.update!()
 
     conn
-    |> put_flash(:success, "Succesfully added #{recipient} as a recipient for the monthly report")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings#email-reports")
+    |> put_flash(:success, "Added #{recipient} as a recipient for the monthly report")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def remove_monthly_report_recipient(conn, %{"website" => website, "recipient" => recipient}) do
@@ -304,9 +369,9 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> put_flash(
       :success,
-      "Succesfully removed #{recipient} as a recipient for the monthly report"
+      "Removed #{recipient} as a recipient for the monthly report"
     )
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings#email-reports")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def new_shared_link(conn, %{"website" => website}) do
@@ -336,7 +401,7 @@ defmodule PlausibleWeb.SiteController do
 
     case Repo.insert(changes) do
       {:ok, _created} ->
-        redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings#visibility")
+        redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
 
       {:error, changeset} ->
         conn
@@ -355,7 +420,7 @@ defmodule PlausibleWeb.SiteController do
     Repo.get_by(Plausible.Site.SharedLink, slug: slug)
     |> Repo.delete!()
 
-    redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings#visibility")
+    redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
   end
 
   def new_custom_domain(conn, %{"website" => website}) do
@@ -424,7 +489,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Custom domain deleted succesfully")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/custom-domain")
   end
 
   defp insert_site(user_id, params) do
