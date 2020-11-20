@@ -1,3 +1,5 @@
+const colors = require('tailwindcss/colors')
+
 module.exports = {
   purge: [
     './js/**/*.js',
@@ -10,6 +12,9 @@ module.exports = {
       padding: '1rem',
     },
     extend: {
+      colors: {
+        orange: colors.orange,
+      },
       spacing: {
         '44': '11rem'
       },
