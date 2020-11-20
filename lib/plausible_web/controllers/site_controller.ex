@@ -230,7 +230,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "#{site.domain} stats will be reset in a few minutes")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/danger-zone")
   end
 
   def delete_site(conn, %{"website" => website}) do
@@ -260,7 +260,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Stats for #{site.domain} are now public.")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
   end
 
   def make_private(conn, %{"website" => website}) do
@@ -271,7 +271,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Stats for #{site.domain} are now private.")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
   end
 
   def enable_weekly_report(conn, %{"website" => website}) do
@@ -401,7 +401,7 @@ defmodule PlausibleWeb.SiteController do
 
     case Repo.insert(changes) do
       {:ok, _created} ->
-        redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/general")
+        redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
 
       {:error, changeset} ->
         conn
@@ -420,7 +420,7 @@ defmodule PlausibleWeb.SiteController do
     Repo.get_by(Plausible.Site.SharedLink, slug: slug)
     |> Repo.delete!()
 
-    redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/general")
+    redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
   end
 
   def new_custom_domain(conn, %{"website" => website}) do
