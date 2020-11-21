@@ -91,8 +91,9 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_general(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
-           |> Repo.preload(:custom_domain)
+    site =
+      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      |> Repo.preload(:custom_domain)
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -116,6 +117,21 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
+  def settings_members(conn, %{"website" => website}) do
+    site =
+      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      |> Repo.preload(:custom_domain)
+      |> Repo.preload(members: [:site_memberships])
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_members.html",
+      site: site,
+      changeset: Plausible.Site.changeset(site, %{}),
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
+  end
+
   def settings_goals(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
     goals = Goals.for_site(site.domain)
@@ -130,7 +146,8 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_search_console(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    site =
+      Sites.get_for_user!(conn.assigns[:current_user].id, website)
       |> Repo.preload(:google_auth)
 
     search_console_domains =
@@ -161,12 +178,16 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_custom_domain(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    site =
+      Sites.get_for_user!(conn.assigns[:current_user].id, website)
       |> Repo.preload(:custom_domain)
 
     conn
     |> assign(:skip_plausible_tracking, true)
-    |> render("settings_custom_domain.html", site: site, layout: {PlausibleWeb.LayoutView, "site_settings.html"})
+    |> render("settings_custom_domain.html",
+      site: site,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
   end
 
   def settings_danger_zone(conn, %{"website" => website}) do
@@ -205,8 +226,60 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/search-console")
   end
 
+  def delete_member(conn, %{"website" => website}) do
+    current_user = conn.assigns[:current_user]
+
+    site =
+      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      |> Repo.preload(members: [:site_memberships])
+
+    Repo.delete!(site.google_auth)
+
+    conn
+    |> put_flash(:success, "Google account unlinked from Plausible")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/search-console")
+  end
+
+  def invite_member(conn, %{"website" => website, "new_user" => new_user}) do
+    current_user = conn.assigns[:current_user]
+    new_user = Map.get(new_user, "email")
+
+    site =
+      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      |> Repo.preload(members: [:site_memberships])
+
+    if Sites.is_admin?(current_user.id, site) do
+      conn
+      |> put_flash(:success, "#{new_user} was invited to Plausible")
+      |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/members")
+    else
+      conn
+      |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/members")
+    end
+  end
+
+  def update_memberships(conn, %{"website" => website, "site" => site_params}) do
+    site =
+      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      |> Repo.preload(members: [:site_memberships])
+
+    # get members, filter out owner
+    membership_updates = parse_membership_updates(site_params)
+
+    role_updates(site.members, membership_updates, site)
+    |> Enum.each(&Repo.update/1)
+
+    site_session_key = "authorized_site__" <> site.domain
+
+    conn
+    |> put_session(site_session_key, nil)
+    |> put_flash(:success, "Your site settings have been saved")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/members")
+  end
+
   def update_settings(conn, %{"website" => website, "site" => site_params}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+
     changeset = site |> Plausible.Site.changeset(site_params)
     res = changeset |> Repo.update()
 
@@ -510,5 +583,52 @@ defmodule PlausibleWeb.SiteController do
       repo.insert(membership_changeset)
     end)
     |> Repo.transaction()
+  end
+
+  defp parse_membership_updates(site_params) do
+    site_params
+    |> Map.get("members", [])
+    |> Enum.map(fn {_index, %{"site_memberships" => data}} ->
+      data |> Map.get("0")
+    end)
+    |> Enum.reduce(
+      %{},
+      fn
+        nil, acc ->
+          acc
+
+        data, acc ->
+          {id, _} = Map.get(data, "id", nil) |> Integer.parse()
+          role = Map.get(data, "role", nil)
+
+          if(id !== nil && role !== nil) do
+            Map.put(acc, id, role)
+          else
+            acc
+          end
+      end
+    )
+  end
+
+  defp role_updates(members, membership_updates, site) do
+    members
+    |> Enum.map(fn member ->
+      member.site_memberships
+      |> Enum.filter(fn sm -> sm.site_id === site.id end)
+    end)
+    |> List.flatten()
+    |> Enum.reduce(
+      [],
+      fn sm, acc ->
+        new_role = Map.get(membership_updates, sm.id)
+
+        [
+          sm
+          |> Plausible.Site.Membership.changeset(%{:role => new_role})
+          |> Plausible.Site.Membership.validate_role()
+          | acc
+        ]
+      end
+    )
   end
 end

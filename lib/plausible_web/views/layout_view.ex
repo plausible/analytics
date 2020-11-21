@@ -25,6 +25,7 @@ defmodule PlausibleWeb.LayoutView do
     [
       [key: "General", value: "general"],
       [key: "Visibility", value: "visibility"],
+      [key: "Members", value: "members"],
       [key: "Goals", value: "goals"],
       [key: "Search Console", value: "search-console"],
       [key: "Email reports", value: "email-reports"],

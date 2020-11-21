@@ -1,0 +1,60 @@
+<div class="shadow sm:rounded-md sm:overflow-hidden">
+  <div class="bg-white py-6 px-4 space-y-6 sm:p-6">
+    <header class="relative">
+      <h2 class="text-lg leading-6 font-medium text-gray-900">Members</h2>
+      <p class="mt-1 text-sm leading-5 text-gray-500">Provide other people access to your site analytcs.</p>
+    </header>
+
+    <div class="divide-y">
+      <div class="mb-6">
+        <%= form_for :new_user, "/#{URI.encode_www_form(@site.domain)}/settings/members", [class: "mb-6"], fn f -> %>
+          <%= label f, "E-mail", class: "block text-sm font-medium leading-5 text-gray-700 md:col-span-2 sm:col-span-4" %>
+          <%= text_input f, :email, placeholder: "Example: somebody@#{@site.domain}",  class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal focus:outline-none focus:border-gray-300 " %>
+          <span class="inline-flex rounded-md shadow-sm mt-3">
+            <%= submit "Invite", class: "bg-indigo-600 border border-transparent rounded-md py-2 px-4 inline-flex justify-center text-sm leading-5 font-medium text-white hover:bg-gray-700 focus:outline-none focus:border-gray-900 focus:ring active:bg-gray-900 transition duration-150 ease-in-out" %>
+          </span>
+        <% end %>
+      </div>
+
+      <div class="pt-6">
+        <%= form_for @changeset, "/#{URI.encode_www_form(@site.domain)}/settings/members", [class: ""], fn f -> %>
+          <div class="grid grid-cols-8 gap-6">
+            <%= label f, "User", class: "block text-sm font-medium leading-5 text-gray-700 col-span-4" %>
+            <%= label f, "Role", class: "block text-sm font-medium leading-5 text-gray-700 col-span-4" %>
+          </div>
+          <div class="grid grid-cols-8 gap-6">
+            <%= inputs_for f, :members, fn m -> %>
+                <div class="col-span-4">
+                  <%= text_input m, :name,  class: "col-span-6 sm:col-span-3 transition appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal focus:outline-none focus:border-gray-300 ", disabled: "disabled" %>
+                </div>
+                <%= inputs_for m, :site_memberships, fn sm -> %>
+                  <div class="col-span-3 relative">
+                    <%= select sm, :role, PlausibleWeb.AuthView.role_options(),  class: "block appearance-none w-full bg-gray-100 text-gray-700 #{if m.data.id !== @site.owner_id, do: "cursor-pointer"} hover:border-gray-500 p-2 pr-8 rounded leading-normal focus:outline-none", disabled: if m.data.id === @site.owner_id, do: "disabled", else: nil %>
+                      <%= unless m.data.id === @site.owner_id do %>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-pink-500">
+                          <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                        </div>
+                      <% end %>
+                    <% end %>
+                  </div>
+                  <div class="col-span-1">
+                    <%= unless m.data.id === @site.owner_id do %>
+                      <%= button(to: "/#{URI.encode_www_form(@site.domain)}/members/#{m.data.id}", method: :delete, class: "text-sm text-red-600 rounded-md py-3 px-4 inline-flex justify-center", data: [confirm: "Are you sure you want to remove this user from your site?"]) do %>
+                        <svg class="feather feather-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                      <% end %>
+                    <% end %>
+                  </div>
+                <% end %>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+        <span class="inline-flex rounded-md shadow-sm">
+          <%= submit "Save", class: "bg-indigo-600 border border-transparent rounded-md py-2 px-4 inline-flex justify-center text-sm leading-5 font-medium text-white hover:bg-gray-700 focus:outline-none focus:border-gray-900 focus:ring active:bg-gray-900 transition duration-150 ease-in-out" %>
+        </span>
+      </div>
+    <% end %>
+  </div>
+</div>

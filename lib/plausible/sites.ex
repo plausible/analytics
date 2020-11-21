@@ -13,6 +13,17 @@ defmodule Plausible.Sites do
     )
   end
 
+  def members(site_id) when is_integer(site_id) do
+    from(u in Plausible.Auth.User,
+      join: sm in Plausible.Site.Membership,
+      on: sm.user_id == u.id,
+      where: sm.site_id == ^site_id,
+      select: [u, sm.role]
+    )
+    |> Repo.all()
+    |> Enum.map(fn [user, role] -> Map.put(user, :role, role) end)
+  end
+
   def has_goals?(site) do
     Repo.exists?(
       from g in Plausible.Goal,
@@ -33,5 +44,12 @@ defmodule Plausible.Sites do
       domain: custom_domain
     })
     |> Repo.insert()
+  end
+
+  def is_admin?(user_id, site) do
+    Repo.exists?(
+      from sm in Plausible.Site.Membership,
+        where: sm.user_id == ^user_id and sm.site_id == ^site.id
+    )
   end
 end

@@ -12,7 +12,12 @@ defmodule Plausible.Site.Membership do
 
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:user_id, :site_id])
+    |> cast(attrs, [:user_id, :site_id, :role])
     |> validate_required([:user_id, :site_id])
+  end
+
+  def validate_role(changeset) do
+    changeset
+    |> validate_inclusion(:role, ["admin", "viewer"])
   end
 end

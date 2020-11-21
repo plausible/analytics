@@ -147,6 +147,7 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings", SiteController, :settings
     get "/:website/settings/general", SiteController, :settings_general
     get "/:website/settings/visibility", SiteController, :settings_visibility
+    get "/:website/settings/members", SiteController, :settings_members
     get "/:website/settings/goals", SiteController, :settings_goals
     get "/:website/settings/search-console", SiteController, :settings_search_console
     get "/:website/settings/email-reports", SiteController, :settings_email_reports
@@ -156,10 +157,13 @@ defmodule PlausibleWeb.Router do
     post "/:website/goals", SiteController, :create_goal
     delete "/:website/goals/:id", SiteController, :delete_goal
     put "/:website/settings", SiteController, :update_settings
+    put "/:website/settings/members", SiteController, :update_memberships
+    post "/:website/settings/members", SiteController, :invite_member
     put "/:website/settings/google", SiteController, :update_google_auth
     delete "/:website/settings/google", SiteController, :delete_google_auth
     delete "/:website", SiteController, :delete_site
     delete "/:website/stats", SiteController, :reset_stats
+    delete "/:website/settings/members/:id", SiteController, :delete_member
 
     get "/share/:slug", StatsController, :shared_link
     post "/share/:slug/authenticate", StatsController, :authenticate_shared_link

@@ -122,6 +122,23 @@ defmodule PlausibleWeb.SiteControllerTest do
       updated = Repo.get(Plausible.Site, site.id)
       assert updated.timezone == "Europe/London"
     end
+
+    test "updates memberships", %{conn: conn, site: site} do
+      put(conn, "/#{site.domain}/settings", %{
+        "site" => %{
+          "timezone" => "Europe/London",
+          "members" => %{
+            "0" => %{
+              "id" => "1",
+              "site_memberships" => %{"0" => %{"id" => "1", "role" => "viewer"}}
+            }
+          }
+        }
+      })
+
+      updated = Repo.get(Plausible.Site, site.id)
+      assert true == false
+    end
   end
 
   describe "POST /sites/:website/make-public" do

@@ -32,6 +32,13 @@ defmodule PlausibleWeb.AuthView do
     PlausibleWeb.Endpoint.host()
   end
 
+  def role_options do
+    [
+      {"Admin", "admin"},
+      {"Viewer", "viewer"}
+    ]
+  end
+
   def plausible_url do
     PlausibleWeb.Endpoint.url()
   end
