@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Ignore consecutive pageviews on same pathname plausible/analytics#417
 - Validate domain format on site creation plausible/analytics#427
 - Improve settings UX and design plausible/analytics#412
+- Improve site listing UX and design plausible/analytics#438
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370
