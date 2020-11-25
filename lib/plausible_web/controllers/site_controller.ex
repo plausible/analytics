@@ -7,7 +7,8 @@ defmodule PlausibleWeb.SiteController do
 
   def index(conn, _params) do
     user = conn.assigns[:current_user] |> Repo.preload(:sites)
-    render(conn, "index.html", sites: user.sites)
+    visitors = Plausible.Stats.Clickhouse.last_24h_visitors(user.sites)
+    render(conn, "index.html", sites: user.sites, visitors: visitors)
   end
 
   def new(conn, _params) do

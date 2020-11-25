@@ -1,25 +1,31 @@
-<div class="pt-16"></div>
-<div class="px-4">
-  <div class="max-w-xl mx-auto flex flex-col sm:flex-row justify-between">
-    <h1 class="text-2xl font-black">My websites</h1>
+<div class="container pt-6">
+  <div class="pb-5 border-b border-gray-200 flex items-center justify-between">
+    <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:leading-9 sm:truncate">
+      My sites
+    </h2>
     <a href="/sites/new" class="button w-full my-2 sm:my-0 sm:w-auto">+ Add a website</a>
   </div>
-  <div class="flex items-center justify-center w-full py-8 mb-16">
-    <div class="overflow-hidden bg-white rounded max-w-xl w-full shadow-md leading-normal">
-      <%= for site <- @sites do %>
-        <div class="w-full relative">
-          <a href="/<%= URI.encode_www_form(site.domain) %>" class="block hover:bg-gray-100 group p-4 border-b no-underline flex justify-between transition items-center">
-            <img src="https://icons.duckduckgo.com/ip3/<%= site.domain %>.ico" referrerpolicy="no-referrer" class="inline mb-1 mr-2 w-4">
-            <p class="w-full font-bold text-lg mb-1 text-gray-800"><%= site.domain %></p>
-          </a>
-          <%= link(to: "/#{URI.encode_www_form(site.domain)}/settings", class: "flex absolute hover:bg-gray-100 transition rounded py-2 px-5", style: "top: 12px; right: 6px;") do %>
-            <div>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-settings -mt-px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+
+  <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <%= for site <- @sites do %>
+      <%= link(to: "/" <> URI.encode_www_form(site.domain)) do %>
+        <li class="col-span-1 bg-white rounded-lg shadow p-4 hover:shadow-lg cursor-pointer">
+          <div class="w-full flex items-center justify-between space-x-4">
+            <img src="https://icons.duckduckgo.com/ip3/<%= site.domain %>.ico" referrerpolicy="no-referrer" class="w-4 h-4 flex-shrink-0 mt-px">
+            <div class="flex-1 truncate -mt-px">
+              <h3 class="text-gray-900 font-medium truncate"><%= site.domain %></h3>
             </div>
-            <p class="ml-1 text-gray-800 font-medium">Settings</p>
-          <% end %>
-        </div>
+          </div>
+          <div class="pl-8 mt-2 flex items-center justify-between">
+            <span class="text-gray-600 text-sm truncate">
+              <span class="text-gray-800">
+                <b><%= PlausibleWeb.StatsView.large_number_format(Map.get(@visitors, site.domain, 0)) %></b>
+                visitors in last 24h
+              </span>
+            </span>
+          </div>
+        </li>
       <% end %>
-    </div>
-  </div>
+    <% end %>
+  </ul>
 </div>
