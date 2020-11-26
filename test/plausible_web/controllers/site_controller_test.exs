@@ -89,20 +89,24 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:website/settings" do
+  describe "GET /:website/settings/general" do
     setup [:create_user, :log_in, :create_site]
 
     test "shows settings form", %{conn: conn, site: site} do
-      conn = get(conn, "/#{site.domain}/settings")
+      conn = get(conn, "/#{site.domain}/settings/general")
 
-      assert html_response(conn, 200) =~ "Settings"
+      assert html_response(conn, 200) =~ "General information"
     end
+  end
+
+  describe "GET /:website/settings/goals" do
+    setup [:create_user, :log_in, :create_site]
 
     test "lists goals for the site", %{conn: conn, site: site} do
       insert(:goal, domain: site.domain, event_name: "Custom event")
       insert(:goal, domain: site.domain, page_path: "/register")
 
-      conn = get(conn, "/#{site.domain}/settings")
+      conn = get(conn, "/#{site.domain}/settings/goals")
 
       assert html_response(conn, 200) =~ "Custom event"
       assert html_response(conn, 200) =~ "Visit /register"
