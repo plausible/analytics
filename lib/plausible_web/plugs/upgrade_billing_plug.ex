@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.UpgradeBillingPlug do
   import Phoenix.Controller
+  import Plug.Conn
   use Plausible.Repo
 
   def init(options) do
@@ -12,6 +13,7 @@ defmodule PlausibleWeb.UpgradeBillingPlug do
     if user && Plausible.Billing.needs_to_upgrade?(conn.assigns[:current_user]) do
       conn
       |> redirect(to: "/settings")
+      |> halt
     else
       conn
     end
