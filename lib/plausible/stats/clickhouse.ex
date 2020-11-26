@@ -762,6 +762,19 @@ defmodule Plausible.Stats.Clickhouse do
     end)
   end
 
+  def last_24h_visitors(sites) do
+    domains = Enum.map(sites, & &1.domain)
+
+    ClickhouseRepo.all(
+      from e in "events",
+      group_by: e.domain,
+      where: fragment("? IN tuple(?)", e.domain, ^domains),
+      where: e.timestamp > fragment("now() - INTERVAL 24 HOUR"),
+      select: {e.domain, fragment("uniq(user_id)")}
+    )
+    |> Enum.into(%{})
+  end
+
   def goal_conversions(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
     ClickhouseRepo.all(
       from e in base_query_w_sessions(site, query),
