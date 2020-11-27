@@ -762,6 +762,7 @@ defmodule Plausible.Stats.Clickhouse do
     end)
   end
 
+  def last_24h_visitors([]), do: %{}
   def last_24h_visitors(sites) do
     domains = Enum.map(sites, & &1.domain)
 

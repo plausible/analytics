@@ -7,6 +7,10 @@
   </div>
 
   <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <%= if Enum.empty?(@sites) do %>
+      <p>You don't have any sites yet</p>
+    <% end %>
+
     <%= for site <- @sites do %>
       <div class="relative group">
         <%= link(to: "/" <> URI.encode_www_form(site.domain)) do %>
@@ -20,8 +24,7 @@
             <div class="pl-8 mt-2 flex items-center justify-between">
               <span class="text-gray-600 text-sm truncate">
                 <span class="text-gray-800">
-                  <b><%= PlausibleWeb.StatsView.large_number_format(Map.get(@visitors, site.domain, 0)) %></b>
-                  visitors in last 24h
+                  <b><%= PlausibleWeb.StatsView.large_number_format(Map.get(@visitors, site.domain, 0)) %></b> visitors in last 24h
                 </span>
               </span>
             </div>

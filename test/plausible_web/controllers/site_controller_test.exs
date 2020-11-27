@@ -12,6 +12,23 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
+  describe "GET /sites" do
+    setup [:create_user, :log_in]
+
+    test "shows empty screen if no sites", %{conn: conn} do
+      conn = get(conn, "/sites")
+      assert html_response(conn, 200) =~ "You don't have any sites yet"
+    end
+
+    test "lists all of your sites with last 24h visitors", %{conn: conn, user: user} do
+      insert(:site, members: [user], domain: "test-site.com")
+      conn = get(conn, "/sites")
+
+      assert html_response(conn, 200) =~ "test-site.com"
+      assert html_response(conn, 200) =~ "<b>3</b> visitors in last 24h"
+    end
+  end
+
   describe "POST /sites" do
     setup [:create_user, :log_in]
 
