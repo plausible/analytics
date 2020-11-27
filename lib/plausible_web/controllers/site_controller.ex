@@ -75,7 +75,7 @@ defmodule PlausibleWeb.SiteController do
         |> put_flash(:success, "Goal created succesfully")
         |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/goals")
 
-      {:error, :goal, changeset, _} ->
+      {:error, changeset} ->
         conn
         |> assign(:skip_plausible_tracking, true)
         |> render("new_goal.html",
