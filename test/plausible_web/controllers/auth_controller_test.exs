@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.AuthControllerTest do
   use PlausibleWeb.ConnCase
   use Bamboo.Test
+  use Plausible.Repo
   import Plausible.TestUtils
 
   describe "GET /register" do
@@ -9,62 +10,132 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert html_response(conn, 200) =~ "Enter your details"
     end
+  end
 
+  describe "POST /register" do
     test "registering sends an activation link", %{conn: conn} do
       post(conn, "/register",
         user: %{
           name: "Jane Doe",
-          email: "user@example.com"
+          email: "user@example.com",
+          password: "very-secret",
+          password_confirmation: "very-secret"
         }
       )
 
       assert_email_delivered_with(subject: "Activate your Plausible free trial")
     end
 
-    test "user sees success page after registering", %{conn: conn} do
+    test "creates user record", %{conn: conn} do
+      post(conn, "/register",
+        user: %{
+          name: "Jane Doe",
+          email: "user@example.com",
+          password: "very-secret",
+          password_confirmation: "very-secret"
+        }
+      )
+
+      user = Repo.one(Plausible.Auth.User)
+      assert user.name == "Jane Doe"
+    end
+
+    test "logs the user in", %{conn: conn} do
       conn =
         post(conn, "/register",
           user: %{
             name: "Jane Doe",
-            email: "user@example.com"
+            email: "user@example.com",
+            password: "very-secret",
+            password_confirmation: "very-secret",
           }
         )
 
-      assert html_response(conn, 200) =~ "Success!"
+      assert get_session(conn, :current_user_id)
+    end
+
+    test "user is redirected to activation after registration", %{conn: conn} do
+      conn =
+        post(conn, "/register",
+          user: %{
+            name: "Jane Doe",
+            email: "user@example.com",
+            password: "very-secret",
+            password_confirmation: "very-secret",
+          }
+        )
+
+      assert redirected_to(conn) == "/activate"
     end
   end
 
-  describe "GET /claim-activation" do
-    test "creates the user", %{conn: conn} do
-      token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
-      get(conn, "/claim-activation?token=#{token}")
+  describe "GET /activate" do
+    setup [:create_user, :log_in]
 
-      assert Plausible.Auth.find_user_by(email: "user@example.com")
+    test "if user does not have a code: prompts user to request activation code", %{conn: conn} do
+      conn = get(conn, "/activate")
+
+      assert html_response(conn, 200) =~ "Request activation code"
     end
 
-    test "sends the welcome email", %{conn: conn} do
-      token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
-      get(conn, "/claim-activation?token=#{token}")
+    test "if user does have a code: prompts user to enter the activation code from their email", %{conn: conn, user: user} do
+      conn = post(conn, "/activate/request-code")
+             |> get("/activate")
 
-      assert_email_delivered_with(subject: "Welcome to Plausible")
-    end
-
-    test "redirects new user to create a password", %{conn: conn} do
-      token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
-      conn = get(conn, "/claim-activation?token=#{token}")
-
-      assert redirected_to(conn) == "/password"
-    end
-
-    test "redirects existing user to create a password", %{conn: conn} do
-      token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
-
-      conn = get(conn, "/claim-activation?token=#{token}")
-      conn = get(conn, "/claim-activation?token=#{token}")
-
-      assert redirected_to(conn) == "/password"
+      assert html_response(conn, 200) =~ "Please enter the 4-digit code we sent to"
     end
   end
+
+  describe "POST /activate/request-code" do
+    setup [:create_user, :log_in]
+
+    test "associates an activation pin with the user account", %{conn: conn, user: user} do
+      post(conn, "/activate/request-code")
+
+      pin = Repo.one(from c in "activation_pins", where: c.user_id == ^user.id, select: %{user_id: c.user_id, issued_at: c.issued_at})
+
+      assert pin[:user_id] == user.id
+      assert Timex.after?(pin[:issued_at], Timex.now() |> Timex.shift(seconds: -10))
+    end
+
+    test "sends activation email to user", %{conn: conn, user: user} do
+      post(conn, "/activate/request-code")
+
+      assert_email_delivered_with(to: [{user.name, user.email}], subject: "Activate your Plausible free trial")
+    end
+  end
+
+  #describe "GET /claim-activation" do
+  #  test "creates the user", %{conn: conn} do
+  #    token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
+  #    get(conn, "/claim-activation?token=#{token}")
+
+  #    assert Plausible.Auth.find_user_by(email: "user@example.com")
+  #  end
+
+  #  test "sends the welcome email", %{conn: conn} do
+  #    token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
+  #    get(conn, "/claim-activation?token=#{token}")
+
+  #    assert_email_delivered_with(subject: "Welcome to Plausible")
+  #  end
+
+  #  test "redirects new user to create a password", %{conn: conn} do
+  #    token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
+  #    conn = get(conn, "/claim-activation?token=#{token}")
+
+  #    assert redirected_to(conn) == "/password"
+  #  end
+
+  #  test "redirects existing user to create a password", %{conn: conn} do
+  #    token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
+
+  #    conn = get(conn, "/claim-activation?token=#{token}")
+  #    conn = get(conn, "/claim-activation?token=#{token}")
+
+  #    assert redirected_to(conn) == "/password"
+  #  end
+  #end
 
   describe "GET /login_form" do
     test "shows the login form", %{conn: conn} do

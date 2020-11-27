@@ -8,7 +8,7 @@ defmodule PlausibleWeb.AuthController do
        when action in [:register_form, :register, :login_form, :login]
 
   plug PlausibleWeb.RequireAccountPlug
-       when action in [:user_settings, :save_settings, :delete_me, :password_form, :set_password]
+       when action in [:user_settings, :save_settings, :delete_me, :password_form, :set_password, :activate]
 
   def register_form(conn, _params) do
     if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) do
@@ -25,10 +25,10 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def register(conn, params) do
-    user = Plausible.Auth.User.changeset(%Plausible.Auth.User{}, params["user"])
+    user = Plausible.Auth.User.new(%Plausible.Auth.User{}, params["user"])
 
     if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
-      case Ecto.Changeset.apply_action(user, :insert) do
+      case Repo.insert(user) do
         {:ok, user} ->
           token = Auth.Token.sign_activation(user.name, user.email)
           url = PlausibleWeb.Endpoint.url() <> "/claim-activation?token=#{token}"
@@ -37,10 +37,9 @@ defmodule PlausibleWeb.AuthController do
           Plausible.Mailer.send_email(email_template)
 
           conn
-          |> render("register_success.html",
-            email: user.email,
-            layout: {PlausibleWeb.LayoutView, "focus.html"}
-          )
+          |> put_session(:current_user_id, user.id)
+          |> put_resp_cookie("logged_in", "true", http_only: false)
+          |> redirect(to: "/activate")
 
         {:error, changeset} ->
           render(conn, "register_form.html",
@@ -55,6 +54,29 @@ defmodule PlausibleWeb.AuthController do
         layout: {PlausibleWeb.LayoutView, "focus.html"}
       )
     end
+  end
+
+  def activate(conn, _params) do
+    user = conn.assigns[:current_user]
+
+    has_pin = Repo.exists?(
+      from c in "activation_pins",
+      where: c.user_id == ^user.id
+    )
+
+    render(conn, "activate.html", has_pin: has_pin, layout: {PlausibleWeb.LayoutView, "focus.html"})
+  end
+
+  def request_activation_code(conn, _params) do
+    user = conn.assigns[:current_user]
+    pin = Auth.issue_activation_code(user)
+
+    email_template = PlausibleWeb.Email.activation_email(user, pin)
+    Plausible.Mailer.send_email(email_template)
+
+    conn
+    |> put_flash(:success, "Activation code was sent to #{user.email}")
+    |> redirect(to: "/activate")
   end
 
   def claim_activation_link(conn, %{"token" => token}) do

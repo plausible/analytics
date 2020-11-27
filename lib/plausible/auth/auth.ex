@@ -3,6 +3,16 @@ defmodule Plausible.Auth do
   alias Plausible.Auth
   alias Plausible.Stats.Clickhouse, as: Stats
 
+  def issue_activation_code(user) do
+    Repo.update_all(from(c in "activation_pins", where: c.user_id == ^user.id), [set: [user_id: nil]])
+
+    pin = Repo.one(from(c in "activation_pins", where: is_nil(c.user_id), select: c.pin, limit: 1))
+
+    Repo.update_all(from(c in "activation_pins", where: c.pin == ^pin), [set: [user_id: user.id, issued_at: Timex.now()]])
+
+    pin
+  end
+
   def create_user(name, email) do
     %Auth.User{}
     |> Auth.User.new(%{name: name, email: email})

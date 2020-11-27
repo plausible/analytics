@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Email do
 
   def activation_email(user, link) do
     base_email()
-    |> to(user.email)
+    |> to(user)
     |> tag("activation-email")
     |> subject("Activate your Plausible free trial")
     |> render("activation_email.html", name: user.name, link: link)

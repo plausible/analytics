@@ -77,6 +77,8 @@ defmodule PlausibleWeb.Router do
 
     get "/register", AuthController, :register_form
     post "/register", AuthController, :register
+    get "/activate", AuthController, :activate
+    post "/activate/request-code", AuthController, :request_activation_code
     get "/claim-activation", AuthController, :claim_activation_link
     get "/login", AuthController, :login_form
     post "/login", AuthController, :login
