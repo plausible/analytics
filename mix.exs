@@ -52,8 +52,8 @@ defmodule Plausible.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      # remove
-      {:browser, "~> 0.4.3"},
+      {:appsignal, "~> 2.0"},
+      {:appsignal_phoenix, "~> 2.0.0"},
       {:bcrypt_elixir, "~> 2.0"},
       {:cors_plug, "~> 1.5"},
       {:ecto_sql, "~> 3.0"},
@@ -90,8 +90,7 @@ defmodule Plausible.MixProject do
       {:sshex, "2.2.1"},
       {:geolix, "~> 1.0"},
       {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
-      {:geolix_adapter_mmdb2, "~> 0.5.0"},
-      {:logflare_logger_backend, "~> 0.7.6"}
+      {:geolix_adapter_mmdb2, "~> 0.5.0"}
     ]
   end
 

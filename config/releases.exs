@@ -49,9 +49,8 @@ geolite2_country_db = System.get_env("GEOLITE2_COUNTRY_DB")
 disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
 hcaptcha_sitekey = System.get_env("HCAPTCHA_SITEKEY")
 hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
-logflare_api_key = System.get_env("LOGFLARE_API_KEY")
-logflare_source_id = System.get_env("LOGFLARE_SOURCE_ID")
 log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
+appsignal_api_key = System.get_env("APPSIGNAL_API_KEY")
 
 config :plausible,
   admin_user: admin_user,
@@ -199,18 +198,13 @@ if geolite2_country_db do
     ]
 end
 
-logger_backends =
-  case logflare_api_key do
-    api_key when is_binary(api_key) -> [LogflareLogger.HttpBackend]
-    _ -> [:console]
-  end
+config :logger, level: log_level
 
-config :logger,
-  level: log_level,
-  backends: logger_backends
-
-if logflare_api_key do
-  config :logflare_logger_backend,
-    api_key: logflare_api_key,
-    source_id: logflare_source_id
+if appsignal_api_key do
+  config :appsignal, :config,
+    otp_app: :plausible,
+    name: "Plausible Analytics",
+    push_api_key: appsignal_api_key,
+    env: env,
+    active: true
 end
