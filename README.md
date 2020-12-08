@@ -33,7 +33,7 @@ We choose the subscription business model rather than the business model of surv
 
 Yes, Plausible is fully [open source web analytics](https://plausible.io/open-source-website-analytics). 
 
-We have a free as in beer [Plausible Analytics Self-Hosted](https://plausible.io/self-hosted-web-analytics) solution. It’s exactly the same product as our Cloud solution with a less frequent release schedule, which you have to install, host and manage yourself on your own infrastrucutre. Take a look at our [self-hosting installation instructions](https://docs.plausible.io/self-hosting).
+We have a free as in beer [Plausible Analytics Self-Hosted](https://plausible.io/self-hosted-web-analytics) solution. It’s exactly the same product as our Cloud solution with a less frequent release schedule, which you have to install, host and manage yourself on your own infrastructure. Take a look at our [self-hosting installation instructions](https://docs.plausible.io/self-hosting).
 
 Plausible Self-Hosted is [a community supported project](https://plausible.discourse.group/) and there are no guarantees that you will get support from the creators of Plausible to troubleshoot your self-hosting issues. But if you [become a sponsor](https://github.com/sponsors/plausible), you can [reach out to us](https://plausible.io/contact) and get equal support to all the other paying customers.
 
