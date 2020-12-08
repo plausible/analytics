@@ -1,4 +1,3 @@
-O
 defmodule PlausibleWeb.AuthController do
   use PlausibleWeb, :controller
   use Plausible.Repo
@@ -9,7 +8,7 @@ defmodule PlausibleWeb.AuthController do
        when action in [:register_form, :register, :login_form, :login]
 
   plug PlausibleWeb.RequireAccountPlug
-       when action in [:user_settings, :save_settings, :delete_me, :password_form, :set_password, :activate]
+       when action in [:user_settings, :save_settings, :delete_me, :password_form, :set_password]
 
   def register_form(conn, _params) do
     if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) do
@@ -60,50 +59,39 @@ defmodule PlausibleWeb.AuthController do
   def activate_form(conn, _params) do
     user = conn.assigns[:current_user]
 
-    has_pin = Repo.exists?(
-      from c in "activation_pins",
+    has_code = Repo.exists?(
+      from c in "email_verification_codes",
       where: c.user_id == ^user.id
     )
 
-    render(conn, "activate.html", has_pin: has_pin, layout: {PlausibleWeb.LayoutView, "focus.html"})
-  end
-
-  defp is_expired?(activation_code_issued) do
-    Timex.before?(activation_code_issued, Timex.shift(Timex.now(), hours: -4))
+    render(conn, "activate.html", has_pin: has_code, layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def activate(conn, %{"code" => code}) do
     user = conn.assigns[:current_user]
     {code, ""} = Integer.parse(code)
 
-    pin = Repo.one(
-      from c in "activation_pins",
-      where: c.user_id == ^user.id,
-      where: c.pin == ^code,
-      select: %{code: c.pin, issued: c.issued_at}
-    )
-
-    cond do
-      is_nil(pin) ->
+    case Auth.verify_email(user, code) do
+      :ok ->
+        redirect(conn, to: "/sites/new")
+      {:error, :incorrect} ->
         render(conn, "activate.html",
           error: "Incorrect activation code",
           has_pin: true,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
-      is_expired?(pin[:issued]) ->
+      {:error, :expired} ->
         render(conn, "activate.html",
           error: "Code is expired, please request another one",
           has_pin: false,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
-      true ->
-        redirect(conn, to: "/sites/new")
     end
   end
 
   def request_activation_code(conn, _params) do
     user = conn.assigns[:current_user]
-    pin = Auth.issue_activation_code(user)
+    pin = Auth.issue_email_verification(user)
 
     email_template = PlausibleWeb.Email.activation_email(user, pin)
     Plausible.Mailer.send_email(email_template)

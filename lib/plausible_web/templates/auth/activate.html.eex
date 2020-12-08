@@ -1,9 +1,3 @@
-<div class="mx-auto mt-6 text-center">
-  <h1 class="text-3xl font-black">Register your 30-day unlimited-use free trial</h1>
-  <div class="text-xl font-medium">Set up privacy-friendly analytics with just a few clicks</div>
-</div>
-
-
 <div class="w-full max-w-3xl mt-4 mx-auto flex">
   <%= if @has_pin do %>
     <%= form_for @conn, "/activate", [class: "w-full max-w-lg mx-auto bg-white shadow-md rounded px-8 py-6 mb-4 mt-8"], fn f -> %>
