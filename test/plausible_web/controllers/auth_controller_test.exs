@@ -78,7 +78,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "Request activation code"
     end
 
-    test "if user does have a code: prompts user to enter the activation code from their email", %{conn: conn, user: user} do
+    test "if user does have a code: prompts user to enter the activation code from their email", %{conn: conn} do
       conn = post(conn, "/activate/request-code")
              |> get("/activate")
 
@@ -105,37 +105,37 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
-  #describe "GET /claim-activation" do
-  #  test "creates the user", %{conn: conn} do
-  #    token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
-  #    get(conn, "/claim-activation?token=#{token}")
+  describe "POST /activate" do
+    setup [:create_user, :log_in]
 
-  #    assert Plausible.Auth.find_user_by(email: "user@example.com")
-  #  end
+    test "with wrong pin - reloads the form with error", %{conn: conn} do
+      conn = post(conn, "/activate", %{code: "1234"})
 
-  #  test "sends the welcome email", %{conn: conn} do
-  #    token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
-  #    get(conn, "/claim-activation?token=#{token}")
+      assert html_response(conn, 200) =~ "Incorrect activation code"
+    end
 
-  #    assert_email_delivered_with(subject: "Welcome to Plausible")
-  #  end
+    test "with expired pin - reloads the form with error", %{conn: conn, user: user} do
+      Repo.insert_all("activation_pins", [%{
+        pin: 1234,
+        user_id: user.id,
+        issued_at: Timex.shift(Timex.now(), days: -1)
+      }])
 
-  #  test "redirects new user to create a password", %{conn: conn} do
-  #    token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
-  #    conn = get(conn, "/claim-activation?token=#{token}")
+      conn = post(conn, "/activate", %{code: "1234"})
 
-  #    assert redirected_to(conn) == "/password"
-  #  end
+      assert html_response(conn, 200) =~ "Code is expired, please request another one"
+    end
 
-  #  test "redirects existing user to create a password", %{conn: conn} do
-  #    token = Plausible.Auth.Token.sign_activation("Jane Doe", "user@example.com")
+    test "marks the user account as active", %{conn: conn, user: user} do
+      post(conn, "/activate/request-code")
 
-  #    conn = get(conn, "/claim-activation?token=#{token}")
-  #    conn = get(conn, "/claim-activation?token=#{token}")
+      pin = Repo.one(from c in "activation_pins", where: c.user_id == ^user.id, select: c.pin) |> Integer.to_string
 
-  #    assert redirected_to(conn) == "/password"
-  #  end
-  #end
+      conn = post(conn, "/activate", %{code: pin})
+
+      assert redirected_to(conn) == "/sites/new"
+    end
+  end
 
   describe "GET /login_form" do
     test "shows the login form", %{conn: conn} do

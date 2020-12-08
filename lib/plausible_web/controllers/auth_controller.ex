@@ -1,3 +1,4 @@
+O
 defmodule PlausibleWeb.AuthController do
   use PlausibleWeb, :controller
   use Plausible.Repo
@@ -56,7 +57,7 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  def activate(conn, _params) do
+  def activate_form(conn, _params) do
     user = conn.assigns[:current_user]
 
     has_pin = Repo.exists?(
@@ -65,6 +66,39 @@ defmodule PlausibleWeb.AuthController do
     )
 
     render(conn, "activate.html", has_pin: has_pin, layout: {PlausibleWeb.LayoutView, "focus.html"})
+  end
+
+  defp is_expired?(activation_code_issued) do
+    Timex.before?(activation_code_issued, Timex.shift(Timex.now(), hours: -4))
+  end
+
+  def activate(conn, %{"code" => code}) do
+    user = conn.assigns[:current_user]
+    {code, ""} = Integer.parse(code)
+
+    pin = Repo.one(
+      from c in "activation_pins",
+      where: c.user_id == ^user.id,
+      where: c.pin == ^code,
+      select: %{code: c.pin, issued: c.issued_at}
+    )
+
+    cond do
+      is_nil(pin) ->
+        render(conn, "activate.html",
+          error: "Incorrect activation code",
+          has_pin: true,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+      is_expired?(pin[:issued]) ->
+        render(conn, "activate.html",
+          error: "Code is expired, please request another one",
+          has_pin: false,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+      true ->
+        redirect(conn, to: "/sites/new")
+    end
   end
 
   def request_activation_code(conn, _params) do
