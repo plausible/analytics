@@ -21,7 +21,9 @@ defmodule Plausible.Factory do
   end
 
   def spike_notification_factory do
-    %Plausible.Site.SpikeNotification{}
+    %Plausible.Site.SpikeNotification{
+      threshold: 10
+    }
   end
 
   def site_factory do

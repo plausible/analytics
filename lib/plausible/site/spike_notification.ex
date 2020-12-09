@@ -11,6 +11,23 @@ defmodule Plausible.Site.SpikeNotification do
     timestamps()
   end
 
+  def changeset(schema, attrs) do
+    schema
+    |> cast(attrs, [:site_id, :recipients, :threshold])
+    |> validate_required([:site_id, :recipients, :threshold])
+    |> unique_constraint(:site)
+  end
+
+  def add_recipient(schema, recipient) do
+    schema
+    |> change(recipients: schema.recipients ++ [recipient])
+  end
+
+  def remove_recipient(schema, recipient) do
+    schema
+    |> change(recipients: List.delete(schema.recipients, recipient))
+  end
+
   def was_sent(schema) do
     schema
     |> change(last_sent: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second))

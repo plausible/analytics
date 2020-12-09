@@ -164,6 +164,7 @@ defmodule PlausibleWeb.SiteController do
       site: site,
       weekly_report: Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id),
       monthly_report: Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id),
+      spike_notification: Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id),
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -372,6 +373,69 @@ defmodule PlausibleWeb.SiteController do
 
     Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
     |> Plausible.Site.MonthlyReport.remove_recipient(recipient)
+    |> Repo.update!()
+
+    conn
+    |> put_flash(
+      :success,
+      "Removed #{recipient} as a recipient for the monthly report"
+    )
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+  end
+
+  def enable_spike_notification(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+
+    Plausible.Site.SpikeNotification.changeset(%Plausible.Site.SpikeNotification{}, %{
+      site_id: site.id,
+      threshold: 10,
+      recipients: [conn.assigns[:current_user].email]
+    })
+    |> Repo.insert!()
+
+    conn
+    |> put_flash(:success, "You will a notification with traffic spikes going forward")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+  end
+
+  def disable_spike_notification(conn, %{"website" => website}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    Repo.delete_all(from mr in Plausible.Site.SpikeNotification, where: mr.site_id == ^site.id)
+
+    conn
+    |> put_flash(:success, "Spike notification disabled")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+  end
+
+  def update_spike_notification(conn, %{"website" => website, "spike_notification" => params}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    notification = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
+
+    Plausible.Site.SpikeNotification.changeset(notification, params)
+    |> Repo.update!()
+
+    conn
+    |> put_flash(:success, "Notification settings updated")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+  end
+
+  def add_spike_notification_recipient(conn, %{"website" => website, "recipient" => recipient}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+
+    Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
+    |> Plausible.Site.SpikeNotification.add_recipient(recipient)
+    |> Repo.update!()
+
+    conn
+    |> put_flash(:success, "Added #{recipient} as a recipient for the traffic spike notification")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+  end
+
+  def remove_spike_notification_recipient(conn, %{"website" => website, "recipient" => recipient}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+
+    Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
+    |> Plausible.Site.SpikeNotification.remove_recipient(recipient)
     |> Repo.update!()
 
     conn
