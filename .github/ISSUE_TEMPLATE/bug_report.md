@@ -2,7 +2,6 @@
 name: Bug report
 about: Create a report to help us improve Plausible Analytics
 title: ''
-labels: bug
 assignees: ''
 
 ---
