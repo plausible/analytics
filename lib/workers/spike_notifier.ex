@@ -1,19 +1,20 @@
 defmodule Plausible.Workers.SpikeNotifier do
   use Plausible.Repo
   alias Plausible.Stats.Query
+  alias Plausible.Site.SpikeNotification
   use Oban.Worker, queue: :spike_notifications
   @at_most_every "12 hours"
 
   @impl Oban.Worker
   def perform(_args, _job, clickhouse \\ Plausible.Stats.Clickhouse) do
     notifications = Repo.all(
-      from sn in Plausible.Site.SpikeNotification,
+      from sn in SpikeNotification,
       where: is_nil(sn.last_sent),
-      or_where: sn.last_sent < fragment("now() - INTERVAL ?", @at_most_every)
+      or_where: sn.last_sent < fragment("now() - INTERVAL ?", @at_most_every),
+      preload: :site
     )
 
     for notification <- notifications do
-      notification = Repo.preload(notification, :site)
       query = Query.from(notification.site.timezone, %{"period" => "realtime"})
       current_visitors = clickhouse.current_visitors(notification.site, query)
       notify(notification, current_visitors)
@@ -25,6 +26,9 @@ defmodule Plausible.Workers.SpikeNotifier do
       for recipient <- notification.recipients do
         send_notification(recipient, notification.site, current_visitors)
       end
+      notification
+      |> SpikeNotification.was_sent()
+      |> Repo.update
     end
   end
 

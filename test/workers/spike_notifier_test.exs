@@ -34,9 +34,16 @@ defmodule Plausible.Workers.SpikeNotifierTest do
 
   test "does not notify anyone if a notification already went out in the last 12 hours" do
     site = insert(:site)
-    insert(:spike_notification, site: site, threshold: 10, recipients: ["jerod@example.com", "uku@example.com"], last_sent: Timex.now())
-
+    insert(:spike_notification, site: site, threshold: 10, recipients: ["uku@example.com"])
     clickhouse_stub = stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 10 end)
+
+    SpikeNotifier.perform(nil, nil, clickhouse_stub)
+
+    assert_email_delivered_with(
+      subject: "Traffic spike on #{site.domain}",
+      to: [nil: "uku@example.com"]
+    )
+
     SpikeNotifier.perform(nil, nil, clickhouse_stub)
 
     assert_no_emails_delivered()

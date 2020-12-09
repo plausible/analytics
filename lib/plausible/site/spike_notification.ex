@@ -18,6 +18,11 @@ defmodule Plausible.Site.SpikeNotification do
     |> unique_constraint(:site)
   end
 
+  def was_sent(schema) do
+    schema
+    |> change(last_sent: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second))
+  end
+
   def add_recipient(report, recipient) do
     report
     |> change(recipients: report.recipients ++ [recipient])
