@@ -13,7 +13,6 @@ defmodule PlausibleWeb.Email do
     |> subject("Activate your Plausible free trial")
     |> render("activation_email.html", name: user.name, link: link)
   end
-
   def welcome_email(user) do
     base_email()
     |> to(user)
@@ -92,6 +91,14 @@ defmodule PlausibleWeb.Email do
     |> tag("weekly-report")
     |> subject("#{assigns[:name]} report for #{site.domain}")
     |> render("weekly_report.html", Keyword.put(assigns, :site, site))
+  end
+
+  def spike_notification(email, site, current_visitors) do
+    base_email()
+    |> to(email)
+    |> tag("spike-notification")
+    |> subject("Traffic spike on #{site.domain}")
+    |> render("spike_notification.html", %{current_visitors: current_visitors})
   end
 
   def cancellation_email(user) do
