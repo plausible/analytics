@@ -598,6 +598,21 @@ defmodule Plausible.Stats.Clickhouse do
     |> Enum.take(limit)
   end
 
+  def browser_versions(site, query, limit \\ 5) do
+    ClickhouseRepo.all(
+      from e in base_query_w_sessions(site, query),
+        group_by: e.browser_version,
+        where: e.browser_version != "",
+        order_by: [desc: fragment("count")],
+        select: %{
+          name: e.browser_version,
+          count: fragment("uniq(user_id) as count")
+        }
+    )
+    |> add_percentages
+    |> Enum.take(limit)
+  end
+
   def operating_systems(site, query, limit \\ 5) do
     ClickhouseRepo.all(
       from e in base_query_w_sessions(site, query),
@@ -606,6 +621,21 @@ defmodule Plausible.Stats.Clickhouse do
         order_by: [desc: fragment("count")],
         select: %{
           name: e.operating_system,
+          count: fragment("uniq(user_id) as count")
+        }
+    )
+    |> add_percentages
+    |> Enum.take(limit)
+  end
+
+  def operating_system_versions(site, query, limit \\ 5) do
+    ClickhouseRepo.all(
+      from e in base_query_w_sessions(site, query),
+        group_by: e.operating_system_version,
+        where: e.operating_system_version != "",
+        order_by: [desc: fragment("count")],
+        select: %{
+          name: e.operating_system_version,
           count: fragment("uniq(user_id) as count")
         }
     )
@@ -697,7 +727,7 @@ defmodule Plausible.Stats.Clickhouse do
     none =
       ClickhouseRepo.all(
         from e in base_query_w_sessions(site, query),
-          where: fragment("not has(meta.key, ?)", ^key),
+          where: fragment("not has(?.key, ?)", e.meta, ^key),
           select: %{
             name: "(none)",
             count: fragment("uniq(?) as count", e.user_id),
@@ -722,6 +752,28 @@ defmodule Plausible.Stats.Clickhouse do
     (values ++ none)
     |> Enum.sort(fn row1, row2 -> row1[:count] >= row2[:count] end)
     |> Enum.filter(fn row -> row[:count] > 0 end)
+    |> Enum.map(fn row ->
+      uri = URI.parse(row[:name])
+      if uri.host && uri.scheme do
+        Map.put(row, :is_url, true)
+      else
+        row
+      end
+    end)
+  end
+
+  def last_24h_visitors([]), do: %{}
+  def last_24h_visitors(sites) do
+    domains = Enum.map(sites, & &1.domain)
+
+    ClickhouseRepo.all(
+      from e in "events",
+      group_by: e.domain,
+      where: fragment("? IN tuple(?)", e.domain, ^domains),
+      where: e.timestamp > fragment("now() - INTERVAL 24 HOUR"),
+      select: {e.domain, fragment("uniq(user_id)")}
+    )
+    |> Enum.into(%{})
   end
 
   def goal_conversions(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
@@ -834,9 +886,25 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     sessions_q =
+      if query.filters["browser_version"] do
+        version = query.filters["browser_version"]
+        from(s in sessions_q, where: s.browser_version == ^version)
+      else
+        sessions_q
+      end
+
+    sessions_q =
       if query.filters["os"] do
         os = query.filters["os"]
         from(s in sessions_q, where: s.operating_system == ^os)
+      else
+        sessions_q
+      end
+
+    sessions_q =
+      if query.filters["os_version"] do
+        version = query.filters["os_version"]
+        from(s in sessions_q, where: s.operating_system_version == ^version)
       else
         sessions_q
       end
@@ -890,7 +958,8 @@ defmodule Plausible.Stats.Clickhouse do
     q =
       if query.filters["source"] || query.filters['referrer'] || query.filters["utm_medium"] ||
            query.filters["utm_source"] || query.filters["utm_campaign"] || query.filters["screen"] ||
-           query.filters["browser"] || query.filters["os"] || query.filters["country"] do
+             query.filters["browser"] || query.filters["browser_version"] || query.filters["os"] ||
+               query.filters["os_version"] || query.filters["country"] do
         from(
           e in q,
           join: sq in subquery(sessions_q),
@@ -983,9 +1052,25 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     q =
+      if query.filters["browser_version"] do
+        version = query.filters["browser_version"]
+        from(s in q, where: s.browser_version == ^version)
+      else
+        q
+      end
+
+    q =
       if query.filters["os"] do
         os = query.filters["os"]
         from(s in q, where: s.operating_system == ^os)
+      else
+        q
+      end
+
+    q =
+      if query.filters["os_version"] do
+        version = query.filters["os_version"]
+        from(s in q, where: s.operating_system_version == ^version)
       else
         q
       end
@@ -1065,9 +1150,25 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     q =
+      if query.filters["browser_version"] do
+        version = query.filters["browser_version"]
+        from(s in q, where: s.browser_version == ^version)
+      else
+        q
+      end
+
+    q =
       if query.filters["os"] do
         os = query.filters["os"]
         from(s in q, where: s.operating_system == ^os)
+      else
+        q
+      end
+
+    q =
+      if query.filters["os_version"] do
+        version = query.filters["os_version"]
+        from(s in q, where: s.operating_system_version == ^version)
       else
         q
       end

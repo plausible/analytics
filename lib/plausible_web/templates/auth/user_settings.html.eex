@@ -80,11 +80,11 @@
   <%= cond do %>
     <% @subscription && @subscription.status in ["active", "past_due", "paused"] && @subscription.cancel_url -> %>
       <div class="mt-8">
-        <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150") %>
+        <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150") %>
       </div>
     <% true -> %>
       <div class="mt-8">
-        <%= link("Upgrade", to: "/billing/upgrade", class: "inline-block px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition ease-in-out duration-150") %>
+        <%= link("Upgrade", to: "/billing/upgrade", class: "inline-block px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150") %>
       </div>
   <% end %>
 </div>
@@ -123,6 +123,6 @@
     <span class="button bg-gray-300 mt-6 hover:shadow-none">Delete my account</span>
     <p class="text-gray-600 text-sm mt-2">Your account cannot be deleted because you have an active subscription. If you want to delete your account, please cancel your subscription first.</p>
   <% else %>
-    <%= link("Delete my account", to: "/me", class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"]) %>
+    <%= link("Delete my account", to: "/me", class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"]) %>
   <% end %>
 </div>

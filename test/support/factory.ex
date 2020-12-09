@@ -51,9 +51,11 @@ defmodule Plausible.Factory do
       timestamp: Timex.now(),
       is_bounce: false,
       browser: "",
+      browser_version: "",
       country_code: "",
       screen_size: "",
-      operating_system: ""
+      operating_system: "",
+      operating_system_version: ""
     }
   end
 
@@ -82,9 +84,11 @@ defmodule Plausible.Factory do
       utm_source: "",
       utm_campaign: "",
       browser: "",
+      browser_version: "",
       country_code: "",
       screen_size: "",
       operating_system: "",
+      operating_system_version: "",
       "meta.key": [],
       "meta.value": []
     }

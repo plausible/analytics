@@ -1,6 +1,6 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
-import {removeQueryParam} from './query'
+import {navigateToQuery, removeQueryParam} from './query'
 import Datamap from 'datamaps'
 
 function filterText(key, value, query) {
@@ -33,8 +33,16 @@ function filterText(key, value, query) {
   if (key === "browser") {
     return <span className="inline-block max-w-sm truncate">Browser: <b>{value}</b></span>
   }
+  if (key === "browser_version") {
+    const browserName = query.filters["browser"] ? query.filters["browser"] : 'Browser'
+    return <span className="inline-block max-w-sm truncate">{browserName}.Version: <b>{value}</b></span>
+  }
   if (key === "os") {
     return <span className="inline-block max-w-sm truncate">Operating System: <b>{value}</b></span>
+  }
+  if (key === "os_version") {
+    const osName = query.filters["os"] ? query.filters["os"] : 'OS'
+    return <span className="inline-block max-w-sm truncate">{osName}.Version: <b>{value}</b></span>
   }
   if (key === "country") {
     const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
@@ -48,9 +56,15 @@ function filterText(key, value, query) {
 
 function renderFilter(history, [key, value], query) {
   function removeFilter() {
-    let newQuery = removeQueryParam(location.search, key)
-    if (key === 'goal') { newQuery = removeQueryParam(newQuery, 'props')  }
-    history.push({search: newQuery})
+    const newOpts = {
+      [key]: false
+    }
+    if (key === 'goal') { newOpts.props = false }
+    navigateToQuery(
+      history,
+      query,
+      newOpts
+    )
   }
 
   return (

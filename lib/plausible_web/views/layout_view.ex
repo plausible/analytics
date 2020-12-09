@@ -21,6 +21,19 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
+  def settings_tabs() do
+    [
+      [key: "General", value: "general"],
+      [key: "Visibility", value: "visibility"],
+      [key: "Goals", value: "goals"],
+      [key: "Search Console", value: "search-console"],
+      [key: "Email reports", value: "email-reports"],
+      [key: "Custom domain", value: "custom-domain"],
+      [key: "Danger zone", value: "danger-zone"],
+    ]
+  end
+
+
   def trial_notificaton(user) do
     case Plausible.Billing.trial_days_left(user) do
       days when days > 1 ->
@@ -35,5 +48,14 @@ defmodule PlausibleWeb.LayoutView do
       days when days < 0 ->
         "Trial over, upgrade now"
     end
+  end
+
+  @doc "http://blog.plataformatec.com.br/2018/05/nested-layouts-with-phoenix/"
+  def render_layout(layout, assigns, do: content) do
+    render(layout, Map.put(assigns, :inner_layout, content))
+  end
+
+  def is_current_tab(conn, tab) do
+    List.last(conn.path_info) == tab
   end
 end

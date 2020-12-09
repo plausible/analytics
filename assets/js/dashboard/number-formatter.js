@@ -14,9 +14,9 @@ export default function numberFormatter(num) {
   } else if (num >= MILLION && num < HUNDRED_MILLION) {
     const millions = num / MILLION
     if (millions === Math.floor(millions)) {
-      return Math.floor(millions) + 'm'
+      return Math.floor(millions) + 'M'
     } else {
-      return (Math.floor(millions * 10) / 10) + 'm'
+      return (Math.floor(millions * 10) / 10) + 'M'
     }
   } else {
     return num

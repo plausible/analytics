@@ -12,6 +12,23 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
+  describe "GET /sites" do
+    setup [:create_user, :log_in]
+
+    test "shows empty screen if no sites", %{conn: conn} do
+      conn = get(conn, "/sites")
+      assert html_response(conn, 200) =~ "You don't have any sites yet"
+    end
+
+    test "lists all of your sites with last 24h visitors", %{conn: conn, user: user} do
+      insert(:site, members: [user], domain: "test-site.com")
+      conn = get(conn, "/sites")
+
+      assert html_response(conn, 200) =~ "test-site.com"
+      assert html_response(conn, 200) =~ "<b>3</b> visitors in last 24h"
+    end
+  end
+
   describe "POST /sites" do
     setup [:create_user, :log_in]
 
@@ -52,6 +69,18 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~ "can&#39;t be blank"
     end
 
+    test "only alphanumeric characters and slash allowed in domain", %{conn: conn} do
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "timezone" => "Europe/London",
+            "domain" => "!@£.com"
+          }
+        })
+
+      assert html_response(conn, 200) =~ "only letters, numbers, slashes and period allowed"
+    end
+
     test "renders form again when it is a duplicate domain", %{conn: conn} do
       insert(:site, domain: "example.com")
 
@@ -77,20 +106,24 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:website/settings" do
+  describe "GET /:website/settings/general" do
     setup [:create_user, :log_in, :create_site]
 
     test "shows settings form", %{conn: conn, site: site} do
-      conn = get(conn, "/#{site.domain}/settings")
+      conn = get(conn, "/#{site.domain}/settings/general")
 
-      assert html_response(conn, 200) =~ "Settings"
+      assert html_response(conn, 200) =~ "General information"
     end
+  end
+
+  describe "GET /:website/settings/goals" do
+    setup [:create_user, :log_in, :create_site]
 
     test "lists goals for the site", %{conn: conn, site: site} do
       insert(:goal, domain: site.domain, event_name: "Custom event")
       insert(:goal, domain: site.domain, page_path: "/register")
 
-      conn = get(conn, "/#{site.domain}/settings")
+      conn = get(conn, "/#{site.domain}/settings/goals")
 
       assert html_response(conn, 200) =~ "Custom event"
       assert html_response(conn, 200) =~ "Visit /register"

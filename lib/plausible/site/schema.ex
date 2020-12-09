@@ -22,6 +22,7 @@ defmodule Plausible.Site do
     site
     |> cast(attrs, [:domain, :timezone])
     |> validate_required([:domain, :timezone])
+    |> validate_format(:domain, ~r/^[a-zA-z0-9\-\.\/\:]*$/, message: "only letters, numbers, slashes and period allowed")
     |> unique_constraint(:domain)
     |> clean_domain
   end
