@@ -30,10 +30,9 @@ defmodule PlausibleWeb.AuthController do
     if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
       case Repo.insert(user) do
         {:ok, user} ->
-          token = Auth.Token.sign_activation(user.name, user.email)
-          url = PlausibleWeb.Endpoint.url() <> "/claim-activation?token=#{token}"
-          Logger.info(url)
-          email_template = PlausibleWeb.Email.activation_email(user, url)
+          code = Auth.issue_email_verification(user)
+          Logger.info("VERIFICATION CODE: #{code}")
+          email_template = PlausibleWeb.Email.activation_email(user, code)
           Plausible.Mailer.send_email(email_template)
 
           conn

@@ -72,7 +72,7 @@ defmodule Plausible.MixProject do
       {:ref_inspector, "~> 1.3"},
       {:timex, "~> 3.6"},
       {:ua_inspector, "~> 0.18"},
-      {:bamboo, "~> 1.3"},
+      {:bamboo, "~> 1.6"},
       {:bamboo_postmark, "~> 0.5"},
       {:bamboo_smtp, "~> 2.1.0"},
       {:sentry, "~> 7.0"},

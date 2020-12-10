@@ -23,7 +23,9 @@ defmodule PlausibleWeb.AuthControllerTest do
         }
       )
 
-      assert_email_delivered_with(subject: "Activate your Plausible free trial")
+      assert_delivered_email_matches(%{to: [{_, user_email}], subject: subject})
+      assert user_email == "user@example.com"
+      assert subject =~ "is your Plausible email verification code"
     end
 
     test "creates user record", %{conn: conn} do
@@ -101,7 +103,9 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "sends activation email to user", %{conn: conn, user: user} do
       post(conn, "/activate/request-code")
 
-      assert_email_delivered_with(to: [{user.name, user.email}], subject: "Activate your Plausible free trial")
+      assert_delivered_email_matches(%{to: [{_, user_email}], subject: subject})
+      assert user_email == user.email
+      assert subject =~ "is your Plausible email verification code"
     end
   end
 
