@@ -13,7 +13,10 @@
     </div>
     <%= link("Start collecting data →", class: "button mt-4 w-full", to: "/#{URI.encode_www_form(@site.domain)}") %>
   <% end %>
-  <div class="pt-12 pl-8 hidden md:block">
-    <%= render(PlausibleWeb.AuthView, "_onboarding_steps.html", current_step: 3) %>
-  </div>
+
+  <%= if @is_first_site do %>
+    <div class="pt-12 pl-8 hidden md:block">
+      <%= render(PlausibleWeb.AuthView, "_onboarding_steps.html", current_step: 3) %>
+    </div>
+  <% end %>
 </div>

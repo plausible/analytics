@@ -28,7 +28,9 @@
     <%= submit "Add snippet →", class: "button mt-4 w-full" %>
   <% end %>
 
-  <div class="pt-12 pl-8 hidden md:block">
-    <%= render(PlausibleWeb.AuthView, "_onboarding_steps.html", current_step: 2) %>
-  </div>
+  <%= if @is_first_site do %>
+    <div class="pt-12 pl-8 hidden md:block">
+      <%= render(PlausibleWeb.AuthView, "_onboarding_steps.html", current_step: 2) %>
+    </div>
+  <% end %>
 </div>
