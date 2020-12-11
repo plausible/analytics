@@ -17,7 +17,7 @@ defmodule Plausible.Workers.SpikeNotifier do
     for notification <- notifications do
       query = Query.from(notification.site.timezone, %{"period" => "realtime"})
       current_visitors = clickhouse.current_visitors(notification.site, query)
-      sources = clickhouse.top_sources(notification.site, query, 3, 1)
+      sources = clickhouse.top_sources(notification.site, query, 3, 1, true)
       notify(notification, current_visitors, sources)
     end
   end
