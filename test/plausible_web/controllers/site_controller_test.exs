@@ -393,7 +393,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "PUT /sites/:website/spike-notification" do
     setup [:create_user, :log_in, :create_site]
 
-    test "updates spike notification threshold", %{conn: conn, site: site, user: user} do
+    test "updates spike notification threshold", %{conn: conn, site: site} do
       insert(:spike_notification, site: site, threshold: 10)
       put(conn, "/sites/#{site.domain}/spike-notification", %{"spike_notification" => %{"threshold" => "15"}})
 

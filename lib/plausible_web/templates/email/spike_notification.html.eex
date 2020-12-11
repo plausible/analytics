@@ -1,1 +1,25 @@
-Yours site has <%= @current_visitors %> visitors. Nice!
+There are currently <%= @current_visitors %> visitors on <%= @site.domain %>.
+<br />
+<br />
+The top 3 sources for current visitors:<br />
+<table cellpadding="0" cellspacing="0" width="640" align="center" border="1">
+<tr>
+<td>
+<table cellpadding="0" cellspacing="0" width="640" align="left" border="1">
+  <%= for %{"name" => source, "count" => visitors} <- @sources do %>
+    <tr>
+      <td><%= source %><td>
+      <td><%= visitors %></td>
+    </tr>
+  <% end %>
+</table>
+</td>
+</tr>
+</table>
+<%= if @link do %>
+  View dashboard: @link
+<% end %>
+<br /><br />
+--
+<br /><br />
+<%= plausible_url() %><br />
