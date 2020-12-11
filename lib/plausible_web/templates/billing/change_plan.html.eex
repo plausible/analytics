@@ -3,16 +3,16 @@
 </script>
 
 <div class="mx-auto mt-6 text-center">
-  <h1 class="text-3xl font-black">Change subscription plan</h1>
+  <h1 class="text-3xl font-black dark:text-gray-100">Change subscription plan</h1>
 </div>
 
 <div class="w-full max-w-lg px-4 mt-4 mx-auto">
-  <div x-data="{volume: '10k', billingCycle: 'monthly'}" class="flex-1 bg-white shadow-md rounded px-8 py-4 mb-4 mt-8">
-    <div class="w-full pt-2 text-xl font-bold">
+  <div x-data="{volume: '10k', billingCycle: 'monthly'}" class="flex-1 bg-white dark:bg-gray-800 shadow-md rounded px-8 py-4 mb-4 mt-8">
+    <div class="w-full pt-2 text-xl font-bold dark:text-gray-100">
       Select your new plan
     </div>
 
-    <div class="w-full text-gray-500 text-sm">
+    <div class="w-full text-gray-500 dark:text-gray-200 text-sm">
       Depending on which plan you choose, your card might be charged immediately and your
       next payment date could change. You can preview these changes before committing.
     </div>
@@ -20,12 +20,12 @@
     <div class="pt-8"></div>
 
     <span class="relative z-0 inline-flex shadow-sm w-full">
-      <button type="button" @click="billingCycle = 'monthly'" :class="{'bg-indigo-600 text-white border-indigo-600': billingCycle === 'monthly', 'bg-white text-gray-700 hover:text-gray-500 border-gray-300': billingCycle === 'yearly'}" class="relative w-full text-center px-4 py-2 rounded-l-md border text-sm leading-5 font-medium focus:outline-none focus:border-blue-300 focus:ring transition ease-in-out duration-150">
+      <button type="button" @click="billingCycle = 'monthly'" :class="{'bg-indigo-600 text-white border-indigo-600': billingCycle === 'monthly', 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-200 border-gray-300 dark:border-gray-500': billingCycle === 'yearly'}" class="relative w-full text-center px-4 py-2 rounded-l-md border text-sm leading-5 font-medium focus:outline-none focus:border-blue-300 focus:ring transition ease-in-out duration-150">
         Monthly billing
       </button>
-      <button type="button" @click="billingCycle = 'yearly'" :class="{'bg-indigo-600 text-white border-indigo-600': billingCycle === 'yearly', 'bg-white text-gray-700 hover:text-gray-500 border-gray-300': billingCycle === 'monthly'}" class="-ml-px relative w-full text-center px-4 py-2 rounded-r-md border text-sm leading-5 font-medium focus:outline-none focus:border-blue-300 focus:ring transition ease-in-out duration-150">
+      <button type="button" @click="billingCycle = 'yearly'" :class="{'bg-indigo-600 text-white border-indigo-600': billingCycle === 'yearly', 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-200 border-gray-300 dark:border-gray-500': billingCycle === 'monthly'}" class="-ml-px relative w-full text-center px-4 py-2 rounded-r-md border text-sm leading-5 font-medium focus:outline-none focus:border-blue-300 focus:ring transition ease-in-out duration-150">
         Yearly billing
-        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium leading-4 bg-yellow-100 text-yellow-800">
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium leading-4 bg-yellow-200 text-yellow-800 dark:text-yellow-900">
           -33%
         </span>
       </button>
@@ -35,64 +35,64 @@
 
     <div class="flex flex-col">
       <div class="-my-2 py-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div class="align-middle inline-block min-w-full shadow overflow-hidden sm:rounded-lg border-b border-gray-200">
+        <div class="align-middle inline-block min-w-full shadow overflow-hidden sm:rounded-lg border-b border-gray-200 dark:border-t dark:border-l dark:border-r dark:shadow-none">
           <table class="min-w-full">
             <thead>
               <tr>
-                <th class="px-6 py-3 border-b border-gray-200 bg-gray-100 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                <th class="px-6 py-3 border-b border-gray-200 bg-gray-100 dark:bg-gray-900 text-left text-xs leading-4 font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
                   Monthly pageviews
                 </th>
-                <th class="px-6 py-3 border-b border-gray-200 bg-gray-100 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                <th class="px-6 py-3 border-b border-gray-200 bg-gray-100 dark:bg-gray-900 text-left text-xs leading-4 font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider">
                   Price per month
                 </th>
               </tr>
             </thead>
-            <tbody class="bg-white">
-              <tr @click="volume = '10k'" :class="{'border-2 border-green-300 bg-green-50': volume === '10k', 'border-b border-gray-200 cursor-pointer': volume !== '10k'}">
-                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '10k'}">10k</td>
-                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '10k'}">
+            <tbody class="bg-white dark:bg-gray-800">
+              <tr @click="volume = '10k'" :class="{'border-2 border-green-300 bg-opacity-20 bg-green-300': volume === '10k', 'border-b border-gray-200 cursor-pointer': volume !== '10k'}">
+                <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100" :class="{'font-bold': volume === '10k'}">10k</td>
+                <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100" :class="{'font-bold': volume === '10k'}">
                   <span x-show="billingCycle === 'monthly'">$6</span>
                   <span x-show="billingCycle === 'yearly'">$4</span>
                 </td>
               </tr>
-              <tr @click="volume = '100k'" :class="{'border-2 border-green-300 bg-green-50': volume === '100k', 'border-b border-gray-200 cursor-pointer': volume !== '100k'}">
-                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '100k'}">100k</td>
-                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '100k'}">
+              <tr @click="volume = '100k'" :class="{'border-2 border-green-300 bg-opacity-20 bg-green-300': volume === '100k', 'border-b border-gray-200 cursor-pointer': volume !== '100k'}">
+                <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100" :class="{'font-bold': volume === '100k'}">100k</td>
+                <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100" :class="{'font-bold': volume === '100k'}">
                   <span x-show="billingCycle === 'monthly'">$12</span>
                   <span x-show="billingCycle === 'yearly'">$8</span>
                 </td>
               </tr>
-              <tr @click="volume = '200k'" :class="{'border-2 border-green-300 bg-green-50': volume === '200k', 'border-b border-gray-200 cursor-pointer': volume !== '200k'}">
-                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '200k'}">200k</td>
-                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '200k'}">
+              <tr @click="volume = '200k'" :class="{'border-2 border-green-300 bg-opacity-20 bg-green-300': volume === '200k', 'border-b border-gray-200 cursor-pointer': volume !== '200k'}">
+                <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100" :class="{'font-bold': volume === '200k'}">200k</td>
+                <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100" :class="{'font-bold': volume === '200k'}">
                   <span x-show="billingCycle === 'monthly'">$18</span>
                   <span x-show="billingCycle === 'yearly'">$12</span>
                 </td>
               </tr>
-              <tr @click="volume = '500k'" :class="{'border-2 border-green-300 bg-green-50': volume === '500k', 'border-b border-gray-200 cursor-pointer': volume !== '500k'}">
-                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '500k'}">500k</td>
-                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '500k'}">
+              <tr @click="volume = '500k'" :class="{'border-2 border-green-300 bg-opacity-20 bg-green-300': volume === '500k', 'border-b border-gray-200 cursor-pointer': volume !== '500k'}">
+                <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100" :class="{'font-bold': volume === '500k'}">500k</td>
+                <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100" :class="{'font-bold': volume === '500k'}">
                   <span x-show="billingCycle === 'monthly'">$27</span>
                   <span x-show="billingCycle === 'yearly'">$18</span>
                 </td>
               </tr>
-              <tr @click="volume = '1m'" :class="{'border-2 border-green-300 bg-green-50': volume === '1m', 'border-b border-gray-200 cursor-pointer': volume !== '1m'}">
-                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '1m'}">1m</td>
-                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '1m'}">
+              <tr @click="volume = '1m'" :class="{'border-2 border-green-300 bg-opacity-20 bg-green-300': volume === '1m', 'border-b border-gray-200 cursor-pointer': volume !== '1m'}">
+                <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100" :class="{'font-bold': volume === '1m'}">1m</td>
+                <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100" :class="{'font-bold': volume === '1m'}">
                   <span x-show="billingCycle === 'monthly'">$48</span>
                   <span x-show="billingCycle === 'yearly'">$32</span>
                 </td>
               </tr>
-              <tr @click="volume = '2m'" :class="{'border-2 border-green-300 bg-green-50': volume === '2m', 'border-b border-gray-200 cursor-pointer': volume !== '1m'}">
-                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '2m'}">2m</td>
-                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '2m'}">
+              <tr @click="volume = '2m'" :class="{'border-2 border-green-300 bg-opacity-20 bg-green-300': volume === '2m', 'border-b border-gray-200 cursor-pointer': volume !== '1m'}">
+                <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100" :class="{'font-bold': volume === '2m'}">2m</td>
+                <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100" :class="{'font-bold': volume === '2m'}">
                   <span x-show="billingCycle === 'monthly'">$69</span>
                   <span x-show="billingCycle === 'yearly'">$46</span>
                 </td>
               </tr>
-              <tr @click="volume = '5m'" :class="{'border-2 border-green-300 bg-green-50': volume === '5m', 'border-b border-gray-200 cursor-pointer': volume !== '1m'}">
-                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '5m'}">5m</td>
-                <td class="px-6 py-4 text-sm leading-5" :class="{'font-bold': volume === '5m'}">
+              <tr @click="volume = '5m'" :class="{'border-2 border-green-300 bg-opacity-20 bg-green-300': volume === '5m', 'border-b border-gray-200 cursor-pointer': volume !== '1m'}">
+                <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100" :class="{'font-bold': volume === '5m'}">5m</td>
+                <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100" :class="{'font-bold': volume === '5m'}">
                   <span x-show="billingCycle === 'monthly'">$99</span>
                   <span x-show="billingCycle === 'yearly'">$66</span>
                 </td>
@@ -110,7 +110,7 @@
           Preview changes
         </a>
 
-        <a x-show="window.plans[billingCycle][volume].product_id === '<%= @subscription.paddle_plan_id %>'" style="display: none;" tooltip="Select a different plan to continue" class="inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-gray-400">
+        <a x-show="window.plans[billingCycle][volume].product_id === @subscription.paddle_plan_id %>'" style="display: none;" tooltip="Select a different plan to continue" class="inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-gray-400">
           <svg fill="currentColor" viewBox="0 0 20 20" class="w-4 h-4 inline mr-2"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path></svg>
           Preview changes
         </a>
@@ -119,7 +119,7 @@
   </div>
 </div>
 
-<div class="text-center mt-8">
+<div class="text-center mt-8 dark:text-gray-100">
   Questions? Contact <%= link("support@plausible.io", to: "mailto: support@plausible.io", class: "text-indigo-500") %>
 </div>
 

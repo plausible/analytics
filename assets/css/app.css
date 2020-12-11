@@ -252,3 +252,19 @@ blockquote {
 .datamaps-subunit {
   cursor: pointer;
 }
+
+.dark .hideOnDark {
+  display: none;
+}
+
+.hideOnDark {
+  display: block;
+}
+
+.dark .hideOnLight {
+  display: block;
+}
+
+.hideOnLight {
+  display: none;
+}
