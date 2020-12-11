@@ -156,7 +156,7 @@ blockquote {
 
 .dropdown-content::before {
     top: -16px;
-    right: 64px;
+    right: 8px;
     left: auto;
 }
 .dropdown-content::before {
@@ -174,7 +174,7 @@ blockquote {
 }
 .dropdown-content::after {
     top: -14px;
-    right: 65px;
+    right: 9px;
     left: auto;
 }
 
