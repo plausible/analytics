@@ -14,6 +14,7 @@ defmodule Plausible.Site do
     has_one :weekly_report, Plausible.Site.WeeklyReport
     has_one :monthly_report, Plausible.Site.MonthlyReport
     has_one :custom_domain, Plausible.Site.CustomDomain
+    has_one :spike_notification, Plausible.Site.SpikeNotification
 
     timestamps()
   end
