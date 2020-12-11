@@ -42,8 +42,14 @@ defmodule PlausibleWeb.SiteController do
         |> redirect(to: "/#{URI.encode_www_form(site.domain)}/snippet")
 
       {:error, :site, changeset, _} ->
+        is_first_site = !Repo.exists?(
+          from sm in Plausible.Site.Membership,
+          where: sm.user_id == ^user.id
+        )
+
         render(conn, "new.html",
           changeset: changeset,
+          is_first_site: is_first_site,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
     end
