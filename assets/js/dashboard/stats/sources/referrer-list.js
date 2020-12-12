@@ -73,14 +73,14 @@ export default class Referrers extends React.Component {
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
           <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50 dark:bg-gray-700 dark:bg-opacity-50" />
           <span className="flex px-2 group" style={{marginTop: '-26px'}} >
-            <LinkOption className="block truncate dark:text-gray-400" to={{search: query.toString()}} disabled={referrer.name === 'Direct / None'}>
+            <LinkOption className="block truncate dark:text-gray-300" to={{search: query.toString()}} disabled={referrer.name === 'Direct / None'}>
               <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} referrerPolicy="no-referrer" className="inline h-4 w-4 mr-2 align-middle -mt-px" />
               { referrer.name }
             </LinkOption>
             { this.renderExternalLink(referrer) }
           </span>
         </div>
-        <span className="font-medium dark:text-gray-300">{numberFormatter(referrer.count)}</span>
+        <span className="font-medium dark:text-gray-200">{numberFormatter(referrer.count)}</span>
       </div>
     )
   }

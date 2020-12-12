@@ -38,13 +38,13 @@ export default class SearchTerms extends React.Component {
       <div className="flex items-center justify-between my-1 text-sm" key={term.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
           <Bar count={term.count} all={this.state.searchTerms} bg="bg-blue-50 dark:bg-gray-700 dark:bg-opacity-50" />
-          <span className="flex px-2 dark:text-gray-400" style={{marginTop: '-26px'}} >
+          <span className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}} >
             <span className="block truncate">
               { term.name }
             </span>
           </span>
         </div>
-        <span className="font-medium dark:text-gray-300">{numberFormatter(term.count)}</span>
+        <span className="font-medium dark:text-gray-200">{numberFormatter(term.count)}</span>
       </div>
     )
   }
