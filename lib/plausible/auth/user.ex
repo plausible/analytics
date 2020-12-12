@@ -15,6 +15,7 @@ defmodule Plausible.Auth.User do
     field :name, :string
     field :last_seen, :naive_datetime
     field :trial_expiry_date, :date
+    field :theme, :string
 
     has_many :site_memberships, Plausible.Site.Membership
     has_many :sites, through: [:site_memberships, :site]
@@ -34,7 +35,7 @@ defmodule Plausible.Auth.User do
 
   def changeset(user, attrs \\ %{}) do
     user
-    |> cast(attrs, [:email, :name])
+    |> cast(attrs, [:email, :name, :theme])
     |> validate_required([:email, :name])
     |> unique_constraint(:email)
   end
