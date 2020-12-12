@@ -258,11 +258,11 @@ blockquote {
 }
 
 .hideOnDark {
-  display: block;
+  display: inline;
 }
 
 .dark .hideOnLight {
-  display: block;
+  display: inline;
 }
 
 .hideOnLight {
