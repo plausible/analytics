@@ -196,6 +196,14 @@ blockquote {
   background-color: #f1f5f8;
 }
 
+.dark .table-striped tbody tr:nth-child(odd) {
+  background-color: rgb(37, 47, 63);
+}
+
+.dark .table-striped tbody tr:nth-child(even) {
+  background-color: rgb(26, 32, 44);
+}
+
 .twitter-icon {
   width: 1.25em;
   height: 1.25em;
@@ -268,3 +276,4 @@ blockquote {
 .hideOnLight {
   display: none;
 }
+

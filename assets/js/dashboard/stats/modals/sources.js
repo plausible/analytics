@@ -84,7 +84,7 @@ class SourcesModal extends React.Component {
     if (filter === 'utm_campaigns') query.set('utm_campaign', source.name)
 
     return (
-      <tr className="text-sm" key={source.name}>
+      <tr className="text-sm dark:text-gray-200" key={source.name}>
         <td className="p-2">
           <img src={`https://icons.duckduckgo.com/ip3/${source.url}.ico`} referrerPolicy="no-referrer" className="h-4 w-4 mr-2 align-middle inline" />
           <Link className="hover:underline" to={{search: query.toString(), pathname: '/' + encodeURIComponent(this.props.site.domain)}}>{ source.name }</Link>
@@ -121,18 +121,18 @@ class SourcesModal extends React.Component {
   render() {
     return (
       <Modal site={this.props.site}>
-        <h1 className="text-xl font-bold">{this.title()}</h1>
+        <h1 className="text-xl font-bold dark:text-gray-100">{this.title()}</h1>
 
-        <div className="my-4 border-b border-gray-300"></div>
+        <div className="my-4 border-b border-gray-300 dark:border-gray-500"></div>
 
         <main className="modal__content">
           <table className="w-full table-striped table-fixed">
             <thead>
               <tr>
-                <th className="p-2 text-xs tracking-wide font-bold text-gray-500" align="left">Source</th>
-                <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">{this.label()}</th>
-                {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Bounce rate</th>}
-                {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Visit duration</th>}
+                <th className="p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Source</th>
+                <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{this.label()}</th>
+                {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Bounce rate</th>}
+                {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visit duration</th>}
               </tr>
             </thead>
             <tbody>
