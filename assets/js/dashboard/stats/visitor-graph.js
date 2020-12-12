@@ -4,6 +4,7 @@ import Chart from 'chart.js'
 import { eventName, navigateToQuery } from '../query'
 import numberFormatter, {durationFormatter} from '../number-formatter'
 import * as api from '../api'
+import {ThemeContext} from '../theme-context'
 
 function buildDataSet(plot, present_index, ctx, label) {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
@@ -92,13 +93,18 @@ function dateFormatter(interval, longForm) {
 }
 
 class LineGraph extends React.Component {
-  componentDidMount() {
+  constructor(props) {
+    super(props);
+    this.regenerateChart = this.regenerateChart.bind(this);
+  }
+
+  regenerateChart() {
     const {graphData} = this.props
     this.ctx = document.getElementById("main-graph-canvas").getContext('2d');
     const label = this.props.query.filters.goal ? 'Converted visitors' : graphData.interval === 'minute' ? 'Pageviews' : 'Visitors'
     const dataSet = buildDataSet(graphData.plot, graphData.present_index, this.ctx, label)
 
-    this.chart = new Chart(this.ctx, {
+    return new Chart(this.ctx, {
       type: 'line',
       data: {
         labels: graphData.labels,
@@ -157,6 +163,7 @@ class LineGraph extends React.Component {
               beginAtZero: true,
               autoSkip: true,
               maxTicksLimit: 8,
+              fontColor: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             },
             gridLines: {
               zeroLineColor: 'transparent',
@@ -171,11 +178,16 @@ class LineGraph extends React.Component {
               autoSkip: true,
               maxTicksLimit: 8,
               callback: dateFormatter(graphData.interval),
+              fontColor: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             }
           }]
         }
       }
     });
+  }
+
+  componentDidMount() {
+    this.chart = this.regenerateChart();
   }
 
   componentDidUpdate(prevProps) {
@@ -188,6 +200,11 @@ class LineGraph extends React.Component {
       }
 
       this.chart.update()
+    }
+
+    if (prevProps.darkTheme !== this.props.darkTheme) {
+      this.chart = this.regenerateChart();
+      this.chart.update();
     }
   }
 
@@ -220,12 +237,12 @@ class LineGraph extends React.Component {
 
     if (comparison > 0) {
       const color = name === 'Bounce rate' ? 'text-red-400' : 'text-green-500'
-      return <span className="text-xs"><span className={color + ' font-bold'}>&uarr;</span> {formattedComparison}%</span>
+      return <span className="text-xs dark:text-gray-100"><span className={color + ' font-bold'}>&uarr;</span> {formattedComparison}%</span>
     } else if (comparison < 0) {
       const color = name === 'Bounce rate' ? 'text-green-500' : 'text-red-400'
-      return <span className="text-xs"><span className={color + ' font-bold'}>&darr;</span> {formattedComparison}%</span>
+      return <span className="text-xs dark:text-gray-100"><span className={color + ' font-bold'}>&darr;</span> {formattedComparison}%</span>
     } else if (comparison === 0) {
-      return <span className="text-xs text-gray-700">&#12336; N/A</span>
+      return <span className="text-xs text-gray-700 dark:text-gray-300">&#12336; N/A</span>
     }
   }
 
@@ -247,9 +264,9 @@ class LineGraph extends React.Component {
 
       return (
         <div className={`px-8 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
-          <div className="text-gray-500 text-xs font-bold tracking-wide uppercase">{stat.name}</div>
+          <div className="text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide uppercase">{stat.name}</div>
           <div className="my-1 flex justify-between items-center">
-            <b className="text-2xl mr-4">{ this.renderTopStatNumber(stat) }</b>
+            <b className="text-2xl mr-4 dark:text-gray-100">{ this.renderTopStatNumber(stat) }</b>
             {this.renderComparison(stat.name, stat.change)}
           </div>
         </div>
@@ -268,7 +285,7 @@ class LineGraph extends React.Component {
 
     return (
       <a href={endpoint} download>
-        <svg className="feather w-4 h-5 absolute text-gray-700" style={{right: '2rem', top: '-2rem'}} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <svg className="feather w-4 h-5 absolute text-gray-700 dark:text-gray-300" style={{right: '2rem', top: '-2rem'}} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
       </a>
     )
   }
@@ -321,14 +338,18 @@ export default class VisitorGraph extends React.Component {
   renderInner() {
     if (this.state.graphData) {
       return (
-        <LineGraph graphData={this.state.graphData} site={this.props.site} query={this.props.query} />
+        <ThemeContext.Consumer>
+          {theme => (
+            <LineGraph graphData={this.state.graphData} site={this.props.site} query={this.props.query} darkTheme={theme}/>
+          )}
+        </ThemeContext.Consumer>
       )
     }
   }
 
   render() {
     return (
-      <div className="w-full relative bg-white shadow-xl rounded mt-6 main-graph">
+      <div className="w-full relative bg-white dark:bg-gray-825 shadow-xl rounded mt-6 main-graph">
         { this.state.loading && <div className="loading pt-24 sm:pt-32 md:pt-48 mx-auto"><div></div></div> }
         { this.renderInner() }
       </div>
