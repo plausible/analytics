@@ -387,3 +387,8 @@ blockquote {
 	-webkit-box-shadow: -10px 0 0 #4556c3 !important;
 	box-shadow: -10px 0 0 #4556c3 !important;
 }
+
+/* Only because the map handler doesn't expose an easier way to change the shadow color */
+.dark .hoverinfo {
+  box-shadow: 1px 1px 5px rgb(26, 32, 44);
+}

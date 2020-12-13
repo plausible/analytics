@@ -26,6 +26,7 @@ class Countries extends React.Component {
     super(props)
     this.resizeMap = this.resizeMap.bind(this)
     this.drawMap = this.drawMap.bind(this)
+    this.getDataset = this.getDataset.bind(this)
     this.state = {loading: true}
   }
 
@@ -44,6 +45,14 @@ class Countries extends React.Component {
       this.setState({loading: true, countries: null})
       this.fetchCountries().then(this.drawMap.bind(this))
     }
+
+    if (this.props.darkTheme !== prevProps.darkTheme) {
+      if (document.getElementById('map-container')) {
+        document.getElementById('map-container').removeChild(document.querySelector('.datamaps-hoverover'));
+        document.getElementById('map-container').removeChild(document.querySelector('.datamap'));
+      }
+      this.drawMap();
+    }
   }
 
   getDataset() {
@@ -54,7 +63,10 @@ class Countries extends React.Component {
 
     var paletteScale = d3.scale.linear()
       .domain([0,maxValue])
-      .range(["#f3ebff","#a779e9"]);
+      .range([
+        this.props.darkTheme ? "#2e3954" : "#f3ebff",
+        this.props.darkTheme ? "#6366f1" : "#a779e9"
+      ]);
 
     this.state.countries.forEach(function(item){
       dataset[item.name] = {numberOfThings: item.count, fillColor: paletteScale(item.count)};
@@ -81,9 +93,10 @@ class Countries extends React.Component {
   drawMap() {
     var dataset = this.getDataset();
     const label = this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
-    const defaultFill = this.props.darkTheme ? '#1a202c' : '#f8fafc'
+    const defaultFill = this.props.darkTheme ? '#2d3747' : '#f8fafc'
     const highlightFill = this.props.darkTheme ? '#374151' : '#F5F5F5'
     const borderColor = this.props.darkTheme ? '#1f2937' : '#dae1e7'
+    const highlightBorderColor = this.props.darkTheme ? '#4f46e5' : '#a779e9'
 
     this.map = new Datamap({
       element: document.getElementById('map-container'),
@@ -97,13 +110,13 @@ class Countries extends React.Component {
         highlightFillColor: function(geo) {
           return geo['fillColor'] || highlightFill;
         },
-        highlightBorderColor: '#a779e9',
+        highlightBorderColor,
         popupTemplate: function(geo, data) {
           if (!data) { return ; }
           const pluralizedLabel = data.numberOfThings === 1 ? label.slice(0, -1) : label
-          return ['<div class="hoverinfo">',
+          return ['<div class="hoverinfo dark:bg-gray-800 dark:shadow-gray-850 dark:border-gray-850 dark:text-gray-200">',
             '<strong>', geo.properties.name, '</strong>',
-            '<br><strong>', numberFormatter(data.numberOfThings), '</strong> ' + pluralizedLabel,
+            '<br><strong class="dark:text-indigo-400">', numberFormatter(data.numberOfThings), '</strong> ' + pluralizedLabel,
             '</div>'].join('');
         }
       },
