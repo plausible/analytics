@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Add tracker module to automatically track outbound links  plausible/analytics#389
 - Display weekday on the visitor graph plausible/analytics#175
 - Collect and display browser & OS versions plausible/analytics#397
+- Simple notifications around traffic spikes plausible/analytics#453
 - Dark theme option/system setting follow plausible/analytics#467
 
 ### Changed

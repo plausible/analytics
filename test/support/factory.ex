@@ -20,6 +20,12 @@ defmodule Plausible.Factory do
     merge_attributes(user, attrs)
   end
 
+  def spike_notification_factory do
+    %Plausible.Site.SpikeNotification{
+      threshold: 10
+    }
+  end
+
   def site_factory do
     domain = sequence(:domain, &"example-#{&1}.com")
 
