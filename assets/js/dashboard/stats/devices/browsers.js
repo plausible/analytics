@@ -45,7 +45,7 @@ export default class Browsers extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={browser.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
-          <Bar count={browser.count} all={this.state.browsers} bg="bg-green-50 dark:bg-green-600 dark:bg-opacity-15" />
+          <Bar count={browser.count} all={this.state.browsers} bg="bg-green-50 dark:bg-gray-500 dark:bg-opacity-15" />
           <span className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}} >
             <Link className="block truncate hover:underline" to={{search: query.toString()}}>
               {browser.name}

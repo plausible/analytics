@@ -42,7 +42,7 @@ class AllSources extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={referrer.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50 dark:bg-blue-700 dark:bg-opacity-15" />
+          <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15" />
           <span className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}} >
             <Link className="block truncate hover:underline" to={{search: query.toString()}}>
               <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} referrerPolicy="no-referrer" className="inline h-4 w-4 mr-2 align-middle -mt-px" />
@@ -146,7 +146,7 @@ class UTMSources extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={referrer.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50 dark:bg-blue-700 dark:bg-opacity-15" />
+          <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15" />
           <span className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}} >
             <Link className="block truncate hover:underline" to={{search: query.toString()}}>
               { referrer.name }

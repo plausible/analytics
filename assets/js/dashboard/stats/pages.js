@@ -45,7 +45,7 @@ export default class Pages extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={page.name}>
         <div className="w-full h-8 truncate" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={page.count} all={this.state.pages} bg="bg-orange-50 dark:bg-orange-600 dark:bg-opacity-15" />
+          <Bar count={page.count} all={this.state.pages} bg="bg-orange-50 dark:bg-gray-500 dark:bg-opacity-15" />
           <span className="flex px-2 group dark:text-gray-300" style={{marginTop: '-26px'}} >
             <Link to={{pathname: window.location.pathname, search: query.toString()}} className="block hover:underline">{page.name}</Link>
             <a target="_blank" href={'http://' + this.props.site.domain + page.name} className="hidden group-hover:block">
