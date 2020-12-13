@@ -130,6 +130,17 @@ defmodule PlausibleWeb.Router do
            SiteController,
            :remove_monthly_report_recipient
 
+    post "/sites/:website/spike-notification/enable", SiteController, :enable_spike_notification
+    post "/sites/:website/spike-notification/disable", SiteController, :disable_spike_notification
+    put "/sites/:website/spike-notification", SiteController, :update_spike_notification
+    post "/sites/:website/spike-notification/recipients",
+         SiteController,
+         :add_spike_notification_recipient
+
+    delete "/sites/:website/spike-notification/recipients/:recipient",
+           SiteController,
+           :remove_spike_notification_recipient
+
     get "/sites/:website/shared-links/new", SiteController, :new_shared_link
     post "/sites/:website/shared-links", SiteController, :create_shared_link
     delete "/sites/:website/shared-links/:slug", SiteController, :delete_shared_link
