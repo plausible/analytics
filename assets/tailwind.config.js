@@ -22,6 +22,9 @@ module.exports = {
       },
       width: {
         '31percent': '31%',
+      },
+      opacity: {
+        '15': '0.15',
       }
     },
   },
@@ -30,7 +33,8 @@ module.exports = {
     display: ['responsive', 'hover', 'focus', 'group-hover'],
     extend: {
       textColor: ['dark'],
-      borderWidth: ['dark']
+      borderWidth: ['dark'],
+      backgroundOpacity: ['dark']
     }
   },
   plugins: [
