@@ -80,7 +80,6 @@ defmodule PlausibleWeb.Router do
     get "/activate", AuthController, :activate_form
     post "/activate/request-code", AuthController, :request_activation_code
     post "/activate", AuthController, :activate
-    get "/claim-activation", AuthController, :claim_activation_link
     get "/login", AuthController, :login_form
     post "/login", AuthController, :login
     get "/password/request-reset", AuthController, :password_reset_request_form

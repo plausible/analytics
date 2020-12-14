@@ -72,6 +72,9 @@ defmodule PlausibleWeb.AuthController do
 
     case Auth.verify_email(user, code) do
       :ok ->
+        PlausibleWeb.Email.welcome_email(user)
+        |> Plausible.Mailer.send_email()
+
         redirect(conn, to: "/sites/new")
       {:error, :incorrect} ->
         render(conn, "activate.html",
@@ -98,39 +101,6 @@ defmodule PlausibleWeb.AuthController do
     conn
     |> put_flash(:success, "Activation code was sent to #{user.email}")
     |> redirect(to: "/activate")
-  end
-
-  def claim_activation_link(conn, %{"token" => token}) do
-    case Auth.Token.verify_activation(token) do
-      {:ok, %{name: name, email: email}} ->
-        case Auth.create_user(name, email) do
-          {:ok, user} ->
-            PlausibleWeb.Email.welcome_email(user)
-            |> Plausible.Mailer.send_email()
-
-            user_activated_account(conn, user)
-
-          {:error, %Ecto.Changeset{errors: [email: {"has already been taken", _}]}} ->
-            user = Auth.find_user_by(email: email)
-            user_activated_account(conn, user)
-
-          {:error, changeset} ->
-            send_resp(conn, 400, inspect(changeset.errors))
-        end
-
-      {:error, :expired} ->
-        render_error(conn, 401, "Your token has expired. Please request another activation link.")
-
-      {:error, _} ->
-        render_error(conn, 400, "Your token is invalid. Please request another activation link.")
-    end
-  end
-
-  defp user_activated_account(conn, user) do
-    conn
-    |> put_session(:current_user_id, user.id)
-    |> put_resp_cookie("logged_in", "true", http_only: false)
-    |> redirect(to: "/password")
   end
 
   def password_reset_request_form(conn, _) do
