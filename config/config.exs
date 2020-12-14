@@ -118,7 +118,9 @@ extra_cron = [
   # Daily at midday
   {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
   # Every 10 minutes
-  {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}
+  {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates},
+  # Every 15 minutes
+  {"*/15 * * * *", Plausible.Workers.SpikeNotifier}
 ]
 
 base_queues = [rotate_salts: 1]
@@ -130,7 +132,8 @@ extra_queues = [
   site_setup_emails: 1,
   trial_notification_emails: 1,
   schedule_email_reports: 1,
-  send_email_reports: 1
+  send_email_reports: 1,
+  spike_notifications: 1
 ]
 
 config :plausible, Oban,

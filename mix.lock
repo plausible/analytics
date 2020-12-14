@@ -44,6 +44,7 @@
   "metrics": {:hex, :metrics, "1.0.1", "25f094dea2cda98213cecc3aeff09e940299d950904393b2a29d191c346a8486", [:rebar3], [], "hexpm", "69b09adddc4f74a40716ae54d140f93beb0fb8978d8636eaded0c31b6f099f16"},
   "mime": {:hex, :mime, "1.3.1", "30ce04ab3175b6ad0bdce0035cba77bba68b813d523d1aac73d9781b4d193cf8", [:mix], [], "hexpm", "6cbe761d6a0ca5a31a0931bf4c63204bceb64538e664a8ecf784a9a6f3b875f1"},
   "mimerl": {:hex, :mimerl, "1.2.0", "67e2d3f571088d5cfd3e550c383094b47159f3eee8ffa08e64106cdf5e981be3", [:rebar3], [], "hexpm", "f278585650aa581986264638ebf698f8bb19df297f66ad91b18910dfc6e19323"},
+  "mix_test_watch": {:hex, :mix_test_watch, "1.0.2", "34900184cbbbc6b6ed616ed3a8ea9b791f9fd2088419352a6d3200525637f785", [:mix], [{:file_system, "~> 0.2.1 or ~> 0.3", [hex: :file_system, repo: "hexpm", optional: false]}], "hexpm", "47ac558d8b06f684773972c6d04fcc15590abdb97aeb7666da19fcbfdc441a07"},
   "mmdb2_decoder": {:hex, :mmdb2_decoder, "3.0.0", "54828676a36e75e9a25bc9a0bb0598d4c7fcc767bf0b40674850b22e05b7b6cc", [:mix], [], "hexpm", "359dc9242915538d1dceb9f6d96c72201dca76ce62e49d22e2ed1e86f20bea8e"},
   "nanoid": {:hex, :nanoid, "2.0.2", "f3f7b4bf103ab6667f22beb00b6315825ee3f30100dd2c93d534e5c02164e857", [:mix], [], "hexpm", "3095cb1fac7bbc78843a8ccd99f1af375d0da1d3ebaa8552e846b73438c0c44f"},
   "oauther": {:hex, :oauther, "1.1.1", "7d8b16167bb587ecbcddd3f8792beb9ec3e7b65c1f8ebd86b8dd25318d535752", [:mix], [], "hexpm", "9374f4302045321874cccdc57eb975893643bd69c3b22bf1312dab5f06e5788e"},
