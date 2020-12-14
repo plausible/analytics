@@ -241,7 +241,7 @@ class DatePicker extends React.Component {
 
   render() {
     return (
-      <div className="flex justify-between sm:justify-between">
+      <div className="flex justify-between sm:justify-between ml-4">
         { this.renderArrows() }
         { this.renderDropDown() }
       </div>
