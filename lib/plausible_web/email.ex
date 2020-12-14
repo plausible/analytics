@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("activation-email")
     |> subject("#{code} is your Plausible email verification code")
-    |> render("activation_email.html", name: user.name, code: code)
+    |> render("activation_email.html", user: user, code: code)
   end
   def welcome_email(user) do
     base_email()
