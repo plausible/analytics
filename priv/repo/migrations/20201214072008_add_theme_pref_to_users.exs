@@ -3,11 +3,7 @@ defmodule Plausible.Repo.Migrations.AddThemePrefToUsers do
 
   def change do
     alter table(:users) do
-      add :theme, :string
-    end
-
-    alter table(:users) do
-      modify :theme, :string, null: false
+      add_if_not_exists :theme, :string, default: "system"
     end
   end
 end
