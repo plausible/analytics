@@ -2,9 +2,9 @@ There are currently <%= @current_visitors %> visitors on <%= link(@site.domain, 
 <%= if Enum.count(@sources) > 0 do %>
   <br />
   <br />
-  The top 3 sources for current visitors:<br />
+  The top sources for current visitors:<br />
   <%= for %{name: source, count: visitors} <- @sources do %>
-    <%= source %> - <%= visitors %> visitors<br />
+    <%= source %> - <%= visitors %> visitor<%= if visitors > 1, do: "s" %><br />
   <% end %>
 <% end %>
 
