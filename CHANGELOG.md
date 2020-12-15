@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 - Show correct stats when goal filter is combined with source plausible/analytics#374
 - Going back in history now correctly resets the period filter plausible/analytics#408
 - Fix URL decoding in query parameters plausible/analytics#416
+- Fix overly-sticky date in query parameters plausible/analytics/#439
 
 ### Security
 - Do not run the plausible Docker container as root plausible/analytics#362
