@@ -1,6 +1,7 @@
 defmodule Plausible.Session.Store do
   use GenServer
   use Plausible.Repo
+  use Appsignal.Instrumentation.Decorators
   alias Plausible.Session.WriteBuffer
   import Ecto.Query, only: [from: 2]
   require Logger
@@ -41,6 +42,7 @@ defmodule Plausible.Session.Store do
     {:ok, %{timer: timer, sessions: sessions}}
   end
 
+  @decorate transaction_event("phoenix_controller")
   def on_event(event, prev_user_id) do
     GenServer.call(__MODULE__, {:on_event, event, prev_user_id})
   end

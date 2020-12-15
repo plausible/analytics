@@ -1,27 +1,36 @@
-<%= form_for @changeset, "/sites", [class: "max-w-md w-full mx-auto bg-white shadow-lg rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
-  <h2 class="text-xl font-bold">Your website details</h2>
-  <div class="my-6">
-    <%= label f, :domain, class: "block text-gray-700 text-sm font-bold" %>
-    <p class="text-gray-600 text-xs mt-1 mb-2">Just the naked domain without <code>www</code> or <code>https://</code></p>
-    <%= text_input f, :domain, class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-400", placeholder: "example.com" %>
-    <%= error_tag f, :domain %>
-  </div>
-  <div class="my-6">
-    <%= label f, :timezone, "Reporting Timezone", class: "block text-gray-700 text-sm font-bold" %>
-    <p class="text-gray-600 text-xs mt-1 mb-2">To make sure we agree on what 'today' means</p>
+<div class="w-full max-w-3xl mt-4 mx-auto flex">
+  <%= form_for @changeset, "/sites", [class: "max-w-lg w-full mx-auto bg-white shadow-lg rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
+    <h2 class="text-xl font-black">Your website details</h2>
+    <div class="my-6">
+      <%= label f, :domain, class: "block text-sm font-medium text-gray-700" %>
+      <div class="mt-2 flex rounded-md shadow-sm">
+        <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+          https://
+        </span>
+        <%= text_input f, :domain, class: "focus:ring-indigo-500 focus:border-indigo-500 flex-1 block w-full px-3 py-2 rounded-none rounded-r-md sm:text-sm border-gray-300", placeholder: "example.com" %>
+      </div>
+      <%= error_tag f, :domain %>
+    </div>
+    <div class="my-6">
+      <%= label f, :timezone, "Reporting Timezone", class: "block text-sm font-medium text-gray-700" %>
+      <p class="text-gray-500 text-xs mt-1">To make sure we agree on what 'today' means</p>
 
-    <div class="inline-block relative w-full">
-      <%= select f, :timezone, Plausible.Timezones.options(), id: "tz-select", selected: "Etc/Greenwich", class: "block appearance-none w-full bg-gray-100 text-gray-700 cursor-pointer hover:border-gray-500 p-2 pr-8 rounded leading-normal focus:outline-none" %>
-      <div class="pointer-events-none absolute top-0 right-0 flex items-center px-2 text-red">
-        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+      <div class="inline-block relative w-full">
+        <%= select f, :timezone, Plausible.Timezones.options(), id: "tz-select", selected: "Etc/Greenwich", class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
       </div>
     </div>
-  </div>
-  <script>
-    var offset = (new Date()).getTimezoneOffset()
-    var option = document.querySelector('#tz-select option[offset="' + offset + '"]')
-    if (option) { option.selected = "selected"}
-  </script>
+    <script>
+      var offset = (new Date()).getTimezoneOffset()
+      var option = document.querySelector('#tz-select option[offset="' + offset + '"]')
+      if (option) { option.selected = "selected"}
+    </script>
 
-  <%= submit "Add snippet →", class: "button mt-4 w-full" %>
-<% end %>
+    <%= submit "Add snippet →", class: "button mt-4 w-full" %>
+  <% end %>
+
+  <%= if @is_first_site do %>
+    <div class="pt-12 pl-8 hidden md:block">
+      <%= render(PlausibleWeb.AuthView, "_onboarding_steps.html", current_step: 2) %>
+    </div>
+  <% end %>
+</div>

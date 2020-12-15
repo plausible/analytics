@@ -13,15 +13,15 @@
   setInterval(updateStatus, 1500)
 </script>
 
-<div class="w-full max-w-sm mx-auto mt-8">
+<div class="w-full max-w-md mx-auto mt-8">
   <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16 relative text-center">
     <h2 class="text-xl font-bold">Waiting for first pageview</h2>
     <h2 class="text-xl font-bold">on <%= @site.domain %></h2>
     <div class="my-44">
       <div class="block pulsating-circle"></div>
-      <p class="text-gray-600 text-sm absolute left-0 bottom-0 mb-6 w-full text-center leading-normal">
+      <p class="text-gray-500 text-xs absolute left-0 bottom-0 mb-6 w-full text-center leading-normal">
         Need to see the snippet again? <%= link("Click here", to: "/#{URI.encode_www_form(@site.domain)}/snippet")%><br />
-        Not working? Contact <a href="mailto:support@plausible.io">support@plausible.io</a> to get set up
+        Not working? Contact <a href="mailto:support@plausible.io" class="text-gray-700 underline">support@plausible.io</a> to get set up
       </p>
     </div>
   </div>

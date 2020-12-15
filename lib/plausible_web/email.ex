@@ -6,12 +6,12 @@ defmodule PlausibleWeb.Email do
     Application.get_env(:plausible, :mailer_email)
   end
 
-  def activation_email(user, link) do
+  def activation_email(user, code) do
     base_email()
-    |> to(user.email)
+    |> to(user)
     |> tag("activation-email")
-    |> subject("Activate your Plausible free trial")
-    |> render("activation_email.html", name: user.name, link: link)
+    |> subject("#{code} is your Plausible email verification code")
+    |> render("activation_email.html", user: user, code: code)
   end
   def welcome_email(user) do
     base_email()

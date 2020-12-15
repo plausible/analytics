@@ -97,14 +97,18 @@
 
   <%= form_for @changeset, "/settings", [class: "max-w-sm"], fn f -> %>
     <div class="my-4">
-      <%= label f, :name, class: "block text-gray-700 text-sm font-bold mb-2" %>
-      <%= text_input f, :name, class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300" %>
-      <%= error_tag f, :name %>
+      <%= label f, :name, class: "block text-sm font-medium text-gray-700" %>
+      <div class="mt-1">
+        <%= text_input f, :name, class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" %>
+        <%= error_tag f, :name %>
+      </div>
     </div>
     <div class="my-4">
-      <%= label f, :email, class: "block text-gray-700 text-sm font-bold mb-2" %>
-      <%= email_input f, :email, class: "transition bg-gray-100 appearance-none border border-transparent rounded w-full p-2 text-gray-700 leading-normal appearance-none focus:outline-none focus:border-gray-300" %>
-      <%= error_tag f, :email %>
+      <%= label f, :email, class: "block text-sm font-medium text-gray-700" %>
+      <div class="mt-1">
+        <%= email_input f, :email, class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" %>
+        <%= error_tag f, :email %>
+      </div>
     </div>
     <%= submit "Save changes", class: "button mt-4" %>
   <% end %>
