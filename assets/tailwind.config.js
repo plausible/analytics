@@ -34,7 +34,8 @@ module.exports = {
     extend: {
       textColor: ['dark'],
       borderWidth: ['dark'],
-      backgroundOpacity: ['dark']
+      backgroundOpacity: ['dark'],
+      display: ['dark'],
     }
   },
   plugins: [
