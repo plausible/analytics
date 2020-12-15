@@ -72,9 +72,6 @@ defmodule PlausibleWeb.AuthController do
 
     case Auth.verify_email(user, code) do
       :ok ->
-        PlausibleWeb.Email.welcome_email(user)
-        |> Plausible.Mailer.send_email()
-
         redirect(conn, to: "/sites/new")
       {:error, :incorrect} ->
         render(conn, "activate.html",
