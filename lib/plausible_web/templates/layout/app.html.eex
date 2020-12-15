@@ -34,7 +34,7 @@
                     </li>
                   <% else %>
                     <li class="mr-6 hidden sm:block">
-                      <%= link("Docs", to: "https://docs.plausible.io", class: "font-bold rounded p-2 hover:bg-gray-200", style: "line-height: 40px;", target: "_blank") %>
+                      <%= link("Docs", to: "https://docs.plausible.io", class: "font-bold rounded p-2 hover:bg-gray-200 dark:hover:bg-gray-900 dark:text-gray-100", style: "line-height: 40px;", target: "_blank") %>
                     </li>
                   <% end %>
                   <li>
