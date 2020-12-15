@@ -6,13 +6,20 @@ defmodule PlausibleWeb.RequireAccountPlug do
   end
 
   def call(conn, _opts) do
-    case conn.assigns[:current_user] do
-      nil ->
+    user = conn.assigns[:current_user]
+
+    cond do
+      is_nil(user) ->
         Plug.Conn.put_session(conn, :login_dest, conn.request_path)
         |> Phoenix.Controller.redirect(to: "/login")
         |> halt
 
-      _email ->
+      not user.email_verified ->
+        conn
+        |> Phoenix.Controller.redirect(to: "/activate")
+        |> halt
+
+      true ->
         conn
     end
   end

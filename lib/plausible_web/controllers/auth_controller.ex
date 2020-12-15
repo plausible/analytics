@@ -25,22 +25,20 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def register(conn, params) do
-    user = Plausible.Auth.User.changeset(%Plausible.Auth.User{}, params["user"])
+    user = Plausible.Auth.User.new(%Plausible.Auth.User{}, params["user"])
 
     if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
-      case Ecto.Changeset.apply_action(user, :insert) do
+      case Repo.insert(user) do
         {:ok, user} ->
-          token = Auth.Token.sign_activation(user.name, user.email)
-          url = PlausibleWeb.Endpoint.url() <> "/claim-activation?token=#{token}"
-          Logger.info(url)
-          email_template = PlausibleWeb.Email.activation_email(user, url)
+          code = Auth.issue_email_verification(user)
+          Logger.info("VERIFICATION CODE: #{code}")
+          email_template = PlausibleWeb.Email.activation_email(user, code)
           Plausible.Mailer.send_email(email_template)
 
           conn
-          |> render("register_success.html",
-            email: user.email,
-            layout: {PlausibleWeb.LayoutView, "focus.html"}
-          )
+          |> put_session(:current_user_id, user.id)
+          |> put_resp_cookie("logged_in", "true", http_only: false)
+          |> redirect(to: "/activate")
 
         {:error, changeset} ->
           render(conn, "register_form.html",
@@ -57,37 +55,52 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  def claim_activation_link(conn, %{"token" => token}) do
-    case Auth.Token.verify_activation(token) do
-      {:ok, %{name: name, email: email}} ->
-        case Auth.create_user(name, email) do
-          {:ok, user} ->
-            PlausibleWeb.Email.welcome_email(user)
-            |> Plausible.Mailer.send_email()
+  def activate_form(conn, _params) do
+    user = conn.assigns[:current_user]
 
-            user_activated_account(conn, user)
+    has_code = Repo.exists?(
+      from c in "email_verification_codes",
+      where: c.user_id == ^user.id
+    )
 
-          {:error, %Ecto.Changeset{errors: [email: {"has already been taken", _}]}} ->
-            user = Auth.find_user_by(email: email)
-            user_activated_account(conn, user)
+    render(conn, "activate.html", has_pin: has_code, layout: {PlausibleWeb.LayoutView, "focus.html"})
+  end
 
-          {:error, changeset} ->
-            send_resp(conn, 400, inspect(changeset.errors))
-        end
+  def activate(conn, %{"code" => code}) do
+    user = conn.assigns[:current_user]
+    {code, ""} = Integer.parse(code)
 
+    case Auth.verify_email(user, code) do
+      :ok ->
+        PlausibleWeb.Email.welcome_email(user)
+        |> Plausible.Mailer.send_email()
+
+        redirect(conn, to: "/sites/new")
+      {:error, :incorrect} ->
+        render(conn, "activate.html",
+          error: "Incorrect activation code",
+          has_pin: true,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
       {:error, :expired} ->
-        render_error(conn, 401, "Your token has expired. Please request another activation link.")
-
-      {:error, _} ->
-        render_error(conn, 400, "Your token is invalid. Please request another activation link.")
+        render(conn, "activate.html",
+          error: "Code is expired, please request another one",
+          has_pin: false,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
     end
   end
 
-  defp user_activated_account(conn, user) do
+  def request_activation_code(conn, _params) do
+    user = conn.assigns[:current_user]
+    pin = Auth.issue_email_verification(user)
+
+    email_template = PlausibleWeb.Email.activation_email(user, pin)
+    Plausible.Mailer.send_email(email_template)
+
     conn
-    |> put_session(:current_user_id, user.id)
-    |> put_resp_cookie("logged_in", "true", http_only: false)
-    |> redirect(to: "/password")
+    |> put_flash(:success, "Activation code was sent to #{user.email}")
+    |> redirect(to: "/activate")
   end
 
   def password_reset_request_form(conn, _) do
