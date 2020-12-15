@@ -30,9 +30,8 @@ module.exports = {
         'gray-50': 'rgb(249, 250, 251)',
         'gray-850': 'rgb(26, 32, 44)',
       },
-      boxShadow: {
-        'sides-gray-50': '-100px 0px 0px 0px rgb(249, 250, 251), 100px 0px 0px 0px rgb(249, 250, 251)',
-        'sides-gray-850': '-100px 0px 0px 0px rgb(26, 32, 44), 100px 0px 0px 0px rgb(26, 32, 44)',
+      zIndex: {
+        '9': 9,
       }
     },
   },
@@ -44,7 +43,6 @@ module.exports = {
       borderWidth: ['dark'],
       backgroundOpacity: ['dark'],
       outline: ['dark'],
-      boxShadow: ['dark'],
     }
   },
   plugins: [
