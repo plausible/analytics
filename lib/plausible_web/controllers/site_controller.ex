@@ -37,6 +37,17 @@ defmodule PlausibleWeb.SiteController do
       {:ok, %{site: site}} ->
         Plausible.Slack.notify("#{user.name} created #{site.domain} [email=#{user.email}]")
 
+        is_first_site = !Repo.exists?(
+          from sm in Plausible.Site.Membership,
+          where: sm.user_id == ^user.id
+          and sm.site_id != ^site.id
+        )
+
+        if is_first_site do
+          PlausibleWeb.Email.welcome_email(user)
+          |> Plausible.Mailer.send_email()
+        end
+
         conn
         |> put_session(site.domain <> "_offer_email_report", true)
         |> redirect(to: "/#{URI.encode_www_form(site.domain)}/snippet")

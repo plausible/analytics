@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.SiteControllerTest do
   use PlausibleWeb.ConnCase
   use Plausible.Repo
+  use Bamboo.Test
   import Plausible.TestUtils
 
   describe "GET /sites/new" do
@@ -43,6 +44,30 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert redirected_to(conn) == "/example.com/snippet"
       assert Repo.exists?(Plausible.Site, domain: "example.com")
+    end
+
+    test "sends welcome email if this is the user's first site", %{conn: conn} do
+      post(conn, "/sites", %{
+        "site" => %{
+          "domain" => "example.com",
+          "timezone" => "Europe/London"
+        }
+      })
+
+      assert_email_delivered_with(subject: "Welcome to Plausible")
+    end
+
+    test "does not send welcome email if user already has a previous site", %{conn: conn, user: user} do
+      insert(:site, members: [user])
+
+      post(conn, "/sites", %{
+        "site" => %{
+          "domain" => "example.com",
+          "timezone" => "Europe/London"
+        }
+      })
+
+      assert_no_emails_delivered()
     end
 
     test "cleans up the url", %{conn: conn} do

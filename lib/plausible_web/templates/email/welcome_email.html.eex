@@ -1,14 +1,22 @@
 Hey <%= user_salutation(@user) %>,
 <br /><br />
-I'm building Plausible to provide a simple and ethical approach to tracking website visitors.
-I'm super excited to have you on board!
+We are building Plausible to provide a simple and ethical approach to tracking website visitors.
+We're super excited to have you on board!
 <br /><br />
-To start collecting stats, you need to <%= link("add a site on Plausible", to: "#{plausible_url()}/sites/new") %>.
+Here are five steps to get the most out of your Plausible experience:
+<br /><br />
+* Serve the script as a <%= link("first party connection from your custom domain", to: "https://docs.plausible.io/custom-domain") %><br />
+* <%= link("Enable email reports", to: "https://docs.plausible.io/email-reports/") %> and notifications for <%= link("traffic spikes", to: "https://docs.plausible.io/traffic-spikes/") %><br />
+* <%= link("Integrate with Search Console", to: "https://docs.plausible.io/google-search-console-integration/") %> to get keyword phrases people find your site with<br />
+* Set up some easy goals including <%= link("404 error pages", to: "https://docs.plausible.io/404-error-pages-tracking") %> and <%= link("outbound link clicks", to: "https://docs.plausible.io/outbound-link-click-tracking/") %><br />
+* <%= link("Opt out from counting your own visits", to: "https://docs.plausible.io/excluding/") %><br />
+<br /><br />
+Then you're ready to start exploring your fast loading, ethical and actionable <%= link("Plausible dashboard", to: "https://plausible.io/sites") %>.
 <br /><br />
 Have a question, feedback or need some guidance? Do reply back to this email.
 <br /><br />
 Thanks,<br />
-Uku Taht
+Uku and Marko
 <br /><br />
 --
 <br /><br />
