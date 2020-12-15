@@ -11,15 +11,4 @@ defmodule Plausible.Auth.Token do
       max_age: @one_hour_in_seconds
     )
   end
-
-  def sign_activation(name, email) do
-    Phoenix.Token.sign(PlausibleWeb.Endpoint, "activation", %{
-      name: name,
-      email: email
-    })
-  end
-
-  def verify_activation(token) do
-    Phoenix.Token.verify(PlausibleWeb.Endpoint, "activation", token, max_age: @one_day_in_seconds)
-  end
 end

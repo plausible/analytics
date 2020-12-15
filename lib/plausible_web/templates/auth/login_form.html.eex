@@ -18,7 +18,7 @@
   <%= submit "Login →", class: "button mt-4 w-full" %>
   <%= if !Keyword.fetch!(Application.get_env(:plausible, :selfhost),:disable_registration) do %>
      <p class="text-center text-gray-500 text-xs mt-4">
-      Don't have an account? <%= link("Register", to: "/register") %> instead.
+      Don't have an account? <%= link("Register", to: "/register", class: "underline text-gray-800") %> instead.
       </p>
   <% end %>
 <% end %>
