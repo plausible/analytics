@@ -111,14 +111,18 @@
 
   <%= form_for @changeset, "/settings", [class: "max-w-sm"], fn f -> %>
     <div class="my-4">
-      <%= label f, :name, class: "block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" %>
-      <%= text_input f, :name, class: "transition bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal focus:outline-none focus:border-gray-300 dark:border-gray-500" %>
-      <%= error_tag f, :name %>
+      <%= label f, :name, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <div class="mt-1">
+        <%= text_input f, :name, class: "shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800" %>
+        <%= error_tag f, :name %>
+      </div>
     </div>
     <div class="my-4">
-      <%= label f, :email, class: "block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" %>
-      <%= email_input f, :email, class: "transition bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal focus:outline-none focus:border-gray-300 dark:border-gray-500" %>
-      <%= error_tag f, :email %>
+      <%= label f, :email, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+      <div class="mt-1">
+        <%= email_input f, :email, class: "shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md" %>
+        <%= error_tag f, :email %>
+      </div>
     </div>
     <%= submit "Save changes", class: "button mt-4" %>
   <% end %>

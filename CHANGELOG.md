@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - Validate domain format on site creation plausible/analytics#427
 - Improve settings UX and design plausible/analytics#412
 - Improve site listing UX and design plausible/analytics#438
+- Improve onboarding UX and design plausible/analytics#441
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370
@@ -26,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - Show correct stats when goal filter is combined with source plausible/analytics#374
 - Going back in history now correctly resets the period filter plausible/analytics#408
 - Fix URL decoding in query parameters plausible/analytics#416
+- Fix overly-sticky date in query parameters plausible/analytics/#439
 
 ### Security
 - Do not run the plausible Docker container as root plausible/analytics#362

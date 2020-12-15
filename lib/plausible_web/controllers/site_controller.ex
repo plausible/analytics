@@ -19,9 +19,15 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def new(conn, _params) do
+    current_user = conn.assigns[:current_user]
     changeset = Plausible.Site.changeset(%Plausible.Site{})
 
-    render(conn, "new.html", changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
+    is_first_site = !Repo.exists?(
+      from sm in Plausible.Site.Membership,
+      where: sm.user_id == ^current_user.id
+    )
+
+    render(conn, "new.html", changeset: changeset, is_first_site: is_first_site, layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def create_site(conn, %{"site" => site_params}) do
@@ -31,26 +37,50 @@ defmodule PlausibleWeb.SiteController do
       {:ok, %{site: site}} ->
         Plausible.Slack.notify("#{user.name} created #{site.domain} [email=#{user.email}]")
 
+        is_first_site = !Repo.exists?(
+          from sm in Plausible.Site.Membership,
+          where: sm.user_id == ^user.id
+          and sm.site_id != ^site.id
+        )
+
+        if is_first_site do
+          PlausibleWeb.Email.welcome_email(user)
+          |> Plausible.Mailer.send_email()
+        end
+
         conn
         |> put_session(site.domain <> "_offer_email_report", true)
         |> redirect(to: "/#{URI.encode_www_form(site.domain)}/snippet")
 
       {:error, :site, changeset, _} ->
+        is_first_site = !Repo.exists?(
+          from sm in Plausible.Site.Membership,
+          where: sm.user_id == ^user.id
+        )
+
         render(conn, "new.html",
           changeset: changeset,
+          is_first_site: is_first_site,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
     end
   end
 
   def add_snippet(conn, %{"website" => website}) do
+    user = conn.assigns[:current_user]
     site =
       Sites.get_for_user!(conn.assigns[:current_user].id, website)
       |> Repo.preload(:custom_domain)
 
+    is_first_site = !Repo.exists?(
+      from sm in Plausible.Site.Membership,
+      where: sm.user_id == ^user.id
+      and sm.site_id != ^site.id
+    )
+
     conn
     |> assign(:skip_plausible_tracking, true)
-    |> render("snippet.html", site: site, layout: {PlausibleWeb.LayoutView, "focus.html"})
+    |> render("snippet.html", site: site, is_first_site: is_first_site, layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def new_goal(conn, %{"website" => website}) do
