@@ -22,7 +22,7 @@
     </div>
     <div class="px-4 py-3 bg-gray-50 dark:bg-gray-850 text-right sm:px-6">
       <span class="inline-flex rounded-md shadow-sm">
-        <%= submit "Save", class: "bg-indigo-600 border border-transparent rounded-md py-2 px-4 inline-flex justify-center text-sm leading-5 font-medium text-white hover:bg-gray-700 focus:outline-none focus:border-gray-900 focus:ring active:bg-gray-900 transition duration-150 ease-in-out" %>
+        <%= submit "Save", class: "button" %>
       </span>
     </div>
   </div>
