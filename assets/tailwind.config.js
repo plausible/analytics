@@ -26,10 +26,6 @@ module.exports = {
       opacity: {
         '15': '0.15',
       },
-      outline: {
-        'gray-50': 'rgb(249, 250, 251)',
-        'gray-850': 'rgb(26, 32, 44)',
-      },
       zIndex: {
         '9': 9,
       }
@@ -42,7 +38,6 @@ module.exports = {
       textColor: ['dark'],
       borderWidth: ['dark'],
       backgroundOpacity: ['dark'],
-      outline: ['dark'],
       display: ['dark'],
     }
   },
