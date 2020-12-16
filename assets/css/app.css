@@ -282,4 +282,5 @@ blockquote {
 
 .dark .fullwidth-shadow::before {
   box-shadow: 0 4px 2px -2px rgba(200, 200, 200, 0.1);
+  background-color: rgb(26, 32, 44);
 }
