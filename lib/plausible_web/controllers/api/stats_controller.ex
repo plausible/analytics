@@ -212,8 +212,9 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
     limit = if params["limit"], do: String.to_integer(params["limit"])
+    page = if params["page"], do: String.to_integer(params["page"])
 
-    json(conn, Stats.top_pages(site, query, limit || 9, include))
+    json(conn, Stats.top_pages(site, query, limit || 9, page || 1, include))
   end
 
   def entry_pages(conn, params) do
@@ -221,8 +222,9 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
     limit = if params["limit"], do: String.to_integer(params["limit"])
+    page = if params["page"], do: String.to_integer(params["page"])
 
-    json(conn, Stats.entry_pages(site, query, limit || 9, include))
+    json(conn, Stats.entry_pages(site, query, limit || 9, page || 1, include))
   end
 
   def countries(conn, params) do
