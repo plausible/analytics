@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Collect and display browser & OS versions plausible/analytics#397
 - Simple notifications around traffic spikes plausible/analytics#453
 - Dark theme option/system setting follow plausible/analytics#467
+- Separate pageview metrics by hostname#478
 
 ### Changed
 - Use alpine as base image to decrease Docker image size plausible/analytics#353
