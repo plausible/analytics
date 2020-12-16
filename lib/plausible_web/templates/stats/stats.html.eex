@@ -8,9 +8,9 @@
   <div id="stats-react-container" data-domain="<%= @site.domain %>" data-offset="<%= Timex.Timezone.total_offset(Timex.Timezone.get(@site.timezone)) %>" data-has-goals="<%= @has_goals %>" data-logged-in="<%= !!@conn.assigns[:current_user] %>" data-inserted-at="<%= @site.inserted_at %>"></div>
   <div id="modal_root"></div>
   <%= if !@conn.assigns[:current_user] && @conn.assigns[:demo] do %>
-    <div class="bg-gray-50">
+    <div class="bg-gray-50 dark:bg-gray-850">
       <div class="py-12 lg:py-16 lg:flex lg:items-center lg:justify-between">
-        <h2 class="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10">
+        <h2 class="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 dark:text-gray-100">
           Want these stats for your website?
           <br />
           <span class="text-indigo-600">Start your free trial today.</span>
@@ -22,7 +22,7 @@
             </a>
           </div>
           <div class="ml-3 inline-flex rounded-md shadow">
-            <a href="/" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-indigo-600 bg-white hover:text-indigo-500 focus:outline-none focus:ring transition duration-150 ease-in-out">
+            <a href="/" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-indigo-600 dark:text-gray-100 bg-white dark:bg-gray-800 hover:text-indigo-500 dark:hover:text-indigo-500 focus:outline-none focus:ring transition duration-150 ease-in-out">
               Learn more
             </a>
           </div>

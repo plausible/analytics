@@ -272,7 +272,8 @@ defmodule PlausibleWeb.AuthController do
 
     render(conn, "user_settings.html",
       changeset: changeset,
-      subscription: conn.assigns[:current_user].subscription
+      subscription: conn.assigns[:current_user].subscription,
+      theme: conn.assigns[:current_user].theme || "system"
     )
   end
 

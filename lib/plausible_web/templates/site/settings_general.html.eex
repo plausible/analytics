@@ -1,37 +1,37 @@
 <%= form_for @changeset, "/#{URI.encode_www_form(@site.domain)}/settings", fn f -> %>
   <div class="shadow sm:rounded-md sm:overflow-hidden">
-    <div class="bg-white py-6 px-4 space-y-6 sm:p-6">
+    <div class="bg-white dark:bg-gray-800 py-6 px-4 space-y-6 sm:p-6">
       <header class="relative">
-        <h2 class="text-lg leading-6 font-medium text-gray-900">General information</h2>
-        <p class="mt-1 text-sm leading-5 text-gray-500">Update your reporting timezone.</p>
+        <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">General information</h2>
+        <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">Update your reporting timezone.</p>
         <%= link(to: "https://docs.plausible.io/general/", target: "_blank") do %>
           <svg class="w-6 h-6 absolute top-0 right-0 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
         <% end %>
       </header>
 
       <div class="grid grid-cols-4 gap-6">
-        <div class="col-span-4 sm:col-span-2"> <%= label f, :domain, class: "block text-sm font-medium leading-5 text-gray-700" %>
-          <%= text_input f, :domain, class: "mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:max-w-xs sm:text-sm border-gray-300 rounded-md", disabled: "disabled" %>
+        <div class="col-span-4 sm:col-span-2"> <%= label f, :domain, class: "block text-sm font-medium leading-5 text-gray-700 dark:text-gray-300" %>
+          <%= text_input f, :domain, class: "dark:bg-gray-900 mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:max-w-xs sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-100", disabled: "disabled" %>
         </div>
 
         <div class="col-span-4 sm:col-span-2">
-          <%= label f, :timezone, "Reporting Timezone", class: "block text-sm font-medium leading-5 text-gray-700" %>
-          <%= select f, :timezone, Plausible.Timezones.options(), class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
+          <%= label f, :timezone, "Reporting Timezone", class: "block text-sm font-medium leading-5 text-gray-700 dark:text-gray-300" %>
+          <%= select f, :timezone, Plausible.Timezones.options(), class: "dark:bg-gray-900  mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100 cursor-pointer" %>
         </div>
       </div>
     </div>
-    <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+    <div class="px-4 py-3 bg-gray-50 dark:bg-gray-850 text-right sm:px-6">
       <span class="inline-flex rounded-md shadow-sm">
-        <%= submit "Save", class: "bg-indigo-600 border border-transparent rounded-md py-2 px-4 inline-flex justify-center text-sm leading-5 font-medium text-white hover:bg-gray-700 focus:outline-none focus:border-gray-900 focus:ring active:bg-gray-900 transition duration-150 ease-in-out" %>
+        <%= submit "Save", class: "button" %>
       </span>
     </div>
   </div>
 <% end %>
 
-<%= form_for @conn, "/", [class: "shadow bg-white sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6"], fn f -> %>
+<%= form_for @conn, "/", [class: "shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6"], fn f -> %>
   <header class="relative">
-    <h2 class="text-lg leading-6 font-medium text-gray-900">Javascript snippet</h2>
-    <p class="mt-1 text-sm leading-5 text-gray-500">Include this snippet in the <code>&lt;head&gt;</code> of your website.</p>
+    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Javascript snippet</h2>
+    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">Include this snippet in the <code>&lt;head&gt;</code> of your website.</p>
 
     <%= link(to: "https://docs.plausible.io/plausible-script", target: "_blank") do %>
       <svg class="w-6 h-6 absolute top-0 right-0 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
@@ -40,7 +40,7 @@
 
   <div class="my-4">
     <div class="relative">
-      <%= textarea f, :domain, id: "snippet_code", class: "transition overflow-hidden bg-gray-100 appearance-none border border-transparent rounded w-full p-2 pr-6 text-gray-700 leading-normal appearance-none focus:outline-none focus:bg-white focus:border-gray-300 text-xs mt-2 resize-none", value: snippet(@site), rows: 2 %>
+      <%= textarea f, :domain, id: "snippet_code", class: "transition overflow-hidden bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 pr-6 text-gray-700 dark:text-gray-300 leading-normal focus:outline-none focus:bg-white focus:border-gray-300 dark:focus:border-gray-500 text-xs mt-2 resize-none", value: snippet(@site), rows: 2 %>
       <a onclick="var textarea = document.getElementById('snippet_code'); textarea.focus(); textarea.select(); document.execCommand('copy');" href="javascript:void(0)" class="no-underline text-indigo-500 text-sm hover:underline">
         <svg class="absolute text-indigo-500" style="top: 24px; right: 12px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       </a>

@@ -101,11 +101,11 @@ class DatePicker extends React.Component {
 
   renderArrow(period, prevDate, nextDate) {
     return (
-      <div className="flex rounded shadow bg-white mr-4 cursor-pointer">
-        <QueryLink to={{date: prevDate}} query={this.props.query} className="flex items-center px-2 border-r border-gray-300">
+      <div className="flex rounded shadow bg-white dark:bg-gray-800 mr-4 cursor-pointer">
+        <QueryLink to={{date: prevDate}} query={this.props.query} className="flex items-center px-2 border-r border-gray-300 dark:border-gray-500 dark:text-gray-100">
           <svg className="feather h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
         </QueryLink>
-        <QueryLink to={{date: nextDate}} query={this.props.query} className="flex items-center px-2">
+        <QueryLink to={{date: nextDate}} query={this.props.query} className="flex items-center px-2 dark:text-gray-100">
           <svg className="feather h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </QueryLink>
       </div>
@@ -135,7 +135,7 @@ class DatePicker extends React.Component {
   renderDropDown() {
     return (
       <div className="relative" style={{height: '35.5px', width: '190px'}}  ref={node => this.dropDownNode = node}>
-        <div onClick={this.open.bind(this)} className="flex items-center justify-between rounded bg-white shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800 h-full">
+        <div onClick={this.open.bind(this)} className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800 dark:text-gray-200 h-full">
           <span className="mr-2">{this.timeFrameText()}</span>
           <svg className="text-pink-500 h-4 w-4" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="6 9 12 15 18 9"></polyline>
@@ -176,7 +176,7 @@ class DatePicker extends React.Component {
     if (opts.date) { opts.date = formatISO(opts.date) }
 
     return (
-      <QueryLink to={{period, ...opts}} onClick={this.close.bind(this)} query={this.props.query} className={boldClass + ' block px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900'}>
+      <QueryLink to={{period, ...opts}} onClick={this.close.bind(this)} query={this.props.query} className={boldClass + ' block px-4 py-2 text-sm leading-tight hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100'}>
         {text}
       </QueryLink>
     )
@@ -186,29 +186,29 @@ class DatePicker extends React.Component {
     if (this.state.mode === 'menu') {
       return (
         <div className="absolute mt-2 rounded shadow-md z-10" style={{width: '235px', right: '-14px'}}>
-          <div className="rounded bg-white ring-1 ring-black ring-opacity-5 font-medium text-gray-800">
+          <div className="rounded bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 font-medium text-gray-800 dark:text-gray-200">
             <div className="py-1">
               { this.renderLink('day', 'Today') }
               { this.renderLink('realtime', 'Realtime') }
             </div>
-            <div className="border-t border-gray-200"></div>
+            <div className="border-t border-gray-200 dark:border-gray-500"></div>
             <div className="py-1">
               { this.renderLink('7d', 'Last 7 days') }
               { this.renderLink('30d', 'Last 30 days') }
             </div>
-            <div className="border-t border-gray-200"></div>
+            <div className="border-t border-gray-200 dark:border-gray-500"></div>
             <div className="py-1">
               { this.renderLink('month', 'This month') }
               { this.renderLink('month', 'Last month', {date: lastMonth(this.props.site)}) }
             </div>
-            <div className="border-t border-gray-200"></div>
+            <div className="border-t border-gray-200 dark:border-gray-500"></div>
             <div className="py-1">
               { this.renderLink('6mo', 'Last 6 months') }
               { this.renderLink('12mo', 'Last 12 months') }
             </div>
-            <div className="border-t border-gray-200"></div>
+            <div className="border-t border-gray-200 dark:border-gray-500"></div>
             <div className="py-1">
-              <span onClick={e => this.setState({mode: 'calendar'}, this.openCalendar.bind(this))} className="block px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900 cursor-pointer">Custom range</span>
+              <span onClick={e => this.setState({mode: 'calendar'}, this.openCalendar.bind(this))} className="block px-4 py-2 text-sm leading-tight hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer">Custom range</span>
             </div>
           </div>
         </div>

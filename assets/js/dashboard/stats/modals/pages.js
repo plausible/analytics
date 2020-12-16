@@ -51,7 +51,7 @@ class PagesModal extends React.Component {
     query.set('page', page.name)
 
     return (
-      <tr className="text-sm" key={page.name}>
+      <tr className="text-sm dark:text-gray-200" key={page.name}>
         <td className="p-2">
           <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline">{page.name}</Link>
         </td>
@@ -79,17 +79,17 @@ class PagesModal extends React.Component {
     } else if (this.state.pages) {
       return (
         <React.Fragment>
-          <h1 className="text-xl font-bold">{this.title()}</h1>
+          <h1 className="text-xl font-bold dark:text-gray-100">{this.title()}</h1>
 
           <div className="my-4 border-b border-gray-300"></div>
           <main className="modal__content">
             <table className="w-full table-striped table-fixed">
               <thead>
                 <tr>
-                  <th className="p-2 text-xs tracking-wide font-bold text-gray-500" align="left">Page url</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">{ this.label() }</th>
-                  {this.showPageviews() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Pageviews</th>}
-                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Bounce rate</th>}
+                  <th className="p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Page url</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{ this.label() }</th>
+                  {this.showPageviews() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Pageviews</th>}
+                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Bounce rate</th>}
                 </tr>
               </thead>
               <tbody>

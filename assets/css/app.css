@@ -5,6 +5,7 @@
 @import "modal.css";
 @import "loader.css";
 @import "tooltip.css";
+@import "flatpickr.dark.css";
 
 .button {
   @apply bg-indigo-600 border border-transparent rounded-md py-2 px-4 inline-flex justify-center text-sm leading-5 font-medium text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
@@ -156,7 +157,7 @@ blockquote {
 
 .dropdown-content::before {
     top: -16px;
-    right: 64px;
+    right: 8px;
     left: auto;
 }
 .dropdown-content::before {
@@ -174,7 +175,7 @@ blockquote {
 }
 .dropdown-content::after {
     top: -14px;
-    right: 65px;
+    right: 9px;
     left: auto;
 }
 
@@ -194,6 +195,14 @@ blockquote {
 
 .table-striped tbody tr:nth-child(odd) {
   background-color: #f1f5f8;
+}
+
+.dark .table-striped tbody tr:nth-child(odd) {
+  background-color: rgb(37, 47, 63);
+}
+
+.dark .table-striped tbody tr:nth-child(even) {
+  background-color: rgb(26, 32, 44);
 }
 
 .twitter-icon {
@@ -251,4 +260,9 @@ blockquote {
 
 .datamaps-subunit {
   cursor: pointer;
+}
+
+/* Only because the map handler doesn't expose an easier way to change the shadow color */
+.dark .hoverinfo {
+  box-shadow: 1px 1px 5px rgb(26, 32, 44);
 }
