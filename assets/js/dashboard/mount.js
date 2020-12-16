@@ -11,7 +11,8 @@ if (container) {
   const site = {
     domain: container.dataset.domain,
     offset: container.dataset.offset,
-    hasGoals: container.dataset.hasGoals === 'true'
+    hasGoals: container.dataset.hasGoals === 'true',
+    insertedAt: container.dataset.insertedAt
   }
 
   const loggedIn = container.dataset.loggedIn === 'true'
