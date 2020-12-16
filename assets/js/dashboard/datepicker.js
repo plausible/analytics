@@ -214,7 +214,9 @@ class DatePicker extends React.Component {
         </div>
       )
     } else if (this.state.mode === 'calendar') {
-      return <Flatpickr options={{mode: 'range', maxDate: 'today', showMonths: 1, static: true, animate: false}} ref={calendar => this.calendar = calendar} className="invisible" onChange={this.setCustomDate.bind(this)} />
+      const insertionDate = new Date(this.props.site.insertedAt);
+      const dayBeforeCreation = insertionDate - 86400000;
+      return <Flatpickr options={{mode: 'range', maxDate: 'today', minDate: dayBeforeCreation, showMonths: 1, static: true, animate: false}} ref={calendar => this.calendar = calendar} className="invisible" onChange={this.setCustomDate.bind(this)} />
     }
   }
 
