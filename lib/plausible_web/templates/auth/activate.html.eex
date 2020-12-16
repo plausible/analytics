@@ -1,32 +1,32 @@
 <div class="w-full max-w-3xl mt-4 mx-auto flex">
   <%= if @has_pin do %>
-    <%= form_for @conn, "/activate", [class: "w-full max-w-lg mx-auto bg-white shadow-md rounded px-8 py-6 mb-4 mt-8"], fn f -> %>
-      <h2 class="text-xl font-black">Activate your account</h2>
+    <%= form_for @conn, "/activate", [class: "w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8"], fn f -> %>
+      <h2 class="text-xl font-black dark:text-gray-100">Activate your account</h2>
 
-      <div class="mt-2 text-sm text-gray-500 leading-tight">
+      <div class="mt-2 text-sm text-gray-500 dark:text-gray-200 leading-tight">
         Please enter the 4-digit code we sent to <b><%= @conn.assigns[:current_user].email %></b>
       </div>
 
       <div class="mt-12 flex items-stretch flex-grow">
         <div>
-          <%= text_input f, :code, class: "tracking-widest font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-36 px-8 border-gray-300 rounded-l-md", oninput: "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 4) document.getElementById('submit').focus()", onclick: "this.select();", maxlength: "4", placeholder: "••••", style: "letter-spacing: 10px;" %>
+          <%= text_input f, :code, class: "tracking-widest font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-36 px-8 border-gray-300 dark:border-gray-500 rounded-l-md dark:text-gray-200 dark:bg-gray-900", oninput: "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 4) document.getElementById('submit').focus()", onclick: "this.select();", maxlength: "4", placeholder: "••••", style: "letter-spacing: 10px;" %>
         </div>
         <button id="submit" class="button rounded-l-none">Activate &rarr;</button>
       </div>
       <%= error_tag(assigns, :error) %>
 
-      <div class="mt-16 text-sm">
+      <div class="mt-16 text-sm dark:text-gray-100">
         Didn't receive an email?
       </div>
       <div class="mt-2 text-sm text-gray-500 leading-tight">
-        Please check your spam folder and contact <a class="underline text-gray-800" href="mailto:support@plausible.io">support@plausible.io</a> if the problem persists
+        Please check your spam folder and contact <a class="underline text-indigo-500" href="mailto:support@plausible.io">support@plausible.io</a> if the problem persists
       </div>
     <% end %>
   <% else %>
-    <div class="w-full max-w-lg mx-auto bg-white shadow-md rounded px-8 py-6 mb-4 mt-8">
-      <h2 class="text-xl font-black">Activate your account</h2>
+    <div class="w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8">
+      <h2 class="text-xl font-black dark:text-gray-100">Activate your account</h2>
 
-      <div class="mt-2 text-sm text-gray-500 leading-tight">
+      <div class="mt-2 text-sm text-gray-500 dark:text-gray-200 leading-tight">
         A 4-digit activation code will be sent to <b><%= @conn.assigns[:current_user].email %></b>
       </div>
 

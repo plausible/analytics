@@ -1,7 +1,7 @@
 <%= if  !Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_subscription) do %>
-<div class="max-w-2xl mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-orange-200 px-8 pt-6 pb-8 mt-24">
+<div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded rounded-t-none border-t-2 border-orange-200 dark:border-orange-200 px-8 pt-6 pb-8 mt-24 ">
   <div class="flex justify-between">
-    <h2 class="text-xl font-black">Subscription Plan</h2>
+    <h2 class="text-xl font-black dark:text-gray-100">Subscription Plan</h2>
     <%= if @subscription do %>
       <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-bold leading-5 <%= subscription_colors(@subscription.status) %>">
         <%= present_subscription_status(@subscription.status) %>
@@ -31,48 +31,48 @@
   <% end %>
 
   <div class="flex flex-col items-center sm:flex-row sm:items-start justify-between mt-8">
-    <div class="text-center bg-gray-100 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
-      <h4 class="font-black">Monthly quota</h4>
+    <div class="text-center bg-gray-100 dark:bg-gray-900 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
+      <h4 class="font-black dark:text-gray-100">Monthly quota</h4>
       <%= if @subscription do %>
-        <div class="text-xl py-2 font-medium"><%= subscription_quota(@subscription) %> pageviews</div>
+        <div class="text-xl py-2 font-medium dark:text-gray-100"><%= subscription_quota(@subscription) %> pageviews</div>
         <%= case @subscription.status do %>
           <% "active" -> %>
             <%= link("Change plan", to: "/billing/change-plan", class: "text-sm text-indigo-500 font-medium") %>
           <% "past_due" -> %>
-            <span class="text-sm text-gray-600 font-medium" tooltip="Please update your billing details before changing plans">Change plan</span>
+            <span class="text-sm text-gray-600 dark:text-gray-400 font-medium" tooltip="Please update your billing details before changing plans">Change plan</span>
           <% _ -> %>
         <% end %>
       <% else %>
-        <div class="text-xl py-2 font-medium">Free trial</div>
+        <div class="text-xl py-2 font-medium dark:text-gray-100">Free trial</div>
         <%= link("Upgrade", to: "/billing/upgrade", class: "text-sm text-indigo-500 font-medium") %>
       <% end %>
     </div>
-    <div class="text-center bg-gray-100 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
-      <h4 class="font-black">Next bill amount</h4>
+    <div class="text-center bg-gray-100 dark:bg-gray-900 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
+      <h4 class="font-black dark:text-gray-100">Next bill amount</h4>
       <%= if @subscription && @subscription.status in ["active", "past_due"] do %>
-        <div class="text-xl py-2 font-medium">$<%= @subscription.next_bill_amount %></div>
+        <div class="text-xl py-2 font-medium dark:text-gray-100">$<%= @subscription.next_bill_amount %></div>
         <%= if @subscription.update_url do %>
           <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo-500 font-medium") %>
         <% end %>
       <% else %>
-        <div class="text-xl py-2 font-medium">---</div>
+        <div class="text-xl py-2 font-medium dark:text-gray-100">---</div>
       <% end %>
     </div>
-    <div class="text-center bg-gray-100 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
-      <h4 class="font-black">Next bill date</h4>
+    <div class="text-center bg-gray-100 dark:bg-gray-900 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
+      <h4 class="font-black dark:text-gray-100">Next bill date</h4>
 
       <%= if @subscription && @subscription.next_bill_date && @subscription.status in ["active", "past_due"] do %>
-        <div class="text-xl py-2 font-medium"><%= Timex.format!(@subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %></div>
-        <div class="text-sm text-gray-600 font-medium">(<%= subscription_interval(@subscription) %> billing)</div>
+        <div class="text-xl py-2 font-medium dark:text-gray-100"><%= Timex.format!(@subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %></div>
+        <div class="text-sm text-gray-600 dark:text-gray-400 font-medium">(<%= subscription_interval(@subscription) %> billing)</div>
       <% else %>
-        <div class="text-xl py-2 font-medium">---</div>
+        <div class="text-xl py-2 font-medium dark:text-gray-100">---</div>
       <% end %>
     </div>
   </div>
 
-  <h3 class="text-xl font-bold mt-8">Your usage</h3>
+  <h3 class="text-xl font-bold mt-8 dark:text-gray-100">Your usage</h3>
 
-  <div class="py-2">
+  <div class="py-2 dark:text-gray-100">
     <b><%= delimit_integer(Plausible.Billing.usage(@conn.assigns[:current_user])) %></b>
     pageviews in the last 30 days
   </div>
@@ -80,7 +80,7 @@
   <%= cond do %>
     <% @subscription && @subscription.status in ["active", "past_due", "paused"] && @subscription.cancel_url -> %>
       <div class="mt-8">
-        <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150") %>
+        <%= link("Cancel my subscription", to: @subscription.cancel_url, class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150") %>
       </div>
     <% true -> %>
       <div class="mt-8">
@@ -90,23 +90,37 @@
 </div>
 <% end %>
 
-<div class="max-w-2xl mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-indigo-100 px-8 pt-6 pb-8 mt-16">
-  <h2 class="text-xl font-black">Account settings</h2>
+<div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded rounded-t-none border-t-2 border-green-500 px-8 pt-6 pb-8 mt-16">
+  <h2 class="text-xl font-black dark:text-gray-100">Dashboard Appearance</h2>
 
-  <div class="my-4 border-b border-gray-300"></div>
+  <div class="my-4 border-b border-gray-300 dark:border-gray-500"></div>
+
+  <%= form_for @changeset, "/settings", [class: "max-w-sm"], fn f -> %>
+    <div class="col-span-4 sm:col-span-2">
+        <%= label f, :theme, "Theme Selection", class: "block text-sm font-medium leading-5 text-gray-700 dark:text-gray-300" %>
+        <%= select f, :theme, Plausible.Themes.options(), class: "dark:bg-gray-900  mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100 cursor-pointer" %>
+      </div>
+    <%= submit "Save", class: "button mt-4" %>
+  <% end %>
+</div>
+
+<div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded rounded-t-none border-t-2 border-indigo-100 dark:border-indigo-500 px-8 pt-6 pb-8 mt-16">
+  <h2 class="text-xl font-black dark:text-gray-100">Account settings</h2>
+
+  <div class="my-4 border-b border-gray-300 dark:border-gray-500"></div>
 
   <%= form_for @changeset, "/settings", [class: "max-w-sm"], fn f -> %>
     <div class="my-4">
-      <%= label f, :name, class: "block text-sm font-medium text-gray-700" %>
+      <%= label f, :name, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
       <div class="mt-1">
-        <%= text_input f, :name, class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" %>
+        <%= text_input f, :name, class: "shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800" %>
         <%= error_tag f, :name %>
       </div>
     </div>
     <div class="my-4">
-      <%= label f, :email, class: "block text-sm font-medium text-gray-700" %>
+      <%= label f, :email, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
       <div class="mt-1">
-        <%= email_input f, :email, class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" %>
+        <%= email_input f, :email, class: "shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md" %>
         <%= error_tag f, :email %>
       </div>
     </div>
@@ -114,19 +128,19 @@
   <% end %>
 </div>
 
-<div class="max-w-2xl mx-auto bg-white shadow-md rounded rounded-t-none border-t-2 border-red-600 px-8 pt-6 pb-8 mt-16 mb-24">
+<div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded rounded-t-none border-t-2 border-red-600 px-8 pt-6 pb-8 mt-16 mb-24">
   <div class="flex items-center justify-between">
-    <h2 class="text-xl font-black">Delete account</h2>
+    <h2 class="text-xl font-black dark:text-gray-100">Delete account</h2>
   </div>
 
-  <div class="my-4 border-b border-gray-300"></div>
+  <div class="my-4 border-b border-gray-300 dark:border-gray-500"></div>
 
-  <p>Deleting your account removes all sites and stats you've collected</p>
+  <p class="dark:text-gray-100">Deleting your account removes all sites and stats you've collected</p>
 
   <%= if @subscription && @subscription.status == "active" do %>
-    <span class="button bg-gray-300 mt-6 hover:shadow-none">Delete my account</span>
-    <p class="text-gray-600 text-sm mt-2">Your account cannot be deleted because you have an active subscription. If you want to delete your account, please cancel your subscription first.</p>
+    <span class="button bg-gray-300 dark:bg-gray-800 mt-6 hover:shadow-none">Delete my account</span>
+    <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Your account cannot be deleted because you have an active subscription. If you want to delete your account, please cancel your subscription first.</p>
   <% else %>
-    <%= link("Delete my account", to: "/me", class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"]) %>
+    <%= link("Delete my account", to: "/me", class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"]) %>
   <% end %>
 </div>

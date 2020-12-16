@@ -67,14 +67,14 @@ class ScreenSizes extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={size.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
-          <Bar count={size.count} all={this.state.sizes} bg="bg-green-50" />
-          <span tooltip={EXPLANATION[size.name]} className="flex px-2" style={{marginTop: '-26px'}} >
+          <Bar count={size.count} all={this.state.sizes} bg="bg-green-50 dark:bg-gray-500 dark:bg-opacity-15" />
+          <span tooltip={EXPLANATION[size.name]} className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}} >
             <Link className="block truncate hover:underline" to={{search: query.toString()}}>
               {iconFor(size.name)} {size.name}
             </Link>
           </span>
         </div>
-        <span className="font-medium">{numberFormatter(size.count)} <span className="inline-block text-xs w-8 text-right">({size.percentage}%)</span></span>
+        <span className="font-medium dark:text-gray-200">{numberFormatter(size.count)} <span className="inline-block text-xs w-8 text-right">({size.percentage}%)</span></span>
       </div>
     )
   }
@@ -95,7 +95,7 @@ class ScreenSizes extends React.Component {
         </React.Fragment>
       )
     } else {
-      return <div className="text-center mt-44 font-medium text-gray-500">No data yet</div>
+      return <div className="text-center mt-44 font-medium text-gray-500 dark:text-gray-400">No data yet</div>
     }
   }
 
@@ -142,21 +142,21 @@ export default class Devices extends React.Component {
     const isActive = this.state.mode === mode
 
     if (isActive) {
-      return <li className="inline-block h-5 text-indigo-700 font-bold border-b-2 border-indigo-700">{name}</li>
+      return <li className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold border-b-2 border-indigo-700 dark:border-indigo-500">{name}</li>
     } else {
-      return <li className="hover:text-indigo-700 cursor-pointer" onClick={this.setMode(mode)}>{name}</li>
+      return <li className="hover:text-indigo-600 cursor-pointer" onClick={this.setMode(mode)}>{name}</li>
     }
   }
 
   render() {
     return (
       <div className="stats-item">
-        <div className="bg-white shadow-xl rounded p-4 relative" style={{height: '436px'}}>
+        <div className="bg-white dark:bg-gray-825 shadow-xl rounded p-4 relative" style={{height: '436px'}}>
 
           <div className="w-full flex justify-between">
-            <h3 className="font-bold">Devices</h3>
+            <h3 className="font-bold dark:text-gray-100">Devices</h3>
 
-            <ul className="flex font-medium text-xs text-gray-500 space-x-2">
+            <ul className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
               { this.renderPill('Size', 'size') }
               { this.renderPill('Browser', 'browser') }
               { this.renderPill('OS', 'os') }
