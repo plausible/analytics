@@ -1,5 +1,3 @@
-Hi <%= @name %>,
+Hey <%= user_salutation(@user) %>,
 <br /><br />
-Thank you for signing up for the free trial of Plausible, a simple and privacy-friendly alternative to Google Analytics.
-<br /><br />
-<a href="<%= @link %>">Click here</a> to activate your trial account. This link will expire in 24 hours.
+Enter <%= @code %> to verify your email address. This code will expire in 4 hours.

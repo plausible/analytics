@@ -43,6 +43,7 @@ module.exports = {
       borderWidth: ['dark'],
       backgroundOpacity: ['dark'],
       outline: ['dark'],
+      display: ['dark'],
     }
   },
   plugins: [

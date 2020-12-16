@@ -8,19 +8,7 @@ import Bar from './bar'
 import MoreLink from './more-link'
 import * as api from '../api'
 import { navigateToQuery } from '../query'
-import { ThemeContext } from "../theme-context";
-
-class CountriesWrapper extends React.Component {
-  render() {
-    return (
-      <ThemeContext.Consumer>
-        {theme => (
-          <Countries darkTheme={theme} {...this.props} />
-        )}
-      </ThemeContext.Consumer>
-    );
-  }
-}
+import { withThemeConsumer } from '../theme-consumer-hoc';
 class Countries extends React.Component {
   constructor(props) {
     super(props)
@@ -158,4 +146,4 @@ class Countries extends React.Component {
   }
 }
 
-export default withRouter(CountriesWrapper)
+export default withRouter(withThemeConsumer(Countries))

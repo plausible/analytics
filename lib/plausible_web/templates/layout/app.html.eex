@@ -19,8 +19,8 @@
           <div class="flex items-center flex-1 md:absolute md:inset-y-0 md:left-0">
             <div class="flex items-center justify-between">
               <a href="<%= home_dest(@conn) %>">
-                <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo_dark.png"), class: "h-8 w-auto sm:h-10 -mt-2 hideOnLight", alt: "Plausible logo")%>
-                <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), class: "h-8 w-auto sm:h-10 -mt-2 hideOnDark", alt: "Plausible logo") %>
+                <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo_dark.png"), class: "h-8 w-auto sm:h-10 -mt-2 hidden dark:inline", alt: "Plausible logo")%>
+                <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), class: "h-8 w-auto sm:h-10 -mt-2 inline dark:hidden", alt: "Plausible logo") %>
               </a>
             </div>
           </div>
@@ -34,7 +34,7 @@
                     </li>
                   <% else %>
                     <li class="mr-6 hidden sm:block">
-                      <%= link("Docs", to: "https://docs.plausible.io", class: "font-bold rounded p-2 hover:bg-gray-200", style: "line-height: 40px;", target: "_blank") %>
+                      <%= link("Docs", to: "https://docs.plausible.io", class: "font-bold rounded p-2 hover:bg-gray-200 dark:hover:bg-gray-900 dark:text-gray-100", style: "line-height: 40px;", target: "_blank") %>
                     </li>
                   <% end %>
                   <li>
