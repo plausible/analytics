@@ -7,6 +7,7 @@ defmodule Plausible.Test.ClickhouseSetup do
       %{
         name: "pageview",
         domain: "test-site.com",
+        hostname: "test-site.com",
         pathname: "/",
         country_code: "EE",
         browser: "Chrome",
@@ -22,6 +23,7 @@ defmodule Plausible.Test.ClickhouseSetup do
       %{
         name: "pageview",
         domain: "test-site.com",
+        hostname: "test-site.com",
         pathname: "/",
         country_code: "EE",
         browser: "Chrome",
@@ -36,6 +38,7 @@ defmodule Plausible.Test.ClickhouseSetup do
       %{
         name: "pageview",
         domain: "test-site.com",
+        hostname: "test-site.com",
         pathname: "/contact",
         country_code: "GB",
         browser: "Firefox",
@@ -44,10 +47,16 @@ defmodule Plausible.Test.ClickhouseSetup do
         referrer_source: "Bing",
         timestamp: ~N[2019-01-01 00:00:00]
       },
-      %{name: "pageview", domain: "test-site.com", timestamp: ~N[2019-01-31 00:00:00]},
+      %{
+        name: "pageview",
+        domain: "test-site.com",
+        hostname: "test-site.com",
+        timestamp: ~N[2019-01-31 00:00:00]
+      },
       %{
         name: "Signup",
         domain: "test-site.com",
+        hostname: "test-site.com",
         session_id: @conversion_1_session_id,
         timestamp: ~N[2019-01-01 01:00:00],
         "meta.key": ["variant"],
@@ -56,6 +65,7 @@ defmodule Plausible.Test.ClickhouseSetup do
       %{
         name: "Signup",
         domain: "test-site.com",
+        hostname: "test-site.com",
         session_id: @conversion_1_session_id,
         timestamp: ~N[2019-01-01 02:00:00],
         "meta.key": ["variant"],
@@ -64,6 +74,7 @@ defmodule Plausible.Test.ClickhouseSetup do
       %{
         name: "Signup",
         domain: "test-site.com",
+        hostname: "test-site.com",
         session_id: @conversion_2_session_id,
         timestamp: ~N[2019-01-01 02:00:00],
         "meta.key": ["variant"],
@@ -73,6 +84,7 @@ defmodule Plausible.Test.ClickhouseSetup do
         name: "pageview",
         pathname: "/register",
         domain: "test-site.com",
+        hostname: "test-site.com",
         session_id: @conversion_1_session_id,
         timestamp: ~N[2019-01-01 23:00:00]
       },
@@ -80,6 +92,7 @@ defmodule Plausible.Test.ClickhouseSetup do
         name: "pageview",
         pathname: "/register",
         domain: "test-site.com",
+        hostname: "blog.test-site.com",
         session_id: @conversion_2_session_id,
         timestamp: ~N[2019-01-01 23:00:00]
       },
@@ -87,24 +100,28 @@ defmodule Plausible.Test.ClickhouseSetup do
         name: "pageview",
         pathname: "/irrelevant",
         domain: "test-site.com",
+        hostname: "test-site.com",
         session_id: @conversion_1_session_id,
         timestamp: ~N[2019-01-01 23:00:00]
       },
       %{
         name: "pageview",
         domain: "test-site.com",
+        hostname: "test-site.com",
         referrer_source: "Google",
         timestamp: ~N[2019-02-01 01:00:00]
       },
       %{
         name: "pageview",
         domain: "test-site.com",
+        hostname: "test-site.com",
         referrer_source: "Google",
         timestamp: ~N[2019-02-01 02:00:00]
       },
       %{
         name: "pageview",
         domain: "test-site.com",
+        hostname: "test-site.com",
         referrer: "t.co/some-link",
         referrer_source: "Twitter",
         timestamp: ~N[2019-03-01 01:00:00]
@@ -112,6 +129,7 @@ defmodule Plausible.Test.ClickhouseSetup do
       %{
         name: "pageview",
         domain: "test-site.com",
+        hostname: "test-site.com",
         referrer: "t.co/some-link",
         referrer_source: "Twitter",
         timestamp: ~N[2019-03-01 01:00:00]
@@ -119,32 +137,42 @@ defmodule Plausible.Test.ClickhouseSetup do
       %{
         name: "pageview",
         domain: "test-site.com",
+        hostname: "test-site.com",
         referrer: "t.co/nonexistent-link",
         referrer_source: "Twitter",
         timestamp: ~N[2019-03-01 02:00:00]
       },
-      %{name: "pageview", domain: "test-site.com"},
+      %{name: "pageview", domain: "test-site.com", hostname: "test-site.com"},
       %{
         name: "pageview",
         domain: "test-site.com",
+        hostname: "test-site.com",
         timestamp: Timex.now() |> Timex.shift(minutes: -3)
       },
       %{
         name: "pageview",
         domain: "test-site.com",
+        hostname: "test-site.com",
         timestamp: Timex.now() |> Timex.shift(minutes: -6)
       },
-      %{name: "pageview", domain: "tz-test.com", timestamp: ~N[2019-01-01 00:00:00]},
-      %{name: "pageview", domain: "public-site.io"},
+      %{
+        name: "pageview",
+        domain: "tz-test.com",
+        hostname: "tz-test.com",
+        timestamp: ~N[2019-01-01 00:00:00]
+      },
+      %{name: "pageview", domain: "public-site.io", hostname: "public-site.io"},
       %{
         name: "pageview",
         domain: "fetch-tweets-test.com",
+        hostname: "fetch-tweets-test.com",
         referrer: "t.co/a-link",
         referrer_source: "Twitter"
       },
       %{
         name: "pageview",
         domain: "fetch-tweets-test.com",
+        hostname: "fetch-tweets-test.com",
         referrer: "t.co/b-link",
         referrer_source: "Twitter",
         timestamp: Timex.now() |> Timex.shift(days: -5)
@@ -154,6 +182,7 @@ defmodule Plausible.Test.ClickhouseSetup do
     Plausible.TestUtils.create_sessions([
       %{
         domain: "test-site.com",
+        hostname: "test-site.com",
         entry_page: "/",
         exit_page: "/",
         referrer_source: "10words",
@@ -173,6 +202,7 @@ defmodule Plausible.Test.ClickhouseSetup do
       },
       %{
         domain: "test-site.com",
+        hostname: "test-site.com",
         entry_page: "/",
         exit_page: "/",
         referrer_source: "10words",
@@ -186,6 +216,7 @@ defmodule Plausible.Test.ClickhouseSetup do
       },
       %{
         domain: "test-site.com",
+        hostname: "test-site.com",
         entry_page: "/",
         exit_page: "/",
         referrer_source: "Bing",
@@ -198,6 +229,7 @@ defmodule Plausible.Test.ClickhouseSetup do
       },
       %{
         domain: "test-site.com",
+        hostname: "test-site.com",
         entry_page: "/",
         exit_page: "/",
         referrer_source: "Google",
@@ -208,6 +240,7 @@ defmodule Plausible.Test.ClickhouseSetup do
       },
       %{
         domain: "test-site.com",
+        hostname: "test-site.com",
         entry_page: "/",
         exit_page: "/",
         referrer_source: "Google",
@@ -218,6 +251,7 @@ defmodule Plausible.Test.ClickhouseSetup do
       },
       %{
         domain: "test-site.com",
+        hostname: "test-site.com",
         entry_page: "/",
         exit_page: "/",
         referrer: "t.co/some-link",
@@ -227,6 +261,7 @@ defmodule Plausible.Test.ClickhouseSetup do
       },
       %{
         domain: "test-site.com",
+        hostname: "test-site.com",
         entry_page: "/",
         exit_page: "/",
         referrer: "t.co/some-link",
@@ -236,6 +271,7 @@ defmodule Plausible.Test.ClickhouseSetup do
       },
       %{
         domain: "test-site.com",
+        hostname: "test-site.com",
         entry_page: "/",
         exit_page: "/",
         referrer: "t.co/nonexistent-link",
@@ -245,6 +281,7 @@ defmodule Plausible.Test.ClickhouseSetup do
       },
       %{
         domain: "test-site.com",
+        hostname: "test-site.com",
         entry_page: "/",
         exit_page: "/",
         referrer_source: "Bing",
@@ -254,6 +291,7 @@ defmodule Plausible.Test.ClickhouseSetup do
       },
       %{
         domain: "test-site.com",
+        hostname: "test-site.com",
         entry_page: "/",
         exit_page: "/exit",
         referrer_source: "10words",
@@ -263,6 +301,7 @@ defmodule Plausible.Test.ClickhouseSetup do
       },
       %{
         domain: "test-site.com",
+        hostname: "test-site.com",
         entry_page: "/",
         exit_page: "/exit",
         referrer_source: "10words",

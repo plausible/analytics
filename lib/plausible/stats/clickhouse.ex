@@ -460,11 +460,12 @@ defmodule Plausible.Stats.Clickhouse do
     q =
       from(
         s in base_session_query(site, query),
+        group_by: s.hostname,
         group_by: s.entry_page,
         order_by: [desc: fragment("count")],
         limit: ^limit,
         select: %{
-          name: s.entry_page,
+          name: fragment("concat(?, ?) as name", s.hostname, s.entry_page),
           count: fragment("uniq(?) as count", s.user_id)
         }
       )
@@ -490,11 +491,12 @@ defmodule Plausible.Stats.Clickhouse do
   def top_pages(site, %Query{period: "realtime"} = query, limit, _include) do
     ClickhouseRepo.all(
       from s in base_session_query(site, query),
+        group_by: s.hostname,
         group_by: s.exit_page,
         order_by: [desc: fragment("count")],
         limit: ^limit,
         select: %{
-          name: fragment("? as name", s.exit_page),
+          name: fragment("concat(?, ?) as name", s.hostname, s.exit_page),
           count: fragment("uniq(?) as count", s.user_id)
         }
     )
@@ -504,11 +506,12 @@ defmodule Plausible.Stats.Clickhouse do
     q =
       from(
         e in base_query(site, query),
+        group_by: e.hostname,
         group_by: e.pathname,
         order_by: [desc: fragment("count")],
         limit: ^limit,
         select: %{
-          name: fragment("? as name", e.pathname),
+          name: fragment("concat(?, ?) as name", e.hostname, e.pathname),
           count: fragment("uniq(?) as count", e.user_id),
           pageviews: fragment("count(*) as pageviews")
         }
@@ -528,15 +531,16 @@ defmodule Plausible.Stats.Clickhouse do
     ClickhouseRepo.all(
       from s in base_session_query(site, query),
         group_by: s.entry_page,
+        group_by: s.hostname,
         order_by: [desc: fragment("total")],
         limit: 100,
         select: %{
-          entry_page: s.entry_page,
+          name: fragment("concat(?, ?)", s.hostname, s.entry_page),
           total: fragment("count(*) as total"),
           bounce_rate: fragment("round(sum(is_bounce * sign) / sum(sign) * 100) as bounce_rate")
         }
     )
-    |> Enum.map(fn row -> {row[:entry_page], row[:bounce_rate]} end)
+    |> Enum.map(fn row -> {row[:name], row[:bounce_rate]} end)
     |> Enum.into(%{})
   end
 
