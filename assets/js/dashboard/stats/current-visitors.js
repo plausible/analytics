@@ -14,7 +14,7 @@ export default class CurrentVisitors extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.refresh !== this.props.refresh) {
-      this.updateCount.bind(this);
+      this.updateCount();
     }
   }
 
