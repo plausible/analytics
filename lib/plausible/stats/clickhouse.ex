@@ -456,13 +456,16 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
-  def entry_pages(site, query, limit, include) do
+  def entry_pages(site, query, limit, page \\ 1, include) do
+    offset = (page - 1) * limit
+
     q =
       from(
         s in base_session_query(site, query),
         group_by: s.entry_page,
         order_by: [desc: fragment("count")],
         limit: ^limit,
+        offset: ^offset,
         select: %{
           name: s.entry_page,
           count: fragment("uniq(?) as count", s.user_id)
@@ -487,12 +490,15 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  def top_pages(site, %Query{period: "realtime"} = query, limit, _include) do
+  def top_pages(site, %Query{period: "realtime"} = query, limit, page, _include) do
+    offset = (page - 1) * limit
+
     ClickhouseRepo.all(
       from s in base_session_query(site, query),
         group_by: s.exit_page,
         order_by: [desc: fragment("count")],
         limit: ^limit,
+        offset: ^offset,
         select: %{
           name: fragment("? as name", s.exit_page),
           count: fragment("uniq(?) as count", s.user_id)
@@ -500,13 +506,16 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
-  def top_pages(site, query, limit, include) do
+  def top_pages(site, query, limit, page, include) do
+    offset = (page - 1) * limit
+
     q =
       from(
         e in base_query(site, query),
         group_by: e.pathname,
         order_by: [desc: fragment("count")],
         limit: ^limit,
+        offset: ^offset,
         select: %{
           name: fragment("? as name", e.pathname),
           count: fragment("uniq(?) as count", e.user_id),
