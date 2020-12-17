@@ -13,11 +13,18 @@ import Conversions from './stats/conversions'
 import { withPinnedHeader } from './pinned-header-hoc';
 
 class Historical extends React.Component {
+  constructor (props) {
+    super(props)
+    this.state = {
+      refresh: 0
+    }
+  }
+
   renderConversions() {
     if (this.props.site.hasGoals) {
       return (
         <div className="w-full block md:flex items-start justify-between mt-6">
-          <Conversions site={this.props.site} query={this.props.query} />
+          <Conversions site={this.props.site} query={this.props.query} refresh={this.state.refresh} />
         </div>
       )
     }
@@ -25,6 +32,7 @@ class Historical extends React.Component {
 
   render() {
     const {pinned, stuck, togglePinned} = this.props;
+    const { refresh } = this.state;
 
     return (
       <div className="mb-12">
@@ -33,10 +41,10 @@ class Historical extends React.Component {
           <div className="w-full sm:flex justify-between items-center">
             <div className="w-full flex items-center">
               <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} />
-              <CurrentVisitors timer={this.props.timer} site={this.props.site}  />
+              <CurrentVisitors timer={this.props.timer} site={this.props.site} refresh={refresh}/>
             </div>
             <div className='dark:text-gray-100 flex items-center justify-end'>
-              <Datepicker site={this.props.site} query={this.props.query} />
+              <Datepicker site={this.props.site} query={this.props.query} refresh={() => this.setState((state) => ({refresh: state.refresh + 1}))}/>
               <span title={pinned ? 'Prevent this menu from remaining on the screen as you scroll' : 'Allow this menu to remain on the screen as you scroll'}>
                 <svg
                   style={{cursor: 'pointer', transform: `rotate(-${pinned ? 135 : 45}deg)`}}
@@ -54,14 +62,14 @@ class Historical extends React.Component {
           </div>
           <Filters query={this.props.query} history={this.props.history} />
         </div>
-        <VisitorGraph site={this.props.site} query={this.props.query} />
+        <VisitorGraph site={this.props.site} query={this.props.query} refresh={refresh} />
         <div className="w-full block md:flex items-start justify-between">
-          <Sources site={this.props.site} query={this.props.query} />
-          <Pages site={this.props.site} query={this.props.query} />
+          <Sources site={this.props.site} query={this.props.query} refresh={refresh} />
+          <Pages site={this.props.site} query={this.props.query} refresh={refresh} />
         </div>
         <div className="w-full block md:flex items-start justify-between">
-          <Countries site={this.props.site} query={this.props.query} />
-          <Devices site={this.props.site} query={this.props.query} />
+          <Countries site={this.props.site} query={this.props.query} refresh={refresh} />
+          <Devices site={this.props.site} query={this.props.query} refresh={refresh} />
         </div>
         { this.renderConversions() }
       </div>

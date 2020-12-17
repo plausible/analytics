@@ -21,7 +21,7 @@ export default class Pages extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.query !== prevProps.query) {
+    if (this.props.query !== prevProps.query || prevProps.refresh !== this.props.refresh) {
       this.setState({loading: true, pages: null})
       this.fetchPages()
     }

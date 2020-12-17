@@ -20,7 +20,7 @@ class AllSources extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.query !== prevProps.query) {
+    if (this.props.query !== prevProps.query || prevProps.refresh !== this.props.refresh) {
       this.setState({loading: true, referrers: null})
       this.fetchReferrers()
     }
@@ -123,7 +123,7 @@ class UTMSources extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.query !== prevProps.query || this.props.tab !== prevProps.tab) {
+    if (this.props.query !== prevProps.query || this.props.tab !== prevProps.tab || prevProps.refresh !== this.props.refresh) {
       this.setState({loading: true, referrers: null})
       this.fetchReferrers()
     }

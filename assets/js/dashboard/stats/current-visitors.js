@@ -12,6 +12,12 @@ export default class CurrentVisitors extends React.Component {
     this.props.timer.onTick(this.updateCount.bind(this))
   }
 
+  componentDidUpdate(prevProps) {
+    if (prevProps.refresh !== this.props.refresh) {
+      this.updateCount.bind(this);
+    }
+  }
+
   updateCount() {
     return fetch(`/api/stats/${encodeURIComponent(this.props.site.domain)}/current-visitors`)
       .then( response => {

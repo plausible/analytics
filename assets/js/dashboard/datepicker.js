@@ -99,6 +99,18 @@ class DatePicker extends React.Component {
     }
   }
 
+  renderRefresh() {
+    return (
+      <div
+        className="flex rounded shadow bg-white dark:bg-gray-800 ml-4 cursor-pointer items-center px-3 dark:text-gray-100"
+        onClick={this.props.refresh}
+        title="Refresh stats"
+      >
+        <svg className="feather h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+      </div>
+    )
+  }
+
   renderArrow(period, prevDate, nextDate) {
     return (
       <div className="flex rounded shadow bg-white dark:bg-gray-800 mr-4 cursor-pointer">
@@ -246,6 +258,7 @@ class DatePicker extends React.Component {
       <div className="flex justify-between sm:justify-between mr-4">
         { this.renderArrows() }
         { this.renderDropDown() }
+        { this.props.query.period !== 'realtime' && this.renderRefresh() }
       </div>
     )
   }

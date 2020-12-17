@@ -49,7 +49,7 @@ class ScreenSizes extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.query !== prevProps.query) {
+    if (this.props.query !== prevProps.query || prevProps.refresh !== this.props.refresh) {
       this.setState({loading: true, sizes: null})
       this.fetchScreenSizes()
     }
@@ -122,12 +122,14 @@ export default class Devices extends React.Component {
   }
 
   renderContent() {
+    const { refresh } = this.props;
+
     if (this.state.mode === 'size') {
-      return <ScreenSizes site={this.props.site} query={this.props.query} timer={this.props.timer} />
+      return <ScreenSizes site={this.props.site} query={this.props.query} timer={this.props.timer} refresh={refresh} />
     } else if (this.state.mode === 'browser') {
-      return <Browsers site={this.props.site} query={this.props.query} timer={this.props.timer} />
+      return <Browsers site={this.props.site} query={this.props.query} timer={this.props.timer} refresh={refresh} />
     } else if (this.state.mode === 'os') {
-      return <OperatingSystems site={this.props.site} query={this.props.query} timer={this.props.timer} />
+      return <OperatingSystems site={this.props.site} query={this.props.query} timer={this.props.timer} refresh={refresh} />
     }
   }
 
