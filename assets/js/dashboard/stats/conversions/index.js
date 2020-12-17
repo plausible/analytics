@@ -50,11 +50,11 @@ export default class Conversions extends React.Component {
     return (
       <div className="my-2 text-sm" key={goal.name}>
         <div className="flex items-center justify-between my-2">
-          <div className="w-full h-8 relative" style={{maxWidth: 'calc(100% - 16rem)'}}>
-            <Bar count={goal.count} all={this.state.goals} bg="bg-red-50" />
+          <div className="w-full h-8 relative dark:text-gray-300" style={{maxWidth: 'calc(100% - 16rem)'}}>
+            <Bar count={goal.count} all={this.state.goals} bg="bg-red-50 dark:bg-gray-500 dark:bg-opacity-15" />
             {this.renderGoalText(goal.name)}
           </div>
-          <div>
+          <div className="dark:text-gray-200">
             <span className="font-medium inline-block w-20 text-right">{numberFormatter(goal.count)}</span>
             <span className="font-medium inline-block w-20 text-right">{numberFormatter(goal.total_count)}</span>
             <span className="font-medium inline-block w-20 text-right">{goal.conversion_rate}%</span>
@@ -68,15 +68,15 @@ export default class Conversions extends React.Component {
   render() {
     if (this.state.loading) {
       return (
-        <div className="w-full bg-white shadow-xl rounded p-4" style={{height: '94px'}}>
+        <div className="w-full bg-white dark:bg-gray-825 shadow-xl rounded p-4" style={{height: '94px'}}>
           <div className="loading my-2 mx-auto"><div></div></div>
         </div>
       )
     } else if (this.state.goals) {
       return (
-        <div className="w-full bg-white shadow-xl rounded p-4">
-          <h3 className="font-bold">{this.props.title || "Goal Conversions"}</h3>
-          <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
+        <div className="w-full bg-white dark:bg-gray-825 shadow-xl rounded p-4">
+          <h3 className="font-bold dark:text-gray-100">{this.props.title || "Goal Conversions"}</h3>
+          <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide">
             <span>Goal</span>
             <div className="text-right">
               <span className="inline-block w-20">Uniques</span>

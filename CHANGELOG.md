@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 - Add tracker module to automatically track outbound links  plausible/analytics#389
 - Display weekday on the visitor graph plausible/analytics#175
 - Collect and display browser & OS versions plausible/analytics#397
+- Simple notifications around traffic spikes plausible/analytics#453
+- Dark theme option/system setting follow plausible/analytics#467
+- "Load More" capability to pages modal plausible/analytics#480
 
 ### Changed
 - Use alpine as base image to decrease Docker image size plausible/analytics#353
@@ -17,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - Validate domain format on site creation plausible/analytics#427
 - Improve settings UX and design plausible/analytics#412
 - Improve site listing UX and design plausible/analytics#438
+- Improve onboarding UX and design plausible/analytics#441
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370
@@ -24,6 +28,8 @@ All notable changes to this project will be documented in this file.
 - Show correct stats when goal filter is combined with source plausible/analytics#374
 - Going back in history now correctly resets the period filter plausible/analytics#408
 - Fix URL decoding in query parameters plausible/analytics#416
+- Fix overly-sticky date in query parameters plausible/analytics/#439
+- Prevent picking dates before site insertion plausible/analtics#446
 
 ### Security
 - Do not run the plausible Docker container as root plausible/analytics#362

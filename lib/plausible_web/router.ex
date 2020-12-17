@@ -77,7 +77,9 @@ defmodule PlausibleWeb.Router do
 
     get "/register", AuthController, :register_form
     post "/register", AuthController, :register
-    get "/claim-activation", AuthController, :claim_activation_link
+    get "/activate", AuthController, :activate_form
+    post "/activate/request-code", AuthController, :request_activation_code
+    post "/activate", AuthController, :activate
     get "/login", AuthController, :login_form
     post "/login", AuthController, :login
     get "/password/request-reset", AuthController, :password_reset_request_form
@@ -129,6 +131,17 @@ defmodule PlausibleWeb.Router do
     delete "/sites/:website/monthly-report/recipients/:recipient",
            SiteController,
            :remove_monthly_report_recipient
+
+    post "/sites/:website/spike-notification/enable", SiteController, :enable_spike_notification
+    post "/sites/:website/spike-notification/disable", SiteController, :disable_spike_notification
+    put "/sites/:website/spike-notification", SiteController, :update_spike_notification
+    post "/sites/:website/spike-notification/recipients",
+         SiteController,
+         :add_spike_notification_recipient
+
+    delete "/sites/:website/spike-notification/recipients/:recipient",
+           SiteController,
+           :remove_spike_notification_recipient
 
     get "/sites/:website/shared-links/new", SiteController, :new_shared_link
     post "/sites/:website/shared-links", SiteController, :create_shared_link

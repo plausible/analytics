@@ -6,14 +6,13 @@ defmodule PlausibleWeb.Email do
     Application.get_env(:plausible, :mailer_email)
   end
 
-  def activation_email(user, link) do
+  def activation_email(user, code) do
     base_email()
-    |> to(user.email)
+    |> to(user)
     |> tag("activation-email")
-    |> subject("Activate your Plausible free trial")
-    |> render("activation_email.html", name: user.name, link: link)
+    |> subject("#{code} is your Plausible email verification code")
+    |> render("activation_email.html", user: user, code: code)
   end
-
   def welcome_email(user) do
     base_email()
     |> to(user)
@@ -92,6 +91,14 @@ defmodule PlausibleWeb.Email do
     |> tag("weekly-report")
     |> subject("#{assigns[:name]} report for #{site.domain}")
     |> render("weekly_report.html", Keyword.put(assigns, :site, site))
+  end
+
+  def spike_notification(email, site, current_visitors, sources, dashboard_link) do
+    base_email()
+    |> to(email)
+    |> tag("spike-notification")
+    |> subject("Traffic spike on #{site.domain}")
+    |> render("spike_notification.html", %{site: site, current_visitors: current_visitors, sources: sources, link: dashboard_link})
   end
 
   def cancellation_email(user) do

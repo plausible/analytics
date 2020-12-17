@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.SiteControllerTest do
   use PlausibleWeb.ConnCase
   use Plausible.Repo
+  use Bamboo.Test
   import Plausible.TestUtils
 
   describe "GET /sites/new" do
@@ -43,6 +44,30 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert redirected_to(conn) == "/example.com/snippet"
       assert Repo.exists?(Plausible.Site, domain: "example.com")
+    end
+
+    test "sends welcome email if this is the user's first site", %{conn: conn} do
+      post(conn, "/sites", %{
+        "site" => %{
+          "domain" => "example.com",
+          "timezone" => "Europe/London"
+        }
+      })
+
+      assert_email_delivered_with(subject: "Welcome to Plausible")
+    end
+
+    test "does not send welcome email if user already has a previous site", %{conn: conn, user: user} do
+      insert(:site, members: [user])
+
+      post(conn, "/sites", %{
+        "site" => %{
+          "domain" => "example.com",
+          "timezone" => "Europe/London"
+        }
+      })
+
+      assert_no_emails_delivered()
     end
 
     test "cleans up the url", %{conn: conn} do
@@ -363,6 +388,67 @@ defmodule PlausibleWeb.SiteControllerTest do
       delete(conn, "/sites/#{site.domain}/monthly-report/recipients/recipient@email.com")
 
       report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
+      assert report.recipients == []
+    end
+  end
+
+  describe "POST /sites/:website/spike-notification/enable" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "creates a spike notification record with the user email", %{conn: conn, site: site, user: user} do
+      post(conn, "/sites/#{site.domain}/spike-notification/enable")
+
+      notification = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
+      assert notification.recipients == [user.email]
+    end
+  end
+
+  describe "POST /sites/:website/spike-notification/disable" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "deletes the spike notification record", %{conn: conn, site: site} do
+      insert(:spike_notification, site: site)
+
+      post(conn, "/sites/#{site.domain}/spike-notification/disable")
+
+      refute Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
+    end
+  end
+
+  describe "PUT /sites/:website/spike-notification" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "updates spike notification threshold", %{conn: conn, site: site} do
+      insert(:spike_notification, site: site, threshold: 10)
+      put(conn, "/sites/#{site.domain}/spike-notification", %{"spike_notification" => %{"threshold" => "15"}})
+
+      notification = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
+      assert notification.threshold == 15
+    end
+  end
+
+  describe "POST /sites/:website/spike-notification/recipients" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "adds a recipient to the spike notification", %{conn: conn, site: site} do
+      insert(:spike_notification, site: site)
+
+      post(conn, "/sites/#{site.domain}/spike-notification/recipients", recipient: "user@email.com")
+
+      report = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
+      assert report.recipients == ["user@email.com"]
+    end
+  end
+
+  describe "DELETE /sites/:website/spike-notification/recipients/:recipient" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "removes a recipient from the spike notification", %{conn: conn, site: site} do
+      insert(:spike_notification, site: site, recipients: ["recipient@email.com"])
+
+      delete(conn, "/sites/#{site.domain}/spike-notification/recipients/recipient@email.com")
+
+      report = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
       assert report.recipients == []
     end
   end

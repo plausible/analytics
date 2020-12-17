@@ -14,10 +14,17 @@ defmodule Plausible.Factory do
       name: "Jane Smith",
       email: sequence(:email, &"email-#{&1}@example.com"),
       password_hash: Plausible.Auth.Password.hash(pw),
-      trial_expiry_date: Timex.today() |> Timex.shift(days: 30)
+      trial_expiry_date: Timex.today() |> Timex.shift(days: 30),
+      email_verified: true
     }
 
     merge_attributes(user, attrs)
+  end
+
+  def spike_notification_factory do
+    %Plausible.Site.SpikeNotification{
+      threshold: 10
+    }
   end
 
   def site_factory do

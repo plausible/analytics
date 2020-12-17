@@ -5,7 +5,7 @@ module.exports = {
     './js/**/*.js',
     '../lib/plausible_web/templates/**/*.html.eex',
   ],
-  darkMode: false,
+  darkMode: 'class',
   theme: {
     container: {
       center: true,
@@ -14,18 +14,29 @@ module.exports = {
     extend: {
       colors: {
         orange: colors.orange,
+        'gray-850': 'rgb(26, 32, 44)',
+        'gray-825': 'rgb(37, 47, 63)'
       },
       spacing: {
         '44': '11rem'
       },
       width: {
         '31percent': '31%',
+      },
+      opacity: {
+        '15': '0.15',
       }
     },
   },
   variants: {
     textColor: ['responsive', 'hover', 'focus', 'group-hover'],
-    display: ['responsive', 'hover', 'focus', 'group-hover']
+    display: ['responsive', 'hover', 'focus', 'group-hover'],
+    extend: {
+      textColor: ['dark'],
+      borderWidth: ['dark'],
+      backgroundOpacity: ['dark'],
+      display: ['dark'],
+    }
   },
   plugins: [
     require('@tailwindcss/forms'),

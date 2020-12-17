@@ -37,14 +37,14 @@ export default class SearchTerms extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={term.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={term.count} all={this.state.searchTerms} bg="bg-blue-50" />
-          <span className="flex px-2" style={{marginTop: '-26px'}} >
+          <Bar count={term.count} all={this.state.searchTerms} bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15" />
+          <span className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}} >
             <span className="block truncate">
               { term.name }
             </span>
           </span>
         </div>
-        <span className="font-medium">{numberFormatter(term.count)}</span>
+        <span className="font-medium dark:text-gray-200">{numberFormatter(term.count)}</span>
       </div>
     )
   }
@@ -52,7 +52,7 @@ export default class SearchTerms extends React.Component {
   renderList() {
     if (this.props.query.filters.goal) {
       return (
-        <div className="text-center text-gray-700 text-sm mt-20">
+        <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
           <RocketIcon />
           <div>Sorry, we cannot show which keywords converted best for goal <b>{this.props.query.filters.goal}</b></div>
           <div>Google does not share this information</div>
@@ -61,7 +61,7 @@ export default class SearchTerms extends React.Component {
 
     } else if (this.state.notConfigured) {
       return (
-        <div className="text-center text-gray-700 text-sm mt-20">
+        <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
           <RocketIcon />
           <div>The site is not connected to Google Search Keywords</div>
           <div>Cannot show search terms</div>
@@ -73,7 +73,7 @@ export default class SearchTerms extends React.Component {
 
       return (
         <React.Fragment>
-          <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
+          <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide">
             <span>Search term</span>
             <span>{valLabel}</span>
           </div>
@@ -83,7 +83,7 @@ export default class SearchTerms extends React.Component {
       )
     } else {
       return (
-        <div className="text-center text-gray-700 text-sm mt-20">
+        <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
           <RocketIcon />
           <div>Could not find any search terms for this period</div>
           <div>Google Search Console data is sampled and delayed by 24-36h</div>
@@ -97,7 +97,7 @@ export default class SearchTerms extends React.Component {
     if (this.state.searchTerms) {
       return (
         <React.Fragment>
-          <h3 className="font-bold">Search Terms</h3>
+          <h3 className="font-bold dark:text-gray-100">Search Terms</h3>
           { this.renderList() }
           <MoreLink site={this.props.site} list={this.state.searchTerms} endpoint="referrers/Google" />
         </React.Fragment>
@@ -107,7 +107,7 @@ export default class SearchTerms extends React.Component {
 
   render() {
     return (
-      <div className="stats-item relative bg-white shadow-xl rounded p-4" style={{height: '436px'}}>
+      <div className="stats-item relative bg-white dark:bg-gray-825 shadow-xl rounded p-4" style={{height: '436px'}}>
         { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
         <FadeIn show={!this.state.loading}>
           { this.renderContent() }
