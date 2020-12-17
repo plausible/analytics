@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
 import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './date'
+import LinkButton from '../components/link_button'
 
 const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'custom']
 
@@ -92,6 +93,30 @@ class QueryLink extends React.Component {
 }
 const QueryLinkWithRouter = withRouter(QueryLink)
 export { QueryLinkWithRouter as QueryLink };
+
+class QueryButton extends React.Component {
+  constructor() {
+    super()
+    this.onClick = this.onClick.bind(this)
+  }
+
+  onClick(e) {
+    e.preventDefault()
+    navigateToQuery(this.props.history, this.props.query, this.props.to)
+    if (this.props.onClick) this.props.onClick(e)
+  }
+
+  render() {
+    const { history, query, to, ...props } = this.props
+    return <LinkButton
+      {...props}
+      to={{ pathname: window.location.pathname, search: generateQueryString(to) }}
+      onClick={this.onClick}
+    />
+  }
+}
+const QueryButtonWithRouter = withRouter(QueryButton)
+export { QueryButtonWithRouter as QueryButton };
 
 export function toHuman(query) {
   if (query.period === 'day') {

@@ -1,9 +1,23 @@
 import React from 'react';
 import Transition from "../transition.js";
-import { withRouter, Link } from 'react-router-dom'
+import { withRouter, Link } from 'react-router-dom';
 import Flatpickr from "react-flatpickr";
-import {shiftDays, shiftMonths, formatDay, formatDayShort, formatMonthYYYY, formatISO, isToday, lastMonth, nowForSite, isSameMonth} from './date'
-import { navigateToQuery, QueryLink } from './query.js'
+import {
+  shiftDays,
+  shiftMonths,
+  formatDay,
+  formatDayShort,
+  formatMonthYYYY,
+  formatISO,
+  isToday,
+  lastMonth,
+  nowForSite,
+  isSameMonth,
+  parseUTCDate,
+  isBefore,
+  isAfter
+} from "./date";
+import { navigateToQuery, QueryLink, QueryButton } from './query.js';
 
 
 class DatePicker extends React.Component {
@@ -100,16 +114,54 @@ class DatePicker extends React.Component {
   }
 
   renderArrow(period, prevDate, nextDate) {
+    const insertionDate = parseUTCDate(this.props.site.insertedAt);
+    const disabledLeft = isBefore(parseUTCDate(prevDate), insertionDate, period);
+    const disabledRight = isAfter(parseUTCDate(nextDate), nowForSite(this.props.site), period)
+
+    const leftClasses = `flex items-center px-2 border-r border-gray-300 ${disabledLeft ? "bg-gray-200" : ""}`
+    const rightClasses = `flex items-center px-2 ${disabledRight ? "bg-gray-200" : ""}`
     return (
       <div className="flex rounded shadow bg-white mr-4 cursor-pointer">
-        <QueryLink to={{date: prevDate}} query={this.props.query} className="flex items-center px-2 border-r border-gray-300">
-          <svg className="feather h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </QueryLink>
-        <QueryLink to={{date: nextDate}} query={this.props.query} className="flex items-center px-2">
-          <svg className="feather h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </QueryLink>
+        <QueryButton
+          to={{ date: prevDate }}
+          query={this.props.query}
+          className={leftClasses}
+          disabled={disabledLeft}
+        >
+          <svg
+            className="feather h-4 w-4"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </QueryButton>
+        <QueryButton
+          to={{ date: nextDate }}
+          query={this.props.query}
+          className={rightClasses}
+          disabled={disabledRight}
+        >
+          <svg
+            className="feather h-4 w-4"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </QueryButton>
       </div>
-    )
+    );
   }
 
   renderArrows() {
