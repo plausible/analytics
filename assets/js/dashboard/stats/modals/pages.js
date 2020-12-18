@@ -12,21 +12,33 @@ class PagesModal extends React.Component {
     super(props)
     this.state = {
       loading: true,
-      query: parseQuery(props.location.search, props.site)
+      query: parseQuery(props.location.search, props.site),
+      pages: [],
+      page: 1,
+      moreResultsAvailable: false
     }
   }
 
   componentDidMount() {
-    const include = this.showBounceRate() ? 'bounce_rate' : null
+    this.loadPages();
+  }
 
-    const {filters} = this.state.query
+  loadPages() {
+    const include = this.showBounceRate() ? 'bounce_rate' : null
+    const {query, page, pages} = this.state;
+
+    const {filters} = query
     if (filters.source || filters.referrer) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`, this.state.query, {limit: 100, include: include})
-        .then((res) => this.setState({loading: false, pages: res}))
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`, query, {limit: 100, page, include})
+        .then((res) => this.setState((state) => ({loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100})))
     } else {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, this.state.query, {limit: 100, include: include})
-        .then((res) => this.setState({loading: false, pages: res}))
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, query, {limit: 100, page, include})
+        .then((res) => this.setState((state) => ({loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100})))
     }
+  }
+
+  loadMore() {
+    this.setState({loading: true, page: this.state.page + 1}, this.loadPages.bind(this))
   }
 
   showBounceRate() {
@@ -71,12 +83,22 @@ class PagesModal extends React.Component {
     return (filters.source || filters.referrer) ? 'Entry Pages' : 'Top Pages'
   }
 
-  renderBody() {
+  renderLoading() {
     if (this.state.loading) {
+      return <div className="loading my-16 mx-auto"><div></div></div>
+    } else if (this.state.moreResultsAvailable) {
       return (
-        <div className="loading mt-32 mx-auto"><div></div></div>
+        <div className="w-full text-center my-4">
+          <button onClick={this.loadMore.bind(this)} type="button" className="button">
+            Load more
+          </button>
+        </div>
       )
-    } else if (this.state.pages) {
+    }
+  }
+
+  renderBody() {
+    if (this.state.pages) {
       return (
         <React.Fragment>
           <h1 className="text-xl font-bold dark:text-gray-100">{this.title()}</h1>
@@ -106,6 +128,7 @@ class PagesModal extends React.Component {
     return (
       <Modal site={this.props.site}>
         { this.renderBody() }
+        { this.renderLoading() }
       </Modal>
     )
   }
