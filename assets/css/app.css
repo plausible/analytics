@@ -269,18 +269,13 @@ blockquote {
 }
 
 .fullwidth-shadow::before {
+  @apply h-full absolute top-0 bg-gray-50 w-screen dark:bg-gray-850;
   box-shadow: 0 4px 2px -2px rgba(0, 0, 0, 0.06);
-  content: " ";
-  height: 100%;
-  position: absolute;
-  top: 0;
-  width: 100vw;
-  background-color: rgb(249, 250, 251);
+  content: "";
   z-index: -1;
   left: calc(-1 * calc(50vw - 50%));
 }
 
 .dark .fullwidth-shadow::before {
   box-shadow: 0 4px 2px -2px rgba(200, 200, 200, 0.1);
-  background-color: rgb(26, 32, 44);
 }
