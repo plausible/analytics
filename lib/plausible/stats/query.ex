@@ -6,36 +6,6 @@ defmodule Plausible.Stats.Query do
     Map.put(query, :date_range, Date.range(new_date, new_date))
   end
 
-  # def shift_back(%__MODULE__{period: "day"} = query, site) do
-  #   # IO.inspect(interval)
-  #   IO.puts("running day")
-  #   diff = Timex.diff(Timex.beginning_of_day(Timex.now(site.timezone)), Timex.now(site.timezone), :minute)
-  #   IO.puts(diff)
-  #   new_first = Timex.to_datetime(query.date_range.first) |> Timex.shift(minutes: diff)
-  #   # IO.puts(Timex.to_date(Timex.now(site.timezone)))
-  #   IO.inspect(Timex.now(site.timezone))
-  #   IO.inspect(Timex.to_datetime(query.date_range.last |> Timex.shift(days: 1)))
-  #   IO.puts(query.date_range.last)
-  #   new_last = if Timex.compare(Timex.now(site.timezone), Timex.to_datetime(query.date_range.last |> Timex.shift(days: 1))) >= 0 do
-  #     IO.puts("doing +1")
-  #     Timex.to_datetime(query.date_range.last) |> Timex.shift(days: 1) |> Timex.shift(minutes: diff)
-  #   else
-  #     Timex.now(site.timezone) |> Timex.shift(minutes: diff)
-  #   end
-
-  #   IO.puts("prev query times")
-  #   IO.puts(new_first)
-  #   IO.puts(new_last)
-  #   interval = Timex.Interval.new(from: new_first, until: new_last)
-  #   IO.inspect(interval)
-
-  #   date_range = %{}
-  #   date_range = Map.put(date_range, :first, Timex.to_naive_datetime(new_first))
-  #   date_range = Map.put(date_range, :last, Timex.to_naive_datetime(new_last))
-
-  #   Map.put(query, :date_range, date_range)
-  # end
-
   def shift_back(%__MODULE__{period: "month"} = query, site) do
     {new_first, new_last} = if Timex.compare(Timex.now(site.timezone), query.date_range.last, :day) <= 0 && Timex.compare(Timex.now(site.timezone), query.date_range.first, :day) >= 0 do # if the current day is within the original query
       diff = Timex.diff(Timex.beginning_of_month(Timex.now(site.timezone)), Timex.now(site.timezone), :days) - 1

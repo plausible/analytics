@@ -74,9 +74,6 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp fetch_top_stats(site, query) do
     prev_query = Query.shift_back(query, site)
-    IO.puts("QUERIES")
-    IO.inspect(query)
-    IO.inspect(prev_query)
     {pageviews, visitors} = Stats.pageviews_and_visitors(site, query)
     {prev_pageviews, prev_visitors} = Stats.pageviews_and_visitors(site, prev_query)
     bounce_rate = Stats.bounce_rate(site, query)
