@@ -46,6 +46,8 @@ export function parseQuery(querystring, site) {
 function generateQueryString(data) {
   const query = new URLSearchParams(window.location.search)
   query.delete("date");
+  query.delete("from");
+  query.delete("to");
   Object.keys(data).forEach(key => {
     if (!data[key]) {
       query.delete(key)

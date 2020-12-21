@@ -30,6 +30,8 @@ All notable changes to this project will be documented in this file.
 - Fix URL decoding in query parameters plausible/analytics#416
 - Fix overly-sticky date in query parameters plausible/analytics/#439
 - Prevent picking dates before site insertion plausible/analtics#446
+- Fix overly-sticky from and to in query parameters plausible/analytics#495
+- Adds support for single-day date selection plausible/analytics#495
 
 ### Security
 - Do not run the plausible Docker container as root plausible/analytics#362
