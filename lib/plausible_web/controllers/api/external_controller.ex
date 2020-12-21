@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalController do
   use PlausibleWeb, :controller
-  use Appsignal.Instrumentation.Decorators
   require Logger
 
   def event(conn, _params) do
@@ -55,7 +54,6 @@ defmodule PlausibleWeb.Api.ExternalController do
     })
   end
 
-  @decorate transaction_event("phoenix_controller")
   defp parse_user_agent(conn) do
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
     user_agent && UAInspector.parse(user_agent)
@@ -162,7 +160,6 @@ defmodule PlausibleWeb.Api.ExternalController do
 
 
 
-  @decorate transaction_event("phoenix_controller")
   defp parse_referrer(_, nil), do: nil
   defp parse_referrer(uri, referrer_str) do
     referrer_uri = URI.parse(referrer_str)
