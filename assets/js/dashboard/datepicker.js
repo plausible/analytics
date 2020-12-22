@@ -223,16 +223,29 @@ class DatePicker extends React.Component {
   setCustomDate(dates) {
     if (dates.length === 2) {
       const [from, to] = dates
-      navigateToQuery(
-        this.props.history,
-        this.props.query,
-        {
-          period: 'custom',
-          date: false,
-          from: formatISO(from),
-          to: formatISO(to),
-        }
-      )
+      if (formatISO(from) === formatISO(to)) {
+        navigateToQuery(
+          this.props.history,
+          this.props.query,
+          {
+            period: 'day',
+            date: formatISO(from),
+            from: false,
+            to: false,
+          }
+        )
+      } else {
+        navigateToQuery(
+          this.props.history,
+          this.props.query,
+          {
+            period: 'custom',
+            date: false,
+            from: formatISO(from),
+            to: formatISO(to),
+          }
+        )
+      }
       this.close()
     }
   }
