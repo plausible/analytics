@@ -16,7 +16,7 @@ function compilefile(input, output, templateVars = {}) {
 }
 
 compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.js'))
-compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.exlcusions.js'), {exclusionMode: true})
+compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.exclusions.js'), {exclusionMode: true})
 compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.hash.js'), {hashMode: true})
 compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.hash.exclusions.js'), {hashMode: true, exclusionMode: true})
 compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.outbound-links.js'), {outboundLinks: true})
