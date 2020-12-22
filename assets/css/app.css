@@ -29,7 +29,8 @@ html {
 
 body {
 	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 blockquote {
@@ -265,4 +266,16 @@ blockquote {
 /* Only because the map handler doesn't expose an easier way to change the shadow color */
 .dark .hoverinfo {
   box-shadow: 1px 1px 5px rgb(26, 32, 44);
+}
+
+.fullwidth-shadow::before {
+  @apply h-full absolute top-0 bg-gray-50 w-screen dark:bg-gray-850;
+  box-shadow: 0 4px 2px -2px rgba(0, 0, 0, 0.06);
+  content: "";
+  z-index: -1;
+  left: calc(-1 * calc(50vw - 50%));
+}
+
+.dark .fullwidth-shadow::before {
+  box-shadow: 0 4px 2px -2px rgba(200, 200, 200, 0.1);
 }

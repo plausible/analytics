@@ -45,7 +45,7 @@
 
     <%= if PlausibleWeb.Captcha.enabled?() do %>
       <div class="mt-4">
-        <div class="h-captcha"></div>
+        <div class="h-captcha" data-sitekey="<%= PlausibleWeb.Captcha.sitekey() %>"></div>
         <%= if assigns[:captcha_error] do %>
           <div class="text-red-500 text-xs italic mt-3"><%= @captcha_error %></div>
         <% end %>

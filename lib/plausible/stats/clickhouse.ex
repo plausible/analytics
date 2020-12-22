@@ -166,6 +166,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def unique_visitors(site, query) do
+    query = if query.period == "realtime", do: %Query{query | period: "30m"}, else: query
     ClickhouseRepo.one(
       from e in base_query_w_sessions(site, query),
         select: fragment("uniq(user_id)")
