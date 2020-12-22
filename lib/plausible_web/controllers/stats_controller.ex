@@ -109,7 +109,7 @@ defmodule PlausibleWeb.StatsController do
     |> put_session(shared_link_key, %{
       valid_until: Timex.now() |> Timex.shift(hours: 1) |> DateTime.to_unix()
     })
-    |> redirect(to: "/#{shared_link.site.domain}")
+    |> redirect(to: "/#{URI.encode_www_form(shared_link.site.domain)}")
   end
 
   defp remove_email_report_banner(conn, site) do
