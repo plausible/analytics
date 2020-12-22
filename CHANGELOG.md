@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - Improve settings UX and design plausible/analytics#412
 - Improve site listing UX and design plausible/analytics#438
 - Improve onboarding UX and design plausible/analytics#441
+- Allows outbound link tracking script to use new tab redirection plausible/analytics#494
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370
