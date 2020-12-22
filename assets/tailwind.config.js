@@ -25,6 +25,9 @@ module.exports = {
       },
       opacity: {
         '15': '0.15',
+      },
+      zIndex: {
+        '9': 9,
       }
     },
   },

@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Simple notifications around traffic spikes plausible/analytics#453
 - Dark theme option/system setting follow plausible/analytics#467
 - "Load More" capability to pages modal plausible/analytics#480
+- Pinned filter and date selector rows while scrolling plausible/analytics#472
 
 ### Changed
 - Use alpine as base image to decrease Docker image size plausible/analytics#353
