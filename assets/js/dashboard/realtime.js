@@ -10,8 +10,9 @@ import Pages from './stats/pages'
 import Countries from './stats/countries'
 import Devices from './stats/devices'
 import Conversions from './stats/conversions'
+import { withPinnedHeader } from './pinned-header-hoc';
 
-export default class Stats extends React.Component {
+class Realtime extends React.Component {
   renderConversions() {
     if (this.props.site.hasGoals) {
       return (
@@ -25,13 +26,16 @@ export default class Stats extends React.Component {
   render() {
     return (
       <div className="mb-12">
-        <div className="w-full sm:flex justify-between items-center">
-          <div className="w-full flex items-center">
-            <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} />
+        <div id="stats-container-top"></div>
+        <div className={`sticky top-0 bg-gray-50 dark:bg-gray-850 py-3 z-9 ${this.props.stuck ? 'z-10 fullwidth-shadow' : ''}`}>
+          <div className="w-full sm:flex justify-between items-center">
+            <div className="w-full flex items-center">
+              <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} />
+            </div>
+            <Datepicker site={this.props.site} query={this.props.query} />
           </div>
-          <Datepicker site={this.props.site} query={this.props.query} />
+          <Filters query={this.props.query} history={this.props.history} />
         </div>
-        <Filters query={this.props.query} history={this.props.history} />
         <VisitorGraph site={this.props.site} query={this.props.query} timer={this.props.timer} />
         <div className="w-full block md:flex items-start justify-between">
           <Sources site={this.props.site} query={this.props.query} timer={this.props.timer} />
@@ -47,3 +51,5 @@ export default class Stats extends React.Component {
     )
   }
 }
+
+export default withPinnedHeader(Realtime, 'realtime');
