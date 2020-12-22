@@ -56,23 +56,33 @@
   }
 
   {{#if outboundLinks}}
-  function registerOutboundLinkEvents() {
-    document.addEventListener('click', function (event) {
-      var link = event.target;
+  function handleOutbound(event) {
+    var link = event.target;
+    var middle = event.type == "auxclick" && event.which == 2;
+    var click = event.type == "click";
       while(link && (typeof link.tagName == 'undefined' || link.tagName.toLowerCase() != 'a' || !link.href)) {
         link = link.parentNode
       }
 
       if (link && link.href && link.host && link.host !== location.host) {
+        if (middle || click)
         plausible('Outbound Link: Click', {props: {url: link.href}})
 
         // Delay navigation so that Plausible is notified of the click
         if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
-          setTimeout(function() { location.href = link.href; }, 150);
-          event.preventDefault();
+          if (!(event.ctrlKey || event.metaKey || event.shiftKey) && click) {
+            setTimeout(function() {
+              location.href = link.href;
+            }, 150);
+            event.preventDefault();
+          }
         }
       }
-    })
+  }
+
+  function registerOutboundLinkEvents() {
+    document.addEventListener('click', handleOutbound)
+    document.addEventListener('auxclick', handleOutbound)
   }
   {{/if}}
 

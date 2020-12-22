@@ -156,6 +156,7 @@ case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
     config :plausible, Plausible.Mailer,
       adapter: :"Elixir.#{mailer_adapter}",
+      request_options: [recv_timeout: 10_000],
       api_key: System.get_env("POSTMARK_API_KEY")
 
   "Bamboo.SMTPAdapter" ->
