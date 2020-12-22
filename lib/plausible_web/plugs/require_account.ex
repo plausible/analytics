@@ -14,7 +14,7 @@ defmodule PlausibleWeb.RequireAccountPlug do
         |> Phoenix.Controller.redirect(to: "/login")
         |> halt
 
-      not user.email_verified ->
+      not user.email_verified and conn.path_info != ["activate"] ->
         conn
         |> Phoenix.Controller.redirect(to: "/activate")
         |> halt
