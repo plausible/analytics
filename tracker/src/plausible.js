@@ -70,10 +70,9 @@
 
         // Delay navigation so that Plausible is notified of the click
         if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
-          if (middle || event.ctrlKey || event.metaKey || event.shiftKey) window.open(link.href)
-          else {
+          if (!(event.ctrlKey || event.metaKey || event.shiftKey) && click) {
             setTimeout(function() {
-              if (click) location.href = link.href;
+              location.href = link.href;
             }, 150);
             event.preventDefault();
           }
