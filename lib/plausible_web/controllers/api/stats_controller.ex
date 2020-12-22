@@ -29,6 +29,10 @@ defmodule PlausibleWeb.Api.StatsController do
         count: Stats.current_visitors(site, query)
       },
       %{
+        name: "Unique visitors (last 30 min)",
+        count: Stats.unique_visitors(site, query)
+      },
+      %{
         name: "Pageviews (last 30 min)",
         count: Stats.total_pageviews(site, query)
       }
