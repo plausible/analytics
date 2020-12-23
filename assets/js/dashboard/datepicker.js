@@ -2,7 +2,7 @@ import React from 'react';
 import Transition from "../transition.js";
 import { withRouter, Link } from 'react-router-dom'
 import Flatpickr from "react-flatpickr";
-import {shiftDays, shiftMonths, formatDay, formatDayShort, formatMonthYYYY, formatISO, isToday, lastMonth, nowForSite, isSameMonth} from './date'
+import {shiftDays, shiftMonths, formatDay, formatDayShort, formatMonthYYYY, formatISO, isToday, lastMonth, nowForSite, isSameMonth, isThisMonth} from './date'
 import { navigateToQuery, QueryLink } from './query.js'
 
 
@@ -87,7 +87,11 @@ class DatePicker extends React.Component {
     } else if (query.period === '30d') {
       return 'Last 30 days'
     } else if (query.period === 'month') {
-      return formatMonthYYYY(query.date)
+      if (isThisMonth(site, query.date)) {
+        return 'Month to Date'
+      } else {
+        return formatMonthYYYY(query.date)
+      }
     } else if (query.period === '6mo') {
       return 'Last 6 months'
     } else if (query.period === '12mo') {
@@ -198,7 +202,7 @@ class DatePicker extends React.Component {
             </div>
             <div className="border-t border-gray-200 dark:border-gray-500"></div>
             <div className="py-1">
-              { this.renderLink('month', 'This month') }
+              { this.renderLink('month', 'Month to Date') }
               { this.renderLink('month', 'Last month', {date: lastMonth(this.props.site)}) }
             </div>
             <div className="border-t border-gray-200 dark:border-gray-500"></div>
