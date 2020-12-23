@@ -5,7 +5,7 @@ defmodule Plausible.Stats.Clickhouse do
   @no_ref "Direct / None"
 
   def compare_pageviews_and_visitors(site, query, {pageviews, visitors}) do
-    query = Query.shift_back(query)
+    query = Query.shift_back(query, site)
     {old_pageviews, old_visitors} = pageviews_and_visitors(site, query)
 
     cond do

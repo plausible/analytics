@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp fetch_top_stats(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
     total_filter = Map.merge(query.filters, %{"goal" => nil, "props" => nil})
-    prev_query = Query.shift_back(query)
+    prev_query = Query.shift_back(query, site)
     unique_visitors = Stats.unique_visitors(site, %{query | filters: total_filter})
     prev_unique_visitors = Stats.unique_visitors(site, %{prev_query | filters: total_filter})
     converted_visitors = Stats.unique_visitors(site, query)

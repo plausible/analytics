@@ -53,7 +53,7 @@ defmodule Plausible.Workers.SendEmailReport do
       Stats.compare_pageviews_and_visitors(site, query, {pageviews, unique_visitors})
 
     bounce_rate = Stats.bounce_rate(site, query)
-    prev_bounce_rate = Stats.bounce_rate(site, Query.shift_back(query))
+    prev_bounce_rate = Stats.bounce_rate(site, Query.shift_back(query, site))
     change_bounce_rate = if prev_bounce_rate > 0, do: bounce_rate - prev_bounce_rate
     referrers = Stats.top_sources(site, query, 5, 1, [])
     pages = Stats.top_pages(site, query, 5, 1, [])
