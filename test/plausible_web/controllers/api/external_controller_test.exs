@@ -524,6 +524,25 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert pageview.utm_source == "%balle%"
   end
 
+  test "can use double quotes in query params", %{conn: conn} do
+    q = URI.encode_query(%{"utm_source" => "Something \"quoted\""})
+
+    params = %{
+      n: "pageview",
+      u: "https://test.com/?" <> q,
+      d: "quote-encode-test.com",
+      h: 1
+    }
+
+    conn
+    |> put_req_header("content-type", "text/plain")
+    |> post("/api/event", Jason.encode!(params))
+
+    pageview = get_event("quote-encode-test.com")
+
+    assert pageview.utm_source == "Something \"quoted\""
+  end
+
   test "responds 400 when required fields are missing", %{conn: conn} do
     params = %{}
 
