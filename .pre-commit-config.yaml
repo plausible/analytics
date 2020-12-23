@@ -1,0 +1,28 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: "v2.2.1"
+    hooks:
+      - id: prettier
+        files: "assets/js|assets/css"
+        args: [--config, assets/.prettierrc.json]
+  - repo: https://github.com/awebdeveloper/pre-commit-stylelint
+    rev: 'f792d6b'
+    hooks:
+    -   id: stylelint
+        additional_dependencies:
+          - stylelint@13.2.1
+          - stylelint-config-standard@20.0.0
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: 'v7.15.0'
+    hooks:
+      - id: eslint
+        files: "assets/js"
+        additional_dependencies:
+          - eslint@7.2.0
+          - eslint-config-airbnb@18.2.0
+          - eslint-plugin-import@2.22.1
+          - eslint-plugin-jsx-a11y@6.4.1
+          - eslint-plugin-react@7.21.5
+          - eslint-plugin-react-hooks@4.2.0
