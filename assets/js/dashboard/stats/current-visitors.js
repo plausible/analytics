@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
+import { countFilters } from '../query';
 
 export default class CurrentVisitors extends React.Component {
   constructor(props) {
@@ -22,6 +23,8 @@ export default class CurrentVisitors extends React.Component {
   }
 
   render() {
+    if (countFilters(this.props.query) !== 0) { return null }
+
     const { currentVisitors } = this.state;
     if (currentVisitors !== null) {
       return (

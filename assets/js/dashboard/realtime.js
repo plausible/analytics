@@ -31,10 +31,10 @@ class Realtime extends React.Component {
           <div className="w-full sm:flex justify-between items-center">
             <div className="w-full flex items-center">
               <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} />
+              <Filters query={this.props.query} history={this.props.history} />
             </div>
             <Datepicker site={this.props.site} query={this.props.query} />
           </div>
-          <Filters query={this.props.query} history={this.props.history} />
         </div>
         <VisitorGraph site={this.props.site} query={this.props.query} timer={this.props.timer} />
         <div className="w-full block md:flex items-start justify-between">
