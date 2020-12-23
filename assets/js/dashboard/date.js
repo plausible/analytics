@@ -67,3 +67,7 @@ export function isSameMonth(date1, date2) {
 export function isToday(site, date) {
   return formatISO(date) === formatISO(nowForSite(site))
 }
+
+export function isThisMonth(site, date) {
+  return formatMonthYYYY(date) === formatMonthYYYY(nowForSite(site))
+}

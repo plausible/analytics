@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - Improve site listing UX and design plausible/analytics#438
 - Improve onboarding UX and design plausible/analytics#441
 - Allows outbound link tracking script to use new tab redirection plausible/analytics#494
+- "This Month" view is now Month-to-date for the current month plausible/analytics#491
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370
