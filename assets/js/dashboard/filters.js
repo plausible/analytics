@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { withRouter } from 'react-router-dom'
 import {countFilters, navigateToQuery, removeQueryParam} from './query'
 import Datamap from 'datamaps'
@@ -82,11 +82,11 @@ function renderFilter(history, [key, value], query, wrapped) {
 }
 
 function Filters({query, history, location}) {
-  const [open, setOpen] = useState(false)
-  const [wrapped, setWrapped] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [wrapped, setWrapped] = useState(false);
+  const [recheck, setRecheck] = useState(false);
   const screenClass = useScreenClass();
-  let dropDownNode
-  const filterHash = Object.values(query.filters).join(' ');
+  let dropDownNode;
   const appliedFilters = Object.keys(query.filters)
     .map((key) => [key, query.filters[key]])
     .filter(([key, value]) => !!value)
@@ -99,10 +99,14 @@ function Filters({query, history, location}) {
   }, [])
 
   const rewrapFilters = () => {
+    // console.log('attempting');
+    if (wrapped) { return };
+    // console.log('rewrapping');
     let currItem, prevItem, items = document.getElementById('filters_row');
-    if (!items) { return }
-    if (wrapped) { setWrapped(false) }
-    if (appliedFilters.length === 1) { return }
+    if (!items) { return };
+
+    if (appliedFilters.length === 1) { return };
+    // console.log('checking');
 
     [...(items.childNodes)].forEach(item => {
       currItem = item.getBoundingClientRect();
@@ -113,9 +117,15 @@ function Filters({query, history, location}) {
     });
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    setWrapped(false);
+    setRecheck(true);
+  }, [JSON.stringify(query), screenClass]);
+
+  useLayoutEffect(() => {
+    setRecheck(false);
     rewrapFilters();
-  }, [filterHash, screenClass])
+  }, [wrapped, recheck]);
 
   const handleClick = (e) => {
     if (dropDownNode && dropDownNode.contains(e.target)) return;
