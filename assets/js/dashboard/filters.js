@@ -86,6 +86,7 @@ function Filters({query, history, location}) {
   const [wrapped, setWrapped] = useState(false)
   const screenClass = useScreenClass();
   let dropDownNode
+  const filterHash = Object.values(query.filters).join(' ');
   const appliedFilters = Object.keys(query.filters)
     .map((key) => [key, query.filters[key]])
     .filter(([key, value]) => !!value)
@@ -97,26 +98,24 @@ function Filters({query, history, location}) {
     }
   }, [])
 
+  const rewrapFilters = () => {
+    let currItem, prevItem, items = document.getElementById('filters_row');
+    if (!items) { return }
+    if (wrapped) { setWrapped(false) }
+    if (appliedFilters.length === 1) { return }
+
+    [...(items.childNodes)].forEach(item => {
+      currItem = item.getBoundingClientRect();
+      if (prevItem && prevItem.top < currItem.top) {
+        setWrapped(true);
+      }
+      prevItem = currItem;
+    });
+  };
+
   useEffect(() => {
-    const rewrapFilters = () => {
-      let currItem, prevItem, items = document.getElementById('filters_row');
-      if (!items) { return };
-
-      setWrapped(false);
-      [...(items.childNodes)].forEach(item => {
-        currItem = item.getBoundingClientRect();
-        if (prevItem && prevItem.top < currItem.top) {
-          setWrapped(true);
-        }
-        prevItem = currItem;
-      });
-    };
-
     rewrapFilters();
-
-    window.addEventListener('resize', rewrapFilters);
-    return () => {window.removeEventListener('resize', rewrapFilters); }
-  }, [appliedFilters.length])
+  }, [filterHash, screenClass])
 
   const handleClick = (e) => {
     if (dropDownNode && dropDownNode.contains(e.target)) return;
@@ -153,6 +152,15 @@ function Filters({query, history, location}) {
     )
   }
 
+  const clearFilters = () => {
+    const newOpts = Object.keys(query.filters).reduce((acc, red) => ({...acc, [red]: false}), {});
+    navigateToQuery(
+      history,
+      query,
+      newOpts
+    );
+  }
+
   const renderDropDownContent = (wrapped) => {
     return (
       <div className="absolute mt-2 rounded shadow-md z-10" style={{width: '235px', right: '-14px'}} ref={node => dropDownNode = node}>
@@ -160,7 +168,7 @@ function Filters({query, history, location}) {
           { appliedFilters.map((filter) => renderFilter(history, filter, query, wrapped)) }
 
           <div className="border-t border-gray-200 dark:border-gray-500" />
-          <div className="px-4 py-2 text-sm leading-tight hover:text-indigo-500 hover:cursor-pointer">
+          <div className="px-4 py-2 text-sm leading-tight hover:text-indigo-500 hover:cursor-pointer" onClick={clearFilters}>
             Clear All Filters
           </div>
         </div>

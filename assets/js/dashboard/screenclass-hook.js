@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 const configuration = {
-  breakpoints: [640, 768, 1024, 1280, 1536],
+  breakpoints: [768, 1024, 1280, 1536],
   defaultScreenClass: '2xl',
   maxScreenClass: '2xl',
 };
