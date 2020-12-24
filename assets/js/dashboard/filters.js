@@ -7,52 +7,52 @@ import { useScreenClass } from './screenclass-hook';
 
 const filterText = (key, value, query) => {
   if (key === "goal") {
-    return <span className="inline-block max-w-2xs truncate">Completed goal <b>{value}</b></span>
+    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Completed goal <b>{value}</b></span>
   }
   if (key === "props") {
     const [metaKey, metaValue] = Object.entries(value)[0]
     const eventName = query.filters["goal"] ? query.filters["goal"] : 'event'
-    return <span className="inline-block max-w-2xs truncate">{eventName}.{metaKey} is <b>{metaValue}</b></span>
+    return <span className="inline-block max-w-2xs md:max-w-xs truncate">{eventName}.{metaKey} is <b>{metaValue}</b></span>
   }
   if (key === "source") {
-    return <span className="inline-block max-w-2xs truncate">Source: <b>{value}</b></span>
+    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Source: <b>{value}</b></span>
   }
   if (key === "utm_medium") {
-    return <span className="inline-block max-w-2xs truncate">UTM medium: <b>{value}</b></span>
+    return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM medium: <b>{value}</b></span>
   }
   if (key === "utm_source") {
-    return <span className="inline-block max-w-2xs truncate">UTM source: <b>{value}</b></span>
+    return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM source: <b>{value}</b></span>
   }
   if (key === "utm_campaign") {
-    return <span className="inline-block max-w-2xs truncate">UTM campaign: <b>{value}</b></span>
+    return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM campaign: <b>{value}</b></span>
   }
   if (key === "referrer") {
-    return <span className="inline-block max-w-2xs truncate">Referrer: <b>{value}</b></span>
+    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Referrer: <b>{value}</b></span>
   }
   if (key === "screen") {
-    return <span className="inline-block max-w-2xs truncate">Screen size: <b>{value}</b></span>
+    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Screen size: <b>{value}</b></span>
   }
   if (key === "browser") {
-    return <span className="inline-block max-w-2xs truncate">Browser: <b>{value}</b></span>
+    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Browser: <b>{value}</b></span>
   }
   if (key === "browser_version") {
     const browserName = query.filters["browser"] ? query.filters["browser"] : 'Browser'
-    return <span className="inline-block max-w-2xs truncate">{browserName}.Version: <b>{value}</b></span>
+    return <span className="inline-block max-w-2xs md:max-w-xs truncate">{browserName}.Version: <b>{value}</b></span>
   }
   if (key === "os") {
-    return <span className="inline-block max-w-2xs truncate">Operating System: <b>{value}</b></span>
+    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Operating System: <b>{value}</b></span>
   }
   if (key === "os_version") {
     const osName = query.filters["os"] ? query.filters["os"] : 'OS'
-    return <span className="inline-block max-w-2xs truncate">{osName}.Version: <b>{value}</b></span>
+    return <span className="inline-block max-w-2xs md:max-w-xs truncate">{osName}.Version: <b>{value}</b></span>
   }
   if (key === "country") {
     const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
     const selectedCountry = allCountries.find((c) => c.id === value)
-    return <span className="inline-block max-w-2xs truncate">Country: <b>{selectedCountry.properties.name}</b></span>
+    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Country: <b>{selectedCountry.properties.name}</b></span>
   }
   if (key === "page") {
-    return <span className="inline-block max-w-2xs truncate">Page: <b>{value}</b></span>
+    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Page: <b>{value}</b></span>
   }
 }
 
@@ -70,9 +70,9 @@ const removeFilter = (key, history, query) => {
 
 const renderDropdownFilter = (history, [key, value], query) => {
   return (
-    <div className="px-4 py-2 text-sm leading-tight flex items-center justify-between" key={key + value}>
+    <div className="px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between" key={key + value}>
       {filterText(key, value, query)}
-      <b className="ml-1 cursor-pointer hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>✕</b>
+      <b className="ml-1 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>✕</b>
     </div>
   )
 }
@@ -120,7 +120,7 @@ const Filters = ({ query, history, location }) => {
 
   // Checks if the filter container is wrapping items
   const rewrapFilters = () => {
-    let currItem, prevItem, items = document.getElementById('filters_row');
+    let currItem, prevItem, items = document.getElementById('filters');
 
     if (wrapped) { return }; // Don't rewrap if we're already wrapped
     if (!items) { return }; // Don't rewrap if there are no filters
@@ -150,11 +150,10 @@ const Filters = ({ query, history, location }) => {
 
   const renderDropDownContent = () => {
     return (
-      <div className="absolute mt-2 rounded shadow-md z-10" style={{ width: '235px', right: '-14px' }} ref={node => dropDownNode = node}>
+      <div className="absolute mt-2 rounded shadow-md z-10" style={{ width: screenClass === 'sm' ? '320px' : '350px', right: '-5px' }} ref={node => dropDownNode = node}>
         <div className="rounded bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 font-medium text-gray-800 dark:text-gray-200 flex flex-col">
           {appliedFilters.map((filter) => renderDropdownFilter(history, filter, query))}
-          <div className="border-t border-gray-200 dark:border-gray-500" />
-          <div className="px-4 py-2 text-sm leading-tight hover:text-indigo-500 hover:cursor-pointer" onClick={() => clearAllFilters(history, query)}>
+          <div className="border-t border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 md:text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => clearAllFilters(history, query)}>
             Clear All Filters
           </div>
         </div>
@@ -164,10 +163,10 @@ const Filters = ({ query, history, location }) => {
 
   const renderDropDown = () => {
     return (
-      <div id="filters_row">
-        <div className="relative" style={{ height: '35.5px', width: '160px' }}>
+      <div id="filters" className='ml-auto'>
+        <div className="relative" style={{ height: '35.5px', width: '100px' }}>
           <div onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800 dark:text-gray-200 h-full">
-            <span className="mr-2">Active Filters</span>
+            <span className="mr-2">Filters</span>
             <svg className="text-pink-500 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
@@ -190,7 +189,7 @@ const Filters = ({ query, history, location }) => {
 
   const renderFilterList = () => {
     return (
-      <div id="filters_row">
+      <div id="filters">
         {(appliedFilters.map((filter) => renderListFilter(history, filter, query)))}
       </div>
     );
