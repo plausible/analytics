@@ -1,3 +1,17 @@
+.flatpickr-calendar:before,.flatpickr-calendar:after {
+  right: 22px !important;
+}
+
+.flatpickr-wrapper {
+  right: 35% !important;
+}
+
+@media (max-width: 768px) {
+  .flatpickr-wrapper {
+    right: 50% !important;
+  }
+}
+
 /* Because Flatpickr offers zero support for dynamic theming on its own (outside of third-party plugins) */
 .dark .flatpickr-calendar {
   background-color: #1f2937;
@@ -21,6 +35,18 @@
 
 .dark .numInputWrapper {
   color: #f3f4f6;
+}
+
+.dark .numInput[disabled] {
+  color: #9ca3af !important;
+}
+
+.dark .flatpickr-current-month .numInputWrapper span.arrowUp::after {
+  border-bottom-color: #f3f4f6 !important;
+}
+
+.dark .flatpickr-current-month .numInputWrapper span.arrowDown::after {
+  border-top-color: #f3f4f6 !important;
 }
 
 .dark .flatpickr-day.prevMonthDay {
