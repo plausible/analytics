@@ -176,7 +176,7 @@ class DatePicker extends React.Component {
     if (opts.date) { opts.date = formatISO(opts.date) }
 
     return (
-      <QueryLink to={{period, ...opts}} onClick={this.close.bind(this)} query={this.props.query} className={boldClass + ' block px-4 py-2 md:text-sm leading-tight hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100'}>
+      <QueryLink to={{from: false, to: false, date: false, period, ...opts}} onClick={this.close.bind(this)} query={this.props.query} className={boldClass + ' block px-4 py-2 md:text-sm leading-tight hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100'}>
         {text}
       </QueryLink>
     )
