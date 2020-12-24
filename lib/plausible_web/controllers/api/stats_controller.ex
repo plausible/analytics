@@ -122,6 +122,9 @@ defmodule PlausibleWeb.Api.StatsController do
       old_count == 0 and new_count == 0 ->
         0
 
+      old_count - new_count == 0 ->
+        0
+
       true ->
         round((new_count - old_count) / old_count * 100)
     end
