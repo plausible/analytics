@@ -90,9 +90,9 @@ defmodule PlausibleWeb.AuthController do
 
   def request_activation_code(conn, _params) do
     user = conn.assigns[:current_user]
-    pin = Auth.issue_email_verification(user)
+    code = Auth.issue_email_verification(user)
 
-    email_template = PlausibleWeb.Email.activation_email(user, pin)
+    email_template = PlausibleWeb.Email.activation_email(user, code)
     Plausible.Mailer.send_email(email_template)
 
     conn
