@@ -11,6 +11,13 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert html_response(conn, 200) =~ "stats-react-container"
     end
 
+    test "public site - shows waiting for first pageview", %{conn: conn} do
+      insert(:site, domain: "some-other-public-site.io", public: true)
+
+      conn = get(conn, "/some-other-public-site.io")
+      assert html_response(conn, 200) =~ "Need to see the snippet again?"
+    end
+
     test "can not view stats of a private website", %{conn: conn} do
       conn = get(conn, "/test-site.com")
       assert html_response(conn, 404) =~ "There&#39;s nothing here"
@@ -46,13 +53,17 @@ defmodule PlausibleWeb.StatsControllerTest do
   describe "GET /share/:slug" do
     test "prompts a password for a password-protected link", %{conn: conn} do
       site = insert(:site)
-      link = insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
+
+      link =
+        insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
 
       conn = get(conn, "/share/#{link.slug}")
       assert response(conn, 200) =~ "Enter password"
     end
 
-    test "logs anonymous user in straight away if the link is not password-protected", %{conn: conn} do
+    test "logs anonymous user in straight away if the link is not password-protected", %{
+      conn: conn
+    } do
       site = insert(:site, domain: "test-site.com")
       link = insert(:shared_link, site: site)
 
@@ -62,12 +73,22 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = get(conn, "/#{site.domain}")
       assert html_response(conn, 200) =~ "stats-react-container"
     end
+
+    test "encodes URI when redirecting", %{conn: conn} do
+      site = insert(:site, domain: "test-site.com/wat")
+      link = insert(:shared_link, site: site)
+
+      conn = get(conn, "/share/#{link.slug}")
+      assert redirected_to(conn, 302) == "/test-site.com%2Fwat"
+    end
   end
 
   describe "POST /share/:slug/authenticate" do
     test "logs anonymous user in with correct password", %{conn: conn} do
       site = insert(:site, domain: "test-site.com")
-      link = insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
+
+      link =
+        insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
 
       conn = post(conn, "/share/#{link.slug}/authenticate", %{password: "password"})
       assert redirected_to(conn, 302) == "/#{site.domain}"
@@ -78,7 +99,9 @@ defmodule PlausibleWeb.StatsControllerTest do
 
     test "shows form again with wrong password", %{conn: conn} do
       site = insert(:site, domain: "test-site.com")
-      link = insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
+
+      link =
+        insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
 
       conn = post(conn, "/share/#{link.slug}/authenticate", %{password: "WRONG!"})
       assert html_response(conn, 200) =~ "Enter password"

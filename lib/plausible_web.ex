@@ -38,6 +38,7 @@ defmodule PlausibleWeb do
 
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
+      use Appsignal.Phoenix.View
 
       import PlausibleWeb.ErrorHelpers
       alias PlausibleWeb.Router.Helpers, as: Routes

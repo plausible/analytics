@@ -1,7 +1,6 @@
 defmodule Plausible.Event.WriteBuffer do
   use GenServer
   require Logger
-  alias Plausible.Clickhouse
   @flush_interval_ms 5_000
   @max_buffer_size 10_000
 
@@ -26,7 +25,7 @@ defmodule Plausible.Event.WriteBuffer do
   end
 
   def handle_cast({:insert, event}, %{buffer: buffer} = state) do
-    new_buffer = [ event | buffer ]
+    new_buffer = [event | buffer]
 
     if length(new_buffer) >= @max_buffer_size do
       Logger.info("Buffer full, flushing to disk")
@@ -59,10 +58,13 @@ defmodule Plausible.Event.WriteBuffer do
 
   defp do_flush(buffer) do
     case buffer do
-      [] -> nil
+      [] ->
+        nil
+
       events ->
         Logger.info("Flushing #{length(events)} events")
-        Clickhouse.insert_events(events)
+        events = Enum.map(events, &(Map.from_struct(&1) |> Map.delete(:__meta__)))
+        Plausible.ClickhouseRepo.insert_all(Plausible.ClickhouseEvent, events)
     end
   end
 end

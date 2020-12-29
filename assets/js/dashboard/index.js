@@ -1,63 +1,54 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
 
-import Datepicker from './datepicker'
-import Filters from './filters'
-import CurrentVisitors from './stats/current-visitors'
-import VisitorGraph from './stats/visitor-graph'
-import Referrers from './stats/referrers'
-import Pages from './stats/pages'
-import Countries from './stats/countries'
-import Devices from './stats/devices'
-import Conversions from './stats/conversions'
+import Historical from './historical'
+import Realtime from './realtime'
 import {parseQuery} from './query'
+import * as api from './api'
+import { withThemeProvider } from './theme-provider-hoc';
 
-class Stats extends React.Component {
+const THIRTY_SECONDS = 30000
+
+class Timer {
+  constructor() {
+    this.listeners = []
+    this.intervalId = setInterval(this.dispatchTick.bind(this), THIRTY_SECONDS)
+  }
+
+  onTick(listener) {
+    this.listeners.push(listener)
+  }
+
+  dispatchTick() {
+    for (const listener of this.listeners) {
+      listener()
+    }
+  }
+}
+
+class Dashboard extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {query: parseQuery(props.location.search, this.props.site)}
+    this.state = {
+      query: parseQuery(props.location.search, this.props.site),
+      timer: new Timer()
+    }
   }
 
   componentDidUpdate(prevProps) {
     if (prevProps.location.search !== this.props.location.search) {
+      api.cancelAll()
       this.setState({query: parseQuery(this.props.location.search, this.props.site)})
     }
   }
 
-  renderConversions() {
-    if (this.props.site.hasGoals) {
-      return (
-        <div className="w-full block md:flex items-start justify-between mt-6">
-          <Conversions site={this.props.site} query={this.state.query} />
-        </div>
-      )
-    }
-  }
-
   render() {
-    return (
-      <div className="mb-12">
-        <div className="w-full sm:flex justify-between items-center">
-          <div className="w-full flex items-center">
-            <h2 className="text-left mr-8 font-semibold text-xl">Analytics for <a href={`//${this.props.site.domain}`} target="_blank">{this.props.site.domain}</a></h2>
-            <CurrentVisitors site={this.props.site}  />
-          </div>
-          <Datepicker site={this.props.site} query={this.state.query} />
-        </div>
-        <Filters query={this.state.query} history={this.props.history} />
-        <VisitorGraph site={this.props.site} query={this.state.query} />
-        <div className="w-full block md:flex items-start justify-between">
-          <Referrers site={this.props.site} query={this.state.query} />
-          <Pages site={this.props.site} query={this.state.query} />
-        </div>
-        <div className="w-full block md:flex items-start justify-between">
-          <Countries site={this.props.site} query={this.state.query} />
-          <Devices site={this.props.site} query={this.state.query} />
-        </div>
-        { this.renderConversions() }
-      </div>
-    )
+    if (this.state.query.period === 'realtime') {
+      return <Realtime timer={this.state.timer} site={this.props.site} loggedIn={this.props.loggedIn} query={this.state.query} />
+    } else {
+      return <Historical timer={this.state.timer} site={this.props.site} loggedIn={this.props.loggedIn} query={this.state.query} />
+    }
   }
 }
 
-export default withRouter(Stats)
+export default withRouter(withThemeProvider(Dashboard))

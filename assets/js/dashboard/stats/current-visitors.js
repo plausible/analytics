@@ -1,6 +1,6 @@
 import React from 'react';
-
-const THIRTY_SECONDS = 30000
+import { Link } from 'react-router-dom'
+import { countFilters } from '../query';
 
 export default class CurrentVisitors extends React.Component {
   constructor(props) {
@@ -9,13 +9,8 @@ export default class CurrentVisitors extends React.Component {
   }
 
   componentDidMount() {
-    this.updateCount().then(() => {
-      this.intervalId = setInterval(this.updateCount.bind(this), THIRTY_SECONDS)
-    })
-  }
-
-  componentWillUnMount() {
-    clearInverval(this.intervalId)
+    this.updateCount()
+    this.props.timer.onTick(this.updateCount.bind(this))
   }
 
   updateCount() {
@@ -28,14 +23,17 @@ export default class CurrentVisitors extends React.Component {
   }
 
   render() {
-    if (this.state.currentVisitors !== null) {
+    if (countFilters(this.props.query) !== 0) { return null }
+
+    const { currentVisitors } = this.state;
+    if (currentVisitors !== null) {
       return (
-        <div className="text-sm font-bold text-gray-500 mt-1">
+        <Link to={`/${encodeURIComponent(this.props.site.domain)}?period=realtime`} className="block text-sm font-bold text-gray-500 dark:text-gray-300 mr-auto ml-2">
           <svg className="w-2 mr-2 fill-current text-green-500 inline" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
             <circle cx="8" cy="8" r="8"/>
           </svg>
-          {this.state.currentVisitors} current visitors
-        </div>
+          {currentVisitors} current visitor{currentVisitors === 1 ? '' : 's'}
+        </Link>
       )
     } else {
       return null

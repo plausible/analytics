@@ -1,12 +1,12 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
 import Chart from 'chart.js'
-import FadeIn from '../fade-in'
-import { eventName } from '../query'
-import numberFormatter from '../number-formatter'
+import { eventName, navigateToQuery } from '../query'
+import numberFormatter, {durationFormatter} from '../number-formatter'
 import * as api from '../api'
+import {ThemeContext} from '../theme-context'
 
-function mainSet(plot, present_index, ctx) {
+function buildDataSet(plot, present_index, ctx, label) {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
   gradient.addColorStop(0, 'rgba(101,116,205, 0.2)');
   gradient.addColorStop(1, 'rgba(101,116,205, 0)');
@@ -19,7 +19,7 @@ function mainSet(plot, present_index, ctx) {
     }
 
     return [{
-        label: 'Visitors',
+        label: label,
         data: plot,
         borderWidth: 3,
         borderColor: 'rgba(101,116,205)',
@@ -27,7 +27,7 @@ function mainSet(plot, present_index, ctx) {
         backgroundColor: gradient,
       },
       {
-        label: 'Visitors',
+        label: label,
         data: dashedPlot,
         borderWidth: 3,
         borderDash: [5, 10],
@@ -37,64 +37,13 @@ function mainSet(plot, present_index, ctx) {
     }]
   } else {
     return [{
-      label: 'Visitors',
+      label: label,
       data: plot,
       borderWidth: 3,
       borderColor: 'rgba(101,116,205)',
       pointBackgroundColor: 'rgba(101,116,205)',
       backgroundColor: gradient,
     }]
-  }
-}
-
-function compareSet(plot, present_index, ctx) {
-  var gradient = ctx.createLinearGradient(0, 0, 0, 300);
-  gradient.addColorStop(0, 'rgba(255, 68, 87, .2)');
-  gradient.addColorStop(1, 'rgba(255, 68, 87, 0)');
-
-  if (present_index) {
-    var dashedPart = plot.slice(present_index - 1);
-    var dashedPlot = (new Array(plot.length - dashedPart.length)).concat(dashedPart)
-    for(var i = present_index; i < plot.length; i++) {
-      plot[i] = undefined
-    }
-
-    return [{
-        label: 'Conversions',
-        data: plot,
-        borderWidth: 3,
-        borderColor: 'rgba(255, 68, 87, 1)',
-        pointBackgroundColor: 'rgba(255, 68, 87, 1)',
-        backgroundColor: gradient,
-      },
-      {
-        label: 'Conversions',
-        data: dashedPlot,
-        borderWidth: 3,
-        borderDash: [5, 10],
-        borderColor: 'rgba(255, 68, 87, 1)',
-        pointBackgroundColor: 'rgba(255, 68, 87, 1)',
-        backgroundColor: gradient,
-    }]
-  } else {
-    return [{
-      label: 'Conversions',
-      data: plot,
-      borderWidth: 3,
-      borderColor: 'rgba(255, 68, 87, 1)',
-      pointBackgroundColor: 'rgba(255, 68, 87, 1)',
-      backgroundColor: gradient,
-    }]
-  }
-}
-
-function dataSets(graphData, ctx) {
-  const dataSets = mainSet(graphData.plot, graphData.present_index, ctx)
-
-  if (graphData.compare_plot) {
-    return dataSets.concat(compareSet(graphData.compare_plot, graphData.present_index, ctx))
-  } else {
-    return dataSets
   }
 }
 
@@ -105,34 +54,61 @@ const MONTHS = [
   "November", "December"
 ]
 
-function dateFormatter(graphData) {
-  return function(isoDate) {
-    const date = new Date(isoDate)
+const MONTHS_ABBREV = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+]
 
-    if (graphData.interval === 'month') {
+const DAYS_ABBREV = [
+  "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+]
+
+function dateFormatter(interval, longForm) {
+  return function(isoDate) {
+    let date = new Date(isoDate)
+
+    if (interval === 'month') {
       return MONTHS[date.getUTCMonth()];
-    } else if (graphData.interval === 'date') {
-      return date.getUTCDate() + ' ' + MONTHS[date.getUTCMonth()];
-    } else if (graphData.interval === 'hour') {
+    } else if (interval === 'date') {
+      var day = DAYS_ABBREV[date.getUTCDay()];
+      var date_ = date.getUTCDate();
+      var month = MONTHS_ABBREV[date.getUTCMonth()];
+      return day + ', ' + date_ + ' ' + month;
+    } else if (interval === 'hour') {
+      const parts = isoDate.split(/[^0-9]/);
+      date = new Date(parts[0],parts[1]-1,parts[2],parts[3],parts[4],parts[5])
       var hours = date.getHours(); // Not sure why getUTCHours doesn't work here
       var ampm = hours >= 12 ? 'pm' : 'am';
       hours = hours % 12;
       hours = hours ? hours : 12; // the hour '0' should be '12'
       return hours + ampm;
+    } else if (interval === 'minute') {
+      if (longForm) {
+        const minutesAgo = Math.abs(isoDate)
+        return minutesAgo === 1 ? '1 minute ago' : minutesAgo + ' minutes ago'
+      } else {
+        return isoDate + 'm'
+      }
     }
   }
 }
 
 class LineGraph extends React.Component {
-  componentDidMount() {
-    const {graphData} = this.props
-    const ctx = document.getElementById("main-graph-canvas").getContext('2d');
+  constructor(props) {
+    super(props);
+    this.regenerateChart = this.regenerateChart.bind(this);
+  }
 
-    this.chart = new Chart(ctx, {
+  regenerateChart() {
+    const {graphData} = this.props
+    this.ctx = document.getElementById("main-graph-canvas").getContext('2d');
+    const label = this.props.query.filters.goal ? 'Converted visitors' : graphData.interval === 'minute' ? 'Pageviews' : 'Visitors'
+    const dataSet = buildDataSet(graphData.plot, graphData.present_index, this.ctx, label)
+
+    return new Chart(this.ctx, {
       type: 'line',
       data: {
         labels: graphData.labels,
-        datasets: dataSets(graphData, ctx)
+        datasets: dataSet
       },
       options: {
         animation: false,
@@ -158,7 +134,7 @@ class LineGraph extends React.Component {
           callbacks: {
             title: function(dataPoints) {
               const data = dataPoints[0]
-              return dateFormatter(graphData)(data.xLabel)
+              return dateFormatter(graphData.interval, true)(data.xLabel)
             },
             beforeBody: function() {
               this.drawnLabels = {}
@@ -167,7 +143,8 @@ class LineGraph extends React.Component {
               const dataset = this._data.datasets[item.datasetIndex]
               if (!this.drawnLabels[dataset.label]) {
                 this.drawnLabels[dataset.label] = true
-                return ` ${item.yLabel} ${dataset.label}`
+                const pluralizedLabel = item.yLabel === 1 ? dataset.label.slice(0, -1) : dataset.label
+                return ` ${item.yLabel} ${pluralizedLabel}`
               }
             },
             footer: function(dataPoints) {
@@ -186,6 +163,7 @@ class LineGraph extends React.Component {
               beginAtZero: true,
               autoSkip: true,
               maxTicksLimit: 8,
+              fontColor: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             },
             gridLines: {
               zeroLineColor: 'transparent',
@@ -199,7 +177,8 @@ class LineGraph extends React.Component {
             ticks: {
               autoSkip: true,
               maxTicksLimit: 8,
-              callback: dateFormatter(graphData),
+              callback: dateFormatter(graphData.interval),
+              fontColor: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             }
           }]
         }
@@ -207,18 +186,49 @@ class LineGraph extends React.Component {
     });
   }
 
+  componentDidMount() {
+    this.chart = this.regenerateChart();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.graphData !== prevProps.graphData) {
+      const label = this.props.query.filters.goal ? 'Converted visitors' : this.props.graphData.interval === 'minute' ? 'Pageviews' : 'Visitors'
+      const newDataset = buildDataSet(this.props.graphData.plot, this.props.graphData.present_index, this.ctx, label)
+
+      for (let i = 0; i < newDataset[0].data.length; i++) {
+        this.chart.data.datasets[0].data[i] = newDataset[0].data[i]
+      }
+
+      this.chart.update()
+    }
+
+    if (prevProps.darkTheme !== this.props.darkTheme) {
+      this.chart = this.regenerateChart();
+      this.chart.update();
+    }
+  }
+
   onClick(e) {
-    const query = new URLSearchParams(window.location.search)
     const element = this.chart.getElementsAtEventForMode(e, 'index', {intersect: false})[0]
     const date = element._chart.config.data.labels[element._index]
     if (this.props.graphData.interval === 'month') {
-      query.set('period', 'month')
-      query.set('date', date)
-      this.props.history.push({search: query.toString()})
+      navigateToQuery(
+        this.props.history,
+        this.props.query,
+        {
+          period: 'month',
+          date,
+        }
+      )
     } else if (this.props.graphData.interval === 'date') {
-      query.set('period', 'day')
-      query.set('date', date)
-      this.props.history.push({search: query.toString()})
+      navigateToQuery(
+        this.props.history,
+        this.props.query,
+        {
+          period: 'day',
+          date,
+        }
+      )
     }
   }
 
@@ -227,31 +237,47 @@ class LineGraph extends React.Component {
 
     if (comparison > 0) {
       const color = name === 'Bounce rate' ? 'text-red-400' : 'text-green-500'
-      return <span className="text-xs"><span className={color + ' font-bold'}>&uarr;</span> {formattedComparison}%</span>
+      return <span className="text-xs dark:text-gray-100"><span className={color + ' font-bold'}>&uarr;</span> {formattedComparison}%</span>
     } else if (comparison < 0) {
       const color = name === 'Bounce rate' ? 'text-green-500' : 'text-red-400'
-      return <span className="text-xs"><span className={color + ' font-bold'}>&darr;</span> {formattedComparison}%</span>
+      return <span className="text-xs dark:text-gray-100"><span className={color + ' font-bold'}>&darr;</span> {formattedComparison}%</span>
     } else if (comparison === 0) {
-      return <span className="text-xs text-gray-700">&#12336; N/A</span>
+      return <span className="text-xs text-gray-700 dark:text-gray-300">&#12336; N/A</span>
+    }
+  }
+
+  renderTopStatNumber(stat) {
+    if (stat.name === 'Visit duration') {
+      return durationFormatter(stat.count)
+    } else if (typeof(stat.count) == 'number') {
+      return numberFormatter(stat.count)
+    } else {
+      return stat.percentage + '%'
     }
   }
 
   renderTopStats() {
     const {graphData} = this.props
-    return this.props.graphData.top_stats.map((stat, index) => {
+    const stats = this.props.graphData.top_stats.map((stat, index) => {
       let border = index > 0 ? 'lg:border-l border-gray-300' : ''
       border = index % 2 === 0 ? border + ' border-r lg:border-r-0' : border
 
       return (
         <div className={`px-8 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
-          <div className="text-gray-500 text-xs font-bold tracking-wide uppercase">{stat.name}</div>
+          <div className="text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide uppercase">{stat.name}</div>
           <div className="my-1 flex justify-between items-center">
-            <b className="text-2xl mr-4">{ typeof(stat.count) == 'number' ? numberFormatter(stat.count) : stat.percentage + '%' }</b>
+            <b className="text-2xl mr-4 dark:text-gray-100">{ this.renderTopStatNumber(stat) }</b>
             {this.renderComparison(stat.name, stat.change)}
           </div>
         </div>
       )
     })
+
+    if (graphData.interval === 'minute') {
+      stats.push(<div key="dot" className="block pulsating-circle" style={{left: '125px', top: '52px'}}></div>)
+    }
+
+    return stats
   }
 
   downloadLink() {
@@ -259,9 +285,7 @@ class LineGraph extends React.Component {
 
     return (
       <a href={endpoint} download>
-        <svg className="w-4 h-5 absolute text-gray-700" style={{right: '2rem', top: '-2rem'}}>
-          <use xlinkHref="#feather-download" />
-        </svg>
+        <svg className="feather w-4 h-5 absolute text-gray-700 dark:text-gray-300" style={{right: '2rem', top: '-2rem'}} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
       </a>
     )
   }
@@ -293,6 +317,7 @@ export default class VisitorGraph extends React.Component {
 
   componentDidMount() {
     this.fetchGraphData()
+    if (this.props.timer) this.props.timer.onTick(this.fetchGraphData.bind(this))
   }
 
   componentDidUpdate(prevProps) {
@@ -313,18 +338,20 @@ export default class VisitorGraph extends React.Component {
   renderInner() {
     if (this.state.graphData) {
       return (
-        <LineGraph graphData={this.state.graphData} site={this.props.site} query={this.props.query} />
+        <ThemeContext.Consumer>
+          {theme => (
+            <LineGraph graphData={this.state.graphData} site={this.props.site} query={this.props.query} darkTheme={theme}/>
+          )}
+        </ThemeContext.Consumer>
       )
     }
   }
 
   render() {
     return (
-      <div className="w-full bg-white shadow-xl rounded mt-6 main-graph">
+      <div className="w-full relative bg-white dark:bg-gray-825 shadow-xl rounded mt-6 main-graph">
         { this.state.loading && <div className="loading pt-24 sm:pt-32 md:pt-48 mx-auto"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
-          { this.renderInner() }
-        </FadeIn>
+        { this.renderInner() }
       </div>
     )
   }

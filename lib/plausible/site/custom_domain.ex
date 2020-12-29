@@ -1,6 +1,7 @@
 defmodule Plausible.Site.CustomDomain do
   use Ecto.Schema
   import Ecto.Changeset
+
   @domain_name_regex ~r/(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]/
 
   schema "custom_domains" do

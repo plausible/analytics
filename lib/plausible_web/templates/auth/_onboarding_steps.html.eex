@@ -1,0 +1,39 @@
+<div class="pt-6 px-4 sm:px-6 lg:px-8">
+  <nav class="flex justify-center">
+    <ol class="space-y-6">
+      <%= for {step, index} <- Enum.with_index(["Register", "Activate account", "Add site info", "Install snippet"]) do %>
+        <%= if index < @current_step do %>
+          <!-- Complete Step -->
+          <li class="flex items-start">
+            <span class="flex-shrink-0 relative h-5 w-5 flex items-center justify-center">
+              <svg class="h-full w-full text-indigo-600 dark:text-indigo-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+            </span>
+            <span class="ml-3 text-sm font-medium text-gray-500 dark:text-gray-300"><%= step %></span>
+          </li>
+        <% end %>
+        <%= if index == @current_step do %>
+          <!-- Current Step -->
+          <li class="flex items-start">
+            <span class="flex-shrink-0 h-5 w-5 relative flex items-center justify-center">
+              <span class="absolute h-4 w-4 rounded-full bg-indigo-200 dark:bg-indigo-100"></span>
+              <span class="relative block w-2 h-2 bg-indigo-600 dark:bg-indigo-500 rounded-full"></span>
+            </span>
+            <span class="ml-3 text-sm font-medium text-indigo-600 dark:text-indigo-500"><%= step %></span>
+          </li>
+        <% end %>
+        <%= if index > @current_step do %>
+          <!-- Upcoming Step -->
+          <li class="flex items-start">
+            <div class="flex-shrink-0 h-5 w-5 relative flex items-center justify-center">
+              <div class="h-2 w-2 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+            </div>
+            <p class="ml-3 text-sm font-medium text-gray-500 dark:text-gray-300"><%= step %></p>
+          </li>
+        <% end %>
+      <% end %>
+
+    </ol>
+  </nav>
+</div>

@@ -4,83 +4,181 @@ defmodule PlausibleWeb.AuthController do
   alias Plausible.Auth
   require Logger
 
-  plug PlausibleWeb.RequireLoggedOutPlug when action in [:register_form, :register, :login_form, :login]
-  plug PlausibleWeb.RequireAccountPlug when action in [:user_settings, :save_settings, :delete_me, :password_form, :set_password]
+  plug PlausibleWeb.RequireLoggedOutPlug
+       when action in [:register_form, :register, :login_form, :login]
+
+  plug PlausibleWeb.RequireAccountPlug
+       when action in [
+              :user_settings,
+              :save_settings,
+              :delete_me,
+              :password_form,
+              :set_password,
+              :activate_form
+            ]
 
   def register_form(conn, _params) do
-    changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
-    render(conn, "register_form.html", changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
-  end
+    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) do
+      conn
+      |> redirect(to: "/login")
+    else
+      changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
 
-  def register(conn, %{"user" => params}) do
-    user = Plausible.Auth.User.changeset(%Plausible.Auth.User{}, params)
-
-    case Ecto.Changeset.apply_action(user, :insert) do
-      {:ok, user} ->
-        token = Auth.Token.sign_activation(user.name, user.email)
-        url = PlausibleWeb.Endpoint.clean_url() <> "/claim-activation?token=#{token}"
-        Logger.info(url)
-        email_template = PlausibleWeb.Email.activation_email(user, url)
-        Plausible.Mailer.send_email(email_template)
-        conn |> render("register_success.html", email: user.email, layout: {PlausibleWeb.LayoutView, "focus.html"})
-      {:error, changeset} ->
-        render(conn, "register_form.html", changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
+      render(conn, "register_form.html",
+        changeset: changeset,
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
+      )
     end
   end
 
-  def claim_activation_link(conn, %{"token" => token}) do
-    case Auth.Token.verify_activation(token) do
-      {:ok, %{name: name, email: email}} ->
-        case Auth.create_user(name, email) do
-          {:ok, user} ->
-            PlausibleWeb.Email.welcome_email(user)
-            |> Plausible.Mailer.send_email()
+  def register(conn, params) do
+    user = Plausible.Auth.User.new(%Plausible.Auth.User{}, params["user"])
 
-            conn
-            |> put_session(:current_user_id, user.id)
-            |> put_resp_cookie("logged_in", "true", http_only: false)
-            |> redirect(to: "/password")
-          {:error, changeset} ->
-            send_resp(conn, 400, inspect(changeset.errors))
-        end
+    if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
+      case Repo.insert(user) do
+        {:ok, user} ->
+          code = Auth.issue_email_verification(user)
+          Logger.info("VERIFICATION CODE: #{code}")
+          email_template = PlausibleWeb.Email.activation_email(user, code)
+          Plausible.Mailer.send_email(email_template)
+
+          conn
+          |> put_session(:current_user_id, user.id)
+          |> put_resp_cookie("logged_in", "true",
+            http_only: false,
+            max_age: 60 * 60 * 24 * 365 * 5000
+          )
+          |> redirect(to: "/activate")
+
+        {:error, changeset} ->
+          render(conn, "register_form.html",
+            changeset: changeset,
+            layout: {PlausibleWeb.LayoutView, "focus.html"}
+          )
+      end
+    else
+      render(conn, "register_form.html",
+        changeset: user,
+        captcha_error: "Please complete the captcha to register",
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
+      )
+    end
+  end
+
+  def activate_form(conn, _params) do
+    user = conn.assigns[:current_user]
+
+    has_code =
+      Repo.exists?(
+        from c in "email_verification_codes",
+          where: c.user_id == ^user.id
+      )
+
+    render(conn, "activate.html",
+      has_pin: has_code,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
+  end
+
+  def activate(conn, %{"code" => code}) do
+    user = conn.assigns[:current_user]
+    {code, ""} = Integer.parse(code)
+
+    case Auth.verify_email(user, code) do
+      :ok ->
+        redirect(conn, to: "/sites/new")
+
+      {:error, :incorrect} ->
+        render(conn, "activate.html",
+          error: "Incorrect activation code",
+          has_pin: true,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
       {:error, :expired} ->
-        render_error(conn, 401, "Your token has expired. Please request another activation link.")
-      {:error, _} ->
-        render_error(conn, 400, "Your token is invalid. Please request another activation link.")
+        render(conn, "activate.html",
+          error: "Code is expired, please request another one",
+          has_pin: false,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
     end
+  end
+
+  def request_activation_code(conn, _params) do
+    user = conn.assigns[:current_user]
+    code = Auth.issue_email_verification(user)
+
+    email_template = PlausibleWeb.Email.activation_email(user, code)
+    Plausible.Mailer.send_email(email_template)
+
+    conn
+    |> put_flash(:success, "Activation code was sent to #{user.email}")
+    |> redirect(to: "/activate")
   end
 
   def password_reset_request_form(conn, _) do
-    render(conn, "password_reset_request_form.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+    render(conn, "password_reset_request_form.html",
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
   end
 
   def password_reset_request(conn, %{"email" => ""}) do
-    render(conn, "password_reset_request_form.html", error: "Please enter an email address", layout: {PlausibleWeb.LayoutView, "focus.html"})
+    render(conn, "password_reset_request_form.html",
+      error: "Please enter an email address",
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
   end
 
-  def password_reset_request(conn, %{"email" => email}) do
-    user = Repo.get_by(Plausible.Auth.User, email: email)
+  def password_reset_request(conn, %{"email" => email} = params) do
+    if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
+      user = Repo.get_by(Plausible.Auth.User, email: email)
 
-    if user do
-      token = Auth.Token.sign_password_reset(email)
-      url = PlausibleWeb.Endpoint.clean_url() <> "/password/reset?token=#{token}"
-      Logger.debug("PASSWORD RESET LINK: " <> url)
-      email_template = PlausibleWeb.Email.password_reset_email(email, url)
-      Plausible.Mailer.deliver_now(email_template)
-      render(conn, "password_reset_request_success.html", email: email, layout: {PlausibleWeb.LayoutView, "focus.html"})
+      if user do
+        token = Auth.Token.sign_password_reset(email)
+        url = PlausibleWeb.Endpoint.url() <> "/password/reset?token=#{token}"
+        Logger.debug("PASSWORD RESET LINK: " <> url)
+        email_template = PlausibleWeb.Email.password_reset_email(email, url)
+        Plausible.Mailer.deliver_now(email_template)
+
+        render(conn, "password_reset_request_success.html",
+          email: email,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+      else
+        render(conn, "password_reset_request_success.html",
+          email: email,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+      end
     else
-      render(conn, "password_reset_request_success.html", email: email, layout: {PlausibleWeb.LayoutView, "focus.html"})
+      render(conn, "password_reset_request_form.html",
+        error: "Please complete the captcha to reset your password",
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
+      )
     end
   end
 
   def password_reset_form(conn, %{"token" => token}) do
     case Auth.Token.verify_password_reset(token) do
       {:ok, _} ->
-        render(conn, "password_reset_form.html", token: token, layout: {PlausibleWeb.LayoutView, "focus.html"})
+        render(conn, "password_reset_form.html",
+          token: token,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
       {:error, :expired} ->
-        render_error(conn, 401, "Your token has expired. Please request another password reset link.")
+        render_error(
+          conn,
+          401,
+          "Your token has expired. Please request another password reset link."
+        )
+
       {:error, _} ->
-        render_error(conn, 401, "Your token is invalid. Please request another password reset link.")
+        render_error(
+          conn,
+          401,
+          "Your token is invalid. Please request another password reset link."
+        )
     end
   end
 
@@ -89,6 +187,7 @@ defmodule PlausibleWeb.AuthController do
       {:ok, %{email: email}} ->
         user = Repo.get_by(Auth.User, email: email)
         changeset = Auth.User.set_password(user, pw)
+
         case Repo.update(changeset) do
           {:ok, _updated} ->
             conn
@@ -97,23 +196,39 @@ defmodule PlausibleWeb.AuthController do
             |> put_session(:current_user_id, nil)
             |> delete_resp_cookie("logged_in")
             |> redirect(to: "/login")
+
           {:error, changeset} ->
-            render(conn, "password_reset_form.html", changeset: changeset, token: token, layout: {PlausibleWeb.LayoutView, "focus.html"})
+            render(conn, "password_reset_form.html",
+              changeset: changeset,
+              token: token,
+              layout: {PlausibleWeb.LayoutView, "focus.html"}
+            )
         end
+
       {:error, :expired} ->
-        render_error(conn, 401, "Your token has expired. Please request another password reset link.")
+        render_error(
+          conn,
+          401,
+          "Your token has expired. Please request another password reset link."
+        )
+
       {:error, _} ->
-        render_error(conn, 401, "Your token is invalid. Please request another password reset link.")
+        render_error(
+          conn,
+          401,
+          "Your token is invalid. Please request another password reset link."
+        )
     end
   end
 
   def login(conn, %{"email" => email, "password" => password}) do
     alias Plausible.Auth.Password
 
-    user = Repo.one(
-      from u in Plausible.Auth.User,
-      where: u.email == ^email
-    )
+    user =
+      Repo.one(
+        from u in Plausible.Auth.User,
+          where: u.email == ^email
+      )
 
     if user do
       if Password.match?(password, user.password_hash || "") do
@@ -121,15 +236,27 @@ defmodule PlausibleWeb.AuthController do
 
         conn
         |> put_session(:current_user_id, user.id)
-        |> put_resp_cookie("logged_in", "true", http_only: false)
+        |> put_resp_cookie("logged_in", "true",
+          http_only: false,
+          max_age: 60 * 60 * 24 * 365 * 5000
+        )
         |> put_session(:login_dest, nil)
         |> redirect(to: login_dest)
       else
-        conn |> render("login_form.html", error: "Wrong email or password. Please try again.", layout: {PlausibleWeb.LayoutView, "focus.html"})
+        conn
+        |> render("login_form.html",
+          error: "Wrong email or password. Please try again.",
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
       end
     else
       Password.dummy_calculation()
-      conn |> render("login_form.html", error: "Wrong email or password. Please try again.", layout: {PlausibleWeb.LayoutView, "focus.html"})
+
+      conn
+      |> render("login_form.html",
+        error: "Wrong email or password. Please try again.",
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
+      )
     end
   end
 
@@ -138,7 +265,10 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def password_form(conn, _params) do
-    render(conn, "password_form.html", layout: {PlausibleWeb.LayoutView, "focus.html"}, skip_plausible_tracking: true)
+    render(conn, "password_form.html",
+      layout: {PlausibleWeb.LayoutView, "focus.html"},
+      skip_plausible_tracking: true
+    )
   end
 
   def set_password(conn, %{"password" => pw}) do
@@ -147,33 +277,47 @@ defmodule PlausibleWeb.AuthController do
     case Repo.update(changeset) do
       {:ok, _user} ->
         redirect(conn, to: "/sites/new")
+
       {:error, changeset} ->
-        render(conn, "password_form.html", changeset: changeset, layout: {PlausibleWeb.LayoutView, "focus.html"})
+        render(conn, "password_form.html",
+          changeset: changeset,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
     end
   end
 
   def user_settings(conn, _params) do
     changeset = Auth.User.changeset(conn.assigns[:current_user])
-    subscription = Plausible.Billing.active_subscription_for(conn.assigns[:current_user].id)
-    render(conn, "user_settings.html", changeset: changeset, subscription: subscription)
+
+    render(conn, "user_settings.html",
+      changeset: changeset,
+      subscription: conn.assigns[:current_user].subscription,
+      theme: conn.assigns[:current_user].theme || "system"
+    )
   end
 
   def save_settings(conn, %{"user" => user_params}) do
     changes = Auth.User.changeset(conn.assigns[:current_user], user_params)
+
     case Repo.update(changes) do
       {:ok, _user} ->
         conn
         |> put_flash(:success, "Account settings saved succesfully")
         |> redirect(to: "/settings")
+
       {:error, changeset} ->
-        render(conn, "user_settings.html", changeset: changeset)
+        render(conn, "user_settings.html",
+          changeset: changeset,
+          subscription: conn.assigns[:current_user].subscription
+        )
     end
   end
 
   def delete_me(conn, params) do
-    user = conn.assigns[:current_user]
-           |> Repo.preload(:sites)
-           |> Repo.preload(:subscription)
+    user =
+      conn.assigns[:current_user]
+      |> Repo.preload(:sites)
+      |> Repo.preload(:subscription)
 
     for site_membership <- user.site_memberships do
       Repo.delete!(site_membership)
@@ -200,7 +344,7 @@ defmodule PlausibleWeb.AuthController do
     res = Plausible.Google.Api.fetch_access_token(code)
     id_token = res["id_token"]
     [_, body, _] = String.split(id_token, ".")
-    id = body |> Base.decode64!(padding: false) |> Jason.decode!
+    id = body |> Base.decode64!(padding: false) |> Jason.decode!()
 
     Plausible.Site.GoogleAuth.changeset(%Plausible.Site.GoogleAuth{}, %{
       email: id["email"],
@@ -209,7 +353,8 @@ defmodule PlausibleWeb.AuthController do
       expires: NaiveDateTime.utc_now() |> NaiveDateTime.add(res["expires_in"]),
       user_id: conn.assigns[:current_user].id,
       site_id: site_id
-    }) |> Repo.insert!
+    })
+    |> Repo.insert!()
 
     site = Repo.get(Plausible.Site, site_id)
 

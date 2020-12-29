@@ -1,6 +1,8 @@
-import {formatDay, formatMonthYYYY, nowInOffset, parseUTCDate} from './date'
+import React from 'react'
+import { Link, withRouter } from 'react-router-dom'
+import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './date'
 
-const PERIODS = ['day', 'month', '7d', '30d', '60d', '6mo', '12mo', 'custom']
+const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'custom']
 
 export function parseQuery(querystring, site) {
   const q = new URLSearchParams(querystring)
@@ -8,7 +10,7 @@ export function parseQuery(querystring, site) {
   const periodKey = 'period__' + site.domain
 
   if (PERIODS.includes(period)) {
-    if (period !== 'custom') window.localStorage[periodKey] = period
+    if (period !== 'custom' && period !== 'realtime') window.localStorage[periodKey] = period
   } else {
     if (window.localStorage[periodKey]) {
       period = window.localStorage[periodKey]
@@ -19,12 +21,85 @@ export function parseQuery(querystring, site) {
 
   return {
     period: period,
-    date: q.get('date') ? parseUTCDate(q.get('date')) : nowInOffset(site.offset),
+    date: q.get('date') ? parseUTCDate(q.get('date')) : nowForSite(site),
     from: q.get('from') ? parseUTCDate(q.get('from')) : undefined,
     to: q.get('to') ? parseUTCDate(q.get('to')) : undefined,
-    filters: {'goal': q.get('goal')}
+    filters: {
+      'goal': q.get('goal'),
+      'props': JSON.parse(q.get('props')),
+      'source': q.get('source'),
+      'utm_medium': q.get('utm_medium'),
+      'utm_source': q.get('utm_source'),
+      'utm_campaign': q.get('utm_campaign'),
+      'referrer': q.get('referrer'),
+      'screen': q.get('screen'),
+      'browser': q.get('browser'),
+      'browser_version': q.get('browser_version'),
+      'os': q.get('os'),
+      'os_version': q.get('os_version'),
+      'country': q.get('country'),
+      'page': q.get('page')
+    }
   }
 }
+
+export function countFilters(query) {
+  let count = 0;
+  for (const filter of Object.values(query.filters)) {
+    if (filter) count++;
+  }
+
+  return count;
+}
+
+function generateQueryString(data) {
+  const query = new URLSearchParams(window.location.search)
+  Object.keys(data).forEach(key => {
+    if (!data[key]) {
+      query.delete(key)
+      return
+    }
+
+    query.set(key, data[key])
+  })
+  return query.toString()
+}
+
+export function navigateToQuery(history, queryFrom, newData) {
+  // if we update any data that we store in localstorage, make sure going back in history will revert them
+  if (newData.period && newData.period !== queryFrom.period) {
+    const replaceQuery = new URLSearchParams(window.location.search)
+    replaceQuery.set('period', queryFrom.period)
+    history.replace({ search: replaceQuery.toString() })
+  }
+
+  // then push the new query to the history
+  history.push({ search: generateQueryString(newData) })
+}
+
+class QueryLink extends React.Component {
+  constructor() {
+    super()
+    this.onClick = this.onClick.bind(this)
+  }
+
+  onClick(e) {
+    e.preventDefault()
+    navigateToQuery(this.props.history, this.props.query, this.props.to)
+    if (this.props.onClick) this.props.onClick(e)
+  }
+
+  render() {
+    const { history, query, to, ...props } = this.props
+    return <Link
+      {...props}
+      to={{ pathname: window.location.pathname, search: generateQueryString(to) }}
+      onClick={this.onClick}
+    />
+  }
+}
+const QueryLinkWithRouter = withRouter(QueryLink)
+export { QueryLinkWithRouter as QueryLink };
 
 export function toHuman(query) {
   if (query.period === 'day') {
@@ -35,8 +110,6 @@ export function toHuman(query) {
     return 'in the last 7 days'
   } else if (query.period === '30d') {
     return 'in the last 30 days'
-  } else if (query.period === '60d') {
-    return 'in the last 60 days'
   } else if (query.period === '6mo') {
     return 'in the last 6 months'
   } else if (query.period === '12mo') {

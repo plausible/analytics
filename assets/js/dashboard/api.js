@@ -1,5 +1,7 @@
 import {formatISO} from './date'
 
+let abortController = new AbortController()
+
 function serialize(obj) {
   var str = [];
   for (var p in obj)
@@ -9,20 +11,32 @@ function serialize(obj) {
   return str.join("&");
 }
 
-export function serializeQuery(query, extraQuery=[]) {
-  query = Object.assign({}, query, {
-    date: query.date ? formatISO(query.date) : undefined,
-    from: query.from ? formatISO(query.from) : undefined,
-    to: query.to ? formatISO(query.to) : undefined,
-    filters: query.filters ? JSON.stringify(query.filters) : undefined
-  }, ...extraQuery)
+export function cancelAll() {
+  abortController.abort()
+  abortController = new AbortController()
+}
 
-  return '?' + serialize(query)
+function serializeFilters(filters) {
+  const cleaned = {}
+  Object.entries(filters).forEach(([key, val]) => val ? cleaned[key] = val : null);
+  return JSON.stringify(cleaned)
+}
+
+export function serializeQuery(query, extraQuery=[]) {
+  const queryObj = {}
+  if (query.period)  { queryObj.period = query.period  }
+  if (query.date)    { queryObj.date = formatISO(query.date)  }
+  if (query.from)    { queryObj.from = formatISO(query.from)  }
+  if (query.to)      { queryObj.to = formatISO(query.to)  }
+  if (query.filters) { queryObj.filters = serializeFilters(query.filters)  }
+  Object.assign(queryObj, ...extraQuery)
+
+  return '?' + serialize(queryObj)
 }
 
 export function get(url, query, ...extraQuery) {
   url = url + serializeQuery(query, extraQuery)
-  return fetch(url)
+  return fetch(url, {signal: abortController.signal})
     .then( response => {
       if (!response.ok) { throw response }
       return response.json()

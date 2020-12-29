@@ -19,15 +19,6 @@
     console.warn('[Plausible] Ignoring event because ' + reason);
   }
 
-  function getUrl() {
-    return window.location.protocol + '//' + window.location.hostname + window.location.pathname + window.location.search;
-  }
-
-  function getSourceFromQueryParam() {
-    var result = window.location.search.match(/[?&](ref|source|utm_source)=([^?&]+)/);
-    return result ? result[2] : null
-  }
-
   function getUserData() {
     var userData = JSON.parse(getCookie('plausible_user'))
 
@@ -57,13 +48,11 @@
     if (window.document.visibilityState === 'prerender') return ignore('document is prerendering');
 
     var payload = CONFIG['trackAcquisition'] ? getUserData() : {}
-    payload.name = eventName
-    payload.url = getUrl()
-    payload.domain = CONFIG['domain']
-    payload.referrer = window.document.referrer || null
-    payload.source = getSourceFromQueryParam()
-    payload.user_agent = window.navigator.userAgent
-    payload.screen_width = window.innerWidth
+    payload.n = eventName
+    payload.u = window.location.href
+    payload.d = CONFIG['domain']
+    payload.r = window.document.referrer || null
+    payload.w = window.innerWidth
 
     var request = new XMLHttpRequest();
     request.open('POST', plausibleHost + '/api/event', true);
@@ -124,4 +113,4 @@
   } catch (e) {
     new Image().src = plausibleHost + '/api/error?message=' +  encodeURIComponent(e.message);
   }
-})(window, "https://plausible.io");
+})(window, '<%= base_url %>');

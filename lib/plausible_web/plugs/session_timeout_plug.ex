@@ -14,15 +14,21 @@ defmodule PlausibleWeb.SessionTimeoutPlug do
         conn
         |> configure_session(drop: true)
         |> delete_resp_cookie("logged_in")
+
       user_id ->
-        put_session(conn, :session_timeout_at, new_session_timeout_at(opts[:timeout_after_seconds]))
+        put_session(
+          conn,
+          :session_timeout_at,
+          new_session_timeout_at(opts[:timeout_after_seconds])
+        )
+
       true ->
         conn
     end
   end
 
   defp now do
-    DateTime.utc_now() |> DateTime.to_unix
+    DateTime.utc_now() |> DateTime.to_unix()
   end
 
   defp new_session_timeout_at(timeout_after_seconds) do

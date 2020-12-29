@@ -34,12 +34,16 @@ defmodule Plausible.Billing.PaddleApi do
   def update_subscription(paddle_subscription_id, params) do
     config = get_config()
 
-    params = Map.merge(params, %{
-      vendor_id: config[:vendor_id],
-      vendor_auth_code: config[:vendor_auth_code],
-      subscription_id: paddle_subscription_id,
-      quantity: 1
-    })
+    params =
+      Map.merge(params, %{
+        vendor_id: config[:vendor_id],
+        vendor_auth_code: config[:vendor_auth_code],
+        subscription_id: paddle_subscription_id,
+        prorate: true,
+        keep_modifiers: true,
+        bill_immediately: true,
+        quantity: 1
+      })
 
     {:ok, response} = HTTPoison.post(@update_endpoint, Poison.encode!(params), @headers)
     body = Poison.decode!(response.body)
@@ -53,6 +57,7 @@ defmodule Plausible.Billing.PaddleApi do
 
   def get_subscription(paddle_subscription_id) do
     config = get_config()
+
     params = %{
       vendor_id: config[:vendor_id],
       vendor_auth_code: config[:vendor_auth_code],

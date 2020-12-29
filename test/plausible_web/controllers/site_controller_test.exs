@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.SiteControllerTest do
   use PlausibleWeb.ConnCase
   use Plausible.Repo
+  use Bamboo.Test
   import Plausible.TestUtils
 
   describe "GET /sites/new" do
@@ -12,52 +13,112 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
+  describe "GET /sites" do
+    setup [:create_user, :log_in]
+
+    test "shows empty screen if no sites", %{conn: conn} do
+      conn = get(conn, "/sites")
+      assert html_response(conn, 200) =~ "You don't have any sites yet"
+    end
+
+    test "lists all of your sites with last 24h visitors", %{conn: conn, user: user} do
+      insert(:site, members: [user], domain: "test-site.com")
+      conn = get(conn, "/sites")
+
+      assert html_response(conn, 200) =~ "test-site.com"
+      assert html_response(conn, 200) =~ "<b>3</b> visitors in last 24h"
+    end
+  end
+
   describe "POST /sites" do
     setup [:create_user, :log_in]
 
     test "creates the site with valid params", %{conn: conn} do
-      conn = post(conn, "/sites", %{
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert redirected_to(conn) == "/example.com/snippet"
+      assert Repo.exists?(Plausible.Site, domain: "example.com")
+    end
+
+    test "sends welcome email if this is the user's first site", %{conn: conn} do
+      post(conn, "/sites", %{
         "site" => %{
           "domain" => "example.com",
           "timezone" => "Europe/London"
         }
       })
 
-      assert redirected_to(conn) == "/example.com/snippet"
-      assert Repo.exists?(Plausible.Site, domain: "example.com")
+      assert_email_delivered_with(subject: "Welcome to Plausible")
     end
 
-    test "cleans up the url", %{conn: conn} do
-      conn = post(conn, "/sites", %{
+    test "does not send welcome email if user already has a previous site", %{
+      conn: conn,
+      user: user
+    } do
+      insert(:site, members: [user])
+
+      post(conn, "/sites", %{
         "site" => %{
-          "domain" => "https://www.Example.com/",
+          "domain" => "example.com",
           "timezone" => "Europe/London"
         }
       })
+
+      assert_no_emails_delivered()
+    end
+
+    test "cleans up the url", %{conn: conn} do
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => "https://www.Example.com/",
+            "timezone" => "Europe/London"
+          }
+        })
 
       assert redirected_to(conn) == "/example.com/snippet"
       assert Repo.exists?(Plausible.Site, domain: "example.com")
     end
 
     test "renders form again when domain is missing", %{conn: conn} do
-      conn = post(conn, "/sites", %{
-        "site" => %{
-          "timezone" => "Europe/London"
-        }
-      })
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "timezone" => "Europe/London"
+          }
+        })
 
       assert html_response(conn, 200) =~ "can&#39;t be blank"
+    end
+
+    test "only alphanumeric characters and slash allowed in domain", %{conn: conn} do
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "timezone" => "Europe/London",
+            "domain" => "!@£.com"
+          }
+        })
+
+      assert html_response(conn, 200) =~ "only letters, numbers, slashes and period allowed"
     end
 
     test "renders form again when it is a duplicate domain", %{conn: conn} do
       insert(:site, domain: "example.com")
 
-      conn = post(conn, "/sites", %{
-        "site" => %{
-          "domain" => "example.com",
-          "timezone" => "Europe/London"
-        }
-      })
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
 
       assert html_response(conn, 200) =~ "has already been taken"
     end
@@ -73,20 +134,24 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:website/settings" do
+  describe "GET /:website/settings/general" do
     setup [:create_user, :log_in, :create_site]
 
     test "shows settings form", %{conn: conn, site: site} do
-      conn = get(conn, "/#{site.domain}/settings")
+      conn = get(conn, "/#{site.domain}/settings/general")
 
-      assert html_response(conn, 200) =~ "Settings"
+      assert html_response(conn, 200) =~ "General information"
     end
+  end
+
+  describe "GET /:website/settings/goals" do
+    setup [:create_user, :log_in, :create_site]
 
     test "lists goals for the site", %{conn: conn, site: site} do
       insert(:goal, domain: site.domain, event_name: "Custom event")
       insert(:goal, domain: site.domain, page_path: "/register")
 
-      conn = get(conn, "/#{site.domain}/settings")
+      conn = get(conn, "/#{site.domain}/settings/goals")
 
       assert html_response(conn, 200) =~ "Custom event"
       assert html_response(conn, 200) =~ "Visit /register"
@@ -133,13 +198,40 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "DELETE /:website" do
     setup [:create_user, :log_in, :create_site]
 
-    test "deletes the site", %{conn: conn, user: user, site: site} do
+    test "deletes the site", %{conn: conn, user: user} do
+      site = insert(:site, members: [user])
       insert(:google_auth, user: user, site: site)
       insert(:custom_domain, site: site)
 
       delete(conn, "/#{site.domain}")
 
       refute Repo.exists?(from s in Plausible.Site, where: s.id == ^site.id)
+    end
+  end
+
+  describe "PUT /:website/settings/google" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "updates google auth property", %{conn: conn, user: user, site: site} do
+      insert(:google_auth, user: user, site: site)
+
+      put(conn, "/#{site.domain}/settings/google", %{
+        "google_auth" => %{"property" => "some-new-property.com"}
+      })
+
+      updated_auth = Repo.one(Plausible.Site.GoogleAuth)
+      assert updated_auth.property == "some-new-property.com"
+    end
+  end
+
+  describe "DELETE /:website/settings/google" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "deletes associated google auth", %{conn: conn, user: user, site: site} do
+      insert(:google_auth, user: user, site: site)
+      delete(conn, "/#{site.domain}/settings/google")
+
+      refute Repo.exists?(Plausible.Site.GoogleAuth)
     end
   end
 
@@ -200,7 +292,11 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "POST /sites/:website/weekly-report/enable" do
     setup [:create_user, :log_in, :create_site]
 
-    test "creates a weekly report record with the user email", %{conn: conn, site: site, user: user} do
+    test "creates a weekly report record with the user email", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
       post(conn, "/sites/#{site.domain}/weekly-report/enable")
 
       report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
@@ -249,7 +345,11 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "POST /sites/:website/monthly-report/enable" do
     setup [:create_user, :log_in, :create_site]
 
-    test "creates a monthly report record with the user email", %{conn: conn, site: site, user: user} do
+    test "creates a monthly report record with the user email", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
       post(conn, "/sites/#{site.domain}/monthly-report/enable")
 
       report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
@@ -291,6 +391,76 @@ defmodule PlausibleWeb.SiteControllerTest do
       delete(conn, "/sites/#{site.domain}/monthly-report/recipients/recipient@email.com")
 
       report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
+      assert report.recipients == []
+    end
+  end
+
+  describe "POST /sites/:website/spike-notification/enable" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "creates a spike notification record with the user email", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
+      post(conn, "/sites/#{site.domain}/spike-notification/enable")
+
+      notification = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
+      assert notification.recipients == [user.email]
+    end
+  end
+
+  describe "POST /sites/:website/spike-notification/disable" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "deletes the spike notification record", %{conn: conn, site: site} do
+      insert(:spike_notification, site: site)
+
+      post(conn, "/sites/#{site.domain}/spike-notification/disable")
+
+      refute Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
+    end
+  end
+
+  describe "PUT /sites/:website/spike-notification" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "updates spike notification threshold", %{conn: conn, site: site} do
+      insert(:spike_notification, site: site, threshold: 10)
+
+      put(conn, "/sites/#{site.domain}/spike-notification", %{
+        "spike_notification" => %{"threshold" => "15"}
+      })
+
+      notification = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
+      assert notification.threshold == 15
+    end
+  end
+
+  describe "POST /sites/:website/spike-notification/recipients" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "adds a recipient to the spike notification", %{conn: conn, site: site} do
+      insert(:spike_notification, site: site)
+
+      post(conn, "/sites/#{site.domain}/spike-notification/recipients",
+        recipient: "user@email.com"
+      )
+
+      report = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
+      assert report.recipients == ["user@email.com"]
+    end
+  end
+
+  describe "DELETE /sites/:website/spike-notification/recipients/:recipient" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "removes a recipient from the spike notification", %{conn: conn, site: site} do
+      insert(:spike_notification, site: site, recipients: ["recipient@email.com"])
+
+      delete(conn, "/sites/#{site.domain}/spike-notification/recipients/recipient@email.com")
+
+      report = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
       assert report.recipients == []
     end
   end
@@ -356,7 +526,10 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "creates a custom domain", %{conn: conn, site: site} do
-      conn = post(conn, "/sites/#{site.domain}/custom-domains", %{"custom_domain" => %{"domain" => "plausible.example.com"}})
+      conn =
+        post(conn, "/sites/#{site.domain}/custom-domains", %{
+          "custom_domain" => %{"domain" => "plausible.example.com"}
+        })
 
       domain = Repo.one(Plausible.Site.CustomDomain)
 
@@ -365,14 +538,18 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "validates presence of domain name", %{conn: conn, site: site} do
-      conn = post(conn, "/sites/#{site.domain}/custom-domains", %{"custom_domain" => %{"domain" => ""}})
+      conn =
+        post(conn, "/sites/#{site.domain}/custom-domains", %{"custom_domain" => %{"domain" => ""}})
 
       refute Repo.one(Plausible.Site.CustomDomain)
       assert html_response(conn, 200) =~ "Setup custom domain"
     end
 
     test "validates format of domain name", %{conn: conn, site: site} do
-      conn = post(conn, "/sites/#{site.domain}/custom-domains", %{"custom_domain" => %{"domain" => "ASD?/not-domain"}})
+      conn =
+        post(conn, "/sites/#{site.domain}/custom-domains", %{
+          "custom_domain" => %{"domain" => "ASD?/not-domain"}
+        })
 
       refute Repo.one(Plausible.Site.CustomDomain)
       assert html_response(conn, 200) =~ "Setup custom domain"
@@ -387,6 +564,18 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/sites/#{site.domain}/custom-domains/dns-setup")
 
       assert html_response(conn, 200) =~ "DNS for #{domain.domain}"
+    end
+  end
+
+  describe "DELETE sites/:website/custom-domains/:id" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "lists goals for the site", %{conn: conn, site: site} do
+      domain = insert(:custom_domain, site: site)
+
+      delete(conn, "/sites/#{site.domain}/custom-domains/#{domain.id}")
+
+      assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 0
     end
   end
 end

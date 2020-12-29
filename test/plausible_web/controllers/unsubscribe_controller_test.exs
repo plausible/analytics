@@ -7,7 +7,8 @@ defmodule PlausibleWeb.UnsubscribeControllerTest do
       site = insert(:site)
       insert(:weekly_report, site: site, recipients: ["recipient@email.com"])
 
-      conn = get(conn, "/sites/#{site.domain}/weekly-report/unsubscribe?email=recipient@email.com")
+      conn =
+        get(conn, "/sites/#{site.domain}/weekly-report/unsubscribe?email=recipient@email.com")
 
       assert html_response(conn, 200) =~ "Unsubscribe successful"
 
@@ -21,7 +22,8 @@ defmodule PlausibleWeb.UnsubscribeControllerTest do
       site = insert(:site)
       insert(:monthly_report, site: site, recipients: ["recipient@email.com"])
 
-      conn = get(conn, "/sites/#{site.domain}/monthly-report/unsubscribe?email=recipient@email.com")
+      conn =
+        get(conn, "/sites/#{site.domain}/monthly-report/unsubscribe?email=recipient@email.com")
 
       assert html_response(conn, 200) =~ "Unsubscribe successful"
 

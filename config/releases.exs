@@ -5,35 +5,30 @@ import Config
 # params are made optional to facilitate smooth release
 
 port = System.get_env("PORT") || 8000
-host = System.get_env("HOST", "localhost")
 
-secret_key_base =
-  System.get_env(
-    "SECRET_KEY_BASE",
-    "/NJrhNtbyCVAsTyvtk1ZYCwfm981Vpo/0XrVwjJvemDaKC/vsvBRevLwsc6u8RCg"
-  )
+base_url =
+  System.get_env("BASE_URL", "http://localhost:8000")
+  |> URI.parse()
 
-db_pool_size = String.to_integer(System.get_env("DATABASE_POOL_SIZE", "10"))
+secret_key_base = System.get_env("SECRET_KEY_BASE")
 
 db_url =
   System.get_env(
     "DATABASE_URL",
-    "postgres://postgres:postgres@127.0.0.1:5432/plausible_test?currentSchema=default"
+    "postgres://postgres:postgres@plausible_db:5432/plausible_db"
   )
 
-db_tls_enabled? = String.to_existing_atom(System.get_env("DATABASE_TLS_ENABLED", "false"))
 admin_user = System.get_env("ADMIN_USER_NAME")
 admin_email = System.get_env("ADMIN_USER_EMAIL")
 admin_pwd = System.get_env("ADMIN_USER_PWD")
 env = System.get_env("ENVIRONMENT", "prod")
-mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.PostmarkAdapter")
+mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.SMTPAdapter")
 mailer_email = System.get_env("MAILER_EMAIL", "hello@plausible.local")
 app_version = System.get_env("APP_VERSION", "0.0.1")
-ck_host = System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost")
-ck_db = System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_dev")
-ck_db_user = System.get_env("CLICKHOUSE_DATABASE_USER")
-ck_db_pwd = System.get_env("CLICKHOUSE_DATABASE_PASSWORD")
-ck_db_pool = System.get_env("CLICKHOUSE_DATABASE_POOLSIZE") || 10
+
+ch_db_url =
+  System.get_env("CLICKHOUSE_DATABASE_URL", "http://plausible_events_db:8123/plausible_events_db")
+
 ### Mandatory params End
 
 sentry_dsn = System.get_env("SENTRY_DSN")
@@ -50,6 +45,12 @@ cron_enabled = String.to_existing_atom(System.get_env("CRON_ENABLED", "false"))
 custom_domain_server_ip = System.get_env("CUSTOM_DOMAIN_SERVER_IP")
 custom_domain_server_user = System.get_env("CUSTOM_DOMAIN_SERVER_USER")
 custom_domain_server_password = System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD")
+geolite2_country_db = System.get_env("GEOLITE2_COUNTRY_DB")
+disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
+hcaptcha_sitekey = System.get_env("HCAPTCHA_SITEKEY")
+hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
+log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
+appsignal_api_key = System.get_env("APPSIGNAL_API_KEY")
 
 config :plausible,
   admin_user: admin_user,
@@ -58,11 +59,18 @@ config :plausible,
   environment: env,
   mailer_email: mailer_email
 
+config :plausible, :selfhost,
+  disable_authentication: disable_auth,
+  disable_subscription: String.to_existing_atom(System.get_env("DISABLE_SUBSCRIPTION", "true")),
+  disable_registration:
+    if(!disable_auth,
+      do: String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false")),
+      else: false
+    )
+
 config :plausible, PlausibleWeb.Endpoint,
-  url: [host: host, port: port],
-  http: [
-    port: port
-  ],
+  url: [host: base_url.host, scheme: base_url.scheme, port: base_url.port],
+  http: [port: port],
   secret_key_base: secret_key_base,
   cache_static_manifest: "priv/static/cache_manifest.json",
   check_origin: false,
@@ -72,10 +80,8 @@ config :plausible, PlausibleWeb.Endpoint,
 
 config :plausible,
        Plausible.Repo,
-       pool_size: db_pool_size,
        url: db_url,
-       adapter: Ecto.Adapters.Postgres,
-       ssl: db_tls_enabled?
+       adapter: Ecto.Adapters.Postgres
 
 config :sentry,
   dsn: sentry_dsn,
@@ -92,33 +98,30 @@ config :plausible, :google,
 
 config :plausible, :slack, webhook: slack_hook_url
 
-config :plausible, :clickhouse,
-       hostname: ck_host,
-       database: ck_db,
-       username: ck_db_user,
-       password: ck_db_pwd,
-       pool_size: ck_db_pool
+config :plausible, Plausible.ClickhouseRepo,
+  loggers: [Ecto.LogEntry],
+  url: ch_db_url
 
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
     config :plausible, Plausible.Mailer,
       adapter: :"Elixir.#{mailer_adapter}",
+      request_options: [recv_timeout: 10_000],
       api_key: System.get_env("POSTMARK_API_KEY")
 
   "Bamboo.SMTPAdapter" ->
     config :plausible, Plausible.Mailer,
       adapter: :"Elixir.#{mailer_adapter}",
-      server: System.fetch_env!("SMTP_HOST_ADDR"),
-      hostname: System.get_env("HOST", "localhost"),
-      port: System.fetch_env!("SMTP_HOST_PORT"),
-      username: System.fetch_env!("SMTP_USER_NAME"),
-      password: System.fetch_env!("SMTP_USER_PWD"),
+      server: System.get_env("SMTP_HOST_ADDR", "mail"),
+      hostname: base_url.host,
+      port: System.get_env("SMTP_HOST_PORT", "25"),
+      username: System.get_env("SMTP_USER_NAME"),
+      password: System.get_env("SMTP_USER_PWD"),
       tls: :if_available,
       allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
-      ssl: System.get_env("SMTP_HOST_SSL_ENABLED") || true,
+      ssl: System.get_env("SMTP_HOST_SSL_ENABLED") || false,
       retries: System.get_env("SMTP_RETRIES") || 2,
-      no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true,
-      auth: :always
+      no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true
 
   _ ->
     raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
@@ -135,25 +138,77 @@ config :plausible, :custom_domain_server,
   password: custom_domain_server_password,
   ip: custom_domain_server_ip
 
-crontab = [
-  {"0 * * * *", Plausible.Workers.SendSiteSetupEmails}, # hourly
-  {"0 * * * *", Plausible.Workers.SendEmailReports}, # hourly
-  {"0 0 * * *", Plausible.Workers.FetchTweets}, # Daily at midnight
-  {"0 12 * * *", Plausible.Workers.SendTrialNotifications}, # Daily at midday
-  {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails}, # Daily at midday
-  {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}, # Every 10 minutes
+config :plausible, PlausibleWeb.Firewall,
+  blocklist: System.get_env("IP_BLOCKLIST", "") |> String.split(",") |> Enum.map(&String.trim/1)
+
+base_cron = [
+  # Daily at midnight
+  {"0 0 * * *", Plausible.Workers.RotateSalts}
+]
+
+extra_cron = [
+  # hourly
+  {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
+  #  hourly
+  {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
+  # Daily at midnight
+  {"0 0 * * *", Plausible.Workers.FetchTweets},
+  # Daily at midday
+  {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
+  # Daily at midday
+  {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
+  # Every 10 minutes
+  {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates},
+  # Every 15 minutes
+  {"*/15 * * * *", Plausible.Workers.SpikeNotifier}
+]
+
+base_queues = [rotate_salts: 1]
+
+extra_queues = [
+  provision_ssl_certificates: 1,
+  fetch_tweets: 1,
+  check_stats_emails: 1,
+  site_setup_emails: 1,
+  trial_notification_emails: 1,
+  schedule_email_reports: 1,
+  send_email_reports: 1,
+  spike_notifications: 1
 ]
 
 config :plausible, Oban,
   repo: Plausible.Repo,
-  queues: [
-    provision_ssl_certificates: 1,
-    fetch_tweets: 1,
-    check_stats_emails: 1,
-    email_reports: 1,
-    site_setup_emails: 1,
-    trial_notification_emails: 1
-  ],
-  crontab: if cron_enabled, do: crontab, else: false
+  queues: if(cron_enabled, do: base_queues ++ extra_queues, else: base_queues),
+  crontab: if(cron_enabled, do: base_cron ++ extra_cron, else: base_cron)
 
-config :logger, level: :warn
+config :plausible, :hcaptcha,
+  sitekey: hcaptcha_sitekey,
+  secret: hcaptcha_secret
+
+config :ref_inspector,
+  init: {Plausible.Release, :configure_ref_inspector}
+
+config :ua_inspector,
+  init: {Plausible.Release, :configure_ua_inspector}
+
+if geolite2_country_db do
+  config :geolix,
+    databases: [
+      %{
+        id: :country,
+        adapter: Geolix.Adapter.MMDB2,
+        source: geolite2_country_db
+      }
+    ]
+end
+
+config :logger, level: log_level
+
+if appsignal_api_key do
+  config :appsignal, :config,
+    otp_app: :plausible,
+    name: "Plausible Analytics",
+    push_api_key: appsignal_api_key,
+    env: env,
+    active: true
+end

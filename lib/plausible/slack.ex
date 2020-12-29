@@ -1,12 +1,12 @@
 defmodule Plausible.Slack do
-  @app_env System.get_env("ENVIRONMENT") || "dev"
   require Logger
 
   def notify(text) do
     Task.start(fn ->
-      case @app_env do
+      case Application.get_env(:plausible, :environment) do
         "prod" ->
           HTTPoison.post!(webhook_url(), Poison.encode!(%{text: text}))
+
         _ ->
           Logger.debug(text)
       end

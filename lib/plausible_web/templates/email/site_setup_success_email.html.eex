@@ -17,5 +17,5 @@ Uku Taht
 <br /><br />
 --
 <br /><br />
-<%= plausible_url() %>
-
+<%= plausible_url() %><br />
+{{{ pm:unsubscribe }}}

@@ -1,25 +1,34 @@
 use Mix.Config
 
+base_url =
+  System.get_env("BASE_URL", "http://localhost:8000")
+  |> URI.parse()
+
 config :plausible,
   admin_user: System.get_env("ADMIN_USER_NAME", "admin"),
   admin_email: System.get_env("ADMIN_USER_EMAIL", "admin@plausible.local"),
   mailer_email: System.get_env("MAILER_EMAIL", "hello@plausible.local"),
   admin_pwd: System.get_env("ADMIN_USER_PWD", "!@d3in"),
-  ecto_repos: [Plausible.Repo],
+  ecto_repos: [Plausible.Repo, Plausible.ClickhouseRepo],
   environment: System.get_env("ENVIRONMENT", "dev")
 
-config :plausible, :clickhouse,
-       hostname: System.get_env("CLICKHOUSE_DATABASE_HOST", "localhost"),
-       database: System.get_env("CLICKHOUSE_DATABASE_NAME", "plausible_test"),
-       username: System.get_env("CLICKHOUSE_DATABASE_USER"),
-       password: System.get_env("CLICKHOUSE_DATABASE_PASSWORD"),
-       pool_size: 10
+disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
+
+config :plausible, :selfhost,
+  disable_authentication: disable_auth,
+  disable_subscription: String.to_existing_atom(System.get_env("DISABLE_SUBSCRIPTION", "false")),
+  disable_registration:
+    if(disable_auth,
+      do: true,
+      else: String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false"))
+    )
 
 # Configures the endpoint
 config :plausible, PlausibleWeb.Endpoint,
   url: [
-    host: System.get_env("HOST", "localhost"),
-    scheme: System.get_env("SCHEME", "http")
+    host: base_url.host,
+    scheme: base_url.scheme,
+    port: base_url.port
   ],
   http: [
     port: String.to_integer(System.get_env("PORT", "8000"))
@@ -64,15 +73,23 @@ config :plausible,
 
 config :plausible,
   # 30 minutes
-  session_timeout: 1000 * 60 * 30, # 30 minutes
+  session_timeout: 1000 * 60 * 30,
   session_length_minutes: 30
 
 config :plausible, :paddle,
   vendor_id: "49430",
   vendor_auth_code: System.get_env("PADDLE_VENDOR_AUTH_CODE")
 
-config :plausible, Plausible.Repo,
-       pool_size: String.to_integer(System.get_env("DATABASE_POOL_SIZE", "10")),
+config :plausible, Plausible.ClickhouseRepo,
+  loggers: [Ecto.LogEntry],
+  url:
+    System.get_env(
+      "CLICKHOUSE_DATABASE_URL",
+      "http://127.0.0.1:8123/plausible_dev"
+    )
+
+config :plausible,
+       Plausible.Repo,
        timeout: 300_000,
        connect_timeout: 300_000,
        handshake_timeout: 300_000,
@@ -80,34 +97,52 @@ config :plausible, Plausible.Repo,
          System.get_env(
            "DATABASE_URL",
            "postgres://postgres:postgres@127.0.0.1:5432/plausible_dev?currentSchema=default"
-         ),
-       ssl: String.to_existing_atom(System.get_env("DATABASE_TLS_ENABLED", "false"))
+         )
 
+cron_enabled = String.to_existing_atom(System.get_env("CRON_ENABLED", "false"))
 
-crontab = if String.to_existing_atom(System.get_env("CRON_ENABLED", "false")) do
-  [
-    {"0 * * * *", Plausible.Workers.SendSiteSetupEmails}, # hourly
-    {"0 * * * *", Plausible.Workers.SendEmailReports}, # hourly
-    {"0 0 * * *", Plausible.Workers.FetchTweets},
-    {"0 12 * * *", Plausible.Workers.SendTrialNotifications}, # Daily at midday
-    {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails}, # Daily at midday
-    {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}, # Every 10 minutes
-  ]
-else
-  false
-end
+base_cron = [
+  # Daily at midnight
+  {"0 0 * * *", Plausible.Workers.RotateSalts}
+]
+
+extra_cron = [
+  # hourly
+  {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
+  #  hourly
+  {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
+  # Daily at midnight
+  {"0 0 * * *", Plausible.Workers.FetchTweets},
+  # Daily at midday
+  {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
+  # Daily at midday
+  {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
+  # Every 10 minutes
+  {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates},
+  # Every 15 minutes
+  {"*/15 * * * *", Plausible.Workers.SpikeNotifier},
+  # Every day at midnight
+  {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes}
+]
+
+base_queues = [rotate_salts: 1]
+
+extra_queues = [
+  provision_ssl_certificates: 1,
+  fetch_tweets: 1,
+  check_stats_emails: 1,
+  site_setup_emails: 1,
+  trial_notification_emails: 1,
+  schedule_email_reports: 1,
+  send_email_reports: 1,
+  spike_notifications: 1,
+  clean_email_verification_codes: 1
+]
 
 config :plausible, Oban,
   repo: Plausible.Repo,
-  queues: [
-    provision_ssl_certificates: 1,
-    fetch_tweets: 1,
-    check_stats_emails: 1,
-    email_reports: 1,
-    site_setup_emails: 1,
-    trial_notification_emails: 1
-  ],
-  crontab: crontab
+  queues: if(cron_enabled, do: base_queues ++ extra_queues, else: base_queues),
+  crontab: if(cron_enabled, do: base_cron ++ extra_cron, else: base_cron)
 
 config :plausible, :google,
   client_id: System.get_env("GOOGLE_CLIENT_ID"),
@@ -121,6 +156,7 @@ case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
     config :plausible, Plausible.Mailer,
       adapter: :"Elixir.#{mailer_adapter}",
+      request_options: [recv_timeout: 10_000],
       api_key: System.get_env("POSTMARK_API_KEY")
 
   "Bamboo.SMTPAdapter" ->
@@ -133,14 +169,14 @@ case mailer_adapter do
       password: System.fetch_env!("SMTP_USER_PWD"),
       tls: :if_available,
       allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
-      ssl: System.get_env("SMTP_HOST_SSL_ENABLED") || true,
+      ssl: System.get_env("SMTP_HOST_SSL_ENABLED") || false,
       retries: System.get_env("SMTP_RETRIES") || 2,
       no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true,
-      auth: :always
+      auth: :if_available
 
   "Bamboo.LocalAdapter" ->
-    config :plausible, Plausible.Mailer,
-      adapter: :"Elixir.#{mailer_adapter}"
+    config :plausible, Plausible.Mailer, adapter: :"Elixir.#{mailer_adapter}"
+
   _ ->
     raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
 end
@@ -155,6 +191,22 @@ config :plausible, :custom_domain_server,
   user: System.get_env("CUSTOM_DOMAIN_SERVER_USER"),
   password: System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD"),
   ip: System.get_env("CUSTOM_DOMAIN_SERVER_IP")
+
+config :plausible, PlausibleWeb.Firewall,
+  blocklist: System.get_env("IP_BLOCKLIST", "") |> String.split(",") |> Enum.map(&String.trim/1)
+
+config :plausible, :hcaptcha,
+  sitekey: System.get_env("HCAPTCHA_SITEKEY"),
+  secret: System.get_env("HCAPTCHA_SECRET")
+
+config :geolix,
+  databases: [
+    %{
+      id: :country,
+      adapter: Geolix.Adapter.MMDB2,
+      source: "priv/geolix/GeoLite2-Country.mmdb"
+    }
+  ]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

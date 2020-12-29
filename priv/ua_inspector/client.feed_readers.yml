@@ -1,7 +1,7 @@
 ###############
 # Device Detector - The Universal Device Detection library for parsing User Agents
 #
-# @link http://piwik.org
+# @link https://matomo.org
 # @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
 ###############
 
@@ -45,6 +45,12 @@
   name: 'Feeddler RSS Reader'
   version: '$1'
   url: 'http://www.chebinliu.com/projects/iphone/feeddler-rss-reader/'
+  type: 'Feed Reader App'
+
+- regex: 'QuiteRSS(?:[/ ](\d+[\.\d]+))?'
+  name: 'QuiteRSS'
+  version: '$1'
+  url: https://quiterss.org
   type: 'Feed Reader App'
 
 - regex: 'gPodder/([\d\.]+)'

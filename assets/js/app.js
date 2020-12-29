@@ -1,6 +1,9 @@
 import css from "../css/app.css"
+import "flatpickr/dist/flatpickr.min.css"
 import "./polyfills/closest"
+import 'abortcontroller-polyfill/dist/polyfill-patch-fetch'
 import "phoenix_html"
+import 'alpinejs'
 
 const triggers = document.querySelectorAll('[data-dropdown-trigger]')
 
@@ -29,14 +32,6 @@ if (triggers.length > 0) {
       }
     }
   })
-}
-
-const flash = document.getElementById('flash')
-
-if (flash) {
-  setTimeout(function() {
-    flash.style.display = 'none'
-  }, 2500)
 }
 
 const registerForm = document.getElementById('register-form')

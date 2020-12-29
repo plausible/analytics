@@ -18,12 +18,18 @@ defmodule Plausible.ClickhouseSession do
     field :events, :integer
     field :sign, :integer
 
+    field :utm_medium, :string
+    field :utm_source, :string
+    field :utm_campaign, :string
     field :referrer, :string
     field :referrer_source, :string
+
     field :country_code, :string
     field :screen_size, :string
     field :operating_system, :string
+    field :operating_system_version, :string
     field :browser, :string
+    field :browser_version, :string
     field :timestamp, :naive_datetime
   end
 
@@ -33,7 +39,26 @@ defmodule Plausible.ClickhouseSession do
 
   def changeset(session, attrs) do
     session
-    |> cast(attrs, [:hostname, :domain, :entry_page, :exit_page, :referrer, :fingerprint, :start, :length, :is_bounce, :operating_system, :browser, :referrer_source, :country_code, :screen_size])
+    |> cast(attrs, [
+      :hostname,
+      :domain,
+      :entry_page,
+      :exit_page,
+      :fingerprint,
+      :start,
+      :length,
+      :is_bounce,
+      :operating_system,
+      :operating_system_version,
+      :browser_version,
+      :referrer,
+      :referrer_source,
+      :utm_medium,
+      :utm_source,
+      :utm_campaign,
+      :country_code,
+      :screen_size
+    ])
     |> validate_required([:hostname, :domain, :fingerprint, :is_bounce, :start])
   end
 end

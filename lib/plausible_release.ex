@@ -3,11 +3,13 @@ defmodule Plausible.Release do
   @app :plausible
   @start_apps [
     :postgrex,
+    :clickhousex,
     :ecto
   ]
-  alias Mix.Tasks.HydrateClickhouse, as: Clickhouse
 
   def init_admin do
+    prepare()
+
     {admin_email, admin_user, admin_pwd} =
       validate_admin(
         {Application.get_env(:plausible, :admin_email),
@@ -15,23 +17,28 @@ defmodule Plausible.Release do
          Application.get_env(:plausible, :admin_pwd)}
       )
 
-    {:ok, admin} = Plausible.Auth.create_user(admin_user, admin_email)
-    # set the password
-    {:ok, admin} = Plausible.Auth.User.set_password(admin, admin_pwd) |> Repo.update()
-    # bump-up the trail period
-    admin
-    |> Ecto.Changeset.cast(%{trial_expiry_date: Timex.today() |> Timex.shift(years: 100)}, [
-      :trial_expiry_date
-    ])
-    |> Repo.update()
+    case Plausible.Auth.find_user_by(email: admin_email) do
+      nil ->
+        {:ok, admin} = Plausible.Auth.create_user(admin_user, admin_email)
+        # set the password
+        {:ok, admin} = Plausible.Auth.User.set_password(admin, admin_pwd) |> Repo.update()
+        # bump-up the trail period
+        admin
+        |> Ecto.Changeset.cast(%{trial_expiry_date: Timex.today() |> Timex.shift(years: 100)}, [
+          :trial_expiry_date
+        ])
+        |> Repo.update()
 
-    IO.puts("Admin user created successful!")
+        IO.puts("Admin user created successful!")
+
+      _ ->
+        IO.puts("Admin user already exists. I won't override, bailing")
+    end
   end
 
   def migrate do
     prepare()
     Enum.each(repos(), &run_migrations_for/1)
-    init_admin()
     IO.puts("Migrations successful!")
   end
 
@@ -39,14 +46,17 @@ defmodule Plausible.Release do
     prepare()
     # Run seed script
     Enum.each(repos(), &run_seeds_for/1)
-
     # Signal shutdown
     IO.puts("Success!")
   end
 
   def createdb do
     prepare()
-    do_create_db()
+
+    for repo <- repos() do
+      :ok = ensure_repo_created(repo)
+    end
+
     IO.puts("Creation of Db successful!")
   end
 
@@ -66,6 +76,16 @@ defmodule Plausible.Release do
       :error ->
         IO.puts("Invalid integer")
     end
+  end
+
+  def configure_ref_inspector() do
+    priv_dir = Application.app_dir(:plausible, "priv/ref_inspector")
+    Application.put_env(:ref_inspector, :database_path, priv_dir)
+  end
+
+  def configure_ua_inspector() do
+    priv_dir = Application.app_dir(:plausible, "priv/ua_inspector")
+    Application.put_env(:ua_inspector, :database_path, priv_dir)
   end
 
   ##############################
@@ -97,81 +117,9 @@ defmodule Plausible.Release do
   end
 
   defp run_migrations_for(repo) do
-    app = Keyword.get(repo.config, :otp_app)
-    IO.puts("Running migrations for #{app}")
+    IO.puts("Running migrations for #{repo}")
     {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
   end
-
-  defp do_create_db do
-    for repo <- repos() do
-      :ok = ensure_repo_created(repo)
-    end
-    do_create_ch_db()
-  end
-
-
-  defp do_create_ch_db() do
-    db_to_create = Keyword.get(Application.get_env(:plausible, :clickhouse),:database)
-
-    IO.puts("create #{inspect(db_to_create)} clickhouse database/tables if it doesn't exist")
-
-    Clickhousex.query(:clickhouse, "CREATE DATABASE IF NOT EXISTS #{db_to_create}", [])
-
-      tb_events = """
-      CREATE TABLE IF NOT EXISTS #{db_to_create}.events (
-        timestamp DateTime,
-        name String,
-        domain String,
-        user_id UInt64,
-        session_id UInt64,
-        hostname String,
-        pathname String,
-        referrer String,
-        referrer_source String,
-        initial_referrer String,
-        initial_referrer_source String,
-        country_code LowCardinality(FixedString(2)),
-        screen_size LowCardinality(String),
-        operating_system LowCardinality(String),
-        browser LowCardinality(String)
-      ) ENGINE = MergeTree()
-      PARTITION BY toYYYYMM(timestamp)
-      ORDER BY (name, domain, user_id, timestamp)
-      SETTINGS index_granularity = 8192
-      """
-
-    Clickhousex.query(:clickhouse, tb_events, [])
-
-    tb_sessions = """
-      CREATE TABLE IF NOT EXISTS #{db_to_create}.sessions (
-        session_id UInt64,
-        sign Int8,
-        domain String,
-        user_id UInt64,
-        hostname String,
-        timestamp DateTime,
-        start DateTime,
-        is_bounce UInt8,
-        entry_page String,
-        exit_page String,
-        pageviews Int32,
-        events Int32,
-        duration UInt32,
-        referrer String,
-        referrer_source String,
-        country_code LowCardinality(FixedString(2)),
-        screen_size LowCardinality(String),
-        operating_system LowCardinality(String),
-        browser LowCardinality(String)
-      ) ENGINE = CollapsingMergeTree(sign)
-      PARTITION BY toYYYYMM(start)
-      ORDER BY (domain, user_id, session_id, start)
-      SETTINGS index_granularity = 8192
-      """
-
-      Clickhousex.query(:clickhouse, tb_sessions, [])
-  end
-
 
   defp ensure_repo_created(repo) do
     IO.puts("create #{inspect(repo)} database if it doesn't exist")
@@ -196,29 +144,13 @@ defmodule Plausible.Release do
     # Load the code for myapp, but don't start it
     :ok = Application.load(@app)
 
-    prepare_clickhouse()
-
     IO.puts("Starting dependencies..")
     # Start apps necessary for executing migrations
     Enum.each(@start_apps, &Application.ensure_all_started/1)
 
-
     # Start the Repo(s) for myapp
     IO.puts("Starting repos..")
     Enum.each(repos(), & &1.start_link(pool_size: 2))
-
-  end
-
-  defp prepare_clickhouse do
-    Application.ensure_all_started(:db_connection)
-    Application.ensure_all_started(:hackney)
-    Clickhousex.start_link([
-      scheme: :http,
-      port: 8123,
-      name: :clickhouse,
-      database: "default",
-      hostname: Keyword.get(Application.get_env(:plausible,:clickhouse),:hostname)
-    ])
   end
 
   defp seeds_path(repo), do: priv_path_for(repo, "seeds.exs")

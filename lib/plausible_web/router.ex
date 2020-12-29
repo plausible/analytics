@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Router do
 
   pipeline :browser do
     plug :accepts, ["html"]
+    plug PlausibleWeb.Firewall
     plug :fetch_session
     plug :fetch_flash
     plug :put_secure_browser_headers
@@ -20,12 +21,14 @@ defmodule PlausibleWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug PlausibleWeb.Firewall
     plug :fetch_session
     plug PlausibleWeb.AuthPlug
   end
 
   pipeline :stats_api do
     plug :accepts, ["json"]
+    plug PlausibleWeb.Firewall
     plug :fetch_session
   end
 
@@ -38,16 +41,22 @@ defmodule PlausibleWeb.Router do
 
     get "/:domain/current-visitors", StatsController, :current_visitors
     get "/:domain/main-graph", StatsController, :main_graph
-    get "/:domain/referrers", StatsController, :referrers
-    get "/:domain/goal/referrers", StatsController, :referrers_for_goal
+    get "/:domain/sources", StatsController, :sources
+    get "/:domain/utm_mediums", StatsController, :utm_mediums
+    get "/:domain/utm_sources", StatsController, :utm_sources
+    get "/:domain/utm_campaigns", StatsController, :utm_campaigns
     get "/:domain/referrers/:referrer", StatsController, :referrer_drilldown
     get "/:domain/goal/referrers/:referrer", StatsController, :referrer_drilldown_for_goal
     get "/:domain/pages", StatsController, :pages
+    get "/:domain/entry-pages", StatsController, :entry_pages
     get "/:domain/countries", StatsController, :countries
     get "/:domain/browsers", StatsController, :browsers
+    get "/:domain/browser-versions", StatsController, :browser_versions
     get "/:domain/operating-systems", StatsController, :operating_systems
+    get "/:domain/operating-system-versions", StatsController, :operating_system_versions
     get "/:domain/screen-sizes", StatsController, :screen_sizes
     get "/:domain/conversions", StatsController, :conversions
+    get "/:domain/property/:prop_name", StatsController, :prop_breakdown
   end
 
   scope "/api", PlausibleWeb do
@@ -55,10 +64,12 @@ defmodule PlausibleWeb.Router do
 
     post "/event", Api.ExternalController, :event
     get "/error", Api.ExternalController, :error
+    get "/health", Api.ExternalController, :health
 
     post "/paddle/webhook", Api.PaddleController, :webhook
 
     get "/:domain/status", Api.InternalController, :domain_status
+    get "/sites", Api.InternalController, :sites
   end
 
   scope "/", PlausibleWeb do
@@ -66,7 +77,9 @@ defmodule PlausibleWeb.Router do
 
     get "/register", AuthController, :register_form
     post "/register", AuthController, :register
-    get "/claim-activation", AuthController, :claim_activation_link
+    get "/activate", AuthController, :activate_form
+    post "/activate/request-code", AuthController, :request_activation_code
+    post "/activate", AuthController, :activate
     get "/login", AuthController, :login_form
     post "/login", AuthController, :login
     get "/password/request-reset", AuthController, :password_reset_request_form
@@ -88,19 +101,12 @@ defmodule PlausibleWeb.Router do
     get "/auth/google/callback", AuthController, :google_auth_callback
 
     get "/", PageController, :index
-    get "/privacy", PageController, :privacy
-    get "/terms", PageController, :terms
-    get "/data-policy", PageController, :data_policy
-    get "/feedback", PageController, :feedback
-    get "/roadmap", PageController, :roadmap
-    get "/contact", PageController, :contact_form
-    post "/contact", PageController, :submit_contact_form
 
     get "/billing/change-plan", BillingController, :change_plan_form
     get "/billing/change-plan/preview/:plan_id", BillingController, :change_plan_preview
     post "/billing/change-plan/:new_plan_id", BillingController, :change_plan
     get "/billing/upgrade", BillingController, :upgrade
-    get "/billing/success", BillingController, :success
+    get "/billing/upgrade-success", BillingController, :upgrade_success
 
     get "/sites", SiteController, :index
     get "/sites/new", SiteController, :new
@@ -110,11 +116,33 @@ defmodule PlausibleWeb.Router do
     post "/sites/:website/weekly-report/enable", SiteController, :enable_weekly_report
     post "/sites/:website/weekly-report/disable", SiteController, :disable_weekly_report
     post "/sites/:website/weekly-report/recipients", SiteController, :add_weekly_report_recipient
-    delete "/sites/:website/weekly-report/recipients/:recipient", SiteController, :remove_weekly_report_recipient
+
+    delete "/sites/:website/weekly-report/recipients/:recipient",
+           SiteController,
+           :remove_weekly_report_recipient
+
     post "/sites/:website/monthly-report/enable", SiteController, :enable_monthly_report
     post "/sites/:website/monthly-report/disable", SiteController, :disable_monthly_report
-    post "/sites/:website/monthly-report/recipients", SiteController, :add_monthly_report_recipient
-    delete "/sites/:website/monthly-report/recipients/:recipient", SiteController, :remove_monthly_report_recipient
+
+    post "/sites/:website/monthly-report/recipients",
+         SiteController,
+         :add_monthly_report_recipient
+
+    delete "/sites/:website/monthly-report/recipients/:recipient",
+           SiteController,
+           :remove_monthly_report_recipient
+
+    post "/sites/:website/spike-notification/enable", SiteController, :enable_spike_notification
+    post "/sites/:website/spike-notification/disable", SiteController, :disable_spike_notification
+    put "/sites/:website/spike-notification", SiteController, :update_spike_notification
+
+    post "/sites/:website/spike-notification/recipients",
+         SiteController,
+         :add_spike_notification_recipient
+
+    delete "/sites/:website/spike-notification/recipients/:recipient",
+           SiteController,
+           :remove_spike_notification_recipient
 
     get "/sites/:website/shared-links/new", SiteController, :new_shared_link
     post "/sites/:website/shared-links", SiteController, :create_shared_link
@@ -124,20 +152,28 @@ defmodule PlausibleWeb.Router do
     get "/sites/:website/custom-domains/dns-setup", SiteController, :custom_domain_dns_setup
     get "/sites/:website/custom-domains/snippet", SiteController, :custom_domain_snippet
     post "/sites/:website/custom-domains", SiteController, :add_custom_domain
+    delete "/sites/:website/custom-domains/:id", SiteController, :delete_custom_domain
 
     get "/sites/:website/weekly-report/unsubscribe", UnsubscribeController, :weekly_report
     get "/sites/:website/monthly-report/unsubscribe", UnsubscribeController, :monthly_report
 
-
     get "/:website/snippet", SiteController, :add_snippet
     get "/:website/settings", SiteController, :settings
-    get "/:website/goals", SiteController, :goals
+    get "/:website/settings/general", SiteController, :settings_general
+    get "/:website/settings/visibility", SiteController, :settings_visibility
+    get "/:website/settings/goals", SiteController, :settings_goals
+    get "/:website/settings/search-console", SiteController, :settings_search_console
+    get "/:website/settings/email-reports", SiteController, :settings_email_reports
+    get "/:website/settings/custom-domain", SiteController, :settings_custom_domain
+    get "/:website/settings/danger-zone", SiteController, :settings_danger_zone
     get "/:website/goals/new", SiteController, :new_goal
     post "/:website/goals", SiteController, :create_goal
     delete "/:website/goals/:id", SiteController, :delete_goal
     put "/:website/settings", SiteController, :update_settings
     put "/:website/settings/google", SiteController, :update_google_auth
+    delete "/:website/settings/google", SiteController, :delete_google_auth
     delete "/:website", SiteController, :delete_site
+    delete "/:website/stats", SiteController, :reset_stats
 
     get "/share/:slug", StatsController, :shared_link
     post "/share/:slug/authenticate", StatsController, :authenticate_shared_link

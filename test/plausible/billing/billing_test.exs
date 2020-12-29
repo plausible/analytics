@@ -1,5 +1,6 @@
 defmodule Plausible.BillingTest do
   use Plausible.DataCase
+  use Bamboo.Test, shared: true
   alias Plausible.Billing
 
   describe "usage" do
@@ -43,17 +44,25 @@ defmodule Plausible.BillingTest do
 
       refute Billing.on_trial?(user)
     end
+
+    test "is false if user has subscription" do
+      user = insert(:user, subscription: build(:subscription))
+
+      refute Billing.on_trial?(user)
+    end
   end
 
   describe "needs_to_upgrade?" do
     test "is false for a trial user" do
       user = insert(:user)
+      user = Repo.preload(user, :subscription)
 
       refute Billing.needs_to_upgrade?(user)
     end
 
     test "is true for a user with an expired trial" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
+      user = Repo.preload(user, :subscription)
 
       assert Billing.needs_to_upgrade?(user)
     end
@@ -61,13 +70,37 @@ defmodule Plausible.BillingTest do
     test "is false for a user with an expired trial but an active subscription" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
       insert(:subscription, user: user)
+      user = Repo.preload(user, :subscription)
 
       refute Billing.needs_to_upgrade?(user)
     end
 
-    test "is true for a user with an expired trial and a non-active subscription" do
+    test "is false for a user with a cancelled subscription IF the billing cycle isn't completed yet" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
-      insert(:subscription, user: user, status: "past_due")
+      insert(:subscription, user: user, status: "deleted", next_bill_date: Timex.today())
+      user = Repo.preload(user, :subscription)
+
+      refute Billing.needs_to_upgrade?(user)
+    end
+
+    test "is true for a user with a cancelled subscription IF the billing cycle is complete" do
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
+
+      insert(:subscription,
+        user: user,
+        status: "deleted",
+        next_bill_date: Timex.shift(Timex.today(), days: -1)
+      )
+
+      user = Repo.preload(user, :subscription)
+
+      assert Billing.needs_to_upgrade?(user)
+    end
+
+    test "is false for a deleted subscription if not next_bill_date specified" do
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
+      insert(:subscription, user: user, status: "deleted", next_bill_date: nil)
+      user = Repo.preload(user, :subscription)
 
       assert Billing.needs_to_upgrade?(user)
     end
@@ -76,10 +109,10 @@ defmodule Plausible.BillingTest do
   @subscription_id "subscription-123"
   @plan_id "plan-123"
 
-
   describe "subscription_created" do
     test "creates a subscription" do
       user = insert(:user)
+
       Billing.subscription_created(%{
         "alert_name" => "subscription_created",
         "subscription_id" => @subscription_id,
@@ -160,13 +193,29 @@ defmodule Plausible.BillingTest do
     end
 
     test "ignores if the subscription cannot be found" do
-      res = Billing.subscription_cancelled(%{
+      res =
+        Billing.subscription_cancelled(%{
+          "alert_name" => "subscription_cancelled",
+          "subscription_id" => "some_nonexistent_id",
+          "status" => "deleted"
+        })
+
+      assert res == {:ok, nil}
+    end
+
+    test "sends an email to confirm cancellation" do
+      user = insert(:user)
+      subscription = insert(:subscription, status: "active", user: user)
+
+      Billing.subscription_cancelled(%{
         "alert_name" => "subscription_cancelled",
-        "subscription_id" => "some_nonexistent_id",
+        "subscription_id" => subscription.paddle_subscription_id,
         "status" => "deleted"
       })
 
-      assert res == {:ok, nil}
+      assert_email_delivered_with(
+        subject: "Your Plausible Analytics subscription has been canceled"
+      )
     end
   end
 
@@ -186,12 +235,13 @@ defmodule Plausible.BillingTest do
     end
 
     test "ignores if the subscription cannot be found" do
-      res = Billing.subscription_payment_succeeded(%{
-        "alert_name" => "subscription_payment_succeeded",
-        "subscription_id" => "nonexistent_subscription_id",
-        "next_bill_date" => Timex.shift(Timex.today(), days: 30),
-        "unit_price" => "12.00"
-      })
+      res =
+        Billing.subscription_payment_succeeded(%{
+          "alert_name" => "subscription_payment_succeeded",
+          "subscription_id" => "nonexistent_subscription_id",
+          "next_bill_date" => Timex.shift(Timex.today(), days: 30),
+          "unit_price" => "12.00"
+        })
 
       assert res == {:ok, nil}
     end
@@ -200,7 +250,7 @@ defmodule Plausible.BillingTest do
   describe "change_plan" do
     test "sets the next bill amount and date" do
       user = insert(:user)
-       insert(:subscription, user: user)
+      insert(:subscription, user: user)
 
       Billing.change_plan(user, "123123")
 
