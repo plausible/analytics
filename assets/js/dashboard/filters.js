@@ -131,7 +131,7 @@ class Filters extends React.Component {
     }
     if (key === "country") {
       const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
-      const selectedCountry = allCountries.find((c) => c.id === value)
+      const selectedCountry = allCountries.find((c) => c.id === value) || {properties: {name: value}};
       return <span className="inline-block max-w-2xs md:max-w-xs truncate">Country: <b>{selectedCountry.properties.name}</b></span>
     }
     if (key === "page") {
