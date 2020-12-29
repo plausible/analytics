@@ -28,6 +28,9 @@ module.exports = {
       },
       zIndex: {
         '9': 9,
+      },
+      maxWidth: {
+        '2xs': '16rem',
       }
     },
   },
@@ -39,6 +42,8 @@ module.exports = {
       borderWidth: ['dark'],
       backgroundOpacity: ['dark'],
       display: ['dark'],
+      cursor: ['hover'],
+      justifyContent: ['responsive']
     }
   },
   plugins: [

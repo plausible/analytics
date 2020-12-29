@@ -43,11 +43,17 @@ export function parseQuery(querystring, site) {
   }
 }
 
+export function countFilters(query) {
+  let count = 0;
+  for (const filter of Object.values(query.filters)) {
+    if (filter) count++;
+  }
+
+  return count;
+}
+
 function generateQueryString(data) {
   const query = new URLSearchParams(window.location.search)
-  query.delete("date");
-  query.delete("from");
-  query.delete("to");
   Object.keys(data).forEach(key => {
     if (!data[key]) {
       query.delete(key)
