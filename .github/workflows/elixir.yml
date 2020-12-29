@@ -24,6 +24,17 @@ jobs:
             --health-timeout 5s
             --health-retries 5
 
+      clickhouse:
+        image: yandex/clickhouse-server:20
+        ports:
+          - 8123:8123
+        env:
+          options: >-
+            --health-cmd nc -zw3 localhost 8124
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+
     steps:
     - uses: actions/checkout@v2
     - name: Read .tool-versions
