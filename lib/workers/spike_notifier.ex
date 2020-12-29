@@ -21,6 +21,8 @@ defmodule Plausible.Workers.SpikeNotifier do
       sources = clickhouse.top_sources(notification.site, query, 3, 1, true)
       notify(notification, current_visitors, sources)
     end
+
+    :ok
   end
 
   def notify(notification, current_visitors, sources) do
