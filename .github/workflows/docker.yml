@@ -11,17 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v2
-
-     -
-        name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-          ${{ runner.os }}-buildx-
-    
+      - uses: actions/checkout@v2    
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -34,6 +24,10 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+       - 
+        name: Docker cache
+        uses: satackey/action-docker-layer-caching@v0.0.11
       -
         name: Build and push
         id: docker_build
