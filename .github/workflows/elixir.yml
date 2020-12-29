@@ -1,0 +1,61 @@
+name: Elixir CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:12
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: postgres
+          options: >-
+            --health-cmd pg_isready
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+
+      clickhouse:
+        image: yandex/clickhouse-server:20
+        ports:
+          - 8123:8123
+        env:
+          options: >-
+            --health-cmd nc -zw3 localhost 8124
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Read .tool-versions
+      uses: marocchino/tool-versions-action@v1
+      id: versions
+    - name: Set up Elixir
+      uses: actions/setup-elixir@v1
+      with:
+        elixir-version: ${{steps.versions.outputs.elixir}}
+        otp-version: ${{ steps.versions.outputs.erlang}}
+    - name: Restore dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: deps
+        key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+        restore-keys: ${{ runner.os }}-mix-
+    - name: Install dependencies
+      run: mix deps.get
+    - name: Check Formatting
+      run: mix format --check-formatted
+    - name: Run tests
+      run: mix test
+env:
+  MIX_ENV: test

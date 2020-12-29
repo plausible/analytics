@@ -4,11 +4,18 @@ defmodule Plausible.Auth do
   alias Plausible.Stats.Clickhouse, as: Stats
 
   def issue_email_verification(user) do
-    Repo.update_all(from(c in "email_verification_codes", where: c.user_id == ^user.id), [set: [user_id: nil]])
+    Repo.update_all(from(c in "email_verification_codes", where: c.user_id == ^user.id),
+      set: [user_id: nil]
+    )
 
-    code = Repo.one(from(c in "email_verification_codes", where: is_nil(c.user_id), select: c.code, limit: 1))
+    code =
+      Repo.one(
+        from(c in "email_verification_codes", where: is_nil(c.user_id), select: c.code, limit: 1)
+      )
 
-    Repo.update_all(from(c in "email_verification_codes", where: c.code == ^code), [set: [user_id: user.id, issued_at: Timex.now()]])
+    Repo.update_all(from(c in "email_verification_codes", where: c.code == ^code),
+      set: [user_id: user.id, issued_at: Timex.now()]
+    )
 
     code
   end
@@ -18,21 +25,34 @@ defmodule Plausible.Auth do
   end
 
   def verify_email(user, code) do
-    found_code = Repo.one(
-      from c in "email_verification_codes",
-      where: c.user_id == ^user.id,
-      where: c.code == ^code,
-      select: %{code: c.code, issued: c.issued_at}
-    )
+    found_code =
+      Repo.one(
+        from c in "email_verification_codes",
+          where: c.user_id == ^user.id,
+          where: c.code == ^code,
+          select: %{code: c.code, issued: c.issued_at}
+      )
 
     cond do
-      is_nil(found_code) -> {:error, :incorrect}
-      is_expired?(found_code[:issued]) -> {:error, :expired}
+      is_nil(found_code) ->
+        {:error, :incorrect}
+
+      is_expired?(found_code[:issued]) ->
+        {:error, :expired}
+
       true ->
-        {:ok, _} = Ecto.Multi.new
-        |> Ecto.Multi.update(:user, Plausible.Auth.User.changeset(user, %{email_verified: true}))
-        |> Ecto.Multi.update_all(:codes, from(c in "email_verification_codes", where: c.user_id == ^user.id), [set: [user_id: nil]])
-        |> Repo.transaction
+        {:ok, _} =
+          Ecto.Multi.new()
+          |> Ecto.Multi.update(
+            :user,
+            Plausible.Auth.User.changeset(user, %{email_verified: true})
+          )
+          |> Ecto.Multi.update_all(
+            :codes,
+            from(c in "email_verification_codes", where: c.user_id == ^user.id),
+            set: [user_id: nil]
+          )
+          |> Repo.transaction()
 
         :ok
     end

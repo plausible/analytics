@@ -7,12 +7,15 @@ defmodule PlausibleWeb.SiteController do
 
   def index(conn, _params) do
     user = conn.assigns[:current_user]
-    sites = Repo.all(
-      from s in Plausible.Site,
-      join: sm in Plausible.Site.Membership, on: sm.site_id == s.id,
-      where: sm.user_id == ^user.id,
-      order_by: s.domain
-    )
+
+    sites =
+      Repo.all(
+        from s in Plausible.Site,
+          join: sm in Plausible.Site.Membership,
+          on: sm.site_id == s.id,
+          where: sm.user_id == ^user.id,
+          order_by: s.domain
+      )
 
     visitors = Plausible.Stats.Clickhouse.last_24h_visitors(sites)
     render(conn, "index.html", sites: sites, visitors: visitors)
@@ -22,12 +25,17 @@ defmodule PlausibleWeb.SiteController do
     current_user = conn.assigns[:current_user]
     changeset = Plausible.Site.changeset(%Plausible.Site{})
 
-    is_first_site = !Repo.exists?(
-      from sm in Plausible.Site.Membership,
-      where: sm.user_id == ^current_user.id
-    )
+    is_first_site =
+      !Repo.exists?(
+        from sm in Plausible.Site.Membership,
+          where: sm.user_id == ^current_user.id
+      )
 
-    render(conn, "new.html", changeset: changeset, is_first_site: is_first_site, layout: {PlausibleWeb.LayoutView, "focus.html"})
+    render(conn, "new.html",
+      changeset: changeset,
+      is_first_site: is_first_site,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
   end
 
   def create_site(conn, %{"site" => site_params}) do
@@ -37,11 +45,13 @@ defmodule PlausibleWeb.SiteController do
       {:ok, %{site: site}} ->
         Plausible.Slack.notify("#{user.name} created #{site.domain} [email=#{user.email}]")
 
-        is_first_site = !Repo.exists?(
-          from sm in Plausible.Site.Membership,
-          where: sm.user_id == ^user.id
-          and sm.site_id != ^site.id
-        )
+        is_first_site =
+          !Repo.exists?(
+            from sm in Plausible.Site.Membership,
+              where:
+                sm.user_id == ^user.id and
+                  sm.site_id != ^site.id
+          )
 
         if is_first_site do
           PlausibleWeb.Email.welcome_email(user)
@@ -53,10 +63,11 @@ defmodule PlausibleWeb.SiteController do
         |> redirect(to: "/#{URI.encode_www_form(site.domain)}/snippet")
 
       {:error, :site, changeset, _} ->
-        is_first_site = !Repo.exists?(
-          from sm in Plausible.Site.Membership,
-          where: sm.user_id == ^user.id
-        )
+        is_first_site =
+          !Repo.exists?(
+            from sm in Plausible.Site.Membership,
+              where: sm.user_id == ^user.id
+          )
 
         render(conn, "new.html",
           changeset: changeset,
@@ -68,19 +79,26 @@ defmodule PlausibleWeb.SiteController do
 
   def add_snippet(conn, %{"website" => website}) do
     user = conn.assigns[:current_user]
+
     site =
       Sites.get_for_user!(conn.assigns[:current_user].id, website)
       |> Repo.preload(:custom_domain)
 
-    is_first_site = !Repo.exists?(
-      from sm in Plausible.Site.Membership,
-      where: sm.user_id == ^user.id
-      and sm.site_id != ^site.id
-    )
+    is_first_site =
+      !Repo.exists?(
+        from sm in Plausible.Site.Membership,
+          where:
+            sm.user_id == ^user.id and
+              sm.site_id != ^site.id
+      )
 
     conn
     |> assign(:skip_plausible_tracking, true)
-    |> render("snippet.html", site: site, is_first_site: is_first_site, layout: {PlausibleWeb.LayoutView, "focus.html"})
+    |> render("snippet.html",
+      site: site,
+      is_first_site: is_first_site,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
   end
 
   def new_goal(conn, %{"website" => website}) do
@@ -129,8 +147,9 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_general(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
-           |> Repo.preload(:custom_domain)
+    site =
+      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      |> Repo.preload(:custom_domain)
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -168,7 +187,8 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_search_console(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    site =
+      Sites.get_for_user!(conn.assigns[:current_user].id, website)
       |> Repo.preload(:google_auth)
 
     search_console_domains =
@@ -200,12 +220,16 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_custom_domain(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    site =
+      Sites.get_for_user!(conn.assigns[:current_user].id, website)
       |> Repo.preload(:custom_domain)
 
     conn
     |> assign(:skip_plausible_tracking, true)
-    |> render("settings_custom_domain.html", site: site, layout: {PlausibleWeb.LayoutView, "site_settings.html"})
+    |> render("settings_custom_domain.html",
+      site: site,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
   end
 
   def settings_danger_zone(conn, %{"website" => website}) do

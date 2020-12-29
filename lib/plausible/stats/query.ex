@@ -7,13 +7,24 @@ defmodule Plausible.Stats.Query do
   end
 
   def shift_back(%__MODULE__{period: "month"} = query, site) do
-    {new_first, new_last} = if Timex.compare(Timex.now(site.timezone), query.date_range.first, :month) == 0  do # Querying current month to date
-      diff = Timex.diff(Timex.beginning_of_month(Timex.now(site.timezone)), Timex.now(site.timezone), :days) - 1
-      {query.date_range.first |> Timex.shift(days: diff), Timex.now(site.timezone) |> Timex.to_date |> Timex.shift(days: diff)}
-    else
-      diff = Timex.diff(query.date_range.first, query.date_range.last, :days) - 1
-      {query.date_range.first |> Timex.shift(days: diff), query.date_range.last |> Timex.shift(days: diff)}
-    end
+    # Querying current month to date
+    {new_first, new_last} =
+      if Timex.compare(Timex.now(site.timezone), query.date_range.first, :month) == 0 do
+        diff =
+          Timex.diff(
+            Timex.beginning_of_month(Timex.now(site.timezone)),
+            Timex.now(site.timezone),
+            :days
+          ) - 1
+
+        {query.date_range.first |> Timex.shift(days: diff),
+         Timex.now(site.timezone) |> Timex.to_date() |> Timex.shift(days: diff)}
+      else
+        diff = Timex.diff(query.date_range.first, query.date_range.last, :days) - 1
+
+        {query.date_range.first |> Timex.shift(days: diff),
+         query.date_range.last |> Timex.shift(days: diff)}
+      end
 
     Map.put(query, :date_range, Date.range(new_first, new_last))
   end

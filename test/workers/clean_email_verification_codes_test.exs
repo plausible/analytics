@@ -3,8 +3,14 @@ defmodule Plausible.Workers.CleanEmailVerificationCodesTest do
   alias Plausible.Workers.CleanEmailVerificationCodes
 
   defp issue_code(user, issued_at) do
-    code = Repo.one(from(c in "email_verification_codes", where: is_nil(c.user_id), select: c.code, limit: 1))
-    Repo.update_all(from(c in "email_verification_codes", where: c.code == ^code), [set: [user_id: user.id, issued_at: issued_at]])
+    code =
+      Repo.one(
+        from(c in "email_verification_codes", where: is_nil(c.user_id), select: c.code, limit: 1)
+      )
+
+    Repo.update_all(from(c in "email_verification_codes", where: c.code == ^code),
+      set: [user_id: user.id, issued_at: issued_at]
+    )
   end
 
   test "cleans codes that are more than 4 hours old" do

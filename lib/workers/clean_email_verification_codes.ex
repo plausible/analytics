@@ -9,7 +9,7 @@ defmodule Plausible.Workers.CleanEmailVerificationCodes do
         where: not is_nil(c.user_id),
         where: c.issued_at < fragment("now() - INTERVAL '4 hours'")
       ),
-      [set: [user_id: nil]]
+      set: [user_id: nil]
     )
   end
 end
