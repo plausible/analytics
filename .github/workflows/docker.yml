@@ -12,6 +12,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - uses: nelonoel/branch-name@v1.0.1
 
       -
         name: Set up QEMU
@@ -35,7 +36,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: plausible/analytics:${GITHUB_REF##*/}
+          tags: plausible/analytics:${BRANCH_NAME}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
       -
