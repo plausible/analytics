@@ -49,7 +49,7 @@ defmodule PlausibleWeb.AuthControllerTest do
             name: "Jane Doe",
             email: "user@example.com",
             password: "very-secret",
-            password_confirmation: "very-secret",
+            password_confirmation: "very-secret"
           }
         )
 
@@ -63,7 +63,7 @@ defmodule PlausibleWeb.AuthControllerTest do
             name: "Jane Doe",
             email: "user@example.com",
             password: "very-secret",
-            password_confirmation: "very-secret",
+            password_confirmation: "very-secret"
           }
         )
 
@@ -80,9 +80,11 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "Request activation code"
     end
 
-    test "if user does have a code: prompts user to enter the activation code from their email", %{conn: conn} do
-      conn = post(conn, "/activate/request-code")
-             |> get("/activate")
+    test "if user does have a code: prompts user to enter the activation code from their email",
+         %{conn: conn} do
+      conn =
+        post(conn, "/activate/request-code")
+        |> get("/activate")
 
       assert html_response(conn, 200) =~ "Please enter the 4-digit code we sent to"
     end
@@ -94,7 +96,12 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "associates an activation pin with the user account", %{conn: conn, user: user} do
       post(conn, "/activate/request-code")
 
-      code = Repo.one(from c in "email_verification_codes", where: c.user_id == ^user.id, select: %{user_id: c.user_id, issued_at: c.issued_at})
+      code =
+        Repo.one(
+          from c in "email_verification_codes",
+            where: c.user_id == ^user.id,
+            select: %{user_id: c.user_id, issued_at: c.issued_at}
+        )
 
       assert code[:user_id] == user.id
       assert Timex.after?(code[:issued_at], Timex.now() |> Timex.shift(seconds: -10))
@@ -119,11 +126,13 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "with expired pin - reloads the form with error", %{conn: conn, user: user} do
-      Repo.insert_all("email_verification_codes", [%{
-        code: 1234,
-        user_id: user.id,
-        issued_at: Timex.shift(Timex.now(), days: -1)
-      }])
+      Repo.insert_all("email_verification_codes", [
+        %{
+          code: 1234,
+          user_id: user.id,
+          issued_at: Timex.shift(Timex.now(), days: -1)
+        }
+      ])
 
       conn = post(conn, "/activate", %{code: "1234"})
 
@@ -134,7 +143,11 @@ defmodule PlausibleWeb.AuthControllerTest do
       Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
       post(conn, "/activate/request-code")
 
-      code = Repo.one(from c in "email_verification_codes", where: c.user_id == ^user.id, select: c.code) |> Integer.to_string
+      code =
+        Repo.one(
+          from c in "email_verification_codes", where: c.user_id == ^user.id, select: c.code
+        )
+        |> Integer.to_string()
 
       conn = post(conn, "/activate", %{code: code})
       user = Repo.get_by(Plausible.Auth.User, id: user.id)
@@ -147,7 +160,11 @@ defmodule PlausibleWeb.AuthControllerTest do
       Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
       post(conn, "/activate/request-code")
 
-      code = Repo.one(from c in "email_verification_codes", where: c.user_id == ^user.id, select: c.code) |> Integer.to_string
+      code =
+        Repo.one(
+          from c in "email_verification_codes", where: c.user_id == ^user.id, select: c.code
+        )
+        |> Integer.to_string()
 
       post(conn, "/activate", %{code: code})
 

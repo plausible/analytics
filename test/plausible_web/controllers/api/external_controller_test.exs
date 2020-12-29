@@ -110,7 +110,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       conn
       |> put_req_header("content-type", "text/plain")
-      |> put_req_header("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/85.0.4183.83 Safari/537.36")
+      |> put_req_header(
+        "user-agent",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/85.0.4183.83 Safari/537.36"
+      )
       |> post("/api/event", Jason.encode!(params))
 
       assert get_event("headless-chrome-test.com") == nil
@@ -396,10 +399,11 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       name: "Signup",
       url: "http://gigride.live/",
       domain: "custom-prop-test.com",
-      props: Jason.encode!(%{
-        bool_test: true,
-        number_test: 12
-      })
+      props:
+        Jason.encode!(%{
+          bool_test: true,
+          number_test: 12
+        })
     }
 
     conn
@@ -508,7 +512,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
   test "decodes URL pathname, fragment and search", %{conn: conn} do
     params = %{
       n: "pageview",
-      u: "https://test.com/%EF%BA%9D%EF%BB%AD%EF%BA%8E%EF%BA%8B%EF%BA%AF-%EF%BB%AE%EF%BB%A4%EF%BA%B3%EF%BA%8E%EF%BA%92%EF%BB%97%EF%BA%8E%EF%BA%97?utm_source=%25balle%25",
+      u:
+        "https://test.com/%EF%BA%9D%EF%BB%AD%EF%BA%8E%EF%BA%8B%EF%BA%AF-%EF%BB%AE%EF%BB%A4%EF%BA%B3%EF%BA%8E%EF%BA%92%EF%BB%97%EF%BA%8E%EF%BA%97?utm_source=%25balle%25",
       d: "url-decode-test.com",
       h: 1
     }

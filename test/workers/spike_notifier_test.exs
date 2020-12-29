@@ -6,10 +6,17 @@ defmodule Plausible.Workers.SpikeNotifierTest do
 
   test "does not notify anyone if current visitors does not exceed notification threshold" do
     site = insert(:site)
-    insert(:spike_notification, site: site, threshold: 10, recipients: ["jerod@example.com", "uku@example.com"])
 
-    clickhouse_stub = stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 5 end)
-                      |> stub(:top_sources, fn _site, _query, _limit, _page, _show_noref -> [] end)
+    insert(:spike_notification,
+      site: site,
+      threshold: 10,
+      recipients: ["jerod@example.com", "uku@example.com"]
+    )
+
+    clickhouse_stub =
+      stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 5 end)
+      |> stub(:top_sources, fn _site, _query, _limit, _page, _show_noref -> [] end)
+
     SpikeNotifier.perform(nil, nil, clickhouse_stub)
 
     assert_no_emails_delivered()
@@ -17,10 +24,17 @@ defmodule Plausible.Workers.SpikeNotifierTest do
 
   test "notifies all recipients when traffic is higher than configured threshold" do
     site = insert(:site)
-    insert(:spike_notification, site: site, threshold: 10, recipients: ["jerod@example.com", "uku@example.com"])
 
-    clickhouse_stub = stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 10 end)
-                      |> stub(:top_sources, fn _site, _query, _limit, _page, _show_noref -> [] end)
+    insert(:spike_notification,
+      site: site,
+      threshold: 10,
+      recipients: ["jerod@example.com", "uku@example.com"]
+    )
+
+    clickhouse_stub =
+      stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 10 end)
+      |> stub(:top_sources, fn _site, _query, _limit, _page, _show_noref -> [] end)
+
     SpikeNotifier.perform(nil, nil, clickhouse_stub)
 
     assert_email_delivered_with(
@@ -37,8 +51,10 @@ defmodule Plausible.Workers.SpikeNotifierTest do
   test "does not notify anyone if a notification already went out in the last 12 hours" do
     site = insert(:site)
     insert(:spike_notification, site: site, threshold: 10, recipients: ["uku@example.com"])
-    clickhouse_stub = stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 10 end)
-                      |> stub(:top_sources, fn _site, _query, _limit, _page, _show_noref -> [] end)
+
+    clickhouse_stub =
+      stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 10 end)
+      |> stub(:top_sources, fn _site, _query, _limit, _page, _show_noref -> [] end)
 
     SpikeNotifier.perform(nil, nil, clickhouse_stub)
 

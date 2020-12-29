@@ -7,12 +7,13 @@ defmodule Plausible.Workers.SpikeNotifier do
 
   @impl Oban.Worker
   def perform(_args, _job, clickhouse \\ Plausible.Stats.Clickhouse) do
-    notifications = Repo.all(
-      from sn in SpikeNotification,
-      where: is_nil(sn.last_sent),
-      or_where: sn.last_sent < fragment("now() - INTERVAL ?", @at_most_every),
-      preload: :site
-    )
+    notifications =
+      Repo.all(
+        from sn in SpikeNotification,
+          where: is_nil(sn.last_sent),
+          or_where: sn.last_sent < fragment("now() - INTERVAL ?", @at_most_every),
+          preload: :site
+      )
 
     for notification <- notifications do
       query = Query.from(notification.site.timezone, %{"period" => "realtime"})
@@ -27,20 +28,30 @@ defmodule Plausible.Workers.SpikeNotifier do
       for recipient <- notification.recipients do
         send_notification(recipient, notification.site, current_visitors, sources)
       end
+
       notification
       |> SpikeNotification.was_sent()
-      |> Repo.update
+      |> Repo.update()
     end
   end
 
   defp send_notification(recipient, site, current_visitors, sources) do
     site = Repo.preload(site, :members)
 
-    dashboard_link = if Enum.member?(site.members, recipient) do
-      PlausibleWeb.Endpoint.url() <> "/" <> URI.encode_www_form(site.domain)
-    end
+    dashboard_link =
+      if Enum.member?(site.members, recipient) do
+        PlausibleWeb.Endpoint.url() <> "/" <> URI.encode_www_form(site.domain)
+      end
 
-    template = PlausibleWeb.Email.spike_notification(recipient, site, current_visitors, sources, dashboard_link)
+    template =
+      PlausibleWeb.Email.spike_notification(
+        recipient,
+        site,
+        current_visitors,
+        sources,
+        dashboard_link
+      )
+
     try do
       Plausible.Mailer.send_email(template)
     rescue
