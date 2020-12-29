@@ -44,5 +44,7 @@ jobs:
       run: mix format --check-formatted
     - name: Run tests
       run: mix test
+      env:
+          DATABASE_URL: postgres://postgres:postgres@postgres:5432/plausible_test
 env:
   MIX_ENV: test
