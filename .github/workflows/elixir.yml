@@ -14,6 +14,8 @@ jobs:
     services:
       postgres:
         image: postgres:12
+        ports:
+          - 5432:5432
         env:
           POSTGRES_PASSWORD: postgres
           options: >-
@@ -44,7 +46,5 @@ jobs:
       run: mix format --check-formatted
     - name: Run tests
       run: mix test
-      env:
-          DATABASE_URL: postgres://postgres:postgres@postgres:5432/plausible_test
 env:
   MIX_ENV: test
