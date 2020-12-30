@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalController do
   use PlausibleWeb, :controller
-  use Appsignal.Instrumentation.Decorators
   require Logger
 
   def event(conn, _params) do
@@ -55,7 +54,6 @@ defmodule PlausibleWeb.Api.ExternalController do
     })
   end
 
-  @decorate transaction_event("phoenix_controller")
   defp parse_user_agent(conn) do
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
     user_agent && UAInspector.parse(user_agent)
@@ -121,9 +119,11 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-
   defp is_bot?(%UAInspector.Result.Bot{}), do: true
-  defp is_bot?(%UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}}), do: true
+
+  defp is_bot?(%UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}}),
+    do: true
+
   defp is_bot?(_), do: false
 
   defp parse_meta(params) do
@@ -139,8 +139,9 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp get_pathname(nil, _), do: "/"
 
   defp get_pathname(uri, hash_mode) do
-    pathname = (uri.path || "/")
-               |> URI.decode
+    pathname =
+      (uri.path || "/")
+      |> URI.decode()
 
     if hash_mode && uri.fragment do
       pathname <> "#" <> URI.decode(uri.fragment)
@@ -160,10 +161,8 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-
-
-  @decorate transaction_event("phoenix_controller")
   defp parse_referrer(_, nil), do: nil
+
   defp parse_referrer(uri, referrer_str) do
     referrer_uri = URI.parse(referrer_str)
 
@@ -225,6 +224,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   defp major_minor(:unknown), do: ""
+
   defp major_minor(version) do
     version
     |> String.split(".")

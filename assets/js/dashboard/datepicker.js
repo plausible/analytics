@@ -13,6 +13,7 @@ import {
   lastMonth,
   nowForSite,
   isSameMonth,
+  isThisMonth,
   parseUTCDate,
   isBefore,
   isAfter
@@ -101,7 +102,11 @@ class DatePicker extends React.Component {
     } else if (query.period === '30d') {
       return 'Last 30 days'
     } else if (query.period === 'month') {
-      return formatMonthYYYY(query.date)
+      if (isThisMonth(site, query.date)) {
+        return 'Month to Date'
+      } else {
+        return formatMonthYYYY(query.date)
+      }
     } else if (query.period === '6mo') {
       return 'Last 6 months'
     } else if (query.period === '12mo') {
@@ -186,8 +191,8 @@ class DatePicker extends React.Component {
 
   renderDropDown() {
     return (
-      <div className="relative" style={{height: '35.5px', width: '190px'}}  ref={node => this.dropDownNode = node}>
-        <div onClick={this.open.bind(this)} className="flex items-center justify-between rounded bg-white shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800 h-full">
+      <div className="relative" style={{height: '35.5px', width: '170px'}}  ref={node => this.dropDownNode = node}>
+        <div onClick={this.open.bind(this)} className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800 dark:text-gray-200 h-full">
           <span className="mr-2">{this.timeFrameText()}</span>
           <svg className="text-pink-500 h-4 w-4" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="6 9 12 15 18 9"></polyline>
@@ -228,7 +233,7 @@ class DatePicker extends React.Component {
     if (opts.date) { opts.date = formatISO(opts.date) }
 
     return (
-      <QueryLink to={{period, ...opts}} onClick={this.close.bind(this)} query={this.props.query} className={boldClass + ' block px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900'}>
+      <QueryLink to={{from: false, to: false, date: false, period, ...opts}} onClick={this.close.bind(this)} query={this.props.query} className={boldClass + ' block px-4 py-2 md:text-sm leading-tight hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100'}>
         {text}
       </QueryLink>
     )
@@ -237,30 +242,30 @@ class DatePicker extends React.Component {
   renderDropDownContent() {
     if (this.state.mode === 'menu') {
       return (
-        <div className="absolute mt-2 rounded shadow-md z-10" style={{width: '235px', right: '-14px'}}>
-          <div className="rounded bg-white ring-1 ring-black ring-opacity-5 font-medium text-gray-800">
+        <div className="absolute mt-2 rounded shadow-md z-10" style={{width: '235px', right: '-5px'}}>
+          <div className="rounded bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 font-medium text-gray-800 dark:text-gray-200">
             <div className="py-1">
               { this.renderLink('day', 'Today') }
               { this.renderLink('realtime', 'Realtime') }
             </div>
-            <div className="border-t border-gray-200"></div>
+            <div className="border-t border-gray-200 dark:border-gray-500"></div>
             <div className="py-1">
               { this.renderLink('7d', 'Last 7 days') }
               { this.renderLink('30d', 'Last 30 days') }
             </div>
-            <div className="border-t border-gray-200"></div>
+            <div className="border-t border-gray-200 dark:border-gray-500"></div>
             <div className="py-1">
-              { this.renderLink('month', 'This month') }
+              { this.renderLink('month', 'Month to Date') }
               { this.renderLink('month', 'Last month', {date: lastMonth(this.props.site)}) }
             </div>
-            <div className="border-t border-gray-200"></div>
+            <div className="border-t border-gray-200 dark:border-gray-500"></div>
             <div className="py-1">
               { this.renderLink('6mo', 'Last 6 months') }
               { this.renderLink('12mo', 'Last 12 months') }
             </div>
-            <div className="border-t border-gray-200"></div>
+            <div className="border-t border-gray-200 dark:border-gray-500"></div>
             <div className="py-1">
-              <span onClick={e => this.setState({mode: 'calendar'}, this.openCalendar.bind(this))} className="block px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900 cursor-pointer">Custom range</span>
+              <span onClick={e => this.setState({mode: 'calendar'}, this.openCalendar.bind(this))} className="block px-4 py-2 md:text-sm leading-tight hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer">Custom range</span>
             </div>
           </div>
         </div>
@@ -268,23 +273,36 @@ class DatePicker extends React.Component {
     } else if (this.state.mode === 'calendar') {
       const insertionDate = new Date(this.props.site.insertedAt);
       const dayBeforeCreation = insertionDate - 86400000;
-      return <Flatpickr options={{mode: 'range', maxDate: 'today', minDate: dayBeforeCreation, showMonths: 1, static: true, animate: false}} ref={calendar => this.calendar = calendar} className="invisible" onChange={this.setCustomDate.bind(this)} />
+      return <Flatpickr options={{mode: 'range', maxDate: 'today', minDate: dayBeforeCreation, showMonths: 1, static: true, animate: true}} ref={calendar => this.calendar = calendar} className="invisible" onChange={this.setCustomDate.bind(this)} />
     }
   }
 
   setCustomDate(dates) {
     if (dates.length === 2) {
       const [from, to] = dates
-      navigateToQuery(
-        this.props.history,
-        this.props.query,
-        {
-          period: 'custom',
-          date: false,
-          from: formatISO(from),
-          to: formatISO(to),
-        }
-      )
+      if (formatISO(from) === formatISO(to)) {
+        navigateToQuery(
+          this.props.history,
+          this.props.query,
+          {
+            period: 'day',
+            date: formatISO(from),
+            from: false,
+            to: false,
+          }
+        )
+      } else {
+        navigateToQuery(
+          this.props.history,
+          this.props.query,
+          {
+            period: 'custom',
+            date: false,
+            from: formatISO(from),
+            to: formatISO(to),
+          }
+        )
+      }
       this.close()
     }
   }
@@ -295,7 +313,7 @@ class DatePicker extends React.Component {
 
   render() {
     return (
-      <div className="flex justify-between sm:justify-between">
+      <div className="flex justify-end ml-auto pl-2">
         { this.renderArrows() }
         { this.renderDropDown() }
       </div>

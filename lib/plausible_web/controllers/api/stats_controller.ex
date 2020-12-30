@@ -29,6 +29,10 @@ defmodule PlausibleWeb.Api.StatsController do
         count: Stats.current_visitors(site, query)
       },
       %{
+        name: "Unique visitors (last 30 min)",
+        count: Stats.unique_visitors(site, query)
+      },
+      %{
         name: "Pageviews (last 30 min)",
         count: Stats.total_pageviews(site, query)
       }
@@ -37,7 +41,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp fetch_top_stats(site, %Query{filters: %{"goal" => goal}} = query) when is_binary(goal) do
     total_filter = Map.merge(query.filters, %{"goal" => nil, "props" => nil})
-    prev_query = Query.shift_back(query)
+    prev_query = Query.shift_back(query, site)
     unique_visitors = Stats.unique_visitors(site, %{query | filters: total_filter})
     prev_unique_visitors = Stats.unique_visitors(site, %{prev_query | filters: total_filter})
     converted_visitors = Stats.unique_visitors(site, query)
@@ -73,7 +77,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_top_stats(site, query) do
-    prev_query = Query.shift_back(query)
+    prev_query = Query.shift_back(query, site)
     {pageviews, visitors} = Stats.pageviews_and_visitors(site, query)
     {prev_pageviews, prev_visitors} = Stats.pageviews_and_visitors(site, prev_query)
     bounce_rate = Stats.bounce_rate(site, query)
@@ -212,8 +216,9 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
     limit = if params["limit"], do: String.to_integer(params["limit"])
+    page = if params["page"], do: String.to_integer(params["page"])
 
-    json(conn, Stats.top_pages(site, query, limit || 9, include))
+    json(conn, Stats.top_pages(site, query, limit || 9, page || 1, include))
   end
 
   def entry_pages(conn, params) do
@@ -221,8 +226,9 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params)
     include = if params["include"], do: String.split(params["include"], ","), else: []
     limit = if params["limit"], do: String.to_integer(params["limit"])
+    page = if params["page"], do: String.to_integer(params["page"])
 
-    json(conn, Stats.entry_pages(site, query, limit || 9, include))
+    json(conn, Stats.entry_pages(site, query, limit || 9, page || 1, include))
   end
 
   def countries(conn, params) do

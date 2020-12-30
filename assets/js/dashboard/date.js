@@ -68,6 +68,10 @@ export function isToday(site, date) {
   return formatISO(date) === formatISO(nowForSite(site))
 }
 
+export function isThisMonth(site, date) {
+  return formatMonthYYYY(date) === formatMonthYYYY(nowForSite(site))
+}
+
 export function isBefore(date1, date2, period) {
   /* assumes 'day' and 'month' are the only valid periods */
   if (date1.getFullYear() !== date2.getFullYear()) {

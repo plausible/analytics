@@ -9,11 +9,13 @@
     <title><%= assigns[:title] || "Plausible · Web analytics" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
     <%= render("_tracking.html", assigns) %>
+    <script type="text/javascript" data-pref="<%= @conn.assigns[:current_user] && @conn.assigns[:current_user].theme %>" src="<%= Routes.static_path(@conn, "/js/applyTheme.js") %>"></script>
   </head>
-  <body class="flex flex-col h-full bg-gray-100">
+  <body class="flex flex-col h-full bg-gray-100 dark:bg-gray-900">
     <div class="text-center w-full my-8">
         <a href="<%= home_dest(@conn) %>">
-          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), class: "inline", style: "height: 2.5rem;", alt: "Plausible logo") %>
+          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo_dark.png"), class: "hidden dark:inline", style: "height: 2.5rem;", alt: "Plausible logo") %>
+          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), class: "inline dark:hidden", style: "height: 2.5rem;", alt: "Plausible logo")%>
         </a>
     </div>
 

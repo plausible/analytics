@@ -8,7 +8,14 @@ defmodule PlausibleWeb.AuthController do
        when action in [:register_form, :register, :login_form, :login]
 
   plug PlausibleWeb.RequireAccountPlug
-       when action in [:user_settings, :save_settings, :delete_me, :password_form, :set_password]
+       when action in [
+              :user_settings,
+              :save_settings,
+              :delete_me,
+              :password_form,
+              :set_password,
+              :activate_form
+            ]
 
   def register_form(conn, _params) do
     if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) do
@@ -37,7 +44,10 @@ defmodule PlausibleWeb.AuthController do
 
           conn
           |> put_session(:current_user_id, user.id)
-          |> put_resp_cookie("logged_in", "true", http_only: false)
+          |> put_resp_cookie("logged_in", "true",
+            http_only: false,
+            max_age: 60 * 60 * 24 * 365 * 5000
+          )
           |> redirect(to: "/activate")
 
         {:error, changeset} ->
@@ -58,12 +68,16 @@ defmodule PlausibleWeb.AuthController do
   def activate_form(conn, _params) do
     user = conn.assigns[:current_user]
 
-    has_code = Repo.exists?(
-      from c in "email_verification_codes",
-      where: c.user_id == ^user.id
-    )
+    has_code =
+      Repo.exists?(
+        from c in "email_verification_codes",
+          where: c.user_id == ^user.id
+      )
 
-    render(conn, "activate.html", has_pin: has_code, layout: {PlausibleWeb.LayoutView, "focus.html"})
+    render(conn, "activate.html",
+      has_pin: has_code,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
   end
 
   def activate(conn, %{"code" => code}) do
@@ -73,12 +87,14 @@ defmodule PlausibleWeb.AuthController do
     case Auth.verify_email(user, code) do
       :ok ->
         redirect(conn, to: "/sites/new")
+
       {:error, :incorrect} ->
         render(conn, "activate.html",
           error: "Incorrect activation code",
           has_pin: true,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
+
       {:error, :expired} ->
         render(conn, "activate.html",
           error: "Code is expired, please request another one",
@@ -90,9 +106,9 @@ defmodule PlausibleWeb.AuthController do
 
   def request_activation_code(conn, _params) do
     user = conn.assigns[:current_user]
-    pin = Auth.issue_email_verification(user)
+    code = Auth.issue_email_verification(user)
 
-    email_template = PlausibleWeb.Email.activation_email(user, pin)
+    email_template = PlausibleWeb.Email.activation_email(user, code)
     Plausible.Mailer.send_email(email_template)
 
     conn
@@ -220,7 +236,10 @@ defmodule PlausibleWeb.AuthController do
 
         conn
         |> put_session(:current_user_id, user.id)
-        |> put_resp_cookie("logged_in", "true", http_only: false)
+        |> put_resp_cookie("logged_in", "true",
+          http_only: false,
+          max_age: 60 * 60 * 24 * 365 * 5000
+        )
         |> put_session(:login_dest, nil)
         |> redirect(to: login_dest)
       else
@@ -272,7 +291,8 @@ defmodule PlausibleWeb.AuthController do
 
     render(conn, "user_settings.html",
       changeset: changeset,
-      subscription: conn.assigns[:current_user].subscription
+      subscription: conn.assigns[:current_user].subscription,
+      theme: conn.assigns[:current_user].theme || "system"
     )
   end
 

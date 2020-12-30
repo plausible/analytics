@@ -14,7 +14,7 @@ export default class ErrorBoundary extends React.Component {
   render() {
     if (this.state.error) {
       return (
-        <div className="text-center text-gray-900 mt-36">
+        <div className="text-center text-gray-900 dark:text-gray-100 mt-36">
           <RocketIcon />
           <div className="text-lg font-bold">Oops! Something went wrong</div>
           <div className="text-lg">{this.state.error.name + ': ' + this.state.error.message}</div>

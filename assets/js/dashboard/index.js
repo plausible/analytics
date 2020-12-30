@@ -5,7 +5,7 @@ import Historical from './historical'
 import Realtime from './realtime'
 import {parseQuery} from './query'
 import * as api from './api'
-
+import { withThemeProvider } from './theme-provider-hoc';
 
 const THIRTY_SECONDS = 30000
 
@@ -51,4 +51,4 @@ class Dashboard extends React.Component {
   }
 }
 
-export default withRouter(Dashboard)
+export default withRouter(withThemeProvider(Dashboard))

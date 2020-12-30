@@ -1,7 +1,7 @@
-<div class="shadow bg-white sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
+<div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
   <header class="relative">
-    <h2 class="text-lg leading-6 font-medium text-gray-900">Email reports</h2>
-    <p class="mt-1 text-sm leading-5 text-gray-500">Send weekly/monthly analytics reports to as many addresses as you wish</p>
+    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Email reports</h2>
+    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">Send weekly/monthly analytics reports to as many addresses as you wish</p>
     <%= link(to: "https://docs.plausible.io/email-reports/", target: "_blank") do %>
       <svg class="w-6 h-6 absolute top-0 right-0 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
     <% end %>
@@ -10,20 +10,20 @@
   <div class="my-8 flex items-center">
     <%= if @weekly_report do %>
       <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/disable", method: :post, class: "bg-indigo-600 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
-        <span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white shadow transform transition ease-in-out duration-200"></span>
+        <span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200"></span>
       <% end %>
     <% else %>
-      <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/enable", method: :post, class: "bg-gray-200 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
-        <span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-white shadow transform transition ease-in-out duration-200"></span>
+      <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/enable", method: :post, class: "bg-gray-200 dark:bg-gray-700 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
+        <span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200"></span>
       <% end %>
     <% end %>
-    <span class="ml-2">Send a weekly email report every Monday</span>
+    <span class="ml-2 dark:text-gray-100">Send a weekly email report every Monday</span>
   </div>
   <%= if @weekly_report do %>
-    <div class="text-sm text-gray-700 mt-6">
-      <h4 class="font-bold my-2">Weekly report recipients</h4>
+    <div class="text-sm text-gray-700 dark:text-gray-300 mt-6">
+      <h4 class="font-bold my-2 dark:text-gray-100">Weekly report recipients</h4>
       <%= for recipient <- @weekly_report.recipients do %>
-        <div class="p-2 pl-3 flex justify-between bg-gray-100 rounded my-2 max-w-md">
+        <div class="p-2 pl-3 flex justify-between bg-gray-100 dark:bg-gray-900 rounded my-2 max-w-md">
           <span>
             <svg class="h-5 w-5 text-gray-400 inline mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
               <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
@@ -45,7 +45,7 @@
                   <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                 </svg>
               </div>
-              <%= email_input f, :recipient, class: "focus:ring-indigo-500 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300", placeholder: "recipient@example.com" %>
+              <%= email_input f, :recipient, class: "focus:ring-indigo-500 dark:bg-gray-900 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300 dark:border-gray-500 dark:placeholder-gray-400 dark:text-gray-100", placeholder: "recipient@example.com" %>
             </div>
 
             <%= submit class: "-ml-px relative button rounded-l-none" do %>
@@ -57,24 +57,24 @@
       <% end %>
     </div>
   <% end %>
-  <div class="my-8 border-b border-gray-300"></div>
+  <div class="my-8 border-b border-gray-300 dark:border-gray-500"></div>
   <div class="my-8 flex items-center">
     <%= if @monthly_report do %>
       <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/disable", method: :post, class: "bg-indigo-600 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
-        <span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white shadow transform transition ease-in-out duration-200"></span>
+        <span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200"></span>
       <% end %>
     <% else %>
-      <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/enable", method: :post, class: "bg-gray-200 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
-				<span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-white shadow transform transition ease-in-out duration-200"></span>
+      <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/enable", method: :post, class: "bg-gray-200 dark:bg-gray-700 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
+				<span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200"></span>
       <% end %>
     <% end %>
-    <span class="ml-2">Send a monthly email report on 1st of the month</span>
+    <span class="ml-2 dark:text-gray-100">Send a monthly email report on 1st of the month</span>
   </div>
   <%= if @monthly_report do %>
-    <div class="text-sm text-gray-700 mt-6">
+    <div class="text-sm text-gray-700 dark:text-gray-300 mt-6">
       <h4 class="font-bold my-2">Monthly report recipients</h4>
       <%= for recipient <- @monthly_report.recipients do %>
-        <div class="p-2 pl-3 flex justify-between bg-gray-100 rounded my-2 max-w-md">
+        <div class="p-2 pl-3 flex justify-between bg-gray-100 dark:bg-gray-900 rounded my-2 max-w-md">
           <span>
             <svg class="h-5 w-5 text-gray-400 inline mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
               <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
@@ -96,7 +96,7 @@
                   <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                 </svg>
               </div>
-              <%= email_input f, :recipient, class: "focus:ring-indigo-500 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300", placeholder: "recipient@example.com" %>
+              <%= email_input f, :recipient, class: "focus:ring-indigo-500 dark:bg-gray-900 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300 dark:border-gray-500 dark:placeholder-gray-400 dark:text-gray-100", placeholder: "recipient@example.com" %>
             </div>
 
             <%= submit class: "-ml-px relative button rounded-l-none" do %>
@@ -110,10 +110,10 @@
   <% end %>
 </div>
 
-<div class="shadow bg-white sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
+<div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
   <header class="relative">
-    <h2 class="text-lg leading-6 font-medium text-gray-900">Traffic spike notifications</h2>
-    <p class="mt-1 text-sm leading-5 text-gray-500">Get notified when your site has unusually high number of current visitors</p>
+    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Traffic spike notifications</h2>
+    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">Get notified when your site has unusually high number of current visitors</p>
     <%= link(to: "https://docs.plausible.io/email-reports/", target: "_blank") do %>
       <svg class="w-6 h-6 absolute top-0 right-0 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
     <% end %>
@@ -122,18 +122,18 @@
   <div class="my-8 flex items-center">
     <%= if @spike_notification do %>
       <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/spike-notification/disable", method: :post, class: "bg-indigo-600 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
-        <span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white shadow transform transition ease-in-out duration-200"></span>
+        <span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200"></span>
       <% end %>
     <% else %>
-      <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/spike-notification/enable", method: :post, class: "bg-gray-200 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
-				<span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-white shadow transform transition ease-in-out duration-200"></span>
+      <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/spike-notification/enable", method: :post, class: "bg-gray-200 dark:bg-gray-700 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
+				<span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200"></span>
       <% end %>
     <% end %>
-    <span class="ml-2">Send notifications of traffic spikes</span>
+    <span class="ml-2 dark:text-gray-100">Send notifications of traffic spikes</span>
   </div>
 
   <%= if @spike_notification do %>
-    <div class="text-sm text-gray-700 mt-6">
+    <div class="text-sm text-gray-700 dark:text-gray-300 mt-6">
 
       <%= form_for Plausible.Site.SpikeNotification.changeset(@spike_notification, %{}), "/sites/#{URI.encode_www_form(@site.domain)}/spike-notification", fn f -> %>
         <h4 class="font-bold my-2">Current visitor threshold</h4>
@@ -145,16 +145,16 @@
                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
               </svg>
             </div>
-            <%= number_input f, :threshold, class: "focus:ring-indigo-500 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300" %>
+            <%= number_input f, :threshold, class: "focus:ring-indigo-500 dark:bg-gray-900 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300 dark:border-gray-500 dark:text-gray-100" %>
           </div>
           <button class="-ml-px relative button rounded-l-none">
             <span>Save threshold</span>
           </button>
         </div>
     <% end %>
-      <h4 class="font-bold mt-6">Notification recipients</h4>
+      <h4 class="font-bold mt-6 dark:text-gray-100">Notification recipients</h4>
       <%= for recipient <- @spike_notification.recipients do %>
-        <div class="p-2 pl-3 flex justify-between bg-gray-100 rounded my-2 max-w-md">
+        <div class="p-2 pl-3 flex justify-between bg-gray-100 dark:bg-gray-900 rounded my-2 max-w-md">
           <span>
             <svg class="h-5 w-5 text-gray-400 inline mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
               <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
@@ -176,7 +176,7 @@
                   <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                 </svg>
               </div>
-              <%= email_input f, :recipient, class: "focus:ring-indigo-500 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300", placeholder: "recipient@example.com" %>
+              <%= email_input f, :recipient, class: "focus:ring-indigo-500 dark:bg-gray-900 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300 dark:border-gray-500 dark:placeholder-gray-400 dark:text-gray-100", placeholder: "recipient@example.com" %>
             </div>
 
             <%= submit class: "-ml-px relative button rounded-l-none" do %>

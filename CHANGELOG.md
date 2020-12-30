@@ -9,6 +9,10 @@ All notable changes to this project will be documented in this file.
 - Display weekday on the visitor graph plausible/analytics#175
 - Collect and display browser & OS versions plausible/analytics#397
 - Simple notifications around traffic spikes plausible/analytics#453
+- Dark theme option/system setting follow plausible/analytics#467
+- "Load More" capability to pages modal plausible/analytics#480
+- Unique Visitors (last 30 min) as a top stat in realtime view plausible/analytics#500
+- Pinned filter and date selector rows while scrolling plausible/analytics#472
 
 ### Changed
 - Use alpine as base image to decrease Docker image size plausible/analytics#353
@@ -19,6 +23,8 @@ All notable changes to this project will be documented in this file.
 - Improve settings UX and design plausible/analytics#412
 - Improve site listing UX and design plausible/analytics#438
 - Improve onboarding UX and design plausible/analytics#441
+- Allows outbound link tracking script to use new tab redirection plausible/analytics#494
+- "This Month" view is now Month-to-date for the current month plausible/analytics#491
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370
@@ -28,6 +34,10 @@ All notable changes to this project will be documented in this file.
 - Fix URL decoding in query parameters plausible/analytics#416
 - Fix overly-sticky date in query parameters plausible/analytics/#439
 - Prevent picking dates before site insertion plausible/analtics#446
+- Fix overly-sticky from and to in query parameters plausible/analytics#495
+- Adds support for single-day date selection plausible/analytics#495
+- Goal conversion rate in realtime view is now accurate plausible/analytics#500
+- Various UI/UX issues plausible/analytics#503
 
 ### Security
 - Do not run the plausible Docker container as root plausible/analytics#362

@@ -20,6 +20,11 @@
   -webkit-animation: spin 1s ease-in-out infinite;
 }
 
+.dark .loading div {
+  border: 3px solid #606f7b;
+  border-top-color: #dae1e7;
+}
+
 .loading.sm div {
   width: 25px;
   height: 25px;

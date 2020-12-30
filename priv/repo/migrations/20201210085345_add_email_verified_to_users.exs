@@ -9,6 +9,6 @@ defmodule Plausible.Repo.Migrations.AddEmailVerifiedToUsers do
 
     flush()
 
-    Repo.update_all("users", [set: [email_verified: true]])
+    Repo.update_all("users", set: [email_verified: true])
   end
 end

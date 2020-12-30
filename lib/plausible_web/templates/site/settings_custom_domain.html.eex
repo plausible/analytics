@@ -1,16 +1,18 @@
-<div class="shadow bg-white sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
+<div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
   <header class="relative">
-    <h2 class="text-lg leading-6 font-medium text-gray-900">Custom domain</h2>
-    <p class="mt-1 text-sm leading-5 text-gray-500">Serve the tracking script from your domain name as a first-party resource instead of loading the script from our domain.</p>
+    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Custom domain</h2>
+    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">Serve the tracking script from your domain name as a first-party resource instead of loading the script from our domain.</p>
 
     <%= link(to: "https://docs.plausible.io/custom-domain/", target: "_blank") do %>
       <svg class="w-6 h-6 absolute top-0 right-0 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
     <% end %>
   </header>
-  <div class="mt-6">
+  <div class="mt-6 dark:text-gray-100 flex justify-between items-center">
     <%= if @site.custom_domain do %>
-      Configured domain: <b><%= @site.custom_domain.domain %></b>
-      <%= link("Remove custom domain", to: "/sites/#{URI.encode_www_form(@site.domain)}/custom-domains/#{@site.custom_domain.id}", class: "inline-block mt-4 px-4 py-2 border border-gray-300 text-sm leading-5 font-medium rounded-md text-red-700 bg-white hover:text-red-500 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
+      <span>
+        Configured domain: <b><%= @site.custom_domain.domain %></b>
+      </span>
+        <%= link("Remove custom domain", to: "/sites/#{URI.encode_www_form(@site.domain)}/custom-domains/#{@site.custom_domain.id}", class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
     <% else %>
       <%= link("Add custom domain", to: "/sites/#{URI.encode_www_form(@site.domain)}/custom-domains/new", class: "button") %>
     <% end %>
