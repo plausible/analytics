@@ -17,7 +17,7 @@ defmodule Plausible.Test.ClickhouseSetup do
         referrer_source: "10words",
         referrer: "10words.com/page1",
         timestamp: ~N[2019-01-01 00:00:00],
-        session_id: @conversion_1_session_id,
+        session_id: @conversion_1_session_id
       },
       %{
         name: "pageview",

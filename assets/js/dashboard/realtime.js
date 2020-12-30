@@ -27,6 +27,7 @@ class Realtime extends React.Component {
     return (
       <div className="mb-12">
         <div id="stats-container-top"></div>
+<<<<<<< HEAD
         <div className={`sticky top-0 bg-gray-50 dark:bg-gray-850 py-3 z-9 ${this.props.stuck ? 'z-10 fullwidth-shadow' : ''}`}>
           <div className="w-full sm:flex justify-between items-center">
             <div className="w-full flex items-center">
@@ -35,6 +36,16 @@ class Realtime extends React.Component {
             <Datepicker site={this.props.site} query={this.props.query} />
           </div>
           <Filters query={this.props.query} history={this.props.history} />
+=======
+        <div className={`sticky top-0 bg-gray-50 dark:bg-gray-850 sm:py-3 py-1 z-9 ${this.props.stuck ? 'z-10 fullwidth-shadow' : ''}`}>
+          <div className="w-full sm:flex justify-between items-center">
+            <div className="w-full flex items-center mb-2 sm:mb-0">
+              <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} />
+              <Filters query={this.props.query} history={this.props.history} />
+            </div>
+            <Datepicker site={this.props.site} query={this.props.query} />
+          </div>
+>>>>>>> 9bbaa756b8241044818969eb5621468ef488721e
         </div>
         <VisitorGraph site={this.props.site} query={this.props.query} timer={this.props.timer} />
         <div className="w-full block md:flex items-start justify-between">

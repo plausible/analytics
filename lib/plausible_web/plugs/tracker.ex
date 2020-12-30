@@ -20,8 +20,7 @@ defmodule PlausibleWeb.Tracker do
   def init(_) do
     templates =
       Enum.reduce(@templates, %{}, fn template_filename, rendered_templates ->
-        rendered =
-          EEx.compile_file("priv/tracker/js/" <> template_filename)
+        rendered = EEx.compile_file("priv/tracker/js/" <> template_filename)
 
         aliases = Map.get(@aliases, template_filename, [])
 
@@ -36,7 +35,9 @@ defmodule PlausibleWeb.Tracker do
 
   def call(conn, templates: templates) do
     case templates[conn.request_path] do
-      nil -> conn
+      nil ->
+        conn
+
       found ->
         {js, _} = Code.eval_quoted(found, base_url: PlausibleWeb.Endpoint.url())
         send_js(conn, js)
