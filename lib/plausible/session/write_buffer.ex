@@ -51,17 +51,11 @@ defmodule Plausible.Session.WriteBuffer do
 
       sessions ->
         Logger.info("Flushing #{length(sessions)} sessions")
-<<<<<<< HEAD
-        sessions = sessions
-          |> Enum.map(&(Map.from_struct(&1) |> Map.delete(:__meta__)))
-          |> Enum.reverse
-=======
 
         sessions =
           sessions
           |> Enum.map(&(Map.from_struct(&1) |> Map.delete(:__meta__)))
           |> Enum.reverse()
->>>>>>> 9bbaa756b8241044818969eb5621468ef488721e
 
         Plausible.ClickhouseRepo.insert_all(Plausible.ClickhouseSession, sessions)
     end

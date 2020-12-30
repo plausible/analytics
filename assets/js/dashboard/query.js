@@ -54,12 +54,6 @@ export function countFilters(query) {
 
 function generateQueryString(data) {
   const query = new URLSearchParams(window.location.search)
-<<<<<<< HEAD
-  query.delete("date");
-  query.delete("from");
-  query.delete("to");
-=======
->>>>>>> 9bbaa756b8241044818969eb5621468ef488721e
   Object.keys(data).forEach(key => {
     if (!data[key]) {
       query.delete(key)

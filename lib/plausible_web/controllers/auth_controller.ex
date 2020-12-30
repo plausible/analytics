@@ -8,9 +8,6 @@ defmodule PlausibleWeb.AuthController do
        when action in [:register_form, :register, :login_form, :login]
 
   plug PlausibleWeb.RequireAccountPlug
-<<<<<<< HEAD
-       when action in [:user_settings, :save_settings, :delete_me, :password_form, :set_password, :activate_form]
-=======
        when action in [
               :user_settings,
               :save_settings,
@@ -19,7 +16,6 @@ defmodule PlausibleWeb.AuthController do
               :set_password,
               :activate_form
             ]
->>>>>>> 9bbaa756b8241044818969eb5621468ef488721e
 
   def register_form(conn, _params) do
     if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) do

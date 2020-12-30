@@ -161,11 +161,6 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 9bbaa756b8241044818969eb5621468ef488721e
   defp parse_referrer(_, nil), do: nil
 
   defp parse_referrer(uri, referrer_str) do

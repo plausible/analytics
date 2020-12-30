@@ -28,12 +28,9 @@ module.exports = {
       },
       zIndex: {
         '9': 9,
-<<<<<<< HEAD
-=======
       },
       maxWidth: {
         '2xs': '16rem',
->>>>>>> 9bbaa756b8241044818969eb5621468ef488721e
       }
     },
   },

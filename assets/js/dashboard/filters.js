@@ -151,14 +151,6 @@ class Filters extends React.Component {
     )
   }
 
-<<<<<<< HEAD
-  return (
-    <span key={key} title={value} className="inline-flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded py-2 px-3 mr-4 mb-2">
-      {filterText(key, value, query)} <b className="ml-1 cursor-pointer" onClick={removeFilter}>✕</b>
-    </span>
-  )
-}
-=======
   renderDropdownFilter(history, [key, value], query) {
     return (
       <div className="px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between" key={key + value}>
@@ -184,7 +176,6 @@ class Filters extends React.Component {
       newOpts
     );
   }
->>>>>>> 9bbaa756b8241044818969eb5621468ef488721e
 
   renderDropDownContent() {
     const { viewport } = this.state;
