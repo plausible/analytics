@@ -45,9 +45,9 @@ export default class SiteSwitcher extends React.Component {
   }
 
   renderSiteLink(domain) {
-    const extraClass = domain === this.props.site.domain ? 'font-medium text-gray-900 dark:text-gray-100' : 'hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100'
+    const extraClass = domain === this.props.site.domain ? 'font-medium text-gray-900 dark:text-gray-100 cursor-default font-bold' : 'hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100'
     return (
-      <a href={`/${encodeURIComponent(domain)}`} key={domain} className={`block truncate px-4 py-2 text-sm leading-5 text-gray-700 dark:text-gray-300 ${extraClass}`}>
+      <a href={domain === this.props.site.domain ? null : `/${encodeURIComponent(domain)}`} key={domain} className={`block truncate px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 ${extraClass}`}>
         <img src={`https://icons.duckduckgo.com/ip3/${domain}.ico`} referrerPolicy="no-referrer" className="inline w-4 mr-2 align-middle" />
         <span>{domain}</span>
       </a>
@@ -63,12 +63,12 @@ export default class SiteSwitcher extends React.Component {
       return (
         <React.Fragment>
           <div className="py-1">
-            <a href={`/${encodeURIComponent(this.props.site.domain)}/settings`} className="group flex items-center px-4 py-2 text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100" role="menuitem">
+            <a href={`/${encodeURIComponent(this.props.site.domain)}/settings`} className="group flex items-center px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100" role="menuitem">
             <svg viewBox="0 0 20 20" fill="currentColor" className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-200 group-hover:text-gray-600 dark:group-hover:text-gray-400 group-focus:text-gray-500 dark:group-focus:text-gray-200"><path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" /></svg>
               Site settings
             </a>
           </div>
-          <div className="border-t border-gray-100 dark:border-gray-900"></div>
+          <div className="border-t border-gray-200 dark:border-gray-500"></div>
           <div className="py-1">
             { this.state.sites.map(this.renderSiteLink.bind(this)) }
           </div>
@@ -91,7 +91,7 @@ export default class SiteSwitcher extends React.Component {
     const hoverClass = this.props.loggedIn ? 'hover:text-gray-500 dark:hover:text-gray-200 focus:border-blue-300 focus:ring ' : 'cursor-default'
 
     return (
-      <div className="relative inline-block text-left z-10 mr-8">
+      <div className="relative inline-block text-left z-10 mr-4">
         <button onClick={this.toggle.bind(this)} className={`inline-flex items-center text-lg w-full rounded-md py-2 leading-5 font-bold text-gray-700 dark:text-gray-300 focus:outline-none transition ease-in-out duration-150 ${hoverClass}`}>
 
           <img src={`https://icons.duckduckgo.com/ip3/${this.props.site.domain}.ico`} referrerPolicy="no-referrer" className="inline w-4 mr-2 align-middle" />

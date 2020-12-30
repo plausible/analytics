@@ -60,5 +60,6 @@ defmodule Plausible.Auth.User do
     hash = Plausible.Auth.Password.hash(changes[:password])
     change(changeset, password_hash: hash)
   end
+
   def hash_password(changeset), do: changeset
 end

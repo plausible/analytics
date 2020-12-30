@@ -29,10 +29,9 @@ defmodule PlausibleWeb.LayoutView do
       [key: "Search Console", value: "search-console"],
       [key: "Email reports", value: "email-reports"],
       [key: "Custom domain", value: "custom-domain"],
-      [key: "Danger zone", value: "danger-zone"],
+      [key: "Danger zone", value: "danger-zone"]
     ]
   end
-
 
   def trial_notificaton(user) do
     case Plausible.Billing.trial_days_left(user) do

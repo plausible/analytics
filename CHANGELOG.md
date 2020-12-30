@@ -37,6 +37,10 @@ All notable changes to this project will be documented in this file.
 - Fix overly-sticky from and to in query parameters plausible/analytics#495
 - Adds support for single-day date selection plausible/analytics#495
 - Goal conversion rate in realtime view is now accurate plausible/analytics#500
+<<<<<<< HEAD
+=======
+- Various UI/UX issues plausible/analytics#503
+>>>>>>> 9bbaa756b8241044818969eb5621468ef488721e
 
 ### Security
 - Do not run the plausible Docker container as root plausible/analytics#362
