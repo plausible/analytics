@@ -19,7 +19,7 @@
     if (plausible_ignore && JSON.parse(plausible_ignore)) return console.warn("Ignoring event due to localStorage flag")
     if (excludedPaths)
       for (var i = 0; i < excludedPaths.length; i++)
-        if (eventName == "pageview" && location.pathname.match(new RegExp('^' + excludedPaths[i].trim().replace(/\*/g, '[^\\s\/]*') + '\/?$')))
+        if (eventName == "pageview" && location.pathname.match(new RegExp('^' + excludedPaths[i].trim().replace(/\*/g, '[^\\s\/]+') + '\/?$')))
           return console.warn("Ignoring event in exclusion");
     {{/if}}
 
