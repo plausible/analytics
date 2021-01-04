@@ -52,6 +52,11 @@ hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
 log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
 appsignal_api_key = System.get_env("APPSIGNAL_API_KEY")
 
+{user_agent_cache_limit, ""} = Integer.parse(System.get_env("USER_AGENT_CACHE_LIMIT", "1000"))
+
+user_agent_cache_stats =
+  String.to_existing_atom(System.get_env("USER_AGENT_CACHE_STATS", "false"))
+
 config :plausible,
   admin_user: admin_user,
   admin_email: admin_email,
@@ -190,6 +195,10 @@ config :ref_inspector,
 
 config :ua_inspector,
   init: {Plausible.Release, :configure_ua_inspector}
+
+config :plausible, :user_agent_cache,
+  limit: user_agent_cache_limit,
+  stats: user_agent_cache_stats
 
 if geolite2_country_db do
   config :geolix,

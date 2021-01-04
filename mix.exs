@@ -39,7 +39,8 @@ defmodule Plausible.MixProject do
         :ref_inspector,
         :bamboo,
         :bamboo_smtp,
-        :appsignal
+        :appsignal,
+        :cachex
       ]
     ]
   end
@@ -92,7 +93,8 @@ defmodule Plausible.MixProject do
       {:geolix, "~> 1.0"},
       {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
       {:geolix_adapter_mmdb2, "~> 0.5.0"},
-      {:mix_test_watch, "~> 1.0", only: :dev, runtime: false}
+      {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
+      {:cachex, "~> 3.3"}
     ]
   end
 

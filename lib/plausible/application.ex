@@ -12,11 +12,14 @@ defmodule Plausible.Application do
       Plausible.Session.WriteBuffer,
       Plausible.Session.Store,
       Plausible.Session.Salts,
-      {Oban, Application.get_env(:plausible, Oban)}
+      {Oban, Application.get_env(:plausible, Oban)},
+      {Cachex,
+       Keyword.merge(Application.get_env(:plausible, :user_agent_cache), name: :user_agents)}
     ]
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
     {:ok, _} = Logger.add_backend(Sentry.LoggerBackend)
+    setup_cache_stats()
     Application.put_env(:plausible, :server_start, Timex.now())
     Supervisor.start_link(children, opts)
   end
@@ -24,5 +27,24 @@ defmodule Plausible.Application do
   def config_change(changed, _new, removed) do
     PlausibleWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp setup_cache_stats() do
+    conf = Application.get_env(:plausible, :user_agent_cache)
+
+    if conf[:stats] do
+      :timer.apply_interval(1000 * 10, Plausible.Application, :report_cache_stats, [])
+    end
+  end
+
+  def report_cache_stats() do
+    case Cachex.stats(:user_agents) do
+      {:ok, stats} ->
+        IO.puts("User agent cache stats:")
+        IO.inspect(stats, pretty: true)
+
+      e ->
+        IO.puts("Unable to show cache stats: #{inspect(e)}")
+    end
   end
 end

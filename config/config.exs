@@ -199,6 +199,10 @@ config :plausible, :hcaptcha,
   sitekey: System.get_env("HCAPTCHA_SITEKEY"),
   secret: System.get_env("HCAPTCHA_SECRET")
 
+config :plausible, :user_agent_cache,
+  limit: 1000,
+  stats: false
+
 config :geolix,
   databases: [
     %{
