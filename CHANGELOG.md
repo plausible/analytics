@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 - Improve site listing UX and design plausible/analytics#438
 - Improve onboarding UX and design plausible/analytics#441
 - Allows outbound link tracking script to use new tab redirection plausible/analytics#494
+- "This Month" view is now Month-to-date for the current month plausible/analytics#491
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370
@@ -37,6 +38,7 @@ All notable changes to this project will be documented in this file.
 - Fix overly-sticky from and to in query parameters plausible/analytics#495
 - Adds support for single-day date selection plausible/analytics#495
 - Goal conversion rate in realtime view is now accurate plausible/analytics#500
+- Various UI/UX issues plausible/analytics#503
 
 ### Security
 - Do not run the plausible Docker container as root plausible/analytics#362

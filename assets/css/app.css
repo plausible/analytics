@@ -5,7 +5,7 @@
 @import "modal.css";
 @import "loader.css";
 @import "tooltip.css";
-@import "flatpickr.dark.css";
+@import "flatpickr.css";
 
 .button {
   @apply bg-indigo-600 border border-transparent rounded-md py-2 px-4 inline-flex justify-center text-sm leading-5 font-medium text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;

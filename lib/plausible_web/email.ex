@@ -13,6 +13,7 @@ defmodule PlausibleWeb.Email do
     |> subject("#{code} is your Plausible email verification code")
     |> render("activation_email.html", user: user, code: code)
   end
+
   def welcome_email(user) do
     base_email()
     |> to(user)
@@ -98,7 +99,12 @@ defmodule PlausibleWeb.Email do
     |> to(email)
     |> tag("spike-notification")
     |> subject("Traffic spike on #{site.domain}")
-    |> render("spike_notification.html", %{site: site, current_visitors: current_visitors, sources: sources, link: dashboard_link})
+    |> render("spike_notification.html", %{
+      site: site,
+      current_visitors: current_visitors,
+      sources: sources,
+      link: dashboard_link
+    })
   end
 
   def cancellation_email(user) do

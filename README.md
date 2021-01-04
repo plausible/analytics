@@ -1,7 +1,5 @@
 # Plausible Analytics
 
-[![Build Status](https://travis-ci.org/plausible/analytics.svg?branch=master)](https://travis-ci.org/plausible/analytics)
-
 [Plausible Analytics](https://plausible.io/) is a simple, lightweight (< 1 KB), open-source and privacy-friendly alternative to Google Analytics. It doesn’t use cookies and is fully compliant with GDPR, CCPA and PECR. You can self-host Plausible or have us run it for you in the Cloud. Here's [the live demo of our own website stats](https://plausible.io/plausible.io). We are completely independent, self-funded and bootstrapped. Made and hosted in the EU 🇪🇺
 
 ![](https://docs.plausible.io/img/plausible-analytics.png)
@@ -31,7 +29,7 @@ We choose the subscription business model rather than the business model of surv
 
 ### Can Plausible Analytics be self-hosted?
 
-Yes, Plausible is fully [open source web analytics](https://plausible.io/open-source-website-analytics). 
+Yes, Plausible is fully [open source web analytics](https://plausible.io/open-source-website-analytics).
 
 We have a free as in beer [Plausible Analytics Self-Hosted](https://plausible.io/self-hosted-web-analytics) solution. It’s exactly the same product as our Cloud solution with a less frequent release schedule. The difference is that the self-hosted version you have to install, host and manage yourself on your own infrastructure while the Cloud version we manage everything for your ease and convenience. Take a look at our [self-hosting installation instructions](https://docs.plausible.io/self-hosting).
 
