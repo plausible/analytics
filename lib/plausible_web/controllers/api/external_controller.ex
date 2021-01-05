@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
     if user_agent do
       Cachex.fetch!(:user_agents, user_agent, fn ua ->
-        {:commit, UAInspector.parse(user_agent)}
+        {:commit, UAInspector.parse(ua)}
       end)
     end
   end
