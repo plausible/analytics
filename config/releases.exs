@@ -83,23 +83,23 @@ config :plausible, PlausibleWeb.Endpoint,
   server: true,
   code_reloader: false
 
-  %{
-    "certificate" => %{"certificate_base64" => cacert},
-    "hosts" => [%{"hostname" => hostname, "port" => port}],
-    "authentication" => %{"password" => password, "username" => username}
-  } =
-    System.get_env("PG_BINDING")
-    |> Jason.decode!()
-    |> Map.get("connection")
-    |> Map.get("postgres")
+%{
+  "certificate" => %{"certificate_base64" => cacert},
+  "hosts" => [%{"hostname" => hostname, "port" => port}],
+  "authentication" => %{"password" => password, "username" => username}
+} =
+  System.get_env("PG_BINDING")
+  |> Jason.decode!()
+  |> Map.get("connection")
+  |> Map.get("postgres")
 
-  config :plausible, Plausible.Repo,
-    url: "postgres://#{username}:#{password}@#{hostname}:#{port}/#{username}",
-    ssl: true,
-    ssl_options: [
-      cacert: cacert |> :base64.decode()
-    ],
-    adapter: Ecto.Adapters.Postgres
+config :plausible, Plausible.Repo,
+  url: "postgres://#{username}:#{password}@#{hostname}:#{port}/#{username}",
+  ssl: true,
+  ssl_options: [
+    cacert: cacert |> :base64.decode()
+  ],
+  adapter: Ecto.Adapters.Postgres
 
 config :sentry,
   dsn: sentry_dsn,
