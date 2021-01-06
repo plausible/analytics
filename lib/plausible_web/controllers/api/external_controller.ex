@@ -56,7 +56,12 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp parse_user_agent(conn) do
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
-    user_agent && UAInspector.parse(user_agent)
+
+    if user_agent do
+      Cachex.fetch!(:user_agents, user_agent, fn ua ->
+        {:commit, UAInspector.parse(user_agent)}
+      end)
+    end
   end
 
   defp create_event(conn, params) do
