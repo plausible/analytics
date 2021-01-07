@@ -46,7 +46,7 @@ export function formatFullDate(date) {
 }
 
 export function parseUTCDate(dateString) {
-  var date = new Date(dateString);
+  const date = new Date(dateString);
   return new Date(date.getTime() + date.getTimezoneOffset() * 60000);
 }
 

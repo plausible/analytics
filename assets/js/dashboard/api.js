@@ -3,11 +3,9 @@ import {formatISO} from './date'
 let abortController = new AbortController()
 
 function serialize(obj) {
-  var str = [];
-  for (var p in obj)
-    if (obj.hasOwnProperty(p)) {
-      str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
-    }
+  const str = Object.entries(obj).reduce((acc, [key, value]) =>
+    acc.push(`${encodeURIComponent(key)  }=${  encodeURIComponent(value)}`)
+  , [] )
   return str.join("&");
 }
 
@@ -17,8 +15,9 @@ export function cancelAll() {
 }
 
 function serializeFilters(filters) {
-  const cleaned = {}
-  Object.entries(filters).forEach(([key, val]) => val ? cleaned[key] = val : null);
+  const cleaned = Object.entries(filters).reduce((acc, [key, val]) =>
+     acc.assign(key, val || null)
+  , {});
   return JSON.stringify(cleaned)
 }
 
@@ -31,12 +30,12 @@ export function serializeQuery(query, extraQuery=[]) {
   if (query.filters) { queryObj.filters = serializeFilters(query.filters)  }
   Object.assign(queryObj, ...extraQuery)
 
-  return '?' + serialize(queryObj)
+  return `?${  serialize(queryObj)}`
 }
 
 export function get(url, query, ...extraQuery) {
-  url = url + serializeQuery(query, extraQuery)
-  return fetch(url, {signal: abortController.signal})
+  const urlWithQuery = url + serializeQuery(query, extraQuery)
+  return fetch(urlWithQuery, {signal: abortController.signal})
     .then( response => {
       if (!response.ok) { throw response }
       return response.json()

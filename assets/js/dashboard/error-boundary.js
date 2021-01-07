@@ -8,7 +8,7 @@ export default class ErrorBoundary extends React.Component {
   }
 
   static getDerivedStateFromError(error) {
-    return {error: error}
+    return {error}
   }
 
   render() {
@@ -17,7 +17,7 @@ export default class ErrorBoundary extends React.Component {
         <div className="text-center text-gray-900 dark:text-gray-100 mt-36">
           <RocketIcon />
           <div className="text-lg font-bold">Oops! Something went wrong</div>
-          <div className="text-lg">{this.state.error.name + ': ' + this.state.error.message}</div>
+          <div className="text-lg">{`${this.state.error.name}: ${this.state.error.message}`}</div>
         </div>
       )
     }
