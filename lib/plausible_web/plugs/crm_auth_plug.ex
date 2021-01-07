@@ -9,7 +9,7 @@ defmodule PlausibleWeb.CRMAuthPlug do
   def call(conn, _opts) do
     case get_session(conn, :current_user_id) do
       nil ->
-        conn
+        conn |> send_resp(403, "Not allowed") |> halt
 
       id ->
         user = Repo.get_by(Plausible.Auth.User, id: id)
