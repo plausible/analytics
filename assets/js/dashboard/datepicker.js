@@ -147,14 +147,14 @@ class DatePicker extends React.Component {
       period
     );
 
-    const leftClasses = `flex items-center px-2 border-r border-gray-300 rounded-l ${
-      disabledLeft ? "bg-gray-200" : ""
+    const leftClasses = `flex items-center px-2 border-r border-gray-300 rounded-l dark:border-gray-500 dark:text-gray-100 ${
+      disabledLeft ? "bg-gray-200 dark:bg-gray-900" : ""
     }`;
-    const rightClasses = `flex items-center px-2 rounded-r ${
-      disabledRight ? "bg-gray-200" : ""
+    const rightClasses = `flex items-center px-2 rounded-r dark:text-gray-100 ${
+      disabledRight ? "bg-gray-200 dark:bg-gray-900" : ""
     }`;
     return (
-      <div className="flex rounded shadow bg-white mr-4 cursor-pointer">
+      <div className="flex rounded shadow bg-white mr-4 cursor-pointer dark:bg-gray-800">
         <QueryButton
           to={{ date: prevDate }}
           query={this.props.query}
@@ -226,7 +226,7 @@ class DatePicker extends React.Component {
       >
         <div
           onClick={this.open.bind(this)}
-          className="flex items-center justify-between rounded bg-white shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800 h-full"
+          className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800 dark:text-gray-200 h-full"
         >
           <span className="mr-2">{this.timeFrameText()}</span>
           <svg
