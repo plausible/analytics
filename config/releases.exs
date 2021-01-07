@@ -20,7 +20,7 @@ db_url =
 
 admin_user = System.get_env("ADMIN_USER_NAME")
 admin_email = System.get_env("ADMIN_USER_EMAIL")
-admin_emails = System.get_env("ADMIN_EMAILS") |> String.split(",")
+admin_emails = System.get_env("ADMIN_EMAILS", "") |> String.split(",")
 admin_pwd = System.get_env("ADMIN_USER_PWD")
 env = System.get_env("ENVIRONMENT", "prod")
 mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.SMTPAdapter")
