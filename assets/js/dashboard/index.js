@@ -1,54 +1,69 @@
 import React from 'react';
-import { withRouter } from 'react-router-dom'
+import { withRouter } from 'react-router-dom';
 
-import Historical from './historical'
-import Realtime from './realtime'
-import {parseQuery} from './query'
-import * as api from './api'
+import Historical from './historical';
+import Realtime from './realtime';
+import { parseQuery } from './query';
+import * as api from './api';
 import { withThemeProvider } from './theme-provider-hoc';
 
-const THIRTY_SECONDS = 30000
+const THIRTY_SECONDS = 30000;
 
 class Timer {
   constructor() {
-    this.listeners = []
-    this.intervalId = setInterval(this.dispatchTick.bind(this), THIRTY_SECONDS)
+    this.listeners = [];
+    this.intervalId = setInterval(this.dispatchTick.bind(this), THIRTY_SECONDS);
   }
 
   onTick(listener) {
-    this.listeners.push(listener)
+    this.listeners.push(listener);
   }
 
   dispatchTick() {
     for (const listener of this.listeners) {
-      listener()
+      listener();
     }
   }
 }
 
 class Dashboard extends React.Component {
   constructor(props) {
-    super(props)
+    super(props);
     this.state = {
       query: parseQuery(props.location.search, this.props.site),
-      timer: new Timer()
-    }
+      timer: new Timer(),
+    };
   }
 
   componentDidUpdate(prevProps) {
     if (prevProps.location.search !== this.props.location.search) {
-      api.cancelAll()
-      this.setState({query: parseQuery(this.props.location.search, this.props.site)})
+      api.cancelAll();
+      this.setState({
+        query: parseQuery(this.props.location.search, this.props.site),
+      });
     }
   }
 
   render() {
     if (this.state.query.period === 'realtime') {
-      return <Realtime timer={this.state.timer} site={this.props.site} loggedIn={this.props.loggedIn} query={this.state.query} />
-    } else {
-      return <Historical timer={this.state.timer} site={this.props.site} loggedIn={this.props.loggedIn} query={this.state.query} />
+      return (
+        <Realtime
+          timer={this.state.timer}
+          site={this.props.site}
+          loggedIn={this.props.loggedIn}
+          query={this.state.query}
+        />
+      );
     }
+    return (
+      <Historical
+        timer={this.state.timer}
+        site={this.props.site}
+        loggedIn={this.props.loggedIn}
+        query={this.state.query}
+      />
+    );
   }
 }
 
-export default withRouter(withThemeProvider(Dashboard))
+export default withRouter(withThemeProvider(Dashboard));

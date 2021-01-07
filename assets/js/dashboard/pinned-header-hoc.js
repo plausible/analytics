@@ -1,35 +1,35 @@
 import React from 'react';
 
-export const withPinnedHeader = (WrappedComponent, flagName) => {
-  return class extends React.Component {
+export const withPinnedHeader = (WrappedComponent, _flagName) =>
+  class extends React.Component {
     constructor(props) {
-      super(props)
+      super(props);
       this.state = {
-        stuck: false
-      }
+        stuck: false,
+      };
     }
 
     componentDidMount() {
-      this.observer = new IntersectionObserver((entries) => {
-        if (entries[0].intersectionRatio === 0)
-          this.setState({ stuck: true });
-        else if (entries[0].intersectionRatio === 1)
-          this.setState({ stuck: false });
-      }, {
-        threshold: [0, 1]
-      });
+      this.observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].intersectionRatio === 0)
+            this.setState({ stuck: true });
+          else if (entries[0].intersectionRatio === 1)
+            this.setState({ stuck: false });
+        },
+        {
+          threshold: [0, 1],
+        }
+      );
 
-      this.observer.observe(document.querySelector("#stats-container-top"));
+      this.observer.observe(document.querySelector('#stats-container-top'));
     }
 
     componentWillUnmount() {
-      this.observer.unobserve(document.querySelector("#stats-container-top"));
+      this.observer.unobserve(document.querySelector('#stats-container-top'));
     }
 
     render() {
-      return (
-        <WrappedComponent stuck={this.state.stuck}{...this.props}/>
-      );
+      return <WrappedComponent stuck={this.state.stuck} {...this.props} />;
     }
-  }
-}
+  };

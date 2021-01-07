@@ -1,28 +1,36 @@
 // https://stackoverflow.com/a/50130338
 export function formatISO(date) {
-  return new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
     .toISOString()
-    .split("T")[0];
+    .split('T')[0];
 }
 
 export function shiftMonths(date, months) {
-  const newDate = new Date(date.getTime())
-  newDate.setMonth(newDate.getMonth() + months)
-  return newDate
+  const newDate = new Date(date.getTime());
+  newDate.setMonth(newDate.getMonth() + months);
+  return newDate;
 }
 
 export function shiftDays(date, days) {
-  const newDate = new Date(date.getTime())
-  newDate.setDate(newDate.getDate() + days)
-  return newDate
+  const newDate = new Date(date.getTime());
+  newDate.setDate(newDate.getDate() + days);
+  return newDate;
 }
 
 const MONTHS = [
-  "January", "February", "March",
-  "April", "May", "June", "July",
-  "August", "September", "October",
-  "November", "December"
-]
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 
 export function formatMonthYYYY(date) {
   return `${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
@@ -41,7 +49,7 @@ export function formatDayShort(date) {
 }
 
 export function formatFullDate(date) {
-  const shortDate = formatMonth(date).substring(0, 3)
+  const shortDate = formatMonth(date).substring(0, 3);
   return `${shortDate} ${date.getDate()}, ${date.getFullYear()}`;
 }
 
@@ -52,22 +60,24 @@ export function parseUTCDate(dateString) {
 
 // https://stackoverflow.com/a/11124448
 export function nowForSite(site) {
-  const browserOffset = (new Date()).getTimezoneOffset() * 60
-  return new Date(new Date().getTime() + (site.offset * 1000) + (browserOffset * 1000))
+  const browserOffset = new Date().getTimezoneOffset() * 60;
+  return new Date(
+    new Date().getTime() + site.offset * 1000 + browserOffset * 1000
+  );
 }
 
 export function lastMonth(site) {
-  return shiftMonths(nowForSite(site), -1)
+  return shiftMonths(nowForSite(site), -1);
 }
 
 export function isSameMonth(date1, date2) {
-  return formatMonthYYYY(date1) === formatMonthYYYY(date2)
+  return formatMonthYYYY(date1) === formatMonthYYYY(date2);
 }
 
 export function isToday(site, date) {
-  return formatISO(date) === formatISO(nowForSite(site))
+  return formatISO(date) === formatISO(nowForSite(site));
 }
 
 export function isThisMonth(site, date) {
-  return formatMonthYYYY(date) === formatMonthYYYY(nowForSite(site))
+  return formatMonthYYYY(date) === formatMonthYYYY(nowForSite(site));
 }

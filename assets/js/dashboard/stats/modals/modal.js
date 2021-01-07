@@ -1,27 +1,27 @@
-import React from "react";
-import { createPortal } from "react-dom";
+import React from 'react';
+import { createPortal } from 'react-dom';
 import { withRouter } from 'react-router-dom';
 
 class Modal extends React.Component {
   constructor(props) {
-    super(props)
-    this.node = React.createRef()
-    this.handleClickOutside = this.handleClickOutside.bind(this)
-    this.handleKeyup = this.handleKeyup.bind(this)
+    super(props);
+    this.node = React.createRef();
+    this.handleClickOutside = this.handleClickOutside.bind(this);
+    this.handleKeyup = this.handleKeyup.bind(this);
   }
 
   componentDidMount() {
     document.body.style.overflow = 'hidden';
     document.body.style.height = '100vh';
-    document.addEventListener("mousedown", this.handleClickOutside);
-    document.addEventListener("keyup", this.handleKeyup);
+    document.addEventListener('mousedown', this.handleClickOutside);
+    document.addEventListener('keyup', this.handleKeyup);
   }
 
   componentWillUnmount() {
     document.body.style.overflow = 'unset';
     document.body.style.height = 'unset';
-    document.removeEventListener("mousedown", this.handleClickOutside);
-    document.removeEventListener("keyup", this.handleKeyup);
+    document.removeEventListener('mousedown', this.handleClickOutside);
+    document.removeEventListener('keyup', this.handleKeyup);
   }
 
   handleClickOutside(e) {
@@ -29,17 +29,21 @@ class Modal extends React.Component {
       return;
     }
 
-    this.close()
+    this.close();
   }
 
   handleKeyup(e) {
     if (e.code === 'Escape') {
-      this.close()
+      this.close();
     }
   }
 
   close() {
-    this.props.history.push(`/${encodeURIComponent(this.props.site.domain)}${this.props.location.search}`)
+    this.props.history.push(
+      `/${encodeURIComponent(this.props.site.domain)}${
+        this.props.location.search
+      }`
+    );
   }
 
   render() {
@@ -50,13 +54,11 @@ class Modal extends React.Component {
           <div ref={this.node} className="modal__container dark:bg-gray-800">
             {this.props.children}
           </div>
-
         </div>
       </div>,
-      document.getElementById("modal_root"),
+      document.getElementById('modal_root')
     );
   }
 }
 
-
-export default withRouter(Modal)
+export default withRouter(Modal);

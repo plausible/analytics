@@ -1,8 +1,8 @@
 import React from 'react';
-import { withRouter } from 'react-router-dom'
-import Datamap from 'datamaps'
-import { navigateToQuery } from './query'
-import Transition from "../transition";
+import { withRouter } from 'react-router-dom';
+import Datamap from 'datamaps';
+import { navigateToQuery } from './query';
+import Transition from '../transition';
 
 class Filters extends React.Component {
   constructor(props) {
@@ -11,7 +11,7 @@ class Filters extends React.Component {
     this.state = {
       dropdownOpen: false,
       wrapped: 1, // 0=unwrapped, 1=waiting to check, 2=wrapped
-      viewport: 1080
+      viewport: 1080,
     };
 
     this.appliedFilters = Object.keys(props.query.filters)
@@ -40,10 +40,12 @@ class Filters extends React.Component {
 
     this.appliedFilters = Object.keys(query.filters)
       .map((key) => [key, query.filters[key]])
-      .filter(([_key, value]) => !!value)
+      .filter(([_key, value]) => !!value);
 
-    if (JSON.stringify(query) !== JSON.stringify(prevProps.query) ||
-        viewport !== prevState.viewport) {
+    if (
+      JSON.stringify(query) !== JSON.stringify(prevProps.query) ||
+      viewport !== prevState.viewport
+    ) {
       this.setState({ wrapped: 1 });
     }
 
@@ -58,18 +60,20 @@ class Filters extends React.Component {
   }
 
   handleResize() {
-    this.setState({ viewport: window.innerWidth || 639});
+    this.setState({ viewport: window.innerWidth || 639 });
   }
 
   handleClick(e) {
     if (this.dropDownNode && this.dropDownNode.contains(e.target)) return;
 
     this.setState({ dropdownOpen: false });
-  };
+  }
 
   // Checks if the filter container is wrapping items
   rewrapFilters() {
-    let currItem; let prevItem; const items = document.getElementById('filters');
+    let currItem;
+    let prevItem;
+    const items = document.getElementById('filters');
     const { wrapped } = this.state;
 
     this.setState({ wrapped: 0 });
@@ -78,137 +82,146 @@ class Filters extends React.Component {
     // filter
     if (wrapped !== 1 || !items || this.appliedFilters.length === 1) {
       return;
-    };
+    }
 
     // For every filter DOM Node, check if its y value is higher than the previous (this indicates
     // a wrap)
-    [...(items.childNodes)].forEach(item => {
+    [...items.childNodes].forEach((item) => {
       currItem = item.getBoundingClientRect();
       if (prevItem && prevItem.top < currItem.top) {
         this.setState({ wrapped: 2 });
       }
       prevItem = currItem;
     });
-  };
+  }
 
   filterText(key, value, query) {
-    if (key === "goal") {
+    if (key === 'goal') {
       return (
         <span className="inline-block max-w-2xs md:max-w-xs truncate">
           Completed goal <b>{value}</b>
         </span>
-      )
+      );
     }
-    if (key === "props") {
-      const [metaKey, metaValue] = Object.entries(value)[0]
-      const eventName = query.filters.goal ? query.filters.goal : 'event'
+    if (key === 'props') {
+      const [metaKey, metaValue] = Object.entries(value)[0];
+      const eventName = query.filters.goal ? query.filters.goal : 'event';
       return (
         <span className="inline-block max-w-2xs md:max-w-xs truncate">
           {eventName}.{metaKey} is <b>{metaValue}</b>
         </span>
-      )
+      );
     }
-    if (key === "source") {
+    if (key === 'source') {
       return (
         <span className="inline-block max-w-2xs md:max-w-xs truncate">
           Source: <b>{value}</b>
         </span>
-      )
+      );
     }
-    if (key === "utm_medium") {
+    if (key === 'utm_medium') {
       return (
         <span className="inline-block max-w-2xs md:max-w-xs truncate">
           UTM medium: <b>{value}</b>
         </span>
-      )
+      );
     }
-    if (key === "utm_source") {
+    if (key === 'utm_source') {
       return (
         <span className="inline-block max-w-2xs md:max-w-xs truncate">
           UTM source: <b>{value}</b>
         </span>
-      )
+      );
     }
-    if (key === "utm_campaign") {
+    if (key === 'utm_campaign') {
       return (
         <span className="inline-block max-w-2xs md:max-w-xs truncate">
           UTM campaign: <b>{value}</b>
         </span>
-      )
+      );
     }
-    if (key === "referrer") {
+    if (key === 'referrer') {
       return (
         <span className="inline-block max-w-2xs md:max-w-xs truncate">
           Referrer: <b>{value}</b>
         </span>
-)
+      );
     }
-    if (key === "screen") {
+    if (key === 'screen') {
       return (
         <span className="inline-block max-w-2xs md:max-w-xs truncate">
           Screen size: <b>{value}</b>
         </span>
-)
+      );
     }
-    if (key === "browser") {
+    if (key === 'browser') {
       return (
         <span className="inline-block max-w-2xs md:max-w-xs truncate">
           Browser: <b>{value}</b>
         </span>
-)
+      );
     }
-    if (key === "browser_version") {
-      const browserName = query.filters.browser ? query.filters.browser : 'Browser'
+    if (key === 'browser_version') {
+      const browserName = query.filters.browser
+        ? query.filters.browser
+        : 'Browser';
       return (
         <span className="inline-block max-w-2xs md:max-w-xs truncate">
           {browserName}.Version: <b>{value}</b>
         </span>
-      )
+      );
     }
-    if (key === "os") {
+    if (key === 'os') {
       return (
         <span className="inline-block max-w-2xs md:max-w-xs truncate">
           Operating System: <b>{value}</b>
         </span>
-      )
+      );
     }
-    if (key === "os_version") {
-      const osName = query.filters.os ? query.filters.os : 'OS'
+    if (key === 'os_version') {
+      const osName = query.filters.os ? query.filters.os : 'OS';
       return (
         <span className="inline-block max-w-2xs md:max-w-xs truncate">
           {osName}.Version: <b>{value}</b>
         </span>
-      )
+      );
     }
-    if (key === "country") {
+    if (key === 'country') {
       const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
-      const selectedCountry = allCountries.find((c)=> c.id === value) ||
-        {properties: {name: value}};
+      const selectedCountry = allCountries.find((c) => c.id === value) || {
+        properties: { name: value },
+      };
       return (
         <span className="inline-block max-w-2xs md:max-w-xs truncate">
           Country: <b>{selectedCountry.properties.name}</b>
         </span>
-      )
+      );
     }
-    if (key === "page") {
+    if (key === 'page') {
       return (
         <span className="inline-block max-w-2xs md:max-w-xs truncate">
           Page: <b>{value}</b>
         </span>
-      )
+      );
     }
   }
 
   removeFilter(key, history, query) {
     const newOpts = {
-      [key]: false
+      [key]: false,
+    };
+    if (key === 'goal') {
+      newOpts.props = false;
     }
-    if (key === 'goal') { newOpts.props = false }
-    navigateToQuery(
-      history,
-      query,
-      newOpts
-    )
+    navigateToQuery(history, query, newOpts);
+  }
+
+  clearAllFilters(history, query) {
+    const newOpts = Object.keys(query.filters).reduce(
+      (acc, red) => ({ ...acc, [red]: false }),
+      {}
+    );
+    navigateToQuery(history, query, newOpts);
   }
 
   renderDropdownFilter(history, [key, value], query) {
@@ -225,7 +238,7 @@ class Filters extends React.Component {
           ✕
         </b>
       </div>
-    )
+    );
   }
 
   renderListFilter(history, [key, value], query) {
@@ -244,15 +257,6 @@ class Filters extends React.Component {
           ✕
         </b>
       </span>
-    )
-  }
-
-  clearAllFilters(history, query) {
-    const newOpts = Object.keys(query.filters).reduce((acc, red) => ({ ...acc, [red]: false }), {});
-    navigateToQuery(
-      history,
-      query,
-      newOpts
     );
   }
 
@@ -264,13 +268,15 @@ class Filters extends React.Component {
       <div
         className="absolute mt-2 rounded shadow-md z-10"
         style={{ width: viewport <= 768 ? '320px' : '350px', right: '-5px' }}
-        ref={node => this.dropDownNode = node}
+        ref={(node) => (this.dropDownNode = node)}
       >
         <div
           className="rounded bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 font-medium
             text-gray-800 dark:text-gray-200 flex flex-col"
         >
-          {this.appliedFilters.map((filter) => this.renderDropdownFilter(history, filter, query))}
+          {this.appliedFilters.map((filter) =>
+            this.renderDropdownFilter(history, filter, query)
+          )}
           <div
             className="border-t border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 md:text-sm
               leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer"
@@ -280,15 +286,17 @@ class Filters extends React.Component {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   renderDropDown() {
     return (
-      <div id="filters" className='ml-auto'>
+      <div id="filters" className="ml-auto">
         <div className="relative" style={{ height: '35.5px', width: '100px' }}>
           <div
-            onClick={() => this.setState((state) => ({ dropdownOpen: !state.dropdownOpen }))}
+            onClick={() =>
+              this.setState((state) => ({ dropdownOpen: !state.dropdownOpen }))
+            }
             className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow
               px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800
               dark:text-gray-200 h-full"
@@ -328,7 +336,9 @@ class Filters extends React.Component {
 
     return (
       <div id="filters">
-        {(this.appliedFilters.map((filter) => this.renderListFilter(history, filter, query)))}
+        {this.appliedFilters.map((filter) =>
+          this.renderListFilter(history, filter, query)
+        )}
       </div>
     );
   }
