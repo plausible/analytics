@@ -147,7 +147,8 @@ class DatePicker extends React.Component {
       period
     );
 
-    const leftClasses = `flex items-center px-2 border-r border-gray-300 rounded-l dark:border-gray-500 dark:text-gray-100 ${
+    const leftClasses = `flex items-center px-2 border-r border-gray-300 rounded-l
+      dark:border-gray-500 dark:text-gray-100 ${
       disabledLeft ? "bg-gray-200 dark:bg-gray-900" : ""
     }`;
     const rightClasses = `flex items-center px-2 rounded-r dark:text-gray-100 ${
@@ -226,7 +227,9 @@ class DatePicker extends React.Component {
       >
         <div
           onClick={this.open.bind(this)}
-          className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800 dark:text-gray-200 h-full"
+          className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-4
+          pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800
+          dark:text-gray-200 h-full"
         >
           <span className="mr-2">{this.timeFrameText()}</span>
           <svg
@@ -279,7 +282,13 @@ class DatePicker extends React.Component {
     }
 
     return (
-      <QueryLink to={{from: false, to: false, date: false, period, ...opts}} onClick={this.close.bind(this)} query={this.props.query} className={`${boldClass  } block px-4 py-2 md:text-sm leading-tight hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100`}>
+      <QueryLink
+        to={{from: false, to: false, date: false, period, ...opts}}
+        onClick={this.close.bind(this)}
+        query={this.props.query}
+        className={`${boldClass  } block px-4 py-2 md:text-sm leading-tight hover:bg-gray-100
+          dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100`}
+      >
         {text}
       </QueryLink>
     );
@@ -288,8 +297,14 @@ class DatePicker extends React.Component {
   renderDropDownContent() {
     if (this.state.mode === "menu") {
       return (
-        <div className="absolute mt-2 rounded shadow-md z-10" style={{width: '235px', right: '-5px'}}>
-          <div className="rounded bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 font-medium text-gray-800 dark:text-gray-200">
+        <div
+          className="absolute mt-2 rounded shadow-md z-10"
+          style={{width: '235px', right: '-5px'}}
+        >
+          <div
+            className="rounded bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5
+            font-medium text-gray-800 dark:text-gray-200"
+          >
             <div className="py-1">
               {this.renderLink("day", "Today")}
               {this.renderLink("realtime", "Realtime")}
@@ -325,7 +340,20 @@ class DatePicker extends React.Component {
     } if (this.state.mode === "calendar") {
       const insertionDate = new Date(this.props.site.insertedAt);
       const dayBeforeCreation = insertionDate - 86400000;
-      return <Flatpickr options={{mode: 'range', maxDate: 'today', minDate: dayBeforeCreation, showMonths: 1, static: true, animate: true}} ref={calendar => this.calendar = calendar} className="invisible" onChange={this.setCustomDate.bind(this)} />
+      return (
+        <Flatpickr
+          options={{
+            mode: 'range',
+            maxDate: 'today',
+            minDate: dayBeforeCreation,
+            showMonths: 1,
+            static: true,
+            animate: true}}
+          ref={calendar => this.calendar = calendar}
+          className="invisible"
+          onChange={this.setCustomDate.bind(this)}
+        />
+        )
     }
   }
 
