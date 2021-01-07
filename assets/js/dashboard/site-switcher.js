@@ -1,5 +1,5 @@
 import React from 'react';
-import Transition from '../transition.js';
+import Transition from '../transition';
 
 export default class SiteSwitcher extends React.Component {
   constructor() {
@@ -65,6 +65,7 @@ export default class SiteSwitcher extends React.Component {
           src={`https://icons.duckduckgo.com/ip3/${domain}.ico`}
           referrerPolicy="no-referrer"
           className="inline w-4 mr-2 align-middle"
+          alt="favicon"
         />
         <span>{domain}</span>
       </a>
@@ -140,6 +141,7 @@ export default class SiteSwitcher extends React.Component {
     return (
       <div className="relative inline-block text-left z-10 mr-4">
         <button
+          type="button"
           onClick={this.toggle.bind(this)}
           className={`inline-flex items-center text-lg w-full rounded-md py-2 leading-5 font-bold text-gray-700 dark:text-gray-300 focus:outline-none transition ease-in-out duration-150 ${hoverClass}`}
         >
@@ -147,6 +149,7 @@ export default class SiteSwitcher extends React.Component {
             src={`https://icons.duckduckgo.com/ip3/${this.props.site.domain}.ico`}
             referrerPolicy="no-referrer"
             className="inline w-4 mr-2 align-middle"
+            alt="favicon"
           />
           {this.props.site.domain}
           {this.renderArrow()}

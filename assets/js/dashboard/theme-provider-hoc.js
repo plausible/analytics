@@ -11,7 +11,7 @@ export const withThemeProvider = (WrappedComponent) =>
       };
 
       this.mutationObserver = new MutationObserver(
-        (mutationsList, observer) => {
+        (mutationsList, _observer) => {
           mutationsList.forEach((mutation) => {
             if (mutation.attributeName === 'class') {
               this.setState({

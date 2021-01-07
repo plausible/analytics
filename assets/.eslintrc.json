@@ -5,8 +5,10 @@
   "extends": ["airbnb", "prettier"],
   "plugins": ["prettier"],
   "rules": {
+    "import/prefer-default-export": [0],
     "max-classes-per-file": [0],
-    "max-len": [2, {"code": 100}],
+    "max-len": [2, {"code": 100, "ignoreStrings": true, "ignoreTemplateLiterals": true}],
+    "no-unused-expressions": [1, { "allowShortCircuit": true }],
     "no-unused-vars": [1, { "argsIgnorePattern": "^_" }],
     "prettier/prettier": [2],
     "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],

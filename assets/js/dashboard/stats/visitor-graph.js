@@ -1,7 +1,7 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom';
 import Chart from 'chart.js';
-import { eventName, navigateToQuery } from '../query';
+import { navigateToQuery } from '../query';
 import numberFormatter, { durationFormatter } from '../number-formatter';
 import * as api from '../api';
 import { ThemeContext } from '../theme-context';
@@ -190,7 +190,7 @@ class LineGraph extends React.Component {
                 return ` ${item.yLabel} ${pluralizedLabel}`;
               }
             },
-            footer(dataPoints) {
+            footer(_dataPoints) {
               if (graphData.interval === 'month') {
                 return 'Click to view month';
               }
@@ -401,8 +401,7 @@ class LineGraph extends React.Component {
             className={`mt-4 ${extraClass}`}
             width="1054"
             height="342"
-          >
-          </canvas>
+          ></canvas>
         </div>
       </>
     );

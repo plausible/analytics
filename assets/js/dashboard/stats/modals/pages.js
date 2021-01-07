@@ -24,7 +24,7 @@ class PagesModal extends React.Component {
 
   loadPages() {
     const include = this.showBounceRate() ? 'bounce_rate' : null;
-    const { query, page, pages } = this.state;
+    const { query, page } = this.state;
 
     const { filters } = query;
     if (filters.source || filters.referrer) {

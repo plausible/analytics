@@ -4,7 +4,6 @@ import { withRouter } from 'react-router-dom';
 
 import numberFormatter from '../number-formatter';
 import FadeIn from '../fade-in';
-import Bar from './bar';
 import MoreLink from './more-link';
 import * as api from '../api';
 import { navigateToQuery } from '../query';

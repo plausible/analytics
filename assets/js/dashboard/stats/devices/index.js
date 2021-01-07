@@ -6,7 +6,6 @@ import OperatingSystems from './operating-systems';
 import FadeIn from '../../fade-in';
 import numberFormatter from '../../number-formatter';
 import Bar from '../bar';
-import MoreLink from '../more-link';
 import * as api from '../../api';
 
 const EXPLANATION = {

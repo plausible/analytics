@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 import Bar from '../bar';
-import MoreLink from '../more-link';
 import PropBreakdown from './prop-breakdown';
 import numberFormatter from '../../number-formatter';
 import * as api from '../../api';

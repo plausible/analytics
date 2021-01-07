@@ -4,7 +4,6 @@ import { Link, withRouter } from 'react-router-dom';
 import Modal from './modal';
 import * as api from '../../api';
 import numberFormatter from '../../number-formatter';
-import Bar from '../bar';
 import { parseQuery } from '../../query';
 
 class CountriesModal extends React.Component {

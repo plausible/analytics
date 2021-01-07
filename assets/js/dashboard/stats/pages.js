@@ -6,7 +6,6 @@ import FadeIn from '../fade-in';
 import Bar from './bar';
 import MoreLink from './more-link';
 import numberFormatter from '../number-formatter';
-import { eventName } from '../query';
 import * as api from '../api';
 
 export default class Pages extends React.Component {
