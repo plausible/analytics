@@ -20,6 +20,10 @@ defmodule Plausible.MixProject do
           applications: [plausible: :permanent],
           steps: [:assemble, :tar]
         ]
+      ],
+      dialyzer: [
+        plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
+        plt_add_apps: [:mix]
       ]
     ]
   end
@@ -94,7 +98,9 @@ defmodule Plausible.MixProject do
       {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
       {:geolix_adapter_mmdb2, "~> 0.5.0"},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
-      {:cachex, "~> 3.3"}
+      {:cachex, "~> 3.3"},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false}
     ]
   end
 

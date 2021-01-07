@@ -3,6 +3,8 @@ defmodule Plausible.Application do
 
   use Application
 
+  require Logger
+
   def start(_type, _args) do
     children = [
       Plausible.Repo,
@@ -40,8 +42,7 @@ defmodule Plausible.Application do
   def report_cache_stats() do
     case Cachex.stats(:user_agents) do
       {:ok, stats} ->
-        IO.puts("User agent cache stats:")
-        IO.inspect(stats, pretty: true)
+        Logger.info("User agent cache stats: #{inspect(stats)}")
 
       e ->
         IO.puts("Unable to show cache stats: #{inspect(e)}")

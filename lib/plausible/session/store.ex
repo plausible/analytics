@@ -5,8 +5,6 @@ defmodule Plausible.Session.Store do
   import Ecto.Query, only: [from: 2]
   require Logger
 
-  @session_length_seconds Application.get_env(:plausible, :session_length_minutes) * 60
-  @forget_session_after @session_length_seconds * 2
   @garbage_collect_interval_milliseconds 60 * 1000
 
   def start_link(opts) do
@@ -19,7 +17,7 @@ defmodule Plausible.Session.Store do
     latest_sessions =
       from(
         s in "sessions",
-        where: s.timestamp >= fragment("now() - INTERVAL ? SECOND", @forget_session_after),
+        where: s.timestamp >= fragment("now() - INTERVAL ? SECOND", ^forget_session_after()),
         group_by: s.session_id,
         select: %{session_id: s.session_id, timestamp: max(s.timestamp)}
       )
@@ -72,7 +70,7 @@ defmodule Plausible.Session.Store do
   end
 
   defp is_active?(session, event) do
-    session && Timex.diff(event.timestamp, session.timestamp, :second) < @session_length_seconds
+    session && Timex.diff(event.timestamp, session.timestamp, :second) < session_length_seconds()
   end
 
   defp update_session(session, event) do
@@ -125,7 +123,7 @@ defmodule Plausible.Session.Store do
 
     new_sessions =
       Enum.reduce(state[:sessions], %{}, fn {key, session}, acc ->
-        if Timex.diff(now, session.timestamp, :second) <= @forget_session_after do
+        if Timex.diff(now, session.timestamp, :second) <= forget_session_after() do
           Map.put(acc, key, session)
         else
           # forget the session
@@ -146,4 +144,7 @@ defmodule Plausible.Session.Store do
 
     {:noreply, %{state | sessions: new_sessions, timer: new_timer}}
   end
+
+  defp session_length_seconds(), do: Application.get_env(:plausible, :session_length_minutes) * 60
+  defp forget_session_after(), do: session_length_seconds() * 2
 end
