@@ -99,7 +99,7 @@ defmodule Plausible.MixProject do
       {:geolix_adapter_mmdb2, "~> 0.5.0"},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:cachex, "~> 3.3"},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false}
     ]
   end
