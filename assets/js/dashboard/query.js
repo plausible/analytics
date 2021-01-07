@@ -109,11 +109,11 @@ class QueryButton extends React.Component {
       <button
         className={className}
         onClick={(event) => {
-        event.preventDefault()
-        navigateToQuery(history, query, to)
-        if (this.props.onClick) this.props.onClick(e)
-        history.push({ pathname: window.location.pathname, search: generateQueryString(to) })
-      }}
+          event.preventDefault()
+          navigateToQuery(history, query, to)
+          if (this.props.onClick) this.props.onClick(event)
+          history.push({ pathname: window.location.pathname, search: generateQueryString(to) })
+        }}
         type="button"
         disabled={disabled}
       >
