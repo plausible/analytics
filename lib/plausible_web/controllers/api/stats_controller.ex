@@ -163,15 +163,13 @@ defmodule PlausibleWeb.Api.StatsController do
     json(conn, Stats.utm_sources(site, query, limit || 9, page || 1, show_noref))
   end
 
-  @google_api Application.fetch_env!(:plausible, :google_api)
-
   def referrer_drilldown(conn, %{"referrer" => "Google"} = params) do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
     query = Query.from(site.timezone, params)
 
     search_terms =
       if site.google_auth && site.google_auth.property && !query.filters["goal"] do
-        @google_api.fetch_stats(site, query, params["limit"] || 9)
+        google_api().fetch_stats(site, query, params["limit"] || 9)
       end
 
     case search_terms do
@@ -317,4 +315,6 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, %{"period" => "realtime"})
     json(conn, Stats.current_visitors(site, query))
   end
+
+  defp google_api(), do: Application.fetch_env!(:plausible, :google_api)
 end
