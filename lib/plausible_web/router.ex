@@ -36,6 +36,8 @@ defmodule PlausibleWeb.Router do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
   end
 
+  use Kaffy.Routes, scope: "/crm", pipe_through: [PlausibleWeb.CRMAuthPlug]
+
   scope "/api/stats", PlausibleWeb.Api do
     pipe_through :stats_api
 
