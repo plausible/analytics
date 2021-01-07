@@ -1,5 +1,3 @@
 {
-  "singleQuote": true,
-  "requirePragma": true,
-  "insertPragma": true
+  "singleQuote": true
 }
