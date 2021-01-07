@@ -58,13 +58,13 @@ jobs:
         run: mix deps.get
       - name: Check Formatting
         run: mix format --check-formatted
-      - name: Warnings
+      - name: Check Compile Warnings
         run: mix compile --warnings-as-errors --all-warnings
       - name: Run tests
         run: mix test
-      - name: Run Dialyzer
+      - name: Check Dialyzer
         run: mix dialyzer
-      - name: Run Credo Warnings
+      - name: Check Credo Warnings
         run: mix credo --strict --only warning --ignore Consistency
 env:
   MIX_ENV: test
