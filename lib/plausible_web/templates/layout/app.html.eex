@@ -50,6 +50,9 @@
                       </div>
                     </div>
                   </li>
+                  <%= if @conn.assigns[:current_user].email in ["me@markosaric.com", "uku@plausible.io"] do  %>
+                    <li id="changelog-notification" class="relative py-2"></li>
+                  <% end %>
                 </ul>
                 <%  Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_authentication) -> %>
                   <ul class="flex" x-show="!document.cookie.includes('logged_in=true')">
