@@ -64,7 +64,7 @@ function generateQueryString(data) {
 }
 
 export function navigateToQuery(history, queryFrom, newData) {
-  // if we update any data that we store in localstorage, make sure going back in history will 
+  // if we update any data that we store in localstorage, make sure going back in history will
   // revert them
   if (newData.period && newData.period !== queryFrom.period) {
     const replaceQuery = new URLSearchParams(window.location.search)
@@ -119,7 +119,7 @@ class QueryButton extends React.Component {
       >
         {children}
       </button>
-)
+    )
   }
 }
 const QueryButtonWithRouter = withRouter(QueryButton)

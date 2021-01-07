@@ -227,9 +227,15 @@ class DatePicker extends React.Component {
       >
         <div
           onClick={this.open.bind(this)}
+          onKeyPress={this.open.bind(this)}
           className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-4
           pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800
           dark:text-gray-200 h-full"
+          tabIndex="0"
+          role="button"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="datemenu"
         >
           <span className="mr-2">{this.timeFrameText()}</span>
           <svg
@@ -277,13 +283,11 @@ class DatePicker extends React.Component {
       boldClass = query.period === period ? "font-bold" : "";
     }
 
-    if (opts.date) {
-      opts.date = formatISO(opts.date);
-    }
+    const date = opts.date ? formatISO(opts.date) : false;
 
     return (
       <QueryLink
-        to={{from: false, to: false, date: false, period, ...opts}}
+        to={{from: false, to: false, date, period, ...opts}}
         onClick={this.close.bind(this)}
         query={this.props.query}
         className={`${boldClass  } block px-4 py-2 md:text-sm leading-tight hover:bg-gray-100
@@ -298,6 +302,7 @@ class DatePicker extends React.Component {
     if (this.state.mode === "menu") {
       return (
         <div
+          id="datemenu"
           className="absolute mt-2 rounded shadow-md z-10"
           style={{width: '235px', right: '-5px'}}
         >
@@ -327,9 +332,16 @@ class DatePicker extends React.Component {
             <div className="border-t border-gray-200 dark:border-gray-500"></div>
             <div className="py-1">
               <span
-                onClick={e => this.setState({mode: 'calendar'}, this.openCalendar.bind(this))}
+                onClick={() => this.setState({mode: 'calendar'}, this.openCalendar.bind(this))}
+                onKeyPress={() => this.setState({mode: 'calendar'}, this.openCalendar.bind(this))}
                 className="block px-4 py-2 md:text-sm leading-tight hover:bg-gray-100
-              dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer"
+                  dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100
+                  cursor-pointer"
+                tabIndex="0"
+                role="button"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-controls="calendar"
               >
                 Custom range
               </span>
@@ -342,6 +354,7 @@ class DatePicker extends React.Component {
       const dayBeforeCreation = insertionDate - 86400000;
       return (
         <Flatpickr
+          id="calendar"
           options={{
             mode: 'range',
             maxDate: 'today',
