@@ -283,7 +283,7 @@ defmodule PlausibleWeb.SiteController do
         |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
 
       {:error, changeset} ->
-        render("settings_general.html", site: site, changeset: changeset)
+        render(conn, "settings_general.html", site: site, changeset: changeset)
     end
   end
 
