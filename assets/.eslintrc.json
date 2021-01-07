@@ -2,12 +2,13 @@
   "extends": ["airbnb", "prettier"],
   "plugins": ["prettier"],
   "rules": {
+    "max-classes-per-file": [0],
     "max-len": [2, {"code": 100}],
+    "no-unused-vars": [1, { "argsIgnorePattern": "^_" }],
     "prettier/prettier": [2],
     "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
     "react/destructuring-assignment": [0],
     "react/prop-types": [0],
-    "max-classes-per-file": [0],
     "react/jsx-one-expression-per-line": [0],
     "react/self-closing-comp": [0]
   }

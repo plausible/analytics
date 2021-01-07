@@ -1,8 +1,8 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
-import { countFilters, navigateToQuery, removeQueryParam } from './query'
 import Datamap from 'datamaps'
-import Transition from "../transition.js";
+import { navigateToQuery } from './query'
+import Transition from "../transition";
 
 class Filters extends React.Component {
   constructor(props) {
@@ -16,7 +16,7 @@ class Filters extends React.Component {
 
     this.appliedFilters = Object.keys(props.query.filters)
       .map((key) => [key, props.query.filters[key]])
-      .filter(([key, value]) => !!value);
+      .filter(([_key, value]) => !!value);
 
     this.renderDropDown = this.renderDropDown.bind(this);
     this.renderDropDownContent = this.renderDropDownContent.bind(this);
@@ -40,9 +40,10 @@ class Filters extends React.Component {
 
     this.appliedFilters = Object.keys(query.filters)
       .map((key) => [key, query.filters[key]])
-      .filter(([key, value]) => !!value)
+      .filter(([_key, value]) => !!value)
 
-    if (JSON.stringify(query) !== JSON.stringify(prevProps.query) || viewport !== prevState.viewport) {
+    if (JSON.stringify(query) !== JSON.stringify(prevProps.query) ||
+        viewport !== prevState.viewport) {
       this.setState({ wrapped: 1 });
     }
 
@@ -68,17 +69,19 @@ class Filters extends React.Component {
 
   // Checks if the filter container is wrapping items
   rewrapFilters() {
-    let currItem, prevItem, items = document.getElementById('filters');
+    let currItem; let prevItem; const items = document.getElementById('filters');
     const { wrapped } = this.state;
 
     this.setState({ wrapped: 0 });
 
-    // Don't rewrap if we're already properly wrapped, there are no DOM children, or there is only filter
+    // Don't rewrap if we're already properly wrapped, there are no DOM children, or there is only
+    // filter
     if (wrapped !== 1 || !items || this.appliedFilters.length === 1) {
       return;
     };
 
-    // For every filter DOM Node, check if its y value is higher than the previous (this indicates a wrap)
+    // For every filter DOM Node, check if its y value is higher than the previous (this indicates
+    // a wrap)
     [...(items.childNodes)].forEach(item => {
       currItem = item.getBoundingClientRect();
       if (prevItem && prevItem.top < currItem.top) {
@@ -90,52 +93,109 @@ class Filters extends React.Component {
 
   filterText(key, value, query) {
     if (key === "goal") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Completed goal <b>{value}</b></span>
+      return (
+        <span className="inline-block max-w-2xs md:max-w-xs truncate">
+          Completed goal <b>{value}</b>
+        </span>
+      )
     }
     if (key === "props") {
       const [metaKey, metaValue] = Object.entries(value)[0]
-      const eventName = query.filters["goal"] ? query.filters["goal"] : 'event'
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{eventName}.{metaKey} is <b>{metaValue}</b></span>
+      const eventName = query.filters.goal ? query.filters.goal : 'event'
+      return (
+        <span className="inline-block max-w-2xs md:max-w-xs truncate">
+          {eventName}.{metaKey} is <b>{metaValue}</b>
+        </span>
+      )
     }
     if (key === "source") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Source: <b>{value}</b></span>
+      return (
+        <span className="inline-block max-w-2xs md:max-w-xs truncate">
+          Source: <b>{value}</b>
+        </span>
+      )
     }
     if (key === "utm_medium") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM medium: <b>{value}</b></span>
+      return (
+        <span className="inline-block max-w-2xs md:max-w-xs truncate">
+          UTM medium: <b>{value}</b>
+        </span>
+      )
     }
     if (key === "utm_source") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM source: <b>{value}</b></span>
+      return (
+        <span className="inline-block max-w-2xs md:max-w-xs truncate">
+          UTM source: <b>{value}</b>
+        </span>
+      )
     }
     if (key === "utm_campaign") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM campaign: <b>{value}</b></span>
+      return (
+        <span className="inline-block max-w-2xs md:max-w-xs truncate">
+          UTM campaign: <b>{value}</b>
+        </span>
+      )
     }
     if (key === "referrer") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Referrer: <b>{value}</b></span>
+      return (
+        <span className="inline-block max-w-2xs md:max-w-xs truncate">
+          Referrer: <b>{value}</b>
+        </span>
+)
     }
     if (key === "screen") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Screen size: <b>{value}</b></span>
+      return (
+        <span className="inline-block max-w-2xs md:max-w-xs truncate">
+          Screen size: <b>{value}</b>
+        </span>
+)
     }
     if (key === "browser") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Browser: <b>{value}</b></span>
+      return (
+        <span className="inline-block max-w-2xs md:max-w-xs truncate">
+          Browser: <b>{value}</b>
+        </span>
+)
     }
     if (key === "browser_version") {
-      const browserName = query.filters["browser"] ? query.filters["browser"] : 'Browser'
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{browserName}.Version: <b>{value}</b></span>
+      const browserName = query.filters.browser ? query.filters.browser : 'Browser'
+      return (
+        <span className="inline-block max-w-2xs md:max-w-xs truncate">
+          {browserName}.Version: <b>{value}</b>
+        </span>
+      )
     }
     if (key === "os") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Operating System: <b>{value}</b></span>
+      return (
+        <span className="inline-block max-w-2xs md:max-w-xs truncate">
+          Operating System: <b>{value}</b>
+        </span>
+      )
     }
     if (key === "os_version") {
-      const osName = query.filters["os"] ? query.filters["os"] : 'OS'
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{osName}.Version: <b>{value}</b></span>
+      const osName = query.filters.os ? query.filters.os : 'OS'
+      return (
+        <span className="inline-block max-w-2xs md:max-w-xs truncate">
+          {osName}.Version: <b>{value}</b>
+        </span>
+      )
     }
     if (key === "country") {
       const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
-      const selectedCountry = allCountries.find((c) => c.id === value) || {properties: {name: value}};
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Country: <b>{selectedCountry.properties.name}</b></span>
+      const selectedCountry = allCountries.find((c)=> c.id === value) ||
+        {properties: {name: value}};
+      return (
+        <span className="inline-block max-w-2xs md:max-w-xs truncate">
+          Country: <b>{selectedCountry.properties.name}</b>
+        </span>
+      )
     }
     if (key === "page") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Page: <b>{value}</b></span>
+      return (
+        <span className="inline-block max-w-2xs md:max-w-xs truncate">
+          Page: <b>{value}</b>
+        </span>
+      )
     }
   }
 
@@ -153,17 +213,36 @@ class Filters extends React.Component {
 
   renderDropdownFilter(history, [key, value], query) {
     return (
-      <div className="px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between" key={key + value}>
+      <div
+        className="px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between"
+        key={key + value}
+      >
         {this.filterText(key, value, query)}
-        <b className="ml-1 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => this.removeFilter(key, history, query)}>✕</b>
+        <b
+          className="ml-1 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"
+          onClick={() => this.removeFilter(key, history, query)}
+        >
+          ✕
+        </b>
       </div>
     )
   }
 
   renderListFilter(history, [key, value], query) {
     return (
-      <span key={key} title={value} className="inline-flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded py-2 px-3 mr-2">
-        {this.filterText(key, value, query)} <b className="ml-1 cursor-pointer hover:text-indigo-500" onClick={() => this.removeFilter(key, history, query)}>✕</b>
+      <span
+        key={key}
+        title={value}
+        className="inline-flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow
+          text-sm rounded py-2 px-3 mr-2"
+      >
+        {this.filterText(key, value, query)}
+        <b
+          className="ml-1 cursor-pointer hover:text-indigo-500"
+          onClick={() => this.removeFilter(key, history, query)}
+        >
+          ✕
+        </b>
       </span>
     )
   }
@@ -182,10 +261,21 @@ class Filters extends React.Component {
     const { history, query } = this.props;
 
     return (
-      <div className="absolute mt-2 rounded shadow-md z-10" style={{ width: viewport <= 768 ? '320px' : '350px', right: '-5px' }} ref={node => this.dropDownNode = node}>
-        <div className="rounded bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 font-medium text-gray-800 dark:text-gray-200 flex flex-col">
+      <div
+        className="absolute mt-2 rounded shadow-md z-10"
+        style={{ width: viewport <= 768 ? '320px' : '350px', right: '-5px' }}
+        ref={node => this.dropDownNode = node}
+      >
+        <div
+          className="rounded bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 font-medium
+            text-gray-800 dark:text-gray-200 flex flex-col"
+        >
           {this.appliedFilters.map((filter) => this.renderDropdownFilter(history, filter, query))}
-          <div className="border-t border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 md:text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => this.clearAllFilters(history, query)}>
+          <div
+            className="border-t border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 md:text-sm
+              leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer"
+            onClick={() => this.clearAllFilters(history, query)}
+          >
             Clear All Filters
           </div>
         </div>
@@ -197,9 +287,23 @@ class Filters extends React.Component {
     return (
       <div id="filters" className='ml-auto'>
         <div className="relative" style={{ height: '35.5px', width: '100px' }}>
-          <div onClick={() => this.setState((state) => ({ dropdownOpen: !state.dropdownOpen }))} className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800 dark:text-gray-200 h-full">
+          <div
+            onClick={() => this.setState((state) => ({ dropdownOpen: !state.dropdownOpen }))}
+            className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow
+              px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800
+              dark:text-gray-200 h-full"
+          >
             <span className="mr-2">Filters</span>
-            <svg className="text-pink-500 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="text-pink-500 h-4 w-4"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </div>
