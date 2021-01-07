@@ -10,7 +10,8 @@ config :plausible,
   mailer_email: System.get_env("MAILER_EMAIL", "hello@plausible.local"),
   admin_pwd: System.get_env("ADMIN_USER_PWD", "!@d3in"),
   ecto_repos: [Plausible.Repo, Plausible.ClickhouseRepo],
-  environment: System.get_env("ENVIRONMENT", "dev")
+  environment: System.get_env("ENVIRONMENT", "dev"),
+  admin_emails: [System.get_env("ADMIN_EMAIL")]
 
 disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
 
@@ -210,6 +211,23 @@ config :geolix,
       adapter: Geolix.Adapter.MMDB2,
       source: "priv/geolix/GeoLite2-Country.mmdb"
     }
+  ]
+
+config :kaffy,
+  otp_app: :plausible,
+  ecto_repo: Plausible.Repo,
+  router: PlausibleWeb.Router,
+  resources: [
+    users: [
+      resources: [
+        users: [schema: Plausible.Auth.User, admin: Plausible.Auth.UserAdmin]
+      ]
+    ],
+    sites: [
+      resources: [
+        sites: [schema: Plausible.Site, admin: Plausible.SiteAdmin]
+      ]
+    ]
   ]
 
 # Import environment specific config. This must remain at the bottom
