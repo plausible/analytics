@@ -1,5 +1,4 @@
 defmodule Plausible.Auth.Token do
-  @one_day_in_seconds 30 * 60 * 24
   @one_hour_in_seconds 30 * 60
 
   def sign_password_reset(email) do
