@@ -14,6 +14,6 @@ export default function Bar({ count, all, bg }) {
   const width = barWidth(count, all);
 
   return (
-    <div className={bg} style={{ width: width + '%', height: '30px' }}></div>
+    <div className={bg} style={{ width: `${width}%`, height: '30px' }}></div>
   );
 }

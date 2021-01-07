@@ -37,7 +37,8 @@ function iconFor(screenSize) {
         <line x1="12" y1="18" x2="12" y2="18" />
       </svg>
     );
-  } else if (screenSize === 'Tablet') {
+  }
+  if (screenSize === 'Tablet') {
     return (
       <svg
         width="16px"
@@ -65,7 +66,8 @@ function iconFor(screenSize) {
         <line x1="12" y1="18" x2="12" y2="18" />
       </svg>
     );
-  } else if (screenSize === 'Laptop') {
+  }
+  if (screenSize === 'Laptop') {
     return (
       <svg
         width="16px"
@@ -85,7 +87,8 @@ function iconFor(screenSize) {
         <line x1="2" y1="20" x2="22" y2="20" />
       </svg>
     );
-  } else if (screenSize === 'Desktop') {
+  }
+  if (screenSize === 'Desktop') {
     return (
       <svg
         width="16px"
@@ -184,34 +187,33 @@ class ScreenSizes extends React.Component {
   renderList() {
     if (this.state.sizes && this.state.sizes.length > 0) {
       return (
-        <React.Fragment>
+        <>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Screen size</span>
             <span>{this.label()}</span>
           </div>
           {this.state.sizes &&
             this.state.sizes.map(this.renderScreenSize.bind(this))}
-        </React.Fragment>
-      );
-    } else {
-      return (
-        <div className="text-center mt-44 font-medium text-gray-500 dark:text-gray-400">
-          No data yet
-        </div>
+        </>
       );
     }
+    return (
+      <div className="text-center mt-44 font-medium text-gray-500 dark:text-gray-400">
+        No data yet
+      </div>
+    );
   }
 
   render() {
     return (
-      <React.Fragment>
+      <>
         {this.state.loading && (
           <div className="loading mt-44 mx-auto">
             <div></div>
           </div>
         )}
         <FadeIn show={!this.state.loading}>{this.renderList()}</FadeIn>
-      </React.Fragment>
+      </>
     );
   }
 }
@@ -219,7 +221,7 @@ class ScreenSizes extends React.Component {
 export default class Devices extends React.Component {
   constructor(props) {
     super(props);
-    this.tabKey = 'deviceTab__' + props.site.domain;
+    this.tabKey = `deviceTab__${props.site.domain}`;
     const storedTab = window.localStorage[this.tabKey];
     this.state = {
       mode: storedTab || 'size',
@@ -235,7 +237,8 @@ export default class Devices extends React.Component {
           timer={this.props.timer}
         />
       );
-    } else if (this.state.mode === 'browser') {
+    }
+    if (this.state.mode === 'browser') {
       return (
         <Browsers
           site={this.props.site}
@@ -243,7 +246,8 @@ export default class Devices extends React.Component {
           timer={this.props.timer}
         />
       );
-    } else if (this.state.mode === 'os') {
+    }
+    if (this.state.mode === 'os') {
       return (
         <OperatingSystems
           site={this.props.site}
@@ -270,16 +274,15 @@ export default class Devices extends React.Component {
           {name}
         </li>
       );
-    } else {
-      return (
-        <li
-          className="hover:text-indigo-600 cursor-pointer"
-          onClick={this.setMode(mode)}
-        >
-          {name}
-        </li>
-      );
     }
+    return (
+      <li
+        className="hover:text-indigo-600 cursor-pointer"
+        onClick={this.setMode(mode)}
+      >
+        {name}
+      </li>
+    );
   }
 
   render() {

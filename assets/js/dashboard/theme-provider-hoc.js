@@ -1,8 +1,8 @@
 import React from 'react';
 import { ThemeContext } from './theme-context';
 
-export const withThemeProvider = (WrappedComponent) => {
-  return class extends React.Component {
+export const withThemeProvider = (WrappedComponent) =>
+  class extends React.Component {
     constructor(props) {
       super(props);
       this.state = {
@@ -41,4 +41,3 @@ export const withThemeProvider = (WrappedComponent) => {
       );
     }
   };
-};

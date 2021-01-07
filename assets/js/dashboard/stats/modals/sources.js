@@ -36,7 +36,7 @@ class SourcesModal extends React.Component {
       .get(
         `/api/stats/${encodeURIComponent(site.domain)}/${this.currentFilter()}`,
         query,
-        { limit: 100, page: page, include: include, show_noref: true }
+        { limit: 100, page, include, show_noref: true }
       )
       .then((res) =>
         this.setState({
@@ -80,18 +80,16 @@ class SourcesModal extends React.Component {
 
   formatBounceRate(page) {
     if (typeof page.bounce_rate === 'number') {
-      return page.bounce_rate + '%';
-    } else {
-      return '-';
+      return `${page.bounce_rate}%`;
     }
+    return '-';
   }
 
   formatDuration(source) {
     if (typeof source.visit_duration === 'number') {
       return durationFormatter(source.visit_duration);
-    } else {
-      return '-';
     }
+    return '-';
   }
 
   renderSource(source) {
@@ -114,7 +112,7 @@ class SourcesModal extends React.Component {
             className="hover:underline"
             to={{
               search: query.toString(),
-              pathname: '/' + encodeURIComponent(this.props.site.domain),
+              pathname: `/${encodeURIComponent(this.props.site.domain)}`,
             }}
           >
             {source.name}
@@ -150,7 +148,8 @@ class SourcesModal extends React.Component {
           <div></div>
         </div>
       );
-    } else if (this.state.moreResultsAvailable) {
+    }
+    if (this.state.moreResultsAvailable) {
       return (
         <div className="w-full text-center my-4">
           <button

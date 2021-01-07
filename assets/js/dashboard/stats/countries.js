@@ -9,6 +9,7 @@ import MoreLink from './more-link';
 import * as api from '../api';
 import { navigateToQuery } from '../query';
 import { withThemeConsumer } from '../theme-consumer-hoc';
+
 class Countries extends React.Component {
   constructor(props) {
     super(props);
@@ -49,14 +50,12 @@ class Countries extends React.Component {
   }
 
   getDataset() {
-    var dataset = {};
+    const dataset = {};
 
-    var onlyValues = this.state.countries.map(function (obj) {
-      return obj.count;
-    });
-    var maxValue = Math.max.apply(null, onlyValues);
+    const onlyValues = this.state.countries.map((obj) => obj.count);
+    const maxValue = Math.max.apply(null, onlyValues);
 
-    var paletteScale = d3.scale
+    const paletteScale = d3.scale
       .linear()
       .domain([0, maxValue])
       .range([
@@ -64,7 +63,7 @@ class Countries extends React.Component {
         this.props.darkTheme ? '#6366f1' : '#a779e9',
       ]);
 
-    this.state.countries.forEach(function (item) {
+    this.state.countries.forEach((item) => {
       dataset[item.name] = {
         numberOfThings: item.count,
         fillColor: paletteScale(item.count),
@@ -94,7 +93,7 @@ class Countries extends React.Component {
   }
 
   drawMap() {
-    var dataset = this.getDataset();
+    const dataset = this.getDataset();
     const label =
       this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors';
     const defaultFill = this.props.darkTheme ? '#2d3747' : '#f8fafc';
@@ -111,11 +110,11 @@ class Countries extends React.Component {
       geographyConfig: {
         borderColor,
         highlightBorderWidth: 2,
-        highlightFillColor: function (geo) {
-          return geo['fillColor'] || highlightFill;
+        highlightFillColor(geo) {
+          return geo.fillColor || highlightFill;
         },
         highlightBorderColor,
-        popupTemplate: function (geo, data) {
+        popupTemplate(geo, data) {
           if (!data) {
             return;
           }
@@ -128,7 +127,7 @@ class Countries extends React.Component {
             '</strong>',
             '<br><strong class="dark:text-indigo-400">',
             numberFormatter(data.numberOfThings),
-            '</strong> ' + pluralizedLabel,
+            `</strong> ${pluralizedLabel}`,
             '</div>',
           ].join('');
         },
@@ -146,19 +145,20 @@ class Countries extends React.Component {
   renderBody() {
     if (this.state.countries) {
       return (
-        <React.Fragment>
+        <>
           <h3 className="font-bold dark:text-gray-100">Countries</h3>
           <div
             className="mt-6 mx-auto"
             style={{ width: '100%', maxWidth: '475px', height: '320px' }}
             id="map-container"
-          ></div>
+          >
+          </div>
           <MoreLink
             site={this.props.site}
             list={this.state.countries}
             endpoint="countries"
           />
-        </React.Fragment>
+        </>
       );
     }
   }

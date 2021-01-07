@@ -1,6 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { withRouter } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
 
 import Modal from './modal';
 import * as api from '../../api';
@@ -84,10 +83,9 @@ class PagesModal extends React.Component {
 
   formatBounceRate(page) {
     if (typeof page.bounce_rate === 'number') {
-      return page.bounce_rate + '%';
-    } else {
-      return '-';
+      return `${page.bounce_rate}%`;
     }
+    return '-';
   }
 
   renderPage(page) {
@@ -142,7 +140,8 @@ class PagesModal extends React.Component {
           <div></div>
         </div>
       );
-    } else if (this.state.moreResultsAvailable) {
+    }
+    if (this.state.moreResultsAvailable) {
       return (
         <div className="w-full text-center my-4">
           <button
@@ -160,7 +159,7 @@ class PagesModal extends React.Component {
   renderBody() {
     if (this.state.pages) {
       return (
-        <React.Fragment>
+        <>
           <h1 className="text-xl font-bold dark:text-gray-100">
             {this.title()}
           </h1>
@@ -203,7 +202,7 @@ class PagesModal extends React.Component {
               <tbody>{this.state.pages.map(this.renderPage.bind(this))}</tbody>
             </table>
           </main>
-        </React.Fragment>
+        </>
       );
     }
   }

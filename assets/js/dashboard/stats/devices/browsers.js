@@ -94,39 +94,38 @@ export default class Browsers extends React.Component {
 
   renderList() {
     const key = this.props.query.filters.browser
-      ? this.props.query.filters.browser + ' version'
+      ? `${this.props.query.filters.browser} version`
       : 'Browser';
 
     if (this.state.browsers && this.state.browsers.length > 0) {
       return (
-        <React.Fragment>
+        <>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide">
             <span>{key}</span>
             <span>{this.label()}</span>
           </div>
           {this.state.browsers &&
             this.state.browsers.map(this.renderBrowser.bind(this))}
-        </React.Fragment>
-      );
-    } else {
-      return (
-        <div className="text-center mt-44 font-medium text-gray-500 dark:text-gray-400">
-          No data yet
-        </div>
+        </>
       );
     }
+    return (
+      <div className="text-center mt-44 font-medium text-gray-500 dark:text-gray-400">
+        No data yet
+      </div>
+    );
   }
 
   render() {
     return (
-      <React.Fragment>
+      <>
         {this.state.loading && (
           <div className="loading mt-44 mx-auto">
             <div></div>
           </div>
         )}
         <FadeIn show={!this.state.loading}>{this.renderList()}</FadeIn>
-      </React.Fragment>
+      </>
     );
   }
 }

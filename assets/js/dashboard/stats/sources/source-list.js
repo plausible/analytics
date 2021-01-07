@@ -89,7 +89,7 @@ class AllSources extends React.Component {
   renderList() {
     if (this.state.referrers.length > 0) {
       return (
-        <React.Fragment>
+        <>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
             <span>Source</span>
             <span>{this.label()}</span>
@@ -98,21 +98,20 @@ class AllSources extends React.Component {
           <FlipMove>
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
-        </React.Fragment>
-      );
-    } else {
-      return (
-        <div className="text-center mt-44 font-medium text-gray-500">
-          No data yet
-        </div>
+        </>
       );
     }
+    return (
+      <div className="text-center mt-44 font-medium text-gray-500">
+        No data yet
+      </div>
+    );
   }
 
   renderContent() {
     if (this.state.referrers) {
       return (
-        <React.Fragment>
+        <>
           <div className="w-full flex justify-between">
             <h3 className="font-bold dark:text-gray-100">Top sources</h3>
             {this.props.renderTabs()}
@@ -123,7 +122,7 @@ class AllSources extends React.Component {
             list={this.state.referrers}
             endpoint="sources"
           />
-        </React.Fragment>
+        </>
       );
     }
   }
@@ -178,7 +177,7 @@ class UTMSources extends React.Component {
   }
 
   fetchReferrers() {
-    const endpoint = UTM_TAGS[this.props.tab].endpoint;
+    const { endpoint } = UTM_TAGS[this.props.tab];
     api
       .get(
         `/api/stats/${encodeURIComponent(this.props.site.domain)}/${endpoint}`,
@@ -231,7 +230,7 @@ class UTMSources extends React.Component {
   renderList() {
     if (this.state.referrers.length > 0) {
       return (
-        <React.Fragment>
+        <>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide">
             <span>{UTM_TAGS[this.props.tab].label}</span>
             <span>{this.label()}</span>
@@ -240,21 +239,20 @@ class UTMSources extends React.Component {
           <FlipMove>
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
-        </React.Fragment>
-      );
-    } else {
-      return (
-        <div className="text-center mt-44 font-medium text-gray-500 dark:text-gray-400">
-          No data yet
-        </div>
+        </>
       );
     }
+    return (
+      <div className="text-center mt-44 font-medium text-gray-500 dark:text-gray-400">
+        No data yet
+      </div>
+    );
   }
 
   renderContent() {
     if (this.state.referrers) {
       return (
-        <React.Fragment>
+        <>
           <div className="w-full flex justify-between">
             <h3 className="font-bold dark:text-gray-100">Top sources</h3>
             {this.props.renderTabs()}
@@ -265,7 +263,7 @@ class UTMSources extends React.Component {
             list={this.state.referrers}
             endpoint={UTM_TAGS[this.props.tab].endpoint}
           />
-        </React.Fragment>
+        </>
       );
     }
   }
@@ -290,7 +288,7 @@ class UTMSources extends React.Component {
 export default class SourceList extends React.Component {
   constructor(props) {
     super(props);
-    this.tabKey = 'sourceTab__' + props.site.domain;
+    this.tabKey = `sourceTab__${props.site.domain}`;
     const storedTab = window.localStorage[this.tabKey];
     this.state = {
       tab: storedTab || 'all',
@@ -354,7 +352,8 @@ export default class SourceList extends React.Component {
           {...this.props}
         />
       );
-    } else if (this.state.tab === 'utm_medium') {
+    }
+    if (this.state.tab === 'utm_medium') {
       return (
         <UTMSources
           tab={this.state.tab}
@@ -363,7 +362,8 @@ export default class SourceList extends React.Component {
           {...this.props}
         />
       );
-    } else if (this.state.tab === 'utm_source') {
+    }
+    if (this.state.tab === 'utm_source') {
       return (
         <UTMSources
           tab={this.state.tab}
@@ -372,7 +372,8 @@ export default class SourceList extends React.Component {
           {...this.props}
         />
       );
-    } else if (this.state.tab === 'utm_campaign') {
+    }
+    if (this.state.tab === 'utm_campaign') {
       return (
         <UTMSources
           tab={this.state.tab}

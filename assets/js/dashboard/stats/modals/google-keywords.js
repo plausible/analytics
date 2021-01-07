@@ -82,7 +82,8 @@ class GoogleKeywordsModal extends React.Component {
           <div className="text-lg">Google does not share this information</div>
         </div>
       );
-    } else if (this.state.notConfigured) {
+    }
+    if (this.state.notConfigured) {
       if (this.state.isOwner) {
         return (
           <div className="text-center text-gray-700 dark:text-gray-300 mt-6">
@@ -103,18 +104,18 @@ class GoogleKeywordsModal extends React.Component {
             </a>
           </div>
         );
-      } else {
-        return (
-          <div className="text-center text-gray-700 dark:text-gray-300 mt-6">
-            <RocketIcon />
-            <div className="text-lg">
-              The site is not connected to Google Search Kewyords
-            </div>
-            <div className="text-lg">Cannot show search terms</div>
-          </div>
-        );
       }
-    } else if (this.state.searchTerms.length > 0) {
+      return (
+        <div className="text-center text-gray-700 dark:text-gray-300 mt-6">
+          <RocketIcon />
+          <div className="text-lg">
+            The site is not connected to Google Search Kewyords
+          </div>
+          <div className="text-lg">Cannot show search terms</div>
+        </div>
+      );
+    }
+    if (this.state.searchTerms.length > 0) {
       return (
         <table className="w-full table-striped table-fixed">
           <thead>
@@ -138,16 +139,15 @@ class GoogleKeywordsModal extends React.Component {
           </tbody>
         </table>
       );
-    } else {
-      return (
-        <div className="text-center text-gray-700 dark:text-gray-300 mt-6">
-          <RocketIcon />
-          <div className="text-lg">
-            Could not find any search terms for this period
-          </div>
-        </div>
-      );
     }
+    return (
+      <div className="text-center text-gray-700 dark:text-gray-300 mt-6">
+        <RocketIcon />
+        <div className="text-lg">
+          Could not find any search terms for this period
+        </div>
+      </div>
+    );
   }
 
   renderGoalText() {
@@ -167,31 +167,30 @@ class GoogleKeywordsModal extends React.Component {
           <div></div>
         </div>
       );
-    } else {
-      return (
-        <React.Fragment>
-          <Link
-            to={`/${encodeURIComponent(this.props.site.domain)}/referrers${
-              window.location.search
-            }`}
-            className="font-bold text-gray-700 dark:text-gray-200 hover:underline"
-          >
-            ← All referrers
-          </Link>
-
-          <div className="my-4 border-b border-gray-300 dark:border-gray-500"></div>
-          <main className="modal__content">
-            <h1 className="text-xl font-semibold mb-0 leading-none dark:text-gray-200">
-              {this.state.totalVisitors} visitors from Google
-              <br />
-              {toHuman(this.state.query)}
-            </h1>
-            {this.renderGoalText()}
-            {this.renderKeywords()}
-          </main>
-        </React.Fragment>
-      );
     }
+    return (
+      <>
+        <Link
+          to={`/${encodeURIComponent(this.props.site.domain)}/referrers${
+            window.location.search
+          }`}
+          className="font-bold text-gray-700 dark:text-gray-200 hover:underline"
+        >
+          ← All referrers
+        </Link>
+
+        <div className="my-4 border-b border-gray-300 dark:border-gray-500"></div>
+        <main className="modal__content">
+          <h1 className="text-xl font-semibold mb-0 leading-none dark:text-gray-200">
+            {this.state.totalVisitors} visitors from Google
+            <br />
+            {toHuman(this.state.query)}
+          </h1>
+          {this.renderGoalText()}
+          {this.renderKeywords()}
+        </main>
+      </>
+    );
   }
 
   render() {

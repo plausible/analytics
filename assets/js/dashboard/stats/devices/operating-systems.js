@@ -100,12 +100,12 @@ export default class OperatingSystems extends React.Component {
 
   renderList() {
     const key = this.props.query.filters.os
-      ? this.props.query.filters.os + ' version'
+      ? `${this.props.query.filters.os} version`
       : 'Operating system';
 
     if (this.state.operatingSystems && this.state.operatingSystems.length > 0) {
       return (
-        <React.Fragment>
+        <>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide">
             <span>{key}</span>
             <span>{this.label()}</span>
@@ -114,27 +114,26 @@ export default class OperatingSystems extends React.Component {
             this.state.operatingSystems.map(
               this.renderOperatingSystem.bind(this)
             )}
-        </React.Fragment>
-      );
-    } else {
-      return (
-        <div className="text-center mt-44 font-medium text-gray-500 dark:text-gray-400">
-          No data yet
-        </div>
+        </>
       );
     }
+    return (
+      <div className="text-center mt-44 font-medium text-gray-500 dark:text-gray-400">
+        No data yet
+      </div>
+    );
   }
 
   render() {
     return (
-      <React.Fragment>
+      <>
         {this.state.loading && (
           <div className="loading mt-44 mx-auto">
             <div></div>
           </div>
         )}
         <FadeIn show={!this.state.loading}>{this.renderList()}</FadeIn>
-      </React.Fragment>
+      </>
     );
   }
 }

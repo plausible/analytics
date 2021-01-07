@@ -1,8 +1,8 @@
 import React from 'react';
 import { ThemeContext } from './theme-context';
 
-export const withThemeConsumer = (WrappedComponent) => {
-  return class extends React.Component {
+export const withThemeConsumer = (WrappedComponent) =>
+  class extends React.Component {
     render() {
       return (
         <ThemeContext.Consumer>
@@ -11,4 +11,3 @@ export const withThemeConsumer = (WrappedComponent) => {
       );
     }
   };
-};

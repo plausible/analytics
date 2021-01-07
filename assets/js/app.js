@@ -8,14 +8,14 @@ import 'alpinejs';
 const triggers = document.querySelectorAll('[data-dropdown-trigger]');
 
 for (const trigger of triggers) {
-  trigger.addEventListener('click', function (e) {
+  trigger.addEventListener('click', (e) => {
     e.stopPropagation();
     e.currentTarget.nextElementSibling.classList.remove('hidden');
   });
 }
 
 if (triggers.length > 0) {
-  document.addEventListener('click', function (e) {
+  document.addEventListener('click', (e) => {
     const dropdown = e.target.closest('[data-dropdown]');
 
     if (dropdown && e.target.tagName === 'A') {
@@ -23,7 +23,7 @@ if (triggers.length > 0) {
     }
   });
 
-  document.addEventListener('click', function (e) {
+  document.addEventListener('click', (e) => {
     const clickedInDropdown = e.target.closest('[data-dropdown]');
 
     if (!clickedInDropdown) {
@@ -37,10 +37,10 @@ if (triggers.length > 0) {
 const registerForm = document.getElementById('register-form');
 
 if (registerForm) {
-  registerForm.addEventListener('submit', function (e) {
+  registerForm.addEventListener('submit', (e) => {
     e.preventDefault();
     setTimeout(submitForm, 1000);
-    var formSubmitted = false;
+    let formSubmitted = false;
 
     function submitForm() {
       if (!formSubmitted) {

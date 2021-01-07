@@ -41,7 +41,7 @@ export default class SiteSwitcher extends React.Component {
           }
           return response.json();
         })
-        .then((sites) => this.setState({ loading: false, sites: sites }))
+        .then((sites) => this.setState({ loading: false, sites }))
         .catch((e) => this.setState({ loading: false, error: e }));
     }
   }
@@ -80,38 +80,38 @@ export default class SiteSwitcher extends React.Component {
           </div>
         </div>
       );
-    } else if (this.state.error) {
+    }
+    if (this.state.error) {
       return (
         <div className="mx-auto px-4 py-6 dark:text-gray-100">
           Something went wrong, try again
         </div>
       );
-    } else {
-      return (
-        <React.Fragment>
-          <div className="py-1">
-            <a
-              href={`/${encodeURIComponent(this.props.site.domain)}/settings`}
-              className="group flex items-center px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100"
-              role="menuitem"
-            >
-              <svg
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-200 group-hover:text-gray-600 dark:group-hover:text-gray-400 group-focus:text-gray-500 dark:group-focus:text-gray-200"
-              >
-                <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
-              </svg>
-              Site settings
-            </a>
-          </div>
-          <div className="border-t border-gray-200 dark:border-gray-500"></div>
-          <div className="py-1">
-            {this.state.sites.map(this.renderSiteLink.bind(this))}
-          </div>
-        </React.Fragment>
-      );
     }
+    return (
+      <>
+        <div className="py-1">
+          <a
+            href={`/${encodeURIComponent(this.props.site.domain)}/settings`}
+            className="group flex items-center px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100"
+            role="menuitem"
+          >
+            <svg
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-200 group-hover:text-gray-600 dark:group-hover:text-gray-400 group-focus:text-gray-500 dark:group-focus:text-gray-200"
+            >
+              <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
+            </svg>
+            Site settings
+          </a>
+        </div>
+        <div className="border-t border-gray-200 dark:border-gray-500"></div>
+        <div className="py-1">
+          {this.state.sites.map(this.renderSiteLink.bind(this))}
+        </div>
+      </>
+    );
   }
 
   renderArrow() {

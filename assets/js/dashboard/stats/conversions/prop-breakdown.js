@@ -9,18 +9,18 @@ export default class PropertyBreakdown extends React.Component {
   constructor(props) {
     super(props);
     let propKey = props.goal.prop_names[0];
-    this.storageKey = 'goalPropTab__' + props.site.domain + props.goal.name;
+    this.storageKey = `goalPropTab__${props.site.domain}${props.goal.name}`;
     const storedKey = window.localStorage[this.storageKey];
     if (props.goal.prop_names.includes(storedKey)) {
       propKey = storedKey;
     }
-    if (props.query.filters['props']) {
-      propKey = Object.keys(props.query.filters['props'])[0];
+    if (props.query.filters.props) {
+      propKey = Object.keys(props.query.filters.props)[0];
     }
 
     this.state = {
       loading: true,
-      propKey: propKey,
+      propKey,
     };
   }
 
@@ -29,7 +29,7 @@ export default class PropertyBreakdown extends React.Component {
   }
 
   fetchPropBreakdown() {
-    if (this.props.query.filters['goal']) {
+    if (this.props.query.filters.goal) {
       api
         .get(
           `/api/stats/${encodeURIComponent(
@@ -62,6 +62,7 @@ export default class PropertyBreakdown extends React.Component {
     }
     return null;
   }
+
   renderPropValue(value) {
     const query = new URLSearchParams(window.location.search);
     query.set('props', JSON.stringify({ [this.state.propKey]: value.name }));
@@ -122,11 +123,10 @@ export default class PropertyBreakdown extends React.Component {
           </div>
         </div>
       );
-    } else {
-      return this.state.breakdown.map((propValue) =>
-        this.renderPropValue(propValue)
-      );
     }
+    return this.state.breakdown.map((propValue) =>
+      this.renderPropValue(propValue)
+    );
   }
 
   renderPill(key) {
@@ -141,17 +141,16 @@ export default class PropertyBreakdown extends React.Component {
           {key}
         </li>
       );
-    } else {
-      return (
-        <li
-          key={key}
-          className="hover:text-indigo-600 cursor-pointer"
-          onClick={this.changePropKey.bind(this, key)}
-        >
-          {key}
-        </li>
-      );
     }
+    return (
+      <li
+        key={key}
+        className="hover:text-indigo-600 cursor-pointer"
+        onClick={this.changePropKey.bind(this, key)}
+      >
+        {key}
+      </li>
+    );
   }
 
   render() {

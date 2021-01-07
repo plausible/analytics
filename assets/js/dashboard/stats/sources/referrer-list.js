@@ -11,12 +11,9 @@ import * as api from '../../api';
 function LinkOption(props) {
   if (props.disabled) {
     return <span {...props}>{props.children}</span>;
-  } else {
-    props = Object.assign({}, props, {
-      className: props.className + ' hover:underline',
-    });
-    return <Link {...props}>{props.children}</Link>;
   }
+  props = { ...props, className: `${props.className} hover:underline` };
+  return <Link {...props}>{props.children}</Link>;
 }
 
 export default class Referrers extends React.Component {
@@ -53,9 +50,7 @@ export default class Referrers extends React.Component {
           { show_noref: this.showNoRef() }
         )
         .then((res) => res.search_terms || res.referrers)
-        .then((referrers) =>
-          this.setState({ loading: false, referrers: referrers })
-        );
+        .then((referrers) => this.setState({ loading: false, referrers }));
     } else if (this.props.query.filters.goal) {
       api
         .get(
@@ -85,7 +80,7 @@ export default class Referrers extends React.Component {
       return (
         <a
           target="_blank"
-          href={'//' + referrer.name}
+          href={`//${referrer.name}`}
           className="hidden group-hover:block"
         >
           <svg
@@ -149,7 +144,7 @@ export default class Referrers extends React.Component {
   renderList() {
     if (this.state.referrers.length > 0) {
       return (
-        <React.Fragment>
+        <>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide">
             <span>Referrer</span>
             <span>{this.label()}</span>
@@ -158,21 +153,20 @@ export default class Referrers extends React.Component {
           <FlipMove>
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
-        </React.Fragment>
-      );
-    } else {
-      return (
-        <div className="text-center mt-44 font-medium text-gray-500 dark:text-gray-400">
-          No data yet
-        </div>
+        </>
       );
     }
+    return (
+      <div className="text-center mt-44 font-medium text-gray-500 dark:text-gray-400">
+        No data yet
+      </div>
+    );
   }
 
   renderContent() {
     if (this.state.referrers) {
       return (
-        <React.Fragment>
+        <>
           <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
           {this.renderList()}
           <MoreLink
@@ -180,7 +174,7 @@ export default class Referrers extends React.Component {
             list={this.state.referrers}
             endpoint={`referrers/${this.props.query.filters.source}`}
           />
-        </React.Fragment>
+        </>
       );
     }
   }

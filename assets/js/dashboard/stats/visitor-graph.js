@@ -7,22 +7,22 @@ import * as api from '../api';
 import { ThemeContext } from '../theme-context';
 
 function buildDataSet(plot, present_index, ctx, label) {
-  var gradient = ctx.createLinearGradient(0, 0, 0, 300);
+  const gradient = ctx.createLinearGradient(0, 0, 0, 300);
   gradient.addColorStop(0, 'rgba(101,116,205, 0.2)');
   gradient.addColorStop(1, 'rgba(101,116,205, 0)');
 
   if (present_index) {
-    var dashedPart = plot.slice(present_index - 1);
-    var dashedPlot = new Array(plot.length - dashedPart.length).concat(
+    const dashedPart = plot.slice(present_index - 1);
+    const dashedPlot = new Array(plot.length - dashedPart.length).concat(
       dashedPart
     );
-    for (var i = present_index; i < plot.length; i++) {
+    for (let i = present_index; i < plot.length; i++) {
       plot[i] = undefined;
     }
 
     return [
       {
-        label: label,
+        label,
         data: plot,
         borderWidth: 3,
         borderColor: 'rgba(101,116,205)',
@@ -30,7 +30,7 @@ function buildDataSet(plot, present_index, ctx, label) {
         backgroundColor: gradient,
       },
       {
-        label: label,
+        label,
         data: dashedPlot,
         borderWidth: 3,
         borderDash: [5, 10],
@@ -39,18 +39,17 @@ function buildDataSet(plot, present_index, ctx, label) {
         backgroundColor: gradient,
       },
     ];
-  } else {
-    return [
-      {
-        label: label,
-        data: plot,
-        borderWidth: 3,
-        borderColor: 'rgba(101,116,205)',
-        pointBackgroundColor: 'rgba(101,116,205)',
-        backgroundColor: gradient,
-      },
-    ];
   }
+  return [
+    {
+      label,
+      data: plot,
+      borderWidth: 3,
+      borderColor: 'rgba(101,116,205)',
+      pointBackgroundColor: 'rgba(101,116,205)',
+      backgroundColor: gradient,
+    },
+  ];
 }
 
 const MONTHS = [
@@ -91,12 +90,14 @@ function dateFormatter(interval, longForm) {
 
     if (interval === 'month') {
       return MONTHS[date.getUTCMonth()];
-    } else if (interval === 'date') {
-      var day = DAYS_ABBREV[date.getUTCDay()];
-      var date_ = date.getUTCDate();
-      var month = MONTHS_ABBREV[date.getUTCMonth()];
-      return day + ', ' + date_ + ' ' + month;
-    } else if (interval === 'hour') {
+    }
+    if (interval === 'date') {
+      const day = DAYS_ABBREV[date.getUTCDay()];
+      const date_ = date.getUTCDate();
+      const month = MONTHS_ABBREV[date.getUTCMonth()];
+      return `${day}, ${date_} ${month}`;
+    }
+    if (interval === 'hour') {
       const parts = isoDate.split(/[^0-9]/);
       date = new Date(
         parts[0],
@@ -106,18 +107,18 @@ function dateFormatter(interval, longForm) {
         parts[4],
         parts[5]
       );
-      var hours = date.getHours(); // Not sure why getUTCHours doesn't work here
-      var ampm = hours >= 12 ? 'pm' : 'am';
-      hours = hours % 12;
-      hours = hours ? hours : 12; // the hour '0' should be '12'
+      let hours = date.getHours(); // Not sure why getUTCHours doesn't work here
+      const ampm = hours >= 12 ? 'pm' : 'am';
+      hours %= 12;
+      hours = hours || 12; // the hour '0' should be '12'
       return hours + ampm;
-    } else if (interval === 'minute') {
+    }
+    if (interval === 'minute') {
       if (longForm) {
         const minutesAgo = Math.abs(isoDate);
-        return minutesAgo === 1 ? '1 minute ago' : minutesAgo + ' minutes ago';
-      } else {
-        return isoDate + 'm';
+        return minutesAgo === 1 ? '1 minute ago' : `${minutesAgo} minutes ago`;
       }
+      return `${isoDate}m`;
     }
   };
 }
@@ -171,14 +172,14 @@ class LineGraph extends React.Component {
           yPadding: 12,
           multiKeyBackground: 'none',
           callbacks: {
-            title: function (dataPoints) {
+            title(dataPoints) {
               const data = dataPoints[0];
               return dateFormatter(graphData.interval, true)(data.xLabel);
             },
-            beforeBody: function () {
+            beforeBody() {
               this.drawnLabels = {};
             },
-            label: function (item) {
+            label(item) {
               const dataset = this._data.datasets[item.datasetIndex];
               if (!this.drawnLabels[dataset.label]) {
                 this.drawnLabels[dataset.label] = true;
@@ -189,10 +190,11 @@ class LineGraph extends React.Component {
                 return ` ${item.yLabel} ${pluralizedLabel}`;
               }
             },
-            footer: function (dataPoints) {
+            footer(dataPoints) {
               if (graphData.interval === 'month') {
                 return 'Click to view month';
-              } else if (graphData.interval === 'date') {
+              }
+              if (graphData.interval === 'date') {
                 return 'Click to view day';
               }
             },
@@ -292,19 +294,21 @@ class LineGraph extends React.Component {
       const color = name === 'Bounce rate' ? 'text-red-400' : 'text-green-500';
       return (
         <span className="text-xs dark:text-gray-100">
-          <span className={color + ' font-bold'}>&uarr;</span>{' '}
+          <span className={`${color} font-bold`}>&uarr;</span>{' '}
           {formattedComparison}%
         </span>
       );
-    } else if (comparison < 0) {
+    }
+    if (comparison < 0) {
       const color = name === 'Bounce rate' ? 'text-green-500' : 'text-red-400';
       return (
         <span className="text-xs dark:text-gray-100">
-          <span className={color + ' font-bold'}>&darr;</span>{' '}
+          <span className={`${color} font-bold`}>&darr;</span>{' '}
           {formattedComparison}%
         </span>
       );
-    } else if (comparison === 0) {
+    }
+    if (comparison === 0) {
       return (
         <span className="text-xs text-gray-700 dark:text-gray-300">
           &#12336; N/A
@@ -316,18 +320,18 @@ class LineGraph extends React.Component {
   renderTopStatNumber(stat) {
     if (stat.name === 'Visit duration') {
       return durationFormatter(stat.count);
-    } else if (typeof stat.count == 'number') {
-      return numberFormatter(stat.count);
-    } else {
-      return stat.percentage + '%';
     }
+    if (typeof stat.count === 'number') {
+      return numberFormatter(stat.count);
+    }
+    return `${stat.percentage}%`;
   }
 
   renderTopStats() {
     const { graphData } = this.props;
     const stats = this.props.graphData.top_stats.map((stat, index) => {
       let border = index > 0 ? 'lg:border-l border-gray-300' : '';
-      border = index % 2 === 0 ? border + ' border-r lg:border-r-0' : border;
+      border = index % 2 === 0 ? `${border} border-r lg:border-r-0` : border;
 
       return (
         <div className={`px-8 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
@@ -388,18 +392,19 @@ class LineGraph extends React.Component {
       this.props.graphData.interval === 'hour' ? '' : 'cursor-pointer';
 
     return (
-      <React.Fragment>
+      <>
         <div className="flex flex-wrap">{this.renderTopStats()}</div>
         <div className="px-2 relative">
           {this.downloadLink()}
           <canvas
             id="main-graph-canvas"
-            className={'mt-4 ' + extraClass}
+            className={`mt-4 ${extraClass}`}
             width="1054"
             height="342"
-          ></canvas>
+          >
+          </canvas>
         </div>
-      </React.Fragment>
+      </>
     );
   }
 }

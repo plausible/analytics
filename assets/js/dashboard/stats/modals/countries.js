@@ -37,7 +37,7 @@ class CountriesModal extends React.Component {
             className="hover:underline"
             to={{
               search: query.toString(),
-              pathname: '/' + encodeURIComponent(this.props.site.domain),
+              pathname: `/${encodeURIComponent(this.props.site.domain)}`,
             }}
           >
             {country.full_country_name}
@@ -66,9 +66,10 @@ class CountriesModal extends React.Component {
           <div></div>
         </div>
       );
-    } else if (this.state.countries) {
+    }
+    if (this.state.countries) {
       return (
-        <React.Fragment>
+        <>
           <h1 className="text-xl font-bold dark:text-gray-100">
             Top countries
           </h1>
@@ -97,7 +98,7 @@ class CountriesModal extends React.Component {
               </tbody>
             </table>
           </main>
-        </React.Fragment>
+        </>
       );
     }
   }

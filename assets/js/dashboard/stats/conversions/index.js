@@ -40,25 +40,24 @@ export default class Conversions extends React.Component {
           {goalName}
         </span>
       );
-    } else {
-      const query = new URLSearchParams(window.location.search);
-      query.set('goal', goalName);
-
-      return (
-        <Link
-          to={{ pathname: window.location.pathname, search: query.toString() }}
-          style={{ marginTop: '-26px' }}
-          className="hover:underline block px-2"
-        >
-          {goalName}
-        </Link>
-      );
     }
+    const query = new URLSearchParams(window.location.search);
+    query.set('goal', goalName);
+
+    return (
+      <Link
+        to={{ pathname: window.location.pathname, search: query.toString() }}
+        style={{ marginTop: '-26px' }}
+        className="hover:underline block px-2"
+      >
+        {goalName}
+      </Link>
+    );
   }
 
   renderGoal(goal) {
     const renderProps =
-      this.props.query.filters['goal'] == goal.name && goal.prop_names;
+      this.props.query.filters.goal == goal.name && goal.prop_names;
 
     return (
       <div className="my-2 text-sm" key={goal.name}>
@@ -109,7 +108,8 @@ export default class Conversions extends React.Component {
           </div>
         </div>
       );
-    } else if (this.state.goals) {
+    }
+    if (this.state.goals) {
       return (
         <div className="w-full bg-white dark:bg-gray-825 shadow-xl rounded p-4">
           <h3 className="font-bold dark:text-gray-100">

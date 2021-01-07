@@ -1,12 +1,11 @@
 import React, { useEffect } from 'react';
+import { BrowserRouter, Switch, Route, useLocation } from 'react-router-dom';
 import Dash from './index';
 import SourcesModal from './stats/modals/sources';
 import ReferrersDrilldownModal from './stats/modals/referrer-drilldown';
 import GoogleKeywordsModal from './stats/modals/google-keywords';
 import PagesModal from './stats/modals/pages';
 import CountriesModal from './stats/modals/countries';
-
-import { BrowserRouter, Switch, Route, useLocation } from 'react-router-dom';
 
 function ScrollToTop() {
   const location = useLocation();

@@ -50,8 +50,7 @@ export default class CurrentVisitors extends React.Component {
           {currentVisitors} current visitor{currentVisitors === 1 ? '' : 's'}
         </Link>
       );
-    } else {
-      return null;
     }
+    return null;
   }
 }

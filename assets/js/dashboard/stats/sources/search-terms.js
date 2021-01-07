@@ -79,7 +79,8 @@ export default class SearchTerms extends React.Component {
           <div>Google does not share this information</div>
         </div>
       );
-    } else if (this.state.notConfigured) {
+    }
+    if (this.state.notConfigured) {
       return (
         <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
           <RocketIcon />
@@ -97,47 +98,47 @@ export default class SearchTerms extends React.Component {
           )}
         </div>
       );
-    } else if (this.state.searchTerms.length > 0) {
+    }
+    if (this.state.searchTerms.length > 0) {
       const valLabel =
         this.props.query.period === 'realtime'
           ? 'Current visitors'
           : 'Visitors';
 
       return (
-        <React.Fragment>
+        <>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide">
             <span>Search term</span>
             <span>{valLabel}</span>
           </div>
 
           {this.state.searchTerms.map(this.renderSearchTerm.bind(this))}
-        </React.Fragment>
-      );
-    } else {
-      return (
-        <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
-          <RocketIcon />
-          <div>Could not find any search terms for this period</div>
-          <div>Google Search Console data is sampled and delayed by 24-36h</div>
-          <div>
-            Read more on{' '}
-            <a
-              href="https://docs.plausible.io/google-search-console-integration/#i-dont-see-google-search-query-data-in-my-dashboard"
-              target="_blank"
-              className="hover:underline text-indigo-700 dark:text-indigo-500"
-            >
-              our documentation
-            </a>
-          </div>
-        </div>
+        </>
       );
     }
+    return (
+      <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
+        <RocketIcon />
+        <div>Could not find any search terms for this period</div>
+        <div>Google Search Console data is sampled and delayed by 24-36h</div>
+        <div>
+          Read more on{' '}
+          <a
+            href="https://docs.plausible.io/google-search-console-integration/#i-dont-see-google-search-query-data-in-my-dashboard"
+            target="_blank"
+            className="hover:underline text-indigo-700 dark:text-indigo-500"
+          >
+            our documentation
+          </a>
+        </div>
+      </div>
+    );
   }
 
   renderContent() {
     if (this.state.searchTerms) {
       return (
-        <React.Fragment>
+        <>
           <h3 className="font-bold dark:text-gray-100">Search Terms</h3>
           {this.renderList()}
           <MoreLink
@@ -145,7 +146,7 @@ export default class SearchTerms extends React.Component {
             list={this.state.searchTerms}
             endpoint="referrers/Google"
           />
-        </React.Fragment>
+        </>
       );
     }
   }

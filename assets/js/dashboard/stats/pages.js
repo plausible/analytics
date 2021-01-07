@@ -81,7 +81,7 @@ export default class Pages extends React.Component {
             </Link>
             <a
               target="_blank"
-              href={'http://' + this.props.site.domain + page.name}
+              href={`http://${this.props.site.domain}${page.name}`}
               className="hidden group-hover:block"
             >
               <svg
@@ -103,20 +103,20 @@ export default class Pages extends React.Component {
   }
 
   label() {
-    const filters = this.props.query.filters;
+    const { filters } = this.props.query;
     if (this.props.query.period === 'realtime') {
       return 'Current visitors';
-    } else if (filters['source'] || filters['referrer']) {
-      return 'Entrances';
-    } else {
-      return 'Visitors';
     }
+    if (filters.source || filters.referrer) {
+      return 'Entrances';
+    }
+    return 'Visitors';
   }
 
   renderList() {
     if (this.state.pages.length > 0) {
       return (
-        <React.Fragment>
+        <>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide">
             <span>Page url</span>
             <span>{this.label()}</span>
@@ -125,28 +125,25 @@ export default class Pages extends React.Component {
           <FlipMove>
             {this.state.pages.map(this.renderPage.bind(this))}
           </FlipMove>
-        </React.Fragment>
-      );
-    } else {
-      return (
-        <div className="text-center mt-44 font-medium text-gray-500 dark:text-gray-400">
-          No data yet
-        </div>
+        </>
       );
     }
+    return (
+      <div className="text-center mt-44 font-medium text-gray-500 dark:text-gray-400">
+        No data yet
+      </div>
+    );
   }
 
   title() {
-    const filters = this.props.query.filters;
-    return filters['source'] || filters['referrer']
-      ? 'Entry Pages'
-      : 'Top Pages';
+    const { filters } = this.props.query;
+    return filters.source || filters.referrer ? 'Entry Pages' : 'Top Pages';
   }
 
   renderContent() {
     if (this.state.pages) {
       return (
-        <React.Fragment>
+        <>
           <h3 className="font-bold dark:text-gray-100">{this.title()}</h3>
           {this.renderList()}
           <MoreLink
@@ -154,7 +151,7 @@ export default class Pages extends React.Component {
             list={this.state.pages}
             endpoint="pages"
           />
-        </React.Fragment>
+        </>
       );
     }
   }

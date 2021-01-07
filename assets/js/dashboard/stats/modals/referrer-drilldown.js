@@ -25,7 +25,7 @@ class ReferrerDrilldownModal extends React.Component {
           this.props.match.params.referrer
         }`,
         this.state.query,
-        { limit: 100, include: include }
+        { limit: 100, include }
       )
       .then((res) =>
         this.setState({
@@ -44,18 +44,16 @@ class ReferrerDrilldownModal extends React.Component {
 
   formatBounceRate(ref) {
     if (typeof ref.bounce_rate === 'number') {
-      return ref.bounce_rate + '%';
-    } else {
-      return '-';
+      return `${ref.bounce_rate}%`;
     }
+    return '-';
   }
 
   formatDuration(referrer) {
     if (typeof referrer.visit_duration === 'number') {
       return durationFormatter(referrer.visit_duration);
-    } else {
-      return '-';
     }
+    return '-';
   }
 
   renderExternalLink(name) {
@@ -63,7 +61,7 @@ class ReferrerDrilldownModal extends React.Component {
       return (
         <a
           target="_blank"
-          href={'//' + name}
+          href={`//${name}`}
           className="hidden group-hover:block"
         >
           <svg
@@ -94,7 +92,7 @@ class ReferrerDrilldownModal extends React.Component {
           className="block truncate hover:underline dark:text-gray-200"
           to={{
             search: query.toString(),
-            pathname: '/' + this.props.site.domain,
+            pathname: `/${this.props.site.domain}`,
           }}
           title={referrer.name}
         >
@@ -113,7 +111,7 @@ class ReferrerDrilldownModal extends React.Component {
 
     return (
       <div key={tweet.tweet_id}>
-        <div className={'flex items-center my-4' + border}>
+        <div className={`flex items-center my-4${border}`}>
           <a
             className="flex items-center group"
             href={authorUrl}
@@ -174,26 +172,25 @@ class ReferrerDrilldownModal extends React.Component {
           )}
         </tr>
       );
-    } else {
-      return (
-        <tr className="text-sm dark:text-gray-200" key={referrer.name}>
-          <td className="p-2">{this.renderReferrerName(referrer)}</td>
-          <td className="p-2 w-32 font-medium" align="right">
-            {numberFormatter(referrer.count)}
-          </td>
-          {this.showExtra() && (
-            <td className="p-2 w-32 font-medium" align="right">
-              {this.formatBounceRate(referrer)}
-            </td>
-          )}
-          {this.showExtra() && (
-            <td className="p-2 w-32 font-medium" align="right">
-              {this.formatDuration(referrer)}
-            </td>
-          )}
-        </tr>
-      );
     }
+    return (
+      <tr className="text-sm dark:text-gray-200" key={referrer.name}>
+        <td className="p-2">{this.renderReferrerName(referrer)}</td>
+        <td className="p-2 w-32 font-medium" align="right">
+          {numberFormatter(referrer.count)}
+        </td>
+        {this.showExtra() && (
+          <td className="p-2 w-32 font-medium" align="right">
+            {this.formatBounceRate(referrer)}
+          </td>
+        )}
+        {this.showExtra() && (
+          <td className="p-2 w-32 font-medium" align="right">
+            {this.formatDuration(referrer)}
+          </td>
+        )}
+      </tr>
+    );
   }
 
   renderGoalText() {
@@ -213,9 +210,10 @@ class ReferrerDrilldownModal extends React.Component {
           <div></div>
         </div>
       );
-    } else if (this.state.referrers) {
+    }
+    if (this.state.referrers) {
       return (
-        <React.Fragment>
+        <>
           <h1 className="text-xl font-bold dark:text-gray-100">
             Referrer drilldown
           </h1>
@@ -267,7 +265,7 @@ class ReferrerDrilldownModal extends React.Component {
               </tbody>
             </table>
           </main>
-        </React.Fragment>
+        </>
       );
     }
   }
