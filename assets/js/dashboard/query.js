@@ -7,20 +7,18 @@ const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'custom
 export function parseQuery(querystring, site) {
   const q = new URLSearchParams(querystring)
   let period = q.get('period')
-  const periodKey = 'period__' + site.domain
+  const periodKey = `period__${  site.domain}`
 
   if (PERIODS.includes(period)) {
     if (period !== 'custom' && period !== 'realtime') window.localStorage[periodKey] = period
-  } else {
-    if (window.localStorage[periodKey]) {
+  } else if (window.localStorage[periodKey]) {
       period = window.localStorage[periodKey]
     } else {
       period = '30d'
     }
-  }
 
   return {
-    period: period,
+    period,
     date: q.get('date') ? parseUTCDate(q.get('date')) : nowForSite(site),
     from: q.get('from') ? parseUTCDate(q.get('from')) : undefined,
     to: q.get('to') ? parseUTCDate(q.get('to')) : undefined,
@@ -66,7 +64,8 @@ function generateQueryString(data) {
 }
 
 export function navigateToQuery(history, queryFrom, newData) {
-  // if we update any data that we store in localstorage, make sure going back in history will revert them
+  // if we update any data that we store in localstorage, make sure going back in history will
+  // revert them
   if (newData.period && newData.period !== queryFrom.period) {
     const replaceQuery = new URLSearchParams(window.location.search)
     replaceQuery.set('period', queryFrom.period)
@@ -91,28 +90,53 @@ class QueryLink extends React.Component {
 
   render() {
     const { history, query, to, ...props } = this.props
-    return <Link
-      {...props}
-      to={{ pathname: window.location.pathname, search: generateQueryString(to) }}
-      onClick={this.onClick}
-    />
+    return (
+      <Link
+        {...props}
+        to={{ pathname: window.location.pathname, search: generateQueryString(to) }}
+        onClick={this.onClick}
+      />
+)
   }
 }
 const QueryLinkWithRouter = withRouter(QueryLink)
 export { QueryLinkWithRouter as QueryLink };
 
+class QueryButton extends React.Component {
+  render() {
+    const { history, query, to, disabled, className, children } = this.props
+    return (
+      <button
+        className={className}
+        onClick={(event) => {
+          event.preventDefault()
+          navigateToQuery(history, query, to)
+          if (this.props.onClick) this.props.onClick(event)
+          history.push({ pathname: window.location.pathname, search: generateQueryString(to) })
+        }}
+        type="button"
+        disabled={disabled}
+      >
+        {children}
+      </button>
+    )
+  }
+}
+const QueryButtonWithRouter = withRouter(QueryButton)
+export { QueryButtonWithRouter as QueryButton };
+
 export function toHuman(query) {
   if (query.period === 'day') {
     return `on ${formatDay(query.date)}`
-  } else if (query.period === 'month') {
+  } if (query.period === 'month') {
     return `in ${formatMonthYYYY(query.date)}`
-  } else if (query.period === '7d') {
+  } if (query.period === '7d') {
     return 'in the last 7 days'
-  } else if (query.period === '30d') {
+  } if (query.period === '30d') {
     return 'in the last 30 days'
-  } else if (query.period === '6mo') {
+  } if (query.period === '6mo') {
     return 'in the last 6 months'
-  } else if (query.period === '12mo') {
+  } if (query.period === '12mo') {
     return 'in the last 12 months'
   }
 }
@@ -129,7 +153,6 @@ export function eventName(query) {
       return 'pageviews'
     }
     return 'events'
-  } else {
-    return 'pageviews'
   }
+  return 'pageviews'
 }
