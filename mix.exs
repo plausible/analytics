@@ -100,7 +100,8 @@ defmodule Plausible.MixProject do
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:cachex, "~> 3.3"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:credo, "~> 1.5", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:kaffy, "~> 0.9.0"}
     ]
   end
 
