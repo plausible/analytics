@@ -218,14 +218,14 @@ config :kaffy,
   ecto_repo: Plausible.Repo,
   router: PlausibleWeb.Router,
   resources: [
-    users: [
+    auth: [
       resources: [
-        users: [schema: Plausible.Auth.User, admin: Plausible.Auth.UserAdmin]
+        user: [schema: Plausible.Auth.User, admin: Plausible.Auth.UserAdmin]
       ]
     ],
     sites: [
       resources: [
-        sites: [schema: Plausible.Site, admin: Plausible.SiteAdmin]
+        site: [schema: Plausible.Site, admin: Plausible.SiteAdmin]
       ]
     ]
   ]
