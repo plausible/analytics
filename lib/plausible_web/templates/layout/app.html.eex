@@ -50,7 +50,7 @@
                       </div>
                     </div>
                   </li>
-                  <%= if @conn.assigns[:current_user].email in ["me@markosaric.com", "uku@plausible.io"] do  %>
+                  <%= if @conn.assigns[:current_user].email in ["hi@markosaric.com", "uku@plausible.io"] do  %>
                     <li id="changelog-notification" class="relative py-2"></li>
                   <% end %>
                 </ul>
