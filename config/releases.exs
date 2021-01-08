@@ -202,6 +202,24 @@ config :plausible, :user_agent_cache,
   limit: user_agent_cache_limit,
   stats: user_agent_cache_stats
 
+config :kaffy,
+  otp_app: :plausible,
+  ecto_repo: Plausible.Repo,
+  router: PlausibleWeb.Router,
+  admin_title: "Plausible Admin",
+  resources: [
+    auth: [
+      resources: [
+        user: [schema: Plausible.Auth.User, admin: Plausible.Auth.UserAdmin]
+      ]
+    ],
+    sites: [
+      resources: [
+        site: [schema: Plausible.Site, admin: Plausible.SiteAdmin]
+      ]
+    ]
+  ]
+
 if geolite2_country_db do
   config :geolix,
     databases: [
