@@ -33,6 +33,10 @@ body {
   overflow-x: hidden;
 }
 
+button:disabled {
+  cursor: default;
+}
+
 blockquote {
   @apply my-4 py-2 px-4 border-l-4 border-gray-500;
 }
