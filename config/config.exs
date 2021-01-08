@@ -43,7 +43,7 @@ config :plausible, PlausibleWeb.Endpoint,
     view: PlausibleWeb.ErrorView,
     accepts: ~w(html json)
   ],
-  pubsub: [name: Plausible.PubSub, adapter: Phoenix.PubSub.PG2]
+  pubsub_server: Plausible.PubSub
 
 config :sentry,
   dsn: System.get_env("SENTRY_DSN"),

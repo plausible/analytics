@@ -20,7 +20,7 @@
     </div>
 
     <%= render("_flash.html", assigns) %>
-    <%= render @view_module, @view_template, assigns %>
+    <%= @inner_content %>
 
     <p class="text-center text-gray-500 text-xs py-8">
       ©2020 Plausible Analytics. All rights reserved.

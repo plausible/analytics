@@ -59,19 +59,19 @@ defmodule Plausible.MixProject do
   defp deps do
     [
       {:appsignal, "~> 2.0"},
-      {:appsignal_phoenix, "~> 2.0.0"},
+      {:appsignal_phoenix, "~> 2.0.3"},
       {:bcrypt_elixir, "~> 2.0"},
       {:cors_plug, "~> 1.5"},
       {:ecto_sql, "~> 3.0"},
       {:elixir_uuid, "~> 1.2"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
-      {:phoenix, "~> 1.4.0"},
+      {:phoenix, "~> 1.5.0"},
       {:phoenix_ecto, "~> 4.0"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_pubsub, "~> 1.1"},
-      {:plug_cowboy, "~> 2.0"},
+      {:phoenix_pubsub, "~> 2.0"},
+      {:plug_cowboy, "~> 2.1"},
       {:postgrex, ">= 0.0.0"},
       #  Used in paddle_api, can remove
       {:poison, "~> 3.1"},
