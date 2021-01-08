@@ -217,6 +217,7 @@ config :kaffy,
   otp_app: :plausible,
   ecto_repo: Plausible.Repo,
   router: PlausibleWeb.Router,
+  admin_title: "Plausible Admin",
   resources: [
     auth: [
       resources: [
