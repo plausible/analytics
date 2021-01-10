@@ -1,6 +1,6 @@
 # Plausible Analytics
 
-[Plausible Analytics](https://plausible.io/) is a simple, lightweight (< 1 KB), open-source and privacy-friendly alternative to Google Analytics. It doesn’t use cookies and is fully compliant with GDPR, CCPA and PECR. You can self-host Plausible or have us run it for you in the Cloud. Here's [the live demo of our own website stats](https://plausible.io/plausible.io). We are completely independent, self-funded and bootstrapped. Made and hosted in the EU 🇪🇺
+[Plausible Analytics](https://plausible.io/) is a simple, lightweight (< 1 KB), open-source and privacy-friendly alternative to Google Analytics. It doesn’t use cookies and is fully compliant with GDPR, CCPA and PECR. You can self-host Plausible or have us run it for you in the Cloud. Here's [the live demo of our own website stats](https://plausible.io/plausible.io). We are completely independent, self-funded and bootstrapped. Made and hosted in the EU
 
 ![](https://docs.plausible.io/img/plausible-analytics.png)
 
