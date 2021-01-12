@@ -44,6 +44,7 @@ defmodule PlausibleWeb.AuthView do
     cond do
       subscription.paddle_plan_id in @monthly_plans -> "monthly"
       subscription.paddle_plan_id in @yearly_plans -> "yearly"
+      subscription.paddle_plan_id == "free_10k" -> "N/A"
       true -> raise "Unknown interval for subscription #{subscription.paddle_plan_id}"
     end
   end

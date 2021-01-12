@@ -20,6 +20,7 @@ db_url =
 
 admin_user = System.get_env("ADMIN_USER_NAME")
 admin_email = System.get_env("ADMIN_USER_EMAIL")
+admin_emails = System.get_env("ADMIN_EMAILS", "") |> String.split(",")
 admin_pwd = System.get_env("ADMIN_USER_PWD")
 env = System.get_env("ENVIRONMENT", "prod")
 mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.SMTPAdapter")
@@ -52,12 +53,18 @@ hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
 log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
 appsignal_api_key = System.get_env("APPSIGNAL_API_KEY")
 
+{user_agent_cache_limit, ""} = Integer.parse(System.get_env("USER_AGENT_CACHE_LIMIT", "1000"))
+
+user_agent_cache_stats =
+  String.to_existing_atom(System.get_env("USER_AGENT_CACHE_STATS", "false"))
+
 config :plausible,
   admin_user: admin_user,
   admin_email: admin_email,
   admin_pwd: admin_pwd,
   environment: env,
-  mailer_email: mailer_email
+  mailer_email: mailer_email,
+  admin_emails: admin_emails
 
 config :plausible, :selfhost,
   disable_authentication: disable_auth,
@@ -190,6 +197,28 @@ config :ref_inspector,
 
 config :ua_inspector,
   init: {Plausible.Release, :configure_ua_inspector}
+
+config :plausible, :user_agent_cache,
+  limit: user_agent_cache_limit,
+  stats: user_agent_cache_stats
+
+config :kaffy,
+  otp_app: :plausible,
+  ecto_repo: Plausible.Repo,
+  router: PlausibleWeb.Router,
+  admin_title: "Plausible Admin",
+  resources: [
+    auth: [
+      resources: [
+        user: [schema: Plausible.Auth.User, admin: Plausible.Auth.UserAdmin]
+      ]
+    ],
+    sites: [
+      resources: [
+        site: [schema: Plausible.Site, admin: Plausible.SiteAdmin]
+      ]
+    ]
+  ]
 
 if geolite2_country_db do
   config :geolix,

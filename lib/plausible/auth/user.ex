@@ -41,8 +41,8 @@ defmodule Plausible.Auth.User do
 
   def changeset(user, attrs \\ %{}) do
     user
-    |> cast(attrs, [:email, :name, :email_verified, :theme])
-    |> validate_required([:email, :name, :email_verified])
+    |> cast(attrs, [:email, :name, :email_verified, :theme, :trial_expiry_date])
+    |> validate_required([:email, :name, :email_verified, :trial_expiry_date])
     |> unique_constraint(:email)
   end
 

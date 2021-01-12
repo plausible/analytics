@@ -302,6 +302,20 @@ defmodule PlausibleWeb.AuthControllerTest do
         }
       ])
 
+      Repo.insert_all("create_site_emails", [
+        %{
+          user_id: user.id,
+          timestamp: NaiveDateTime.utc_now()
+        }
+      ])
+
+      Repo.insert_all("check_stats_emails", [
+        %{
+          user_id: user.id,
+          timestamp: NaiveDateTime.utc_now()
+        }
+      ])
+
       insert(:google_auth, site: site, user: user)
       insert(:subscription, user: user, status: "deleted")
 
