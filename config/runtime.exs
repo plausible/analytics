@@ -1,8 +1,8 @@
 import Config
 
-### Mandatory params Start
-# it is highly recommended to change this parameters in production systems
-# params are made optional to facilitate smooth release
+if config_env() == :dev do
+  Envy.auto_load()
+end
 
 port = System.get_env("PORT") || 8000
 
@@ -78,17 +78,9 @@ config :plausible, :selfhost,
 config :plausible, PlausibleWeb.Endpoint,
   url: [host: base_url.host, scheme: base_url.scheme, port: base_url.port],
   http: [port: port],
-  secret_key_base: secret_key_base,
-  cache_static_manifest: "priv/static/cache_manifest.json",
-  check_origin: false,
-  load_from_system_env: true,
-  server: true,
-  code_reloader: false
+  secret_key_base: secret_key_base
 
-config :plausible,
-       Plausible.Repo,
-       url: db_url,
-       adapter: Ecto.Adapters.Postgres
+config :plausible, Plausible.Repo, url: db_url
 
 config :sentry,
   dsn: sentry_dsn,
@@ -130,6 +122,9 @@ case mailer_adapter do
       retries: System.get_env("SMTP_RETRIES") || 2,
       no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true
 
+  "Bamboo.LocalAdapter" ->
+    config :plausible, Plausible.Mailer, adapter: :"Elixir.#{mailer_adapter}"
+
   _ ->
     raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
 end
@@ -167,7 +162,9 @@ extra_cron = [
   # Every 10 minutes
   {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates},
   # Every 15 minutes
-  {"*/15 * * * *", Plausible.Workers.SpikeNotifier}
+  {"*/15 * * * *", Plausible.Workers.SpikeNotifier},
+  # Every day at midnight
+  {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes}
 ]
 
 base_queues = [rotate_salts: 1]
@@ -180,7 +177,8 @@ extra_queues = [
   trial_notification_emails: 1,
   schedule_email_reports: 1,
   send_email_reports: 1,
-  spike_notifications: 1
+  spike_notifications: 1,
+  clean_email_verification_codes: 1
 ]
 
 config :plausible, Oban,
