@@ -123,7 +123,10 @@ case mailer_adapter do
       no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true
 
   "Bamboo.LocalAdapter" ->
-    config :plausible, Plausible.Mailer, adapter: :"Elixir.#{mailer_adapter}"
+    config :plausible, Plausible.Mailer, adapter: Bamboo.LocalAdapter
+
+  "Bamboo.TestAdapter" ->
+    config :plausible, Plausible.Mailer, adapter: Bamboo.TestAdapter
 
   _ ->
     raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
@@ -143,48 +146,50 @@ config :plausible, :custom_domain_server,
 config :plausible, PlausibleWeb.Firewall,
   blocklist: System.get_env("IP_BLOCKLIST", "") |> String.split(",") |> Enum.map(&String.trim/1)
 
-base_cron = [
-  # Daily at midnight
-  {"0 0 * * *", Plausible.Workers.RotateSalts}
-]
+if config_env() !== :test do
+  base_cron = [
+    # Daily at midnight
+    {"0 0 * * *", Plausible.Workers.RotateSalts}
+  ]
 
-extra_cron = [
-  # hourly
-  {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
-  #  hourly
-  {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
-  # Daily at midnight
-  {"0 0 * * *", Plausible.Workers.FetchTweets},
-  # Daily at midday
-  {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
-  # Daily at midday
-  {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
-  # Every 10 minutes
-  {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates},
-  # Every 15 minutes
-  {"*/15 * * * *", Plausible.Workers.SpikeNotifier},
-  # Every day at midnight
-  {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes}
-]
+  extra_cron = [
+    # hourly
+    {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
+    #  hourly
+    {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
+    # Daily at midnight
+    {"0 0 * * *", Plausible.Workers.FetchTweets},
+    # Daily at midday
+    {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
+    # Daily at midday
+    {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
+    # Every 10 minutes
+    {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates},
+    # Every 15 minutes
+    {"*/15 * * * *", Plausible.Workers.SpikeNotifier},
+    # Every day at midnight
+    {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes}
+  ]
 
-base_queues = [rotate_salts: 1]
+  base_queues = [rotate_salts: 1]
 
-extra_queues = [
-  provision_ssl_certificates: 1,
-  fetch_tweets: 1,
-  check_stats_emails: 1,
-  site_setup_emails: 1,
-  trial_notification_emails: 1,
-  schedule_email_reports: 1,
-  send_email_reports: 1,
-  spike_notifications: 1,
-  clean_email_verification_codes: 1
-]
+  extra_queues = [
+    provision_ssl_certificates: 1,
+    fetch_tweets: 1,
+    check_stats_emails: 1,
+    site_setup_emails: 1,
+    trial_notification_emails: 1,
+    schedule_email_reports: 1,
+    send_email_reports: 1,
+    spike_notifications: 1,
+    clean_email_verification_codes: 1
+  ]
 
-config :plausible, Oban,
-  repo: Plausible.Repo,
-  queues: if(cron_enabled, do: base_queues ++ extra_queues, else: base_queues),
-  crontab: if(cron_enabled, do: base_cron ++ extra_cron, else: base_cron)
+  config :plausible, Oban,
+    repo: Plausible.Repo,
+    queues: if(cron_enabled, do: base_queues ++ extra_queues, else: base_queues),
+    crontab: if(cron_enabled, do: base_cron ++ extra_cron, else: base_cron)
+end
 
 config :plausible, :hcaptcha,
   sitekey: hcaptcha_sitekey,

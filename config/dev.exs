@@ -1,6 +1,10 @@
 import Config
 
 config :plausible, PlausibleWeb.Endpoint,
+  render_errors: [
+    view: PlausibleWeb.ErrorView,
+    accepts: ~w(html json)
+  ],
   server: true,
   debug_errors: true,
   code_reloader: true,
@@ -13,12 +17,6 @@ config :plausible, PlausibleWeb.Endpoint,
       "--watch-stdin",
       cd: Path.expand("../assets", __DIR__)
     ]
-  ]
-
-config :plausible, PlausibleWeb.Endpoint,
-  render_errors: [
-    view: PlausibleWeb.ErrorView,
-    accepts: ~w(html json)
   ],
   live_reload: [
     patterns: [

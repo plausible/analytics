@@ -6,9 +6,7 @@ config :plausible, PlausibleWeb.Endpoint, server: false
 
 config :bcrypt_elixir, :log_rounds, 4
 
-config :plausible, Plausible.Repo,
-  pool: Ecto.Adapters.SQL.Sandbox,
-  url: "postgres://postgres:postgres@127.0.0.1:5432/plausible_test"
+config :plausible, Plausible.Repo, pool: Ecto.Adapters.SQL.Sandbox
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
@@ -19,13 +17,6 @@ config :plausible, Plausible.Mailer, adapter: Bamboo.TestAdapter
 config :plausible,
   paddle_api: Plausible.PaddleApi.Mock,
   google_api: Plausible.Google.Api.Mock
-
-config :junit_formatter,
-  report_file: "report.xml",
-  report_dir: File.cwd!(),
-  print_report_file: true,
-  prepend_project_name?: true,
-  include_filename?: true
 
 config :geolix,
   databases: [
@@ -38,3 +29,8 @@ config :geolix,
 
 config :plausible,
   session_timeout: 0
+
+config :plausible, Oban,
+  repo: Plausible.Repo,
+  queues: false,
+  crontab: false

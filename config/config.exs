@@ -35,8 +35,7 @@ config :plausible, Plausible.ClickhouseRepo, loggers: [Ecto.LogEntry]
 config :plausible, Plausible.Repo,
   timeout: 300_000,
   connect_timeout: 300_000,
-  handshake_timeout: 300_000,
-  adapter: Ecto.Adapters.Postgres
+  handshake_timeout: 300_000
 
 config :plausible, :user_agent_cache,
   limit: 1000,
