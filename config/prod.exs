@@ -1,7 +1,7 @@
-use Mix.Config
+import Config
 
-# For the actual-production deployments we will use releases,
-# i.e., "releases.exs" is the _actual_ production config
-# see "releases.exs"
-
-import_config "releases.exs"
+config :plausible, PlausibleWeb.Endpoint,
+  cache_static_manifest: "priv/static/cache_manifest.json",
+  check_origin: false,
+  server: true,
+  code_reloader: false

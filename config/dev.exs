@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :plausible, PlausibleWeb.Endpoint,
   server: true,
@@ -16,6 +16,10 @@ config :plausible, PlausibleWeb.Endpoint,
   ]
 
 config :plausible, PlausibleWeb.Endpoint,
+  render_errors: [
+    view: PlausibleWeb.ErrorView,
+    accepts: ~w(html json)
+  ],
   live_reload: [
     patterns: [
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
@@ -30,9 +34,3 @@ config :plausible, PlausibleWeb.Endpoint,
 config :logger, :console, format: "[$level] $message\n"
 config :phoenix, :stacktrace_depth, 20
 config :phoenix, :plug_init_mode, :runtime
-
-if File.exists?("config/dev.secret.exs") do
-  import_config "dev.secret.exs"
-end
-
-config :logger, level: :debug

@@ -101,7 +101,8 @@ defmodule Plausible.MixProject do
       {:cachex, "~> 3.3"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
-      {:kaffy, "~> 0.9.0"}
+      {:kaffy, "~> 0.9.0"},
+      {:envy, "~> 1.1.1"}
     ]
   end
 
