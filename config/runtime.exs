@@ -1,6 +1,6 @@
 import Config
 
-if config_env() == :dev do
+if config_env() in [:dev, :test] do
   Envy.auto_load()
 end
 
