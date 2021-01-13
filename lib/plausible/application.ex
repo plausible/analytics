@@ -9,6 +9,7 @@ defmodule Plausible.Application do
     children = [
       Plausible.Repo,
       Plausible.ClickhouseRepo,
+      {Phoenix.PubSub, name: Plausible.PubSub},
       PlausibleWeb.Endpoint,
       Plausible.Event.WriteBuffer,
       Plausible.Session.WriteBuffer,

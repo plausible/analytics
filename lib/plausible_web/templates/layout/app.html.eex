@@ -140,7 +140,7 @@
     <% end %>
 
     <main class="flex-1">
-    <%= Map.get(assigns, :inner_layout) || render @view_module, @view_template, assigns %>
+    <%= Map.get(assigns, :inner_layout) || @inner_content %>
     </main>
     <%= render("_footer.html", assigns) %>
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
