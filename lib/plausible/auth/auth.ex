@@ -58,9 +58,9 @@ defmodule Plausible.Auth do
     end
   end
 
-  def create_user(name, email) do
+  def create_user(name, email, pwd) do
     %Auth.User{}
-    |> Auth.User.new(%{name: name, email: email})
+    |> Auth.User.new(%{name: name, email: email, password: pwd, password_confirmation: pwd})
     |> Repo.insert()
   end
 

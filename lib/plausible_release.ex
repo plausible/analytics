@@ -19,10 +19,7 @@ defmodule Plausible.Release do
 
     case Plausible.Auth.find_user_by(email: admin_email) do
       nil ->
-        {:ok, admin} = Plausible.Auth.create_user(admin_user, admin_email)
-        # set the password
-        {:ok, _} = Plausible.Auth.User.set_password(admin, admin_pwd) |> Repo.update()
-
+        {:ok, _} = Plausible.Auth.create_user(admin_user, admin_email, admin_pwd)
         IO.puts("Admin user created successful!")
 
       _ ->
