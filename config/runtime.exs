@@ -144,7 +144,7 @@ config :plausible, :custom_domain_server,
 config :plausible, PlausibleWeb.Firewall,
   blocklist: System.get_env("IP_BLOCKLIST", "") |> String.split(",") |> Enum.map(&String.trim/1)
 
-if config_env() !== :test do
+if config_env() == :prod do
   base_cron = [
     # Daily at midnight
     {"0 0 * * *", Plausible.Workers.RotateSalts},
@@ -189,6 +189,11 @@ if config_env() !== :test do
     repo: Plausible.Repo,
     queues: if(is_selfhost, do: base_queues, else: base_queues ++ extra_queues),
     crontab: if(is_selfhost, do: base_cron, else: base_cron ++ extra_cron)
+else
+  config :plausible, Oban,
+    repo: Plausible.Repo,
+    queues: false,
+    crontab: false
 end
 
 config :plausible, :hcaptcha,
