@@ -111,6 +111,8 @@ defmodule PlausibleWeb.Router do
     post "/sites", SiteController, :create_site
     post "/sites/:website/make-public", SiteController, :make_public
     post "/sites/:website/make-private", SiteController, :make_private
+    post "/sites/:website/make-embeddable", SiteController, :make_embeddable
+    post "/sites/:website/make-not-embeddable", SiteController, :make_not_embeddable
     post "/sites/:website/weekly-report/enable", SiteController, :enable_weekly_report
     post "/sites/:website/weekly-report/disable", SiteController, :disable_weekly_report
     post "/sites/:website/weekly-report/recipients", SiteController, :add_weekly_report_recipient
@@ -161,6 +163,7 @@ defmodule PlausibleWeb.Router do
     delete "/:website", SiteController, :delete_site
     delete "/:website/stats", SiteController, :reset_stats
 
+    get "/share/embed/:slug", StatsController, :shared_link
     get "/share/:slug", StatsController, :shared_link
     post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
     get "/:domain/visitors.csv", StatsController, :csv_export

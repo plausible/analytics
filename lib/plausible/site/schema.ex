@@ -8,6 +8,7 @@ defmodule Plausible.Site do
     field :domain, :string
     field :timezone, :string
     field :public, :boolean
+    field :embeddable, :boolean
 
     many_to_many :members, User, join_through: Plausible.Site.Membership
     has_one :google_auth, GoogleAuth
@@ -33,6 +34,14 @@ defmodule Plausible.Site do
 
   def make_private(site) do
     change(site, public: false)
+  end
+
+  def make_embeddable(site) do
+    change(site, embeddable: true)
+  end
+
+  def make_not_embeddable(site) do
+    change(site, embeddable: false)
   end
 
   defp clean_domain(changeset) do
