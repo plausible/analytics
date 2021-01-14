@@ -48,10 +48,12 @@ custom_domain_server_user = System.get_env("CUSTOM_DOMAIN_SERVER_USER")
 custom_domain_server_password = System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD")
 geolite2_country_db = System.get_env("GEOLITE2_COUNTRY_DB")
 disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
+disable_registration = String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false"))
 hcaptcha_sitekey = System.get_env("HCAPTCHA_SITEKEY")
 hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
 log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
 appsignal_api_key = System.get_env("APPSIGNAL_API_KEY")
+is_selfhost = String.to_existing_atom(System.get_env("SELFHOST", "true"))
 
 {user_agent_cache_limit, ""} = Integer.parse(System.get_env("USER_AGENT_CACHE_LIMIT", "1000"))
 
@@ -64,16 +66,12 @@ config :plausible,
   admin_pwd: admin_pwd,
   environment: env,
   mailer_email: mailer_email,
-  admin_emails: admin_emails
+  admin_emails: admin_emails,
+  is_selfhost: is_selfhost
 
 config :plausible, :selfhost,
   disable_authentication: disable_auth,
-  disable_subscription: String.to_existing_atom(System.get_env("DISABLE_SUBSCRIPTION", "true")),
-  disable_registration:
-    if(!disable_auth,
-      do: String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false")),
-      else: false
-    )
+  disable_registration: if(!disable_auth, do: disable_registration, else: false)
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [host: base_url.host, scheme: base_url.scheme, port: base_url.port],
@@ -149,46 +147,48 @@ config :plausible, PlausibleWeb.Firewall,
 if config_env() !== :test do
   base_cron = [
     # Daily at midnight
-    {"0 0 * * *", Plausible.Workers.RotateSalts}
-  ]
-
-  extra_cron = [
-    # hourly
-    {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
+    {"0 0 * * *", Plausible.Workers.RotateSalts},
     #  hourly
     {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
+    # hourly
+    {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
     # Daily at midnight
     {"0 0 * * *", Plausible.Workers.FetchTweets},
     # Daily at midday
-    {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
-    # Daily at midday
     {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
-    # Every 10 minutes
-    {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates},
     # Every 15 minutes
     {"*/15 * * * *", Plausible.Workers.SpikeNotifier},
     # Every day at midnight
     {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes}
   ]
 
-  base_queues = [rotate_salts: 1]
+  extra_cron = [
+    # Daily at midday
+    {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
+    # Every 10 minutes
+    {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}
+  ]
 
-  extra_queues = [
-    provision_ssl_certificates: 1,
-    fetch_tweets: 1,
-    check_stats_emails: 1,
-    site_setup_emails: 1,
-    trial_notification_emails: 1,
+  base_queues = [
+    rotate_salts: 1,
     schedule_email_reports: 1,
     send_email_reports: 1,
     spike_notifications: 1,
-    clean_email_verification_codes: 1
+    fetch_tweets: 1,
+    clean_email_verification_codes: 1,
+    check_stats_emails: 1,
+    site_setup_emails: 1
+  ]
+
+  extra_queues = [
+    provision_ssl_certificates: 1,
+    trial_notification_emails: 1
   ]
 
   config :plausible, Oban,
     repo: Plausible.Repo,
-    queues: if(cron_enabled, do: base_queues ++ extra_queues, else: base_queues),
-    crontab: if(cron_enabled, do: base_cron ++ extra_cron, else: base_cron)
+    queues: if(is_selfhost, do: base_queues, else: base_queues ++ extra_queues),
+    crontab: if(is_selfhost, do: base_cron, else: base_cron ++ extra_cron)
 end
 
 config :plausible, :hcaptcha,

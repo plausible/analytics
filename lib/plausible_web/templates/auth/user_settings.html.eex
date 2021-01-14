@@ -1,4 +1,4 @@
-<%= if  !Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_subscription) do %>
+<%= if !Application.get_env(:plausible, :is_selfhost) do %>
 <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded rounded-t-none border-t-2 border-orange-200 dark:border-orange-200 px-8 pt-6 pb-8 mt-24 ">
   <div class="flex justify-between">
     <h2 class="text-xl font-black dark:text-gray-100">Subscription Plan</h2>
