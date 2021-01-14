@@ -21,13 +21,7 @@ defmodule Plausible.Release do
       nil ->
         {:ok, admin} = Plausible.Auth.create_user(admin_user, admin_email)
         # set the password
-        {:ok, admin} = Plausible.Auth.User.set_password(admin, admin_pwd) |> Repo.update()
-        # bump-up the trail period
-        admin
-        |> Ecto.Changeset.cast(%{trial_expiry_date: Timex.today() |> Timex.shift(years: 100)}, [
-          :trial_expiry_date
-        ])
-        |> Repo.update()
+        {:ok, _} = Plausible.Auth.User.set_password(admin, admin_pwd) |> Repo.update()
 
         IO.puts("Admin user created successful!")
 
