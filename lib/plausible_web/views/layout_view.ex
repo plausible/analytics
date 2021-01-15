@@ -28,7 +28,11 @@ defmodule PlausibleWeb.LayoutView do
       [key: "Goals", value: "goals"],
       [key: "Search Console", value: "search-console"],
       [key: "Email reports", value: "email-reports"],
-      [key: "Custom domain", value: "custom-domain"],
+      if is_selfhost() do
+        [key: "Custom domain", value: "custom-domain"]
+      else
+        nil
+      end,
       [key: "Danger zone", value: "danger-zone"]
     ]
   end
@@ -56,5 +60,9 @@ defmodule PlausibleWeb.LayoutView do
 
   def is_current_tab(conn, tab) do
     List.last(conn.path_info) == tab
+  end
+
+  defp is_selfhost() do
+    Application.get_env(:plausible, :is_selfhost)
   end
 end

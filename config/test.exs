@@ -29,8 +29,3 @@ config :geolix,
 
 config :plausible,
   session_timeout: 0
-
-config :plausible, Oban,
-  repo: Plausible.Repo,
-  queues: false,
-  crontab: false

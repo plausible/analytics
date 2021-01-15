@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.1.2] - Unreleased
+## [1.2] - Unreleased
 
 ### Added
 - Ability to add event metadata plausible/analytics#381
@@ -25,6 +25,8 @@ All notable changes to this project will be documented in this file.
 - Improve onboarding UX and design plausible/analytics#441
 - Allows outbound link tracking script to use new tab redirection plausible/analytics#494
 - "This Month" view is now Month-to-date for the current month plausible/analytics#491
+- Background jobs are enabled by default for self-hosted installations plausible/analytics#603
+- All new users on self-hosted installations have a never-ending trial plausible/analytics#603
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370
