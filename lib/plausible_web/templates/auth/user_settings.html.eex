@@ -71,10 +71,45 @@
   </div>
 
   <h3 class="text-xl font-bold mt-8 dark:text-gray-100">Your usage</h3>
+  <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">Last 30 days total usage across all of your sites</p>
+  <div class="py-2">
+    <div class="flex flex-col">
+      <div class="-my-2 sm:-mx-6 lg:-mx-8">
+        <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+          <div>
+            <table class="min-w-full divide-y divide-gray-200 text-gray-900 dark:text-gray-100">
+              <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200">
+                <tr>
+                  <td class="py-4 whitespace-nowrap text-sm">
+                    Pageviews
+                  </td>
+                  <td class="py-4 whitespace-nowrap text-sm">
+                    <%= delimit_integer(@usage_pageviews) %>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="py-4 whitespace-nowrap text-sm">
+                    Custom events
+                  </td>
+                  <td class="py-4 whitespace-nowrap text-sm">
+                    <%= delimit_integer(@usage_custom_events) %>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="py-4 whitespace-nowrap text-sm font-medium">
+                    Total billable pageviews
+                  </td>
+                  <td class="py-4 whitespace-nowrap text-sm font-medium">
+                    <%= delimit_integer(@usage_pageviews + @usage_custom_events) %>
+                  </td>
+                </tr>
 
-  <div class="py-2 dark:text-gray-100">
-    <b><%= delimit_integer(Plausible.Billing.usage(@conn.assigns[:current_user])) %></b>
-    pageviews in the last 30 days
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <%= cond do %>

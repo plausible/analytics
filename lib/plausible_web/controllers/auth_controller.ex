@@ -289,10 +289,15 @@ defmodule PlausibleWeb.AuthController do
   def user_settings(conn, _params) do
     changeset = Auth.User.changeset(conn.assigns[:current_user])
 
+    {usage_pageviews, usage_custom_events} =
+      Plausible.Billing.usage_breakdown(conn.assigns[:current_user])
+
     render(conn, "user_settings.html",
       changeset: changeset,
       subscription: conn.assigns[:current_user].subscription,
-      theme: conn.assigns[:current_user].theme || "system"
+      theme: conn.assigns[:current_user].theme || "system",
+      usage_pageviews: usage_pageviews,
+      usage_custom_events: usage_custom_events
     )
   end
 
