@@ -202,6 +202,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       site = insert(:site, members: [user])
       insert(:google_auth, user: user, site: site)
       insert(:custom_domain, site: site)
+      insert(:spike_notification, site: site)
 
       delete(conn, "/#{site.domain}")
 
