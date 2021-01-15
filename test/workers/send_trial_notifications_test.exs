@@ -34,7 +34,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
 
       perform()
 
-      assert_delivered_email(PlausibleWeb.Email.trial_upgrade_email(user, "tomorrow", 3))
+      assert_delivered_email(PlausibleWeb.Email.trial_upgrade_email(user, "tomorrow", {3, 0}))
     end
 
     test "sends an upgrade email the day the trial ends" do
@@ -43,7 +43,25 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
 
       perform()
 
-      assert_delivered_email(PlausibleWeb.Email.trial_upgrade_email(user, "today", 3))
+      assert_delivered_email(PlausibleWeb.Email.trial_upgrade_email(user, "today", {3, 0}))
+    end
+
+    test "does not include custom event note if user has not used custom events" do
+      user = insert(:user, trial_expiry_date: Timex.today())
+
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {9_000, 0})
+
+      assert email.html_body =~
+               "In the last month, your account has used 9,000 billable pageviews."
+    end
+
+    test "includes custom event note if user has used custom events" do
+      user = insert(:user, trial_expiry_date: Timex.today())
+
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {9_000, 100})
+
+      assert email.html_body =~
+               "In the last month, your account has used 9,100 billable pageviews and custom events in total."
     end
 
     test "sends a trial over email the day after the trial ends" do
@@ -70,56 +88,56 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     test "suggests 10k/mo plan" do
       user = insert(:user)
 
-      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", 9_000)
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {9_000, 0})
       assert email.html_body =~ "we recommend you select the 10k/mo plan which runs at $6/mo."
     end
 
     test "suggests 100k/mo plan" do
       user = insert(:user)
 
-      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", 90_000)
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {90_000, 0})
       assert email.html_body =~ "we recommend you select the 100k/mo plan which runs at $12/mo."
     end
 
     test "suggests 200k/mo plan" do
       user = insert(:user)
 
-      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", 180_000)
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {180_000, 0})
       assert email.html_body =~ "we recommend you select the 200k/mo plan which runs at $18/mo."
     end
 
     test "suggests 500k/mo plan" do
       user = insert(:user)
 
-      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", 450_000)
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {450_000, 0})
       assert email.html_body =~ "we recommend you select the 500k/mo plan which runs at $27/mo."
     end
 
     test "suggests 1m/mo plan" do
       user = insert(:user)
 
-      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", 900_000)
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {900_000, 0})
       assert email.html_body =~ "we recommend you select the 1m/mo plan which runs at $48/mo."
     end
 
     test "suggests 2m/mo plan" do
       user = insert(:user)
 
-      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", 1_800_000)
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {1_800_000, 0})
       assert email.html_body =~ "we recommend you select the 2m/mo plan which runs at $69/mo."
     end
 
     test "suggests 5m/mo plan" do
       user = insert(:user)
 
-      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", 4_500_000)
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {4_500_000, 0})
       assert email.html_body =~ "we recommend you select the 5m/mo plan which runs at $99/mo."
     end
 
     test "does not suggest a plan above that" do
       user = insert(:user)
 
-      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", 10_000_000)
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {10_000_000, 0})
       assert email.html_body =~ "please reply back to this email to get a quote for your volume"
     end
   end
