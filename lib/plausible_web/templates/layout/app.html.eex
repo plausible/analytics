@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content="Plausible is a lightweight and open-source web analytics tool. Your website data is 100% yours and the privacy of your visitors is respected."/>
-    <link rel="icon" type="image/png" sizes="32x32" href="<%= PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_favicon.png") %>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<%= PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/traffic_reports_favicon.png") %>">
     <link rel="apple-touch-icon" href="/images/icon/apple-touch-icon.png">
     <title><%= assigns[:title] || "Plausible · Simple, privacy-friendly alternative to Google Analytics" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
@@ -19,8 +19,8 @@
           <div class="flex items-center flex-1 md:absolute md:inset-y-0 md:left-0">
             <div class="flex items-center justify-between">
               <a href="<%= home_dest(@conn) %>">
-                <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo_dark.png"), class: "h-8 w-auto sm:h-10 -mt-2 hidden dark:inline", alt: "Plausible logo")%>
-                <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), class: "h-8 w-auto sm:h-10 -mt-2 inline dark:hidden", alt: "Plausible logo") %>
+                <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/traffic_reports_logo_dark.png"), class: "h-8 w-auto sm:h-10 -mt-2 hidden dark:inline", alt: "Traffic reports logo")%>
+                <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/traffic_reports_logo.png"), class: "h-8 w-auto sm:h-10 -mt-2 inline dark:hidden", alt: "Traffic reports logo") %>
               </a>
             </div>
           </div>

@@ -21,7 +21,7 @@
       <ol class="list-decimal text-xs text-gray-500 leading-tight space-y-1 mt-1">
         <li>Check your spam folder</li>
         <li><%= link("Send a new code", class: "underline text-indigo-600", to: "/activate/request-code", method: :post) %> to <%= @conn.assigns[:current_user].email %></li>
-        <li>Contact <a class="underline text-indigo-600" href="mailto:support@plausible.io">support@plausible.io</a> if the problem persists</li>
+        <li>Contact <a class="underline text-indigo-600" href="mailto:support@frangout.com">support@frangout.com</a> if the problem persists</li>
       </ol>
     <% end %>
   <% else %>

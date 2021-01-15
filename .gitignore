@@ -59,3 +59,4 @@ plausible-report.xml
 # Dializer
 /priv/plts/*.plt
 /priv/plts/*.plt.hash
+.DS_Store

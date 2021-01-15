@@ -58,7 +58,7 @@ defmodule PlausibleWeb.BillingController do
         conn
         |> put_flash(
           :error,
-          "Something went wrong. Please try again or contact support at support@plausible.io"
+          "Something went wrong. Please try again or contact support at support@frangout.com"
         )
         |> redirect(to: "/settings")
     end
