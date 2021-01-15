@@ -7,42 +7,50 @@
     <% end %>
   </header>
 
-  <%= if @site.google_auth do %>
-    <div class="py-2"></div>
-    <span class="text-gray-700 dark:text-gray-300">Linked Google account: <b><%= @site.google_auth.email %></b></span>
+  <%= if Keyword.get(Application.get_env(:plausible, :google), :client_id) do %>
+    <%= if @site.google_auth do %>
+      <div class="py-2"></div>
+      <span class="text-gray-700 dark:text-gray-300">Linked Google account: <b><%= @site.google_auth.email %></b></span>
 
-    <%= link("Unlink Google account", to: "/#{URI.encode_www_form(@site.domain)}/settings/google", class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
+      <%= link("Unlink Google account", to: "/#{URI.encode_www_form(@site.domain)}/settings/google", class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
 
-    <%= case @search_console_domains do %>
-      <% {:ok, domains} -> %>
-        <%= if @site.google_auth.property && !(@site.google_auth.property in domains) do %>
-          <p class="text-gray-700 dark:text-gray-300 mt-6 font-bold">
-          NB: Your Google account does not have access to your currently configured property, <%= @site.google_auth.property %>. Please select a verified property from the list below.
-          </p>
-        <% else %>
-          <p class="text-gray-700 dark:text-gray-300 mt-6">
-          Select the Google Search Console property you would like to pull keyword data from. If you don't see your domain, <%= link("set it up and verify", to: "https://docs.plausible.io/google-search-console-integration", class: "text-indigo-500") %> on Search Console first.
-          </p>
-        <% end %>
+      <%= case @search_console_domains do %>
+        <% {:ok, domains} -> %>
+          <%= if @site.google_auth.property && !(@site.google_auth.property in domains) do %>
+            <p class="text-gray-700 dark:text-gray-300 mt-6 font-bold">
+            NB: Your Google account does not have access to your currently configured property, <%= @site.google_auth.property %>. Please select a verified property from the list below.
+            </p>
+          <% else %>
+            <p class="text-gray-700 dark:text-gray-300 mt-6">
+            Select the Google Search Console property you would like to pull keyword data from. If you don't see your domain, <%= link("set it up and verify", to: "https://docs.plausible.io/google-search-console-integration", class: "text-indigo-500") %> on Search Console first.
+            </p>
+          <% end %>
 
-        <%= form_for Plausible.Site.GoogleAuth.changeset(@site.google_auth), "/#{URI.encode_www_form(@site.domain)}/settings/google", [class: "max-w-xs"], fn f -> %>
-          <div class="my-6">
-            <div class="inline-block relative w-full">
-              <%= select f, :property, domains, prompt: "(Choose property)", class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
+          <%= form_for Plausible.Site.GoogleAuth.changeset(@site.google_auth), "/#{URI.encode_www_form(@site.domain)}/settings/google", [class: "max-w-xs"], fn f -> %>
+            <div class="my-6">
+              <div class="inline-block relative w-full">
+                <%= select f, :property, domains, prompt: "(Choose property)", class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
+              </div>
             </div>
-          </div>
 
-          <%= submit "Save", class: "button" %>
-        <% end %>
+            <%= submit "Save", class: "button" %>
+          <% end %>
         <% {:error, error} -> %>
           <p class="text-gray-700 dark:text-gray-300 mt-6">The following error happened when fetching your Google Search Console domains.</p>
           <p class="text-red-700 font-medium mt-3"><%= error %></p>
-        <% end %>
-      <% else %>
-        <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(@site.id), class: "button mt-8") %>
-
-        <div class="text-gray-700 dark:text-gray-300 mt-8">
-          NB: You also need to set up your site on <%= link("Google Search Console", to: "https://search.google.com/search-console/about") %> for the integration to work. <%= link("Read the docs", to: "https://docs.plausible.io/google-search-console-integration", class: "text-indigo-500") %>
-        </div>
       <% end %>
+    <% else %>
+      <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(@site.id), class: "button mt-8") %>
+
+      <div class="text-gray-700 dark:text-gray-300 mt-8">
+        NB: You also need to set up your site on <%= link("Google Search Console", to: "https://search.google.com/search-console/about") %> for the integration to work. <%= link("Read the docs", to: "https://docs.plausible.io/google-search-console-integration", class: "text-indigo-500") %>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="my-8 text-center text-lg">
+      <svg class="block mx-auto mb-4 w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+      An extra step is needed to set up your Plausible Analytics Self Hosted for the Google Search Console integration.
+      Find instructions <%= link("here", to: "https://plausible.io/docs/self-hosting-configuration#google-search-integration", class: "text-indigo-500") %>
+    </div>
+  <% end %>
 </div>

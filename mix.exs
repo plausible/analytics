@@ -60,19 +60,19 @@ defmodule Plausible.MixProject do
   defp deps do
     [
       {:appsignal, "~> 2.0"},
-      {:appsignal_phoenix, "~> 2.0.0"},
+      {:appsignal_phoenix, "~> 2.0.3"},
       {:bcrypt_elixir, "~> 2.0"},
       {:cors_plug, "~> 1.5"},
       {:ecto_sql, "~> 3.0"},
       {:elixir_uuid, "~> 1.2"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
-      {:phoenix, "~> 1.4.0"},
+      {:phoenix, "~> 1.5.0"},
       {:phoenix_ecto, "~> 4.0"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_pubsub, "~> 1.1"},
-      {:plug_cowboy, "~> 2.0"},
+      {:phoenix_pubsub, "~> 2.0"},
+      {:plug_cowboy, "~> 2.1"},
       {:postgrex, ">= 0.0.0"},
       #  Used in paddle_api, can remove
       {:poison, "~> 3.1"},
@@ -87,7 +87,6 @@ defmodule Plausible.MixProject do
       {:ex_machina, "~> 2.3", only: :test},
       {:excoveralls, "~> 0.10", only: :test},
       {:double, "~> 0.7.0", only: :test},
-      {:junit_formatter, "~> 3.1", only: [:test]},
       {:php_serializer, "~> 0.9.0"},
       {:csv, "~> 2.3"},
       {:oauther, "~> 1.1"},
@@ -102,16 +101,11 @@ defmodule Plausible.MixProject do
       {:cachex, "~> 3.3"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
-      {:kaffy, "~> 0.9.0"}
+      {:kaffy, "~> 0.9.0"},
+      {:envy, "~> 1.1.1"}
     ]
   end
 
-  # Aliases are shortcuts or tasks specific to the current project.
-  # For example, to create, migrate and run the seeds file at once:
-  #
-  #     $ mix ecto.setup
-  #
-  # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],

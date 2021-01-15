@@ -1,16 +1,26 @@
 import Config
 
-### Mandatory params Start
-# it is highly recommended to change this parameters in production systems
-# params are made optional to facilitate smooth release
+if config_env() in [:dev, :test] do
+  Envy.auto_load()
+end
 
 port = System.get_env("PORT") || 8000
 
-base_url =
-  System.get_env("BASE_URL", "http://localhost:8000")
-  |> URI.parse()
+base_url = System.get_env("BASE_URL")
 
-secret_key_base = System.get_env("SECRET_KEY_BASE")
+if !base_url do
+  raise "BASE_URL configuration option is required. See https://plausible.io/docs/self-hosting-configuration#server"
+end
+
+base_url = URI.parse(base_url)
+
+if base_url.scheme not in ["http", "https"] do
+  raise "BASE_URL must start with `http` or `https`. Currently configured as `#{
+          System.get_env("BASE_URL")
+        }`"
+end
+
+secret_key_base = System.fetch_env!("SECRET_KEY_BASE")
 
 db_url =
   System.get_env(
@@ -48,10 +58,12 @@ custom_domain_server_user = System.get_env("CUSTOM_DOMAIN_SERVER_USER")
 custom_domain_server_password = System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD")
 geolite2_country_db = System.get_env("GEOLITE2_COUNTRY_DB")
 disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
+disable_registration = String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false"))
 hcaptcha_sitekey = System.get_env("HCAPTCHA_SITEKEY")
 hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
 log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
 appsignal_api_key = System.get_env("APPSIGNAL_API_KEY")
+is_selfhost = String.to_existing_atom(System.get_env("SELFHOST", "true"))
 
 {user_agent_cache_limit, ""} = Integer.parse(System.get_env("USER_AGENT_CACHE_LIMIT", "1000"))
 
@@ -64,26 +76,17 @@ config :plausible,
   admin_pwd: admin_pwd,
   environment: env,
   mailer_email: mailer_email,
-  admin_emails: admin_emails
+  admin_emails: admin_emails,
+  is_selfhost: is_selfhost
 
 config :plausible, :selfhost,
   disable_authentication: disable_auth,
-  disable_subscription: String.to_existing_atom(System.get_env("DISABLE_SUBSCRIPTION", "true")),
-  disable_registration:
-    if(!disable_auth,
-      do: String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false")),
-      else: false
-    )
+  disable_registration: if(!disable_auth, do: disable_registration, else: false)
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [host: base_url.host, scheme: base_url.scheme, port: base_url.port],
   http: [port: port],
-  secret_key_base: secret_key_base,
-  cache_static_manifest: "priv/static/cache_manifest.json",
-  check_origin: false,
-  load_from_system_env: true,
-  server: true,
-  code_reloader: false
+  secret_key_base: secret_key_base
 
 %{
   "certificate" => %{"certificate_base64" => cacert},
@@ -148,6 +151,12 @@ case mailer_adapter do
       retries: System.get_env("SMTP_RETRIES") || 2,
       no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true
 
+  "Bamboo.LocalAdapter" ->
+    config :plausible, Plausible.Mailer, adapter: Bamboo.LocalAdapter
+
+  "Bamboo.TestAdapter" ->
+    config :plausible, Plausible.Mailer, adapter: Bamboo.TestAdapter
+
   _ ->
     raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
 end
@@ -166,45 +175,57 @@ config :plausible, :custom_domain_server,
 config :plausible, PlausibleWeb.Firewall,
   blocklist: System.get_env("IP_BLOCKLIST", "") |> String.split(",") |> Enum.map(&String.trim/1)
 
-base_cron = [
-  # Daily at midnight
-  {"0 0 * * *", Plausible.Workers.RotateSalts}
-]
+if config_env() == :prod do
+  base_cron = [
+    # Daily at midnight
+    {"0 0 * * *", Plausible.Workers.RotateSalts},
+    #  hourly
+    {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
+    # hourly
+    {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
+    # Daily at midnight
+    {"0 0 * * *", Plausible.Workers.FetchTweets},
+    # Daily at midday
+    {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
+    # Every 15 minutes
+    {"*/15 * * * *", Plausible.Workers.SpikeNotifier},
+    # Every day at midnight
+    {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes}
+  ]
 
-extra_cron = [
-  # hourly
-  {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
-  #  hourly
-  {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
-  # Daily at midnight
-  {"0 0 * * *", Plausible.Workers.FetchTweets},
-  # Daily at midday
-  {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
-  # Daily at midday
-  {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
-  # Every 10 minutes
-  {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates},
-  # Every 15 minutes
-  {"*/15 * * * *", Plausible.Workers.SpikeNotifier}
-]
+  extra_cron = [
+    # Daily at midday
+    {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
+    # Every 10 minutes
+    {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}
+  ]
 
-base_queues = [rotate_salts: 1]
+  base_queues = [
+    rotate_salts: 1,
+    schedule_email_reports: 1,
+    send_email_reports: 1,
+    spike_notifications: 1,
+    fetch_tweets: 1,
+    clean_email_verification_codes: 1,
+    check_stats_emails: 1,
+    site_setup_emails: 1
+  ]
 
-extra_queues = [
-  provision_ssl_certificates: 1,
-  fetch_tweets: 1,
-  check_stats_emails: 1,
-  site_setup_emails: 1,
-  trial_notification_emails: 1,
-  schedule_email_reports: 1,
-  send_email_reports: 1,
-  spike_notifications: 1
-]
+  extra_queues = [
+    provision_ssl_certificates: 1,
+    trial_notification_emails: 1
+  ]
 
-config :plausible, Oban,
-  repo: Plausible.Repo,
-  queues: if(cron_enabled, do: base_queues ++ extra_queues, else: base_queues),
-  crontab: if(cron_enabled, do: base_cron ++ extra_cron, else: base_cron)
+  config :plausible, Oban,
+    repo: Plausible.Repo,
+    queues: if(is_selfhost, do: base_queues, else: base_queues ++ extra_queues),
+    crontab: if(is_selfhost, do: base_cron, else: base_cron ++ extra_cron)
+else
+  config :plausible, Oban,
+    repo: Plausible.Repo,
+    queues: false,
+    crontab: false
+end
 
 config :plausible, :hcaptcha,
   sitekey: hcaptcha_sitekey,
@@ -219,6 +240,24 @@ config :ua_inspector,
 config :plausible, :user_agent_cache,
   limit: user_agent_cache_limit,
   stats: user_agent_cache_stats
+
+config :kaffy,
+  otp_app: :plausible,
+  ecto_repo: Plausible.Repo,
+  router: PlausibleWeb.Router,
+  admin_title: "Plausible Admin",
+  resources: [
+    auth: [
+      resources: [
+        user: [schema: Plausible.Auth.User, admin: Plausible.Auth.UserAdmin]
+      ]
+    ],
+    sites: [
+      resources: [
+        site: [schema: Plausible.Site, admin: Plausible.SiteAdmin]
+      ]
+    ]
+  ]
 
 if geolite2_country_db do
   config :geolix,

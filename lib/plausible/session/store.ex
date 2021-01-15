@@ -1,7 +1,6 @@
 defmodule Plausible.Session.Store do
   use GenServer
   use Plausible.Repo
-  alias Plausible.Session.WriteBuffer
   import Ecto.Query, only: [from: 2]
   require Logger
 
@@ -11,7 +10,8 @@ defmodule Plausible.Session.Store do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  def init(_opts) do
+  def init(opts) do
+    buffer = Keyword.get(opts, :buffer, Plausible.Session.WriteBuffer)
     timer = Process.send_after(self(), :garbage_collect, @garbage_collect_interval_milliseconds)
 
     latest_sessions =
@@ -36,14 +36,18 @@ defmodule Plausible.Session.Store do
         _e -> %{}
       end
 
-    {:ok, %{timer: timer, sessions: sessions}}
+    {:ok, %{timer: timer, sessions: sessions, buffer: buffer}}
   end
 
-  def on_event(event, prev_user_id) do
-    GenServer.call(__MODULE__, {:on_event, event, prev_user_id})
+  def on_event(event, prev_user_id, pid \\ __MODULE__) do
+    GenServer.call(pid, {:on_event, event, prev_user_id})
   end
 
-  def handle_call({:on_event, event, prev_user_id}, _from, %{sessions: sessions} = state) do
+  def handle_call(
+        {:on_event, event, prev_user_id},
+        _from,
+        %{sessions: sessions, buffer: buffer} = state
+      ) do
     found_session = sessions[event.user_id] || (prev_user_id && sessions[prev_user_id])
     active = is_active?(found_session, event)
 
@@ -51,17 +55,17 @@ defmodule Plausible.Session.Store do
       cond do
         found_session && active ->
           new_session = update_session(found_session, event)
-          WriteBuffer.insert([%{new_session | sign: 1}, %{found_session | sign: -1}])
+          buffer.insert([%{new_session | sign: 1}, %{found_session | sign: -1}])
           Map.put(sessions, event.user_id, new_session)
 
         found_session && !active ->
           new_session = new_session_from_event(event)
-          WriteBuffer.insert([new_session])
+          buffer.insert([new_session])
           Map.put(sessions, event.user_id, new_session)
 
         true ->
           new_session = new_session_from_event(event)
-          WriteBuffer.insert([new_session])
+          buffer.insert([new_session])
           Map.put(sessions, event.user_id, new_session)
       end
 
@@ -80,7 +84,7 @@ defmodule Plausible.Session.Store do
         timestamp: event.timestamp,
         exit_page: event.pathname,
         is_bounce: false,
-        duration: Timex.diff(event.timestamp, session.start, :second),
+        duration: Timex.diff(event.timestamp, session.start, :second) |> abs,
         pageviews:
           if(event.name == "pageview", do: session.pageviews + 1, else: session.pageviews),
         events: session.events + 1

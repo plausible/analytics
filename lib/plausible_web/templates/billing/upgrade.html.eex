@@ -10,7 +10,7 @@
   <div class="w-full max-w-4xl px-4 mt-4 mx-auto flex flex-col md:flex-row">
     <div x-data="{planSize: '10k', billingCycle: 'monthly'}" class="flex-1 bg-white dark:bg-gray-800 shadow-md rounded px-8 py-4 mb-4 mt-8">
       <div class="w-full py-4 dark:text-gray-100">
-        <span>You've used <b><%= PlausibleWeb.AuthView.delimit_integer(@usage) %></b> pageviews in the last 30 days</span>
+        <span>You've used <b><%= PlausibleWeb.AuthView.delimit_integer(@usage) %></b> billable pageviews in the last 30 days</span>
       </div>
 
       <div class="pt-2"></div>
