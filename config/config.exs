@@ -42,8 +42,7 @@ config :plausible, PlausibleWeb.Endpoint,
     view: PlausibleWeb.ErrorView,
     accepts: ~w(html json)
   ],
-  pubsub: [name: Plausible.PubSub, adapter: Phoenix.PubSub.PG2],
-  session_extra: System.get_env("SESSION_EXTRA", "SameSite=Lax")
+  pubsub: [name: Plausible.PubSub, adapter: Phoenix.PubSub.PG2]
 
 config :sentry,
   dsn: System.get_env("SENTRY_DSN"),

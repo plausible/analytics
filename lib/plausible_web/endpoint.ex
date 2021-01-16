@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Endpoint do
     signing_salt: "3IL0ob4k",
     # 5 years, this is super long but the SlidingSessionTimeout will log people out if they don't return for 2 weeks
     max_age: 60 * 60 * 24 * 365 * 5,
-    extra: config[:session_extra]
+    extra: "SameSite=Lax"
 
   plug CORSPlug
   plug PlausibleWeb.Tracker
