@@ -282,28 +282,6 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
   end
 
-  def make_embeddable(conn, %{"website" => website}) do
-    site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
-      |> Plausible.Site.make_embeddable()
-      |> Repo.update!()
-
-    conn
-    |> put_flash(:success, "Stats for #{site.domain} are now embeddable.")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
-  end
-
-  def make_not_embeddable(conn, %{"website" => website}) do
-    site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
-      |> Plausible.Site.make_not_embeddable()
-      |> Repo.update!()
-
-    conn
-    |> put_flash(:success, "Stats for #{site.domain} are now not embeddable.")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
-  end
-
   def enable_weekly_report(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
 

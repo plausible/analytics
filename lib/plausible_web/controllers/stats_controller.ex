@@ -6,8 +6,6 @@ defmodule PlausibleWeb.StatsController do
 
   plug PlausibleWeb.AuthorizeStatsPlug when action in [:stats, :csv_export]
   plug PlausibleWeb.UpgradeBillingPlug when action in [:stats]
-  plug PlausibleWeb.EmbeddableStatsPlug when action in [:stats]
-  plug PlausibleWeb.EmbeddableAuthSharedLinkPlug when action in [:shared_link, :authenticate_shared_link]
 
   def base_domain() do
     PlausibleWeb.Endpoint.host()
@@ -24,7 +22,6 @@ defmodule PlausibleWeb.StatsController do
       |> put_resp_header("x-robots-tag", "noindex")
       |> render("stats.html",
         site: site,
-        embed_mode: get_session(conn, "embed_mode"),
         has_goals: Plausible.Sites.has_goals?(site),
         title: "Plausible · " <> site.domain,
         offer_email_report: offer_email_report,
@@ -33,10 +30,7 @@ defmodule PlausibleWeb.StatsController do
     else
       conn
       |> assign(:skip_plausible_tracking, true)
-      |> render("waiting_first_pageview.html",
-        site: site,
-        embed_mode: get_session(conn, "embed_mode")
-      )
+      |> render("waiting_first_pageview.html", site: site)
     end
   end
 
@@ -65,27 +59,32 @@ defmodule PlausibleWeb.StatsController do
     |> send_resp(200, csv_content)
   end
 
-  def shared_link(%{assigns: %{shared_link: shared_link}} = conn, %{"slug" => slug}) do
+  def shared_link(conn, %{"slug" => slug}) do
+    shared_link =
+      Repo.get_by(Plausible.Site.SharedLink, slug: slug)
+      |> Repo.preload(:site)
+
     if shared_link do
       if shared_link.password_hash do
         conn
-        |> put_session("embed_mode", Enum.at(conn.path_info, 1) == "embed")
         |> assign(:skip_plausible_tracking, true)
         |> render("shared_link_password.html",
           link: shared_link,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
       else
-        conn
-        |> put_session("embed_mode", Enum.at(conn.path_info, 1) == "embed")
-        |> shared_link_auth_success(shared_link)
+        shared_link_auth_success(conn, shared_link)
       end
     else
       render_error(conn, 404)
     end
   end
 
-  def authenticate_shared_link(%{assigns: %{shared_link: shared_link}} = conn, %{"slug" => slug, "password" => password}) do
+  def authenticate_shared_link(conn, %{"slug" => slug, "password" => password}) do
+    shared_link =
+      Repo.get_by(Plausible.Site.SharedLink, slug: slug)
+      |> Repo.preload(:site)
+
     if shared_link do
       if Plausible.Auth.Password.match?(password, shared_link.password_hash) do
         shared_link_auth_success(conn, shared_link)
