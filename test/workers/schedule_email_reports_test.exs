@@ -38,7 +38,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
 
       perform(%{})
       Repo.update_all("oban_jobs", set: [state: "completed"])
-      assert Enum.count(all_enqueued(worker: SendEmailReport)) == 0
+      assert Enum.empty?(all_enqueued(worker: SendEmailReport))
       perform(%{})
       assert Enum.count(all_enqueued(worker: SendEmailReport)) == 1
     end
@@ -74,7 +74,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
 
       perform(%{})
       Repo.update_all("oban_jobs", set: [state: "completed"])
-      assert Enum.count(all_enqueued(worker: SendEmailReport)) == 0
+      assert Enum.empty?(all_enqueued(worker: SendEmailReport))
       perform(%{})
       assert Enum.count(all_enqueued(worker: SendEmailReport)) == 1
     end

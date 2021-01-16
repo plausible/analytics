@@ -20,7 +20,14 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
 
     test "returns top OS versions by unique visitors", %{conn: conn, site: site} do
       filters = Jason.encode!(%{os: "Mac"})
-      conn = get(conn, "/api/stats/#{site.domain}/operating-system-versions?period=day&date=2019-01-01&filters=#{filters}")
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/operating-system-versions?period=day&date=2019-01-01&filters=#{
+            filters
+          }"
+        )
 
       assert json_response(conn, 200) == [
                %{"name" => "10.15", "count" => 1, "percentage" => 100}

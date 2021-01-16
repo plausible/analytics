@@ -12,21 +12,33 @@ class PagesModal extends React.Component {
     super(props)
     this.state = {
       loading: true,
-      query: parseQuery(props.location.search, props.site)
+      query: parseQuery(props.location.search, props.site),
+      pages: [],
+      page: 1,
+      moreResultsAvailable: false
     }
   }
 
   componentDidMount() {
-    const include = this.showBounceRate() ? 'bounce_rate' : null
+    this.loadPages();
+  }
 
-    const {filters} = this.state.query
+  loadPages() {
+    const include = this.showBounceRate() ? 'bounce_rate' : null
+    const {query, page, pages} = this.state;
+
+    const {filters} = query
     if (filters.source || filters.referrer) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`, this.state.query, {limit: 100, include: include})
-        .then((res) => this.setState({loading: false, pages: res}))
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`, query, {limit: 100, page, include})
+        .then((res) => this.setState((state) => ({loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100})))
     } else {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, this.state.query, {limit: 100, include: include})
-        .then((res) => this.setState({loading: false, pages: res}))
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, query, {limit: 100, page, include})
+        .then((res) => this.setState((state) => ({loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100})))
     }
+  }
+
+  loadMore() {
+    this.setState({loading: true, page: this.state.page + 1}, this.loadPages.bind(this))
   }
 
   showBounceRate() {
@@ -51,7 +63,7 @@ class PagesModal extends React.Component {
     query.set('page', page.name)
 
     return (
-      <tr className="text-sm" key={page.name}>
+      <tr className="text-sm dark:text-gray-200" key={page.name}>
         <td className="p-2">
           <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline">{page.name}</Link>
         </td>
@@ -71,25 +83,35 @@ class PagesModal extends React.Component {
     return (filters.source || filters.referrer) ? 'Entry Pages' : 'Top Pages'
   }
 
-  renderBody() {
+  renderLoading() {
     if (this.state.loading) {
+      return <div className="loading my-16 mx-auto"><div></div></div>
+    } else if (this.state.moreResultsAvailable) {
       return (
-        <div className="loading mt-32 mx-auto"><div></div></div>
+        <div className="w-full text-center my-4">
+          <button onClick={this.loadMore.bind(this)} type="button" className="button">
+            Load more
+          </button>
+        </div>
       )
-    } else if (this.state.pages) {
+    }
+  }
+
+  renderBody() {
+    if (this.state.pages) {
       return (
         <React.Fragment>
-          <h1 className="text-xl font-bold">{this.title()}</h1>
+          <h1 className="text-xl font-bold dark:text-gray-100">{this.title()}</h1>
 
           <div className="my-4 border-b border-gray-300"></div>
           <main className="modal__content">
             <table className="w-full table-striped table-fixed">
               <thead>
                 <tr>
-                  <th className="p-2 text-xs tracking-wide font-bold text-gray-500" align="left">Page url</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">{ this.label() }</th>
-                  {this.showPageviews() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Pageviews</th>}
-                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500" align="right">Bounce rate</th>}
+                  <th className="p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Page url</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{ this.label() }</th>
+                  {this.showPageviews() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Pageviews</th>}
+                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Bounce rate</th>}
                 </tr>
               </thead>
               <tbody>
@@ -106,6 +128,7 @@ class PagesModal extends React.Component {
     return (
       <Modal site={this.props.site}>
         { this.renderBody() }
+        { this.renderLoading() }
       </Modal>
     )
   }

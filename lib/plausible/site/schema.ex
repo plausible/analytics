@@ -14,6 +14,7 @@ defmodule Plausible.Site do
     has_one :weekly_report, Plausible.Site.WeeklyReport
     has_one :monthly_report, Plausible.Site.MonthlyReport
     has_one :custom_domain, Plausible.Site.CustomDomain
+    has_one :spike_notification, Plausible.Site.SpikeNotification
 
     timestamps()
   end
@@ -22,7 +23,9 @@ defmodule Plausible.Site do
     site
     |> cast(attrs, [:domain, :timezone])
     |> validate_required([:domain, :timezone])
-    |> validate_format(:domain, ~r/^[a-zA-z0-9\-\.\/\:]*$/, message: "only letters, numbers, slashes and period allowed")
+    |> validate_format(:domain, ~r/^[a-zA-z0-9\-\.\/\:]*$/,
+      message: "only letters, numbers, slashes and period allowed"
+    )
     |> unique_constraint(:domain)
     |> clean_domain
   end

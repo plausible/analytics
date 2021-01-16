@@ -45,14 +45,14 @@ export default class Browsers extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={browser.name}>
         <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
-          <Bar count={browser.count} all={this.state.browsers} bg="bg-green-50" />
-          <span className="flex px-2" style={{marginTop: '-26px'}} >
+          <Bar count={browser.count} all={this.state.browsers} bg="bg-green-50 dark:bg-gray-500 dark:bg-opacity-15" />
+          <span className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}} >
             <Link className="block truncate hover:underline" to={{search: query.toString()}}>
               {browser.name}
             </Link>
           </span>
         </div>
-        <span className="font-medium">{numberFormatter(browser.count)} <span className="inline-block text-xs w-8 text-right">({browser.percentage}%)</span></span>
+        <span className="font-medium dark:text-gray-200">{numberFormatter(browser.count)} <span className="inline-block text-xs w-8 text-right">({browser.percentage}%)</span></span>
       </div>
     )
   }
@@ -68,7 +68,7 @@ export default class Browsers extends React.Component {
     if (this.state.browsers && this.state.browsers.length > 0) {
       return (
         <React.Fragment>
-          <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
+          <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide">
             <span>{ key }</span>
             <span>{ this.label() }</span>
           </div>
@@ -76,7 +76,7 @@ export default class Browsers extends React.Component {
         </React.Fragment>
       )
     } else {
-      return <div className="text-center mt-44 font-medium text-gray-500">No data yet</div>
+      return <div className="text-center mt-44 font-medium text-gray-500 dark:text-gray-400">No data yet</div>
     }
   }
 

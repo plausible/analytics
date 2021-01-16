@@ -1,0 +1,18 @@
+There are currently <%= @current_visitors %> visitors on <%= link(@site.domain, to: "https://" <> @site.domain) %>.
+<%= if Enum.count(@sources) > 0 do %>
+  <br />
+  <br />
+  The top sources for current visitors:<br />
+  <%= for %{name: source, count: visitors} <- @sources do %>
+    <%= source %> - <%= visitors %> visitor<%= if visitors > 1, do: "s" %><br />
+  <% end %>
+<% end %>
+
+<%= if @link do %>
+<br /><br />
+View dashboard: @link
+<% end %>
+<br /><br />
+--
+<br /><br />
+<%= plausible_url() %><br />

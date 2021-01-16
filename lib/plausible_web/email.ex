@@ -6,12 +6,12 @@ defmodule PlausibleWeb.Email do
     Application.get_env(:plausible, :mailer_email)
   end
 
-  def activation_email(user, link) do
+  def activation_email(user, code) do
     base_email()
-    |> to(user.email)
+    |> to(user)
     |> tag("activation-email")
-    |> subject("Activate your Plausible free trial")
-    |> render("activation_email.html", name: user.name, link: link)
+    |> subject("#{code} is your Plausible email verification code")
+    |> render("activation_email.html", user: user, code: code)
   end
 
   def welcome_email(user) do
@@ -70,12 +70,17 @@ defmodule PlausibleWeb.Email do
     |> render("trial_one_week_reminder.html", user: user)
   end
 
-  def trial_upgrade_email(user, day, pageviews) do
+  def trial_upgrade_email(user, day, {pageviews, custom_events}) do
     base_email()
     |> to(user)
     |> tag("trial-upgrade-email")
     |> subject("Your Plausible trial ends #{day}")
-    |> render("trial_upgrade_email.html", user: user, day: day, pageviews: pageviews)
+    |> render("trial_upgrade_email.html",
+      user: user,
+      day: day,
+      custom_events: custom_events,
+      usage: pageviews + custom_events
+    )
   end
 
   def trial_over_email(user) do
@@ -92,6 +97,19 @@ defmodule PlausibleWeb.Email do
     |> tag("weekly-report")
     |> subject("#{assigns[:name]} report for #{site.domain}")
     |> render("weekly_report.html", Keyword.put(assigns, :site, site))
+  end
+
+  def spike_notification(email, site, current_visitors, sources, dashboard_link) do
+    base_email()
+    |> to(email)
+    |> tag("spike-notification")
+    |> subject("Traffic spike on #{site.domain}")
+    |> render("spike_notification.html", %{
+      site: site,
+      current_visitors: current_visitors,
+      sources: sources,
+      link: dashboard_link
+    })
   end
 
   def cancellation_email(user) do

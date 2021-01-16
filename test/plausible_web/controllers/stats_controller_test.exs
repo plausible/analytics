@@ -73,6 +73,14 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = get(conn, "/#{site.domain}")
       assert html_response(conn, 200) =~ "stats-react-container"
     end
+
+    test "encodes URI when redirecting", %{conn: conn} do
+      site = insert(:site, domain: "test-site.com/wat")
+      link = insert(:shared_link, site: site)
+
+      conn = get(conn, "/share/#{link.slug}")
+      assert redirected_to(conn, 302) == "/test-site.com%2Fwat"
+    end
   end
 
   describe "POST /share/:slug/authenticate" do
