@@ -25,6 +25,10 @@ defmodule PlausibleWeb.SiteView do
     plausible_url() <> "/share/" <> link.slug
   end
 
+  def embed_shared_link_dest(link) do
+    plausible_url() <> "/share/embed/" <> link.slug
+  end
+
   def snippet(site) do
     tracker =
       if site.custom_domain do

@@ -6,6 +6,8 @@ defmodule PlausibleWeb.StatsController do
 
   plug PlausibleWeb.AuthorizeStatsPlug when action in [:stats, :csv_export]
   plug PlausibleWeb.UpgradeBillingPlug when action in [:stats]
+  plug PlausibleWeb.EmbeddableStatsPlug when action in [:stats]
+  plug PlausibleWeb.EmbeddableAuthSharedLinkPlug when action in [:shared_link, :authenticate_shared_link]
 
   def base_domain() do
     PlausibleWeb.Endpoint.host()
@@ -22,6 +24,7 @@ defmodule PlausibleWeb.StatsController do
       |> put_resp_header("x-robots-tag", "noindex")
       |> render("stats.html",
         site: site,
+        embed_mode: get_session(conn, "embed_mode"),
         has_goals: Plausible.Sites.has_goals?(site),
         title: "Plausible · " <> site.domain,
         offer_email_report: offer_email_report,
@@ -30,7 +33,10 @@ defmodule PlausibleWeb.StatsController do
     else
       conn
       |> assign(:skip_plausible_tracking, true)
-      |> render("waiting_first_pageview.html", site: site)
+      |> render("waiting_first_pageview.html",
+        site: site,
+        embed_mode: get_session(conn, "embed_mode")
+      )
     end
   end
 
@@ -64,16 +70,24 @@ defmodule PlausibleWeb.StatsController do
       Repo.get_by(Plausible.Site.SharedLink, slug: slug)
       |> Repo.preload(:site)
 
+    embed_mode = (Enum.at(conn.path_info, 1) == "embed")
+
+    embed_link = if embed_mode do "/embed" else "" end
+
     if shared_link do
       if shared_link.password_hash do
         conn
+        |> put_session("embed_mode", embed_mode)
         |> assign(:skip_plausible_tracking, true)
         |> render("shared_link_password.html",
           link: shared_link,
+          embed_link: embed_link,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
       else
-        shared_link_auth_success(conn, shared_link)
+        conn
+        |> put_session("embed_mode", embed_mode)
+        |> shared_link_auth_success(shared_link)
       end
     else
       render_error(conn, 404)
