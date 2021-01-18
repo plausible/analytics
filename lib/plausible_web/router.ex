@@ -8,11 +8,20 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["html"]
     plug PlausibleWeb.Firewall
     plug :fetch_session
-    plug :fetch_flash
+    plug :fetch_live_flash
     plug :put_secure_browser_headers
+    plug :put_root_layout, {PlausibleWeb.LayoutView, :root}
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
     plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.LastSeenPlug
+  end
+
+  pipeline :dashboard do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :put_secure_browser_headers
+    plug :put_root_layout, {PlausibleWeb.LayoutView, :root}
   end
 
   pipeline :csrf do
@@ -103,6 +112,12 @@ defmodule PlausibleWeb.Router do
     post "/password/request-reset", AuthController, :password_reset_request
     get "/password/reset", AuthController, :password_reset_form
     post "/password/reset", AuthController, :password_reset
+  end
+
+  scope "/live", PlausibleWeb do
+    pipe_through [:dashboard, :csrf]
+
+    live "/:domain", DashboardLive, :index
   end
 
   scope "/", PlausibleWeb do

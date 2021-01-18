@@ -2,6 +2,7 @@ defmodule PlausibleWeb do
   def controller do
     quote do
       use Phoenix.Controller, namespace: PlausibleWeb
+      import Phoenix.LiveView.Controller
 
       import Plug.Conn
       import PlausibleWeb.ControllerHelpers
@@ -16,14 +17,35 @@ defmodule PlausibleWeb do
         namespace: PlausibleWeb
 
       # Import convenience functions from controllers
-      import Phoenix.Controller, only: [get_flash: 1, get_flash: 2, view_module: 1]
+      import Phoenix.Controller,
+        only: [get_flash: 1, get_flash: 2, view_module: 1, view_template: 1]
 
-      # Use all HTML functionality (forms, tags, etc)
+      # Include shared imports and aliases for views
+      unquote(view_helpers())
+    end
+  end
+
+  def live_view do
+    quote do
+      use Phoenix.LiveView,
+        layout: {PlausibleWeb.LayoutView, "live.html"}
+
+      unquote(view_helpers())
+    end
+  end
+
+  def live_component do
+    quote do
+      use Phoenix.LiveComponent
+
+      unquote(view_helpers())
+    end
+  end
+
+  defp view_helpers do
+    quote do
       use Phoenix.HTML
-
-      if Application.get_env(:appsignal, :config) do
-        use Appsignal.Phoenix.View
-      end
+      import Phoenix.LiveView.Helpers
 
       import PlausibleWeb.ErrorHelpers
       alias PlausibleWeb.Router.Helpers, as: Routes
@@ -35,6 +57,7 @@ defmodule PlausibleWeb do
       use Phoenix.Router
       import Plug.Conn
       import Phoenix.Controller
+      import Phoenix.LiveView.Router
     end
   end
 

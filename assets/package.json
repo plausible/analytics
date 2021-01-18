@@ -24,6 +24,7 @@
     "optimize-css-assets-webpack-plugin": "^5.0.3",
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html",
+    "phoenix_live_view": "file:../deps/phoenix_live_view",
     "postcss": "^7.0.35",
     "postcss-loader": "^4.0.4",
     "react": "^16.13.1",

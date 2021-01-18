@@ -1,0 +1,39 @@
+<div class="container pb-24">
+  <div class="pt-6"></div>
+
+  <div class="mb-12">
+    <div id="stats-container-top"></div>
+    <div class="">
+      <div class="items-center w-full sm:flex">
+        <div class="flex items-center w-full mb-2 sm:mb-0">
+          Site: <%= @site_domain %>
+        </div>
+      </div>
+    </div>
+    <div class="relative w-full mt-6 bg-white rounded shadow-xl dark:bg-gray-825 main-graph">
+      <%= if @top_stats do %>
+        <div class="flex flex-wrap">
+          <%= for stat <- @top_stats do %>
+            <div class="w-1/2 px-8 my-4 lg:w-auto">
+              <div class="text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400"><%= stat[:name] %></div>
+              <div className="my-1 flex justify-between items-center">
+                <b className="text-2xl mr-4 dark:text-gray-100"><%= stat[:count] %></b>
+
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div id="visitor-graph" phx-hook="VisitorGraph" phx-update="ignore">
+        <div class="pt-24 mx-auto loading sm:pt-32 md:pt-48"><div></div></div>
+      </div>
+    </div>
+    <div class="items-start justify-between block w-full md:flex">
+      <%= live_component @socket, PlausibleWeb.ListComponent, list: @pages  %>
+      Sources pages
+    </div>
+    <div class="items-start justify-between block w-full md:flex">
+    </div>
+  </div>
+</div>
