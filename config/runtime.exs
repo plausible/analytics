@@ -64,6 +64,7 @@ hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
 log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
 appsignal_api_key = System.get_env("APPSIGNAL_API_KEY")
 is_selfhost = String.to_existing_atom(System.get_env("SELFHOST", "true"))
+disable_cron = String.to_existing_atom(System.get_env("DISABLE_CRON", "false"))
 
 {user_agent_cache_limit, ""} = Integer.parse(System.get_env("USER_AGENT_CACHE_LIMIT", "1000"))
 
@@ -154,7 +155,7 @@ config :plausible, :custom_domain_server,
 config :plausible, PlausibleWeb.Firewall,
   blocklist: System.get_env("IP_BLOCKLIST", "") |> String.split(",") |> Enum.map(&String.trim/1)
 
-if config_env() == :prod do
+if config_env() == :prod && !disable_cron do
   base_cron = [
     # Daily at midnight
     {"0 0 * * *", Plausible.Workers.RotateSalts},
