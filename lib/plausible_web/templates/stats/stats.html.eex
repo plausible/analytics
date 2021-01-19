@@ -1,7 +1,7 @@
 <div class="container pb-24" data-site-domain="<%= @site.domain %>">
   <%= if @offer_email_report do %>
     <div class="text-center bg-blue-200 text-blue-900 text-sm font-bold px-4 w-full rounded transition" style="top: 91px" role="alert">
-      <%= link("Click here to enable weekly email reports →", to: "/#{URI.encode_www_form(@site.domain)}/settings#email-reports", class: "py-2 block") %>
+      <%= link("Click here to enable weekly email reports →", to: "/#{URI.encode_www_form(@site.domain)}/settings/email-reports", class: "py-2 block") %>
     </div>
   <% end %>
   <div class="pt-6"></div>
