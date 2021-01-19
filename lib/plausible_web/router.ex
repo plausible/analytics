@@ -26,10 +26,17 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.AuthPlug
   end
 
-  pipeline :stats_api do
+  pipeline :internal_stats_api do
     plug :accepts, ["json"]
     plug PlausibleWeb.Firewall
     plug :fetch_session
+    plug PlausibleWeb.AuthorizeStatsPlug
+  end
+
+  pipeline :external_stats_api do
+    plug :accepts, ["json"]
+    plug PlausibleWeb.Firewall
+    plug PlausibleWeb.AuthorizeApiStatsPlug
   end
 
   if Application.get_env(:plausible, :environment) == "dev" do
@@ -38,8 +45,8 @@ defmodule PlausibleWeb.Router do
 
   use Kaffy.Routes, scope: "/crm", pipe_through: [PlausibleWeb.CRMAuthPlug]
 
-  scope "/api/stats", PlausibleWeb.Api do
-    pipe_through :stats_api
+  scope "/_api/stats", PlausibleWeb.Api do
+    pipe_through :internal_stats_api
 
     get "/:domain/current-visitors", StatsController, :current_visitors
     get "/:domain/main-graph", StatsController, :main_graph
@@ -59,6 +66,14 @@ defmodule PlausibleWeb.Router do
     get "/:domain/screen-sizes", StatsController, :screen_sizes
     get "/:domain/conversions", StatsController, :conversions
     get "/:domain/property/:prop_name", StatsController, :prop_breakdown
+  end
+
+  scope "/api/stats", PlausibleWeb.Api do
+    pipe_through :external_stats_api
+
+    get "/realtime/visitors", ExternalStatsController, :realtime_visitors
+    get "/aggregate", ExternalStatsController, :aggregate
+    get "/timeseries", ExternalStatsController, :timeseries
   end
 
   scope "/api", PlausibleWeb do

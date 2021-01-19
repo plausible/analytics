@@ -7,7 +7,7 @@ defmodule Plausible.TestUtils do
   end
 
   def create_site(%{user: user}) do
-    site = Factory.insert(:site, domain: "test-site.com", members: [user])
+    site = Factory.insert(:site, members: [user])
     {:ok, site: site}
   end
 
@@ -60,5 +60,28 @@ defmodule Plausible.TestUtils do
     conn
     |> Plug.Session.call(opts)
     |> Plug.Conn.fetch_session()
+  end
+
+  def populate_stats(events) do
+    sessions =
+      Enum.reduce(events, %{}, fn event, sessions ->
+        Plausible.Session.Store.reconcile_event(sessions, event)
+      end)
+      |> Map.values()
+
+    Plausible.ClickhouseRepo.insert_all(
+      Plausible.ClickhouseEvent,
+      Enum.map(events, &schema_to_map/1)
+    )
+
+    Plausible.ClickhouseRepo.insert_all(
+      Plausible.ClickhouseSession,
+      Enum.map(sessions, &schema_to_map/1)
+    )
+  end
+
+  defp schema_to_map(schema) do
+    Map.from_struct(schema)
+    |> Map.delete(:__meta__)
   end
 end
