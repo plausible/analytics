@@ -28,7 +28,7 @@ defmodule PlausibleWeb.LayoutView do
       [key: "Goals", value: "goals"],
       [key: "Search Console", value: "search-console"],
       [key: "Email reports", value: "email-reports"],
-      if is_selfhost() do
+      if !is_selfhost() do
         [key: "Custom domain", value: "custom-domain"]
       else
         nil
