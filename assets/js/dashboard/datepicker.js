@@ -239,7 +239,7 @@ class DatePicker extends React.Component {
         >
           <span className="mr-2">{this.timeFrameText()}</span>
           <svg
-            className="text-pink-500 h-4 w-4"
+            className="text-indigo-500 h-4 w-4"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="none"
