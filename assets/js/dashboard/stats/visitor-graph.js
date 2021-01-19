@@ -6,43 +6,56 @@ import numberFormatter, {durationFormatter} from '../number-formatter'
 import * as api from '../api'
 import {ThemeContext} from '../theme-context'
 
-function buildDataSet(plot, present_index, ctx, label) {
+function buildDataSet(plot, present_index, ctx, label, isPrevious) {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
+  var prev_gradient = ctx.createLinearGradient(0, 0, 0, 300);
   gradient.addColorStop(0, 'rgba(101,116,205, 0.2)');
   gradient.addColorStop(1, 'rgba(101,116,205, 0)');
+  prev_gradient.addColorStop(0, 'rgba(101,116,205, 0.1)');
+  prev_gradient.addColorStop(1, 'rgba(101,116,205, 0)');
+  if (!isPrevious) {
+    if (present_index) {
+      var dashedPart = plot.slice(present_index - 1);
+      var dashedPlot = (new Array(plot.length - dashedPart.length)).concat(dashedPart)
+      for(var i = present_index; i < plot.length; i++) {
+        plot[i] = undefined
+      }
 
-  if (present_index) {
-    var dashedPart = plot.slice(present_index - 1);
-    var dashedPlot = (new Array(plot.length - dashedPart.length)).concat(dashedPart)
-    for(var i = present_index; i < plot.length; i++) {
-      plot[i] = undefined
-    }
-
-    return [{
+      return [{
+          label: label,
+          data: plot,
+          borderWidth: 3,
+          borderColor: 'rgba(101,116,205)',
+          pointBackgroundColor: 'rgba(101,116,205)',
+          backgroundColor: gradient,
+        },
+        {
+          label: label,
+          data: dashedPlot,
+          borderWidth: 3,
+          borderDash: [5, 10],
+          borderColor: 'rgba(101,116,205)',
+          pointBackgroundColor: 'rgba(101,116,205)',
+          backgroundColor: gradient,
+      }]
+    } else {
+      return [{
         label: label,
         data: plot,
         borderWidth: 3,
         borderColor: 'rgba(101,116,205)',
         pointBackgroundColor: 'rgba(101,116,205)',
         backgroundColor: gradient,
-      },
-      {
-        label: label,
-        data: dashedPlot,
-        borderWidth: 3,
-        borderDash: [5, 10],
-        borderColor: 'rgba(101,116,205)',
-        pointBackgroundColor: 'rgba(101,116,205)',
-        backgroundColor: gradient,
-    }]
+      }]
+    }
   } else {
     return [{
       label: label,
       data: plot,
       borderWidth: 3,
-      borderColor: 'rgba(101,116,205)',
-      pointBackgroundColor: 'rgba(101,116,205)',
-      backgroundColor: gradient,
+      borderColor: 'rgba(101,116,205,0.3)',
+      pointBackgroundColor: 'transparent',
+      backgroundColor: prev_gradient,
     }]
   }
 }
@@ -103,21 +116,26 @@ class LineGraph extends React.Component {
     this.ctx = document.getElementById("main-graph-canvas").getContext('2d');
     const label = this.props.query.filters.goal ? 'Converted visitors' : graphData.interval === 'minute' ? 'Pageviews' : 'Visitors'
     const dataSet = buildDataSet(graphData.plot, graphData.present_index, this.ctx, label)
+    const prev_dataSet = buildDataSet(graphData.prev_plot, false, this.ctx, label, true)
+
+    console.log(dataSet)
+    console.log(prev_dataSet)
 
     return new Chart(this.ctx, {
       type: 'line',
       data: {
         labels: graphData.labels,
-        datasets: dataSet
+        datasets: [...dataSet, ...prev_dataSet]
       },
       options: {
-        animation: false,
+        easing: 'easeInExpo',
         legend: {display: false},
         responsive: true,
         elements: {line: {tension: 0}, point: {radius: 0}},
         onClick: this.onClick.bind(this),
         tooltips: {
           mode: 'index',
+          position: 'custom',
           intersect: false,
           xPadding: 10,
           yPadding: 10,
@@ -133,18 +151,27 @@ class LineGraph extends React.Component {
           multiKeyBackground: 'none',
           callbacks: {
             title: function(dataPoints) {
-              const data = dataPoints[0]
-              return dateFormatter(graphData.interval, true)(data.xLabel)
+              const data = graphData.labels[dataPoints[0].index]
+              const prev_data = graphData.prev_labels[dataPoints[1].index]
+              if (graphData.interval === 'month' || graphData.interval === 'date') {
+                return dateFormatter(graphData.interval, true)(data) + ' vs ' + dateFormatter(graphData.interval, true)(prev_data)
+              }
+
+              return dateFormatter(graphData.interval, true)(data) + ' vs Previous ' + dateFormatter(graphData.interval, true)(prev_data)
             },
             beforeBody: function() {
               this.drawnLabels = {}
             },
             label: function(item) {
+              const datasets = this._data.datasets
               const dataset = this._data.datasets[item.datasetIndex]
+              const point = datasets[0].data[item.index] || (datasets.slice(-2)[0] && datasets.slice(-2)[0].data[item.index]) || 0
+              const prev_point = datasets.slice(-1)[0].data[item.index]
+              const pct_change = point === 0 && prev_point !== 0 ? 100 : point === prev_point ? 0 : Math.round((prev_point - point)/point * 100)
               if (!this.drawnLabels[dataset.label]) {
                 this.drawnLabels[dataset.label] = true
                 const pluralizedLabel = item.yLabel === 1 ? dataset.label.slice(0, -1) : dataset.label
-                return ` ${item.yLabel} ${pluralizedLabel}`
+                return ` ${item.yLabel} ${pluralizedLabel} ${prev_point > point ? '↓' : prev_point == point ? '〰' : '↑'} ${numberFormatter(Math.abs(pct_change))}%`
               }
             },
             footer: function(dataPoints) {
@@ -188,6 +215,16 @@ class LineGraph extends React.Component {
 
   componentDidMount() {
     this.chart = this.regenerateChart();
+
+    Chart.Tooltip.positioners.custom = function(elements, eventPosition) {
+      /** @type {Chart.Tooltip} */
+      var tooltip = this;
+
+      return {
+          x: elements[0]._model.x,
+          y: elements[0]._model.y
+      };
+  };
   }
 
   componentDidUpdate(prevProps) {

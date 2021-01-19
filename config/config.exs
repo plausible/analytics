@@ -85,7 +85,7 @@ config :plausible, Plausible.ClickhouseRepo,
   url:
     System.get_env(
       "CLICKHOUSE_DATABASE_URL",
-      "http://127.0.0.1:8123/plausible_dev"
+      "http://127.0.0.1:8123/plausible_events_db"
     )
 
 config :plausible,
@@ -96,7 +96,7 @@ config :plausible,
        url:
          System.get_env(
            "DATABASE_URL",
-           "postgres://postgres:postgres@127.0.0.1:5432/plausible_dev?currentSchema=default"
+           "postgres://postgres:postgres@127.0.0.1:5432/plausible_db?currentSchema=default"
          )
 
 cron_enabled = String.to_existing_atom(System.get_env("CRON_ENABLED", "false"))

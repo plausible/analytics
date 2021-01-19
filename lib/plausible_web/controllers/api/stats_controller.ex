@@ -8,15 +8,20 @@ defmodule PlausibleWeb.Api.StatsController do
   def main_graph(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
+    prev_query = Query.shift_back(query, site)
 
     plot_task = Task.async(fn -> Stats.calculate_plot(site, query) end)
+    prev_plot_task = Task.async(fn -> Stats.calculate_plot(site, prev_query) end)
     top_stats = fetch_top_stats(site, query)
     {plot, labels, present_index} = Task.await(plot_task)
+    {prev_plot, prev_labels, _} = Task.await(prev_plot_task)
 
     json(conn, %{
       plot: plot,
       labels: labels,
       present_index: present_index,
+      prev_plot: prev_plot,
+      prev_labels: prev_labels,
       top_stats: top_stats,
       interval: query.step_type
     })
