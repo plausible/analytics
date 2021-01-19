@@ -65,7 +65,7 @@ export default class SearchTerms extends React.Component {
           <RocketIcon />
           <div>The site is not connected to Google Search Keywords</div>
           <div>Cannot show search terms</div>
-          {this.state.isOwner && <a href={`/${encodeURIComponent(this.props.site.domain)}/settings#google-auth`} className="button mt-4">Connect with Google</a> }
+          {this.state.isOwner && <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/search-console`} className="button mt-4">Connect with Google</a> }
         </div>
       )
     } else if (this.state.searchTerms.length > 0) {
