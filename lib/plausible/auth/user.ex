@@ -35,7 +35,7 @@ defmodule Plausible.Auth.User do
     |> validate_length(:password, min: 6, message: "has to be at least 6 characters")
     |> validate_confirmation(:password)
     |> hash_password()
-    |> change(trial_expiry_date: Timex.today() |> Timex.shift(days: 30))
+    |> change(trial_expiry_date: trial_expiry())
     |> unique_constraint(:email)
   end
 
@@ -62,4 +62,12 @@ defmodule Plausible.Auth.User do
   end
 
   def hash_password(changeset), do: changeset
+
+  defp trial_expiry() do
+    if Application.get_env(:plausible, :is_selfhost) do
+      Timex.today() |> Timex.shift(years: 100)
+    else
+      Timex.today() |> Timex.shift(days: 30)
+    end
+  end
 end
