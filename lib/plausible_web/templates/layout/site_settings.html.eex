@@ -19,7 +19,7 @@
       </div>
 
       <div class="space-y-6 lg:col-span-9 lg:mt-4">
-        <%= render @view_module, @view_template, assigns %>
+        <%= @inner_content %>
       </div>
     </div>
   </div>

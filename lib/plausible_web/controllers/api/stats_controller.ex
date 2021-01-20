@@ -8,15 +8,20 @@ defmodule PlausibleWeb.Api.StatsController do
   def main_graph(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
+    prev_query = Query.shift_back(query, site)
 
     plot_task = Task.async(fn -> Stats.calculate_plot(site, query) end)
+    prev_plot_task = Task.async(fn -> Stats.calculate_plot(site, prev_query) end)
     top_stats = fetch_top_stats(site, query)
     {plot, labels, present_index} = Task.await(plot_task)
+    {prev_plot, prev_labels, _} = Task.await(prev_plot_task)
 
     json(conn, %{
       plot: plot,
       labels: labels,
       present_index: present_index,
+      prev_plot: prev_plot,
+      prev_labels: prev_labels,
       top_stats: top_stats,
       interval: query.step_type
     })
@@ -163,15 +168,13 @@ defmodule PlausibleWeb.Api.StatsController do
     json(conn, Stats.utm_sources(site, query, limit || 9, page || 1, show_noref))
   end
 
-  @google_api Application.fetch_env!(:plausible, :google_api)
-
   def referrer_drilldown(conn, %{"referrer" => "Google"} = params) do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
     query = Query.from(site.timezone, params)
 
     search_terms =
       if site.google_auth && site.google_auth.property && !query.filters["goal"] do
-        @google_api.fetch_stats(site, query, params["limit"] || 9)
+        google_api().fetch_stats(site, query, params["limit"] || 9)
       end
 
     case search_terms do
@@ -317,4 +320,6 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, %{"period" => "realtime"})
     json(conn, Stats.current_visitors(site, query))
   end
+
+  defp google_api(), do: Application.fetch_env!(:plausible, :google_api)
 end

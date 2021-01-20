@@ -1,7 +1,6 @@
 defmodule Plausible.Billing do
   use Plausible.Repo
   alias Plausible.Billing.{Subscription, PaddleApi}
-  @paddle_api Application.fetch_env!(:plausible, :paddle_api)
 
   def active_subscription_for(user_id) do
     Repo.get_by(Subscription, user_id: user_id, status: "active")
@@ -58,7 +57,7 @@ defmodule Plausible.Billing do
     subscription = Repo.get_by(Subscription, paddle_subscription_id: params["subscription_id"])
 
     if subscription do
-      {:ok, api_subscription} = @paddle_api.get_subscription(subscription.paddle_subscription_id)
+      {:ok, api_subscription} = paddle_api().get_subscription(subscription.paddle_subscription_id)
 
       amount =
         :erlang.float_to_binary(api_subscription["next_payment"]["amount"] / 1, decimals: 2)
@@ -79,7 +78,7 @@ defmodule Plausible.Billing do
     subscription = active_subscription_for(user.id)
 
     res =
-      @paddle_api.update_subscription(subscription.paddle_subscription_id, %{
+      paddle_api().update_subscription(subscription.paddle_subscription_id, %{
         plan_id: new_plan_id
       })
 
@@ -130,16 +129,19 @@ defmodule Plausible.Billing do
   end
 
   def usage(user) do
-    user = Repo.preload(user, :sites)
-
-    Enum.reduce(user.sites, 0, fn site, total ->
-      total + site_usage(site)
-    end)
+    {pageviews, custom_events} = usage_breakdown(user)
+    pageviews + custom_events
   end
 
-  defp site_usage(site) do
-    q = Plausible.Stats.Query.from(site.timezone, %{"period" => "30d"})
-    Plausible.Stats.Clickhouse.total_events(site, q)
+  def usage_breakdown(user) do
+    user = Repo.preload(user, :sites)
+
+    Enum.reduce(user.sites, {0, 0}, fn site, {pageviews, custom_events} ->
+      usage = Plausible.Stats.Clickhouse.usage(site)
+
+      {pageviews + Map.get(usage, :pageviews, 0),
+       custom_events + Map.get(usage, :custom_events, 0)}
+    end)
   end
 
   defp format_subscription(params) do
@@ -158,4 +160,6 @@ defmodule Plausible.Billing do
   defp present?(""), do: false
   defp present?(nil), do: false
   defp present?(_), do: true
+
+  defp paddle_api(), do: Application.fetch_env!(:plausible, :paddle_api)
 end

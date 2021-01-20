@@ -11,7 +11,7 @@ defmodule Plausible.Mailer do
           extra: %{extra: "Error while sending email"}
         )
 
-        raise error
+        reraise error, __STACKTRACE__
     end
   end
 end

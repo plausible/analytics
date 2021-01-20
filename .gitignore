@@ -55,3 +55,7 @@ plausible-report.xml
 *.iml
 *.log
 *.code-workspace
+
+# Dializer
+/priv/plts/*.plt
+/priv/plts/*.plt.hash
