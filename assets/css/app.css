@@ -279,3 +279,21 @@ blockquote {
 .dark .fullwidth-shadow::before {
   box-shadow: 0 4px 2px -2px rgba(200, 200, 200, 0.1);
 }
+
+#chartjs-tooltip {
+  background-color: rgba(25, 30, 56);
+  position: absolute;
+  font-size: 14px;
+  font-style: normal;
+  padding: 10px 12px;
+  pointer-events: none;
+  border-radius: 5px;
+}
+
+/* #chartjs-caret {
+  pointer-events: none;
+  border: 7px solid transparent;
+  position: absolute;
+  display: inline-block;
+  content: "";
+} */
