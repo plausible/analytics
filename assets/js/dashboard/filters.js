@@ -62,7 +62,7 @@ class Filters extends React.Component {
   handleKeyup(e) {
     const {query, history} = this.props
 
-    if (e.ctrlKey || e.ctrlKey || e.altKey) return
+    if (e.ctrlKey || e.metaKey || e.altKey) return
 
     if (e.key === 'Escape') {
       this.clearAllFilters(history, query)
