@@ -13,6 +13,7 @@ function buildDataSet(plot, present_index, ctx, label, isPrevious) {
   gradient.addColorStop(1, 'rgba(101,116,205, 0)');
   prev_gradient.addColorStop(0, 'rgba(101,116,205, 0.075)');
   prev_gradient.addColorStop(1, 'rgba(101,116,205, 0)');
+
   if (!isPrevious) {
     if (present_index) {
       var dashedPart = plot.slice(present_index - 1);
@@ -150,39 +151,9 @@ class LineGraph extends React.Component {
           mode: 'index',
           position: 'average',
           intersect: false,
-          // callbacks: {
-          //   title: function(dataPoints) {
-          //     const data = graphData.labels[dataPoints[0].index]
-          //     const prev_data = graphData.prev_labels[dataPoints[1].index]
-          //     if (graphData.interval === 'month' || graphData.interval === 'date') {
-          //       return dateFormatter(graphData.interval, true)(data) + ' vs ' + dateFormatter(graphData.interval, true)(prev_data)
-          //     }
-
-          //     return dateFormatter(graphData.interval, true)(data) + ' vs Previous ' + dateFormatter(graphData.interval, true)(prev_data)
-          //   },
-          //   label: function(item) {
-          //     const datasets = this._data.datasets
-          //     const dataset = this._data.datasets[item.datasetIndex]
-          //     const point = datasets[0].data[item.index] || (datasets.slice(-2)[0] && datasets.slice(-2)[0].data[item.index]) || 0
-          //     const prev_point = datasets.slice(-1)[0].data[item.index]
-          //     const pct_change = point === 0 && prev_point !== 0 ? 100 : point === prev_point ? 0 : Math.round((prev_point - point)/point * 100)
-          //     if (!this.drawnLabels[dataset.label]) {
-          //       this.drawnLabels[dataset.label] = true
-          //       const pluralizedLabel = item.yLabel === 1 ? dataset.label.slice(0, -1) : dataset.label
-          //       return ` ${item.yLabel} ${pluralizedLabel} ${prev_point > point ? '↓' : prev_point == point ? '〰' : '↑'} ${numberFormatter(Math.abs(pct_change))}%`
-          //     }
-          //   },
-          //   footer: function(dataPoints) {
-          //     if (graphData.interval === 'month') {
-          //       return 'Click to view month'
-          //     } else if (graphData.interval === 'date') {
-          //       return 'Click to view day'
-          //     }
-          //   }
-          // },
           custom: function (tooltipModel) {
+            // Canvas Offset from 0,0
             const offset = this._chart.canvas.getBoundingClientRect();
-            console.log(tooltipModel)
             // Tooltip Element
             let tooltipEl = document.getElementById('chartjs-tooltip');
 
@@ -208,10 +179,8 @@ class LineGraph extends React.Component {
               return bodyItem.lines;
             }
 
-            // Set Body
+            // Set Tooltip Body
             if (tooltipModel.body) {
-
-              var titleLines = tooltipModel.title || [];
               var bodyLines = tooltipModel.body.map(getBody);
               // Remove duplicated line on overlap between dashed and normal
               if (bodyLines.length == 3) {
@@ -223,43 +192,48 @@ class LineGraph extends React.Component {
                 return;
               }
 
+              const data = tooltipModel.dataPoints[0]
+              const prev_data = tooltipModel.dataPoints.slice(-1)[0]
+              const label = graphData.labels[data.index]
+              const prev_label = graphData.prev_labels[prev_data.index]
+              const point = data.yLabel || 0
+              const prev_point = prev_data.yLabel || 0
+              const pct_change = point === prev_point ? 0 : prev_point === 0 ? 100 : parseFloat(((point - prev_point) / prev_point * 100).toFixed(1))
+              const amt_change = point - prev_point;
+
+              function renderLabel(isPrevious) {
+                const formattedLabel = dateFormatter(graphData.interval, true)(label)
+                const prev_formattedLabel = dateFormatter(graphData.interval, true)(prev_label)
+
+
+                if (graphData.interval === 'month') {
+                  return !isPrevious ? `${formattedLabel} ${(new Date(label)).getUTCFullYear()}` : `${prev_formattedLabel} ${(new Date(prev_label)).getUTCFullYear()}`
+                }
+
+                if (graphData.interval === 'date') {
+                  return !isPrevious ? formattedLabel : prev_formattedLabel
+                }
+
+                if (graphData.interval === 'hour') {
+                  return !isPrevious ? `${dateFormatter("date", true)(label)}, ${formattedLabel}` : `${dateFormatter("date", true)(prev_label)}, ${dateFormatter(graphData.interval, true)(prev_label)}`
+                }
+
+                return !isPrevious ? formattedLabel : prev_formattedLabel
+              }
+
               function renderComparison(change, amt) {
                 const formattedComparison = numberFormatter(Math.abs(change))
                 const formattedAmount = numberFormatter(Math.abs(amt))
 
                 if (change > 0) {
                   return `<span class='text-green-500 font-bold flex'>+${formattedAmount} (<div class='transform -rotate-90'>&#10132;</div>${formattedComparison}%)</span>`
-                } else if (change < 0) {
+                }
+                if (change < 0) {
                   return `<span class='text-red-400 font-bold flex'>&#8722;${formattedAmount} (<div class='transform rotate-90'>&#10132;</div>${formattedComparison}%)</span>`
-                } else if (change === 0) {
+                }
+                if (change === 0) {
                   return `<span class='font-bold'>+0 (&#12336;0%)</span>`
                 }
-              }
-              const data = tooltipModel.dataPoints[0]
-              const prev_data = tooltipModel.dataPoints.slice(-1)[0]
-              const label = graphData.labels[data.index]
-              const prev_label = graphData.prev_labels[prev_data.index]
-              console.log(data, prev_data)
-              console.log(label, prev_label)
-              const point = tooltipModel.dataPoints[0].yLabel || 0
-              const prev_point = tooltipModel.dataPoints.slice(-1)[0].yLabel || 0
-              const pct_change = point === prev_point ? 0 : prev_point === 0 ? 100 : parseFloat(((point - prev_point) / prev_point * 100).toFixed(1))
-              const amt_change = point - prev_point;
-
-              function renderLabel(isPrevious) {
-                if (graphData.interval === 'month') {
-                  return !isPrevious ? dateFormatter(graphData.interval, true)(label) + ' ' + (new Date(label)).getUTCFullYear()  : dateFormatter(graphData.interval, true)(prev_label) + ' ' + (new Date(prev_label)).getUTCFullYear()
-                }
-
-                if (graphData.interval === 'date') {
-                  return !isPrevious ? dateFormatter(graphData.interval, true)(label) : dateFormatter(graphData.interval, true)(prev_label)
-                }
-
-                if (graphData.interval === 'hour') {
-                  return !isPrevious ? dateFormatter("date", true)(label) + ', ' + dateFormatter(graphData.interval, true)(label) : dateFormatter("date", true)(prev_label) + ', ' + dateFormatter(graphData.interval, true)(prev_label)
-                }
-
-                return !isPrevious ? dateFormatter(graphData.interval, true)(label) : dateFormatter(graphData.interval, true)(prev_label)
               }
 
               let innerHtml = `
@@ -288,20 +262,6 @@ class LineGraph extends React.Component {
               </div>
               `;
 
-
-              // console.log(tooltipModel.body)
-              // bodyLines.forEach(function (body, i) {
-              //   if (!body) return;
-              //   var colors = tooltipModel.labelColors[i];
-              //   var style = 'background:' + colors.backgroundColor;
-              //   style += '; border-color:' + colors.borderColor;
-              //   style += '; border-width: 2px';
-              //   var span = '<span style="' + style + '"></span>';
-              //   innerHtml += '<tr><td>' + span + body + '</td></tr>';
-              // });
-              // innerHtml += '</tbody>';
-
-              // const tableRoot = tooltipEl.querySelector('table');
               tooltipEl.innerHTML = innerHtml;
             }
 
@@ -376,6 +336,7 @@ class LineGraph extends React.Component {
   }
 
   componentWillUnmount() {
+    // Ensure that the tooltip doesn't hang around when we are loading more data
     document.getElementById('chartjs-tooltip').style.opacity = 0;
     window.removeEventListener('mousemove', this.repositionTooltip)
   }
