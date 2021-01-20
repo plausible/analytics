@@ -7,7 +7,9 @@ defmodule PlausibleWeb.StatsController do
   plug PlausibleWeb.AuthorizeStatsPlug when action in [:stats, :csv_export]
   plug PlausibleWeb.UpgradeBillingPlug when action in [:stats]
   plug PlausibleWeb.EmbeddableStatsPlug when action in [:stats]
-  plug PlausibleWeb.EmbeddableAuthSharedLinkPlug when action in [:shared_link, :authenticate_shared_link]
+
+  plug PlausibleWeb.EmbeddableAuthSharedLinkPlug
+       when action in [:shared_link, :authenticate_shared_link]
 
   def base_domain() do
     PlausibleWeb.Endpoint.host()
@@ -70,9 +72,9 @@ defmodule PlausibleWeb.StatsController do
       Repo.get_by(Plausible.Site.SharedLink, slug: slug)
       |> Repo.preload(:site)
 
-    embed_mode = (Enum.at(conn.path_info, 1) == "embed")
+    embed_mode = Enum.at(conn.path_info, 1) == "embed"
 
-    embed_link = if embed_mode do "/embed" else "" end
+    embed_link = if(embed_mode, do: "/embed", else: "")
 
     if shared_link do
       if shared_link.password_hash do
