@@ -289,11 +289,3 @@ blockquote {
   pointer-events: none;
   border-radius: 5px;
 }
-
-/* #chartjs-caret {
-  pointer-events: none;
-  border: 7px solid transparent;
-  position: absolute;
-  display: inline-block;
-  content: "";
-} */
