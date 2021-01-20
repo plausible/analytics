@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 - My sites now show settings cog at all times on smaller screens plausible/analytics#497
 - Background jobs are enabled by default for self-hosted installations plausible/analytics#603
 - All new users on self-hosted installations have a never-ending trial plausible/analytics#603
+- Changed caret/chevron color in datepicker and filters dropdown
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370
