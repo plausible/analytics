@@ -26,7 +26,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
       )
 
     for user <- Repo.all(q) do
-      if Enum.count(user.sites) == 0 do
+      if Enum.empty?(user.sites) do
         send_create_site_email(user)
       end
     end

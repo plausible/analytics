@@ -71,7 +71,7 @@
         </a>
       </span>
       <span class="flex space-betwee rounded-md shadow-sm">
-        <%= button("Confirm plan change", to: "/billing/change-plan/", method: :post, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150") %>
+        <%= button("Confirm plan change", to: "/billing/change-plan/#{@preview_info["plan_id"]}", method: :post, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150") %>
       </span>
     </div>
   </div>

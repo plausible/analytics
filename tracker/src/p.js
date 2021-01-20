@@ -1,3 +1,7 @@
+// NOTE: This file is deprecated and only kept around so we don't break compatibility
+// with some early customers. This script uses a cookie but this was an old version of Plausible.
+// Current script can be found in the tracker/src/plausible.js file
+
 (function(window, plausibleHost){
   'use strict';
 

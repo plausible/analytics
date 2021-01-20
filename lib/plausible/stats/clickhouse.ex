@@ -158,6 +158,24 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
+  def usage(site) do
+    q = Plausible.Stats.Query.from(site.timezone, %{"period" => "30d"})
+    {first_datetime, last_datetime} = utc_boundaries(q, site.timezone)
+
+    ClickhouseRepo.all(
+      from e in "events",
+        where: e.domain == ^site.domain,
+        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
+        group_by: e.name,
+        select: {e.name, fragment("count(*)")}
+    )
+    |> Enum.map(fn {ev_name, count} ->
+      ev_name = if ev_name == "pageview", do: :pageviews, else: :custom_events
+      {ev_name, count}
+    end)
+    |> Enum.into(%{})
+  end
+
   def pageviews_and_visitors(site, query) do
     ClickhouseRepo.one(
       from e in base_query_w_sessions(site, query),

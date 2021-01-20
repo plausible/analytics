@@ -1,12 +1,6 @@
 defmodule Plausible.Factory do
   use ExMachina.Ecto, repo: Plausible.Repo
 
-  @hash_key Keyword.fetch!(
-              Application.get_env(:plausible, PlausibleWeb.Endpoint),
-              :secret_key_base
-            )
-            |> binary_part(0, 16)
-
   def user_factory(attrs) do
     pw = Map.get(attrs, :password, "password")
 
@@ -41,8 +35,8 @@ defmodule Plausible.Factory do
 
     %Plausible.ClickhouseSession{
       sign: 1,
-      session_id: SipHash.hash!(@hash_key, UUID.uuid4()),
-      user_id: SipHash.hash!(@hash_key, UUID.uuid4()),
+      session_id: SipHash.hash!(hash_key(), UUID.uuid4()),
+      user_id: SipHash.hash!(hash_key(), UUID.uuid4()),
       hostname: hostname,
       domain: hostname,
       referrer: "",
@@ -83,8 +77,8 @@ defmodule Plausible.Factory do
       domain: hostname,
       pathname: "/",
       timestamp: Timex.now(),
-      user_id: SipHash.hash!(@hash_key, UUID.uuid4()),
-      session_id: SipHash.hash!(@hash_key, UUID.uuid4()),
+      user_id: SipHash.hash!(hash_key(), UUID.uuid4()),
+      session_id: SipHash.hash!(hash_key(), UUID.uuid4()),
       referrer: "",
       referrer_source: "",
       utm_medium: "",
@@ -155,5 +149,13 @@ defmodule Plausible.Factory do
     %Plausible.Site.SharedLink{
       slug: Nanoid.generate()
     }
+  end
+
+  defp hash_key() do
+    Keyword.fetch!(
+      Application.get_env(:plausible, PlausibleWeb.Endpoint),
+      :secret_key_base
+    )
+    |> binary_part(0, 16)
   end
 end

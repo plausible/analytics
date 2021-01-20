@@ -71,3 +71,31 @@ export function isToday(site, date) {
 export function isThisMonth(site, date) {
   return formatMonthYYYY(date) === formatMonthYYYY(nowForSite(site))
 }
+
+export function isBefore(date1, date2, period) {
+  /* assumes 'day' and 'month' are the only valid periods */
+  if (date1.getFullYear() !== date2.getFullYear()) {
+    return date1.getFullYear() < date2.getFullYear();
+  }
+  if (date1.getMonth() !== date2.getMonth()) {
+    return date1.getMonth() < date2.getMonth();
+  }
+  if (period === "month") {
+    return false;
+  }
+  return date1.getDate() < date2.getDate()
+}
+
+export function isAfter(date1, date2, period) {
+  /* assumes 'day' and 'month' are the only valid periods */
+  if (date1.getFullYear() !== date2.getFullYear()) {
+    return date1.getFullYear() > date2.getFullYear();
+  }
+  if (date1.getMonth() !== date2.getMonth()) {
+    return date1.getMonth() > date2.getMonth();
+  }
+  if (period === "month") {
+    return false;
+  }
+  return date1.getDate() > date2.getDate()
+}

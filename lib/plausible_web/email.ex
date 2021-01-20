@@ -70,12 +70,17 @@ defmodule PlausibleWeb.Email do
     |> render("trial_one_week_reminder.html", user: user)
   end
 
-  def trial_upgrade_email(user, day, pageviews) do
+  def trial_upgrade_email(user, day, {pageviews, custom_events}) do
     base_email()
     |> to(user)
     |> tag("trial-upgrade-email")
     |> subject("Your Plausible trial ends #{day}")
-    |> render("trial_upgrade_email.html", user: user, day: day, pageviews: pageviews)
+    |> render("trial_upgrade_email.html",
+      user: user,
+      day: day,
+      custom_events: custom_events,
+      usage: pageviews + custom_events
+    )
   end
 
   def trial_over_email(user) do

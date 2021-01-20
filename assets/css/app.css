@@ -33,6 +33,10 @@ body {
   overflow-x: hidden;
 }
 
+button:disabled {
+  cursor: default;
+}
+
 blockquote {
   @apply my-4 py-2 px-4 border-l-4 border-gray-500;
 }
@@ -278,6 +282,10 @@ blockquote {
 
 .dark .fullwidth-shadow::before {
   box-shadow: 0 4px 2px -2px rgba(200, 200, 200, 0.1);
+}
+
+iframe[hidden] {
+display: none;
 }
 
 #chartjs-tooltip {
