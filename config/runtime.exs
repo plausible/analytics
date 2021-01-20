@@ -22,8 +22,6 @@ end
 
 secret_key_base = System.fetch_env!("SECRET_KEY_BASE")
 
-session_extra = System.get_env("SESSION_EXTRA", "SameSite=Lax")
-
 db_url =
   System.get_env(
     "DATABASE_URL",
@@ -88,8 +86,7 @@ config :plausible, :selfhost,
 config :plausible, PlausibleWeb.Endpoint,
   url: [host: base_url.host, scheme: base_url.scheme, port: base_url.port],
   http: [port: port],
-  secret_key_base: secret_key_base,
-  session_extra: session_extra
+  secret_key_base: secret_key_base
 
 config :plausible, Plausible.Repo, url: db_url
 

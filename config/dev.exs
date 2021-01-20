@@ -6,6 +6,7 @@ config :plausible, PlausibleWeb.Endpoint,
     accepts: ~w(html json)
   ],
   server: true,
+  allow_embed: false,
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
