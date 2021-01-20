@@ -167,6 +167,7 @@ class LineGraph extends React.Component {
             if (tooltipEl && offset && window.innerWidth < 768) {
               tooltipEl.style.top = offset.y + offset.height + window.pageYOffset + 'px'
               tooltipEl.style.left = offset.x + window.pageXOffset + 'px'
+              tooltipEl.style.right = 'unset'
             }
 
             // Stop if no tooltip showing
@@ -198,7 +199,7 @@ class LineGraph extends React.Component {
               const prev_label = graphData.prev_labels[prev_data.index]
               const point = data.yLabel || 0
               const prev_point = prev_data.yLabel || 0
-              const pct_change = point === prev_point ? 0 : prev_point === 0 ? 100 : parseFloat(((point - prev_point) / prev_point * 100).toFixed(1))
+              const pct_change = point === prev_point ? 0 : prev_point === 0 ? 100 : Math.round(((point - prev_point) / prev_point * 100))
 
               function renderLabel(isPrevious) {
                 const formattedLabel = dateFormatter(graphData.interval, true)(label)
@@ -300,8 +301,14 @@ class LineGraph extends React.Component {
   repositionTooltip(e) {
     const tooltipEl = document.getElementById('chartjs-tooltip');
     if (tooltipEl && window.innerWidth >= 768) {
+      if (e.clientX > 0.66*window.innerWidth) {
+        tooltipEl.style.right = (window.innerWidth - e.clientX) + window.pageXOffset + 'px'
+        tooltipEl.style.left = 'unset'
+      } else {
+        tooltipEl.style.right = 'unset'
+        tooltipEl.style.left = e.clientX + window.pageXOffset + 'px'
+      }
       tooltipEl.style.top = e.clientY + window.pageYOffset + 'px'
-      tooltipEl.style.left = e.clientX + window.pageXOffset + 'px'
     }
   }
 
