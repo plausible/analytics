@@ -1,9 +1,9 @@
 <div class="container pt-6">
   <div class="pb-5 border-b border-gray-200 dark:border-gray-500 flex items-center justify-between">
-    <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate">
+    <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate flex-shrink-0">
       My sites
     </h2>
-    <a href="/sites/new" class="button w-full my-2 sm:my-0 sm:w-auto">+ Add a website</a>
+    <a href="/sites/new" class="button my-2 sm:my-0 w-auto">+ Add a website</a>
   </div>
 
   <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
