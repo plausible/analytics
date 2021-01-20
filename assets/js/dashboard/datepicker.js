@@ -25,6 +25,8 @@ class DatePicker extends React.Component {
     super(props);
     this.handleKeyup = this.handleKeyup.bind(this);
     this.handleClick = this.handleClick.bind(this);
+    this.openCalendar = this.openCalendar.bind(this);
+    this.open = this.open.bind(this);
     this.state = { mode: "menu", open: false };
   }
 
@@ -96,7 +98,16 @@ class DatePicker extends React.Component {
       }
     }
 
-    if (newSearch.date) {
+    this.setState({open: false});
+
+    const keys = ['d', 'r', 'w', 'm', 'y', 'D', 'R', 'W', 'M', 'Y'];
+    const redirects = [{date: false, period: 'day'}, {period: 'realtime'}, {date: false, period: '7d'}, {date: false, period: 'month'}, {date: false, period: '12mo'}];
+
+    if (keys.includes(e.key)) {
+      navigateToQuery(history, query, {...newSearch, ...(redirects[keys.indexOf(e.key) % 5])});
+    } else if (e.key === 'C' || e.key === 'c') {
+      this.setState({mode: 'calendar', open: true}, this.openCalendar);
+    } else if (newSearch.date) {
       navigateToQuery(history, query, newSearch);
     }
   }
@@ -226,8 +237,8 @@ class DatePicker extends React.Component {
         ref={(node) => (this.dropDownNode = node)}
       >
         <div
-          onClick={this.open.bind(this)}
-          onKeyPress={this.open.bind(this)}
+          onClick={this.open}
+          onKeyPress={this.open}
           className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-4
           pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800
           dark:text-gray-200 h-full"
@@ -285,15 +296,36 @@ class DatePicker extends React.Component {
 
     const date = opts.date ? formatISO(opts.date) : false;
 
+    let keybind = '';
+
+    switch (text) {
+      case 'Today':
+        keybind = 'D'
+        break;
+      case 'Realtime':
+        keybind = 'R'
+        break;
+      case 'Last 7 days':
+        keybind = 'W'
+        break;
+      case 'Month to Date':
+        keybind = 'M'
+        break;
+      case 'Last 12 months':
+        keybind = 'Y'
+        break;
+    }
+
     return (
       <QueryLink
         to={{from: false, to: false, date, period, ...opts}}
         onClick={this.close.bind(this)}
         query={this.props.query}
-        className={`${boldClass  } block px-4 py-2 md:text-sm leading-tight hover:bg-gray-100
-          dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100`}
+        className={`${boldClass  } px-4 py-2 md:text-sm leading-tight hover:bg-gray-100
+          dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 flex items-center justify-between`}
       >
         {text}
+        <span className='font-normal'>{keybind}</span>
       </QueryLink>
     );
   }
@@ -332,11 +364,11 @@ class DatePicker extends React.Component {
             <div className="border-t border-gray-200 dark:border-gray-500"></div>
             <div className="py-1">
               <span
-                onClick={() => this.setState({mode: 'calendar'}, this.openCalendar.bind(this))}
-                onKeyPress={() => this.setState({mode: 'calendar'}, this.openCalendar.bind(this))}
-                className="block px-4 py-2 md:text-sm leading-tight hover:bg-gray-100
+                onClick={() => this.setState({mode: 'calendar'}, this.openCalendar)}
+                onKeyPress={() => this.setState({mode: 'calendar'}, this.openCalendar)}
+                className="px-4 py-2 md:text-sm leading-tight hover:bg-gray-100
                   dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100
-                  cursor-pointer"
+                  cursor-pointer flex items-center justify-between"
                 tabIndex="0"
                 role="button"
                 aria-haspopup="true"
@@ -344,6 +376,7 @@ class DatePicker extends React.Component {
                 aria-controls="calendar"
               >
                 Custom range
+                <span className='font-normal'>C</span>
               </span>
             </div>
           </div>
