@@ -11,7 +11,7 @@ function buildDataSet(plot, present_index, ctx, label, isPrevious) {
   var prev_gradient = ctx.createLinearGradient(0, 0, 0, 300);
   gradient.addColorStop(0, 'rgba(101,116,205, 0.2)');
   gradient.addColorStop(1, 'rgba(101,116,205, 0)');
-  prev_gradient.addColorStop(0, 'rgba(101,116,205, 0.1)');
+  prev_gradient.addColorStop(0, 'rgba(101,116,205, 0.075)');
   prev_gradient.addColorStop(1, 'rgba(101,116,205, 0)');
   if (!isPrevious) {
     if (present_index) {
@@ -27,18 +27,20 @@ function buildDataSet(plot, present_index, ctx, label, isPrevious) {
         data: _plot,
         borderWidth: 3,
         borderColor: 'rgba(101,116,205)',
-        pointBackgroundColor: 'rgba(101,116,205)',
-        pointHoverRadius: 5,
+        pointHoverBackgroundColor: 'rgba(71, 87, 193)',
+        pointBorderColor: 'transparent',
+        pointHoverRadius: 4,
         backgroundColor: gradient,
       },
       {
         label: label,
         data: dashedPlot,
         borderWidth: 3,
-        borderDash: [3,3],
+        borderDash: [3, 3],
         borderColor: 'rgba(101,116,205)',
-        pointBackgroundColor: 'rgba(101,116,205)',
-        pointHoverRadius: 5,
+        pointHoverBackgroundColor: 'rgba(71, 87, 193)',
+        pointBorderColor: 'transparent',
+        pointHoverRadius: 4,
         backgroundColor: gradient,
       }]
     } else {
@@ -47,8 +49,9 @@ function buildDataSet(plot, present_index, ctx, label, isPrevious) {
         data: plot,
         borderWidth: 3,
         borderColor: 'rgba(101,116,205)',
-        pointBackgroundColor: 'rgba(101,116,205)',
-        pointHoverRadius: 5,
+        pointHoverBackgroundColor: 'rgba(71, 87, 193)',
+        pointBorderColor: 'transparent',
+        pointHoverRadius: 4,
         backgroundColor: gradient,
       }]
     }
@@ -56,11 +59,13 @@ function buildDataSet(plot, present_index, ctx, label, isPrevious) {
     return [{
       label: label,
       data: plot,
-      borderWidth: 3,
-      borderDash: [10, 3],
-      borderColor: 'rgba(166,187,210,0.7)',
-      pointBackgroundColor: 'transparent',
-      pointHoverRadius: 5,
+      borderWidth: 2,
+      // borderDash: [10, 1],
+      borderColor: 'rgba(166,187,210,0.5)',
+      pointHoverBackgroundColor: 'rgba(166,187,210,0.8)',
+      pointBorderColor: 'transparent',
+      pointHoverBorderColor: 'transparent',
+      pointHoverRadius: 4,
       backgroundColor: prev_gradient,
     }]
   }
@@ -136,10 +141,14 @@ class LineGraph extends React.Component {
         responsive: true,
         elements: { line: { tension: 0 }, point: { radius: 0 } },
         onClick: this.onClick.bind(this),
+        hover: {
+          mode: 'index',
+          intersect: false
+        },
         tooltips: {
           enabled: false,
           mode: 'index',
-          position: 'custom',
+          position: 'average',
           intersect: false,
           // callbacks: {
           //   title: function(dataPoints) {
@@ -150,9 +159,6 @@ class LineGraph extends React.Component {
           //     }
 
           //     return dateFormatter(graphData.interval, true)(data) + ' vs Previous ' + dateFormatter(graphData.interval, true)(prev_data)
-          //   },
-          //   beforeBody: function() {
-          //     this.drawnLabels = {}
           //   },
           //   label: function(item) {
           //     const datasets = this._data.datasets
@@ -179,53 +185,24 @@ class LineGraph extends React.Component {
             console.log(tooltipModel)
             // Tooltip Element
             let tooltipEl = document.getElementById('chartjs-tooltip');
-            // let tooltipCaret = document.getElementById('chartjs-caret');
 
             // Create element on first render
             if (!tooltipEl) {
               tooltipEl = document.createElement('div');
-              // tooltipCaret = document.createElement('div');
               tooltipEl.id = 'chartjs-tooltip';
-              // tooltipCaret.id = 'chartjs-caret';
               document.body.appendChild(tooltipEl);
-              // document.body.appendChild(tooltipCaret);
+            }
+
+            if (tooltipEl && offset && window.innerWidth < 768) {
+              tooltipEl.style.top = offset.y + offset.height + window.pageYOffset + 15 + 'px'
+              tooltipEl.style.left = offset.x + window.pageXOffset + 15 + 'px'
             }
 
             // Stop if no tooltip showing
             if (tooltipModel.opacity === 0) {
               tooltipEl.style.opacity = 0;
-              // tooltipCaret.style.opacity = 0;
               return;
             }
-
-            // Position and render caret
-            // let caretTop = tooltipModel.caretY;
-            // let caretLeft = tooltipModel.caretX;
-            // caretLeft += tooltipModel.yAlign == 'top' ? -7 : tooltipModel.yAlign == 'bottom' ? 7 : 0;
-            // caretTop += tooltipModel.xAlign == 'left' ? -7 : tooltipModel.xAlign == 'right' ? 7 : 0;
-            // caretLeft += tooltipModel.xAlign == 'left' ? -3.5 : tooltipModel.xAlign == 'right' ? 3.5 : 0;
-            // caretTop += tooltipModel.yAlign == 'top' ? -3.5 : tooltipModel.yAlign == 'bottom' ? 3.5 : 0;
-
-            // tooltipCaret.style.left = offset.left + window.pageXOffset + caretLeft + 'px'
-            // tooltipCaret.style.top = offset.top + window.pageYOffset + caretTop + 'px'
-            // tooltipCaret.style.borderColor = 'transparent'
-
-            // let caretLocation = tooltipModel.yAlign !== 'center' ? tooltipModel.yAlign : tooltipModel.xAlign
-            // switch (caretLocation) {
-            //   case 'top':
-            //     caretLocation = 'bottom'
-            //     break;
-            //   case 'bottom':
-            //     caretLocation = 'top'
-            //     break;
-            //   case 'right':
-            //     caretLocation = 'left'
-            //     break;
-            //   case 'left':
-            //     caretLocation = 'right'
-            //     break;
-            // }
-            // tooltipCaret.style[`border${caretLocation.charAt(0).toUpperCase() + caretLocation.slice(1)}Color`] = 'rgba(25, 30, 56)'
 
             function getBody(bodyItem) {
               return bodyItem.lines;
@@ -243,18 +220,19 @@ class LineGraph extends React.Component {
               // Don't render if we only have one dataset available (this means the point is in the future)
               if (bodyLines.length == 1) {
                 tooltipEl.style.opacity = 0;
-              return;
+                return;
               }
 
-              function renderComparison(change) {
+              function renderComparison(change, amt) {
                 const formattedComparison = numberFormatter(Math.abs(change))
+                const formattedAmount = numberFormatter(Math.abs(amt))
 
                 if (change > 0) {
-                  return `<th class='text-green-500 font-bold'>&uarr;${formattedComparison}%</th>`
+                  return `<span class='text-green-500 font-bold flex'>+${formattedAmount} (<div class='transform -rotate-90'>&#10132;</div>${formattedComparison}%)</span>`
                 } else if (change < 0) {
-                  return `<th class='text-red-400 font-bold'>&darr;${formattedComparison}%</th>`
+                  return `<span class='text-red-400 font-bold flex'>&#8722;${formattedAmount} (<div class='transform rotate-90'>&#10132;</div>${formattedComparison}%)</span>`
                 } else if (change === 0) {
-                  return `<th class='font-bold'>&#12336;N/A</th>`
+                  return `<span class='font-bold'>+0 (&#12336;0%)</span>`
                 }
               }
               const data = tooltipModel.dataPoints[0]
@@ -265,20 +243,50 @@ class LineGraph extends React.Component {
               console.log(label, prev_label)
               const point = tooltipModel.dataPoints[0].yLabel || 0
               const prev_point = tooltipModel.dataPoints.slice(-1)[0].yLabel || 0
-              const pct_change = point === prev_point ? 0 : prev_point === 0 ? 100 : Math.round((point - prev_point)/prev_point * 100)
+              const pct_change = point === prev_point ? 0 : prev_point === 0 ? 100 : parseFloat(((point - prev_point) / prev_point * 100).toFixed(1))
+              const amt_change = point - prev_point;
+
+              function renderLabel(isPrevious) {
+                if (graphData.interval === 'month') {
+                  return !isPrevious ? dateFormatter(graphData.interval, true)(label) + ' ' + (new Date(label)).getUTCFullYear()  : dateFormatter(graphData.interval, true)(prev_label) + ' ' + (new Date(prev_label)).getUTCFullYear()
+                }
+
+                if (graphData.interval === 'date') {
+                  return !isPrevious ? dateFormatter(graphData.interval, true)(label) : dateFormatter(graphData.interval, true)(prev_label)
+                }
+
+                if (graphData.interval === 'hour') {
+                  return !isPrevious ? dateFormatter("date", true)(label) + ', ' + dateFormatter(graphData.interval, true)(label) : dateFormatter("date", true)(prev_label) + ', ' + dateFormatter(graphData.interval, true)(prev_label)
+                }
+
+                return !isPrevious ? dateFormatter(graphData.interval, true)(label) : dateFormatter(graphData.interval, true)(prev_label)
+              }
 
               let innerHtml = `
-              <table class="text-gray-100">
-                <thead>
-                  <tr>
-                    <th>${bodyLines[0][0].split(':')[0]}</th>
-                    ${renderComparison(pct_change)}
-                  </tr>
-                </thead>
-                <tbody>
-
-                </tbody>
-              </table>`;
+              <div class='text-gray-100 flex flex-col'>
+                <div class='flex justify-between items-center'>
+                    <span class='font-bold mr-4 text-lg'>${bodyLines[0][0].split(':')[0]}</span>
+                    ${renderComparison(pct_change, amt_change)}
+                </div>
+                <div class='flex flex-col'>
+                  <div class='flex flex-row justify-between items-center'>
+                    <span class='flex items-center'>
+                      <div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(101,116,205)'></div>
+                      <span>${renderLabel()}</span>
+                    </span>
+                    <span>${numberFormatter(point)}</span>
+                  </div>
+                  <div class='flex flex-row justify-between items-center mt-1'>
+                    <span class='flex items-center'>
+                      <div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(166,187,210,0.5)'></div>
+                      <span>${renderLabel(true)}</span>
+                    </span>
+                    <span>${numberFormatter(prev_point)}</span>
+                  </div>
+                </div>
+                <span class='font-bold text-'>${graphData.interval === 'month' ? 'Click to view month' : graphData.interval === 'date' ? 'Click to view day' : ''}</span>
+              </div>
+              `;
 
 
               // console.log(tooltipModel.body)
@@ -297,16 +305,7 @@ class LineGraph extends React.Component {
               tooltipEl.innerHTML = innerHtml;
             }
 
-            let top = tooltipModel.y;
-            let left = tooltipModel.x;
-            // left += tooltipModel.xAlign == 'left' ? 3.5 : tooltipModel.xAlign == 'right' ? -3.5 : 0;
-            // top += tooltipModel.yAlign == 'top' ? 3.5 : tooltipModel.yAlign == 'bottom' ? -3.5 : 0;
-            top += tooltipModel.yAlign == 'bottom' ? -49 : 0;
-
             tooltipEl.style.opacity = 1;
-            // tooltipCaret.style.opacity = 1;
-            tooltipEl.style.left = offset.left + window.pageXOffset + left + 'px';
-            tooltipEl.style.top = offset.top + window.pageYOffset + top + 'px';
           }
         },
         scales: {
@@ -339,6 +338,14 @@ class LineGraph extends React.Component {
     });
   }
 
+  repositionTooltip(e) {
+    const tooltipEl = document.getElementById('chartjs-tooltip');
+    if (tooltipEl && window.innerWidth >= 768) {
+      tooltipEl.style.top = e.clientY + window.pageYOffset + 'px'
+      tooltipEl.style.left = e.clientX + window.pageXOffset + 'px'
+    }
+  }
+
   componentDidMount() {
     this.chart = this.regenerateChart();
 
@@ -351,6 +358,9 @@ class LineGraph extends React.Component {
         y: elements[0]._model.y
       };
     };
+
+    // Having the tooltip follow the mouse is much more intuitive
+    window.addEventListener('mousemove', this.repositionTooltip);
   }
 
   componentDidUpdate(prevProps) {
@@ -363,6 +373,11 @@ class LineGraph extends React.Component {
       this.chart = this.regenerateChart();
       this.chart.update();
     }
+  }
+
+  componentWillUnmount() {
+    document.getElementById('chartjs-tooltip').style.opacity = 0;
+    window.removeEventListener('mousemove', this.repositionTooltip)
   }
 
   onClick(e) {
