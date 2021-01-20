@@ -165,8 +165,8 @@ class LineGraph extends React.Component {
             }
 
             if (tooltipEl && offset && window.innerWidth < 768) {
-              tooltipEl.style.top = offset.y + offset.height + window.pageYOffset + 15 + 'px'
-              tooltipEl.style.left = offset.x + window.pageXOffset + 15 + 'px'
+              tooltipEl.style.top = offset.y + offset.height + window.pageYOffset + 'px'
+              tooltipEl.style.left = offset.x + window.pageXOffset + 'px'
             }
 
             // Stop if no tooltip showing
@@ -199,12 +199,10 @@ class LineGraph extends React.Component {
               const point = data.yLabel || 0
               const prev_point = prev_data.yLabel || 0
               const pct_change = point === prev_point ? 0 : prev_point === 0 ? 100 : parseFloat(((point - prev_point) / prev_point * 100).toFixed(1))
-              const amt_change = point - prev_point;
 
               function renderLabel(isPrevious) {
                 const formattedLabel = dateFormatter(graphData.interval, true)(label)
                 const prev_formattedLabel = dateFormatter(graphData.interval, true)(prev_label)
-
 
                 if (graphData.interval === 'month') {
                   return !isPrevious ? `${formattedLabel} ${(new Date(label)).getUTCFullYear()}` : `${prev_formattedLabel} ${(new Date(prev_label)).getUTCFullYear()}`
@@ -221,18 +219,17 @@ class LineGraph extends React.Component {
                 return !isPrevious ? formattedLabel : prev_formattedLabel
               }
 
-              function renderComparison(change, amt) {
+              function renderComparison(change) {
                 const formattedComparison = numberFormatter(Math.abs(change))
-                const formattedAmount = numberFormatter(Math.abs(amt))
 
                 if (change > 0) {
-                  return `<span class='text-green-500 font-bold flex'>+${formattedAmount} (<div class='transform -rotate-90'>&#10132;</div>${formattedComparison}%)</span>`
+                  return `<span class='text-green-500 font-bold'>${formattedComparison}%</span>`
                 }
                 if (change < 0) {
-                  return `<span class='text-red-400 font-bold flex'>&#8722;${formattedAmount} (<div class='transform rotate-90'>&#10132;</div>${formattedComparison}%)</span>`
+                  return `<span class='text-red-400 font-bold'>${formattedComparison}%</span>`
                 }
                 if (change === 0) {
-                  return `<span class='font-bold'>+0 (&#12336;0%)</span>`
+                  return `<span class='font-bold'>0%</span>`
                 }
               }
 
@@ -240,18 +237,18 @@ class LineGraph extends React.Component {
               <div class='text-gray-100 flex flex-col'>
                 <div class='flex justify-between items-center'>
                     <span class='font-bold mr-4 text-lg'>${bodyLines[0][0].split(':')[0]}</span>
-                    ${renderComparison(pct_change, amt_change)}
+                    ${renderComparison(pct_change)}
                 </div>
                 <div class='flex flex-col'>
                   <div class='flex flex-row justify-between items-center'>
-                    <span class='flex items-center'>
+                    <span class='flex items-center mr-4'>
                       <div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(101,116,205)'></div>
                       <span>${renderLabel()}</span>
                     </span>
                     <span>${numberFormatter(point)}</span>
                   </div>
                   <div class='flex flex-row justify-between items-center mt-1'>
-                    <span class='flex items-center'>
+                    <span class='flex items-center mr-4'>
                       <div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(166,187,210,0.5)'></div>
                       <span>${renderLabel(true)}</span>
                     </span>
@@ -366,16 +363,19 @@ class LineGraph extends React.Component {
   }
 
   renderComparison(name, comparison) {
+    comparison = comparison || 0
     const formattedComparison = numberFormatter(Math.abs(comparison))
 
     if (comparison > 0) {
       const color = name === 'Bounce rate' ? 'text-red-400' : 'text-green-500'
-      return <span className="text-xs dark:text-gray-100"><span className={color + ' font-bold'}>&uarr;</span> {formattedComparison}%</span>
-    } else if (comparison < 0) {
+      return <span class='text-sm flex dark:text-gray-300'><div class={color + ' transform -rotate-90'}>&#10132;</div>{formattedComparison}%</span>
+    }
+    if (comparison < 0) {
       const color = name === 'Bounce rate' ? 'text-green-500' : 'text-red-400'
-      return <span className="text-xs dark:text-gray-100"><span className={color + ' font-bold'}>&darr;</span> {formattedComparison}%</span>
-    } else if (comparison === 0) {
-      return <span className="text-xs text-gray-700 dark:text-gray-300">&#12336; N/A</span>
+      return <span class='text-sm flex dark:text-gray-300'><div class={color + ' transform rotate-90'}>&#10132;</div>{formattedComparison}%</span>
+    }
+    if (comparison === 0) {
+      return <span class='text-sm text-gray-700 dark:text-gray-300'>&#12336; 0%</span>
     }
   }
 
