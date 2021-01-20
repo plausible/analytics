@@ -7,7 +7,9 @@ defmodule Plausible.Billing.Plans do
       "500k": %{product_id: "597487", due_now: "$27"},
       "1m": %{product_id: "597642", due_now: "$48"},
       "2m": %{product_id: "597309", due_now: "$69"},
-      "5m": %{product_id: "597311", due_now: "$99"}
+      "5m": %{product_id: "597311", due_now: "$99"},
+      "10m": %{product_id: "642352", due_now: "$150"},
+      "20m": %{product_id: "642355", due_now: "$225"}
     },
     yearly: %{
       "10k": %{product_id: "572810", due_now: "$48"},
@@ -16,7 +18,9 @@ defmodule Plausible.Billing.Plans do
       "500k": %{product_id: "597488", due_now: "$216"},
       "1m": %{product_id: "597643", due_now: "$384"},
       "2m": %{product_id: "597310", due_now: "$552"},
-      "5m": %{product_id: "597312", due_now: "$792"}
+      "5m": %{product_id: "597312", due_now: "$792"},
+      "10m": %{product_id: "642354", due_now: "$1200"},
+      "20m": %{product_id: "642356", due_now: "$1800"}
     }
   }
 

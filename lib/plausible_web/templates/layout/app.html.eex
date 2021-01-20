@@ -97,12 +97,6 @@
 
     <%= render("_flash.html", assigns) %>
 
-    <%= if get_flash(@conn, :error) do %>
-      <div id="flash" class="text-center bg-red-dark-500 text-red-100 text-sm font-bold px-4 absolute w-full transition overflow-hidden" style="top: 91px" role="alert">
-        <p class="py-3 "><%= get_flash(@conn, :error) %></p>
-      </div>
-    <% end %>
-
     <%= if @conn.assigns[:current_user] && @conn.assigns[:current_user].subscription && @conn.assigns[:current_user].subscription.status == "past_due" do %>
       <div class="container">
         <div class="p-2 rounded-lg bg-yellow-100 sm:p-3">
