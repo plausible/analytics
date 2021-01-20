@@ -140,7 +140,7 @@ class LineGraph extends React.Component {
         animation: false,
         legend: { display: false },
         responsive: true,
-        elements: { line: { tension: 0 }, point: { radius: 0 } },
+        elements: { line: { tension: 0.1 }, point: { radius: 0 } },
         onClick: this.onClick.bind(this),
         hover: {
           mode: 'index',
@@ -308,16 +308,6 @@ class LineGraph extends React.Component {
   componentDidMount() {
     this.chart = this.regenerateChart();
 
-    Chart.Tooltip.positioners.custom = function (elements, eventPosition) {
-      /** @type {Chart.Tooltip} */
-      var tooltip = this;
-
-      return {
-        x: elements[0]._model.x,
-        y: elements[0]._model.y
-      };
-    };
-
     // Having the tooltip follow the mouse is much more intuitive
     window.addEventListener('mousemove', this.repositionTooltip);
   }
@@ -372,14 +362,14 @@ class LineGraph extends React.Component {
 
     if (comparison > 0) {
       const color = name === 'Bounce rate' ? 'text-red-400' : 'text-green-500'
-      return <span class='text-sm flex dark:text-gray-300'><div class={color + ' transform -rotate-90'}>&#10132;</div>{formattedComparison}%</span>
+      return <span className='text-sm flex dark:text-gray-300'><div className={color + ' transform -rotate-90'}>&#10132;</div>{formattedComparison}%</span>
     }
     if (comparison < 0) {
       const color = name === 'Bounce rate' ? 'text-green-500' : 'text-red-400'
-      return <span class='text-sm flex dark:text-gray-300'><div class={color + ' transform rotate-90'}>&#10132;</div>{formattedComparison}%</span>
+      return <span className='text-sm flex dark:text-gray-300'><div className={color + ' transform rotate-90'}>&#10132;</div>{formattedComparison}%</span>
     }
     if (comparison === 0) {
-      return <span class='text-sm text-gray-700 dark:text-gray-300'>&#12336; 0%</span>
+      return <span className='text-sm text-gray-700 dark:text-gray-300'>&#12336; 0%</span>
     }
   }
 
@@ -422,7 +412,7 @@ class LineGraph extends React.Component {
 
     return (
       <a href={endpoint} download>
-        <svg className="feather w-4 h-5 absolute text-gray-700 dark:text-gray-300" style={{ right: '2rem', top: '-2rem' }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <svg className="feather w-4 h-5 absolute text-gray-700 dark:text-gray-300 hover:text-indigo-500 cursor-pointer" style={{ right: '2rem', top: '-2rem' }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
       </a>
     )
   }
