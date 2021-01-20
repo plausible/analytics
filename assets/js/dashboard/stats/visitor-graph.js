@@ -237,7 +237,7 @@ class LineGraph extends React.Component {
               <div class='text-gray-100 flex flex-col'>
                 <div class='flex justify-between items-center'>
                     <span class='font-bold mr-4 text-lg'>${bodyLines[0][0].split(':')[0]}</span>
-                    ${renderComparison(pct_change)}
+                    ${graphData.interval === 'minute' ? '' : renderComparison(pct_change)}
                 </div>
                 <div class='flex flex-col'>
                   <div class='flex flex-row justify-between items-center'>
@@ -247,13 +247,15 @@ class LineGraph extends React.Component {
                     </span>
                     <span>${numberFormatter(point)}</span>
                   </div>
-                  <div class='flex flex-row justify-between items-center mt-1'>
-                    <span class='flex items-center mr-4'>
-                      <div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(166,187,210,0.5)'></div>
-                      <span>${renderLabel(true)}</span>
-                    </span>
-                    <span>${numberFormatter(prev_point)}</span>
-                  </div>
+                  ${graphData.interval === 'minute' ? '' : `
+                    <div class='flex flex-row justify-between items-center mt-1'>
+                      <span class='flex items-center mr-4'>
+                        <div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(166,187,210,0.5)'></div>
+                        <span>${renderLabel(true)}</span>
+                      </span>
+                      <span>${numberFormatter(prev_point)}</span>
+                    </div>
+                  `}
                 </div>
                 <span class='font-bold text-'>${graphData.interval === 'month' ? 'Click to view month' : graphData.interval === 'date' ? 'Click to view day' : ''}</span>
               </div>
@@ -363,7 +365,6 @@ class LineGraph extends React.Component {
   }
 
   renderComparison(name, comparison) {
-    comparison = comparison || 0
     const formattedComparison = numberFormatter(Math.abs(comparison))
 
     if (comparison > 0) {
