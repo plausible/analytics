@@ -287,3 +287,13 @@ blockquote {
 iframe[hidden] {
   display: none;
 }
+
+#chartjs-tooltip {
+  background-color: rgba(25, 30, 56);
+  position: absolute;
+  font-size: 14px;
+  font-style: normal;
+  padding: 10px 12px;
+  pointer-events: none;
+  border-radius: 5px;
+}

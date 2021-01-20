@@ -26,7 +26,7 @@ defmodule Plausible.Stats.Clickhouse do
   def calculate_plot(site, %Query{step_type: "month"} = query) do
     steps =
       Enum.map((query.steps - 1)..0, fn shift ->
-        Timex.now(site.timezone)
+        Timex.to_datetime(query.date_range.last)
         |> Timex.beginning_of_month()
         |> Timex.shift(months: -shift)
         |> DateTime.to_date()
