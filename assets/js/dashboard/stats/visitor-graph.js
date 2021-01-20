@@ -336,7 +336,10 @@ class LineGraph extends React.Component {
 
   componentWillUnmount() {
     // Ensure that the tooltip doesn't hang around when we are loading more data
-    document.getElementById('chartjs-tooltip').style.opacity = 0;
+    const tooltip = document.getElementById('chartjs-tooltip');
+    if (tooltip) {
+      tooltip.style.opacity = 0;
+    }
     window.removeEventListener('mousemove', this.repositionTooltip)
   }
 
