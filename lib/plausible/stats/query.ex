@@ -71,7 +71,7 @@ defmodule Plausible.Stats.Query do
 
   def from(tz, %{"period" => "7d"} = params) do
     end_date = today(tz)
-    start_date = end_date |> Timex.shift(days: -7)
+    start_date = end_date |> Timex.shift(days: -6)
 
     %__MODULE__{
       period: "7d",
@@ -83,7 +83,7 @@ defmodule Plausible.Stats.Query do
 
   def from(tz, %{"period" => "30d"} = params) do
     end_date = today(tz)
-    start_date = end_date |> Timex.shift(days: -30)
+    start_date = end_date |> Timex.shift(days: -29)
 
     %__MODULE__{
       period: "30d",
