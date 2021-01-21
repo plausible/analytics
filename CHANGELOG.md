@@ -13,7 +13,8 @@ All notable changes to this project will be documented in this file.
 - "Load More" capability to pages modal plausible/analytics#480
 - Unique Visitors (last 30 min) as a top stat in realtime view plausible/analytics#500
 - Pinned filter and date selector rows while scrolling plausible/analytics#472
-- Keybindings for selection dates/ranges plausible/analytics#630
+- Escape keyboard shortcut to clear all filters plausible/analytics#625
+- Keybindings for selecting dates/ranges plausible/analytics#630
 
 ### Changed
 - Use alpine as base image to decrease Docker image size plausible/analytics#353
@@ -43,7 +44,6 @@ All notable changes to this project will be documented in this file.
 - Adds support for single-day date selection plausible/analytics#495
 - Goal conversion rate in realtime view is now accurate plausible/analytics#500
 - Various UI/UX issues plausible/analytics#503
-- Add comparison line to visitor graph plausible/analytics#624
 
 ### Security
 - Do not run the plausible Docker container as root plausible/analytics#362
