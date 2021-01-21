@@ -100,12 +100,12 @@ class DatePicker extends React.Component {
 
     this.setState({open: false});
 
-    const keys = ['d', 'r', 'w', 'm', 'y', 'D', 'R', 'W', 'M', 'Y'];
+    const keys = ['d', 'r', 'w', 'm', 'y'];
     const redirects = [{date: false, period: 'day'}, {period: 'realtime'}, {date: false, period: '7d'}, {date: false, period: 'month'}, {date: false, period: '12mo'}];
 
-    if (keys.includes(e.key)) {
+    if (keys.includes(e.key.toLowerCase())) {
       navigateToQuery(history, query, {...newSearch, ...(redirects[keys.indexOf(e.key) % 5])});
-    } else if (e.key === 'C' || e.key === 'c') {
+    } else if (e.key.toLowerCase() === 'c') {
       this.setState({mode: 'calendar', open: true}, this.openCalendar);
     } else if (newSearch.date) {
       navigateToQuery(history, query, newSearch);
@@ -296,25 +296,13 @@ class DatePicker extends React.Component {
 
     const date = opts.date ? formatISO(opts.date) : false;
 
-    let keybind = '';
-
-    switch (text) {
-      case 'Today':
-        keybind = 'D'
-        break;
-      case 'Realtime':
-        keybind = 'R'
-        break;
-      case 'Last 7 days':
-        keybind = 'W'
-        break;
-      case 'Month to Date':
-        keybind = 'M'
-        break;
-      case 'Last 12 months':
-        keybind = 'Y'
-        break;
-    }
+    const keybinds = {
+      'Today': 'D',
+      'Realtime': 'R',
+      'Last 7 days': 'W',
+      'Month to Date': 'M',
+      'Last 12 months': 'Y',
+    };
 
     return (
       <QueryLink
@@ -325,7 +313,7 @@ class DatePicker extends React.Component {
           dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 flex items-center justify-between`}
       >
         {text}
-        <span className='font-normal'>{keybind}</span>
+        <span className='font-normal'>{keybinds[text]}</span>
       </QueryLink>
     );
   }
