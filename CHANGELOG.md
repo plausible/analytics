@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - "Load More" capability to pages modal plausible/analytics#480
 - Unique Visitors (last 30 min) as a top stat in realtime view plausible/analytics#500
 - Pinned filter and date selector rows while scrolling plausible/analytics#472
+- Escape keyboard shortcut to clear all filters plausible/analytics#625
 
 ### Changed
 
