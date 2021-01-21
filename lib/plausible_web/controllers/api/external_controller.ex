@@ -56,7 +56,12 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp parse_user_agent(conn) do
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
-    user_agent && UAInspector.parse(user_agent)
+
+    if user_agent do
+      Cachex.fetch!(:user_agents, user_agent, fn ua ->
+        {:commit, UAInspector.parse(ua)}
+      end)
+    end
   end
 
   defp create_event(conn, params) do
@@ -190,7 +195,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp clean_referrer(ref) do
     uri = URI.parse(ref.referer)
 
-    if uri && uri.host && uri.scheme in ["http", "https"] do
+    if right_uri?(uri) do
       host = String.replace_prefix(uri.host, "www.", "")
       path = uri.path || ""
       host <> String.trim_trailing(path, "/")
@@ -274,8 +279,16 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp clean_uri(uri) do
     uri = URI.parse(String.trim(uri))
 
-    if uri && uri.host && uri.scheme in ["http", "https"] do
+    if right_uri?(uri) do
       String.replace_leading(uri.host, "www.", "")
     end
   end
+
+  defp right_uri?(%URI{host: nil}), do: false
+
+  defp right_uri?(%URI{host: host, scheme: scheme})
+       when scheme in ["http", "https"] and byte_size(host) > 0,
+       do: true
+
+  defp right_uri?(_), do: false
 end

@@ -1,4 +1,7 @@
 {
+  "env": {
+    "browser": true
+  },
   "extends": ["airbnb", "prettier"],
   "plugins": ["prettier"],
   "rules": {
@@ -9,6 +12,7 @@
     "react/prop-types": [0],
     "max-classes-per-file": [0],
     "react/jsx-one-expression-per-line": [0],
-    "react/self-closing-comp": [0]
+    "react/self-closing-comp": [0],
+    "no-unused-expressions": [1, { "allowShortCircuit": true }]
   }
 }

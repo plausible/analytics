@@ -202,6 +202,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       site = insert(:site, members: [user])
       insert(:google_auth, user: user, site: site)
       insert(:custom_domain, site: site)
+      insert(:spike_notification, site: site)
 
       delete(conn, "/#{site.domain}")
 
@@ -407,6 +408,19 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       notification = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
       assert notification.recipients == [user.email]
+    end
+
+    test "does not allow duplicate spike notification to be created", %{
+      conn: conn,
+      site: site
+    } do
+      post(conn, "/sites/#{site.domain}/spike-notification/enable")
+      post(conn, "/sites/#{site.domain}/spike-notification/enable")
+
+      assert Repo.aggregate(
+               from(s in Plausible.Site.SpikeNotification, where: s.site_id == ^site.id),
+               :count
+             ) == 1
     end
   end
 

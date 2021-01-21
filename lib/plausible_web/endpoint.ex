@@ -1,6 +1,10 @@
 defmodule PlausibleWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :plausible
-  use Appsignal.Phoenix
+
+  if Application.get_env(:appsignal, :config) do
+    use Appsignal.Phoenix
+  end
+
   use Sentry.Phoenix.Endpoint
 
   # Serve at "/" the static files from "priv/static" directory.
@@ -12,6 +16,12 @@ defmodule PlausibleWeb.Endpoint do
     from: :plausible,
     gzip: false,
     only: ~w(css fonts images js favicon.ico robots.txt)
+
+  plug Plug.Static,
+    at: "/kaffy",
+    from: :kaffy,
+    gzip: false,
+    only: ~w(assets)
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.

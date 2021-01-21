@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.1.2] - Unreleased
+## [1.2] - Unreleased
 
 ### Added
 - Ability to add event metadata plausible/analytics#381
@@ -13,7 +13,8 @@ All notable changes to this project will be documented in this file.
 - "Load More" capability to pages modal plausible/analytics#480
 - Unique Visitors (last 30 min) as a top stat in realtime view plausible/analytics#500
 - Pinned filter and date selector rows while scrolling plausible/analytics#472
-- Tracking exclusions, see our [documentation](https://docs.plausible.io/excluding) for details plausible/analytics#489
+- Escape keyboard shortcut to clear all filters plausible/analytics#625
+- Tracking exclusions, see our documentation [here](https://docs.plausible.io/excluding) and [here](https://docs.plausible.io/excluding-pages) for details plausible/analytics#489
 
 ### Changed
 - Use alpine as base image to decrease Docker image size plausible/analytics#353
@@ -26,6 +27,10 @@ All notable changes to this project will be documented in this file.
 - Improve onboarding UX and design plausible/analytics#441
 - Allows outbound link tracking script to use new tab redirection plausible/analytics#494
 - "This Month" view is now Month-to-date for the current month plausible/analytics#491
+- My sites now show settings cog at all times on smaller screens plausible/analytics#497
+- Background jobs are enabled by default for self-hosted installations plausible/analytics#603
+- All new users on self-hosted installations have a never-ending trial plausible/analytics#603
+- Changed caret/chevron color in datepicker and filters dropdown
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370
