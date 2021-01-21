@@ -24,11 +24,13 @@ class Filters extends React.Component {
     this.handleResize = this.handleResize.bind(this);
     this.rewrapFilters = this.rewrapFilters.bind(this);
     this.renderFilterList = this.renderFilterList.bind(this);
+    this.handleKeyup = this.handleKeyup.bind(this)
   }
 
   componentDidMount() {
     document.addEventListener('mousedown', this.handleClick, false);
     window.addEventListener('resize', this.handleResize, false);
+    document.addEventListener('keyup', this.handleKeyup);
 
     this.rewrapFilters();
     this.handleResize();
@@ -52,8 +54,19 @@ class Filters extends React.Component {
   }
 
   componentWillUnmount() {
+    document.removeEventListener("keyup", this.handleKeyup);
     document.removeEventListener('mousedown', this.handleClick, false);
     window.removeEventListener('resize', this.handleResize, false);
+  }
+
+  handleKeyup(e) {
+    const {query, history} = this.props
+
+    if (e.ctrlKey || e.metaKey || e.altKey) return
+
+    if (e.key === 'Escape') {
+      this.clearAllFilters(history, query)
+    }
   }
 
   handleResize() {
