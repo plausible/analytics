@@ -4,14 +4,25 @@ defmodule PlausibleWeb.Tracker do
 
   @templates [
     "plausible.js",
-    "plausible.hash.js",
+    "plausible.exclusions.js",
+    "plausible.hash.exclusions.js",
     "plausible.hash.outbound-links.js",
-    "plausible.outbound-links.js",
+    "plausible.hash.exclusions.outbound-links.js",
+    "plausible.exclusions.outbound-links.js",
     "p.js"
   ]
   @aliases %{
     "plausible.js" => ["analytics.js"],
-    "plausible.hash.outbound-links.js" => ["plausible.outbound-links.hash.js"]
+    "plausible.hash.outbound-links.js" => ["plausible.outbound-links.hash.js"],
+    "plausible.hash.exclusions.js" => ["plausible.exclusions.hash.js"],
+    "plausible.exclusions.outbound-links.js" => ["plausible.outbound-links.exclusions.js"],
+    "plausible.hash.exclusions.outbound-links.js" => [
+      "plausible.exclusions.hash.outbound-links.js",
+      "plausible.exclusions.outbound-links.hash.js",
+      "plausible.hash.outbound-links.exclusions.js",
+      "plausible.outbound-links.hash.exclusions.js",
+      "plausible.outbound-links.exclusions.hash.js"
+    ]
   }
 
   #  1 hour
