@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Pinned filter and date selector rows while scrolling plausible/analytics#472
 - Escape keyboard shortcut to clear all filters plausible/analytics#625
 - Tracking exclusions, see our documentation [here](https://docs.plausible.io/excluding) and [here](https://docs.plausible.io/excluding-pages) for details plausible/analytics#489
+- Keybindings for selecting dates/ranges plausible/analytics#630
 
 ### Changed
 - Use alpine as base image to decrease Docker image size plausible/analytics#353
