@@ -18,55 +18,45 @@ defmodule PlausibleWeb.AuthController do
             ]
 
   def register_form(conn, _params) do
-    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) do
-      conn
-      |> redirect(to: "/login")
-    else
-      changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
+    changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
 
-      render(conn, "register_form.html",
-        changeset: changeset,
-        layout: {PlausibleWeb.LayoutView, "focus.html"}
-      )
-    end
+    render(conn, "register_form.html",
+      changeset: changeset,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
   end
 
   def register(conn, params) do
-    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) do
-      conn
-      |> redirect(to: "/login")
-    else
-      user = Plausible.Auth.User.new(%Plausible.Auth.User{}, params["user"])
+    user = Plausible.Auth.User.new(%Plausible.Auth.User{}, params["user"])
 
-      if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
-        case Repo.insert(user) do
-          {:ok, user} ->
-            code = Auth.issue_email_verification(user)
-            Logger.info("VERIFICATION CODE: #{code}")
-            email_template = PlausibleWeb.Email.activation_email(user, code)
-            Plausible.Mailer.send_email(email_template)
+    if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
+      case Repo.insert(user) do
+        {:ok, user} ->
+          code = Auth.issue_email_verification(user)
+          Logger.info("VERIFICATION CODE: #{code}")
+          email_template = PlausibleWeb.Email.activation_email(user, code)
+          Plausible.Mailer.send_email(email_template)
 
-            conn
-            |> put_session(:current_user_id, user.id)
-            |> put_resp_cookie("logged_in", "true",
-              http_only: false,
-              max_age: 60 * 60 * 24 * 365 * 5000
-            )
-            |> redirect(to: "/activate")
+          conn
+          |> put_session(:current_user_id, user.id)
+          |> put_resp_cookie("logged_in", "true",
+            http_only: false,
+            max_age: 60 * 60 * 24 * 365 * 5000
+          )
+          |> redirect(to: "/activate")
 
-          {:error, changeset} ->
-            render(conn, "register_form.html",
-              changeset: changeset,
-              layout: {PlausibleWeb.LayoutView, "focus.html"}
-            )
-        end
-      else
-        render(conn, "register_form.html",
-          changeset: user,
-          captcha_error: "Please complete the captcha to register",
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
+        {:error, changeset} ->
+          render(conn, "register_form.html",
+            changeset: changeset,
+            layout: {PlausibleWeb.LayoutView, "focus.html"}
+          )
       end
+    else
+      render(conn, "register_form.html",
+        changeset: user,
+        captcha_error: "Please complete the captcha to register",
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
+      )
     end
   end
 

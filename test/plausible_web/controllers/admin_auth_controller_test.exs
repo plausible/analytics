@@ -32,7 +32,9 @@ defmodule PlausibleWeb.AdminAuthControllerTest do
     test "disable registration", %{conn: conn} do
       set_config(disable_registration: true)
       conn = get(conn, "/register")
-      assert redirected_to(conn) == "/login"
+      assert html_response(conn, 404)
+      conn = post(conn, "/register")
+      assert html_response(conn, 404)
     end
   end
 

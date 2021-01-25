@@ -77,8 +77,11 @@ defmodule PlausibleWeb.Router do
   scope "/", PlausibleWeb do
     pipe_through :browser
 
-    get "/register", AuthController, :register_form
-    post "/register", AuthController, :register
+    if !Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) do
+      get "/register", AuthController, :register_form
+      post "/register", AuthController, :register
+    end
+
     get "/activate", AuthController, :activate_form
     post "/activate/request-code", AuthController, :request_activation_code
     post "/activate", AuthController, :activate
