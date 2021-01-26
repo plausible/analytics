@@ -75,7 +75,7 @@ function showChangelogNotification(el) {
   if ((!lastChecked || hasNewUpdateSinceLastClicked) && notOlderThanThreeDays) {
     el.innerHTML = `
       <a href="https://plausible.io/changelog" target="_blank">
-        <svg class="w-5 h-5 text-gray-600 " fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <svg class="w-5 h-5 text-gray-600 dark:text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
         </svg>
         <svg class="w-4 h-4 text-pink-500 absolute" style="left: 14px; top: 2px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
