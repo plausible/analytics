@@ -6,11 +6,26 @@
 
   var scriptEl = document.querySelector('[src*="' + plausibleHost +'"]')
   var domain = scriptEl && scriptEl.getAttribute('data-domain')
+  var plausible_ignore = window.localStorage.plausible_ignore;
+  {{#if exclusionMode}}
+  var excludedPaths = scriptEl && scriptEl.getAttribute('data-exclude').split(',');
+  {{/if}}
   var lastPage;
 
+  function warn(reason) {
+    console.warn('Ignoring Event: ' + reason);
+  }
+
   function trigger(eventName, options) {
-    if (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(location.hostname) || location.protocol === 'file:') return console.warn('Ignoring event on localhost');
+    if (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(location.hostname) || location.protocol === 'file:') return warn('localhost');
     if (window.phantom || window._phantom || window.__nightmare || window.navigator.webdriver) return;
+    if (plausible_ignore=="true") return warn('localStorage flag')
+    {{#if exclusionMode}}
+    if (excludedPaths)
+      for (var i = 0; i < excludedPaths.length; i++)
+        if (eventName == "pageview" && location.pathname.match(new RegExp('^' + excludedPaths[i].trim().replace(/\*\*/g, '.*').replace(/[^\.]\*/g, '[^\\s\/]*') + '\/?$')))
+          return warn('exclusion rule');
+    {{/if}}
 
     var payload = {}
     payload.n = eventName
