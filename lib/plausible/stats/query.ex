@@ -111,10 +111,12 @@ defmodule Plausible.Stats.Query do
       Timex.shift(today(tz), months: -5)
       |> Timex.beginning_of_month()
 
+    end_date = today(tz) |> Timex.end_of_month()
+
     %__MODULE__{
       period: "6mo",
-      date_range: Date.range(start_date, today(tz)),
-      interval: "month",
+      date_range: Date.range(start_date, end_date),
+      interval: Map.get(params, "interval", "month"),
       filters: parse_filters(params)
     }
   end
@@ -124,17 +126,17 @@ defmodule Plausible.Stats.Query do
       Timex.shift(today(tz), months: -11)
       |> Timex.beginning_of_month()
 
-    interval = Map.get(params, "interval", "month")
+    end_date = today(tz) |> Timex.end_of_month()
 
     %__MODULE__{
       period: "12mo",
-      date_range: Date.range(start_date, today(tz)),
-      interval: interval,
+      date_range: Date.range(start_date, end_date),
+      interval: Map.get(params, "interval", "month"),
       filters: parse_filters(params)
     }
   end
 
-  def from(_tz, %{"period" => "range", "date" => date} = params) do
+  def from(_tz, %{"period" => "custom", "date" => date} = params) do
     [from, to] = String.split(date, ",")
     from_date = Date.from_iso8601!(from)
     to_date = Date.from_iso8601!(to)
@@ -142,21 +144,13 @@ defmodule Plausible.Stats.Query do
     %__MODULE__{
       period: "custom",
       date_range: Date.range(from_date, to_date),
-      interval: "date",
+      interval: Map.get(params, "interval", "date"),
       filters: parse_filters(params)
     }
   end
 
-  def from(_tz, %{"period" => "custom", "from" => from, "to" => to} = params) do
-    from_date = Date.from_iso8601!(from)
-    to_date = Date.from_iso8601!(to)
-
-    %__MODULE__{
-      period: "custom",
-      date_range: Date.range(from_date, to_date),
-      interval: "date",
-      filters: parse_filters(params)
-    }
+  def from(tz, %{"period" => "custom", "from" => from, "to" => to} = params) do
+    from(tz, Map.merge(params, %{"period" => "custom", "date" => Enum.join([from, to], ",")}))
   end
 
   def from(tz, _) do

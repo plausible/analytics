@@ -49,7 +49,26 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
            ]
   end
 
-  test "shows a custom range", %{conn: conn, site: site} do
+  test "shows last 12 months of visitors with interval daily", %{conn: conn, site: site} do
+    populate_stats([
+      build(:pageview, domain: site.domain, timestamp: ~N[2020-02-01 00:00:00]),
+      build(:pageview, domain: site.domain, timestamp: ~N[2020-12-31 00:00:00]),
+      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
+    ])
+
+    conn =
+      get(conn, "/api/stats/timeseries", %{
+        "site_id" => site.domain,
+        "period" => "12mo",
+        "interval" => "date"
+      })
+
+    res = json_response(conn, 200)
+    assert Enum.count(res) in [365, 366]
+  end
+
+  test "shows a custom range with daily interval", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
       build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
@@ -68,5 +87,297 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
              %{"date" => "2021-01-01", "value" => 2},
              %{"date" => "2021-01-02", "value" => 1}
            ]
+  end
+
+  test "shows a custom range with monthly interval", %{conn: conn, site: site} do
+    populate_stats([
+      build(:pageview, domain: site.domain, timestamp: ~N[2020-12-01 00:00:00]),
+      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-02 00:00:00])
+    ])
+
+    conn =
+      get(conn, "/api/stats/timeseries", %{
+        "site_id" => site.domain,
+        "period" => "custom",
+        "from" => "2020-12-01",
+        "to" => "2021-01-02",
+        "interval" => "month"
+      })
+
+    assert json_response(conn, 200) == [
+             %{"date" => "2020-12-01", "value" => 1},
+             %{"date" => "2021-01-01", "value" => 2}
+           ]
+  end
+
+  describe "filters" do
+    test "can filter by source", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview,
+          referrer_source: "Google",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters[session:source]" => "Google"
+        })
+
+      res = json_response(conn, 200)
+      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+    end
+
+    test "can filter by no source/referrer", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview,
+          referrer_source: "Google",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters[session:source]" => "Direct / None"
+        })
+
+      res = json_response(conn, 200)
+      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+    end
+
+    test "can filter by referrer", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview,
+          referrer: "https://facebook.com",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters[session:referrer]" => "https://facebook.com"
+        })
+
+      res = json_response(conn, 200)
+      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+    end
+
+    test "can filter by utm_medium", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview,
+          utm_medium: "social",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters[session:utm_medium]" => "social"
+        })
+
+      res = json_response(conn, 200)
+      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+    end
+
+    test "can filter by utm_source", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview,
+          utm_source: "Twitter",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters[session:utm_source]" => "Twitter"
+        })
+
+      res = json_response(conn, 200)
+      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+    end
+
+    test "can filter by utm_campaign", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview,
+          utm_campaign: "profile",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters[session:utm_campaign]" => "profile"
+        })
+
+      res = json_response(conn, 200)
+      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+    end
+
+    test "can filter by device type", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview,
+          screen_size: "Desktop",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters[session:device]" => "Desktop"
+        })
+
+      res = json_response(conn, 200)
+      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+    end
+
+    test "can filter by browser", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview,
+          browser: "Chrome",
+          browser_version: "56.1",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          browser: "Chrome",
+          browser_version: "55",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters[session:browser]" => "Chrome",
+          "filters[session:browser_version]" => "56.1"
+        })
+
+      res = json_response(conn, 200)
+      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+    end
+
+    test "can filter by operating system", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview,
+          operating_system: "Mac",
+          operating_system_version: "10.5",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          operating_system: "Mac",
+          operating_system_version: "10.4",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters[session:os]" => "Mac",
+          "filters[session:os_version]" => "10.5"
+        })
+
+      res = json_response(conn, 200)
+      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+    end
+
+    test "can filter by country", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview,
+          country_code: "EE",
+          operating_system_version: "10.5",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters[session:country]" => "EE"
+        })
+
+      res = json_response(conn, 200)
+      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+    end
+
+    test "can filter by page", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview,
+          pathname: "/hello",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/hello",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/goobye",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters[event:page]" => "/hello"
+        })
+
+      res = json_response(conn, 200)
+      assert List.first(res) == %{"date" => "2021-01-01", "value" => 2}
+    end
   end
 end

@@ -67,7 +67,11 @@ defmodule Plausible.TestUtils do
       Enum.reduce(events, %{}, fn event, sessions ->
         Plausible.Session.Store.reconcile_event(sessions, event)
       end)
-      |> Map.values()
+
+    events =
+      Enum.map(events, fn event ->
+        Map.put(event, :session_id, sessions[event.user_id].session_id)
+      end)
 
     Plausible.ClickhouseRepo.insert_all(
       Plausible.ClickhouseEvent,
@@ -76,7 +80,7 @@ defmodule Plausible.TestUtils do
 
     Plausible.ClickhouseRepo.insert_all(
       Plausible.ClickhouseSession,
-      Enum.map(sessions, &schema_to_map/1)
+      Enum.map(Map.values(sessions), &schema_to_map/1)
     )
   end
 

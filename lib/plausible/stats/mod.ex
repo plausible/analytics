@@ -19,23 +19,21 @@ defmodule Plausible.Stats do
   end
 
   defp select_bucket(q, site, %Query{interval: "month"}) do
-    import Ecto.Query
-
-    q
-    |> select([e], {
-      fragment("toStartOfMonth(toTimeZone(?, ?)) as bucket", e.timestamp, ^site.timezone),
-      fragment("uniq(user_id) as count")
-    })
+    from(
+      e in q,
+      select:
+        {fragment("toStartOfMonth(toTimeZone(?, ?)) as bucket", e.timestamp, ^site.timezone),
+         fragment("uniq(?)", e.user_id)}
+    )
   end
 
   defp select_bucket(q, site, %Query{interval: "date"}) do
-    import Ecto.Query
-
-    q
-    |> select([e], {
-      fragment("toDate(toTimeZone(?, ?)) as bucket", e.timestamp, ^site.timezone),
-      fragment("uniq(user_id) as count")
-    })
+    from(
+      e in q,
+      select:
+        {fragment("toDate(toTimeZone(?, ?)) as bucket", e.timestamp, ^site.timezone),
+         fragment("uniq(?)", e.user_id)}
+    )
   end
 
   def timeseries(site, query) do
@@ -62,7 +60,7 @@ defmodule Plausible.Stats do
     "utm_medium",
     "utm_source",
     "utm_campaign",
-    "screen",
+    "device",
     "browser",
     "browser_version",
     "os",
@@ -80,12 +78,21 @@ defmodule Plausible.Stats do
         select: %{session_id: s.session_id}
       )
 
-    # Source noref
-    # Soure !== referrer_source
-    # Country alpha2
     sessions_q =
       Enum.reduce(@session_props, sessions_q, fn prop_name, sessions_q ->
         prop_val = query.filters["session:" <> prop_name]
+        prop_name = if prop_name == "source", do: "referrer_source", else: prop_name
+        prop_name = if prop_name == "device", do: "screen_size", else: prop_name
+        prop_name = if prop_name == "os", do: "operating_system", else: prop_name
+        prop_name = if prop_name == "os_version", do: "operating_system_version", else: prop_name
+        prop_name = if prop_name == "country", do: "country_code", else: prop_name
+
+        prop_val =
+          if prop_name == "referrer_source" && prop_val == @no_ref do
+            ""
+          else
+            prop_val
+          end
 
         if prop_val do
           where_target = [{String.to_existing_atom(prop_name), prop_val}]
