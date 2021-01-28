@@ -297,15 +297,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def delete_site(conn, %{"website" => website}) do
-    site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
-      |> Repo.preload(:google_auth)
-
-    Repo.delete_all(from sm in "site_memberships", where: sm.site_id == ^site.id)
-
-    if site.google_auth do
-      Repo.delete!(site.google_auth)
-    end
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
 
     Repo.delete!(site)
     Plausible.ClickhouseRepo.clear_stats_for(site.domain)

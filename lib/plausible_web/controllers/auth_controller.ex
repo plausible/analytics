@@ -329,10 +329,6 @@ defmodule PlausibleWeb.AuthController do
       |> Repo.preload(:sites)
       |> Repo.preload(:subscription)
 
-    for site_membership <- user.site_memberships do
-      Repo.delete!(site_membership)
-    end
-
     for site <- user.sites do
       Repo.delete!(site)
     end
