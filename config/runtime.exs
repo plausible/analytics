@@ -62,6 +62,7 @@ disable_registration = String.to_existing_atom(System.get_env("DISABLE_REGISTRAT
 hcaptcha_sitekey = System.get_env("HCAPTCHA_SITEKEY")
 hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
 log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
+log_format = System.get_env("LOG_FORMAT", "elixir")
 appsignal_api_key = System.get_env("APPSIGNAL_API_KEY")
 is_selfhost = String.to_existing_atom(System.get_env("SELFHOST", "true"))
 disable_cron = String.to_existing_atom(System.get_env("DISABLE_CRON", "false"))
@@ -250,7 +251,20 @@ if geolite2_country_db do
     ]
 end
 
-config :logger, level: log_level
+logger_backends = %{
+  "elixir" => [:console],
+  "json" => [Ink]
+}
+
+config :logger,
+  level: log_level,
+  backends: logger_backends[log_format]
+
+if log_format == "json" do
+  config :logger, Ink,
+    name: "plausible",
+    level: log_level
+end
 
 if appsignal_api_key do
   config :appsignal, :config,
