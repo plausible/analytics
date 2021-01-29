@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Router do
 
   use Kaffy.Routes, scope: "/crm", pipe_through: [PlausibleWeb.CRMAuthPlug]
 
-  scope "/_api/stats", PlausibleWeb.Api do
+  scope "/api/stats", PlausibleWeb.Api do
     pipe_through :internal_stats_api
 
     get "/:domain/current-visitors", StatsController, :current_visitors
@@ -68,7 +68,7 @@ defmodule PlausibleWeb.Router do
     get "/:domain/property/:prop_name", StatsController, :prop_breakdown
   end
 
-  scope "/api/stats", PlausibleWeb.Api do
+  scope "/api/v1/stats", PlausibleWeb.Api do
     pipe_through :external_stats_api
 
     get "/realtime/visitors", ExternalStatsController, :realtime_visitors
