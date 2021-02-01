@@ -2,7 +2,7 @@
 
 [Plausible Analytics](https://plausible.io/) is a simple, lightweight (< 1 KB), open-source and privacy-friendly alternative to Google Analytics. It doesn’t use cookies and is fully compliant with GDPR, CCPA and PECR. You can self-host Plausible or have us run it for you in the Cloud. Here's [the live demo of our own website stats](https://plausible.io/plausible.io). Made and hosted in the EU 🇪🇺
 
-We are dedicated to making web analytics more privacy-friendly. Our mission is to reduce corporate surveillance by providing an alternative web analytics tool which doesn’t come from the AdTech world. The full-time team is based in the EU and consists of Uku Taht and Marko Saric. We are completely independent, self-funded and bootstrapped.
+We are dedicated to making web analytics more privacy-friendly. Our mission is to reduce corporate surveillance by providing an alternative web analytics tool which doesn’t come from the AdTech world. The full-time team consists of Uku Taht and Marko Saric. We are completely independent, self-funded and bootstrapped.
 
 ![](https://docs.plausible.io/img/plausible-analytics.png)
 
