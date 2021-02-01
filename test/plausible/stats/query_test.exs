@@ -42,7 +42,7 @@ defmodule Plausible.Stats.QueryTest do
     assert q.date_range.first ==
              Timex.shift(Timex.today(), months: -5) |> Timex.beginning_of_month()
 
-    assert q.date_range.last == Timex.today()
+    assert q.date_range.last == Timex.today() |> Timex.end_of_month()
     assert q.interval == "month"
   end
 
@@ -52,7 +52,7 @@ defmodule Plausible.Stats.QueryTest do
     assert q.date_range.first ==
              Timex.shift(Timex.today(), months: -11) |> Timex.beginning_of_month()
 
-    assert q.date_range.last == Timex.today()
+    assert q.date_range.last == Timex.today() |> Timex.end_of_month()
     assert q.interval == "month"
   end
 

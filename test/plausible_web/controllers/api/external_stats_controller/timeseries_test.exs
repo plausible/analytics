@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
   use PlausibleWeb.ConnCase
   import Plausible.TestUtils
 
-  setup [:create_user, :create_site]
+  setup [:create_user, :create_new_site]
 
   test "shows last 6 months of visitors", %{conn: conn, site: site} do
     populate_stats([
