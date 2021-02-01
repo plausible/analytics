@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
     ])
 
-    conn = get(conn, "/api/stats/timeseries", %{"site_id" => site.domain, "period" => "6mo"})
+    conn = get(conn, "/api/v1/stats/timeseries", %{"site_id" => site.domain, "period" => "6mo"})
 
     assert json_response(conn, 200) == [
              %{"date" => "2020-08-01", "value" => 0},
@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
     ])
 
-    conn = get(conn, "/api/stats/timeseries", %{"site_id" => site.domain, "period" => "12mo"})
+    conn = get(conn, "/api/v1/stats/timeseries", %{"site_id" => site.domain, "period" => "12mo"})
 
     assert json_response(conn, 200) == [
              %{"date" => "2020-02-01", "value" => 1},
@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
     ])
 
     conn =
-      get(conn, "/api/stats/timeseries", %{
+      get(conn, "/api/v1/stats/timeseries", %{
         "site_id" => site.domain,
         "period" => "12mo",
         "interval" => "date"
@@ -76,7 +76,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
     ])
 
     conn =
-      get(conn, "/api/stats/timeseries", %{
+      get(conn, "/api/v1/stats/timeseries", %{
         "site_id" => site.domain,
         "period" => "custom",
         "from" => "2021-01-01",
@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
     ])
 
     conn =
-      get(conn, "/api/stats/timeseries", %{
+      get(conn, "/api/v1/stats/timeseries", %{
         "site_id" => site.domain,
         "period" => "custom",
         "from" => "2020-12-01",
@@ -123,7 +123,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       ])
 
       conn =
-        get(conn, "/api/stats/timeseries", %{
+        get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
@@ -145,7 +145,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       ])
 
       conn =
-        get(conn, "/api/stats/timeseries", %{
+        get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
@@ -167,7 +167,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       ])
 
       conn =
-        get(conn, "/api/stats/timeseries", %{
+        get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
@@ -189,7 +189,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       ])
 
       conn =
-        get(conn, "/api/stats/timeseries", %{
+        get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
@@ -211,7 +211,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       ])
 
       conn =
-        get(conn, "/api/stats/timeseries", %{
+        get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
@@ -233,7 +233,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       ])
 
       conn =
-        get(conn, "/api/stats/timeseries", %{
+        get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
@@ -255,7 +255,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       ])
 
       conn =
-        get(conn, "/api/stats/timeseries", %{
+        get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
@@ -284,7 +284,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       ])
 
       conn =
-        get(conn, "/api/stats/timeseries", %{
+        get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
@@ -314,7 +314,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       ])
 
       conn =
-        get(conn, "/api/stats/timeseries", %{
+        get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
@@ -338,7 +338,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       ])
 
       conn =
-        get(conn, "/api/stats/timeseries", %{
+        get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
@@ -369,7 +369,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       ])
 
       conn =
-        get(conn, "/api/stats/timeseries", %{
+        get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
