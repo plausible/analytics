@@ -3,7 +3,23 @@
     <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate flex-shrink-0">
       My sites
     </h2>
-    <a href="/sites/new" class="button my-2 sm:my-0 w-auto">+ Add a website</a>
+    <ul class="flex">
+      <li class="relative mr-6">
+        <%# <div data-dropdown-trigger class="rounded bg-white dark:bg-gray-800 shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800 dark:text-gray-200flex items-center hover:bg-gray-200 dark:hover:bg-gray-900 rounded m-1 p-1 cursor-pointer dark:text-gray-100"> %>
+        <div data-dropdown-trigger class="rounded bg-white shadow px-4 py-2 cursor-pointer text-sm font-medium flex items-center hover:bg-gray-200 dark:hover:bg-gray-900 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+          <span class="pl-2 mr-2"><%= elem(@period, 1) %></span>
+          <svg class="text-indigo-500 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+
+        <div data-dropdown style="top: 42px; right: 0px; width: 185px;" class="dropdown-content hidden absolute right-0 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded shadow-md z-10">
+          <%= for {key, name} <- @periods do %>
+            <%= link(name, to: "/sites?period=#{key}", class: "block py-2 px-2 border-b border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-gray-100") %>
+          <% end %>
+        </div>
+      </li>
+
+      <li><a href="/sites/new" class="button my-2 sm:my-0 w-auto">+ Add a website</a></li>
+    </ul>
   </div>
 
   <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -23,8 +39,8 @@
             </div>
             <div class="pl-8 mt-2 flex items-center justify-between">
               <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
-                <span class="text-gray-800 dark:text-gray-200">
-                  <b><%= PlausibleWeb.StatsView.large_number_format(Map.get(@visitors, site.domain, 0)) %></b> visitor<%= if Map.get(@visitors, site.domain, 0) != 1 do %>s<% end %> in last 24h
+                <span class="visitors-row text-gray-800 dark:text-gray-200">
+                  <b><%= PlausibleWeb.StatsView.large_number_format(Map.get(@visitors, site.domain, 0)) %></b> visitor<%= if Map.get(@visitors, site.domain, 0) != 1 do %>s<% end %> in last <%= elem(@period, 0) %>
                 </span>
               </span>
             </div>
@@ -37,4 +53,15 @@
       </div>
     <% end %>
   </ul>
+  <script>
+    setInterval(function(){
+      document.querySelectorAll(".visitors-row").forEach(async el => {
+        const domain = el.closest('a').getAttribute('href')
+        const request = await fetch(`/api/stats${domain}/main-graph?period=<%= elem(@period, 0) %>`)
+        const json = await request.json()
+        const visitors = json.top_stats[0].count
+        el.innerHTML = `<b>${visitors}</b> visitor${visitors === 1 ? '' : 's'} in last <%=elem(@period, 0) %>`
+      })
+    }, 30000)
+  </script>
 </div>

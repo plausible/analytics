@@ -5,7 +5,7 @@ defmodule PlausibleWeb.SiteController do
 
   plug PlausibleWeb.RequireAccountPlug
 
-  def index(conn, _params) do
+  def index(conn, params) do
     user = conn.assigns[:current_user]
 
     sites =
@@ -17,8 +17,31 @@ defmodule PlausibleWeb.SiteController do
           order_by: s.domain
       )
 
-    visitors = Plausible.Stats.Clickhouse.last_24h_visitors(sites)
-    render(conn, "index.html", sites: sites, visitors: visitors)
+    params_defaults = Map.put_new(params, "period", get_session(conn, "period_sites") || "24h")
+
+    visitors =
+      for site <- sites, into: %{} do
+        query = Plausible.Stats.Query.from(site.timezone, params_defaults)
+        visits = Plausible.Stats.Clickhouse.unique_visitors(site, query)
+        {site.domain, visits}
+      end
+
+    periods = [
+      {"24h", "Last 24h"},
+      {"7d", "Last 7 days"},
+      {"30d", "Last 30 days"},
+      {"6m", "Last 6 months"},
+      {"12m", "Last 12 months"}
+    ]
+
+    conn = put_session(conn, "period_sites", params_defaults["period"])
+
+    render(conn, "index.html",
+      sites: sites,
+      visitors: visitors,
+      period: List.keyfind(periods, params_defaults["period"], 0),
+      periods: periods
+    )
   end
 
   def new(conn, _params) do
