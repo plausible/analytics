@@ -79,7 +79,7 @@ defmodule Plausible.Stats do
 
     sessions_q =
       Enum.reduce(@session_props, sessions_q, fn prop_name, sessions_q ->
-        prop_val = query.filters["session:" <> prop_name]
+        prop_val = query.filters["visit:" <> prop_name]
         prop_name = if prop_name == "source", do: "referrer_source", else: prop_name
         prop_name = if prop_name == "device", do: "screen_size", else: prop_name
         prop_name = if prop_name == "os", do: "operating_system", else: prop_name
@@ -108,7 +108,7 @@ defmodule Plausible.Stats do
       )
 
     q =
-      if Enum.any?(@session_props, &query.filters["session:" <> &1]) do
+      if Enum.any?(@session_props, &query.filters["visit:" <> &1]) do
         from(
           e in q,
           join: sq in subquery(sessions_q),
