@@ -3,18 +3,17 @@ defmodule Plausible.Stats do
   alias Plausible.Stats.Query
   @no_ref "Direct / None"
 
-  defp buckets(site, %Query{interval: "month"} = query) do
+  defp buckets(%Query{interval: "month"} = query) do
     n_buckets = Timex.diff(query.date_range.last, query.date_range.first, :months)
 
     Enum.map(n_buckets..0, fn shift ->
-      Timex.now(site.timezone)
+      query.date_range.last
       |> Timex.beginning_of_month()
       |> Timex.shift(months: -shift)
-      |> DateTime.to_date()
     end)
   end
 
-  defp buckets(_site, %Query{interval: "date"} = query) do
+  defp buckets(%Query{interval: "date"} = query) do
     Enum.into(query.date_range, [])
   end
 
@@ -37,7 +36,7 @@ defmodule Plausible.Stats do
   end
 
   def timeseries(site, query) do
-    steps = buckets(site, query)
+    steps = buckets(query)
 
     groups =
       from(e in base_query(site, query),
