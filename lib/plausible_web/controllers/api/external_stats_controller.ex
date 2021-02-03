@@ -2,20 +2,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use Plug.ErrorHandler
-  alias Plausible.Stats.Clickhouse, as: Stats
   alias Plausible.Stats.Query
-
-  @metric_queries %{
-    "visitors" => &Stats.unique_visitors/2,
-    "pageviews" => &Stats.total_pageviews/2,
-    "bounce_rate" => &Stats.bounce_rate/2,
-    "visit_duration" => &Stats.visit_duration/2
-  }
 
   def realtime_visitors(conn, _params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, %{"period" => "realtime"})
-    json(conn, Stats.current_visitors(site, query))
+    json(conn, Plausible.Stats.Clickhouse.current_visitors(site, query))
   end
 
   def aggregate(conn, params) do
@@ -26,13 +18,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       params["metrics"]
       |> String.split(",")
       |> Enum.map(&String.trim/1)
-      |> Enum.map(fn metric -> {metric, @metric_queries[metric]} end)
-      |> Enum.filter(fn {_metric, fun} -> !!fun end)
-      |> Enum.map(fn {metric, fun} -> {metric, Task.async(fn -> fun.(site, query) end)} end)
-      |> Enum.map(fn {metric, task} -> {metric, %{value: Task.await(task)}} end)
-      |> Enum.into(%{})
 
-    json(conn, metrics)
+    result = Plausible.Stats.aggregate(site, query, metrics)
+    json(conn, result)
   end
 
   def timeseries(conn, params) do
