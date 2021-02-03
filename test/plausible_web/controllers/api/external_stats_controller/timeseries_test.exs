@@ -137,7 +137,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
-          "filters[visit:source]" => "Google"
+          "filters" => "visit:source==Google"
         })
 
       res = json_response(conn, 200)
@@ -159,7 +159,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
-          "filters[visit:source]" => "Direct / None"
+          "filters" => "visit:source==Direct / None"
         })
 
       res = json_response(conn, 200)
@@ -181,7 +181,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
-          "filters[visit:referrer]" => "https://facebook.com"
+          "filters" => "visit:referrer==https://facebook.com"
         })
 
       res = json_response(conn, 200)
@@ -203,7 +203,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
-          "filters[visit:utm_medium]" => "social"
+          "filters" => "visit:utm_medium==social"
         })
 
       res = json_response(conn, 200)
@@ -225,7 +225,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
-          "filters[visit:utm_source]" => "Twitter"
+          "filters" => "visit:utm_source==Twitter"
         })
 
       res = json_response(conn, 200)
@@ -247,7 +247,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
-          "filters[visit:utm_campaign]" => "profile"
+          "filters" => "visit:utm_campaign==profile"
         })
 
       res = json_response(conn, 200)
@@ -269,7 +269,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
-          "filters[visit:device]" => "Desktop"
+          "filters" => "visit:device==Desktop"
         })
 
       res = json_response(conn, 200)
@@ -298,8 +298,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
-          "filters[visit:browser]" => "Chrome",
-          "filters[visit:browser_version]" => "56.1"
+          "filters" => "visit:browser==Chrome;visit:browser_version==56.1"
         })
 
       res = json_response(conn, 200)
@@ -310,6 +309,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       populate_stats([
         build(:pageview,
           operating_system: "Mac",
+          operating_system_version: "10.5",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          operating_system: "Something else",
           operating_system_version: "10.5",
           domain: site.domain,
           timestamp: ~N[2021-01-01 00:00:00]
@@ -328,8 +333,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
-          "filters[visit:os]" => "Mac",
-          "filters[visit:os_version]" => "10.5"
+          "filters" => "visit:os == Mac;visit:os_version==10.5"
         })
 
       res = json_response(conn, 200)
@@ -352,7 +356,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
-          "filters[visit:country]" => "EE"
+          "filters" => "visit:country==EE"
         })
 
       res = json_response(conn, 200)
@@ -383,7 +387,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
-          "filters[event:page]" => "/hello"
+          "filters" => "event:page==/hello"
         })
 
       res = json_response(conn, 200)

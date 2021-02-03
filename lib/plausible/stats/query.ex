@@ -171,7 +171,27 @@ defmodule Plausible.Stats.Query do
     Timex.now(tz) |> Timex.to_date()
   end
 
-  defp parse_filters(%{"filters" => filters}) when is_binary(filters), do: Jason.decode!(filters)
+  defp parse_filters(%{"filters" => filters}) when is_binary(filters) do
+    case Jason.decode(filters) do
+      {:ok, parsed} -> parsed
+      {:error, err} -> parse_filter_expression(err.data)
+    end
+  end
+
   defp parse_filters(%{"filters" => filters}) when is_map(filters), do: filters
   defp parse_filters(_), do: %{}
+
+  defp parse_filter_expression(str) do
+    filters = String.split(str, ";")
+
+    Enum.map(filters, &parse_single_filter/1)
+    |> Enum.into(%{})
+  end
+
+  defp parse_single_filter(str) do
+    String.trim(str)
+    |> String.split("==")
+    |> Enum.map(&String.trim/1)
+    |> List.to_tuple()
+  end
 end
