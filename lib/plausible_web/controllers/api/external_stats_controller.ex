@@ -19,7 +19,30 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       |> String.split(",")
       |> Enum.map(&String.trim/1)
 
-    result = Plausible.Stats.aggregate(site, query, metrics)
+    result =
+      if params["compare"] == "previous_period" do
+        prev_query = Query.shift_back(query)
+
+        [prev_result, curr_result] =
+          Task.await_many([
+            Task.async(fn -> Plausible.Stats.aggregate(site, prev_query, metrics) end),
+            Task.async(fn -> Plausible.Stats.aggregate(site, query, metrics) end)
+          ])
+
+        Enum.map(curr_result, fn {metric, %{value: current_val}} ->
+          %{value: prev_val} = prev_result[metric]
+
+          {metric,
+           %{
+             value: current_val,
+             change: percent_change(prev_val, current_val)
+           }}
+        end)
+        |> Enum.into(%{})
+      else
+        Plausible.Stats.aggregate(site, query, metrics)
+      end
+
     json(conn, result)
   end
 
@@ -39,5 +62,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   def handle_errors(conn, %{kind: kind, reason: reason}) do
     json(conn, %{error: Exception.format_banner(kind, reason)})
+  end
+
+  defp percent_change(old_count, new_count) do
+    cond do
+      old_count == 0 and new_count > 0 ->
+        100
+
+      old_count == 0 and new_count == 0 ->
+        0
+
+      true ->
+        round((new_count - old_count) / old_count * 100)
+    end
   end
 end
