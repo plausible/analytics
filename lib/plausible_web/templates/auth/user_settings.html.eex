@@ -1,5 +1,5 @@
 <%= if !Application.get_env(:plausible, :is_selfhost) do %>
-<div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded rounded-t-none border-t-2 border-orange-200 dark:border-orange-200 px-8 pt-6 pb-8 mt-24 ">
+<div class="max-w-2xl px-8 pt-6 pb-8 mx-auto mt-24 bg-white border-t-2 border-orange-200 rounded rounded-t-none shadow-md dark:bg-gray-800 dark:border-orange-200 ">
   <div class="flex justify-between">
     <h2 class="text-xl font-black dark:text-gray-100">Subscription Plan</h2>
     <%= if @subscription do %>
@@ -12,10 +12,10 @@
   <div class="my-4 border-b border-gray-400"></div>
 
   <%= if @subscription && @subscription.status == "deleted" do %>
-    <div class="p-2 rounded-lg bg-red-100 sm:p-3">
-      <div class="flex items-center justify-between flex-wrap">
-        <div class="w-0 flex-1 flex items-center">
-          <svg class="h-6 w-6 text-red-800" viewBox="0 0 24 24" stroke="currentColor" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <div class="p-2 bg-red-100 rounded-lg sm:p-3">
+      <div class="flex flex-wrap items-center justify-between">
+        <div class="flex items-center flex-1 w-0">
+          <svg class="w-6 h-6 text-red-800" viewBox="0 0 24 24" stroke="currentColor" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33978 16C2.56998 17.3333 3.53223 19 5.07183 19Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <p class="ml-3 font-medium text-red-800">
@@ -30,76 +30,76 @@
     </div>
   <% end %>
 
-  <div class="flex flex-col items-center sm:flex-row sm:items-start justify-between mt-8">
-    <div class="text-center bg-gray-100 dark:bg-gray-900 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
+  <div class="flex flex-col items-center justify-between mt-8 sm:flex-row sm:items-start">
+    <div class="h-32 px-2 py-4 my-4 text-center bg-gray-100 rounded dark:bg-gray-900" style="width: 11.75rem;">
       <h4 class="font-black dark:text-gray-100">Monthly quota</h4>
       <%= if @subscription do %>
-        <div class="text-xl py-2 font-medium dark:text-gray-100"><%= subscription_quota(@subscription) %> pageviews</div>
+        <div class="py-2 text-xl font-medium dark:text-gray-100"><%= subscription_quota(@subscription) %> pageviews</div>
         <%= case @subscription.status do %>
           <% "active" -> %>
             <%= link("Change plan", to: "/billing/change-plan", class: "text-sm text-indigo-500 font-medium") %>
           <% "past_due" -> %>
-            <span class="text-sm text-gray-600 dark:text-gray-400 font-medium" tooltip="Please update your billing details before changing plans">Change plan</span>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-400" tooltip="Please update your billing details before changing plans">Change plan</span>
           <% _ -> %>
         <% end %>
       <% else %>
-        <div class="text-xl py-2 font-medium dark:text-gray-100">Free trial</div>
+        <div class="py-2 text-xl font-medium dark:text-gray-100">Free trial</div>
         <%= link("Upgrade", to: "/billing/upgrade", class: "text-sm text-indigo-500 font-medium") %>
       <% end %>
     </div>
-    <div class="text-center bg-gray-100 dark:bg-gray-900 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
+    <div class="h-32 px-2 py-4 my-4 text-center bg-gray-100 rounded dark:bg-gray-900" style="width: 11.75rem;">
       <h4 class="font-black dark:text-gray-100">Next bill amount</h4>
       <%= if @subscription && @subscription.status in ["active", "past_due"] do %>
-        <div class="text-xl py-2 font-medium dark:text-gray-100">$<%= @subscription.next_bill_amount %></div>
+        <div class="py-2 text-xl font-medium dark:text-gray-100">$<%= @subscription.next_bill_amount %></div>
         <%= if @subscription.update_url do %>
           <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo-500 font-medium") %>
         <% end %>
       <% else %>
-        <div class="text-xl py-2 font-medium dark:text-gray-100">---</div>
+        <div class="py-2 text-xl font-medium dark:text-gray-100">---</div>
       <% end %>
     </div>
-    <div class="text-center bg-gray-100 dark:bg-gray-900 py-4 px-2 rounded h-32 my-4" style="width: 11.75rem;">
+    <div class="h-32 px-2 py-4 my-4 text-center bg-gray-100 rounded dark:bg-gray-900" style="width: 11.75rem;">
       <h4 class="font-black dark:text-gray-100">Next bill date</h4>
 
       <%= if @subscription && @subscription.next_bill_date && @subscription.status in ["active", "past_due"] do %>
-        <div class="text-xl py-2 font-medium dark:text-gray-100"><%= Timex.format!(@subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %></div>
-        <div class="text-sm text-gray-600 dark:text-gray-400 font-medium">(<%= subscription_interval(@subscription) %> billing)</div>
+        <div class="py-2 text-xl font-medium dark:text-gray-100"><%= Timex.format!(@subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %></div>
+        <div class="text-sm font-medium text-gray-600 dark:text-gray-400">(<%= subscription_interval(@subscription) %> billing)</div>
       <% else %>
-        <div class="text-xl py-2 font-medium dark:text-gray-100">---</div>
+        <div class="py-2 text-xl font-medium dark:text-gray-100">---</div>
       <% end %>
     </div>
   </div>
 
-  <h3 class="text-xl font-bold mt-8 dark:text-gray-100">Your usage</h3>
-  <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">Last 30 days total usage across all of your sites</p>
+  <h3 class="mt-8 text-xl font-bold dark:text-gray-100">Your usage</h3>
+  <p class="mt-1 text-sm text-gray-500 leading-5 dark:text-gray-200">Last 30 days total usage across all of your sites</p>
   <div class="py-2">
     <div class="flex flex-col">
       <div class="-my-2 sm:-mx-6 lg:-mx-8">
-        <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
           <div>
-            <table class="min-w-full divide-y divide-gray-200 text-gray-900 dark:text-gray-100">
+            <table class="min-w-full text-gray-900 divide-y divide-gray-200 dark:text-gray-100">
               <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200">
                 <tr>
-                  <td class="py-4 whitespace-nowrap text-sm">
+                  <td class="py-4 text-sm whitespace-nowrap">
                     Pageviews
                   </td>
-                  <td class="py-4 whitespace-nowrap text-sm">
+                  <td class="py-4 text-sm whitespace-nowrap">
                     <%= delimit_integer(@usage_pageviews) %>
                   </td>
                 </tr>
                 <tr>
-                  <td class="py-4 whitespace-nowrap text-sm">
+                  <td class="py-4 text-sm whitespace-nowrap">
                     Custom events
                   </td>
-                  <td class="py-4 whitespace-nowrap text-sm">
+                  <td class="py-4 text-sm whitespace-nowrap">
                     <%= delimit_integer(@usage_custom_events) %>
                   </td>
                 </tr>
                 <tr>
-                  <td class="py-4 whitespace-nowrap text-sm font-medium">
+                  <td class="py-4 text-sm font-medium whitespace-nowrap">
                     Total billable pageviews
                   </td>
-                  <td class="py-4 whitespace-nowrap text-sm font-medium">
+                  <td class="py-4 text-sm font-medium whitespace-nowrap">
                     <%= delimit_integer(@usage_pageviews + @usage_custom_events) %>
                   </td>
                 </tr>
@@ -125,7 +125,7 @@
 </div>
 <% end %>
 
-<div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded rounded-t-none border-t-2 border-green-500 px-8 pt-6 pb-8 mt-16">
+<div class="max-w-2xl px-8 pt-6 pb-8 mx-auto mt-16 bg-white border-t-2 border-green-500 rounded rounded-t-none shadow-md dark:bg-gray-800">
   <h2 class="text-xl font-black dark:text-gray-100">Dashboard Appearance</h2>
 
   <div class="my-4 border-b border-gray-300 dark:border-gray-500"></div>
@@ -139,7 +139,7 @@
   <% end %>
 </div>
 
-<div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded rounded-t-none border-t-2 border-indigo-100 dark:border-indigo-500 px-8 pt-6 pb-8 mt-16">
+<div class="max-w-2xl px-8 pt-6 pb-8 mx-auto mt-16 bg-white border-t-2 border-indigo-100 rounded rounded-t-none shadow-md dark:bg-gray-800 dark:border-indigo-500">
   <h2 class="text-xl font-black dark:text-gray-100">Account settings</h2>
 
   <div class="my-4 border-b border-gray-300 dark:border-gray-500"></div>
@@ -163,7 +163,80 @@
   <% end %>
 </div>
 
-<div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded rounded-t-none border-t-2 border-red-600 px-8 pt-6 pb-8 mt-16 mb-24">
+<div id="api-keys" class="max-w-2xl px-8 pt-6 pb-8 mx-auto mt-16 bg-white border-t-2 border-indigo-100 rounded rounded-t-none shadow-md dark:bg-gray-800 dark:border-indigo-500">
+  <h2 class="text-xl font-black dark:text-gray-100">API keys</h2>
+
+  <div class="my-4 border-b border-gray-300 dark:border-gray-500"></div>
+
+  <div class="p-4 rounded-md bg-yellow-50">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <!-- Heroicon name: solid/exclamation -->
+        <svg class="w-5 h-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <div class="ml-3">
+        <h3 class="text-sm font-medium text-yellow-800">
+          Beta feature
+        </h3>
+        <div class="mt-2 text-sm text-yellow-700">
+          <p>
+          The stats API is in public beta mode. Feel free to issue API keys and test your integrations.
+          However, we reserve the right to make breaking changes to the API until we exit the beta and release
+          v1.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-col">
+    <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+      <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+
+        <%= if Enum.any?(@user.api_keys) do %>
+          <div class="overflow-hidden border-b border-gray-200 shadow sm:rounded-lg">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                    Name
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                    Key
+                  </th>
+                  <th scope="col" class="relative px-6 py-3">
+                    <span class="sr-only">Remove</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <%= for api_key <- @user.api_keys do  %>
+                  <tr class="bg-white">
+                    <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                      <%= api_key.name %>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                      <%= api_key.key_prefix %><%= String.duplicate("*", 32 - 6) %>
+                    </td>
+                    <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
+                      <%= button("Revoke", to: "/settings/api-keys/#{api_key.id}", class: "text-red-600 hover:text-red-900", method: :delete, "data-confirm": "Are you sure you want to revoke this key? This action cannot be reversed.") %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+
+        <%= link "+ New API key", to: "/settings/api-keys/new", class: "button mt-4" %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-2xl px-8 pt-6 pb-8 mx-auto mt-16 mb-24 bg-white border-t-2 border-red-600 rounded rounded-t-none shadow-md dark:bg-gray-800">
   <div class="flex items-center justify-between">
     <h2 class="text-xl font-black dark:text-gray-100">Delete account</h2>
   </div>
@@ -173,8 +246,8 @@
   <p class="dark:text-gray-100">Deleting your account removes all sites and stats you've collected</p>
 
   <%= if @subscription && @subscription.status == "active" do %>
-    <span class="button bg-gray-300 dark:bg-gray-800 mt-6 hover:shadow-none">Delete my account</span>
-    <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Your account cannot be deleted because you have an active subscription. If you want to delete your account, please cancel your subscription first.</p>
+    <span class="mt-6 bg-gray-300 button dark:bg-gray-800 hover:shadow-none">Delete my account</span>
+    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Your account cannot be deleted because you have an active subscription. If you want to delete your account, please cancel your subscription first.</p>
   <% else %>
     <%= link("Delete my account", to: "/me", class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"]) %>
   <% end %>
