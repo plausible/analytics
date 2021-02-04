@@ -21,14 +21,19 @@ defmodule Plausible.Auth.ApiKey do
     |> process_key
   end
 
-  def process_key(%{errors: [], changes: changes} = changeset) do
-    hash =
-      :crypto.hash(:sha256, [secret_key_base(), changes[:key]])
-      |> Base.encode16()
-      |> String.downcase()
+  def do_hash(key) do
+    :crypto.hash(:sha256, [secret_key_base(), key])
+    |> Base.encode16()
+    |> String.downcase()
+  end
 
+  def process_key(%{errors: [], changes: changes} = changeset) do
     prefix = binary_part(changes[:key], 0, 6)
-    change(changeset, key_hash: hash, key_prefix: prefix)
+
+    change(changeset,
+      key_hash: do_hash(changes[:key]),
+      key_prefix: prefix
+    )
   end
 
   def process_key(changeset), do: changeset
