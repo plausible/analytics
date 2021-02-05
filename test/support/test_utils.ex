@@ -16,6 +16,18 @@ defmodule Plausible.TestUtils do
     {:ok, site: site}
   end
 
+  def create_api_key(%{user: user}) do
+    api_key = Factory.insert(:api_key, user: user)
+
+    {:ok, api_key: api_key.key}
+  end
+
+  def use_api_key(%{conn: conn, api_key: api_key}) do
+    conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key}")
+
+    {:ok, conn: conn}
+  end
+
   def create_pageviews(pageviews) do
     pageviews =
       Enum.map(pageviews, fn pageview ->

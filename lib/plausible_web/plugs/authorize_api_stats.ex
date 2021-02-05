@@ -41,5 +41,6 @@ defmodule PlausibleWeb.AuthorizeApiStatsPlug do
     conn
     |> put_status(404)
     |> Phoenix.Controller.json(%{error: "Not found"})
+    |> halt()
   end
 end
