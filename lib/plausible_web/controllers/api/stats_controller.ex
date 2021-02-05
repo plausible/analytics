@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Api.StatsController do
   use Plausible.Repo
   alias Plausible.Stats.Clickhouse, as: Stats
   alias Plausible.Stats.Query
-  plug PlausibleWeb.AuthorizeStatsPlug
 
   def main_graph(conn, params) do
     site = conn.assigns[:site]
@@ -18,7 +17,7 @@ defmodule PlausibleWeb.Api.StatsController do
       labels: labels,
       present_index: present_index,
       top_stats: top_stats,
-      interval: query.step_type
+      interval: query.interval
     })
   end
 

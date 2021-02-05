@@ -1,5 +1,5 @@
 defmodule Plausible.Stats.Query do
-  defstruct date_range: nil, step_type: nil, period: nil, steps: nil, filters: %{}
+  defstruct date_range: nil, interval: nil, period: nil, filters: %{}
 
   def shift_back(%__MODULE__{period: "day"} = query) do
     new_date = query.date_range.first |> Timex.shift(days: -1)
@@ -41,30 +41,24 @@ defmodule Plausible.Stats.Query do
 
     %__MODULE__{
       period: "realtime",
-      step_type: "minute",
+      interval: "minute",
       date_range: Date.range(date, date),
-      filters: parse_filters(params)
-    }
-  end
-
-  def from(_tz, %{"period" => "day", "date" => date} = params) do
-    date = Date.from_iso8601!(date)
-
-    %__MODULE__{
-      period: "day",
-      date_range: Date.range(date, date),
-      step_type: "hour",
       filters: parse_filters(params)
     }
   end
 
   def from(tz, %{"period" => "day"} = params) do
-    date = today(tz)
+    date =
+      if params["date"] do
+        Date.from_iso8601!(params["date"])
+      else
+        today(tz)
+      end
 
     %__MODULE__{
       period: "day",
       date_range: Date.range(date, date),
-      step_type: "hour",
+      interval: "hour",
       filters: parse_filters(params)
     }
   end
@@ -76,7 +70,7 @@ defmodule Plausible.Stats.Query do
     %__MODULE__{
       period: "7d",
       date_range: Date.range(start_date, end_date),
-      step_type: "date",
+      interval: "date",
       filters: parse_filters(params)
     }
   end
@@ -88,62 +82,85 @@ defmodule Plausible.Stats.Query do
     %__MODULE__{
       period: "30d",
       date_range: Date.range(start_date, end_date),
-      step_type: "date",
+      interval: "date",
       filters: parse_filters(params)
     }
   end
 
-  def from(_tz, %{"period" => "month", "date" => date} = params) do
-    start_date = Date.from_iso8601!(date) |> Timex.beginning_of_month()
-    end_date = Timex.end_of_month(start_date)
+  def from(tz, %{"period" => "month"} = params) do
+    date =
+      if params["date"] do
+        Date.from_iso8601!(params["date"])
+      else
+        today(tz)
+      end
+
+    start_date = Timex.beginning_of_month(date)
+    end_date = Timex.end_of_month(date)
 
     %__MODULE__{
       period: "month",
       date_range: Date.range(start_date, end_date),
-      step_type: "date",
-      steps: Timex.diff(start_date, end_date, :days),
+      interval: "date",
       filters: parse_filters(params)
     }
   end
 
   def from(tz, %{"period" => "6mo"} = params) do
+    end_date =
+      case params["date"] do
+        nil -> today(tz)
+        date -> Date.from_iso8601!(date)
+      end
+      |> Timex.end_of_month()
+
     start_date =
-      Timex.shift(today(tz), months: -5)
+      Timex.shift(end_date, months: -5)
       |> Timex.beginning_of_month()
 
     %__MODULE__{
       period: "6mo",
-      date_range: Date.range(start_date, today(tz)),
-      step_type: "month",
-      steps: 6,
+      date_range: Date.range(start_date, end_date),
+      interval: Map.get(params, "interval", "month"),
       filters: parse_filters(params)
     }
   end
 
   def from(tz, %{"period" => "12mo"} = params) do
+    end_date =
+      case params["date"] do
+        nil -> today(tz)
+        date -> Date.from_iso8601!(date)
+      end
+      |> Timex.end_of_month()
+
     start_date =
-      Timex.shift(today(tz), months: -11)
+      Timex.shift(end_date, months: -11)
       |> Timex.beginning_of_month()
 
     %__MODULE__{
       period: "12mo",
-      date_range: Date.range(start_date, today(tz)),
-      step_type: "month",
-      steps: 12,
+      date_range: Date.range(start_date, end_date),
+      interval: Map.get(params, "interval", "month"),
       filters: parse_filters(params)
     }
   end
 
-  def from(_tz, %{"period" => "custom", "from" => from, "to" => to} = params) do
+  def from(_tz, %{"period" => "custom", "date" => date} = params) do
+    [from, to] = String.split(date, ",")
     from_date = Date.from_iso8601!(from)
     to_date = Date.from_iso8601!(to)
 
     %__MODULE__{
       period: "custom",
       date_range: Date.range(from_date, to_date),
-      step_type: "date",
+      interval: Map.get(params, "interval", "date"),
       filters: parse_filters(params)
     }
+  end
+
+  def from(tz, %{"period" => "custom", "from" => from, "to" => to} = params) do
+    from(tz, Map.merge(params, %{"period" => "custom", "date" => Enum.join([from, to], ",")}))
   end
 
   def from(tz, _) do
@@ -154,11 +171,27 @@ defmodule Plausible.Stats.Query do
     Timex.now(tz) |> Timex.to_date()
   end
 
-  defp parse_filters(params) do
-    if params["filters"] do
-      Jason.decode!(params["filters"])
-    else
-      %{}
+  defp parse_filters(%{"filters" => filters}) when is_binary(filters) do
+    case Jason.decode(filters) do
+      {:ok, parsed} -> parsed
+      {:error, err} -> parse_filter_expression(err.data)
     end
+  end
+
+  defp parse_filters(%{"filters" => filters}) when is_map(filters), do: filters
+  defp parse_filters(_), do: %{}
+
+  defp parse_filter_expression(str) do
+    filters = String.split(str, ";")
+
+    Enum.map(filters, &parse_single_filter/1)
+    |> Enum.into(%{})
+  end
+
+  defp parse_single_filter(str) do
+    String.trim(str)
+    |> String.split("==")
+    |> Enum.map(&String.trim/1)
+    |> List.to_tuple()
   end
 end

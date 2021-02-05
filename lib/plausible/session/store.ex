@@ -73,6 +73,28 @@ defmodule Plausible.Session.Store do
     {:reply, session_id, %{state | sessions: updated_sessions}}
   end
 
+  def reconcile_event(sessions, event) do
+    found_session = sessions[event.user_id]
+    active = is_active?(found_session, event)
+
+    updated_sessions =
+      cond do
+        found_session && active ->
+          new_session = update_session(found_session, event)
+          Map.put(sessions, event.user_id, new_session)
+
+        found_session && !active ->
+          new_session = new_session_from_event(event)
+          Map.put(sessions, event.user_id, new_session)
+
+        true ->
+          new_session = new_session_from_event(event)
+          Map.put(sessions, event.user_id, new_session)
+      end
+
+    updated_sessions
+  end
+
   defp is_active?(session, event) do
     session && Timex.diff(event.timestamp, session.timestamp, :second) < session_length_seconds()
   end

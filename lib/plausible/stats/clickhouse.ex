@@ -23,9 +23,11 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  def calculate_plot(site, %Query{step_type: "month"} = query) do
+  def calculate_plot(site, %Query{interval: "month"} = query) do
+    n_steps = Timex.diff(query.date_range.last, query.date_range.first, :months)
+
     steps =
-      Enum.map((query.steps - 1)..0, fn shift ->
+      Enum.map(n_steps..0, fn shift ->
         Timex.now(site.timezone)
         |> Timex.beginning_of_month()
         |> Timex.shift(months: -shift)
@@ -54,7 +56,7 @@ defmodule Plausible.Stats.Clickhouse do
     {plot, labels, present_index}
   end
 
-  def calculate_plot(site, %Query{step_type: "date"} = query) do
+  def calculate_plot(site, %Query{interval: "date"} = query) do
     steps = Enum.into(query.date_range, [])
 
     groups =
@@ -78,7 +80,7 @@ defmodule Plausible.Stats.Clickhouse do
     {plot, labels, present_index}
   end
 
-  def calculate_plot(site, %Query{step_type: "hour"} = query) do
+  def calculate_plot(site, %Query{interval: "hour"} = query) do
     steps = 0..23
 
     groups =
@@ -148,6 +150,13 @@ defmodule Plausible.Stats.Clickhouse do
     ClickhouseRepo.one(
       from e in base_session_query(site, query),
         select: fragment("sum(sign * pageviews)")
+    )
+  end
+
+  def total_pageviews(site, query) do
+    ClickhouseRepo.one(
+      from e in base_query(site, query),
+        select: fragment("count(*)")
     )
   end
 
