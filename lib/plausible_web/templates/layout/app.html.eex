@@ -154,6 +154,8 @@
     </main>
     <%= if !(@conn.assigns[:embed_mode] && @conn.assigns.site.embeddable) do %>
       <%= render("_footer.html", assigns) %>
+    <% else %>
+      <%= render("_embed_mode_footer.html", assigns) %>
     <% end %>
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </body>
