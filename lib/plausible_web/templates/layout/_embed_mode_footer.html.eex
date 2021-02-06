@@ -1,0 +1,13 @@
+<div class="bg-gray-800 dark:bg-gray-800 mt-4">
+  <div class="container px-4 sm:px-6 lg:px-8">
+    <div class="xl:grid xl:grid-cols-3 xl:gap-8">
+      <div class="col-start-2 xl:my-0">
+        <p class="text-center">
+          <span class="text-gray-100 text-xs">Powered by</span>
+          <img src="/images/icon/plausible_logo_sm.png" class="inline-block w-4 ml-1" />
+          <span class="leading-5 font-semibold tracking-wider text-gray-300 text-xs">Plausible Analytics</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
