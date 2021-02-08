@@ -146,6 +146,16 @@ defmodule Plausible.Stats.Query do
     }
   end
 
+  def from(tz, %{"period" => "custom", "from" => from, "to" => to} = params) do
+    new_params =
+      params
+      |> Map.delete("from")
+      |> Map.delete("to")
+      |> Map.put("date", Enum.join([from, to], ","))
+
+    from(tz, new_params)
+  end
+
   def from(_tz, %{"period" => "custom", "date" => date} = params) do
     [from, to] = String.split(date, ",")
     from_date = Date.from_iso8601!(from)
@@ -157,10 +167,6 @@ defmodule Plausible.Stats.Query do
       interval: Map.get(params, "interval", "date"),
       filters: parse_filters(params)
     }
-  end
-
-  def from(tz, %{"period" => "custom", "from" => from, "to" => to} = params) do
-    from(tz, Map.merge(params, %{"period" => "custom", "date" => Enum.join([from, to], ",")}))
   end
 
   def from(tz, _) do
