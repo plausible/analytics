@@ -1,4 +1,4 @@
-defmodule Plausible.Workers.CleanEmailVerificationCodesTest do
+defmodule Plausible.Workers.CheckUsageTest do
   use Plausible.DataCase
   use Bamboo.Test
   import Double
