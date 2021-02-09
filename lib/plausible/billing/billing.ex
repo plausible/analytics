@@ -133,6 +133,10 @@ defmodule Plausible.Billing do
     pageviews + custom_events
   end
 
+  def last_two_billing_months_usage(user) do
+    {1, 2}
+  end
+
   def usage_breakdown(user) do
     user = Repo.preload(user, :sites)
 
