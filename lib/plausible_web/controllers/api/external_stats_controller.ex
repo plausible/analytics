@@ -57,7 +57,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   def timeseries(conn, params) do
     with :ok <- validate_date(params),
-         :ok <- validate_period(params) do
+         :ok <- validate_period(params),
+         :ok <- validate_interval(params) do
       site = conn.assigns[:site]
       query = Query.from(site.timezone, params)
 
@@ -140,4 +141,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp validate_metrics(_), do: :ok
+
+  @valid_intervals ["date", "month"]
+  @valid_intervals_str Enum.map(@valid_intervals, &("`" <> &1 <> "`")) |> Enum.join(", ")
+
+  defp validate_interval(%{"interval" => interval}) do
+    if interval in @valid_intervals do
+      :ok
+    else
+      {:error,
+       "Error parsing `interval` parameter: invalid interval `#{interval}`. Valid intervals are #{
+         @valid_intervals_str
+       }"}
+    end
+  end
+
+  defp validate_interval(_), do: :ok
 end

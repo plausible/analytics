@@ -31,6 +31,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                  "Error parsing `period` parameter: invalid period `aosuhsacp`. Please find accepted values in our docs: https://plausible.io/docs/stats-api#time-periods"
              }
     end
+
+    test "validates that interval is `date` or `month`", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "12mo",
+          "interval" => "alskd"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Error parsing `interval` parameter: invalid interval `alskd`. Valid intervals are `date`, `month`"
+             }
+    end
   end
 
   test "shows last 6 months of visitors", %{conn: conn, site: site} do
