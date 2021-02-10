@@ -4,6 +4,49 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
 
   setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
 
+  describe "param validation" do
+    test "validates that date can be parsed", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "6mo",
+          "date" => "2021-dkjbAS"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Error parsing `date` parameter: invalid_format. Please specify a valid date in ISO-8601 format."
+             }
+    end
+
+    test "validates that period can be parsed", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "aosuhsacp"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Error parsing `period` parameter: invalid period `aosuhsacp`. Please find accepted values in our docs: https://plausible.io/docs/stats-api#time-periods"
+             }
+    end
+
+    test "validates that interval is `date` or `month`", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "12mo",
+          "interval" => "alskd"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Error parsing `interval` parameter: invalid interval `alskd`. Valid intervals are `date`, `month`"
+             }
+    end
+  end
+
   test "shows last 6 months of visitors", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview, domain: site.domain, timestamp: ~N[2020-12-31 00:00:00]),

@@ -5,6 +5,51 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
   setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
   @user_id 123
 
+  describe "param validation" do
+    test "validates that date can be parsed", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-dkjbAS",
+          "metrics" => "pageviews"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Error parsing `date` parameter: invalid_format. Please specify a valid date in ISO-8601 format."
+             }
+    end
+
+    test "validates that period can be parsed", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "aosuhsacp",
+          "metrics" => "pageviews"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Error parsing `period` parameter: invalid period `aosuhsacp`. Please find accepted values in our docs: https://plausible.io/docs/stats-api#time-periods"
+             }
+    end
+
+    test "validates that metrics are all recognized", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "30d",
+          "metrics" => "pageviews,led_zeppelin"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Error parsing `metrics` parameter: invalid metric `led_zeppelin`. Valid metrics are `pageviews`, `visitors`, `bounce_rate`, `visit_duration`"
+             }
+    end
+  end
+
   test "aggregates a single metric", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
