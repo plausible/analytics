@@ -114,7 +114,8 @@ defmodule PlausibleWeb.Email do
 
   def over_limit_email(user, usage) do
     base_email()
-    |> to(user)
+    # Temporary testing
+    |> to(["uku@plausible.io", "marko@plausible.io"])
     |> tag("over-limit")
     |> subject("You have outgrown your Plausible subscription tier ")
     |> render("over_limit.html", %{
