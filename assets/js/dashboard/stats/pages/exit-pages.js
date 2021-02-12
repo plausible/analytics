@@ -2,14 +2,14 @@ import React from 'react';
 import { Link } from 'react-router-dom'
 import FlipMove from 'react-flip-move';
 
-import FadeIn from '../fade-in'
-import Bar from './bar'
-import MoreLink from './more-link'
-import numberFormatter from '../number-formatter'
-import { eventName } from '../query'
-import * as api from '../api'
+import FadeIn from '../../fade-in'
+import Bar from '../bar'
+import MoreLink from '../more-link'
+import numberFormatter from '../../number-formatter'
+import { eventName } from '../../query'
+import * as api from '../../api'
 
-export default class Pages extends React.Component {
+export default class ExitPages extends React.Component {
   constructor(props) {
     super(props)
     this.state = {loading: true}
@@ -28,14 +28,8 @@ export default class Pages extends React.Component {
   }
 
   fetchPages() {
-    const {filters} = this.props.query
-    if (filters.source || filters.referrer) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`, this.props.query)
-        .then((res) => this.setState({loading: false, pages: res}))
-    } else {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, this.props.query)
-        .then((res) => this.setState({loading: false, pages: res}))
-    }
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/exit-pages`, this.props.query)
+      .then((res) => this.setState({loading: false, pages: res}))
   }
 
   renderPage(page) {
@@ -58,24 +52,13 @@ export default class Pages extends React.Component {
     )
   }
 
-  label() {
-    const filters = this.props.query.filters
-    if (this.props.query.period === 'realtime') {
-      return 'Current visitors'
-    } else if (filters['source'] || filters['referrer']) {
-      return 'Entrances'
-    } else {
-      return 'Visitors'
-    }
-  }
-
   renderList() {
-    if (this.state.pages.length > 0) {
+    if (this.state.pages && this.state.pages.length > 0) {
       return (
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide">
             <span>Page url</span>
-            <span>{ this.label() }</span>
+            <span>Exits</span>
           </div>
 
           <FlipMove>
@@ -88,31 +71,16 @@ export default class Pages extends React.Component {
     }
   }
 
-  title() {
-    const filters = this.props.query.filters
-    return filters['source'] || filters['referrer'] ? 'Entry Pages' : 'Top Pages'
-  }
-
-  renderContent() {
-    if (this.state.pages) {
-      return (
-        <React.Fragment>
-          <h3 className="font-bold dark:text-gray-100">{this.title()}</h3>
-          { this.renderList() }
-          <MoreLink site={this.props.site} list={this.state.pages} endpoint="pages" />
-        </React.Fragment>
-      )
-    }
-  }
-
   render() {
+    const { loading } = this.state;
     return (
-      <div className="stats-item relative bg-white dark:bg-gray-825 shadow-xl rounded p-4" style={{height: '436px'}}>
-        { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
-          { this.renderContent() }
+      <React.Fragment>
+        { loading && <div className="loading mt-44 mx-auto"><div></div></div> }
+        <FadeIn show={!loading}>
+          { this.renderList() }
         </FadeIn>
-      </div>
+        {!loading && <MoreLink site={this.props.site} list={this.state.pages} endpoint="exit-pages" />}
+      </React.Fragment>
     )
   }
 }

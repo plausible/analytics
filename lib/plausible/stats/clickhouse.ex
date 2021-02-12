@@ -519,6 +519,33 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
+  def exit_pages(site, query, limit, page \\ 1) do
+    offset = (page - 1) * limit
+
+    q =
+      from(
+        s in base_session_query(site, query),
+        group_by: s.exit_page,
+        order_by: [desc: fragment("count")],
+        limit: ^limit,
+        offset: ^offset,
+        select: %{
+          name: s.exit_page,
+          count: fragment("uniq(?) as count", s.user_id)
+        }
+      )
+
+    q =
+      if query.filters["page"] do
+        page = query.filters["page"]
+        from(s in q, where: s.exit_page == ^page)
+      else
+        q
+      end
+
+    ClickhouseRepo.all(q)
+  end
+
   def top_pages(site, %Query{period: "realtime"} = query, limit, page, _include) do
     offset = (page - 1) * limit
 
