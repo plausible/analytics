@@ -220,18 +220,20 @@ defmodule Plausible.BillingTest do
   end
 
   describe "subscription_payment_succeeded" do
-    test "sets the next bill amount and date" do
+    test "sets the next bill amount and date, last bill date" do
       user = insert(:user)
       subscription = insert(:subscription, user: user)
 
       Billing.subscription_payment_succeeded(%{
         "alert_name" => "subscription_payment_succeeded",
-        "subscription_id" => subscription.paddle_subscription_id
+        "subscription_id" => subscription.paddle_subscription_id,
+        "event_time" => "2019-06-10 09:40:20"
       })
 
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
       assert subscription.next_bill_date == ~D[2019-07-10]
       assert subscription.next_bill_amount == "6.00"
+      assert subscription.last_bill_date == ~D[2019-06-10]
     end
 
     test "ignores if the subscription cannot be found" do

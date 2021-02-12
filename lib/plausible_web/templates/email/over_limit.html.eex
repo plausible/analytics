@@ -1,0 +1,32 @@
+Hey <%= user_salutation(@user) %>,
+<br /><br />
+Thanks for being a Plausible Analytics subscriber!
+<br /><br />
+This is a friendly reminder that your traffic has exceeded your subscription tier two months in a row. Congrats on all that traffic!
+<br /><br />
+We don't enforce any hard limits at the moment, we're still counting your stats and you have access to your dashboard, but we kindly ask you to upgrade your subscription plan to accommodate your new traffic levels.
+<br /><br />
+In the last month, your account has used <%= @usage %> billable pageviews.
+<%= if @usage <= 20_000_000 do %>
+
+  Based on that we recommend you select the <%= Plausible.Billing.Plans.suggested_plan_name(@usage) %> plan which runs at <%= Plausible.Billing.Plans.suggested_plan_cost(@usage) %>. You can also go with yearly billing to get 33% off.
+  <br /><br />
+  You can upgrade your subscription using our self-serve platform. The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire.
+  <br /><br />
+  <a href="https://plausible.io/settings">Click here</a> to go to your site settings. You can upgrade your subscription tier by clicking the 'change plan' link.
+<% else %>
+  This is more than our standard plans, so please reply back to this email to get a quote for your volume.
+<% end %>
+<br /><br />
+Were the last two months extraordinary and you don't expect these higher traffic levels to continue? Reply to this email and we'll figure it out.
+<br /><br />
+Have questions or need help with anything? Just reply to this email and we'll gladly help.
+<br /><br />
+Thanks again for using our product and for your support!
+<br /><br />
+Uku and Marko
+<br /><br />
+--
+<br /><br />
+<%= plausible_url() %><br />
+{{{ pm:unsubscribe }}}

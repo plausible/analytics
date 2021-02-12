@@ -65,7 +65,8 @@ defmodule Plausible.Billing do
       changeset =
         Subscription.changeset(subscription, %{
           next_bill_amount: amount,
-          next_bill_date: api_subscription["next_payment"]["date"]
+          next_bill_date: api_subscription["next_payment"]["date"],
+          last_bill_date: params["event_time"]
         })
 
       Repo.update(changeset)
@@ -131,6 +132,10 @@ defmodule Plausible.Billing do
   def usage(user) do
     {pageviews, custom_events} = usage_breakdown(user)
     pageviews + custom_events
+  end
+
+  def last_two_billing_months_usage(_user) do
+    {1, 2}
   end
 
   def usage_breakdown(user) do
