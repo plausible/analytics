@@ -31,19 +31,19 @@ class DatePicker extends React.Component {
   }
 
   componentDidMount() {
-    document.addEventListener("keyup", this.handleKeyup);
+    document.addEventListener("keydown", this.handleKeyup);
     document.addEventListener("mousedown", this.handleClick, false);
   }
 
   componentWillUnmount() {
-    document.removeEventListener("keyup", this.handleKeyup);
+    document.removeEventListener("keydown", this.handleKeyup);
     document.removeEventListener("mousedown", this.handleClick, false);
   }
 
   handleKeyup(e) {
     const { query, history } = this.props;
 
-    if (e.ctrlKey || e.metaKey || e.altKey) return
+    if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.keyCode === 229) return
 
     const newSearch = {
       period: false,
@@ -104,7 +104,7 @@ class DatePicker extends React.Component {
     const redirects = [{date: false, period: 'day'}, {period: 'realtime'}, {date: false, period: '7d'}, {date: false, period: 'month'}, {date: false, period: '12mo'}];
 
     if (keys.includes(e.key.toLowerCase())) {
-      navigateToQuery(history, query, {...newSearch, ...(redirects[keys.indexOf(e.key) % 5])});
+      navigateToQuery(history, query, {...newSearch, ...(redirects[keys.indexOf(e.key.toLowerCase())])});
     } else if (e.key.toLowerCase() === 'c') {
       this.setState({mode: 'calendar', open: true}, this.openCalendar);
     } else if (newSearch.date) {
