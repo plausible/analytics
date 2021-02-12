@@ -95,7 +95,6 @@ export default {
       this.el.innerHTML = '<canvas id="main-graph-canvas" class="mt-4" width="1054" height="342"></canvas>'
       this.ctx = this.el.querySelector('canvas').getContext('2d');
       this.props = {darkTheme: false, query: {filters: {goal: null}}}
-      console.log('HERE')
       this.regenerateChart(payload)
     })
   },
@@ -105,6 +104,7 @@ export default {
   },
 
   regenerateChart(graphData) {
+    console.log('DRAW CHART')
     const label = this.props.query.filters.goal ? 'Converted visitors' : graphData.interval === 'minute' ? 'Pageviews' : 'Visitors'
     const dataSet = buildDataSet(graphData.plot, graphData.present_index, this.ctx, label)
 

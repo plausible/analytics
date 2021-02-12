@@ -8,6 +8,8 @@
         <div class="flex items-center w-full mb-2 sm:mb-0">
           Site: <%= @site_domain %>
         </div>
+
+        <%= live_component @socket, PlausibleWeb.DropdownComponent, period: @period %>
       </div>
     </div>
     <div class="relative w-full mt-6 bg-white rounded shadow-xl dark:bg-gray-825 main-graph">
@@ -23,15 +25,16 @@
             </div>
           <% end %>
         </div>
+
+        <div id="visitor-graph" phx-hook="VisitorGraph" phx-update="ignore">
+          <div class="pt-24 mx-auto loading sm:pt-32 md:pt-48"><div></div></div>
+        </div>
       <% end %>
 
-      <div id="visitor-graph" phx-hook="VisitorGraph" phx-update="ignore">
-        <div class="pt-24 mx-auto loading sm:pt-32 md:pt-48"><div></div></div>
-      </div>
     </div>
     <div class="items-start justify-between block w-full md:flex">
-      <%= live_component @socket, PlausibleWeb.ListComponent, list: @pages  %>
-      Sources pages
+      <%= live_component @socket, PlausibleWeb.ListComponent, list: @sources, title: "Top sources", key_label: "Source", value_label: "Visitors", bar_color: "bg-indigo-50"  %>
+      <%= live_component @socket, PlausibleWeb.ListComponent, list: @pages, title: "Top pages", key_label: "Page url", value_label: "Visitors", bar_color: "bg-orange-50"  %>
     </div>
     <div class="items-start justify-between block w-full md:flex">
     </div>
