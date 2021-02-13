@@ -23,7 +23,7 @@ import { navigateToQuery, QueryLink, QueryButton } from "./query";
 class DatePicker extends React.Component {
   constructor(props) {
     super(props);
-    this.handleKeyup = this.handleKeyup.bind(this);
+    this.handleKeydown = this.handleKeydown.bind(this);
     this.handleClick = this.handleClick.bind(this);
     this.openCalendar = this.openCalendar.bind(this);
     this.open = this.open.bind(this);
@@ -31,16 +31,16 @@ class DatePicker extends React.Component {
   }
 
   componentDidMount() {
-    document.addEventListener("keydown", this.handleKeyup);
+    document.addEventListener("keydown", this.handleKeydown);
     document.addEventListener("mousedown", this.handleClick, false);
   }
 
   componentWillUnmount() {
-    document.removeEventListener("keydown", this.handleKeyup);
+    document.removeEventListener("keydown", this.handleKeydown);
     document.removeEventListener("mousedown", this.handleClick, false);
   }
 
-  handleKeyup(e) {
+  handleKeydown(e) {
     const { query, history } = this.props;
 
     if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.keyCode === 229) return
