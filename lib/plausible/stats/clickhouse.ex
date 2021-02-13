@@ -621,18 +621,19 @@ defmodule Plausible.Stats.Clickhouse do
         event_q
       end
 
-    event_q = if path do
-      from(e in event_q, where: e.pathname == ^path)
-    else
-      event_q
-    end
+    event_q =
+      if path do
+        from(e in event_q, where: e.pathname == ^path)
+      else
+        event_q
+      end
 
     if goal_event || path do
       from(
-          e in q,
-          join: eq in subquery(event_q),
-          on: e.session_id == eq.session_id
-        )
+        e in q,
+        join: eq in subquery(event_q),
+        on: e.session_id == eq.session_id
+      )
     else
       q
     end
@@ -1202,6 +1203,7 @@ defmodule Plausible.Stats.Clickhouse do
     q =
       if query.filters["page"] do
         page = query.filters["page"]
+
         if exit_pages do
           from(s in q, where: s.exit_page == ^page)
         else
