@@ -68,23 +68,36 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/entry-pages?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
-               %{"count" => 3, "name" => "/"}
+               %{"count" => 3, "entries" => 3, "name" => "/", "visit_duration" => 200}
              ]
     end
 
-    test "calculates bounce rate for entry pages", %{conn: conn, site: site} do
+    test "calculates visit duration for entry pages", %{conn: conn, site: site} do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/entry-pages?period=day&date=2019-01-01&include=bounce_rate"
+          "/api/stats/#{site.domain}/entry-pages?period=day&date=2019-01-01"
         )
 
       assert json_response(conn, 200) == [
                %{
-                 "bounce_rate" => 33.0,
+                "visit_duration" => 200,
                  "count" => 3,
+                 "entries" => 3,
                  "name" => "/"
                }
+             ]
+    end
+  end
+
+  describe "GET /api/stats/:domain/exit-pages" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "returns top exit pages by visitors", %{conn: conn, site: site} do
+      conn = get(conn, "/api/stats/#{site.domain}/exit-pages?period=day&date=2019-01-01")
+
+      assert json_response(conn, 200) == [
+               %{"count" => 3, "exits" => 3, "name" => "/", "exit_rate" => 150.0}
              ]
     end
   end

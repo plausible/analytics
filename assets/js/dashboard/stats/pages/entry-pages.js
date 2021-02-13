@@ -58,7 +58,7 @@ export default class EntryPages extends React.Component {
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide">
             <span>Page url</span>
-            <span>Unique Entrants</span>
+            <span>Unique Entrances</span>
           </div>
 
           <FlipMove>

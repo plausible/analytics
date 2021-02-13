@@ -34,6 +34,13 @@ class ExitPagesModal extends React.Component {
     this.setState({loading: true, page: this.state.page + 1}, this.loadPages.bind(this))
   }
 
+  formatPercentage(number) {
+    if (typeof(number) === 'number') {
+      return number + '%'
+    } else {
+      return '-'
+    }
+  }
 
   renderPage(page) {
     const query = new URLSearchParams(window.location.search)
@@ -46,6 +53,7 @@ class ExitPagesModal extends React.Component {
         </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.exits)}</td>
+        <td className="p-2 w-32 font-medium" align="right">{this.formatPercentage(page.exit_rate)}</td>
       </tr>
     )
   }
@@ -78,6 +86,7 @@ class ExitPagesModal extends React.Component {
                   <th className="p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Page url</th>
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Unique Exits</th>
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Total Exits</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Exit Rate</th>
                 </tr>
               </thead>
               <tbody>

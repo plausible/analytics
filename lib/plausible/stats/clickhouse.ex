@@ -485,7 +485,7 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
-  def entry_pages(site, query, limit, page \\ 1, include) do
+  def entry_pages(site, query, limit, page \\ 1) do
     offset = (page - 1) * limit
 
     q =
@@ -498,20 +498,14 @@ defmodule Plausible.Stats.Clickhouse do
         select: %{
           name: s.entry_page,
           count: fragment("uniq(?) as count", s.user_id),
-          entries: fragment("count(*) as entries")
+          entries: fragment("count(*) as entries"),
+          visit_duration: fragment("avg(?) as visit_duration", s.duration)
         }
       )
 
     q = add_goal_filter(site, query, q)
 
-    pages = ClickhouseRepo.all(q)
-
-    if "bounce_rate" in include do
-      bounce_rates = bounce_rates_by_page_url(site, query)
-      Enum.map(pages, fn url -> Map.put(url, :bounce_rate, bounce_rates[url[:name]]) end)
-    else
-      pages
-    end
+    ClickhouseRepo.all(q)
   end
 
   def exit_pages(site, query, limit, page \\ 1) do
@@ -533,7 +527,26 @@ defmodule Plausible.Stats.Clickhouse do
 
     q = add_goal_filter(site, query, q)
 
-    ClickhouseRepo.all(q)
+    result = ClickhouseRepo.all(q)
+
+    if Enum.count(result) > 0 do
+      pages = Enum.map(result, fn r -> r[:name] end)
+
+      total_pageviews = ClickhouseRepo.all(from(
+          e in base_query_w_sessions(site, query),
+          group_by: e.pathname,
+          where: fragment("? IN tuple(?)", e.pathname, ^pages),
+          where: e.name == ^"pageview",
+          select: {e.pathname, fragment("count(*)")}
+        )) |> Enum.into(%{})
+
+      Enum.map(result, fn r ->
+        exit_rate = r[:exits]/Map.get(total_pageviews,r[:name]) * 100
+        Map.put(r, :exit_rate, Float.floor(exit_rate))
+      end)
+    else
+      result
+    end
   end
 
   def top_pages(site, %Query{period: "realtime"} = query, limit, page, _include) do

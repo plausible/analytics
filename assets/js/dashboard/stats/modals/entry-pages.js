@@ -4,7 +4,7 @@ import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import * as api from '../../api'
-import numberFormatter from '../../number-formatter'
+import numberFormatter, { durationFormatter } from '../../number-formatter'
 import {parseQuery} from '../../query'
 
 class EntryPagesModal extends React.Component {
@@ -24,10 +24,9 @@ class EntryPagesModal extends React.Component {
   }
 
   loadPages() {
-    const include = this.showBounceRate() ? 'bounce_rate' : null
     const {query, page, pages} = this.state;
 
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`, query, {limit: 100, page, include})
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`, query, {limit: 100, page})
       .then((res) => this.setState((state) => ({loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100})))
   }
 
@@ -35,8 +34,8 @@ class EntryPagesModal extends React.Component {
     this.setState({loading: true, page: this.state.page + 1}, this.loadPages.bind(this))
   }
 
-  showBounceRate() {
-    return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
+  showVisitDuration() {
+    return this.state.query.period !== 'realtime'
   }
 
   formatBounceRate(page) {
@@ -58,7 +57,7 @@ class EntryPagesModal extends React.Component {
         </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.entries)}</td>
-        {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td> }
+        {this.showVisitDuration() && <td className="p-2 w-32 font-medium" align="right">{durationFormatter(page.visit_duration)}</td>}
       </tr>
     )
   }
@@ -89,9 +88,9 @@ class EntryPagesModal extends React.Component {
               <thead>
                 <tr>
                   <th className="p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Page url</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Unique Entrants</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Unique Entrances</th>
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Total Entrances</th>
-                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Bounce rate</th>}
+                  {<th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visit Duration</th>}
                 </tr>
               </thead>
               <tbody>
