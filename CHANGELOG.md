@@ -1,7 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.2] - Unreleased
+## [1.3] - Unreleased
+
+### Added
+- Stats API [currently in beta] plausible/analytics#679
+
+## [1.2] - 2021-01-26
 
 ### Added
 - Ability to add event metadata plausible/analytics#381
