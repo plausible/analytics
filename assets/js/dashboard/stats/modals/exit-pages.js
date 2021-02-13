@@ -26,7 +26,7 @@ class ExitPagesModal extends React.Component {
   loadPages() {
     const {query, page, pages} = this.state;
 
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`, query, {limit: 100, page})
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/exit-pages`, query, {limit: 100, page})
       .then((res) => this.setState((state) => ({loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100})))
   }
 
@@ -45,6 +45,7 @@ class ExitPagesModal extends React.Component {
           <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline">{page.name}</Link>
         </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
+        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.exits)}</td>
       </tr>
     )
   }
@@ -75,7 +76,8 @@ class ExitPagesModal extends React.Component {
               <thead>
                 <tr>
                   <th className="p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Page url</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Entrants</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Unique Exits</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Total Exits</th>
                 </tr>
               </thead>
               <tbody>

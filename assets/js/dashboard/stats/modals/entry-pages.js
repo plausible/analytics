@@ -57,6 +57,7 @@ class EntryPagesModal extends React.Component {
           <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline">{page.name}</Link>
         </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
+        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.entries)}</td>
         {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td> }
       </tr>
     )
@@ -88,7 +89,8 @@ class EntryPagesModal extends React.Component {
               <thead>
                 <tr>
                   <th className="p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Page url</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Entrants</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Unique Entrants</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Total Entrances</th>
                   {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Bounce rate</th>}
                 </tr>
               </thead>

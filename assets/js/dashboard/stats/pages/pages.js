@@ -56,8 +56,6 @@ export default class Visits extends React.Component {
     const filters = this.props.query.filters
     if (this.props.query.period === 'realtime') {
       return 'Current visitors'
-    } else if (filters['source'] || filters['referrer']) {
-      return 'Entrances'
     } else {
       return 'Visitors'
     }

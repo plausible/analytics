@@ -7,7 +7,7 @@ import ExitPages from './exit-pages'
 import FadeIn from '../../fade-in'
 
 const labelFor = {
-	'pages': 'Page Visits',
+	'pages': 'Top Pages',
 	'entry-pages': 'Entry Pages',
 	'exit-pages': 'Exit Pages',
 }
@@ -59,7 +59,7 @@ export default class Pages extends React.Component {
             <h3 className="font-bold dark:text-gray-100">{labelFor[this.state.mode] || 'Page Visits'}</h3>
 
             <ul className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
-              { this.renderPill('Visits', 'pages') }
+              { this.renderPill('Top Pages', 'pages') }
               { this.renderPill('Entry Pages', 'entry-pages') }
               { this.renderPill('Exit Pages', 'exit-pages') }
             </ul>

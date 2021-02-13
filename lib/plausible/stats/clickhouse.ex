@@ -487,8 +487,6 @@ defmodule Plausible.Stats.Clickhouse do
 
   def entry_pages(site, query, limit, page \\ 1, include) do
     offset = (page - 1) * limit
-    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
-    {goal_event, path} = event_name_for_goal(query)
 
     q =
       from(
@@ -499,48 +497,12 @@ defmodule Plausible.Stats.Clickhouse do
         offset: ^offset,
         select: %{
           name: s.entry_page,
-          count: fragment("uniq(?) as count", s.user_id)
+          count: fragment("uniq(?) as count", s.user_id),
+          entries: fragment("count(*) as entries")
         }
       )
 
-    q =
-      if query.filters["page"] do
-        page = query.filters["page"]
-        from(s in q, where: s.exit_page == ^page)
-      else
-        q
-      end
-
-    event_q =
-      from(e in "events",
-        where: e.domain == ^site.domain,
-        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
-        select: %{session_id: e.session_id}
-      )
-
-    event_q =
-      if goal_event do
-        from(e in event_q, where: e.name == ^goal_event)
-      else
-        event_q
-      end
-
-    event_q = if path do
-      from(e in event_q, where: e.pathname == ^path)
-    else
-      event_q
-    end
-
-    q =
-      if goal_event || path do
-        from(
-            e in q,
-            join: eq in subquery(event_q),
-            on: e.session_id == eq.session_id
-          )
-      else
-        q
-      end
+    q = add_goal_filter(site, query, q)
 
     pages = ClickhouseRepo.all(q)
 
@@ -554,60 +516,22 @@ defmodule Plausible.Stats.Clickhouse do
 
   def exit_pages(site, query, limit, page \\ 1) do
     offset = (page - 1) * limit
-    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
-    {goal_event, path} = event_name_for_goal(query)
 
     q =
       from(
-        s in base_session_query(site, query),
+        s in base_session_query(site, query, true),
         group_by: s.exit_page,
         order_by: [desc: fragment("count")],
         limit: ^limit,
         offset: ^offset,
         select: %{
           name: s.exit_page,
-          count: fragment("uniq(?) as count", s.user_id)
+          count: fragment("count(?) as count", s.user_id),
+          exits: fragment("count(*) as exits")
         }
       )
 
-    q =
-      if query.filters["page"] do
-        page = query.filters["page"]
-        from(s in q, where: s.exit_page == ^page)
-      else
-        q
-      end
-
-    event_q =
-      from(e in "events",
-        where: e.domain == ^site.domain,
-        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
-        select: %{session_id: e.session_id}
-      )
-
-    event_q =
-      if goal_event do
-        from(e in event_q, where: e.name == ^goal_event)
-      else
-        event_q
-      end
-
-    event_q = if path do
-      from(e in event_q, where: e.pathname == ^path)
-    else
-      event_q
-    end
-
-    q =
-      if goal_event || path do
-        from(
-            e in q,
-            join: eq in subquery(event_q),
-            on: e.session_id == eq.session_id
-          )
-      else
-        q
-      end
+    q = add_goal_filter(site, query, q)
 
     ClickhouseRepo.all(q)
   end
@@ -677,6 +601,41 @@ defmodule Plausible.Stats.Clickhouse do
     Enum.map(stat_list, fn stat ->
       Map.put(stat, :percentage, round(stat[:count] / total * 100))
     end)
+  end
+
+  defp add_goal_filter(site, query, q) do
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
+    {goal_event, path} = event_name_for_goal(query)
+
+    event_q =
+      from(e in "events",
+        where: e.domain == ^site.domain,
+        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
+        select: %{session_id: e.session_id}
+      )
+
+    event_q =
+      if goal_event do
+        from(e in event_q, where: e.name == ^goal_event)
+      else
+        event_q
+      end
+
+    event_q = if path do
+      from(e in event_q, where: e.pathname == ^path)
+    else
+      event_q
+    end
+
+    if goal_event || path do
+      from(
+          e in q,
+          join: eq in subquery(event_q),
+          on: e.session_id == eq.session_id
+        )
+    else
+      q
+    end
   end
 
   def top_screen_sizes(site, query) do
@@ -1150,7 +1109,7 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  defp base_session_query(site, query) do
+  defp base_session_query(site, query, exit_pages \\ false) do
     {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
     q =
@@ -1243,7 +1202,11 @@ defmodule Plausible.Stats.Clickhouse do
     q =
       if query.filters["page"] do
         page = query.filters["page"]
-        from(s in q, where: s.entry_page == ^page)
+        if exit_pages do
+          from(s in q, where: s.exit_page == ^page)
+        else
+          from(s in q, where: s.entry_page == ^page)
+        end
       else
         q
       end
