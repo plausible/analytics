@@ -68,7 +68,12 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/entry-pages?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
-               %{"count" => 3, "entries" => 3, "name" => "/", "visit_duration" => 200}
+               %{
+                 "count" => 3,
+                 "entries" => 3,
+                 "name" => "/",
+                 "visit_duration" => 66.66666666666667
+               }
              ]
     end
 
@@ -81,7 +86,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "visit_duration" => 200,
+                 "visit_duration" => 66.66666666666667,
                  "count" => 3,
                  "entries" => 3,
                  "name" => "/"
