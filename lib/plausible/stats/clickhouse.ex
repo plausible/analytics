@@ -567,7 +567,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     q =
       from(
-        e in base_query(site, query),
+        e in base_query_w_sessions(site, query),
         group_by: e.pathname,
         order_by: [desc: fragment("count")],
         limit: ^limit,

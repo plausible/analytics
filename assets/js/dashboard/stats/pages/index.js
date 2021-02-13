@@ -22,14 +22,6 @@ export default class Pages extends React.Component {
     }
   }
 
-	componentDidUpdate(prevProps, prevState) {
-		const filters = this.props.query.filters
-
-    if ((filters.source || filters.referrer) && this.state.mode == 'pages') {
-			this.setState({mode: 'entry-pages'})
-    }
-	}
-
   renderContent() {
     if (this.state.mode === 'pages') {
       return <Visits site={this.props.site} query={this.props.query} timer={this.props.timer} />
@@ -67,7 +59,7 @@ export default class Pages extends React.Component {
             <h3 className="font-bold dark:text-gray-100">{labelFor[this.state.mode] || 'Page Visits'}</h3>
 
             <ul className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
-              { !filters['source'] && !filters['referrer'] && this.renderPill('Visits', 'pages') }
+              { this.renderPill('Visits', 'pages') }
               { this.renderPill('Entry Pages', 'entry-pages') }
               { this.renderPill('Exit Pages', 'exit-pages') }
             </ul>
