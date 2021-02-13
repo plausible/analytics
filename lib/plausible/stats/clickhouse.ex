@@ -532,16 +532,20 @@ defmodule Plausible.Stats.Clickhouse do
     if Enum.count(result) > 0 do
       pages = Enum.map(result, fn r -> r[:name] end)
 
-      total_pageviews = ClickhouseRepo.all(from(
-          e in base_query_w_sessions(site, query),
-          group_by: e.pathname,
-          where: fragment("? IN tuple(?)", e.pathname, ^pages),
-          where: e.name == ^"pageview",
-          select: {e.pathname, fragment("count(*)")}
-        )) |> Enum.into(%{})
+      total_pageviews =
+        ClickhouseRepo.all(
+          from(
+            e in base_query_w_sessions(site, query),
+            group_by: e.pathname,
+            where: fragment("? IN tuple(?)", e.pathname, ^pages),
+            where: e.name == ^"pageview",
+            select: {e.pathname, fragment("count(*)")}
+          )
+        )
+        |> Enum.into(%{})
 
       Enum.map(result, fn r ->
-        exit_rate = r[:exits]/Map.get(total_pageviews,r[:name]) * 100
+        exit_rate = r[:exits] / Map.get(total_pageviews, r[:name]) * 100
         Map.put(r, :exit_rate, Float.floor(exit_rate))
       end)
     else
