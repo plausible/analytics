@@ -487,6 +487,8 @@ defmodule Plausible.Stats.Clickhouse do
 
   def entry_pages(site, query, limit, page \\ 1, include) do
     offset = (page - 1) * limit
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
+    {goal_event, path} = event_name_for_goal(query)
 
     q =
       from(
@@ -504,7 +506,38 @@ defmodule Plausible.Stats.Clickhouse do
     q =
       if query.filters["page"] do
         page = query.filters["page"]
-        from(s in q, where: s.entry_page == ^page)
+        from(s in q, where: s.exit_page == ^page)
+      else
+        q
+      end
+
+    event_q =
+      from(e in "events",
+        where: e.domain == ^site.domain,
+        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
+        select: %{session_id: e.session_id}
+      )
+
+    event_q =
+      if goal_event do
+        from(e in event_q, where: e.name == ^goal_event)
+      else
+        event_q
+      end
+
+    event_q = if path do
+      from(e in event_q, where: e.pathname == ^path)
+    else
+      event_q
+    end
+
+    q =
+      if goal_event || path do
+        from(
+            e in q,
+            join: eq in subquery(event_q),
+            on: e.session_id == eq.session_id
+          )
       else
         q
       end
@@ -521,6 +554,8 @@ defmodule Plausible.Stats.Clickhouse do
 
   def exit_pages(site, query, limit, page \\ 1) do
     offset = (page - 1) * limit
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
+    {goal_event, path} = event_name_for_goal(query)
 
     q =
       from(
@@ -539,6 +574,37 @@ defmodule Plausible.Stats.Clickhouse do
       if query.filters["page"] do
         page = query.filters["page"]
         from(s in q, where: s.exit_page == ^page)
+      else
+        q
+      end
+
+    event_q =
+      from(e in "events",
+        where: e.domain == ^site.domain,
+        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
+        select: %{session_id: e.session_id}
+      )
+
+    event_q =
+      if goal_event do
+        from(e in event_q, where: e.name == ^goal_event)
+      else
+        event_q
+      end
+
+    event_q = if path do
+      from(e in event_q, where: e.pathname == ^path)
+    else
+      event_q
+    end
+
+    q =
+      if goal_event || path do
+        from(
+            e in q,
+            join: eq in subquery(event_q),
+            on: e.session_id == eq.session_id
+          )
       else
         q
       end
