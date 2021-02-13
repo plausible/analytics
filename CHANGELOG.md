@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Stats API [currently in beta] plausible/analytics#679
-
+- Ability to view entry and exit pages, in addition to regular page hits plausible/analytics#712
 ## [1.2] - 2021-01-26
 
 ### Added
