@@ -95,6 +95,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end
   end
 
+  defp validate_date(%{"period" => "custom"} = params) do
+    with {:ok, date} <- Map.fetch(params, "date"),
+         [from, to] <- String.split(date, ","),
+         {:ok, _from} <- Date.from_iso8601(from),
+         {:ok, _to} <- Date.from_iso8601(to) do
+      :ok
+    else
+      _ ->
+        {:error,
+         "The `date` parameter is required when using a custom period. See https://plausible.io/docs/stats-api#time-periods"}
+    end
+  end
+
   defp validate_date(%{"date" => date}) do
     case Date.from_iso8601(date) do
       {:ok, _date} ->
