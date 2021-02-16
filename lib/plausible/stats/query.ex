@@ -158,8 +158,8 @@ defmodule Plausible.Stats.Query do
 
   def from(_tz, %{"period" => "custom", "date" => date} = params) do
     [from, to] = String.split(date, ",")
-    from_date = Date.from_iso8601!(from)
-    to_date = Date.from_iso8601!(to)
+    from_date = Date.from_iso8601!(String.trim(from))
+    to_date = Date.from_iso8601!(String.trim(to))
 
     %__MODULE__{
       period: "custom",

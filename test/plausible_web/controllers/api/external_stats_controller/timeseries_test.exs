@@ -132,8 +132,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       get(conn, "/api/v1/stats/timeseries", %{
         "site_id" => site.domain,
         "period" => "custom",
-        "from" => "2021-01-01",
-        "to" => "2021-01-02"
+        "date" => "2021-01-01,2021-01-02"
       })
 
     assert json_response(conn, 200) == [
@@ -153,8 +152,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       get(conn, "/api/v1/stats/timeseries", %{
         "site_id" => site.domain,
         "period" => "custom",
-        "from" => "2020-12-01",
-        "to" => "2021-01-02",
+        "date" => "2020-12-01, 2021-01-02",
         "interval" => "month"
       })
 
