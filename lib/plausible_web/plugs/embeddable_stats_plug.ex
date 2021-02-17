@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.EmbeddableStatsPlug do
   import Plug.Conn
-  use Plausible.Repo
 
   def init(options) do
     options

@@ -44,6 +44,26 @@ defmodule PlausibleWeb.StatsView do
     """
   end
 
+  def theme_path(conn, theme) do
+    current_path_list = conn.path_params["path"]
+
+    theme_index = Enum.find_index(current_path_list, fn x -> x == "theme" end)
+
+    path_list =
+      if(
+        theme_index,
+        do:
+          List.insert_at(
+            List.delete_at(current_path_list, theme_index + 1),
+            theme_index + 1,
+            theme
+          ),
+        else: current_path_list ++ ["theme", theme]
+      )
+
+    "/" <> Enum.join(path_list, "/")
+  end
+
   defp bar_width(count, all) do
     max =
       Enum.max_by(all, fn
