@@ -7,6 +7,7 @@ defmodule PlausibleWeb.StatsController do
   plug PlausibleWeb.AuthorizeStatsPlug when action in [:stats, :csv_export]
   plug PlausibleWeb.UpgradeBillingPlug when action in [:stats]
   plug PlausibleWeb.EmbeddableStatsPlug when action in [:stats]
+  plug PlausibleWeb.SharedLinkThemeSelectionPlug when action in [:stats]
 
   plug PlausibleWeb.EmbeddableAuthSharedLinkPlug
        when action in [:shared_link, :authenticate_shared_link]
@@ -15,7 +16,16 @@ defmodule PlausibleWeb.StatsController do
     PlausibleWeb.Endpoint.host()
   end
 
-  def stats(%{assigns: %{site: site}} = conn, _params) do
+  def stats(
+        %{
+          assigns: %{
+            site: site,
+            valid_shared_link: valid_shared_link,
+            selected_theme: selected_theme
+          }
+        } = conn,
+        _params
+      ) do
     if Stats.has_pageviews?(site) do
       demo = site.domain == base_domain()
       offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
@@ -30,7 +40,9 @@ defmodule PlausibleWeb.StatsController do
         has_goals: Plausible.Sites.has_goals?(site),
         title: "Plausible · " <> site.domain,
         offer_email_report: offer_email_report,
-        demo: demo
+        demo: demo,
+        valid_shared_link: valid_shared_link,
+        selected_theme: selected_theme
       )
     else
       conn
