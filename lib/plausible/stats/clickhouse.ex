@@ -497,8 +497,8 @@ defmodule Plausible.Stats.Clickhouse do
         offset: ^offset,
         select: %{
           name: s.entry_page,
-          count: fragment("uniq(?) as count", s.user_id),
-          entries: fragment("count(*) as entries"),
+          count: fragment("uniq(DISTINCT ?) as count", s.user_id),
+          entries: fragment("count(DISTINCT ?) as entries", s.session_id),
           visit_duration: fragment("avg(?) as visit_duration", s.duration)
         }
       )
@@ -520,8 +520,8 @@ defmodule Plausible.Stats.Clickhouse do
         offset: ^offset,
         select: %{
           name: s.exit_page,
-          count: fragment("count(?) as count", s.user_id),
-          exits: fragment("count(*) as exits")
+          count: fragment("count(DISTINCT ?) as count", s.user_id),
+          exits: fragment("count(DISTINCT ?) as exits", s.session_id)
         }
       )
 
@@ -532,21 +532,31 @@ defmodule Plausible.Stats.Clickhouse do
     if Enum.count(result) > 0 do
       pages = Enum.map(result, fn r -> r[:name] end)
 
-      total_pageviews =
-        ClickhouseRepo.all(
-          from(
-            e in base_query_w_sessions(site, query),
-            group_by: e.pathname,
-            where: fragment("? IN tuple(?)", e.pathname, ^pages),
-            where: e.name == ^"pageview",
-            select: {e.pathname, fragment("count(*)")}
-          )
+      q2 =
+        from(
+          e in base_query_w_sessions(site, query),
+          select: %{session_id: fragment("DISTINCT ?", e.session_id)}
         )
-        |> Enum.into(%{})
+
+      event_q =
+        from(e in base_query_w_sessions_bare(site, query),
+          join: eq in subquery(q2),
+          on: e.session_id == eq.session_id,
+          group_by: e.pathname,
+          where: fragment("? IN tuple(?)", e.pathname, ^pages),
+          select: {
+            e.pathname,
+            fragment("count(*)")
+          }
+        )
+
+      total_pageviews = ClickhouseRepo.all(event_q) |> Enum.into(%{})
 
       Enum.map(result, fn r ->
-        exit_rate = r[:exits] / Map.get(total_pageviews, r[:name]) * 100
-        Map.put(r, :exit_rate, Float.floor(exit_rate))
+        if Map.get(total_pageviews, r[:name]) do
+          exit_rate = r[:exits] / Map.get(total_pageviews, r[:name]) * 100
+          Map.put(r, :exit_rate, Float.floor(exit_rate))
+        end
       end)
     else
       result
