@@ -73,6 +73,7 @@ defmodule PlausibleWeb.Router do
 
     get "/realtime/visitors", ExternalStatsController, :realtime_visitors
     get "/aggregate", ExternalStatsController, :aggregate
+    get "/breakdown", ExternalStatsController, :breakdown
     get "/timeseries", ExternalStatsController, :timeseries
   end
 

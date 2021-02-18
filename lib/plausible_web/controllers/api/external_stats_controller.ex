@@ -55,6 +55,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end
   end
 
+  def breakdown(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, params)
+    property = Map.fetch!(params, "property")
+
+    metrics =
+      Map.get(params, "metrics", "visitors")
+      |> String.split(",")
+
+    limit = String.to_integer(Map.get(params, "limit", "100"))
+    page = String.to_integer(Map.get(params, "page", "1"))
+
+    json(conn, Plausible.Stats.breakdown(site, query, property, metrics, {limit, page}))
+  end
+
   def timeseries(conn, params) do
     with :ok <- validate_date(params),
          :ok <- validate_period(params),
