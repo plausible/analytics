@@ -25,6 +25,8 @@ defmodule Plausible.Stats.Breakdown do
     |> Enum.map(fn {k, v} -> Map.put(v, :page, k) end)
   end
 
+  def breakdown(_, _, _, [], _), do: %{}
+
   def breakdown(site, query, property, metrics, {limit, page}) do
     offset = (page - 1) * limit
 
