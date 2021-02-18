@@ -1,6 +1,7 @@
 defmodule Plausible.Billing do
   use Plausible.Repo
   alias Plausible.Billing.{Subscription, PaddleApi}
+  use Plausible.ClickhouseRepo
 
   def active_subscription_for(user_id) do
     Repo.get_by(Subscription, user_id: user_id, status: "active")
@@ -134,8 +135,46 @@ defmodule Plausible.Billing do
     pageviews + custom_events
   end
 
-  def last_two_billing_months_usage(_user) do
-    {1, 2}
+  defp get_usage_for_billing_cycle(user, cycle) do
+    domains = Enum.map(user.sites, & &1.domain)
+
+    ClickhouseRepo.one(
+      from e in "events",
+        where: e.domain in ^domains,
+        where: fragment("toDate(?)", e.timestamp) >= ^cycle.first,
+        where: fragment("toDate(?)", e.timestamp) <= ^cycle.last,
+        select: fragment("count(*)")
+    )
+  end
+
+  def last_two_billing_months_usage(user, today \\ Timex.today()) do
+    {first, second} = last_two_billing_cycles(user, today)
+    user = Repo.preload(user, :sites)
+
+    {
+      get_usage_for_billing_cycle(user, first),
+      get_usage_for_billing_cycle(user, second)
+    }
+  end
+
+  def last_two_billing_cycles(user, today \\ Timex.today()) do
+    last_bill_date = user.subscription.last_bill_date
+
+    normalized_last_bill_date =
+      Timex.shift(last_bill_date,
+        months: Timex.diff(today, last_bill_date, :months)
+      )
+
+    {
+      Date.range(
+        Timex.shift(normalized_last_bill_date, months: -2),
+        Timex.shift(normalized_last_bill_date, days: -1, months: -1)
+      ),
+      Date.range(
+        Timex.shift(normalized_last_bill_date, months: -1),
+        Timex.shift(normalized_last_bill_date, days: -1)
+      )
+    }
   end
 
   def usage_breakdown(user) do

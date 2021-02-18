@@ -2,6 +2,7 @@ defmodule Plausible.BillingTest do
   use Plausible.DataCase
   use Bamboo.Test, shared: true
   alias Plausible.Billing
+  import Plausible.TestUtils
 
   describe "usage" do
     test "is 0 with no events" do
@@ -15,6 +16,64 @@ defmodule Plausible.BillingTest do
       insert(:site, domain: "test-site.com", members: [user])
 
       assert Billing.usage(user) == 3
+    end
+  end
+
+  describe "last_two_billing_cycles" do
+    test "billing on the 1st" do
+      last_bill_date = ~D[2021-01-01]
+      today = ~D[2021-01-02]
+
+      user = insert(:user, subscription: build(:subscription, last_bill_date: last_bill_date))
+
+      expected_cycles = {
+        Date.range(~D[2020-11-01], ~D[2020-11-30]),
+        Date.range(~D[2020-12-01], ~D[2020-12-31])
+      }
+
+      assert Billing.last_two_billing_cycles(user, today) == expected_cycles
+    end
+
+    test "in case of yearly billing, cycles are normalized as if they were paying monthly" do
+      last_bill_date = ~D[2020-09-01]
+      today = ~D[2021-02-02]
+
+      user = insert(:user, subscription: build(:subscription, last_bill_date: last_bill_date))
+
+      expected_cycles = {
+        Date.range(~D[2020-12-01], ~D[2020-12-31]),
+        Date.range(~D[2021-01-01], ~D[2021-01-31])
+      }
+
+      assert Billing.last_two_billing_cycles(user, today) == expected_cycles
+    end
+  end
+
+  describe "last_two_billing_months_usage" do
+    test "counts events from last two billing cycles" do
+      last_bill_date = ~D[2021-01-01]
+      today = ~D[2021-01-02]
+      user = insert(:user, subscription: build(:subscription, last_bill_date: last_bill_date))
+      site = insert(:site, members: [user])
+
+      create_pageviews([
+        %{domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]},
+        %{domain: site.domain, timestamp: ~N[2020-12-31 00:00:00]},
+        %{domain: site.domain, timestamp: ~N[2020-11-01 00:00:00]},
+        %{domain: site.domain, timestamp: ~N[2020-10-31 00:00:00]}
+      ])
+
+      assert Billing.last_two_billing_months_usage(user, today) == {1, 1}
+    end
+
+    test "gets event count from last month and this one" do
+      user =
+        insert(:user,
+          subscription:
+            build(:subscription, last_bill_date: Timex.today() |> Timex.shift(days: -1))
+        )
+
+      assert Billing.last_two_billing_months_usage(user) == {0, 0}
     end
   end
 
