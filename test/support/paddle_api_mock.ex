@@ -5,6 +5,10 @@ defmodule Plausible.PaddleApi.Mock do
        "next_payment" => %{
          "date" => "2019-07-10",
          "amount" => 6
+       },
+       "last_payment" => %{
+         "date" => "2019-06-10",
+         "amount" => 6
        }
      }}
   end

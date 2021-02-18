@@ -66,7 +66,7 @@ defmodule Plausible.Billing do
         Subscription.changeset(subscription, %{
           next_bill_amount: amount,
           next_bill_date: api_subscription["next_payment"]["date"],
-          last_bill_date: params["event_time"]
+          last_bill_date: api_subscription["last_payment"]["date"]
         })
 
       Repo.update(changeset)

@@ -226,8 +226,7 @@ defmodule Plausible.BillingTest do
 
       Billing.subscription_payment_succeeded(%{
         "alert_name" => "subscription_payment_succeeded",
-        "subscription_id" => subscription.paddle_subscription_id,
-        "event_time" => "2019-06-10 09:40:20"
+        "subscription_id" => subscription.paddle_subscription_id
       })
 
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
