@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Stats API [currently in beta] plausible/analytics#679
+- 30 day and 6 month keybindings (`3` and `6`, respectively) plausible/analytics#709
+
+### Fixed
+- Capitalized date/time selection keybinds not working plausible/analytics#709
 
 ## [1.2] - 2021-01-26
 
