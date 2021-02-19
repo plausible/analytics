@@ -69,8 +69,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
       limit = String.to_integer(Map.get(params, "limit", "100"))
       page = String.to_integer(Map.get(params, "page", "1"))
-
-      json(conn, Plausible.Stats.breakdown(site, query, property, metrics, {limit, page}))
+      results = Plausible.Stats.breakdown(site, query, property, metrics, {limit, page})
+      json(conn, %{"results" => results})
     else
       {:error, msg} ->
         conn

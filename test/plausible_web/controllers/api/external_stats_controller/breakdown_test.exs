@@ -58,10 +58,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         "property" => "visit:source"
       })
 
-    assert json_response(conn, 200) == [
-             %{"source" => "Google", "visitors" => 2},
-             %{"source" => "Twitter", "visitors" => 1}
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"source" => "Google", "visitors" => 2},
+               %{"source" => "Twitter", "visitors" => 1}
+             ]
+           }
   end
 
   test "breakdown by visit:country", %{conn: conn, site: site} do
@@ -79,10 +81,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         "property" => "visit:country"
       })
 
-    assert json_response(conn, 200) == [
-             %{"country" => "EE", "visitors" => 2},
-             %{"country" => "US", "visitors" => 1}
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"country" => "EE", "visitors" => 2},
+               %{"country" => "US", "visitors" => 1}
+             ]
+           }
   end
 
   test "breakdown by visit:referrer", %{conn: conn, site: site} do
@@ -112,10 +116,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         "property" => "visit:referrer"
       })
 
-    assert json_response(conn, 200) == [
-             %{"referrer" => "https://ref.com", "visitors" => 2},
-             %{"referrer" => "https://ref2.com", "visitors" => 1}
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"referrer" => "https://ref.com", "visitors" => 2},
+               %{"referrer" => "https://ref2.com", "visitors" => 1}
+             ]
+           }
   end
 
   test "breakdown by visit:utm_medium", %{conn: conn, site: site} do
@@ -145,10 +151,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         "property" => "visit:utm_medium"
       })
 
-    assert json_response(conn, 200) == [
-             %{"utm_medium" => "Search", "visitors" => 2},
-             %{"utm_medium" => "Social", "visitors" => 1}
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"utm_medium" => "Search", "visitors" => 2},
+               %{"utm_medium" => "Social", "visitors" => 1}
+             ]
+           }
   end
 
   test "breakdown by visit:utm_source", %{conn: conn, site: site} do
@@ -178,10 +186,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         "property" => "visit:utm_source"
       })
 
-    assert json_response(conn, 200) == [
-             %{"utm_source" => "Google", "visitors" => 2},
-             %{"utm_source" => "Twitter", "visitors" => 1}
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"utm_source" => "Google", "visitors" => 2},
+               %{"utm_source" => "Twitter", "visitors" => 1}
+             ]
+           }
   end
 
   test "breakdown by visit:utm_campaign", %{conn: conn, site: site} do
@@ -211,10 +221,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         "property" => "visit:utm_campaign"
       })
 
-    assert json_response(conn, 200) == [
-             %{"utm_campaign" => "ads", "visitors" => 2},
-             %{"utm_campaign" => "profile", "visitors" => 1}
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"utm_campaign" => "ads", "visitors" => 2},
+               %{"utm_campaign" => "profile", "visitors" => 1}
+             ]
+           }
   end
 
   test "breakdown by visit:device", %{conn: conn, site: site} do
@@ -244,10 +256,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         "property" => "visit:device"
       })
 
-    assert json_response(conn, 200) == [
-             %{"device" => "Desktop", "visitors" => 2},
-             %{"device" => "Mobile", "visitors" => 1}
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"device" => "Desktop", "visitors" => 2},
+               %{"device" => "Mobile", "visitors" => 1}
+             ]
+           }
   end
 
   test "breakdown by visit:os", %{conn: conn, site: site} do
@@ -277,10 +291,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         "property" => "visit:os"
       })
 
-    assert json_response(conn, 200) == [
-             %{"os" => "Mac", "visitors" => 2},
-             %{"os" => "Windows", "visitors" => 1}
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"os" => "Mac", "visitors" => 2},
+               %{"os" => "Windows", "visitors" => 1}
+             ]
+           }
   end
 
   test "breakdown by visit:os_version", %{conn: conn, site: site} do
@@ -310,10 +326,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         "property" => "visit:os_version"
       })
 
-    assert json_response(conn, 200) == [
-             %{"os_version" => "10.5", "visitors" => 2},
-             %{"os_version" => "10.6", "visitors" => 1}
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"os_version" => "10.5", "visitors" => 2},
+               %{"os_version" => "10.6", "visitors" => 1}
+             ]
+           }
   end
 
   test "breakdown by visit:browser", %{conn: conn, site: site} do
@@ -331,10 +349,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         "property" => "visit:browser"
       })
 
-    assert json_response(conn, 200) == [
-             %{"browser" => "Firefox", "visitors" => 2},
-             %{"browser" => "Safari", "visitors" => 1}
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"browser" => "Firefox", "visitors" => 2},
+               %{"browser" => "Safari", "visitors" => 1}
+             ]
+           }
   end
 
   test "breakdown by visit:browser_version", %{conn: conn, site: site} do
@@ -364,10 +384,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         "property" => "visit:browser_version"
       })
 
-    assert json_response(conn, 200) == [
-             %{"browser_version" => "56", "visitors" => 2},
-             %{"browser_version" => "57", "visitors" => 1}
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"browser_version" => "56", "visitors" => 2},
+               %{"browser_version" => "57", "visitors" => 1}
+             ]
+           }
   end
 
   test "breakdown by event:page", %{conn: conn, site: site} do
@@ -389,10 +411,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         "property" => "event:page"
       })
 
-    assert json_response(conn, 200) == [
-             %{"page" => "/", "visitors" => 2},
-             %{"page" => "/plausible.io", "visitors" => 1}
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"page" => "/", "visitors" => 2},
+               %{"page" => "/plausible.io", "visitors" => 1}
+             ]
+           }
   end
 
   describe "pagination" do
@@ -413,7 +437,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         })
 
       res = json_response(conn, 200)
-      assert Enum.count(res) == 2
+      assert Enum.count(res["results"]) == 2
     end
 
     test "can paginate results", %{conn: conn, site: site} do
@@ -434,7 +458,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         })
 
       res = json_response(conn, 200)
-      assert Enum.count(res) == 1
+      assert Enum.count(res["results"]) == 1
     end
   end
 
@@ -474,22 +498,24 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "metrics" => "visitors,pageviews,bounce_rate,visit_duration"
         })
 
-      assert json_response(conn, 200) == [
-               %{
-                 "source" => "Google",
-                 "visitors" => 2,
-                 "bounce_rate" => 50,
-                 "visit_duration" => 300,
-                 "pageviews" => 3
-               },
-               %{
-                 "source" => "Twitter",
-                 "visitors" => 1,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "pageviews" => 1
-               }
-             ]
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "source" => "Google",
+                   "visitors" => 2,
+                   "bounce_rate" => 50,
+                   "visit_duration" => 300,
+                   "pageviews" => 3
+                 },
+                 %{
+                   "source" => "Twitter",
+                   "visitors" => 1,
+                   "bounce_rate" => 100,
+                   "visit_duration" => 0,
+                   "pageviews" => 1
+                 }
+               ]
+             }
     end
 
     test "all metrics for breakdown by event prop", %{conn: conn, site: site} do
@@ -523,22 +549,24 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "metrics" => "visitors,pageviews,bounce_rate,visit_duration"
         })
 
-      assert json_response(conn, 200) == [
-               %{
-                 "page" => "/",
-                 "visitors" => 2,
-                 "bounce_rate" => 50,
-                 "visit_duration" => 300,
-                 "pageviews" => 2
-               },
-               %{
-                 "page" => "/plausible.io",
-                 "visitors" => 2,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0,
-                 "pageviews" => 2
-               }
-             ]
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "page" => "/",
+                   "visitors" => 2,
+                   "bounce_rate" => 50,
+                   "visit_duration" => 300,
+                   "pageviews" => 2
+                 },
+                 %{
+                   "page" => "/plausible.io",
+                   "visitors" => 2,
+                   "bounce_rate" => 100,
+                   "visit_duration" => 0,
+                   "pageviews" => 2
+                 }
+               ]
+             }
     end
 
     test "just bounce rate for event:page", %{conn: conn, site: site} do
@@ -572,10 +600,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "metrics" => "bounce_rate"
         })
 
-      assert json_response(conn, 200) == [
-               %{"page" => "/", "bounce_rate" => 50},
-               %{"page" => "/plausible.io", "bounce_rate" => 100}
-             ]
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"page" => "/", "bounce_rate" => 50},
+                 %{"page" => "/plausible.io", "bounce_rate" => 100}
+               ]
+             }
     end
   end
 end
