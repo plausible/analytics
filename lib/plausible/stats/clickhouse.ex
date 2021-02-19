@@ -521,13 +521,19 @@ defmodule Plausible.Stats.Clickhouse do
         select: %{
           name: s.exit_page,
           count: fragment("count(DISTINCT ?) as count", s.user_id),
-          exits: fragment("count(DISTINCT ?) as exits", s.session_id)
+          exits: fragment("count(DISTINCT ?) as exits", s.session_id),
         }
       )
+
+    IO.puts "EXIT--"
+    IO.inspect q
 
     q = add_goal_filter(site, query, q)
 
     result = ClickhouseRepo.all(q)
+
+    IO.inspect q
+    IO.inspect result
 
     if Enum.count(result) > 0 do
       pages = Enum.map(result, fn r -> r[:name] end)
@@ -538,24 +544,45 @@ defmodule Plausible.Stats.Clickhouse do
           select: %{session_id: fragment("DISTINCT ?", e.session_id)}
         )
 
-      event_q =
-        from(e in base_query_w_sessions_bare(site, query),
-          join: eq in subquery(q2),
-          on: e.session_id == eq.session_id,
+      IO.inspect q2
+      IO.puts "PAGES--"
+      IO.inspect pages
+
+      event_q = from(e in base_query_bare(site,query),
           group_by: e.pathname,
           where: fragment("? IN tuple(?)", e.pathname, ^pages),
+          join: eq in subquery(q2),
+          on: e.session_id == eq.session_id,
           select: {
             e.pathname,
             fragment("count(*)")
           }
-        )
+      )
 
-      total_pageviews = ClickhouseRepo.all(event_q) |> Enum.into(%{})
+      IO.inspect event_q
+
+      total_pageviews = ClickhouseRepo.all(event_q)
+
+      IO.inspect total_pageviews
+
+      total_pageviews = total_pageviews |> Enum.into(%{})
+
+      IO.inspect total_pageviews
+      # Enum.map(total_pageviews, fn x -> IO.inspect x end)
+      # IO.inspect Enum.find_index(pages, fn x -> x=="/game/#/table/EarlyMedicalDearGoat" end)
+      # IO.inspect total_pageviews["/game/#/table/EarlyMedicalDearGoat"]
 
       Enum.map(result, fn r ->
+        IO.inspect [r[:name], r[:exits], Map.get(total_pageviews, r[:name])]
         if Map.get(total_pageviews, r[:name]) do
           exit_rate = r[:exits] / Map.get(total_pageviews, r[:name]) * 100
-          Map.put(r, :exit_rate, Float.floor(exit_rate))
+          if exit_rate > 100 do
+            Map.put(r, :exit_rate, 100.0)
+          else
+            Map.put(r, :exit_rate, Float.floor(exit_rate))
+          end
+        else
+          Map.put(r, :exit_rate, nil)
         end
       end)
     else
@@ -1248,9 +1275,8 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  defp base_query(site, query) do
+  defp base_query_bare(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
-    {goal_event, path} = event_name_for_goal(query)
 
     q =
       from(e in "events",
@@ -1346,25 +1372,30 @@ defmodule Plausible.Stats.Clickhouse do
         q
       end
 
-    q =
-      if query.filters["props"] do
-        [{key, val}] = query.filters["props"] |> Enum.into([])
+    if query.filters["props"] do
+      [{key, val}] = query.filters["props"] |> Enum.into([])
 
-        if val == "(none)" do
-          from(
-            e in q,
-            where: fragment("not has(meta.key, ?)", ^key)
-          )
-        else
-          from(
-            e in q,
-            inner_lateral_join: meta in fragment("meta as m"),
-            where: meta.key == ^key and meta.value == ^val
-          )
-        end
+      if val == "(none)" do
+        from(
+          e in q,
+          where: fragment("not has(meta.key, ?)", ^key)
+        )
       else
-        q
+        from(
+          e in q,
+          inner_lateral_join: meta in fragment("meta as m"),
+          where: meta.key == ^key and meta.value == ^val
+        )
       end
+    else
+      q
+    end
+  end
+
+  defp base_query(site, query) do
+    q = base_query_bare(site, query)
+
+    {goal_event, path} = event_name_for_goal(query)
 
     q =
       if path do
