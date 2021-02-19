@@ -4,6 +4,33 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
   setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
 
+  describe "param validation" do
+    test "validates that property is required", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "The `property` parameter is required. Please provide at least one property to show a breakdown by."
+             }
+    end
+
+    test "validates that correct period is used", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "bad_period"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Error parsing `period` parameter: invalid period `bad_period`. Please find accepted values in our docs: https://plausible.io/docs/stats-api#time-periods"
+             }
+    end
+  end
+
   test "breakdown by visit:source", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview,

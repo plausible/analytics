@@ -38,7 +38,7 @@ defmodule PlausibleWeb.AuthorizeApiStatsPlug do
     hashed_key = ApiKey.do_hash(api_key)
     found_key = Repo.get_by(ApiKey, key_hash: hashed_key)
     site = Repo.get_by(Plausible.Site, domain: site_id)
-    is_owner = site && Plausible.Sites.is_owner?(found_key.user_id, site)
+    is_owner = site && found_key && Plausible.Sites.is_owner?(found_key.user_id, site)
 
     cond do
       found_key && site && is_owner -> {:ok, site}

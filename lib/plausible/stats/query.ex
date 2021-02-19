@@ -1,11 +1,6 @@
 defmodule Plausible.Stats.Query do
   defstruct date_range: nil, interval: nil, period: nil, filters: %{}
 
-  def shift_back(%__MODULE__{period: "day"} = query) do
-    new_date = query.date_range.first |> Timex.shift(days: -1)
-    Map.put(query, :date_range, Date.range(new_date, new_date))
-  end
-
   def shift_back(%__MODULE__{period: "month"} = query, site) do
     # Querying current month to date
     {new_first, new_last} =

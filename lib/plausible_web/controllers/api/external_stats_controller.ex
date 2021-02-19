@@ -24,7 +24,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
       result =
         if params["compare"] == "previous_period" do
-          prev_query = Query.shift_back(query)
+          prev_query = Query.shift_back(query, site)
 
           [prev_result, curr_result] =
             Task.await_many([
@@ -38,7 +38,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
             {metric,
              %{
                value: current_val,
-               change: percent_change(prev_val, current_val)
+               previous_value: prev_val,
+               percent_change: percent_change(prev_val, current_val)
              }}
           end)
           |> Enum.into(%{})
@@ -56,18 +57,35 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   def breakdown(conn, params) do
-    site = conn.assigns[:site]
-    query = Query.from(site.timezone, params)
-    property = Map.fetch!(params, "property")
+    with :ok <- validate_date(params),
+         :ok <- validate_period(params),
+         {:ok, property} <- validate_property(params) do
+      site = conn.assigns[:site]
+      query = Query.from(site.timezone, params)
 
-    metrics =
-      Map.get(params, "metrics", "visitors")
-      |> String.split(",")
+      metrics =
+        Map.get(params, "metrics", "visitors")
+        |> String.split(",")
 
-    limit = String.to_integer(Map.get(params, "limit", "100"))
-    page = String.to_integer(Map.get(params, "page", "1"))
+      limit = String.to_integer(Map.get(params, "limit", "100"))
+      page = String.to_integer(Map.get(params, "page", "1"))
 
-    json(conn, Plausible.Stats.breakdown(site, query, property, metrics, {limit, page}))
+      json(conn, Plausible.Stats.breakdown(site, query, property, metrics, {limit, page}))
+    else
+      {:error, msg} ->
+        conn
+        |> put_status(400)
+        |> json(%{error: msg})
+    end
+  end
+
+  defp validate_property(%{"property" => property}) do
+    {:ok, property}
+  end
+
+  defp validate_property(_) do
+    {:error,
+     "The `property` parameter is required. Please provide at least one property to show a breakdown by."}
   end
 
   def timeseries(conn, params) do
