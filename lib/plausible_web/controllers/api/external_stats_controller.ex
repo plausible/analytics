@@ -98,10 +98,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
       graph =
         Enum.zip(labels, plot)
-        |> Enum.map(fn {label, val} -> %{date: label, value: val} end)
+        |> Enum.map(fn {label, val} -> %{date: label, visitors: val} end)
         |> Enum.into([])
 
-      json(conn, graph)
+      json(conn, %{"results" => graph})
     else
       {:error, msg} ->
         conn
