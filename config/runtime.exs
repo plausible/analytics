@@ -177,6 +177,8 @@ if config_env() == :prod && !disable_cron do
   extra_cron = [
     # Daily at midday
     {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
+    # Daily at 14
+    {"0 14 * * *", Plausible.Workers.CheckUsage},
     # Every 10 minutes
     {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}
   ]
@@ -194,7 +196,8 @@ if config_env() == :prod && !disable_cron do
 
   extra_queues = [
     provision_ssl_certificates: 1,
-    trial_notification_emails: 1
+    trial_notification_emails: 1,
+    check_usage: 1
   ]
 
   config :plausible, Oban,
