@@ -38,8 +38,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
             {metric,
              %{
                value: current_val,
-               previous_value: prev_val,
-               percent_change: percent_change(prev_val, current_val)
+               change: percent_change(prev_val, current_val)
              }}
           end)
           |> Enum.into(%{})
