@@ -44,7 +44,7 @@ class ExitPagesModal extends React.Component {
 
   renderPage(page) {
     const query = new URLSearchParams(window.location.search)
-    query.set('page', page.name)
+    query.set('exit_page', page.name)
 
     return (
       <tr className="text-sm dark:text-gray-200" key={page.name}>

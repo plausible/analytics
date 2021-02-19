@@ -155,7 +155,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def total_pageviews(site, query) do
     ClickhouseRepo.one(
-      from e in base_query(site, query),
+      from e in base_query_w_sessions(site, query),
         select: fragment("count(*)")
     )
   end
@@ -513,7 +513,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     q =
       from(
-        s in base_session_query(site, query, true),
+        s in base_session_query(site, query),
         group_by: s.exit_page,
         order_by: [desc: fragment("count")],
         limit: ^limit,
@@ -525,15 +525,9 @@ defmodule Plausible.Stats.Clickhouse do
         }
       )
 
-    IO.puts "EXIT--"
-    IO.inspect q
-
     q = add_goal_filter(site, query, q)
 
     result = ClickhouseRepo.all(q)
-
-    IO.inspect q
-    IO.inspect result
 
     if Enum.count(result) > 0 do
       pages = Enum.map(result, fn r -> r[:name] end)
@@ -543,10 +537,6 @@ defmodule Plausible.Stats.Clickhouse do
           e in base_query_w_sessions(site, query),
           select: %{session_id: fragment("DISTINCT ?", e.session_id)}
         )
-
-      IO.inspect q2
-      IO.puts "PAGES--"
-      IO.inspect pages
 
       event_q = from(e in base_query_bare(site,query),
           group_by: e.pathname,
@@ -559,21 +549,9 @@ defmodule Plausible.Stats.Clickhouse do
           }
       )
 
-      IO.inspect event_q
-
-      total_pageviews = ClickhouseRepo.all(event_q)
-
-      IO.inspect total_pageviews
-
-      total_pageviews = total_pageviews |> Enum.into(%{})
-
-      IO.inspect total_pageviews
-      # Enum.map(total_pageviews, fn x -> IO.inspect x end)
-      # IO.inspect Enum.find_index(pages, fn x -> x=="/game/#/table/EarlyMedicalDearGoat" end)
-      # IO.inspect total_pageviews["/game/#/table/EarlyMedicalDearGoat"]
+      total_pageviews = ClickhouseRepo.all(event_q) |> Enum.into(%{})
 
       Enum.map(result, fn r ->
-        IO.inspect [r[:name], r[:exits], Map.get(total_pageviews, r[:name])]
         if Map.get(total_pageviews, r[:name]) do
           exit_rate = r[:exits] / Map.get(total_pageviews, r[:name]) * 100
           if exit_rate > 100 do
@@ -1096,6 +1074,22 @@ defmodule Plausible.Stats.Clickhouse do
         sessions_q
       end
 
+    sessions_q =
+      if query.filters["entry_page"] do
+        entry_page = query.filters["entry_page"]
+          from(s in sessions_q, where: s.entry_page == ^entry_page)
+      else
+        sessions_q
+      end
+
+    sessions_q =
+      if query.filters["exit_page"] do
+        exit_page = query.filters["exit_page"]
+          from(s in sessions_q, where: s.exit_page == ^exit_page)
+      else
+        sessions_q
+      end
+
     q =
       from(e in "events",
         where: e.domain == ^site.domain,
@@ -1106,7 +1100,7 @@ defmodule Plausible.Stats.Clickhouse do
       if query.filters["source"] || query.filters['referrer'] || query.filters["utm_medium"] ||
            query.filters["utm_source"] || query.filters["utm_campaign"] || query.filters["screen"] ||
            query.filters["browser"] || query.filters["browser_version"] || query.filters["os"] ||
-           query.filters["os_version"] || query.filters["country"] do
+           query.filters["os_version"] || query.filters["country"] || query.filters["entry_page"] || query.filters["exit_page"] do
         from(
           e in q,
           join: sq in subquery(sessions_q),
@@ -1164,7 +1158,7 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  defp base_session_query(site, query, exit_pages \\ false) do
+  defp base_session_query(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
     q =
@@ -1255,14 +1249,17 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     q =
-      if query.filters["page"] do
-        page = query.filters["page"]
+      if query.filters["entry_page"] do
+        entry_page = query.filters["entry_page"]
+          from(s in q, where: s.entry_page == ^entry_page)
+      else
+        q
+      end
 
-        if exit_pages do
-          from(s in q, where: s.exit_page == ^page)
-        else
-          from(s in q, where: s.entry_page == ^page)
-        end
+    q =
+      if query.filters["exit_page"] do
+        exit_page = query.filters["exit_page"]
+          from(s in q, where: s.exit_page == ^exit_page)
       else
         q
       end

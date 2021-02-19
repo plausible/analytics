@@ -36,7 +36,9 @@ export function parseQuery(querystring, site) {
       'os': q.get('os'),
       'os_version': q.get('os_version'),
       'country': q.get('country'),
-      'page': q.get('page')
+      'page': q.get('page'),
+      'entry_page': q.get('entry_page'),
+      'exit_page': q.get('exit_page')
     }
   }
 }

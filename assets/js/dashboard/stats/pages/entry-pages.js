@@ -34,7 +34,7 @@ export default class EntryPages extends React.Component {
 
   renderPage(page) {
     const query = new URLSearchParams(window.location.search)
-    query.set('page', page.name)
+    query.set('entry_page', page.name)
 
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={page.name}>

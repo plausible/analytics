@@ -34,7 +34,7 @@ export default class ExitPages extends React.Component {
 
   renderPage(page) {
     const query = new URLSearchParams(window.location.search)
-    query.set('page', page.name)
+    query.set('exit_page', page.name)
 
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={page.name}>
