@@ -100,7 +100,7 @@ class DatePicker extends React.Component {
 
     this.setState({open: false});
 
-    const keys = ['d', 'r', 'w', 'm', 'y', '3', '6'];
+    const keys = ['d', 'r', 'w', 'm', 'y', 't', 's'];
     const redirects = [{date: false, period: 'day'}, {period: 'realtime'}, {date: false, period: '7d'}, {date: false, period: 'month'}, {date: false, period: '12mo'}, {date: false, period: '30d'}, {date: false, period: '6mo'}];
 
     if (keys.includes(e.key.toLowerCase())) {
