@@ -302,8 +302,8 @@ class DatePicker extends React.Component {
       'Last 7 days': 'W',
       'Month to Date': 'M',
       'Last 12 months': 'Y',
-      'Last 6 months': '6',
-      'Last 30 days': '3',
+      'Last 6 months': 'S',
+      'Last 30 days': 'T',
     };
 
     return (
