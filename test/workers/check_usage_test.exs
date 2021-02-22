@@ -31,7 +31,8 @@ defmodule Plausible.Workers.CheckUsageTest do
     user: user
   } do
     billing_stub =
-      stub(Plausible.Billing, :last_two_billing_months_usage, fn _user -> {9_000, 11_000} end)
+      Plausible.Billing
+      |> stub(:last_two_billing_months_usage, fn _user -> {9_000, 11_000} end)
 
     insert(:subscription,
       user: user,
@@ -48,7 +49,11 @@ defmodule Plausible.Workers.CheckUsageTest do
     user: user
   } do
     billing_stub =
-      stub(Plausible.Billing, :last_two_billing_months_usage, fn _user -> {11_000, 11_000} end)
+      Plausible.Billing
+      |> stub(:last_two_billing_months_usage, fn _user -> {11_000, 11_000} end)
+      |> stub(:last_two_billing_cycles, fn _user ->
+        {Date.range(Timex.today(), Timex.today()), Date.range(Timex.today(), Timex.today())}
+      end)
 
     insert(:subscription,
       user: user,
@@ -69,7 +74,11 @@ defmodule Plausible.Workers.CheckUsageTest do
       user: user
     } do
       billing_stub =
-        stub(Plausible.Billing, :last_two_billing_months_usage, fn _user -> {11_000, 11_000} end)
+        Plausible.Billing
+        |> stub(:last_two_billing_months_usage, fn _user -> {11_000, 11_000} end)
+        |> stub(:last_two_billing_cycles, fn _user ->
+          {Date.range(Timex.today(), Timex.today()), Date.range(Timex.today(), Timex.today())}
+        end)
 
       insert(:subscription,
         user: user,
@@ -89,7 +98,11 @@ defmodule Plausible.Workers.CheckUsageTest do
       user: user
     } do
       billing_stub =
-        stub(Plausible.Billing, :last_two_billing_months_usage, fn _user -> {11_000, 11_000} end)
+        Plausible.Billing
+        |> stub(:last_two_billing_months_usage, fn _user -> {11_000, 11_000} end)
+        |> stub(:last_two_billing_cycles, fn _user ->
+          {Date.range(Timex.today(), Timex.today()), Date.range(Timex.today(), Timex.today())}
+        end)
 
       insert(:subscription,
         user: user,
@@ -106,7 +119,11 @@ defmodule Plausible.Workers.CheckUsageTest do
       user: user
     } do
       billing_stub =
-        stub(Plausible.Billing, :last_two_billing_months_usage, fn _user -> {11_000, 11_000} end)
+        Plausible.Billing
+        |> stub(:last_two_billing_months_usage, fn _user -> {11_000, 11_000} end)
+        |> stub(:last_two_billing_cycles, fn _user ->
+          {Date.range(Timex.today(), Timex.today()), Date.range(Timex.today(), Timex.today())}
+        end)
 
       insert(:subscription,
         user: user,
@@ -127,7 +144,11 @@ defmodule Plausible.Workers.CheckUsageTest do
            user: user
          } do
       billing_stub =
-        stub(Plausible.Billing, :last_two_billing_months_usage, fn _user -> {11_000, 11_000} end)
+        Plausible.Billing
+        |> stub(:last_two_billing_months_usage, fn _user -> {11_000, 11_000} end)
+        |> stub(:last_two_billing_cycles, fn _user ->
+          {Date.range(Timex.today(), Timex.today()), Date.range(Timex.today(), Timex.today())}
+        end)
 
       insert(:subscription,
         user: user,

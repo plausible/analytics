@@ -24,7 +24,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
       result =
         if params["compare"] == "previous_period" do
-          prev_query = Query.shift_back(query)
+          prev_query = Query.shift_back(query, site)
 
           [prev_result, curr_result] =
             Task.await_many([
@@ -55,6 +55,38 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end
   end
 
+  def breakdown(conn, params) do
+    with :ok <- validate_date(params),
+         :ok <- validate_period(params),
+         {:ok, property} <- validate_property(params) do
+      site = conn.assigns[:site]
+      query = Query.from(site.timezone, params)
+
+      metrics =
+        Map.get(params, "metrics", "visitors")
+        |> String.split(",")
+
+      limit = String.to_integer(Map.get(params, "limit", "100"))
+      page = String.to_integer(Map.get(params, "page", "1"))
+      results = Plausible.Stats.breakdown(site, query, property, metrics, {limit, page})
+      json(conn, %{"results" => results})
+    else
+      {:error, msg} ->
+        conn
+        |> put_status(400)
+        |> json(%{error: msg})
+    end
+  end
+
+  defp validate_property(%{"property" => property}) do
+    {:ok, property}
+  end
+
+  defp validate_property(_) do
+    {:error,
+     "The `property` parameter is required. Please provide at least one property to show a breakdown by."}
+  end
+
   def timeseries(conn, params) do
     with :ok <- validate_date(params),
          :ok <- validate_period(params),
@@ -66,10 +98,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
       graph =
         Enum.zip(labels, plot)
-        |> Enum.map(fn {label, val} -> %{date: label, value: val} end)
+        |> Enum.map(fn {label, val} -> %{date: label, visitors: val} end)
         |> Enum.into([])
 
-      json(conn, graph)
+      json(conn, %{"results" => graph})
     else
       {:error, msg} ->
         conn
@@ -92,6 +124,23 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
       true ->
         round((new_count - old_count) / old_count * 100)
+    end
+  end
+
+  defp validate_date(%{"period" => "custom"} = params) do
+    with {:ok, date} <- Map.fetch(params, "date"),
+         [from, to] <- String.split(date, ","),
+         {:ok, _from} <- Date.from_iso8601(String.trim(from)),
+         {:ok, _to} <- Date.from_iso8601(String.trim(to)) do
+      :ok
+    else
+      :error ->
+        {:error,
+         "The `date` parameter is required when using a custom period. See https://plausible.io/docs/stats-api#time-periods"}
+
+      _ ->
+        {:error,
+         "Invalid format for `date` parameter. When using a custom period, please include two ISO-8601 formatted dates joined by a comma. See https://plausible.io/docs/stats-api#time-periods"}
     end
   end
 
