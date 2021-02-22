@@ -22,11 +22,11 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                  "percentage" => 25
                },
                %{
-                "name" => "USA",
-                "full_country_name" => "United States",
-                "count" => 1,
-                "percentage" => 25
-              }
+                 "name" => "USA",
+                 "full_country_name" => "United States",
+                 "count" => 1,
+                 "percentage" => 25
+               }
              ]
     end
   end
