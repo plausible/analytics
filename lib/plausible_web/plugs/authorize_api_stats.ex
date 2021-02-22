@@ -8,21 +8,41 @@ defmodule PlausibleWeb.AuthorizeApiStatsPlug do
   end
 
   def call(conn, _opts) do
-    site = Repo.get_by(Plausible.Site, domain: conn.params["site_id"])
-    api_key = get_bearer_token(conn)
-
-    if !(site && api_key) do
-      not_found(conn)
+    with {:ok, api_key} <- get_bearer_token(conn),
+         {:ok, site} <- verify_access(api_key, conn.params["site_id"]) do
+      assign(conn, :site, site)
     else
-      hashed_key = ApiKey.do_hash(api_key)
-      found_key = Repo.get_by(ApiKey, key_hash: hashed_key)
-      can_access = found_key && Plausible.Sites.is_owner?(found_key.user_id, site)
+      {:error, :missing_api_key} ->
+        unauthorized(
+          conn,
+          "Missing API key. Please use a valid Plausible API key as a Bearer Token."
+        )
 
-      if !can_access do
-        not_found(conn)
-      else
-        assign(conn, :site, site)
-      end
+      {:error, :missing_site_id} ->
+        bad_request(
+          conn,
+          "Missing site ID. Please provide the required site_id parameter with your request."
+        )
+
+      {:error, :invalid_api_key} ->
+        unauthorized(
+          conn,
+          "Invalid API key or site ID. Please make sure you're using a valid API key with access to the site you've requested."
+        )
+    end
+  end
+
+  defp verify_access(_api_key, nil), do: {:error, :missing_site_id}
+
+  defp verify_access(api_key, site_id) do
+    hashed_key = ApiKey.do_hash(api_key)
+    found_key = Repo.get_by(ApiKey, key_hash: hashed_key)
+    site = Repo.get_by(Plausible.Site, domain: site_id)
+    is_owner = site && found_key && Plausible.Sites.is_owner?(found_key.user_id, site)
+
+    cond do
+      found_key && site && is_owner -> {:ok, site}
+      true -> {:error, :invalid_api_key}
     end
   end
 
@@ -32,15 +52,22 @@ defmodule PlausibleWeb.AuthorizeApiStatsPlug do
       |> List.first()
 
     case authorization_header do
-      "Bearer " <> token -> String.trim(token)
-      _ -> nil
+      "Bearer " <> token -> {:ok, String.trim(token)}
+      _ -> {:error, :missing_api_key}
     end
   end
 
-  defp not_found(conn) do
+  defp bad_request(conn, msg) do
     conn
-    |> put_status(404)
-    |> Phoenix.Controller.json(%{error: "Not found"})
+    |> put_status(400)
+    |> Phoenix.Controller.json(%{error: msg})
+    |> halt()
+  end
+
+  defp unauthorized(conn, msg) do
+    conn
+    |> put_status(401)
+    |> Phoenix.Controller.json(%{error: msg})
     |> halt()
   end
 end

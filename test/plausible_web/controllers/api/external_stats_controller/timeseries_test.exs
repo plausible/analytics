@@ -61,14 +61,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
         "date" => "2021-01-01"
       })
 
-    assert json_response(conn, 200) == [
-             %{"date" => "2020-08-01", "value" => 0},
-             %{"date" => "2020-09-01", "value" => 0},
-             %{"date" => "2020-10-01", "value" => 0},
-             %{"date" => "2020-11-01", "value" => 0},
-             %{"date" => "2020-12-01", "value" => 1},
-             %{"date" => "2021-01-01", "value" => 2}
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"date" => "2020-08-01", "visitors" => 0},
+               %{"date" => "2020-09-01", "visitors" => 0},
+               %{"date" => "2020-10-01", "visitors" => 0},
+               %{"date" => "2020-11-01", "visitors" => 0},
+               %{"date" => "2020-12-01", "visitors" => 1},
+               %{"date" => "2021-01-01", "visitors" => 2}
+             ]
+           }
   end
 
   test "shows last 12 months of visitors", %{conn: conn, site: site} do
@@ -86,20 +88,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
         "date" => "2021-01-01"
       })
 
-    assert json_response(conn, 200) == [
-             %{"date" => "2020-02-01", "value" => 1},
-             %{"date" => "2020-03-01", "value" => 0},
-             %{"date" => "2020-04-01", "value" => 0},
-             %{"date" => "2020-05-01", "value" => 0},
-             %{"date" => "2020-06-01", "value" => 0},
-             %{"date" => "2020-07-01", "value" => 0},
-             %{"date" => "2020-08-01", "value" => 0},
-             %{"date" => "2020-09-01", "value" => 0},
-             %{"date" => "2020-10-01", "value" => 0},
-             %{"date" => "2020-11-01", "value" => 0},
-             %{"date" => "2020-12-01", "value" => 1},
-             %{"date" => "2021-01-01", "value" => 2}
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"date" => "2020-02-01", "visitors" => 1},
+               %{"date" => "2020-03-01", "visitors" => 0},
+               %{"date" => "2020-04-01", "visitors" => 0},
+               %{"date" => "2020-05-01", "visitors" => 0},
+               %{"date" => "2020-06-01", "visitors" => 0},
+               %{"date" => "2020-07-01", "visitors" => 0},
+               %{"date" => "2020-08-01", "visitors" => 0},
+               %{"date" => "2020-09-01", "visitors" => 0},
+               %{"date" => "2020-10-01", "visitors" => 0},
+               %{"date" => "2020-11-01", "visitors" => 0},
+               %{"date" => "2020-12-01", "visitors" => 1},
+               %{"date" => "2021-01-01", "visitors" => 2}
+             ]
+           }
   end
 
   test "shows last 12 months of visitors with interval daily", %{conn: conn, site: site} do
@@ -118,7 +122,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       })
 
     res = json_response(conn, 200)
-    assert Enum.count(res) in [365, 366]
+    assert Enum.count(res["results"]) in [365, 366]
   end
 
   test "shows a custom range with daily interval", %{conn: conn, site: site} do
@@ -132,14 +136,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       get(conn, "/api/v1/stats/timeseries", %{
         "site_id" => site.domain,
         "period" => "custom",
-        "from" => "2021-01-01",
-        "to" => "2021-01-02"
+        "date" => "2021-01-01,2021-01-02"
       })
 
-    assert json_response(conn, 200) == [
-             %{"date" => "2021-01-01", "value" => 2},
-             %{"date" => "2021-01-02", "value" => 1}
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"date" => "2021-01-01", "visitors" => 2},
+               %{"date" => "2021-01-02", "visitors" => 1}
+             ]
+           }
   end
 
   test "shows a custom range with monthly interval", %{conn: conn, site: site} do
@@ -153,15 +158,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       get(conn, "/api/v1/stats/timeseries", %{
         "site_id" => site.domain,
         "period" => "custom",
-        "from" => "2020-12-01",
-        "to" => "2021-01-02",
+        "date" => "2020-12-01, 2021-01-02",
         "interval" => "month"
       })
 
-    assert json_response(conn, 200) == [
-             %{"date" => "2020-12-01", "value" => 1},
-             %{"date" => "2021-01-01", "value" => 2}
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"date" => "2020-12-01", "visitors" => 1},
+               %{"date" => "2021-01-01", "visitors" => 2}
+             ]
+           }
   end
 
   describe "filters" do
@@ -184,7 +190,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
         })
 
       res = json_response(conn, 200)
-      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+      assert List.first(res["results"]) == %{"date" => "2021-01-01", "visitors" => 1}
     end
 
     test "can filter by no source/referrer", %{conn: conn, site: site} do
@@ -205,8 +211,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "filters" => "visit:source==Direct / None"
         })
 
-      res = json_response(conn, 200)
-      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+      res = json_response(conn, 200)["results"]
+      assert List.first(res) == %{"date" => "2021-01-01", "visitors" => 1}
     end
 
     test "can filter by referrer", %{conn: conn, site: site} do
@@ -227,8 +233,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "filters" => "visit:referrer==https://facebook.com"
         })
 
-      res = json_response(conn, 200)
-      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+      res = json_response(conn, 200)["results"]
+      assert List.first(res) == %{"date" => "2021-01-01", "visitors" => 1}
     end
 
     test "can filter by utm_medium", %{conn: conn, site: site} do
@@ -249,8 +255,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "filters" => "visit:utm_medium==social"
         })
 
-      res = json_response(conn, 200)
-      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+      res = json_response(conn, 200)["results"]
+      assert List.first(res) == %{"date" => "2021-01-01", "visitors" => 1}
     end
 
     test "can filter by utm_source", %{conn: conn, site: site} do
@@ -271,8 +277,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "filters" => "visit:utm_source==Twitter"
         })
 
-      res = json_response(conn, 200)
-      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+      res = json_response(conn, 200)["results"]
+      assert List.first(res) == %{"date" => "2021-01-01", "visitors" => 1}
     end
 
     test "can filter by utm_campaign", %{conn: conn, site: site} do
@@ -293,8 +299,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "filters" => "visit:utm_campaign==profile"
         })
 
-      res = json_response(conn, 200)
-      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+      res = json_response(conn, 200)["results"]
+      assert List.first(res) == %{"date" => "2021-01-01", "visitors" => 1}
     end
 
     test "can filter by device type", %{conn: conn, site: site} do
@@ -315,8 +321,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "filters" => "visit:device==Desktop"
         })
 
-      res = json_response(conn, 200)
-      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+      res = json_response(conn, 200)["results"]
+      assert List.first(res) == %{"date" => "2021-01-01", "visitors" => 1}
     end
 
     test "can filter by browser", %{conn: conn, site: site} do
@@ -344,8 +350,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "filters" => "visit:browser==Chrome;visit:browser_version==56.1"
         })
 
-      res = json_response(conn, 200)
-      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+      res = json_response(conn, 200)["results"]
+      assert List.first(res) == %{"date" => "2021-01-01", "visitors" => 1}
     end
 
     test "can filter by operating system", %{conn: conn, site: site} do
@@ -379,8 +385,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "filters" => "visit:os == Mac;visit:os_version==10.5"
         })
 
-      res = json_response(conn, 200)
-      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+      res = json_response(conn, 200)["results"]
+      assert List.first(res) == %{"date" => "2021-01-01", "visitors" => 1}
     end
 
     test "can filter by country", %{conn: conn, site: site} do
@@ -402,8 +408,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "filters" => "visit:country==EE"
         })
 
-      res = json_response(conn, 200)
-      assert List.first(res) == %{"date" => "2021-01-01", "value" => 1}
+      res = json_response(conn, 200)["results"]
+      assert List.first(res) == %{"date" => "2021-01-01", "visitors" => 1}
     end
 
     test "can filter by page", %{conn: conn, site: site} do
@@ -433,8 +439,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "filters" => "event:page==/hello"
         })
 
-      res = json_response(conn, 200)
-      assert List.first(res) == %{"date" => "2021-01-01", "value" => 2}
+      res = json_response(conn, 200)["results"]
+      assert List.first(res) == %{"date" => "2021-01-01", "visitors" => 2}
     end
   end
 end
