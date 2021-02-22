@@ -5,24 +5,34 @@ defmodule Plausible.Stats.Breakdown do
   @event_metrics ["visitors", "pageviews"]
   @session_metrics ["bounce_rate", "visit_duration"]
 
+  # use join once this is solved: https://github.com/ClickHouse/ClickHouse/issues/10276
+  # https://github.com/ClickHouse/ClickHouse/issues/17319
   def breakdown(site, query, "event:page", metrics, pagination) do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
-    event_result =
-      breakdown_events(site, query, event_metrics, pagination)
-      |> Enum.map(fn row -> {row[:page], Map.delete(row, :page)} end)
-      |> Enum.into(%{})
+    event_result = breakdown_events(site, query, event_metrics, pagination)
+    pages = Enum.map(event_result, fn r -> r[:page] end)
 
-    session_result =
-      breakdown(site, query, "visit:entry_page", session_metrics, pagination)
-      |> Enum.map(fn row -> {row[:entry_page], Map.delete(row, :entry_page)} end)
-      |> Enum.into(%{})
+    if Enum.any?(session_metrics) do
+      session_result =
+        from(s in query_sessions(site, query),
+          group_by: s.entry_page,
+          where: s.entry_page in ^pages,
+          select: %{entry_page: s.entry_page}
+        )
+        |> select_metrics(session_metrics)
+        |> ClickhouseRepo.all()
 
-    Map.merge(event_result, session_result, fn _page, v1, v2 ->
-      Map.merge(v1, v2)
-    end)
-    |> Enum.map(fn {k, v} -> Map.put(v, :page, k) end)
+      session_metrics_atoms = Enum.map(session_metrics, &String.to_atom/1)
+
+      Enum.map(event_result, fn row ->
+        session_row = Enum.find(session_result, fn row2 -> row2[:entry_page] == row[:page] end)
+        Map.merge(row, Map.take(session_row, session_metrics_atoms))
+      end)
+    else
+      event_result
+    end
   end
 
   def breakdown(_, _, _, [], _), do: %{}

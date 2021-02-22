@@ -568,44 +568,5 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                ]
              }
     end
-
-    test "just bounce rate for event:page", %{conn: conn, site: site} do
-      populate_stats([
-        build(:pageview,
-          user_id: 1,
-          pathname: "/",
-          domain: site.domain,
-          timestamp: ~N[2021-01-01 00:00:00]
-        ),
-        build(:pageview,
-          user_id: 1,
-          pathname: "/plausible.io",
-          domain: site.domain,
-          timestamp: ~N[2021-01-01 00:10:00]
-        ),
-        build(:pageview, pathname: "/", domain: site.domain, timestamp: ~N[2021-01-01 00:25:00]),
-        build(:pageview,
-          pathname: "/plausible.io",
-          domain: site.domain,
-          timestamp: ~N[2021-01-01 00:00:00]
-        )
-      ])
-
-      conn =
-        get(conn, "/api/v1/stats/breakdown", %{
-          "site_id" => site.domain,
-          "period" => "day",
-          "date" => "2021-01-01",
-          "property" => "event:page",
-          "metrics" => "bounce_rate"
-        })
-
-      assert json_response(conn, 200) == %{
-               "results" => [
-                 %{"page" => "/", "bounce_rate" => 50},
-                 %{"page" => "/plausible.io", "bounce_rate" => 100}
-               ]
-             }
-    end
   end
 end
