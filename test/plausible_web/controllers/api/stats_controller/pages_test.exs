@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
-               %{"count" => 2, "pageviews" => 2, "name" => "/"},
+               %{"count" => 3, "pageviews" => 3, "name" => "/"},
                %{"count" => 2, "pageviews" => 2, "name" => "/register"},
                %{"count" => 1, "pageviews" => 1, "name" => "/contact"},
                %{"count" => 1, "pageviews" => 1, "name" => "/irrelevant"}
@@ -26,8 +26,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       assert json_response(conn, 200) == [
                %{
                  "bounce_rate" => 33.0,
-                 "count" => 2,
-                 "pageviews" => 2,
+                 "count" => 3,
+                 "pageviews" => 3,
                  "name" => "/"
                },
                %{
@@ -102,7 +102,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/exit-pages?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
-               %{"count" => 3, "exits" => 3, "name" => "/", "exit_rate" => 60.0}
+               %{"count" => 3, "exits" => 3, "name" => "/", "exit_rate" => 100.0}
              ]
     end
   end
