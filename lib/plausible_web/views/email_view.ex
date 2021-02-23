@@ -20,4 +20,8 @@ defmodule PlausibleWeb.EmailView do
       ""
     end
   end
+
+  def date_format(date) do
+    Timex.format!(date, "{D} {Mshort} {YYYY}")
+  end
 end

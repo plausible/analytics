@@ -35,6 +35,35 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    test "custom period is not valid without a date", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "custom",
+          "metrics" => "pageviews"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "The `date` parameter is required when using a custom period. See https://plausible.io/docs/stats-api#time-periods"
+             }
+    end
+
+    test "validates date format in custom period", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "custom",
+          "date" => "2020-131-2piaskj,s,a90uac",
+          "metrics" => "pageviews"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Invalid format for `date` parameter. When using a custom period, please include two ISO-8601 formatted dates joined by a comma. See https://plausible.io/docs/stats-api#time-periods"
+             }
+    end
+
     test "validates that metrics are all recognized", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/aggregate", %{
