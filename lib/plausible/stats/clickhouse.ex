@@ -863,24 +863,32 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp fetch_pageview_goals(goals, site, query) do
-    pages =
+    goals =
       Enum.map(goals, fn goal -> goal.page_path end)
       |> Enum.filter(& &1)
 
-    if Enum.count(pages) > 0 do
+    if Enum.count(goals) > 0 do
+
+      regex_goals = Enum.map(goals, fn g ->
+        "(^#{g}\/?$)" |> String.replace(~r/\*\*/, ".*") |> String.replace(~r/(?<!\.)\*/, "[^/]*")
+      end)
+      clickhouse_regex = regex_goals |> Enum.join("|")
+      bare_regexes = regex_goals |> Enum.map(fn x -> Regex.compile(x) |> elem(1) end)
+
       q =
         from(
           e in base_query_w_sessions(site, query),
-          where: fragment("? IN tuple(?)", e.pathname, ^pages),
+          where: fragment("match(?, ?)", e.pathname, ^clickhouse_regex),
           group_by: e.pathname,
           select: %{
-            name: fragment("concat('Visit ', ?) as name", e.pathname),
+            name: fragment("? as name", e.pathname),
             count: fragment("uniq(user_id) as count"),
             total_count: fragment("count(*) as total_count")
           }
         )
 
-      ClickhouseRepo.all(q)
+      a = ClickhouseRepo.all(q)
+      bare_regexes |> Enum.map(fn x -> Enum.filter(a, fn y -> String.match?(y[:name], x) end) |> Enum.reduce(%{count: 0, total_count: 0}, fn curr, acc -> %{count: acc[:count] + curr[:count], total_count: acc[:total_count] + curr[:total_count]} end) |> Map.put(:name, "Visit #{Enum.at(goals, Enum.find_index(bare_regexes, fn regex -> regex==x end))}") end)
     else
       []
     end
