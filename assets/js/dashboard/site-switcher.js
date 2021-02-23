@@ -5,6 +5,8 @@ export default class SiteSwitcher extends React.Component {
   constructor() {
     super()
     this.handleClick = this.handleClick.bind(this)
+    this.handleKeydown = this.handleKeydown.bind(this);
+    this.populateSites = this.populateSites.bind(this);
     this.state = {
       open: false,
       sites: null,
@@ -14,11 +16,24 @@ export default class SiteSwitcher extends React.Component {
   }
 
   componentDidMount() {
+    this.populateSites();
+    document.addEventListener("keydown", this.handleKeydown);
     document.addEventListener('mousedown', this.handleClick, false);
   }
 
   componentWillUnmount() {
+    document.removeEventListener("keydown", this.handleKeydown);
     document.removeEventListener('mousedown', this.handleClick, false);
+  }
+
+  populateSites() {
+    fetch('/api/sites')
+      .then( response => {
+        if (!response.ok) { throw response }
+        return response.json()
+      })
+      .then((sites) => this.setState({loading: false, sites: sites}))
+      .catch((e) => this.setState({loading: false, error: e}))
   }
 
   handleClick(e) {
@@ -28,28 +43,39 @@ export default class SiteSwitcher extends React.Component {
     this.setState({open: false})
   }
 
+  handleKeydown(e) {
+    const { query, history, site } = this.props;
+    const { sites } = this.state;
+
+    if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.keyCode === 229 || !sites) return
+
+    const siteNum = parseInt(e.key)
+
+    if (1 <= siteNum <= 9 && siteNum <= sites.length && sites[siteNum-1] !== site.domain) {
+      window.location = `/${encodeURIComponent(sites[siteNum-1])}`
+    }
+
+  }
+
   toggle() {
     if (!this.props.loggedIn) return;
 
     this.setState({open: !this.state.open})
 
     if (!this.state.sites) {
-      fetch('/api/sites')
-        .then( response => {
-          if (!response.ok) { throw response }
-          return response.json()
-        })
-        .then((sites) => this.setState({loading: false, sites: sites}))
-        .catch((e) => this.setState({loading: false, error: e}))
+      this.populateSites();
     }
   }
 
-  renderSiteLink(domain) {
+  renderSiteLink(domain, index) {
     const extraClass = domain === this.props.site.domain ? 'font-medium text-gray-900 dark:text-gray-100 cursor-default font-bold' : 'hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100'
     return (
-      <a href={domain === this.props.site.domain ? null : `/${encodeURIComponent(domain)}`} key={domain} className={`block truncate px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 ${extraClass}`}>
-        <img src={`https://icons.duckduckgo.com/ip3/${domain}.ico`} referrerPolicy="no-referrer" className="inline w-4 mr-2 align-middle" />
-        <span>{domain}</span>
+      <a href={domain === this.props.site.domain ? null : `/${encodeURIComponent(domain)}`} key={domain} className={`flex items-center justify-between truncate px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 ${extraClass}`}>
+        <span>
+          <img src={`https://icons.duckduckgo.com/ip3/${domain}.ico`} referrerPolicy="no-referrer" className="inline w-4 mr-2 align-middle" />
+          <span>{domain}</span>
+        </span>
+        {index < 9 && <span>{index+1}</span>}
       </a>
     )
   }
@@ -75,7 +101,7 @@ export default class SiteSwitcher extends React.Component {
           <div className="border-t border-gray-200 dark:border-gray-500"></div>
           <div className="py-1">
             <a href='/sites/new' className="group flex items-center px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100" role="menuitem">
-            <svg className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-200 group-hover:text-gray-600 dark:group-hover:text-gray-400 group-focus:text-gray-500 dark:group-focus:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            <svg className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-200 group-hover:text-gray-600 dark:group-hover:text-gray-400 group-focus:text-gray-500 dark:group-focus:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
               Add Site
             </a>
           </div>
