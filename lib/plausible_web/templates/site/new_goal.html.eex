@@ -22,6 +22,7 @@
 <% end %>
 
 <script>
+  // @license magnet:?xt=urn:btih:0b31508aeb0634b347b8270c7bee4d411b5d4109&dn=agpl-3.0.txt AGPL-3.0-or-later
   document.getElementById('pageview-tab').onclick = function() {
     document.getElementById('pageview-fields').classList.remove('hidden')
     document.getElementById('pageview-tab').classList.add('shadow-inner', 'font-bold', 'bg-indigo-600', 'text-white')
@@ -36,4 +37,5 @@
     document.getElementById('pageview-tab').classList.remove('shadow-inner', 'font-bold', 'bg-indigo-600', 'text-white')
     document.getElementById('pageview-tab').classList.add('dark:text-gray-100')
   }
+  // @license-end
 </script>

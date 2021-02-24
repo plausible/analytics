@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - 30 day and 6 month keybindings (`T` and `S`, respectively) plausible/analytics#709
 - Site switching keybinds (1-9 for respective sites) plausible/analytics#735
 - Glob (wildcard) based pageview goals plausible/analytics#750
+- LibreJS metadata to the JavaScript files, web labels page is available at `/licenses` plausible/analytics#757
 
 ### Fixed
 - Capitalized date/time selection keybinds not working plausible/analytics#709

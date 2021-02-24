@@ -49,6 +49,9 @@
                   Open source
                 </a>
               </li>
+              <li class="mt-4">
+                <%= link("JavaScript license", to: "/licenses", class: "text-base leading-6 text-gray-300 hover:text-white", data: [jslicense: "1"]) %>
+              </li>
             </ul>
           </div>
           <div class="mt-12 md:mt-0">

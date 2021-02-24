@@ -1,4 +1,8 @@
 <%= if !@conn.assigns[:skip_plausible_tracking] do %>
   <script async defer src="<%="#{plausible_url()}/js/plausible.js"%>"></script>
-  <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+  <script>
+    // @license magnet:?xt=urn:btih:0b31508aeb0634b347b8270c7bee4d411b5d4109&dn=agpl-3.0.txt AGPL-3.0-or-later
+    window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }
+    // @license-end
+  </script>
 <% end %>
