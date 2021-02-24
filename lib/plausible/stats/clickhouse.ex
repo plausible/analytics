@@ -132,6 +132,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def bounce_rate(site, query) do
     q = base_session_query(site, query) |> apply_page_as_entry_page(site, query)
+
     ClickhouseRepo.one(
       from s in q,
         select: fragment("round(sum(is_bounce * sign) / sum(sign) * 100)")
@@ -140,6 +141,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def visit_duration(site, query) do
     q = base_session_query(site, query) |> apply_page_as_entry_page(site, query)
+
     ClickhouseRepo.one(
       from s in q,
         select: fragment("round(avg(duration * sign))")
@@ -150,6 +152,7 @@ defmodule Plausible.Stats.Clickhouse do
     query = %Query{query | period: "30m"}
 
     q = base_session_query(site, query) |> apply_page_as_entry_page(site, query)
+
     ClickhouseRepo.one(
       from e in q,
         select: fragment("sum(sign * pageviews)")
@@ -317,7 +320,7 @@ defmodule Plausible.Stats.Clickhouse do
     page = query.filters["page"]
 
     if is_binary(page) do
-        from(s in db_query, where: s.entry_page == ^page)
+      from(s in db_query, where: s.entry_page == ^page)
     else
       db_query
     end
@@ -577,6 +580,7 @@ defmodule Plausible.Stats.Clickhouse do
     offset = (page - 1) * limit
 
     q = base_session_query(site, query) |> apply_page_as_entry_page(site, query)
+
     ClickhouseRepo.all(
       from s in q,
         group_by: s.exit_page,
@@ -619,6 +623,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   defp bounce_rates_by_page_url(site, query) do
     q = base_session_query(site, query) |> apply_page_as_entry_page(site, query)
+
     ClickhouseRepo.all(
       from s in q,
         group_by: s.entry_page,
