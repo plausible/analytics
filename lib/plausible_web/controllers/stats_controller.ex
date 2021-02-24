@@ -11,7 +11,7 @@ defmodule PlausibleWeb.StatsController do
     PlausibleWeb.Endpoint.host()
   end
 
-  def stats(%{assigns: %{site: site}} = conn, _params) do
+  def stats(%{assigns: %{site: site}} = conn, params) do
     if Stats.has_pageviews?(site) do
       demo = site.domain == base_domain()
       offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
@@ -59,6 +59,32 @@ defmodule PlausibleWeb.StatsController do
     |> send_resp(200, csv_content)
   end
 
+  def shared_link(conn, %{"slug" => domain, "auth" => auth}) do
+    shared_link =
+      Repo.get_by(Plausible.Site.SharedLink, slug: auth)
+      |> Repo.preload(:site)
+
+    if shared_link && shared_link.site.domain == domain do
+      if shared_link.password_hash do
+        with {:ok, token} <- Map.fetch(conn.req_cookies, "shared-link-token"),
+             {:ok, %{slug: slug}} <- Plausible.Auth.Token.verify_shared_link(token)
+        do
+          shared_link_auth_success(conn, shared_link)
+        else
+          e ->
+            conn
+            |> assign(:skip_plausible_tracking, true)
+            |> render("shared_link_password.html",
+              link: shared_link,
+              layout: {PlausibleWeb.LayoutView, "focus.html"}
+            )
+        end
+      else
+        shared_link_auth_success(conn, shared_link)
+      end
+    end
+  end
+
   def shared_link(conn, %{"slug" => slug}) do
     shared_link =
       Repo.get_by(Plausible.Site.SharedLink, slug: slug)
@@ -87,7 +113,10 @@ defmodule PlausibleWeb.StatsController do
 
     if shared_link do
       if Plausible.Auth.Password.match?(password, shared_link.password_hash) do
-        shared_link_auth_success(conn, shared_link)
+        token = Plausible.Auth.Token.sign_shared_link(slug)
+        conn
+        |> put_resp_cookie("shared-link-token", token)
+        |> redirect(to: "/share/#{URI.encode_www_form(shared_link.site.domain)}?auth=#{slug}")
       else
         conn
         |> assign(:skip_plausible_tracking, true)
@@ -103,13 +132,17 @@ defmodule PlausibleWeb.StatsController do
   end
 
   defp shared_link_auth_success(conn, shared_link) do
-    shared_link_key = "shared_link_auth_" <> shared_link.site.domain
-
     conn
-    |> put_session(shared_link_key, %{
-      valid_until: Timex.now() |> Timex.shift(hours: 1) |> DateTime.to_unix()
-    })
-    |> redirect(to: "/#{URI.encode_www_form(shared_link.site.domain)}")
+    |> assign(:skip_plausible_tracking, true)
+    |> put_resp_header("x-robots-tag", "noindex")
+    |> render("stats.html",
+      site: shared_link.site,
+      has_goals: Plausible.Sites.has_goals?(shared_link.site),
+      title: "Plausible · " <> shared_link.site.domain,
+      offer_email_report: false,
+      demo: false,
+      shared_link_auth: shared_link.slug
+    )
   end
 
   defp remove_email_report_banner(conn, site) do
