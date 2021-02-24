@@ -131,15 +131,17 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def bounce_rate(site, query) do
+    q = base_session_query(site, query) |> apply_page_as_entry_page(site, query)
     ClickhouseRepo.one(
-      from s in base_session_query(site, query),
+      from s in q,
         select: fragment("round(sum(is_bounce * sign) / sum(sign) * 100)")
     ) || 0
   end
 
   def visit_duration(site, query) do
+    q = base_session_query(site, query) |> apply_page_as_entry_page(site, query)
     ClickhouseRepo.one(
-      from s in base_session_query(site, query),
+      from s in q,
         select: fragment("round(avg(duration * sign))")
     ) || 0
   end
@@ -147,8 +149,9 @@ defmodule Plausible.Stats.Clickhouse do
   def total_pageviews(site, %Query{period: "realtime"} = query) do
     query = %Query{query | period: "30m"}
 
+    q = base_session_query(site, query) |> apply_page_as_entry_page(site, query)
     ClickhouseRepo.one(
-      from e in base_session_query(site, query),
+      from e in q,
         select: fragment("sum(sign * pageviews)")
     )
   end
@@ -305,6 +308,16 @@ defmodule Plausible.Stats.Clickhouse do
         join: cs in subquery(converted_sessions),
         on: s.session_id == cs.session_id
       )
+    else
+      db_query
+    end
+  end
+
+  defp apply_page_as_entry_page(db_query, _site, query) do
+    page = query.filters["page"]
+
+    if is_binary(page) do
+        from(s in db_query, where: s.entry_page == ^page)
     else
       db_query
     end
@@ -563,8 +576,9 @@ defmodule Plausible.Stats.Clickhouse do
   def top_pages(site, %Query{period: "realtime"} = query, limit, page, _include) do
     offset = (page - 1) * limit
 
+    q = base_session_query(site, query) |> apply_page_as_entry_page(site, query)
     ClickhouseRepo.all(
-      from s in base_session_query(site, query),
+      from s in q,
         group_by: s.exit_page,
         order_by: [desc: fragment("count")],
         limit: ^limit,
@@ -604,8 +618,9 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp bounce_rates_by_page_url(site, query) do
+    q = base_session_query(site, query) |> apply_page_as_entry_page(site, query)
     ClickhouseRepo.all(
-      from s in base_session_query(site, query),
+      from s in q,
         group_by: s.entry_page,
         order_by: [desc: fragment("total")],
         limit: 100,
