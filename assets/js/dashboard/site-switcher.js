@@ -73,7 +73,7 @@ export default class SiteSwitcher extends React.Component {
       <a href={domain === this.props.site.domain ? null : `/${encodeURIComponent(domain)}`} key={domain} className={`flex items-center justify-between truncate px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 ${extraClass}`}>
         <span>
           <img src={`https://icons.duckduckgo.com/ip3/${domain}.ico`} referrerPolicy="no-referrer" className="inline w-4 mr-2 align-middle" />
-          <span>{domain}</span>
+          <span class="truncate inline-block align-middle max-w-3xs pr-2">{domain}</span>
         </span>
         {index < 9 && <span>{index+1}</span>}
       </a>
