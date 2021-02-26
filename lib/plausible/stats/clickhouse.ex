@@ -870,25 +870,29 @@ defmodule Plausible.Stats.Clickhouse do
     if Enum.count(goals) > 0 do
       regex_goals =
         Enum.map(goals, fn g ->
-          bare_regex =
-            "(^#{g}\/?$)"
-            |> String.replace(~r/\*\*/, ".*")
-            |> String.replace(~r/(?<!\.)\*/, "[^/]*")
-
-          %{regex: bare_regex, name: g}
+          "(^#{g}\/?$)"
+          |> String.replace(~r/\*\*/, ".*")
+          |> String.replace(~r/(?<!\.)\*/, "[^/]*")
         end)
 
-      Enum.map(regex_goals, fn x ->
-        from(
-          e in base_query_w_sessions(site, query),
-          where: fragment("match(?, ?)", e.pathname, ^x[:regex]),
-          select: %{
-            count: fragment("uniq(user_id) as count"),
-            total_count: fragment("count(*) as total_count")
-          }
-        )
-        |> ClickhouseRepo.one()
-        |> Map.put(:name, "Visit #{x[:name]}")
+      from(
+        e in base_query_w_sessions(site, query),
+        where: fragment("multiMatchAny(?, array(?))", e.pathname, ^regex_goals),
+        select: %{
+          index:
+            fragment(
+              "arrayJoin(multiMatchAllIndices(?, array(?))) as index",
+              e.pathname,
+              ^regex_goals
+            ),
+          count: fragment("uniq(user_id) as count"),
+          total_count: fragment("count(*) as total_count")
+        },
+        group_by: fragment("index")
+      )
+      |> ClickhouseRepo.all()
+      |> Enum.map(fn x ->
+        Map.put(x, :name, "Visit #{Enum.at(goals, x[:index] - 1)}") |> Map.delete(:index)
       end)
     else
       []
