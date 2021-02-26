@@ -870,7 +870,7 @@ defmodule Plausible.Stats.Clickhouse do
     if Enum.count(goals) > 0 do
       regex_goals =
         Enum.map(goals, fn g ->
-          "(^#{g}\/?$)"
+          "^#{g}\/?$"
           |> String.replace(~r/\*\*/, ".*")
           |> String.replace(~r/(?<!\.)\*/, "[^/]*")
         end)

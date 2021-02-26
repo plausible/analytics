@@ -79,4 +79,53 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
   end
+
+  describe "GET /api/stats/:domain/conversions - with glob goals" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "returns correct and sorted glob goal counts", %{conn: conn, site: site} do
+      insert(:goal, %{domain: site.domain, page_path: "/register"})
+      insert(:goal, %{domain: site.domain, page_path: "/reg*"})
+      insert(:goal, %{domain: site.domain, page_path: "/reg*ster"})
+      insert(:goal, %{domain: site.domain, page_path: "/*/contact"})
+      insert(:goal, %{domain: site.domain, page_path: "/*"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=12mo&date=2019-01-01"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "conversion_rate" => 100.0,
+                 "count" => 7,
+                 "name" => "Visit /*",
+                 "total_count" => 7,
+                 "prop_names" => nil
+               },
+               %{
+                 "conversion_rate" => 28.6,
+                 "count" => 2,
+                 "name" => "Visit /reg*ster",
+                 "total_count" => 2,
+                 "prop_names" => nil
+               },
+               %{
+                 "conversion_rate" => 28.6,
+                 "count" => 2,
+                 "name" => "Visit /reg*",
+                 "total_count" => 2,
+                 "prop_names" => nil
+               },
+               %{
+                 "conversion_rate" => 28.6,
+                 "count" => 2,
+                 "name" => "Visit /register",
+                 "total_count" => 2,
+                 "prop_names" => nil
+               }
+             ]
+    end
+  end
 end
