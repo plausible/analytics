@@ -99,27 +99,27 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "conversion_rate" => 100.0,
-                 "count" => 7,
+                 "count" => 8,
                  "name" => "Visit /*",
-                 "total_count" => 7,
+                 "total_count" => 8,
                  "prop_names" => nil
                },
                %{
-                 "conversion_rate" => 28.6,
+                 "conversion_rate" => 25.0,
                  "count" => 2,
                  "name" => "Visit /reg*ster",
                  "total_count" => 2,
                  "prop_names" => nil
                },
                %{
-                 "conversion_rate" => 28.6,
+                 "conversion_rate" => 25.0,
                  "count" => 2,
                  "name" => "Visit /reg*",
                  "total_count" => 2,
                  "prop_names" => nil
                },
                %{
-                 "conversion_rate" => 28.6,
+                 "conversion_rate" => 25.0,
                  "count" => 2,
                  "name" => "Visit /register",
                  "total_count" => 2,
