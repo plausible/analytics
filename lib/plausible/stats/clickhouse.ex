@@ -877,14 +877,14 @@ defmodule Plausible.Stats.Clickhouse do
 
       from(
         e in base_query_w_sessions(site, query),
-        where: fragment("multiMatchAny(?, array(?))", e.pathname, ^regex_goals),
+        where:
+          fragment(
+            "notEmpty(multiMatchAllIndices(?, array(?)) as indices)",
+            e.pathname,
+            ^regex_goals
+          ),
         select: %{
-          index:
-            fragment(
-              "arrayJoin(multiMatchAllIndices(?, array(?))) as index",
-              e.pathname,
-              ^regex_goals
-            ),
+          index: fragment("arrayJoin(indices) as index"),
           count: fragment("uniq(user_id) as count"),
           total_count: fragment("count(*) as total_count")
         },
