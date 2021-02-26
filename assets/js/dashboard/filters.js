@@ -150,6 +150,12 @@ class Filters extends React.Component {
     if (key === "page") {
       return <span className="inline-block max-w-2xs md:max-w-xs truncate">Page: <b>{value}</b></span>
     }
+    if (key === "entry_page") {
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Entry Page: <b>{value}</b></span>
+    }
+    if (key === "exit_page") {
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Exit Page: <b>{value}</b></span>
+    }
   }
 
   removeFilter(key, history, query) {

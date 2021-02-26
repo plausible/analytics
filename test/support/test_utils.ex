@@ -87,7 +87,7 @@ defmodule Plausible.TestUtils do
 
     events =
       Enum.map(events, fn event ->
-        Map.put(event, :session_id, sessions[event.user_id].session_id)
+        Map.put(event, :session_id, sessions[{event.domain, event.user_id}].session_id)
       end)
 
     Plausible.ClickhouseRepo.insert_all(
