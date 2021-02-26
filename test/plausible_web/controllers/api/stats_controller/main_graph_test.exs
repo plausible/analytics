@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       zeroes = Stream.repeatedly(fn -> 0 end) |> Stream.take(22) |> Enum.into([])
 
       assert Enum.count(plot) == 24
-      assert plot == [3] ++ zeroes ++ [3]
+      assert plot == [4] ++ zeroes ++ [3]
     end
 
     test "displays hourly stats in configured timezone", %{conn: conn, user: user} do
@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{"plot" => plot} = json_response(conn, 200)
 
       assert Enum.count(plot) == 31
-      assert List.first(plot) == 6
+      assert List.first(plot) == 7
       assert List.last(plot) == 1
     end
 
@@ -83,14 +83,14 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
       res = json_response(conn, 200)
-      assert %{"name" => "Unique visitors", "count" => 6, "change" => 100} in res["top_stats"]
+      assert %{"name" => "Unique visitors", "count" => 7, "change" => 100} in res["top_stats"]
     end
 
     test "counts total pageviews", %{conn: conn, site: site} do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
       res = json_response(conn, 200)
-      assert %{"name" => "Total pageviews", "count" => 6, "change" => 100} in res["top_stats"]
+      assert %{"name" => "Total pageviews", "count" => 7, "change" => 100} in res["top_stats"]
     end
 
     test "calculates bounce rate", %{conn: conn, site: site} do
@@ -121,7 +121,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
 
       res = json_response(conn, 200)
-      assert %{"name" => "Unique visitors", "count" => 6, "change" => 100} in res["top_stats"]
+      assert %{"name" => "Unique visitors", "count" => 7, "change" => 100} in res["top_stats"]
     end
 
     test "returns converted visitors", %{conn: conn, site: site} do
@@ -148,7 +148,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Conversion rate", "percentage" => 50.0, "change" => 100} in res[
+      assert %{"name" => "Conversion rate", "percentage" => 42.9, "change" => 100} in res[
                "top_stats"
              ]
     end
