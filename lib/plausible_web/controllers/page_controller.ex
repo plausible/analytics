@@ -15,6 +15,10 @@ defmodule PlausibleWeb.PageController do
   end
 
   def licenses_table(conn, _) do
-    render(conn, "licenses.html")
+    render(conn, "licenses.html",
+      title: "License information | Plausible Analytics",
+      noindex: true,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
   end
 end
