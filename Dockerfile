@@ -65,4 +65,5 @@ RUN chown -R plausibleuser:plausibleuser /app
 USER plausibleuser
 WORKDIR /app
 ENTRYPOINT ["/entrypoint.sh"]
+EXPOSE 8000
 CMD ["run"]

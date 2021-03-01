@@ -1,7 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.2] - Unreleased
+## [1.3] - Unreleased
+
+### Added
+- Stats API [currently in beta] plausible/analytics#679
+- Ability to view and filter by entry and exit pages, in addition to regular page hits plausible/analytics#712
+- 30 day and 6 month keybindings (`T` and `S`, respectively) plausible/analytics#709
+- Site switching keybinds (1-9 for respective sites) plausible/analytics#735
+
+### Fixed
+- Capitalized date/time selection keybinds not working plausible/analytics#709
+- Invisible text on Google Search Console settings page in dark mode plausible/analytics#759
+
+## [1.2] - 2021-01-26
 
 ### Added
 - Ability to add event metadata plausible/analytics#381
@@ -13,6 +25,9 @@ All notable changes to this project will be documented in this file.
 - "Load More" capability to pages modal plausible/analytics#480
 - Unique Visitors (last 30 min) as a top stat in realtime view plausible/analytics#500
 - Pinned filter and date selector rows while scrolling plausible/analytics#472
+- Escape keyboard shortcut to clear all filters plausible/analytics#625
+- Tracking exclusions, see our documentation [here](https://docs.plausible.io/excluding) and [here](https://docs.plausible.io/excluding-pages) for details plausible/analytics#489
+- Keybindings for selecting dates/ranges plausible/analytics#630
 
 ### Changed
 - Use alpine as base image to decrease Docker image size plausible/analytics#353
@@ -28,6 +43,7 @@ All notable changes to this project will be documented in this file.
 - My sites now show settings cog at all times on smaller screens plausible/analytics#497
 - Background jobs are enabled by default for self-hosted installations plausible/analytics#603
 - All new users on self-hosted installations have a never-ending trial plausible/analytics#603
+- Changed caret/chevron color in datepicker and filters dropdown
 
 ### Fixed
 - Do not error when activating an already activated account plausible/analytics#370

@@ -9,7 +9,7 @@ defmodule Plausible.Stats.QueryTest do
 
     assert q.date_range.first == ~D[2019-01-01]
     assert q.date_range.last == ~D[2019-01-01]
-    assert q.step_type == "hour"
+    assert q.interval == "hour"
   end
 
   test "day fromat defaults to today" do
@@ -17,7 +17,7 @@ defmodule Plausible.Stats.QueryTest do
 
     assert q.date_range.first == Timex.today()
     assert q.date_range.last == Timex.today()
-    assert q.step_type == "hour"
+    assert q.interval == "hour"
   end
 
   test "parses realtime format" do
@@ -33,7 +33,7 @@ defmodule Plausible.Stats.QueryTest do
 
     assert q.date_range.first == ~D[2019-01-01]
     assert q.date_range.last == ~D[2019-01-31]
-    assert q.step_type == "date"
+    assert q.interval == "date"
   end
 
   test "parses 6 month format" do
@@ -42,8 +42,8 @@ defmodule Plausible.Stats.QueryTest do
     assert q.date_range.first ==
              Timex.shift(Timex.today(), months: -5) |> Timex.beginning_of_month()
 
-    assert q.date_range.last == Timex.today()
-    assert q.step_type == "month"
+    assert q.date_range.last == Timex.today() |> Timex.end_of_month()
+    assert q.interval == "month"
   end
 
   test "parses 12 month format" do
@@ -52,8 +52,8 @@ defmodule Plausible.Stats.QueryTest do
     assert q.date_range.first ==
              Timex.shift(Timex.today(), months: -11) |> Timex.beginning_of_month()
 
-    assert q.date_range.last == Timex.today()
-    assert q.step_type == "month"
+    assert q.date_range.last == Timex.today() |> Timex.end_of_month()
+    assert q.interval == "month"
   end
 
   test "defaults to 30 days format" do
@@ -65,7 +65,7 @@ defmodule Plausible.Stats.QueryTest do
 
     assert q.date_range.first == ~D[2019-01-01]
     assert q.date_range.last == ~D[2019-01-15]
-    assert q.step_type == "date"
+    assert q.interval == "date"
   end
 
   describe "filters" do

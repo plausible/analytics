@@ -62,8 +62,10 @@ disable_registration = String.to_existing_atom(System.get_env("DISABLE_REGISTRAT
 hcaptcha_sitekey = System.get_env("HCAPTCHA_SITEKEY")
 hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
 log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
+log_format = System.get_env("LOG_FORMAT", "elixir")
 appsignal_api_key = System.get_env("APPSIGNAL_API_KEY")
 is_selfhost = String.to_existing_atom(System.get_env("SELFHOST", "true"))
+disable_cron = String.to_existing_atom(System.get_env("DISABLE_CRON", "false"))
 
 {user_agent_cache_limit, ""} = Integer.parse(System.get_env("USER_AGENT_CACHE_LIMIT", "1000"))
 
@@ -154,7 +156,7 @@ config :plausible, :custom_domain_server,
 config :plausible, PlausibleWeb.Firewall,
   blocklist: System.get_env("IP_BLOCKLIST", "") |> String.split(",") |> Enum.map(&String.trim/1)
 
-if config_env() == :prod do
+if config_env() == :prod && !disable_cron do
   base_cron = [
     # Daily at midnight
     {"0 0 * * *", Plausible.Workers.RotateSalts},
@@ -175,6 +177,8 @@ if config_env() == :prod do
   extra_cron = [
     # Daily at midday
     {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
+    # Daily at 14
+    {"0 14 * * *", Plausible.Workers.CheckUsage},
     # Every 10 minutes
     {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}
   ]
@@ -192,7 +196,8 @@ if config_env() == :prod do
 
   extra_queues = [
     provision_ssl_certificates: 1,
-    trial_notification_emails: 1
+    trial_notification_emails: 1,
+    check_usage: 1
   ]
 
   config :plausible, Oban,
@@ -249,7 +254,20 @@ if geolite2_country_db do
     ]
 end
 
-config :logger, level: log_level
+logger_backends = %{
+  "elixir" => [:console],
+  "json" => [Ink]
+}
+
+config :logger,
+  level: log_level,
+  backends: logger_backends[log_format]
+
+if log_format == "json" do
+  config :logger, Ink,
+    name: "plausible",
+    level: log_level
+end
 
 if appsignal_api_key do
   config :appsignal, :config,
