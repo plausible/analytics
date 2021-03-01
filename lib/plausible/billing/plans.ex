@@ -74,8 +74,11 @@ defmodule Plausible.Billing.Plans do
   end
 
   def allowance(subscription) do
-    Enum.find(@all_plans, fn plan -> plan[:product_id] == subscription.paddle_plan_id end)
-    |> Map.fetch!(:limit)
+    found = Enum.find(@all_plans, fn plan -> plan[:product_id] == subscription.paddle_plan_id end)
+
+    if found do
+      Map.fetch!(found, :limit)
+    end
   end
 
   defp number_format(num) do
