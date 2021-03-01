@@ -89,6 +89,7 @@ defmodule PlausibleWeb.StatsController do
       embed_link = if(embed_mode, do: "/embed", else: "")
 
       theme_index = Enum.find_index(conn.path_info, fn x -> x == "theme" end)
+
       admin_selected_theme =
         if(
           theme_index,

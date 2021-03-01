@@ -79,12 +79,16 @@ defmodule Plausible.Site do
 
   #  https://gist.github.com/atomkirk/74b39b5b09c7d0f21763dd55b877f998
   defp validate_url(changeset, field, opts \\ []) do
-    validate_change changeset, field, fn _, value ->
+    validate_change(changeset, field, fn _, value ->
       case URI.parse(value) do
-        %URI{scheme: nil} -> "is missing a scheme (e.g. https)"
-        %URI{host: nil} -> "is missing a host"
+        %URI{scheme: nil} ->
+          "is missing a scheme (e.g. https)"
+
+        %URI{host: nil} ->
+          "is missing a host"
+
         %URI{host: host} ->
-          case :inet.gethostbyname(Kernel.to_charlist host) do
+          case :inet.gethostbyname(Kernel.to_charlist(host)) do
             {:ok, _} -> nil
             {:error, _} -> "invalid host"
           end
@@ -93,6 +97,6 @@ defmodule Plausible.Site do
         error when is_binary(error) -> [{field, Keyword.get(opts, :message, error)}]
         _ -> []
       end
-    end
+    end)
   end
 end
