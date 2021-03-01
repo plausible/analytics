@@ -22,7 +22,7 @@ defmodule PlausibleWeb.SharedLinkThemeSelectionPlug do
           if(
             theme_index,
             do: Enum.at(conn.path_info, theme_index + 1),
-            else: get_session(conn, "selected_theme")
+            else: nil
           )
 
         conn

@@ -152,6 +152,9 @@ defmodule PlausibleWeb.Router do
     post "/sites/:website/shared-links", SiteController, :create_shared_link
     delete "/sites/:website/shared-links/:slug", SiteController, :delete_shared_link
 
+    put "/sites/:website/external-css", SiteController, :add_external_css
+    delete "/sites/:website/external-css", SiteController, :delete_external_css
+
     get "/sites/:website/custom-domains/new", SiteController, :new_custom_domain
     get "/sites/:website/custom-domains/dns-setup", SiteController, :custom_domain_dns_setup
     get "/sites/:website/custom-domains/snippet", SiteController, :custom_domain_snippet
@@ -179,7 +182,9 @@ defmodule PlausibleWeb.Router do
     delete "/:website", SiteController, :delete_site
     delete "/:website/stats", SiteController, :reset_stats
 
+    get "/share/embed/:slug/theme/:theme_slug", StatsController, :shared_link
     get "/share/embed/:slug", StatsController, :shared_link
+    get "/share/:slug/theme/:theme_slug", StatsController, :shared_link
     get "/share/:slug", StatsController, :shared_link
     post "/share/embed/:slug/authenticate", StatsController, :authenticate_shared_link
     post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
