@@ -13,13 +13,19 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                  "name" => "EST",
                  "full_country_name" => "Estonia",
                  "count" => 2,
-                 "percentage" => 67
+                 "percentage" => 50
                },
                %{
                  "name" => "GBR",
                  "full_country_name" => "United Kingdom",
                  "count" => 1,
-                 "percentage" => 33
+                 "percentage" => 25
+               },
+               %{
+                 "name" => "USA",
+                 "full_country_name" => "United States",
+                 "count" => 1,
+                 "percentage" => 25
                }
              ]
     end

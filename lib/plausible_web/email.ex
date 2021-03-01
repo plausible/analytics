@@ -112,6 +112,18 @@ defmodule PlausibleWeb.Email do
     })
   end
 
+  def over_limit_email(user, usage, last_cycle) do
+    base_email()
+    |> to(user)
+    |> tag("over-limit")
+    |> subject("You have outgrown your Plausible subscription tier ")
+    |> render("over_limit.html", %{
+      user: user,
+      usage: usage,
+      last_cycle: last_cycle
+    })
+  end
+
   def cancellation_email(user) do
     base_email()
     |> to(user.email)

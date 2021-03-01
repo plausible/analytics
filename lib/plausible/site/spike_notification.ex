@@ -15,7 +15,7 @@ defmodule Plausible.Site.SpikeNotification do
     schema
     |> cast(attrs, [:site_id, :recipients, :threshold])
     |> validate_required([:site_id, :recipients, :threshold])
-    |> unique_constraint(:site)
+    |> unique_constraint(:site_id)
   end
 
   def add_recipient(schema, recipient) do

@@ -24,11 +24,13 @@ class Filters extends React.Component {
     this.handleResize = this.handleResize.bind(this);
     this.rewrapFilters = this.rewrapFilters.bind(this);
     this.renderFilterList = this.renderFilterList.bind(this);
+    this.handleKeyup = this.handleKeyup.bind(this)
   }
 
   componentDidMount() {
     document.addEventListener('mousedown', this.handleClick, false);
     window.addEventListener('resize', this.handleResize, false);
+    document.addEventListener('keyup', this.handleKeyup);
 
     this.rewrapFilters();
     this.handleResize();
@@ -52,8 +54,19 @@ class Filters extends React.Component {
   }
 
   componentWillUnmount() {
+    document.removeEventListener("keyup", this.handleKeyup);
     document.removeEventListener('mousedown', this.handleClick, false);
     window.removeEventListener('resize', this.handleResize, false);
+  }
+
+  handleKeyup(e) {
+    const {query, history} = this.props
+
+    if (e.ctrlKey || e.metaKey || e.altKey) return
+
+    if (e.key === 'Escape') {
+      this.clearAllFilters(history, query)
+    }
   }
 
   handleResize() {
@@ -137,6 +150,12 @@ class Filters extends React.Component {
     if (key === "page") {
       return <span className="inline-block max-w-2xs md:max-w-xs truncate">Page: <b>{value}</b></span>
     }
+    if (key === "entry_page") {
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Entry Page: <b>{value}</b></span>
+    }
+    if (key === "exit_page") {
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Exit Page: <b>{value}</b></span>
+    }
   }
 
   removeFilter(key, history, query) {
@@ -199,7 +218,7 @@ class Filters extends React.Component {
         <div className="relative" style={{ height: '35.5px', width: '100px' }}>
           <div onClick={() => this.setState((state) => ({ dropdownOpen: !state.dropdownOpen }))} className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-4 pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800 dark:text-gray-200 h-full">
             <span className="mr-2">Filters</span>
-            <svg className="text-pink-500 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="text-indigo-500 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </div>

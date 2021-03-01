@@ -151,6 +151,17 @@ defmodule Plausible.Factory do
     }
   end
 
+  def api_key_factory do
+    key = :crypto.strong_rand_bytes(64) |> Base.url_encode64() |> binary_part(0, 64)
+
+    %Plausible.Auth.ApiKey{
+      name: "api-key-name",
+      key: key,
+      key_hash: Plausible.Auth.ApiKey.do_hash(key),
+      key_prefix: binary_part(key, 0, 6)
+    }
+  end
+
   defp hash_key() do
     Keyword.fetch!(
       Application.get_env(:plausible, PlausibleWeb.Endpoint),

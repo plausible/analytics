@@ -18,8 +18,8 @@ class Modal extends React.Component {
   }
 
   componentWillUnmount() {
-    document.body.style.overflow = 'unset';
-    document.body.style.height = 'unset';
+    document.body.style.overflow = null;
+    document.body.style.height = null;
     document.removeEventListener("mousedown", this.handleClickOutside);
     document.removeEventListener("keyup", this.handleKeyup);
   }

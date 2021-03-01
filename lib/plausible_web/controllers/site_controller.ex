@@ -299,15 +299,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def delete_site(conn, %{"website" => website}) do
-    site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
-      |> Repo.preload(:google_auth)
-
-    Repo.delete_all(from sm in "site_memberships", where: sm.site_id == ^site.id)
-
-    if site.google_auth do
-      Repo.delete!(site.google_auth)
-    end
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
 
     Repo.delete!(site)
     Plausible.ClickhouseRepo.clear_stats_for(site.domain)
@@ -464,16 +456,25 @@ defmodule PlausibleWeb.SiteController do
   def enable_spike_notification(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
 
-    Plausible.Site.SpikeNotification.changeset(%Plausible.Site.SpikeNotification{}, %{
-      site_id: site.id,
-      threshold: 10,
-      recipients: [conn.assigns[:current_user].email]
-    })
-    |> Repo.insert!()
+    res =
+      Plausible.Site.SpikeNotification.changeset(%Plausible.Site.SpikeNotification{}, %{
+        site_id: site.id,
+        threshold: 10,
+        recipients: [conn.assigns[:current_user].email]
+      })
+      |> Repo.insert()
 
-    conn
-    |> put_flash(:success, "You will a notification with traffic spikes going forward")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+    case res do
+      {:ok, _} ->
+        conn
+        |> put_flash(:success, "You will a notification with traffic spikes going forward")
+        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+
+      {:error, _} ->
+        conn
+        |> put_flash(:error, "Unable to create a spike notification")
+        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+    end
   end
 
   def disable_spike_notification(conn, %{"website" => website}) do

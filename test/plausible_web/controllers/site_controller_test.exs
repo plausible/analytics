@@ -409,6 +409,19 @@ defmodule PlausibleWeb.SiteControllerTest do
       notification = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
       assert notification.recipients == [user.email]
     end
+
+    test "does not allow duplicate spike notification to be created", %{
+      conn: conn,
+      site: site
+    } do
+      post(conn, "/sites/#{site.domain}/spike-notification/enable")
+      post(conn, "/sites/#{site.domain}/spike-notification/enable")
+
+      assert Repo.aggregate(
+               from(s in Plausible.Site.SpikeNotification, where: s.site_id == ^site.id),
+               :count
+             ) == 1
+    end
   end
 
   describe "POST /sites/:website/spike-notification/disable" do

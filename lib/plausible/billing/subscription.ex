@@ -12,6 +12,8 @@ defmodule Plausible.Billing.Subscription do
     :next_bill_date,
     :user_id
   ]
+
+  @optional_fields [:last_bill_date]
   @valid_statuses ["active", "past_due", "deleted", "paused"]
 
   schema "subscriptions" do
@@ -22,6 +24,7 @@ defmodule Plausible.Billing.Subscription do
     field :status, :string
     field :next_bill_amount, :string
     field :next_bill_date, :date
+    field :last_bill_date, :date
 
     belongs_to :user, Plausible.Auth.User
 
@@ -30,7 +33,7 @@ defmodule Plausible.Billing.Subscription do
 
   def changeset(model, attrs \\ %{}) do
     model
-    |> cast(attrs, @required_fields)
+    |> cast(attrs, @required_fields ++ @optional_fields)
     |> validate_required(@required_fields)
     |> validate_inclusion(:status, @valid_statuses)
     |> unique_constraint(:paddle_subscription_id)
