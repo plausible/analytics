@@ -84,13 +84,21 @@ defmodule PlausibleWeb.StatsController do
       Repo.get_by(Plausible.Site.SharedLink, slug: slug)
       |> Repo.preload(:site)
 
-    embed_mode = Enum.at(conn.path_info, 1) == "embed"
-
-    embed_link = if(embed_mode, do: "/embed", else: "")
-
     if shared_link do
+      embed_mode = Enum.at(conn.path_info, 1) == "embed"
+      embed_link = if(embed_mode, do: "/embed", else: "")
+
+      theme_index = Enum.find_index(conn.path_info, fn x -> x == "theme" end)
+      admin_selected_theme =
+        if(
+          theme_index,
+          do: Enum.at(conn.path_info, theme_index + 1),
+          else: nil
+        )
+
       if shared_link.password_hash do
         conn
+        |> put_session("admin_selected_theme", admin_selected_theme)
         |> put_session("embed_mode", embed_mode)
         |> assign(:skip_plausible_tracking, true)
         |> render("shared_link_password.html",
@@ -100,6 +108,7 @@ defmodule PlausibleWeb.StatsController do
         )
       else
         conn
+        |> put_session("admin_selected_theme", admin_selected_theme)
         |> put_session("embed_mode", embed_mode)
         |> shared_link_auth_success(shared_link)
       end

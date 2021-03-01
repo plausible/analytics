@@ -163,11 +163,13 @@ defmodule PlausibleWeb.SiteController do
   def settings_visibility(conn, %{"website" => website}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
     shared_links = Repo.all(from l in Plausible.Site.SharedLink, where: l.site_id == ^site.id)
+    changeset = Plausible.Site.changeset(site)
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_visibility.html",
       site: site,
+      changeset: changeset,
       shared_links: shared_links,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
@@ -655,5 +657,38 @@ defmodule PlausibleWeb.SiteController do
       repo.insert(membership_changeset)
     end)
     |> Repo.transaction()
+  end
+
+  def add_external_css(conn, %{"website" => website, "site" => site_changes}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    changeset = Plausible.Site.add_external_css(site, site_changes["external_css"])
+
+    case Repo.update(changeset) do
+      {:ok, _site} ->
+        redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
+
+      {:error, changeset} ->
+        shared_links = Repo.all(from l in Plausible.Site.SharedLink, where: l.site_id == ^site.id)
+
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("settings_visibility.html",
+          site: site,
+          changeset: changeset,
+          shared_links: shared_links,
+          layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+        )
+    end
+  end
+
+  def delete_external_css(conn, %{"website" => website}) do
+    site =
+      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      |> Plausible.Site.delete_external_css()
+      |> Repo.update!()
+
+    conn
+    |> put_flash(:success, "External CSS for #{site.domain} deleted successfully.")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
   end
 end
