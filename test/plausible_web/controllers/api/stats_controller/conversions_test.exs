@@ -86,28 +86,47 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
     test "returns correct and sorted glob goal counts", %{conn: conn, site: site} do
       insert(:goal, %{domain: site.domain, page_path: "/register"})
       insert(:goal, %{domain: site.domain, page_path: "/reg*"})
-      insert(:goal, %{domain: site.domain, page_path: "/reg*ster"})
-      insert(:goal, %{domain: site.domain, page_path: "/*/contact"})
+      insert(:goal, %{domain: site.domain, page_path: "/*/register"})
+      insert(:goal, %{domain: site.domain, page_path: "/billing**/success"})
+      insert(:goal, %{domain: site.domain, page_path: "/billing*/success"})
+      insert(:goal, %{domain: site.domain, page_path: "/signup"})
+      insert(:goal, %{domain: site.domain, page_path: "/signup/*"})
+      insert(:goal, %{domain: site.domain, page_path: "/signup/**"})
       insert(:goal, %{domain: site.domain, page_path: "/*"})
+      insert(:goal, %{domain: site.domain, page_path: "/**"})
 
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/conversions?period=12mo&date=2019-01-01"
+          "/api/stats/#{site.domain}/conversions?period=day&date=2019-07-01"
         )
 
       assert json_response(conn, 200) == [
                %{
                  "conversion_rate" => 100.0,
                  "count" => 8,
-                 "name" => "Visit /*",
+                 "name" => "Visit /**",
                  "total_count" => 8,
+                 "prop_names" => nil
+               },
+               %{
+                 "conversion_rate" => 37.5,
+                 "count" => 3,
+                 "name" => "Visit /*",
+                 "total_count" => 3,
+                 "prop_names" => nil
+               },
+               %{
+                 "conversion_rate" => 37.5,
+                 "count" => 3,
+                 "name" => "Visit /signup/**",
+                 "total_count" => 3,
                  "prop_names" => nil
                },
                %{
                  "conversion_rate" => 25.0,
                  "count" => 2,
-                 "name" => "Visit /reg*ster",
+                 "name" => "Visit /billing**/success",
                  "total_count" => 2,
                  "prop_names" => nil
                },
@@ -119,10 +138,24 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "prop_names" => nil
                },
                %{
-                 "conversion_rate" => 25.0,
-                 "count" => 2,
+                 "conversion_rate" => 12.5,
+                 "count" => 1,
+                 "name" => "Visit /billing*/success",
+                 "total_count" => 1,
+                 "prop_names" => nil
+               },
+               %{
+                 "conversion_rate" => 12.5,
+                 "count" => 1,
                  "name" => "Visit /register",
-                 "total_count" => 2,
+                 "total_count" => 1,
+                 "prop_names" => nil
+               },
+               %{
+                 "conversion_rate" => 12.5,
+                 "count" => 1,
+                 "name" => "Visit /signup/*",
+                 "total_count" => 1,
                  "prop_names" => nil
                }
              ]
