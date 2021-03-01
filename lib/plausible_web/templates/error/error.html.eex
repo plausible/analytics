@@ -9,7 +9,7 @@
     <title><%= assigns[:title] || "Plausible · Web analytics" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
     <script type="text/javascript" data-pref="<%= @conn.assigns[:current_user] && @conn.assigns[:current_user].theme %>" src="<%= Routes.static_path(@conn, "/js/applyTheme.js") %>"></script>
-    <link data-jslicense="1" href="/licenses">
+    <link rel="license" data-jslicense="1" href="/licenses">
   </head>
   <body class="flex flex-col h-full bg-gray-100 dark:bg-gray-900">
     <div class="container text-center mt-24">
