@@ -12,15 +12,27 @@ defmodule Plausible.Billing.Plans do
   ]
 
   @yearly_plans [
-    %{product_id: "572810", cost: "$48", limit: 10_000, cycle: "yearly"},
-    %{product_id: "590752", cost: "$96", limit: 100_000, cycle: "yearly"},
-    %{product_id: "597486", cost: "$144", limit: 200_000, cycle: "yearly"},
-    %{product_id: "597488", cost: "$216", limit: 500_000, cycle: "yearly"},
-    %{product_id: "597643", cost: "$384", limit: 1_000_000, cycle: "yearly"},
-    %{product_id: "597310", cost: "$552", limit: 2_000_000, cycle: "yearly"},
-    %{product_id: "597312", cost: "$792", limit: 5_000_000, cycle: "yearly"},
-    %{product_id: "642354", cost: "$1200", limit: 10_000_000, cycle: "yearly"},
-    %{product_id: "642356", cost: "$1800", limit: 20_000_000, cycle: "yearly"}
+    %{product_id: "572810", cost: "$48", monthly_cost: "$4", limit: 10_000, cycle: "yearly"},
+    %{product_id: "590752", cost: "$96", monthly_cost: "$8", limit: 100_000, cycle: "yearly"},
+    %{product_id: "597486", cost: "$144", monthly_cost: "$12", limit: 200_000, cycle: "yearly"},
+    %{product_id: "597488", cost: "$216", monthly_cost: "$18", limit: 500_000, cycle: "yearly"},
+    %{product_id: "597643", cost: "$384", monthly_cost: "$32", limit: 1_000_000, cycle: "yearly"},
+    %{product_id: "597310", cost: "$552", monthly_cost: "$46", limit: 2_000_000, cycle: "yearly"},
+    %{product_id: "597312", cost: "$792", monthly_cost: "$66", limit: 5_000_000, cycle: "yearly"},
+    %{
+      product_id: "642354",
+      cost: "$1200",
+      monthly_cost: "$100",
+      limit: 10_000_000,
+      cycle: "yearly"
+    },
+    %{
+      product_id: "642356",
+      cost: "$1800",
+      monthly_cost: "$150",
+      limit: 20_000_000,
+      cycle: "yearly"
+    }
   ]
 
   @all_plans @monthly_plans ++ @yearly_plans
@@ -50,6 +62,11 @@ defmodule Plausible.Billing.Plans do
   def suggested_plan_cost(usage) do
     plan = suggested_plan(usage)
     plan[:cost] <> "/mo"
+  end
+
+  def suggested_plan_cost_yearly(usage) do
+    plan = Enum.find(@yearly_plans, fn plan -> usage < plan[:limit] end)
+    plan[:monthly_cost] <> "/mo"
   end
 
   defp suggested_plan(usage) do
