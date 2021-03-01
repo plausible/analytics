@@ -5,6 +5,8 @@ defmodule PlausibleWeb.Tracker do
   @templates [
     "plausible.js",
     "plausible.exclusions.js",
+    "plausible.hash.js",
+    "plausible.outbound-links.js",
     "plausible.hash.exclusions.js",
     "plausible.hash.outbound-links.js",
     "plausible.hash.exclusions.outbound-links.js",

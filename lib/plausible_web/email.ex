@@ -112,6 +112,31 @@ defmodule PlausibleWeb.Email do
     })
   end
 
+  def over_limit_email(user, usage, last_cycle) do
+    yearly_plan_ids =
+      Plausible.Billing.Plans.plans()
+      |> Map.fetch!(:yearly)
+      |> Enum.map(fn {_limit, plan} -> plan[:product_id] end)
+
+    subject_pre =
+      if user.subscription.paddle_plan_id in yearly_plan_ids do
+        "[YEARLY] "
+      else
+        ""
+      end
+
+    base_email()
+    # Temporary testing
+    |> to(["uku@plausible.io"])
+    |> tag("over-limit")
+    |> subject("#{subject_pre}You have outgrown your Plausible subscription tier ")
+    |> render("over_limit.html", %{
+      user: user,
+      usage: usage,
+      last_cycle: last_cycle
+    })
+  end
+
   def cancellation_email(user) do
     base_email()
     |> to(user.email)

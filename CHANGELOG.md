@@ -1,7 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.2] - Unreleased
+## [1.3] - Unreleased
+
+### Added
+- Stats API [currently in beta] plausible/analytics#679
+- 30 day and 6 month keybindings (`T` and `S`, respectively) plausible/analytics#709
+- Site switching keybinds (1-9 for respective sites) plausible/analytics#735
+
+### Fixed
+- Capitalized date/time selection keybinds not working plausible/analytics#709
+- Invisible text on Google Search Console settings page in dark mode plausible/analytics#759
+
+## [1.2] - 2021-01-26
 
 ### Added
 - Ability to add event metadata plausible/analytics#381
