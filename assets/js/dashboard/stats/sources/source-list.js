@@ -60,7 +60,7 @@ class AllSources extends React.Component {
   }
 
   renderList() {
-    if (this.state.referrers.length > 0) {
+    if (this.state.referrers && this.state.referrers.length > 0) {
       return (
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
@@ -71,6 +71,7 @@ class AllSources extends React.Component {
           <FlipMove>
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
+          <MoreLink site={this.props.site} list={this.state.referrers} endpoint="sources" />
         </React.Fragment>
       )
     } else {
@@ -79,27 +80,24 @@ class AllSources extends React.Component {
   }
 
   renderContent() {
-    if (this.state.referrers) {
-      return (
-        <React.Fragment>
-          <div className="w-full flex justify-between">
-            <h3 className="font-bold dark:text-gray-100">Top sources</h3>
-            { this.props.renderTabs() }
-          </div>
+    return (
+      <React.Fragment>
+        <div className="w-full flex justify-between">
+          <h3 className="font-bold dark:text-gray-100">Top sources</h3>
+          { this.props.renderTabs() }
+        </div>
+        { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
+        <FadeIn show={!this.state.loading}>
           { this.renderList() }
-          <MoreLink site={this.props.site} list={this.state.referrers} endpoint="sources" />
-        </React.Fragment>
-      )
-    }
+        </FadeIn>
+      </React.Fragment>
+    )
   }
 
   render() {
     return (
       <div className="stats-item relative bg-white dark:bg-gray-825 shadow-xl rounded p-4" style={{height: '436px'}}>
-        { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
           { this.renderContent() }
-        </FadeIn>
       </div>
     )
   }
@@ -163,7 +161,7 @@ class UTMSources extends React.Component {
   }
 
   renderList() {
-    if (this.state.referrers.length > 0) {
+    if (this.state.referrers && this.state.referrers.length > 0) {
       return (
         <React.Fragment>
           <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide">
@@ -174,6 +172,7 @@ class UTMSources extends React.Component {
           <FlipMove>
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
+          <MoreLink site={this.props.site} list={this.state.referrers} endpoint="sources" />
         </React.Fragment>
       )
     } else {
@@ -182,27 +181,24 @@ class UTMSources extends React.Component {
   }
 
   renderContent() {
-    if (this.state.referrers) {
-      return (
-        <React.Fragment>
-          <div className="w-full flex justify-between">
-            <h3 className="font-bold dark:text-gray-100">Top sources</h3>
-            { this.props.renderTabs() }
-          </div>
+    return (
+      <React.Fragment>
+        <div className="w-full flex justify-between">
+          <h3 className="font-bold dark:text-gray-100">Top sources</h3>
+          { this.props.renderTabs() }
+        </div>
+        { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
+        <FadeIn show={!this.state.loading}>
           { this.renderList() }
-          <MoreLink site={this.props.site} list={this.state.referrers} endpoint={UTM_TAGS[this.props.tab].endpoint} />
-        </React.Fragment>
-      )
-    }
+        </FadeIn>
+      </React.Fragment>
+    )
   }
 
   render() {
     return (
       <div className="stats-item relative bg-white dark:bg-gray-825 shadow-xl rounded p-4" style={{height: '436px'}}>
-        { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
-          { this.renderContent() }
-        </FadeIn>
+        { this.renderContent() }
       </div>
     )
   }

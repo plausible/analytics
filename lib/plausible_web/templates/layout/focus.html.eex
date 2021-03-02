@@ -12,18 +12,21 @@
     <script type="text/javascript" data-pref="<%= @conn.assigns[:current_user] && @conn.assigns[:current_user].theme %>" src="<%= Routes.static_path(@conn, "/js/applyTheme.js") %>"></script>
   </head>
   <body class="flex flex-col h-full bg-gray-100 dark:bg-gray-900">
-    <div class="text-center w-full my-8">
+    <div class="w-full my-8 text-center">
         <a href="<%= home_dest(@conn) %>">
           <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo_dark.png"), class: "hidden dark:inline", style: "height: 2.5rem;", alt: "Plausible logo") %>
           <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), class: "inline dark:hidden", style: "height: 2.5rem;", alt: "Plausible logo")%>
         </a>
     </div>
 
-    <%= render("_flash.html", assigns) %>
+    <%= if @conn.private[:phoenix_flash] do %>
+      <%= render("_flash.html", assigns) %>
+    <% end %>
     <%= @inner_content %>
 
+
     <p class="text-center text-gray-500 text-xs py-8">
-      ©2020 Plausible Analytics. All rights reserved.
+      ©<%= DateTime.utc_now().year() %> Plausible Analytics. All rights reserved.
     </p>
 
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>

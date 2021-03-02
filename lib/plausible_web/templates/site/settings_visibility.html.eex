@@ -36,7 +36,7 @@
   <div class="mt-6">
     <%= for link <- @shared_links do %>
       <div class="flex relative w-full max-w-xl mt-2 text-sm">
-        <input type="text" id="<%= link.slug %>" readonly="readonly" value="<%= shared_link_dest(link) %>" class="transition bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded rounded-r-none w-full p-2 text-gray-700 dark:text-gray-300 focus:outline-none focus:border-gray-300 dark:focus:border-gray-500" />
+        <input type="text" id="<%= link.slug %>" readonly="readonly" value="<%= shared_link_dest(@site, link) %>" class="transition bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded rounded-r-none w-full p-2 text-gray-700 dark:text-gray-300 focus:outline-none focus:border-gray-300 dark:focus:border-gray-500" />
         <button onclick="var input = document.getElementById('<%= link.slug %>'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="py-2 px-4 bg-gray-200 dark:bg-gray-850 text-indigo-800 dark:text-indigo-500 rounded-none border-r border-gray-300 dark:border-gray-500 hover:bg-gray-300 dark:hover:bg-gray-825">
           <svg class="feather-sm" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
         </button>

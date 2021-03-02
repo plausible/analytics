@@ -9,8 +9,8 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       conn = get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&date=2019-01-01")
 
       assert json_response(conn, 200) == [
-               %{"name" => "Mac", "count" => 2, "percentage" => 67},
-               %{"name" => "Android", "count" => 1, "percentage" => 33}
+               %{"name" => "Mac", "count" => 3, "percentage" => 75},
+               %{"name" => "Android", "count" => 1, "percentage" => 25}
              ]
     end
   end

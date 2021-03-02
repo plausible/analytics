@@ -8,18 +8,20 @@ defmodule PlausibleWeb.AuthorizeStatsPlug do
 
   def call(conn, _opts) do
     site = Repo.get_by(Plausible.Site, domain: conn.params["domain"])
+    shared_link_auth = get_req_header(conn, "x-shared-link-auth") |> List.first()
+    # SHOULD GENERATE A NEW PHOENIX TOKEN WHEN MOUNTING THE STATS
+    shared_link_record =
+      shared_link_auth && Repo.get_by(Plausible.Site.SharedLink, slug: shared_link_auth)
 
     if !site do
       PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt
     else
       user_id = get_session(conn, :current_user_id)
-      shared_link_key = "shared_link_auth_" <> site.domain
-      shared_link_auth = get_session(conn, shared_link_key)
 
       can_access =
         site.public ||
           (user_id && Plausible.Sites.is_owner?(user_id, site)) ||
-          (shared_link_auth && shared_link_auth[:valid_until] > DateTime.to_unix(Timex.now()))
+          (shared_link_auth && shared_link_record && shared_link_record.site_id == site.id)
 
       if !can_access do
         PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt

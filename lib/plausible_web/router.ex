@@ -15,6 +15,11 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.LastSeenPlug
   end
 
+  pipeline :shared_link do
+    plug :accepts, ["html"]
+    plug :put_secure_browser_headers
+  end
+
   pipeline :csrf do
     plug :protect_from_forgery
   end
@@ -26,10 +31,17 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.AuthPlug
   end
 
-  pipeline :stats_api do
+  pipeline :internal_stats_api do
     plug :accepts, ["json"]
     plug PlausibleWeb.Firewall
     plug :fetch_session
+    plug PlausibleWeb.AuthorizeStatsPlug
+  end
+
+  pipeline :external_stats_api do
+    plug :accepts, ["json"]
+    plug PlausibleWeb.Firewall
+    plug PlausibleWeb.AuthorizeApiStatsPlug
   end
 
   if Application.get_env(:plausible, :environment) == "dev" do
@@ -39,7 +51,7 @@ defmodule PlausibleWeb.Router do
   use Kaffy.Routes, scope: "/crm", pipe_through: [PlausibleWeb.CRMAuthPlug]
 
   scope "/api/stats", PlausibleWeb.Api do
-    pipe_through :stats_api
+    pipe_through :internal_stats_api
 
     get "/:domain/current-visitors", StatsController, :current_visitors
     get "/:domain/main-graph", StatsController, :main_graph
@@ -51,6 +63,7 @@ defmodule PlausibleWeb.Router do
     get "/:domain/goal/referrers/:referrer", StatsController, :referrer_drilldown_for_goal
     get "/:domain/pages", StatsController, :pages
     get "/:domain/entry-pages", StatsController, :entry_pages
+    get "/:domain/exit-pages", StatsController, :exit_pages
     get "/:domain/countries", StatsController, :countries
     get "/:domain/browsers", StatsController, :browsers
     get "/:domain/browser-versions", StatsController, :browser_versions
@@ -59,6 +72,15 @@ defmodule PlausibleWeb.Router do
     get "/:domain/screen-sizes", StatsController, :screen_sizes
     get "/:domain/conversions", StatsController, :conversions
     get "/:domain/property/:prop_name", StatsController, :prop_breakdown
+  end
+
+  scope "/api/v1/stats", PlausibleWeb.Api do
+    pipe_through :external_stats_api
+
+    get "/realtime/visitors", ExternalStatsController, :realtime_visitors
+    get "/aggregate", ExternalStatsController, :aggregate
+    get "/breakdown", ExternalStatsController, :breakdown
+    get "/timeseries", ExternalStatsController, :timeseries
   end
 
   scope "/api", PlausibleWeb do
@@ -91,6 +113,13 @@ defmodule PlausibleWeb.Router do
   end
 
   scope "/", PlausibleWeb do
+    pipe_through [:shared_link]
+
+    get "/share/:slug", StatsController, :shared_link
+    post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
+  end
+
+  scope "/", PlausibleWeb do
     pipe_through [:browser, :csrf]
 
     get "/password", AuthController, :password_form
@@ -99,6 +128,9 @@ defmodule PlausibleWeb.Router do
     get "/settings", AuthController, :user_settings
     put "/settings", AuthController, :save_settings
     delete "/me", AuthController, :delete_me
+    get "/settings/api-keys/new", AuthController, :new_api_key
+    post "/settings/api-keys", AuthController, :create_api_key
+    delete "/settings/api-keys/:id", AuthController, :delete_api_key
 
     get "/auth/google/callback", AuthController, :google_auth_callback
 
@@ -177,8 +209,6 @@ defmodule PlausibleWeb.Router do
     delete "/:website", SiteController, :delete_site
     delete "/:website/stats", SiteController, :reset_stats
 
-    get "/share/:slug", StatsController, :shared_link
-    post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
     get "/:domain/visitors.csv", StatsController, :csv_export
     get "/:domain/*path", StatsController, :stats
   end

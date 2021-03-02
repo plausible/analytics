@@ -57,7 +57,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       link =
         insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
 
-      conn = get(conn, "/share/#{link.slug}")
+      conn = get(conn, "/share/#{site.domain}?auth=#{link.slug}")
       assert response(conn, 200) =~ "Enter password"
     end
 
@@ -67,19 +67,8 @@ defmodule PlausibleWeb.StatsControllerTest do
       site = insert(:site, domain: "test-site.com")
       link = insert(:shared_link, site: site)
 
-      conn = get(conn, "/share/#{link.slug}")
-      assert redirected_to(conn, 302) == "/#{site.domain}"
-
-      conn = get(conn, "/#{site.domain}")
+      conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
       assert html_response(conn, 200) =~ "stats-react-container"
-    end
-
-    test "encodes URI when redirecting", %{conn: conn} do
-      site = insert(:site, domain: "test-site.com/wat")
-      link = insert(:shared_link, site: site)
-
-      conn = get(conn, "/share/#{link.slug}")
-      assert redirected_to(conn, 302) == "/test-site.com%2Fwat"
     end
   end
 
@@ -91,9 +80,9 @@ defmodule PlausibleWeb.StatsControllerTest do
         insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
 
       conn = post(conn, "/share/#{link.slug}/authenticate", %{password: "password"})
-      assert redirected_to(conn, 302) == "/#{site.domain}"
+      assert redirected_to(conn, 302) == "/share/#{site.domain}?auth=#{link.slug}"
 
-      conn = get(conn, "/#{site.domain}")
+      conn = get(conn, "/share/#{site.domain}?auth=#{link.slug}")
       assert html_response(conn, 200) =~ "stats-react-container"
     end
 
