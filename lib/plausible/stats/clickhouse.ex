@@ -925,24 +925,37 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp fetch_pageview_goals(goals, site, query) do
-    pages =
+    goals =
       Enum.map(goals, fn goal -> goal.page_path end)
       |> Enum.filter(& &1)
 
-    if Enum.count(pages) > 0 do
-      q =
-        from(
-          e in base_query_w_sessions(site, query),
-          where: fragment("? IN tuple(?)", e.pathname, ^pages),
-          group_by: e.pathname,
-          select: %{
-            name: fragment("concat('Visit ', ?) as name", e.pathname),
-            count: fragment("uniq(user_id) as count"),
-            total_count: fragment("count(*) as total_count")
-          }
-        )
+    if Enum.count(goals) > 0 do
+      regex_goals =
+        Enum.map(goals, fn g ->
+          "^#{g}\/?$"
+          |> String.replace(~r/\*\*/, ".*")
+          |> String.replace(~r/(?<!\.)\*/, "[^/]*")
+        end)
 
-      ClickhouseRepo.all(q)
+      from(
+        e in base_query_w_sessions(site, query),
+        where:
+          fragment(
+            "notEmpty(multiMatchAllIndices(?, array(?)) as indices)",
+            e.pathname,
+            ^regex_goals
+          ),
+        select: %{
+          index: fragment("arrayJoin(indices) as index"),
+          count: fragment("uniq(user_id) as count"),
+          total_count: fragment("count(*) as total_count")
+        },
+        group_by: fragment("index")
+      )
+      |> ClickhouseRepo.all()
+      |> Enum.map(fn x ->
+        Map.put(x, :name, "Visit #{Enum.at(goals, x[:index] - 1)}") |> Map.delete(:index)
+      end)
     else
       []
     end

@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Ability to view and filter by entry and exit pages, in addition to regular page hits plausible/analytics#712
 - 30 day and 6 month keybindings (`T` and `S`, respectively) plausible/analytics#709
 - Site switching keybinds (1-9 for respective sites) plausible/analytics#735
+- Glob (wildcard) based pageview goals plausible/analytics#750
 
 ### Fixed
 - Capitalized date/time selection keybinds not working plausible/analytics#709
