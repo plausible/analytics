@@ -537,6 +537,7 @@ defmodule Plausible.Stats.Clickhouse do
         order_by: [desc: fragment("count")],
         limit: ^limit,
         offset: ^offset,
+        where: s.exit_page != "",
         select: %{
           name: s.exit_page,
           count: fragment("uniq(?) as count", s.user_id),
