@@ -4,6 +4,8 @@ import SourcesModal from './stats/modals/sources'
 import ReferrersDrilldownModal from './stats/modals/referrer-drilldown'
 import GoogleKeywordsModal from './stats/modals/google-keywords'
 import PagesModal from './stats/modals/pages'
+import EntryPagesModal from './stats/modals/entry-pages'
+import ExitPagesModal from './stats/modals/exit-pages'
 import CountriesModal from './stats/modals/countries'
 
 import {BrowserRouter, Switch, Route, useLocation} from "react-router-dom";
@@ -38,6 +40,12 @@ export default function Router({site, loggedIn}) {
           </Route>
           <Route path="/:domain/pages">
             <PagesModal site={site} />
+          </Route>
+          <Route path="/:domain/entry-pages">
+            <EntryPagesModal site={site} />
+          </Route>
+          <Route path="/:domain/exit-pages">
+            <ExitPagesModal site={site} />
           </Route>
           <Route path="/:domain/countries">
             <CountriesModal site={site} />

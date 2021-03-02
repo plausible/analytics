@@ -4,6 +4,7 @@ import 'url-search-params-polyfill';
 
 import Router from './router'
 import ErrorBoundary from './error-boundary'
+import * as api from './api'
 
 const container = document.getElementById('stats-react-container')
 
@@ -16,6 +17,10 @@ if (container) {
   }
 
   const loggedIn = container.dataset.loggedIn === 'true'
+  const sharedLinkAuth = container.dataset.sharedLinkAuth
+  if (sharedLinkAuth) {
+    api.setSharedLinkAuth(sharedLinkAuth)
+  }
 
   const app = (
     <ErrorBoundary>

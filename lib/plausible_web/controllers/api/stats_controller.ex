@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Api.StatsController do
   use Plausible.Repo
   alias Plausible.Stats.Clickhouse, as: Stats
   alias Plausible.Stats.Query
-  plug PlausibleWeb.AuthorizeStatsPlug
 
   def main_graph(conn, params) do
     site = conn.assigns[:site]
@@ -18,7 +17,7 @@ defmodule PlausibleWeb.Api.StatsController do
       labels: labels,
       present_index: present_index,
       top_stats: top_stats,
-      interval: query.step_type
+      interval: query.interval
     })
   end
 
@@ -222,11 +221,19 @@ defmodule PlausibleWeb.Api.StatsController do
   def entry_pages(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
-    include = if params["include"], do: String.split(params["include"], ","), else: []
     limit = if params["limit"], do: String.to_integer(params["limit"])
     page = if params["page"], do: String.to_integer(params["page"])
 
-    json(conn, Stats.entry_pages(site, query, limit || 9, page || 1, include))
+    json(conn, Stats.entry_pages(site, query, limit || 9, page || 1))
+  end
+
+  def exit_pages(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, params)
+    limit = if params["limit"], do: String.to_integer(params["limit"])
+    page = if params["page"], do: String.to_integer(params["page"])
+
+    json(conn, Stats.exit_pages(site, query, limit || 9, page || 1))
   end
 
   def countries(conn, params) do
