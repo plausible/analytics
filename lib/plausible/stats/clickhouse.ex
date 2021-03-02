@@ -1175,7 +1175,11 @@ defmodule Plausible.Stats.Clickhouse do
 
     if path do
       if String.match?(path, ~r/\*/) do
-        path_regex = "^#{path}\/?$" |> String.replace(~r/\*\*/, ".*") |> String.replace(~r/(?<!\.)\*/, "[^/]*")
+        path_regex =
+          "^#{path}\/?$"
+          |> String.replace(~r/\*\*/, ".*")
+          |> String.replace(~r/(?<!\.)\*/, "[^/]*")
+
         from(e in q, where: fragment("match(?, ?)", e.pathname, ^path_regex))
       else
         from(e in q, where: e.pathname == ^path)
@@ -1424,7 +1428,11 @@ defmodule Plausible.Stats.Clickhouse do
     q =
       if path do
         if String.match?(path, ~r/\*/) do
-          path_regex = "^#{path}\/?$" |> String.replace(~r/\*\*/, ".*") |> String.replace(~r/(?<!\.)\*/, "[^/]*")
+          path_regex =
+            "^#{path}\/?$"
+            |> String.replace(~r/\*\*/, ".*")
+            |> String.replace(~r/(?<!\.)\*/, "[^/]*")
+
           from(e in q, where: fragment("match(?, ?)", e.pathname, ^path_regex))
         else
           from(e in q, where: e.pathname == ^path)
