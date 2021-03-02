@@ -36,6 +36,20 @@ defmodule Plausible.Test.ClickhouseSetup do
       %{
         name: "pageview",
         domain: "test-site.com",
+        pathname: "/",
+        country_code: "US",
+        browser: "Chrome",
+        browser_version: "79.0",
+        operating_system: "Mac",
+        operating_system_version: "10.16",
+        screen_size: "Laptop",
+        referrer_source: "",
+        referrer: "",
+        timestamp: ~N[2019-01-01 00:00:00]
+      },
+      %{
+        name: "pageview",
+        domain: "test-site.com",
         pathname: "/contact",
         country_code: "GB",
         browser: "Firefox",

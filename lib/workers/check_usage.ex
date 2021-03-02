@@ -39,6 +39,7 @@ defmodule Plausible.Workers.CheckUsage do
           join: s in Plausible.Billing.Subscription,
           on: s.user_id == u.id,
           where: s.status == "active",
+          where: not is_nil(s.last_bill_date),
           # Accounts for situations like last_bill_date==2021-01-31 AND today==2021-03-01. Since February never reaches the 31st day, the account is checked on 2021-03-01.
           where:
             least(day_of_month(s.last_bill_date), day_of_month(last_day_of_month(^yesterday))) ==

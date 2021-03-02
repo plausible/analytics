@@ -24,8 +24,9 @@
     <% end %>
     <%= @inner_content %>
 
-    <p class="py-8 text-xs text-center text-gray-500">
-      ©2020 Plausible Analytics. All rights reserved.
+
+    <p class="text-center text-gray-500 text-xs py-8">
+      ©<%= DateTime.utc_now().year() %> Plausible Analytics. All rights reserved.
     </p>
 
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>

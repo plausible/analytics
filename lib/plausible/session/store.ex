@@ -30,7 +30,7 @@ defmodule Plausible.Session.Store do
             on: s.session_id == ls.session_id and s.timestamp == ls.timestamp,
             order_by: s.timestamp
         )
-        |> Enum.map(fn s -> {s.user_id, s} end)
+        |> Enum.map(fn s -> {{s.domain, s.user_id}, s} end)
         |> Enum.into(%{})
       rescue
         _e -> %{}
@@ -48,7 +48,11 @@ defmodule Plausible.Session.Store do
         _from,
         %{sessions: sessions, buffer: buffer} = state
       ) do
-    found_session = sessions[event.user_id] || (prev_user_id && sessions[prev_user_id])
+    session_key = {event.domain, event.user_id}
+
+    found_session =
+      sessions[session_key] || (prev_user_id && sessions[{event.domain, prev_user_id}])
+
     active = is_active?(found_session, event)
 
     updated_sessions =
@@ -56,40 +60,41 @@ defmodule Plausible.Session.Store do
         found_session && active ->
           new_session = update_session(found_session, event)
           buffer.insert([%{new_session | sign: 1}, %{found_session | sign: -1}])
-          Map.put(sessions, event.user_id, new_session)
+          Map.put(sessions, session_key, new_session)
 
         found_session && !active ->
           new_session = new_session_from_event(event)
           buffer.insert([new_session])
-          Map.put(sessions, event.user_id, new_session)
+          Map.put(sessions, session_key, new_session)
 
         true ->
           new_session = new_session_from_event(event)
           buffer.insert([new_session])
-          Map.put(sessions, event.user_id, new_session)
+          Map.put(sessions, session_key, new_session)
       end
 
-    session_id = updated_sessions[event.user_id].session_id
+    session_id = updated_sessions[session_key].session_id
     {:reply, session_id, %{state | sessions: updated_sessions}}
   end
 
   def reconcile_event(sessions, event) do
-    found_session = sessions[event.user_id]
+    session_key = {event.domain, event.user_id}
+    found_session = sessions[session_key]
     active = is_active?(found_session, event)
 
     updated_sessions =
       cond do
         found_session && active ->
           new_session = update_session(found_session, event)
-          Map.put(sessions, event.user_id, new_session)
+          Map.put(sessions, session_key, new_session)
 
         found_session && !active ->
           new_session = new_session_from_event(event)
-          Map.put(sessions, event.user_id, new_session)
+          Map.put(sessions, session_key, new_session)
 
         true ->
           new_session = new_session_from_event(event)
-          Map.put(sessions, event.user_id, new_session)
+          Map.put(sessions, session_key, new_session)
       end
 
     updated_sessions
