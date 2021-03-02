@@ -83,7 +83,7 @@ class AllSources extends React.Component {
     return (
       <React.Fragment>
         <div className="w-full flex justify-between">
-          <h3 className="font-bold dark:text-gray-100">Top sources</h3>
+          <h3 className="font-bold dark:text-gray-100">Top Sources</h3>
           { this.props.renderTabs() }
         </div>
         { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
