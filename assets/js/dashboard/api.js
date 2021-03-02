@@ -1,6 +1,7 @@
 import {formatISO} from './date'
 
 let abortController = new AbortController()
+let SHARED_LINK_AUTH = null
 
 function serialize(obj) {
   var str = [];
@@ -9,6 +10,10 @@ function serialize(obj) {
       str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
     }
   return str.join("&");
+}
+
+export function setSharedLinkAuth(auth) {
+  SHARED_LINK_AUTH = auth
 }
 
 export function cancelAll() {
@@ -35,8 +40,9 @@ export function serializeQuery(query, extraQuery=[]) {
 }
 
 export function get(url, query, ...extraQuery) {
+  const headers = SHARED_LINK_AUTH ? {'X-Shared-Link-Auth': SHARED_LINK_AUTH} : {}
   url = url + serializeQuery(query, extraQuery)
-  return fetch(url, {signal: abortController.signal})
+  return fetch(url, {signal: abortController.signal, headers: headers})
     .then( response => {
       if (!response.ok) { throw response }
       return response.json()

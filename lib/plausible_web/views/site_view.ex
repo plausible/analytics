@@ -21,8 +21,9 @@ defmodule PlausibleWeb.SiteView do
     name
   end
 
-  def shared_link_dest(link) do
-    plausible_url() <> "/share/" <> link.slug
+  def shared_link_dest(site, link) do
+    domain = "/share/#{URI.encode_www_form(site.domain)}"
+    plausible_url() <> domain <> "?auth=" <> link.slug
   end
 
   def snippet(site) do
