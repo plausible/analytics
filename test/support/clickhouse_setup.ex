@@ -36,6 +36,20 @@ defmodule Plausible.Test.ClickhouseSetup do
       %{
         name: "pageview",
         domain: "test-site.com",
+        pathname: "/",
+        country_code: "US",
+        browser: "Chrome",
+        browser_version: "79.0",
+        operating_system: "Mac",
+        operating_system_version: "10.16",
+        screen_size: "Laptop",
+        referrer_source: "",
+        referrer: "",
+        timestamp: ~N[2019-01-01 00:00:00]
+      },
+      %{
+        name: "pageview",
+        domain: "test-site.com",
         pathname: "/contact",
         country_code: "GB",
         browser: "Firefox",
@@ -148,6 +162,54 @@ defmodule Plausible.Test.ClickhouseSetup do
         referrer: "t.co/b-link",
         referrer_source: "Twitter",
         timestamp: Timex.now() |> Timex.shift(days: -5)
+      },
+      %{
+        name: "pageview",
+        pathname: "/register",
+        domain: "test-site.com",
+        timestamp: ~N[2019-07-01 23:00:00]
+      },
+      %{
+        name: "pageview",
+        pathname: "/signup/new",
+        domain: "test-site.com",
+        timestamp: ~N[2019-07-01 23:00:00]
+      },
+      %{
+        name: "pageview",
+        pathname: "/billing/success",
+        domain: "test-site.com",
+        timestamp: ~N[2019-07-01 23:00:00]
+      },
+      %{
+        name: "pageview",
+        pathname: "/",
+        domain: "test-site.com",
+        timestamp: ~N[2019-07-01 23:00:00]
+      },
+      %{
+        name: "pageview",
+        pathname: "/reg",
+        domain: "test-site.com",
+        timestamp: ~N[2019-07-01 23:00:00]
+      },
+      %{
+        name: "pageview",
+        pathname: "/signup/new/2",
+        domain: "test-site.com",
+        timestamp: ~N[2019-07-01 23:00:00]
+      },
+      %{
+        name: "pageview",
+        pathname: "/signup/new/3",
+        domain: "test-site.com",
+        timestamp: ~N[2019-07-01 23:00:00]
+      },
+      %{
+        name: "pageview",
+        pathname: "/billing/upgrade/success",
+        domain: "test-site.com",
+        timestamp: ~N[2019-07-01 23:00:00]
       }
     ])
 

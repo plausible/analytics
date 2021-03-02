@@ -18,17 +18,22 @@ defmodule Plausible.Goal do
   end
 
   defp validate_event_name_and_page_path(changeset) do
-    if present?(changeset, :event_name) || present?(changeset, :page_path) do
+    if validate_page_path(changeset) || validate_event_name(changeset) do
       changeset
     else
       changeset
-      |> add_error(:event_name, "this field is required")
-      |> add_error(:page_path, "this field is required")
+      |> add_error(:event_name, "this field is required and cannot be blank")
+      |> add_error(:page_path, "this field is required and must start with a /")
     end
   end
 
-  defp present?(changeset, field) do
-    value = get_field(changeset, field)
-    value && value != ""
+  defp validate_page_path(changeset) do
+    value = get_field(changeset, :page_path)
+    value && String.match?(value, ~r/^\/.*/)
+  end
+
+  defp validate_event_name(changeset) do
+    value = get_field(changeset, :event_name)
+    value && String.match?(value, ~r/^.+/)
   end
 end

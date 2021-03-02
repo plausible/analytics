@@ -15,6 +15,11 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.LastSeenPlug
   end
 
+  pipeline :shared_link do
+    plug :accepts, ["html"]
+    plug :put_secure_browser_headers
+  end
+
   pipeline :csrf do
     plug :protect_from_forgery
   end
@@ -58,6 +63,7 @@ defmodule PlausibleWeb.Router do
     get "/:domain/goal/referrers/:referrer", StatsController, :referrer_drilldown_for_goal
     get "/:domain/pages", StatsController, :pages
     get "/:domain/entry-pages", StatsController, :entry_pages
+    get "/:domain/exit-pages", StatsController, :exit_pages
     get "/:domain/countries", StatsController, :countries
     get "/:domain/browsers", StatsController, :browsers
     get "/:domain/browser-versions", StatsController, :browser_versions
@@ -104,6 +110,13 @@ defmodule PlausibleWeb.Router do
     post "/password/request-reset", AuthController, :password_reset_request
     get "/password/reset", AuthController, :password_reset_form
     post "/password/reset", AuthController, :password_reset
+  end
+
+  scope "/", PlausibleWeb do
+    pipe_through [:shared_link]
+
+    get "/share/:slug", StatsController, :shared_link
+    post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
   end
 
   scope "/", PlausibleWeb do
@@ -196,8 +209,6 @@ defmodule PlausibleWeb.Router do
     delete "/:website", SiteController, :delete_site
     delete "/:website/stats", SiteController, :reset_stats
 
-    get "/share/:slug", StatsController, :shared_link
-    post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
     get "/:domain/visitors.csv", StatsController, :csv_export
     get "/:domain/*path", StatsController, :stats
   end
