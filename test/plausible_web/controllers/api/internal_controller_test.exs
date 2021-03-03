@@ -23,7 +23,7 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
     end
   end
 
-  describe "GET /api/status" do
+  describe "GET /api/sites" do
     setup [:create_user, :log_in]
 
     test "returns a list of site domains for the current user", %{conn: conn, user: user} do
@@ -32,6 +32,16 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
       conn = get(conn, "/api/sites")
 
       assert json_response(conn, 200) == [site.domain, site2.domain]
+    end
+  end
+
+  describe "GET /api/sites - user not logged in" do
+    test "returns 401 unauthorized", %{conn: conn} do
+      conn = get(conn, "/api/sites")
+
+      assert json_response(conn, 401) == %{
+               "error" => "You need to be logged in to request a list of sites"
+             }
     end
   end
 end
