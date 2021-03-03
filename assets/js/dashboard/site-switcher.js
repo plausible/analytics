@@ -51,7 +51,7 @@ export default class SiteSwitcher extends React.Component {
 
     const siteNum = parseInt(e.key)
 
-    if (1 <= siteNum <= 9 && siteNum <= sites.length && sites[siteNum-1] !== site.domain) {
+    if (1 <= siteNum && siteNum <= 9 && siteNum <= sites.length && sites[siteNum-1] !== site.domain) {
       window.location = `/${encodeURIComponent(sites[siteNum-1])}`
     }
 
