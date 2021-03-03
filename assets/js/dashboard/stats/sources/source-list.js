@@ -172,7 +172,7 @@ class UTMSources extends React.Component {
           <FlipMove>
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
-          <MoreLink site={this.props.site} list={this.state.referrers} endpoint="sources" />
+          <MoreLink site={this.props.site} list={this.state.referrers} endpoint={UTM_TAGS[this.props.tab].endpoint} />
         </React.Fragment>
       )
     } else {
