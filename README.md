@@ -37,8 +37,6 @@ We have a free as in beer [Plausible Analytics Self-Hosted](https://plausible.io
 
 What are the differences between Plausible Cloud and Plausible Self-Hosted?
 
-<div class="py-2"></div>
-
 | | Cloud | Self-hosted |
 |---|---|---|---|---|
 | **Hosting** | Easy and convenient. We manage everything for you so you don’t have to worry about anything. We take care of the installation, upgrades, server, security, maintenance, uptime, stability, consistency, loading time and so on. | You do it all yourself. You need to get a server and you need to install, maintain and manage Plausible on that server. You are  responsible for installation, maintenance, upgrades, server capacity, uptime, backup and so on. |
