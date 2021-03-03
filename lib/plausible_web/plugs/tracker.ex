@@ -2,30 +2,41 @@ defmodule PlausibleWeb.Tracker do
   import Plug.Conn
   use Agent
 
-  @templates [
-    "plausible.js",
-    "plausible.exclusions.js",
-    "plausible.hash.js",
-    "plausible.outbound-links.js",
-    "plausible.hash.exclusions.js",
-    "plausible.hash.outbound-links.js",
-    "plausible.hash.exclusions.outbound-links.js",
-    "plausible.exclusions.outbound-links.js",
-    "p.js"
-  ]
-  @aliases %{
-    "plausible.js" => ["analytics.js"],
-    "plausible.hash.outbound-links.js" => ["plausible.outbound-links.hash.js"],
-    "plausible.hash.exclusions.js" => ["plausible.exclusions.hash.js"],
-    "plausible.exclusions.outbound-links.js" => ["plausible.outbound-links.exclusions.js"],
-    "plausible.hash.exclusions.outbound-links.js" => [
-      "plausible.exclusions.hash.outbound-links.js",
-      "plausible.exclusions.outbound-links.hash.js",
-      "plausible.hash.outbound-links.exclusions.js",
-      "plausible.outbound-links.hash.exclusions.js",
-      "plausible.outbound-links.exclusions.hash.js"
-    ]
-  }
+  base_variants = ["hash", "outbound-links", "exclusions"]
+
+  # Generates Power Set of all variants
+  variants =
+    1..Enum.count(base_variants)
+    |> Enum.map(fn x ->
+      Combination.combine(base_variants, x)
+      |> Enum.map(fn y -> Enum.sort(y) |> Enum.join(".") end)
+    end)
+    |> List.flatten()
+
+  # Formats power set into filenames
+  files_available =
+    ["plausible.js", "p.js"] ++ Enum.map(variants, fn v -> "plausible.#{v}.js" end)
+
+  # Computes permutations for every power set elements, formats them as alias filenames
+  aliases_available =
+    Enum.map(variants, fn x ->
+      variants =
+        String.split(x, ".")
+        |> Combination.permutate()
+        |> Enum.map(fn p -> Enum.join(p, ".") end)
+        |> Enum.filter(fn permutation -> permutation != x end)
+        |> Enum.map(fn v -> "plausible.#{v}.js" end)
+
+      if Enum.count(variants) > 0 do
+        {"plausible.#{x}.js", variants}
+      end
+    end)
+    |> Enum.reject(fn x -> x == nil end)
+    |> Enum.into(%{})
+    |> Map.put("plausible.js", ["analytics.js"])
+
+  @templates files_available
+  @aliases aliases_available
 
   #  1 hour
   @max_age 3600
