@@ -1162,22 +1162,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp base_query_w_sessions(site, query) do
-    q = base_query_w_sessions_bare(site, query)
-
-    {goal_event, path} = event_name_for_goal(query)
-
-    q =
-      if goal_event do
-        from(e in q, where: e.name == ^goal_event)
-      else
-        from(e in q, where: e.name == "pageview")
-      end
-
-    if path do
-      from(e in q, where: e.pathname == ^path)
-    else
-      q
-    end
+    base_query_w_sessions_bare(site, query) |> include_goal_conversions(query)
   end
 
   defp base_session_query(site, query) do
@@ -1412,22 +1397,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp base_query(site, query) do
-    q = base_query_bare(site, query)
-
-    {goal_event, path} = event_name_for_goal(query)
-
-    q =
-      if path do
-        from(e in q, where: e.pathname == ^path)
-      else
-        q
-      end
-
-    if goal_event do
-      from(e in q, where: e.name == ^goal_event)
-    else
-      from(e in q, where: e.name == "pageview")
-    end
+    base_query_bare(site, query) |> include_goal_conversions(query)
   end
 
   defp utc_boundaries(%Query{period: "30m"}, _timezone) do
@@ -1470,6 +1440,32 @@ defmodule Plausible.Stats.Clickhouse do
 
       _ ->
         {nil, nil}
+    end
+  end
+
+  defp include_goal_conversions(db_query, query) do
+    {goal_event, path} = event_name_for_goal(query)
+
+    q =
+      if goal_event do
+        from(e in db_query, where: e.name == ^goal_event)
+      else
+        from(e in db_query, where: e.name == "pageview")
+      end
+
+    if path do
+      if String.match?(path, ~r/\*/) do
+        path_regex =
+          "^#{path}\/?$"
+          |> String.replace(~r/\*\*/, ".*")
+          |> String.replace(~r/(?<!\.)\*/, "[^/]*")
+
+        from(e in q, where: fragment("match(?, ?)", e.pathname, ^path_regex))
+      else
+        from(e in q, where: e.pathname == ^path)
+      end
+    else
+      q
     end
   end
 end

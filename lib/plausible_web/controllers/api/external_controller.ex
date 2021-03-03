@@ -135,7 +135,10 @@ defmodule PlausibleWeb.Api.ExternalController do
     raw_meta = params["m"] || params["meta"] || params["p"] || params["props"]
 
     if raw_meta do
-      Jason.decode!(raw_meta)
+      case Jason.decode(raw_meta) do
+        {:ok, props} when is_map(props) -> props
+        _ -> %{}
+      end
     else
       %{}
     end
