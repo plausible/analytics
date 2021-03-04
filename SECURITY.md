@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-We only make security updates to the latest MAJOR.MINOR version of the project. No securit updates are backported to previous versions. If you
+We only add security updates to the latest MAJOR.MINOR version of the project. No securit updates are backported to previous versions. If you
 want be up to date on security patches, make sure your Plausible image is up to date with `plausible/analytics:latest`
 
 ## Reporting a Vulnerability
