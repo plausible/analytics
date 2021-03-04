@@ -16,7 +16,7 @@ class Historical extends React.Component {
   renderConversions() {
     if (this.props.site.hasGoals) {
       return (
-        <div className="w-full block md:flex items-start justify-between mt-6">
+        <div className="items-start justify-between block w-full mt-6 md:flex">
           <Conversions site={this.props.site} query={this.props.query} />
         </div>
       )
@@ -24,12 +24,13 @@ class Historical extends React.Component {
   }
 
   render() {
+    const extraStyle = this.props.site.background ? {backgroundColor: this.props.site.background} : {}
     return (
       <div className="mb-12">
         <div id="stats-container-top"></div>
-        <div className={`sticky top-0 bg-gray-50 dark:bg-gray-850 sm:py-3 py-1 z-9 ${this.props.stuck ? 'z-10 fullwidth-shadow' : ''}`}>
-          <div className="w-full sm:flex items-center">
-            <div className="w-full flex items-center mb-2 sm:mb-0">
+        <div className={`sticky top-0 bg-gray-50 dark:bg-gray-850 sm:py-3 py-1 z-9 ${this.props.stuck ? 'z-10 fullwidth-shadow' : ''}`} style={extraStyle}>
+          <div className="items-center w-full sm:flex">
+            <div className="flex items-center w-full mb-2 sm:mb-0">
               <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} />
               <CurrentVisitors timer={this.props.timer} site={this.props.site} query={this.props.query} />
               <Filters query={this.props.query} history={this.props.history} />
@@ -38,11 +39,11 @@ class Historical extends React.Component {
           </div>
         </div>
         <VisitorGraph site={this.props.site} query={this.props.query} />
-        <div className="w-full block md:flex items-start justify-between">
+        <div className="items-start justify-between block w-full md:flex">
           <Sources site={this.props.site} query={this.props.query} />
           <Pages site={this.props.site} query={this.props.query} />
         </div>
-        <div className="w-full block md:flex items-start justify-between">
+        <div className="items-start justify-between block w-full md:flex">
           <Countries site={this.props.site} query={this.props.query} />
           <Devices site={this.props.site} query={this.props.query} />
         </div>

@@ -8,19 +8,19 @@
 @import "flatpickr.css";
 
 .button {
-  @apply bg-indigo-600 border border-transparent rounded-md py-2 px-4 inline-flex justify-center text-sm leading-5 font-medium text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+  @apply inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md leading-5 transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
 }
 
 .button-outline {
-  @apply bg-transparent border border-indigo-600 text-indigo-600;
+  @apply text-indigo-600 bg-transparent border border-indigo-600;
 }
 
 .button-sm {
-  @apply text-sm py-2 px-4;
+  @apply px-4 py-2 text-sm;
 }
 
 .button-md {
-  @apply py-2 px-4;
+  @apply px-4 py-2;
 }
 
 html {
@@ -38,7 +38,7 @@ button:disabled {
 }
 
 blockquote {
-  @apply my-4 py-2 px-4 border-l-4 border-gray-500;
+  @apply px-4 py-2 my-4 border-l-4 border-gray-500;
 }
 
 @screen xl {
@@ -273,11 +273,12 @@ blockquote {
 }
 
 .fullwidth-shadow::before {
-  @apply h-full absolute top-0 bg-gray-50 w-screen dark:bg-gray-850;
+  @apply absolute top-0 w-screen h-full;
   box-shadow: 0 4px 2px -2px rgba(0, 0, 0, 0.06);
   content: "";
   z-index: -1;
   left: calc(-1 * calc(50vw - 50%));
+  background-color: inherit;
 }
 
 .dark .fullwidth-shadow::before {
