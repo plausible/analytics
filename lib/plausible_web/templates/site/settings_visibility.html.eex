@@ -59,24 +59,37 @@
     <% end %>
   </header>
 
-  <div class="mt-6">
-    <div class="max-w-xl">
+  <div class="max-w-xl mt-4">
+    <div>
       <label for="embed-link" class="block text-sm font-medium text-gray-700">Enter shared link</label>
-      <div class="flex mt-1 rounded-md shadow-sm">
-        <div class="relative flex items-stretch flex-grow focus-within:z-10">
-          <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"></path></svg>
-          </div>
-          <input type="text" name="embed-link" id="embed-link" onclick="this.select()" class="block w-full pl-10 border-gray-300 rounded-none focus:ring-indigo-500 focus:border-indigo-500 rounded-l-md sm:text-sm">
-        </div>
-        <button id="generate-embed" class="rounded-l-none button">Generate embed code</button>
+      <div class="mt-1">
+        <input type="text" name="embed-link" id="embed-link" onclick="this.select()" class="block w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+      </div>
+    </div>
+
+    <div class="mt-2">
+      <label for="theme" class="block text-sm font-medium text-gray-700">Select theme</label>
+      <select id="theme" name="theme" class="block w-full py-2 pl-3 pr-10 mt-1 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+        <option selected>Light</option>
+        <option>Dark</option>
+        <option>System</option>
+      </select>
+    </div>
+
+    <div class="mt-2">
+      <label for="background" class="block text-sm font-medium text-gray-700">Custom background colour (optional)</label>
+      <div class="mt-1">
+        <input type="text" name="background" id="background" class="block w-full border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" placeholder="#F9FAFB">
       </div>
     </div>
   </div>
 
-  <div class="mt-6">
+  <button id="generate-embed" class="my-4 button">Generate embed code 👇</button>
+
+  <div class="mt-2">
     <div class="max-w-xl">
       <label for="embed-code" class="block text-sm font-medium text-gray-700">Embed code</label>
+
       <div class="relative mt-1">
         <textarea id="embed-code" name="embed-code" rows="3" readonly="readonly" onclick="this.select()" class="block w-full max-w-xl border-gray-300 resize-none shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"></textarea>
         <a onclick="var textarea = document.getElementById('embed-code'); textarea.focus(); textarea.select(); document.execCommand('copy');" href="javascript:void(0)" class="text-sm text-indigo-500 no-underline hover:underline">
