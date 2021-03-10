@@ -107,7 +107,7 @@ if (embedButton) {
         embedLink.searchParams.set('background', background)
       }
 
-      embedCode.value = `<iframe id="plausible-embed" src="${embedLink.toString()}" width="100%" height="1700px" scrolling="no"></iframe>`
+      embedCode.value = `<iframe id="plausible-embed" src="${embedLink.toString()}" width="100%" height="1600px" scrolling="no" frameborder="0" loading="lazy"></iframe>`
     } catch (e) {
       embedCode.value = 'ERROR: Please enter a valid URL in the shared link field'
     }

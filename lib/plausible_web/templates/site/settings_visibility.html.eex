@@ -95,6 +95,8 @@
         <a onclick="var textarea = document.getElementById('embed-code'); textarea.focus(); textarea.select(); document.execCommand('copy');" href="javascript:void(0)" class="text-sm text-indigo-500 no-underline hover:underline">
           <svg class="absolute text-indigo-800" style="top: 12px; right: 12px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
         </a>
+
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-200">If you're using custom goals, you need to increase the height of the window to match the height of your dashboard.</p>
       </div>
     </div>
   </div>
