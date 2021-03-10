@@ -1,43 +1,43 @@
-<div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
+<div class="px-4 py-6 bg-white shadow dark:bg-gray-800 sm:rounded-md sm:overflow-hidden sm:p-6">
   <header class="relative">
-    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Public dashboard</h2>
-    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">Share your stats publicly or keep them private</p>
+    <h2 class="text-lg font-medium text-gray-900 leading-6 dark:text-gray-100">Public dashboard</h2>
+    <p class="mt-1 text-sm text-gray-500 leading-5 dark:text-gray-200">Share your stats publicly or keep them private</p>
     <%= link(to: "https://docs.plausible.io/visibility", target: "_blank") do %>
-      <svg class="w-6 h-6 absolute top-0 right-0 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+      <svg class="absolute top-0 right-0 w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
     <% end %>
   </header>
 
 	<%= if @site.public do %>
-		<div class="flex items-center space-x-3 mt-4">
+		<div class="flex items-center mt-4 space-x-3">
 			<%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/make-private", method: "POST", class: "bg-indigo-600 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
-				<span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200"></span>
+				<span class="inline-block w-5 h-5 bg-white rounded-full shadow translate-x-5 dark:bg-gray-800 transform transition ease-in-out duration-200"></span>
 			<% end %>
-			<span class="text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">Make stats publicly available on <a href="<%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%>" class="text-indigo-500"><%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%></a></span>
+			<span class="text-sm font-medium text-gray-900 leading-5 dark:text-gray-100">Make stats publicly available on <a href="<%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%>" class="text-indigo-500"><%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%></a></span>
 		</div>
 	<% else %>
-		<div class="flex items-center space-x-3 mt-4">
+		<div class="flex items-center mt-4 space-x-3">
 			<%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/make-public", method: "POST", class: "bg-gray-200 dark:bg-gray-700 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
-				<span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200"></span>
+				<span class="inline-block w-5 h-5 bg-white rounded-full shadow translate-x-0 dark:bg-gray-800 transform transition ease-in-out duration-200"></span>
 			<% end %>
-			<span class="text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">Make stats publicly available on <a href="<%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%>" class="text-indigo-500"><%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%></a></span>
+			<span class="text-sm font-medium text-gray-900 leading-5 dark:text-gray-100">Make stats publicly available on <a href="<%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%>" class="text-indigo-500"><%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%></a></span>
 		</div>
 	<% end %>
 </div>
 
-<div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
+<div class="px-4 py-6 bg-white shadow dark:bg-gray-800 sm:rounded-md sm:overflow-hidden sm:p-6">
   <header class="relative">
-    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Shared links</h2>
-    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">You can share your stats privately by generating a shared link. The links are impossible to guess and you can add password protection for extra security.</p>
+    <h2 class="text-lg font-medium text-gray-900 leading-6 dark:text-gray-100">Shared links</h2>
+    <p class="mt-1 text-sm text-gray-500 leading-5 dark:text-gray-200">You can share your stats privately by generating a shared link. The links are impossible to guess and you can add password protection for extra security.</p>
     <%= link(to: "https://docs.plausible.io/shared-links", target: "_blank") do %>
-      <svg class="w-6 h-6 absolute top-0 right-0 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+      <svg class="absolute top-0 right-0 w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
     <% end %>
   </header>
 
   <div class="mt-6">
     <%= for link <- @shared_links do %>
-      <div class="flex relative w-full max-w-xl mt-2 text-sm">
-        <input type="text" id="<%= link.slug %>" readonly="readonly" value="<%= shared_link_dest(@site, link) %>" class="transition bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded rounded-r-none w-full p-2 text-gray-700 dark:text-gray-300 focus:outline-none focus:border-gray-300 dark:focus:border-gray-500" />
-        <button onclick="var input = document.getElementById('<%= link.slug %>'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="py-2 px-4 bg-gray-200 dark:bg-gray-850 text-indigo-800 dark:text-indigo-500 rounded-none border-r border-gray-300 dark:border-gray-500 hover:bg-gray-300 dark:hover:bg-gray-825">
+      <div class="relative flex w-full max-w-xl mt-2 text-sm">
+        <input type="text" id="<%= link.slug %>" readonly="readonly" value="<%= shared_link_dest(@site, link) %>" class="w-full p-2 text-gray-700 bg-gray-100 border border-transparent rounded rounded-r-none outline-none appearance-none transition dark:bg-gray-900 dark:text-gray-300 focus:outline-none focus:border-gray-300 dark:focus:border-gray-500" />
+        <button onclick="var input = document.getElementById('<%= link.slug %>'); input.focus(); input.select(); document.execCommand('copy');" href="javascript:void(0)" class="px-4 py-2 text-indigo-800 bg-gray-200 border-r border-gray-300 rounded-none dark:bg-gray-850 dark:text-indigo-500 dark:border-gray-500 hover:bg-gray-300 dark:hover:bg-gray-825">
           <svg class="feather-sm" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
         </button>
         <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/shared-links/#{link.slug}", method: :delete, class: "py-2 px-4 bg-gray-200 dark:bg-gray-850 text-red-600 dark:text-red-500 rounded-l-none hover:bg-gray-300 dark:hover:bg-gray-825", data: [confirm: "Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."]) do %>
@@ -50,3 +50,52 @@
   </div>
 </div>
 
+<div class="px-4 py-6 bg-white shadow dark:bg-gray-800 sm:rounded-md sm:overflow-hidden sm:p-6">
+  <header class="relative">
+    <h2 class="text-lg font-medium text-gray-900 leading-6 dark:text-gray-100">Embed dashboard</h2>
+    <p class="mt-1 text-sm text-gray-500 leading-5 dark:text-gray-200">You can use shared links to embed your stats in any other webpage using an <code>iframe</code>. Copy & paste a shared link into the form below to generate the embed code.</p>
+    <%= link(to: "https://docs.plausible.io/visibility", target: "_blank") do %>
+      <svg class="absolute top-0 right-0 w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+    <% end %>
+  </header>
+
+  <div class="max-w-xl mt-4">
+    <div>
+      <label for="embed-link" class="block text-sm font-medium text-gray-700">Enter shared link</label>
+      <div class="mt-1">
+        <input type="text" name="embed-link" id="embed-link" onclick="this.select()" class="block w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+      </div>
+    </div>
+
+    <div class="mt-2">
+      <label for="theme" class="block text-sm font-medium text-gray-700">Select theme</label>
+      <select id="theme" name="theme" class="block w-full py-2 pl-3 pr-10 mt-1 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+        <option selected>Light</option>
+        <option>Dark</option>
+        <option>System</option>
+      </select>
+    </div>
+
+    <div class="mt-2">
+      <label for="background" class="block text-sm font-medium text-gray-700">Custom background colour (optional)</label>
+      <div class="mt-1">
+        <input type="text" name="background" id="background" class="block w-full border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" placeholder="#F9FAFB">
+      </div>
+    </div>
+  </div>
+
+  <button id="generate-embed" class="my-4 button">Generate embed code 👇</button>
+
+  <div class="mt-2">
+    <div class="max-w-xl">
+      <label for="embed-code" class="block text-sm font-medium text-gray-700">Embed code</label>
+
+      <div class="relative mt-1">
+        <textarea id="embed-code" name="embed-code" rows="3" readonly="readonly" onclick="this.select()" class="block w-full max-w-xl border-gray-300 resize-none shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"></textarea>
+        <a onclick="var textarea = document.getElementById('embed-code'); textarea.focus(); textarea.select(); document.execCommand('copy');" href="javascript:void(0)" class="text-sm text-indigo-500 no-underline hover:underline">
+          <svg class="absolute text-indigo-800" style="top: 12px; right: 12px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

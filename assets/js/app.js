@@ -90,3 +90,26 @@ function showChangelogNotification(el) {
     })
   }
 }
+
+const embedButton = document.getElementById('generate-embed')
+
+if (embedButton) {
+  embedButton.addEventListener('click', function(e) {
+    const embedCode = document.getElementById('embed-code')
+    const theme = document.getElementById('theme').value.toLowerCase()
+    const background = document.getElementById('background').value
+
+    try {
+      const embedLink = new URL(document.getElementById('embed-link').value)
+      embedLink.searchParams.set('embed', 'true')
+      embedLink.searchParams.set('theme', theme)
+      if (background) {
+        embedLink.searchParams.set('background', background)
+      }
+
+      embedCode.value = `<iframe id="plausible-embed" src="${embedLink.toString()}" width="100%" height="1700px" scrolling="no"></iframe>`
+    } catch (e) {
+      embedCode.value = 'ERROR: Please enter a valid URL in the shared link field'
+    }
+  })
+}

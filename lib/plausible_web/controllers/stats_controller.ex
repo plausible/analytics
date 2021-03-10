@@ -74,6 +74,7 @@ defmodule PlausibleWeb.StatsController do
           _e ->
             conn
             |> assign(:skip_plausible_tracking, true)
+            |> delete_resp_header("x-frame-options")
             |> render("shared_link_password.html",
               link: shared_link,
               layout: {PlausibleWeb.LayoutView, "focus.html"}
@@ -112,6 +113,7 @@ defmodule PlausibleWeb.StatsController do
       else
         conn
         |> assign(:skip_plausible_tracking, true)
+        |> delete_resp_header("x-frame-options")
         |> render("shared_link_password.html",
           link: shared_link,
           error: "Incorrect password. Please try again.",
@@ -127,13 +129,17 @@ defmodule PlausibleWeb.StatsController do
     conn
     |> assign(:skip_plausible_tracking, true)
     |> put_resp_header("x-robots-tag", "noindex")
+    |> delete_resp_header("x-frame-options")
     |> render("stats.html",
       site: shared_link.site,
       has_goals: Plausible.Sites.has_goals?(shared_link.site),
       title: "Plausible · " <> shared_link.site.domain,
       offer_email_report: false,
       demo: false,
-      shared_link_auth: shared_link.slug
+      shared_link_auth: shared_link.slug,
+      embedded: conn.params["embed"] == "true",
+      theme: conn.params["theme"],
+      background: conn.params["background"]
     )
   end
 
