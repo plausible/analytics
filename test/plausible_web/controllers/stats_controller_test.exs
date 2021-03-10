@@ -70,6 +70,16 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
       assert html_response(conn, 200) =~ "stats-react-container"
     end
+
+    test "returns page with X-Frame-Options disabled so it can be embedded in an iframe", %{
+      conn: conn
+    } do
+      site = insert(:site, domain: "test-site.com")
+      link = insert(:shared_link, site: site)
+
+      conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
+      assert Plug.Conn.get_resp_header(conn, "x-frame-options") == []
+    end
   end
 
   describe "POST /share/:slug/authenticate" do
