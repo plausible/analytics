@@ -1,6 +1,7 @@
 defmodule Plausible.Stats.Breakdown do
   use Plausible.ClickhouseRepo
   import Plausible.Stats.Base
+  @no_ref "Direct / None"
 
   @event_metrics ["visitors", "pageviews"]
   @session_metrics ["bounce_rate", "visit_duration"]
@@ -71,7 +72,9 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.referrer_source,
-      select_merge: %{source: s.referrer_source}
+      select_merge: %{
+        source: fragment("if(empty(?), ?, ?)", s.referrer_source, @no_ref, s.referrer_source)
+      }
     )
   end
 
@@ -95,7 +98,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.referrer,
-      select_merge: %{referrer: s.referrer}
+      select_merge: %{referrer: fragment("if(empty(?), ?, ?)", s.referrer, @no_ref, s.referrer)}
     )
   end
 
@@ -103,7 +106,9 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.utm_medium,
-      select_merge: %{utm_medium: s.utm_medium}
+      select_merge: %{
+        utm_medium: fragment("if(empty(?), ?, ?)", s.utm_medium, @no_ref, s.utm_medium)
+      }
     )
   end
 
@@ -111,7 +116,9 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.utm_source,
-      select_merge: %{utm_source: s.utm_source}
+      select_merge: %{
+        utm_source: fragment("if(empty(?), ?, ?)", s.utm_source, @no_ref, s.utm_source)
+      }
     )
   end
 
@@ -119,7 +126,9 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.utm_campaign,
-      select_merge: %{utm_campaign: s.utm_campaign}
+      select_merge: %{
+        utm_campaign: fragment("if(empty(?), ?, ?)", s.utm_campaign, @no_ref, s.utm_campaign)
+      }
     )
   end
 

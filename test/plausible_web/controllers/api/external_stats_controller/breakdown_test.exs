@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         timestamp: ~N[2021-01-01 00:25:00]
       ),
       build(:pageview,
-        referrer_source: "Twitter",
+        referrer_source: "",
         domain: site.domain,
         timestamp: ~N[2021-01-01 00:00:00]
       )
@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     assert json_response(conn, 200) == %{
              "results" => [
                %{"source" => "Google", "visitors" => 2},
-               %{"source" => "Twitter", "visitors" => 1}
+               %{"source" => "Direct / None", "visitors" => 1}
              ]
            }
   end
@@ -102,7 +102,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         timestamp: ~N[2021-01-01 00:25:00]
       ),
       build(:pageview,
-        referrer: "https://ref2.com",
+        referrer: "",
         domain: site.domain,
         timestamp: ~N[2021-01-01 00:00:00]
       )
@@ -119,7 +119,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     assert json_response(conn, 200) == %{
              "results" => [
                %{"referrer" => "https://ref.com", "visitors" => 2},
-               %{"referrer" => "https://ref2.com", "visitors" => 1}
+               %{"referrer" => "Direct / None", "visitors" => 1}
              ]
            }
   end
@@ -137,7 +137,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         timestamp: ~N[2021-01-01 00:25:00]
       ),
       build(:pageview,
-        utm_medium: "Social",
+        utm_medium: "",
         domain: site.domain,
         timestamp: ~N[2021-01-01 00:00:00]
       )
@@ -154,7 +154,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     assert json_response(conn, 200) == %{
              "results" => [
                %{"utm_medium" => "Search", "visitors" => 2},
-               %{"utm_medium" => "Social", "visitors" => 1}
+               %{"utm_medium" => "Direct / None", "visitors" => 1}
              ]
            }
   end
@@ -172,7 +172,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         timestamp: ~N[2021-01-01 00:25:00]
       ),
       build(:pageview,
-        utm_source: "Twitter",
+        utm_source: "",
         domain: site.domain,
         timestamp: ~N[2021-01-01 00:00:00]
       )
@@ -189,7 +189,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     assert json_response(conn, 200) == %{
              "results" => [
                %{"utm_source" => "Google", "visitors" => 2},
-               %{"utm_source" => "Twitter", "visitors" => 1}
+               %{"utm_source" => "Direct / None", "visitors" => 1}
              ]
            }
   end
@@ -207,7 +207,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         timestamp: ~N[2021-01-01 00:25:00]
       ),
       build(:pageview,
-        utm_campaign: "profile",
+        utm_campaign: "",
         domain: site.domain,
         timestamp: ~N[2021-01-01 00:00:00]
       )
@@ -224,7 +224,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     assert json_response(conn, 200) == %{
              "results" => [
                %{"utm_campaign" => "ads", "visitors" => 2},
-               %{"utm_campaign" => "profile", "visitors" => 1}
+               %{"utm_campaign" => "Direct / None", "visitors" => 1}
              ]
            }
   end
