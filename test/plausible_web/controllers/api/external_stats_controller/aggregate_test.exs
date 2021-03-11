@@ -155,6 +155,39 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                "visit_duration" => %{"value" => 750, "change" => 100}
              }
     end
+
+    test "compare period=6mo with previous period", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview, domain: site.domain, timestamp: ~N[2020-12-31 00:00:00]),
+        build(:pageview,
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-02-01 00:25:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-03-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "6mo",
+          "date" => "2021-03-01",
+          "metrics" => "pageviews,visitors,bounce_rate,visit_duration",
+          "compare" => "previous_period"
+        })
+
+      assert json_response(conn, 200) == %{
+               "pageviews" => %{"value" => 3, "change" => 200},
+               "visitors" => %{"value" => 2, "change" => 100},
+               "bounce_rate" => %{"value" => 50, "change" => -50},
+               "visit_duration" => %{"value" => 750, "change" => 100}
+             }
+    end
   end
 
   describe "filters" do

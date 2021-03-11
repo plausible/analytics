@@ -16,7 +16,7 @@ defmodule Plausible.Stats.Aggregate do
       Task.await(session_task)
     )
     |> Enum.map(fn {metric, value} ->
-      {metric, %{value: value}}
+      {metric, %{value: value || 0}}
     end)
     |> Enum.into(%{})
   end
