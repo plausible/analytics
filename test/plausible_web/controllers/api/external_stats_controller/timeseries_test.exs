@@ -47,6 +47,49 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
     end
   end
 
+  test "shows hourly data for a certain date", %{conn: conn, site: site} do
+    populate_stats([
+      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 23:59:00])
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/timeseries", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01"
+      })
+
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"date" => "2021-01-01 00:00:00", "visitors" => 1},
+               %{"date" => "2021-01-01 01:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 02:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 03:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 04:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 05:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 06:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 07:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 08:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 09:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 10:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 11:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 12:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 13:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 14:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 15:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 16:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 17:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 18:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 19:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 20:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 21:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 22:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 23:00:00", "visitors" => 1}
+             ]
+           }
+  end
+
   test "shows last 6 months of visitors", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview, domain: site.domain, timestamp: ~N[2020-12-31 00:00:00]),
