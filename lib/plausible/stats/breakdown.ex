@@ -6,39 +6,54 @@ defmodule Plausible.Stats.Breakdown do
   @event_metrics ["visitors", "pageviews"]
   @session_metrics ["bounce_rate", "visit_duration"]
 
+  def breakdown(_, _, _, [], _), do: %{}
+
   # use join once this is solved: https://github.com/ClickHouse/ClickHouse/issues/10276
   # https://github.com/ClickHouse/ClickHouse/issues/17319
-  def breakdown(site, query, "event:page", metrics, pagination) do
+  def breakdown(site, query, property, metrics, pagination) do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
-    event_result = breakdown_events(site, query, event_metrics, pagination)
-    pages = Enum.map(event_result, fn r -> r[:page] end)
+    event_task =
+      Task.async(fn -> breakdown_events(site, query, property, event_metrics, pagination) end)
 
-    if Enum.any?(session_metrics) do
-      session_result =
-        from(s in query_sessions(site, query),
-          group_by: s.entry_page,
-          where: s.entry_page in ^pages,
-          select: %{entry_page: s.entry_page}
-        )
-        |> select_metrics(session_metrics)
-        |> ClickhouseRepo.all()
+    session_task =
+      Task.async(fn -> breakdown_sessions(site, query, property, session_metrics, pagination) end)
 
-      session_metrics_atoms = Enum.map(session_metrics, &String.to_atom/1)
-
-      Enum.map(event_result, fn row ->
-        session_row = Enum.find(session_result, fn row2 -> row2[:entry_page] == row[:page] end)
-        Map.merge(row, Map.take(session_row, session_metrics_atoms))
-      end)
-    else
-      event_result
-    end
+    zip_results(
+      Task.await(event_task),
+      Task.await(session_task),
+      property,
+      metrics
+    )
   end
 
-  def breakdown(_, _, _, [], _), do: %{}
+  defp zip_results(event_result, session_result, property, metrics) do
+    property =
+      property
+      |> String.trim_leading("event:")
+      |> String.trim_leading("visit:")
+      |> String.to_existing_atom()
 
-  def breakdown(site, query, property, metrics, {limit, page}) do
+    null_row =
+      Enum.map(metrics, fn metric -> {String.to_existing_atom(metric), nil} end) |> Enum.into(%{})
+
+    prop_values =
+      Enum.map(event_result ++ session_result, fn row -> row[property] end)
+      |> Enum.uniq()
+
+    Enum.map(prop_values, fn value ->
+      event_row = Enum.find(event_result, fn row -> row[property] == value end) || %{}
+      session_row = Enum.find(session_result, fn row -> row[property] == value end) || %{}
+
+      Map.merge(null_row, event_row)
+      |> Map.merge(session_row)
+    end)
+  end
+
+  defp breakdown_sessions(_, _, _, [], _), do: []
+
+  defp breakdown_sessions(site, query, property, metrics, {limit, page}) do
     offset = (page - 1) * limit
 
     from(s in query_sessions(site, query),
@@ -52,20 +67,46 @@ defmodule Plausible.Stats.Breakdown do
     |> ClickhouseRepo.all()
   end
 
-  defp breakdown_events(_, _, [], _), do: %{}
+  defp breakdown_events(_, _, _, [], _), do: []
 
-  defp breakdown_events(site, query, metrics, {limit, page}) do
+  defp breakdown_events(site, query, property, metrics, {limit, page}) do
     offset = (page - 1) * limit
 
     from(e in base_event_query(site, query),
-      group_by: e.pathname,
       order_by: [desc: fragment("uniq(?)", e.user_id)],
       limit: ^limit,
       offset: ^offset,
-      select: %{page: e.pathname}
+      select: %{}
     )
+    |> do_group_by(property)
     |> select_event_metrics(metrics)
     |> ClickhouseRepo.all()
+  end
+
+  defp do_group_by(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events", _}}} = q,
+         "event:page"
+       ) do
+    from(
+      e in q,
+      group_by: e.pathname,
+      select_merge: %{
+        page: e.pathname
+      }
+    )
+  end
+
+  defp do_group_by(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"sessions", _}}} = q,
+         "event:page"
+       ) do
+    from(
+      s in q,
+      group_by: s.entry_page,
+      select_merge: %{
+        page: s.entry_page
+      }
+    )
   end
 
   defp do_group_by(q, "visit:source") do

@@ -419,6 +419,53 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  describe "filtering" do
+    test "event:page filter for breakdown by session props", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview,
+          pathname: "/ignore",
+          browser: "Chrome",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/plausible.io",
+          browser: "Chrome",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/plausible.io",
+          browser: "Chrome",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview,
+          browser: "Safari",
+          pathname: "/plausible.io",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:browser",
+          "filters" => "event:page==/plausible.io"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"browser" => "Chrome", "visitors" => 2},
+                 %{"browser" => "Safari", "visitors" => 1}
+               ]
+             }
+    end
+  end
+
   describe "pagination" do
     test "can limit results", %{conn: conn, site: site} do
       populate_stats([
