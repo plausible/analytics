@@ -90,6 +90,32 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
            }
   end
 
+  test "shows last 7 days of visitors", %{conn: conn, site: site} do
+    populate_stats([
+      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-07 23:59:00])
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/timeseries", %{
+        "site_id" => site.domain,
+        "period" => "7d",
+        "date" => "2021-01-07"
+      })
+
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"date" => "2021-01-01", "visitors" => 1},
+               %{"date" => "2021-01-02", "visitors" => 0},
+               %{"date" => "2021-01-03", "visitors" => 0},
+               %{"date" => "2021-01-04", "visitors" => 0},
+               %{"date" => "2021-01-05", "visitors" => 0},
+               %{"date" => "2021-01-06", "visitors" => 0},
+               %{"date" => "2021-01-07", "visitors" => 1}
+             ]
+           }
+  end
+
   test "shows last 6 months of visitors", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview, domain: site.domain, timestamp: ~N[2020-12-31 00:00:00]),
