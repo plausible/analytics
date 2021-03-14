@@ -313,7 +313,7 @@ defmodule PlausibleWeb.AuthController do
     case Repo.update(changes) do
       {:ok, _user} ->
         conn
-        |> put_flash(:success, "Account settings saved succesfully")
+        |> put_flash(:success, "Account settings saved successfully")
         |> redirect(to: "/settings")
 
       {:error, changeset} ->
