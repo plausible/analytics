@@ -12,18 +12,19 @@
     <%= render("_tracking.html", assigns) %>
     <script type="text/javascript" data-pref="<%= @conn.assigns[:theme] || (@conn.assigns[:current_user] && @conn.assigns[:current_user].theme) %>" src="<%= Routes.static_path(@conn, "/js/applyTheme.js") %>"></script>
   </head>
-  <body class="flex flex-col h-full bg-gray-50 dark:bg-gray-850" style="<%= if @conn.assigns[:background], do: "background-color: " <> @conn.assigns[:background] %>">
+  <body class="flex flex-col bg-gray-50 dark:bg-gray-850" style="<%= if !@conn.assigns[:embedded], do: "height: 100%" %>">
     <%= if !@conn.assigns[:embedded] do %>
       <%= render("_header.html", assigns) %>
       <%= render("_notice.html", assigns) %>
     <% end %>
 
     <main class="flex-1">
-    <%= Map.get(assigns, :inner_layout) || @inner_content %>
+      <%= Map.get(assigns, :inner_layout) || @inner_content %>
     </main>
 
     <%= if @conn.assigns[:embedded] do %>
-      <%= render("_embedded_footer.html", assigns) %>
+      <div data-iframe-height></div>
+      <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/embed.content.js") %>"></script>
     <% else %>
       <%= render("_footer.html", assigns) %>
     <% end %>

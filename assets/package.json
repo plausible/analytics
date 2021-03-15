@@ -20,6 +20,7 @@
     "copy-webpack-plugin": "^6.0.3",
     "css-loader": "^3.6.0",
     "datamaps": "^0.5.9",
+    "iframe-resizer": "^4.3.1",
     "mini-css-extract-plugin": "^0.8.2",
     "optimize-css-assets-webpack-plugin": "^5.0.3",
     "phoenix": "file:../deps/phoenix",
@@ -50,5 +51,6 @@
     "stylelint": "^13.8.0",
     "stylelint-config-prettier": "^8.0.2",
     "stylelint-config-standard": "^20.0.0"
-  }
+  },
+  "name": "assets"
 }
