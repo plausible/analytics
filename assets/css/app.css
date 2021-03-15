@@ -277,7 +277,7 @@ blockquote {
 }
 
 .fullwidth-shadow::before {
-  @apply absolute top-0 w-screen h-full;
+  @apply absolute top-0 w-screen h-full bg-gray-50 dark:bg-gray-850;
   box-shadow: 0 4px 2px -2px rgba(0, 0, 0, 0.06);
   content: "";
   z-index: -1;

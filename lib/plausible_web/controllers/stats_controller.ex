@@ -136,10 +136,10 @@ defmodule PlausibleWeb.StatsController do
       title: "Plausible · " <> shared_link.site.domain,
       offer_email_report: false,
       demo: false,
+      skip_plausible_tracking: true,
       shared_link_auth: shared_link.slug,
       embedded: conn.params["embed"] == "true",
-      theme: conn.params["theme"],
-      background: conn.params["background"]
+      theme: conn.params["theme"]
     )
   end
 
