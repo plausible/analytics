@@ -59,26 +59,30 @@ blockquote {
 
 @tailwind utilities;
 
+
 .main-graph {
-  height: 440px;
+  position: relative;
+  height: 0;
+  /* Formula is: (top row height + (graph height / graph width * 100%)) */
+  padding-top: calc(148px + (451 / 1088 * 100%));
 }
 
 @screen md {
-  .main-graph {
-    height: 480px;
-  }
+  padding-top: calc(128px + (451 / 1088 * 100%));
 }
 
 @screen lg {
   .main-graph {
-    height: 440px;
+    padding-top: calc(451 / 1088 * 100%);
   }
 }
 
-@screen xl {
-  .main-graph {
-    height: 460px;
-  }
+.graph-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
 }
 
 .light-text {
@@ -273,7 +277,7 @@ blockquote {
 }
 
 .fullwidth-shadow::before {
-  @apply absolute top-0 w-screen h-full;
+  @apply absolute top-0 w-screen h-full bg-gray-50 dark:bg-gray-850;
   box-shadow: 0 4px 2px -2px rgba(0, 0, 0, 0.06);
   content: "";
   z-index: -1;

@@ -24,11 +24,10 @@ class Historical extends React.Component {
   }
 
   render() {
-    const extraStyle = this.props.site.background ? {backgroundColor: this.props.site.background} : {}
     return (
       <div className="mb-12">
         <div id="stats-container-top"></div>
-        <div className={`sticky top-0 bg-gray-50 dark:bg-gray-850 sm:py-3 py-1 z-9 ${this.props.stuck ? 'z-10 fullwidth-shadow' : ''}`} style={extraStyle}>
+        <div className={`sticky top-0 sm:py-3 py-1 z-9 ${this.props.stuck && !this.props.site.embedded ? 'z-10 fullwidth-shadow bg-gray-50 dark:bg-gray-850' : ''}`}>
           <div className="items-center w-full sm:flex">
             <div className="flex items-center w-full mb-2 sm:mb-0">
               <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} />

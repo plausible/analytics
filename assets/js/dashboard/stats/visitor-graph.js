@@ -264,9 +264,9 @@ class LineGraph extends React.Component {
 
       return (
         <div className={`px-8 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
-          <div className="text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide uppercase">{stat.name}</div>
-          <div className="my-1 flex justify-between items-center">
-            <b className="text-2xl mr-4 dark:text-gray-100">{ this.renderTopStatNumber(stat) }</b>
+          <div className="text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">{stat.name}</div>
+          <div className="flex items-center justify-between my-1">
+            <b className="mr-4 text-2xl dark:text-gray-100">{ this.renderTopStatNumber(stat) }</b>
             {this.renderComparison(stat.name, stat.change)}
           </div>
         </div>
@@ -285,7 +285,7 @@ class LineGraph extends React.Component {
 
     return (
       <a href={endpoint} download>
-        <svg className="feather w-4 h-5 absolute text-gray-700 dark:text-gray-300" style={{right: '2rem', top: '-2rem'}} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <svg className="absolute w-4 h-5 text-gray-700 feather dark:text-gray-300" style={{right: '2rem', top: '-2rem'}} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
       </a>
     )
   }
@@ -294,15 +294,15 @@ class LineGraph extends React.Component {
     const extraClass = this.props.graphData.interval === 'hour' ? '' : 'cursor-pointer'
 
     return (
-      <React.Fragment>
+      <div className="graph-inner">
         <div className="flex flex-wrap">
           { this.renderTopStats() }
         </div>
-        <div className="px-2 relative">
+        <div className="relative px-2">
           { this.downloadLink() }
           <canvas id="main-graph-canvas" className={'mt-4 ' + extraClass} width="1054" height="342"></canvas>
         </div>
-      </React.Fragment>
+      </div>
     )
   }
 }
@@ -349,8 +349,8 @@ export default class VisitorGraph extends React.Component {
 
   render() {
     return (
-      <div className="w-full relative bg-white dark:bg-gray-825 shadow-xl rounded mt-6 main-graph">
-        { this.state.loading && <div className="loading pt-24 sm:pt-32 md:pt-48 mx-auto"><div></div></div> }
+      <div className="relative w-full mt-6 bg-white rounded shadow-xl dark:bg-gray-825 main-graph">
+        { this.state.loading && <div className="graph-inner"><div className="pt-24 mx-auto loading sm:pt-32 md:pt-48"><div></div></div></div> }
         { this.renderInner() }
       </div>
     )
