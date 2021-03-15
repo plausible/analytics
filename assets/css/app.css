@@ -73,7 +73,7 @@ blockquote {
 
 @screen lg {
   .main-graph {
-    padding-top: calc(451 / 1088 * 100%);
+    padding-top: calc(28px + (451 / 1088 * 100%));
   }
 }
 
