@@ -4,7 +4,6 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const DefinePlugin = require('webpack').DefinePlugin;
 
 module.exports = (env, options) => ({
   optimization: {
@@ -15,7 +14,9 @@ module.exports = (env, options) => ({
   },
   entry: {
       'app': ['./js/app.js'],
-      'dashboard': ['./js/dashboard/mount.js']
+      'dashboard': ['./js/dashboard/mount.js'],
+      'embed.host': ['./js/embed.host.js'],
+      'embed.content': ['./js/embed.content.js']
   },
   output: {
     filename: '[name].js',
@@ -40,8 +41,5 @@ module.exports = (env, options) => ({
   plugins: [
     new MiniCssExtractPlugin({filename: '../css/[name].css'}),
     new CopyWebpackPlugin({patterns: [{from: 'static/', to: '../' }]}),
-    new DefinePlugin({
-      "BASE_URL": JSON.stringify(process.env.BASE_URL || "http://localtest.me:8000")
-    })
   ]
 });

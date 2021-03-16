@@ -24,7 +24,7 @@ defmodule PlausibleWeb.StatsView do
           "#{thousands}k"
         end
 
-      n >= 1_000_000 && n < 100_000_000 ->
+      n >= 1_000_000 && n < 1_000_000_000 ->
         millions = trunc(n / 100_000) / 10
 
         if millions == trunc(millions) do

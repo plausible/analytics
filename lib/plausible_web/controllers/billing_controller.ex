@@ -76,6 +76,23 @@ defmodule PlausibleWeb.BillingController do
     )
   end
 
+  def upgrade_to_plan(conn, %{"plan_id" => plan_id}) do
+    plan = Plausible.Billing.Plans.for_product_id(plan_id)
+
+    if plan do
+      usage = Plausible.Billing.usage(conn.assigns[:current_user])
+
+      render(conn, "upgrade_to_plan.html",
+        usage: usage,
+        plan: plan,
+        user: conn.assigns[:current_user],
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
+      )
+    else
+      render_error(conn, 404)
+    end
+  end
+
   def upgrade_success(conn, _params) do
     render(conn, "upgrade_success.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
   end

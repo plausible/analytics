@@ -40,7 +40,7 @@ defmodule PlausibleWeb.BillingControllerTest do
     test "shows success page after user subscribes", %{conn: conn} do
       conn = get(conn, "/billing/upgrade-success")
 
-      assert html_response(conn, 200) =~ "Subscription created succesfully"
+      assert html_response(conn, 200) =~ "Subscription created successfully"
     end
   end
 end
