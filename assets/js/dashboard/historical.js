@@ -24,10 +24,12 @@ class Historical extends React.Component {
   }
 
   render() {
+    const navClass = this.props.site.embedded ? 'relative' : 'sticky'
+
     return (
       <div className="mb-12">
         <div id="stats-container-top"></div>
-        <div className={`sticky top-0 sm:py-3 py-1 z-9 ${this.props.stuck && !this.props.site.embedded ? 'z-10 fullwidth-shadow bg-gray-50 dark:bg-gray-850' : ''}`}>
+        <div className={`${navClass} top-0 sm:py-3 py-1 z-9 ${this.props.stuck && !this.props.site.embedded ? 'z-10 fullwidth-shadow bg-gray-50 dark:bg-gray-850' : ''}`}>
           <div className="items-center w-full sm:flex">
             <div className="flex items-center w-full mb-2 sm:mb-0">
               <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} />

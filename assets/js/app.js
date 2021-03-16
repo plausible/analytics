@@ -104,9 +104,8 @@ if (embedButton) {
       const embedLink = new URL(document.getElementById('embed-link').value)
       embedLink.searchParams.set('embed', 'true')
       embedLink.searchParams.set('theme', theme)
-      let backgroundAttr = ''
       if (background) {
-        backgroundAttr = `background="${background}"`
+        embedLink.searchParams.set('background', background)
       }
 
       embedCode.value = `<iframe plausible-embed ${backgroundAttr} src="${embedLink.toString()}" scrolling="no" frameborder="0" loading="lazy" style="width: 1px; min-width: 100%; height: 1600px;"></iframe>

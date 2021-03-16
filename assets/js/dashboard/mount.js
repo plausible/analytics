@@ -14,7 +14,8 @@ if (container) {
     offset: container.dataset.offset,
     hasGoals: container.dataset.hasGoals === 'true',
     insertedAt: container.dataset.insertedAt,
-    embedded: container.dataset.embedded
+    embedded: container.dataset.embedded,
+    background: container.dataset.background
   }
 
   const loggedIn = container.dataset.loggedIn === 'true'

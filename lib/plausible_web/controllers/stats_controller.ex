@@ -139,6 +139,7 @@ defmodule PlausibleWeb.StatsController do
       skip_plausible_tracking: true,
       shared_link_auth: shared_link.slug,
       embedded: conn.params["embed"] == "true",
+      background: conn.params["background"],
       theme: conn.params["theme"]
     )
   end

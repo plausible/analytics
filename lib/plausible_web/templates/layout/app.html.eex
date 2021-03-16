@@ -12,7 +12,7 @@
     <%= render("_tracking.html", assigns) %>
     <script type="text/javascript" data-pref="<%= @conn.assigns[:theme] || (@conn.assigns[:current_user] && @conn.assigns[:current_user].theme) %>" src="<%= Routes.static_path(@conn, "/js/applyTheme.js") %>"></script>
   </head>
-  <body class="flex flex-col bg-gray-50 dark:bg-gray-850" style="<%= if !@conn.assigns[:embedded], do: "height: 100%" %>">
+  <body class="flex flex-col bg-gray-50 dark:bg-gray-850" style="<%= if !@conn.assigns[:embedded], do: "height: 100%;" %> <%= if @conn.assigns[:background], do: "background-color: #{@conn.assigns[:background]}" %>">
     <%= if !@conn.assigns[:embedded] do %>
       <%= render("_header.html", assigns) %>
       <%= render("_notice.html", assigns) %>
