@@ -85,6 +85,17 @@ defmodule Plausible.Stats.Breakdown do
 
   defp do_group_by(
          %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events", _}}} = q,
+         "event:name"
+       ) do
+    from(
+      e in q,
+      group_by: e.name,
+      select_merge: %{name: e.name}
+    )
+  end
+
+  defp do_group_by(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events", _}}} = q,
          "event:page"
        ) do
     from(

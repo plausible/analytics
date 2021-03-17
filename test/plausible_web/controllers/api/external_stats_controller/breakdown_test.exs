@@ -29,6 +29,34 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                  "Error parsing `period` parameter: invalid period `bad_period`. Please find accepted values in our docs: https://plausible.io/docs/stats-api#time-periods"
              }
     end
+
+    test "fails when an invalid metric is provided", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "property" => "event:page",
+          "metrics" => "visitors,baa",
+          "site_id" => site.domain
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "The metric `baa` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#get-apiv1statsbreakdown"
+             }
+    end
+
+    test "session metrics cannot be used with event:name property", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "property" => "event:name",
+          "metrics" => "visitors,bounce_rate",
+          "site_id" => site.domain
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Session metric `bounce_rate` cannot be queried for breakdown by `event:name`."
+             }
+    end
   end
 
   test "breakdown by visit:source", %{conn: conn, site: site} do
@@ -417,6 +445,97 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                %{"page" => "/plausible.io", "visitors" => 1}
              ]
            }
+  end
+
+  describe "custom events" do
+    test "can breakdown by event:name", %{conn: conn, site: site} do
+      populate_stats([
+        build(:event,
+          name: "Signup",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:name"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"name" => "Signup", "visitors" => 2},
+                 %{"name" => "pageview", "visitors" => 1}
+               ]
+             }
+    end
+
+    test "can breakdown by event:name while filtering for something", %{conn: conn, site: site} do
+      populate_stats([
+        build(:event,
+          name: "Signup",
+          pathname: "/pageA",
+          browser: "Chrome",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          pathname: "/pageA",
+          browser: "Chrome",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          pathname: "/pageA",
+          browser: "Safari",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          pathname: "/pageB",
+          browser: "Chrome",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/pageA",
+          browser: "Chrome",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:name",
+          "filters" => "event:page==/pageA;visit:browser==Chrome"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"name" => "Signup", "visitors" => 2},
+                 %{"name" => "pageview", "visitors" => 1}
+               ]
+             }
+    end
   end
 
   describe "filtering" do

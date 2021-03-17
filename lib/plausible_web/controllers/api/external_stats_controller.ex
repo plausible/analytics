@@ -58,13 +58,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   def breakdown(conn, params) do
     with :ok <- validate_date(params),
          :ok <- validate_period(params),
-         {:ok, property} <- validate_property(params) do
+         {:ok, property} <- validate_property(params),
+         {:ok, metrics} <- parse_metrics(params, property) do
       site = conn.assigns[:site]
       query = Query.from(site.timezone, params)
-
-      metrics =
-        Map.get(params, "metrics", "visitors")
-        |> String.split(",")
 
       limit = String.to_integer(Map.get(params, "limit", "100"))
       page = String.to_integer(Map.get(params, "page", "1"))
@@ -85,6 +82,35 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   defp validate_property(_) do
     {:error,
      "The `property` parameter is required. Please provide at least one property to show a breakdown by."}
+  end
+
+  @event_metrics ["visitors", "pageviews"]
+  @session_metrics ["bounce_rate", "visit_duration"]
+  defp parse_metrics(params, property) do
+    metrics =
+      Map.get(params, "metrics", "visitors")
+      |> String.split(",")
+
+    valid_metrics =
+      if property == "event:name" do
+        @event_metrics
+      else
+        @event_metrics ++ @session_metrics
+      end
+
+    invalid_metric = Enum.find(metrics, fn metric -> metric not in valid_metrics end)
+
+    if invalid_metric do
+      if property == "event:name" && invalid_metric in @session_metrics do
+        {:error,
+         "Session metric `#{invalid_metric}` cannot be queried for breakdown by `event:name`."}
+      else
+        {:error,
+         "The metric `#{invalid_metric}` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#get-apiv1statsbreakdown"}
+      end
+    else
+      {:ok, metrics}
+    end
   end
 
   def timeseries(conn, params) do
