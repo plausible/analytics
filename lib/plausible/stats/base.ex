@@ -54,6 +54,14 @@ defmodule Plausible.Stats.Base do
         q
       end
 
+    q =
+      if query.filters["event:name"] do
+        name = query.filters["event:name"]
+        from(e in q, where: e.name == ^name)
+      else
+        q
+      end
+
     if query.filters["props"] do
       [{key, val}] = query.filters["props"] |> Enum.into([])
 

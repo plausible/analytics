@@ -74,7 +74,25 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
 
       assert json_response(conn, 400) == %{
                "error" =>
-                 "Error parsing `metrics` parameter: invalid metric `led_zeppelin`. Valid metrics are `pageviews`, `visitors`, `bounce_rate`, `visit_duration`"
+                 "The metric `led_zeppelin` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#get-apiv1statsbreakdown"
+             }
+    end
+
+    test "validates that session metrics cannot be used with event:name filter", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "30d",
+          "metrics" => "pageviews,visit_duration",
+          "filters" => "event:name==Signup"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Session metric `visit_duration` cannot be queried when using a filter on `event:name`."
              }
     end
   end
@@ -629,6 +647,43 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                "visitors" => %{"value" => 2},
                "bounce_rate" => %{"value" => 50},
                "visit_duration" => %{"value" => 750}
+             }
+    end
+
+    test "filtering by event:name", %{conn: conn, site: site} do
+      populate_stats([
+        build(:event,
+          name: "Signup",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          domain: site.domain,
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Signup",
+          domain: site.domain,
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,pageviews",
+          "filters" => "event:name==Signup"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "pageviews" => %{"value" => 0},
+               "visitors" => %{"value" => 2}
              }
     end
 

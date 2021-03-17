@@ -11,17 +11,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   def aggregate(conn, params) do
-    with :ok <- validate_date(params),
-         :ok <- validate_period(params),
-         :ok <- validate_metrics(params) do
-      site = conn.assigns[:site]
-      query = Query.from(site.timezone, params)
+    site = conn.assigns[:site]
 
-      metrics =
-        params["metrics"]
-        |> String.split(",")
-        |> Enum.map(&String.trim/1)
-
+    with :ok <- validate_period(params),
+         :ok <- validate_date(params),
+         query <- Query.from(site.timezone, params),
+         {:ok, metrics} <- parse_metrics(params, nil, query) do
       results =
         if params["compare"] == "previous_period" do
           prev_query = Query.shift_back(query, site)
@@ -56,13 +51,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   def breakdown(conn, params) do
-    with :ok <- validate_date(params),
-         :ok <- validate_period(params),
-         {:ok, property} <- validate_property(params),
-         {:ok, metrics} <- parse_metrics(params, property) do
-      site = conn.assigns[:site]
-      query = Query.from(site.timezone, params)
+    site = conn.assigns[:site]
 
+    with :ok <- validate_period(params),
+         :ok <- validate_date(params),
+         {:ok, property} <- validate_property(params),
+         query <- Query.from(site.timezone, params),
+         {:ok, metrics} <- parse_metrics(params, property, query) do
       limit = String.to_integer(Map.get(params, "limit", "100"))
       page = String.to_integer(Map.get(params, "page", "1"))
       results = Plausible.Stats.breakdown(site, query, property, metrics, {limit, page})
@@ -86,13 +81,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   @event_metrics ["visitors", "pageviews"]
   @session_metrics ["bounce_rate", "visit_duration"]
-  defp parse_metrics(params, property) do
+  defp parse_metrics(params, property, query) do
     metrics =
       Map.get(params, "metrics", "visitors")
       |> String.split(",")
 
     valid_metrics =
-      if property == "event:name" do
+      if property == "event:name" || query.filters["event:name"] do
         @event_metrics
       else
         @event_metrics ++ @session_metrics
@@ -101,12 +96,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     invalid_metric = Enum.find(metrics, fn metric -> metric not in valid_metrics end)
 
     if invalid_metric do
-      if property == "event:name" && invalid_metric in @session_metrics do
-        {:error,
-         "Session metric `#{invalid_metric}` cannot be queried for breakdown by `event:name`."}
-      else
-        {:error,
-         "The metric `#{invalid_metric}` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#get-apiv1statsbreakdown"}
+      cond do
+        property == "event:name" && invalid_metric in @session_metrics ->
+          {:error,
+           "Session metric `#{invalid_metric}` cannot be queried for breakdown by `event:name`."}
+
+        query.filters["event:name"] && invalid_metric in @session_metrics ->
+          {:error,
+           "Session metric `#{invalid_metric}` cannot be queried when using a filter on `event:name`."}
+
+        true ->
+          {:error,
+           "The metric `#{invalid_metric}` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#get-apiv1statsbreakdown"}
       end
     else
       {:ok, metrics}
@@ -114,12 +115,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   def timeseries(conn, params) do
-    with :ok <- validate_date(params),
-         :ok <- validate_period(params),
-         :ok <- validate_interval(params) do
-      site = conn.assigns[:site]
-      query = Query.from(site.timezone, params)
+    site = conn.assigns[:site]
 
+    with :ok <- validate_period(params),
+         :ok <- validate_date(params),
+         :ok <- validate_interval(params),
+         query <- Query.from(site.timezone, params) do
       {plot, labels} = Plausible.Stats.timeseries(site, query)
 
       graph =
@@ -193,29 +194,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp validate_period(_), do: :ok
-
-  @valid_metrics ["pageviews", "visitors", "bounce_rate", "visit_duration"]
-  @valid_metrics_str Enum.map(@valid_metrics, &("`" <> &1 <> "`")) |> Enum.join(", ")
-
-  defp validate_metrics(%{"metrics" => metrics_str}) do
-    metrics =
-      metrics_str
-      |> String.split(",")
-      |> Enum.map(&String.trim/1)
-
-    bad_metric = Enum.find(metrics, fn metric -> metric not in @valid_metrics end)
-
-    if bad_metric do
-      {:error,
-       "Error parsing `metrics` parameter: invalid metric `#{bad_metric}`. Valid metrics are #{
-         @valid_metrics_str
-       }"}
-    else
-      :ok
-    end
-  end
-
-  defp validate_metrics(_), do: :ok
 
   @valid_intervals ["date", "month"]
   @valid_intervals_str Enum.map(@valid_intervals, &("`" <> &1 <> "`")) |> Enum.join(", ")

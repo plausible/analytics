@@ -57,6 +57,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                  "Session metric `bounce_rate` cannot be queried for breakdown by `event:name`."
              }
     end
+
+    test "session metrics cannot be used with event:name filter", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "property" => "event:page",
+          "filters" => "event:name==Signup",
+          "metrics" => "visitors,bounce_rate",
+          "site_id" => site.domain
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Session metric `bounce_rate` cannot be queried when using a filter on `event:name`."
+             }
+    end
   end
 
   test "breakdown by visit:source", %{conn: conn, site: site} do

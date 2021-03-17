@@ -148,8 +148,8 @@ defmodule Plausible.Stats.Query do
     }
   end
 
-  def from(tz, _) do
-    __MODULE__.from(tz, %{"period" => "30d"})
+  def from(tz, params) do
+    __MODULE__.from(tz, Map.merge(params, %{"period" => "30d"}))
   end
 
   defp today(tz) do

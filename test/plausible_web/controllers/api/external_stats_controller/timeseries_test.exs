@@ -511,5 +511,27 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       res = json_response(conn, 200)["results"]
       assert List.first(res) == %{"date" => "2021-01-01", "visitors" => 2}
     end
+
+    test "can filter by event:name", %{conn: conn, site: site} do
+      populate_stats([
+        build(:event,
+          name: "Signup",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters" => "event:name==Signup"
+        })
+
+      res = json_response(conn, 200)
+      assert List.first(res["results"]) == %{"date" => "2021-01-01", "visitors" => 1}
+    end
   end
 end
