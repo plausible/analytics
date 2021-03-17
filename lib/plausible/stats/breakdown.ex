@@ -5,12 +5,11 @@ defmodule Plausible.Stats.Breakdown do
 
   @event_metrics ["visitors", "pageviews"]
   @session_metrics ["bounce_rate", "visit_duration"]
-
-  def breakdown(_, _, _, [], _), do: %{}
+  @event_props ["event:page", "event:name"]
 
   # use join once this is solved: https://github.com/ClickHouse/ClickHouse/issues/10276
   # https://github.com/ClickHouse/ClickHouse/issues/17319
-  def breakdown(site, query, property, metrics, pagination) do
+  def breakdown(site, query, property, metrics, pagination) when property in @event_props do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
@@ -26,6 +25,10 @@ defmodule Plausible.Stats.Breakdown do
       property,
       metrics
     )
+  end
+
+  def breakdown(site, query, property, metrics, pagination) do
+    breakdown_sessions(site, query, property, metrics, pagination)
   end
 
   defp zip_results(event_result, session_result, property, metrics) do
@@ -62,9 +65,28 @@ defmodule Plausible.Stats.Breakdown do
       offset: ^offset,
       select: %{}
     )
+    |> filter_converted_sessions(site, query)
     |> do_group_by(property)
     |> select_metrics(metrics)
     |> ClickhouseRepo.all()
+  end
+
+  defp filter_converted_sessions(db_query, site, query) do
+    event = query.filters["event:name"]
+
+    if is_binary(event) do
+      converted_sessions =
+        from(e in query_events(site, query),
+          select: %{session_id: fragment("DISTINCT ?", e.session_id)}
+        )
+
+      from(s in db_query,
+        join: cs in subquery(converted_sessions),
+        on: s.session_id == cs.session_id
+      )
+    else
+      db_query
+    end
   end
 
   defp breakdown_events(_, _, _, [], _), do: []
@@ -134,6 +156,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.country_code,
+      where: s.country_code != "\0\0",
       select_merge: %{country: s.country_code}
     )
   end

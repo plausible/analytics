@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   use PlausibleWeb.ConnCase
   import Plausible.TestUtils
+  @user_id 1231
 
   setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
 
@@ -548,6 +549,134 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                "results" => [
                  %{"name" => "Signup", "visitors" => 2},
                  %{"name" => "pageview", "visitors" => 1}
+               ]
+             }
+    end
+
+    test "can breakdown by a visit:property when filtering by event:name", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats([
+        build(:pageview,
+          referrer_source: "Google",
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          domain: site.domain,
+          referrer_source: "Twitter",
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:source",
+          "filters" => "event:name==Signup"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"source" => "Google", "visitors" => 1}
+               ]
+             }
+    end
+
+    test "can breakdown by event:name when filtering by event:page", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview,
+          pathname: "/pageA",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/pageA",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          pathname: "/pageA",
+          name: "Signup",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/pageB",
+          domain: site.domain,
+          referrer_source: "Twitter",
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:name",
+          "filters" => "event:page==/pageA"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"name" => "pageview", "visitors" => 2},
+                 %{"name" => "Signup", "visitors" => 1}
+               ]
+             }
+    end
+
+    test "can breakdown by event:page when filtering by event:name", %{conn: conn, site: site} do
+      populate_stats([
+        build(:event,
+          name: "Signup",
+          pathname: "/pageA",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          pathname: "/pageA",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          pathname: "/pageB",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/pageB",
+          domain: site.domain,
+          referrer_source: "Twitter",
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:page",
+          "filters" => "event:name==Signup"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"page" => "/pageA", "visitors" => 2},
+                 %{"page" => "/pageB", "visitors" => 1}
                ]
              }
     end
