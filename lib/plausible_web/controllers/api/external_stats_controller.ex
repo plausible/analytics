@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
         |> String.split(",")
         |> Enum.map(&String.trim/1)
 
-      result =
+      results =
         if params["compare"] == "previous_period" do
           prev_query = Query.shift_back(query, site)
 
@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
           Plausible.Stats.aggregate(site, query, metrics)
         end
 
-      json(conn, result)
+      json(conn, %{"results" => results})
     else
       {:error, msg} ->
         conn
