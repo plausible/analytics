@@ -7,28 +7,28 @@ defmodule Plausible.Stats.Breakdown do
   @session_metrics ["bounce_rate", "visit_duration"]
   @event_props ["event:page", "event:name"]
 
-  # use join once this is solved: https://github.com/ClickHouse/ClickHouse/issues/10276
-  # https://github.com/ClickHouse/ClickHouse/issues/17319
-  def breakdown(site, query, property, metrics, pagination) when property in @event_props do
-    event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
-    session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
-
-    event_task =
-      Task.async(fn -> breakdown_events(site, query, property, event_metrics, pagination) end)
-
-    session_task =
-      Task.async(fn -> breakdown_sessions(site, query, property, session_metrics, pagination) end)
-
-    zip_results(
-      Task.await(event_task),
-      Task.await(session_task),
-      property,
-      metrics
-    )
-  end
-
   def breakdown(site, query, property, metrics, pagination) do
-    breakdown_sessions(site, query, property, metrics, pagination)
+    if property in @event_props || String.starts_with?(property, "event:props:") do
+      event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
+      session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
+
+      event_task =
+        Task.async(fn -> breakdown_events(site, query, property, event_metrics, pagination) end)
+
+      session_task =
+        Task.async(fn ->
+          breakdown_sessions(site, query, property, session_metrics, pagination)
+        end)
+
+      zip_results(
+        Task.await(event_task),
+        Task.await(session_task),
+        property,
+        metrics
+      )
+    else
+      breakdown_sessions(site, query, property, metrics, pagination)
+    end
   end
 
   defp zip_results(event_result, session_result, property, metrics) do
@@ -36,10 +36,9 @@ defmodule Plausible.Stats.Breakdown do
       property
       |> String.trim_leading("event:")
       |> String.trim_leading("visit:")
-      |> String.to_existing_atom()
+      |> String.trim_leading("props:")
 
-    null_row =
-      Enum.map(metrics, fn metric -> {String.to_existing_atom(metric), nil} end) |> Enum.into(%{})
+    null_row = Enum.map(metrics, fn metric -> {metric, nil} end) |> Enum.into(%{})
 
     prop_values =
       Enum.map(event_result ++ session_result, fn row -> row[property] end)
@@ -106,13 +105,42 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp do_group_by(
+         %Ecto.Query{
+           from: %Ecto.Query.FromExpr{source: {"events", _}},
+           joins: [%Ecto.Query.JoinExpr{source: {"meta", _}}]
+         } = q,
+         "event:props:" <> prop
+       ) do
+    from(
+      [e, meta] in q,
+      group_by: e.name,
+      where: meta.key == ^prop,
+      group_by: meta.value,
+      select_merge: %{^prop => meta.value}
+    )
+  end
+
+  defp do_group_by(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events", _}}} = q,
+         "event:props:" <> prop
+       ) do
+    from(
+      e in q,
+      inner_lateral_join: meta in fragment("meta"),
+      where: meta.key == ^prop,
+      group_by: meta.value,
+      select_merge: %{^prop => meta.value}
+    )
+  end
+
+  defp do_group_by(
          %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events", _}}} = q,
          "event:name"
        ) do
     from(
       e in q,
       group_by: e.name,
-      select_merge: %{name: e.name}
+      select_merge: %{"name" => e.name}
     )
   end
 
@@ -123,9 +151,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       e in q,
       group_by: e.pathname,
-      select_merge: %{
-        page: e.pathname
-      }
+      select_merge: %{"page" => e.pathname}
     )
   end
 
@@ -136,9 +162,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.entry_page,
-      select_merge: %{
-        page: s.entry_page
-      }
+      select_merge: %{"page" => s.entry_page}
     )
   end
 
@@ -147,7 +171,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.referrer_source,
       select_merge: %{
-        source: fragment("if(empty(?), ?, ?)", s.referrer_source, @no_ref, s.referrer_source)
+        "source" => fragment("if(empty(?), ?, ?)", s.referrer_source, @no_ref, s.referrer_source)
       }
     )
   end
@@ -157,7 +181,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.country_code,
       where: s.country_code != "\0\0",
-      select_merge: %{country: s.country_code}
+      select_merge: %{"country" => s.country_code}
     )
   end
 
@@ -165,7 +189,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.entry_page,
-      select_merge: %{entry_page: s.entry_page}
+      select_merge: %{"entry_page" => s.entry_page}
     )
   end
 
@@ -173,7 +197,9 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.referrer,
-      select_merge: %{referrer: fragment("if(empty(?), ?, ?)", s.referrer, @no_ref, s.referrer)}
+      select_merge: %{
+        "referrer" => fragment("if(empty(?), ?, ?)", s.referrer, @no_ref, s.referrer)
+      }
     )
   end
 
@@ -182,7 +208,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.utm_medium,
       select_merge: %{
-        utm_medium: fragment("if(empty(?), ?, ?)", s.utm_medium, @no_ref, s.utm_medium)
+        "utm_medium" => fragment("if(empty(?), ?, ?)", s.utm_medium, @no_ref, s.utm_medium)
       }
     )
   end
@@ -192,7 +218,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.utm_source,
       select_merge: %{
-        utm_source: fragment("if(empty(?), ?, ?)", s.utm_source, @no_ref, s.utm_source)
+        "utm_source" => fragment("if(empty(?), ?, ?)", s.utm_source, @no_ref, s.utm_source)
       }
     )
   end
@@ -202,7 +228,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.utm_campaign,
       select_merge: %{
-        utm_campaign: fragment("if(empty(?), ?, ?)", s.utm_campaign, @no_ref, s.utm_campaign)
+        "utm_campaign" => fragment("if(empty(?), ?, ?)", s.utm_campaign, @no_ref, s.utm_campaign)
       }
     )
   end
@@ -211,7 +237,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.screen_size,
-      select_merge: %{device: s.screen_size}
+      select_merge: %{"device" => s.screen_size}
     )
   end
 
@@ -219,7 +245,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.operating_system,
-      select_merge: %{os: s.operating_system}
+      select_merge: %{"os" => s.operating_system}
     )
   end
 
@@ -227,7 +253,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.operating_system_version,
-      select_merge: %{os_version: s.operating_system_version}
+      select_merge: %{"os_version" => s.operating_system_version}
     )
   end
 
@@ -235,7 +261,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.browser,
-      select_merge: %{browser: s.browser}
+      select_merge: %{"browser" => s.browser}
     )
   end
 
@@ -243,7 +269,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.browser_version,
-      select_merge: %{browser_version: s.browser_version}
+      select_merge: %{"browser_version" => s.browser_version}
     )
   end
 
@@ -251,14 +277,14 @@ defmodule Plausible.Stats.Breakdown do
 
   defp select_event_metrics(q, ["pageviews" | rest]) do
     from(e in q,
-      select_merge: %{pageviews: fragment("countIf(? = 'pageview')", e.name)}
+      select_merge: %{"pageviews" => fragment("countIf(? = 'pageview')", e.name)}
     )
     |> select_event_metrics(rest)
   end
 
   defp select_event_metrics(q, ["visitors" | rest]) do
     from(e in q,
-      select_merge: %{visitors: fragment("uniq(?) as count", e.user_id)}
+      select_merge: %{"visitors" => fragment("uniq(?) as count", e.user_id)}
     )
     |> select_event_metrics(rest)
   end
@@ -267,14 +293,14 @@ defmodule Plausible.Stats.Breakdown do
 
   defp select_metrics(q, ["pageviews" | rest]) do
     from(s in q,
-      select_merge: %{pageviews: fragment("sum(? * ?)", s.sign, s.pageviews)}
+      select_merge: %{"pageviews" => fragment("sum(? * ?)", s.sign, s.pageviews)}
     )
     |> select_metrics(rest)
   end
 
   defp select_metrics(q, ["visitors" | rest]) do
     from(s in q,
-      select_merge: %{visitors: fragment("uniq(?) as count", s.user_id)}
+      select_merge: %{"visitors" => fragment("uniq(?) as count", s.user_id)}
     )
     |> select_metrics(rest)
   end
@@ -282,7 +308,7 @@ defmodule Plausible.Stats.Breakdown do
   defp select_metrics(q, ["bounce_rate" | rest]) do
     from(s in q,
       select_merge: %{
-        bounce_rate: fragment("round(sum(? * ?) / sum(?) * 100)", s.is_bounce, s.sign, s.sign)
+        "bounce_rate" => fragment("round(sum(? * ?) / sum(?) * 100)", s.is_bounce, s.sign, s.sign)
       }
     )
     |> select_metrics(rest)
@@ -290,7 +316,7 @@ defmodule Plausible.Stats.Breakdown do
 
   defp select_metrics(q, ["visit_duration" | rest]) do
     from(s in q,
-      select_merge: %{visit_duration: fragment("round(avg(? * ?))", s.duration, s.sign)}
+      select_merge: %{"visit_duration" => fragment("round(avg(? * ?))", s.duration, s.sign)}
     )
     |> select_metrics(rest)
   end

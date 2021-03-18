@@ -680,6 +680,55 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                ]
              }
     end
+
+    test "breakdown by custom event property", %{conn: conn, site: site} do
+      populate_stats([
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["personal"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Some other event",
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:props:package",
+          "filters" => "event:name==Purchase"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"package" => "business", "visitors" => 2},
+                 %{"package" => "personal", "visitors" => 1}
+               ]
+             }
+    end
   end
 
   describe "filtering" do
@@ -824,6 +873,59 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                    "visit_duration" => 0,
                    "pageviews" => 1
                  }
+               ]
+             }
+    end
+
+    test "filter by custom event property", %{conn: conn, site: site} do
+      populate_stats([
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          browser: "Chrome",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          browser: "Safari",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          browser: "Safari",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["personal"],
+          browser: "IE",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:browser",
+          "filters" => "event:name==Purchase;event:props:package==business"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"browser" => "Safari", "visitors" => 2},
+                 %{"browser" => "Chrome", "visitors" => 1}
                ]
              }
     end
