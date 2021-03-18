@@ -18,7 +18,7 @@
 
   function trigger(eventName, options) {
     if (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(location.hostname) || location.protocol === 'file:') return warn('localhost');
-    if (window.phantom || window._phantom || window.__nightmare || window.navigator.webdriver) return;
+    if (window.phantom || window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) return;
     if (plausible_ignore=="true") return warn('localStorage flag')
     {{#if exclusionMode}}
     if (excludedPaths)
