@@ -7,14 +7,16 @@ import Bar from '../bar'
 import MoreLink from '../more-link'
 import numberFormatter from '../../number-formatter'
 import * as api from '../../api'
+import LazyLoader from '../../lazy-loader'
 
 class AllSources extends React.Component {
   constructor(props) {
     super(props)
+    this.onVisible = this.onVisible.bind(this)
     this.state = {loading: true}
   }
 
-  componentDidMount() {
+  onVisible() {
     this.fetchReferrers()
     if (this.props.timer) this.props.timer.onTick(this.fetchReferrers.bind(this))
   }
@@ -45,7 +47,7 @@ class AllSources extends React.Component {
           <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15" />
           <span className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}} >
             <Link className="block truncate hover:underline" to={{search: query.toString()}}>
-              <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} referrerPolicy="no-referrer" className="inline h-4 w-4 mr-2 align-middle -mt-px" />
+              <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} referrerPolicy="no-referrer" className="inline w-4 h-4 mr-2 -mt-px align-middle" />
               { referrer.name }
             </Link>
           </span>
@@ -63,7 +65,7 @@ class AllSources extends React.Component {
     if (this.state.referrers && this.state.referrers.length > 0) {
       return (
         <React.Fragment>
-          <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 text-xs font-bold tracking-wide">
+          <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500">
             <span>Source</span>
             <span>{this.label()}</span>
           </div>
@@ -75,28 +77,28 @@ class AllSources extends React.Component {
         </React.Fragment>
       )
     } else {
-      return <div className="text-center mt-44 font-medium text-gray-500">No data yet</div>
+      return <div className="font-medium text-center text-gray-500 mt-44">No data yet</div>
     }
   }
 
   renderContent() {
     return (
-      <React.Fragment>
-        <div className="w-full flex justify-between">
+      <LazyLoader onVisible={this.onVisible}>
+        <div id="sources" className="flex justify-between w-full">
           <h3 className="font-bold dark:text-gray-100">Top Sources</h3>
           { this.props.renderTabs() }
         </div>
-        { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
+        { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
         <FadeIn show={!this.state.loading}>
           { this.renderList() }
         </FadeIn>
-      </React.Fragment>
+      </LazyLoader>
     )
   }
 
   render() {
     return (
-      <div className="stats-item relative bg-white dark:bg-gray-825 shadow-xl rounded p-4" style={{height: '436px'}}>
+      <div className="relative p-4 bg-white rounded shadow-xl stats-item dark:bg-gray-825" style={{height: '436px'}}>
           { this.renderContent() }
       </div>
     )
@@ -164,7 +166,7 @@ class UTMSources extends React.Component {
     if (this.state.referrers && this.state.referrers.length > 0) {
       return (
         <React.Fragment>
-          <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide">
+          <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>{UTM_TAGS[this.props.tab].label}</span>
             <span>{this.label()}</span>
           </div>
@@ -176,18 +178,18 @@ class UTMSources extends React.Component {
         </React.Fragment>
       )
     } else {
-      return <div className="text-center mt-44 font-medium text-gray-500 dark:text-gray-400">No data yet</div>
+      return <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">No data yet</div>
     }
   }
 
   renderContent() {
     return (
       <React.Fragment>
-        <div className="w-full flex justify-between">
+        <div className="flex justify-between w-full">
           <h3 className="font-bold dark:text-gray-100">Top sources</h3>
           { this.props.renderTabs() }
         </div>
-        { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
+        { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
         <FadeIn show={!this.state.loading}>
           { this.renderList() }
         </FadeIn>
@@ -197,7 +199,7 @@ class UTMSources extends React.Component {
 
   render() {
     return (
-      <div className="stats-item relative bg-white dark:bg-gray-825 shadow-xl rounded p-4" style={{height: '436px'}}>
+      <div className="relative p-4 bg-white rounded shadow-xl stats-item dark:bg-gray-825" style={{height: '436px'}}>
         { this.renderContent() }
       </div>
     )
@@ -225,7 +227,7 @@ export default class SourceList extends React.Component {
     const activeClass = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold border-b-2 border-indigo-700 dark:border-indigo-500'
     const defaultClass = 'hover:text-indigo-600 cursor-pointer'
     return (
-      <ul className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
+      <ul className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
         <li className={this.state.tab === 'all' ? activeClass : defaultClass} onClick={this.setTab('all')}>All</li>
         <li className={this.state.tab === 'utm_medium' ? activeClass : defaultClass} onClick={this.setTab('utm_medium')}>Medium</li>
         <li className={this.state.tab === 'utm_source' ? activeClass : defaultClass} onClick={this.setTab('utm_source')}>Source</li>
