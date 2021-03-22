@@ -23,7 +23,7 @@
     {{#if exclusionMode}}
     if (excludedPaths)
       for (var i = 0; i < excludedPaths.length; i++)
-        if (eventName == "pageview" && location.pathname.match(new RegExp('^' + excludedPaths[i].trim().replace(/\*\*/g, '.*').replace(/[^\.]\*/g, '[^\\s\/]*') + '\/?$')))
+        if (eventName == "pageview" && location.pathname.match(new RegExp('^' + excludedPaths[i].trim().replace(/\*\*/g, '.*').replace(/([^\.])\*/g, '$1[^\\s\/]*') + '\/?$')))
           return warn('exclusion rule');
     {{/if}}
 
