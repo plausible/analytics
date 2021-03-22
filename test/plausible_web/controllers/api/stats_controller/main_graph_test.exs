@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=7d")
       assert %{"labels" => labels} = json_response(conn, 200)
 
-      {:ok, first} = Timex.today() |> Timex.shift(days: -7) |> Timex.format("{ISOdate}")
+      {:ok, first} = Timex.today() |> Timex.shift(days: -6) |> Timex.format("{ISOdate}")
       {:ok, last} = Timex.today() |> Timex.format("{ISOdate}")
       assert List.first(labels) == first
       assert List.last(labels) == last

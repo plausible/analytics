@@ -183,8 +183,8 @@ defmodule Plausible.Billing do
     Enum.reduce(user.sites, {0, 0}, fn site, {pageviews, custom_events} ->
       usage = Plausible.Stats.Clickhouse.usage(site)
 
-      {pageviews + Map.get(usage, :pageviews, 0),
-       custom_events + Map.get(usage, :custom_events, 0)}
+      {pageviews + Map.get(usage, "pageviews", 0),
+       custom_events + Map.get(usage, "custom_events", 0)}
     end)
   end
 

@@ -181,13 +181,12 @@ defmodule Plausible.Stats.Clickhouse do
       from e in "events",
         where: e.domain == ^site.domain,
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
-        group_by: e.name,
-        select: {e.name, fragment("count(*)")}
+        group_by: fragment("name"),
+        select: {
+          fragment("if(? = 'pageview', 'pageviews', 'custom_events') as name", e.name),
+          fragment("count(*)")
+        }
     )
-    |> Enum.map(fn {ev_name, count} ->
-      ev_name = if ev_name == "pageview", do: :pageviews, else: :custom_events
-      {ev_name, count}
-    end)
     |> Enum.into(%{})
   end
 

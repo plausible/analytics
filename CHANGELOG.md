@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Capitalized date/time selection keybinds not working plausible/analytics#709
 - Invisible text on Google Search Console settings page in dark mode plausible/analytics#759
+- Disable analytics tracking when running Cypress tests
 
 ## [1.2] - 2021-01-26
 

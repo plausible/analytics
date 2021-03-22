@@ -16,7 +16,7 @@ defmodule Plausible.Stats.Aggregate do
       Task.await(session_task)
     )
     |> Enum.map(fn {metric, value} ->
-      {metric, %{value: value}}
+      {metric, %{value: value || 0}}
     end)
     |> Enum.into(%{})
   end
@@ -31,7 +31,9 @@ defmodule Plausible.Stats.Aggregate do
   end
 
   defp select_event_metric("pageviews", q) do
-    from(e in q, select_merge: %{pageviews: fragment("count(*)")})
+    from(e in q,
+      select_merge: %{pageviews: fragment("countIf(? = 'pageview')", e.name)}
+    )
   end
 
   defp select_event_metric("visitors", q) do
