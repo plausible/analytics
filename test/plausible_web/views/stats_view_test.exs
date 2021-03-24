@@ -42,5 +42,9 @@ defmodule PlausibleWeb.StatsView.Test do
     test "99_999_999 becomes 99.9m" do
       assert StatsView.large_number_format(99_999_999) == "99.9m"
     end
+
+    test "101_000_000 becomes 101m" do
+      assert StatsView.large_number_format(101_000_000) == "101m"
+    end
   end
 end

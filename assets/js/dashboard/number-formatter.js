@@ -2,6 +2,7 @@ const THOUSAND = 1000
 const HUNDRED_THOUSAND = 100000
 const MILLION = 1000000
 const HUNDRED_MILLION = 100000000
+const BILLION = 1000000000
 
 export default function numberFormatter(num) {
   if (num >= THOUSAND && num < MILLION) {
@@ -11,9 +12,9 @@ export default function numberFormatter(num) {
     } else {
       return (Math.floor(thousands * 10) / 10) + 'k'
     }
-  } else if (num >= MILLION && num < HUNDRED_MILLION) {
+  } else if (num >= MILLION && num < BILLION) {
     const millions = num / MILLION
-    if (millions === Math.floor(millions)) {
+    if (millions === Math.floor(millions) || num >= HUNDRED_MILLION) {
       return Math.floor(millions) + 'M'
     } else {
       return (Math.floor(millions * 10) / 10) + 'M'
