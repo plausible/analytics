@@ -24,7 +24,7 @@ export default class extends React.Component {
 
   render() {
     return (
-      <div ref={(el) => this.element = el}>{this.props.children}</div>
+      <div ref={(el) => this.element = el} className={this.props.className} style={this.props.style}>{this.props.children}</div>
     );
   }
 }
