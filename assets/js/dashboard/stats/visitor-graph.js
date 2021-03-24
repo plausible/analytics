@@ -258,7 +258,9 @@ class LineGraph extends React.Component {
 
   topStatTooltip(stat) {
     if (typeof(stat.count) == 'number') {
-      return stat.count.toLocaleString() + ' ' + stat.name
+      let name = stat.name.toLowerCase()
+      name = stat.count === 1 ? name.slice(0, -1) : name
+      return stat.count.toLocaleString() + ' ' + name
     }
   }
 
