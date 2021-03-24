@@ -246,13 +246,19 @@ class LineGraph extends React.Component {
     }
   }
 
-  renderTopStatNumber(stat) {
-    if (stat.name === 'Visit duration') {
-      return durationFormatter(stat.count)
+  topStatNumberShort(stat) {
+    if (typeof(stat.duration) == 'number') {
+      return durationFormatter(stat.duration)
     } else if (typeof(stat.count) == 'number') {
       return numberFormatter(stat.count)
     } else {
       return stat.percentage + '%'
+    }
+  }
+
+  topStatTooltip(stat) {
+    if (typeof(stat.count) == 'number') {
+      return stat.count.toLocaleString() + ' ' + stat.name
     }
   }
 
@@ -266,7 +272,7 @@ class LineGraph extends React.Component {
         <div className={`px-8 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
           <div className="text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">{stat.name}</div>
           <div className="flex items-center justify-between my-1">
-            <b className="mr-4 text-2xl dark:text-gray-100">{ this.renderTopStatNumber(stat) }</b>
+            <b className="mr-4 text-2xl dark:text-gray-100" tooltip={this.topStatTooltip(stat)}>{ this.topStatNumberShort(stat) }</b>
             {this.renderComparison(stat.name, stat.change)}
           </div>
         </div>

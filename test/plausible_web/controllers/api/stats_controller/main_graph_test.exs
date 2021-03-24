@@ -104,7 +104,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
       res = json_response(conn, 200)
-      assert %{"name" => "Visit duration", "count" => 67, "change" => 100} in res["top_stats"]
+      assert %{"name" => "Visit duration", "duration" => 67, "change" => 100} in res["top_stats"]
     end
   end
 

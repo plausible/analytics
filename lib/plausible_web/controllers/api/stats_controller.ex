@@ -98,7 +98,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
         %{
           name: "Visit duration",
-          count: duration,
+          duration: duration,
           change: percent_change(prev_duration, duration)
         }
       end
