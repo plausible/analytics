@@ -11,6 +11,12 @@ defmodule Plausible.Stats.Fragments do
     end
   end
 
+  defmacro sample_percent() do
+    quote do
+      fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
+    end
+  end
+
   defmacro bounce_rate() do
     quote do
       fragment("toUInt64(round(sum(is_bounce * sign) / sum(sign) * 100))")

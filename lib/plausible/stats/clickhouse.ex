@@ -192,18 +192,28 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def pageviews_and_visitors(site, query) do
+    {pageviews, visitors, _} = pageviews_and_visitors_with_sample_percent(site, query)
+    {pageviews, visitors}
+  end
+
+  def pageviews_and_visitors_with_sample_percent(site, query) do
     ClickhouseRepo.one(
       from e in base_query_w_sessions(site, query),
-        select: {total(), uniq(e.user_id)}
+        select: {total(), uniq(e.user_id), sample_percent()}
     )
   end
 
   def unique_visitors(site, query) do
+    {visitors, _} = unique_visitors_with_sample_percent(site, query)
+    visitors
+  end
+
+  def unique_visitors_with_sample_percent(site, query) do
     query = if query.period == "realtime", do: %Query{query | period: "30m"}, else: query
 
     ClickhouseRepo.one(
       from e in base_query_w_sessions(site, query),
-        select: uniq(e.user_id)
+        select: {uniq(e.user_id), sample_percent()}
     )
   end
 

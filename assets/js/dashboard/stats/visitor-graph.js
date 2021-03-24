@@ -285,9 +285,23 @@ class LineGraph extends React.Component {
 
     return (
       <a href={endpoint} download>
-        <svg className="absolute w-4 h-5 text-gray-700 feather dark:text-gray-300" style={{right: '2rem', top: '-2rem'}} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <svg className="absolute w-4 h-5 text-gray-700 feather dark:text-gray-300 -top-8 right-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
       </a>
     )
+  }
+
+  samplingNotice() {
+    const samplePercent = this.props.graphData.sample_percent
+
+    if (samplePercent < 100) {
+      return (
+        <div tooltip={`Stats based on a ${samplePercent}% sample of all visitors`} className="absolute cursor-pointer -top-20 right-8">
+          <svg className="w-4 h-4 text-gray-300 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      )
+    }
   }
 
   render() {
@@ -300,6 +314,7 @@ class LineGraph extends React.Component {
         </div>
         <div className="relative px-2">
           { this.downloadLink() }
+          { this.samplingNotice() }
           <canvas id="main-graph-canvas" className={'mt-4 ' + extraClass} width="1054" height="342"></canvas>
         </div>
       </div>
@@ -349,7 +364,7 @@ export default class VisitorGraph extends React.Component {
 
   render() {
     return (
-      <div className="relative w-full mt-6 bg-white rounded shadow-xl dark:bg-gray-825 main-graph">
+      <div className="relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825 main-graph">
         { this.state.loading && <div className="graph-inner"><div className="pt-24 mx-auto loading sm:pt-32 md:pt-48"><div></div></div></div> }
         { this.renderInner() }
       </div>
