@@ -5,6 +5,7 @@ import { eventName, navigateToQuery } from '../query'
 import numberFormatter, {durationFormatter} from '../number-formatter'
 import * as api from '../api'
 import {ThemeContext} from '../theme-context'
+import LazyLoader from '../lazy-loader'
 
 function buildDataSet(plot, present_index, ctx, label) {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
@@ -305,7 +306,7 @@ class LineGraph extends React.Component {
       return (
         <div tooltip={`Stats based on a ${samplePercent}% sample of all visitors`} className="absolute cursor-pointer -top-20 right-8">
           <svg className="w-4 h-4 text-gray-300 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
       )
@@ -336,9 +337,10 @@ export default class VisitorGraph extends React.Component {
   constructor(props) {
     super(props)
     this.state = {loading: true}
+    this.onVisible = this.onVisible.bind(this)
   }
 
-  componentDidMount() {
+  onVisible() {
     this.fetchGraphData()
     if (this.props.timer) this.props.timer.onTick(this.fetchGraphData.bind(this))
   }
@@ -372,10 +374,12 @@ export default class VisitorGraph extends React.Component {
 
   render() {
     return (
-      <div className="relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825 main-graph">
-        { this.state.loading && <div className="graph-inner"><div className="pt-24 mx-auto loading sm:pt-32 md:pt-48"><div></div></div></div> }
-        { this.renderInner() }
-      </div>
+      <LazyLoader onVisible={this.onVisible}>
+        <div className="relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825 main-graph">
+          { this.state.loading && <div className="graph-inner"><div className="pt-24 mx-auto loading sm:pt-32 md:pt-48"><div></div></div></div> }
+          { this.renderInner() }
+        </div>
+      </LazyLoader>
     )
   }
 }
