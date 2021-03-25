@@ -3,6 +3,13 @@ import {formatISO} from './date'
 let abortController = new AbortController()
 let SHARED_LINK_AUTH = null
 
+class ApiError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 function serialize(obj) {
   var str = [];
   for (var p in obj)
@@ -44,7 +51,11 @@ export function get(url, query, ...extraQuery) {
   url = url + serializeQuery(query, extraQuery)
   return fetch(url, {signal: abortController.signal, headers: headers})
     .then( response => {
-      if (!response.ok) { throw response }
+      if (!response.ok) {
+        return response.json().then((msg) => {
+          throw new ApiError(msg.error)
+        })
+      }
       return response.json()
     })
 }
