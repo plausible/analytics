@@ -246,13 +246,21 @@ class LineGraph extends React.Component {
     }
   }
 
-  renderTopStatNumber(stat) {
-    if (stat.name === 'Visit duration') {
-      return durationFormatter(stat.count)
+  topStatNumberShort(stat) {
+    if (typeof(stat.duration) == 'number') {
+      return durationFormatter(stat.duration)
     } else if (typeof(stat.count) == 'number') {
       return numberFormatter(stat.count)
     } else {
       return stat.percentage + '%'
+    }
+  }
+
+  topStatTooltip(stat) {
+    if (typeof(stat.count) == 'number') {
+      let name = stat.name.toLowerCase()
+      name = stat.count === 1 ? name.slice(0, -1) : name
+      return stat.count.toLocaleString() + ' ' + name
     }
   }
 
@@ -266,7 +274,7 @@ class LineGraph extends React.Component {
         <div className={`px-8 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
           <div className="text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">{stat.name}</div>
           <div className="flex items-center justify-between my-1">
-            <b className="mr-4 text-2xl dark:text-gray-100">{ this.renderTopStatNumber(stat) }</b>
+            <b className="mr-4 text-2xl dark:text-gray-100" tooltip={this.topStatTooltip(stat)}>{ this.topStatNumberShort(stat) }</b>
             {this.renderComparison(stat.name, stat.change)}
           </div>
         </div>
@@ -285,9 +293,23 @@ class LineGraph extends React.Component {
 
     return (
       <a href={endpoint} download>
-        <svg className="absolute w-4 h-5 text-gray-700 feather dark:text-gray-300" style={{right: '2rem', top: '-2rem'}} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <svg className="absolute w-4 h-5 text-gray-700 feather dark:text-gray-300 -top-8 right-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
       </a>
     )
+  }
+
+  samplingNotice() {
+    const samplePercent = this.props.graphData.sample_percent
+
+    if (samplePercent < 100) {
+      return (
+        <div tooltip={`Stats based on a ${samplePercent}% sample of all visitors`} className="absolute cursor-pointer -top-20 right-8">
+          <svg className="w-4 h-4 text-gray-300 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      )
+    }
   }
 
   render() {
@@ -300,6 +322,7 @@ class LineGraph extends React.Component {
         </div>
         <div className="relative px-2">
           { this.downloadLink() }
+          { this.samplingNotice() }
           <canvas id="main-graph-canvas" className={'mt-4 ' + extraClass} width="1054" height="342"></canvas>
         </div>
       </div>
@@ -349,7 +372,7 @@ export default class VisitorGraph extends React.Component {
 
   render() {
     return (
-      <div className="relative w-full mt-6 bg-white rounded shadow-xl dark:bg-gray-825 main-graph">
+      <div className="relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825 main-graph">
         { this.state.loading && <div className="graph-inner"><div className="pt-24 mx-auto loading sm:pt-32 md:pt-48"><div></div></div></div> }
         { this.renderInner() }
       </div>
