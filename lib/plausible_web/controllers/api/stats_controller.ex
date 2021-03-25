@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.Api.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
+  use Plug.ErrorHandler
   alias Plausible.Stats.Clickhouse, as: Stats
   alias Plausible.Stats.Query
 
@@ -335,4 +336,8 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp google_api(), do: Application.fetch_env!(:plausible, :google_api)
+
+  def handle_errors(conn, %{kind: kind, reason: reason}) do
+    json(conn, %{error: Exception.format_banner(kind, reason)})
+  end
 end

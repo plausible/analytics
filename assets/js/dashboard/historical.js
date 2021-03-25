@@ -54,4 +54,4 @@ class Historical extends React.Component {
   }
 }
 
-export default withPinnedHeader(Historical, 'historical');
+export default withPinnedHeader(Historical, '#stats-container-top');
