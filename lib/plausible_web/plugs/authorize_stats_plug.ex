@@ -9,6 +9,7 @@ defmodule PlausibleWeb.AuthorizeStatsPlug do
   def call(conn, _opts) do
     site = Repo.get_by(Plausible.Site, domain: conn.params["domain"])
     shared_link_auth = conn.params["auth"]
+
     shared_link_record =
       shared_link_auth && Repo.get_by(Plausible.Site.SharedLink, slug: shared_link_auth)
 
