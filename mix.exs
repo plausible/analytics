@@ -36,15 +36,7 @@ defmodule Plausible.MixProject do
       mod: {Plausible.Application, []},
       extra_applications: [
         :logger,
-        :sentry,
-        :runtime_tools,
-        :timex,
-        :ua_inspector,
-        :ref_inspector,
-        :bamboo,
-        :bamboo_smtp,
-        :appsignal,
-        :cachex
+        :runtime_tools
       ]
     ]
   end
