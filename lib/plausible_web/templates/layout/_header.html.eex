@@ -4,8 +4,8 @@
       <div class="flex items-center flex-1 md:absolute md:inset-y-0 md:left-0">
         <div class="flex items-center justify-between">
           <a href="<%= home_dest(@conn) %>">
-            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo_dark.png"), class: "h-8 w-auto sm:h-10 -mt-2 hidden dark:inline", alt: "Plausible logo")%>
-            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), class: "h-8 w-auto sm:h-10 -mt-2 inline dark:hidden", alt: "Plausible logo") %>
+            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo_dark.png"), class: "h-8 w-auto sm:h-10 -mt-2 hidden dark:inline", alt: "Plausible logo", loading: "lazy")%>
+            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), class: "h-8 w-auto sm:h-10 -mt-2 inline dark:hidden", alt: "Plausible logo", loading: "lazy") %>
           </a>
         </div>
       </div>
