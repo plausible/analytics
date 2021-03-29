@@ -114,7 +114,6 @@ export default class Referrers extends React.Component {
     if (this.state.referrers) {
       return (
         <React.Fragment>
-          <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
           { this.renderList() }
           <MoreLink site={this.props.site} list={this.state.referrers} endpoint={`referrers/${this.props.query.filters.source}`} />
         </React.Fragment>
@@ -124,14 +123,15 @@ export default class Referrers extends React.Component {
 
   render() {
     return (
-      <LazyLoader>
-        <div className="relative p-4 bg-white rounded shadow-xl stats-item dark:bg-gray-825" style={{height: '436px'}}>
+      <div className="relative p-4 bg-white rounded shadow-xl stats-item dark:bg-gray-825" style={{height: '436px'}}>
+        <LazyLoader onVisible={this.onVisible}>
+          <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
           { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
-          <FadeIn show={!this.state.loading}>
-            { this.renderContent() }
-          </FadeIn>
-        </div>
-      </LazyLoader>
+            <FadeIn show={!this.state.loading}>
+              { this.renderContent() }
+            </FadeIn>
+        </LazyLoader>
+      </div>
     )
   }
 }
