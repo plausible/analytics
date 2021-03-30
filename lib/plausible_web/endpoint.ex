@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Endpoint do
     use Appsignal.Phoenix
   end
 
-  use Sentry.Phoenix.Endpoint
+  use Sentry.PlugCapture
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -38,6 +38,8 @@ defmodule PlausibleWeb.Endpoint do
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
     json_decoder: Phoenix.json_library()
+
+  plug Sentry.PlugContext
 
   plug Plug.MethodOverride
   plug Plug.Head
