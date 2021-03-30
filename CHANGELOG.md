@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Invisible text on Google Search Console settings page in dark mode plausible/analytics#759
 - Disable analytics tracking when running Cypress tests
 - CSV reports can be downloaded via shared links plausible/analytics#884
+- Fixes weekly/monthly email report delivery over SMTP plausible/analytics#889
 
 ## [1.2] - 2021-01-26
 
