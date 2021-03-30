@@ -3,7 +3,7 @@ defmodule Plausible.Mailer do
 
   def send_email(email) do
     try do
-      Plausible.Mailer.deliver_now(email)
+      Plausible.Mailer.deliver_now!(email)
     rescue
       error ->
         Sentry.capture_exception(error,

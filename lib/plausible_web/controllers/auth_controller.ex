@@ -143,7 +143,7 @@ defmodule PlausibleWeb.AuthController do
         url = PlausibleWeb.Endpoint.url() <> "/password/reset?token=#{token}"
         Logger.debug("PASSWORD RESET LINK: " <> url)
         email_template = PlausibleWeb.Email.password_reset_email(email, url)
-        Plausible.Mailer.deliver_now(email_template)
+        Plausible.Mailer.deliver_now!(email_template)
 
         render(conn, "password_reset_request_success.html",
           email: email,
