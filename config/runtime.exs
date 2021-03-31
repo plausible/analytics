@@ -255,8 +255,8 @@ if geolite2_country_db do
 end
 
 logger_backends = %{
-  "elixir" => [:console, Sentry.LoggerBackend],
-  "json" => [Ink, Sentry.LoggerBackend]
+  "elixir" => [:console],
+  "json" => [Ink]
 }
 
 config :logger,
