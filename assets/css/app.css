@@ -64,11 +64,19 @@ blockquote {
   position: relative;
   height: 0;
   /* Formula is: (top row height + (graph height / graph width * 100%)) */
-  padding-top: calc(148px + (451 / 1088 * 100%));
+  padding-top: calc(168px + (451 / 1088 * 100%));
+}
+
+@screen sm {
+  .main-graph {
+    padding-top: calc(148px + (451 / 1088 * 100%));
+  }
 }
 
 @screen md {
-  padding-top: calc(128px + (451 / 1088 * 100%));
+  .main-graph {
+    padding-top: calc(128px + (451 / 1088 * 100%));
+  }
 }
 
 @screen lg {
