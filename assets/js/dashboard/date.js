@@ -7,8 +7,12 @@ export function formatISO(date) {
 
 export function shiftMonths(date, months) {
   const newDate = new Date(date.getTime())
-  newDate.setMonth(newDate.getMonth() + months)
-  return newDate
+  const d = newDate.getDate();
+  newDate.setMonth(newDate.getMonth() + +months);
+  if (newDate.getDate() != d) {
+    newDate.setDate(0);
+  }
+  return newDate;
 }
 
 export function shiftDays(date, days) {

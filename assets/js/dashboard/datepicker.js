@@ -294,7 +294,7 @@ class DatePicker extends React.Component {
       boldClass = query.period === period ? "font-bold" : "";
     }
 
-    const date = opts.date ? formatISO(opts.date) : false;
+    opts.date = opts.date ? formatISO(opts.date) : false;
 
     const keybinds = {
       'Today': 'D',
@@ -308,7 +308,7 @@ class DatePicker extends React.Component {
 
     return (
       <QueryLink
-        to={{from: false, to: false, date, period, ...opts}}
+        to={{from: false, to: false, period, ...opts}}
         onClick={this.close.bind(this)}
         query={this.props.query}
         className={`${boldClass  } px-4 py-2 md:text-sm leading-tight hover:bg-gray-100
