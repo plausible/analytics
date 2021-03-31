@@ -72,7 +72,7 @@ export default class SiteSwitcher extends React.Component {
     return (
       <a href={domain === this.props.site.domain ? null : `/${encodeURIComponent(domain)}`} key={domain} className={`flex items-center justify-between truncate px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 ${extraClass}`}>
         <span>
-          <img src={`https://icons.duckduckgo.com/ip3/${domain}.ico`} referrerPolicy="no-referrer" className="inline w-4 mr-2 align-middle" />
+          <img src={`https://icons.duckduckgo.com/ip3/${domain}.ico`} referrerPolicy="no-referrer" onError={(e)=>{e.target.onerror = null; e.target.src="https://icons.duckduckgo.com/ip3/placeholder.ico"}} className="inline w-4 mr-2 align-middle" />
           <span class="truncate inline-block align-middle max-w-3xs pr-2">{domain}</span>
         </span>
         {index < 9 && <span>{index+1}</span>}
@@ -127,7 +127,7 @@ export default class SiteSwitcher extends React.Component {
       <div className="relative inline-block text-left z-10 mr-4">
         <button onClick={this.toggle.bind(this)} className={`inline-flex items-center text-lg w-full rounded-md py-2 leading-5 font-bold text-gray-700 dark:text-gray-300 focus:outline-none transition ease-in-out duration-150 ${hoverClass}`}>
 
-          <img src={`https://icons.duckduckgo.com/ip3/${this.props.site.domain}.ico`} referrerPolicy="no-referrer" className="inline w-4 mr-2 align-middle" />
+          <img src={`https://icons.duckduckgo.com/ip3/${this.props.site.domain}.ico`} onError={(e)=>{e.target.onerror = null; e.target.src="https://icons.duckduckgo.com/ip3/placeholder.ico"}} referrerPolicy="no-referrer" className="inline w-4 mr-2 align-middle" />
           {this.props.site.domain}
           {this.renderArrow()}
         </button>
