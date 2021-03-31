@@ -122,7 +122,7 @@ defmodule PlausibleWeb.Router do
 
     get "/password", AuthController, :password_form
     post "/password", AuthController, :set_password
-    post "/logout", AuthController, :logout
+    get "/logout", AuthController, :logout
     get "/settings", AuthController, :user_settings
     put "/settings", AuthController, :save_settings
     delete "/me", AuthController, :delete_me

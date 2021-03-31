@@ -39,7 +39,7 @@
 
                   <div data-dropdown style="top: 42px; right: 0px; width: 185px;" class="absolute right-0 z-10 hidden bg-white border border-gray-300 rounded shadow-md dropdown-content dark:bg-gray-800 dark:border-gray-500">
                     <%= link("Settings", to: "/settings", class: "block py-2 px-2 border-b border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-gray-100") %>
-                    <%= link("Log out", to: "/logout", method: :post, class: "block py-2 px-2 hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-gray-100") %>
+                    <%= link("Log out", to: "/logout", class: "block py-2 px-2 hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-gray-100") %>
                   </div>
                 </div>
               </li>
