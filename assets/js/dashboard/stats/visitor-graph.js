@@ -273,9 +273,9 @@ class LineGraph extends React.Component {
 
       return (
         <div className={`px-8 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
-          <div className="text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">{stat.name}</div>
-          <div className="flex items-center justify-between my-1">
-            <b className="mr-4 text-2xl dark:text-gray-100" tooltip={this.topStatTooltip(stat)}>{ this.topStatNumberShort(stat) }</b>
+          <div className="text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">{stat.name}</div>
+          <div className="flex items-center justify-between my-1 whitespace-nowrap">
+            <b className="mr-4 text-xl md:text-2xl dark:text-gray-100" tooltip={this.topStatTooltip(stat)}>{ this.topStatNumberShort(stat) }</b>
             {this.renderComparison(stat.name, stat.change)}
           </div>
         </div>
