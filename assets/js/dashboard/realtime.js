@@ -54,4 +54,4 @@ class Realtime extends React.Component {
   }
 }
 
-export default withPinnedHeader(Realtime);
+export default withPinnedHeader(Realtime, '#stats-container-top');
