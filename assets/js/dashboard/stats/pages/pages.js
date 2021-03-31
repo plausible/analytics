@@ -42,10 +42,10 @@ export default class Visits extends React.Component {
 
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={page.name}>
-        <div className="w-full h-8 truncate" style={{maxWidth: 'calc(100% - 4rem)'}}>
+        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
           <Bar count={page.count} all={this.state.pages} bg="bg-orange-50 dark:bg-gray-500 dark:bg-opacity-15" />
           <span className="flex px-2 group dark:text-gray-300" style={{marginTop: '-26px'}} >
-            <Link to={{pathname: window.location.pathname, search: query.toString()}} className="block hover:underline">{page.name}</Link>
+            <Link to={{pathname: window.location.pathname, search: query.toString()}} className="block hover:underline truncate">{page.name}</Link>
             <a target="_blank" href={externalLink} className="hidden group-hover:block">
               <svg className="inline w-4 h-4 ml-1 -mt-1 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
             </a>
