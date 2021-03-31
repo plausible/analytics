@@ -45,7 +45,7 @@
                   <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                 </svg>
               </div>
-              <%= email_input f, :recipient, class: "focus:ring-indigo-500 dark:bg-gray-900 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300 dark:border-gray-500 dark:placeholder-gray-400 dark:text-gray-100", placeholder: "recipient@example.com" %>
+              <%= email_input f, :recipient, class: "focus:ring-indigo-500 dark:bg-gray-900 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300 dark:border-gray-500 dark:placeholder-gray-400 dark:text-gray-100", placeholder: "recipient@example.com", required: "true" %>
             </div>
 
             <%= submit class: "-ml-px relative button rounded-l-none" do %>
@@ -96,7 +96,7 @@
                   <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                 </svg>
               </div>
-              <%= email_input f, :recipient, class: "focus:ring-indigo-500 dark:bg-gray-900 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300 dark:border-gray-500 dark:placeholder-gray-400 dark:text-gray-100", placeholder: "recipient@example.com" %>
+              <%= email_input f, :recipient, class: "focus:ring-indigo-500 dark:bg-gray-900 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300 dark:border-gray-500 dark:placeholder-gray-400 dark:text-gray-100", placeholder: "recipient@example.com", required: "true" %>
             </div>
 
             <%= submit class: "-ml-px relative button rounded-l-none" do %>
@@ -176,7 +176,7 @@
                   <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                 </svg>
               </div>
-              <%= email_input f, :recipient, class: "focus:ring-indigo-500 dark:bg-gray-900 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300 dark:border-gray-500 dark:placeholder-gray-400 dark:text-gray-100", placeholder: "recipient@example.com" %>
+              <%= email_input f, :recipient, class: "focus:ring-indigo-500 dark:bg-gray-900 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300 dark:border-gray-500 dark:placeholder-gray-400 dark:text-gray-100", placeholder: "recipient@example.com", required: "true" %>
             </div>
 
             <%= submit class: "-ml-px relative button rounded-l-none" do %>
