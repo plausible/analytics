@@ -73,7 +73,7 @@ defmodule Plausible.MixProject do
       {:bamboo, "~> 2.0"},
       {:hackney, "~> 1.8"},
       {:bamboo_phoenix, "~> 1.0.0"},
-      {:bamboo_postmark, "~> 0.5"},
+      {:bamboo_postmark, git: "https://github.com/pablo-co/bamboo_postmark.git", tag: "master"},
       {:bamboo_smtp, "~> 4.0"},
       {:sentry, "~> 8.0"},
       {:httpoison, "~> 1.4"},
