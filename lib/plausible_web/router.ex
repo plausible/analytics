@@ -95,7 +95,7 @@ defmodule PlausibleWeb.Router do
   end
 
   scope "/", PlausibleWeb do
-    pipe_through :browser
+    pipe_through [:browser, :csrf]
 
     get "/register", AuthController, :register_form
     post "/register", AuthController, :register

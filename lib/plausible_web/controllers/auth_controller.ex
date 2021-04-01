@@ -377,11 +377,13 @@ defmodule PlausibleWeb.AuthController do
     logout(conn, params)
   end
 
-  def logout(conn, _params) do
+  def logout(conn, params) do
+    redirect_to = Map.get(params, "redirect", "/")
+
     conn
     |> configure_session(drop: true)
     |> delete_resp_cookie("logged_in")
-    |> redirect(to: "/")
+    |> redirect(to: redirect_to)
   end
 
   def google_auth_callback(conn, %{"code" => code, "state" => site_id}) do
