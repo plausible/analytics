@@ -23,7 +23,7 @@ defmodule PlausibleWeb.AdminAuthControllerTest do
       assert redirected_to(conn) == "/sites"
 
       # trying logging out
-      conn = post(conn, "/logout")
+      conn = get(conn, "/logout")
       assert redirected_to(conn) == "/"
       conn = get(conn, "/")
       assert redirected_to(conn) == "/sites"

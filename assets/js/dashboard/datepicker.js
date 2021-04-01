@@ -43,7 +43,8 @@ class DatePicker extends React.Component {
   handleKeydown(e) {
     const { query, history } = this.props;
 
-    if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.keyCode === 229) return
+    if (e.target.tagName === 'INPUT') return true;
+    if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.keyCode === 229) return;
 
     const newSearch = {
       period: false,

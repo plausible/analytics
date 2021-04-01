@@ -35,5 +35,6 @@
     document.getElementById('pageview-fields').classList.add('hidden')
     document.getElementById('pageview-tab').classList.remove('shadow-inner', 'font-bold', 'bg-indigo-600', 'text-white')
     document.getElementById('pageview-tab').classList.add('dark:text-gray-100')
+    document.getElementById('goal_page_path').value = ''
   }
 </script>
