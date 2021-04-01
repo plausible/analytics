@@ -11,20 +11,13 @@ defmodule PlausibleWeb.Api.ExternalController do
         conn |> send_resp(202, "")
 
       {:error, changeset} ->
-        request = Sentry.Plug.build_request_interface_data(conn, [])
-
-        Sentry.capture_message("Error processing event",
-          extra: %{errors: inspect(changeset.errors), params: params, request: request}
-        )
-
         Logger.info("Error processing event: #{inspect(changeset)}")
         conn |> send_resp(400, "")
     end
   end
 
   def error(conn, _params) do
-    request = Sentry.Plug.build_request_interface_data(conn, [])
-    Sentry.capture_message("JS snippet error", request: request)
+    Sentry.capture_message("JS snippet error")
     send_resp(conn, 200, "")
   end
 
@@ -135,7 +128,10 @@ defmodule PlausibleWeb.Api.ExternalController do
     raw_meta = params["m"] || params["meta"] || params["p"] || params["props"]
 
     if raw_meta do
-      Jason.decode!(raw_meta)
+      case Jason.decode(raw_meta) do
+        {:ok, props} when is_map(props) -> props
+        _ -> %{}
+      end
     else
       %{}
     end

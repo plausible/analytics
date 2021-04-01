@@ -1,7 +1,7 @@
 <div class="w-full max-w-lg px-4 mt-4 mx-auto">
   <div x-data="{volume: '10k', billingCycle: 'monthly'}" class="flex-1 bg-white dark:bg-gray-800 shadow-md rounded px-8 py-4 mb-4 mt-8">
     <div class="w-full pt-2 text-xl font-bold dark:text-gray-100">
-      Subscription created succesfully
+      Subscription created successfully
     </div>
 
     <div class="w-full text-gray-500 dark:text-gray-200 text-sm py-4">

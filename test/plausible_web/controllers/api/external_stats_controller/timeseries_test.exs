@@ -47,6 +47,75 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
     end
   end
 
+  test "shows hourly data for a certain date", %{conn: conn, site: site} do
+    populate_stats([
+      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 23:59:00])
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/timeseries", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01"
+      })
+
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"date" => "2021-01-01 00:00:00", "visitors" => 1},
+               %{"date" => "2021-01-01 01:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 02:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 03:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 04:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 05:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 06:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 07:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 08:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 09:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 10:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 11:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 12:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 13:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 14:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 15:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 16:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 17:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 18:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 19:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 20:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 21:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 22:00:00", "visitors" => 0},
+               %{"date" => "2021-01-01 23:00:00", "visitors" => 1}
+             ]
+           }
+  end
+
+  test "shows last 7 days of visitors", %{conn: conn, site: site} do
+    populate_stats([
+      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-07 23:59:00])
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/timeseries", %{
+        "site_id" => site.domain,
+        "period" => "7d",
+        "date" => "2021-01-07"
+      })
+
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"date" => "2021-01-01", "visitors" => 1},
+               %{"date" => "2021-01-02", "visitors" => 0},
+               %{"date" => "2021-01-03", "visitors" => 0},
+               %{"date" => "2021-01-04", "visitors" => 0},
+               %{"date" => "2021-01-05", "visitors" => 0},
+               %{"date" => "2021-01-06", "visitors" => 0},
+               %{"date" => "2021-01-07", "visitors" => 1}
+             ]
+           }
+  end
+
   test "shows last 6 months of visitors", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview, domain: site.domain, timestamp: ~N[2020-12-31 00:00:00]),
@@ -441,6 +510,73 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
 
       res = json_response(conn, 200)["results"]
       assert List.first(res) == %{"date" => "2021-01-01", "visitors" => 2}
+    end
+
+    test "can filter by event:name", %{conn: conn, site: site} do
+      populate_stats([
+        build(:event,
+          name: "Signup",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters" => "event:name==Signup"
+        })
+
+      res = json_response(conn, 200)
+      assert List.first(res["results"]) == %{"date" => "2021-01-01", "visitors" => 1}
+    end
+
+    test "filter by custom event property", %{conn: conn, site: site} do
+      populate_stats([
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["personal"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-02 00:25:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters" => "event:name==Purchase;event:props:package==business"
+        })
+
+      %{"results" => [first, second | _rest]} = json_response(conn, 200)
+      assert first == %{"date" => "2021-01-01", "visitors" => 2}
+      assert second == %{"date" => "2021-01-02", "visitors" => 1}
     end
   end
 end

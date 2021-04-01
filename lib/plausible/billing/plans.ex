@@ -32,6 +32,13 @@ defmodule Plausible.Billing.Plans do
       monthly_cost: "$150",
       limit: 20_000_000,
       cycle: "yearly"
+    },
+    %{
+      product_id: "648089",
+      cost: "$4800",
+      monthly_cost: "$400",
+      limit: 150_000_000,
+      cycle: "yearly"
     }
   ]
 
@@ -52,6 +59,10 @@ defmodule Plausible.Billing.Plans do
       monthly: monthly,
       yearly: yearly
     }
+  end
+
+  def for_product_id(product_id) do
+    Enum.find(@all_plans, fn plan -> plan[:product_id] == product_id end)
   end
 
   def suggested_plan_name(usage) do

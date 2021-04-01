@@ -1,0 +1,44 @@
+<div class="mx-auto mt-6 text-center">
+  <h1 class="text-3xl font-black dark:text-gray-100">Upgrade your free trial</h1>
+</div>
+
+<div>
+  <div class="flex flex-col w-full max-w-4xl px-4 mx-auto mt-4 md:flex-row">
+    <div class="flex-1 px-8 py-4 mt-8 mb-4 bg-white rounded shadow-md dark:bg-gray-800">
+      <div class="w-full py-4 dark:text-gray-100">
+        <span>You've used <b><%= PlausibleWeb.AuthView.delimit_integer(@usage) %></b> billable pageviews in the last 30 days</span>
+      </div>
+
+      <div class="w-full py-4 dark:text-gray-100">
+        <span>With this link you can upgrade to a plan with <b><%= PlausibleWeb.StatsView.large_number_format(@plan[:limit]) %> monthly pageviews</b></span>. You will be billed <%= @plan[:cost] %> on a <%= @plan[:cycle] %> basis.
+      </div>
+
+      <div class="mt-6 text-left">
+        <span class="inline-flex w-full rounded-md shadow-sm">
+          <button type="button" data-theme="none" data-product="<%= @plan[:product_id] %>" data-email="<%= @conn.assigns[:current_user].email %>" data-disable-logout="true" data-passthrough="<%= @conn.assigns[:current_user].id %>" data-success="/billing/upgrade-success" class="items-center button paddle_button">
+            <svg fill="currentColor" viewBox="0 0 20 20" class="inline w-4 h-4 mr-2"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+            Pay securely via Paddle
+          </button>
+        </span>
+      </div>
+    </div>
+
+    <div class="flex-1 pl-8 pt-14">
+      <h3 class="text-lg font-medium text-gray-900 leading-6 dark:text-gray-100">
+         What happens if I go over my page views limit?
+      </h3>
+      <div class="mt-2 text-base text-gray-500 leading-6 dark:text-gray-200">
+        You will never be charged extra for an occasional traffic spike. There are no surprise fees and your card will never be charged unexpectedly.<br /><br />
+        If your page views exceed your plan for two consecutive months, we will contact you to upgrade to a higher plan for the following month. You will have two weeks to make a decision. You can decide to continue with a higher plan or to cancel your account at that point.
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="mt-8 text-center dark:text-gray-100">
+  Questions? Contact <%= link("support@plausible.io", to: "mailto: support@plausible.io", class: "text-indigo-500") %>
+</div>
+
+<script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js"></script>
+<script>Paddle.Setup({vendor: 49430})</script>

@@ -6,14 +6,16 @@ import MoreLink from '../more-link'
 import PropBreakdown from './prop-breakdown'
 import numberFormatter from '../../number-formatter'
 import * as api from '../../api'
+import LazyLoader from '../../lazy-loader'
 
 export default class Conversions extends React.Component {
   constructor(props) {
     super(props)
     this.state = {loading: true}
+    this.onVisible = this.onVisible.bind(this)
   }
 
-  componentDidMount() {
+  onVisible() {
     this.fetchConversions()
   }
 
@@ -37,7 +39,7 @@ export default class Conversions extends React.Component {
       query.set('goal', goalName)
 
       return (
-        <Link to={{pathname: window.location.pathname, search: query.toString()}} style={{marginTop: '-26px'}} className="hover:underline block px-2">
+        <Link to={{pathname: window.location.pathname, search: query.toString()}} style={{marginTop: '-26px'}} className="block px-2 hover:underline">
           { goalName }
         </Link>
       )
@@ -50,14 +52,14 @@ export default class Conversions extends React.Component {
     return (
       <div className="my-2 text-sm" key={goal.name}>
         <div className="flex items-center justify-between my-2">
-          <div className="w-full h-8 relative dark:text-gray-300" style={{maxWidth: 'calc(100% - 16rem)'}}>
+          <div className="relative w-full h-8 dark:text-gray-300" style={{maxWidth: 'calc(100% - 16rem)'}}>
             <Bar count={goal.count} all={this.state.goals} bg="bg-red-50 dark:bg-gray-500 dark:bg-opacity-15" />
             {this.renderGoalText(goal.name)}
           </div>
           <div className="dark:text-gray-200">
-            <span className="font-medium inline-block w-20 text-right">{numberFormatter(goal.count)}</span>
-            <span className="font-medium inline-block w-20 text-right">{numberFormatter(goal.total_count)}</span>
-            <span className="font-medium inline-block w-20 text-right">{goal.conversion_rate}%</span>
+            <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.count)}</span>
+            <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.total_count)}</span>
+            <span className="inline-block w-20 font-medium text-right">{goal.conversion_rate}%</span>
           </div>
         </div>
         { renderProps && <PropBreakdown site={this.props.site} query={this.props.query} goal={goal} /> }
@@ -65,18 +67,14 @@ export default class Conversions extends React.Component {
     )
   }
 
-  render() {
+  renderInner() {
     if (this.state.loading) {
-      return (
-        <div className="w-full bg-white dark:bg-gray-825 shadow-xl rounded p-4" style={{height: '94px'}}>
-          <div className="loading my-2 mx-auto"><div></div></div>
-        </div>
-      )
+      return <div className="mx-auto my-2 loading"><div></div></div>
     } else if (this.state.goals) {
       return (
-        <div className="w-full bg-white dark:bg-gray-825 shadow-xl rounded p-4">
+        <React.Fragment>
           <h3 className="font-bold dark:text-gray-100">{this.props.title || "Goal Conversions"}</h3>
-          <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide">
+          <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>Goal</span>
             <div className="text-right">
               <span className="inline-block w-20">Uniques</span>
@@ -86,8 +84,16 @@ export default class Conversions extends React.Component {
           </div>
 
           { this.state.goals.map(this.renderGoal.bind(this)) }
-        </div>
+        </React.Fragment>
       )
     }
+  }
+
+  render() {
+    return (
+      <LazyLoader className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825" style={{minHeight: '94px'}} onVisible={this.onVisible}>
+        { this.renderInner() }
+      </LazyLoader>
+    )
   }
 }
