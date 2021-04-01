@@ -48,7 +48,7 @@ export default class SiteSwitcher extends React.Component {
     const { sites } = this.state;
 
     if (e.target.tagName === 'INPUT') return true;
-    if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.keyCode === 229 || !sites);
+    if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.keyCode === 229 || !sites) return;
 
     const siteNum = parseInt(e.key)
 
