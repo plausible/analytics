@@ -5,14 +5,16 @@ import FadeIn from '../../fade-in'
 import numberFormatter from '../../number-formatter'
 import Bar from '../bar'
 import * as api from '../../api'
+import LazyLoader from '../../lazy-loader'
 
 export default class Browsers extends React.Component {
   constructor(props) {
     super(props)
     this.state = {loading: true}
+    this.onVisible = this.onVisible.bind(this)
   }
 
-  componentDidMount() {
+  onVisible() {
     this.fetchBrowsers()
     if (this.props.timer) this.props.timer.onTick(this.fetchBrowsers.bind(this))
   }
@@ -52,7 +54,7 @@ export default class Browsers extends React.Component {
             </Link>
           </span>
         </div>
-        <span className="font-medium dark:text-gray-200">{numberFormatter(browser.count)} <span className="inline-block text-xs w-8 text-right">({browser.percentage}%)</span></span>
+        <span className="font-medium dark:text-gray-200">{numberFormatter(browser.count)} <span className="inline-block w-8 text-xs text-right">({browser.percentage}%)</span></span>
       </div>
     )
   }
@@ -68,7 +70,7 @@ export default class Browsers extends React.Component {
     if (this.state.browsers && this.state.browsers.length > 0) {
       return (
         <React.Fragment>
-          <div className="flex items-center mt-3 mb-2 justify-between text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide">
+          <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>{ key }</span>
             <span>{ this.label() }</span>
           </div>
@@ -76,18 +78,18 @@ export default class Browsers extends React.Component {
         </React.Fragment>
       )
     } else {
-      return <div className="text-center mt-44 font-medium text-gray-500 dark:text-gray-400">No data yet</div>
+      return <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">No data yet</div>
     }
   }
 
   render() {
     return (
-      <React.Fragment>
-        { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
+      <LazyLoader onVisible={this.onVisible}>
+        { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
         <FadeIn show={!this.state.loading}>
           { this.renderList() }
         </FadeIn>
-      </React.Fragment>
+      </LazyLoader>
     )
   }
 }

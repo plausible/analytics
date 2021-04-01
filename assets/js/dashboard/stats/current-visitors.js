@@ -25,11 +25,14 @@ export default class CurrentVisitors extends React.Component {
   render() {
     if (countFilters(this.props.query) !== 0) { return null }
 
+    const query = new URLSearchParams(window.location.search)
+    query.set('period', 'realtime')
+
     const { currentVisitors } = this.state;
     if (currentVisitors !== null) {
       return (
-        <Link to={`/${encodeURIComponent(this.props.site.domain)}?period=realtime`} className="block text-sm font-bold text-gray-500 dark:text-gray-300 mr-auto ml-2">
-          <svg className="w-2 mr-2 fill-current text-green-500 inline" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+        <Link to={{search: query.toString()}} className="block ml-2 mr-auto text-sm font-bold text-gray-500 dark:text-gray-300">
+          <svg className="inline w-2 mr-2 text-green-500 fill-current" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
             <circle cx="8" cy="8" r="8"/>
           </svg>
           {currentVisitors} current visitor{currentVisitors === 1 ? '' : 's'}

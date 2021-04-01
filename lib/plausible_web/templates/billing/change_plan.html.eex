@@ -52,11 +52,11 @@
               <%= render("_plan_option.html", volume: "100k", monthly_price: "$12", yearly_price: "$8") %>
               <%= render("_plan_option.html", volume: "200k", monthly_price: "$18", yearly_price: "$12") %>
               <%= render("_plan_option.html", volume: "500k", monthly_price: "$27", yearly_price: "$18") %>
-              <%= render("_plan_option.html", volume: "1m", monthly_price: "$48", yearly_price: "$32") %>
-              <%= render("_plan_option.html", volume: "2m", monthly_price: "$69", yearly_price: "$46") %>
-              <%= render("_plan_option.html", volume: "5m", monthly_price: "$99", yearly_price: "$69") %>
-              <%= render("_plan_option.html", volume: "10m", monthly_price: "$150", yearly_price: "$100") %>
-              <%= render("_plan_option.html", volume: "20m", monthly_price: "$225", yearly_price: "$150") %>
+              <%= render("_plan_option.html", volume: "1M", monthly_price: "$48", yearly_price: "$32") %>
+              <%= render("_plan_option.html", volume: "2M", monthly_price: "$69", yearly_price: "$46") %>
+              <%= render("_plan_option.html", volume: "5M", monthly_price: "$99", yearly_price: "$69") %>
+              <%= render("_plan_option.html", volume: "10M", monthly_price: "$150", yearly_price: "$100") %>
+              <%= render("_plan_option.html", volume: "20M", monthly_price: "$225", yearly_price: "$150") %>
             </tbody>
           </table>
         </div>

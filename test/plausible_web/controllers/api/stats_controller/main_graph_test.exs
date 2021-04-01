@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=7d")
       assert %{"labels" => labels} = json_response(conn, 200)
 
-      {:ok, first} = Timex.today() |> Timex.shift(days: -7) |> Timex.format("{ISOdate}")
+      {:ok, first} = Timex.today() |> Timex.shift(days: -6) |> Timex.format("{ISOdate}")
       {:ok, last} = Timex.today() |> Timex.format("{ISOdate}")
       assert List.first(labels) == first
       assert List.last(labels) == last
@@ -97,14 +97,14 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
       res = json_response(conn, 200)
-      assert %{"name" => "Bounce rate", "percentage" => 33.0, "change" => nil} in res["top_stats"]
+      assert %{"name" => "Bounce rate", "percentage" => 33, "change" => nil} in res["top_stats"]
     end
 
     test "calculates average visit duration", %{conn: conn, site: site} do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2019-01-01")
 
       res = json_response(conn, 200)
-      assert %{"name" => "Visit duration", "count" => 67.0, "change" => 100} in res["top_stats"]
+      assert %{"name" => "Visit duration", "duration" => 67, "change" => 100} in res["top_stats"]
     end
   end
 

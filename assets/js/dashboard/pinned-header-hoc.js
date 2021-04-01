@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const withPinnedHeader = (WrappedComponent, flagName) => {
+export const withPinnedHeader = (WrappedComponent, selector) => {
   return class extends React.Component {
     constructor(props) {
       super(props)
@@ -19,11 +19,12 @@ export const withPinnedHeader = (WrappedComponent, flagName) => {
         threshold: [0, 1]
       });
 
-      this.observer.observe(document.querySelector("#stats-container-top"));
+      this.el = document.querySelector(selector)
+      this.observer.observe(this.el);
     }
 
     componentWillUnmount() {
-      this.observer.unobserve(document.querySelector("#stats-container-top"));
+      this.observer.unobserve(this.el);
     }
 
     render() {

@@ -284,6 +284,11 @@ config :logger,
   level: log_level,
   backends: logger_backends[log_format]
 
+config :logger, Sentry.LoggerBackend,
+  capture_log_messages: true,
+  level: :error,
+  excluded_domains: []
+
 if log_format == "json" do
   config :logger, Ink,
     name: "plausible",

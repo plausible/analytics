@@ -12,7 +12,13 @@ defmodule PlausibleWeb.Api.InternalController do
   end
 
   def sites(conn, _) do
-    user = Repo.preload(conn.assigns[:current_user], :sites)
-    json(conn, Enum.map(user.sites, & &1.domain))
+    if conn.assigns[:current_user] do
+      user = Repo.preload(conn.assigns[:current_user], :sites)
+      json(conn, Enum.map(user.sites, & &1.domain))
+    else
+      conn
+      |> put_status(401)
+      |> json(%{error: "You need to be logged in to request a list of sites"})
+    end
   end
 end

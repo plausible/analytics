@@ -120,7 +120,7 @@ defmodule PlausibleWeb.SiteController do
     case Plausible.Goals.create(site, goal) do
       {:ok, _} ->
         conn
-        |> put_flash(:success, "Goal created succesfully")
+        |> put_flash(:success, "Goal created successfully")
         |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/goals")
 
       {:error, changeset} ->
@@ -138,7 +138,7 @@ defmodule PlausibleWeb.SiteController do
     Plausible.Goals.delete(goal_id)
 
     conn
-    |> put_flash(:success, "Goal deleted succesfully")
+    |> put_flash(:success, "Goal deleted successfully")
     |> redirect(to: "/#{URI.encode_www_form(website)}/settings/goals")
   end
 
@@ -252,7 +252,7 @@ defmodule PlausibleWeb.SiteController do
     |> Repo.update!()
 
     conn
-    |> put_flash(:success, "Google integration saved succesfully")
+    |> put_flash(:success, "Google integration saved successfully")
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/search-console")
   end
 
@@ -303,7 +303,7 @@ defmodule PlausibleWeb.SiteController do
     Plausible.ClickhouseRepo.clear_stats_for(site.domain)
 
     conn
-    |> put_flash(:success, "Site deleted succesfully along with all pageviews")
+    |> put_flash(:success, "Site deleted successfully along with all pageviews")
     |> redirect(to: "/sites")
   end
 
@@ -615,7 +615,7 @@ defmodule PlausibleWeb.SiteController do
     Repo.delete!(site.custom_domain)
 
     conn
-    |> put_flash(:success, "Custom domain deleted succesfully")
+    |> put_flash(:success, "Custom domain deleted successfully")
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/custom-domain")
   end
 

@@ -1,7 +1,5 @@
 defmodule PlausibleWeb.Router do
   use PlausibleWeb, :router
-  use Plug.ErrorHandler
-  use Sentry.Plug
   @two_weeks_in_seconds 60 * 60 * 24 * 14
 
   pipeline :browser do
@@ -97,7 +95,7 @@ defmodule PlausibleWeb.Router do
   end
 
   scope "/", PlausibleWeb do
-    pipe_through :browser
+    pipe_through [:browser, :csrf]
 
     get "/register", AuthController, :register_form
     post "/register", AuthController, :register
@@ -124,7 +122,7 @@ defmodule PlausibleWeb.Router do
 
     get "/password", AuthController, :password_form
     post "/password", AuthController, :set_password
-    post "/logout", AuthController, :logout
+    get "/logout", AuthController, :logout
     get "/settings", AuthController, :user_settings
     put "/settings", AuthController, :save_settings
     delete "/me", AuthController, :delete_me
@@ -140,6 +138,7 @@ defmodule PlausibleWeb.Router do
     get "/billing/change-plan/preview/:plan_id", BillingController, :change_plan_preview
     post "/billing/change-plan/:new_plan_id", BillingController, :change_plan
     get "/billing/upgrade", BillingController, :upgrade
+    get "/billing/upgrade/:plan_id", BillingController, :upgrade_to_plan
     get "/billing/upgrade-success", BillingController, :upgrade_success
 
     get "/sites", SiteController, :index
