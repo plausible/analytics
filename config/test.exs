@@ -18,14 +18,5 @@ config :plausible,
   paddle_api: Plausible.PaddleApi.Mock,
   google_api: Plausible.Google.Api.Mock
 
-config :geolix,
-  databases: [
-    %{
-      id: :country,
-      adapter: Geolix.Adapter.Fake,
-      data: %{{1, 1, 1, 1} => %{country: %{iso_code: "US"}}}
-    }
-  ]
-
 config :plausible,
   session_timeout: 0
