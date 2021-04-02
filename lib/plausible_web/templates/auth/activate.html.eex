@@ -18,11 +18,19 @@
       <div class="mt-16 text-sm dark:text-gray-100">
         Didn't receive an email?
       </div>
-      <ol class="list-decimal text-xs text-gray-500 leading-tight space-y-1 mt-1">
+      <ol class="list-disc text-xs text-gray-500 leading-tight space-y-1 mt-1">
         <li>Check your spam folder</li>
         <li><%= link("Send a new code", class: "underline text-indigo-600", to: "/activate/request-code", method: :post) %> to <%= @conn.assigns[:current_user].email %></li>
         <li>Contact <a class="underline text-indigo-600" href="mailto:support@plausible.io">support@plausible.io</a> if the problem persists</li>
       </ol>
+      <div class="mt-4 text-sm dark:text-gray-100">
+        Entered the wrong email address?
+      </div>
+      <ul class="list-disc text-xs text-gray-500 leading-tight mt-1">
+        <li>
+          <%= link("Delete this account", class: "underline text-indigo-600", to: "/me?redirect=/register", method: "delete", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"]) %> and start over
+        </li>
+      </ul>
     <% end %>
   <% else %>
     <div class="w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8">

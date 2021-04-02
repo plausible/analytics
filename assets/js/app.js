@@ -90,3 +90,30 @@ function showChangelogNotification(el) {
     })
   }
 }
+
+const embedButton = document.getElementById('generate-embed')
+
+if (embedButton) {
+  embedButton.addEventListener('click', function(e) {
+    const baseUrl = document.getElementById('base-url').value
+    const embedCode = document.getElementById('embed-code')
+    const theme = document.getElementById('theme').value.toLowerCase()
+    const background = document.getElementById('background').value
+
+    try {
+      const embedLink = new URL(document.getElementById('embed-link').value)
+      embedLink.searchParams.set('embed', 'true')
+      embedLink.searchParams.set('theme', theme)
+      if (background) {
+        embedLink.searchParams.set('background', background)
+      }
+
+      embedCode.value = `<iframe plausible-embed src="${embedLink.toString()}" scrolling="no" frameborder="0" loading="lazy" style="width: 1px; min-width: 100%; height: 1600px;"></iframe>
+<div style="font-size: 14px; padding-bottom: 14px;">Stats powered by <a target="_blank" style="color: #4F46E5; text-decoration: underline;" href="https://plausible.io">Plausible Analytics</a></div>
+<script async src="${baseUrl}/js/embed.host.js"></script>`
+    } catch (e) {
+      console.error(e)
+      embedCode.value = 'ERROR: Please enter a valid URL in the shared link field'
+    }
+  })
+}

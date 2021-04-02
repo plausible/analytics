@@ -30,8 +30,8 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   @impl Oban.Worker
-  def perform(_args, _job, billing_mod \\ Plausible.Billing) do
-    yesterday = Timex.today() |> Timex.shift(days: -1)
+  def perform(_args, _job, billing_mod \\ Plausible.Billing, today \\ Timex.today()) do
+    yesterday = today |> Timex.shift(days: -1)
 
     active_subscribers =
       Repo.all(

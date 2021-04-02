@@ -36,7 +36,7 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
   end
 
   defp report_result({error_msg, error_code}, domain) do
-    Logger.error(
+    Logger.warn(
       "Error obtaining SSL certificate for #{domain.domain}: #{error_msg} (code=#{error_code})"
     )
 

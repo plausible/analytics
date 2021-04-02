@@ -72,7 +72,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "count" => 3,
                  "entries" => 3,
                  "name" => "/",
-                 "visit_duration" => 66.66666666666667
+                 "visit_duration" => 67
                }
              ]
     end
@@ -86,7 +86,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "visit_duration" => 66.66666666666667,
+                 "visit_duration" => 67,
                  "count" => 3,
                  "entries" => 3,
                  "name" => "/"

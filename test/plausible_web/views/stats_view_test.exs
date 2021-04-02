@@ -32,15 +32,31 @@ defmodule PlausibleWeb.StatsView.Test do
     end
 
     test "1_000_000 becomes 1m" do
-      assert StatsView.large_number_format(1_000_000) == "1m"
+      assert StatsView.large_number_format(1_000_000) == "1M"
     end
 
     test "2_590_000 becomes 2.5m" do
-      assert StatsView.large_number_format(2_590_000) == "2.5m"
+      assert StatsView.large_number_format(2_590_000) == "2.5M"
     end
 
     test "99_999_999 becomes 99.9m" do
-      assert StatsView.large_number_format(99_999_999) == "99.9m"
+      assert StatsView.large_number_format(99_999_999) == "99.9M"
+    end
+
+    test "101_000_000 becomes 101m" do
+      assert StatsView.large_number_format(101_000_000) == "101M"
+    end
+
+    test "2_500_000_000 becomes 2.5bn" do
+      assert StatsView.large_number_format(2_500_000_000) == "2.5B"
+    end
+
+    test "25_500_000_000 becomes 25bn" do
+      assert StatsView.large_number_format(25_500_000_000) == "25.5B"
+    end
+
+    test "250_500_000_000 becomes 250bn" do
+      assert StatsView.large_number_format(250_500_000_000) == "250B"
     end
   end
 end

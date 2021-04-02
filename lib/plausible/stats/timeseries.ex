@@ -16,7 +16,12 @@ defmodule Plausible.Stats.Timeseries do
       |> Enum.into(%{})
 
     plot = Enum.map(steps, fn step -> groups[step] || 0 end)
-    labels = Enum.map(steps, fn step -> Timex.format!(step, "{ISOdate}") end)
+
+    labels =
+      Enum.map(steps, fn
+        step when is_binary(step) -> step
+        step -> Timex.format!(step, "{ISOdate}")
+      end)
 
     {plot, labels}
   end
@@ -35,6 +40,14 @@ defmodule Plausible.Stats.Timeseries do
     Enum.into(query.date_range, [])
   end
 
+  defp buckets(%Query{interval: "hour"} = query) do
+    Enum.map(0..23, fn step ->
+      Timex.to_datetime(query.date_range.first)
+      |> Timex.shift(hours: step)
+      |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
+    end)
+  end
+
   defp select_bucket(q, site, %Query{interval: "month"}) do
     from(
       e in q,
@@ -49,6 +62,15 @@ defmodule Plausible.Stats.Timeseries do
       e in q,
       select:
         {fragment("toDate(toTimeZone(?, ?)) as bucket", e.timestamp, ^site.timezone),
+         fragment("uniq(?)", e.user_id)}
+    )
+  end
+
+  defp select_bucket(q, site, %Query{interval: "hour"}) do
+    from(
+      e in q,
+      select:
+        {fragment("toStartOfHour(toTimeZone(?, ?)) as bucket", e.timestamp, ^site.timezone),
          fragment("uniq(?)", e.user_id)}
     )
   end

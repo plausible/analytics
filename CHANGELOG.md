@@ -9,10 +9,15 @@ All notable changes to this project will be documented in this file.
 - 30 day and 6 month keybindings (`T` and `S`, respectively) plausible/analytics#709
 - Site switching keybinds (1-9 for respective sites) plausible/analytics#735
 - Glob (wildcard) based pageview goals plausible/analytics#750
+- Support for embedding shared links in an iframe plausible/analytics#812
 
 ### Fixed
 - Capitalized date/time selection keybinds not working plausible/analytics#709
 - Invisible text on Google Search Console settings page in dark mode plausible/analytics#759
+- Disable analytics tracking when running Cypress tests
+- CSV reports can be downloaded via shared links plausible/analytics#884
+- Fixes weekly/monthly email report delivery over SMTP plausible/analytics#889
+- Disable self-tracking with self hosting plausible/analytics#907
 
 ## [1.2] - 2021-01-26
 

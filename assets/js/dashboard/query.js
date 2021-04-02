@@ -79,8 +79,8 @@ export function navigateToQuery(history, queryFrom, newData) {
 }
 
 class QueryLink extends React.Component {
-  constructor() {
-    super()
+  constructor(props) {
+    super(props)
     this.onClick = this.onClick.bind(this)
   }
 
