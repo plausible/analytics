@@ -19,7 +19,7 @@ defmodule Plausible.Stats.Fragments do
 
   defmacro bounce_rate() do
     quote do
-      fragment("toUInt32(round(sum(is_bounce * sign) / sum(sign) * 100))")
+      fragment("toUInt32(ifNotFinite(round(sum(is_bounce * sign) / sum(sign) * 100), 0))")
     end
   end
 
