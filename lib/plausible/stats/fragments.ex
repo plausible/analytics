@@ -25,7 +25,7 @@ defmodule Plausible.Stats.Fragments do
 
   defmacro visit_duration() do
     quote do
-      fragment("toUInt32(round(avg(duration * sign)))")
+      fragment("toUInt32(ifNotFinite(round(avg(duration * sign)), 0))")
     end
   end
 
