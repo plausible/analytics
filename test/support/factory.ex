@@ -147,6 +147,7 @@ defmodule Plausible.Factory do
 
   def shared_link_factory do
     %Plausible.Site.SharedLink{
+      name: "Link name",
       slug: Nanoid.generate()
     }
   end
