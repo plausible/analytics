@@ -4,6 +4,7 @@ defmodule Plausible.Site.SharedLink do
 
   schema "shared_links" do
     belongs_to :site, Plausible.Site
+    field :name, :string
     field :slug, :string
     field :password_hash, :string
     field :password, :string, virtual: true
@@ -13,8 +14,8 @@ defmodule Plausible.Site.SharedLink do
 
   def changeset(link, attrs \\ %{}) do
     link
-    |> cast(attrs, [:slug, :password])
-    |> validate_required([:slug])
+    |> cast(attrs, [:slug, :password, :name])
+    |> validate_required([:slug, :name])
     |> unique_constraint(:slug)
     |> hash_password()
   end
