@@ -493,23 +493,54 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "creates shared link without password", %{conn: conn, site: site} do
-      post(conn, "/sites/#{site.domain}/shared-links", %{"shared_link" => %{}})
+      post(conn, "/sites/#{site.domain}/shared-links", %{
+        "shared_link" => %{"name" => "Link name"}
+      })
 
       link = Repo.one(Plausible.Site.SharedLink)
 
       refute is_nil(link.slug)
       assert is_nil(link.password_hash)
+      assert link.name == "Link name"
     end
 
     test "creates shared link with password", %{conn: conn, site: site} do
       post(conn, "/sites/#{site.domain}/shared-links", %{
-        "shared_link" => %{"password" => "password"}
+        "shared_link" => %{"password" => "password", "name" => "New name"}
       })
 
       link = Repo.one(Plausible.Site.SharedLink)
 
       refute is_nil(link.slug)
       refute is_nil(link.password_hash)
+      assert link.name == "New name"
+    end
+  end
+
+  describe "GET /sites/:website/shared-links/edit" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "shows form to edit shared link", %{conn: conn, site: site} do
+      link = insert(:shared_link, site: site)
+      conn = get(conn, "/sites/#{site.domain}/shared-links/#{link.slug}/edit")
+
+      assert html_response(conn, 200) =~ "Edit shared link"
+    end
+  end
+
+  describe "PUT /sites/:website/shared-links/:slug" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "can update link name", %{conn: conn, site: site} do
+      link = insert(:shared_link, site: site)
+
+      put(conn, "/sites/#{site.domain}/shared-links/#{link.slug}", %{
+        "shared_link" => %{"name" => "Updated link name"}
+      })
+
+      link = Repo.one(Plausible.Site.SharedLink)
+
+      assert link.name == "Updated link name"
     end
   end
 

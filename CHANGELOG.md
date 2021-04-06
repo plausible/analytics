@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Site switching keybinds (1-9 for respective sites) plausible/analytics#735
 - Glob (wildcard) based pageview goals plausible/analytics#750
 - Support for embedding shared links in an iframe plausible/analytics#812
+- Add name/label to shared links plausible/analytics#910
 
 ### Fixed
 - Capitalized date/time selection keybinds not working plausible/analytics#709
