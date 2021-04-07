@@ -47,7 +47,7 @@ export function serializeQuery(query, extraQuery=[]) {
   return '?' + serialize(queryObj)
 }
 
-export function get(url, query, ...extraQuery) {
+export function get(url, query={}, ...extraQuery) {
   const headers = SHARED_LINK_AUTH ? {'X-Shared-Link-Auth': SHARED_LINK_AUTH} : {}
   url = url + serializeQuery(query, extraQuery)
   return fetch(url, {signal: abortController.signal, headers: headers})

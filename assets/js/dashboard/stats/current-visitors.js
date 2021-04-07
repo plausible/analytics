@@ -1,4 +1,5 @@
 import React from 'react';
+import * as api from '../api'
 import { Link } from 'react-router-dom'
 import { countFilters } from '../query';
 
@@ -14,11 +15,7 @@ export default class CurrentVisitors extends React.Component {
   }
 
   updateCount() {
-    return fetch(`/api/stats/${encodeURIComponent(this.props.site.domain)}/current-visitors`)
-      .then( response => {
-        if (!response.ok) { throw response }
-        return response.json()
-      })
+    return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/current-visitors`)
       .then((res) => this.setState({currentVisitors: res}))
   }
 
