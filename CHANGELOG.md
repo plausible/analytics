@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - CSV reports can be downloaded via shared links plausible/analytics#884
 - Fixes weekly/monthly email report delivery over SMTP plausible/analytics#889
 - Disable self-tracking with self hosting plausible/analytics#907
+- Fix current visitors request when using shared links
 
 ## [1.2] - 2021-01-26
 
