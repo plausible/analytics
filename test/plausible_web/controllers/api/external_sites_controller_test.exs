@@ -2,7 +2,12 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   use PlausibleWeb.ConnCase
   import Plausible.TestUtils
 
-  setup [:create_user, :create_api_key, :use_api_key]
+  setup %{conn: conn} do
+    user = insert(:user)
+    api_key = insert(:api_key, user: user, scopes: ["sites:provision:*"])
+    conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+    {:ok, user: user, api_key: api_key, conn: conn}
+  end
 
   describe "POST /api/v1/sites" do
     test "can create a site", %{conn: conn} do
@@ -39,6 +44,20 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
       assert json_response(conn, 400) == %{
                "error" => "domain can't be blank"
+             }
+    end
+
+    test "cannot access with a bad API key scope", %{conn: conn, user: user} do
+      api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
+
+      conn =
+        conn
+        |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
+        |> post("/api/v1/sites", %{"site" => %{"domain" => "domain.com"}})
+
+      assert json_response(conn, 401) == %{
+               "error" =>
+                 "Invalid API key. Please make sure you're using a valid API key with access to the resource you've requested."
              }
     end
   end

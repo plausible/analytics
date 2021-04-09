@@ -5,6 +5,7 @@ defmodule Plausible.Auth.ApiKey do
   @required [:user_id, :key, :name]
   schema "api_keys" do
     field :name, :string
+    field :scopes, {:array, :string}, default: ["stats:read:*"]
 
     field :key, :string, virtual: true
     field :key_hash, :string

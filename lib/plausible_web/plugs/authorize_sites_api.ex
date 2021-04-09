@@ -21,14 +21,20 @@ defmodule PlausibleWeb.AuthorizeSitesApiPlug do
       {:error, :invalid_api_key} ->
         unauthorized(
           conn,
-          "Invalid API key. Please make sure you're using a valid API key with access to the site you've requested."
+          "Invalid API key. Please make sure you're using a valid API key with access to the resource you've requested."
         )
     end
   end
 
   defp verify_access(api_key) do
     hashed_key = ApiKey.do_hash(api_key)
-    found_key = Repo.get_by(ApiKey, key_hash: hashed_key)
+
+    found_key =
+      Repo.one(
+        from a in ApiKey,
+          where: a.key_hash == ^hashed_key,
+          where: fragment("? @> ?", a.scopes, ["sites:provision:*"])
+      )
 
     cond do
       found_key -> {:ok, found_key}
