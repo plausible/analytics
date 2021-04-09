@@ -17,6 +17,7 @@ defmodule Plausible.Site.SharedLink do
     |> cast(attrs, [:slug, :password, :name])
     |> validate_required([:slug, :name])
     |> unique_constraint(:slug)
+    |> unique_constraint(:name, name: :shared_links_site_id_name_index)
     |> hash_password()
   end
 

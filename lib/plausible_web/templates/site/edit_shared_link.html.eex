@@ -8,5 +8,5 @@
     </div>
   </div>
 
-  <%= submit "Edit shared link", class: "button mt-4 w-full" %>
+  <%= submit "Update", class: "button mt-4 w-full" %>
 <% end %>
