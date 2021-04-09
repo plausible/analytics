@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.AuthorizeApiStatsPlug do
+defmodule PlausibleWeb.AuthorizeStatsApiPlug do
   import Plug.Conn
   use Plausible.Repo
   alias Plausible.Auth.ApiKey

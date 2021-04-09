@@ -36,10 +36,9 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.AuthorizeStatsPlug
   end
 
-  pipeline :external_stats_api do
+  pipeline :public_api do
     plug :accepts, ["json"]
     plug PlausibleWeb.Firewall
-    plug PlausibleWeb.AuthorizeApiStatsPlug
   end
 
   if Application.get_env(:plausible, :environment) == "dev" do
@@ -73,12 +72,19 @@ defmodule PlausibleWeb.Router do
   end
 
   scope "/api/v1/stats", PlausibleWeb.Api do
-    pipe_through :external_stats_api
+    pipe_through [:public_api, PlausibleWeb.AuthorizeStatsApiPlug]
 
     get "/realtime/visitors", ExternalStatsController, :realtime_visitors
     get "/aggregate", ExternalStatsController, :aggregate
     get "/breakdown", ExternalStatsController, :breakdown
     get "/timeseries", ExternalStatsController, :timeseries
+  end
+
+  scope "/api/v1/sites", PlausibleWeb.Api do
+    pipe_through [:public_api, PlausibleWeb.AuthorizeSitesApiPlug]
+
+    post "/", ExternalSitesController, :create_site
+    put "/:domain/shared-links/:link_name", ExternalSitesController, :find_or_create_shared_link
   end
 
   scope "/api", PlausibleWeb do
