@@ -541,6 +541,40 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
+  def edit_shared_link(conn, %{"website" => website, "slug" => slug}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug)
+    changeset = Plausible.Site.SharedLink.changeset(shared_link, %{})
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("edit_shared_link.html",
+      site: site,
+      changeset: changeset,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
+  end
+
+  def update_shared_link(conn, %{"website" => website, "slug" => slug, "shared_link" => params}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug)
+    changeset = Plausible.Site.SharedLink.changeset(shared_link, params)
+
+    case Repo.update(changeset) do
+      {:ok, _created} ->
+        redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
+
+      {:error, changeset} ->
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("edit_shared_link.html",
+          site: site,
+          changeset: changeset,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+    end
+  end
+
   def delete_shared_link(conn, %{"website" => website, "slug" => slug}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
 

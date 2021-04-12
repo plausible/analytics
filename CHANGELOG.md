@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Glob (wildcard) based pageview goals plausible/analytics#750
 - Support for embedding shared links in an iframe plausible/analytics#812
 - Include a basic IP-To-Country database by default plausible/analytics#906
+- Add name/label to shared links plausible/analytics#910
 
 ### Fixed
 - Capitalized date/time selection keybinds not working plausible/analytics#709
@@ -18,6 +19,8 @@ All notable changes to this project will be documented in this file.
 - Disable analytics tracking when running Cypress tests
 - CSV reports can be downloaded via shared links plausible/analytics#884
 - Fixes weekly/monthly email report delivery over SMTP plausible/analytics#889
+- Disable self-tracking with self hosting plausible/analytics#907
+- Fix current visitors request when using shared links
 
 ## [1.2] - 2021-01-26
 
