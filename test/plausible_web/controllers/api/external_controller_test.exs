@@ -454,6 +454,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert event.referrer == ""
   end
 
+  # Fake data is set up in config/test.exs
   test "looks up the country from the ip address", %{conn: conn} do
     params = %{
       name: "pageview",
@@ -463,12 +464,12 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     conn
     |> put_req_header("content-type", "text/plain")
-    |> put_req_header("x-forwarded-for", "78.76.58.149")
+    |> put_req_header("x-forwarded-for", "1.1.1.1")
     |> post("/api/event", Jason.encode!(params))
 
     pageview = get_event("external-controller-test-20.com")
 
-    assert pageview.country_code == "SE"
+    assert pageview.country_code == "US"
   end
 
   test "URL is decoded", %{conn: conn} do
