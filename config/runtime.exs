@@ -56,7 +56,7 @@ cron_enabled = String.to_existing_atom(System.get_env("CRON_ENABLED", "false"))
 custom_domain_server_ip = System.get_env("CUSTOM_DOMAIN_SERVER_IP")
 custom_domain_server_user = System.get_env("CUSTOM_DOMAIN_SERVER_USER")
 custom_domain_server_password = System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD")
-geolite2_country_db = System.get_env("GEOLITE2_COUNTRY_DB")
+geolite2_country_db = System.get_env("EOLITE2_COUNTRY_DB", "priv/geodb/dbip-country.mmdb")
 disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
 disable_registration = String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false"))
 hcaptcha_sitekey = System.get_env("HCAPTCHA_SITEKEY")
@@ -243,7 +243,7 @@ config :kaffy,
     ]
   ]
 
-if geolite2_country_db do
+if config_env() != :test && geolite2_country_db do
   config :geolix,
     databases: [
       %{
