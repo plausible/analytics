@@ -201,6 +201,8 @@ if config_env() == :prod && !disable_cron do
   ]
 
   config :plausible, Oban,
+    # Keep 30 days history
+    plugins: [{Oban.Plugins.Pruner, max_age: 2_592_000}],
     repo: Plausible.Repo,
     queues: if(is_selfhost, do: base_queues, else: base_queues ++ extra_queues),
     crontab: if(is_selfhost, do: base_cron, else: base_cron ++ extra_cron)
