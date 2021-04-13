@@ -20,7 +20,17 @@ if base_url.scheme not in ["http", "https"] do
         }`"
 end
 
-secret_key_base = System.fetch_env!("SECRET_KEY_BASE")
+secret_key_base =
+  case System.get_env("SECRET_KEY_BASE") do
+    nil ->
+      raise "SECRET_KEY_BASE configuration option is required. See https://plausible.io/docs/self-hosting-configuration#server"
+
+    key when byte_size(key) < 64 ->
+      raise "SECRET_KEY_BASE must be at least 64 bytes long. See https://plausible.io/docs/self-hosting-configuration#server"
+
+    key ->
+      key
+  end
 
 db_url =
   System.get_env(
@@ -56,7 +66,13 @@ cron_enabled = String.to_existing_atom(System.get_env("CRON_ENABLED", "false"))
 custom_domain_server_ip = System.get_env("CUSTOM_DOMAIN_SERVER_IP")
 custom_domain_server_user = System.get_env("CUSTOM_DOMAIN_SERVER_USER")
 custom_domain_server_password = System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD")
-geolite2_country_db = System.get_env("GEOLITE2_COUNTRY_DB")
+
+geolite2_country_db =
+  System.get_env(
+    "GEOLITE2_COUNTRY_DB",
+    Application.app_dir(:plausible) <> "/priv/geodb/dbip-country.mmdb"
+  )
+
 disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
 disable_registration = String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false"))
 hcaptcha_sitekey = System.get_env("HCAPTCHA_SITEKEY")
@@ -201,6 +217,8 @@ if config_env() == :prod && !disable_cron do
   ]
 
   config :plausible, Oban,
+    # Keep 30 days history
+    prune: {:maxage, 2_592_000},
     repo: Plausible.Repo,
     queues: if(is_selfhost, do: base_queues, else: base_queues ++ extra_queues),
     crontab: if(is_selfhost, do: base_cron, else: base_cron ++ extra_cron)
@@ -243,7 +261,7 @@ config :kaffy,
     ]
   ]
 
-if geolite2_country_db do
+if config_env() != :test && geolite2_country_db do
   config :geolix,
     databases: [
       %{

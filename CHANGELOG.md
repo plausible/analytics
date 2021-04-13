@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Site switching keybinds (1-9 for respective sites) plausible/analytics#735
 - Glob (wildcard) based pageview goals plausible/analytics#750
 - Support for embedding shared links in an iframe plausible/analytics#812
+- Include a basic IP-To-Country database by default plausible/analytics#906
 - Add name/label to shared links plausible/analytics#910
 
 ### Fixed
@@ -19,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - CSV reports can be downloaded via shared links plausible/analytics#884
 - Fixes weekly/monthly email report delivery over SMTP plausible/analytics#889
 - Disable self-tracking with self hosting plausible/analytics#907
+- Fix current visitors request when using shared links
 
 ## [1.2] - 2021-01-26
 

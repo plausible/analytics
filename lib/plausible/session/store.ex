@@ -1,7 +1,6 @@
 defmodule Plausible.Session.Store do
   use GenServer
   use Plausible.Repo
-  import Ecto.Query, only: [from: 2]
   require Logger
 
   @garbage_collect_interval_milliseconds 60 * 1000
@@ -14,29 +13,7 @@ defmodule Plausible.Session.Store do
     buffer = Keyword.get(opts, :buffer, Plausible.Session.WriteBuffer)
     timer = Process.send_after(self(), :garbage_collect, @garbage_collect_interval_milliseconds)
 
-    latest_sessions =
-      from(
-        s in "sessions",
-        where: s.timestamp >= fragment("now() - INTERVAL ? SECOND", ^forget_session_after()),
-        group_by: s.session_id,
-        select: %{session_id: s.session_id, timestamp: max(s.timestamp)}
-      )
-
-    sessions =
-      try do
-        Plausible.ClickhouseRepo.all(
-          from s in Plausible.ClickhouseSession,
-            join: ls in subquery(latest_sessions),
-            on: s.session_id == ls.session_id and s.timestamp == ls.timestamp,
-            order_by: s.timestamp
-        )
-        |> Enum.map(fn s -> {{s.domain, s.user_id}, s} end)
-        |> Enum.into(%{})
-      rescue
-        _e -> %{}
-      end
-
-    {:ok, %{timer: timer, sessions: sessions, buffer: buffer}}
+    {:ok, %{timer: timer, sessions: %{}, buffer: buffer}}
   end
 
   def on_event(event, prev_user_id, pid \\ __MODULE__) do
