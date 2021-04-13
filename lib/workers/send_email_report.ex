@@ -46,12 +46,6 @@ defmodule Plausible.Workers.SendEmailReport do
     :ok
   end
 
-  defp gen_login_link("Weekly"),
-    do: PlausibleWeb.Endpoint.url() <> "/login?utm_medium=email&utm_source=weekly-report"
-
-  defp gen_login_link(_),
-    do: PlausibleWeb.Endpoint.url() <> "/login?utm_medium=email&utm_source=monthly-report"
-
   defp send_report(email, site, name, unsubscribe_link, query) do
     {pageviews, unique_visitors} = Stats.pageviews_and_visitors(site, query)
 
@@ -64,7 +58,7 @@ defmodule Plausible.Workers.SendEmailReport do
     referrers = Stats.top_sources(site, query, 5, 1, [])
     pages = Stats.top_pages(site, query, 5, 1, [])
     user = Plausible.Auth.find_user_by(email: email)
-    login_link = user && Plausible.Sites.is_owner?(user.id, site) && gen_login_link(name)
+    login_link = user && Plausible.Sites.is_owner?(user.id, site)
 
     template =
       PlausibleWeb.Email.weekly_report(email, site,
@@ -79,8 +73,7 @@ defmodule Plausible.Workers.SendEmailReport do
         login_link: login_link,
         pages: pages,
         query: query,
-        name: name,
-        login_link: login_link
+        name: name
       )
 
     try do
