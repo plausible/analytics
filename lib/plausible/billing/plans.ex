@@ -8,7 +8,8 @@ defmodule Plausible.Billing.Plans do
     %{product_id: "597309", cost: "$69", limit: 2_000_000, cycle: "monthly"},
     %{product_id: "597311", cost: "$99", limit: 5_000_000, cycle: "monthly"},
     %{product_id: "642352", cost: "$150", limit: 10_000_000, cycle: "monthly"},
-    %{product_id: "642355", cost: "$225", limit: 20_000_000, cycle: "monthly"}
+    %{product_id: "642355", cost: "$225", limit: 20_000_000, cycle: "monthly"},
+    %{product_id: "650652", cost: "$330", limit: 50_000_000, cycle: "monthly"}
   ]
 
   @yearly_plans [
@@ -31,6 +32,13 @@ defmodule Plausible.Billing.Plans do
       cost: "$1800",
       monthly_cost: "$150",
       limit: 20_000_000,
+      cycle: "yearly"
+    },
+    %{
+      product_id: "650653",
+      cost: "$2640",
+      monthly_cost: "$220",
+      limit: 50_000_000,
       cycle: "yearly"
     },
     %{
