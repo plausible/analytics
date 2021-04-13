@@ -25,19 +25,6 @@ defmodule Plausible.Workers.SendEmailReportTest do
         to: [nil: "user2@email.com"]
       )
     end
-
-    test "includes correct login link in email" do
-      user = insert(:user)
-      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern", members: [user])
-      insert(:weekly_report, site: site, recipients: [user.email])
-
-      perform(%{"site_id" => site.id, "interval" => "weekly"})
-
-      user_email = user.email
-      assert_delivered_email_matches(%{to: [{_, ^user_email}], html_body: html_body})
-
-      assert html_body =~ "/login?utm_medium=email&amp;utm_source=weekly-report"
-    end
   end
 
   describe "monthly_reports" do
@@ -62,19 +49,6 @@ defmodule Plausible.Workers.SendEmailReportTest do
         subject: "#{last_month} report for #{site.domain}",
         to: [nil: "user2@email.com"]
       )
-    end
-
-    test "includes correct login link in email" do
-      user = insert(:user)
-      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern", members: [user])
-      insert(:monthly_report, site: site, recipients: [user.email])
-
-      perform(%{"site_id" => site.id, "interval" => "monthly"})
-
-      user_email = user.email
-      assert_delivered_email_matches(%{to: [{_, ^user_email}], html_body: html_body})
-
-      assert html_body =~ "/login?utm_medium=email&amp;utm_source=monthly-report"
     end
   end
 end
