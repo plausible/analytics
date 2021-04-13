@@ -20,7 +20,17 @@ if base_url.scheme not in ["http", "https"] do
         }`"
 end
 
-secret_key_base = System.fetch_env!("SECRET_KEY_BASE")
+secret_key_base =
+  case System.get_env("SECRET_KEY_BASE") do
+    nil ->
+      raise "SECRET_KEY_BASE configuration option is required. See https://plausible.io/docs/self-hosting-configuration#server"
+
+    key when byte_size(key) < 64 ->
+      raise "SECRET_KEY_BASE must be at least 64 bytes long. See https://plausible.io/docs/self-hosting-configuration#server"
+
+    key ->
+      key
+  end
 
 db_url =
   System.get_env(
