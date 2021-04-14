@@ -2,6 +2,7 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
   use Plausible.Repo
   use Oban.Worker, queue: :provision_ssl_certificates, max_attempts: 1
   require Logger
+  @timeout 20_000
 
   @impl Oban.Worker
   def perform(_args, _job, ssh \\ SSHEx) do
@@ -25,7 +26,9 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
       {:ok, res, code} =
         ssh.run(
           conn,
-          'sudo certbot certonly --webroot -w /root/webroot -n -d \"#{domain.domain}\"'
+          'sudo certbot certonly --webroot -w /root/webroot -n -d \"#{domain.domain}\"',
+          channel_timeout: @timeout,
+          exec_timeout: @timeout
         )
 
       report_result({res, code}, domain)
