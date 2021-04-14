@@ -38,14 +38,16 @@ defmodule Plausible.Sites do
     base <> domain <> "?auth=" <> link.slug
   end
 
-  def get_for_user!(user_id, domain) do
-    Repo.one!(
-      from s in Plausible.Site,
-        join: sm in Plausible.Site.Membership,
-        on: sm.site_id == s.id,
-        where: sm.user_id == ^user_id,
-        where: s.domain == ^domain,
-        select: s
+  def get_for_user!(user_id, domain), do: Repo.one!(get_for_user_q(user_id, domain))
+  def get_for_user(user_id, domain), do: Repo.one(get_for_user_q(user_id, domain))
+
+  def get_for_user_q(user_id, domain) do
+    from(s in Plausible.Site,
+      join: sm in Plausible.Site.Membership,
+      on: sm.site_id == s.id,
+      where: sm.user_id == ^user_id,
+      where: s.domain == ^domain,
+      select: s
     )
   end
 
