@@ -9,13 +9,13 @@ defmodule Plausible.Workers.SslCertificatesTest do
 
     ssh_stub =
       stub(SSHEx, :connect, fn _cmd -> {:ok, nil} end)
-      |> stub(:run, fn _conn, _cmd -> {:ok, "", 0} end)
+      |> stub(:run, fn _conn, _cmd, _opts -> {:ok, "", 0} end)
 
     ProvisionSslCertificates.perform(nil, nil, ssh_stub)
 
     assert_receive(
       {SSHEx, :run,
-       [nil, 'sudo certbot certonly --webroot -w /root/webroot -n -d "custom-site.com"']}
+       [nil, 'sudo certbot certonly --webroot -w /root/webroot -n -d "custom-site.com"', _]}
     )
   end
 
@@ -25,7 +25,7 @@ defmodule Plausible.Workers.SslCertificatesTest do
 
     ssh_stub =
       stub(SSHEx, :connect, fn _cmd -> {:ok, nil} end)
-      |> stub(:run, fn _conn, _cmd -> {:ok, "", 0} end)
+      |> stub(:run, fn _conn, _cmd, _opts -> {:ok, "", 0} end)
 
     ProvisionSslCertificates.perform(nil, nil, ssh_stub)
 
@@ -39,7 +39,7 @@ defmodule Plausible.Workers.SslCertificatesTest do
 
     ssh_stub =
       stub(SSHEx, :connect, fn _cmd -> {:ok, nil} end)
-      |> stub(:run, fn _conn, _cmd -> {:ok, "", 1} end)
+      |> stub(:run, fn _conn, _cmd, _opts -> {:ok, "", 1} end)
 
     ProvisionSslCertificates.perform(nil, nil, ssh_stub)
 
