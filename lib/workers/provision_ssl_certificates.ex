@@ -22,7 +22,12 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
       )
 
     for domain <- recent_custom_domains do
-      {:ok, res, code} = ssh.run(conn, 'sudo certbot certonly --nginx -n -d \"#{domain.domain}\"')
+      {:ok, res, code} =
+        ssh.run(
+          conn,
+          'sudo certbot certonly --webroot -w /root/webroot -n -d \"#{domain.domain}\"'
+        )
+
       report_result({res, code}, domain)
     end
 
