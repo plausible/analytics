@@ -13,7 +13,10 @@ defmodule Plausible.Workers.SslCertificatesTest do
 
     ProvisionSslCertificates.perform(nil, nil, ssh_stub)
 
-    assert_receive({SSHEx, :run, [nil, 'sudo certbot certonly --nginx -n -d "custom-site.com"']})
+    assert_receive(
+      {SSHEx, :run,
+       [nil, 'sudo certbot certonly --webroot -w /root/webroot -n -d "custom-site.com"']}
+    )
   end
 
   test "sets has_ssl_certficate=true if the ssh command is succesful" do
