@@ -3,6 +3,7 @@ defmodule Plausible.Auth.ApiKey do
   import Ecto.Changeset
 
   @required [:user_id, :key, :name]
+  @optional [:scopes]
   schema "api_keys" do
     field :name, :string
     field :scopes, {:array, :string}, default: ["stats:read:*"]
@@ -18,7 +19,7 @@ defmodule Plausible.Auth.ApiKey do
 
   def changeset(schema, attrs \\ %{}) do
     schema
-    |> cast(attrs, @required)
+    |> cast(attrs, @required ++ @optional)
     |> validate_required(@required)
     |> process_key
   end

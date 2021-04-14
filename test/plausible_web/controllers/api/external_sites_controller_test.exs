@@ -13,10 +13,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     test "can create a site", %{conn: conn} do
       conn =
         post(conn, "/api/v1/sites", %{
-          "site" => %{
-            "domain" => "some-site.domain",
-            "timezone" => "Europe/Tallinn"
-          }
+          "domain" => "some-site.domain",
+          "timezone" => "Europe/Tallinn"
         })
 
       assert json_response(conn, 200) == %{
@@ -28,9 +26,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     test "timezone defaults to Etc/Greenwich", %{conn: conn} do
       conn =
         post(conn, "/api/v1/sites", %{
-          "site" => %{
-            "domain" => "some-site.domain"
-          }
+          "domain" => "some-site.domain"
         })
 
       assert json_response(conn, 200) == %{
@@ -66,7 +62,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     setup :create_site
 
     test "can add a shared link to a site", %{conn: conn, site: site} do
-      conn = put(conn, "/api/v1/sites/#{site.domain}/shared-links/Wordpress")
+      conn = put(conn, "/api/v1/sites/shared-links/Wordpress?site_id=#{site.domain}")
 
       res = json_response(conn, 200)
       assert res["name"] == "Wordpress"
@@ -74,13 +70,27 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     end
 
     test "is idempotent find or create op", %{conn: conn, site: site} do
-      conn = put(conn, "/api/v1/sites/#{site.domain}/shared-links/Wordpress")
+      conn = put(conn, "/api/v1/sites/shared-links/Wordpress?site_id=#{site.domain}")
 
       %{"url" => url} = json_response(conn, 200)
 
-      conn = put(conn, "/api/v1/sites/#{site.domain}/shared-links/Wordpress")
+      conn = put(conn, "/api/v1/sites/shared-links/Wordpress?site_id=#{site.domain}")
 
       assert %{"url" => ^url} = json_response(conn, 200)
+    end
+
+    test "returns 400 when site id missing", %{conn: conn} do
+      conn = put(conn, "/api/v1/sites/shared-links/Wordpress")
+
+      res = json_response(conn, 400)
+      assert res["error"] == "Query parameter `site_id` is required to create a shared link"
+    end
+
+    test "returns 404 when site id is non existent", %{conn: conn} do
+      conn = put(conn, "/api/v1/sites/shared-links/Wordpress?site_id=bad")
+
+      res = json_response(conn, 404)
+      assert res["error"] == "Site could not be found"
     end
   end
 end
