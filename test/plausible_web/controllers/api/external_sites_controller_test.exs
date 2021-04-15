@@ -23,7 +23,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
              }
     end
 
-    test "timezone defaults to Etc/Greenwich", %{conn: conn} do
+    test "timezone defaults to Etc/UTC", %{conn: conn} do
       conn =
         post(conn, "/api/v1/sites", %{
           "domain" => "some-site.domain"
@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
       assert json_response(conn, 200) == %{
                "domain" => "some-site.domain",
-               "timezone" => "Etc/Greenwich"
+               "timezone" => "Etc/UTC"
              }
     end
 
