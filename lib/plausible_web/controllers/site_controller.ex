@@ -517,7 +517,7 @@ defmodule PlausibleWeb.SiteController do
   def create_shared_link(conn, %{"website" => website, "shared_link" => link}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
 
-    case Sites.create_shared_link(site, link["name"]) do
+    case Sites.create_shared_link(site, link["name"], link["password"]) do
       {:ok, _created} ->
         redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
 
