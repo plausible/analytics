@@ -41,7 +41,7 @@ defmodule PlausibleWeb.SiteController do
   def create_site(conn, %{"site" => site_params}) do
     user = conn.assigns[:current_user]
 
-    case insert_site(user.id, site_params) do
+    case Sites.create(user.id, site_params) do
       {:ok, %{site: site}} ->
         Plausible.Slack.notify("#{user.name} created #{site.domain} [email=#{user.email}]")
 
@@ -517,16 +517,7 @@ defmodule PlausibleWeb.SiteController do
   def create_shared_link(conn, %{"website" => website, "shared_link" => link}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
 
-    changes =
-      Plausible.Site.SharedLink.changeset(
-        %Plausible.Site.SharedLink{
-          site_id: site.id,
-          slug: Nanoid.generate()
-        },
-        link
-      )
-
-    case Repo.insert(changes) do
+    case Sites.create_shared_link(site, link["name"]) do
       {:ok, _created} ->
         redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
 
@@ -651,22 +642,5 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> put_flash(:success, "Custom domain deleted successfully")
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/custom-domain")
-  end
-
-  defp insert_site(user_id, params) do
-    site_changeset = Plausible.Site.changeset(%Plausible.Site{}, params)
-
-    Ecto.Multi.new()
-    |> Ecto.Multi.insert(:site, site_changeset)
-    |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
-      membership_changeset =
-        Plausible.Site.Membership.changeset(%Plausible.Site.Membership{}, %{
-          site_id: site.id,
-          user_id: user_id
-        })
-
-      repo.insert(membership_changeset)
-    end)
-    |> Repo.transaction()
   end
 end
