@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
         H.bad_request(conn, "Parameter `name` is required to create a shared link")
 
       e ->
-        H.bad_request(400, "Something went wrong: #{inspect(e)}")
+        H.bad_request(conn, "Something went wrong: #{inspect(e)}")
     end
   end
 
