@@ -19,14 +19,14 @@ defmodule Plausible.Sites do
     |> Repo.transaction()
   end
 
-  def create_shared_link(site, name) do
+  def create_shared_link(site, name, password \\ nil) do
     changes =
       SharedLink.changeset(
         %SharedLink{
           site_id: site.id,
           slug: Nanoid.generate()
         },
-        %{name: name}
+        %{name: name, password: password}
       )
 
     Repo.insert(changes)
