@@ -2,6 +2,7 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
   import Plug.Conn
   use Plausible.Repo
   alias Plausible.Auth.ApiKey
+  alias PlausibleWeb.Api.Helpers, as: H
 
   def init(options) do
     options
@@ -13,19 +14,19 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
       assign(conn, :site, site)
     else
       {:error, :missing_api_key} ->
-        unauthorized(
+        H.unauthorized(
           conn,
           "Missing API key. Please use a valid Plausible API key as a Bearer Token."
         )
 
       {:error, :missing_site_id} ->
-        bad_request(
+        H.bad_request(
           conn,
           "Missing site ID. Please provide the required site_id parameter with your request."
         )
 
       {:error, :invalid_api_key} ->
-        unauthorized(
+        H.unauthorized(
           conn,
           "Invalid API key or site ID. Please make sure you're using a valid API key with access to the site you've requested."
         )
@@ -55,19 +56,5 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
       "Bearer " <> token -> {:ok, String.trim(token)}
       _ -> {:error, :missing_api_key}
     end
-  end
-
-  defp bad_request(conn, msg) do
-    conn
-    |> put_status(400)
-    |> Phoenix.Controller.json(%{error: msg})
-    |> halt()
-  end
-
-  defp unauthorized(conn, msg) do
-    conn
-    |> put_status(401)
-    |> Phoenix.Controller.json(%{error: msg})
-    |> halt()
   end
 end

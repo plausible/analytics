@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   use Plausible.Repo
   use Plug.ErrorHandler
   alias Plausible.Sites
+  alias PlausibleWeb.Api.Helpers, as: H
 
   def create_site(conn, params) do
     user_id = conn.assigns[:current_user_id]
@@ -18,8 +19,16 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
-  def find_or_create_shared_link(conn, %{"link_name" => link_name} = params) do
-    with {:ok, site_id} <- Map.fetch(params, "site_id"),
+  defp expect_param_key(params, key) do
+    case Map.fetch(params, key) do
+      :error -> {:missing, key}
+      res -> res
+    end
+  end
+
+  def find_or_create_shared_link(conn, params) do
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, link_name} <- expect_param_key(params, "name"),
          site when not is_nil(site) <- Sites.get_for_user(conn.assigns[:current_user_id], site_id) do
       shared_link = Repo.get_by(Plausible.Site.SharedLink, site_id: site.id, name: link_name)
 
@@ -38,19 +47,16 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       end
     else
       nil ->
-        conn
-        |> put_status(404)
-        |> json(%{error: "Site could not be found"})
+        H.not_found(conn, "Site could not be found")
 
-      :error ->
-        conn
-        |> put_status(400)
-        |> json(%{error: "Query parameter `site_id` is required to create a shared link"})
+      {:missing, "site_id"} ->
+        H.bad_request(conn, "Parameter `site_id` is required to create a shared link")
+
+      {:missing, "name"} ->
+        H.bad_request(conn, "Parameter `name` is required to create a shared link")
 
       e ->
-        conn
-        |> put_status(400)
-        |> json(%{error: "Something went wrong: #{inspect(e)}"})
+        H.bad_request(400, "Something went wrong: #{inspect(e)}")
     end
   end
 
