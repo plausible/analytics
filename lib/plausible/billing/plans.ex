@@ -74,20 +74,20 @@ defmodule Plausible.Billing.Plans do
   end
 
   def subscription_quota("free_10k"), do: "10k"
+
   def subscription_quota(product_id) do
     case for_product_id(product_id) do
       nil -> raise "Unknown quota for subscription #{product_id}"
       product -> number_format(product[:limit])
-
     end
   end
 
   def subscription_interval("free_10k"), do: "N/A"
+
   def subscription_interval(product_id) do
     case for_product_id(product_id) do
       nil -> raise "Unknown interval for subscription #{product_id}"
       product -> product[:cycle]
-
     end
   end
 
