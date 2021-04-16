@@ -1,54 +1,6 @@
 defmodule PlausibleWeb.AuthView do
   use PlausibleWeb, :view
-
-  @monthly_plans [
-    "558018",
-    "558745",
-    "597485",
-    "597487",
-    "597642",
-    "558746",
-    "597309",
-    "597311",
-    "642355",
-    "642352"
-  ]
-  @yearly_plans [
-    "572810",
-    "590752",
-    "597486",
-    "597488",
-    "597643",
-    "590753",
-    "597310",
-    "597312",
-    "642356",
-    "642354"
-  ]
-
-  @subscription_quotas %{
-    "558018" => "10k",
-    "558745" => "100k",
-    "597485" => "200k",
-    "597487" => "500k",
-    "597642" => "1m",
-    "558746" => "1m",
-    "597309" => "2m",
-    "597311" => "5m",
-    "572810" => "10k",
-    "590752" => "100k",
-    "597486" => "200k",
-    "597488" => "500k",
-    "597643" => "1m",
-    "590753" => "1m",
-    "597310" => "2m",
-    "597312" => "5m",
-    "642354" => "10m",
-    "642352" => "10m",
-    "642355" => "20m",
-    "642356" => "20m",
-    "free_10k" => "10k"
-  }
+  alias Plausible.Billing.Plans
 
   def admin_email do
     Application.get_env(:plausible, :admin_email)
@@ -63,16 +15,11 @@ defmodule PlausibleWeb.AuthView do
   end
 
   def subscription_quota(subscription) do
-    @subscription_quotas[subscription.paddle_plan_id]
+    Plans.subscription_quota(subscription.paddle_plan_id)
   end
 
   def subscription_interval(subscription) do
-    cond do
-      subscription.paddle_plan_id in @monthly_plans -> "monthly"
-      subscription.paddle_plan_id in @yearly_plans -> "yearly"
-      subscription.paddle_plan_id == "free_10k" -> "N/A"
-      true -> raise "Unknown interval for subscription #{subscription.paddle_plan_id}"
-    end
+    Plans.subscription_interval(subscription.paddle_plan_id)
   end
 
   def delimit_integer(number) do
