@@ -1,0 +1,13 @@
+Hey <%= user_salutation(@user) %>,
+<br /><br />
+Time flies! Your annual subscription for Plausible Analytics is due to renew on <%= @date %>. We will automatically charge
+$<%= @next_bill_amount %> from your card.
+<br /><br />
+If you don't want to continue your subscription, you can cancel it on your <%= link("account settings page", to: "#{plausible_url()}/billing/upgrade") %>.
+<br /><br />
+Have a question, feedback or need some guidance? Just reply to this email to get in touch!
+<br /><br />
+<br /><br />
+Thanks,<br />
+Uku Taht<br />
+<%= plausible_url() %><br />

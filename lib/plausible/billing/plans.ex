@@ -69,6 +69,10 @@ defmodule Plausible.Billing.Plans do
     }
   end
 
+  def yearly_plan_ids do
+    Enum.map(@yearly_plans, fn plan -> plan[:product_id] end)
+  end
+
   def for_product_id(product_id) do
     Enum.find(@all_plans, fn plan -> plan[:product_id] == product_id end)
   end
