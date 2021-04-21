@@ -143,7 +143,7 @@ defmodule PlausibleWeb.Email do
 
     base_email()
     |> to(user)
-    |> tag("yearly-renewal")
+    |> tag("yearly-expiration")
     |> subject("Your Plausible subscription is about to expire")
     |> render("yearly_expiration_notification.html", %{
       user: user,
