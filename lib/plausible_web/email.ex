@@ -130,7 +130,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("yearly-renewal")
-    |> subject("Your Plausible subscription will renew on #{date}")
+    |> subject("Your Plausible subscription is up for renewal")
     |> render("yearly_renewal_notification.html", %{
       user: user,
       date: date,
