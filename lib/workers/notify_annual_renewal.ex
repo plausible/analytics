@@ -8,10 +8,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
   @doc """
   Sends a notification at most 7 days and at least 1 day before the renewal of an annual subscription
   """
-  def perform(_args, _job, today \\ Timex.today()) do
-    latest = Timex.shift(today, days: 7, years: -1)
-    earliest = Timex.shift(today, days: 1, years: -1)
-
+  def perform(_args, _job) do
     users =
       Repo.all(
         from u in Plausible.Auth.User,
@@ -19,15 +16,26 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
           join: s in Plausible.Billing.Subscription,
           on: s.user_id == u.id,
           where: s.paddle_plan_id in @yearly_plans,
-          where: s.last_bill_date <= ^latest and s.last_bill_date >= ^earliest,
+          where:
+            s.next_bill_date > fragment("now()::date") and
+              s.next_bill_date <= fragment("now()::date + INTERVAL '7 days'"),
           where: is_nil(sent.id) or sent.timestamp < fragment("now() - INTERVAL '1 month'"),
           preload: [subscription: s]
       )
 
     for user <- users do
-      renewal_date = Timex.shift(user.subscription.last_bill_date, years: 1)
-      template = PlausibleWeb.Email.yearly_renewal_notification(user, renewal_date)
-      Plausible.Mailer.send_email(template)
+      case user.subscription.status do
+        "active" ->
+          template = PlausibleWeb.Email.yearly_renewal_notification(user)
+          Plausible.Mailer.send_email(template)
+
+        "deleted" ->
+          template = PlausibleWeb.Email.yearly_expiration_notification(user)
+          Plausible.Mailer.send_email(template)
+
+        _ ->
+          Sentry.capture_message("Invalid subscription for renewal", user: user)
+      end
 
       Repo.insert_all("sent_renewal_notifications", [
         %{

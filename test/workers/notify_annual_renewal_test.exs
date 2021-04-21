@@ -8,7 +8,6 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   setup [:create_user, :create_site]
   @monthly_plan Plans.plans()[:monthly][:"10k"][:product_id]
   @yearly_plan Plans.plans()[:yearly][:"10k"][:product_id]
-  @renewal_date ~D[2021-05-10]
 
   test "ignores user without subscription" do
     NotifyAnnualRenewal.perform(nil, nil)
@@ -19,7 +18,8 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   test "ignores user with monthly subscription", %{user: user} do
     insert(:subscription,
       user: user,
-      paddle_plan_id: @monthly_plan
+      paddle_plan_id: @monthly_plan,
+      next_bill_date: Timex.shift(Timex.today(), days: 7)
     )
 
     NotifyAnnualRenewal.perform(nil, nil)
@@ -28,15 +28,13 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   end
 
   test "ignores user with yearly subscription that's not due for renewal in 7 days", %{user: user} do
-    today = Timex.shift(@renewal_date, days: -10)
-
     insert(:subscription,
       user: user,
       paddle_plan_id: @yearly_plan,
-      last_bill_date: Timex.shift(@renewal_date, months: -12, days: -10)
+      next_bill_date: Timex.shift(Timex.today(), days: 10)
     )
 
-    NotifyAnnualRenewal.perform(nil, nil, today)
+    NotifyAnnualRenewal.perform(nil, nil)
 
     assert_no_emails_delivered()
   end
@@ -44,83 +42,93 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   test "sends renewal notification to user whose subscription is due for renewal in 7 days", %{
     user: user
   } do
-    today = Timex.shift(@renewal_date, days: -7)
-
     insert(:subscription,
       user: user,
       paddle_plan_id: @yearly_plan,
-      last_bill_date: Timex.shift(@renewal_date, years: -1)
+      next_bill_date: Timex.shift(Timex.today(), days: 7)
     )
 
-    NotifyAnnualRenewal.perform(nil, nil, today)
+    NotifyAnnualRenewal.perform(nil, nil)
 
     assert_email_delivered_with(
       to: [{user.name, user.email}],
-      subject: "Your Plausible subscription will renew on May 10, 2021"
+      subject: "Your Plausible subscription is up for renewal"
     )
   end
 
   test "sends renewal notification to user whose subscription is due for renewal in 2 days", %{
     user: user
   } do
-    today = Timex.shift(@renewal_date, days: -2)
-
     insert(:subscription,
       user: user,
       paddle_plan_id: @yearly_plan,
-      last_bill_date: Timex.shift(@renewal_date, years: -1)
+      next_bill_date: Timex.shift(Timex.today(), days: 2)
     )
 
-    NotifyAnnualRenewal.perform(nil, nil, today)
+    NotifyAnnualRenewal.perform(nil, nil)
 
     assert_email_delivered_with(
       to: [{user.name, user.email}],
-      subject: "Your Plausible subscription will renew on May 10, 2021"
+      subject: "Your Plausible subscription is up for renewal"
     )
   end
 
   test "does not send renewal notification multiple times", %{user: user} do
-    today = Timex.shift(@renewal_date, days: -7)
-
     insert(:subscription,
       user: user,
       paddle_plan_id: @yearly_plan,
-      last_bill_date: Timex.shift(@renewal_date, years: -1)
+      next_bill_date: Timex.shift(Timex.today(), days: 7)
     )
 
-    NotifyAnnualRenewal.perform(nil, nil, today)
+    NotifyAnnualRenewal.perform(nil, nil)
 
     assert_email_delivered_with(
       to: [{user.name, user.email}],
-      subject: "Your Plausible subscription will renew on May 10, 2021"
+      subject: "Your Plausible subscription is up for renewal"
     )
 
-    NotifyAnnualRenewal.perform(nil, nil, today)
+    NotifyAnnualRenewal.perform(nil, nil)
 
     assert_no_emails_delivered()
   end
 
   test "sends a renewal notification again a year after the previous one", %{user: user} do
-    today = Timex.shift(@renewal_date, days: -7)
-
     insert(:subscription,
       user: user,
       paddle_plan_id: @yearly_plan,
-      last_bill_date: Timex.shift(@renewal_date, years: -1)
+      next_bill_date: Timex.shift(Timex.today(), days: 7)
     )
 
     Repo.insert_all("sent_renewal_notifications", [
       %{
         user_id: user.id,
-        timestamp: Timex.shift(@renewal_date, years: -1, days: -7) |> Timex.to_naive_datetime()
+        timestamp: Timex.shift(Timex.today(), years: -1) |> Timex.to_naive_datetime()
       }
     ])
 
-    NotifyAnnualRenewal.perform(nil, nil, today)
+    NotifyAnnualRenewal.perform(nil, nil)
 
     assert_email_delivered_with(
       to: [{user.name, user.email}],
-      subject: "Your Plausible subscription will renew on May 10, 2021"
+      subject: "Your Plausible subscription is up for renewal"
     )
+  end
+
+  describe "expiration" do
+    test "if user subscription is 'deleted', notify them about expiration instead", %{user: user} do
+      insert(:subscription,
+        user: user,
+        paddle_plan_id: @yearly_plan,
+        next_bill_date: Timex.shift(Timex.today(), days: 7),
+        status: "deleted"
+      )
+
+      NotifyAnnualRenewal.perform(nil, nil)
+
+      assert_email_delivered_with(
+        to: [{user.name, user.email}],
+        subject: "Your Plausible subscription is about to expire"
+      )
+    end
   end
 end

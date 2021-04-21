@@ -9,6 +9,5 @@ If you don't want to continue your subscription, you can cancel it on your <%= l
 Have a question, feedback or need some guidance? Just reply to this email to get in touch!
 <br /><br />
 <br /><br />
-Thanks,<br />
-Uku Taht<br />
+Thanks for being a Plausible Analytics subscriber!<br />
 <%= plausible_url() %><br />
