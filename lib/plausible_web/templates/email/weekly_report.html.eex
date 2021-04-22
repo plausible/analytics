@@ -223,7 +223,7 @@ body {
                         <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right: 5px; padding-left: 5px; padding-top: 0px; padding-bottom: 5px; font-family: Arial, sans-serif"><![endif]-->
                         <div style="color:#555555;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;line-height:120%;padding-top:0px;padding-right:5px;padding-bottom:5px;padding-left:5px;">
                           <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; color: #555555;">
-                            <p style="font-size: 12px; line-height: 24px; text-align: left; margin: 0;"><span style="font-size: 20px;"><strong><span style="line-height: 24px; font-size: 20px;"><%= PlausibleWeb.StatsView.large_number_format(@unique_visitors) %></span></strong></span></p>
+                            <p style="font-size: 12px; line-height: 24px; text-align: left; margin: 0;"><span style="font-size: 20px;"><strong><span id="visitors" style="line-height: 24px; font-size: 20px;"><%= PlausibleWeb.StatsView.large_number_format(@unique_visitors) %></span></strong></span></p>
                           </div>
                         </div>
                         <!--[if mso]></td></tr></table><![endif]-->
