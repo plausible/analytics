@@ -1,7 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.3] - Unreleased
+## Unreleased
+
+### Fixed
+- Fix weekly report time range plausible/analytics#951
+
+
+## [1.3] - 2021-04-14
 
 ### Added
 - Stats API [currently in beta] plausible/analytics#679
