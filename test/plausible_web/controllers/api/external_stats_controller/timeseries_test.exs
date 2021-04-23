@@ -47,9 +47,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
     end
   end
 
+  @user_id 123
   test "shows hourly data for a certain date", %{conn: conn, site: site} do
     populate_stats([
-      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2021-01-01 00:10:00]),
       build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 23:59:00])
     ])
 
@@ -57,35 +59,180 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       get(conn, "/api/v1/stats/timeseries", %{
         "site_id" => site.domain,
         "period" => "day",
-        "date" => "2021-01-01"
+        "date" => "2021-01-01",
+        "metrics" => "visitors,pageviews,visit_duration,bounce_rate"
       })
 
     assert json_response(conn, 200) == %{
              "results" => [
-               %{"date" => "2021-01-01 00:00:00", "visitors" => 1},
-               %{"date" => "2021-01-01 01:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 02:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 03:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 04:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 05:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 06:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 07:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 08:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 09:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 10:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 11:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 12:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 13:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 14:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 15:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 16:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 17:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 18:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 19:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 20:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 21:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 22:00:00", "visitors" => 0},
-               %{"date" => "2021-01-01 23:00:00", "visitors" => 1}
+               %{
+                 "date" => "2021-01-01 00:00:00",
+                 "visitors" => 1,
+                 "pageviews" => 2,
+                 "visit_duration" => 600,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 01:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 02:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 03:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 04:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 05:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 06:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 07:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 08:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 09:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 10:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 11:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 12:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 13:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 14:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 15:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 16:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 17:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 18:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 19:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 20:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 21:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 22:00:00",
+                 "visitors" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => nil
+               },
+               %{
+                 "date" => "2021-01-01 23:00:00",
+                 "visitors" => 1,
+                 "pageviews" => 1,
+                 "visit_duration" => 0,
+                 "bounce_rate" => 100
+               }
              ]
            }
   end
@@ -218,7 +365,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
 
   test "shows a custom range with monthly interval", %{conn: conn, site: site} do
     populate_stats([
-      build(:pageview, domain: site.domain, timestamp: ~N[2020-12-01 00:00:00]),
+      build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2020-12-01 00:00:00]),
+      build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2020-12-01 00:05:00]),
       build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
       build(:pageview, domain: site.domain, timestamp: ~N[2021-01-02 00:00:00])
     ])
@@ -228,13 +376,26 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
         "site_id" => site.domain,
         "period" => "custom",
         "date" => "2020-12-01, 2021-01-02",
-        "interval" => "month"
+        "interval" => "month",
+        "metrics" => "pageviews,visitors,bounce_rate,visit_duration"
       })
 
     assert json_response(conn, 200) == %{
              "results" => [
-               %{"date" => "2020-12-01", "visitors" => 1},
-               %{"date" => "2021-01-01", "visitors" => 2}
+               %{
+                 "date" => "2020-12-01",
+                 "visitors" => 1,
+                 "pageviews" => 2,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 300
+               },
+               %{
+                 "date" => "2021-01-01",
+                 "visitors" => 2,
+                 "pageviews" => 2,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0
+               }
              ]
            }
   end
@@ -461,10 +622,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
     test "can filter by country", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
+          user_id: @user_id,
           country_code: "EE",
           operating_system_version: "10.5",
           domain: site.domain,
           timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          country_code: "EE",
+          operating_system_version: "10.5",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
       ])
@@ -474,24 +643,42 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
-          "filters" => "visit:country==EE"
+          "filters" => "visit:country==EE",
+          "metrics" => "visitors,pageviews,bounce_rate,visit_duration"
         })
 
       res = json_response(conn, 200)["results"]
-      assert List.first(res) == %{"date" => "2021-01-01", "visitors" => 1}
+
+      assert List.first(res) == %{
+               "date" => "2021-01-01",
+               "visitors" => 1,
+               "pageviews" => 2,
+               "bounce_rate" => 0,
+               "visit_duration" => 900
+             }
     end
 
-    test "can filter by page", %{conn: conn, site: site} do
+    test "filtering by page - session metrics consider it like entry_page", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats([
         build(:pageview,
           pathname: "/hello",
+          user_id: @user_id,
           domain: site.domain,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
           pathname: "/hello",
+          user_id: @user_id,
           domain: site.domain,
-          timestamp: ~N[2021-01-01 00:00:00]
+          timestamp: ~N[2021-01-01 00:05:00]
+        ),
+        build(:pageview,
+          pathname: "/hello",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 05:00:00]
         ),
         build(:pageview,
           pathname: "/goobye",
@@ -505,11 +692,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "month",
           "date" => "2021-01-01",
-          "filters" => "event:page==/hello"
+          "filters" => "event:page==/hello",
+          "metrics" => "visitors,pageviews,bounce_rate,visit_duration"
         })
 
       res = json_response(conn, 200)["results"]
-      assert List.first(res) == %{"date" => "2021-01-01", "visitors" => 2}
+
+      assert List.first(res) == %{
+               "date" => "2021-01-01",
+               "visitors" => 2,
+               "pageviews" => 3,
+               "bounce_rate" => 50,
+               "visit_duration" => 150
+             }
     end
 
     test "can filter by event:name", %{conn: conn, site: site} do
