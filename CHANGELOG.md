@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fix weekly report time range plausible/analytics#951
 
+### Removed
+- Removes AppSignal monitoring package
 
 ## [1.3] - 2021-04-14
 
