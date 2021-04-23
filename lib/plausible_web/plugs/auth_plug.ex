@@ -20,7 +20,7 @@ defmodule PlausibleWeb.AuthPlug do
           )
 
         if user do
-          Sentry.Context.set_user_context(%{id: user.id, name: user.name})
+          Sentry.Context.set_user_context(%{id: user.id, name: user.name, email: user.email})
           assign(conn, :current_user, user)
         else
           conn

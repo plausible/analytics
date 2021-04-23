@@ -112,7 +112,9 @@ config :sentry,
   environment_name: env,
   included_environments: ["prod", "staging"],
   release: app_version,
-  tags: %{app_version: app_version}
+  tags: %{app_version: app_version},
+  enable_source_code_context: true,
+  root_source_code_path: [File.cwd!()]
 
 config :plausible, :paddle, vendor_auth_code: paddle_auth_code
 
