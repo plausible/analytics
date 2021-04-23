@@ -30,8 +30,10 @@ defmodule PlausibleWeb.ErrorView do
         opts =
           %{
             eventId: event_id,
-            "user.email": current_user && current_user.email,
-            "user.name": current_user && current_user.name
+            user: %{
+              name: current_user && current_user.name,
+              email: current_user && current_user.email
+            }
           }
           |> Jason.encode!()
 
