@@ -45,8 +45,8 @@ defmodule PlausibleWeb.StatsControllerTest do
       today = Timex.today() |> Timex.format!("{ISOdate}")
 
       conn = get(conn, "/" <> site.domain <> "/visitors.csv")
-      assert response(conn, 200) =~ "Date,Visitors"
-      assert response(conn, 200) =~ "#{today},3"
+      assert response(conn, 200) =~ "visitors,pageviews,bounce_rate,visit_duration"
+      assert response(conn, 200) =~ "#{today},3,3,0,0"
     end
   end
 
@@ -58,8 +58,8 @@ defmodule PlausibleWeb.StatsControllerTest do
       today = Timex.today() |> Timex.format!("{ISOdate}")
 
       conn = get(conn, "/" <> site.domain <> "/visitors.csv?auth=#{link.slug}")
-      assert response(conn, 200) =~ "Date,Visitors"
-      assert response(conn, 200) =~ "#{today},3"
+      assert response(conn, 200) =~ "visitors,pageviews,bounce_rate,visit_duration"
+      assert response(conn, 200) =~ "#{today},3,3,0,0"
     end
   end
 
