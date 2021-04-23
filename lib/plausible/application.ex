@@ -21,7 +21,7 @@ defmodule Plausible.Application do
     ]
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
-    {:ok, _} = Logger.add_backend(Sentry.LoggerBackend)
+    Logger.add_backend(Sentry.LoggerBackend)
     setup_cache_stats()
     Application.put_env(:plausible, :server_start, Timex.now())
     Supervisor.start_link(children, opts)

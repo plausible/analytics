@@ -7,7 +7,9 @@ defmodule Plausible.Workers.SendEmailReport do
   @impl Oban.Worker
   def perform(%{"interval" => "weekly", "site_id" => site_id}, _job) do
     site = Repo.get(Plausible.Site, site_id) |> Repo.preload(:weekly_report)
-    query = Query.from(site.timezone, %{"period" => "7d"})
+    today = Timex.now(site.timezone) |> DateTime.to_date()
+    date = Timex.shift(today, weeks: -1) |> Timex.end_of_week() |> Date.to_iso8601()
+    query = Query.from(site.timezone, %{"period" => "7d", "date" => date})
 
     for email <- site.weekly_report.recipients do
       unsubscribe_link =
