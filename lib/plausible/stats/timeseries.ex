@@ -2,6 +2,7 @@ defmodule Plausible.Stats.Timeseries do
   use Plausible.ClickhouseRepo
   alias Plausible.Stats.Query
   import Plausible.Stats.Base
+  use Plausible.Stats.Fragments
 
   @event_metrics ["visitors", "pageviews"]
   @session_metrics ["bounce_rate", "visit_duration"]
@@ -117,7 +118,7 @@ defmodule Plausible.Stats.Timeseries do
   defp select_session_metrics(q, ["bounce_rate" | rest]) do
     from(s in q,
       select_merge: %{
-        "bounce_rate" => fragment("round(sum(? * ?) / sum(?) * 100)", s.is_bounce, s.sign, s.sign)
+        "bounce_rate" => bounce_rate()
       }
     )
     |> select_session_metrics(rest)
@@ -125,13 +126,13 @@ defmodule Plausible.Stats.Timeseries do
 
   defp select_session_metrics(q, ["visit_duration" | rest]) do
     from(s in q,
-      select_merge: %{"visit_duration" => fragment("round(avg(? * ?))", s.duration, s.sign)}
+      select_merge: %{"visit_duration" => visit_duration()}
     )
     |> select_session_metrics(rest)
   end
 
   defp empty_row(date, metrics) do
-    Enum.reduce(metrics, %{date: date}, fn metric, row ->
+    Enum.reduce(metrics, %{"date" => date}, fn metric, row ->
       case metric do
         "pageviews" -> Map.merge(row, %{"pageviews" => 0})
         "visitors" -> Map.merge(row, %{"visitors" => 0})
