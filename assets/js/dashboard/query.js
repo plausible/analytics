@@ -161,14 +161,13 @@ export function eventName(query) {
 
 export function parsePageAttributes({domain, pageName}) {
   const {hostname, pathname} = new URL(`https://${pageName}`)
-  let pageLabel = pathname;
-  let subdomain;
+  let label;
   if(hostname.includes(domain)){
     if(hostname !== domain){
-      subdomain = hostname.replace(`.${domain}`, "")
+      label = hostname.replace(`.${domain}`, "")
     }
   } else {
-    pageLabel = hostname + pathname
+    label = hostname
   }
-  return {pageLabel, subdomain}
+  return {pathname, label}
 }

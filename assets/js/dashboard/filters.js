@@ -148,8 +148,8 @@ class Filters extends React.Component {
       return <span className="inline-block max-w-2xs md:max-w-xs truncate">Country: <b>{selectedCountry.properties.name}</b></span>
     }
     if (key === "page") {
-      const {pageLabel, subdomain} = parsePageAttributes({domain: this.props.site.domain, pageName: value})
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Page: <b>{pageLabel}</b> {subdomain && <span className="bg-gray-600 px-1 rounded-md">{subdomain}</span>}</span>
+      const {pathname, label} = parsePageAttributes({domain: this.props.site.domain, pageName: value})
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Page: <b>{pathname}</b> {label && <span className="bg-gray-600 px-1 rounded-md">{label}</span>}</span>
     }
     if (key === "entry_page") {
       return <span className="inline-block max-w-2xs md:max-w-xs truncate">Entry Page: <b>{value}</b></span>

@@ -61,13 +61,13 @@ class PagesModal extends React.Component {
   renderPage(page) {
     const query = new URLSearchParams(window.location.search)
     query.set('page', page.name)
-    const {pageLabel, subdomain} = parsePageAttributes({domain: this.props.site.domain, pageName: page.name})
+    const {pathname, label} = parsePageAttributes({domain: this.props.site.domain, pageName: page.name})
 
     return (
-      <tr className="text-sm dark:text-gray-200" key={page.name}>
+      <tr className="text-sm dark:text-gray-200" key={pathname + label}>
         <td className="p-2">
           <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline flex">
-            {pageLabel} {subdomain && <div className="bg-gray-600 px-1 rounded-md ml-2">{subdomain}</div>}
+            {pathname} {label && <div className="bg-gray-600 px-1 rounded-md ml-2">{label}</div>}
           </Link>
         </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
