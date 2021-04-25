@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - New parameter `metrics` for the `/api/v1/stats/timeseries` endpoint plausible/analytics#952
 - CSV export now includes pageviews, bounce rate and visit duration in addition to visitors plausible/analytics#952
+- Page views are now grouped by hostname and pathname on the dashboard.
 
 ### Fixed
 - Fix weekly report time range plausible/analytics#951
