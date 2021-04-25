@@ -519,12 +519,13 @@ defmodule Plausible.Stats.Clickhouse do
     q =
       from(
         s in base_session_query(site, query),
+        group_by: s.hostname,
         group_by: s.entry_page,
         order_by: [desc: uniq(s.user_id)],
         limit: ^limit,
         offset: ^offset,
         select: %{
-          name: s.entry_page,
+          name: fragment("concat(?, ?) as name", s.hostname, s.entry_page),
           count: uniq(s.user_id),
           entries: uniq(s.session_id),
           visit_duration: visit_duration()
@@ -541,13 +542,14 @@ defmodule Plausible.Stats.Clickhouse do
     q =
       from(
         s in base_session_query(site, query),
+        group_by: s.hostname,
         group_by: s.exit_page,
         order_by: [desc: uniq(s.user_id)],
         limit: ^limit,
         offset: ^offset,
         where: s.exit_page != "",
         select: %{
-          name: s.exit_page,
+          name: fragment("concat(?, ?) as name", s.hostname, s.exit_page),
           count: uniq(s.user_id),
           exits: uniq(s.session_id)
         }
@@ -592,12 +594,13 @@ defmodule Plausible.Stats.Clickhouse do
 
     ClickhouseRepo.all(
       from s in q,
+        group_by: s.hostname,
         group_by: s.exit_page,
         order_by: [desc: uniq(s.user_id)],
         limit: ^limit,
         offset: ^offset,
         select: %{
-          name: s.exit_page,
+          name: fragment("concat(?, ?) as name", s.hostname, s.exit_page),
           count: uniq(s.user_id)
         }
     )
@@ -609,12 +612,13 @@ defmodule Plausible.Stats.Clickhouse do
     q =
       from(
         e in base_query_w_sessions(site, query),
+        group_by: e.hostname,
         group_by: e.pathname,
         order_by: [desc: uniq(e.user_id)],
         limit: ^limit,
         offset: ^offset,
         select: %{
-          name: e.pathname,
+          name: fragment("concat(?, ?) as name", e.hostname, e.pathname),
           count: uniq(e.user_id),
           pageviews: total()
         }
@@ -636,10 +640,11 @@ defmodule Plausible.Stats.Clickhouse do
     ClickhouseRepo.all(
       from s in q,
         group_by: s.entry_page,
+        group_by: s.hostname,
         order_by: [desc: total()],
         limit: 100,
         select: %{
-          entry_page: s.entry_page,
+          entry_page: fragment("concat(?, ?)", s.hostname, s.entry_page),
           total: total(),
           bounce_rate: bounce_rate()
         }

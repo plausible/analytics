@@ -5,7 +5,7 @@ import { withRouter } from 'react-router-dom'
 import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter, { durationFormatter } from '../../number-formatter'
-import {parseQuery} from '../../query'
+import {parseQuery, parsePageAttributes} from '../../query'
 
 class EntryPagesModal extends React.Component {
   constructor(props) {
@@ -49,11 +49,14 @@ class EntryPagesModal extends React.Component {
   renderPage(page) {
     const query = new URLSearchParams(window.location.search)
     query.set('entry_page', page.name)
+    const {pageLabel, subdomain} = parsePageAttributes({domain: this.props.site.domain, pageName: page.name})
 
     return (
       <tr className="text-sm dark:text-gray-200" key={page.name}>
         <td className="p-2">
-          <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline">{page.name}</Link>
+          <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline flex">
+            {pageLabel} {subdomain && <div className="bg-gray-600 px-1 rounded-md ml-2">{subdomain}</div>}
+          </Link>
         </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.entries)}</td>

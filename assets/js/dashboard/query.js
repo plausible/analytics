@@ -158,3 +158,17 @@ export function eventName(query) {
   }
   return 'pageviews'
 }
+
+export function parsePageAttributes({domain, pageName}) {
+  const {hostname, pathname} = new URL(`https://${pageName}`)
+  let pageLabel = pathname;
+  let subdomain;
+  if(hostname.includes(domain)){
+    if(hostname !== domain){
+      subdomain = hostname.replace(`.${domain}`, "")
+    }
+  } else {
+    pageLabel = hostname + pathname
+  }
+  return {pageLabel, subdomain}
+}
