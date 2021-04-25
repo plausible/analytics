@@ -560,14 +560,14 @@ defmodule Plausible.Stats.Clickhouse do
 
     if Enum.count(result) > 0 do
       pages = Enum.map(result, fn r -> r[:name] end)
-
       event_q =
         from(e in base_query_w_session_based_pageviews(site, query),
+          group_by: e.hostname,
           group_by: e.pathname,
-          where: fragment("? IN tuple(?)", e.pathname, ^pages),
+          where: fragment("? IN tuple(?)", fragment("? || '' || ?", e.hostname, e.pathname), ^pages),
           where: e.name == "pageview",
           select: {
-            e.pathname,
+            fragment("concat(?, ?) as name", e.hostname, e.pathname),
             total()
           }
         )
@@ -644,12 +644,12 @@ defmodule Plausible.Stats.Clickhouse do
         order_by: [desc: total()],
         limit: 100,
         select: %{
-          entry_page: fragment("concat(?, ?)", s.hostname, s.entry_page),
+          name: fragment("concat(?, ?)", s.hostname, s.entry_page),
           total: total(),
           bounce_rate: bounce_rate()
         }
     )
-    |> Enum.map(fn row -> {row[:entry_page], row[:bounce_rate]} end)
+    |> Enum.map(fn row -> {row[:name], row[:bounce_rate]} end)
     |> Enum.into(%{})
   end
 
@@ -1119,7 +1119,8 @@ defmodule Plausible.Stats.Clickhouse do
     q =
       if query.filters["page"] do
         page = query.filters["page"]
-        from(e in q, where: e.pathname == ^page)
+        uri = URI.parse("https://#{page}")
+        from(e in q, where: e.pathname == ^uri.path, where: e.hostname == ^uri.host)
       else
         q
       end

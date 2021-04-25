@@ -1,6 +1,6 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
-import { countFilters, navigateToQuery, removeQueryParam } from './query'
+import { countFilters, navigateToQuery, parsePageAttributes, removeQueryParam } from './query'
 import Datamap from 'datamaps'
 import Transition from "../transition.js";
 
@@ -148,7 +148,8 @@ class Filters extends React.Component {
       return <span className="inline-block max-w-2xs md:max-w-xs truncate">Country: <b>{selectedCountry.properties.name}</b></span>
     }
     if (key === "page") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Page: <b>{value}</b></span>
+      const {pageLabel, subdomain} = parsePageAttributes({domain: this.props.site.domain, pageName: value})
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Page: <b>{pageLabel}</b> {subdomain && <span className="bg-gray-600 px-1 rounded-md">{subdomain}</span>}</span>
     }
     if (key === "entry_page") {
       return <span className="inline-block max-w-2xs md:max-w-xs truncate">Entry Page: <b>{value}</b></span>
