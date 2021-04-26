@@ -3,7 +3,7 @@ defmodule Plausible.Workers.SendCheckStatsEmails do
   use Oban.Worker, queue: :check_stats_emails
 
   @impl Oban.Worker
-  def perform(_args, _job) do
+  def perform(_job) do
     q =
       from(u in Plausible.Auth.User,
         left_join: ce in "check_stats_emails",

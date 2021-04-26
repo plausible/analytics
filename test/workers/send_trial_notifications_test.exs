@@ -1,11 +1,8 @@
 defmodule Plausible.Workers.SendTrialNotificationsTest do
   use Plausible.DataCase
   use Bamboo.Test
-
-  defp perform() do
-    Plausible.Workers.SendTrialNotifications.new(%{}) |> Oban.insert!()
-    Oban.drain_queue(:trial_notification_emails)
-  end
+  use Oban.Testing, repo: Plausible.Repo
+  alias Plausible.Workers.SendTrialNotifications
 
   test "does not send a notification if user didn't set up their site" do
     insert(:user, inserted_at: Timex.now() |> Timex.shift(days: -14))
@@ -13,7 +10,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     insert(:user, inserted_at: Timex.now() |> Timex.shift(days: -30))
     insert(:user, inserted_at: Timex.now() |> Timex.shift(days: -31))
 
-    perform()
+    perform_job(SendTrialNotifications, %{})
 
     assert_no_emails_delivered()
   end
@@ -23,7 +20,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
       user = insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 7))
       insert(:site, domain: "test-site.com", members: [user])
 
-      perform()
+      perform_job(SendTrialNotifications, %{})
 
       assert_delivered_email(PlausibleWeb.Email.trial_one_week_reminder(user))
     end
@@ -32,7 +29,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
       user = insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 1))
       insert(:site, domain: "test-site.com", members: [user])
 
-      perform()
+      perform_job(SendTrialNotifications, %{})
 
       assert_delivered_email(PlausibleWeb.Email.trial_upgrade_email(user, "tomorrow", {3, 0}))
     end
@@ -41,7 +38,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
       user = insert(:user, trial_expiry_date: Timex.today())
       insert(:site, domain: "test-site.com", members: [user])
 
-      perform()
+      perform_job(SendTrialNotifications, %{})
 
       assert_delivered_email(PlausibleWeb.Email.trial_upgrade_email(user, "today", {3, 0}))
     end
@@ -68,7 +65,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
       user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
       insert(:site, domain: "test-site.com", members: [user])
 
-      perform()
+      perform_job(SendTrialNotifications, %{})
 
       assert_delivered_email(PlausibleWeb.Email.trial_over_email(user))
     end
@@ -78,7 +75,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
       insert(:site, domain: "test-site.com", members: [user])
       insert(:subscription, user: user)
 
-      perform()
+      perform_job(SendTrialNotifications, %{})
 
       assert_no_emails_delivered()
     end

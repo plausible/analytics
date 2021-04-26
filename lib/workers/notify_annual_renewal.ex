@@ -8,7 +8,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
   @doc """
   Sends a notification at most 7 days and at least 1 day before the renewal of an annual subscription
   """
-  def perform(_args, _job) do
+  def perform(_job) do
     users =
       Repo.all(
         from u in Plausible.Auth.User,
