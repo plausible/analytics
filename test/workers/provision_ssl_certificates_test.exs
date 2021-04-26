@@ -11,7 +11,7 @@ defmodule Plausible.Workers.SslCertificatesTest do
       stub(SSHEx, :connect, fn _cmd -> {:ok, nil} end)
       |> stub(:run, fn _conn, _cmd, _opts -> {:ok, "", 0} end)
 
-    ProvisionSslCertificates.perform(nil, nil, ssh_stub)
+    ProvisionSslCertificates.perform(nil, ssh_stub)
 
     assert_receive(
       {SSHEx, :run,
@@ -27,7 +27,7 @@ defmodule Plausible.Workers.SslCertificatesTest do
       stub(SSHEx, :connect, fn _cmd -> {:ok, nil} end)
       |> stub(:run, fn _conn, _cmd, _opts -> {:ok, "", 0} end)
 
-    ProvisionSslCertificates.perform(nil, nil, ssh_stub)
+    ProvisionSslCertificates.perform(nil, ssh_stub)
 
     domain = Repo.get_by(Plausible.Site.CustomDomain, site_id: site.id)
     assert domain.has_ssl_certificate
@@ -41,7 +41,7 @@ defmodule Plausible.Workers.SslCertificatesTest do
       stub(SSHEx, :connect, fn _cmd -> {:ok, nil} end)
       |> stub(:run, fn _conn, _cmd, _opts -> {:ok, "", 1} end)
 
-    ProvisionSslCertificates.perform(nil, nil, ssh_stub)
+    ProvisionSslCertificates.perform(nil, ssh_stub)
 
     domain = Repo.get_by(Plausible.Site.CustomDomain, site_id: site.id)
     refute domain.has_ssl_certificate

@@ -4,7 +4,7 @@ defmodule Plausible.Workers.FetchTweets do
   use Oban.Worker, queue: :fetch_tweets
 
   @impl Oban.Worker
-  def perform(_args, _job, twitter_api \\ Plausible.Twitter.Api) do
+  def perform(_job, twitter_api \\ Plausible.Twitter.Api) do
     new_links =
       Plausible.ClickhouseRepo.all(
         from e in Plausible.ClickhouseEvent,

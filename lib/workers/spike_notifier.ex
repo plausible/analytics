@@ -6,7 +6,7 @@ defmodule Plausible.Workers.SpikeNotifier do
   @at_most_every "12 hours"
 
   @impl Oban.Worker
-  def perform(_args, _job, clickhouse \\ Plausible.Stats.Clickhouse) do
+  def perform(_job, clickhouse \\ Plausible.Stats.Clickhouse) do
     notifications =
       Repo.all(
         from sn in SpikeNotification,

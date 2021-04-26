@@ -5,7 +5,7 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
   @timeout 20_000
 
   @impl Oban.Worker
-  def perform(_args, _job, ssh \\ SSHEx) do
+  def perform(_job, ssh \\ SSHEx) do
     config = get_config()
 
     {:ok, conn} =

@@ -1,17 +1,14 @@
 defmodule Plausible.Workers.SendCheckStatsEmailsTest do
   use Plausible.DataCase
+  use Oban.Testing, repo: Plausible.Repo
   use Bamboo.Test
-
-  defp perform() do
-    Plausible.Workers.SendCheckStatsEmails.new(%{}) |> Oban.insert!()
-    Oban.drain_queue(:check_stats_emails)
-  end
+  alias Plausible.Workers.SendCheckStatsEmails
 
   test "does not send an email before a week has passed" do
     user = insert(:user, inserted_at: days_ago(6), last_seen: days_ago(6))
     insert(:site, domain: "test-site.com", members: [user])
 
-    perform()
+    perform_job(SendCheckStatsEmails, %{})
 
     assert_no_emails_delivered()
   end
@@ -20,7 +17,7 @@ defmodule Plausible.Workers.SendCheckStatsEmailsTest do
     user = insert(:user, inserted_at: days_ago(9), last_seen: days_ago(6))
     insert(:site, domain: "test-site.com", members: [user])
 
-    perform()
+    perform_job(SendCheckStatsEmails, %{})
 
     assert_no_emails_delivered()
   end
@@ -30,7 +27,7 @@ defmodule Plausible.Workers.SendCheckStatsEmailsTest do
     site = insert(:site, domain: "test-site.com", members: [user])
     insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
-    perform()
+    perform_job(SendCheckStatsEmails, %{})
 
     assert_no_emails_delivered()
   end
@@ -39,7 +36,7 @@ defmodule Plausible.Workers.SendCheckStatsEmailsTest do
     user = insert(:user, inserted_at: days_ago(8), last_seen: days_ago(8))
     insert(:site, domain: "test-site.com", members: [user])
 
-    perform()
+    perform_job(SendCheckStatsEmails, %{})
 
     assert_email_delivered_with(
       to: [{user.name, user.email}],

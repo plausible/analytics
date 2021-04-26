@@ -3,7 +3,7 @@ defmodule Plausible.Workers.CleanEmailVerificationCodes do
   use Oban.Worker, queue: :clean_email_verification_codes
 
   @impl Oban.Worker
-  def perform(_args, _job) do
+  def perform(_job) do
     Repo.update_all(
       from(c in "email_verification_codes",
         where: not is_nil(c.user_id),
