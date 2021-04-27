@@ -5,14 +5,14 @@ defmodule Plausible.Workers.FetchTweetsTest do
 
   test "fetches Twitter referrals from the last day" do
     twitter_mock = stub(Plausible.Twitter.Api, :search, fn _link -> [] end)
-    FetchTweets.perform(nil, nil, twitter_mock)
+    FetchTweets.perform(nil, twitter_mock)
 
     assert_receive({Plausible.Twitter.Api, :search, ["t.co/a-link"]})
   end
 
   test "fetches Twitter referrals from 5-6 days ago" do
     twitter_mock = stub(Plausible.Twitter.Api, :search, fn _link -> [] end)
-    FetchTweets.perform(nil, nil, twitter_mock)
+    FetchTweets.perform(nil, twitter_mock)
 
     assert_receive({Plausible.Twitter.Api, :search, ["t.co/b-link"]})
   end
@@ -39,7 +39,7 @@ defmodule Plausible.Workers.FetchTweetsTest do
         _link -> []
       end)
 
-    FetchTweets.perform(nil, nil, twitter_mock)
+    FetchTweets.perform(nil, twitter_mock)
 
     [found_tweet] = Repo.all(from(t in Plausible.Twitter.Tweet))
     assert found_tweet.tweet_id == "the_tweet_id"

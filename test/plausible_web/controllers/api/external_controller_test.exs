@@ -38,6 +38,26 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.pathname == "/"
     end
 
+    test "can send to multiple dashboards by listing multiple domains", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://gigride.live/",
+        referrer: "http://m.facebook.com/",
+        domain: "test-domain1.com,test-domain2.com",
+        screen_width: 1440
+      }
+
+      conn =
+        conn
+        |> put_req_header("content-type", "text/plain")
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", Jason.encode!(params))
+
+      assert response(conn, 202) == ""
+      assert get_event("test-domain1.com")
+      assert get_event("test-domain2.com")
+    end
+
     test "www. is stripped from domain", %{conn: conn} do
       params = %{
         name: "custom event",

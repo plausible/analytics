@@ -10,7 +10,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   @yearly_plan Plans.plans()[:yearly][:"10k"][:product_id]
 
   test "ignores user without subscription" do
-    NotifyAnnualRenewal.perform(nil, nil)
+    NotifyAnnualRenewal.perform(nil)
 
     assert_no_emails_delivered()
   end
@@ -22,7 +22,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
       next_bill_date: Timex.shift(Timex.today(), days: 7)
     )
 
-    NotifyAnnualRenewal.perform(nil, nil)
+    NotifyAnnualRenewal.perform(nil)
 
     assert_no_emails_delivered()
   end
@@ -34,7 +34,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
       next_bill_date: Timex.shift(Timex.today(), days: 10)
     )
 
-    NotifyAnnualRenewal.perform(nil, nil)
+    NotifyAnnualRenewal.perform(nil)
 
     assert_no_emails_delivered()
   end
@@ -48,7 +48,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
       next_bill_date: Timex.shift(Timex.today(), days: 7)
     )
 
-    NotifyAnnualRenewal.perform(nil, nil)
+    NotifyAnnualRenewal.perform(nil)
 
     assert_email_delivered_with(
       to: [{user.name, user.email}],
@@ -65,7 +65,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
       next_bill_date: Timex.shift(Timex.today(), days: 2)
     )
 
-    NotifyAnnualRenewal.perform(nil, nil)
+    NotifyAnnualRenewal.perform(nil)
 
     assert_email_delivered_with(
       to: [{user.name, user.email}],
@@ -80,14 +80,14 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
       next_bill_date: Timex.shift(Timex.today(), days: 7)
     )
 
-    NotifyAnnualRenewal.perform(nil, nil)
+    NotifyAnnualRenewal.perform(nil)
 
     assert_email_delivered_with(
       to: [{user.name, user.email}],
       subject: "Your Plausible subscription is up for renewal"
     )
 
-    NotifyAnnualRenewal.perform(nil, nil)
+    NotifyAnnualRenewal.perform(nil)
 
     assert_no_emails_delivered()
   end
@@ -106,7 +106,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
       }
     ])
 
-    NotifyAnnualRenewal.perform(nil, nil)
+    NotifyAnnualRenewal.perform(nil)
 
     assert_email_delivered_with(
       to: [{user.name, user.email}],
@@ -123,7 +123,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
         status: "deleted"
       )
 
-      NotifyAnnualRenewal.perform(nil, nil)
+      NotifyAnnualRenewal.perform(nil)
 
       assert_email_delivered_with(
         to: [{user.name, user.email}],

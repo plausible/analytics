@@ -220,17 +220,17 @@ if config_env() == :prod && !disable_cron do
     notify_annual_renewal: 1
   ]
 
+  # Keep 30 days history
   config :plausible, Oban,
-    # Keep 30 days history
-    prune: {:maxage, 2_592_000},
     repo: Plausible.Repo,
+    plugins: [{Oban.Plugins.Pruner, max_age: 2_592_000}],
     queues: if(is_selfhost, do: base_queues, else: base_queues ++ extra_queues),
     crontab: if(is_selfhost, do: base_cron, else: base_cron ++ extra_cron)
 else
   config :plausible, Oban,
     repo: Plausible.Repo,
     queues: false,
-    crontab: false
+    plugins: false
 end
 
 config :plausible, :hcaptcha,

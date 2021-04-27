@@ -2,20 +2,16 @@ defmodule Plausible.Workers.SendEmailReportTest do
   import Plausible.TestUtils
   use Plausible.DataCase
   use Bamboo.Test
+  use Oban.Testing, repo: Plausible.Repo
   alias Plausible.Workers.SendEmailReport
   alias Timex.Timezone
-
-  defp perform(args) do
-    SendEmailReport.new(args) |> Oban.insert!()
-    Oban.drain_queue(:send_email_reports)
-  end
 
   describe "weekly reports" do
     test "sends weekly report to all recipients" do
       site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com", "user2@email.com"])
 
-      perform(%{"site_id" => site.id, "interval" => "weekly"})
+      perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
 
       assert_email_delivered_with(
         subject: "Weekly report for #{site.domain}",
@@ -53,7 +49,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
         %{domain: site.domain, timestamp: Timezone.convert(this_monday, "UTC")}
       ])
 
-      perform(%{"site_id" => site.id, "interval" => "weekly"})
+      perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
 
       assert_delivered_email_matches(%{
         to: [nil: "user@email.com"],
@@ -77,7 +73,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
         |> Timex.beginning_of_month()
         |> Timex.format!("{Mfull}")
 
-      perform(%{"site_id" => site.id, "interval" => "monthly"})
+      perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "monthly"})
 
       assert_email_delivered_with(
         subject: "#{last_month} report for #{site.domain}",

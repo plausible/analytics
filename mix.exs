@@ -83,7 +83,7 @@ defmodule Plausible.MixProject do
       {:oauther, "~> 1.1"},
       {:nanoid, "~> 2.0.2"},
       {:siphash, "~> 3.2"},
-      {:oban, "~> 1.2"},
+      {:oban, "~> 2.0"},
       {:sshex, "2.2.1"},
       {:geolix, "~> 1.0"},
       {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
