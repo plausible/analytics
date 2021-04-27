@@ -8,7 +8,7 @@ We are dedicated to making web analytics more privacy-friendly. Our mission is t
 
 ### Why Plausible?
 
-Here's what makes Plausible a great Google Analytics alternative and why we're trusted by 2,000+ paying subscribers to deliver their website and business insights: 
+Here's what makes Plausible a great Google Analytics alternative and why we're trusted by 3,000+ paying subscribers to deliver their website and business insights: 
 
 - **Clutter Free**: Plausible Analytics provides [simple web analytics](https://plausible.io/simple-web-analytics) and it cuts through the noise. No layers of menus, no need for custom reports. Get all the important insights on one single page. No training necessary.
 - **GDPR/CCPA/PECR compliant**: Measure traffic, not individuals. No personal data or IP addresses are ever stored in our database. We don't use cookies or any other persistent idenfitiers. [Read more about our data policy](https://plausible.io/data-policy)

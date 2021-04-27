@@ -3,7 +3,7 @@ defmodule Plausible.Workers.RotateSalts do
   use Oban.Worker, queue: :rotate_salts
 
   @impl Oban.Worker
-  def perform(_args, _job) do
+  def perform(_job) do
     Plausible.Session.Salts.rotate()
   end
 end

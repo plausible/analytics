@@ -10,7 +10,7 @@ defmodule Plausible.Workers.CheckUsageTest do
   @paddle_id_10k Plans.plans()[:monthly][:"10k"][:product_id]
 
   test "ignores user without subscription" do
-    CheckUsage.perform(nil, nil)
+    CheckUsage.perform(nil)
 
     assert_no_emails_delivered()
   end
@@ -22,7 +22,7 @@ defmodule Plausible.Workers.CheckUsageTest do
       last_bill_date: Timex.shift(Timex.today(), days: -1)
     )
 
-    CheckUsage.perform(nil, nil)
+    CheckUsage.perform(nil)
 
     assert_no_emails_delivered()
   end
@@ -40,7 +40,7 @@ defmodule Plausible.Workers.CheckUsageTest do
       last_bill_date: Timex.shift(Timex.today(), days: -1)
     )
 
-    CheckUsage.perform(nil, nil, billing_stub)
+    CheckUsage.perform(nil, billing_stub)
 
     assert_no_emails_delivered()
   end
@@ -61,7 +61,7 @@ defmodule Plausible.Workers.CheckUsageTest do
       last_bill_date: Timex.shift(Timex.today(), days: -1)
     )
 
-    CheckUsage.perform(nil, nil, billing_stub)
+    CheckUsage.perform(nil, billing_stub)
 
     assert_email_delivered_with(
       to: [user],
@@ -85,7 +85,7 @@ defmodule Plausible.Workers.CheckUsageTest do
       last_bill_date: Timex.shift(Timex.today(), days: -1)
     )
 
-    CheckUsage.perform(nil, nil, billing_stub)
+    CheckUsage.perform(nil, billing_stub)
 
     assert_email_delivered_with(
       to: [user],
@@ -110,7 +110,7 @@ defmodule Plausible.Workers.CheckUsageTest do
         last_bill_date: Timex.shift(Timex.today(), days: -1)
       )
 
-      CheckUsage.perform(nil, nil, billing_stub)
+      CheckUsage.perform(nil, billing_stub)
 
       assert_email_delivered_with(
         to: [user],
@@ -134,7 +134,7 @@ defmodule Plausible.Workers.CheckUsageTest do
         last_bill_date: ~D[2021-03-28]
       )
 
-      CheckUsage.perform(nil, nil, billing_stub, ~D[2021-03-28])
+      CheckUsage.perform(nil, billing_stub, ~D[2021-03-28])
 
       assert_no_emails_delivered()
     end
@@ -156,7 +156,7 @@ defmodule Plausible.Workers.CheckUsageTest do
         last_bill_date: Timex.shift(Timex.today(), months: -2, days: -1)
       )
 
-      CheckUsage.perform(nil, nil, billing_stub)
+      CheckUsage.perform(nil, billing_stub)
 
       assert_email_delivered_with(
         to: [user],

@@ -7,11 +7,10 @@ defmodule PlausibleWeb.Api.ExternalController do
     Sentry.Context.set_extra_context(%{request: params})
 
     case create_event(conn, params) do
-      {:ok, _} ->
+      :ok ->
         conn |> send_resp(202, "")
 
-      {:error, changeset} ->
-        Logger.info("Error processing event: #{inspect(changeset)}")
+      :error ->
         conn |> send_resp(400, "")
     end
   end
@@ -71,7 +70,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     ua = parse_user_agent(conn)
 
     if is_bot?(ua) do
-      {:ok, nil}
+      :ok
     else
       uri = params["url"] && URI.parse(params["url"])
       query = if uri && uri.query, do: URI.decode_query(uri.query), else: %{}
@@ -84,36 +83,47 @@ defmodule PlausibleWeb.Api.ExternalController do
         timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
         name: params["name"],
         hostname: strip_www(uri && uri.host),
-        domain: strip_www(params["domain"]) || strip_www(uri && uri.host),
         pathname: get_pathname(uri, params["hash_mode"]),
-        user_id: generate_user_id(conn, params, salts[:current]),
-        referrer_source: get_referrer_source(query, ref) || "",
-        referrer: clean_referrer(ref) || "",
-        utm_medium: query["utm_medium"] || "",
-        utm_source: query["utm_source"] || "",
-        utm_campaign: query["utm_campaign"] || "",
-        country_code: country_code || "",
-        operating_system: (ua && os_name(ua)) || "",
-        operating_system_version: (ua && os_version(ua)) || "",
-        browser: (ua && browser_name(ua)) || "",
-        browser_version: (ua && browser_version(ua)) || "",
-        screen_size: calculate_screen_size(params["screen_width"]) || "",
+        referrer_source: get_referrer_source(query, ref),
+        referrer: clean_referrer(ref),
+        utm_medium: query["utm_medium"],
+        utm_source: query["utm_source"],
+        utm_campaign: query["utm_campaign"],
+        country_code: country_code,
+        operating_system: ua && os_name(ua),
+        operating_system_version: ua && os_version(ua),
+        browser: ua && browser_name(ua),
+        browser_version: ua && browser_version(ua),
+        screen_size: calculate_screen_size(params["screen_width"]),
         "meta.key": Map.keys(params["meta"]),
         "meta.value": Map.values(params["meta"]) |> Enum.map(&Kernel.to_string/1)
       }
 
-      changeset = Plausible.ClickhouseEvent.changeset(%Plausible.ClickhouseEvent{}, event_attrs)
+      Enum.reduce_while(get_domains(params, uri), :error, fn domain, _res ->
+        user_id = generate_user_id(conn, domain, event_attrs[:hostname], salts[:current])
 
-      if changeset.valid? do
-        previous_user_id = salts[:previous] && generate_user_id(conn, params, salts[:previous])
-        event = struct(Plausible.ClickhouseEvent, event_attrs)
-        session_id = Plausible.Session.Store.on_event(event, previous_user_id)
+        previous_user_id =
+          salts[:previous] &&
+            generate_user_id(conn, domain, event_attrs[:hostname], salts[:previous])
 
-        Map.put(event, :session_id, session_id)
-        |> Plausible.Event.WriteBuffer.insert()
-      else
-        {:error, changeset}
-      end
+        changeset =
+          event_attrs
+          |> Map.merge(%{domain: domain, user_id: user_id})
+          |> Plausible.ClickhouseEvent.new()
+
+        if changeset.valid? do
+          event = Ecto.Changeset.apply_changes(changeset)
+          session_id = Plausible.Session.Store.on_event(event, previous_user_id)
+
+          event
+          |> Map.put(:session_id, session_id)
+          |> Plausible.Event.WriteBuffer.insert()
+
+          {:cont, :ok}
+        else
+          {:halt, :error}
+        end
+      end)
     end
   end
 
@@ -134,6 +144,16 @@ defmodule PlausibleWeb.Api.ExternalController do
       end
     else
       %{}
+    end
+  end
+
+  defp get_domains(params, uri) do
+    if params["domain"] do
+      String.split(params["domain"], ",")
+      |> Enum.map(&String.trim/1)
+      |> Enum.map(&strip_www/1)
+    else
+      List.wrap(strip_www(uri && uri.host))
     end
   end
 
@@ -172,12 +192,11 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp generate_user_id(conn, params, salt) do
+  defp generate_user_id(conn, domain, hostname, salt) do
     user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
     ip_address = PlausibleWeb.RemoteIp.get(conn)
-    domain = strip_www(params["domain"]) || ""
 
-    SipHash.hash!(salt, user_agent <> ip_address <> domain)
+    SipHash.hash!(salt, user_agent <> ip_address <> domain <> hostname)
   end
 
   defp calculate_screen_size(nil), do: nil

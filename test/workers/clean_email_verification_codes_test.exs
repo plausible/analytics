@@ -18,7 +18,7 @@ defmodule Plausible.Workers.CleanEmailVerificationCodesTest do
     issue_code(user, Timex.now() |> Timex.shift(hours: -5))
     issue_code(user, Timex.now() |> Timex.shift(days: -5))
 
-    CleanEmailVerificationCodes.perform(nil, nil)
+    CleanEmailVerificationCodes.perform(nil)
 
     refute Repo.exists?(from c in "email_verification_codes", where: c.user_id == ^user.id)
   end
@@ -27,7 +27,7 @@ defmodule Plausible.Workers.CleanEmailVerificationCodesTest do
     user = insert(:user)
     issue_code(user, Timex.now() |> Timex.shift(hours: -2))
 
-    CleanEmailVerificationCodes.perform(nil, nil)
+    CleanEmailVerificationCodes.perform(nil)
 
     assert Repo.exists?(from c in "email_verification_codes", where: c.user_id == ^user.id)
   end
