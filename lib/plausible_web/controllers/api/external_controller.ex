@@ -84,17 +84,17 @@ defmodule PlausibleWeb.Api.ExternalController do
         name: params["name"],
         hostname: strip_www(uri && uri.host),
         pathname: get_pathname(uri, params["hash_mode"]),
-        referrer_source: get_referrer_source(query, ref) || "",
-        referrer: clean_referrer(ref) || "",
-        utm_medium: query["utm_medium"] || "",
-        utm_source: query["utm_source"] || "",
-        utm_campaign: query["utm_campaign"] || "",
-        country_code: country_code || "",
-        operating_system: (ua && os_name(ua)) || "",
-        operating_system_version: (ua && os_version(ua)) || "",
-        browser: (ua && browser_name(ua)) || "",
-        browser_version: (ua && browser_version(ua)) || "",
-        screen_size: calculate_screen_size(params["screen_width"]) || "",
+        referrer_source: get_referrer_source(query, ref),
+        referrer: clean_referrer(ref),
+        utm_medium: query["utm_medium"],
+        utm_source: query["utm_source"],
+        utm_campaign: query["utm_campaign"],
+        country_code: country_code,
+        operating_system: ua && os_name(ua),
+        operating_system_version: ua && os_version(ua),
+        browser: ua && browser_name(ua),
+        browser_version: ua && browser_version(ua),
+        screen_size: calculate_screen_size(params["screen_width"]),
         "meta.key": Map.keys(params["meta"]),
         "meta.value": Map.values(params["meta"]) |> Enum.map(&Kernel.to_string/1)
       }
@@ -112,7 +112,7 @@ defmodule PlausibleWeb.Api.ExternalController do
           |> Plausible.ClickhouseEvent.new()
 
         if changeset.valid? do
-          event = struct(Plausible.ClickhouseEvent, event_attrs)
+          event = Ecto.Changeset.apply_changes(changeset)
           session_id = Plausible.Session.Store.on_event(event, previous_user_id)
 
           event
