@@ -21,10 +21,6 @@ defmodule PlausibleWeb do
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
 
-      if Application.get_env(:appsignal, :config) do
-        use Appsignal.Phoenix.View
-      end
-
       import PlausibleWeb.ErrorHelpers
       alias PlausibleWeb.Router.Helpers, as: Routes
     end

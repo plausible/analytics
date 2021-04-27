@@ -2,7 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.3] - Unreleased
+## Unreleased
+
+### Added
+- New parameter `metrics` for the `/api/v1/stats/timeseries` endpoint plausible/analytics#952
+- CSV export now includes pageviews, bounce rate and visit duration in addition to visitors plausible/analytics#952
+- Send stats to multiple dashboards by configuring a comma-separated list of domains plausible/analytics#968
+
+### Fixed
+- Fix weekly report time range plausible/analytics#951
+
+### Removed
+- Removes AppSignal monitoring package
+
+## [1.3] - 2021-04-14
 
 ### Added
 - Stats API [currently in beta] plausible/analytics#679

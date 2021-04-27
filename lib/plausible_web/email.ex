@@ -124,6 +124,34 @@ defmodule PlausibleWeb.Email do
     })
   end
 
+  def yearly_renewal_notification(user) do
+    date = Timex.format!(user.subscription.next_bill_date, "{Mfull} {D}, {YYYY}")
+
+    base_email()
+    |> to(user)
+    |> tag("yearly-renewal")
+    |> subject("Your Plausible subscription is up for renewal")
+    |> render("yearly_renewal_notification.html", %{
+      user: user,
+      date: date,
+      next_bill_amount: user.subscription.next_bill_amount
+    })
+  end
+
+  def yearly_expiration_notification(user) do
+    date = Timex.format!(user.subscription.next_bill_date, "{Mfull} {D}, {YYYY}")
+
+    base_email()
+    |> to(user)
+    |> tag("yearly-expiration")
+    |> subject("Your Plausible subscription is about to expire")
+    |> render("yearly_expiration_notification.html", %{
+      user: user,
+      date: date,
+      next_bill_amount: user.subscription.next_bill_amount
+    })
+  end
+
   def cancellation_email(user) do
     base_email()
     |> to(user.email)

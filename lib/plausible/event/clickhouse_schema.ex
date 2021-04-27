@@ -10,46 +10,52 @@ defmodule Plausible.ClickhouseEvent do
     field :pathname, :string
     field :user_id, :integer
     field :session_id, :integer
+    field :timestamp, :naive_datetime
 
-    field :referrer, :string
-    field :referrer_source, :string
-    field :utm_medium, :string
-    field :utm_source, :string
-    field :utm_campaign, :string
+    field :referrer, :string, default: ""
+    field :referrer_source, :string, default: ""
+    field :utm_medium, :string, default: ""
+    field :utm_source, :string, default: ""
+    field :utm_campaign, :string, default: ""
 
-    field :country_code, :string
-    field :screen_size, :string
-    field :operating_system, :string
-    field :operating_system_version, :string
-    field :browser, :string
-    field :browser_version, :string
+    field :country_code, :string, default: ""
+    field :screen_size, :string, default: ""
+    field :operating_system, :string, default: ""
+    field :operating_system_version, :string, default: ""
+    field :browser, :string, default: ""
+    field :browser_version, :string, default: ""
 
-    field :"meta.key", {:array, :string}
-    field :"meta.value", {:array, :string}
-
-    timestamps(inserted_at: :timestamp, updated_at: false)
+    field :"meta.key", {:array, :string}, default: []
+    field :"meta.value", {:array, :string}, default: []
   end
 
-  def changeset(pageview, attrs) do
-    pageview
-    |> cast(attrs, [
-      :name,
-      :domain,
-      :hostname,
-      :pathname,
-      :user_id,
-      :operating_system,
-      :operating_system_version,
-      :browser,
-      :browser_version,
-      :referrer,
-      :referrer_source,
-      :utm_medium,
-      :utm_source,
-      :utm_campaign,
-      :country_code,
-      :screen_size
-    ])
-    |> validate_required([:name, :domain, :hostname, :pathname, :user_id])
+  def new(attrs) do
+    %__MODULE__{}
+    |> cast(
+      attrs,
+      [
+        :name,
+        :domain,
+        :hostname,
+        :pathname,
+        :user_id,
+        :timestamp,
+        :operating_system,
+        :operating_system_version,
+        :browser,
+        :browser_version,
+        :referrer,
+        :referrer_source,
+        :utm_medium,
+        :utm_source,
+        :utm_campaign,
+        :country_code,
+        :screen_size,
+        :"meta.key",
+        :"meta.value"
+      ],
+      empty_values: [nil, ""]
+    )
+    |> validate_required([:name, :domain, :hostname, :pathname, :user_id, :timestamp])
   end
 end

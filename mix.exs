@@ -60,8 +60,6 @@ defmodule Plausible.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:appsignal, "~> 2.0"},
-      {:appsignal_phoenix, "~> 2.0.3"},
       {:bcrypt_elixir, "~> 2.0"},
       {:cors_plug, "~> 1.5"},
       {:ecto_sql, "~> 3.0"},
@@ -95,7 +93,7 @@ defmodule Plausible.MixProject do
       {:oauther, "~> 1.1"},
       {:nanoid, "~> 2.0.2"},
       {:siphash, "~> 3.2"},
-      {:oban, "~> 1.2"},
+      {:oban, "~> 2.0"},
       {:sshex, "2.2.1"},
       {:geolix, "~> 1.0"},
       {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
@@ -114,7 +112,8 @@ defmodule Plausible.MixProject do
     [
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate", "test", "clean_clickhouse"]
+      test: ["ecto.create --quiet", "ecto.migrate", "test", "clean_clickhouse"],
+      sentry_recompile: ["compile", "deps.compile sentry --force"]
     ]
   end
 end

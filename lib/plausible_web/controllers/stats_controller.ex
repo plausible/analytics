@@ -36,20 +36,28 @@ defmodule PlausibleWeb.StatsController do
 
   def csv_export(conn, %{"domain" => domain}) do
     site = conn.assigns[:site]
-
     query = Query.from(site.timezone, conn.params)
-    {plot, labels, _} = Stats.calculate_plot(site, query)
+
+    metrics =
+      if query.filters["event:name"] do
+        ["visitors", "pageviews"]
+      else
+        ["visitors", "pageviews", "bounce_rate", "visit_duration"]
+      end
+
+    graph = Plausible.Stats.timeseries(site, query, metrics)
+
+    headers = ["date" | metrics]
 
     csv_content =
-      Enum.zip(labels, plot)
-      |> Enum.map(fn {k, v} -> [k, v] end)
-      |> (fn data -> [["Date", "Visitors"] | data] end).()
+      Enum.map(graph, fn row -> Enum.map(headers, &row[&1]) end)
+      |> (fn data -> [headers | data] end).()
       |> CSV.encode()
       |> Enum.into([])
       |> Enum.join()
 
     filename =
-      "Visitors #{domain} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{
+      "Plausible export #{domain} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{
         Timex.format!(query.date_range.last, "{ISOdate} ")
       }.csv"
 

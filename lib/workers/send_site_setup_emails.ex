@@ -5,7 +5,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
   alias Plausible.Stats.Clickhouse, as: Stats
 
   @impl Oban.Worker
-  def perform(_args, _job) do
+  def perform(_job) do
     send_create_site_emails()
     send_setup_help_emails()
     send_setup_success_emails()

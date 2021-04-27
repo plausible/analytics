@@ -8,7 +8,7 @@ defmodule Plausible.Workers.SendTrialNotifications do
   require Logger
 
   @impl Oban.Worker
-  def perform(_args, _job) do
+  def perform(_job) do
     users =
       Repo.all(
         from u in Plausible.Auth.User,

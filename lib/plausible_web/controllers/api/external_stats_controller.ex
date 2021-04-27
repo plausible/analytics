@@ -120,14 +120,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          :ok <- validate_interval(params),
-         query <- Query.from(site.timezone, params) do
-      {plot, labels} = Plausible.Stats.timeseries(site, query)
-
-      graph =
-        Enum.zip(labels, plot)
-        |> Enum.map(fn {label, val} -> %{date: label, visitors: val} end)
-        |> Enum.into([])
-
+         query <- Query.from(site.timezone, params),
+         {:ok, metrics} <- parse_metrics(params, nil, query) do
+      graph = Plausible.Stats.timeseries(site, query, metrics)
       json(conn, %{"results" => graph})
     else
       {:error, msg} ->

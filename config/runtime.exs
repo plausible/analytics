@@ -79,7 +79,6 @@ hcaptcha_sitekey = System.get_env("HCAPTCHA_SITEKEY")
 hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
 log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
 log_format = System.get_env("LOG_FORMAT", "elixir")
-appsignal_api_key = System.get_env("APPSIGNAL_API_KEY")
 is_selfhost = String.to_existing_atom(System.get_env("SELFHOST", "true"))
 disable_cron = String.to_existing_atom(System.get_env("DISABLE_CRON", "false"))
 
@@ -129,7 +128,9 @@ config :sentry,
   environment_name: env,
   included_environments: ["prod", "staging"],
   release: app_version,
-  tags: %{app_version: app_version}
+  tags: %{app_version: app_version},
+  enable_source_code_context: true,
+  root_source_code_path: [File.cwd!()]
 
 config :plausible, :paddle, vendor_auth_code: paddle_auth_code
 
@@ -216,6 +217,8 @@ if config_env() == :prod && !disable_cron do
     {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
     # Daily at 14
     {"0 14 * * *", Plausible.Workers.CheckUsage},
+    # Daily at 15
+    {"0 15 * * *", Plausible.Workers.NotifyAnnualRenewal},
     # Every 10 minutes
     {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}
   ]
@@ -234,20 +237,23 @@ if config_env() == :prod && !disable_cron do
   extra_queues = [
     provision_ssl_certificates: 1,
     trial_notification_emails: 1,
-    check_usage: 1
+    check_usage: 1,
+    notify_annual_renewal: 1
   ]
 
+  # Keep 30 days history
   config :plausible, Oban,
     # Keep 30 days history
     prune: {:maxage, 2_592_000},
     repo: Plausible.Repo,
+    plugins: [{Oban.Plugins.Pruner, max_age: 2_592_000}],
     queues: if(is_selfhost, do: base_queues, else: base_queues ++ extra_queues),
     crontab: if(is_selfhost, do: base_cron, else: base_cron ++ extra_cron)
 else
   config :plausible, Oban,
     repo: Plausible.Repo,
     queues: false,
-    crontab: false
+    plugins: false
 end
 
 config :plausible, :hcaptcha,
@@ -311,13 +317,4 @@ if log_format == "json" do
   config :logger, Ink,
     name: "plausible",
     level: log_level
-end
-
-if appsignal_api_key do
-  config :appsignal, :config,
-    otp_app: :plausible,
-    name: "Plausible Analytics",
-    push_api_key: appsignal_api_key,
-    env: env,
-    active: true
 end
