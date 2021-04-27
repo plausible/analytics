@@ -30,8 +30,8 @@ defmodule Plausible.ClickhouseEvent do
     timestamps(inserted_at: :timestamp, updated_at: false)
   end
 
-  def changeset(pageview, attrs) do
-    pageview
+  def new(attrs) do
+    %__MODULE__{}
     |> cast(attrs, [
       :name,
       :domain,

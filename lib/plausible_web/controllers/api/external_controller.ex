@@ -84,7 +84,6 @@ defmodule PlausibleWeb.Api.ExternalController do
         name: params["name"],
         hostname: strip_www(uri && uri.host),
         pathname: get_pathname(uri, params["hash_mode"]),
-        user_id: generate_user_id(conn, params, salts[:current]),
         referrer_source: get_referrer_source(query, ref) || "",
         referrer: clean_referrer(ref) || "",
         utm_medium: query["utm_medium"] || "",
@@ -101,12 +100,19 @@ defmodule PlausibleWeb.Api.ExternalController do
       }
 
       Enum.reduce_while(get_domains(params, uri), :error, fn domain, _res ->
-        attrs = Map.put(event_attrs, :domain, domain)
-        changeset = Plausible.ClickhouseEvent.changeset(%Plausible.ClickhouseEvent{}, attrs)
+        user_id = generate_user_id(conn, domain, event_attrs[:hostname], salts[:current])
+
+        previous_user_id =
+          salts[:previous] &&
+            generate_user_id(conn, domain, event_attrs[:hostname], salts[:previous])
+
+        changeset =
+          event_attrs
+          |> Map.merge(%{domain: domain, user_id: user_id})
+          |> Plausible.ClickhouseEvent.new()
 
         if changeset.valid? do
-          previous_user_id = salts[:previous] && generate_user_id(conn, params, salts[:previous])
-          event = struct(Plausible.ClickhouseEvent, attrs)
+          event = struct(Plausible.ClickhouseEvent, event_attrs)
           session_id = Plausible.Session.Store.on_event(event, previous_user_id)
 
           event
@@ -186,12 +192,11 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp generate_user_id(conn, params, salt) do
+  defp generate_user_id(conn, domain, hostname, salt) do
     user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
     ip_address = PlausibleWeb.RemoteIp.get(conn)
-    domain = strip_www(params["domain"]) || ""
 
-    SipHash.hash!(salt, user_agent <> ip_address <> domain)
+    SipHash.hash!(salt, user_agent <> ip_address <> domain <> hostname)
   end
 
   defp calculate_screen_size(nil), do: nil
