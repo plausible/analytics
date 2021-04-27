@@ -7,11 +7,10 @@ defmodule PlausibleWeb.Api.ExternalController do
     Sentry.Context.set_extra_context(%{request: params})
 
     case create_event(conn, params) do
-      {:ok, _} ->
+      :ok ->
         conn |> send_resp(202, "")
 
-      {:error, changeset} ->
-        Logger.info("Error processing event: #{inspect(changeset)}")
+      :error ->
         conn |> send_resp(400, "")
     end
   end
@@ -71,7 +70,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     ua = parse_user_agent(conn)
 
     if is_bot?(ua) do
-      {:ok, nil}
+      :ok
     else
       uri = params["url"] && URI.parse(params["url"])
       query = if uri && uri.query, do: URI.decode_query(uri.query), else: %{}
@@ -84,7 +83,6 @@ defmodule PlausibleWeb.Api.ExternalController do
         timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
         name: params["name"],
         hostname: strip_www(uri && uri.host),
-        domain: strip_www(params["domain"]) || strip_www(uri && uri.host),
         pathname: get_pathname(uri, params["hash_mode"]),
         user_id: generate_user_id(conn, params, salts[:current]),
         referrer_source: get_referrer_source(query, ref) || "",
@@ -102,18 +100,24 @@ defmodule PlausibleWeb.Api.ExternalController do
         "meta.value": Map.values(params["meta"]) |> Enum.map(&Kernel.to_string/1)
       }
 
-      changeset = Plausible.ClickhouseEvent.changeset(%Plausible.ClickhouseEvent{}, event_attrs)
+      Enum.reduce_while(get_domains(params, uri), :error, fn domain, _res ->
+        attrs = Map.put(event_attrs, :domain, domain)
+        changeset = Plausible.ClickhouseEvent.changeset(%Plausible.ClickhouseEvent{}, attrs)
 
-      if changeset.valid? do
-        previous_user_id = salts[:previous] && generate_user_id(conn, params, salts[:previous])
-        event = struct(Plausible.ClickhouseEvent, event_attrs)
-        session_id = Plausible.Session.Store.on_event(event, previous_user_id)
+        if changeset.valid? do
+          previous_user_id = salts[:previous] && generate_user_id(conn, params, salts[:previous])
+          event = struct(Plausible.ClickhouseEvent, attrs)
+          session_id = Plausible.Session.Store.on_event(event, previous_user_id)
 
-        Map.put(event, :session_id, session_id)
-        |> Plausible.Event.WriteBuffer.insert()
-      else
-        {:error, changeset}
-      end
+          event
+          |> Map.put(:session_id, session_id)
+          |> Plausible.Event.WriteBuffer.insert()
+
+          {:cont, :ok}
+        else
+          {:halt, :error}
+        end
+      end)
     end
   end
 
@@ -134,6 +138,16 @@ defmodule PlausibleWeb.Api.ExternalController do
       end
     else
       %{}
+    end
+  end
+
+  defp get_domains(params, uri) do
+    if params["domain"] do
+      String.split(params["domain"], ",")
+      |> Enum.map(&String.trim/1)
+      |> Enum.map(&strip_www/1)
+    else
+      List.wrap(strip_www(uri && uri.host))
     end
   end
 
