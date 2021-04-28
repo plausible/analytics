@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom'
 import FlipMove from 'react-flip-move';
 
+import * as storage from '../../storage'
 import FadeIn from '../../fade-in'
 import Bar from '../bar'
 import MoreLink from '../more-link'
@@ -210,7 +211,7 @@ export default class SourceList extends React.Component {
   constructor(props) {
     super(props)
     this.tabKey = 'sourceTab__' + props.site.domain
-    const storedTab = window.localStorage[this.tabKey]
+    const storedTab = storage.getItem(this.tabKey)
     this.state = {
       tab: storedTab || 'all'
     }
@@ -218,7 +219,7 @@ export default class SourceList extends React.Component {
 
   setTab(tab) {
     return () => {
-      window.localStorage[this.tabKey] = tab
+      storage.setItem(this.tabKey, tab)
       this.setState({tab})
     }
   }

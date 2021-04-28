@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
 import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './date'
+import * as storage from './storage'
 
 const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'custom']
 
@@ -10,9 +11,9 @@ export function parseQuery(querystring, site) {
   const periodKey = `period__${  site.domain}`
 
   if (PERIODS.includes(period)) {
-    if (period !== 'custom' && period !== 'realtime') window.localStorage[periodKey] = period
-  } else if (window.localStorage[periodKey]) {
-      period = window.localStorage[periodKey]
+    if (period !== 'custom' && period !== 'realtime') storage.setItem(periodKey, period)
+  } else if (storage.getItem(periodKey)) {
+      period = storage.getItem(periodKey)
     } else {
       period = '30d'
     }
