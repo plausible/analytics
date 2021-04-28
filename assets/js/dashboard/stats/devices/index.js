@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
 
+import * as storage from '../../storage'
 import LazyLoader from '../../lazy-loader'
 import Browsers from './browsers'
 import OperatingSystems from './operating-systems'
@@ -117,7 +118,7 @@ export default class Devices extends React.Component {
   constructor(props) {
     super(props)
     this.tabKey = 'deviceTab__' + props.site.domain
-    const storedTab = window.localStorage[this.tabKey]
+    const storedTab = storage.getItem(this.tabKey)
     this.state = {
       mode: storedTab || 'size'
     }
@@ -135,7 +136,7 @@ export default class Devices extends React.Component {
 
   setMode(mode) {
     return () => {
-      window.localStorage[this.tabKey] = mode
+      storage.setItem(this.tabKey, mode)
       this.setState({mode})
     }
   }
