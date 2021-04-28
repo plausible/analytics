@@ -7,9 +7,7 @@ You've activated your free 30-day trial of Plausible, a simple and privacy-frien
 Do reply back to this email if you have any questions or need some guidance.
 <br /></br>
 Thanks,<br />
-Uku Taht
-<br /><br />
---
-<br /><br />
+Uku and Marko<br />
+--<br />
 <%= plausible_url() %><br />
 {{{ pm:unsubscribe }}}

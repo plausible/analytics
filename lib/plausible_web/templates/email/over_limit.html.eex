@@ -23,8 +23,8 @@ Have questions or need help with anything? Just reply to this email and we'll gl
 <br /><br />
 Thanks again for using our product and for your support!
 <br /><br />
-Uku and Marko
-<br /><br />
---
-<br /><br />
+Thanks,<br />
+Uku and Marko<br />
+--<br />
 <%= plausible_url() %><br />
+{{{ pm:unsubscribe }}}

@@ -11,11 +11,9 @@ Congrats! The Plausible script has been installed correctly on <%= link(@site.do
 PS: Plausible is fully open-source and our public roadmap is defined by the community. <%= link("Leave your feedback", to: "#{plausible_url()}/feedback") %> and have your say on metrics and features we should be adding next.
 <br /><br />
 Do reply back to this email if you have any questions.
-<br /></br>
+<br /><br />
 Thanks,<br />
-Uku Taht
-<br /><br />
---
-<br /><br />
+Uku and Marko<br />
+--<br />
 <%= plausible_url() %><br />
 {{{ pm:unsubscribe }}}
