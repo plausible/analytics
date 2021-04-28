@@ -23,7 +23,7 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
       )
 
     for domain <- recent_custom_domains do
-      {:ok, res, code} =
+      res =
         ssh.run(
           conn,
           'sudo certbot certonly --webroot -w /root/webroot -n -d \"#{domain.domain}\"',
@@ -31,7 +31,13 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
           exec_timeout: @timeout
         )
 
-      report_result({res, code}, domain)
+      case res do
+        {:ok, msg, code} ->
+          report_result({msg, code}, domain)
+
+        e ->
+          Logger.warn("Error obtaining SSL certificate for #{domain.domain}: #{inspect(e)}")
+      end
     end
 
     :ok
