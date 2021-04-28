@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
 
+import * as storage from '../../storage'
 import Visits from './pages'
 import EntryPages from './entry-pages'
 import ExitPages from './exit-pages'
@@ -16,7 +17,7 @@ export default class Pages extends React.Component {
   constructor(props) {
     super(props)
     this.tabKey = 'pageTab__' + props.site.domain
-    const storedTab = window.localStorage[this.tabKey]
+    const storedTab = storage.getItem(this.tabKey)
     this.state = {
       mode: storedTab || 'pages'
     }
@@ -34,7 +35,7 @@ export default class Pages extends React.Component {
 
   setMode(mode) {
     return () => {
-      window.localStorage[this.tabKey] = mode
+      storage.setItem(this.tabKey, mode)
       this.setState({mode})
     }
   }

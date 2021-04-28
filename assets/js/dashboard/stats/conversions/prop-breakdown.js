@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
 
+import * as storage from '../../storage'
 import Bar from '../bar'
 import numberFormatter from '../../number-formatter'
 import * as api from '../../api'
@@ -10,7 +11,7 @@ export default class PropertyBreakdown extends React.Component {
     super(props)
     let propKey = props.goal.prop_names[0]
     this.storageKey = 'goalPropTab__' + props.site.domain + props.goal.name
-    const storedKey = window.localStorage[this.storageKey]
+    const storedKey = storage.getItem(this.storageKey)
     if (props.goal.prop_names.includes(storedKey)) {
       propKey = storedKey
     }
@@ -70,7 +71,7 @@ export default class PropertyBreakdown extends React.Component {
   }
 
   changePropKey(newKey) {
-    window.localStorage[this.storageKey] = newKey
+    storage.setItem(this.storageKey, newKey)
     this.setState({propKey: newKey, loading: true}, this.fetchPropBreakdown)
   }
 

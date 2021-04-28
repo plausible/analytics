@@ -9,11 +9,9 @@ To finish your setup for <%= @site.domain %>, you need to install <%= link("this
 This Plausible script is 14 times smaller than Google Analytics script so you’ll have a fast loading site while getting all the important traffic insights on one single page.
 <br /><br />
 Do reply back to this email if you have any questions or need some guidance.
-<br /></br>
+<br /><br />
 Thanks,<br />
-Uku Taht
-<br /><br />
---
-<br /><br />
+Uku and Marko<br />
+--<br />
 <%= plausible_url() %><br />
 {{{ pm:unsubscribe }}}
