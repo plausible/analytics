@@ -199,7 +199,7 @@ if config_env() == :prod && !disable_cron do
   base_cron = [
     # Daily at midnight
     {"0 0 * * *", Plausible.Workers.RotateSalts},
-    #  hourly
+    #  hourly
     {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
     # hourly
     {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
@@ -244,8 +244,6 @@ if config_env() == :prod && !disable_cron do
 
   # Keep 30 days history
   config :plausible, Oban,
-    # Keep 30 days history
-    prune: {:maxage, 2_592_000},
     repo: Plausible.Repo,
     plugins: [{Oban.Plugins.Pruner, max_age: 2_592_000}],
     queues: if(is_selfhost, do: base_queues, else: base_queues ++ extra_queues),
