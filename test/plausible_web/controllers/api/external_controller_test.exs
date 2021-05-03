@@ -492,6 +492,24 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert pageview.country_code == "US"
   end
 
+  test "uses cloudflare's special header for client IP address if present", %{conn: conn} do
+    params = %{
+      name: "pageview",
+      domain: "external-controller-test-cloudflare.com",
+      url: "http://gigride.live/"
+    }
+
+    conn
+    |> put_req_header("content-type", "text/plain")
+    |> put_req_header("x-forwarded-for", "0.0.0.0")
+    |> put_req_header("cf-connecting-ip", "1.1.1.1")
+    |> post("/api/event", Jason.encode!(params))
+
+    pageview = get_event("external-controller-test-cloudflare.com")
+
+    assert pageview.country_code == "US"
+  end
+
   test "URL is decoded", %{conn: conn} do
     params = %{
       name: "pageview",
