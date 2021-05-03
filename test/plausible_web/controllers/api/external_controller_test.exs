@@ -587,7 +587,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
   end
 
   test "responds 400 when required fields are missing", %{conn: conn} do
-    params = %{}
+    params = %{
+      domain: "some-domain.com",
+      name: "pageview"
+    }
 
     conn =
       conn
