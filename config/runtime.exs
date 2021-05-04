@@ -80,6 +80,7 @@ hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
 log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
 log_format = System.get_env("LOG_FORMAT", "elixir")
 is_selfhost = String.to_existing_atom(System.get_env("SELFHOST", "true"))
+{site_limit, ""} = Integer.parse(System.get_env("SITE_LIMIT", "20"))
 disable_cron = String.to_existing_atom(System.get_env("DISABLE_CRON", "false"))
 
 {user_agent_cache_limit, ""} = Integer.parse(System.get_env("USER_AGENT_CACHE_LIMIT", "1000"))
@@ -94,6 +95,7 @@ config :plausible,
   environment: env,
   mailer_email: mailer_email,
   admin_emails: admin_emails,
+  site_limit: site_limit,
   is_selfhost: is_selfhost
 
 config :plausible, :selfhost,

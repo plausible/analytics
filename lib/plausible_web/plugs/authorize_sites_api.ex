@@ -11,7 +11,8 @@ defmodule PlausibleWeb.AuthorizeSitesApiPlug do
   def call(conn, _opts) do
     with {:ok, raw_api_key} <- get_bearer_token(conn),
          {:ok, api_key} <- verify_access(raw_api_key) do
-      assign(conn, :current_user_id, api_key.user_id)
+      user = Repo.get_by(Plausible.Auth.User, id: api_key.user_id)
+      assign(conn, :current_user, user)
     else
       {:error, :missing_api_key} ->
         H.unauthorized(

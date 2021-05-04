@@ -2,21 +2,28 @@ defmodule Plausible.Sites do
   use Plausible.Repo
   alias Plausible.Site.{CustomDomain, SharedLink}
 
-  def create(user_id, params) do
-    site_changeset = Plausible.Site.changeset(%Plausible.Site{}, params)
+  def create(user, params) do
+    count = count_for(user)
+    limit = Plausible.Billing.sites_limit(user)
 
-    Ecto.Multi.new()
-    |> Ecto.Multi.insert(:site, site_changeset)
-    |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
-      membership_changeset =
-        Plausible.Site.Membership.changeset(%Plausible.Site.Membership{}, %{
-          site_id: site.id,
-          user_id: user_id
-        })
+    if count >= limit do
+      {:error, :limit, limit}
+    else
+      site_changeset = Plausible.Site.changeset(%Plausible.Site{}, params)
 
-      repo.insert(membership_changeset)
-    end)
-    |> Repo.transaction()
+      Ecto.Multi.new()
+      |> Ecto.Multi.insert(:site, site_changeset)
+      |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
+        membership_changeset =
+          Plausible.Site.Membership.changeset(%Plausible.Site.Membership{}, %{
+            site_id: site.id,
+            user_id: user.id
+          })
+
+        repo.insert(membership_changeset)
+      end)
+      |> Repo.transaction()
+    end
   end
 
   def create_shared_link(site, name, password \\ nil) do
@@ -48,6 +55,15 @@ defmodule Plausible.Sites do
       where: sm.user_id == ^user_id,
       where: s.domain == ^domain,
       select: s
+    )
+  end
+
+  def count_for(user) do
+    Repo.aggregate(
+      from(sm in Plausible.Site.Membership,
+        where: sm.user_id == ^user.id
+      ),
+      :count
     )
   end
 

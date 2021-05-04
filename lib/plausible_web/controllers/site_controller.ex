@@ -23,35 +23,30 @@ defmodule PlausibleWeb.SiteController do
 
   def new(conn, _params) do
     current_user = conn.assigns[:current_user]
-    changeset = Plausible.Site.changeset(%Plausible.Site{})
+    site_count = Plausible.Sites.count_for(current_user)
+    site_limit = Plausible.Billing.sites_limit(current_user)
+    is_at_limit = site_limit && site_count >= site_limit
+    is_first_site = site_count == 0
 
-    is_first_site =
-      !Repo.exists?(
-        from sm in Plausible.Site.Membership,
-          where: sm.user_id == ^current_user.id
-      )
+    changeset = Plausible.Site.changeset(%Plausible.Site{})
 
     render(conn, "new.html",
       changeset: changeset,
       is_first_site: is_first_site,
+      is_at_limit: is_at_limit,
+      site_limit: site_limit,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
 
   def create_site(conn, %{"site" => site_params}) do
     user = conn.assigns[:current_user]
+    site_count = Plausible.Sites.count_for(user)
+    is_first_site = site_count == 0
 
-    case Sites.create(user.id, site_params) do
+    case Sites.create(user, site_params) do
       {:ok, %{site: site}} ->
         Plausible.Slack.notify("#{user.name} created #{site.domain} [email=#{user.email}]")
-
-        is_first_site =
-          !Repo.exists?(
-            from sm in Plausible.Site.Membership,
-              where:
-                sm.user_id == ^user.id and
-                  sm.site_id != ^site.id
-          )
 
         if is_first_site do
           PlausibleWeb.Email.welcome_email(user)
@@ -63,17 +58,15 @@ defmodule PlausibleWeb.SiteController do
         |> redirect(to: "/#{URI.encode_www_form(site.domain)}/snippet")
 
       {:error, :site, changeset, _} ->
-        is_first_site =
-          !Repo.exists?(
-            from sm in Plausible.Site.Membership,
-              where: sm.user_id == ^user.id
-          )
-
         render(conn, "new.html",
           changeset: changeset,
           is_first_site: is_first_site,
+          is_at_limit: false,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
+
+      {:error, :limit, _limit} ->
+        send_resp(conn, 400, "Site limit reached")
     end
   end
 

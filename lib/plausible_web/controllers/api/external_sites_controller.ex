@@ -6,9 +6,9 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   alias PlausibleWeb.Api.Helpers, as: H
 
   def create_site(conn, params) do
-    user_id = conn.assigns[:current_user_id]
+    user = conn.assigns[:current_user]
 
-    case Sites.create(user_id, params) do
+    case Sites.create(user, params) do
       {:ok, %{site: site}} ->
         json(conn, site)
 
@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   def find_or_create_shared_link(conn, params) do
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
          {:ok, link_name} <- expect_param_key(params, "name"),
-         site when not is_nil(site) <- Sites.get_for_user(conn.assigns[:current_user_id], site_id) do
+         site when not is_nil(site) <- Sites.get_for_user(conn.assigns[:current_user].id, site_id) do
       shared_link = Repo.get_by(Plausible.Site.SharedLink, site_id: site.id, name: link_name)
 
       shared_link =
