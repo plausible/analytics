@@ -43,6 +43,27 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~ "test-site.com"
       assert html_response(conn, 200) =~ "<b>3</b> visitors in last 24h"
     end
+
+    test "paginates sites", %{conn: conn, user: user} do
+      insert(:site, members: [user], domain: "test-site1.com")
+      insert(:site, members: [user], domain: "test-site2.com")
+      insert(:site, members: [user], domain: "test-site3.com")
+      insert(:site, members: [user], domain: "test-site4.com")
+
+      conn = get(conn, "/sites?per_page=2")
+
+      assert html_response(conn, 200) =~ "test-site1.com"
+      assert html_response(conn, 200) =~ "test-site2.com"
+      refute html_response(conn, 200) =~ "test-site3.com"
+      refute html_response(conn, 200) =~ "test-site4.com"
+
+      conn = get(conn, "/sites?per_page=2&page=2")
+
+      refute html_response(conn, 200) =~ "test-site1.com"
+      refute html_response(conn, 200) =~ "test-site2.com"
+      assert html_response(conn, 200) =~ "test-site3.com"
+      assert html_response(conn, 200) =~ "test-site4.com"
+    end
   end
 
   describe "POST /sites" do

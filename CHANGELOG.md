@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fix weekly report time range plausible/analytics#951
 - Make sure embedded dashboards can run when user has blocked third-party cookies plausible/analytics#971
+- Sites listing page will paginate if the user has a lot of sites plausible/analytics#994
 
 ### Removed
 - Removes AppSignal monitoring package

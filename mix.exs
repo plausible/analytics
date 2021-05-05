@@ -94,7 +94,8 @@ defmodule Plausible.MixProject do
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:kaffy, "~> 0.9.0"},
       {:envy, "~> 1.1.1"},
-      {:ink, "~> 1.0"}
+      {:ink, "~> 1.0"},
+      {:phoenix_pagination, "~> 0.7.0"}
     ]
   end
 

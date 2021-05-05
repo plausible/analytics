@@ -304,3 +304,7 @@ blockquote {
 iframe[hidden] {
   display: none;
 }
+
+.pagination-link[disabled] {
+  @apply cursor-default bg-gray-100 pointer-events-none;
+}
