@@ -5,20 +5,22 @@ defmodule PlausibleWeb.SiteController do
 
   plug PlausibleWeb.RequireAccountPlug
 
-  def index(conn, _params) do
+  def index(conn, params) do
     user = conn.assigns[:current_user]
 
-    sites =
-      Repo.all(
-        from s in Plausible.Site,
+    {sites, pagination} =
+      Repo.paginate(
+        from(s in Plausible.Site,
           join: sm in Plausible.Site.Membership,
           on: sm.site_id == s.id,
           where: sm.user_id == ^user.id,
           order_by: s.domain
+        ),
+        params
       )
 
     visitors = Plausible.Stats.Clickhouse.last_24h_visitors(sites)
-    render(conn, "index.html", sites: sites, visitors: visitors)
+    render(conn, "index.html", sites: sites, visitors: visitors, pagination: pagination)
   end
 
   def new(conn, _params) do

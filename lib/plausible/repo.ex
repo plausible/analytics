@@ -3,6 +3,8 @@ defmodule Plausible.Repo do
     otp_app: :plausible,
     adapter: Ecto.Adapters.Postgres
 
+  use Phoenix.Pagination, per_page: 18
+
   defmacro __using__(_) do
     quote do
       alias Plausible.Repo
