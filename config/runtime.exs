@@ -81,7 +81,6 @@ log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
 log_format = System.get_env("LOG_FORMAT", "elixir")
 is_selfhost = String.to_existing_atom(System.get_env("SELFHOST", "true"))
 {site_limit, ""} = Integer.parse(System.get_env("SITE_LIMIT", "20"))
-no_limit_ids = System.get_env("NO_LIMIT_IDS", "") |> String.split(",") |> Enum.map(&String.trim/1)
 disable_cron = String.to_existing_atom(System.get_env("DISABLE_CRON", "false"))
 
 {user_agent_cache_limit, ""} = Integer.parse(System.get_env("USER_AGENT_CACHE_LIMIT", "1000"))
@@ -97,7 +96,6 @@ config :plausible,
   mailer_email: mailer_email,
   admin_emails: admin_emails,
   site_limit: site_limit,
-  no_limit_ids: no_limit_ids,
   is_selfhost: is_selfhost
 
 config :plausible, :selfhost,
