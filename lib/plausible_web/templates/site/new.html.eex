@@ -1,6 +1,27 @@
 <div class="w-full max-w-3xl mt-4 mx-auto flex">
   <%= form_for @changeset, "/sites", [class: "max-w-lg w-full mx-auto bg-white dark:bg-gray-800 shadow-lg rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
     <h2 class="text-xl font-black dark:text-gray-100">Your website details</h2>
+    <%= if @is_at_limit do %>
+      <div class="rounded-md bg-yellow-50 dark:bg-transparent dark:border border-yellow-200 p-4 mt-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-yellow-400 dark:text-yellow-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-400">
+              Upgrade required
+            </h3>
+            <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+              <p>
+              Your account is limited to <%= @site_limit %> sites. Please contact hello@plausible.io to add more sites.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
     <div class="my-6">
       <%= label f, :domain, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
       <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">Just the naked domain or subdomain without 'www'</p>
@@ -8,7 +29,7 @@
         <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-500 bg-gray-50 dark:bg-gray-850 text-gray-500 dark:text-gray-400 sm:text-sm">
           https://
         </span>
-        <%= text_input f, :domain, class: "focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 flex-1 block w-full px-3 py-2 rounded-none rounded-r-md sm:text-sm border-gray-300 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300", placeholder: "example.com" %>
+        <%= text_input f, :domain, class: "focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 flex-1 block w-full px-3 py-2 rounded-none rounded-r-md sm:text-sm border-gray-300 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300", placeholder: "example.com", disabled: @is_at_limit %>
       </div>
       <%= error_tag f, :domain %>
     </div>
@@ -17,7 +38,7 @@
       <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">To make sure we agree on what 'today' means</p>
 
       <div class="inline-block relative w-full">
-        <%= select f, :timezone, Plausible.Timezones.options(), id: "tz-select", selected: "Etc/Greenwich", class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
+        <%= select f, :timezone, Plausible.Timezones.options(), id: "tz-select", selected: "Etc/Greenwich", class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md", disabled: @is_at_limit %>
       </div>
     </div>
     <script>
@@ -26,7 +47,7 @@
       if (option) { option.selected = "selected"}
     </script>
 
-    <%= submit "Add snippet →", class: "button mt-4 w-full" %>
+    <%= submit "Add snippet →", class: "button mt-4 w-full", disabled: @is_at_limit %>
   <% end %>
 
   <%= if @is_first_site do %>

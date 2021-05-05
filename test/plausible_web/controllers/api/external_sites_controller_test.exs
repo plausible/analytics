@@ -43,6 +43,24 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
              }
     end
 
+    test "does not allow creating more sites than the limit", %{conn: conn, user: user} do
+      Application.put_env(:plausible, :site_limit, 3)
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+
+      conn =
+        post(conn, "/api/v1/sites", %{
+          "domain" => "some-site.domain",
+          "timezone" => "Europe/Tallinn"
+        })
+
+      assert json_response(conn, 403) == %{
+               "error" =>
+                 "Your account has reached the limit of 3 sites per account. Please contact hello@plausible.io to unlock more sites."
+             }
+    end
+
     test "cannot access with a bad API key scope", %{conn: conn, user: user} do
       api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
 
