@@ -108,6 +108,32 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert conn.status == 400
     end
 
+    test "allows accounts registered before 2021-05-05 to go over the limit", %{
+      conn: conn,
+      user: user
+    } do
+      Repo.update_all(from(u in "users", where: u.id == ^user.id),
+        set: [inserted_at: ~N[2020-01-01 00:00:00]]
+      )
+
+      Application.put_env(:plausible, :site_limit, 3)
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert redirected_to(conn) == "/example.com/snippet"
+      assert Repo.exists?(Plausible.Site, domain: "example.com")
+    end
+
     test "cleans up the url", %{conn: conn} do
       conn =
         post(conn, "/sites", %{
