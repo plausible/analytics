@@ -193,11 +193,14 @@ defmodule Plausible.Billing do
   grandfathering old accounts to unlimited websites and ignores site limit on self-hosted
   installations.
   """
-  @limit_accounts_after ~D[2018-05-04]
+  @limit_accounts_since ~D[2018-05-05]
   def sites_limit(user) do
+    no_limit_ids = Application.get_env(:plausible, :no_limit_ids)
+
     cond do
-      Timex.before?(user.inserted_at, @limit_accounts_after) -> nil
+      Timex.before?(user.inserted_at, @limit_accounts_since) -> nil
       Application.get_env(:plausible, :is_selfhost) -> nil
+      user.id in no_limit_ids -> nil
       true -> Application.get_env(:plausible, :site_limit)
     end
   end
