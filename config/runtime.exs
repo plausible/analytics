@@ -128,6 +128,8 @@ config :plausible, :slack, webhook: slack_hook_url
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
+  queue_target: 500,
+  queue_interval: 2000,
   url: ch_db_url
 
 case mailer_adapter do
