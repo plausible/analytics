@@ -8,7 +8,7 @@ We don't enforce any hard limits at the moment, we're still counting your stats 
 <br /><br />
 In the last billing cycle (<%= date_format(@last_cycle.first) %> to <%= date_format(@last_cycle.last) %>), your account has used <%= PlausibleWeb.StatsView.large_number_format(@usage) %> billable pageviews.
 <%= if @usage <= 20_000_000 do %>
-Based on that we recommend you select the <%= Plausible.Billing.Plans.suggested_plan_name(@usage) %> plan which runs at <%= Plausible.Billing.Plans.suggested_plan_cost(@usage) %> or <%= Plausible.Billing.Plans.suggested_plan_cost_yearly(@usage) %> when billed yearly.
+Based on that we recommend you select the <%= @suggested_plan[:volume] %>/mo plan which runs at <%= @suggested_plan[:monthly_cost] %>/mo or <%= @suggested_plan[:yearly_cost] %>/yr when billed yearly.
 <br /><br />
 You can upgrade your subscription using our self-serve platform. The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire.
 <br /><br />

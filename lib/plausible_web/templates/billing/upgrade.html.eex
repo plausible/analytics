@@ -1,5 +1,27 @@
 <script>
-  window.plans = <%= raw Jason.encode!(Plausible.Billing.Plans.plans()) %>
+  window.plans = function() {
+    return {
+      rawPlans: <%= raw Jason.encode!(Plausible.Billing.Plans.plans_for(@user)) %>,
+      volume: '10k',
+      billingCycle: 'monthly',
+      selectedPlanPrice() {
+        var selectedPlan = this.rawPlans.find((plan) => plan.volume === this.volume)
+        if (this.billingCycle === 'monthly'){
+          return selectedPlan.monthly_cost
+        } else {
+          return selectedPlan.yearly_cost
+        }
+      },
+      selectedPlanProductId() {
+        var selectedPlan = this.rawPlans.find((plan) => plan.volume === this.volume)
+        if (this.billingCycle === 'monthly'){
+          return selectedPlan.monthly_product_id
+        } else {
+          return selectedPlan.yearly_product_id
+        }
+      }
+    }
+  }
 </script>
 
 <div class="mx-auto mt-6 text-center">
@@ -8,7 +30,7 @@
 
 <div>
   <div class="flex flex-col w-full max-w-4xl px-4 mx-auto mt-4 md:flex-row">
-    <div x-data="{volume: '10k', billingCycle: 'monthly'}" class="flex-1 px-8 py-4 mt-8 mb-4 bg-white rounded shadow-md dark:bg-gray-800">
+    <div x-data="window.plans()" class="flex-1 px-8 py-4 mt-8 mb-4 bg-white rounded shadow-md dark:bg-gray-800">
       <div class="w-full py-4 dark:text-gray-100">
         <span>You've used <b><%= PlausibleWeb.AuthView.delimit_integer(@usage) %></b> billable pageviews in the last 30 days</span>
       </div>
@@ -39,20 +61,14 @@
                     Monthly pageviews
                   </th>
                   <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase bg-gray-100 border-b border-gray-200 dark:bg-gray-900 leading-4 dark:text-gray-200">
-                    Price per month
+                    Price
                   </th>
                 </tr>
               </thead>
               <tbody class="bg-white dark:bg-gray-800">
-              <%= render("_plan_option.html", volume: "10k", monthly_price: "$6", yearly_price: "$4") %>
-              <%= render("_plan_option.html", volume: "100k", monthly_price: "$12", yearly_price: "$8") %>
-              <%= render("_plan_option.html", volume: "200k", monthly_price: "$18", yearly_price: "$12") %>
-              <%= render("_plan_option.html", volume: "500k", monthly_price: "$27", yearly_price: "$18") %>
-              <%= render("_plan_option.html", volume: "1M", monthly_price: "$48", yearly_price: "$32") %>
-              <%= render("_plan_option.html", volume: "2M", monthly_price: "$69", yearly_price: "$46") %>
-              <%= render("_plan_option.html", volume: "5M", monthly_price: "$99", yearly_price: "$69") %>
-              <%= render("_plan_option.html", volume: "10M", monthly_price: "$150", yearly_price: "$100") %>
-              <%= render("_plan_option.html", volume: "20M", monthly_price: "$225", yearly_price: "$150") %>
+                <%= for plan <- Plausible.Billing.Plans.plans_for(@user) do %>
+                  <%= render("_plan_option.html", volume: PlausibleWeb.StatsView.large_number_format(plan[:limit]), monthly_price: plan[:monthly_cost], yearly_price: plan[:yearly_cost]) %>
+                <% end %>
               </tbody>
             </table>
           </div>
@@ -60,9 +76,9 @@
       </div>
 
       <div class="mt-6 text-right">
-        <div class="mb-4 text-sm font-medium dark:text-gray-100">Due today: <b x-text="window.plans[billingCycle][volume].cost">$6</b></div>
+        <div class="mb-4 text-sm font-medium dark:text-gray-100">Due today: <b x-text="selectedPlanPrice()">$6</b></div>
         <span class="inline-flex rounded-md shadow-sm">
-          <button type="button" data-theme="none" :data-product="window.plans[billingCycle][volume].product_id" data-email="<%= @conn.assigns[:current_user].email %>" data-disable-logout="true" data-passthrough="<%= @conn.assigns[:current_user].id %>" data-success="/billing/upgrade-success" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent paddle_button leading-5 rounded-md hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150">
+          <button type="button" data-theme="none" :data-product="selectedPlanProductId()" data-email="<%= @conn.assigns[:current_user].email %>" data-disable-logout="true" data-passthrough="<%= @conn.assigns[:current_user].id %>" data-success="/billing/upgrade-success" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent paddle_button leading-5 rounded-md hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150">
             <svg fill="currentColor" viewBox="0 0 20 20" class="inline w-4 h-4 mr-2"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
             Pay securely via Paddle
           </button>

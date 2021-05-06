@@ -7,7 +7,7 @@ defmodule Plausible.Workers.CheckUsageTest do
   alias Plausible.Billing.Plans
 
   setup [:create_user, :create_site]
-  @paddle_id_10k Plans.plans()[:monthly][:"10k"][:product_id]
+  @paddle_id_10k Plans.plans_for(nil) |> List.first() |> Map.get(:monthly_product_id)
 
   test "ignores user without subscription" do
     CheckUsage.perform(nil)
@@ -89,7 +89,8 @@ defmodule Plausible.Workers.CheckUsageTest do
 
     assert_email_delivered_with(
       to: [user],
-      html_body: ~r/select the 100k\/mo plan which runs at \$12\/mo or \$8\/mo when billed yearly/
+      html_body:
+        ~r/select the 100k\/mo plan which runs at \$12\/mo or \$96\/yr when billed yearly/
     )
   end
 

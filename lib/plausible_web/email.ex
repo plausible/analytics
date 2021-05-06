@@ -71,6 +71,8 @@ defmodule PlausibleWeb.Email do
   end
 
   def trial_upgrade_email(user, day, {pageviews, custom_events}) do
+    suggested_plan = Plausible.Billing.Plans.suggested_plan(user, pageviews + custom_events)
+
     base_email()
     |> to(user)
     |> tag("trial-upgrade-email")
@@ -79,7 +81,8 @@ defmodule PlausibleWeb.Email do
       user: user,
       day: day,
       custom_events: custom_events,
-      usage: pageviews + custom_events
+      usage: pageviews + custom_events,
+      suggested_plan: suggested_plan
     )
   end
 
@@ -112,7 +115,7 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  def over_limit_email(user, usage, last_cycle) do
+  def over_limit_email(user, usage, last_cycle, suggested_plan) do
     base_email()
     |> to(user)
     |> tag("over-limit")
@@ -120,7 +123,8 @@ defmodule PlausibleWeb.Email do
     |> render("over_limit.html", %{
       user: user,
       usage: usage,
-      last_cycle: last_cycle
+      last_cycle: last_cycle,
+      suggested_plan: suggested_plan
     })
   end
 

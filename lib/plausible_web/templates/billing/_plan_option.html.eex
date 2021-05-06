@@ -1,7 +1,7 @@
 <tr @click="volume = '<%= @volume %>'" :class="{'border-2 border-green-300 bg-opacity-20 bg-green-300': volume === '<%= @volume %>', 'border-b border-gray-200 cursor-pointer': volume !== '<%= @volume %>'}">
   <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100" :class="{'font-bold': volume === '<%= @volume %>'}"><%= @volume %></td>
   <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100" :class="{'font-bold': volume === '<%= @volume %>'}">
-    <span x-show="billingCycle === 'monthly'"><%= @monthly_price %></span>
-    <span x-show="billingCycle === 'yearly'"><%= @yearly_price %></span>
+    <span x-show="billingCycle === 'monthly'"><%= @monthly_price %> / mo</span>
+    <span x-show="billingCycle === 'yearly'"><%= @yearly_price %> / yr</span>
   </td>
 </tr>

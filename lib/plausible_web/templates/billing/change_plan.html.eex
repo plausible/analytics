@@ -1,5 +1,27 @@
 <script>
-  window.plans = <%= raw Jason.encode!(Plausible.Billing.Plans.plans()) %>
+  window.plans = function() {
+    return {
+      rawPlans: <%= raw Jason.encode!(Plausible.Billing.Plans.plans_for(@conn.assigns[:current_user])) %>,
+      volume: '10k',
+      billingCycle: 'monthly',
+      selectedPlanPrice() {
+        var selectedPlan = this.rawPlans.find((plan) => plan.volume === this.volume)
+        if (this.billingCycle === 'monthly'){
+          return selectedPlan.monthly_cost
+        } else {
+          return selectedPlan.yearly_cost
+        }
+      },
+      selectedPlanProductId() {
+        var selectedPlan = this.rawPlans.find((plan) => plan.volume === this.volume)
+        if (this.billingCycle === 'monthly'){
+          return selectedPlan.monthly_product_id
+        } else {
+          return selectedPlan.yearly_product_id
+        }
+      }
+    }
+  }
 </script>
 
 <div class="mx-auto mt-6 text-center">
@@ -7,7 +29,7 @@
 </div>
 
 <div class="w-full max-w-lg px-4 mx-auto mt-4">
-  <div x-data="{volume: '10k', billingCycle: 'monthly'}" class="flex-1 px-8 py-4 mt-8 mb-4 bg-white rounded shadow-md dark:bg-gray-800">
+  <div x-data="window.plans()" class="flex-1 px-8 py-4 mt-8 mb-4 bg-white rounded shadow-md dark:bg-gray-800">
     <div class="w-full pt-2 text-xl font-bold dark:text-gray-100">
       Select your new plan
     </div>
@@ -48,15 +70,9 @@
               </tr>
             </thead>
             <tbody class="bg-white dark:bg-gray-800">
-              <%= render("_plan_option.html", volume: "10k", monthly_price: "$6", yearly_price: "$4") %>
-              <%= render("_plan_option.html", volume: "100k", monthly_price: "$12", yearly_price: "$8") %>
-              <%= render("_plan_option.html", volume: "200k", monthly_price: "$18", yearly_price: "$12") %>
-              <%= render("_plan_option.html", volume: "500k", monthly_price: "$27", yearly_price: "$18") %>
-              <%= render("_plan_option.html", volume: "1M", monthly_price: "$48", yearly_price: "$32") %>
-              <%= render("_plan_option.html", volume: "2M", monthly_price: "$69", yearly_price: "$46") %>
-              <%= render("_plan_option.html", volume: "5M", monthly_price: "$99", yearly_price: "$69") %>
-              <%= render("_plan_option.html", volume: "10M", monthly_price: "$150", yearly_price: "$100") %>
-              <%= render("_plan_option.html", volume: "20M", monthly_price: "$225", yearly_price: "$150") %>
+              <%= for plan <- Plausible.Billing.Plans.plans_for(@conn.assigns[:current_user]) do %>
+                <%= render("_plan_option.html", volume: PlausibleWeb.StatsView.large_number_format(plan[:limit]), monthly_price: plan[:monthly_cost], yearly_price: plan[:yearly_cost]) %>
+              <% end %>
             </tbody>
           </table>
         </div>
@@ -65,12 +81,12 @@
 
     <div class="mt-6 text-right">
       <span class="inline-flex rounded-md shadow-sm">
-        <a x-show="window.plans[billingCycle][volume].product_id !== '<%= @subscription.paddle_plan_id %>'" style="display: none;" :href="'/billing/change-plan/preview/' + window.plans[billingCycle][volume].product_id" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent leading-5 rounded-md hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150">
+        <a x-show="selectedPlanProductId() !== '<%= @subscription.paddle_plan_id %>'" style="display: none;" :href="'/billing/change-plan/preview/' + selectedPlanProductId()" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent leading-5 rounded-md hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150">
           <svg fill="currentColor" viewBox="0 0 20 20" class="inline w-4 h-4 mr-2"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path></svg>
           Preview changes
         </a>
 
-        <a x-show="window.plans[billingCycle][volume].product_id === '<%= @subscription.paddle_plan_id %>'" style="display: none;" tooltip="Select a different plan to continue" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-400 border border-transparent leading-5 rounded-md">
+        <a x-show="selectedPlanProductId() === '<%= @subscription.paddle_plan_id %>'" style="display: none;" tooltip="Select a different plan to continue" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-400 border border-transparent leading-5 rounded-md">
           <svg fill="currentColor" viewBox="0 0 20 20" class="inline w-4 h-4 mr-2"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path></svg>
           Preview changes
         </a>

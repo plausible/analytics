@@ -6,8 +6,9 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   alias Plausible.Billing.Plans
 
   setup [:create_user, :create_site]
-  @monthly_plan Plans.plans()[:monthly][:"10k"][:product_id]
-  @yearly_plan Plans.plans()[:yearly][:"10k"][:product_id]
+  @plan_10k Plans.plans_for(nil) |> List.first()
+  @monthly_plan @plan_10k[:monthly_product_id]
+  @yearly_plan @plan_10k[:yearly_product_id]
 
   test "ignores user without subscription" do
     NotifyAnnualRenewal.perform(nil)
