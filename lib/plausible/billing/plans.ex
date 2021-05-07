@@ -1,76 +1,8 @@
 defmodule Plausible.Billing.Plans do
-  @plans_v1 [
-    %{
-      limit: 10_000,
-      monthly_product_id: "558018",
-      monthly_cost: "$6",
-      yearly_product_id: "572810",
-      yearly_cost: "$48"
-    },
-    %{
-      limit: 100_000,
-      monthly_product_id: "558745",
-      monthly_cost: "$12",
-      yearly_product_id: "590752",
-      yearly_cost: "$96"
-    },
-    %{
-      limit: 200_000,
-      monthly_product_id: "597485",
-      monthly_cost: "$18",
-      yearly_product_id: "597486",
-      yearly_cost: "$144"
-    },
-    %{
-      limit: 500_000,
-      monthly_product_id: "597487",
-      monthly_cost: "$27",
-      yearly_product_id: "597488",
-      yearly_cost: "$216"
-    },
-    %{
-      limit: 1_000_000,
-      monthly_product_id: "597642",
-      monthly_cost: "$48",
-      yearly_product_id: "597643",
-      yearly_cost: "$384"
-    },
-    %{
-      limit: 2_000_000,
-      monthly_product_id: "597309",
-      monthly_cost: "$69",
-      yearly_product_id: "597310",
-      yearly_cost: "$552"
-    },
-    %{
-      limit: 5_000_000,
-      monthly_product_id: "597311",
-      monthly_cost: "$99",
-      yearly_product_id: "597312",
-      yearly_cost: "$792"
-    },
-    %{
-      limit: 10_000_000,
-      monthly_product_id: "642352",
-      monthly_cost: "$150",
-      yearly_product_id: "642354",
-      yearly_cost: "$1200"
-    },
-    %{
-      limit: 20_000_000,
-      monthly_product_id: "642355",
-      monthly_cost: "$225",
-      yearly_product_id: "642356",
-      yearly_cost: "$1800"
-    },
-    %{
-      limit: 50_000_000,
-      monthly_product_id: "650652",
-      monthly_cost: "$330",
-      yearly_product_id: "650653",
-      yearly_cost: "$2640"
-    }
-  ]
+  @plans_v1 File.read!(Application.app_dir(:plausible) <> "/priv/plans_v1.json")
+            |> Jason.decode!(keys: :atoms)
+  @plans_v2 File.read!(Application.app_dir(:plausible) <> "/priv/plans_v2.json")
+            |> Jason.decode!(keys: :atoms)
 
   @unlisted_plans_v1 [
     %{limit: 150_000_000, yearly_product_id: "648089", yearly_cost: "$4800"}
@@ -131,5 +63,8 @@ defmodule Plausible.Billing.Plans do
 
   defp number_format(num) do
     PlausibleWeb.StatsView.large_number_format(num)
+  end
+
+  defp plans_v1() do
   end
 end
