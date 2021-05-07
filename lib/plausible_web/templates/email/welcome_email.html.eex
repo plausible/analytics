@@ -17,8 +17,8 @@ Have a question, feedback or need some guidance? Do reply back to this email.
 <br /><br />
 Thanks,<br />
 Uku and Marko
-<br /><br />
+<br />
 --
-<br /><br />
+<br />
 <%= plausible_url() %><br />
 {{{ pm:unsubscribe }}}

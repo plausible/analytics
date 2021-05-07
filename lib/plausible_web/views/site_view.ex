@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.SiteView do
   use PlausibleWeb, :view
+  import Phoenix.Pagination.HTML
 
   def admin_email do
     Application.get_env(:plausible, :admin_email)

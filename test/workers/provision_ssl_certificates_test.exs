@@ -46,4 +46,18 @@ defmodule Plausible.Workers.SslCertificatesTest do
     domain = Repo.get_by(Plausible.Site.CustomDomain, site_id: site.id)
     refute domain.has_ssl_certificate
   end
+
+  test "does not set has_ssl_certficate=true if the ssh command errors completely" do
+    site = insert(:site)
+    insert(:custom_domain, site: site, domain: "custom-site.com")
+
+    ssh_stub =
+      stub(SSHEx, :connect, fn _cmd -> {:ok, nil} end)
+      |> stub(:run, fn _conn, _cmd, _opts -> {:error, "msg"} end)
+
+    ProvisionSslCertificates.perform(nil, ssh_stub)
+
+    domain = Repo.get_by(Plausible.Site.CustomDomain, site_id: site.id)
+    refute domain.has_ssl_certificate
+  end
 end
