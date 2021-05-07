@@ -94,6 +94,9 @@ defmodule PlausibleWeb.BillingController do
     plan = Plausible.Billing.Plans.for_product_id(plan_id)
 
     if plan do
+      cycle = if plan[:monthly_product_id] == plan_id, do: "monthly", else: "yearly"
+      cost = if cycle == "monthly", do: plan[:monthly_cost], else: plan[:yearly_cost]
+      plan = Map.merge(plan, %{cycle: cycle, cost: cost, product_id: plan_id})
       usage = Plausible.Billing.usage(conn.assigns[:current_user])
 
       render(conn, "upgrade_to_plan.html",

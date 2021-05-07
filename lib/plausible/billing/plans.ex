@@ -72,7 +72,7 @@ defmodule Plausible.Billing.Plans do
     }
   ]
 
-  @yearly_plans_v1 [
+  @unlisted_plans_v1 [
     %{limit: 150_000_000, yearly_product_id: "648089", yearly_cost: "$4800"}
   ]
 
@@ -85,7 +85,7 @@ defmodule Plausible.Billing.Plans do
   end
 
   def for_product_id(product_id) do
-    Enum.find(@plans_v1, fn plan ->
+    Enum.find(@plans_v1 ++ @unlisted_plans_v1, fn plan ->
       product_id in [plan[:monthly_product_id], plan[:yearly_product_id]]
     end)
   end
