@@ -4,7 +4,7 @@ import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import * as api from '../../api'
-import numberFormatter from '../../number-formatter'
+import numberFormatter, {durationFormatter} from '../../number-formatter'
 import {parseQuery} from '../../query'
 
 class PagesModal extends React.Component {
@@ -24,7 +24,7 @@ class PagesModal extends React.Component {
   }
 
   loadPages() {
-    const include = this.showBounceRate() ? 'bounce_rate' : null
+    const include = [this.showBounceRate() && 'bounce_rate', this.showTimeOnPage() && 'time_on_page'].filter(i =>i).join(',')
     const {query, page, pages} = this.state;
 
     const {filters} = query
@@ -45,6 +45,10 @@ class PagesModal extends React.Component {
     return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
   }
 
+  showTimeOnPage() {
+    return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
+  }
+
   showPageviews() {
     const {filters} = this.state.query
     return this.state.query.period !== 'realtime' && !(filters.goal || filters.source || filters.referrer)
@@ -60,6 +64,7 @@ class PagesModal extends React.Component {
 
   renderPage(page) {
     const query = new URLSearchParams(window.location.search)
+    const timeOnPage = page['time_on_page'] ? durationFormatter(page['time_on_page']) : '-';
     query.set('page', page.name)
 
     return (
@@ -70,6 +75,7 @@ class PagesModal extends React.Component {
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
         {this.showPageviews() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.pageviews)}</td> }
         {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td> }
+        {this.showTimeOnPage() && <td className="p-2 w-32 font-medium" align="right">{timeOnPage}</td> }
       </tr>
     )
   }
@@ -112,6 +118,7 @@ class PagesModal extends React.Component {
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{ this.label() }</th>
                   {this.showPageviews() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Pageviews</th>}
                   {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Bounce rate</th>}
+                  {this.showTimeOnPage() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Time on Page</th>}
                 </tr>
               </thead>
               <tbody>

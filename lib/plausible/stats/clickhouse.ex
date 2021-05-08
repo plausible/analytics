@@ -622,9 +622,20 @@ defmodule Plausible.Stats.Clickhouse do
 
     pages = ClickhouseRepo.all(q)
 
-    if "bounce_rate" in include do
-      bounce_rates = bounce_rates_by_page_url(site, query)
-      Enum.map(pages, fn url -> Map.put(url, :bounce_rate, bounce_rates[url[:name]]) end)
+    pages =
+      if "bounce_rate" in include do
+        bounce_rates = bounce_rates_by_page_url(site, query)
+        Enum.map(pages, fn url -> Map.put(url, :bounce_rate, bounce_rates[url[:name]]) end)
+      else
+        pages
+      end
+
+    if "time_on_page" in include do
+      {:ok, page_times} =
+        page_times_by_page_url(site, query, Enum.map(pages, fn p -> p.name end))
+
+      page_times = page_times.rows |> Enum.map(fn [a, b] -> {a, b} end) |> Enum.into(%{})
+      Enum.map(pages, fn url -> time=page_times[url[:name]]; if time do Map.put(url, :time_on_page, round(time)) else url end end)
     else
       pages
     end
@@ -646,6 +657,39 @@ defmodule Plausible.Stats.Clickhouse do
     )
     |> Enum.map(fn row -> {row[:entry_page], row[:bounce_rate]} end)
     |> Enum.into(%{})
+  end
+
+  defp page_times_by_page_url(site, query, page_list) do
+    q =
+      from(e in base_query(site, query),
+        select: {
+          fragment("? as p", e.pathname),
+          fragment("? as t", e.timestamp),
+          fragment("? as s", e.session_id)
+        },
+        order_by: [e.session_id, e.timestamp]
+      )
+
+    {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
+
+    "SELECT
+      p,
+      sum(td)/count(case when p2 != p then 1 end) as avgTime
+    FROM
+      (SELECT
+        p,
+        p2,
+        sum(t2-t) as td
+      FROM
+        (SELECT
+          *,
+          neighbor(t, 1) as t2,
+          neighbor(p, 1) as p2,
+          neighbor(s, 1) as s2
+        FROM (#{base_query_raw}))
+      WHERE s=s2 AND p IN tuple(?)
+      GROUP BY p,p2,s)
+    GROUP BY p" |> ClickhouseRepo.query(base_query_raw_params ++ [page_list])
   end
 
   defp add_percentages(stat_list) do
