@@ -631,11 +631,23 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     if "time_on_page" in include do
-      {:ok, page_times} =
-        page_times_by_page_url(site, query, Enum.map(pages, fn p -> p.name end))
+      {:ok, page_times} = page_times_by_page_url(site, query, Enum.map(pages, fn p -> p.name end))
 
       page_times = page_times.rows |> Enum.map(fn [a, b] -> {a, b} end) |> Enum.into(%{})
-      Enum.map(pages, fn url -> time=page_times[url[:name]];  Map.put(url, :time_on_page, if time do round(time) else nil end) end)
+
+      Enum.map(pages, fn url ->
+        time = page_times[url[:name]]
+
+        Map.put(
+          url,
+          :time_on_page,
+          if time do
+            round(time)
+          else
+            nil
+          end
+        )
+      end)
     else
       pages
     end

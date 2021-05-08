@@ -66,14 +66,14 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/"
                },
                %{
-                "time_on_page" => nil,
+                 "time_on_page" => nil,
                  "count" => 2,
                  "pageviews" => 2,
                  "name" => "/register"
                },
                %{
-                "time_on_page" => nil,
-                "count" => 1,
+                 "time_on_page" => nil,
+                 "count" => 1,
                  "pageviews" => 1,
                  "name" => "/contact"
                },
