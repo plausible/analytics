@@ -3,12 +3,11 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   use Bamboo.Test
   import Plausible.TestUtils
   alias Plausible.Workers.NotifyAnnualRenewal
-  alias Plausible.Billing.Plans
 
   setup [:create_user, :create_site]
-  @plan_10k Plans.plans_for(nil) |> List.first()
-  @monthly_plan @plan_10k[:monthly_product_id]
-  @yearly_plan @plan_10k[:yearly_product_id]
+  @monthly_plan "558018"
+  @yearly_plan "572810"
+  @v2_pricing_yearly_plan "653232"
 
   test "ignores user without subscription" do
     NotifyAnnualRenewal.perform(nil)
@@ -106,6 +105,23 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
         timestamp: Timex.shift(Timex.today(), years: -1) |> Timex.to_naive_datetime()
       }
     ])
+
+    NotifyAnnualRenewal.perform(nil)
+
+    assert_email_delivered_with(
+      to: [{user.name, user.email}],
+      subject: "Your Plausible subscription is up for renewal"
+    )
+  end
+
+  test "sends renewal notification to user on v2 yearly pricing plans", %{
+    user: user
+  } do
+    insert(:subscription,
+      user: user,
+      paddle_plan_id: @v2_pricing_yearly_plan,
+      next_bill_date: Timex.shift(Timex.today(), days: 7)
+    )
 
     NotifyAnnualRenewal.perform(nil)
 

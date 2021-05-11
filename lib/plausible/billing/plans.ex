@@ -8,16 +8,25 @@ defmodule Plausible.Billing.Plans do
     %{limit: 150_000_000, yearly_product_id: "648089", yearly_cost: "$4800"}
   ]
 
+  @v2_pricing_date ~D[2021-05-13]
+
   def plans_for(user) do
-    @plans_v1 |> Enum.map(fn plan -> Map.put(plan, :volume, number_format(plan[:limit])) end)
+    raw_plans =
+      if Timex.before?(user.inserted_at, @v2_pricing_date) do
+        @plans_v1
+      else
+        @plans_v2
+      end
+
+    Enum.map(raw_plans, fn plan -> Map.put(plan, :volume, number_format(plan[:limit])) end)
   end
 
   def all_yearly_plan_ids do
-    Enum.map(@plans_v1, fn plan -> plan[:yearly_product_id] end)
+    Enum.map(all_plans(), fn plan -> plan[:yearly_product_id] end)
   end
 
   def for_product_id(product_id) do
-    Enum.find(@plans_v1 ++ @unlisted_plans_v1, fn plan ->
+    Enum.find(all_plans(), fn plan ->
       product_id in [plan[:monthly_product_id], plan[:yearly_product_id]]
     end)
   end
@@ -65,6 +74,7 @@ defmodule Plausible.Billing.Plans do
     PlausibleWeb.StatsView.large_number_format(num)
   end
 
-  defp plans_v1() do
+  defp all_plans() do
+    @plans_v1 ++ @unlisted_plans_v1 ++ @plans_v2
   end
 end

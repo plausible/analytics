@@ -7,7 +7,7 @@ defmodule Plausible.Workers.CheckUsageTest do
   alias Plausible.Billing.Plans
 
   setup [:create_user, :create_site]
-  @paddle_id_10k Plans.plans_for(nil) |> List.first() |> Map.get(:monthly_product_id)
+  @paddle_id_10k "558018"
 
   test "ignores user without subscription" do
     CheckUsage.perform(nil)
