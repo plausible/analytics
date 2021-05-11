@@ -4,7 +4,6 @@ defmodule Plausible.Workers.CheckUsageTest do
   import Double
   import Plausible.TestUtils
   alias Plausible.Workers.CheckUsage
-  alias Plausible.Billing.Plans
 
   setup [:create_user, :create_site]
   @paddle_id_10k "558018"

@@ -47,9 +47,6 @@
       </button>
       <button type="button" @click="billingCycle = 'yearly'" :class="{'bg-indigo-600 text-white border-indigo-600': billingCycle === 'yearly', 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-200 border-gray-300 dark:border-gray-500': billingCycle === 'monthly'}" class="relative w-full px-4 py-2 -ml-px text-sm font-medium text-center border rounded-r-md leading-5 focus:outline-none focus:border-blue-300 focus:ring transition ease-in-out duration-150">
         Yearly billing
-        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium leading-4 bg-yellow-200 text-yellow-800 dark:text-yellow-900">
-          -33%
-        </span>
       </button>
     </span>
 
@@ -65,7 +62,7 @@
                   Monthly pageviews
                 </th>
                 <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase bg-gray-100 border-b border-gray-200 dark:bg-gray-900 leading-4 dark:text-gray-200">
-                  Price per month
+                  Price
                 </th>
               </tr>
             </thead>

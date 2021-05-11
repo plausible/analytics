@@ -54,6 +54,7 @@ defmodule Plausible.Workers.CheckUsage do
       if last_last_month > allowance && last_month > allowance do
         {_, last_cycle} = billing_mod.last_two_billing_cycles(subscriber)
         suggested_plan = Plausible.Billing.Plans.suggested_plan(subscriber, last_month)
+
         template =
           PlausibleWeb.Email.over_limit_email(subscriber, last_month, last_cycle, suggested_plan)
 
