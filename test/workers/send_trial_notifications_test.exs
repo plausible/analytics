@@ -100,35 +100,35 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
       user = insert(:user)
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {180_000, 0})
-      assert email.html_body =~ "we recommend you select the 200k/mo plan which runs at $18/mo"
+      assert email.html_body =~ "we recommend you select the 200k/mo plan which runs at $20/mo"
     end
 
     test "suggests 500k/mo plan" do
       user = insert(:user)
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {450_000, 0})
-      assert email.html_body =~ "we recommend you select the 500k/mo plan which runs at $27/mo"
+      assert email.html_body =~ "we recommend you select the 500k/mo plan which runs at $30/mo"
     end
 
     test "suggests 1m/mo plan" do
       user = insert(:user)
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {900_000, 0})
-      assert email.html_body =~ "we recommend you select the 1M/mo plan which runs at $48/mo"
+      assert email.html_body =~ "we recommend you select the 1M/mo plan which runs at $50/mo"
     end
 
     test "suggests 2m/mo plan" do
       user = insert(:user)
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {1_800_000, 0})
-      assert email.html_body =~ "we recommend you select the 2M/mo plan which runs at $69/mo"
+      assert email.html_body =~ "we recommend you select the 2M/mo plan which runs at $70/mo"
     end
 
     test "suggests 5m/mo plan" do
       user = insert(:user)
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {4_500_000, 0})
-      assert email.html_body =~ "we recommend you select the 5M/mo plan which runs at $99/mo"
+      assert email.html_body =~ "we recommend you select the 5M/mo plan which runs at $100/mo"
     end
 
     test "suggests 10m/mo plan" do
