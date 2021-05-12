@@ -89,7 +89,7 @@ defmodule Plausible.Workers.CheckUsageTest do
     assert_email_delivered_with(
       to: [user],
       html_body:
-        ~r/select the 100k\/mo plan which runs at \$12\/mo or \$96\/yr when billed yearly/
+        ~r/select the 100k\/mo plan which runs at \$12\/mo or \$120\/yr when billed yearly/
     )
   end
 
