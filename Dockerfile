@@ -28,8 +28,7 @@ RUN mix local.hex --force && \
 COPY assets/package.json assets/package-lock.json ./assets/
 COPY tracker/package.json tracker/package-lock.json ./tracker/
 
-RUN npm audit fix --prefix ./assets && \
-    npm install --prefix ./assets && \
+RUN npm install --prefix ./assets && \
     npm install --prefix ./tracker
 
 COPY assets ./assets
