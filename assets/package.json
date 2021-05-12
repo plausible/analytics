@@ -14,7 +14,6 @@
     "@tailwindcss/typography": "^0.3.1",
     "abortcontroller-polyfill": "^1.5.0",
     "alpinejs": "^2.7.3",
-    "autoprefixer": "^9.8.6",
     "babel-loader": "^8.1.0",
     "chart.js": "^2.9.3",
     "copy-webpack-plugin": "^6.0.3",
@@ -25,7 +24,6 @@
     "optimize-css-assets-webpack-plugin": "^5.0.3",
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html",
-    "postcss": "^7.0.35",
     "postcss-loader": "^4.0.4",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
@@ -33,13 +31,13 @@
     "react-flip-move": "^3.0.4",
     "react-router-dom": "^5.2.0",
     "react-transition-group": "^4.4.1",
-    "tailwindcss": "^2.0.1-compat",
     "terser-webpack-plugin": "^4.2.3",
     "url-search-params-polyfill": "^8.0.0",
     "webpack": "4.39.2",
     "webpack-cli": "^3.3.12"
   },
   "devDependencies": {
+    "autoprefixer": "^10.2.5",
     "eslint": "^7.2.0",
     "eslint-config-airbnb": "^18.2.0",
     "eslint-config-prettier": "^7.0.0",
@@ -48,9 +46,11 @@
     "eslint-plugin-prettier": "^3.3.0",
     "eslint-plugin-react": "^7.21.5",
     "eslint-plugin-react-hooks": "^4.2.0",
+    "postcss": "^8.2.15",
     "stylelint": "^13.8.0",
     "stylelint-config-prettier": "^8.0.2",
-    "stylelint-config-standard": "^20.0.0"
+    "stylelint-config-standard": "^20.0.0",
+    "tailwindcss": "^2.1.2"
   },
   "name": "assets"
 }
