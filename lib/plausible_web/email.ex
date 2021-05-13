@@ -138,7 +138,8 @@ defmodule PlausibleWeb.Email do
     |> render("yearly_renewal_notification.html", %{
       user: user,
       date: date,
-      next_bill_amount: user.subscription.next_bill_amount
+      next_bill_amount: user.subscription.next_bill_amount,
+      currency: user.subscription.currency_code
     })
   end
 
@@ -151,8 +152,7 @@ defmodule PlausibleWeb.Email do
     |> subject("Your Plausible subscription is about to expire")
     |> render("yearly_expiration_notification.html", %{
       user: user,
-      date: date,
-      next_bill_amount: user.subscription.next_bill_amount
+      date: date
     })
   end
 

@@ -81,7 +81,6 @@ defmodule PlausibleWeb.BillingController do
   def upgrade(conn, _params) do
     usage = Plausible.Billing.usage(conn.assigns[:current_user])
     today = Timex.today()
-    IO.inspect(Plausible.Billing.Plans.plans_for(conn.assigns[:current_user]))
 
     render(conn, "upgrade.html",
       usage: usage,
@@ -96,8 +95,7 @@ defmodule PlausibleWeb.BillingController do
 
     if plan do
       cycle = if plan[:monthly_product_id] == plan_id, do: "monthly", else: "yearly"
-      cost = if cycle == "monthly", do: plan[:monthly_cost], else: plan[:yearly_cost]
-      plan = Map.merge(plan, %{cycle: cycle, cost: cost, product_id: plan_id})
+      plan = Map.merge(plan, %{cycle: cycle, product_id: plan_id})
       usage = Plausible.Billing.usage(conn.assigns[:current_user])
 
       render(conn, "upgrade_to_plan.html",
