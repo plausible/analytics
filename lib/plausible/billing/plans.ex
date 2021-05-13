@@ -1,21 +1,16 @@
 defmodule Plausible.Billing.Plans do
-  @plans_v1 File.read!(Application.app_dir(:plausible) <> "/priv/plans_v1.json")
-            |> Jason.decode!(keys: :atoms)
-  @plans_v2 File.read!(Application.app_dir(:plausible) <> "/priv/plans_v2.json")
-            |> Jason.decode!(keys: :atoms)
-
   @unlisted_plans_v1 [
     %{limit: 150_000_000, yearly_product_id: "648089", yearly_cost: "$4800"}
   ]
 
-  @v2_pricing_date ~D[2021-05-11]
+  @v2_pricing_date ~D[2017-05-11]
 
   def plans_for(user) do
     raw_plans =
       if Timex.before?(user.inserted_at, @v2_pricing_date) do
-        @plans_v1
+        plans_v1()
       else
-        @plans_v2
+        plans_v2()
       end
 
     Enum.map(raw_plans, fn plan -> Map.put(plan, :volume, number_format(plan[:limit])) end)
@@ -75,6 +70,16 @@ defmodule Plausible.Billing.Plans do
   end
 
   defp all_plans() do
-    @plans_v1 ++ @unlisted_plans_v1 ++ @plans_v2
+    plans_v1() ++ @unlisted_plans_v1 ++ plans_v2()
+  end
+
+  defp plans_v1() do
+    File.read!(Application.app_dir(:plausible) <> "/priv/plans_v1.json")
+    |> Jason.decode!(keys: :atoms)
+  end
+
+  defp plans_v2() do
+    File.read!(Application.app_dir(:plausible) <> "/priv/plans_v2.json")
+    |> Jason.decode!(keys: :atoms)
   end
 end

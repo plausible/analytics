@@ -81,6 +81,7 @@ defmodule PlausibleWeb.BillingController do
   def upgrade(conn, _params) do
     usage = Plausible.Billing.usage(conn.assigns[:current_user])
     today = Timex.today()
+    IO.inspect(Plausible.Billing.Plans.plans_for(conn.assigns[:current_user]))
 
     render(conn, "upgrade.html",
       usage: usage,
