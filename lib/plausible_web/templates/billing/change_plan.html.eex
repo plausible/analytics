@@ -1,16 +1,13 @@
+<script type="text/javascript"  src="https://cdnjs.cloudflare.com/ajax/libs/fetch-jsonp/1.1.3/fetch-jsonp.min.js"></script>
 <script>
-  window.plans = function() {
+  plans = function() {
     return {
       rawPlans: <%= raw Jason.encode!(Plausible.Billing.Plans.plans_for(@conn.assigns[:current_user])) %>,
+      localizedPlans: null,
       volume: '10k',
       billingCycle: 'monthly',
       selectedPlanPrice() {
-        var selectedPlan = this.rawPlans.find((plan) => plan.volume === this.volume)
-        if (this.billingCycle === 'monthly'){
-          return selectedPlan.monthly_cost
-        } else {
-          return selectedPlan.yearly_cost
-        }
+        return this.priceFor(this.selectedPlanProductId())
       },
       selectedPlanProductId() {
         var selectedPlan = this.rawPlans.find((plan) => plan.volume === this.volume)
@@ -19,6 +16,30 @@
         } else {
           return selectedPlan.yearly_product_id
         }
+      },
+      priceFor(productId) {
+        var plan = this.localizedPlans.find(plan => plan.product_id === Number(productId))
+        var currency = {
+          'USD': '$',
+          'EUR': '€',
+          'GBP': '£'
+        }[plan.currency]
+
+        return currency + plan.price.gross
+      },
+      fetchPlans() {
+        var productIds = []
+
+        this.rawPlans.forEach((plan) => {
+          productIds.push(plan.monthly_product_id)
+          productIds.push(plan.yearly_product_id)
+        })
+
+        fetchJsonp('https://checkout.paddle.com/api/2.0/prices?product_ids=' + productIds.join(','))
+          .then((res) => res.json())
+          .then((data) => {
+            this.localizedPlans = data.response.products
+          })
       }
     }
   }
@@ -29,7 +50,7 @@
 </div>
 
 <div class="w-full max-w-lg px-4 mx-auto mt-4">
-  <div x-data="window.plans()" class="flex-1 px-8 py-4 mt-8 mb-4 bg-white rounded shadow-md dark:bg-gray-800">
+  <div x-init="fetchPlans" x-data="plans()" class="flex-1 px-8 py-4 mt-8 mb-4 bg-white rounded shadow-md dark:bg-gray-800">
     <div class="w-full pt-2 text-xl font-bold dark:text-gray-100">
       Select your new plan
     </div>
@@ -52,7 +73,7 @@
 
     <div class="pt-6"></div>
 
-    <div class="flex flex-col">
+    <template x-if="localizedPlans" class="flex flex-col">
       <div class="py-2 -my-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div class="inline-block min-w-full overflow-hidden align-middle border-b border-gray-200 shadow sm:rounded-lg dark:border-t dark:border-l dark:border-r dark:shadow-none">
           <table class="min-w-full">
@@ -68,13 +89,15 @@
             </thead>
             <tbody class="bg-white dark:bg-gray-800">
               <%= for plan <- Plausible.Billing.Plans.plans_for(@conn.assigns[:current_user]) do %>
-                <%= render("_plan_option.html", volume: PlausibleWeb.StatsView.large_number_format(plan[:limit]), monthly_price: plan[:monthly_cost], yearly_price: plan[:yearly_cost]) %>
+                <%= render("_plan_option.html", plan: plan) %>
               <% end %>
             </tbody>
           </table>
         </div>
       </div>
-    </div>
+    </template>
+
+    <div x-show="!localizedPlans" class="mx-auto my-56 loading sm"><div></div></div>
 
     <div class="mt-6 text-right">
       <span class="inline-flex rounded-md shadow-sm">

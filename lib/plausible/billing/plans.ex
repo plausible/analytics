@@ -3,7 +3,7 @@ defmodule Plausible.Billing.Plans do
     %{limit: 150_000_000, yearly_product_id: "648089", yearly_cost: "$4800"}
   ]
 
-  @v2_pricing_date ~D[2017-05-11]
+  @v2_pricing_date ~D[2021-05-11]
 
   def plans_for(user) do
     raw_plans =

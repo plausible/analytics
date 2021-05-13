@@ -28,10 +28,9 @@
         return currency + plan.price.gross
       },
       fetchPlans() {
-        var rawPlans = <%= raw Jason.encode!(Plausible.Billing.Plans.plans_for(@user)) %>
         var productIds = []
 
-        rawPlans.forEach((plan) => {
+        this.rawPlans.forEach((plan) => {
           productIds.push(plan.monthly_product_id)
           productIds.push(plan.yearly_product_id)
         })
@@ -97,7 +96,7 @@
       <div x-show="!localizedPlans" class="mx-auto my-56 loading sm"><div></div></div>
 
       <div class="mt-6 text-right">
-        <div class="text-sm font-medium dark:text-gray-100">Due today: <template x-if="localizedPlans"><b x-text="selectedPlanPrice()">$6</b></template></div>
+        <div class="text-sm font-medium dark:text-gray-100">Due today: <template x-if="localizedPlans"><b x-text="selectedPlanPrice()"></b></template></div>
         <div class="mb-4 text-xs font-medium dark:text-gray-100">+ VAT if applicable</div>
         <span class="inline-flex rounded-md shadow-sm">
           <button type="button" data-theme="none" :data-product="selectedPlanProductId()" data-email="<%= @conn.assigns[:current_user].email %>" data-disable-logout="true" data-passthrough="<%= @conn.assigns[:current_user].id %>" data-success="/billing/upgrade-success" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent paddle_button leading-5 rounded-md hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150">
