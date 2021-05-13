@@ -15,7 +15,7 @@ defmodule PlausibleWeb.AuthView do
   end
 
   def subscription_quota(subscription) do
-    Plans.subscription_quota(subscription.paddle_plan_id)
+    Plans.allowance(subscription) |> PlausibleWeb.StatsView.large_number_format()
   end
 
   def subscription_interval(subscription) do

@@ -211,7 +211,8 @@ defmodule Plausible.Billing do
       user_id: params["passthrough"],
       status: params["status"],
       next_bill_date: params["next_bill_date"],
-      next_bill_amount: params["unit_price"] || params["new_unit_price"]
+      next_bill_amount: params["unit_price"] || params["new_unit_price"],
+      currency_code: params["currency"]
     }
   end
 

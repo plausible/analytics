@@ -107,7 +107,8 @@ defmodule Plausible.Factory do
       update_url: "cancel.com",
       status: "active",
       next_bill_amount: "6.00",
-      next_bill_date: Timex.today()
+      next_bill_date: Timex.today(),
+      currency_code: "USD"
     }
   end
 

@@ -9,7 +9,7 @@
 
       <div class="mt-12 flex items-stretch flex-grow">
         <div>
-          <%= text_input f, :code, class: "tracking-widest font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-36 px-8 border-gray-300 dark:border-gray-500 rounded-l-md dark:text-gray-200 dark:bg-gray-900", oninput: "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 4) document.getElementById('submit').focus()", onclick: "this.select();", maxlength: "4", placeholder: "••••", style: "letter-spacing: 10px;" %>
+          <%= text_input f, :code, class: "tracking-widest font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-36 px-8 border-gray-300 dark:border-gray-500 rounded-l-md dark:text-gray-200 dark:bg-gray-900", oninput: "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 4) document.getElementById('submit').focus()", onclick: "this.select();", maxlength: "4", placeholder: "••••", style: "letter-spacing: 10px;", required: "required" %>
         </div>
         <button id="submit" class="button rounded-l-none">Activate &rarr;</button>
       </div>
