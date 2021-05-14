@@ -697,7 +697,7 @@ defmodule Plausible.Stats.Clickhouse do
         FROM (#{base_query_raw}))
       WHERE s=s2 AND p IN tuple(?)
       GROUP BY p,p2,s)
-    GROUP BY p" |> ClickhouseRepo.query(base_query_raw_params ++ [page_list])
+    GROUP BY p" |> ClickhouseRepo.query(base_query_raw_params ++ [page_list ++ ["/"]])
   end
 
   defp add_percentages(stat_list) do
