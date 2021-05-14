@@ -140,7 +140,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def sources(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
-    include_details = params["detailed"]=="true"
+    include_details = params["detailed"] == "true"
     limit = if params["limit"], do: String.to_integer(params["limit"])
     page = if params["page"], do: String.to_integer(params["page"])
     show_noref = params["show_noref"] == "true"
@@ -203,7 +203,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def referrer_drilldown(conn, %{"referrer" => referrer} = params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
-    include_details = params["detailed"]=="true"
+    include_details = params["detailed"] == "true"
     limit = params["limit"] || 9
 
     referrers = Stats.referrer_drilldown(site, query, referrer, include_details, limit)
@@ -223,7 +223,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def pages(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
-    include_details = params["detailed"]=="true"
+    include_details = params["detailed"] == "true"
     limit = if params["limit"], do: String.to_integer(params["limit"])
     page = if params["page"], do: String.to_integer(params["page"])
 
