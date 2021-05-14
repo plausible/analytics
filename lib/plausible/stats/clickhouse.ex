@@ -624,15 +624,18 @@ defmodule Plausible.Stats.Clickhouse do
 
     if include_details do
       [bounce_result, time_result] =
-        Task.await_many([
-          Task.async(fn -> bounce_rates_by_page_url(site, query) end),
-          Task.async(fn ->
-            {:ok, page_times} =
-              page_times_by_page_url(site, query, Enum.map(pages, fn p -> p.name end))
+        Task.await_many(
+          [
+            Task.async(fn -> bounce_rates_by_page_url(site, query) end),
+            Task.async(fn ->
+              {:ok, page_times} =
+                page_times_by_page_url(site, query, Enum.map(pages, fn p -> p.name end))
 
-            page_times.rows |> Enum.map(fn [a, b] -> {a, b} end) |> Enum.into(%{})
-          end)
-        ])
+              page_times.rows |> Enum.map(fn [a, b] -> {a, b} end) |> Enum.into(%{})
+            end)
+          ],
+          15000
+        )
 
       Enum.map(pages, fn page -> Map.put(page, :bounce_rate, bounce_result[page[:name]]) end)
       |> Enum.map(fn page ->
