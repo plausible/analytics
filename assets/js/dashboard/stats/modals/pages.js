@@ -24,15 +24,15 @@ class PagesModal extends React.Component {
   }
 
   loadPages() {
-    const include = [this.showBounceRate() && 'bounce_rate', this.showTimeOnPage() && 'time_on_page'].filter(i =>i).join(',')
+    const detailed = this.showExtra()
     const {query, page, pages} = this.state;
 
     const {filters} = query
     if (filters.source || filters.referrer) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`, query, {limit: 100, page, include})
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`, query, {limit: 100, page, detailed})
         .then((res) => this.setState((state) => ({loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100})))
     } else {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, query, {limit: 100, page, include})
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, query, {limit: 100, page, detailed})
         .then((res) => this.setState((state) => ({loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100})))
     }
   }
@@ -41,11 +41,7 @@ class PagesModal extends React.Component {
     this.setState({loading: true, page: this.state.page + 1}, this.loadPages.bind(this))
   }
 
-  showBounceRate() {
-    return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
-  }
-
-  showTimeOnPage() {
+  showExtra() {
     return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
   }
 
@@ -74,8 +70,8 @@ class PagesModal extends React.Component {
         </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
         {this.showPageviews() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.pageviews)}</td> }
-        {this.showBounceRate() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td> }
-        {this.showTimeOnPage() && <td className="p-2 w-32 font-medium" align="right">{timeOnPage}</td> }
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td> }
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{timeOnPage}</td> }
       </tr>
     )
   }
@@ -117,8 +113,8 @@ class PagesModal extends React.Component {
                   <th className="p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Page url</th>
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{ this.label() }</th>
                   {this.showPageviews() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Pageviews</th>}
-                  {this.showBounceRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Bounce rate</th>}
-                  {this.showTimeOnPage() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Time on Page</th>}
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Bounce rate</th>}
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Time on Page</th>}
                 </tr>
               </thead>
               <tbody>

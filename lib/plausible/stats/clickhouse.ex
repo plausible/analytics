@@ -238,7 +238,7 @@ defmodule Plausible.Stats.Clickhouse do
     end)
   end
 
-  def top_sources(site, query, limit, page, show_noref \\ false, include \\ []) do
+  def top_sources(site, query, limit, page, show_noref \\ false, include_details) do
     offset = (page - 1) * limit
 
     referrers =
@@ -266,7 +266,7 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     referrers =
-      if "bounce_rate" in include do
+      if include_details do
         from(
           s in referrers,
           select: %{
@@ -441,7 +441,7 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
-  def referrer_drilldown(site, query, referrer, include, limit) do
+  def referrer_drilldown(site, query, referrer, include_details, limit) do
     referrer = if referrer == @no_ref, do: "", else: referrer
 
     q =
@@ -455,7 +455,7 @@ defmodule Plausible.Stats.Clickhouse do
       |> filter_converted_sessions(site, query)
 
     q =
-      if "bounce_rate" in include do
+      if include_details do
         from(
           s in q,
           select: %{
@@ -585,7 +585,7 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  def top_pages(site, %Query{period: "realtime"} = query, limit, page, _include) do
+  def top_pages(site, %Query{period: "realtime"} = query, limit, page, _include_details) do
     offset = (page - 1) * limit
 
     q = base_session_query(site, query) |> apply_page_as_entry_page(site, query)
@@ -603,7 +603,7 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
-  def top_pages(site, query, limit, page, include) do
+  def top_pages(site, query, limit, page, include_details) do
     offset = (page - 1) * limit
 
     q =
@@ -622,30 +622,26 @@ defmodule Plausible.Stats.Clickhouse do
 
     pages = ClickhouseRepo.all(q)
 
-    pages =
-      if "bounce_rate" in include do
-        bounce_rates = bounce_rates_by_page_url(site, query)
-        Enum.map(pages, fn url -> Map.put(url, :bounce_rate, bounce_rates[url[:name]]) end)
-      else
-        pages
-      end
+    if include_details do
+      [bounce_result, time_result] =
+        Task.await_many([
+          Task.async(fn -> bounce_rates_by_page_url(site, query) end),
+          Task.async(fn ->
+            {:ok, page_times} =
+              page_times_by_page_url(site, query, Enum.map(pages, fn p -> p.name end))
 
-    if "time_on_page" in include do
-      {:ok, page_times} = page_times_by_page_url(site, query, Enum.map(pages, fn p -> p.name end))
+            page_times.rows |> Enum.map(fn [a, b] -> {a, b} end) |> Enum.into(%{})
+          end)
+        ])
 
-      page_times = page_times.rows |> Enum.map(fn [a, b] -> {a, b} end) |> Enum.into(%{})
-
-      Enum.map(pages, fn url ->
-        time = page_times[url[:name]]
+      Enum.map(pages, fn page -> Map.put(page, :bounce_rate, bounce_result[page[:name]]) end)
+      |> Enum.map(fn page ->
+        time = time_result[page[:name]]
 
         Map.put(
-          url,
+          page,
           :time_on_page,
-          if time do
-            round(time)
-          else
-            nil
-          end
+          if(time, do: round(time), else: nil)
         )
       end)
     else
