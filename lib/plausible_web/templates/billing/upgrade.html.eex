@@ -25,7 +25,8 @@
           'GBP': '£'
         }[plan.currency]
 
-        return currency + plan.price.gross
+        console.log(plan)
+        return currency + plan.price.net
       },
       fetchPlans() {
         var productIds = []
