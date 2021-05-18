@@ -5,53 +5,50 @@ defmodule PlausibleWeb.SiteController do
 
   plug PlausibleWeb.RequireAccountPlug
 
-  def index(conn, _params) do
+  def index(conn, params) do
     user = conn.assigns[:current_user]
 
-    sites =
-      Repo.all(
-        from s in Plausible.Site,
+    {sites, pagination} =
+      Repo.paginate(
+        from(s in Plausible.Site,
           join: sm in Plausible.Site.Membership,
           on: sm.site_id == s.id,
           where: sm.user_id == ^user.id,
           order_by: s.domain
+        ),
+        params
       )
 
     visitors = Plausible.Stats.Clickhouse.last_24h_visitors(sites)
-    render(conn, "index.html", sites: sites, visitors: visitors)
+    render(conn, "index.html", sites: sites, visitors: visitors, pagination: pagination)
   end
 
   def new(conn, _params) do
     current_user = conn.assigns[:current_user]
-    changeset = Plausible.Site.changeset(%Plausible.Site{})
+    site_count = Plausible.Sites.count_for(current_user)
+    site_limit = Plausible.Billing.sites_limit(current_user)
+    is_at_limit = site_limit && site_count >= site_limit
+    is_first_site = site_count == 0
 
-    is_first_site =
-      !Repo.exists?(
-        from sm in Plausible.Site.Membership,
-          where: sm.user_id == ^current_user.id
-      )
+    changeset = Plausible.Site.changeset(%Plausible.Site{})
 
     render(conn, "new.html",
       changeset: changeset,
       is_first_site: is_first_site,
+      is_at_limit: is_at_limit,
+      site_limit: site_limit,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
 
   def create_site(conn, %{"site" => site_params}) do
     user = conn.assigns[:current_user]
+    site_count = Plausible.Sites.count_for(user)
+    is_first_site = site_count == 0
 
-    case insert_site(user.id, site_params) do
+    case Sites.create(user, site_params) do
       {:ok, %{site: site}} ->
         Plausible.Slack.notify("#{user.name} created #{site.domain} [email=#{user.email}]")
-
-        is_first_site =
-          !Repo.exists?(
-            from sm in Plausible.Site.Membership,
-              where:
-                sm.user_id == ^user.id and
-                  sm.site_id != ^site.id
-          )
 
         if is_first_site do
           PlausibleWeb.Email.welcome_email(user)
@@ -63,17 +60,15 @@ defmodule PlausibleWeb.SiteController do
         |> redirect(to: "/#{URI.encode_www_form(site.domain)}/snippet")
 
       {:error, :site, changeset, _} ->
-        is_first_site =
-          !Repo.exists?(
-            from sm in Plausible.Site.Membership,
-              where: sm.user_id == ^user.id
-          )
-
         render(conn, "new.html",
           changeset: changeset,
           is_first_site: is_first_site,
+          is_at_limit: false,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
+
+      {:error, :limit, _limit} ->
+        send_resp(conn, 400, "Site limit reached")
     end
   end
 
@@ -120,7 +115,7 @@ defmodule PlausibleWeb.SiteController do
     case Plausible.Goals.create(site, goal) do
       {:ok, _} ->
         conn
-        |> put_flash(:success, "Goal created succesfully")
+        |> put_flash(:success, "Goal created successfully")
         |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/goals")
 
       {:error, changeset} ->
@@ -138,7 +133,7 @@ defmodule PlausibleWeb.SiteController do
     Plausible.Goals.delete(goal_id)
 
     conn
-    |> put_flash(:success, "Goal deleted succesfully")
+    |> put_flash(:success, "Goal deleted successfully")
     |> redirect(to: "/#{URI.encode_www_form(website)}/settings/goals")
   end
 
@@ -252,7 +247,7 @@ defmodule PlausibleWeb.SiteController do
     |> Repo.update!()
 
     conn
-    |> put_flash(:success, "Google integration saved succesfully")
+    |> put_flash(:success, "Google integration saved successfully")
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/search-console")
   end
 
@@ -303,7 +298,7 @@ defmodule PlausibleWeb.SiteController do
     Plausible.ClickhouseRepo.clear_stats_for(site.domain)
 
     conn
-    |> put_flash(:success, "Site deleted succesfully along with all pageviews")
+    |> put_flash(:success, "Site deleted successfully along with all pageviews")
     |> redirect(to: "/sites")
   end
 
@@ -517,16 +512,7 @@ defmodule PlausibleWeb.SiteController do
   def create_shared_link(conn, %{"website" => website, "shared_link" => link}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
 
-    changes =
-      Plausible.Site.SharedLink.changeset(
-        %Plausible.Site.SharedLink{
-          site_id: site.id,
-          slug: Nanoid.generate()
-        },
-        link
-      )
-
-    case Repo.insert(changes) do
+    case Sites.create_shared_link(site, link["name"], link["password"]) do
       {:ok, _created} ->
         redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
 
@@ -534,6 +520,40 @@ defmodule PlausibleWeb.SiteController do
         conn
         |> assign(:skip_plausible_tracking, true)
         |> render("new_shared_link.html",
+          site: site,
+          changeset: changeset,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+    end
+  end
+
+  def edit_shared_link(conn, %{"website" => website, "slug" => slug}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug)
+    changeset = Plausible.Site.SharedLink.changeset(shared_link, %{})
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("edit_shared_link.html",
+      site: site,
+      changeset: changeset,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
+  end
+
+  def update_shared_link(conn, %{"website" => website, "slug" => slug, "shared_link" => params}) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+    shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug)
+    changeset = Plausible.Site.SharedLink.changeset(shared_link, params)
+
+    case Repo.update(changeset) do
+      {:ok, _created} ->
+        redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
+
+      {:error, changeset} ->
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("edit_shared_link.html",
           site: site,
           changeset: changeset,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
@@ -615,24 +635,7 @@ defmodule PlausibleWeb.SiteController do
     Repo.delete!(site.custom_domain)
 
     conn
-    |> put_flash(:success, "Custom domain deleted succesfully")
+    |> put_flash(:success, "Custom domain deleted successfully")
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/custom-domain")
-  end
-
-  defp insert_site(user_id, params) do
-    site_changeset = Plausible.Site.changeset(%Plausible.Site{}, params)
-
-    Ecto.Multi.new()
-    |> Ecto.Multi.insert(:site, site_changeset)
-    |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
-      membership_changeset =
-        Plausible.Site.Membership.changeset(%Plausible.Site.Membership{}, %{
-          site_id: site.id,
-          user_id: user_id
-        })
-
-      repo.insert(membership_changeset)
-    end)
-    |> Repo.transaction()
   end
 end

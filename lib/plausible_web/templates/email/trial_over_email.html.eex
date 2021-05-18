@@ -9,10 +9,7 @@ We will keep recording stats for another month to give you time to upgrade.
 
 <br /><br />
 Thanks,<br />
-Uku Taht<br />
-Founder, Plausible Analytics
-<br /><br />
---
-<br /><br />
+Uku and Marko<br />
+--<br />
 <%= plausible_url() %><br />
 {{{ pm:unsubscribe }}}

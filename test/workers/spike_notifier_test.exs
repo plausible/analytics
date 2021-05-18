@@ -17,7 +17,7 @@ defmodule Plausible.Workers.SpikeNotifierTest do
       stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 5 end)
       |> stub(:top_sources, fn _site, _query, _limit, _page, _show_noref -> [] end)
 
-    SpikeNotifier.perform(nil, nil, clickhouse_stub)
+    SpikeNotifier.perform(nil, clickhouse_stub)
 
     assert_no_emails_delivered()
   end
@@ -35,7 +35,7 @@ defmodule Plausible.Workers.SpikeNotifierTest do
       stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 10 end)
       |> stub(:top_sources, fn _site, _query, _limit, _page, _show_noref -> [] end)
 
-    SpikeNotifier.perform(nil, nil, clickhouse_stub)
+    SpikeNotifier.perform(nil, clickhouse_stub)
 
     assert_email_delivered_with(
       subject: "Traffic spike on #{site.domain}",
@@ -56,14 +56,14 @@ defmodule Plausible.Workers.SpikeNotifierTest do
       stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 10 end)
       |> stub(:top_sources, fn _site, _query, _limit, _page, _show_noref -> [] end)
 
-    SpikeNotifier.perform(nil, nil, clickhouse_stub)
+    SpikeNotifier.perform(nil, clickhouse_stub)
 
     assert_email_delivered_with(
       subject: "Traffic spike on #{site.domain}",
       to: [nil: "uku@example.com"]
     )
 
-    SpikeNotifier.perform(nil, nil, clickhouse_stub)
+    SpikeNotifier.perform(nil, clickhouse_stub)
 
     assert_no_emails_delivered()
   end

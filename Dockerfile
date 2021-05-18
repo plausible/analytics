@@ -28,8 +28,7 @@ RUN mix local.hex --force && \
 COPY assets/package.json assets/package-lock.json ./assets/
 COPY tracker/package.json tracker/package-lock.json ./tracker/
 
-RUN npm audit fix --prefix ./assets && \
-    npm install --prefix ./assets && \
+RUN npm install --prefix ./assets && \
     npm install --prefix ./tracker
 
 COPY assets ./assets
@@ -40,7 +39,10 @@ COPY lib ./lib
 
 RUN npm run deploy --prefix ./assets && \
     npm run deploy --prefix ./tracker && \
-    mix phx.digest priv/static
+    mix phx.digest priv/static && \
+    mix download_country_database && \
+# https://hexdocs.pm/sentry/Sentry.Sources.html#module-source-code-storage
+    mix sentry_recompile
 
 WORKDIR /app
 COPY rel rel

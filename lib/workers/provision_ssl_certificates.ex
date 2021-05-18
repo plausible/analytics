@@ -2,9 +2,10 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
   use Plausible.Repo
   use Oban.Worker, queue: :provision_ssl_certificates, max_attempts: 1
   require Logger
+  @timeout 20_000
 
   @impl Oban.Worker
-  def perform(_args, _job, ssh \\ SSHEx) do
+  def perform(_job, ssh \\ SSHEx) do
     config = get_config()
 
     {:ok, conn} =
@@ -22,8 +23,21 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
       )
 
     for domain <- recent_custom_domains do
-      {:ok, res, code} = ssh.run(conn, 'sudo certbot certonly --nginx -n -d \"#{domain.domain}\"')
-      report_result({res, code}, domain)
+      res =
+        ssh.run(
+          conn,
+          'sudo certbot certonly --webroot -w /root/webroot -n -d \"#{domain.domain}\"',
+          channel_timeout: @timeout,
+          exec_timeout: @timeout
+        )
+
+      case res do
+        {:ok, msg, code} ->
+          report_result({msg, code}, domain)
+
+        e ->
+          Logger.warn("Error obtaining SSL certificate for #{domain.domain}: #{inspect(e)}")
+      end
     end
 
     :ok
@@ -36,10 +50,8 @@ defmodule Plausible.Workers.ProvisionSslCertificates do
   end
 
   defp report_result({error_msg, error_code}, domain) do
-    Logger.error("Error obtaining SSL certificate for #{domain.domain}: #{error_msg}")
-
-    Sentry.capture_message("Error obtaining SSL certificate",
-      extra: %{error_msg: error_msg, error_code: error_code, domain: domain.domain}
+    Logger.warn(
+      "Error obtaining SSL certificate for #{domain.domain}: #{error_msg} (code=#{error_code})"
     )
 
     # Failing to obtain is expected, not a failure for the job queue

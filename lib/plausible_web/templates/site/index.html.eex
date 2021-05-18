@@ -16,7 +16,7 @@
         <%= link(to: "/" <> URI.encode_www_form(site.domain)) do %>
           <li class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
             <div class="w-full flex items-center justify-between space-x-4">
-              <img src="https://icons.duckduckgo.com/ip3/<%= site.domain %>.ico" referrerpolicy="no-referrer" class="w-4 h-4 flex-shrink-0 mt-px">
+              <img src="https://icons.duckduckgo.com/ip3/<%= site.domain %>.ico" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='https://icons.duckduckgo.com/ip3/placeholder.ico';" class="w-4 h-4 flex-shrink-0 mt-px">
               <div class="flex-1 truncate -mt-px">
                 <h3 class="text-gray-900 font-medium text-lg truncate dark:text-gray-100"><%= site.domain %></h3>
               </div>
@@ -37,4 +37,25 @@
       </div>
     <% end %>
   </ul>
+
+  <%= if @pagination.total_pages > 1 do %>
+    <%= pagination @conn, @pagination, [current_class: "is-current"], fn p -> %>
+      <nav class="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6" aria-label="Pagination">
+        <div class="hidden sm:block">
+          <p class="text-sm text-gray-700">
+          Showing page
+          <span class="font-medium"><%= @pagination.page %></span>
+          of
+          <span class="font-medium"><%= @pagination.total_pages %></span>
+          total
+          </p>
+        </div>
+        <div class="flex-1 flex justify-between sm:justify-end">
+          <%= pagination_link(p, :previous, label: "← Previous", class: "pagination-link relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50", force_show: true) %>
+          <%= pagination_link(p, :next, label: "Next →", class: "pagination-link ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50", force_show: true) %>
+        </div>
+      </nav>
+    <% end %>
+  <% end %>
+
 </div>

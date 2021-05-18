@@ -36,7 +36,7 @@ npm-debug.log
 # we ignore priv/static. You may want to comment
 # this depending on your deployment strategy.
 /priv/static/
-/priv/geolix/
+/priv/geodb/
 
 # Files matching config/*.secret.exs pattern contain sensitive
 # data and you should not commit them into version control.

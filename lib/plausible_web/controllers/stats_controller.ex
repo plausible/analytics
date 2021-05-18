@@ -36,20 +36,28 @@ defmodule PlausibleWeb.StatsController do
 
   def csv_export(conn, %{"domain" => domain}) do
     site = conn.assigns[:site]
-
     query = Query.from(site.timezone, conn.params)
-    {plot, labels, _} = Stats.calculate_plot(site, query)
+
+    metrics =
+      if query.filters["event:name"] do
+        ["visitors", "pageviews"]
+      else
+        ["visitors", "pageviews", "bounce_rate", "visit_duration"]
+      end
+
+    graph = Plausible.Stats.timeseries(site, query, metrics)
+
+    headers = ["date" | metrics]
 
     csv_content =
-      Enum.zip(labels, plot)
-      |> Enum.map(fn {k, v} -> [k, v] end)
-      |> (fn data -> [["Date", "Visitors"] | data] end).()
+      Enum.map(graph, fn row -> Enum.map(headers, &row[&1]) end)
+      |> (fn data -> [headers | data] end).()
       |> CSV.encode()
       |> Enum.into([])
       |> Enum.join()
 
     filename =
-      "Visitors #{domain} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{
+      "Plausible export #{domain} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{
         Timex.format!(query.date_range.last, "{ISOdate} ")
       }.csv"
 
@@ -127,13 +135,18 @@ defmodule PlausibleWeb.StatsController do
     conn
     |> assign(:skip_plausible_tracking, true)
     |> put_resp_header("x-robots-tag", "noindex")
+    |> delete_resp_header("x-frame-options")
     |> render("stats.html",
       site: shared_link.site,
       has_goals: Plausible.Sites.has_goals?(shared_link.site),
       title: "Plausible · " <> shared_link.site.domain,
       offer_email_report: false,
       demo: false,
-      shared_link_auth: shared_link.slug
+      skip_plausible_tracking: true,
+      shared_link_auth: shared_link.slug,
+      embedded: conn.params["embed"] == "true",
+      background: conn.params["background"],
+      theme: conn.params["theme"]
     )
   end
 

@@ -36,15 +36,7 @@ defmodule Plausible.MixProject do
       mod: {Plausible.Application, []},
       extra_applications: [
         :logger,
-        :sentry,
-        :runtime_tools,
-        :timex,
-        :ua_inspector,
-        :ref_inspector,
-        :bamboo,
-        :bamboo_smtp,
-        :appsignal,
-        :cachex
+        :runtime_tools
       ]
     ]
   end
@@ -58,8 +50,6 @@ defmodule Plausible.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:appsignal, "~> 2.0"},
-      {:appsignal_phoenix, "~> 2.0.3"},
       {:bcrypt_elixir, "~> 2.0"},
       {:combination, "~> 0.0.3"},
       {:cors_plug, "~> 1.5"},
@@ -72,17 +62,19 @@ defmodule Plausible.MixProject do
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_pubsub, "~> 2.0"},
-      {:plug_cowboy, "~> 2.1"},
+      {:plug_cowboy, "~> 2.3"},
       {:postgrex, ">= 0.0.0"},
       #  Used in paddle_api, can remove
       {:poison, "~> 3.1"},
       {:ref_inspector, "~> 1.3"},
       {:timex, "~> 3.6"},
       {:ua_inspector, "~> 0.18"},
-      {:bamboo, "~> 1.6"},
-      {:bamboo_postmark, "~> 0.5"},
-      {:bamboo_smtp, "~> 2.1.0"},
-      {:sentry, "~> 7.0"},
+      {:bamboo, "~> 2.0"},
+      {:hackney, "~> 1.8"},
+      {:bamboo_phoenix, "~> 1.0.0"},
+      {:bamboo_postmark, git: "https://github.com/pablo-co/bamboo_postmark.git", tag: "master"},
+      {:bamboo_smtp, "~> 4.0"},
+      {:sentry, "~> 8.0"},
       {:httpoison, "~> 1.4"},
       {:ex_machina, "~> 2.3", only: :test},
       {:excoveralls, "~> 0.10", only: :test},
@@ -92,7 +84,7 @@ defmodule Plausible.MixProject do
       {:oauther, "~> 1.1"},
       {:nanoid, "~> 2.0.2"},
       {:siphash, "~> 3.2"},
-      {:oban, "~> 1.2"},
+      {:oban, "~> 2.0"},
       {:sshex, "2.2.1"},
       {:geolix, "~> 1.0"},
       {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
@@ -103,7 +95,8 @@ defmodule Plausible.MixProject do
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:kaffy, "~> 0.9.0"},
       {:envy, "~> 1.1.1"},
-      {:ink, "~> 1.0"}
+      {:ink, "~> 1.0"},
+      {:phoenix_pagination, "~> 0.7.0"}
     ]
   end
 
@@ -111,7 +104,8 @@ defmodule Plausible.MixProject do
     [
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate", "test", "clean_clickhouse"]
+      test: ["ecto.create --quiet", "ecto.migrate", "test", "clean_clickhouse"],
+      sentry_recompile: ["compile", "deps.compile sentry --force"]
     ]
   end
 end

@@ -74,7 +74,25 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
 
       assert json_response(conn, 400) == %{
                "error" =>
-                 "Error parsing `metrics` parameter: invalid metric `led_zeppelin`. Valid metrics are `pageviews`, `visitors`, `bounce_rate`, `visit_duration`"
+                 "The metric `led_zeppelin` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#get-apiv1statsbreakdown"
+             }
+    end
+
+    test "validates that session metrics cannot be used with event:name filter", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "30d",
+          "metrics" => "pageviews,visit_duration",
+          "filters" => "event:name==Signup"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Session metric `visit_duration` cannot be queried when using a filter on `event:name`."
              }
     end
   end
@@ -94,7 +112,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         "metrics" => "pageviews"
       })
 
-    assert json_response(conn, 200) == %{
+    assert json_response(conn, 200)["results"] == %{
              "pageviews" => %{"value" => 3}
            }
   end
@@ -114,7 +132,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         "metrics" => "pageviews,visitors,bounce_rate,visit_duration"
       })
 
-    assert json_response(conn, 200) == %{
+    assert json_response(conn, 200)["results"] == %{
              "pageviews" => %{"value" => 3},
              "visitors" => %{"value" => 2},
              "bounce_rate" => %{"value" => 50},
@@ -148,11 +166,44 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "compare" => "previous_period"
         })
 
-      assert json_response(conn, 200) == %{
+      assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 3, "change" => 200},
                "visitors" => %{"value" => 2, "change" => 100},
                "bounce_rate" => %{"value" => 50, "change" => -50},
                "visit_duration" => %{"value" => 750, "change" => 100}
+             }
+    end
+
+    test "compare period=6mo with previous period", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview, domain: site.domain, timestamp: ~N[2020-12-31 00:00:00]),
+        build(:pageview,
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-02-01 00:25:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-03-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "6mo",
+          "date" => "2021-03-01",
+          "metrics" => "pageviews,visitors,bounce_rate,visit_duration",
+          "compare" => "previous_period"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "pageviews" => %{"value" => 4, "change" => 100},
+               "visitors" => %{"value" => 3, "change" => 100},
+               "bounce_rate" => %{"value" => 100, "change" => 100},
+               "visit_duration" => %{"value" => 0, "change" => 0}
              }
     end
   end
@@ -183,7 +234,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "filters" => "visit:source==Google"
         })
 
-      assert json_response(conn, 200) == %{
+      assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 2},
                "visitors" => %{"value" => 1},
                "bounce_rate" => %{"value" => 0},
@@ -219,7 +270,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "filters" => "visit:source==Direct / None"
         })
 
-      assert json_response(conn, 200) == %{
+      assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 2},
                "visitors" => %{"value" => 1},
                "bounce_rate" => %{"value" => 0},
@@ -252,7 +303,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "filters" => "visit:referrer==https://facebook.com"
         })
 
-      assert json_response(conn, 200) == %{
+      assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 2},
                "visitors" => %{"value" => 1},
                "bounce_rate" => %{"value" => 0},
@@ -285,7 +336,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "filters" => "visit:utm_medium==social"
         })
 
-      assert json_response(conn, 200) == %{
+      assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 2},
                "visitors" => %{"value" => 1},
                "bounce_rate" => %{"value" => 0},
@@ -318,7 +369,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "filters" => "visit:utm_source==Twitter"
         })
 
-      assert json_response(conn, 200) == %{
+      assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 2},
                "visitors" => %{"value" => 1},
                "bounce_rate" => %{"value" => 0},
@@ -351,7 +402,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "filters" => "visit:utm_campaign==profile"
         })
 
-      assert json_response(conn, 200) == %{
+      assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 2},
                "visitors" => %{"value" => 1},
                "bounce_rate" => %{"value" => 0},
@@ -384,7 +435,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "filters" => "visit:device==Desktop"
         })
 
-      assert json_response(conn, 200) == %{
+      assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 2},
                "visitors" => %{"value" => 1},
                "bounce_rate" => %{"value" => 0},
@@ -417,7 +468,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "filters" => "visit:browser==Chrome"
         })
 
-      assert json_response(conn, 200) == %{
+      assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 2},
                "visitors" => %{"value" => 1},
                "bounce_rate" => %{"value" => 0},
@@ -451,7 +502,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "filters" => "visit:browser_version==56"
         })
 
-      assert json_response(conn, 200) == %{
+      assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 2},
                "visitors" => %{"value" => 1},
                "bounce_rate" => %{"value" => 0},
@@ -484,7 +535,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "filters" => "visit:os==Mac"
         })
 
-      assert json_response(conn, 200) == %{
+      assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 2},
                "visitors" => %{"value" => 1},
                "bounce_rate" => %{"value" => 0},
@@ -517,7 +568,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "filters" => "visit:os_version==10.5"
         })
 
-      assert json_response(conn, 200) == %{
+      assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 2},
                "visitors" => %{"value" => 1},
                "bounce_rate" => %{"value" => 0},
@@ -550,7 +601,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "filters" => "visit:country==EE"
         })
 
-      assert json_response(conn, 200) == %{
+      assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 2},
                "visitors" => %{"value" => 1},
                "bounce_rate" => %{"value" => 0},
@@ -591,11 +642,48 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "filters" => "event:page==/blogpost"
         })
 
-      assert json_response(conn, 200) == %{
+      assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 2},
                "visitors" => %{"value" => 2},
                "bounce_rate" => %{"value" => 50},
                "visit_duration" => %{"value" => 750}
+             }
+    end
+
+    test "filtering by event:name", %{conn: conn, site: site} do
+      populate_stats([
+        build(:event,
+          name: "Signup",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          domain: site.domain,
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Signup",
+          domain: site.domain,
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,pageviews",
+          "filters" => "event:name==Signup"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "pageviews" => %{"value" => 0},
+               "visitors" => %{"value" => 2}
              }
     end
 
@@ -630,7 +718,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "filters" => "event:page==/blogpost;visit:country==EE"
         })
 
-      assert json_response(conn, 200) == %{
+      assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 1},
                "visitors" => %{"value" => 1},
                "bounce_rate" => %{"value" => 0},

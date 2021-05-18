@@ -143,7 +143,7 @@ defmodule PlausibleWeb.AuthController do
         url = PlausibleWeb.Endpoint.url() <> "/password/reset?token=#{token}"
         Logger.debug("PASSWORD RESET LINK: " <> url)
         email_template = PlausibleWeb.Email.password_reset_email(email, url)
-        Plausible.Mailer.deliver_now(email_template)
+        Plausible.Mailer.deliver_now!(email_template)
 
         render(conn, "password_reset_request_success.html",
           email: email,
@@ -313,7 +313,7 @@ defmodule PlausibleWeb.AuthController do
     case Repo.update(changes) do
       {:ok, _user} ->
         conn
-        |> put_flash(:success, "Account settings saved succesfully")
+        |> put_flash(:success, "Account settings saved successfully")
         |> redirect(to: "/settings")
 
       {:error, changeset} ->
@@ -377,11 +377,13 @@ defmodule PlausibleWeb.AuthController do
     logout(conn, params)
   end
 
-  def logout(conn, _params) do
+  def logout(conn, params) do
+    redirect_to = Map.get(params, "redirect", "/")
+
     conn
     |> configure_session(drop: true)
     |> delete_resp_cookie("logged_in")
-    |> redirect(to: "/")
+    |> redirect(to: redirect_to)
   end
 
   def google_auth_callback(conn, %{"code" => code, "state" => site_id}) do

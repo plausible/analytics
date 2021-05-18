@@ -21,7 +21,7 @@ defmodule Plausible.Application do
     ]
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
-    {:ok, _} = Logger.add_backend(Sentry.LoggerBackend)
+    setup_sentry()
     setup_cache_stats()
     Application.put_env(:plausible, :server_start, Timex.now())
     Supervisor.start_link(children, opts)
@@ -38,6 +38,17 @@ defmodule Plausible.Application do
     if conf[:stats] do
       :timer.apply_interval(1000 * 10, Plausible.Application, :report_cache_stats, [])
     end
+  end
+
+  def setup_sentry() do
+    Logger.add_backend(Sentry.LoggerBackend)
+
+    :telemetry.attach_many(
+      "oban-errors",
+      [[:oban, :job, :exception], [:oban, :circuit, :trip]],
+      &ErrorReporter.handle_event/4,
+      %{}
+    )
   end
 
   def report_cache_stats() do

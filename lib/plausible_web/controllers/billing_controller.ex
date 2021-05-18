@@ -47,9 +47,23 @@ defmodule PlausibleWeb.BillingController do
         |> redirect(to: "/settings")
 
       {:error, e} ->
+        # https://developer.paddle.com/api-reference/intro/api-error-codes
+        msg =
+          case e do
+            %{"code" => 147} ->
+              "We were unable to charge your card. Make sure your payment details are up to date and try again."
+
+            %{"message" => msg} when not is_nil(msg) ->
+              msg
+
+            _ ->
+              "Something went wrong. Please try again or contact support at support@plausible.io"
+          end
+
         Sentry.capture_message("Error changing plans",
           extra: %{
             errors: inspect(e),
+            message: msg,
             new_plan_id: new_plan_id,
             user_id: conn.assigns[:current_user].id
           }
@@ -74,6 +88,25 @@ defmodule PlausibleWeb.BillingController do
       user: conn.assigns[:current_user],
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
+  end
+
+  def upgrade_to_plan(conn, %{"plan_id" => plan_id}) do
+    plan = Plausible.Billing.Plans.for_product_id(plan_id)
+
+    if plan do
+      cycle = if plan[:monthly_product_id] == plan_id, do: "monthly", else: "yearly"
+      plan = Map.merge(plan, %{cycle: cycle, product_id: plan_id})
+      usage = Plausible.Billing.usage(conn.assigns[:current_user])
+
+      render(conn, "upgrade_to_plan.html",
+        usage: usage,
+        plan: plan,
+        user: conn.assigns[:current_user],
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
+      )
+    else
+      render_error(conn, 404)
+    end
   end
 
   def upgrade_success(conn, _params) do

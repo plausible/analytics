@@ -4,9 +4,10 @@ defmodule Plausible.Site do
   alias Plausible.Auth.User
   alias Plausible.Site.GoogleAuth
 
+  @derive {Jason.Encoder, only: [:domain, :timezone]}
   schema "sites" do
     field :domain, :string
-    field :timezone, :string
+    field :timezone, :string, default: "Etc/UTC"
     field :public, :boolean
 
     many_to_many :members, User, join_through: Plausible.Site.Membership

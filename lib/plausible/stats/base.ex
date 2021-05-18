@@ -54,25 +54,35 @@ defmodule Plausible.Stats.Base do
         q
       end
 
-    if query.filters["props"] do
-      [{key, val}] = query.filters["props"] |> Enum.into([])
-
-      if val == "(none)" do
-        from(
-          e in q,
-          where: fragment("not has(meta.key, ?)", ^key)
-        )
+    q =
+      if query.filters["event:name"] do
+        name = query.filters["event:name"]
+        from(e in q, where: e.name == ^name)
       else
-        from(
-          e in q,
-          inner_lateral_join: meta in fragment("meta as m"),
-          as: :meta,
-          where: meta.key == ^key and meta.value == ^val
-        )
+        q
       end
-    else
-      q
-    end
+
+    Enum.reduce(query.filters, q, fn {filter_key, filter_value}, query ->
+      case filter_key do
+        "event:props:" <> prop_name ->
+          if filter_value == "(none)" do
+            from(
+              e in query,
+              where: fragment("not has(meta.key, ?)", ^prop_name)
+            )
+          else
+            from(
+              e in query,
+              inner_lateral_join: meta in "meta",
+              as: :meta,
+              where: meta.key == ^prop_name and meta.value == ^filter_value
+            )
+          end
+
+        _ ->
+          query
+      end
+    end)
   end
 
   def query_sessions(site, query) do

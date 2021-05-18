@@ -1,11 +1,6 @@
 defmodule PlausibleWeb.Endpoint do
+  use Sentry.PlugCapture
   use Phoenix.Endpoint, otp_app: :plausible
-
-  if Application.get_env(:appsignal, :config) do
-    use Appsignal.Phoenix
-  end
-
-  use Sentry.Phoenix.Endpoint
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -38,6 +33,8 @@ defmodule PlausibleWeb.Endpoint do
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
     json_decoder: Phoenix.json_library()
+
+  plug Sentry.PlugContext
 
   plug Plug.MethodOverride
   plug Plug.Head

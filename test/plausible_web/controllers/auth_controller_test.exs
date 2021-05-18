@@ -270,6 +270,20 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "10k pageviews"
       assert html_response(conn, 200) =~ "monthly billing"
     end
+
+    test "shows yearly subscription", %{conn: conn, user: user} do
+      insert(:subscription, paddle_plan_id: "590752", user: user)
+      conn = get(conn, "/settings")
+      assert html_response(conn, 200) =~ "100k pageviews"
+      assert html_response(conn, 200) =~ "yearly billing"
+    end
+
+    test "shows free subscription", %{conn: conn, user: user} do
+      insert(:subscription, paddle_plan_id: "free_10k", user: user)
+      conn = get(conn, "/settings")
+      assert html_response(conn, 200) =~ "10k pageviews"
+      assert html_response(conn, 200) =~ "N/A billing"
+    end
   end
 
   describe "PUT /settings" do

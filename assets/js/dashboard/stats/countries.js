@@ -4,11 +4,13 @@ import { withRouter } from 'react-router-dom'
 
 import numberFormatter from '../number-formatter'
 import FadeIn from '../fade-in'
+import LazyLoader from '../lazy-loader'
 import Bar from './bar'
 import MoreLink from './more-link'
 import * as api from '../api'
 import { navigateToQuery } from '../query'
 import { withThemeConsumer } from '../theme-consumer-hoc';
+
 class Countries extends React.Component {
   constructor(props) {
     super(props)
@@ -16,9 +18,10 @@ class Countries extends React.Component {
     this.drawMap = this.drawMap.bind(this)
     this.getDataset = this.getDataset.bind(this)
     this.state = {loading: true}
+    this.onVisible = this.onVisible.bind(this)
   }
 
-  componentDidMount() {
+  onVisible() {
     this.fetchCountries().then(this.drawMap.bind(this))
     window.addEventListener('resize', this.resizeMap);
     if (this.props.timer) this.props.timer.onTick(this.updateCountries.bind(this))
@@ -122,13 +125,22 @@ class Countries extends React.Component {
     });
   }
 
+  geolocationDbNotice() {
+    if (this.props.site.selfhosted) {
+      return (
+        <span className="text-xs text-gray-500 absolute bottom-4 right-3">IP Geolocation by <a target="_blank" href="https://db-ip.com" className="text-indigo-600">DB-IP</a></span>
+      )
+    }
+  }
+
   renderBody() {
     if (this.state.countries) {
       return (
         <React.Fragment>
           <h3 className="font-bold dark:text-gray-100">Countries</h3>
-          <div className="mt-6 mx-auto" style={{width: '100%', maxWidth: '475px', height: '320px'}} id="map-container"></div>
+          <div className="mx-auto mt-6" style={{width: '100%', maxWidth: '475px', height: '335px'}} id="map-container"></div>
           <MoreLink site={this.props.site} list={this.state.countries} endpoint="countries" />
+          { this.geolocationDbNotice() }
         </React.Fragment>
       )
     }
@@ -136,11 +148,13 @@ class Countries extends React.Component {
 
   render() {
     return (
-      <div className="stats-item relative bg-white dark:bg-gray-825 shadow-xl rounded p-4" style={{height: '436px'}}>
-        { this.state.loading && <div className="loading my-32 mx-auto"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
-          { this.renderBody() }
-        </FadeIn>
+      <div className="relative p-4 bg-white rounded shadow-xl stats-item dark:bg-gray-825" style={{height: '436px'}}>
+        <LazyLoader onVisible={this.onVisible}>
+          { this.state.loading && <div className="mx-auto my-32 loading"><div></div></div> }
+          <FadeIn show={!this.state.loading}>
+            { this.renderBody() }
+          </FadeIn>
+        </LazyLoader>
       </div>
     )
   }

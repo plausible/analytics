@@ -43,12 +43,7 @@ defmodule Plausible.Stats.Query do
   end
 
   def from(tz, %{"period" => "day"} = params) do
-    date =
-      if params["date"] do
-        Date.from_iso8601!(params["date"])
-      else
-        today(tz)
-      end
+    date = parse_single_date(tz, params)
 
     %__MODULE__{
       period: "day",
@@ -59,8 +54,8 @@ defmodule Plausible.Stats.Query do
   end
 
   def from(tz, %{"period" => "7d"} = params) do
-    end_date = today(tz)
-    start_date = end_date |> Timex.shift(days: -7)
+    end_date = parse_single_date(tz, params)
+    start_date = end_date |> Timex.shift(days: -6)
 
     %__MODULE__{
       period: "7d",
@@ -71,7 +66,7 @@ defmodule Plausible.Stats.Query do
   end
 
   def from(tz, %{"period" => "30d"} = params) do
-    end_date = today(tz)
+    end_date = parse_single_date(tz, params)
     start_date = end_date |> Timex.shift(days: -30)
 
     %__MODULE__{
@@ -83,12 +78,7 @@ defmodule Plausible.Stats.Query do
   end
 
   def from(tz, %{"period" => "month"} = params) do
-    date =
-      if params["date"] do
-        Date.from_iso8601!(params["date"])
-      else
-        today(tz)
-      end
+    date = parse_single_date(tz, params)
 
     start_date = Timex.beginning_of_month(date)
     end_date = Timex.end_of_month(date)
@@ -103,10 +93,7 @@ defmodule Plausible.Stats.Query do
 
   def from(tz, %{"period" => "6mo"} = params) do
     end_date =
-      case params["date"] do
-        nil -> today(tz)
-        date -> Date.from_iso8601!(date)
-      end
+      parse_single_date(tz, params)
       |> Timex.end_of_month()
 
     start_date =
@@ -123,10 +110,7 @@ defmodule Plausible.Stats.Query do
 
   def from(tz, %{"period" => "12mo"} = params) do
     end_date =
-      case params["date"] do
-        nil -> today(tz)
-        date -> Date.from_iso8601!(date)
-      end
+      parse_single_date(tz, params)
       |> Timex.end_of_month()
 
     start_date =
@@ -164,12 +148,20 @@ defmodule Plausible.Stats.Query do
     }
   end
 
-  def from(tz, _) do
-    __MODULE__.from(tz, %{"period" => "30d"})
+  def from(tz, params) do
+    __MODULE__.from(tz, Map.merge(params, %{"period" => "30d"}))
   end
 
   defp today(tz) do
     Timex.now(tz) |> Timex.to_date()
+  end
+
+  defp parse_single_date(tz, params) do
+    case params["date"] do
+      "today" -> Timex.now(tz) |> Timex.to_date()
+      date when is_binary(date) -> Date.from_iso8601!(date)
+      _ -> Timex.now(tz) |> Timex.to_date()
+    end
   end
 
   defp parse_filters(%{"filters" => filters}) when is_binary(filters) do

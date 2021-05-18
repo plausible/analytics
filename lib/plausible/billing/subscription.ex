@@ -10,7 +10,8 @@ defmodule Plausible.Billing.Subscription do
     :status,
     :next_bill_amount,
     :next_bill_date,
-    :user_id
+    :user_id,
+    :currency_code
   ]
 
   @optional_fields [:last_bill_date]
@@ -25,6 +26,7 @@ defmodule Plausible.Billing.Subscription do
     field :next_bill_amount, :string
     field :next_bill_date, :date
     field :last_bill_date, :date
+    field :currency_code, :string
 
     belongs_to :user, Plausible.Auth.User
 

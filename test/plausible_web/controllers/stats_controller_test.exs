@@ -45,8 +45,21 @@ defmodule PlausibleWeb.StatsControllerTest do
       today = Timex.today() |> Timex.format!("{ISOdate}")
 
       conn = get(conn, "/" <> site.domain <> "/visitors.csv")
-      assert response(conn, 200) =~ "Date,Visitors"
-      assert response(conn, 200) =~ "#{today},3"
+      assert response(conn, 200) =~ "visitors,pageviews,bounce_rate,visit_duration"
+      assert response(conn, 200) =~ "#{today},3,3,0,0"
+    end
+  end
+
+  describe "GET /:website/visitors.csv - via shared link" do
+    test "exports graph as csv", %{conn: conn} do
+      site = insert(:site, domain: "test-site.com")
+      link = insert(:shared_link, site: site)
+
+      today = Timex.today() |> Timex.format!("{ISOdate}")
+
+      conn = get(conn, "/" <> site.domain <> "/visitors.csv?auth=#{link.slug}")
+      assert response(conn, 200) =~ "visitors,pageviews,bounce_rate,visit_duration"
+      assert response(conn, 200) =~ "#{today},3,3,0,0"
     end
   end
 
@@ -69,6 +82,16 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
       assert html_response(conn, 200) =~ "stats-react-container"
+    end
+
+    test "returns page with X-Frame-Options disabled so it can be embedded in an iframe", %{
+      conn: conn
+    } do
+      site = insert(:site, domain: "test-site.com")
+      link = insert(:shared_link, site: site)
+
+      conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
+      assert Plug.Conn.get_resp_header(conn, "x-frame-options") == []
     end
   end
 

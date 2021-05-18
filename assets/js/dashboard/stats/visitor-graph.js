@@ -5,6 +5,7 @@ import { eventName, navigateToQuery } from '../query'
 import numberFormatter, {durationFormatter} from '../number-formatter'
 import * as api from '../api'
 import {ThemeContext} from '../theme-context'
+import LazyLoader from '../lazy-loader'
 
 function buildDataSet(plot, present_index, ctx, label) {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
@@ -246,13 +247,21 @@ class LineGraph extends React.Component {
     }
   }
 
-  renderTopStatNumber(stat) {
-    if (stat.name === 'Visit duration') {
-      return durationFormatter(stat.count)
+  topStatNumberShort(stat) {
+    if (typeof(stat.duration) == 'number') {
+      return durationFormatter(stat.duration)
     } else if (typeof(stat.count) == 'number') {
       return numberFormatter(stat.count)
     } else {
       return stat.percentage + '%'
+    }
+  }
+
+  topStatTooltip(stat) {
+    if (typeof(stat.count) == 'number') {
+      let name = stat.name.toLowerCase()
+      name = stat.count === 1 ? name.slice(0, -1) : name
+      return stat.count.toLocaleString() + ' ' + name
     }
   }
 
@@ -264,9 +273,9 @@ class LineGraph extends React.Component {
 
       return (
         <div className={`px-8 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
-          <div className="text-gray-500 dark:text-gray-400 text-xs font-bold tracking-wide uppercase">{stat.name}</div>
-          <div className="my-1 flex justify-between items-center">
-            <b className="text-2xl mr-4 dark:text-gray-100">{ this.renderTopStatNumber(stat) }</b>
+          <div className="text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap">{stat.name}</div>
+          <div className="flex items-center justify-between my-1 whitespace-nowrap">
+            <b className="mr-4 text-xl md:text-2xl dark:text-gray-100" tooltip={this.topStatTooltip(stat)}>{ this.topStatNumberShort(stat) }</b>
             {this.renderComparison(stat.name, stat.change)}
           </div>
         </div>
@@ -285,24 +294,39 @@ class LineGraph extends React.Component {
 
     return (
       <a href={endpoint} download>
-        <svg className="feather w-4 h-5 absolute text-gray-700 dark:text-gray-300" style={{right: '2rem', top: '-2rem'}} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <svg className="absolute w-4 h-5 text-gray-700 feather dark:text-gray-300 -top-8 right-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
       </a>
     )
+  }
+
+  samplingNotice() {
+    const samplePercent = this.props.graphData.sample_percent
+
+    if (samplePercent < 100) {
+      return (
+        <div tooltip={`Stats based on a ${samplePercent}% sample of all visitors`} className="absolute cursor-pointer -top-20 right-8">
+          <svg className="w-4 h-4 text-gray-300 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      )
+    }
   }
 
   render() {
     const extraClass = this.props.graphData.interval === 'hour' ? '' : 'cursor-pointer'
 
     return (
-      <React.Fragment>
+      <div className="graph-inner">
         <div className="flex flex-wrap">
           { this.renderTopStats() }
         </div>
-        <div className="px-2 relative">
+        <div className="relative px-2">
           { this.downloadLink() }
+          { this.samplingNotice() }
           <canvas id="main-graph-canvas" className={'mt-4 ' + extraClass} width="1054" height="342"></canvas>
         </div>
-      </React.Fragment>
+      </div>
     )
   }
 }
@@ -313,9 +337,10 @@ export default class VisitorGraph extends React.Component {
   constructor(props) {
     super(props)
     this.state = {loading: true}
+    this.onVisible = this.onVisible.bind(this)
   }
 
-  componentDidMount() {
+  onVisible() {
     this.fetchGraphData()
     if (this.props.timer) this.props.timer.onTick(this.fetchGraphData.bind(this))
   }
@@ -349,10 +374,12 @@ export default class VisitorGraph extends React.Component {
 
   render() {
     return (
-      <div className="w-full relative bg-white dark:bg-gray-825 shadow-xl rounded mt-6 main-graph">
-        { this.state.loading && <div className="loading pt-24 sm:pt-32 md:pt-48 mx-auto"><div></div></div> }
-        { this.renderInner() }
-      </div>
+      <LazyLoader onVisible={this.onVisible}>
+        <div className="relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825 main-graph">
+          { this.state.loading && <div className="graph-inner"><div className="pt-24 mx-auto loading sm:pt-32 md:pt-48"><div></div></div></div> }
+          { this.renderInner() }
+        </div>
+      </LazyLoader>
     )
   }
 }

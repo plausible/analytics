@@ -181,13 +181,15 @@ defmodule Plausible.BillingTest do
         "passthrough" => user.id,
         "status" => "active",
         "next_bill_date" => "2019-06-01",
-        "unit_price" => "6.00"
+        "unit_price" => "6.00",
+        "currency" => "EUR"
       })
 
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
       assert subscription.paddle_subscription_id == @subscription_id
       assert subscription.next_bill_date == ~D[2019-06-01]
       assert subscription.next_bill_amount == "6.00"
+      assert subscription.currency_code == "EUR"
     end
 
     test "create with email address" do
@@ -203,7 +205,8 @@ defmodule Plausible.BillingTest do
         "cancel_url" => "cancel_url.com",
         "status" => "active",
         "next_bill_date" => "2019-06-01",
-        "unit_price" => "6.00"
+        "unit_price" => "6.00",
+        "currency" => "EUR"
       })
 
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
@@ -227,7 +230,8 @@ defmodule Plausible.BillingTest do
         "passthrough" => user.id,
         "status" => "active",
         "next_bill_date" => "2019-06-01",
-        "new_unit_price" => "12.00"
+        "new_unit_price" => "12.00",
+        "currency" => "EUR"
       })
 
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)

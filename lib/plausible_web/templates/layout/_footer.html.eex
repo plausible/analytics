@@ -1,12 +1,12 @@
-<div class="bg-gray-800 dark:bg-gray-800 mt-12">
-  <div class="container py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
+<div class="mt-24 bg-gray-800 dark:bg-gray-800">
+  <div class="container px-4 py-12 sm:px-6 lg:py-16 lg:px-8">
     <div class="xl:grid xl:grid-cols-3 xl:gap-8">
       <div class="my-8 xl:my-0">
-        <h4 class="leading-5 font-semibold tracking-wider text-gray-300">
+        <h4 class="font-semibold tracking-wider text-gray-300 leading-5">
           <img src="/images/icon/plausible_logo_sm.png" class="inline-block w-6 mr-1" />
           Plausible Analytics
         </h4>
-        <p class="mt-4 text-gray-400 text-base leading-6">
+        <p class="mt-4 text-base text-gray-400 leading-6">
         <%= if !Application.get_env(:plausible, :is_selfhost) do %>
           Made and hosted in the EU <span class="text-lg">🇪🇺</span><br />
         <% end %>
@@ -15,8 +15,8 @@
         </p>
         <%= if Application.get_env(:plausible, :is_selfhost) do %>
           <div class="mt-4">
-            <a href="https://github.com/sponsors/plausible" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-gray-50 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2  focus:ring-gray-500">
-              <svg class="-ml-1 mr-2 w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+            <a href="https://github.com/sponsors/plausible" class="inline-flex items-center px-4 py-2 text-sm font-medium bg-gray-700 border border-transparent shadow-sm rounded-md text-gray-50 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500">
+              <svg class="w-5 h-5 mr-2 -ml-1 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
               Sponsor @plausible
             </a>
           </div>
@@ -25,44 +25,44 @@
       <div class="grid grid-cols-2 gap-8 xl:col-span-2">
         <div class="md:grid md:grid-cols-2 md:gap-8">
           <div>
-            <h4 class="text-sm leading-5 font-semibold tracking-wider text-gray-400 uppercase">
+            <h4 class="text-sm font-semibold tracking-wider text-gray-400 uppercase leading-5">
               Why Plausible?
             </h4>
             <ul class="mt-4">
               <li>
-                <a href="https://plausible.io/simple-web-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/simple-web-analytics" class="text-base text-gray-300 leading-6 hover:text-white">
                   Simple metrics
                 </a>
               </li>
               <li class="mt-4">
-                <a href="https://plausible.io/lightweight-web-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/lightweight-web-analytics" class="text-base text-gray-300 leading-6 hover:text-white">
                   Lightweight script
                 </a>
               </li>
               <li class="mt-4">
-                <a href="https://plausible.io/privacy-focused-web-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/privacy-focused-web-analytics" class="text-base text-gray-300 leading-6 hover:text-white">
                   Privacy focused
                 </a>
               </li>
               <li class="mt-4">
-                <a href="https://plausible.io/open-source-website-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/open-source-website-analytics" class="text-base text-gray-300 leading-6 hover:text-white">
                   Open source
                 </a>
               </li>
             </ul>
           </div>
           <div class="mt-12 md:mt-0">
-            <h4 class="text-sm leading-5 font-semibold tracking-wider text-gray-400 uppercase">
+            <h4 class="text-sm font-semibold tracking-wider text-gray-400 uppercase leading-5">
               Comparisons
             </h4>
             <ul class="mt-4">
               <li>
-                <a href="https://plausible.io/vs-google-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/vs-google-analytics" class="text-base text-gray-300 leading-6 hover:text-white">
                   vs Google Analytics
                 </a>
               </li>
               <li class="mt-4">
-                <a href="https://plausible.io/vs-matomo" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/vs-matomo" class="text-base text-gray-300 leading-6 hover:text-white">
                   vs Matomo
                 </a>
               </li>
@@ -72,74 +72,74 @@
         </div>
         <div class="md:grid md:grid-cols-2 md:gap-8">
           <div class="mt-12 md:mt-0">
-            <h4 class="text-sm leading-5 font-semibold tracking-wider text-gray-400 uppercase">
+            <h4 class="text-sm font-semibold tracking-wider text-gray-400 uppercase leading-5">
               Community
             </h4>
             <ul class="mt-4">
               <li>
-                <a href="https://plausible.io/blog" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/blog" class="text-base text-gray-300 leading-6 hover:text-white">
                   Blog
                 </a>
               </li>
             <li class="mt-4">
-                <a target="_blank" href="https://docs.plausible.io/" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a target="_blank" href="https://docs.plausible.io/" class="text-base text-gray-300 leading-6 hover:text-white">
                   Documentation
                 </a>
               </li>
               <li class="mt-4">
-                <a target="_blank" href="https://github.com/plausible/analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a target="_blank" href="https://github.com/plausible/analytics" class="text-base text-gray-300 leading-6 hover:text-white">
                   GitHub
                 </a>
               </li>
               <li class="mt-4">
-                <a target="_blank" href="https://plausible.io/forum" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a target="_blank" href="https://plausible.io/forum" class="text-base text-gray-300 leading-6 hover:text-white">
                   Forum
                 </a>
               </li>
               <li class="mt-4">
-                <a target="_blank" href="https://twitter.com/plausiblehq" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a target="_blank" href="https://twitter.com/plausiblehq" class="text-base text-gray-300 leading-6 hover:text-white">
                   Twitter
                 </a>
               </li>
               <li class="mt-4">
-                <a target="_blank" href="https://fosstodon.org/@plausible" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a target="_blank" href="https://fosstodon.org/@plausible" class="text-base text-gray-300 leading-6 hover:text-white">
                   Mastodon
                 </a>
               </li>
             </ul>
           </div>
           <div>
-            <h4 class="text-sm leading-5 font-semibold tracking-wider text-gray-400 uppercase">
+            <h4 class="text-sm font-semibold tracking-wider text-gray-400 uppercase leading-5">
               Company
             </h4>
             <ul class="mt-4">
               <li class="mt-4">
-                <a href="https://plausible.io/about" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/about" class="text-base text-gray-300 leading-6 hover:text-white">
                   About
                 </a>
               </li>
               <li class="mt-4">
-                <a href="https://plausible.io/status" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/status" class="text-base text-gray-300 leading-6 hover:text-white">
                   Status
                 </a>
               </li>
               <li class="mt-4">
-                <a href="https://plausible.io/contact" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/contact" class="text-base text-gray-300 leading-6 hover:text-white">
                   Contact
                 </a>
               </li>
               <li class="mt-4">
-                <a href="https://plausible.io/privacy" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/privacy" class="text-base text-gray-300 leading-6 hover:text-white">
                   Privacy
                 </a>
               </li>
               <li class="mt-4">
-                <a href="https://plausible.io/data-policy" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/data-policy" class="text-base text-gray-300 leading-6 hover:text-white">
                   Data policy
                 </a>
               </li>
               <li class="mt-4">
-                <a href="https://plausible.io/imprint" class="text-base leading-6 text-gray-300 hover:text-white">
+                <a href="https://plausible.io/imprint" class="text-base text-gray-300 leading-6 hover:text-white">
                   Imprint
                 </a>
               </li>

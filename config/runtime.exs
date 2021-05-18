@@ -20,7 +20,17 @@ if base_url.scheme not in ["http", "https"] do
         }`"
 end
 
-secret_key_base = System.fetch_env!("SECRET_KEY_BASE")
+secret_key_base =
+  case System.get_env("SECRET_KEY_BASE") do
+    nil ->
+      raise "SECRET_KEY_BASE configuration option is required. See https://plausible.io/docs/self-hosting-configuration#server"
+
+    key when byte_size(key) < 64 ->
+      raise "SECRET_KEY_BASE must be at least 64 bytes long. See https://plausible.io/docs/self-hosting-configuration#server"
+
+    key ->
+      key
+  end
 
 db_url =
   System.get_env(
@@ -56,15 +66,21 @@ cron_enabled = String.to_existing_atom(System.get_env("CRON_ENABLED", "false"))
 custom_domain_server_ip = System.get_env("CUSTOM_DOMAIN_SERVER_IP")
 custom_domain_server_user = System.get_env("CUSTOM_DOMAIN_SERVER_USER")
 custom_domain_server_password = System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD")
-geolite2_country_db = System.get_env("GEOLITE2_COUNTRY_DB")
+
+geolite2_country_db =
+  System.get_env(
+    "GEOLITE2_COUNTRY_DB",
+    Application.app_dir(:plausible) <> "/priv/geodb/dbip-country.mmdb"
+  )
+
 disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
 disable_registration = String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false"))
 hcaptcha_sitekey = System.get_env("HCAPTCHA_SITEKEY")
 hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
 log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
 log_format = System.get_env("LOG_FORMAT", "elixir")
-appsignal_api_key = System.get_env("APPSIGNAL_API_KEY")
 is_selfhost = String.to_existing_atom(System.get_env("SELFHOST", "true"))
+{site_limit, ""} = Integer.parse(System.get_env("SITE_LIMIT", "20"))
 disable_cron = String.to_existing_atom(System.get_env("DISABLE_CRON", "false"))
 
 {user_agent_cache_limit, ""} = Integer.parse(System.get_env("USER_AGENT_CACHE_LIMIT", "1000"))
@@ -79,6 +95,7 @@ config :plausible,
   environment: env,
   mailer_email: mailer_email,
   admin_emails: admin_emails,
+  site_limit: site_limit,
   is_selfhost: is_selfhost
 
 config :plausible, :selfhost,
@@ -97,7 +114,9 @@ config :sentry,
   environment_name: env,
   included_environments: ["prod", "staging"],
   release: app_version,
-  tags: %{app_version: app_version}
+  tags: %{app_version: app_version},
+  enable_source_code_context: true,
+  root_source_code_path: [File.cwd!()]
 
 config :plausible, :paddle, vendor_auth_code: paddle_auth_code
 
@@ -109,6 +128,8 @@ config :plausible, :slack, webhook: slack_hook_url
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
+  queue_target: 500,
+  queue_interval: 2000,
   url: ch_db_url
 
 case mailer_adapter do
@@ -179,6 +200,8 @@ if config_env() == :prod && !disable_cron do
     {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
     # Daily at 14
     {"0 14 * * *", Plausible.Workers.CheckUsage},
+    # Daily at 15
+    {"0 15 * * *", Plausible.Workers.NotifyAnnualRenewal},
     # Every 10 minutes
     {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}
   ]
@@ -197,18 +220,21 @@ if config_env() == :prod && !disable_cron do
   extra_queues = [
     provision_ssl_certificates: 1,
     trial_notification_emails: 1,
-    check_usage: 1
+    check_usage: 1,
+    notify_annual_renewal: 1
   ]
 
+  # Keep 30 days history
   config :plausible, Oban,
     repo: Plausible.Repo,
+    plugins: [{Oban.Plugins.Pruner, max_age: 2_592_000}],
     queues: if(is_selfhost, do: base_queues, else: base_queues ++ extra_queues),
     crontab: if(is_selfhost, do: base_cron, else: base_cron ++ extra_cron)
 else
   config :plausible, Oban,
     repo: Plausible.Repo,
     queues: false,
-    crontab: false
+    plugins: false
 end
 
 config :plausible, :hcaptcha,
@@ -243,7 +269,7 @@ config :kaffy,
     ]
   ]
 
-if geolite2_country_db do
+if config_env() != :test && geolite2_country_db do
   config :geolix,
     databases: [
       %{
@@ -263,17 +289,13 @@ config :logger,
   level: log_level,
   backends: logger_backends[log_format]
 
+config :logger, Sentry.LoggerBackend,
+  capture_log_messages: true,
+  level: :error,
+  excluded_domains: []
+
 if log_format == "json" do
   config :logger, Ink,
     name: "plausible",
     level: log_level
-end
-
-if appsignal_api_key do
-  config :appsignal, :config,
-    otp_app: :plausible,
-    name: "Plausible Analytics",
-    push_api_key: appsignal_api_key,
-    env: env,
-    active: true
 end
