@@ -5,7 +5,7 @@
   var document = window.document
 
   var scriptEl = document.currentScript;
-  var plausibleHost = new URL(scriptEl.src).origin
+  var endpoint = scriptEl.getAttribute('data-api') || new URL(scriptEl.src).origin + '/api/event'
   var plausible_ignore = window.localStorage.plausible_ignore;
   {{#if exclusions}}
   var excludedPaths = scriptEl && scriptEl.getAttribute('data-exclude').split(',');
@@ -30,7 +30,7 @@
     var payload = {}
     payload.n = eventName
     payload.u = location.href
-    payload.d = scriptEl.id
+    payload.d = scriptEl.getAttribute('data-domain')
     payload.r = document.referrer || null
     payload.w = window.innerWidth
     if (options && options.meta) {
@@ -44,7 +44,7 @@
     {{/if}}
 
     var request = new XMLHttpRequest();
-    request.open('POST', plausibleHost + '/api/event', true);
+    request.open('POST', endpoint, true);
     request.setRequestHeader('Content-Type', 'text/plain');
 
     request.send(JSON.stringify(payload));
