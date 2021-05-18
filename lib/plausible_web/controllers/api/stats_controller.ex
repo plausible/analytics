@@ -140,11 +140,11 @@ defmodule PlausibleWeb.Api.StatsController do
   def sources(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
-    include = if params["include"], do: String.split(params["include"], ","), else: []
+    include_details = params["detailed"] == "true"
     limit = if params["limit"], do: String.to_integer(params["limit"])
     page = if params["page"], do: String.to_integer(params["page"])
     show_noref = params["show_noref"] == "true"
-    json(conn, Stats.top_sources(site, query, limit || 9, page || 1, show_noref, include))
+    json(conn, Stats.top_sources(site, query, limit || 9, page || 1, show_noref, include_details))
   end
 
   def utm_mediums(conn, params) do
@@ -203,10 +203,10 @@ defmodule PlausibleWeb.Api.StatsController do
   def referrer_drilldown(conn, %{"referrer" => referrer} = params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
-    include = if params["include"], do: String.split(params["include"], ","), else: []
+    include_details = params["detailed"] == "true"
     limit = params["limit"] || 9
 
-    referrers = Stats.referrer_drilldown(site, query, referrer, include, limit)
+    referrers = Stats.referrer_drilldown(site, query, referrer, include_details, limit)
     {_, total_visitors} = Stats.pageviews_and_visitors(site, query)
     json(conn, %{referrers: referrers, total_visitors: total_visitors})
   end
@@ -223,11 +223,11 @@ defmodule PlausibleWeb.Api.StatsController do
   def pages(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
-    include = if params["include"], do: String.split(params["include"], ","), else: []
+    include_details = params["detailed"] == "true"
     limit = if params["limit"], do: String.to_integer(params["limit"])
     page = if params["page"], do: String.to_integer(params["page"])
 
-    json(conn, Stats.top_pages(site, query, limit || 9, page || 1, include))
+    json(conn, Stats.top_pages(site, query, limit || 9, page || 1, include_details))
   end
 
   def entry_pages(conn, params) do

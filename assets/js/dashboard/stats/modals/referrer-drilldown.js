@@ -17,9 +17,9 @@ class ReferrerDrilldownModal extends React.Component {
   }
 
   componentDidMount() {
-    const include = this.showExtra() ? 'bounce_rate,visit_duration' : null
+    const detailed = this.showExtra()
 
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100, include: include})
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100, detailed})
       .then((res) => this.setState({loading: false, referrers: res.referrers, totalVisitors: res.total_visitors}))
   }
 

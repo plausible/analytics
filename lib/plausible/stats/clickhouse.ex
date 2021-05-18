@@ -238,7 +238,7 @@ defmodule Plausible.Stats.Clickhouse do
     end)
   end
 
-  def top_sources(site, query, limit, page, show_noref \\ false, include \\ []) do
+  def top_sources(site, query, limit, page, show_noref \\ false, include_details) do
     offset = (page - 1) * limit
 
     referrers =
@@ -266,7 +266,7 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     referrers =
-      if "bounce_rate" in include do
+      if include_details do
         from(
           s in referrers,
           select: %{
@@ -441,7 +441,7 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
-  def referrer_drilldown(site, query, referrer, include, limit) do
+  def referrer_drilldown(site, query, referrer, include_details, limit) do
     referrer = if referrer == @no_ref, do: "", else: referrer
 
     q =
@@ -455,7 +455,7 @@ defmodule Plausible.Stats.Clickhouse do
       |> filter_converted_sessions(site, query)
 
     q =
-      if "bounce_rate" in include do
+      if include_details do
         from(
           s in q,
           select: %{
@@ -585,7 +585,7 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  def top_pages(site, %Query{period: "realtime"} = query, limit, page, _include) do
+  def top_pages(site, %Query{period: "realtime"} = query, limit, page, _include_details) do
     offset = (page - 1) * limit
 
     q = base_session_query(site, query) |> apply_page_as_entry_page(site, query)
@@ -603,7 +603,7 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
-  def top_pages(site, query, limit, page, include) do
+  def top_pages(site, query, limit, page, include_details) do
     offset = (page - 1) * limit
 
     q =
@@ -622,9 +622,52 @@ defmodule Plausible.Stats.Clickhouse do
 
     pages = ClickhouseRepo.all(q)
 
-    if "bounce_rate" in include do
-      bounce_rates = bounce_rates_by_page_url(site, query)
-      Enum.map(pages, fn url -> Map.put(url, :bounce_rate, bounce_rates[url[:name]]) end)
+    if include_details do
+      [{bounce_state, bounce_result}, {time_state, time_result}] =
+        Task.yield_many(
+          [
+            Task.async(fn -> bounce_rates_by_page_url(site, query) end),
+            Task.async(fn ->
+              {:ok, page_times} =
+                page_times_by_page_url(site, query, Enum.map(pages, fn p -> p.name end))
+
+              page_times.rows |> Enum.map(fn [a, b] -> {a, b} end) |> Enum.into(%{})
+            end)
+          ],
+          15000
+        )
+        |> Enum.map(fn {task, response} ->
+          case response do
+            nil ->
+              Task.shutdown(task, :brutal_kill)
+              {nil, nil}
+
+            {:ok, result} ->
+              {:ok, result}
+
+            _ ->
+              response
+          end
+        end)
+
+      Enum.map(pages, fn page ->
+        if bounce_state == :ok,
+          do: Map.put(page, :bounce_rate, bounce_result[page[:name]]),
+          else: page
+      end)
+      |> Enum.map(fn page ->
+        if time_state == :ok do
+          time = time_result[page[:name]]
+
+          Map.put(
+            page,
+            :time_on_page,
+            if(time, do: round(time), else: nil)
+          )
+        else
+          page
+        end
+      end)
     else
       pages
     end
@@ -646,6 +689,43 @@ defmodule Plausible.Stats.Clickhouse do
     )
     |> Enum.map(fn row -> {row[:entry_page], row[:bounce_rate]} end)
     |> Enum.into(%{})
+  end
+
+  defp page_times_by_page_url(site, query, page_list) do
+    q =
+      from(
+        e in base_query_w_sessions(site, %Query{
+          query
+          | filters: Map.delete(query.filters, "page")
+        }),
+        select: {
+          fragment("? as p", e.pathname),
+          fragment("? as t", e.timestamp),
+          fragment("? as s", e.session_id)
+        },
+        order_by: [e.session_id, e.timestamp]
+      )
+
+    {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
+
+    "SELECT
+      p,
+      sum(td)/count(case when p2 != p then 1 end) as avgTime
+    FROM
+      (SELECT
+        p,
+        p2,
+        sum(t2-t) as td
+      FROM
+        (SELECT
+          *,
+          neighbor(t, 1) as t2,
+          neighbor(p, 1) as p2,
+          neighbor(s, 1) as s2
+        FROM (#{base_query_raw}))
+      WHERE s=s2 AND p IN tuple(?)
+      GROUP BY p,p2,s)
+    GROUP BY p" |> ClickhouseRepo.query(base_query_raw_params ++ [page_list ++ ["/"]])
   end
 
   defp add_percentages(stat_list) do
