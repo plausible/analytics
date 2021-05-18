@@ -42,38 +42,33 @@ defmodule PlausibleWeb.Tracker do
   @max_age 3600
 
   def init(_) do
-    templates =
-      Enum.reduce(@templates, %{}, fn template_filename, rendered_templates ->
-        rendered = EEx.compile_file("priv/tracker/js/" <> template_filename)
-
+    all_files =
+      Enum.reduce(@templates, %{}, fn template_filename, all_files ->
         aliases = Map.get(@aliases, template_filename, [])
 
         [template_filename | aliases]
-        |> Enum.map(fn filename -> {"/js/" <> filename, rendered} end)
+        |> Enum.map(fn filename -> {"/js/" <> filename, template_filename} end)
         |> Enum.into(%{})
-        |> Map.merge(rendered_templates)
+        |> Map.merge(all_files)
       end)
 
-    [templates: templates]
+    [files: all_files]
   end
 
-  def call(conn, templates: templates) do
-    case templates[conn.request_path] do
+  def call(conn, files: files) do
+    case files[conn.request_path] do
       nil ->
         conn
 
       found ->
-        {js, _} = Code.eval_quoted(found, base_url: PlausibleWeb.Endpoint.url())
-        send_js(conn, js)
-    end
-  end
+        location = Application.app_dir(:plausible, "priv/tracker/js/" <> found)
 
-  defp send_js(conn, file) do
-    conn
-    |> put_resp_header("cache-control", "max-age=#{@max_age},public")
-    |> put_resp_header("content-type", "application/javascript")
-    |> put_resp_header("cross-origin-resource-policy", "cross-origin")
-    |> send_resp(200, file)
-    |> halt()
+        conn
+        |> put_resp_header("cache-control", "max-age=#{@max_age},public")
+        |> put_resp_header("content-type", "application/javascript")
+        |> put_resp_header("cross-origin-resource-policy", "cross-origin")
+        |> send_file(200, location)
+        |> halt()
+    end
   end
 end
