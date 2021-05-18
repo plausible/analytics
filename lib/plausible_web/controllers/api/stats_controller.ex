@@ -106,41 +106,39 @@ defmodule PlausibleWeb.Api.StatsController do
 
     time_on_page =
       if query.filters["page"] do
-        IO.inspect(
-          [{success, duration}, {prev_success, prev_duration}] =
-            Task.yield_many(
-              [
-                Task.async(fn ->
-                  {:ok, page_times} =
-                    Stats.page_times_by_page_url(site, query, [query.filters["page"]])
+        [{success, duration}, {prev_success, prev_duration}] =
+          Task.yield_many(
+            [
+              Task.async(fn ->
+                {:ok, page_times} =
+                  Stats.page_times_by_page_url(site, query, [query.filters["page"]])
 
-                  page_times
-                end),
-                Task.async(fn ->
-                  {:ok, page_times} =
-                    Stats.page_times_by_page_url(site, prev_query, [query.filters["page"]])
+                page_times
+              end),
+              Task.async(fn ->
+                {:ok, page_times} =
+                  Stats.page_times_by_page_url(site, prev_query, [query.filters["page"]])
 
-                  page_times
-                end)
-              ],
-              5000
-            )
-            |> Enum.map(fn {task, response} ->
-              case response do
-                nil ->
-                  Task.shutdown(task, :brutal_kill)
-                  {nil, nil}
+                page_times
+              end)
+            ],
+            5000
+          )
+          |> Enum.map(fn {task, response} ->
+            case response do
+              nil ->
+                Task.shutdown(task, :brutal_kill)
+                {nil, nil}
 
-                {:ok, page_times} ->
-                  result = Enum.at(page_times.rows, 0)
-                  result = if result, do: Enum.at(result, 1), else: nil
-                  if result, do: {:ok, round(result)}, else: {:ok, 0}
+              {:ok, page_times} ->
+                result = Enum.at(page_times.rows, 0)
+                result = if result, do: Enum.at(result, 1), else: nil
+                if result, do: {:ok, round(result)}, else: {:ok, 0}
 
-                _ ->
-                  response
-              end
-            end)
-        )
+              _ ->
+                response
+            end
+          end)
 
         if success == :ok && prev_success == :ok do
           %{
