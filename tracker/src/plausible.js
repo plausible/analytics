@@ -7,7 +7,7 @@
   var scriptEl = document.querySelector('[src*="' + plausibleHost +'"]')
   var domain = scriptEl && scriptEl.getAttribute('data-domain')
   var plausible_ignore = window.localStorage.plausible_ignore;
-  {{#if exclusionMode}}
+  {{#if exclusions}}
   var excludedPaths = scriptEl && scriptEl.getAttribute('data-exclude').split(',');
   {{/if}}
   var lastPage;
@@ -20,7 +20,7 @@
     if (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(location.hostname) || location.protocol === 'file:') return warn('localhost');
     if (window.phantom || window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) return;
     if (plausible_ignore=="true") return warn('localStorage flag')
-    {{#if exclusionMode}}
+    {{#if exclusions}}
     if (excludedPaths)
       for (var i = 0; i < excludedPaths.length; i++)
         if (eventName == "pageview" && location.pathname.match(new RegExp('^' + excludedPaths[i].trim().replace(/\*\*/g, '.*').replace(/([^\.])\*/g, '$1[^\\s\/]*') + '\/?$')))
@@ -39,7 +39,7 @@
     if (options && options.props) {
       payload.p = JSON.stringify(options.props)
     }
-    {{#if hashMode}}
+    {{#if hash}}
     payload.h = 1
     {{/if}}
 
@@ -57,7 +57,7 @@
   }
 
   function page() {
-    {{#unless hashMode}}
+    {{#unless hash}}
     if (lastPage === location.pathname) return;
     {{/unless}}
     lastPage = location.pathname
@@ -70,7 +70,7 @@
     }
   }
 
-  {{#if outboundLinks}}
+  {{#if outbound_links}}
   function handleOutbound(event) {
     var link = event.target;
     var middle = event.type == "auxclick" && event.which == 2;
@@ -102,7 +102,7 @@
   {{/if}}
 
   try {
-    {{#if hashMode}}
+    {{#if hash}}
     window.addEventListener('hashchange', page)
     {{else}}
     var his = window.history
@@ -116,7 +116,7 @@
     }
 
     {{/if}}
-    {{#if outboundLinks}}
+    {{#if outbound_links}}
     registerOutboundLinkEvents()
     {{/if}}
 
