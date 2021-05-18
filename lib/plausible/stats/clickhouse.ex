@@ -693,7 +693,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   defp page_times_by_page_url(site, query, page_list) do
     q =
-      from(e in base_query(site, query),
+      from(e in base_query_w_sessions(site, %Query{query | filters: Map.delete(query.filters, "page")}),
         select: {
           fragment("? as p", e.pathname),
           fragment("? as t", e.timestamp),
