@@ -27,14 +27,8 @@ class PagesModal extends React.Component {
     const detailed = this.showExtra()
     const {query, page, pages} = this.state;
 
-    const {filters} = query
-    if (filters.source || filters.referrer) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`, query, {limit: 100, page, detailed})
-        .then((res) => this.setState((state) => ({loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100})))
-    } else {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, query, {limit: 100, page, detailed})
-        .then((res) => this.setState((state) => ({loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100})))
-    }
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, query, {limit: 100, page, detailed})
+      .then((res) => this.setState((state) => ({loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100})))
   }
 
   loadMore() {
@@ -80,11 +74,6 @@ class PagesModal extends React.Component {
     return this.state.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
   }
 
-  title() {
-    const {filters} = this.state.query
-    return (filters.source || filters.referrer) ? 'Entry Pages' : 'Top Pages'
-  }
-
   renderLoading() {
     if (this.state.loading) {
       return <div className="loading my-16 mx-auto"><div></div></div>
@@ -103,7 +92,7 @@ class PagesModal extends React.Component {
     if (this.state.pages) {
       return (
         <React.Fragment>
-          <h1 className="text-xl font-bold dark:text-gray-100">{this.title()}</h1>
+          <h1 className="text-xl font-bold dark:text-gray-100">Top Pages</h1>
 
           <div className="my-4 border-b border-gray-300"></div>
           <main className="modal__content">
