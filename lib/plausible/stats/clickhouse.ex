@@ -691,7 +691,7 @@ defmodule Plausible.Stats.Clickhouse do
     |> Enum.into(%{})
   end
 
-  defp page_times_by_page_url(site, query, page_list) do
+  def page_times_by_page_url(site, query, page_list) do
     q =
       from(
         e in base_query_w_sessions(site, %Query{
@@ -725,7 +725,10 @@ defmodule Plausible.Stats.Clickhouse do
         FROM (#{base_query_raw}))
       WHERE s=s2 AND p IN tuple(?)
       GROUP BY p,p2,s)
-    GROUP BY p" |> ClickhouseRepo.query(base_query_raw_params ++ [page_list ++ ["/"]])
+    GROUP BY p"
+    |> ClickhouseRepo.query(
+      base_query_raw_params ++ [(Enum.count(page_list) > 0 && page_list) || ["/"]]
+    )
   end
 
   defp add_percentages(stat_list) do
