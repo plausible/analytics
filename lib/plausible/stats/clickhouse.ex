@@ -623,8 +623,8 @@ defmodule Plausible.Stats.Clickhouse do
     pages = ClickhouseRepo.all(q)
 
     if include_details do
-      [bounce_result, time_result] =
-        Task.await_many(
+      [{bounce_state, bounce_result}, {time_state, time_result}] =
+        Task.yield_many(
           [
             Task.async(fn -> bounce_rates_by_page_url(site, query) end),
             Task.async(fn ->
@@ -636,16 +636,37 @@ defmodule Plausible.Stats.Clickhouse do
           ],
           15000
         )
+        |> Enum.map(fn {task, response} ->
+          case response do
+            nil ->
+              Task.shutdown(task, :brutal_kill)
+              {nil, nil}
 
-      Enum.map(pages, fn page -> Map.put(page, :bounce_rate, bounce_result[page[:name]]) end)
+            {:ok, result} ->
+              {:ok, result}
+
+            _ ->
+              response
+          end
+        end)
+
+      Enum.map(pages, fn page ->
+        if bounce_state == :ok,
+          do: Map.put(page, :bounce_rate, bounce_result[page[:name]]),
+          else: page
+      end)
       |> Enum.map(fn page ->
-        time = time_result[page[:name]]
+        if time_state == :ok do
+          time = time_result[page[:name]]
 
-        Map.put(
-          page,
-          :time_on_page,
-          if(time, do: round(time), else: nil)
-        )
+          Map.put(
+            page,
+            :time_on_page,
+            if(time, do: round(time), else: nil)
+          )
+        else
+          page
+        end
       end)
     else
       pages
