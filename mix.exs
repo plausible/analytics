@@ -51,6 +51,7 @@ defmodule Plausible.MixProject do
   defp deps do
     [
       {:bcrypt_elixir, "~> 2.0"},
+      {:combination, "~> 0.0.3"},
       {:cors_plug, "~> 1.5"},
       {:ecto_sql, "~> 3.0"},
       {:elixir_uuid, "~> 1.2"},
