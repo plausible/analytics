@@ -4,7 +4,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "handlebars": "^4.7.6",
+    "generatorics": "^1.1.0",
+    "handlebars": "^4.7.7",
     "uglify-js": "^3.9.4"
   }
 }

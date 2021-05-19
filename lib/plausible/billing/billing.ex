@@ -188,6 +188,20 @@ defmodule Plausible.Billing do
     end)
   end
 
+  @doc """
+  Returns the number of sites that an account is allowed to have. Accounts for
+  grandfathering old accounts to unlimited websites and ignores site limit on self-hosted
+  installations.
+  """
+  @limit_accounts_since ~D[2021-05-05]
+  def sites_limit(user) do
+    cond do
+      Timex.before?(user.inserted_at, @limit_accounts_since) -> nil
+      Application.get_env(:plausible, :is_selfhost) -> nil
+      true -> Application.get_env(:plausible, :site_limit)
+    end
+  end
+
   defp format_subscription(params) do
     %{
       paddle_subscription_id: params["subscription_id"],
@@ -197,7 +211,8 @@ defmodule Plausible.Billing do
       user_id: params["passthrough"],
       status: params["status"],
       next_bill_date: params["next_bill_date"],
-      next_bill_amount: params["unit_price"] || params["new_unit_price"]
+      next_bill_amount: params["unit_price"] || params["new_unit_price"],
+      currency_code: params["currency"]
     }
   end
 

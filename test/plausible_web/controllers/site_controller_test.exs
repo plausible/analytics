@@ -9,7 +9,22 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     test "shows the site form", %{conn: conn} do
       conn = get(conn, "/sites/new")
+
       assert html_response(conn, 200) =~ "Your website details"
+    end
+
+    test "shows onboarding steps if it's the first site for the user", %{conn: conn} do
+      conn = get(conn, "/sites/new")
+
+      assert html_response(conn, 200) =~ "Add site info"
+    end
+
+    test "does not show onboarding steps if user has a site already", %{conn: conn, user: user} do
+      insert(:site, members: [user], domain: "test-site.com")
+
+      conn = get(conn, "/sites/new")
+
+      refute html_response(conn, 200) =~ "Add site info"
     end
   end
 
@@ -27,6 +42,27 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert html_response(conn, 200) =~ "test-site.com"
       assert html_response(conn, 200) =~ "<b>3</b> visitors in last 24h"
+    end
+
+    test "paginates sites", %{conn: conn, user: user} do
+      insert(:site, members: [user], domain: "test-site1.com")
+      insert(:site, members: [user], domain: "test-site2.com")
+      insert(:site, members: [user], domain: "test-site3.com")
+      insert(:site, members: [user], domain: "test-site4.com")
+
+      conn = get(conn, "/sites?per_page=2")
+
+      assert html_response(conn, 200) =~ "test-site1.com"
+      assert html_response(conn, 200) =~ "test-site2.com"
+      refute html_response(conn, 200) =~ "test-site3.com"
+      refute html_response(conn, 200) =~ "test-site4.com"
+
+      conn = get(conn, "/sites?per_page=2&page=2")
+
+      refute html_response(conn, 200) =~ "test-site1.com"
+      refute html_response(conn, 200) =~ "test-site2.com"
+      assert html_response(conn, 200) =~ "test-site3.com"
+      assert html_response(conn, 200) =~ "test-site4.com"
     end
   end
 
@@ -71,6 +107,52 @@ defmodule PlausibleWeb.SiteControllerTest do
       })
 
       assert_no_emails_delivered()
+    end
+
+    test "does not allow site creation when the user is at their site limit", %{
+      conn: conn,
+      user: user
+    } do
+      Application.put_env(:plausible, :site_limit, 3)
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert conn.status == 400
+    end
+
+    test "allows accounts registered before 2021-05-05 to go over the limit", %{
+      conn: conn,
+      user: user
+    } do
+      Repo.update_all(from(u in "users", where: u.id == ^user.id),
+        set: [inserted_at: ~N[2020-01-01 00:00:00]]
+      )
+
+      Application.put_env(:plausible, :site_limit, 3)
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert redirected_to(conn) == "/example.com/snippet"
+      assert Repo.exists?(Plausible.Site, domain: "example.com")
     end
 
     test "cleans up the url", %{conn: conn} do

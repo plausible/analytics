@@ -82,7 +82,6 @@ defmodule PlausibleWeb.StatsController do
           _e ->
             conn
             |> assign(:skip_plausible_tracking, true)
-            |> delete_resp_header("x-frame-options")
             |> render("shared_link_password.html",
               link: shared_link,
               layout: {PlausibleWeb.LayoutView, "focus.html"}
@@ -117,12 +116,10 @@ defmodule PlausibleWeb.StatsController do
 
         conn
         |> put_resp_cookie("shared-link-token", token)
-        |> delete_resp_header("x-frame-options")
         |> redirect(to: "/share/#{URI.encode_www_form(shared_link.site.domain)}?auth=#{slug}")
       else
         conn
         |> assign(:skip_plausible_tracking, true)
-        |> delete_resp_header("x-frame-options")
         |> render("shared_link_password.html",
           link: shared_link,
           error: "Incorrect password. Please try again.",

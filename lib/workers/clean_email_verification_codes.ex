@@ -11,5 +11,7 @@ defmodule Plausible.Workers.CleanEmailVerificationCodes do
       ),
       set: [user_id: nil]
     )
+
+    :ok
   end
 end

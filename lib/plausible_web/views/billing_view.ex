@@ -18,6 +18,10 @@ defmodule PlausibleWeb.BillingView do
     |> Timex.format!("{D} {Mshort} {YYYY}")
   end
 
+  def present_currency("USD"), do: "$"
+  def present_currency("EUR"), do: "€"
+  def present_currency("GBP"), do: "£"
+
   def reccommended_plan(usage) do
     cond do
       usage < 9000 ->

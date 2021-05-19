@@ -2,6 +2,7 @@ const uglify = require("uglify-js");
 const fs = require('fs')
 const path = require('path')
 const Handlebars = require("handlebars");
+const g = require("generatorics");
 
 function relPath(segment) {
   return path.join(__dirname, segment)
@@ -15,13 +16,14 @@ function compilefile(input, output, templateVars = {}) {
   fs.writeFileSync(output, result.code)
 }
 
+const base_variants = ["hash", "outbound-links", "exclusions"]
+const variants = [...g.clone.powerSet(base_variants)].filter(a => a.length > 0).map(a => a.sort());
+
 compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.js'))
-compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.exclusions.js'), {exclusionMode: true})
-compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.hash.js'), {hashMode: true})
-compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.hash.exclusions.js'), {hashMode: true, exclusionMode: true})
-compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.outbound-links.js'), {outboundLinks: true})
-compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.exclusions.outbound-links.js'), {outboundLinks: true, exclusionMode: true})
-compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.hash.outbound-links.js'), {hashMode: true, outboundLinks: true})
-compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.hash.exclusions.outbound-links.js'), {hashMode: true, outboundLinks: true, exclusionMode: true})
+compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/analytics.js'))
 compilefile(relPath('src/p.js'), relPath('../priv/tracker/js/p.js'))
-fs.copyFileSync(relPath('../priv/tracker/js/plausible.js'), relPath('../priv/tracker/js/analytics.js'))
+
+variants.map(variant => {
+  const options = variant.map(variant => variant.replace('-', '_')).reduce((acc, curr) => (acc[curr] = true, acc), {})
+  compilefile(relPath('src/plausible.js'), relPath(`../priv/tracker/js/plausible.${variant.join('.')}.js`), options)
+})

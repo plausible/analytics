@@ -50,7 +50,7 @@
     <div class="h-32 px-2 py-4 my-4 text-center bg-gray-100 rounded dark:bg-gray-900" style="width: 11.75rem;">
       <h4 class="font-black dark:text-gray-100">Next bill amount</h4>
       <%= if @subscription && @subscription.status in ["active", "past_due"] do %>
-        <div class="py-2 text-xl font-medium dark:text-gray-100">$<%= @subscription.next_bill_amount %></div>
+        <div class="py-2 text-xl font-medium dark:text-gray-100"><%= PlausibleWeb.BillingView.present_currency(@subscription.currency_code) %><%= @subscription.next_bill_amount %></div>
         <%= if @subscription.update_url do %>
           <%= link("Update billing info", to: @subscription.update_url, class: "text-sm text-indigo-500 font-medium") %>
         <% end %>
