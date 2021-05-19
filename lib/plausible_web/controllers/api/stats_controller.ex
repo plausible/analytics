@@ -104,6 +104,51 @@ defmodule PlausibleWeb.Api.StatsController do
         }
       end
 
+    time_on_page =
+      if query.filters["page"] do
+        [{success, duration}, {prev_success, prev_duration}] =
+          Task.yield_many(
+            [
+              Task.async(fn ->
+                {:ok, page_times} =
+                  Stats.page_times_by_page_url(site, query, [query.filters["page"]])
+
+                page_times
+              end),
+              Task.async(fn ->
+                {:ok, page_times} =
+                  Stats.page_times_by_page_url(site, prev_query, [query.filters["page"]])
+
+                page_times
+              end)
+            ],
+            5000
+          )
+          |> Enum.map(fn {task, response} ->
+            case response do
+              nil ->
+                Task.shutdown(task, :brutal_kill)
+                {nil, nil}
+
+              {:ok, page_times} ->
+                result = Enum.at(page_times.rows, 0)
+                result = if result, do: Enum.at(result, 1), else: nil
+                if result, do: {:ok, round(result)}, else: {:ok, 0}
+
+              _ ->
+                response
+            end
+          end)
+
+        if success == :ok && prev_success == :ok do
+          %{
+            name: "Time on Page",
+            duration: duration,
+            change: percent_change(prev_duration, duration)
+          }
+        end
+      end
+
     stats =
       [
         %{
@@ -117,7 +162,8 @@ defmodule PlausibleWeb.Api.StatsController do
           change: percent_change(prev_pageviews, pageviews)
         },
         %{name: "Bounce rate", percentage: bounce_rate, change: change_bounce_rate},
-        visit_duration
+        visit_duration,
+        time_on_page
       ]
       |> Enum.filter(& &1)
 
