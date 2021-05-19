@@ -1,4 +1,5 @@
 <%= if !Application.get_env(:plausible, :is_selfhost) && !@conn.assigns[:skip_plausible_tracking] do %>
-  <script async defer src="<%="#{plausible_url()}/js/script.js"%>"></script>
+  <script defer data-api="https://testing.plausible.io/stats/api/event" src="https://testing.plausible.io/stats/js/script.js"></script>
+  <script defer src="<%="#{plausible_url()}/js/script.js"%>"></script>
   <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
 <% end %>
