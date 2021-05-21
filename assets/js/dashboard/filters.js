@@ -102,6 +102,9 @@ class Filters extends React.Component {
   };
 
   filterText(key, value, query) {
+    const negated = value[0] == '!' && ['page', 'entry_page', 'exit_page'].includes(key)
+    value = negated ? value.slice(1) : value
+
     if (key === "goal") {
       return <span className="inline-block max-w-2xs md:max-w-xs truncate">Completed goal <b>{value}</b></span>
     }
@@ -148,13 +151,13 @@ class Filters extends React.Component {
       return <span className="inline-block max-w-2xs md:max-w-xs truncate">Country: <b>{selectedCountry.properties.name}</b></span>
     }
     if (key === "page") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Page: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Page{negated ? ' (not)' : ''}: <b>{value}</b></span>
     }
     if (key === "entry_page") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Entry Page: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Entry Page{negated ? ' (not)' : ''}: <b>{value}</b></span>
     }
     if (key === "exit_page") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Exit Page: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Exit Page{negated ? ' (not)' : ''}: <b>{value}</b></span>
     }
   }
 
@@ -174,7 +177,13 @@ class Filters extends React.Component {
     return (
       <div className="px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between" key={key + value}>
         {this.filterText(key, value, query)}
-        <b className="ml-1 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => this.removeFilter(key, history, query)}>✕</b>
+        <span className="ml-2 flex items-center">
+          {!['goal', 'props'].includes(key) &&
+          <Link to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${key}`, search: window.location.search }}>
+            <svg className="cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+          </Link>}
+          <b className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => this.removeFilter(key, history, query)}>✕</b>
+        </span>
       </div>
     )
   }
@@ -182,7 +191,14 @@ class Filters extends React.Component {
   renderListFilter(history, [key, value], query) {
     return (
       <span key={key} title={value} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded py-2 px-3 mr-2">
-        {this.filterText(key, value, query)} <b className="ml-1 cursor-pointer hover:text-indigo-500" onClick={() => this.removeFilter(key, history, query)}>✕</b>
+        {this.filterText(key, value, query)}
+        <span className="ml-2 flex items-center">
+          {!['goal', 'props'].includes(key) &&
+          <Link to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${key}`, search: window.location.search }}>
+            <svg className="cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+          </Link>}
+          <b className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => this.removeFilter(key, history, query)}>✕</b>
+        </span>
       </span>
     )
   }
@@ -203,8 +219,8 @@ class Filters extends React.Component {
     return (
       <div className="absolute mt-2 rounded shadow-md z-10" style={{ width: viewport <= 768 ? '320px' : '350px', right: '-5px' }} ref={node => this.dropDownNode = node}>
         <div className="rounded bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 font-medium text-gray-800 dark:text-gray-200 flex flex-col">
-          <Link to={`/${encodeURIComponent(site.domain)}/filter${window.location.search}`} className="border-b flex border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 md:text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer">
-          <svg className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+          <Link to={`/${encodeURIComponent(site.domain)}/filter${window.location.search}`} className="group border-b flex border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 md:text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer">
+          <svg className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-200 group-hover:text-indigo-700 dark:group-hover:text-indigo-500 hover:cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
             Add Filter
           </Link>
           {this.appliedFilters.map((filter) => this.renderDropdownFilter(history, filter, query))}
@@ -247,10 +263,10 @@ class Filters extends React.Component {
     const {viewport} = this.state;
 
     return (
-      <div id="filters" className="flex flex-grow pl-3 flex-wrap">
+      <div id="filters" className="flex flex-grow pl-2 flex-wrap">
         {(this.appliedFilters.map((filter) => this.renderListFilter(history, filter, query)))}
         <Link to={`/${encodeURIComponent(site.domain)}/filter${window.location.search}`} className={`button ${viewport <= 768 ? "px-2 mr-1" : "px-3 mr-2"} py-2 cursor-pointer ml-auto`}>
-          <svg className={`${viewport <= 768 ? "mr-1" : "mr-2"} h-4 w-4 text-gray-500 dark:text-gray-200 group-hover:text-gray-600 dark:group-hover:text-gray-400 group-focus:text-gray-500 dark:group-focus:text-gray-200`} fill="none" stroke="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+          <svg className={`${viewport <= 768 ? "mr-1" : "mr-2"} h-4 w-4`} fill="none" stroke="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
           {viewport <= 768 ? "Filter" : "Add Filter"}
         </Link>
       </div>
