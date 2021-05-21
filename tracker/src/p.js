@@ -2,8 +2,10 @@
 // with some early customers. This script uses a cookie but this was an old version of Plausible.
 // Current script can be found in the tracker/src/plausible.js file
 
-(function(window, plausibleHost){
+(function(){
   'use strict';
+
+  var plausibleHost = new URL(scriptEl.src).origin
 
   function setCookie(name,value) {
     var date = new Date();
@@ -117,4 +119,4 @@
   } catch (e) {
     new Image().src = plausibleHost + '/api/error?message=' +  encodeURIComponent(e.message);
   }
-})(window, '<%= base_url %>');
+})();
