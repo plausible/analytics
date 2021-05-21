@@ -1520,9 +1520,11 @@ defmodule Plausible.Stats.Clickhouse do
 
   defp convert_path_regex(path) do
     contains_regex = String.match?(path, ~r/\*/)
-    regex = "^#{path}\/?$"
-    |> String.replace(~r/\*\*/, ".*")
-    |> String.replace(~r/(?<!\.)\*/, "[^/]*")
+
+    regex =
+      "^#{path}\/?$"
+      |> String.replace(~r/\*\*/, ".*")
+      |> String.replace(~r/(?<!\.)\*/, "[^/]*")
 
     {contains_regex, regex}
   end
