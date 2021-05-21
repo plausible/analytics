@@ -1,5 +1,5 @@
 import React from 'react';
-import { withRouter } from 'react-router-dom'
+import { withRouter, Link } from 'react-router-dom'
 import { countFilters, navigateToQuery, removeQueryParam } from './query'
 import Datamap from 'datamaps'
 import Transition from "../transition.js";
@@ -181,7 +181,7 @@ class Filters extends React.Component {
 
   renderListFilter(history, [key, value], query) {
     return (
-      <span key={key} title={value} className="inline-flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded py-2 px-3 mr-2">
+      <span key={key} title={value} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded py-2 px-3 mr-2">
         {this.filterText(key, value, query)} <b className="ml-1 cursor-pointer hover:text-indigo-500" onClick={() => this.removeFilter(key, history, query)}>✕</b>
       </span>
     )
@@ -198,11 +198,15 @@ class Filters extends React.Component {
 
   renderDropDownContent() {
     const { viewport } = this.state;
-    const { history, query } = this.props;
+    const { history, query, site } = this.props;
 
     return (
       <div className="absolute mt-2 rounded shadow-md z-10" style={{ width: viewport <= 768 ? '320px' : '350px', right: '-5px' }} ref={node => this.dropDownNode = node}>
         <div className="rounded bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 font-medium text-gray-800 dark:text-gray-200 flex flex-col">
+          <Link to={`/${encodeURIComponent(site.domain)}/filter${window.location.search}`} className="border-b flex border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 md:text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer">
+          <svg className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            Add Filter
+          </Link>
           {this.appliedFilters.map((filter) => this.renderDropdownFilter(history, filter, query))}
           <div className="border-t border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 md:text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => this.clearAllFilters(history, query)}>
             Clear All Filters
@@ -239,11 +243,16 @@ class Filters extends React.Component {
   }
 
   renderFilterList() {
-    const { history, query } = this.props;
+    const { history, query, site } = this.props;
+    const {viewport} = this.state;
 
     return (
-      <div id="filters">
+      <div id="filters" className="flex flex-grow pl-3 flex-wrap">
         {(this.appliedFilters.map((filter) => this.renderListFilter(history, filter, query)))}
+        <Link to={`/${encodeURIComponent(site.domain)}/filter${window.location.search}`} className={`button ${viewport <= 768 ? "px-2 mr-1" : "px-3 mr-2"} py-2 cursor-pointer ml-auto`}>
+          <svg className={`${viewport <= 768 ? "mr-1" : "mr-2"} h-4 w-4 text-gray-500 dark:text-gray-200 group-hover:text-gray-600 dark:group-hover:text-gray-400 group-focus:text-gray-500 dark:group-focus:text-gray-200`} fill="none" stroke="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+          {viewport <= 768 ? "Filter" : "Add Filter"}
+        </Link>
       </div>
     );
   }
@@ -251,15 +260,11 @@ class Filters extends React.Component {
   render() {
     const { wrapped, viewport } = this.state;
 
-    if (this.appliedFilters.length > 0) {
-      if (wrapped === 2 || viewport <= 768) {
-        return this.renderDropDown();
-      }
-
-      return this.renderFilterList();
+    if (this.appliedFilters.length > 0 && (wrapped === 2 || viewport <= 768)) {
+      return this.renderDropDown();
     }
 
-    return null;
+    return this.renderFilterList();
   }
 }
 
