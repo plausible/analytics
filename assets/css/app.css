@@ -310,3 +310,11 @@ iframe[hidden] {
 .pagination-link[disabled] {
   @apply cursor-default bg-gray-100 pointer-events-none;
 }
+
+.filterListText:hover .filterListEdit {
+  display: block;
+}
+
+.filterListText:hover ~ .filterListRemove {
+  display: none;
+}

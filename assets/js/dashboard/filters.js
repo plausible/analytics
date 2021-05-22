@@ -1,6 +1,6 @@
 import React from 'react';
 import { withRouter, Link } from 'react-router-dom'
-import { countFilters, navigateToQuery, removeQueryParam } from './query'
+import { countFilters, formattedFilters, navigateToQuery, removeQueryParam } from './query'
 import Datamap from 'datamaps'
 import Transition from "../transition.js";
 
@@ -60,7 +60,7 @@ class Filters extends React.Component {
   }
 
   handleKeyup(e) {
-    const {query, history} = this.props
+    const { query, history } = this.props
 
     if (e.ctrlKey || e.metaKey || e.altKey) return
 
@@ -70,7 +70,7 @@ class Filters extends React.Component {
   }
 
   handleResize() {
-    this.setState({ viewport: window.innerWidth || 639});
+    this.setState({ viewport: window.innerWidth || 639 });
   }
 
   handleClick(e) {
@@ -111,7 +111,7 @@ class Filters extends React.Component {
     if (key === "props") {
       const [metaKey, metaValue] = Object.entries(value)[0]
       const eventName = query.filters["goal"] ? query.filters["goal"] : 'event'
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{eventName}.{metaKey} is <b>{metaValue}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{eventName}.{metaKey}: <b>{metaValue}</b></span>
     }
     if (key === "source") {
       return <span className="inline-block max-w-2xs md:max-w-xs truncate">Source: <b>{value}</b></span>
@@ -136,18 +136,18 @@ class Filters extends React.Component {
     }
     if (key === "browser_version") {
       const browserName = query.filters["browser"] ? query.filters["browser"] : 'Browser'
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{browserName}.Version: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{browserName} Version: <b>{value}</b></span>
     }
     if (key === "os") {
       return <span className="inline-block max-w-2xs md:max-w-xs truncate">Operating System: <b>{value}</b></span>
     }
     if (key === "os_version") {
       const osName = query.filters["os"] ? query.filters["os"] : 'OS'
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{osName}.Version: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{osName} Version: <b>{value}</b></span>
     }
     if (key === "country") {
       const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
-      const selectedCountry = allCountries.find((c) => c.id === value) || {properties: {name: value}};
+      const selectedCountry = allCountries.find((c) => c.id === value) || { properties: { name: value } };
       return <span className="inline-block max-w-2xs md:max-w-xs truncate">Country: <b>{selectedCountry.properties.name}</b></span>
     }
     if (key === "page") {
@@ -179,25 +179,36 @@ class Filters extends React.Component {
         {this.filterText(key, value, query)}
         <span className="ml-2 flex items-center">
           {!['goal', 'props'].includes(key) &&
-          <Link to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${key}`, search: window.location.search }}>
-            <svg className="cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-          </Link>}
-          <b className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => this.removeFilter(key, history, query)}>✕</b>
+            <Link title={`Edit filter: ${formattedFilters[key]}`} to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${key}`, search: window.location.search }}>
+              <svg className="cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            </Link>}
+          <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => this.removeFilter(key, history, query)}>✕</b>
         </span>
       </div>
     )
   }
 
   renderListFilter(history, [key, value], query) {
+    if (!['goal', 'props'].includes(key)) {
+      return (
+        <span key={key} title={value} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
+          <Link title={`Edit filter: ${formattedFilters[key]}`} className="filterListText flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${key}`, search: window.location.search }}>
+            {this.filterText(key, value, query)}
+            <svg className="filterListEdit hidden ml-2 mr-3 cursor-pointer text-indigo-700 dark:text-indigo-500 w-5 h-5" fill="none" stroke="currentColor" viewBox="1 1 23 23" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+          </Link>
+          <span title={`Remove filter: ${formattedFilters[key]}`} className="filterListRemove flex h-full w-full pl-2 pr-3 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center" onClick={() => this.removeFilter(key, history, query)}>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </span>
+        </span>
+      )
+    }
     return (
-      <span key={key} title={value} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded py-2 px-3 mr-2">
-        {this.filterText(key, value, query)}
-        <span className="ml-2 flex items-center">
-          {!['goal', 'props'].includes(key) &&
-          <Link to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${key}`, search: window.location.search }}>
-            <svg className="cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-          </Link>}
-          <b className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => this.removeFilter(key, history, query)}>✕</b>
+      <span key={key} title={value} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
+        <span className="flex w-full h-full items-center py-2 pl-3">
+          {this.filterText(key, value, query)}
+        </span>
+        <span title={`Remove filter: ${formattedFilters[key]}`} className="filterListRemove flex h-full w-full pl-2 pr-3 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center" onClick={() => this.removeFilter(key, history, query)}>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </span>
       </span>
     )
@@ -220,7 +231,7 @@ class Filters extends React.Component {
       <div className="absolute mt-2 rounded shadow-md z-10" style={{ width: viewport <= 768 ? '320px' : '350px', right: '-5px' }} ref={node => this.dropDownNode = node}>
         <div className="rounded bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 font-medium text-gray-800 dark:text-gray-200 flex flex-col">
           <Link to={`/${encodeURIComponent(site.domain)}/filter${window.location.search}`} className="group border-b flex border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 md:text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer">
-          <svg className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-200 group-hover:text-indigo-700 dark:group-hover:text-indigo-500 hover:cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            <svg className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-200 group-hover:text-indigo-700 dark:group-hover:text-indigo-500 hover:cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
             Add Filter
           </Link>
           {this.appliedFilters.map((filter) => this.renderDropdownFilter(history, filter, query))}
@@ -260,7 +271,7 @@ class Filters extends React.Component {
 
   renderFilterList() {
     const { history, query, site } = this.props;
-    const {viewport} = this.state;
+    const { viewport } = this.state;
 
     return (
       <div id="filters" className="flex flex-grow pl-2 flex-wrap">
