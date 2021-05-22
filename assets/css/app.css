@@ -311,8 +311,8 @@ iframe[hidden] {
   @apply cursor-default bg-gray-100 pointer-events-none;
 }
 
-.filterListText:hover .filterListEdit {
-  display: block;
+.filterListText:hover ~ .filterListEdit {
+  display: flex;
 }
 
 .filterListText:hover ~ .filterListRemove {

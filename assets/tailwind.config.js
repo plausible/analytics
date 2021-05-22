@@ -30,7 +30,7 @@ module.exports = {
         '9': 9,
       },
       maxWidth: {
-        '2xs': '16rem',
+        '2xs': '15rem',
         '3xs': '12rem',
       }
     },

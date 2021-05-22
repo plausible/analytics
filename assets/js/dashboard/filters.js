@@ -174,41 +174,49 @@ class Filters extends React.Component {
   }
 
   renderDropdownFilter(history, [key, value], query) {
-    return (
-      <div className="px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between" key={key + value}>
-        {this.filterText(key, value, query)}
-        <span className="ml-2 flex items-center">
-          {!['goal', 'props'].includes(key) &&
-            <Link title={`Edit filter: ${formattedFilters[key]}`} to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${key}`, search: window.location.search }}>
-              <svg className="cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-            </Link>}
+    if (['goal', 'props'].includes(key)) {
+      return (
+        <div className="px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between" key={key + value}>
+          {this.filterText(key, value, query)}
           <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => this.removeFilter(key, history, query)}>✕</b>
-        </span>
+        </div>
+      )
+    }
+
+    return (
+      <div className="px-3 md:px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between" key={key + value}>
+        <Link
+          title={`Edit filter: ${formattedFilters[key]}`}
+          to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${key}`, search: window.location.search }}
+          className="group flex w-full justify-between items-center"
+        >
+          {this.filterText(key, value, query)}
+          <svg className="ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+        </Link>
+        <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => this.removeFilter(key, history, query)}>✕</b>
       </div>
     )
   }
 
   renderListFilter(history, [key, value], query) {
-    if (!['goal', 'props'].includes(key)) {
-      return (
-        <span key={key} title={value} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
-          <Link title={`Edit filter: ${formattedFilters[key]}`} className="filterListText flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${key}`, search: window.location.search }}>
-            {this.filterText(key, value, query)}
-            <svg className="filterListEdit hidden ml-2 mr-3 cursor-pointer text-indigo-700 dark:text-indigo-500 w-5 h-5" fill="none" stroke="currentColor" viewBox="1 1 23 23" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-          </Link>
-          <span title={`Remove filter: ${formattedFilters[key]}`} className="filterListRemove flex h-full w-full pl-2 pr-3 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center" onClick={() => this.removeFilter(key, history, query)}>
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-          </span>
-        </span>
-      )
-    }
     return (
       <span key={key} title={value} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
-        <span className="flex w-full h-full items-center py-2 pl-3">
-          {this.filterText(key, value, query)}
-        </span>
-        <span title={`Remove filter: ${formattedFilters[key]}`} className="filterListRemove flex h-full w-full pl-2 pr-3 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center" onClick={() => this.removeFilter(key, history, query)}>
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        {['goal', 'props'].includes(key) ? (
+          <span className="flex w-full h-full items-center py-2 pl-3">
+            {this.filterText(key, value, query)}
+          </span>
+        ) : (
+          <>
+            <Link title={`Edit filter: ${formattedFilters[key]}`} className="filterListText flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${key}`, search: window.location.search }}>
+              {this.filterText(key, value, query)}
+            </Link>
+            <span className="filterListEdit hidden h-full w-full px-2 cursor-pointer text-indigo-700 dark:text-indigo-500 items-center">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="1 1 23 23" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            </span>
+          </>
+        )}
+        <span title={`Remove filter: ${formattedFilters[key]}`} className="filterListRemove flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center" onClick={() => this.removeFilter(key, history, query)}>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </span>
       </span>
     )
