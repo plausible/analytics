@@ -256,9 +256,7 @@ defmodule PlausibleWeb.AuthController do
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
-      {:rate_limit, wat} ->
-        IO.inspect(wat)
-
+      {:rate_limit, _} ->
         render_error(
           conn,
           429,
