@@ -3,6 +3,10 @@ defmodule Plausible.Billing.Plans do
     %{limit: 150_000_000, yearly_product_id: "648089", yearly_cost: "$4800"}
   ]
 
+  @unlisted_plans_v2 [
+    %{limit: 10_000_000, monthly_product_id: "655350", yearly_cost: "$250"}
+  ]
+
   @v2_pricing_date ~D[2021-05-13]
 
   def plans_for(user) do
@@ -70,7 +74,7 @@ defmodule Plausible.Billing.Plans do
   end
 
   defp all_plans() do
-    plans_v1() ++ @unlisted_plans_v1 ++ plans_v2()
+    plans_v1() ++ @unlisted_plans_v1 ++ plans_v2() ++ @unlisted_plans_v2
   end
 
   defp plans_v1() do

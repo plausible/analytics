@@ -21,4 +21,11 @@ defmodule PlausibleWeb.Api.Helpers do
     |> Phoenix.Controller.json(%{error: msg})
     |> halt()
   end
+
+  def too_many_requests(conn, msg) do
+    conn
+    |> put_status(429)
+    |> Phoenix.Controller.json(%{error: msg})
+    |> halt()
+  end
 end

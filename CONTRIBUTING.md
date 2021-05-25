@@ -23,3 +23,10 @@ Make sure Docker, Elixir, Erlang and Node.js are all installed on your developme
 3. Fill in the rest of the forms and for the domain use `dummy.site`
 4. Run `make dummy_event` from the terminal to generate a fake pageview event for the dummy site.
 5. You should now be all set!
+
+### Stopping Docker containers
+
+1. Stop and remove the Postgres container with `make postgres-stop`.
+2. Stop and remove the Clickhouse container with `make clickhouse-stop`.
+
+Volumes are preserved. You'll find that the Postgres and Clickhouse state are retained when you bring them up again the next time: no need to re-register and so on.
