@@ -250,6 +250,9 @@ config :plausible, :user_agent_cache,
   limit: user_agent_cache_limit,
   stats: user_agent_cache_stats
 
+config :hammer,
+  backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 4, cleanup_interval_ms: 60_000 * 10]}
+
 config :kaffy,
   otp_app: :plausible,
   ecto_repo: Plausible.Repo,

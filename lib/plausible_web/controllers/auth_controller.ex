@@ -227,41 +227,79 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def login(conn, %{"email" => email, "password" => password}) do
-    alias Plausible.Auth.Password
+    with :ok <- check_ip_rate_limit(conn),
+         {:ok, user} <- find_user(email),
+         :ok <- check_user_rate_limit(user),
+         :ok <- check_password(user, password) do
+      login_dest = get_session(conn, :login_dest) || "/sites"
 
+      conn
+      |> put_session(:current_user_id, user.id)
+      |> put_resp_cookie("logged_in", "true",
+        http_only: false,
+        max_age: 60 * 60 * 24 * 365 * 5000
+      )
+      |> put_session(:login_dest, nil)
+      |> redirect(to: login_dest)
+    else
+      :wrong_password ->
+        render(conn, "login_form.html",
+          error: "Wrong email or password. Please try again.",
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
+      :user_not_found ->
+        Plausible.Auth.Password.dummy_calculation()
+
+        render(conn, "login_form.html",
+          error: "Wrong email or password. Please try again.",
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
+      {:rate_limit, wat} ->
+        IO.inspect(wat)
+
+        render_error(
+          conn,
+          429,
+          "Too many login attempts. Wait a minute before trying again."
+        )
+    end
+  end
+
+  @login_interval 60_000
+  @login_limit 5
+  defp check_ip_rate_limit(conn) do
+    ip_address = PlausibleWeb.RemoteIp.get(conn)
+
+    case Hammer.check_rate("login:ip:#{ip_address}", @login_interval, @login_limit) do
+      {:allow, _} -> :ok
+      {:deny, _} -> {:rate_limit, :ip_address}
+    end
+  end
+
+  defp find_user(email) do
     user =
       Repo.one(
         from u in Plausible.Auth.User,
           where: u.email == ^email
       )
 
-    if user do
-      if Password.match?(password, user.password_hash || "") do
-        login_dest = get_session(conn, :login_dest) || "/sites"
+    if user, do: {:ok, user}, else: :user_not_found
+  end
 
-        conn
-        |> put_session(:current_user_id, user.id)
-        |> put_resp_cookie("logged_in", "true",
-          http_only: false,
-          max_age: 60 * 60 * 24 * 365 * 5000
-        )
-        |> put_session(:login_dest, nil)
-        |> redirect(to: login_dest)
-      else
-        conn
-        |> render("login_form.html",
-          error: "Wrong email or password. Please try again.",
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
-      end
+  defp check_user_rate_limit(user) do
+    case Hammer.check_rate("login:user:#{user.id}", @login_interval, @login_limit) do
+      {:allow, _} -> :ok
+      {:deny, _} -> {:rate_limit, :user}
+    end
+  end
+
+  defp check_password(user, password) do
+    if Plausible.Auth.Password.match?(password, user.password_hash || "") do
+      :ok
     else
-      Password.dummy_calculation()
-
-      conn
-      |> render("login_form.html",
-        error: "Wrong email or password. Please try again.",
-        layout: {PlausibleWeb.LayoutView, "focus.html"}
-      )
+      :wrong_password
     end
   end
 
