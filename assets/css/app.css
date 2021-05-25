@@ -311,10 +311,10 @@ iframe[hidden] {
   @apply cursor-default bg-gray-100 pointer-events-none;
 }
 
-.filterListText:hover ~ .filterListEdit {
+.filter-list-text:hover ~ .filter-list-edit {
   display: flex;
 }
 
-.filterListText:hover ~ .filterListRemove {
+.filter-list-text:hover ~ .filter-list-remove {
   display: none;
 }

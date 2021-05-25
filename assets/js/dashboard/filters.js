@@ -111,53 +111,53 @@ class Filters extends React.Component {
     if (key === "props") {
       const [metaKey, metaValue] = Object.entries(value)[0]
       const eventName = query.filters["goal"] ? query.filters["goal"] : 'event'
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{eventName}.{metaKey}: <b>{metaValue}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{eventName}.{metaKey} is <b>{metaValue}</b></span>
     }
     if (key === "source") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Source: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Source is <b>{value}</b></span>
     }
     if (key === "utm_medium") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM medium: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM medium is <b>{value}</b></span>
     }
     if (key === "utm_source") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM source: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM source is <b>{value}</b></span>
     }
     if (key === "utm_campaign") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM campaign: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM campaign is <b>{value}</b></span>
     }
     if (key === "referrer") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Referrer: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Referrer is <b>{value}</b></span>
     }
     if (key === "screen") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Screen size: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Screen size is <b>{value}</b></span>
     }
     if (key === "browser") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Browser: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Browser is <b>{value}</b></span>
     }
     if (key === "browser_version") {
       const browserName = query.filters["browser"] ? query.filters["browser"] : 'Browser'
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{browserName} Version: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{browserName} Version is <b>{value}</b></span>
     }
     if (key === "os") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Operating System: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Operating System is <b>{value}</b></span>
     }
     if (key === "os_version") {
       const osName = query.filters["os"] ? query.filters["os"] : 'OS'
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{osName} Version: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{osName} Version is <b>{value}</b></span>
     }
     if (key === "country") {
       const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
       const selectedCountry = allCountries.find((c) => c.id === value) || { properties: { name: value } };
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Country: <b>{selectedCountry.properties.name}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Country is <b>{selectedCountry.properties.name}</b></span>
     }
     if (key === "page") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Page{negated ? ' (not)' : ''}: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Page is{negated ? ' not' : ''} <b>{value}</b></span>
     }
     if (key === "entry_page") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Entry Page{negated ? ' (not)' : ''}: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Entry Page is{negated ? ' not' : ''} <b>{value}</b></span>
     }
     if (key === "exit_page") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Exit Page{negated ? ' (not)' : ''}: <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Exit Page is{negated ? ' not' : ''} <b>{value}</b></span>
     }
   }
 
@@ -207,15 +207,15 @@ class Filters extends React.Component {
           </span>
         ) : (
           <>
-            <Link title={`Edit filter: ${formattedFilters[key]}`} className="filterListText flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${key}`, search: window.location.search }}>
+            <Link title={`Edit filter: ${formattedFilters[key]}`} className="filter-list-text flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${key}`, search: window.location.search }}>
               {this.filterText(key, value, query)}
             </Link>
-            <span className="filterListEdit hidden h-full w-full px-2 cursor-pointer text-indigo-700 dark:text-indigo-500 items-center">
+            <span className="filter-list-edit hidden h-full w-full px-2 cursor-pointer text-indigo-700 dark:text-indigo-500 items-center">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="1 1 23 23" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
             </span>
           </>
         )}
-        <span title={`Remove filter: ${formattedFilters[key]}`} className="filterListRemove flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center" onClick={() => this.removeFilter(key, history, query)}>
+        <span title={`Remove filter: ${formattedFilters[key]}`} className="filter-list-remove flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center" onClick={() => this.removeFilter(key, history, query)}>
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </span>
       </span>
@@ -284,8 +284,8 @@ class Filters extends React.Component {
     return (
       <div id="filters" className="flex flex-grow pl-2 flex-wrap">
         {(this.appliedFilters.map((filter) => this.renderListFilter(history, filter, query)))}
-        <Link to={`/${encodeURIComponent(site.domain)}/filter${window.location.search}`} className={`button ${viewport <= 768 ? "px-2 mr-1" : "px-3 mr-2"} py-2 cursor-pointer ml-auto`}>
-          <svg className={`${viewport <= 768 ? "mr-1" : "mr-2"} h-4 w-4`} fill="none" stroke="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+        <Link to={`/${encodeURIComponent(site.domain)}/filter${window.location.search}`} className={`button ${viewport <= 768 ? "px-2 mr-1" : "px-3 mr-2"} py-2 cursor-pointer ml-auto text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800`}>
+          <svg className={`${viewport <= 768 ? "mr-1" : "mr-2"} h-4 w-4 text-indigo-500`} fill="none" stroke="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
           {viewport <= 768 ? "Filter" : "Add Filter"}
         </Link>
       </div>
