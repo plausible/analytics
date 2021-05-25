@@ -51,4 +51,29 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
                "Missing site ID. Please provide the required site_id parameter with your request."
            }
   end
+
+  test "limits the rate of API requests", %{user: user} do
+    api_key = insert(:api_key, user_id: user.id, hourly_request_limit: 3)
+
+    build_conn()
+    |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
+    |> get("/api/v1/stats/aggregate")
+
+    build_conn()
+    |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
+    |> get("/api/v1/stats/aggregate")
+
+    build_conn()
+    |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
+    |> get("/api/v1/stats/aggregate")
+
+    conn =
+      build_conn()
+      |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
+      |> get("/api/v1/stats/aggregate")
+
+    assert json_response(conn, 429) == %{
+             "error" => "Too many API requests. Your API key is limited to 3 requests per hour."
+           }
+  end
 end

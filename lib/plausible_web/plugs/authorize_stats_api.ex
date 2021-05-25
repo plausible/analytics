@@ -9,7 +9,9 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
   end
 
   def call(conn, _opts) do
-    with {:ok, api_key} <- get_bearer_token(conn),
+    with {:ok, token} <- get_bearer_token(conn),
+         {:ok, api_key} <- find_api_key(token),
+         :ok <- check_api_key_rate_limit(api_key),
          {:ok, site} <- verify_access(api_key, conn.params["site_id"]) do
       assign(conn, :site, site)
     else
@@ -25,6 +27,12 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
           "Missing site ID. Please provide the required site_id parameter with your request."
         )
 
+      {:error, :rate_limit, limit} ->
+        H.too_many_requests(
+          conn,
+          "Too many API requests. Your API key is limited to #{limit} requests per hour."
+        )
+
       {:error, :invalid_api_key} ->
         H.unauthorized(
           conn,
@@ -36,13 +44,11 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
   defp verify_access(_api_key, nil), do: {:error, :missing_site_id}
 
   defp verify_access(api_key, site_id) do
-    hashed_key = ApiKey.do_hash(api_key)
-    found_key = Repo.get_by(ApiKey, key_hash: hashed_key)
     site = Repo.get_by(Plausible.Site, domain: site_id)
-    is_owner = site && found_key && Plausible.Sites.is_owner?(found_key.user_id, site)
+    is_owner = site && Plausible.Sites.is_owner?(api_key.user_id, site)
 
     cond do
-      found_key && site && is_owner -> {:ok, site}
+      site && is_owner -> {:ok, site}
       true -> {:error, :invalid_api_key}
     end
   end
@@ -55,6 +61,20 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
     case authorization_header do
       "Bearer " <> token -> {:ok, String.trim(token)}
       _ -> {:error, :missing_api_key}
+    end
+  end
+
+  defp find_api_key(token) do
+    hashed_key = ApiKey.do_hash(token)
+    found_key = Repo.get_by(ApiKey, key_hash: hashed_key)
+    if found_key, do: {:ok, found_key}, else: {:error, :invalid_api_key}
+  end
+
+  @one_hour 60 * 60 * 1000
+  defp check_api_key_rate_limit(api_key) do
+    case Hammer.check_rate("api_request:#{api_key.id}", @one_hour, api_key.hourly_request_limit) do
+      {:allow, _} -> :ok
+      {:deny, _} -> {:error, :rate_limit, api_key.hourly_request_limit}
     end
   end
 end
