@@ -50,6 +50,9 @@ app_version = System.get_env("APP_VERSION", "0.0.1")
 ch_db_url =
   System.get_env("CLICKHOUSE_DATABASE_URL", "http://plausible_events_db:8123/plausible_events_db")
 
+{ch_flush_interval_ms, ""} = Integer.parse(System.get_env("CLICKHOUSE_FLUSH_INTERVAL_MS", "5000"))
+{ch_max_buffer_size, ""} = Integer.parse(System.get_env("CLICKHOUSE_MAX_BUFFER_SIZE", "10000"))
+
 ### Mandatory params End
 
 sentry_dsn = System.get_env("SENTRY_DSN")
@@ -129,7 +132,9 @@ config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
   queue_target: 500,
   queue_interval: 2000,
-  url: ch_db_url
+  url: ch_db_url,
+  flush_interval_ms: ch_flush_interval_ms,
+  max_buffer_size: ch_max_buffer_size
 
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
