@@ -63,7 +63,7 @@ class ReferrerDrilldownModal extends React.Component {
         <Link className="block truncate hover:underline dark:text-gray-200" to={{search: query.toString(), pathname: '/' + this.props.site.domain}} title={referrer.name}>
           {referrer.name}
         </Link>
-        { this.renderExternalLink(name) }
+        { this.renderExternalLink(referrer.name) }
       </span>
     )
   }
