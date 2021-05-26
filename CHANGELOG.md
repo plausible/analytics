@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file.
 - New parameter `metrics` for the `/api/v1/stats/timeseries` endpoint plausible/analytics#952
 - CSV export now includes pageviews, bounce rate and visit duration in addition to visitors plausible/analytics#952
 - Send stats to multiple dashboards by configuring a comma-separated list of domains plausible/analytics#968
+- To authenticate against a local postgresql via socket authentication, the environment-variables
+  `DATABASE_SOCKET_DIR` & `DATABASE_NAME` were added.
 - Time on Page metric available in detailed Top Pages report plausible/analytics#1007
 - Glob (wildcard) based page, entry page and exit page filters plausible/analytics#1067
 - Exclusion filters for page, entry page and exit page filters plausible/analytics#1067

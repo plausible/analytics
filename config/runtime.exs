@@ -109,7 +109,15 @@ config :plausible, PlausibleWeb.Endpoint,
   http: [port: port],
   secret_key_base: secret_key_base
 
-config :plausible, Plausible.Repo, url: db_url
+case System.get_env("DATABASE_SOCKET_DIR", "") do
+  "" ->
+    config :plausible, Plausible.Repo, url: db_url
+
+  x ->
+    config :plausible, Plausible.Repo,
+      socket_dir: x,
+      database: System.get_env("DATABASE_NAME")
+end
 
 config :sentry,
   dsn: sentry_dsn,
