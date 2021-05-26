@@ -19,6 +19,7 @@ import {
 } from "./date";
 import Transition from "../transition";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
+import { withComparisonConsumer } from "./comparison-consumer-hoc";
 
 class DatePicker extends React.Component {
   constructor(props) {
@@ -33,6 +34,8 @@ class DatePicker extends React.Component {
   componentDidMount() {
     document.addEventListener("keydown", this.handleKeydown);
     document.addEventListener("mousedown", this.handleClick, false);
+
+    this.props.modifyComparison({enabled: true})
   }
 
   componentWillUnmount() {
@@ -438,4 +441,4 @@ class DatePicker extends React.Component {
   }
 }
 
-export default withRouter(DatePicker);
+export default withComparisonConsumer(withRouter(DatePicker));

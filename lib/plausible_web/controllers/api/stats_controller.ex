@@ -11,12 +11,19 @@ defmodule PlausibleWeb.Api.StatsController do
 
     plot_task = Task.async(fn -> Stats.calculate_plot(site, query) end)
     {top_stats, sample_percent} = fetch_top_stats(site, query)
+
+    prev_query = Query.shift_back(query, site)
+    prev_plot_task = Task.async(fn -> Stats.calculate_plot(site, prev_query) end)
+
+    {prev_plot, prev_labels, _} = Task.await(prev_plot_task)
     {plot, labels, present_index} = Task.await(plot_task)
 
     json(conn, %{
       plot: plot,
       labels: labels,
       present_index: present_index,
+      prev_plot: prev_plot,
+      prev_labels: prev_labels,
       top_stats: top_stats,
       interval: query.interval,
       sample_percent: sample_percent
