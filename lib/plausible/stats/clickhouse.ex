@@ -238,7 +238,7 @@ defmodule Plausible.Stats.Clickhouse do
     end)
   end
 
-  def top_sources(site, query, limit, page, show_noref \\ false, include \\ []) do
+  def top_sources(site, query, limit, page, show_noref \\ false, include_details) do
     offset = (page - 1) * limit
 
     referrers =
@@ -257,16 +257,10 @@ defmodule Plausible.Stats.Clickhouse do
         from(s in referrers, where: s.referrer_source != "")
       end
 
-    referrers =
-      if query.filters["page"] do
-        page = query.filters["page"]
-        from(s in referrers, where: s.entry_page == ^page)
-      else
-        referrers
-      end
+    referrers = apply_page_as_entry_page(referrers, site, query)
 
     referrers =
-      if "bounce_rate" in include do
+      if include_details do
         from(
           s in referrers,
           select: %{
@@ -326,13 +320,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp apply_page_as_entry_page(db_query, _site, query) do
-    page = query.filters["page"]
-
-    if is_binary(page) do
-      from(s in db_query, where: s.entry_page == ^page)
-    else
-      db_query
-    end
+    include_path_filter_entry(db_query, query.filters["page"])
   end
 
   def utm_mediums(site, query, limit \\ 9, page \\ 1, show_noref \\ false) do
@@ -441,7 +429,7 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
-  def referrer_drilldown(site, query, referrer, include, limit) do
+  def referrer_drilldown(site, query, referrer, include_details, limit) do
     referrer = if referrer == @no_ref, do: "", else: referrer
 
     q =
@@ -455,7 +443,7 @@ defmodule Plausible.Stats.Clickhouse do
       |> filter_converted_sessions(site, query)
 
     q =
-      if "bounce_rate" in include do
+      if include_details do
         from(
           s in q,
           select: %{
@@ -585,7 +573,7 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  def top_pages(site, %Query{period: "realtime"} = query, limit, page, _include) do
+  def top_pages(site, %Query{period: "realtime"} = query, limit, page, _include_details) do
     offset = (page - 1) * limit
 
     q = base_session_query(site, query) |> apply_page_as_entry_page(site, query)
@@ -603,7 +591,7 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
-  def top_pages(site, query, limit, page, include) do
+  def top_pages(site, query, limit, page, include_details) do
     offset = (page - 1) * limit
 
     q =
@@ -622,9 +610,52 @@ defmodule Plausible.Stats.Clickhouse do
 
     pages = ClickhouseRepo.all(q)
 
-    if "bounce_rate" in include do
-      bounce_rates = bounce_rates_by_page_url(site, query)
-      Enum.map(pages, fn url -> Map.put(url, :bounce_rate, bounce_rates[url[:name]]) end)
+    if include_details do
+      [{bounce_state, bounce_result}, {time_state, time_result}] =
+        Task.yield_many(
+          [
+            Task.async(fn -> bounce_rates_by_page_url(site, query) end),
+            Task.async(fn ->
+              {:ok, page_times} =
+                page_times_by_page_url(site, query, Enum.map(pages, fn p -> p.name end))
+
+              page_times.rows |> Enum.map(fn [a, b] -> {a, b} end) |> Enum.into(%{})
+            end)
+          ],
+          15000
+        )
+        |> Enum.map(fn {task, response} ->
+          case response do
+            nil ->
+              Task.shutdown(task, :brutal_kill)
+              {nil, nil}
+
+            {:ok, result} ->
+              {:ok, result}
+
+            _ ->
+              response
+          end
+        end)
+
+      Enum.map(pages, fn page ->
+        if bounce_state == :ok,
+          do: Map.put(page, :bounce_rate, bounce_result[page[:name]]),
+          else: page
+      end)
+      |> Enum.map(fn page ->
+        if time_state == :ok do
+          time = time_result[page[:name]]
+
+          Map.put(
+            page,
+            :time_on_page,
+            if(time, do: round(time), else: nil)
+          )
+        else
+          page
+        end
+      end)
     else
       pages
     end
@@ -646,6 +677,46 @@ defmodule Plausible.Stats.Clickhouse do
     )
     |> Enum.map(fn row -> {row[:entry_page], row[:bounce_rate]} end)
     |> Enum.into(%{})
+  end
+
+  def page_times_by_page_url(site, query, page_list) do
+    q =
+      from(
+        e in base_query_w_sessions(site, %Query{
+          query
+          | filters: Map.delete(query.filters, "page")
+        }),
+        select: {
+          fragment("? as p", e.pathname),
+          fragment("? as t", e.timestamp),
+          fragment("? as s", e.session_id)
+        },
+        order_by: [e.session_id, e.timestamp]
+      )
+
+    {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
+
+    "SELECT
+      p,
+      sum(td)/count(case when p2 != p then 1 end) as avgTime
+    FROM
+      (SELECT
+        p,
+        p2,
+        sum(t2-t) as td
+      FROM
+        (SELECT
+          *,
+          neighbor(t, 1) as t2,
+          neighbor(p, 1) as p2,
+          neighbor(s, 1) as s2
+        FROM (#{base_query_raw}))
+      WHERE s=s2 AND p IN tuple(?)
+      GROUP BY p,p2,s)
+    GROUP BY p"
+    |> ClickhouseRepo.query(
+      base_query_raw_params ++ [(Enum.count(page_list) > 0 && page_list) || ["/"]]
+    )
   end
 
   defp add_percentages(stat_list) do
@@ -1073,21 +1144,9 @@ defmodule Plausible.Stats.Clickhouse do
         sessions_q
       end
 
-    sessions_q =
-      if query.filters["entry_page"] do
-        entry_page = query.filters["entry_page"]
-        from(s in sessions_q, where: s.entry_page == ^entry_page)
-      else
-        sessions_q
-      end
+    sessions_q = include_path_filter_entry(sessions_q, query.filters["entry_page"])
 
-    sessions_q =
-      if query.filters["exit_page"] do
-        exit_page = query.filters["exit_page"]
-        from(s in sessions_q, where: s.exit_page == ^exit_page)
-      else
-        sessions_q
-      end
+    sessions_q = include_path_filter_exit(sessions_q, query.filters["exit_page"])
 
     q =
       from(e in "events",
@@ -1097,7 +1156,7 @@ defmodule Plausible.Stats.Clickhouse do
       )
 
     q =
-      if query.filters["source"] || query.filters['referrer'] || query.filters["utm_medium"] ||
+      if query.filters["source"] || query.filters["referrer"] || query.filters["utm_medium"] ||
            query.filters["utm_source"] || query.filters["utm_campaign"] || query.filters["screen"] ||
            query.filters["browser"] || query.filters["browser_version"] || query.filters["os"] ||
            query.filters["os_version"] || query.filters["country"] || query.filters["entry_page"] ||
@@ -1111,13 +1170,7 @@ defmodule Plausible.Stats.Clickhouse do
         q
       end
 
-    q =
-      if query.filters["page"] do
-        page = query.filters["page"]
-        from(e in q, where: e.pathname == ^page)
-      else
-        q
-      end
+    q = include_path_filter(q, query.filters["page"])
 
     if query.filters["props"] do
       [{key, val}] = query.filters["props"] |> Enum.into([])
@@ -1157,7 +1210,7 @@ defmodule Plausible.Stats.Clickhouse do
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
       )
 
-    if query.filters["source"] || query.filters['referrer'] || query.filters["utm_medium"] ||
+    if query.filters["source"] || query.filters["referrer"] || query.filters["utm_medium"] ||
          query.filters["utm_source"] || query.filters["utm_campaign"] || query.filters["screen"] ||
          query.filters["browser"] || query.filters["browser_version"] || query.filters["os"] ||
          query.filters["os_version"] || query.filters["country"] || query.filters["entry_page"] ||
@@ -1267,21 +1320,9 @@ defmodule Plausible.Stats.Clickhouse do
         q
       end
 
-    q =
-      if query.filters["entry_page"] do
-        entry_page = query.filters["entry_page"]
-        from(s in q, where: s.entry_page == ^entry_page)
-      else
-        q
-      end
+    q = include_path_filter_entry(q, query.filters["entry_page"])
 
-    q =
-      if query.filters["exit_page"] do
-        exit_page = query.filters["exit_page"]
-        from(s in q, where: s.exit_page == ^exit_page)
-      else
-        q
-      end
+    q = include_path_filter_exit(q, query.filters["exit_page"])
 
     if query.filters["referrer"] do
       ref = query.filters["referrer"]
@@ -1381,13 +1422,7 @@ defmodule Plausible.Stats.Clickhouse do
         q
       end
 
-    q =
-      if query.filters["page"] do
-        page = query.filters["page"]
-        from(e in q, where: e.pathname == ^page)
-      else
-        q
-      end
+    q = include_path_filter(q, query.filters["page"])
 
     if query.filters["props"] do
       [{key, val}] = query.filters["props"] |> Enum.into([])
@@ -1467,18 +1502,102 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     if path do
-      if String.match?(path, ~r/\*/) do
-        path_regex =
-          "^#{path}\/?$"
-          |> String.replace(~r/\*\*/, ".*")
-          |> String.replace(~r/(?<!\.)\*/, "[^/]*")
+      {contains_regex, path_regex} = convert_path_regex(path)
 
+      if contains_regex do
         from(e in q, where: fragment("match(?, ?)", e.pathname, ^path_regex))
       else
         from(e in q, where: e.pathname == ^path)
       end
     else
       q
+    end
+  end
+
+  defp check_negated_filter(filter) do
+    negated = String.at(filter, 0) == "!"
+    updated_filter = if negated, do: String.slice(filter, 1..-1), else: filter
+
+    {negated, updated_filter}
+  end
+
+  defp convert_path_regex(path) do
+    contains_regex = String.match?(path, ~r/\*/)
+
+    regex =
+      "^#{path}\/?$"
+      |> String.replace(~r/\*\*/, ".*")
+      |> String.replace(~r/(?<!\.)\*/, "[^/]*")
+
+    {contains_regex, regex}
+  end
+
+  defp include_path_filter(db_query, path) do
+    if path do
+      {negated, path} = check_negated_filter(path)
+      {contains_regex, path_regex} = convert_path_regex(path)
+
+      if contains_regex do
+        if negated do
+          from(e in db_query, where: fragment("not(match(?, ?))", e.pathname, ^path_regex))
+        else
+          from(e in db_query, where: fragment("match(?, ?)", e.pathname, ^path_regex))
+        end
+      else
+        if negated do
+          from(e in db_query, where: e.pathname != ^path)
+        else
+          from(e in db_query, where: e.pathname == ^path)
+        end
+      end
+    else
+      db_query
+    end
+  end
+
+  defp include_path_filter_entry(db_query, path) do
+    if path do
+      {negated, path} = check_negated_filter(path)
+      {contains_regex, path_regex} = convert_path_regex(path)
+
+      if contains_regex do
+        if negated do
+          from(e in db_query, where: fragment("not(match(?, ?))", e.entry_page, ^path_regex))
+        else
+          from(e in db_query, where: fragment("match(?, ?)", e.entry_page, ^path_regex))
+        end
+      else
+        if negated do
+          from(e in db_query, where: e.entry_page != ^path)
+        else
+          from(e in db_query, where: e.entry_page == ^path)
+        end
+      end
+    else
+      db_query
+    end
+  end
+
+  defp include_path_filter_exit(db_query, path) do
+    if path do
+      {negated, path} = check_negated_filter(path)
+      {contains_regex, path_regex} = convert_path_regex(path)
+
+      if contains_regex do
+        if negated do
+          from(e in db_query, where: fragment("not(match(?, ?))", e.exit_page, ^path_regex))
+        else
+          from(e in db_query, where: fragment("match(?, ?)", e.exit_page, ^path_regex))
+        end
+      else
+        if negated do
+          from(e in db_query, where: e.exit_page != ^path)
+        else
+          from(e in db_query, where: e.exit_page == ^path)
+        end
+      end
+    else
+      db_query
     end
   end
 end

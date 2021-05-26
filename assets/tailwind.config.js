@@ -14,6 +14,7 @@ module.exports = {
     extend: {
       colors: {
         orange: colors.orange,
+        'gray-950': 'rgb(13, 18, 30)',
         'gray-850': 'rgb(26, 32, 44)',
         'gray-825': 'rgb(37, 47, 63)'
       },
@@ -30,7 +31,7 @@ module.exports = {
         '9': 9,
       },
       maxWidth: {
-        '2xs': '16rem',
+        '2xs': '15rem',
         '3xs': '12rem',
       }
     },

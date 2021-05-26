@@ -51,6 +51,7 @@ defmodule Plausible.MixProject do
   defp deps do
     [
       {:bcrypt_elixir, "~> 2.0"},
+      {:combination, "~> 0.0.3"},
       {:cors_plug, "~> 1.5"},
       {:ecto_sql, "~> 3.0"},
       {:elixir_uuid, "~> 1.2"},
@@ -94,8 +95,8 @@ defmodule Plausible.MixProject do
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:kaffy, "~> 0.9.0"},
       {:envy, "~> 1.1.1"},
-      {:ink, "~> 1.0"},
-      {:phoenix_pagination, "~> 0.7.0"}
+      {:phoenix_pagination, "~> 0.7.0"},
+      {:hammer, "~> 6.0"}
     ]
   end
 
