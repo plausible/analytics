@@ -1156,7 +1156,7 @@ defmodule Plausible.Stats.Clickhouse do
       )
 
     q =
-      if query.filters["source"] || query.filters['referrer'] || query.filters["utm_medium"] ||
+      if query.filters["source"] || query.filters["referrer"] || query.filters["utm_medium"] ||
            query.filters["utm_source"] || query.filters["utm_campaign"] || query.filters["screen"] ||
            query.filters["browser"] || query.filters["browser_version"] || query.filters["os"] ||
            query.filters["os_version"] || query.filters["country"] || query.filters["entry_page"] ||
@@ -1210,7 +1210,7 @@ defmodule Plausible.Stats.Clickhouse do
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
       )
 
-    if query.filters["source"] || query.filters['referrer'] || query.filters["utm_medium"] ||
+    if query.filters["source"] || query.filters["referrer"] || query.filters["utm_medium"] ||
          query.filters["utm_source"] || query.filters["utm_campaign"] || query.filters["screen"] ||
          query.filters["browser"] || query.filters["browser_version"] || query.filters["os"] ||
          query.filters["os_version"] || query.filters["country"] || query.filters["entry_page"] ||
