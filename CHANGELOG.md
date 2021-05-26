@@ -8,7 +8,10 @@ All notable changes to this project will be documented in this file.
 - CSV export now includes pageviews, bounce rate and visit duration in addition to visitors plausible/analytics#952
 - Send stats to multiple dashboards by configuring a comma-separated list of domains plausible/analytics#968
 - Time on Page metric available in detailed Top Pages report plausible/analytics#1007
-- Added `CLICKHOUSE_FLUSH_INTERVAL_MS` and `CLICKHOUSE_MAX_BUFFER_SIZE` configuration parameters
+- Glob (wildcard) based page, entry page and exit page filters plausible/analytics#1067
+- Exclusion filters for page, entry page and exit page filters plausible/analytics#1067
+- Menu to add new and edit existing filters directly plausible/analytics#1067
+- Added `CLICKHOUSE_FLUSH_INTERVAL_MS` and `CLICKHOUSE_MAX_BUFFER_SIZE` configuration parameters plausible/analytics#1073
 
 ### Fixed
 - Fix weekly report time range plausible/analytics#951
