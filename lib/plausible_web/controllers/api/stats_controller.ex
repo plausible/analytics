@@ -340,4 +340,11 @@ defmodule PlausibleWeb.Api.StatsController do
   def handle_errors(conn, %{kind: kind, reason: reason}) do
     json(conn, %{error: Exception.format_banner(kind, reason)})
   end
+
+  def filter_suggestions(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, params)
+
+    json(conn, Stats.make_suggestions(site, query, params["filter_name"], params["q"]))
+  end
 end

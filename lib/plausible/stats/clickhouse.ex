@@ -1597,4 +1597,99 @@ defmodule Plausible.Stats.Clickhouse do
       db_query
     end
   end
+
+  def make_suggestions(site, query, filter_name, filter_search) do
+    filter_query = "%#{filter_search}%"
+
+    filter_name = case filter_name do
+      "page" -> "pathname"
+      "source" -> "referrer_source"
+      "os" -> "operating_system"
+      "os_version" -> "operating_system_version"
+      _ -> filter_name
+    end
+
+    q =
+      if(filter_name == "pathname",
+        do: base_query(site, query),
+        else: base_session_query(site, query)
+      )
+      |> from(
+        group_by: ^String.to_atom(filter_name),
+        order_by: [desc: fragment("count(*)")],
+        limit: 10
+      )
+
+    q =
+      case filter_name do
+        "pathname" ->
+          from(e in q,
+            select: {e.pathname},
+            where: fragment("? ilike ?", e.pathname, ^filter_query)
+          )
+
+        "entry_page" ->
+          from(e in q,
+            select: {e.entry_page},
+            where: fragment("? ilike ?", e.entry_page, ^filter_query)
+          )
+
+        "exit_page" ->
+          from(e in q,
+            select: {e.exit_page},
+            where: fragment("? ilike ?", e.exit_page, ^filter_query)
+          )
+
+        "referrer_source" ->
+          from(e in q,
+            select: {e.referrer_source},
+            where: fragment("? ilike ?", e.referrer_source, ^filter_query)
+          )
+
+        "utm_medium" ->
+          from(e in q,
+            select: {e.utm_medium},
+            where: fragment("? ilike ?", e.utm_medium, ^filter_query)
+          )
+
+        "utm_source" ->
+          from(e in q,
+            select: {e.utm_source},
+            where: fragment("? ilike ?", e.utm_source, ^filter_query)
+          )
+
+        "utm_campaign" ->
+          from(e in q,
+            select: {e.utm_campaign},
+            where: fragment("? ilike ?", e.utm_campaign, ^filter_query)
+          )
+
+        "referrer" ->
+          from(e in q,
+            select: {e.referrer},
+            where: fragment("? ilike ?", e.referrer, ^filter_query)
+          )
+
+        "browser" ->
+          from(e in q, select: {e.browser}, where: fragment("? ilike ?", e.browser, ^filter_query))
+
+        "browser_version" ->
+          from(e in q,
+            select: {e.browser_version},
+            where: fragment("? ilike ?", e.browser_version, ^filter_query)
+          )
+
+        "operating_system" ->
+          from(e in q, select: {e.operating_system}, where: fragment("? ilike ?", e.operating_system, ^filter_query))
+
+        "operating_system_version" ->
+          from(e in q,
+            select: {e.operating_system_version},
+            where: fragment("? ilike ?", e.operating_system_version, ^filter_query)
+          )
+      end
+
+
+    ClickhouseRepo.all(q) |> Enum.map(fn {suggestion} -> suggestion end) |> Enum.filter(fn suggestion -> suggestion != "" end)
+  end
 end
