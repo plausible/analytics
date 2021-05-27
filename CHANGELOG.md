@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Glob (wildcard) based page, entry page and exit page filters plausible/analytics#1067
 - Exclusion filters for page, entry page and exit page filters plausible/analytics#1067
 - Menu to add new and edit existing filters directly plausible/analytics#1067
+- Added `CLICKHOUSE_FLUSH_INTERVAL_MS` and `CLICKHOUSE_MAX_BUFFER_SIZE` configuration parameters plausible/analytics#1073
 
 ### Fixed
 - Fix weekly report time range plausible/analytics#951

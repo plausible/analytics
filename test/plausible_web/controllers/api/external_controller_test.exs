@@ -510,6 +510,45 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert pageview.country_code == "US"
   end
 
+  test "Uses the Forwarded header when cf-connecting-ip and x-forwarded-for are missing", %{
+    conn: conn
+  } do
+    params = %{
+      name: "pageview",
+      domain: "external-controller-test-forwarded.com",
+      url: "http://gigride.live/"
+    }
+
+    conn
+    |> put_req_header("content-type", "text/plain")
+    |> put_req_header("forwarded", "by=0.0.0.0;for=1.1.1.1;host=somehost.com;proto=https")
+    |> post("/api/event", Jason.encode!(params))
+
+    pageview = get_event("external-controller-test-forwarded.com")
+
+    assert pageview.country_code == "US"
+  end
+
+  test "Forwarded header can parse ipv6", %{conn: conn} do
+    params = %{
+      name: "pageview",
+      domain: "external-controller-test-forwarded-ipv6.com",
+      url: "http://gigride.live/"
+    }
+
+    conn
+    |> put_req_header("content-type", "text/plain")
+    |> put_req_header(
+      "forwarded",
+      "by=0.0.0.0;for=\"[1:1:1:1:1:1:1:1]\",for=0.0.0.0;host=somehost.com;proto=https"
+    )
+    |> post("/api/event", Jason.encode!(params))
+
+    pageview = get_event("external-controller-test-forwarded-ipv6.com")
+
+    assert pageview.country_code == "US"
+  end
+
   test "URL is decoded", %{conn: conn} do
     params = %{
       name: "pageview",
