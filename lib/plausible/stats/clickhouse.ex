@@ -1598,16 +1598,38 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
+  def make_suggestions(site, query, "country", filter_search) do
+    filter_search =
+      String.split(filter_search, ",")
+      |> Enum.map(fn c -> Plausible.Stats.CountryName.to_alpha2(c) end)
+
+    q =
+      from(
+        e in base_session_query(site, query),
+        group_by: e.country_code,
+        order_by: [desc: fragment("count(*)")],
+        select: {e.country_code}
+      )
+
+    ClickhouseRepo.all(q)
+    |> Enum.map(fn {x} -> x end)
+    |> Enum.filter(fn c -> Enum.find(filter_search, false, fn x -> x == c end) end)
+    |> Enum.map(fn c -> Plausible.Stats.CountryName.to_alpha3(c) end)
+    |> Enum.slice(0..9)
+  end
+
   def make_suggestions(site, query, filter_name, filter_search) do
     filter_query = "%#{filter_search}%"
 
-    filter_name = case filter_name do
-      "page" -> "pathname"
-      "source" -> "referrer_source"
-      "os" -> "operating_system"
-      "os_version" -> "operating_system_version"
-      _ -> filter_name
-    end
+    filter_name =
+      case filter_name do
+        "page" -> "pathname"
+        "source" -> "referrer_source"
+        "os" -> "operating_system"
+        "os_version" -> "operating_system_version"
+        "screen" -> "screen_size"
+        _ -> filter_name
+      end
 
     q =
       if(filter_name == "pathname",
@@ -1680,16 +1702,26 @@ defmodule Plausible.Stats.Clickhouse do
           )
 
         "operating_system" ->
-          from(e in q, select: {e.operating_system}, where: fragment("? ilike ?", e.operating_system, ^filter_query))
+          from(e in q,
+            select: {e.operating_system},
+            where: fragment("? ilike ?", e.operating_system, ^filter_query)
+          )
 
         "operating_system_version" ->
           from(e in q,
             select: {e.operating_system_version},
             where: fragment("? ilike ?", e.operating_system_version, ^filter_query)
           )
+
+        "screen_size" ->
+          from(e in q,
+            select: {e.screen_size},
+            where: fragment("? ilike ?", e.screen_size, ^filter_query)
+          )
       end
 
-
-    ClickhouseRepo.all(q) |> Enum.map(fn {suggestion} -> suggestion end) |> Enum.filter(fn suggestion -> suggestion != "" end)
+    ClickhouseRepo.all(q)
+    |> Enum.map(fn {suggestion} -> suggestion end)
+    |> Enum.filter(fn suggestion -> suggestion != "" end)
   end
 end

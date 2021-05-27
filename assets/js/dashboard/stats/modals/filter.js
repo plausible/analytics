@@ -3,9 +3,9 @@ import { withRouter, Redirect } from 'react-router-dom'
 
 import Modal from './modal'
 import { parseQuery, formattedFilters, navigateToQuery } from '../../query'
-import { country_codes, screen_sizes } from "../../constants";
 import Transition from "../../../transition";
 import * as api from '../../api'
+import Datamap from 'datamaps'
 
 class FilterModal extends React.Component {
   constructor(props) {
@@ -18,8 +18,8 @@ class FilterModal extends React.Component {
       filterSaved: false,
       suggestions: [],
       fetchSuggestionsTimeout: undefined,
-      initialSuggest: true,
-      focusedSuggestionIndex: -1
+      focusedSuggestionIndex: -1,
+      preventSuggestions: true
     }
 
     this.editableGoals = Object.keys(this.state.query.filters).filter(filter => !['goal', 'props'].includes(filter))
@@ -35,15 +35,24 @@ class FilterModal extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { query, selectedFilter, updatedValue, preventSuggestions } = this.state
+    const { query, selectedFilter, updatedValue, preventSuggestions, fetchSuggestionsTimeout } = this.state
 
     if (prevState.selectedFilter !== selectedFilter) {
       const negated = query.filters[selectedFilter] && query.filters[selectedFilter][0] == '!' && this.negationSupported(selectedFilter)
-      const updatedValue = negated ? query.filters[selectedFilter].slice(1) : (query.filters[selectedFilter] || "")
+      let updatedValue = negated ? query.filters[selectedFilter].slice(1) : (query.filters[selectedFilter] || "")
+      clearTimeout(fetchSuggestionsTimeout)
 
-      clearTimeout(this.state.fetchSuggestionsTimeout)
+      if (selectedFilter == 'country') {
+        const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
+        const selectedCountry = allCountries.find((c) => c.id === updatedValue) || { properties: { name: updatedValue } };
+        updatedValue = selectedCountry.properties.name
+      }
 
-      this.setState({ updatedValue, negated, suggestions: [], fetchSuggestionsTimeout: undefined, focusedSuggestionIndex: -1 })
+      this.setState({ updatedValue, negated, suggestions: [], fetchSuggestionsTimeout: undefined, focusedSuggestionIndex: -1, noSuggestions: false }, () => {
+        if (selectedFilter) {
+          this.fetchSuggestions()
+        }
+      })
     }
 
     if (prevState.updatedValue !== updatedValue) {
@@ -51,13 +60,11 @@ class FilterModal extends React.Component {
         let fetchSuggestionsTimeout;
         clearTimeout(this.state.fetchSuggestionsTimeout)
 
-        if (!['country', 'screen'].includes(selectedFilter)) {
-          fetchSuggestionsTimeout = setTimeout(this.fetchSuggestions, 1000)
-        }
-
-        this.setState({ suggestions: [], fetchSuggestionsTimeout, preventSuggestions: false, focusedSuggestionIndex: -1 })
+        this.setState({ suggestions: [], preventSuggestions: false, focusedSuggestionIndex: -1, noSuggestions: false }, () => {
+          this.setState({ fetchSuggestionsTimeout: setTimeout(this.fetchSuggestions, 200) })
+        })
       } else {
-        this.setState({ suggestions: [], fetchSuggestionsTimeout: undefined, focusedSuggestionIndex: -1 })
+        this.setState({ suggestions: [], fetchSuggestionsTimeout: undefined, focusedSuggestionIndex: -1, noSuggestions: false })
       }
     }
   }
@@ -68,7 +75,7 @@ class FilterModal extends React.Component {
 
   handleKeydown(e) {
     const { suggestions } = this.state
-    let { focusedSuggestionIndex, updatedValue, preventSuggestions } = this.state
+    let { focusedSuggestionIndex, updatedValue, preventSuggestions, selectedFilter } = this.state
     const navigationKeys = ['ArrowUp', undefined, 'ArrowDown']
 
     if (e.target.id !== 'suggestions_input') return true
@@ -82,7 +89,7 @@ class FilterModal extends React.Component {
     }
 
     if (navigationKeys.includes(e.key)) {
-      focusedSuggestionIndex += navigationKeys.indexOf(e.key)-1
+      focusedSuggestionIndex += navigationKeys.indexOf(e.key) - 1
       if (focusedSuggestionIndex < 0) {
         focusedSuggestionIndex = suggestions.length - 1
       } else if (focusedSuggestionIndex >= suggestions.length) {
@@ -100,47 +107,30 @@ class FilterModal extends React.Component {
 
   fetchSuggestions() {
     const { query, updatedValue, selectedFilter } = this.state
+    const updatedQuery = { ...query, filters: { ...query.filters, [selectedFilter]: null } }
 
-    query.filters[selectedFilter] = null
+    if (selectedFilter == 'country') {
+      const matchedCountries = Datamap.prototype.worldTopo.objects.world.geometries.filter(c => c.properties.name.includes(updatedValue.trim()))
+      const matches = matchedCountries.map(c => c.id)
 
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/suggestions/${selectedFilter}`, query, { q: updatedValue })
-      .then((res) => this.setState({ suggestions: res, fetchSuggestionsTimeout: undefined, focusedSuggestionIndex: -1 }))
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/suggestions/country`, updatedQuery, { q: matches })
+        .then((res) => {
+          const suggestions = res.map(code => matchedCountries.filter(c => c.id == code)[0].properties.name)
+
+          this.setState({ suggestions, fetchSuggestionsTimeout: undefined, focusedSuggestionIndex: -1, noSuggestions: res.length == 0 })
+        })
+    } else {
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/suggestions/${selectedFilter}`, updatedQuery, { q: updatedValue.trim() })
+        .then((res) => {
+          this.setState({ suggestions: res, fetchSuggestionsTimeout: undefined, focusedSuggestionIndex: -1, noSuggestions: res.length == 0 })
+        })
+    }
   }
 
   renderSelector(filter) {
-    const { updatedValue, suggestions, initialSuggest, inputFocused, focusedSuggestionIndex } = this.state;
+    const { updatedValue, suggestions, inputFocused, focusedSuggestionIndex, selectedFilter } = this.state;
 
-    if (!filter) { return null; }
-
-    if (filter === 'country') {
-      return (<select
-        value={updatedValue}
-        className="my-2 block w-full py-2 pl-3 pr-10 text-base border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300"
-        placeholder="Select a Country"
-        onChange={(e) => this.setState({ updatedValue: e.target.value })}
-      >
-        {!Object.keys(country_codes).includes(updatedValue) && <option disabled value={updatedValue} className="hidden">Select a Country</option>}
-        <option disabled value="" className="hidden">Select a Country</option>
-        {Object.keys(country_codes).map(key => <option key={key} value={key}>{country_codes[key]}</option>)}
-      </select>)
-    }
-
-    if (filter === 'screen') {
-      return (
-        <>
-          <select
-            value={updatedValue}
-            className="my-2 block w-full py-2 pl-3 pr-10 text-base border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300"
-            placeholder="Select a Screen Size"
-            onChange={(e) => this.setState({ updatedValue: e.target.value })}
-          >
-            {!screen_sizes.includes(updatedValue) && <option disabled value={updatedValue} className="hidden">Select a Screen Size</option>}
-            <option disabled value="" className="hidden">Select a Screen Size</option>
-            {screen_sizes.map(key => <option key={key} value={key}>{key}</option>)}
-          </select>
-        </>
-      )
-    }
+    if (!filter) return null
 
     return <div className="relative">
       <input
@@ -155,10 +145,6 @@ class FilterModal extends React.Component {
           })
         }}
         onFocus={() => {
-          if (initialSuggest) {
-            this.setState({ initial: false })
-            this.fetchSuggestions()
-          }
           this.setState({ inputFocused: true })
         }}
         onBlur={() => this.setState({ inputFocused: false })}
@@ -176,13 +162,13 @@ class FilterModal extends React.Component {
           className="absolute mt-2 rounded shadow-md z-10"
           style={{ width: '360px' }}
         >
-          <div className="rounded bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 font-medium text-gray-800 dark:text-gray-200 py-1">
+          <div className="rounded bg-white dark:bg-gray-850 ring-1 ring-black ring-opacity-5 font-medium text-gray-800 dark:text-gray-200 py-1">
             {suggestions.map((suggestion, index) => (
               <span
                 key={suggestion}
-                className={`${focusedSuggestionIndex == index ? 'ring-2 ring-opacity-50' : ''} rounded px-4 py-2 md:text-sm leading-tight hover:bg-gray-200 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 flex items-center justify-between cursor-pointer`}
+                className={`${focusedSuggestionIndex == index ? 'ring-2 ring-opacity-50' : ''} rounded px-4 py-2 md:text-sm leading-tight hover:bg-gray-200 dark:hover:bg-gray-950 hover:text-gray-900 dark:hover:text-gray-100 flex items-center justify-between cursor-pointer`}
                 onClick={() => {
-                  this.setState({ updatedValue: suggestion, preventSuggestions: true })
+                  this.setState({ updatedValue: suggestion, preventSuggestions: true, suggestions: [] })
                 }}
               >
                 {suggestion}
@@ -194,12 +180,9 @@ class FilterModal extends React.Component {
   }
 
   renderBody() {
-    const { selectedFilter, negated, updatedValue, query } = this.state;
+    const { selectedFilter, negated, updatedValue, query, noSuggestions } = this.state;
 
-    const finalFilterValue = (this.negationSupported(selectedFilter) && negated ? '!' : '') + updatedValue
-    const finalizedQuery = new URLSearchParams(window.location.search)
-    const validFilter = this.editableGoals.includes(selectedFilter) && updatedValue
-    finalizedQuery.set(selectedFilter, finalFilterValue)
+    const validFilter = this.editableGoals.includes(selectedFilter) && updatedValue.trim()
 
     return (
       <React.Fragment>
@@ -208,6 +191,15 @@ class FilterModal extends React.Component {
         <div className="my-4 border-b border-gray-300"></div>
         <main className="modal__content">
           <form className="flex flex-col" onSubmit={() => {
+            let finalFilterValue = (this.negationSupported(selectedFilter) && negated ? '!' : '') + updatedValue.trim()
+            if (selectedFilter == 'country') {
+              const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
+              const selectedCountry = allCountries.find((c) => c.properties.name === finalFilterValue) || { id: finalFilterValue };
+              finalFilterValue = selectedCountry.id
+            }
+            const finalizedQuery = new URLSearchParams(window.location.search)
+            finalizedQuery.set(selectedFilter, finalFilterValue)
+
             if (validFilter) {
               this.setState({ finalizedQuery })
             }
@@ -238,6 +230,13 @@ class FilterModal extends React.Component {
             }
 
             {this.renderSelector(selectedFilter)}
+
+            {noSuggestions &&
+              <span className="text-red-500 text-md flex mt-2 px-3">
+                <svg className="w-8 h-8 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span className="">No results found in current dashboard, try removing some filters{updatedValue.trim().length ? ', checking your input' : ''} and ensuring this data exists</span>
+              </span>
+            }
 
             <button
               type="submit"
