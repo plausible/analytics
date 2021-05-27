@@ -162,7 +162,7 @@ export function eventName(query) {
 
 export const formattedFilters = {
   'goal': 'Goal',
-  'props': 'Props',
+  'props': 'Goal properties',
   'source': 'Source',
   'utm_medium': 'UTM Medium',
   'utm_source': 'UTM Source',

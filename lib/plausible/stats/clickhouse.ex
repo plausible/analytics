@@ -1718,10 +1718,24 @@ defmodule Plausible.Stats.Clickhouse do
             select: {e.screen_size},
             where: fragment("? ilike ?", e.screen_size, ^filter_query)
           )
+
+        "goal" ->
+          nil
       end
 
-    ClickhouseRepo.all(q)
-    |> Enum.map(fn {suggestion} -> suggestion end)
-    |> Enum.filter(fn suggestion -> suggestion != "" end)
+    if filter_name == "goal" do
+      Repo.all(from g in Plausible.Goal, where: g.domain == ^site.domain)
+      |> Enum.map(fn x -> if x.event_name, do: x.event_name, else: "Visit #{x.page_path}" end)
+      |> Enum.filter(fn goal ->
+        String.contains?(
+          String.downcase(goal),
+          String.downcase(filter_search) || filter_search == ""
+        )
+      end)
+    else
+      ClickhouseRepo.all(q)
+      |> Enum.map(fn {suggestion} -> suggestion end)
+      |> Enum.filter(fn suggestion -> suggestion != "" end)
+    end
   end
 end

@@ -22,7 +22,7 @@ class FilterModal extends React.Component {
       preventSuggestions: true
     }
 
-    this.editableGoals = Object.keys(this.state.query.filters).filter(filter => !['goal', 'props'].includes(filter))
+    this.editableGoals = Object.keys(this.state.query.filters).filter(filter => !['props'].includes(filter))
     this.renderSelector = this.renderSelector.bind(this)
     this.fetchSuggestions = this.fetchSuggestions.bind(this)
     this.handleKeydown = this.handleKeydown.bind(this)
@@ -166,7 +166,7 @@ class FilterModal extends React.Component {
             {suggestions.map((suggestion, index) => (
               <span
                 key={suggestion}
-                className={`${focusedSuggestionIndex == index ? 'ring-2 ring-opacity-50' : ''} rounded px-4 py-2 md:text-sm leading-tight hover:bg-gray-200 dark:hover:bg-gray-950 hover:text-gray-900 dark:hover:text-gray-100 flex items-center justify-between cursor-pointer`}
+                className={`${focusedSuggestionIndex == index ? 'ring-2 ring-inset ring-opacity-50' : ''} rounded px-4 py-2 md:text-sm leading-tight hover:bg-gray-200 dark:hover:bg-gray-950 hover:text-gray-900 dark:hover:text-gray-100 flex items-center justify-between cursor-pointer`}
                 onClick={() => {
                   this.setState({ updatedValue: suggestion, preventSuggestions: true, suggestions: [] })
                 }}

@@ -174,7 +174,7 @@ class Filters extends React.Component {
   }
 
   renderDropdownFilter(history, [key, value], query) {
-    if (['goal', 'props'].includes(key)) {
+    if ('props' == key) {
       return (
         <div className="px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between" key={key + value}>
           {this.filterText(key, value, query)}
@@ -201,7 +201,7 @@ class Filters extends React.Component {
   renderListFilter(history, [key, value], query) {
     return (
       <span key={key} title={value} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
-        {['goal', 'props'].includes(key) ? (
+        {'props' == key ? (
           <span className="flex w-full h-full items-center py-2 pl-3">
             {this.filterText(key, value, query)}
           </span>
