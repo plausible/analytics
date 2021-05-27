@@ -1623,13 +1623,13 @@ defmodule Plausible.Stats.Clickhouse do
 
   def make_suggestions(site, _query, "goal", filter_search) do
     Repo.all(from g in Plausible.Goal, where: g.domain == ^site.domain)
-      |> Enum.map(fn x -> if x.event_name, do: x.event_name, else: "Visit #{x.page_path}" end)
-      |> Enum.filter(fn goal ->
-        String.contains?(
-          String.downcase(goal),
-          String.downcase(filter_search) || filter_search == ""
-        )
-      end)
+    |> Enum.map(fn x -> if x.event_name, do: x.event_name, else: "Visit #{x.page_path}" end)
+    |> Enum.filter(fn goal ->
+      String.contains?(
+        String.downcase(goal),
+        String.downcase(filter_search) || filter_search == ""
+      )
+    end)
   end
 
   def make_suggestions(site, query, filter_name, filter_search) do
