@@ -1601,6 +1601,8 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
+  def make_suggestions(site, query, filter_name, filter_search \\ "")
+
   def make_suggestions(site, query, "country", filter_search) do
     filter_search =
       String.split(filter_search, ",")
