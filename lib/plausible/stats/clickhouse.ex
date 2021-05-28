@@ -1601,8 +1601,6 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  def make_suggestions(site, query, filter_name, filter_search \\ "")
-
   def make_suggestions(site, query, "country", filter_search) do
     filter_search =
       String.split(filter_search, ",")
@@ -1629,7 +1627,7 @@ defmodule Plausible.Stats.Clickhouse do
     |> Enum.filter(fn goal ->
       String.contains?(
         String.downcase(goal),
-        String.downcase(filter_search) || filter_search == ""
+        String.downcase(filter_search)
       )
     end)
   end
