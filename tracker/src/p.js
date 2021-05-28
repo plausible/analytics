@@ -5,6 +5,7 @@
 (function(){
   'use strict';
 
+  var scriptEl = window.document.currentScript;
   var plausibleHost = new URL(scriptEl.src).origin
 
   function setCookie(name,value) {
