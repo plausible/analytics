@@ -182,9 +182,14 @@ defmodule Plausible.Stats.Query do
   end
 
   defp parse_single_filter(str) do
-    String.trim(str)
-    |> String.split("==")
-    |> Enum.map(&String.trim/1)
-    |> List.to_tuple()
+    [key, val] =
+      String.trim(str)
+      |> String.split("==")
+      |> Enum.map(&String.trim/1)
+
+    case String.split(val, "|") do
+      [single_value] -> {key, {:is, single_value}}
+      list -> {key, {:member, list}}
+    end
   end
 end
