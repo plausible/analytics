@@ -38,9 +38,6 @@ defmodule PlausibleWeb.Tracker do
   @templates files_available
   @aliases aliases_available
 
-  #  1 hour
-  @max_age 3600
-
   def init(_) do
     all_files =
       Enum.reduce(@templates, %{}, fn template_filename, all_files ->
@@ -64,7 +61,6 @@ defmodule PlausibleWeb.Tracker do
         location = Application.app_dir(:plausible, "priv/tracker/js/" <> found)
 
         conn
-        |> put_resp_header("cache-control", "max-age=#{@max_age},public")
         |> put_resp_header("content-type", "application/javascript")
         |> put_resp_header("cross-origin-resource-policy", "cross-origin")
         |> send_file(200, location)
