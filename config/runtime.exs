@@ -15,9 +15,7 @@ end
 base_url = URI.parse(base_url)
 
 if base_url.scheme not in ["http", "https"] do
-  raise "BASE_URL must start with `http` or `https`. Currently configured as `#{
-          System.get_env("BASE_URL")
-        }`"
+  raise "BASE_URL must start with `http` or `https`. Currently configured as `#{System.get_env("BASE_URL")}`"
 end
 
 secret_key_base =
@@ -303,3 +301,5 @@ config :logger, Sentry.LoggerBackend,
   capture_log_messages: true,
   level: :error,
   excluded_domains: []
+
+config :tzdata, :data_dir, System.get_env("TZDATA_DIR", "priv")
