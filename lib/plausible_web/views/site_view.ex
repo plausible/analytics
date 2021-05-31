@@ -26,6 +26,18 @@ defmodule PlausibleWeb.SiteView do
     Plausible.Sites.shared_link_url(site, link)
   end
 
+  def gravatar(email, opts) do
+    hash =
+      email
+      |> String.trim()
+      |> String.downcase()
+      |> :erlang.md5()
+      |> Base.encode16(case: :lower)
+
+    img = "https://www.gravatar.com/avatar/#{hash}?s=150&d=identicon"
+    img_tag(img, opts)
+  end
+
   def snippet(site) do
     tracker =
       if site.custom_domain do

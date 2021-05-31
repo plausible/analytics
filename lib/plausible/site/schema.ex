@@ -11,6 +11,7 @@ defmodule Plausible.Site do
     field :public, :boolean
 
     many_to_many :members, User, join_through: Plausible.Site.Membership
+    has_many :memberships, Plausible.Site.Membership
     has_one :google_auth, GoogleAuth
     has_one :weekly_report, Plausible.Site.WeeklyReport
     has_one :monthly_report, Plausible.Site.MonthlyReport

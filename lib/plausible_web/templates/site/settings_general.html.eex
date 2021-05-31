@@ -10,8 +10,7 @@
       </header>
 
       <div class="grid grid-cols-4 gap-6">
-        <div class="col-span-4 sm:col-span-2"> <%= label f, :domain, class: "block text-sm font-medium leading-5 text-gray-700 dark:text-gray-300" %>
-          <%= text_input f, :domain, class: "dark:bg-gray-900 mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:max-w-xs sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-100", disabled: "disabled" %>
+        <div class="col-span-4 sm:col-span-2"> <%= label f, :domain, class: "block text-sm font-medium leading-5 text-gray-700 dark:text-gray-300" %> <%= text_input f, :domain, class: "dark:bg-gray-900 mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:max-w-xs sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-100", disabled: "disabled" %>
         </div>
 
         <div class="col-span-4 sm:col-span-2">
@@ -27,6 +26,108 @@
     </div>
   </div>
 <% end %>
+
+<div class="shadow bg-white dark:bg-gray-800 sm:rounded-md py-6 px-4 sm:p-6">
+  <header class="relative">
+    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">People</h2>
+    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">Invite your friend or coworkers</p>
+    <%= link(to: "https://docs.plausible.io/general/", target: "_blank") do %>
+      <svg class="w-6 h-6 absolute top-0 right-0 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+    <% end %>
+  </header>
+  <div class="flow-root mt-6">
+    <ul class="-my-5 divide-y divide-gray-200">
+      <%= for membership <- @site.memberships do %>
+        <li class="py-4">
+          <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+              <%= gravatar(membership.user.email, class: "h-8 w-8 rounded-full") %>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-900 truncate">
+                <%= membership.user.name %>
+              </p>
+              <p class="text-sm text-gray-500 truncate">
+                <%= membership.user.email %>
+              </p>
+            </div>
+
+            <div x-data="{open: false}" @click.away="open = false" x-cloak class="relative">
+              <button @click="open = !open" class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
+                <%= membership.role |> Atom.to_string() |> String.capitalize() %>
+                <svg class="w-4 h-4 pt-px ml-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+              </button>
+              <ul
+                x-show="open"
+                x-transition:leave="transition ease-in duration-100"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="origin-top-right absolute z-10 right-0 mt-2 w-72 rounded-md shadow-lg overflow-hidden bg-white divide-y divide-gray-200 ring-1 ring-black ring-opacity-5 focus:outline-none" tabindex="-1" role="listbox" aria-labelledby="listbox-label" aria-activedescendant="listbox-option-0"
+                >
+                <%= if membership.role == :owner do %>
+                  <li class="p-4 text-sm cursor-default group hover:bg-indigo-500 flex justify-between" role="option">
+                    <div>
+                      <p class="text-base font-medium text-gray-900 group-hover:text-white">Owner</p>
+                      <p class="mt-1 text-sm text-gray-500 group-hover:text-gray-100">Site owner cannot be assigned to any other role</p>
+                    </div>
+
+                    <span class="text-indigo-500 group-hover:text-white">
+                      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                      </svg>
+                    </span>
+                  </li>
+                  <li class="select-none relative p-4 cursor-pointer hover:bg-gray-100 text-red-600" role="option">
+                    <p class="text-sm text-red-600 font-medium">Transfer ownership &rarr;</p>
+                  </li>
+                <% else %>
+                  <%= link(to: "/sites/memberships/#{membership.id}/role/admin", method: :put, class: "p-4 flex justify-between text-sm group hover:bg-indigo-500") do %>
+                    <div>
+                      <p class="text-base font-medium text-gray-900 group-hover:text-white">Admin</p>
+                      <p class="mt-1 text-sm text-gray-500 group-hover:text-gray-100">View stats and edit site settings</p>
+                    </div>
+
+                    <%= if membership.role == :admin do %>
+                      <span class="text-indigo-500 group-hover:text-white">
+                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                      </span>
+                    <% end %>
+                  <% end %>
+                  <%= link(to: "/sites/memberships/#{membership.id}/role/viewer", method: :put, class: "p-4 flex justify-between text-sm group hover:bg-indigo-500") do %>
+                    <div>
+                      <p class="text-base font-medium text-gray-900 group-hover:text-white">Viewer</p>
+                      <p class="mt-1 text-sm text-gray-500 group-hover:text-white">View stats only</p>
+                    </div>
+
+                    <%= if membership.role == :viewer do %>
+                      <span class="text-indigo-500 group-hover:text-white">
+                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                      </span>
+                    <% end %>
+                  <% end %>
+                  <a href="/wat" class="p-4 flex hover:bg-gray-100 text-red-600">
+                    <p class="text-sm text-red-600 font-medium">Remove member</p>
+                  </a>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+
+  <div class="mt-8">
+    <%= link(to: Routes.membership_path(@conn, :invite_member_form, @site.domain), class: "button") do %>
+      <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"></path></svg>
+      Invite
+    <% end %>
+  </div>
+</div>
 
 <%= form_for @conn, "/", [class: "shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6"], fn f -> %>
   <header class="relative">

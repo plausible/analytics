@@ -145,6 +145,7 @@ defmodule PlausibleWeb.SiteController do
     site =
       Sites.get_for_user!(conn.assigns[:current_user].id, website)
       |> Repo.preload(:custom_domain)
+      |> Repo.preload(memberships: :user)
 
     conn
     |> assign(:skip_plausible_tracking, true)

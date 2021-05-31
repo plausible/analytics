@@ -195,6 +195,10 @@ defmodule PlausibleWeb.Router do
     post "/sites/:website/custom-domains", SiteController, :add_custom_domain
     delete "/sites/:website/custom-domains/:id", SiteController, :delete_custom_domain
 
+    get "/sites/:website/memberships/invite", Site.MembershipController, :invite_member_form
+    post "/sites/:website/memberships/invite", Site.MembershipController, :invite_member
+    put "/sites/memberships/:id/role/:new_role", Site.MembershipController, :update_role
+
     get "/sites/:website/weekly-report/unsubscribe", UnsubscribeController, :weekly_report
     get "/sites/:website/monthly-report/unsubscribe", UnsubscribeController, :monthly_report
 
