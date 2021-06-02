@@ -12,6 +12,7 @@ defmodule PlausibleWeb.RemoteIp do
         String.split(forwarded_for, ",")
         |> Enum.map(&String.trim/1)
         |> List.first()
+        |> remove_port
 
       forwarded ->
         Regex.named_captures(~r/for=(?<for>[^;,]+).*$/, forwarded)
@@ -24,5 +25,10 @@ defmodule PlausibleWeb.RemoteIp do
       true ->
         to_string(:inet_parse.ntoa(conn.remote_ip))
     end
+  end
+
+  defp remove_port(ip) do
+    String.split(ip, ":")
+    |> List.first()
   end
 end
