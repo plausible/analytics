@@ -1,6 +1,6 @@
 import React from 'react';
-import { withRouter, Link } from 'react-router-dom'
-import { countFilters, formattedFilters, navigateToQuery, removeQueryParam } from './query'
+import { withRouter } from 'react-router-dom'
+import { countFilters, navigateToQuery, removeQueryParam } from './query'
 import Datamap from 'datamaps'
 import Transition from "../transition.js";
 
@@ -60,7 +60,7 @@ class Filters extends React.Component {
   }
 
   handleKeyup(e) {
-    const { query, history } = this.props
+    const {query, history} = this.props
 
     if (e.ctrlKey || e.metaKey || e.altKey) return
 
@@ -70,7 +70,7 @@ class Filters extends React.Component {
   }
 
   handleResize() {
-    this.setState({ viewport: window.innerWidth || 639 });
+    this.setState({ viewport: window.innerWidth || 639});
   }
 
   handleClick(e) {
@@ -102,9 +102,6 @@ class Filters extends React.Component {
   };
 
   filterText(key, value, query) {
-    const negated = value[0] == '!' && ['page', 'entry_page', 'exit_page'].includes(key)
-    value = negated ? value.slice(1) : value
-
     if (key === "goal") {
       return <span className="inline-block max-w-2xs md:max-w-xs truncate">Completed goal <b>{value}</b></span>
     }
@@ -114,50 +111,50 @@ class Filters extends React.Component {
       return <span className="inline-block max-w-2xs md:max-w-xs truncate">{eventName}.{metaKey} is <b>{metaValue}</b></span>
     }
     if (key === "source") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Source is <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Source: <b>{value}</b></span>
     }
     if (key === "utm_medium") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM medium is <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM medium: <b>{value}</b></span>
     }
     if (key === "utm_source") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM source is <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM source: <b>{value}</b></span>
     }
     if (key === "utm_campaign") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM campaign is <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM campaign: <b>{value}</b></span>
     }
     if (key === "referrer") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Referrer is <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Referrer: <b>{value}</b></span>
     }
     if (key === "screen") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Screen size is <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Screen size: <b>{value}</b></span>
     }
     if (key === "browser") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Browser is <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Browser: <b>{value}</b></span>
     }
     if (key === "browser_version") {
       const browserName = query.filters["browser"] ? query.filters["browser"] : 'Browser'
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{browserName} Version is <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{browserName}.Version: <b>{value}</b></span>
     }
     if (key === "os") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Operating System is <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Operating System: <b>{value}</b></span>
     }
     if (key === "os_version") {
       const osName = query.filters["os"] ? query.filters["os"] : 'OS'
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{osName} Version is <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">{osName}.Version: <b>{value}</b></span>
     }
     if (key === "country") {
       const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
-      const selectedCountry = allCountries.find((c) => c.id === value) || { properties: { name: value } };
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Country is <b>{selectedCountry.properties.name}</b></span>
+      const selectedCountry = allCountries.find((c) => c.id === value) || {properties: {name: value}};
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Country: <b>{selectedCountry.properties.name}</b></span>
     }
     if (key === "page") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Page is{negated ? ' not' : ''} <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Page: <b>{value}</b></span>
     }
     if (key === "entry_page") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Entry Page is{negated ? ' not' : ''} <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Entry Page: <b>{value}</b></span>
     }
     if (key === "exit_page") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Exit Page is{negated ? ' not' : ''} <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Exit Page: <b>{value}</b></span>
     }
   }
 
@@ -174,50 +171,18 @@ class Filters extends React.Component {
   }
 
   renderDropdownFilter(history, [key, value], query) {
-    if (['goal', 'props'].includes(key)) {
-      return (
-        <div className="px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between" key={key + value}>
-          {this.filterText(key, value, query)}
-          <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => this.removeFilter(key, history, query)}>✕</b>
-        </div>
-      )
-    }
-
     return (
-      <div className="px-3 md:px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between" key={key + value}>
-        <Link
-          title={`Edit filter: ${formattedFilters[key]}`}
-          to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${key}`, search: window.location.search }}
-          className="group flex w-full justify-between items-center"
-        >
-          {this.filterText(key, value, query)}
-          <svg className="ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-        </Link>
-        <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => this.removeFilter(key, history, query)}>✕</b>
+      <div className="px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between" key={key + value}>
+        {this.filterText(key, value, query)}
+        <b className="ml-1 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => this.removeFilter(key, history, query)}>✕</b>
       </div>
     )
   }
 
   renderListFilter(history, [key, value], query) {
     return (
-      <span key={key} title={value} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
-        {['goal', 'props'].includes(key) ? (
-          <span className="flex w-full h-full items-center py-2 pl-3">
-            {this.filterText(key, value, query)}
-          </span>
-        ) : (
-          <>
-            <Link title={`Edit filter: ${formattedFilters[key]}`} className="filter-list-text flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${key}`, search: window.location.search }}>
-              {this.filterText(key, value, query)}
-            </Link>
-            <span className="filter-list-edit hidden h-full w-full px-2 cursor-pointer text-indigo-700 dark:text-indigo-500 items-center">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="1 1 23 23" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-            </span>
-          </>
-        )}
-        <span title={`Remove filter: ${formattedFilters[key]}`} className="filter-list-remove flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center" onClick={() => this.removeFilter(key, history, query)}>
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </span>
+      <span key={key} title={value} className="inline-flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded py-2 px-3 mr-2">
+        {this.filterText(key, value, query)} <b className="ml-1 cursor-pointer hover:text-indigo-500" onClick={() => this.removeFilter(key, history, query)}>✕</b>
       </span>
     )
   }
@@ -233,15 +198,11 @@ class Filters extends React.Component {
 
   renderDropDownContent() {
     const { viewport } = this.state;
-    const { history, query, site } = this.props;
+    const { history, query } = this.props;
 
     return (
       <div className="absolute mt-2 rounded shadow-md z-10" style={{ width: viewport <= 768 ? '320px' : '350px', right: '-5px' }} ref={node => this.dropDownNode = node}>
         <div className="rounded bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 font-medium text-gray-800 dark:text-gray-200 flex flex-col">
-          <Link to={`/${encodeURIComponent(site.domain)}/filter${window.location.search}`} className="group border-b flex border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 md:text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer">
-            <svg className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-200 group-hover:text-indigo-700 dark:group-hover:text-indigo-500 hover:cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-            Add Filter
-          </Link>
           {this.appliedFilters.map((filter) => this.renderDropdownFilter(history, filter, query))}
           <div className="border-t border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 md:text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => this.clearAllFilters(history, query)}>
             Clear All Filters
@@ -278,16 +239,11 @@ class Filters extends React.Component {
   }
 
   renderFilterList() {
-    const { history, query, site } = this.props;
-    const { viewport } = this.state;
+    const { history, query } = this.props;
 
     return (
-      <div id="filters" className="flex flex-grow pl-2 flex-wrap">
+      <div id="filters">
         {(this.appliedFilters.map((filter) => this.renderListFilter(history, filter, query)))}
-        <Link to={`/${encodeURIComponent(site.domain)}/filter${window.location.search}`} className={`button ${viewport <= 768 ? "px-2 mr-1" : "px-3 mr-2"} py-2 cursor-pointer ml-auto text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-900 shadow`}>
-          <svg className={`${viewport <= 768 ? "mr-1" : "mr-2"} h-4 w-4 text-indigo-500`} fill="none" stroke="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-          {viewport <= 768 ? "Filter" : "Add Filter"}
-        </Link>
       </div>
     );
   }
@@ -295,11 +251,15 @@ class Filters extends React.Component {
   render() {
     const { wrapped, viewport } = this.state;
 
-    if (this.appliedFilters.length > 0 && (wrapped === 2 || viewport <= 768)) {
-      return this.renderDropDown();
+    if (this.appliedFilters.length > 0) {
+      if (wrapped === 2 || viewport <= 768) {
+        return this.renderDropDown();
+      }
+
+      return this.renderFilterList();
     }
 
-    return this.renderFilterList();
+    return null;
   }
 }
 

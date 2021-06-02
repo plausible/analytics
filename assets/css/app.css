@@ -310,11 +310,3 @@ iframe[hidden] {
 .pagination-link[disabled] {
   @apply cursor-default bg-gray-100 dark:bg-gray-300 pointer-events-none;
 }
-
-.filter-list-text:hover ~ .filter-list-edit {
-  display: flex;
-}
-
-.filter-list-text:hover ~ .filter-list-remove {
-  display: none;
-}

@@ -47,7 +47,7 @@ class Modal extends React.Component {
       <div className="modal is-open" onClick={this.props.onClick}>
         <div className="modal__overlay">
           <button className="modal__close"></button>
-          <div ref={this.node} className="modal__container dark:bg-gray-800" style={{maxWidth: this.props.maxWidth || '860px'}}>
+          <div ref={this.node} className="modal__container dark:bg-gray-800">
             {this.props.children}
           </div>
 

@@ -55,100 +55,6 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    test "filters pages based on wildards", %{conn: conn, site: site} do
-      filters = Jason.encode!(%{page: "/*re*"})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/pages?period=day&date=2019-01-01&detailed=true&filters=#{
-            filters
-          }"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "time_on_page" => 1,
-                 "bounce_rate" => nil,
-                 "count" => 2,
-                 "pageviews" => 2,
-                 "name" => "/register"
-               },
-               %{
-                 "time_on_page" => nil,
-                 "bounce_rate" => nil,
-                 "count" => 1,
-                 "pageviews" => 1,
-                 "name" => "/irrelevant"
-               }
-             ]
-    end
-
-    test "filters pages based on exclusion", %{conn: conn, site: site} do
-      filters = Jason.encode!(%{page: "!/"})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/pages?period=day&date=2019-01-01&detailed=true&filters=#{
-            filters
-          }"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "time_on_page" => 1,
-                 "bounce_rate" => nil,
-                 "count" => 2,
-                 "pageviews" => 2,
-                 "name" => "/register"
-               },
-               %{
-                 "time_on_page" => nil,
-                 "bounce_rate" => nil,
-                 "count" => 1,
-                 "pageviews" => 1,
-                 "name" => "/contact"
-               },
-               %{
-                 "time_on_page" => nil,
-                 "bounce_rate" => nil,
-                 "count" => 1,
-                 "pageviews" => 1,
-                 "name" => "/irrelevant"
-               }
-             ]
-    end
-
-    test "filters pages based on wildard exclusion", %{conn: conn, site: site} do
-      filters = Jason.encode!(%{page: "!/*re*"})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/pages?period=day&date=2019-01-01&detailed=true&filters=#{
-            filters
-          }"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "time_on_page" => 82800,
-                 "bounce_rate" => 33.0,
-                 "count" => 3,
-                 "pageviews" => 3,
-                 "name" => "/"
-               },
-               %{
-                 "time_on_page" => nil,
-                 "bounce_rate" => nil,
-                 "count" => 1,
-                 "pageviews" => 1,
-                 "name" => "/contact"
-               }
-             ]
-    end
-
     test "returns top pages in realtime report", %{conn: conn, site: site} do
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=realtime")
 
@@ -191,18 +97,6 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                }
              ]
     end
-
-    test "filters based on exclusion for entry pages", %{conn: conn, site: site} do
-      filters = Jason.encode!(%{entry_page: "!/"})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/entry-pages?period=day&date=2019-01-01&filters=#{filters}"
-        )
-
-      assert json_response(conn, 200) == []
-    end
   end
 
   describe "GET /api/stats/:domain/exit-pages" do
@@ -214,18 +108,6 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       assert json_response(conn, 200) == [
                %{"count" => 3, "exits" => 3, "name" => "/", "exit_rate" => 100.0}
              ]
-    end
-
-    test "filters based on exclusion for entry pages", %{conn: conn, site: site} do
-      filters = Jason.encode!(%{exit_page: "!/"})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/exit-pages?period=day&date=2019-01-01&filters=#{filters}"
-        )
-
-      assert json_response(conn, 200) == []
     end
   end
 end

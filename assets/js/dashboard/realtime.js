@@ -33,7 +33,7 @@ class Realtime extends React.Component {
           <div className="items-center justify-between w-full sm:flex">
             <div className="flex items-center w-full mb-2 sm:mb-0">
               <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} />
-              <Filters site={this.props.site} query={this.props.query} history={this.props.history} />
+              <Filters query={this.props.query} history={this.props.history} />
             </div>
             <Datepicker site={this.props.site} query={this.props.query} />
           </div>

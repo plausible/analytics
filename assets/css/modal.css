@@ -38,6 +38,7 @@
 .modal__container {
   background-color: #fff;
   padding: 1rem 2rem;
+  max-width: 860px;
   border-radius: 4px;
   margin: 50px auto;
   box-sizing: border-box;

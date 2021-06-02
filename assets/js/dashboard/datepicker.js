@@ -161,10 +161,10 @@ class DatePicker extends React.Component {
 
     const leftClasses = `flex items-center px-2 border-r border-gray-300 rounded-l
       dark:border-gray-500 dark:text-gray-100 ${
-      disabledLeft ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-200 dark:hover:bg-gray-900"
+      disabledLeft ? "bg-gray-200 dark:bg-gray-900" : ""
     }`;
     const rightClasses = `flex items-center px-2 rounded-r dark:text-gray-100 ${
-      disabledRight ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-200 dark:hover:bg-gray-900"
+      disabledRight ? "bg-gray-200 dark:bg-gray-900" : ""
     }`;
     return (
       <div className="flex rounded shadow bg-white mr-4 cursor-pointer dark:bg-gray-800">
@@ -242,7 +242,7 @@ class DatePicker extends React.Component {
           onKeyPress={this.open}
           className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-4
           pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800
-          dark:text-gray-200 h-full hover:bg-gray-200 dark:hover:bg-gray-900"
+          dark:text-gray-200 h-full"
           tabIndex="0"
           role="button"
           aria-haspopup="true"
@@ -312,7 +312,7 @@ class DatePicker extends React.Component {
         to={{from: false, to: false, period, ...opts}}
         onClick={this.close.bind(this)}
         query={this.props.query}
-        className={`${boldClass  } px-4 py-2 md:text-sm leading-tight hover:bg-gray-200
+        className={`${boldClass  } px-4 py-2 md:text-sm leading-tight hover:bg-gray-100
           dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 flex items-center justify-between`}
       >
         {text}
