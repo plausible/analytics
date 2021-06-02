@@ -308,5 +308,5 @@ iframe[hidden] {
 }
 
 .pagination-link[disabled] {
-  @apply cursor-default bg-gray-100 pointer-events-none;
+  @apply cursor-default bg-gray-100 dark:bg-gray-300 pointer-events-none;
 }
