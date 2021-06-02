@@ -8,6 +8,13 @@ defmodule PlausibleWeb.SiteController do
   def index(conn, params) do
     user = conn.assigns[:current_user]
 
+    invitations =
+      Repo.all(
+        from i in Plausible.Auth.Invitation,
+          where: i.email == ^user.email
+      )
+      |> Repo.preload(:site)
+
     {sites, pagination} =
       Repo.paginate(
         from(s in Plausible.Site,
@@ -19,8 +26,15 @@ defmodule PlausibleWeb.SiteController do
         params
       )
 
-    visitors = Plausible.Stats.Clickhouse.last_24h_visitors(sites)
-    render(conn, "index.html", sites: sites, visitors: visitors, pagination: pagination)
+    visitors =
+      Plausible.Stats.Clickhouse.last_24h_visitors(sites ++ Enum.map(invitations, & &1.site))
+
+    render(conn, "index.html",
+      invitations: invitations,
+      sites: sites,
+      visitors: visitors,
+      pagination: pagination
+    )
   end
 
   def new(conn, _params) do
@@ -146,6 +160,7 @@ defmodule PlausibleWeb.SiteController do
       Sites.get_for_user!(conn.assigns[:current_user].id, website)
       |> Repo.preload(:custom_domain)
       |> Repo.preload(memberships: :user)
+      |> Repo.preload(:invitations)
 
     conn
     |> assign(:skip_plausible_tracking, true)

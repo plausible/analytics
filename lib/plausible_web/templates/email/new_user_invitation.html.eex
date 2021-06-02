@@ -1,0 +1,11 @@
+Hey,
+<br /><br />
+<%= @inviting_user.email %> has granted you access to the <%= @site.domain %> site on Plausible Analytics.
+<%= link("Click here", to: Routes.auth_path(PlausibleWeb.Endpoint, :register_form), invitation: @invitation.invitation_id) %> to create your account.
+<br /><br />
+Plausible is a lightweight and open-source website analytics tool. We hope you like our simple and ethical approach to tracking website visitors.
+<br /><br />
+Thanks,<br />
+Uku and Marko<br />
+--<br />
+<%= plausible_url() %><br />

@@ -70,8 +70,67 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
+  def register_from_invitation_form(conn, %{"invitation_id" => invitation_id}) do
+    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) do
+      conn
+      |> redirect(to: "/login")
+    else
+      invitation = Repo.get_by(Plausible.Auth.Invitation, invitation_id: invitation_id)
+      changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
+
+      render(conn, "register_from_invitation_form.html",
+        changeset: changeset,
+        invitation: invitation,
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
+      )
+    end
+  end
+
+  def register_from_invitation(conn, %{"invitation_id" => invitation_id} = params) do
+    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) do
+      conn
+      |> redirect(to: "/login")
+    else
+      invitation = Repo.get_by(Plausible.Auth.Invitation, invitation_id: invitation_id)
+      user = Plausible.Auth.User.new(%Plausible.Auth.User{}, params["user"])
+
+      if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
+        case Repo.insert(user) do
+          {:ok, user} ->
+            code = Auth.issue_email_verification(user)
+            Logger.info("VERIFICATION CODE: #{code}")
+            email_template = PlausibleWeb.Email.activation_email(user, code)
+            Plausible.Mailer.send_email(email_template)
+
+            conn
+            |> put_session(:current_user_id, user.id)
+            |> put_resp_cookie("logged_in", "true",
+              http_only: false,
+              max_age: 60 * 60 * 24 * 365 * 5000
+            )
+            |> redirect(to: "/activate")
+
+          {:error, changeset} ->
+            render(conn, "register_from_invitation_form.html",
+              invitation: invitation,
+              changeset: changeset,
+              layout: {PlausibleWeb.LayoutView, "focus.html"}
+            )
+        end
+      else
+        render(conn, "register_from_invitation_form.html",
+          invitation: invitation,
+          changeset: user,
+          captcha_error: "Please complete the captcha to register",
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+      end
+    end
+  end
+
   def activate_form(conn, _params) do
     user = conn.assigns[:current_user]
+    invitation = Repo.get_by(Plausible.Auth.Invitation, email: user.email)
 
     has_code =
       Repo.exists?(
@@ -81,17 +140,23 @@ defmodule PlausibleWeb.AuthController do
 
     render(conn, "activate.html",
       has_pin: has_code,
+      invitation: invitation,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
 
   def activate(conn, %{"code" => code}) do
     user = conn.assigns[:current_user]
+    invitation = Repo.get_by(Plausible.Auth.Invitation, email: user.email)
     {code, ""} = Integer.parse(code)
 
     case Auth.verify_email(user, code) do
       :ok ->
-        redirect(conn, to: "/sites/new")
+        if invitation do
+          redirect(conn, to: "/sites")
+        else
+          redirect(conn, to: "/sites/new")
+        end
 
       {:error, :incorrect} ->
         render(conn, "activate.html",

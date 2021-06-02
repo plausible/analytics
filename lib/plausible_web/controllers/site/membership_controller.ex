@@ -29,13 +29,27 @@ defmodule PlausibleWeb.Site.MembershipController do
       |> put_flash(:success, "#{email} now has access to the site as a #{role}")
       |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
     else
-      render(
-        conn,
-        "invite_member_form.html",
-        site: site,
-        error: "User does not exist",
-        layout: {PlausibleWeb.LayoutView, "focus.html"}
-      )
+      invitation =
+        Plausible.Auth.Invitation.new(%{
+          email: email,
+          role: role,
+          site_id: site.id
+        })
+        |> Repo.insert!()
+
+      email_template =
+        PlausibleWeb.Email.new_user_invitation(
+          email,
+          conn.assigns[:current_user],
+          site,
+          invitation
+        )
+
+      Plausible.Mailer.send_email(email_template)
+
+      conn
+      |> put_flash(:success, "#{email} now has access to the site as a #{role}")
+      |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
     end
   end
 
