@@ -87,7 +87,7 @@ defmodule Plausible.MixProject do
       {:oban, "~> 2.0"},
       {:sshex, "2.2.1"},
       {:geolix, "~> 1.0"},
-      {:clickhouse_ecto, path: "/home/uku/plausible/clickhouse_ecto"},
+      {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
       {:geolix_adapter_mmdb2, "~> 0.5.0"},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:cachex, "~> 3.3"},
