@@ -504,6 +504,38 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert pageview.country_code == "US"
   end
 
+  test "works with ipv6 without port in x-forwarded-for", %{conn: conn} do
+    params = %{
+      name: "pageview",
+      domain: "external-controller-test-x-forwarded-for-ipv6.com",
+      url: "http://gigride.live/"
+    }
+
+    conn
+    |> put_req_header("x-forwarded-for", "1:1:1:1:1:1:1:1")
+    |> post("/api/event", params)
+
+    pageview = get_event("external-controller-test-x-forwarded-for-ipv6.com")
+
+    assert pageview.country_code == "US"
+  end
+
+  test "works with ipv6 with a port number in x-forwarded-for", %{conn: conn} do
+    params = %{
+      name: "pageview",
+      domain: "external-controller-test-x-forwarded-for-ipv6-port.com",
+      url: "http://gigride.live/"
+    }
+
+    conn
+    |> put_req_header("x-forwarded-for", "[1:1:1:1:1:1:1:1]:123")
+    |> post("/api/event", params)
+
+    pageview = get_event("external-controller-test-x-forwarded-for-ipv6-port.com")
+
+    assert pageview.country_code == "US"
+  end
+
   test "uses cloudflare's special header for client IP address if present", %{conn: conn} do
     params = %{
       name: "pageview",
