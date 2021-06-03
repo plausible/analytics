@@ -303,3 +303,5 @@ config :logger, Sentry.LoggerBackend,
   capture_log_messages: true,
   level: :error,
   excluded_domains: []
+
+config :tzdata, :data_dir, System.get_env("STORAGE_DIR", "priv")
