@@ -74,10 +74,11 @@ defmodule Plausible.Sites do
     )
   end
 
-  def is_owner?(user_id, site) do
-    Repo.exists?(
+  def role(user_id, site) do
+    Repo.one(
       from sm in Plausible.Site.Membership,
-        where: sm.user_id == ^user_id and sm.site_id == ^site.id
+        where: sm.user_id == ^user_id and sm.site_id == ^site.id,
+        select: sm.role
     )
   end
 

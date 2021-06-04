@@ -21,10 +21,15 @@ defmodule PlausibleWeb.SiteController do
           join: sm in Plausible.Site.Membership,
           on: sm.site_id == s.id,
           where: sm.user_id == ^user.id,
-          order_by: s.domain
+          order_by: s.domain,
+          preload: [memberships: sm]
         ),
         params
       )
+
+    user_owns_sites =
+      Enum.any?(sites, fn site -> List.first(site.memberships).role == :owner end) ||
+        Plausible.Auth.user_owns_sites?(user)
 
     visitors =
       Plausible.Stats.Clickhouse.last_24h_visitors(sites ++ Enum.map(invitations, & &1.site))
@@ -33,7 +38,8 @@ defmodule PlausibleWeb.SiteController do
       invitations: invitations,
       sites: sites,
       visitors: visitors,
-      pagination: pagination
+      pagination: pagination,
+      needs_to_upgrade: user_owns_sites && Plausible.Billing.needs_to_upgrade?(user)
     )
   end
 

@@ -30,6 +30,10 @@ defmodule Plausible.Factory do
     }
   end
 
+  def site_membership_factory do
+    %Plausible.Site.Membership{}
+  end
+
   def ch_session_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 

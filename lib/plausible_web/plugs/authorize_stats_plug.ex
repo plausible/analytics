@@ -17,16 +17,17 @@ defmodule PlausibleWeb.AuthorizeStatsPlug do
       PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt
     else
       user_id = get_session(conn, :current_user_id)
+      role = user_id && Plausible.Sites.role(user_id, site)
 
       can_access =
         site.public ||
-          (user_id && Plausible.Sites.is_owner?(user_id, site)) ||
+          (user_id && role) ||
           (shared_link_auth && shared_link_record && shared_link_record.site_id == site.id)
 
       if !can_access do
         PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt
       else
-        assign(conn, :site, site)
+        merge_assigns(conn, site: site, current_user_role: role)
       end
     end
   end
