@@ -1,6 +1,11 @@
 <%= form_for @conn, Routes.membership_path(@conn, :invite_member, @site.domain), [class: "max-w-lg w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
   <h2 class="text-xl font-black dark:text-gray-100">Invite member to <%= @site.domain %></h2>
 
+  <p class="mt-4 max-w-2xl text-sm text-gray-500">
+    Enter their email address and role. We will contact them over email to offer them access to
+    <%= @site.domain %> analytics.
+  </p>
+
   <%= if @conn.assigns[:error] do %>
     <div class="text-red-500 text-xs italic mt-4"><%= @conn.assigns[:error] %></div>
   <% end %>

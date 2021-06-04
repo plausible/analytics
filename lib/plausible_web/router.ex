@@ -200,6 +200,8 @@ defmodule PlausibleWeb.Router do
     get "/sites/:website/memberships/invite", Site.MembershipController, :invite_member_form
     post "/sites/:website/memberships/invite", Site.MembershipController, :invite_member
     put "/sites/memberships/:id/role/:new_role", Site.MembershipController, :update_role
+    post "/sites/invitations/:invitation_id/accept", Site.MembershipController, :accept_invitation
+    post "/sites/invitations/:invitation_id/reject", Site.MembershipController, :reject_invitation
 
     get "/sites/:website/weekly-report/unsubscribe", UnsubscribeController, :weekly_report
     get "/sites/:website/monthly-report/unsubscribe", UnsubscribeController, :monthly_report

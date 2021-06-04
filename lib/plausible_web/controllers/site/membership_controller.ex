@@ -1,8 +1,10 @@
 defmodule PlausibleWeb.Site.MembershipController do
   use PlausibleWeb, :controller
   use Plausible.Repo
+  alias Ecto.Multi
   alias Plausible.Sites
   alias Plausible.Site.Membership
+  alias Plausible.Auth.Invitation
 
   plug PlausibleWeb.RequireAccountPlug
 
@@ -30,7 +32,7 @@ defmodule PlausibleWeb.Site.MembershipController do
       |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
     else
       invitation =
-        Plausible.Auth.Invitation.new(%{
+        Invitation.new(%{
           email: email,
           role: role,
           site_id: site.id
@@ -63,5 +65,50 @@ defmodule PlausibleWeb.Site.MembershipController do
     conn
     |> put_flash(:success, "#{membership.user.name} is now a #{new_role}")
     |> redirect(to: "/#{URI.encode_www_form(membership.site.domain)}/settings/general")
+  end
+
+  def accept_invitation(conn, %{"invitation_id" => invitation_id}) do
+    invitation =
+      Repo.get_by!(Invitation, invitation_id: invitation_id)
+      |> Repo.preload(:site)
+
+    user = conn.assigns[:current_user]
+
+    membership_changeset =
+      Membership.changeset(%Membership{}, %{
+        user_id: user.id,
+        site_id: invitation.site.id,
+        role: invitation.role
+      })
+
+    result =
+      Multi.new()
+      |> Multi.insert(:membership, membership_changeset)
+      |> Multi.delete(:invitation, invitation)
+      |> Repo.transaction()
+
+    case result do
+      {:ok, _} ->
+        conn
+        |> put_flash(:success, "You now have access to #{invitation.site.domain}")
+        |> redirect(to: "/#{URI.encode_www_form(invitation.site.domain)}")
+
+      {:error, _} ->
+        conn
+        |> put_flash(:error, "Something went wrong, please try again")
+        |> redirect(to: "/sites")
+    end
+  end
+
+  def reject_invitation(conn, %{"invitation_id" => invitation_id}) do
+    invitation =
+      Repo.get_by!(Invitation, invitation_id: invitation_id)
+      |> Repo.preload(:site)
+
+    Repo.delete!(invitation)
+
+    conn
+    |> put_flash(:success, "You have rejected the invitation to #{invitation.site.domain}")
+    |> redirect(to: "/sites")
   end
 end

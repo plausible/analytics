@@ -36,7 +36,7 @@ defmodule PlausibleWeb.AuthController do
       conn
       |> redirect(to: "/login")
     else
-      user = Plausible.Auth.User.new(%Plausible.Auth.User{}, params["user"])
+      user = Plausible.Auth.User.new(params["user"])
 
       if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
         case Repo.insert(user) do
@@ -92,7 +92,7 @@ defmodule PlausibleWeb.AuthController do
       |> redirect(to: "/login")
     else
       invitation = Repo.get_by(Plausible.Auth.Invitation, invitation_id: invitation_id)
-      user = Plausible.Auth.User.new(%Plausible.Auth.User{}, params["user"])
+      user = Plausible.Auth.User.new(params["user"])
 
       if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
         case Repo.insert(user) do
