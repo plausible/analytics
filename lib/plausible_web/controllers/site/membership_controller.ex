@@ -24,11 +24,15 @@ defmodule PlausibleWeb.Site.MembershipController do
     user = Plausible.Auth.find_user_by(email: email)
 
     if user do
-      Membership.changeset(%Membership{}, %{site_id: site.id, user_id: user.id, role: role})
+      Invitation.new(%{
+        email: email,
+        role: role,
+        site_id: site.id
+      })
       |> Repo.insert!()
 
       conn
-      |> put_flash(:success, "#{email} now has access to the site as a #{role}")
+      |> put_flash(:success, "#{email} has been invited to #{site_domain} as a #{role}")
       |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
     else
       invitation =
@@ -50,7 +54,7 @@ defmodule PlausibleWeb.Site.MembershipController do
       Plausible.Mailer.send_email(email_template)
 
       conn
-      |> put_flash(:success, "#{email} now has access to the site as a #{role}")
+      |> put_flash(:success, "#{email} has been invited to #{site_domain} as a #{role}")
       |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
     end
   end
