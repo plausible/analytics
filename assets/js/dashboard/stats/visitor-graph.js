@@ -26,6 +26,7 @@ function buildDataSet(plot, present_index, ctx, label) {
         borderColor: 'rgba(101,116,205)',
         pointBackgroundColor: 'rgba(101,116,205)',
         backgroundColor: gradient,
+        fill: true
       },
       {
         label: label,
@@ -35,6 +36,7 @@ function buildDataSet(plot, present_index, ctx, label) {
         borderColor: 'rgba(101,116,205)',
         pointBackgroundColor: 'rgba(101,116,205)',
         backgroundColor: gradient,
+        fill: true
     }]
   } else {
     return [{
@@ -44,6 +46,7 @@ function buildDataSet(plot, present_index, ctx, label) {
       borderColor: 'rgba(101,116,205)',
       pointBackgroundColor: 'rgba(101,116,205)',
       backgroundColor: gradient,
+      fill: true
     }]
   }
 }
@@ -64,7 +67,7 @@ const DAYS_ABBREV = [
 ]
 
 function dateFormatter(interval, longForm) {
-  return function(isoDate) {
+  return function(isoDate, index, ticks) {
     let date = new Date(isoDate)
 
     if (interval === 'month') {
@@ -170,12 +173,10 @@ class LineGraph extends React.Component {
             }
           },
           x: {
-            grid: {
-              display: false,
-            },
+            grid: {display: false},
             ticks: {
               maxTicksLimit: 8,
-              callback: dateFormatter(graphData.interval),
+              callback: function(val, index, ticks) { return dateFormatter(graphData.interval)(this.getLabelForValue(val)) },
               color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             }
           }

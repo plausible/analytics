@@ -50,7 +50,8 @@
     "eslint-plugin-react-hooks": "^4.2.0",
     "stylelint": "^13.8.0",
     "stylelint-config-prettier": "^8.0.2",
-    "stylelint-config-standard": "^20.0.0"
+    "stylelint-config-standard": "^20.0.0",
+    "webpack-bundle-analyzer": "^4.4.2"
   },
   "name": "assets"
 }
