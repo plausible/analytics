@@ -13,13 +13,8 @@ defmodule PlausibleWeb.LayoutView do
     PlausibleWeb.Endpoint.url()
   end
 
-  def home_dest(conn) do
-    if conn.assigns[:current_user] do
-      "/sites"
-    else
-      "/"
-    end
-  end
+  def home_dest(nil), do: "/"
+  def home_dest(_), do: "/sites"
 
   def settings_tabs() do
     [

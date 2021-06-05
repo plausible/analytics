@@ -112,7 +112,8 @@ config :plausible, :selfhost,
 config :plausible, PlausibleWeb.Endpoint,
   url: [host: base_url.host, scheme: base_url.scheme, port: base_url.port],
   http: [port: port],
-  secret_key_base: secret_key_base
+  secret_key_base: secret_key_base,
+  live_view: [signing_salt: secret_key_base]
 
 case System.get_env("DATABASE_SOCKET_DIR", "") do
   "" ->
