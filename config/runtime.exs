@@ -83,6 +83,10 @@ hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
 log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
 is_selfhost = String.to_existing_atom(System.get_env("SELFHOST", "true"))
 {site_limit, ""} = Integer.parse(System.get_env("SITE_LIMIT", "20"))
+
+site_limit_exempt =
+  System.get_env("SITE_LIMIT_EXEMPT", "") |> String.split(",") |> Enum.map(&String.trim/1)
+
 disable_cron = String.to_existing_atom(System.get_env("DISABLE_CRON", "false"))
 
 {user_agent_cache_limit, ""} = Integer.parse(System.get_env("USER_AGENT_CACHE_LIMIT", "1000"))
@@ -98,6 +102,7 @@ config :plausible,
   mailer_email: mailer_email,
   admin_emails: admin_emails,
   site_limit: site_limit,
+  site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost
 
 config :plausible, :selfhost,
@@ -304,4 +309,4 @@ config :logger, Sentry.LoggerBackend,
   level: :error,
   excluded_domains: []
 
-config :tzdata, :data_dir, System.get_env("STORAGE_DIR", "priv")
+config :tzdata, :data_dir, System.get_env("STORAGE_DIR", Application.app_dir(:tzdata, "priv"))

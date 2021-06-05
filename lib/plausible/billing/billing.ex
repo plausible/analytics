@@ -198,6 +198,7 @@ defmodule Plausible.Billing do
     cond do
       Timex.before?(user.inserted_at, @limit_accounts_since) -> nil
       Application.get_env(:plausible, :is_selfhost) -> nil
+      user.email in Application.get_env(:plausible, :site_limit_exempt) -> nil
       true -> Application.get_env(:plausible, :site_limit)
     end
   end
