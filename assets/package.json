@@ -16,7 +16,7 @@
     "alpinejs": "^2.7.3",
     "autoprefixer": "^9.8.6",
     "babel-loader": "^8.1.0",
-    "chart.js": "^2.9.3",
+    "chart.js": "^3.3.2",
     "copy-webpack-plugin": "^6.0.3",
     "css-loader": "^3.6.0",
     "datamaps": "^0.5.9",
@@ -50,7 +50,8 @@
     "eslint-plugin-react-hooks": "^4.2.0",
     "stylelint": "^13.8.0",
     "stylelint-config-prettier": "^8.0.2",
-    "stylelint-config-standard": "^20.0.0"
+    "stylelint-config-standard": "^20.0.0",
+    "webpack-bundle-analyzer": "^4.4.2"
   },
   "name": "assets"
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
-import Chart from 'chart.js'
+import Chart from 'chart.js/auto';
 import { eventName, navigateToQuery } from '../query'
 import numberFormatter, {durationFormatter} from '../number-formatter'
 import * as api from '../api'
@@ -26,6 +26,7 @@ function buildDataSet(plot, present_index, ctx, label) {
         borderColor: 'rgba(101,116,205)',
         pointBackgroundColor: 'rgba(101,116,205)',
         backgroundColor: gradient,
+        fill: true
       },
       {
         label: label,
@@ -35,6 +36,7 @@ function buildDataSet(plot, present_index, ctx, label) {
         borderColor: 'rgba(101,116,205)',
         pointBackgroundColor: 'rgba(101,116,205)',
         backgroundColor: gradient,
+        fill: true
     }]
   } else {
     return [{
@@ -44,6 +46,7 @@ function buildDataSet(plot, present_index, ctx, label) {
       borderColor: 'rgba(101,116,205)',
       pointBackgroundColor: 'rgba(101,116,205)',
       backgroundColor: gradient,
+      fill: true
     }]
   }
 }
@@ -64,7 +67,7 @@ const DAYS_ABBREV = [
 ]
 
 function dateFormatter(interval, longForm) {
-  return function(isoDate) {
+  return function(isoDate, index, ticks) {
     let date = new Date(isoDate)
 
     if (interval === 'month') {
@@ -113,75 +116,70 @@ class LineGraph extends React.Component {
       },
       options: {
         animation: false,
-        legend: {display: false},
+        plugins: {
+          legend: {display: false},
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            titleFont: {size: 18},
+            footerFont: {size: 14},
+            bodyFont: {size: 14},
+            backgroundColor: 'rgba(25, 30, 56)',
+            titleMarginBottom: 8,
+            bodySpacing: 6,
+            footerMarginTop: 8,
+            padding: {x: 10, y: 10},
+            multiKeyBackground: 'none',
+            callbacks: {
+              title: function(dataPoints) {
+                const data = dataPoints[0]
+                return dateFormatter(graphData.interval, true)(data.label)
+              },
+              beforeBody: function() {
+                this.drawnLabels = {}
+              },
+              label: function(item) {
+                const dataset = item.dataset
+                if (!this.drawnLabels[dataset.label]) {
+                  this.drawnLabels[dataset.label] = true
+                  const pluralizedLabel = item.formattedValue === "1" ? dataset.label.slice(0, -1) : dataset.label
+                  return ` ${item.formattedValue} ${pluralizedLabel}`
+                }
+              },
+              footer: function(dataPoints) {
+                if (graphData.interval === 'month') {
+                  return 'Click to view month'
+                } else if (graphData.interval === 'date') {
+                  return 'Click to view day'
+                }
+              }
+            }
+          },
+        },
         responsive: true,
         elements: {line: {tension: 0}, point: {radius: 0}},
         onClick: this.onClick.bind(this),
-        tooltips: {
-          mode: 'index',
-          intersect: false,
-          xPadding: 10,
-          yPadding: 10,
-          titleFontSize: 18,
-          footerFontSize: 14,
-          bodyFontSize: 14,
-          backgroundColor: 'rgba(25, 30, 56)',
-          titleMarginBottom: 8,
-          bodySpacing: 6,
-          footerMarginTop: 8,
-          xPadding: 16,
-          yPadding: 12,
-          multiKeyBackground: 'none',
-          callbacks: {
-            title: function(dataPoints) {
-              const data = dataPoints[0]
-              return dateFormatter(graphData.interval, true)(data.xLabel)
-            },
-            beforeBody: function() {
-              this.drawnLabels = {}
-            },
-            label: function(item) {
-              const dataset = this._data.datasets[item.datasetIndex]
-              if (!this.drawnLabels[dataset.label]) {
-                this.drawnLabels[dataset.label] = true
-                const pluralizedLabel = item.yLabel === 1 ? dataset.label.slice(0, -1) : dataset.label
-                return ` ${item.yLabel} ${pluralizedLabel}`
-              }
-            },
-            footer: function(dataPoints) {
-              if (graphData.interval === 'month') {
-                return 'Click to view month'
-              } else if (graphData.interval === 'date') {
-                return 'Click to view day'
-              }
-            }
-          }
-        },
         scales: {
-          yAxes: [{
+          y: {
+            beginAtZero: true,
             ticks: {
               callback: numberFormatter,
-              beginAtZero: true,
-              autoSkip: true,
               maxTicksLimit: 8,
-              fontColor: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
+              color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             },
-            gridLines: {
+            grid: {
               zeroLineColor: 'transparent',
               drawBorder: false,
             }
-          }],
-          xAxes: [{
-            gridLines: {
-              display: false,
-            },
+          },
+          x: {
+            grid: {display: false},
             ticks: {
-              autoSkip: true,
               maxTicksLimit: 8,
-              callback: dateFormatter(graphData.interval),
-              fontColor: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
+              callback: function(val, index, ticks) { return dateFormatter(graphData.interval)(this.getLabelForValue(val)) },
+              color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             }
-          }]
+          }
         }
       }
     });
@@ -211,7 +209,8 @@ class LineGraph extends React.Component {
 
   onClick(e) {
     const element = this.chart.getElementsAtEventForMode(e, 'index', {intersect: false})[0]
-    const date = element._chart.config.data.labels[element._index]
+    const date = this.chart.data.labels[element.index]
+
     if (this.props.graphData.interval === 'month') {
       navigateToQuery(
         this.props.history,
