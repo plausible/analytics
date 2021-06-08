@@ -31,3 +31,6 @@ Make sure Docker, Elixir, Erlang and Node.js are all installed on your developme
 2. Stop and remove the Clickhouse container with `make clickhouse-stop`.
 
 Volumes are preserved. You'll find that the Postgres and Clickhouse state are retained when you bring them up again the next time: no need to re-register and so on.
+
+Note: Since we are deleting the containers, be careful when deleting volumes with `docker volume prune`. You might accidentally delete the database and would have to go through re-registration process.
+
