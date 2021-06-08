@@ -203,6 +203,38 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert get_session(conn, :current_user_id) == nil
       assert html_response(conn, 200) =~ "Enter your email and password"
     end
+
+    test "limits login attempts to 5 per minute" do
+      user = insert(:user, password: "password")
+
+      build_conn()
+      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> post("/login", email: user.email, password: "wrong")
+
+      build_conn()
+      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> post("/login", email: user.email, password: "wrong")
+
+      build_conn()
+      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> post("/login", email: user.email, password: "wrong")
+
+      build_conn()
+      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> post("/login", email: user.email, password: "wrong")
+
+      build_conn()
+      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> post("/login", email: user.email, password: "wrong")
+
+      conn =
+        build_conn()
+        |> put_req_header("x-forwarded-for", "1.1.1.1")
+        |> post("/login", email: user.email, password: "wrong")
+
+      assert get_session(conn, :current_user_id) == nil
+      assert html_response(conn, 429) =~ "Too many login attempts"
+    end
   end
 
   describe "GET /password/request-reset" do

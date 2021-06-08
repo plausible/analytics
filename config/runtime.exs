@@ -50,6 +50,9 @@ app_version = System.get_env("APP_VERSION", "0.0.1")
 ch_db_url =
   System.get_env("CLICKHOUSE_DATABASE_URL", "http://plausible_events_db:8123/plausible_events_db")
 
+{ch_flush_interval_ms, ""} = Integer.parse(System.get_env("CLICKHOUSE_FLUSH_INTERVAL_MS", "5000"))
+{ch_max_buffer_size, ""} = Integer.parse(System.get_env("CLICKHOUSE_MAX_BUFFER_SIZE", "10000"))
+
 ### Mandatory params End
 
 sentry_dsn = System.get_env("SENTRY_DSN")
@@ -78,9 +81,12 @@ disable_registration = String.to_existing_atom(System.get_env("DISABLE_REGISTRAT
 hcaptcha_sitekey = System.get_env("HCAPTCHA_SITEKEY")
 hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
 log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
-log_format = System.get_env("LOG_FORMAT", "elixir")
 is_selfhost = String.to_existing_atom(System.get_env("SELFHOST", "true"))
 {site_limit, ""} = Integer.parse(System.get_env("SITE_LIMIT", "20"))
+
+site_limit_exempt =
+  System.get_env("SITE_LIMIT_EXEMPT", "") |> String.split(",") |> Enum.map(&String.trim/1)
+
 disable_cron = String.to_existing_atom(System.get_env("DISABLE_CRON", "false"))
 
 {user_agent_cache_limit, ""} = Integer.parse(System.get_env("USER_AGENT_CACHE_LIMIT", "1000"))
@@ -96,6 +102,7 @@ config :plausible,
   mailer_email: mailer_email,
   admin_emails: admin_emails,
   site_limit: site_limit,
+  site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost
 
 config :plausible, :selfhost,
@@ -107,7 +114,15 @@ config :plausible, PlausibleWeb.Endpoint,
   http: [port: port],
   secret_key_base: secret_key_base
 
-config :plausible, Plausible.Repo, url: db_url
+case System.get_env("DATABASE_SOCKET_DIR", "") do
+  "" ->
+    config :plausible, Plausible.Repo, url: db_url
+
+  x ->
+    config :plausible, Plausible.Repo,
+      socket_dir: x,
+      database: System.get_env("DATABASE_NAME")
+end
 
 config :sentry,
   dsn: sentry_dsn,
@@ -130,7 +145,9 @@ config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
   queue_target: 500,
   queue_interval: 2000,
-  url: ch_db_url
+  url: ch_db_url,
+  flush_interval_ms: ch_flush_interval_ms,
+  max_buffer_size: ch_max_buffer_size
 
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
@@ -251,6 +268,9 @@ config :plausible, :user_agent_cache,
   limit: user_agent_cache_limit,
   stats: user_agent_cache_stats
 
+config :hammer,
+  backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 4, cleanup_interval_ms: 60_000 * 10]}
+
 config :kaffy,
   otp_app: :plausible,
   ecto_repo: Plausible.Repo,
@@ -280,22 +300,13 @@ if config_env() != :test && geolite2_country_db do
     ]
 end
 
-logger_backends = %{
-  "elixir" => [:console],
-  "json" => [Ink]
-}
-
 config :logger,
   level: log_level,
-  backends: logger_backends[log_format]
+  backends: [:console]
 
 config :logger, Sentry.LoggerBackend,
   capture_log_messages: true,
   level: :error,
   excluded_domains: []
 
-if log_format == "json" do
-  config :logger, Ink,
-    name: "plausible",
-    level: log_level
-end
+config :tzdata, :data_dir, System.get_env("STORAGE_DIR", Application.app_dir(:tzdata, "priv"))
