@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 export default function MoreLink({site, list, endpoint}) {
   if (list.length > 0) {
     return (
-      <div className="text-center w-full absolute bottom-0 left-0 pb-3">
+      <div className="text-center w-full more-link py-3 md:pb-3 md:pt-0">
         <Link
           to={`/${encodeURIComponent(site.domain)}/${endpoint}${window.location.search}`}
           // eslint-disable-next-line max-len

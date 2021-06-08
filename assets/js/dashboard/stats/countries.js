@@ -148,7 +148,7 @@ class Countries extends React.Component {
 
   render() {
     return (
-      <div className="relative p-4 bg-white rounded shadow-xl stats-item dark:bg-gray-825" style={{height: '436px'}}>
+      <div className="relative p-4 bg-white rounded shadow-xl stats-item dark:bg-gray-825">
         <LazyLoader onVisible={this.onVisible}>
           { this.state.loading && <div className="mx-auto my-32 loading"><div></div></div> }
           <FadeIn show={!this.state.loading}>

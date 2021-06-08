@@ -106,7 +106,9 @@ class ScreenSizes extends React.Component {
     if (this.state.sizes && this.state.sizes.length > 0) {
       return (
         <React.Fragment>
-          <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500">
+          <div
+            className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500"
+          >
             <span>Screen size</span>
             <span>{ this.label() }</span>
           </div>
@@ -125,9 +127,9 @@ class ScreenSizes extends React.Component {
 
   render() {
     return (
-      <LazyLoader onVisible={this.onVisible}>
+      <LazyLoader onVisible={this.onVisible} className="stats-item__main">
         { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
+        <FadeIn show={!this.state.loading} class="stats-item__contents">
           { this.renderList() }
         </FadeIn>
       </LazyLoader>
@@ -202,9 +204,10 @@ export default class Devices extends React.Component {
 
   render() {
     return (
-      <div className="stats-item">
-        <div className="relative p-4 bg-white rounded shadow-xl dark:bg-gray-825" style={{height: '436px'}}>
-
+      <div className="stats-item stats-item--has-header">
+        <div
+          className="stats-item__header relative p-4 bg-white rounded shadow-xl dark:bg-gray-825"
+        >
           <div className="flex justify-between w-full">
             <h3 className="font-bold dark:text-gray-100">Devices</h3>
             <ul className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
