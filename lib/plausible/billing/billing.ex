@@ -135,8 +135,8 @@ defmodule Plausible.Billing do
     pageviews + custom_events
   end
 
-  defp get_usage_for_billing_cycle(user, cycle) do
-    domains = Enum.map(user.sites, & &1.domain)
+  defp get_usage_for_billing_cycle(sites, cycle) do
+    domains = Enum.map(sites, & &1.domain)
 
     ClickhouseRepo.one(
       from e in "events",
@@ -149,11 +149,11 @@ defmodule Plausible.Billing do
 
   def last_two_billing_months_usage(user, today \\ Timex.today()) do
     {first, second} = last_two_billing_cycles(user, today)
-    user = Repo.preload(user, :sites)
+    sites = Plausible.Sites.owned_by(user)
 
     {
-      get_usage_for_billing_cycle(user, first),
-      get_usage_for_billing_cycle(user, second)
+      get_usage_for_billing_cycle(sites, first),
+      get_usage_for_billing_cycle(sites, second)
     }
   end
 
@@ -178,9 +178,9 @@ defmodule Plausible.Billing do
   end
 
   def usage_breakdown(user) do
-    user = Repo.preload(user, :sites)
+    sites = Plausible.Sites.owned_by(user)
 
-    Enum.reduce(user.sites, {0, 0}, fn site, {pageviews, custom_events} ->
+    Enum.reduce(sites, {0, 0}, fn site, {pageviews, custom_events} ->
       usage = Plausible.Stats.Clickhouse.usage(site)
 
       {pageviews + Map.get(usage, "pageviews", 0),

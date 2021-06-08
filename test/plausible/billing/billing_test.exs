@@ -17,6 +17,26 @@ defmodule Plausible.BillingTest do
 
       assert Billing.usage(user) == 3
     end
+
+    test "only counts usage from sites where the user is the owner" do
+      user = insert(:user)
+
+      insert(:site,
+        domain: "site-with-no-views.com",
+        memberships: [
+          build(:site_membership, user: user, role: :owner)
+        ]
+      )
+
+      insert(:site,
+        domain: "test-site.com",
+        memberships: [
+          build(:site_membership, user: user, role: :admin)
+        ]
+      )
+
+      assert Billing.usage(user) == 0
+    end
   end
 
   describe "last_two_billing_cycles" do
@@ -61,6 +81,36 @@ defmodule Plausible.BillingTest do
         %{domain: site.domain, timestamp: ~N[2020-12-31 00:00:00]},
         %{domain: site.domain, timestamp: ~N[2020-11-01 00:00:00]},
         %{domain: site.domain, timestamp: ~N[2020-10-31 00:00:00]}
+      ])
+
+      assert Billing.last_two_billing_months_usage(user, today) == {1, 1}
+    end
+
+    test "only considers sites that the user owns" do
+      last_bill_date = ~D[2021-01-01]
+      today = ~D[2021-01-02]
+
+      user = insert(:user, subscription: build(:subscription, last_bill_date: last_bill_date))
+
+      owner_site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner)
+          ]
+        )
+
+      admin_site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :admin)
+          ]
+        )
+
+      create_pageviews([
+        %{domain: owner_site.domain, timestamp: ~N[2020-12-31 00:00:00]},
+        %{domain: admin_site.domain, timestamp: ~N[2020-12-31 00:00:00]},
+        %{domain: owner_site.domain, timestamp: ~N[2020-11-01 00:00:00]},
+        %{domain: admin_site.domain, timestamp: ~N[2020-11-01 00:00:00]}
       ])
 
       assert Billing.last_two_billing_months_usage(user, today) == {1, 1}

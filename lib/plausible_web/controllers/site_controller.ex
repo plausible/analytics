@@ -93,7 +93,7 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  def add_snippet(conn, %{"website" => website}) do
+  def add_snippet(conn, _params) do
     user = conn.assigns[:current_user]
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
 

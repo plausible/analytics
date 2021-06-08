@@ -82,6 +82,16 @@ defmodule Plausible.Sites do
     )
   end
 
+  def owned_by(user) do
+    Repo.all(
+      from s in Plausible.Site,
+        join: sm in Plausible.Site.Membership,
+        on: sm.site_id == s.id,
+        where: sm.role == :owner,
+        where: sm.user_id == ^user.id
+    )
+  end
+
   def add_custom_domain(site, custom_domain) do
     CustomDomain.changeset(%CustomDomain{}, %{
       site_id: site.id,
