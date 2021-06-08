@@ -36,4 +36,4 @@ Note: Since we are deleting the containers, be careful when deleting volumes wit
 
 ### Pre-commit hooks
 
-`pre-commit` requires Python to be available locally and covers JavaScript and CSS. Set up with `pip install --user pre-commit` followed by `pre-commit install`.
+`pre-commit` requires Python to be available locally and covers JavaScript and CSS. Set up with `pip install --user pre-commit` followed by `pre-commit install`. Conversely, if the prompts are far too bothersome, remove with `pre-commit uninstall`.
