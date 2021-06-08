@@ -34,3 +34,6 @@ Volumes are preserved. You'll find that the Postgres and Clickhouse state are re
 
 Note: Since we are deleting the containers, be careful when deleting volumes with `docker volume prune`. You might accidentally delete the database and would have to go through re-registration process.
 
+### Pre-commit hooks
+
+`pre-commit` requires Python to be available locally and covers JavaScript and CSS. Set up with `pip install --user pre-commit` followed by `pre-commit install`.
