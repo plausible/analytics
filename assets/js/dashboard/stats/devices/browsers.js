@@ -14,16 +14,16 @@ export default class Browsers extends React.Component {
     this.onVisible = this.onVisible.bind(this)
   }
 
-  onVisible() {
-    this.fetchBrowsers()
-    if (this.props.timer) this.props.timer.onTick(this.fetchBrowsers.bind(this))
-  }
-
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
       this.setState({loading: true, browsers: null})
       this.fetchBrowsers()
     }
+  }
+  
+  onVisible() {
+    this.fetchBrowsers()
+    if (this.props.timer) this.props.timer.onTick(this.fetchBrowsers.bind(this))
   }
 
   fetchBrowsers() {
