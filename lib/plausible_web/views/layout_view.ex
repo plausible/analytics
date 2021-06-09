@@ -47,9 +47,6 @@ defmodule PlausibleWeb.LayoutView do
 
       days when days == 0 ->
         "Trial ends today"
-
-      days when days < 0 ->
-        "Trial over, upgrade now"
     end
   end
 

@@ -73,8 +73,6 @@
               <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
                 <span class="text-gray-800 dark:text-gray-200">
                   <b><%= PlausibleWeb.StatsView.large_number_format(Map.get(@visitors, site.domain, 0)) %></b> visitor<%= if Map.get(@visitors, site.domain, 0) != 1 do %>s<% end %> in last 24h
-                  <%= site.locked %>
-                  <%= List.first(site.memberships).role %>
                 </span>
               </span>
             </div>

@@ -119,10 +119,10 @@ defmodule Plausible.Billing do
     subscription.next_bill_date && !Timex.before?(subscription.next_bill_date, Timex.today())
   end
 
-  defp subscription_is_active?(_), do: false
+  defp subscription_is_active?(%Subscription{}), do: false
+  defp subscription_is_active?(nil), do: false
 
   def on_trial?(user) do
-    user = Repo.preload(user, :subscription)
     !subscription_is_active?(user.subscription) && trial_days_left(user) >= 0
   end
 
