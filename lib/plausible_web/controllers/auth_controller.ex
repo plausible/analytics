@@ -162,6 +162,7 @@ defmodule PlausibleWeb.AuthController do
         render(conn, "activate.html",
           error: "Incorrect activation code",
           has_pin: true,
+          invitation: invitation,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
@@ -169,6 +170,7 @@ defmodule PlausibleWeb.AuthController do
         render(conn, "activate.html",
           error: "Code is expired, please request another one",
           has_pin: false,
+          invitation: invitation,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
     end

@@ -4,7 +4,7 @@ defmodule PlausibleWeb.SiteController do
   alias Plausible.{Sites, Goals}
 
   plug PlausibleWeb.RequireAccountPlug
-  plug :assert_role when action not in [:index, :new, :create_site, :add_snippet]
+  plug :assert_role when action not in [:index, :new, :create_site]
 
   def index(conn, params) do
     user = conn.assigns[:current_user]

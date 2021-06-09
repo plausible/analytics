@@ -65,6 +65,14 @@ defmodule Plausible.Sites do
     )
   end
 
+  def is_member?(user_id, site) do
+    role(user_id, site) !== nil
+  end
+
+  def has_admin_access?(user_id, site) do
+    role(user_id, site) in [:admin, :owner]
+  end
+
   def role(user_id, site) do
     Repo.one(
       from sm in Plausible.Site.Membership,
