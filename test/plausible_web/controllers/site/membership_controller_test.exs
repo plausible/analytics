@@ -113,4 +113,17 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       refute Repo.exists?(from(i in Plausible.Auth.Invitation, where: i.email == ^user.email))
     end
   end
+
+  describe "DELETE /sites/invitations/:invitation_id" do
+    test "removes the invitation", %{conn: conn} do
+      site = insert(:site)
+      invitation = insert(:invitation, site_id: site.id, email: "jane@example.com", role: :admin)
+
+      delete(conn, "/sites/invitations/#{invitation.invitation_id}")
+
+      refute Repo.exists?(
+               from i in Plausible.Auth.Invitation, where: i.email == "jane@example.com"
+             )
+    end
+  end
 end

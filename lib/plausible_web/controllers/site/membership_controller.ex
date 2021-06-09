@@ -130,4 +130,16 @@ defmodule PlausibleWeb.Site.MembershipController do
     |> put_flash(:success, "You have rejected the invitation to #{invitation.site.domain}")
     |> redirect(to: "/sites")
   end
+
+  def remove_invitation(conn, %{"invitation_id" => invitation_id}) do
+    invitation =
+      Repo.get_by!(Invitation, invitation_id: invitation_id)
+      |> Repo.preload(:site)
+
+    Repo.delete!(invitation)
+
+    conn
+    |> put_flash(:success, "You have removed the invitation for #{invitation.email}")
+    |> redirect(to: Routes.site_path(conn, :settings_general, invitation.site.domain))
+  end
 end

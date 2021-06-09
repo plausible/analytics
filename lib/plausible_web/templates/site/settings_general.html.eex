@@ -159,7 +159,7 @@
                         <%= invitation.inserted_at %>
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <a href="#" class="text-red-600 hover:text-red-900">Remove</a>
+                        <%= link("Remove", to: "/sites/invitations/#{invitation.invitation_id}", method: :delete, class: "text-red-600 hover:text-red-900") %>
                       </td>
                     </tr>
                   <% end %>

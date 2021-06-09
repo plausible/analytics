@@ -203,6 +203,7 @@ defmodule PlausibleWeb.Router do
     delete "/sites/memberships/:id", Site.MembershipController, :remove_member
     post "/sites/invitations/:invitation_id/accept", Site.MembershipController, :accept_invitation
     post "/sites/invitations/:invitation_id/reject", Site.MembershipController, :reject_invitation
+    delete "/sites/invitations/:invitation_id", Site.MembershipController, :remove_invitation
 
     get "/sites/:website/weekly-report/unsubscribe", UnsubscribeController, :weekly_report
     get "/sites/:website/monthly-report/unsubscribe", UnsubscribeController, :monthly_report
