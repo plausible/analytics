@@ -71,6 +71,21 @@ defmodule PlausibleWeb.Site.MembershipController do
     |> redirect(to: "/#{URI.encode_www_form(membership.site.domain)}/settings/general")
   end
 
+  def remove_member(conn, %{"id" => id}) do
+    membership =
+      Repo.get!(Membership, id)
+      |> Repo.preload([:user, :site])
+
+    Repo.delete!(membership)
+
+    conn
+    |> put_flash(
+      :success,
+      "#{membership.user.name} has been removed from #{membership.site.domain}"
+    )
+    |> redirect(to: "/#{URI.encode_www_form(membership.site.domain)}/settings/general")
+  end
+
   def accept_invitation(conn, %{"invitation_id" => invitation_id}) do
     invitation =
       Repo.get_by!(Invitation, invitation_id: invitation_id)

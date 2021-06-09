@@ -109,9 +109,10 @@
                       </span>
                     <% end %>
                   <% end %>
-                  <a href="/wat" class="p-4 flex hover:bg-gray-100 text-red-600">
+
+                  <%= link(to: "/sites/memberships/#{membership.id}", method: :delete, class: "p-4 flex hover:bg-gray-100 text-red-600") do %>
                     <p class="text-sm text-red-600 font-medium">Remove member</p>
-                  </a>
+                  <% end %>
                 <% end %>
               </ul>
             </div>

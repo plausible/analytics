@@ -157,6 +157,12 @@ defmodule Plausible.Factory do
     }
   end
 
+  def invitation_factory do
+    %Plausible.Auth.Invitation{
+      invitation_id: Nanoid.generate()
+    }
+  end
+
   def api_key_factory do
     key = :crypto.strong_rand_bytes(64) |> Base.url_encode64() |> binary_part(0, 64)
 
