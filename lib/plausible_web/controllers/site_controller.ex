@@ -46,7 +46,7 @@ defmodule PlausibleWeb.SiteController do
 
   def new(conn, _params) do
     current_user = conn.assigns[:current_user]
-    site_count = Plausible.Sites.count_for(current_user)
+    site_count = Enum.count(Plausible.Sites.owned_by(current_user))
     site_limit = Plausible.Billing.sites_limit(current_user)
     is_at_limit = site_limit && site_count >= site_limit
     is_first_site = site_count == 0
@@ -64,7 +64,7 @@ defmodule PlausibleWeb.SiteController do
 
   def create_site(conn, %{"site" => site_params}) do
     user = conn.assigns[:current_user]
-    site_count = Plausible.Sites.count_for(user)
+    site_count = Enum.count(Plausible.Sites.owned_by(user))
     is_first_site = site_count == 0
 
     case Sites.create(user, site_params) do

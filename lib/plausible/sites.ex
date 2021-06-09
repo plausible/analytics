@@ -3,7 +3,7 @@ defmodule Plausible.Sites do
   alias Plausible.Site.{CustomDomain, SharedLink}
 
   def create(user, params) do
-    count = count_for(user)
+    count = Enum.count(owned_by(user))
     limit = Plausible.Billing.sites_limit(user)
 
     if count >= limit do
@@ -55,15 +55,6 @@ defmodule Plausible.Sites do
       where: sm.user_id == ^user_id,
       where: s.domain == ^domain,
       select: s
-    )
-  end
-
-  def count_for(user) do
-    Repo.aggregate(
-      from(sm in Plausible.Site.Membership,
-        where: sm.user_id == ^user.id
-      ),
-      :count
     )
   end
 
