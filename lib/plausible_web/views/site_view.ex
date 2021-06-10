@@ -35,7 +35,7 @@ defmodule PlausibleWeb.SiteView do
       end
 
     """
-    <script async defer data-domain="#{site.domain}" src="#{tracker}"></script>
+    <script defer data-domain="#{site.domain}" src="#{tracker}"></script>
     """
   end
 end

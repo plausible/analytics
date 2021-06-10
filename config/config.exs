@@ -41,22 +41,4 @@ config :plausible, :user_agent_cache,
   limit: 1000,
   stats: false
 
-config :kaffy,
-  otp_app: :plausible,
-  ecto_repo: Plausible.Repo,
-  router: PlausibleWeb.Router,
-  admin_title: "Plausible Admin",
-  resources: [
-    auth: [
-      resources: [
-        user: [schema: Plausible.Auth.User, admin: Plausible.Auth.UserAdmin]
-      ]
-    ],
-    sites: [
-      resources: [
-        site: [schema: Plausible.Site, admin: Plausible.SiteAdmin]
-      ]
-    ]
-  ]
-
 import_config "#{config_env()}.exs"
