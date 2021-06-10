@@ -279,7 +279,8 @@ config :kaffy,
   resources: [
     auth: [
       resources: [
-        user: [schema: Plausible.Auth.User, admin: Plausible.Auth.UserAdmin]
+        user: [schema: Plausible.Auth.User, admin: Plausible.Auth.UserAdmin],
+        api_key: [schema: Plausible.Auth.ApiKey, admin: Plausible.Auth.ApiKeyAdmin]
       ]
     ],
     sites: [
