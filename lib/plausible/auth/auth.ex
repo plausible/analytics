@@ -67,13 +67,14 @@ defmodule Plausible.Auth do
     Repo.get_by(Auth.User, opts)
   end
 
-  def user_completed_setup?(user) do
+  def has_active_sites?(user, roles \\ [:owner, :admin, :viewer]) do
     domains =
       Repo.all(
         from u in Plausible.Auth.User,
           where: u.id == ^user.id,
           join: sm in Plausible.Site.Membership,
           on: sm.user_id == u.id,
+          where: sm.role in ^roles,
           join: s in Plausible.Site,
           on: s.id == sm.site_id,
           select: s.domain
