@@ -318,3 +318,71 @@ iframe[hidden] {
 .filter-list-text:hover ~ .filter-list-remove {
   display: none;
 }
+
+.filter-select__control:focus-within {
+  box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px, rgb(99, 102, 241) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px; /* indigo-500 */
+}
+
+.filter-select__control {
+  @apply dark:bg-gray-900 border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500;
+}
+
+.filter-select__control:hover {
+  @apply cursor-pointer;
+  border-color: rgb(156, 163, 175) !important; /* gray-400 */
+}
+
+.filter-select__indicator-separator {
+  @apply hidden;
+}
+
+.filter-select__indicator {
+  @apply text-gray-400;
+}
+
+.filter-select__input {
+  @apply w-full;
+}
+
+.filter-select__input input {
+  width: 100% !important;
+  box-shadow: none !important;
+}
+
+.dark .filter-select__input input {
+  color: rgb(209, 213, 219) !important; /* gray-300 */
+}
+
+.filter-select__value-container > :not(.filter-select__single-value) {
+  @apply w-full;
+}
+
+.filter-select__loading-indicator {
+  color: rgb(79, 70, 229) !important; /* indigo-600 */
+}
+
+.filter-select__loading-indicator > span {
+  height: 1.5em;
+  width: 1.5em;
+}
+
+.filter-select__single-value {
+  @apply dark:text-gray-400;
+}
+
+.filter-select__menu-list {
+  @apply dark:bg-gray-900;
+}
+
+.filter-select__option {
+  @apply dark:text-gray-300;
+}
+
+.filter-select__option--is-focused {
+  background-color: rgb(165, 180, 252) !important; /* indigo-300 */
+}
+
+.dark .filter-select__option--is-focused {
+  background-color: rgb(79, 70, 229) !important; /* indigo-600 */
+}
+

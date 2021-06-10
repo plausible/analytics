@@ -1618,7 +1618,7 @@ defmodule Plausible.Stats.Clickhouse do
     |> Enum.map(fn {x} -> x end)
     |> Enum.filter(fn c -> Enum.find(filter_search, false, fn x -> x == c end) end)
     |> Enum.map(fn c -> Plausible.Stats.CountryName.to_alpha3(c) end)
-    |> Enum.slice(0..9)
+    |> Enum.slice(0..24)
   end
 
   def make_suggestions(site, _query, "goal", filter_search) do
@@ -1633,7 +1633,10 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def make_suggestions(site, query, filter_name, filter_search) do
-    filter_query = "%#{filter_search}%"
+    filter_query =
+      if Enum.member?(["entry_page", "page", "exit_page"], filter_name),
+        do: "%#{String.replace(filter_search, "*", "")}%",
+        else: "%#{filter_search}%"
 
     filter_name =
       case filter_name do
@@ -1653,7 +1656,7 @@ defmodule Plausible.Stats.Clickhouse do
       |> from(
         group_by: ^String.to_atom(filter_name),
         order_by: [desc: fragment("count(*)")],
-        limit: 10
+        limit: 25
       )
 
     q =
