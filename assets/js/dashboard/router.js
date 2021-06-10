@@ -22,12 +22,12 @@ function ScrollToTop() {
   return null;
 }
 
-export default function Router({site, loggedIn}) {
+export default function Router({site, loggedIn, currentUserRole}) {
   return (
     <BrowserRouter>
       <Route path="/:domain">
         <ScrollToTop />
-        <Dash site={site} loggedIn={loggedIn} />
+        <Dash site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} />
         <Switch>
           <Route exact path={["/:domain/sources", "/:domain/utm_mediums", "/:domain/utm_sources", "/:domain/utm_campaigns"]}>
             <SourcesModal site={site} />

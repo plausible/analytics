@@ -65,20 +65,20 @@
                 class="origin-top-right absolute z-10 right-0 mt-2 w-72 rounded-md shadow-lg overflow-hidden bg-white divide-y divide-gray-200 ring-1 ring-black ring-opacity-5 focus:outline-none" tabindex="-1" role="listbox" aria-labelledby="listbox-label" aria-activedescendant="listbox-option-0"
                 >
                 <%= if membership.role == :owner do %>
-                  <li class="p-4 text-sm cursor-default group hover:bg-indigo-500 flex justify-between" role="option">
+                  <li class="p-4 text-sm cursor-default group flex justify-between" role="option">
                     <div>
-                      <p class="text-base font-medium text-gray-900 group-hover:text-white">Owner</p>
-                      <p class="mt-1 text-sm text-gray-500 group-hover:text-gray-100">Site owner cannot be assigned to any other role</p>
+                      <p class="text-base font-medium text-gray-900">Owner</p>
+                      <p class="mt-1 text-sm text-gray-500">Site owner cannot be assigned to any other role</p>
                     </div>
 
-                    <span class="text-indigo-500 group-hover:text-white">
+                    <span class="text-indigo-500">
                       <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                       </svg>
                     </span>
                   </li>
-                  <li class="select-none relative p-4 cursor-pointer hover:bg-gray-100 text-red-600" role="option">
-                    <p class="text-sm text-red-600 font-medium">Transfer ownership &rarr;</p>
+                  <li class="select-none hover:bg-gray-100 text-red-600" role="option">
+                    <%= link("Transfer ownership →", to: Routes.membership_path(@conn, :transfer_ownership_form, @site.domain), class: "inline-block w-full p-4 text-sm text-red-600 font-medium") %>
                   </li>
                 <% else %>
                   <%= link(to: "/sites/memberships/#{membership.id}/role/admin", method: :put, class: "p-4 flex justify-between text-sm group hover:bg-indigo-500") do %>

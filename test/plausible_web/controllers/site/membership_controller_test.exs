@@ -101,6 +101,26 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       membership = Repo.get_by(Plausible.Site.Membership, user_id: user.id, site_id: site.id)
       assert membership.role == :admin
     end
+
+    test "ownership transfer - downgrades previous owner to admin", %{conn: conn, user: user} do
+      old_owner = insert(:user)
+      site = insert(:site, members: [old_owner])
+      invitation = insert(:invitation, site_id: site.id, email: user.email, role: :owner)
+
+      post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+
+      refute Repo.exists?(from(i in Plausible.Auth.Invitation, where: i.email == ^user.email))
+
+      old_owner_membership =
+        Repo.get_by(Plausible.Site.Membership, user_id: old_owner.id, site_id: site.id)
+
+      assert old_owner_membership.role == :admin
+
+      new_owner_membership =
+        Repo.get_by(Plausible.Site.Membership, user_id: user.id, site_id: site.id)
+
+      assert new_owner_membership.role == :owner
+    end
   end
 
   describe "POST /sites/invitations/:invitation_id/reject" do
@@ -124,6 +144,16 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       refute Repo.exists?(
                from i in Plausible.Auth.Invitation, where: i.email == "jane@example.com"
              )
+    end
+  end
+
+  describe "GET /sites/:website/transfer-ownership" do
+    test "shows the form", %{conn: conn, user: user} do
+      site = insert(:site, members: [user])
+
+      conn = get(conn, "/sites/#{site.domain}/transfer-ownership")
+
+      assert html_response(conn, 200) =~ "Transfer ownership"
     end
   end
 end

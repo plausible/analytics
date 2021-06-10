@@ -156,7 +156,10 @@
                 </h3>
                 <div class="mt-2">
                   <p class="text-sm text-gray-500">
-                    You've been invited to collaborate on the <span x-text="selectedInvitation && selectedInvitation.site.domain"></span> analytics dashboard as an <b class="capitalize" x-text="selectedInvitation && selectedInvitation.role">Admin</b>.
+                    You've been invited to the <span x-text="selectedInvitation && selectedInvitation.site.domain"></span> analytics dashboard as an <b class="capitalize" x-text="selectedInvitation && selectedInvitation.role">Admin</b>.
+                  </p>
+                  <p x-show="selectedInvitation && selectedInvitation.role === 'owner'" class="mt-2 text-sm text-gray-500">
+                    If you accept the ownership transfer, you will be responsible for billing.
                   </p>
                 </div>
               </div>
