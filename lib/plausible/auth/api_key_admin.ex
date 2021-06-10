@@ -18,7 +18,7 @@ defmodule Plausible.Auth.ApiKeyAdmin do
   end
 
   def update_changeset(schema, attrs) do
-    Plausible.Auth.ApiKey.update(schema, attrs) |> IO.inspect()
+    Plausible.Auth.ApiKey.update(schema, attrs)
   end
 
   @plaintext_key_help """
