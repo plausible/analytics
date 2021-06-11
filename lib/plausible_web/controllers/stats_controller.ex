@@ -4,7 +4,7 @@ defmodule PlausibleWeb.StatsController do
   alias Plausible.Stats.Clickhouse, as: Stats
   alias Plausible.Stats.Query
 
-  plug PlausibleWeb.AuthorizeStatsPlug when action in [:stats, :csv_export]
+  plug PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export]
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
     has_pageviews = Stats.has_pageviews?(site)

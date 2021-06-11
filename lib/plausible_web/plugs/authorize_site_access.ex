@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.AuthorizeStatsPlug do
+defmodule PlausibleWeb.AuthorizeSiteAccess do
   import Plug.Conn
   use Plausible.Repo
 

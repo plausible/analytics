@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["json"]
     plug PlausibleWeb.Firewall
     plug :fetch_session
-    plug PlausibleWeb.AuthorizeStatsPlug
+    plug PlausibleWeb.AuthorizeSiteAccess
   end
 
   pipeline :public_api do

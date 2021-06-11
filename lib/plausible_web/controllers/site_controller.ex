@@ -5,7 +5,7 @@ defmodule PlausibleWeb.SiteController do
 
   plug PlausibleWeb.RequireAccountPlug
 
-  plug PlausibleWeb.AuthorizeStatsPlug,
+  plug PlausibleWeb.AuthorizeSiteAccess,
        [:owner, :admin] when action not in [:index, :new, :create_site]
 
   def index(conn, params) do

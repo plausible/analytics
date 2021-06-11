@@ -8,9 +8,9 @@ defmodule PlausibleWeb.Site.MembershipController do
   @only_owner_is_allowed_to [:transfer_ownership_form, :transfer_ownership]
 
   plug PlausibleWeb.RequireAccountPlug
-  plug PlausibleWeb.AuthorizeStatsPlug, [:owner] when action in @only_owner_is_allowed_to
+  plug PlausibleWeb.AuthorizeSiteAccess, [:owner] when action in @only_owner_is_allowed_to
 
-  plug PlausibleWeb.AuthorizeStatsPlug,
+  plug PlausibleWeb.AuthorizeSiteAccess,
        [:owner, :admin] when action not in @only_owner_is_allowed_to
 
   def invite_member_form(conn, %{"website" => site_domain}) do
