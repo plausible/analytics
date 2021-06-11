@@ -21,7 +21,7 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
-  def settings_tabs() do
+  def settings_tabs(conn) do
     [
       [key: "General", value: "general"],
       [key: "Visibility", value: "visibility"],
@@ -33,7 +33,11 @@ defmodule PlausibleWeb.LayoutView do
       else
         nil
       end,
-      [key: "Danger zone", value: "danger-zone"]
+      if conn.assigns[:current_user_role] == :owner do
+        [key: "Danger zone", value: "danger-zone"]
+      else
+        nil
+      end
     ]
   end
 

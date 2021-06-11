@@ -4,7 +4,9 @@ defmodule PlausibleWeb.SiteController do
   alias Plausible.{Sites, Goals}
 
   plug PlausibleWeb.RequireAccountPlug
-  plug :assert_role when action not in [:index, :new, :create_site]
+
+  plug PlausibleWeb.AuthorizeStatsPlug,
+       [:owner, :admin] when action not in [:index, :new, :create_site]
 
   def index(conn, params) do
     user = conn.assigns[:current_user]
@@ -651,20 +653,5 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> put_flash(:success, "Custom domain deleted successfully")
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/custom-domain")
-  end
-
-  defp assert_role(conn, _) do
-    user = conn.assigns[:current_user]
-    domain = conn.params["domain"] || conn.params["website"]
-
-    site = Repo.get_by(Plausible.Site, domain: domain)
-    role = site && Plausible.Sites.role(user.id, site)
-
-    if site && role in [:owner, :admin] do
-      merge_assigns(conn, site: site, role: role)
-    else
-      render_error(conn, 404)
-      |> halt
-    end
   end
 end

@@ -77,11 +77,13 @@
                       </svg>
                     </span>
                   </li>
-                  <li class="select-none hover:bg-gray-100 text-red-600" role="option">
-                    <%= link("Transfer ownership →", to: Routes.membership_path(@conn, :transfer_ownership_form, @site.domain), class: "inline-block w-full p-4 text-sm text-red-600 font-medium") %>
-                  </li>
+                  <%= if @conn.assigns[:current_user_role] == :owner do %>
+                    <li class="select-none hover:bg-gray-100 text-red-600" role="option">
+                      <%= link("Transfer ownership →", to: Routes.membership_path(@conn, :transfer_ownership_form, @site.domain), class: "inline-block w-full p-4 text-sm text-red-600 font-medium") %>
+                    </li>
+                  <% end %>
                 <% else %>
-                  <%= link(to: "/sites/memberships/#{membership.id}/role/admin", method: :put, class: "p-4 flex justify-between text-sm group hover:bg-indigo-500") do %>
+                  <%= link(to: Routes.membership_path(@conn, :update_role, @site.domain, membership.id, "admin"), method: :put, class: "p-4 flex justify-between text-sm group hover:bg-indigo-500") do %>
                     <div>
                       <p class="text-base font-medium text-gray-900 group-hover:text-white">Admin</p>
                       <p class="mt-1 text-sm text-gray-500 group-hover:text-gray-100">View stats and edit site settings</p>
@@ -95,7 +97,7 @@
                       </span>
                     <% end %>
                   <% end %>
-                  <%= link(to: "/sites/memberships/#{membership.id}/role/viewer", method: :put, class: "p-4 flex justify-between text-sm group hover:bg-indigo-500") do %>
+                  <%= link(to: Routes.membership_path(@conn, :update_role, @site.domain, membership.id, "viewer"), method: :put, class: "p-4 flex justify-between text-sm group hover:bg-indigo-500") do %>
                     <div>
                       <p class="text-base font-medium text-gray-900 group-hover:text-white">Viewer</p>
                       <p class="mt-1 text-sm text-gray-500 group-hover:text-white">View stats only</p>
@@ -110,7 +112,7 @@
                     <% end %>
                   <% end %>
 
-                  <%= link(to: "/sites/memberships/#{membership.id}", method: :delete, class: "p-4 flex hover:bg-gray-100 text-red-600") do %>
+                  <%= link(to: Routes.membership_path(@conn, :remove_member, @site.domain, membership.id), method: :delete, class: "p-4 flex hover:bg-gray-100 text-red-600") do %>
                     <p class="text-sm text-red-600 font-medium">Remove member</p>
                   <% end %>
                 <% end %>

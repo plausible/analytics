@@ -200,15 +200,15 @@ defmodule PlausibleWeb.Router do
     get "/sites/:website/memberships/invite", Site.MembershipController, :invite_member_form
     post "/sites/:website/memberships/invite", Site.MembershipController, :invite_member
 
-    post "/sites/invitations/:invitation_id/accept", Site.MembershipController, :accept_invitation
-    post "/sites/invitations/:invitation_id/reject", Site.MembershipController, :reject_invitation
-    delete "/sites/invitations/:invitation_id", Site.MembershipController, :remove_invitation
+    post "/sites//invitations/:invitation_id/accept", InvitationController, :accept_invitation
+    post "/sites//invitations/:invitation_id/reject", InvitationController, :reject_invitation
+    delete "/sites//invitations/:invitation_id", InvitationController, :remove_invitation
 
     get "/sites/:website/transfer-ownership", Site.MembershipController, :transfer_ownership_form
     post "/sites/:website/transfer-ownership", Site.MembershipController, :transfer_ownership
 
-    put "/sites/memberships/:id/role/:new_role", Site.MembershipController, :update_role
-    delete "/sites/memberships/:id", Site.MembershipController, :remove_member
+    put "/sites/:website/memberships/:id/role/:new_role", Site.MembershipController, :update_role
+    delete "/sites/:website/memberships/:id", Site.MembershipController, :remove_member
 
     get "/sites/:website/weekly-report/unsubscribe", UnsubscribeController, :weekly_report
     get "/sites/:website/monthly-report/unsubscribe", UnsubscribeController, :monthly_report
