@@ -108,6 +108,7 @@ class FilterModal extends React.Component {
         maxMenuHeight={250}
         tabSelectsValue={false}
         classNamePrefix='filter-select'
+        blurInputOnSelect
         noOptionsMessage={() => (
           <span className="text-red-500 text-md flex mt-2 px-3">
             <svg className="w-10 h-10 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -125,7 +126,7 @@ class FilterModal extends React.Component {
         }}
         onInputChange={(value, { action }) => {
           if (action == 'input-change') this.setState({ inputValue: value })
-          if (action == 'menu-close' || action == 'input-blur') this.setState({ updatedValue: inputValue })
+          if (action == 'menu-close' || action == 'input-blur') this.setState(({inputValue}) => ({ updatedValue: inputValue }))
         }}
         inputValue={inputValue}
         onBlur={() => this.setState({ forceReloadSuggestions: forceReloadSuggestions + 1 })}

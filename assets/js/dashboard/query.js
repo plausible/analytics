@@ -167,7 +167,7 @@ export const formattedFilters = {
   'utm_medium': 'UTM Medium',
   'utm_source': 'UTM Source',
   'utm_campaign': 'UTM Campaign',
-  'referrer': 'Referrer',
+  'referrer': 'Referrer URL',
   'screen': 'Screen size',
   'browser': 'Browser',
   'browser_version': 'Browser Version',

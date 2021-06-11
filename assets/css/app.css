@@ -376,6 +376,7 @@ iframe[hidden] {
 
 .filter-select__option {
   @apply dark:text-gray-300;
+  cursor: pointer !important;
 }
 
 .filter-select__option--is-focused {
