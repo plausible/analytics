@@ -250,22 +250,6 @@ blockquote {
   min-height: 436px;
 }
 
-.stats-item__header {
-  @apply flex flex-col;
-  @apply flex-grow;
-}
-
-/* Main container -- includes heading labels and contents. */
-.stats-item__main {
-  @apply flex flex-col;
-  @apply flex-grow;
-}
-
-/* Contents inside main container. */
-.stats-item__contents {
-  @apply flex-grow;
-}
-
 @screen md {
   .stats-item {
     margin-left: 6px;
@@ -287,19 +271,6 @@ blockquote {
 
 .stats-item:last-child {
   margin-right: 0;
-}
-
-/**
- * The "more" links needs to be absolutely position on bigger screens, but flow naturally and stick to the bottom of its container on smaller screens.
- 
- For the smaller screens, we don't need to meddle with the .more-link class. That happens as an effect of using flex-grow on the previous sibling HTML element!
- */
-
-@screen md {
-  .more-link {
-    /* Sticky it to the bottom of the container */
-    @apply absolute bottom-0 left-0;
-  }
 }
 
 .fade-enter {

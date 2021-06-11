@@ -87,9 +87,9 @@ export default class Visits extends React.Component {
   render() {
     const { loading } = this.state;
     return (
-      <LazyLoader onVisible={this.onVisible} className="stats-item__main">
+      <LazyLoader onVisible={this.onVisible} className="flex flex-col flex-grow">
         { loading && <div className="mx-auto loading mt-44"><div></div></div> }
-        <FadeIn show={!loading} className="stats-item__contents">
+        <FadeIn show={!loading} className="flex-grow">
           { this.renderList() }
         </FadeIn>
         {!loading && <MoreLink site={this.props.site} list={this.state.pages} endpoint="pages" />}

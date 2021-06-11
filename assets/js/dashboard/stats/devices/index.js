@@ -127,9 +127,9 @@ class ScreenSizes extends React.Component {
 
   render() {
     return (
-      <LazyLoader onVisible={this.onVisible} className="stats-item__main">
+      <LazyLoader onVisible={this.onVisible} className="flex flex-col flex-grow">
         { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
-        <FadeIn show={!this.state.loading} class="stats-item__contents">
+        <FadeIn show={!this.state.loading} class="flex-grow">
           { this.renderList() }
         </FadeIn>
       </LazyLoader>
@@ -208,7 +208,7 @@ export default class Devices extends React.Component {
         className="stats-item flex flex-col mt-6 stats-item--has-header w-full"
       >
         <div
-          className="stats-item__header relative p-4 bg-white rounded shadow-xl dark:bg-gray-825"
+          className="stats-item__header flex flex-col flex-grow relative p-4 bg-white rounded shadow-xl dark:bg-gray-825"
         >
           <div className="flex justify-between w-full">
             <h3 className="font-bold dark:text-gray-100">Devices</h3>

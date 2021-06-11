@@ -94,7 +94,7 @@ export default class Referrers extends React.Component {
   renderList() {
     if (this.state.referrers.length > 0) {
       return (
-        <div className="stats-item__main">
+        <div className="flex flex-col flex-grow">
           <div
             className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400"
           >
@@ -102,7 +102,7 @@ export default class Referrers extends React.Component {
             <span>{ this.label() }</span>
           </div>
 
-          <FlipMove className="stats-item__contents">
+          <FlipMove className="flex-grow">
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
         </div>
@@ -133,7 +133,7 @@ export default class Referrers extends React.Component {
       <div
         className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col dark:bg-gray-825 mt-6 w-full"
       >
-        <LazyLoader onVisible={this.onVisible} className="stats-item__main">
+        <LazyLoader onVisible={this.onVisible} className="flex flex-col flex-grow">
           <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
           { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
           <FadeIn show={!this.state.loading}>
