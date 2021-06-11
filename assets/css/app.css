@@ -247,9 +247,6 @@ blockquote {
 }
 
 .stats-item {
-  @apply mt-6;
-  @apply flex flex-col;
-  width: 100%;
   min-height: 436px;
 }
 

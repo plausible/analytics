@@ -204,7 +204,9 @@ export default class Devices extends React.Component {
 
   render() {
     return (
-      <div className="stats-item stats-item--has-header">
+      <div
+        className="stats-item flex flex-col mt-6 stats-item--has-header w-full"
+      >
         <div
           className="stats-item__header relative p-4 bg-white rounded shadow-xl dark:bg-gray-825"
         >

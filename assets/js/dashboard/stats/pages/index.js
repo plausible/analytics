@@ -66,7 +66,9 @@ export default class Pages extends React.Component {
 
   render() {
     return (
-      <div className="stats-item stats-item--has-header">
+      <div
+        className="stats-item flex flex-col w-full mt-6 stats-item--has-header"
+      >
         <div
           className="stats-item__header bg-white dark:bg-gray-825 shadow-xl rounded p-4 relative"
         >

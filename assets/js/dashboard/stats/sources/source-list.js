@@ -99,7 +99,9 @@ class AllSources extends React.Component {
 
   render() {
     return (
-      <div className="relative p-4 bg-white rounded shadow-xl stats-item dark:bg-gray-825">
+      <div
+        className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col mt-6 w-full dark:bg-gray-825"
+      >
           { this.renderContent() }
       </div>
     )
@@ -200,7 +202,9 @@ class UTMSources extends React.Component {
 
   render() {
     return (
-      <div className="relative p-4 bg-white rounded shadow-xl stats-item dark:bg-gray-825">
+      <div
+        className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col dark:bg-gray-825 mt-6 w-full"
+      >
         { this.renderContent() }
       </div>
     )
