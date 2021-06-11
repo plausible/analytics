@@ -27,28 +27,18 @@ defmodule PlausibleWeb.Site.MembershipController do
       Invitation.new(%{
         email: email,
         role: role,
-        site_id: site.id
+        site_id: site.id,
+        inviter_id: conn.assigns[:current_user].id
       })
       |> Repo.insert!()
+      |> Repo.preload([:site, :inviter])
 
     if user do
-      email_template =
-        PlausibleWeb.Email.existing_user_invitation(
-          email,
-          conn.assigns[:current_user],
-          site,
-          invitation
-        )
+      email_template = PlausibleWeb.Email.existing_user_invitation(invitation)
 
       Plausible.Mailer.send_email(email_template)
     else
-      email_template =
-        PlausibleWeb.Email.new_user_invitation(
-          email,
-          conn.assigns[:current_user],
-          site,
-          invitation
-        )
+      email_template = PlausibleWeb.Email.new_user_invitation(invitation)
 
       Plausible.Mailer.send_email(email_template)
     end
@@ -114,7 +104,7 @@ defmodule PlausibleWeb.Site.MembershipController do
   def accept_invitation(conn, %{"invitation_id" => invitation_id}) do
     invitation =
       Repo.get_by!(Invitation, invitation_id: invitation_id)
-      |> Repo.preload(:site)
+      |> Repo.preload([:site, :inviter])
 
     user = conn.assigns[:current_user]
     existing_membership = Repo.get_by(Membership, user_id: user.id, site_id: invitation.site.id)
@@ -140,6 +130,8 @@ defmodule PlausibleWeb.Site.MembershipController do
 
     case Repo.transaction(multi) do
       {:ok, _} ->
+        notify_invitation_acceptance(invitation)
+
         conn
         |> put_flash(:success, "You now have access to #{invitation.site.domain}")
         |> redirect(to: "/#{URI.encode_www_form(invitation.site.domain)}")
@@ -162,12 +154,20 @@ defmodule PlausibleWeb.Site.MembershipController do
     Multi.update_all(multi, :prev_owner, prev_owner, set: [role: :admin])
   end
 
+  defp notify_invitation_acceptance(invitation) do
+    PlausibleWeb.Email.invitation_accepted(invitation)
+    |> Plausible.Mailer.send_email()
+  end
+
   def reject_invitation(conn, %{"invitation_id" => invitation_id}) do
     invitation =
       Repo.get_by!(Invitation, invitation_id: invitation_id)
-      |> Repo.preload(:site)
+      |> Repo.preload([:site, :inviter])
 
     Repo.delete!(invitation)
+
+    PlausibleWeb.Email.invitation_rejected(invitation)
+    |> Plausible.Mailer.send_email()
 
     conn
     |> put_flash(:success, "You have rejected the invitation to #{invitation.site.domain}")

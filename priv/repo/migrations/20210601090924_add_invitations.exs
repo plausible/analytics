@@ -5,6 +5,7 @@ defmodule Plausible.Repo.Migrations.AddInvitations do
     create table(:invitations) do
       add :email, :string, null: false
       add :site_id, references(:sites), null: false
+      add :inviter_id, references(:users), null: false
       add :role, :site_membership_role, null: false
       add :invitation_id, :string
 
