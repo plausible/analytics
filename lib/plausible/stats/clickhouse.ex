@@ -682,8 +682,8 @@ defmodule Plausible.Stats.Clickhouse do
   def page_times_by_page_url(site, query, page_list \\ nil)
 
   def page_times_by_page_url(site, query, _page_list = nil) do
-    {negated, updatedPageSelection} = query.filters["page"] |> check_negated_filter()
-    {_, pageRegex} = updatedPageSelection |> convert_path_regex()
+    {negated, updated_page_selection} = query.filters["page"] |> check_negated_filter()
+    {_, page_regex} = updated_page_selection |> convert_path_regex()
 
     q =
       from(
@@ -725,7 +725,7 @@ defmodule Plausible.Stats.Clickhouse do
           GROUP BY p,p2,s)
         GROUP BY p)"
 
-    time_query |> ClickhouseRepo.query(base_query_raw_params ++ [pageRegex])
+    time_query |> ClickhouseRepo.query(base_query_raw_params ++ [page_regex])
   end
 
   def page_times_by_page_url(site, query, page_list) do
