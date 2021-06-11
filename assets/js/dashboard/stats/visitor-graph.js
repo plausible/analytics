@@ -202,6 +202,7 @@ class LineGraph extends React.Component {
     }
 
     if (prevProps.darkTheme !== this.props.darkTheme) {
+      this.chart.destroy();
       this.chart = this.regenerateChart();
       this.chart.update();
     }
