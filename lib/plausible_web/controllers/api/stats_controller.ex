@@ -110,14 +110,12 @@ defmodule PlausibleWeb.Api.StatsController do
           Task.yield_many(
             [
               Task.async(fn ->
-                {:ok, page_times} =
-                  Stats.page_times_by_page_url(site, query)
+                {:ok, page_times} = Stats.page_times_by_page_url(site, query)
 
                 page_times
               end),
               Task.async(fn ->
-                {:ok, page_times} =
-                  Stats.page_times_by_page_url(site, prev_query)
+                {:ok, page_times} = Stats.page_times_by_page_url(site, prev_query)
 
                 page_times
               end)
@@ -133,7 +131,7 @@ defmodule PlausibleWeb.Api.StatsController do
               {:ok, page_times} ->
                 result = Enum.at(page_times.rows, 0)
                 result = if result, do: Enum.at(result, 0), else: nil
-                if result, do: {:ok, round(result)}, else: {:nil, nil}
+                if result, do: {:ok, round(result)}, else: {nil, nil}
 
               _ ->
                 response

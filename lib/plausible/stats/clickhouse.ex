@@ -679,7 +679,9 @@ defmodule Plausible.Stats.Clickhouse do
     |> Enum.into(%{})
   end
 
-  def page_times_by_page_url(site, query, page_list \\ nil) do
+  def page_times_by_page_url(site, query, page_list \\ nil)
+
+  def page_times_by_page_url(site, query, _page_list = nil) do
     {negated, updatedPageSelection} = query.filters["page"] |> check_negated_filter()
     {_, pageRegex} = updatedPageSelection |> convert_path_regex()
 
@@ -699,40 +701,74 @@ defmodule Plausible.Stats.Clickhouse do
 
     {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
 
-    page_selector = if page_list == nil, do: [pageRegex], else: [page_list && (Enum.count(page_list) > 0 && page_list) || ["/"]]
+    time_query = "
+      SELECT
+        avg(ifNotFinite(avgTime, null))
+      FROM
+        (SELECT
+          p,
+          sum(td)/count(case when p2 != p then 1 end) as avgTime
+        FROM
+          (SELECT
+            p,
+            p2,
+            sum(t2-t) as td
+          FROM
+            (SELECT
+              *,
+              neighbor(t, 1) as t2,
+              neighbor(p, 1) as p2,
+              neighbor(s, 1) as s2
+            FROM (#{base_query_raw}))
+          WHERE s=s2 AND
+          #{if negated, do: "not(match(p, ?))", else: "match(p, ?)"}
+          GROUP BY p,p2,s)
+        GROUP BY p)"
 
-    time_query = "SELECT
-    p,
-    sum(td)/count(case when p2 != p then 1 end) as avgTime
-  FROM
-    (SELECT
-      p,
-      p2,
-      sum(t2-t) as td
-    FROM
-      (SELECT
-        *,
-        neighbor(t, 1) as t2,
-        neighbor(p, 1) as p2,
-        neighbor(s, 1) as s2
-      FROM (#{base_query_raw}))
-    WHERE s=s2 AND
-    #{
-    if page_list == nil do
-      if negated, do: "not(match(p, ?))", else: "match(p, ?)"
-    else
-      "p IN tuple(?)"
-    end
-    }
-    GROUP BY p,p2,s)
-  GROUP BY p"
+    time_query |> ClickhouseRepo.query(base_query_raw_params ++ [pageRegex])
+  end
 
-  time_query = if page_list == nil, do: "SELECT avg(ifNotFinite(avgTime, null)) FROM (#{time_query})", else: time_query
+  def page_times_by_page_url(site, query, page_list) do
+    q =
+      from(
+        e in base_query_w_sessions(site, %Query{
+          query
+          | filters: Map.delete(query.filters, "page")
+        }),
+        select: {
+          fragment("? as p", e.pathname),
+          fragment("? as t", e.timestamp),
+          fragment("? as s", e.session_id)
+        },
+        order_by: [e.session_id, e.timestamp]
+      )
 
-  time_query |> ClickhouseRepo.query(
-    base_query_raw_params ++ page_selector
-  )
+    {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
 
+    time_query = "
+      SELECT
+        p,
+        sum(td)/count(case when p2 != p then 1 end) as avgTime
+      FROM
+        (SELECT
+          p,
+          p2,
+          sum(t2-t) as td
+        FROM
+          (SELECT
+            *,
+            neighbor(t, 1) as t2,
+            neighbor(p, 1) as p2,
+            neighbor(s, 1) as s2
+          FROM (#{base_query_raw}))
+        WHERE s=s2 AND p IN tuple(?)
+        GROUP BY p,p2,s)
+      GROUP BY p"
+
+    time_query
+    |> ClickhouseRepo.query(
+      base_query_raw_params ++ [(Enum.count(page_list) > 0 && page_list) || ["/"]]
+    )
   end
 
   defp add_percentages(stat_list) do
@@ -1649,6 +1685,8 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def make_suggestions(site, query, filter_name, filter_search) do
+    filter_search = if filter_search == nil, do: "", else: filter_search
+
     filter_query =
       if Enum.member?(["entry_page", "page", "exit_page"], filter_name),
         do: "%#{String.replace(filter_search, "*", "")}%",
