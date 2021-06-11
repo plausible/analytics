@@ -110,14 +110,12 @@ defmodule PlausibleWeb.Api.StatsController do
           Task.yield_many(
             [
               Task.async(fn ->
-                {:ok, page_times} =
-                  Stats.page_times_by_page_url(site, query, [query.filters["page"]])
+                {:ok, page_times} = Stats.page_times_by_page_url(site, query)
 
                 page_times
               end),
               Task.async(fn ->
-                {:ok, page_times} =
-                  Stats.page_times_by_page_url(site, prev_query, [query.filters["page"]])
+                {:ok, page_times} = Stats.page_times_by_page_url(site, prev_query)
 
                 page_times
               end)
@@ -132,8 +130,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
               {:ok, page_times} ->
                 result = Enum.at(page_times.rows, 0)
-                result = if result, do: Enum.at(result, 1), else: nil
-                if result, do: {:ok, round(result)}, else: {:ok, 0}
+                result = if result, do: Enum.at(result, 0), else: nil
+                if result, do: {:ok, round(result)}, else: {nil, nil}
 
               _ ->
                 response
@@ -385,5 +383,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def handle_errors(conn, %{kind: kind, reason: reason}) do
     json(conn, %{error: Exception.format_banner(kind, reason)})
+  end
+
+  def filter_suggestions(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, params)
+
+    json(conn, Stats.make_suggestions(site, query, params["filter_name"], params["q"]))
   end
 end

@@ -34,7 +34,7 @@ class Historical extends React.Component {
             <div className="flex items-center w-full mb-2 sm:mb-0">
               <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} />
               <CurrentVisitors timer={this.props.timer} site={this.props.site} query={this.props.query} />
-              <Filters query={this.props.query} history={this.props.history} />
+              <Filters site={this.props.site} query={this.props.query} history={this.props.history} />
             </div>
             <Datepicker site={this.props.site} query={this.props.query} />
           </div>
