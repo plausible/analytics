@@ -159,3 +159,22 @@ export function eventName(query) {
   }
   return 'pageviews'
 }
+
+export const formattedFilters = {
+  'goal': 'Goal',
+  'props': 'Goal properties',
+  'source': 'Source',
+  'utm_medium': 'UTM Medium',
+  'utm_source': 'UTM Source',
+  'utm_campaign': 'UTM Campaign',
+  'referrer': 'Referrer URL',
+  'screen': 'Screen size',
+  'browser': 'Browser',
+  'browser_version': 'Browser Version',
+  'os': 'Operating System',
+  'os_version': 'Operating System Version',
+  'country': 'Country',
+  'page': 'Page',
+  'entry_page': 'Entry Page',
+  'exit_page': 'Exit Page'
+}
