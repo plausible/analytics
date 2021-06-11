@@ -176,6 +176,18 @@ defmodule PlausibleWeb.Email do
     )
   end
 
+  def existing_user_invitation(email_address, inviting_user, site, invitation) do
+    base_email()
+    |> to(email_address)
+    |> tag("existing-user-invitation")
+    |> subject("[Plausible Analytics] You've been invited to #{site.domain}")
+    |> render("existing_user_invitation.html",
+      inviting_user: inviting_user,
+      site: site,
+      invitation: invitation
+    )
+  end
+
   defp base_email() do
     mailer_from = Application.get_env(:plausible, :mailer_email)
 

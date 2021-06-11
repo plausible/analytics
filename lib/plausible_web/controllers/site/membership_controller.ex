@@ -23,22 +23,25 @@ defmodule PlausibleWeb.Site.MembershipController do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
     user = Plausible.Auth.find_user_by(email: email)
 
-    if user do
+    invitation =
       Invitation.new(%{
         email: email,
         role: role,
         site_id: site.id
       })
       |> Repo.insert!()
-    else
-      invitation =
-        Invitation.new(%{
-          email: email,
-          role: role,
-          site_id: site.id
-        })
-        |> Repo.insert!()
 
+    if user do
+      email_template =
+        PlausibleWeb.Email.existing_user_invitation(
+          email,
+          conn.assigns[:current_user],
+          site,
+          invitation
+        )
+
+      Plausible.Mailer.send_email(email_template)
+    else
       email_template =
         PlausibleWeb.Email.new_user_invitation(
           email,

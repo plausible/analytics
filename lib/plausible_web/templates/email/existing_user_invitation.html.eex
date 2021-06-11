@@ -1,0 +1,9 @@
+Hey,
+<br /><br />
+<%= @inviting_user.email %> has invited you to the <%= @site.domain %> site on Plausible Analytics.
+<%= link("Click here", to: Routes.site_path(PlausibleWeb.Endpoint, :index)) %> to view and respond to the invitation.
+<br /><br />
+Thanks,<br />
+Uku and Marko<br />
+--<br />
+<%= plausible_url() %><br />

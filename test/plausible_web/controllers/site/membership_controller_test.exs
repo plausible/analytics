@@ -32,7 +32,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert redirected_to(conn) == "/#{site.domain}/settings/general"
     end
 
-    test "sends invitation email", %{conn: conn, user: user} do
+    test "sends invitation email for new user", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
       post(conn, "/sites/#{site.domain}/memberships/invite", %{
@@ -42,6 +42,21 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       assert_email_delivered_with(
         to: [nil: "john.doe@example.com"],
+        subject: "[Plausible Analytics] You've been invited to #{site.domain}"
+      )
+    end
+
+    test "sends invitation email for existing user", %{conn: conn, user: user} do
+      existing_user = insert(:user)
+      site = insert(:site, members: [user])
+
+      post(conn, "/sites/#{site.domain}/memberships/invite", %{
+        email: existing_user.email,
+        role: "admin"
+      })
+
+      assert_email_delivered_with(
+        to: [nil: existing_user.email],
         subject: "[Plausible Analytics] You've been invited to #{site.domain}"
       )
     end
