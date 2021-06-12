@@ -19,6 +19,7 @@ import {
 } from "./date";
 import Transition from "../transition";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
+import { withComparisonConsumer } from "./comparison-consumer-hoc";
 
 class DatePicker extends React.Component {
   constructor(props) {
@@ -41,7 +42,7 @@ class DatePicker extends React.Component {
   }
 
   handleKeydown(e) {
-    const { query, history } = this.props;
+    const { site, query, history, comparison, modifyComparison } = this.props;
 
     if (e.target.tagName === 'INPUT') return true;
     if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.keyCode === 229) return;
@@ -53,7 +54,7 @@ class DatePicker extends React.Component {
       date: false,
     };
 
-    const insertionDate = parseUTCDate(this.props.site.insertedAt);
+    const insertionDate = parseUTCDate(site.insertedAt);
 
     if (e.key === "ArrowLeft") {
       const prevDate = formatISO(shiftDays(query.date, -1));
@@ -101,13 +102,25 @@ class DatePicker extends React.Component {
 
     this.setState({open: false});
 
+
+
     const keys = ['d', 'r', 'w', 'm', 'y', 't', 's'];
-    const redirects = [{date: false, period: 'day'}, {period: 'realtime'}, {date: false, period: '7d'}, {date: false, period: 'month'}, {date: false, period: '12mo'}, {date: false, period: '30d'}, {date: false, period: '6mo'}];
+    const redirects = [
+      {date: false, period: 'day'},
+      {period: 'realtime'},
+      {date: false, period: '7d'},
+      {date: false, period: 'month'},
+      {date: false, period: '12mo'},
+      {date: false, period: '30d'},
+      {date: false, period: '6mo'}
+    ];
 
     if (keys.includes(e.key.toLowerCase())) {
       navigateToQuery(history, query, {...newSearch, ...(redirects[keys.indexOf(e.key.toLowerCase())])});
     } else if (e.key.toLowerCase() === 'c') {
       this.setState({mode: 'calendar', open: true}, this.openCalendar);
+    } else if (e.key.toLowerCase() === 'p') {
+      modifyComparison({enabled: !comparison.enabled})
     } else if (newSearch.date) {
       navigateToQuery(history, query, newSearch);
     }
@@ -322,6 +335,8 @@ class DatePicker extends React.Component {
   }
 
   renderDropDownContent() {
+    const { site, comparison } = this.props
+
     if (this.state.mode === "menu") {
       return (
         <div
@@ -345,7 +360,7 @@ class DatePicker extends React.Component {
             <div className="border-t border-gray-200 dark:border-gray-500"></div>
             <div className="py-1">
               { this.renderLink('month', 'Month to Date') }
-              { this.renderLink('month', 'Last month', {date: lastMonth(this.props.site)}) }
+              { this.renderLink('month', 'Last month', {date: lastMonth(site)}) }
             </div>
             <div className="border-t border-gray-200 dark:border-gray-500"></div>
             <div className="py-1">
@@ -370,11 +385,26 @@ class DatePicker extends React.Component {
                 <span className='font-normal'>C</span>
               </span>
             </div>
+            <div className="border-t border-gray-200 dark:border-gray-500"></div>
+            <div className="py-1">
+              <span
+                onClick={() => this.props.modifyComparison({enabled: !comparison.enabled})}
+                className="px-4 py-2 md:text-sm leading-tight hover:bg-gray-100
+                  dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100
+                  cursor-pointer flex items-center justify-between"
+              >
+                <div className="flex">
+                  <svg className={`w-5 h-5 mr-2 ${comparison.enabled ? 'text-indigo-500' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg>
+                  {comparison.enabled ? 'Hide ' : 'Show '}Comparison
+                </div>
+                <span className='font-normal'>P</span>
+              </span>
+            </div>
           </div>
         </div>
       );
     } if (this.state.mode === "calendar") {
-      const insertionDate = new Date(this.props.site.insertedAt);
+      const insertionDate = new Date(site.insertedAt);
       const dayBeforeCreation = insertionDate - 86400000;
       return (
         <Flatpickr
@@ -438,4 +468,4 @@ class DatePicker extends React.Component {
   }
 }
 
-export default withRouter(DatePicker);
+export default withComparisonConsumer(withRouter(DatePicker));
