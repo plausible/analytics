@@ -17,7 +17,10 @@
   }
 
   function trigger(eventName, options) {
-    if (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(location.hostname) || location.protocol === 'file:') return warn('localhost');
+    if (eventName === 'plausible_config') window.localStorage.plausible_config = JSON.stringify(options); return;
+    options = Object.assign(JSON.parse(window.localStorage.plausible_config || {}), options)
+    var allowLocalhost = options && options.allowLocalhost;
+    if (!allowLocalhost && (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(location.hostname) || location.protocol === 'file:')) return warn('localhost');
     if (window.phantom || window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) return;
     if (plausible_ignore=="true") return warn('localStorage flag')
     {{#if exclusions}}
