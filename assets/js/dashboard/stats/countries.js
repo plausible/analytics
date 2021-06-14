@@ -34,7 +34,7 @@ class Countries extends React.Component {
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
       this.setState({loading: true, countries: null})
-      this.fetchCountries().then(this.drawMap.bind(this))
+      this.fetchCountries().then(this.drawMap)
     }
 
     if (this.props.darkTheme !== prevProps.darkTheme) {
@@ -42,7 +42,7 @@ class Countries extends React.Component {
         document.getElementById('map-container').removeChild(document.querySelector('.datamaps-hoverover'));
         document.getElementById('map-container').removeChild(document.querySelector('.datamap'));
       }
-      this.drawMap();
+      this.fetchCountries().then(this.drawMap)
     }
   }
 
