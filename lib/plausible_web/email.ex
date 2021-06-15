@@ -170,8 +170,6 @@ defmodule PlausibleWeb.Email do
     |> tag("new-user-invitation")
     |> subject("[Plausible Analytics] You've been invited to #{invitation.site.domain}")
     |> render("new_user_invitation.html",
-      inviting_user: invitation.inviter,
-      site: invitation.site,
       invitation: invitation
     )
   end
@@ -182,9 +180,18 @@ defmodule PlausibleWeb.Email do
     |> tag("existing-user-invitation")
     |> subject("[Plausible Analytics] You've been invited to #{invitation.site.domain}")
     |> render("existing_user_invitation.html",
-      inviting_user: invitation.inviter,
-      site: invitation.site,
       invitation: invitation
+    )
+  end
+
+  def ownership_transfer_request(invitation, new_owner_account) do
+    base_email()
+    |> to(invitation.email)
+    |> tag("ownership-transfer-request")
+    |> subject("[Plausible Analytics] Request to transfer ownership of #{invitation.site.domain}")
+    |> render("ownership_transfer_request.html",
+      invitation: invitation,
+      new_owner_account: new_owner_account
     )
   end
 
@@ -212,6 +219,34 @@ defmodule PlausibleWeb.Email do
       }"
     )
     |> render("invitation_rejected.html",
+      invitation: invitation
+    )
+  end
+
+  def ownership_transfer_accepted(invitation) do
+    base_email()
+    |> to(invitation.inviter.email)
+    |> tag("ownership-transfer-accepted")
+    |> subject(
+      "[Plausible Analytics] #{invitation.email} accepted the ownership transfer of #{
+        invitation.site.domain
+      }"
+    )
+    |> render("ownership_transfer_accepted.html",
+      invitation: invitation
+    )
+  end
+
+  def ownership_transfer_rejected(invitation) do
+    base_email()
+    |> to(invitation.inviter.email)
+    |> tag("ownership-transfer-rejected")
+    |> subject(
+      "[Plausible Analytics] #{invitation.email} rejected the ownership transfer of #{
+        invitation.site.domain
+      }"
+    )
+    |> render("ownership_transfer_rejected.html",
       invitation: invitation
     )
   end

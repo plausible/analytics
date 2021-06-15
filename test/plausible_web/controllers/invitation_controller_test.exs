@@ -41,6 +41,25 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       )
     end
 
+    test "ownership transfer - notifies the original inviter with a different email", %{
+      conn: conn,
+      user: user
+    } do
+      inviter = insert(:user)
+      site = insert(:site)
+
+      invitation =
+        insert(:invitation, site_id: site.id, inviter: inviter, email: user.email, role: :owner)
+
+      post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+
+      assert_email_delivered_with(
+        to: [nil: inviter.email],
+        subject:
+          "[Plausible Analytics] #{user.email} accepted the ownership transfer of #{site.domain}"
+      )
+    end
+
     test "ownership transfer - downgrades previous owner to admin", %{conn: conn, user: user} do
       old_owner = insert(:user)
       site = insert(:site, members: [old_owner])
@@ -114,16 +133,6 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       refute Repo.exists?(
                from i in Plausible.Auth.Invitation, where: i.email == "jane@example.com"
              )
-    end
-  end
-
-  describe "GET /sites/:website/transfer-ownership" do
-    test "shows the form", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
-
-      conn = get(conn, "/sites/#{site.domain}/transfer-ownership")
-
-      assert html_response(conn, 200) =~ "Transfer ownership"
     end
   end
 end

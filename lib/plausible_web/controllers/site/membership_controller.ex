@@ -28,29 +28,38 @@ defmodule PlausibleWeb.Site.MembershipController do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
     user = Plausible.Auth.find_user_by(email: email)
 
-    invitation =
-      Invitation.new(%{
-        email: email,
-        role: role,
-        site_id: site.id,
-        inviter_id: conn.assigns[:current_user].id
-      })
-      |> Repo.insert!()
-      |> Repo.preload([:site, :inviter])
+    if user && Sites.is_member?(user.id, site) do
+      msg = "Cannot send invite because #{user.email} is already a member of #{site.domain}"
 
-    if user do
-      email_template = PlausibleWeb.Email.existing_user_invitation(invitation)
-
-      Plausible.Mailer.send_email(email_template)
+      render(conn, "invite_member_form.html",
+        error: msg,
+        site: site,
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
+      )
     else
-      email_template = PlausibleWeb.Email.new_user_invitation(invitation)
+      invitation =
+        Invitation.new(%{
+          email: email,
+          role: role,
+          site_id: site.id,
+          inviter_id: conn.assigns[:current_user].id
+        })
+        |> Repo.insert!()
+        |> Repo.preload([:site, :inviter])
+
+      email_template =
+        if user do
+          PlausibleWeb.Email.existing_user_invitation(invitation)
+        else
+          PlausibleWeb.Email.new_user_invitation(invitation)
+        end
 
       Plausible.Mailer.send_email(email_template)
-    end
 
-    conn
-    |> put_flash(:success, "#{email} has been invited to #{site_domain} as a #{role}")
-    |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+      conn
+      |> put_flash(:success, "#{email} has been invited to #{site_domain} as a #{role}")
+      |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+    end
   end
 
   def transfer_ownership_form(conn, %{"website" => site_domain}) do
@@ -66,13 +75,20 @@ defmodule PlausibleWeb.Site.MembershipController do
 
   def transfer_ownership(conn, %{"website" => site_domain, "email" => email}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
+    user = Plausible.Auth.find_user_by(email: email)
 
-    Invitation.new(%{
-      email: email,
-      role: :owner,
-      site_id: site.id
-    })
-    |> Repo.insert!()
+    invitation =
+      Invitation.new(%{
+        email: email,
+        role: :owner,
+        site_id: site.id,
+        inviter_id: conn.assigns[:current_user].id
+      })
+      |> Repo.insert!()
+      |> Repo.preload([:site, :inviter])
+
+    PlausibleWeb.Email.ownership_transfer_request(invitation, user)
+    |> Plausible.Mailer.send_email()
 
     conn
     |> put_flash(:success, "Site transfer request has been sent to #{email}")

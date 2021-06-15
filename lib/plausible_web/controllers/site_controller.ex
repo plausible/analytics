@@ -18,12 +18,15 @@ defmodule PlausibleWeb.SiteController do
       )
       |> Repo.preload(:site)
 
+    invitation_site_ids = Enum.map(invitations, & &1.site.id)
+
     {sites, pagination} =
       Repo.paginate(
         from(s in Plausible.Site,
           join: sm in Plausible.Site.Membership,
           on: sm.site_id == s.id,
           where: sm.user_id == ^user.id,
+          where: s.id not in ^invitation_site_ids,
           order_by: s.domain,
           preload: [memberships: sm]
         ),

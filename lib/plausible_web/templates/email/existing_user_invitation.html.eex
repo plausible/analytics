@@ -1,6 +1,6 @@
 Hey,
 <br /><br />
-<%= @inviting_user.email %> has invited you to the <%= @site.domain %> site on Plausible Analytics.
+<%= @invitation.inviter.email %> has invited you to the <%= @invitation.site.domain %> site on Plausible Analytics.
 <%= link("Click here", to: Routes.site_path(PlausibleWeb.Endpoint, :index)) %> to view and respond to the invitation.
 <br /><br />
 Thanks,<br />
