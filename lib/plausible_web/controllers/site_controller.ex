@@ -168,14 +168,26 @@ defmodule PlausibleWeb.SiteController do
     site =
       conn.assigns[:site]
       |> Repo.preload(:custom_domain)
-      |> Repo.preload(memberships: :user)
-      |> Repo.preload(:invitations)
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_general.html",
       site: site,
       changeset: Plausible.Site.changeset(site, %{}),
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
+  end
+
+  def settings_people(conn, _params) do
+    site =
+      conn.assigns[:site]
+      |> Repo.preload(memberships: :user)
+      |> Repo.preload(:invitations)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_people.html",
+      site: site,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end

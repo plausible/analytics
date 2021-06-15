@@ -55,7 +55,7 @@ defmodule PlausibleWeb.SiteView do
     if String.starts_with?(word, ["a", "e", "i", "o", "u"]) do
       "an " <> word
     else
-      "a word"
+      "a " <> word
     end
   end
 end

@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       invitation = Repo.get_by(Plausible.Auth.Invitation, email: "john.doe@example.com")
 
       assert invitation.role == :admin
-      assert redirected_to(conn) == "/#{site.domain}/settings/general"
+      assert redirected_to(conn) == "/#{site.domain}/settings/people"
     end
 
     test "sends invitation email for new user", %{conn: conn, user: user} do
@@ -96,7 +96,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       invitation = Repo.get_by(Plausible.Auth.Invitation, email: "john.doe@example.com")
 
       assert invitation.role == :owner
-      assert redirected_to(conn) == "/#{site.domain}/settings/general"
+      assert redirected_to(conn) == "/#{site.domain}/settings/people"
     end
 
     test "sends ownership transfer email for new user", %{conn: conn, user: user} do

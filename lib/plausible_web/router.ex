@@ -216,6 +216,7 @@ defmodule PlausibleWeb.Router do
     get "/:website/snippet", SiteController, :add_snippet
     get "/:website/settings", SiteController, :settings
     get "/:website/settings/general", SiteController, :settings_general
+    get "/:website/settings/people", SiteController, :settings_people
     get "/:website/settings/visibility", SiteController, :settings_visibility
     get "/:website/settings/goals", SiteController, :settings_goals
     get "/:website/settings/search-console", SiteController, :settings_search_console

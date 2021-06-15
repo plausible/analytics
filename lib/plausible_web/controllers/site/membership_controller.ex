@@ -63,7 +63,7 @@ defmodule PlausibleWeb.Site.MembershipController do
           PlausibleWeb.SiteView.with_indefinite_article(role)
         }"
       )
-      |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+      |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
     end
   end
 
@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Site.MembershipController do
 
     conn
     |> put_flash(:success, "Site transfer request has been sent to #{email}")
-    |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+    |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
   end
 
   def update_role(conn, %{"id" => id, "new_role" => new_role}) do
@@ -111,7 +111,7 @@ defmodule PlausibleWeb.Site.MembershipController do
       if membership.user.id == conn.assigns[:current_user].id && new_role == "viewer" do
         "/#{URI.encode_www_form(membership.site.domain)}"
       else
-        "/#{URI.encode_www_form(membership.site.domain)}/settings/general"
+        Routes.site_path(conn, :settings_people, membership.site.domain)
       end
 
     conn
@@ -129,11 +129,18 @@ defmodule PlausibleWeb.Site.MembershipController do
 
     Repo.delete!(membership)
 
+    redirect_target =
+      if membership.user.id == conn.assigns[:current_user].id do
+        "/#{URI.encode_www_form(membership.site.domain)}"
+      else
+        Routes.site_path(conn, :settings_people, membership.site.domain)
+      end
+
     conn
     |> put_flash(
       :success,
       "#{membership.user.name} has been removed from #{membership.site.domain}"
     )
-    |> redirect(to: "/#{URI.encode_www_form(membership.site.domain)}/settings/general")
+    |> redirect(to: redirect_target)
   end
 end

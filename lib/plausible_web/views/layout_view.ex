@@ -24,6 +24,7 @@ defmodule PlausibleWeb.LayoutView do
   def settings_tabs(conn) do
     [
       [key: "General", value: "general"],
+      [key: "People", value: "people"],
       [key: "Visibility", value: "visibility"],
       [key: "Goals", value: "goals"],
       [key: "Search Console", value: "search-console"],
