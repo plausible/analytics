@@ -81,6 +81,26 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
       assert new_owner_membership.role == :owner
     end
+
+    test "ownership transfer - will lock the site if new owner does not have an active subscription or trial",
+         %{
+           conn: conn,
+           user: user
+         } do
+      Repo.update_all(from(u in Plausible.Auth.User, where: u.id == ^user.id),
+        set: [trial_expiry_date: Timex.today() |> Timex.shift(days: -1)]
+      )
+
+      inviter = insert(:user)
+      site = insert(:site, locked: false)
+
+      invitation =
+        insert(:invitation, site_id: site.id, inviter: inviter, email: user.email, role: :owner)
+
+      post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+
+      assert Repo.reload!(site).locked
+    end
   end
 
   describe "POST /sites/invitations/:invitation_id/reject" do

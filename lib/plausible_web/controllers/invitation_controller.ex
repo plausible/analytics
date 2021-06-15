@@ -37,6 +37,7 @@ defmodule PlausibleWeb.InvitationController do
     case Repo.transaction(multi) do
       {:ok, _} ->
         notify_invitation_accepted(invitation)
+        Plausible.Billing.SiteLocker.check_sites_for(user)
 
         conn
         |> put_flash(:success, "You now have access to #{invitation.site.domain}")
