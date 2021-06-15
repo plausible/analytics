@@ -179,5 +179,26 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       refute Repo.exists?(from sm in Plausible.Site.Membership, where: sm.user_id == ^admin.id)
     end
+
+    test "notifies the user who has been removed via email", %{conn: conn, user: user} do
+      admin = insert(:user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner),
+            build(:site_membership, user: admin, role: :admin)
+          ]
+        )
+
+      membership = Enum.find(site.memberships, &(&1.role == :admin))
+
+      delete(conn, "/sites/#{site.domain}/memberships/#{membership.id}")
+
+      assert_email_delivered_with(
+        to: [nil: admin.email],
+        subject: "[Plausible Analytics] Your access to #{site.domain} has been revoked"
+      )
+    end
   end
 end

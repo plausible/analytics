@@ -129,6 +129,9 @@ defmodule PlausibleWeb.Site.MembershipController do
 
     Repo.delete!(membership)
 
+    PlausibleWeb.Email.site_member_removed(membership)
+    |> Plausible.Mailer.send_email()
+
     redirect_target =
       if membership.user.id == conn.assigns[:current_user].id do
         "/#{URI.encode_www_form(membership.site.domain)}"

@@ -251,6 +251,16 @@ defmodule PlausibleWeb.Email do
     )
   end
 
+  def site_member_removed(membership) do
+    base_email()
+    |> to(membership.user.email)
+    |> tag("site-member-removed")
+    |> subject("[Plausible Analytics] Your access to #{membership.site.domain} has been revoked")
+    |> render("site_member_removed.html",
+      membership: membership
+    )
+  end
+
   defp base_email() do
     mailer_from = Application.get_env(:plausible, :mailer_email)
 
