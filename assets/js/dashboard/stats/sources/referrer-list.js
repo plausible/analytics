@@ -94,20 +94,27 @@ export default class Referrers extends React.Component {
   renderList() {
     if (this.state.referrers.length > 0) {
       return (
-        <React.Fragment>
-          <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
+        <div className="flex flex-col flex-grow">
+          <div
+            className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400"
+          >
             <span>Referrer</span>
             <span>{ this.label() }</span>
           </div>
 
-          <FlipMove>
+          <FlipMove className="flex-grow">
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
-        </React.Fragment>
+        </div>
       )
-    } else {
-      return <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">No data yet</div>
     }
+    return (
+      <div
+        className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400"
+      >
+        No data yet
+      </div>
+    )
   }
 
   renderContent() {
@@ -123,13 +130,15 @@ export default class Referrers extends React.Component {
 
   render() {
     return (
-      <div className="relative p-4 bg-white rounded shadow-xl stats-item dark:bg-gray-825" style={{height: '436px'}}>
-        <LazyLoader onVisible={this.onVisible}>
+      <div
+        className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col dark:bg-gray-825 mt-6 w-full"
+      >
+        <LazyLoader onVisible={this.onVisible} className="flex flex-col flex-grow">
           <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
           { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
-            <FadeIn show={!this.state.loading}>
-              { this.renderContent() }
-            </FadeIn>
+          <FadeIn show={!this.state.loading}>
+            { this.renderContent() }
+          </FadeIn>
         </LazyLoader>
       </div>
     )

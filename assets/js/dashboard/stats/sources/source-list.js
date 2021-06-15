@@ -99,7 +99,9 @@ class AllSources extends React.Component {
 
   render() {
     return (
-      <div className="relative p-4 bg-white rounded shadow-xl stats-item dark:bg-gray-825" style={{height: '436px'}}>
+      <div
+        className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col mt-6 w-full dark:bg-gray-825"
+      >
           { this.renderContent() }
       </div>
     )
@@ -166,17 +168,17 @@ class UTMSources extends React.Component {
   renderList() {
     if (this.state.referrers && this.state.referrers.length > 0) {
       return (
-        <React.Fragment>
+        <div class="flex flex-col flex-grow">
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>{UTM_TAGS[this.props.tab].label}</span>
             <span>{this.label()}</span>
           </div>
 
-          <FlipMove>
+          <FlipMove className="flex-grow">
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
           <MoreLink site={this.props.site} list={this.state.referrers} endpoint={UTM_TAGS[this.props.tab].endpoint} />
-        </React.Fragment>
+        </div>
       )
     } else {
       return <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">No data yet</div>
@@ -191,7 +193,7 @@ class UTMSources extends React.Component {
           { this.props.renderTabs() }
         </div>
         { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
+        <FadeIn show={!this.state.loading} className="flex flex-col flex-grow">
           { this.renderList() }
         </FadeIn>
       </React.Fragment>
@@ -200,7 +202,9 @@ class UTMSources extends React.Component {
 
   render() {
     return (
-      <div className="relative p-4 bg-white rounded shadow-xl stats-item dark:bg-gray-825" style={{height: '436px'}}>
+      <div
+        className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col dark:bg-gray-825 mt-6 w-full"
+      >
         { this.renderContent() }
       </div>
     )

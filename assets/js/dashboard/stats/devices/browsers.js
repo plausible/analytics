@@ -14,16 +14,16 @@ export default class Browsers extends React.Component {
     this.onVisible = this.onVisible.bind(this)
   }
 
-  onVisible() {
-    this.fetchBrowsers()
-    if (this.props.timer) this.props.timer.onTick(this.fetchBrowsers.bind(this))
-  }
-
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
       this.setState({loading: true, browsers: null})
       this.fetchBrowsers()
     }
+  }
+  
+  onVisible() {
+    this.fetchBrowsers()
+    if (this.props.timer) this.props.timer.onTick(this.fetchBrowsers.bind(this))
   }
 
   fetchBrowsers() {
@@ -84,9 +84,9 @@ export default class Browsers extends React.Component {
 
   render() {
     return (
-      <LazyLoader onVisible={this.onVisible}>
+      <LazyLoader onVisible={this.onVisible} className="flex flex-col flex-grow">
         { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
+        <FadeIn show={!this.state.loading} className="flex-grow">
           { this.renderList() }
         </FadeIn>
       </LazyLoader>
