@@ -1,7 +1,7 @@
 Hey <%= user_salutation(@invitation.inviter) %>,
 <br /><br />
 <%= @invitation.email %> has rejected your invitation to <%= @invitation.site.domain %>.
-<%= link("Click here", to: Routes.site_path(PlausibleWeb.Endpoint, :settings_general, @invitation.site.domain)) %> to view site settings.
+<%= link("Click here", to: Routes.site_url(PlausibleWeb.Endpoint, :settings_general, @invitation.site.domain)) %> to view site settings.
 <br /><br />
 Thanks,<br />
 Uku and Marko<br />
