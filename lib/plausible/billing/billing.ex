@@ -18,7 +18,7 @@ defmodule Plausible.Billing do
 
     changeset = Subscription.changeset(%Subscription{}, format_subscription(params))
 
-    Repo.insert(changeset)
+    Repo.insert(changeset) |> check_lock_status
   end
 
   def subscription_updated(params) do
@@ -220,6 +220,17 @@ defmodule Plausible.Billing do
   defp present?(""), do: false
   defp present?(nil), do: false
   defp present?(_), do: true
+
+  defp check_lock_status({:ok, subscription}) do
+    user =
+      Repo.get(Plausible.Auth.User, subscription.user_id)
+      |> Map.put(:subscription, subscription)
+
+    Plausible.Billing.SiteLocker.check_sites_for(user)
+    {:ok, subscription}
+  end
+
+  defp check_lock_status(err), do: err
 
   defp paddle_api(), do: Application.fetch_env!(:plausible, :paddle_api)
 end

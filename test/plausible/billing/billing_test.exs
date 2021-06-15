@@ -266,6 +266,26 @@ defmodule Plausible.BillingTest do
       assert subscription.next_bill_date == ~D[2019-06-01]
       assert subscription.next_bill_amount == "6.00"
     end
+
+    test "unlocks sites if user has any locked sites" do
+      user = insert(:user)
+      site = insert(:site, locked: true, members: [user])
+
+      Billing.subscription_created(%{
+        "alert_name" => "subscription_created",
+        "subscription_id" => @subscription_id,
+        "subscription_plan_id" => @plan_id,
+        "update_url" => "update_url.com",
+        "cancel_url" => "cancel_url.com",
+        "passthrough" => user.id,
+        "status" => "active",
+        "next_bill_date" => "2019-06-01",
+        "unit_price" => "6.00",
+        "currency" => "EUR"
+      })
+
+      refute Repo.reload!(site).locked
+    end
   end
 
   describe "subscription_updated" do
