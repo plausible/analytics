@@ -135,13 +135,29 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
           ]
         )
 
-      membership = Enum.find(site.memberships, &(&1.role == :admin))
+      membership = Repo.get_by(Plausible.Site.Membership, user_id: admin.id)
 
       put(conn, "/sites/#{site.domain}/memberships/#{membership.id}/role/viewer")
 
-      membership = Repo.get_by(Plausible.Site.Membership, user_id: admin.id)
+      membership = Repo.reload!(membership)
 
       assert membership.role == :viewer
+    end
+
+    test "can downgrade yourself from admin to viewer, redirects to stats instead", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :admin)])
+
+      membership = Repo.get_by(Plausible.Site.Membership, user_id: user.id)
+
+      conn = put(conn, "/sites/#{site.domain}/memberships/#{membership.id}/role/viewer")
+
+      membership = Repo.reload!(membership)
+
+      assert membership.role == :viewer
+      assert redirected_to(conn) == "/#{site.domain}"
     end
   end
 

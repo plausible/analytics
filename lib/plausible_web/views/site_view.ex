@@ -50,4 +50,12 @@ defmodule PlausibleWeb.SiteView do
     <script defer data-domain="#{site.domain}" src="#{tracker}"></script>
     """
   end
+
+  def with_indefinite_article(word) do
+    if String.starts_with?(word, ["a", "e", "i", "o", "u"]) do
+      "an " <> word
+    else
+      "a word"
+    end
+  end
 end

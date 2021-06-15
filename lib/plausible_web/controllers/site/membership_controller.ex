@@ -57,7 +57,12 @@ defmodule PlausibleWeb.Site.MembershipController do
       Plausible.Mailer.send_email(email_template)
 
       conn
-      |> put_flash(:success, "#{email} has been invited to #{site_domain} as a #{role}")
+      |> put_flash(
+        :success,
+        "#{email} has been invited to #{site_domain} as #{
+          PlausibleWeb.SiteView.with_indefinite_article(role)
+        }"
+      )
       |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
     end
   end
@@ -102,9 +107,19 @@ defmodule PlausibleWeb.Site.MembershipController do
       |> Membership.changeset(%{role: new_role})
       |> Repo.update!()
 
+    redirect_target =
+      if membership.user.id == conn.assigns[:current_user].id && new_role == "viewer" do
+        "/#{URI.encode_www_form(membership.site.domain)}"
+      else
+        "/#{URI.encode_www_form(membership.site.domain)}/settings/general"
+      end
+
     conn
-    |> put_flash(:success, "#{membership.user.name} is now a #{new_role}")
-    |> redirect(to: "/#{URI.encode_www_form(membership.site.domain)}/settings/general")
+    |> put_flash(
+      :success,
+      "#{membership.user.name} is now #{PlausibleWeb.SiteView.with_indefinite_article(new_role)}"
+    )
+    |> redirect(to: redirect_target)
   end
 
   def remove_member(conn, %{"id" => id}) do
