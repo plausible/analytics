@@ -1,12 +1,16 @@
 import Config
+import Plausible.ConfigHelpers
 
 if config_env() in [:dev, :test] do
   Envy.auto_load()
 end
 
-port = System.get_env("PORT") || 8000
+config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
 
-base_url = System.get_env("BASE_URL")
+# System.get_env does not accept a non string default
+port = get_var_from_path_or_env(config_dir, "PORT") || 8000
+
+base_url = get_var_from_path_or_env(config_dir, "BASE_URL")
 
 if !base_url do
   raise "BASE_URL configuration option is required. See https://plausible.io/docs/self-hosting-configuration#server"
@@ -20,79 +24,137 @@ if base_url.scheme not in ["http", "https"] do
         }`"
 end
 
-secret_key_base =
-  case System.get_env("SECRET_KEY_BASE") do
-    nil ->
-      raise "SECRET_KEY_BASE configuration option is required. See https://plausible.io/docs/self-hosting-configuration#server"
+secret_key_base = get_var_from_path_or_env(config_dir, "SECRET_KEY_BASE", nil)
 
-    key when byte_size(key) < 64 ->
-      raise "SECRET_KEY_BASE must be at least 64 bytes long. See https://plausible.io/docs/self-hosting-configuration#server"
+case secret_key_base do
+  nil ->
+    raise "SECRET_KEY_BASE configuration option is required. See https://plausible.io/docs/self-hosting-configuration#server"
 
-    key ->
-      key
-  end
+  key when byte_size(key) < 64 ->
+    raise "SECRET_KEY_BASE must be at least 64 bytes long. See https://plausible.io/docs/self-hosting-configuration#server"
+
+  _ ->
+    nil
+end
 
 db_url =
-  System.get_env(
+  get_var_from_path_or_env(
+    config_dir,
     "DATABASE_URL",
     "postgres://postgres:postgres@plausible_db:5432/plausible_db"
   )
 
-admin_user = System.get_env("ADMIN_USER_NAME")
-admin_email = System.get_env("ADMIN_USER_EMAIL")
-admin_emails = System.get_env("ADMIN_EMAILS", "") |> String.split(",")
-admin_pwd = System.get_env("ADMIN_USER_PWD")
-env = System.get_env("ENVIRONMENT", "prod")
-mailer_adapter = System.get_env("MAILER_ADAPTER", "Bamboo.SMTPAdapter")
-mailer_email = System.get_env("MAILER_EMAIL", "hello@plausible.local")
-app_version = System.get_env("APP_VERSION", "0.0.1")
+db_socket_dir = get_var_from_path_or_env(config_dir, "DATABASE_SOCKET_DIR")
+
+admin_user = get_var_from_path_or_env(config_dir, "ADMIN_USER_NAME")
+admin_email = get_var_from_path_or_env(config_dir, "ADMIN_USER_EMAIL")
+
+admin_emails =
+  get_var_from_path_or_env(config_dir, "ADMIN_EMAILS", "")
+  |> String.split(",")
+
+admin_pwd = get_var_from_path_or_env(config_dir, "ADMIN_USER_PWD")
+env = get_var_from_path_or_env(config_dir, "ENVIRONMENT", "prod")
+mailer_adapter = get_var_from_path_or_env(config_dir, "MAILER_ADAPTER", "Bamboo.SMTPAdapter")
+mailer_email = get_var_from_path_or_env(config_dir, "MAILER_EMAIL", "hello@plausible.local")
+app_version = get_var_from_path_or_env(config_dir, "APP_VERSION", "0.0.1")
 
 ch_db_url =
-  System.get_env("CLICKHOUSE_DATABASE_URL", "http://plausible_events_db:8123/plausible_events_db")
+  get_var_from_path_or_env(
+    config_dir,
+    "CLICKHOUSE_DATABASE_URL",
+    "http://plausible_events_db:8123/plausible_events_db"
+  )
 
-{ch_flush_interval_ms, ""} = Integer.parse(System.get_env("CLICKHOUSE_FLUSH_INTERVAL_MS", "5000"))
-{ch_max_buffer_size, ""} = Integer.parse(System.get_env("CLICKHOUSE_MAX_BUFFER_SIZE", "10000"))
+{ch_flush_interval_ms, ""} =
+  config_dir
+  |> get_var_from_path_or_env("CLICKHOUSE_FLUSH_INTERVAL_MS", "5000")
+  |> Integer.parse()
+
+{ch_max_buffer_size, ""} =
+  config_dir
+  |> get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE", "10000")
+  |> Integer.parse()
 
 ### Mandatory params End
 
-sentry_dsn = System.get_env("SENTRY_DSN")
-paddle_auth_code = System.get_env("PADDLE_VENDOR_AUTH_CODE")
-google_cid = System.get_env("GOOGLE_CLIENT_ID")
-google_secret = System.get_env("GOOGLE_CLIENT_SECRET")
-slack_hook_url = System.get_env("SLACK_WEBHOOK")
-twitter_consumer_key = System.get_env("TWITTER_CONSUMER_KEY")
-twitter_consumer_secret = System.get_env("TWITTER_CONSUMER_SECRET")
-twitter_token = System.get_env("TWITTER_ACCESS_TOKEN")
-twitter_token_secret = System.get_env("TWITTER_ACCESS_TOKEN_SECRET")
-postmark_api_key = System.get_env("POSTMARK_API_KEY")
-cron_enabled = String.to_existing_atom(System.get_env("CRON_ENABLED", "false"))
-custom_domain_server_ip = System.get_env("CUSTOM_DOMAIN_SERVER_IP")
-custom_domain_server_user = System.get_env("CUSTOM_DOMAIN_SERVER_USER")
-custom_domain_server_password = System.get_env("CUSTOM_DOMAIN_SERVER_PASSWORD")
+sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
+paddle_auth_code = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_AUTH_CODE")
+google_cid = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_ID")
+google_secret = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_SECRET")
+slack_hook_url = get_var_from_path_or_env(config_dir, "SLACK_WEBHOOK")
+twitter_consumer_key = get_var_from_path_or_env(config_dir, "TWITTER_CONSUMER_KEY")
+twitter_consumer_secret = get_var_from_path_or_env(config_dir, "TWITTER_CONSUMER_SECRET")
+twitter_token = get_var_from_path_or_env(config_dir, "TWITTER_ACCESS_TOKEN")
+twitter_token_secret = get_var_from_path_or_env(config_dir, "TWITTER_ACCESS_TOKEN_SECRET")
+postmark_api_key = get_var_from_path_or_env(config_dir, "POSTMARK_API_KEY")
+
+cron_enabled =
+  config_dir
+  |> get_var_from_path_or_env("CRON_ENABLED", "false")
+  |> String.to_existing_atom()
+
+custom_domain_server_ip = get_var_from_path_or_env(config_dir, "CUSTOM_DOMAIN_SERVER_IP")
+custom_domain_server_user = get_var_from_path_or_env(config_dir, "CUSTOM_DOMAIN_SERVER_USER")
+
+custom_domain_server_password =
+  get_var_from_path_or_env(config_dir, "CUSTOM_DOMAIN_SERVER_PASSWORD")
 
 geolite2_country_db =
-  System.get_env(
+  get_var_from_path_or_env(
+    config_dir,
     "GEOLITE2_COUNTRY_DB",
     Application.app_dir(:plausible) <> "/priv/geodb/dbip-country.mmdb"
   )
 
-disable_auth = String.to_existing_atom(System.get_env("DISABLE_AUTH", "false"))
-disable_registration = String.to_existing_atom(System.get_env("DISABLE_REGISTRATION", "false"))
-hcaptcha_sitekey = System.get_env("HCAPTCHA_SITEKEY")
-hcaptcha_secret = System.get_env("HCAPTCHA_SECRET")
-log_level = String.to_existing_atom(System.get_env("LOG_LEVEL", "warn"))
-is_selfhost = String.to_existing_atom(System.get_env("SELFHOST", "true"))
-{site_limit, ""} = Integer.parse(System.get_env("SITE_LIMIT", "20"))
+disable_auth =
+  config_dir
+  |> get_var_from_path_or_env("DISABLE_AUTH", "false")
+  |> String.to_existing_atom()
+
+disable_registration =
+  config_dir
+  |> get_var_from_path_or_env("DISABLE_REGISTRATION", "false")
+  |> String.to_existing_atom()
+
+hcaptcha_sitekey = get_var_from_path_or_env(config_dir, "HCAPTCHA_SITEKEY")
+hcaptcha_secret = get_var_from_path_or_env(config_dir, "HCAPTCHA_SECRET")
+
+log_level =
+  config_dir
+  |> get_var_from_path_or_env("LOG_LEVEL", "warn")
+  |> String.to_existing_atom()
+
+is_selfhost =
+  config_dir
+  |> get_var_from_path_or_env("SELFHOST", "true")
+  |> String.to_existing_atom()
+
+{site_limit, ""} =
+  config_dir
+  |> get_var_from_path_or_env("SITE_LIMIT", "20")
+  |> Integer.parse()
 
 site_limit_exempt =
-  System.get_env("SITE_LIMIT_EXEMPT", "") |> String.split(",") |> Enum.map(&String.trim/1)
+  config_dir
+  |> get_var_from_path_or_env("SITE_LIMIT_EXEMPT", "")
+  |> String.split(",")
+  |> Enum.map(&String.trim/1)
 
-disable_cron = String.to_existing_atom(System.get_env("DISABLE_CRON", "false"))
+disable_cron =
+  config_dir
+  |> get_var_from_path_or_env("DISABLE_CRON", "false")
+  |> String.to_existing_atom()
 
-{user_agent_cache_limit, ""} = Integer.parse(System.get_env("USER_AGENT_CACHE_LIMIT", "1000"))
+{user_agent_cache_limit, ""} =
+  config_dir
+  |> get_var_from_path_or_env("USER_AGENT_CACHE_LIMIT", "1000")
+  |> Integer.parse()
 
 user_agent_cache_stats =
-  String.to_existing_atom(System.get_env("USER_AGENT_CACHE_STATS", "false"))
+  config_dir
+  |> get_var_from_path_or_env("USER_AGENT_CACHE_STATS", "false")
+  |> String.to_existing_atom()
 
 config :plausible,
   admin_user: admin_user,
@@ -114,14 +176,12 @@ config :plausible, PlausibleWeb.Endpoint,
   http: [port: port],
   secret_key_base: secret_key_base
 
-case System.get_env("DATABASE_SOCKET_DIR", "") do
-  "" ->
-    config :plausible, Plausible.Repo, url: db_url
-
-  x ->
-    config :plausible, Plausible.Repo,
-      socket_dir: x,
-      database: System.get_env("DATABASE_NAME")
+if is_nil(db_socket_dir) do
+  config :plausible, Plausible.Repo, url: db_url
+else
+  config :plausible, Plausible.Repo,
+    socket_dir: db_socket_dir,
+    database: get_var_from_path_or_env(config_dir, "DATABASE_NAME", "plausible")
 end
 
 config :sentry,
@@ -154,21 +214,21 @@ case mailer_adapter do
     config :plausible, Plausible.Mailer,
       adapter: :"Elixir.#{mailer_adapter}",
       request_options: [recv_timeout: 10_000],
-      api_key: System.get_env("POSTMARK_API_KEY")
+      api_key: get_var_from_path_or_env(config_dir, "POSTMARK_API_KEY")
 
   "Bamboo.SMTPAdapter" ->
     config :plausible, Plausible.Mailer,
       adapter: :"Elixir.#{mailer_adapter}",
-      server: System.get_env("SMTP_HOST_ADDR", "mail"),
+      server: get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR", "mail"),
       hostname: base_url.host,
-      port: System.get_env("SMTP_HOST_PORT", "25"),
-      username: System.get_env("SMTP_USER_NAME"),
-      password: System.get_env("SMTP_USER_PWD"),
+      port: get_var_from_path_or_env(config_dir, "SMTP_HOST_PORT", "25"),
+      username: get_var_from_path_or_env(config_dir, "SMTP_USER_NAME"),
+      password: get_var_from_path_or_env(config_dir, "SMTP_USER_PWD"),
       tls: :if_available,
       allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
-      ssl: System.get_env("SMTP_HOST_SSL_ENABLED") || false,
-      retries: System.get_env("SMTP_RETRIES") || 2,
-      no_mx_lookups: System.get_env("SMTP_MX_LOOKUPS_ENABLED") || true
+      ssl: get_var_from_path_or_env(config_dir, "SMTP_HOST_SSL_ENABLED", false),
+      retries: get_var_from_path_or_env(config_dir, "SMTP_RETRIES", 2),
+      no_mx_lookups: get_var_from_path_or_env(config_dir, "SMTP_MX_LOOKUPS_ENABLED") || true
 
   "Bamboo.LocalAdapter" ->
     config :plausible, Plausible.Mailer, adapter: Bamboo.LocalAdapter
@@ -192,7 +252,10 @@ config :plausible, :custom_domain_server,
   ip: custom_domain_server_ip
 
 config :plausible, PlausibleWeb.Firewall,
-  blocklist: System.get_env("IP_BLOCKLIST", "") |> String.split(",") |> Enum.map(&String.trim/1)
+  blocklist:
+    get_var_from_path_or_env(config_dir, "IP_BLOCKLIST", "")
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
 
 if config_env() == :prod && !disable_cron do
   base_cron = [
@@ -310,4 +373,6 @@ config :logger, Sentry.LoggerBackend,
   level: :error,
   excluded_domains: []
 
-config :tzdata, :data_dir, System.get_env("STORAGE_DIR", Application.app_dir(:tzdata, "priv"))
+config :tzdata,
+       :data_dir,
+       get_var_from_path_or_env(config_dir, "STORAGE_DIR", Application.app_dir(:tzdata, "priv"))
