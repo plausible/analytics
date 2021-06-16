@@ -220,7 +220,9 @@ if config_env() == :prod && !disable_cron do
     # Daily at 15
     {"0 15 * * *", Plausible.Workers.NotifyAnnualRenewal},
     # Every 10 minutes
-    {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}
+    {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates},
+    # Every midnight
+    {"0 0 * * *", Plausible.Workers.LockSites}
   ]
 
   base_queues = [
@@ -238,7 +240,8 @@ if config_env() == :prod && !disable_cron do
     provision_ssl_certificates: 1,
     trial_notification_emails: 1,
     check_usage: 1,
-    notify_annual_renewal: 1
+    notify_annual_renewal: 1,
+    lock_sites: 1
   ]
 
   # Keep 30 days history
