@@ -76,9 +76,9 @@ export default class ExitPages extends React.Component {
   render() {
     const { loading } = this.state;
     return (
-      <LazyLoader onVisible={this.onVisible}>
+      <LazyLoader onVisible={this.onVisible} className="flex flex-col flex-grow">
         { loading && <div className="mx-auto loading mt-44"><div></div></div> }
-        <FadeIn show={!loading}>
+        <FadeIn show={!loading} className="flex-grow">
           { this.renderList() }
         </FadeIn>
         {!loading && <MoreLink site={this.props.site} list={this.state.pages} endpoint="exit-pages" />}
