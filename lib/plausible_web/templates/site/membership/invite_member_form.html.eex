@@ -2,8 +2,12 @@
   <h2 class="text-xl font-black dark:text-gray-100">Invite member to <%= @site.domain %></h2>
 
   <p class="mt-4 max-w-2xl text-sm text-gray-500">
-    Enter their email address and role. We will contact them over email to offer them access to
+    Enter the email address and role of the person you want to invite. We will contact them over email to offer them access to
     <%= @site.domain %> analytics.
+  </p>
+
+  <p class="mt-4 max-w-2xl text-sm text-gray-500">
+    The invitation will expire in 48 hours
   </p>
 
   <%= if @conn.assigns[:error] do %>
