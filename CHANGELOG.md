@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - Make sure embedded dashboards can run when user has blocked third-party cookies plausible/analytics#971
 - Sites listing page will paginate if the user has a lot of sites plausible/analytics#994
 - Crash when changing theme on a loaded dashboard plausible/analytics#1123
+- UI fix for details button overlapping content on mobile plausible/analytics#1114
 
 ### Removed
 - Removes AppSignal monitoring package
