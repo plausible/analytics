@@ -60,7 +60,7 @@ defmodule Plausible.Workers.SendEmailReport do
     referrers = Stats.top_sources(site, query, 5, 1, [])
     pages = Stats.top_pages(site, query, 5, 1, [])
     user = Plausible.Auth.find_user_by(email: email)
-    login_link = user && Plausible.Sites.is_owner?(user.id, site)
+    login_link = user && Plausible.Sites.is_member?(user.id, site)
 
     template =
       PlausibleWeb.Email.weekly_report(email, site,

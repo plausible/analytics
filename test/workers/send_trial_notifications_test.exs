@@ -4,11 +4,35 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
   use Oban.Testing, repo: Plausible.Repo
   alias Plausible.Workers.SendTrialNotifications
 
-  test "does not send a notification if user didn't set up their site" do
-    insert(:user, inserted_at: Timex.now() |> Timex.shift(days: -14))
-    insert(:user, inserted_at: Timex.now() |> Timex.shift(days: -29))
-    insert(:user, inserted_at: Timex.now() |> Timex.shift(days: -30))
-    insert(:user, inserted_at: Timex.now() |> Timex.shift(days: -31))
+  test "does not send a notification if user didn't create a site" do
+    insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 7))
+    insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 1))
+    insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 0))
+    insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: -1))
+
+    perform_job(SendTrialNotifications, %{})
+
+    assert_no_emails_delivered()
+  end
+
+  test "does not send a notification if user created a site but there are no pageviews" do
+    user = insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 7))
+    insert(:site, domain: "some-nonexistent-site.com", members: [user])
+
+    perform_job(SendTrialNotifications, %{})
+
+    assert_no_emails_delivered()
+  end
+
+  test "does not send a notification if user is a collaborator on sites but not an owner" do
+    user = insert(:user, trial_expiry_date: Timex.now())
+
+    insert(:site,
+      domain: "test-site.com",
+      memberships: [
+        build(:site_membership, user: user, role: :admin)
+      ]
+    )
 
     perform_job(SendTrialNotifications, %{})
 

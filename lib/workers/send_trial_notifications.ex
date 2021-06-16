@@ -21,22 +21,22 @@ defmodule Plausible.Workers.SendTrialNotifications do
     for user <- users do
       case Timex.diff(user.trial_expiry_date, Timex.today(), :days) do
         7 ->
-          if Plausible.Auth.user_completed_setup?(user) do
+          if Plausible.Auth.has_active_sites?(user, [:owner]) do
             send_one_week_reminder(user)
           end
 
         1 ->
-          if Plausible.Auth.user_completed_setup?(user) do
+          if Plausible.Auth.has_active_sites?(user, [:owner]) do
             send_tomorrow_reminder(user)
           end
 
         0 ->
-          if Plausible.Auth.user_completed_setup?(user) do
+          if Plausible.Auth.has_active_sites?(user, [:owner]) do
             send_today_reminder(user)
           end
 
         -1 ->
-          if Plausible.Auth.user_completed_setup?(user) do
+          if Plausible.Auth.has_active_sites?(user, [:owner]) do
             send_over_reminder(user)
           end
 
