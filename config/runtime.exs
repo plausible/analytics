@@ -49,9 +49,10 @@ db_socket_dir = get_var_from_path_or_env(config_dir, "DATABASE_SOCKET_DIR")
 admin_user = get_var_from_path_or_env(config_dir, "ADMIN_USER_NAME")
 admin_email = get_var_from_path_or_env(config_dir, "ADMIN_USER_EMAIL")
 
-admin_emails =
-  get_var_from_path_or_env(config_dir, "ADMIN_EMAILS", "")
+admin_user_ids =
+  get_var_from_path_or_env(config_dir, "ADMIN_USER_IDS", "")
   |> String.split(",")
+  |> Enum.map(fn id -> Integer.parse(id) |> elem(0) end)
 
 admin_pwd = get_var_from_path_or_env(config_dir, "ADMIN_USER_PWD")
 env = get_var_from_path_or_env(config_dir, "ENVIRONMENT", "prod")
@@ -162,7 +163,7 @@ config :plausible,
   admin_pwd: admin_pwd,
   environment: env,
   mailer_email: mailer_email,
-  admin_emails: admin_emails,
+  admin_user_ids: admin_user_ids,
   site_limit: site_limit,
   site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost

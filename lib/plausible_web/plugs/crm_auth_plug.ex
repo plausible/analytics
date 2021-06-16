@@ -14,7 +14,7 @@ defmodule PlausibleWeb.CRMAuthPlug do
       id ->
         user = Repo.get_by(Plausible.Auth.User, id: id)
 
-        if user && user.email in admin_emails() do
+        if user && user.id in admin_user_ids() do
           assign(conn, :current_user, user)
         else
           conn |> send_resp(403, "Not allowed") |> halt
@@ -22,5 +22,5 @@ defmodule PlausibleWeb.CRMAuthPlug do
     end
   end
 
-  defp admin_emails(), do: Application.get_env(:plausible, :admin_emails)
+  defp admin_user_ids(), do: Application.get_env(:plausible, :admin_user_ids)
 end

@@ -15,12 +15,12 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
     if !site do
       PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt
     else
-      user = conn.assigns[:current_user]
-      membership_role = user && Plausible.Sites.role(user.id, site)
+      user_id = get_session(conn, :current_user_id)
+      membership_role = user_id && Plausible.Sites.role(user_id, site)
 
       role =
         cond do
-          user && membership_role ->
+          user_id && membership_role ->
             membership_role
 
           site.public ->
@@ -29,7 +29,7 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
           shared_link_record && shared_link_record.site_id == site.id ->
             :public
 
-          user.email in admin_emails() ->
+          user_id in admin_user_ids() ->
             :admin
 
           true ->
@@ -44,7 +44,7 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
     end
   end
 
-  defp admin_emails() do
-    Application.get_env(:plausible, :admin_emails)
+  defp admin_user_ids() do
+    Application.get_env(:plausible, :admin_user_ids)
   end
 end
