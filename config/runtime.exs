@@ -2,7 +2,7 @@ import Config
 import Plausible.ConfigHelpers
 
 if config_env() in [:dev, :test] do
-  Envy.auto_load()
+  Envy.load(["config/.env.#{config_env()}"])
 end
 
 config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
