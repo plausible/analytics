@@ -52,7 +52,12 @@ admin_email = get_var_from_path_or_env(config_dir, "ADMIN_USER_EMAIL")
 admin_user_ids =
   get_var_from_path_or_env(config_dir, "ADMIN_USER_IDS", "")
   |> String.split(",")
-  |> Enum.map(fn id -> Integer.parse(id) |> elem(0) end)
+  |> Enum.map(fn id -> Integer.parse(id) end)
+  |> Enum.map(fn
+    {int, ""} -> int
+    _ -> nil
+  end)
+  |> Enum.filter(& &1)
 
 admin_pwd = get_var_from_path_or_env(config_dir, "ADMIN_USER_PWD")
 env = get_var_from_path_or_env(config_dir, "ENVIRONMENT", "prod")
