@@ -78,11 +78,15 @@ defmodule PlausibleWeb.AuthController do
       invitation = Repo.get_by(Plausible.Auth.Invitation, invitation_id: invitation_id)
       changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
 
-      render(conn, "register_from_invitation_form.html",
-        changeset: changeset,
-        invitation: invitation,
-        layout: {PlausibleWeb.LayoutView, "focus.html"}
-      )
+      if invitation do
+        render(conn, "register_from_invitation_form.html",
+          changeset: changeset,
+          invitation: invitation,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+      else
+        render(conn, "invitation_expired.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+      end
     end
   end
 
