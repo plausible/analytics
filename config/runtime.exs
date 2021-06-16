@@ -209,7 +209,9 @@ if config_env() == :prod && !disable_cron do
     # Every 15 minutes
     {"*/15 * * * *", Plausible.Workers.SpikeNotifier},
     # Every day at midnight
-    {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes}
+    {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes},
+    # Every day at 1am
+    {"0 1 * * *", Plausible.Workers.CleanInvitations}
   ]
 
   extra_cron = [
@@ -231,9 +233,10 @@ if config_env() == :prod && !disable_cron do
     send_email_reports: 1,
     spike_notifications: 1,
     fetch_tweets: 1,
-    clean_email_verification_codes: 1,
     check_stats_emails: 1,
-    site_setup_emails: 1
+    site_setup_emails: 1,
+    clean_email_verification_codes: 1,
+    clean_invitations: 1
   ]
 
   extra_queues = [
