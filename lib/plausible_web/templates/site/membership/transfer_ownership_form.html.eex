@@ -6,7 +6,7 @@
   </p>
   <p class="mt-4 max-w-2xl text-sm text-gray-500">
     If they accept the transfer request, the new owner will be responsible for billing. Your access will be downgraded to <b>admin</b> and
-    any other member roles will stay the same.
+    any other member roles will stay the same. If they don't respond in 48 hours, the request will expire automatically.
   </p>
 
   <%= if @conn.assigns[:error] do %>
