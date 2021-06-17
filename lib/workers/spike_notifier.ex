@@ -12,7 +12,10 @@ defmodule Plausible.Workers.SpikeNotifier do
         from sn in SpikeNotification,
           where: is_nil(sn.last_sent),
           or_where: sn.last_sent < fragment("now() - INTERVAL ?", @at_most_every),
-          preload: :site
+          join: s in Plausible.Site,
+          on: sn.site_id == s.id,
+          where: not s.locked,
+          preload: [site: s]
       )
 
     for notification <- notifications do
