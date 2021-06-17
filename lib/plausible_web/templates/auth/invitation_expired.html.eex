@@ -7,6 +7,6 @@
   <h2 class="text-xl font-black dark:text-gray-100">Invitation expired</h2>
 
   <p class="mt-4 text-sm">
-  Your invitation has expired. Please request fresh one or you can <%= link("sign up", class: "text-indigo-600 hover:text-indigo-900", to: Routes.auth_path(@conn, :register)) %> for a 30-day unlimited free trial without an invitation.
+  Your invitation has expired or been revoked. Please request fresh one or you can <%= link("sign up", class: "text-indigo-600 hover:text-indigo-900", to: Routes.auth_path(@conn, :register)) %> for a 30-day unlimited free trial without an invitation.
   </p>
 </div>
