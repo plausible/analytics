@@ -181,8 +181,7 @@ defmodule PlausibleWeb.SiteController do
   def settings_people(conn, _params) do
     site =
       conn.assigns[:site]
-      |> Repo.preload(memberships: :user)
-      |> Repo.preload(:invitations)
+      |> Repo.preload(memberships: :user, invitations: [], custom_domain: [])
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -193,7 +192,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_visibility(conn, _params) do
-    site = conn.assigns[:site]
+    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
     shared_links = Repo.all(from l in Plausible.Site.SharedLink, where: l.site_id == ^site.id)
 
     conn
@@ -206,7 +205,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_goals(conn, _params) do
-    site = conn.assigns[:site]
+    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
     goals = Goals.for_site(site.domain)
 
     conn
@@ -221,7 +220,7 @@ defmodule PlausibleWeb.SiteController do
   def settings_search_console(conn, _params) do
     site =
       conn.assigns[:site]
-      |> Repo.preload(:google_auth)
+      |> Repo.preload([:google_auth, :custom_domain])
 
     search_console_domains =
       if site.google_auth do
@@ -238,7 +237,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_email_reports(conn, _params) do
-    site = conn.assigns[:site]
+    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -265,10 +264,12 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_danger_zone(conn, _params) do
+    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_danger_zone.html",
-      site: conn.assigns[:site],
+      site: site,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -667,6 +668,6 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Custom domain deleted successfully")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/custom-domain")
+    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
   end
 end
