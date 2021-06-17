@@ -5,8 +5,20 @@ defmodule PlausibleWeb.SiteController do
 
   plug PlausibleWeb.RequireAccountPlug
 
+  plug PlausibleWeb.AuthorizeSiteAccess,
+       [:owner, :admin] when action not in [:index, :new, :create_site]
+
   def index(conn, params) do
     user = conn.assigns[:current_user]
+
+    invitations =
+      Repo.all(
+        from i in Plausible.Auth.Invitation,
+          where: i.email == ^user.email
+      )
+      |> Repo.preload(:site)
+
+    invitation_site_ids = Enum.map(invitations, & &1.site.id)
 
     {sites, pagination} =
       Repo.paginate(
@@ -14,18 +26,32 @@ defmodule PlausibleWeb.SiteController do
           join: sm in Plausible.Site.Membership,
           on: sm.site_id == s.id,
           where: sm.user_id == ^user.id,
-          order_by: s.domain
+          where: s.id not in ^invitation_site_ids,
+          order_by: s.domain,
+          preload: [memberships: sm]
         ),
         params
       )
 
-    visitors = Plausible.Stats.Clickhouse.last_24h_visitors(sites)
-    render(conn, "index.html", sites: sites, visitors: visitors, pagination: pagination)
+    user_owns_sites =
+      Enum.any?(sites, fn site -> List.first(site.memberships).role == :owner end) ||
+        Plausible.Auth.user_owns_sites?(user)
+
+    visitors =
+      Plausible.Stats.Clickhouse.last_24h_visitors(sites ++ Enum.map(invitations, & &1.site))
+
+    render(conn, "index.html",
+      invitations: invitations,
+      sites: sites,
+      visitors: visitors,
+      pagination: pagination,
+      needs_to_upgrade: user_owns_sites && Plausible.Billing.needs_to_upgrade?(user)
+    )
   end
 
   def new(conn, _params) do
     current_user = conn.assigns[:current_user]
-    site_count = Plausible.Sites.count_for(current_user)
+    site_count = Enum.count(Plausible.Sites.owned_by(current_user))
     site_limit = Plausible.Billing.sites_limit(current_user)
     is_at_limit = site_limit && site_count >= site_limit
     is_first_site = site_count == 0
@@ -43,7 +69,7 @@ defmodule PlausibleWeb.SiteController do
 
   def create_site(conn, %{"site" => site_params}) do
     user = conn.assigns[:current_user]
-    site_count = Plausible.Sites.count_for(user)
+    site_count = Enum.count(Plausible.Sites.owned_by(user))
     is_first_site = site_count == 0
 
     case Sites.create(user, site_params) do
@@ -72,12 +98,9 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  def add_snippet(conn, %{"website" => website}) do
+  def add_snippet(conn, _params) do
     user = conn.assigns[:current_user]
-
-    site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
-      |> Repo.preload(:custom_domain)
+    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
 
     is_first_site =
       !Repo.exists?(
@@ -96,8 +119,8 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def new_goal(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def new_goal(conn, _params) do
+    site = conn.assigns[:site]
     changeset = Plausible.Goal.changeset(%Plausible.Goal{})
 
     conn
@@ -109,8 +132,8 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def create_goal(conn, %{"website" => website, "goal" => goal}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def create_goal(conn, %{"goal" => goal}) do
+    site = conn.assigns[:site]
 
     case Plausible.Goals.create(site, goal) do
       {:ok, _} ->
@@ -141,9 +164,9 @@ defmodule PlausibleWeb.SiteController do
     redirect(conn, to: "/#{URI.encode_www_form(website)}/settings/general")
   end
 
-  def settings_general(conn, %{"website" => website}) do
+  def settings_general(conn, _params) do
     site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      conn.assigns[:site]
       |> Repo.preload(:custom_domain)
 
     conn
@@ -155,8 +178,22 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def settings_visibility(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def settings_people(conn, _params) do
+    site =
+      conn.assigns[:site]
+      |> Repo.preload(memberships: :user)
+      |> Repo.preload(:invitations)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_people.html",
+      site: site,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
+  end
+
+  def settings_visibility(conn, _params) do
+    site = conn.assigns[:site]
     shared_links = Repo.all(from l in Plausible.Site.SharedLink, where: l.site_id == ^site.id)
 
     conn
@@ -168,8 +205,8 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def settings_goals(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def settings_goals(conn, _params) do
+    site = conn.assigns[:site]
     goals = Goals.for_site(site.domain)
 
     conn
@@ -181,9 +218,9 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def settings_search_console(conn, %{"website" => website}) do
+  def settings_search_console(conn, _params) do
     site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      conn.assigns[:site]
       |> Repo.preload(:google_auth)
 
     search_console_domains =
@@ -200,8 +237,8 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def settings_email_reports(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def settings_email_reports(conn, _params) do
+    site = conn.assigns[:site]
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -214,9 +251,9 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def settings_custom_domain(conn, %{"website" => website}) do
+  def settings_custom_domain(conn, _params) do
     site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      conn.assigns[:site]
       |> Repo.preload(:custom_domain)
 
     conn
@@ -227,21 +264,17 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def settings_danger_zone(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
-
+  def settings_danger_zone(conn, _params) do
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_danger_zone.html",
-      site: site,
+      site: conn.assigns[:site],
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
 
-  def update_google_auth(conn, %{"website" => website, "google_auth" => attrs}) do
-    site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
-      |> Repo.preload(:google_auth)
+  def update_google_auth(conn, %{"google_auth" => attrs}) do
+    site = conn.assigns[:site] |> Repo.preload(:google_auth)
 
     Plausible.Site.GoogleAuth.set_property(site.google_auth, attrs)
     |> Repo.update!()
@@ -251,9 +284,9 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/search-console")
   end
 
-  def delete_google_auth(conn, %{"website" => website}) do
+  def delete_google_auth(conn, _params) do
     site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      conn.assigns[:site]
       |> Repo.preload(:google_auth)
 
     Repo.delete!(site.google_auth)
@@ -263,8 +296,8 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/search-console")
   end
 
-  def update_settings(conn, %{"website" => website, "site" => site_params}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def update_settings(conn, %{"site" => site_params}) do
+    site = conn.assigns[:site]
     changeset = site |> Plausible.Site.changeset(site_params)
     res = changeset |> Repo.update()
 
@@ -282,8 +315,8 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  def reset_stats(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def reset_stats(conn, _params) do
+    site = conn.assigns[:site]
     Plausible.ClickhouseRepo.clear_stats_for(site.domain)
 
     conn
@@ -291,8 +324,8 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/danger-zone")
   end
 
-  def delete_site(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def delete_site(conn, _params) do
+    site = conn.assigns[:site]
 
     Repo.delete!(site)
     Plausible.ClickhouseRepo.clear_stats_for(site.domain)
@@ -302,9 +335,9 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/sites")
   end
 
-  def make_public(conn, %{"website" => website}) do
+  def make_public(conn, _params) do
     site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      conn.assigns[:site]
       |> Plausible.Site.make_public()
       |> Repo.update!()
 
@@ -313,9 +346,9 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
   end
 
-  def make_private(conn, %{"website" => website}) do
+  def make_private(conn, _params) do
     site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      conn.assigns[:site]
       |> Plausible.Site.make_private()
       |> Repo.update!()
 
@@ -324,8 +357,8 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
   end
 
-  def enable_weekly_report(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def enable_weekly_report(conn, _params) do
+    site = conn.assigns[:site]
 
     Plausible.Site.WeeklyReport.changeset(%Plausible.Site.WeeklyReport{}, %{
       site_id: site.id,
@@ -338,8 +371,8 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
-  def disable_weekly_report(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def disable_weekly_report(conn, _params) do
+    site = conn.assigns[:site]
     Repo.delete_all(from wr in Plausible.Site.WeeklyReport, where: wr.site_id == ^site.id)
 
     conn
@@ -347,8 +380,8 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
-  def add_weekly_report_recipient(conn, %{"website" => website, "recipient" => recipient}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def add_weekly_report_recipient(conn, %{"recipient" => recipient}) do
+    site = conn.assigns[:site]
 
     Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
     |> Plausible.Site.WeeklyReport.add_recipient(recipient)
@@ -359,8 +392,8 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
-  def remove_weekly_report_recipient(conn, %{"website" => website, "recipient" => recipient}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def remove_weekly_report_recipient(conn, %{"recipient" => recipient}) do
+    site = conn.assigns[:site]
 
     Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
     |> Plausible.Site.WeeklyReport.remove_recipient(recipient)
@@ -374,8 +407,8 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
-  def enable_monthly_report(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def enable_monthly_report(conn, _params) do
+    site = conn.assigns[:site]
 
     Plausible.Site.MonthlyReport.changeset(%Plausible.Site.MonthlyReport{}, %{
       site_id: site.id,
@@ -388,8 +421,8 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
-  def disable_monthly_report(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def disable_monthly_report(conn, _params) do
+    site = conn.assigns[:site]
     Repo.delete_all(from mr in Plausible.Site.MonthlyReport, where: mr.site_id == ^site.id)
 
     conn
@@ -397,8 +430,8 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
-  def add_monthly_report_recipient(conn, %{"website" => website, "recipient" => recipient}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def add_monthly_report_recipient(conn, %{"recipient" => recipient}) do
+    site = conn.assigns[:site]
 
     Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
     |> Plausible.Site.MonthlyReport.add_recipient(recipient)
@@ -409,8 +442,8 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
-  def remove_monthly_report_recipient(conn, %{"website" => website, "recipient" => recipient}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def remove_monthly_report_recipient(conn, %{"recipient" => recipient}) do
+    site = conn.assigns[:site]
 
     Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
     |> Plausible.Site.MonthlyReport.remove_recipient(recipient)
@@ -424,8 +457,8 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
-  def enable_spike_notification(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def enable_spike_notification(conn, _params) do
+    site = conn.assigns[:site]
 
     res =
       Plausible.Site.SpikeNotification.changeset(%Plausible.Site.SpikeNotification{}, %{
@@ -448,8 +481,8 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  def disable_spike_notification(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def disable_spike_notification(conn, _params) do
+    site = conn.assigns[:site]
     Repo.delete_all(from mr in Plausible.Site.SpikeNotification, where: mr.site_id == ^site.id)
 
     conn
@@ -457,8 +490,8 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
-  def update_spike_notification(conn, %{"website" => website, "spike_notification" => params}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def update_spike_notification(conn, %{"spike_notification" => params}) do
+    site = conn.assigns[:site]
     notification = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
 
     Plausible.Site.SpikeNotification.changeset(notification, params)
@@ -469,8 +502,8 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
-  def add_spike_notification_recipient(conn, %{"website" => website, "recipient" => recipient}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def add_spike_notification_recipient(conn, %{"recipient" => recipient}) do
+    site = conn.assigns[:site]
 
     Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
     |> Plausible.Site.SpikeNotification.add_recipient(recipient)
@@ -481,8 +514,8 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
-  def remove_spike_notification_recipient(conn, %{"website" => website, "recipient" => recipient}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def remove_spike_notification_recipient(conn, %{"recipient" => recipient}) do
+    site = conn.assigns[:site]
 
     Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
     |> Plausible.Site.SpikeNotification.remove_recipient(recipient)
@@ -496,8 +529,8 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
-  def new_shared_link(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def new_shared_link(conn, _params) do
+    site = conn.assigns[:site]
     changeset = Plausible.Site.SharedLink.changeset(%Plausible.Site.SharedLink{}, %{})
 
     conn
@@ -509,8 +542,8 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def create_shared_link(conn, %{"website" => website, "shared_link" => link}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def create_shared_link(conn, %{"shared_link" => link}) do
+    site = conn.assigns[:site]
 
     case Sites.create_shared_link(site, link["name"], link["password"]) do
       {:ok, _created} ->
@@ -527,8 +560,8 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  def edit_shared_link(conn, %{"website" => website, "slug" => slug}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def edit_shared_link(conn, %{"slug" => slug}) do
+    site = conn.assigns[:site]
     shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug)
     changeset = Plausible.Site.SharedLink.changeset(shared_link, %{})
 
@@ -541,8 +574,8 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def update_shared_link(conn, %{"website" => website, "slug" => slug, "shared_link" => params}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def update_shared_link(conn, %{"slug" => slug, "shared_link" => params}) do
+    site = conn.assigns[:site]
     shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug)
     changeset = Plausible.Site.SharedLink.changeset(shared_link, params)
 
@@ -561,8 +594,8 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  def delete_shared_link(conn, %{"website" => website, "slug" => slug}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def delete_shared_link(conn, %{"slug" => slug}) do
+    site = conn.assigns[:site]
 
     Repo.get_by(Plausible.Site.SharedLink, slug: slug)
     |> Repo.delete!()
@@ -570,8 +603,8 @@ defmodule PlausibleWeb.SiteController do
     redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
   end
 
-  def new_custom_domain(conn, %{"website" => website}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def new_custom_domain(conn, _params) do
+    site = conn.assigns[:site]
     changeset = Plausible.Site.CustomDomain.changeset(%Plausible.Site.CustomDomain{}, %{})
 
     conn
@@ -583,10 +616,8 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def custom_domain_dns_setup(conn, %{"website" => website}) do
-    site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
-      |> Repo.preload(:custom_domain)
+  def custom_domain_dns_setup(conn, _params) do
+    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -596,9 +627,9 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def custom_domain_snippet(conn, %{"website" => website}) do
+  def custom_domain_snippet(conn, _params) do
     site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      conn.assigns[:site]
       |> Repo.preload(:custom_domain)
 
     conn
@@ -609,8 +640,8 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def add_custom_domain(conn, %{"website" => website, "custom_domain" => domain}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, website)
+  def add_custom_domain(conn, %{"custom_domain" => domain}) do
+    site = conn.assigns[:site]
 
     case Sites.add_custom_domain(site, domain["domain"]) do
       {:ok, _custom_domain} ->
@@ -627,9 +658,9 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  def delete_custom_domain(conn, %{"website" => website}) do
+  def delete_custom_domain(conn, _params) do
     site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, website)
+      conn.assigns[:site]
       |> Repo.preload(:custom_domain)
 
     Repo.delete!(site.custom_domain)

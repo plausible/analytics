@@ -164,6 +164,103 @@ defmodule PlausibleWeb.Email do
     |> render("cancellation_email.html", name: user.name)
   end
 
+  def new_user_invitation(invitation) do
+    base_email()
+    |> to(invitation.email)
+    |> tag("new-user-invitation")
+    |> subject("[Plausible Analytics] You've been invited to #{invitation.site.domain}")
+    |> render("new_user_invitation.html",
+      invitation: invitation
+    )
+  end
+
+  def existing_user_invitation(invitation) do
+    base_email()
+    |> to(invitation.email)
+    |> tag("existing-user-invitation")
+    |> subject("[Plausible Analytics] You've been invited to #{invitation.site.domain}")
+    |> render("existing_user_invitation.html",
+      invitation: invitation
+    )
+  end
+
+  def ownership_transfer_request(invitation, new_owner_account) do
+    base_email()
+    |> to(invitation.email)
+    |> tag("ownership-transfer-request")
+    |> subject("[Plausible Analytics] Request to transfer ownership of #{invitation.site.domain}")
+    |> render("ownership_transfer_request.html",
+      invitation: invitation,
+      new_owner_account: new_owner_account
+    )
+  end
+
+  def invitation_accepted(invitation) do
+    base_email()
+    |> to(invitation.inviter.email)
+    |> tag("invitation-accepted")
+    |> subject(
+      "[Plausible Analytics] #{invitation.email} accepted your invitation to #{
+        invitation.site.domain
+      }"
+    )
+    |> render("invitation_accepted.html",
+      invitation: invitation
+    )
+  end
+
+  def invitation_rejected(invitation) do
+    base_email()
+    |> to(invitation.inviter.email)
+    |> tag("invitation-rejected")
+    |> subject(
+      "[Plausible Analytics] #{invitation.email} rejected your invitation to #{
+        invitation.site.domain
+      }"
+    )
+    |> render("invitation_rejected.html",
+      invitation: invitation
+    )
+  end
+
+  def ownership_transfer_accepted(invitation) do
+    base_email()
+    |> to(invitation.inviter.email)
+    |> tag("ownership-transfer-accepted")
+    |> subject(
+      "[Plausible Analytics] #{invitation.email} accepted the ownership transfer of #{
+        invitation.site.domain
+      }"
+    )
+    |> render("ownership_transfer_accepted.html",
+      invitation: invitation
+    )
+  end
+
+  def ownership_transfer_rejected(invitation) do
+    base_email()
+    |> to(invitation.inviter.email)
+    |> tag("ownership-transfer-rejected")
+    |> subject(
+      "[Plausible Analytics] #{invitation.email} rejected the ownership transfer of #{
+        invitation.site.domain
+      }"
+    )
+    |> render("ownership_transfer_rejected.html",
+      invitation: invitation
+    )
+  end
+
+  def site_member_removed(membership) do
+    base_email()
+    |> to(membership.user.email)
+    |> tag("site-member-removed")
+    |> subject("[Plausible Analytics] Your access to #{membership.site.domain} has been revoked")
+    |> render("site_member_removed.html",
+      membership: membership
+    )
+  end
+
   defp base_email() do
     mailer_from = Application.get_env(:plausible, :mailer_email)
 

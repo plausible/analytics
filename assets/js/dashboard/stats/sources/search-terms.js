@@ -29,7 +29,7 @@ export default class SearchTerms extends React.Component {
         loading: false,
         searchTerms: res.search_terms || [],
         notConfigured: res.not_configured,
-        isOwner: res.is_owner
+        isAdmin: res.is_admin
       }))
   }
 
@@ -65,7 +65,7 @@ export default class SearchTerms extends React.Component {
           <RocketIcon />
           <div>The site is not connected to Google Search Keywords</div>
           <div>Cannot show search terms</div>
-          {this.state.isOwner && <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/search-console`} className="button mt-4">Connect with Google</a> }
+          {this.state.isAdmin && <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/search-console`} className="button mt-4">Connect with Google</a> }
         </div>
       )
     } else if (this.state.searchTerms.length > 0) {
@@ -107,9 +107,11 @@ export default class SearchTerms extends React.Component {
 
   render() {
     return (
-      <div className="stats-item relative bg-white dark:bg-gray-825 shadow-xl rounded p-4" style={{height: '436px'}}>
+      <div
+        className="stats-item flex flex-col relative bg-white dark:bg-gray-825 shadow-xl rounded p-4 mt-6 w-full"
+      >
         { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
+        <FadeIn show={!this.state.loading} className="flex-grow">
           { this.renderContent() }
         </FadeIn>
       </div>

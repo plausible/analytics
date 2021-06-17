@@ -83,9 +83,9 @@ export default class OperatingSystems extends React.Component {
 
   render() {
     return (
-      <LazyLoader onVisible={this.onVisible}>
+      <LazyLoader onVisible={this.onVisible} className="flex flex-col flex-grow">
         { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
+        <FadeIn show={!this.state.loading} className="flex-grow">
           { this.renderList() }
         </FadeIn>
       </LazyLoader>

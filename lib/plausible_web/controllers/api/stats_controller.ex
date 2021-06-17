@@ -233,8 +233,8 @@ defmodule PlausibleWeb.Api.StatsController do
       nil ->
         {_, total_visitors} = Stats.pageviews_and_visitors(site, query)
         user_id = get_session(conn, :current_user_id)
-        is_owner = user_id && Plausible.Sites.is_owner?(user_id, site)
-        json(conn, %{not_configured: true, is_owner: is_owner, total_visitors: total_visitors})
+        is_admin = user_id && Plausible.Sites.has_admin_access?(user_id, site)
+        json(conn, %{not_configured: true, is_admin: is_admin, total_visitors: total_visitors})
 
       {:ok, terms} ->
         {_, total_visitors} = Stats.pageviews_and_visitors(site, query)
