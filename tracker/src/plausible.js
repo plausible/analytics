@@ -4,7 +4,11 @@
   var location = window.location
   var document = window.document
 
+  {{#if compat}}
+  var scriptEl = document.getElementById('plausible');
+  {{else}}
   var scriptEl = document.currentScript;
+  {{/if}}
   var endpoint = scriptEl.getAttribute('data-api') || new URL(scriptEl.src).origin + '/api/event'
   var plausible_ignore = window.localStorage.plausible_ignore;
   {{#if exclusions}}
