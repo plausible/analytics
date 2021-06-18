@@ -51,13 +51,32 @@ defmodule Plausible.Workers.LockSitesTest do
   end
 
   test "locks user who cancelled subscription and the cancelled subscription has expired" do
-    user = insert(:user)
+    user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
 
     insert(:subscription,
       status: "deleted",
       next_bill_date: Timex.today() |> Timex.shift(days: -1),
       user: user
     )
+
+    site = insert(:site, members: [user])
+
+    LockSites.perform(nil)
+
+    assert Repo.reload!(site).locked
+  end
+
+  test "does not lock if user has an old cancelled subscription and a new active subscription" do
+    user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
+
+    insert(:subscription,
+      status: "deleted",
+      next_bill_date: Timex.today() |> Timex.shift(days: -1),
+      user: user,
+      inserted_at: Timex.now() |> Timex.shift(days: -1)
+    )
+
+    insert(:subscription, status: "active", user: user)
 
     site = insert(:site, members: [user])
 
