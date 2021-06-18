@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["json"]
     plug PlausibleWeb.Firewall
     plug :fetch_session
-    plug PlausibleWeb.AuthorizeStatsPlug
+    plug PlausibleWeb.AuthorizeSiteAccess
   end
 
   pipeline :public_api do
@@ -105,6 +105,8 @@ defmodule PlausibleWeb.Router do
 
     get "/register", AuthController, :register_form
     post "/register", AuthController, :register
+    get "/register/invitation/:invitation_id", AuthController, :register_from_invitation_form
+    post "/register/invitation/:invitation_id", AuthController, :register_from_invitation
     get "/activate", AuthController, :activate_form
     post "/activate/request-code", AuthController, :request_activation_code
     post "/activate", AuthController, :activate
@@ -195,12 +197,26 @@ defmodule PlausibleWeb.Router do
     post "/sites/:website/custom-domains", SiteController, :add_custom_domain
     delete "/sites/:website/custom-domains/:id", SiteController, :delete_custom_domain
 
+    get "/sites/:website/memberships/invite", Site.MembershipController, :invite_member_form
+    post "/sites/:website/memberships/invite", Site.MembershipController, :invite_member
+
+    post "/sites//invitations/:invitation_id/accept", InvitationController, :accept_invitation
+    post "/sites//invitations/:invitation_id/reject", InvitationController, :reject_invitation
+    delete "/sites//invitations/:invitation_id", InvitationController, :remove_invitation
+
+    get "/sites/:website/transfer-ownership", Site.MembershipController, :transfer_ownership_form
+    post "/sites/:website/transfer-ownership", Site.MembershipController, :transfer_ownership
+
+    put "/sites/:website/memberships/:id/role/:new_role", Site.MembershipController, :update_role
+    delete "/sites/:website/memberships/:id", Site.MembershipController, :remove_member
+
     get "/sites/:website/weekly-report/unsubscribe", UnsubscribeController, :weekly_report
     get "/sites/:website/monthly-report/unsubscribe", UnsubscribeController, :monthly_report
 
     get "/:website/snippet", SiteController, :add_snippet
     get "/:website/settings", SiteController, :settings
     get "/:website/settings/general", SiteController, :settings_general
+    get "/:website/settings/people", SiteController, :settings_people
     get "/:website/settings/visibility", SiteController, :settings_visibility
     get "/:website/settings/goals", SiteController, :settings_goals
     get "/:website/settings/search-console", SiteController, :settings_search_console

@@ -2,12 +2,12 @@ defmodule Plausible.Auth.ApiKey do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @required [:user_id, :key, :name]
-  @optional [:scopes, :hourly_request_limit]
+  @required [:user_id, :name]
+  @optional [:key, :scopes, :hourly_request_limit]
   schema "api_keys" do
     field :name, :string
     field :scopes, {:array, :string}, default: ["stats:read:*"]
-    field :hourly_request_limit, :integer
+    field :hourly_request_limit, :integer, default: 1000
 
     field :key, :string, virtual: true
     field :key_hash, :string
@@ -22,7 +22,14 @@ defmodule Plausible.Auth.ApiKey do
     schema
     |> cast(attrs, @required ++ @optional)
     |> validate_required(@required)
-    |> process_key
+    |> generate_key()
+    |> process_key()
+  end
+
+  def update(schema, attrs \\ %{}) do
+    schema
+    |> cast(attrs, [:name, :user_id, :scopes, :hourly_request_limit])
+    |> validate_required([:user_id, :name])
   end
 
   def do_hash(key) do
@@ -41,6 +48,15 @@ defmodule Plausible.Auth.ApiKey do
   end
 
   def process_key(changeset), do: changeset
+
+  defp generate_key(changeset) do
+    if !changeset.changes[:key] do
+      key = :crypto.strong_rand_bytes(64) |> Base.url_encode64() |> binary_part(0, 64)
+      change(changeset, key: key)
+    else
+      changeset
+    end
+  end
 
   defp secret_key_base() do
     Application.get_env(:plausible, PlausibleWeb.Endpoint)
