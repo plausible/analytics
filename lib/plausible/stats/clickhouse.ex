@@ -257,13 +257,7 @@ defmodule Plausible.Stats.Clickhouse do
         from(s in referrers, where: s.referrer_source != "")
       end
 
-    referrers =
-      if query.filters["page"] do
-        page = query.filters["page"]
-        from(s in referrers, where: s.entry_page == ^page)
-      else
-        referrers
-      end
+    referrers = apply_page_as_entry_page(referrers, site, query)
 
     referrers =
       if include_details do
@@ -326,13 +320,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp apply_page_as_entry_page(db_query, _site, query) do
-    page = query.filters["page"]
-
-    if is_binary(page) do
-      from(s in db_query, where: s.entry_page == ^page)
-    else
-      db_query
-    end
+    include_path_filter_entry(db_query, query.filters["page"])
   end
 
   def utm_mediums(site, query, limit \\ 9, page \\ 1, show_noref \\ false) do
@@ -691,6 +679,55 @@ defmodule Plausible.Stats.Clickhouse do
     |> Enum.into(%{})
   end
 
+  def page_times_by_page_url(site, query, page_list \\ nil)
+
+  def page_times_by_page_url(site, query, _page_list = nil) do
+    {negated, updated_page_selection} = query.filters["page"] |> check_negated_filter()
+    {_, page_regex} = updated_page_selection |> convert_path_regex()
+
+    q =
+      from(
+        e in base_query_w_sessions(site, %Query{
+          query
+          | filters: Map.delete(query.filters, "page")
+        }),
+        select: {
+          fragment("? as p", e.pathname),
+          fragment("? as t", e.timestamp),
+          fragment("? as s", e.session_id)
+        },
+        order_by: [e.session_id, e.timestamp]
+      )
+
+    {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
+
+    time_query = "
+      SELECT
+        avg(ifNotFinite(avgTime, null))
+      FROM
+        (SELECT
+          p,
+          sum(td)/count(case when p2 != p then 1 end) as avgTime
+        FROM
+          (SELECT
+            p,
+            p2,
+            sum(t2-t) as td
+          FROM
+            (SELECT
+              *,
+              neighbor(t, 1) as t2,
+              neighbor(p, 1) as p2,
+              neighbor(s, 1) as s2
+            FROM (#{base_query_raw}))
+          WHERE s=s2 AND
+          #{if negated, do: "not(match(p, ?))", else: "match(p, ?)"}
+          GROUP BY p,p2,s)
+        GROUP BY p)"
+
+    time_query |> ClickhouseRepo.query(base_query_raw_params ++ [page_regex])
+  end
+
   def page_times_by_page_url(site, query, page_list) do
     q =
       from(
@@ -708,24 +745,27 @@ defmodule Plausible.Stats.Clickhouse do
 
     {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
 
-    "SELECT
-      p,
-      sum(td)/count(case when p2 != p then 1 end) as avgTime
-    FROM
-      (SELECT
+    time_query = "
+      SELECT
         p,
-        p2,
-        sum(t2-t) as td
+        sum(td)/count(case when p2 != p then 1 end) as avgTime
       FROM
         (SELECT
-          *,
-          neighbor(t, 1) as t2,
-          neighbor(p, 1) as p2,
-          neighbor(s, 1) as s2
-        FROM (#{base_query_raw}))
-      WHERE s=s2 AND p IN tuple(?)
-      GROUP BY p,p2,s)
-    GROUP BY p"
+          p,
+          p2,
+          sum(t2-t) as td
+        FROM
+          (SELECT
+            *,
+            neighbor(t, 1) as t2,
+            neighbor(p, 1) as p2,
+            neighbor(s, 1) as s2
+          FROM (#{base_query_raw}))
+        WHERE s=s2 AND p IN tuple(?)
+        GROUP BY p,p2,s)
+      GROUP BY p"
+
+    time_query
     |> ClickhouseRepo.query(
       base_query_raw_params ++ [(Enum.count(page_list) > 0 && page_list) || ["/"]]
     )
@@ -1156,21 +1196,9 @@ defmodule Plausible.Stats.Clickhouse do
         sessions_q
       end
 
-    sessions_q =
-      if query.filters["entry_page"] do
-        entry_page = query.filters["entry_page"]
-        from(s in sessions_q, where: s.entry_page == ^entry_page)
-      else
-        sessions_q
-      end
+    sessions_q = include_path_filter_entry(sessions_q, query.filters["entry_page"])
 
-    sessions_q =
-      if query.filters["exit_page"] do
-        exit_page = query.filters["exit_page"]
-        from(s in sessions_q, where: s.exit_page == ^exit_page)
-      else
-        sessions_q
-      end
+    sessions_q = include_path_filter_exit(sessions_q, query.filters["exit_page"])
 
     q =
       from(e in "events",
@@ -1194,13 +1222,7 @@ defmodule Plausible.Stats.Clickhouse do
         q
       end
 
-    q =
-      if query.filters["page"] do
-        page = query.filters["page"]
-        from(e in q, where: e.pathname == ^page)
-      else
-        q
-      end
+    q = include_path_filter(q, query.filters["page"])
 
     if query.filters["props"] do
       [{key, val}] = query.filters["props"] |> Enum.into([])
@@ -1350,21 +1372,9 @@ defmodule Plausible.Stats.Clickhouse do
         q
       end
 
-    q =
-      if query.filters["entry_page"] do
-        entry_page = query.filters["entry_page"]
-        from(s in q, where: s.entry_page == ^entry_page)
-      else
-        q
-      end
+    q = include_path_filter_entry(q, query.filters["entry_page"])
 
-    q =
-      if query.filters["exit_page"] do
-        exit_page = query.filters["exit_page"]
-        from(s in q, where: s.exit_page == ^exit_page)
-      else
-        q
-      end
+    q = include_path_filter_exit(q, query.filters["exit_page"])
 
     if query.filters["referrer"] do
       ref = query.filters["referrer"]
@@ -1464,13 +1474,7 @@ defmodule Plausible.Stats.Clickhouse do
         q
       end
 
-    q =
-      if query.filters["page"] do
-        page = query.filters["page"]
-        from(e in q, where: e.pathname == ^page)
-      else
-        q
-      end
+    q = include_path_filter(q, query.filters["page"])
 
     if query.filters["props"] do
       [{key, val}] = query.filters["props"] |> Enum.into([])
@@ -1550,12 +1554,9 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     if path do
-      if String.match?(path, ~r/\*/) do
-        path_regex =
-          "^#{path}\/?$"
-          |> String.replace(~r/\*\*/, ".*")
-          |> String.replace(~r/(?<!\.)\*/, "[^/]*")
+      {contains_regex, path_regex} = convert_path_regex(path)
 
+      if contains_regex do
         from(e in q, where: fragment("match(?, ?)", e.pathname, ^path_regex))
       else
         from(e in q, where: e.pathname == ^path)
@@ -1563,5 +1564,235 @@ defmodule Plausible.Stats.Clickhouse do
     else
       q
     end
+  end
+
+  defp check_negated_filter(filter) do
+    negated = String.at(filter, 0) == "!"
+    updated_filter = if negated, do: String.slice(filter, 1..-1), else: filter
+
+    {negated, updated_filter}
+  end
+
+  defp convert_path_regex(path) do
+    contains_regex = String.match?(path, ~r/\*/)
+
+    regex =
+      "^#{path}\/?$"
+      |> String.replace(~r/\*\*/, ".*")
+      |> String.replace(~r/(?<!\.)\*/, "[^/]*")
+
+    {contains_regex, regex}
+  end
+
+  defp include_path_filter(db_query, path) do
+    if path do
+      {negated, path} = check_negated_filter(path)
+      {contains_regex, path_regex} = convert_path_regex(path)
+
+      if contains_regex do
+        if negated do
+          from(e in db_query, where: fragment("not(match(?, ?))", e.pathname, ^path_regex))
+        else
+          from(e in db_query, where: fragment("match(?, ?)", e.pathname, ^path_regex))
+        end
+      else
+        if negated do
+          from(e in db_query, where: e.pathname != ^path)
+        else
+          from(e in db_query, where: e.pathname == ^path)
+        end
+      end
+    else
+      db_query
+    end
+  end
+
+  defp include_path_filter_entry(db_query, path) do
+    if path do
+      {negated, path} = check_negated_filter(path)
+      {contains_regex, path_regex} = convert_path_regex(path)
+
+      if contains_regex do
+        if negated do
+          from(e in db_query, where: fragment("not(match(?, ?))", e.entry_page, ^path_regex))
+        else
+          from(e in db_query, where: fragment("match(?, ?)", e.entry_page, ^path_regex))
+        end
+      else
+        if negated do
+          from(e in db_query, where: e.entry_page != ^path)
+        else
+          from(e in db_query, where: e.entry_page == ^path)
+        end
+      end
+    else
+      db_query
+    end
+  end
+
+  defp include_path_filter_exit(db_query, path) do
+    if path do
+      {negated, path} = check_negated_filter(path)
+      {contains_regex, path_regex} = convert_path_regex(path)
+
+      if contains_regex do
+        if negated do
+          from(e in db_query, where: fragment("not(match(?, ?))", e.exit_page, ^path_regex))
+        else
+          from(e in db_query, where: fragment("match(?, ?)", e.exit_page, ^path_regex))
+        end
+      else
+        if negated do
+          from(e in db_query, where: e.exit_page != ^path)
+        else
+          from(e in db_query, where: e.exit_page == ^path)
+        end
+      end
+    else
+      db_query
+    end
+  end
+
+  def make_suggestions(site, query, "country", filter_search) do
+    filter_search =
+      String.split(filter_search, ",")
+      |> Enum.map(fn c -> Plausible.Stats.CountryName.to_alpha2(c) end)
+
+    q =
+      from(
+        e in base_session_query(site, query),
+        group_by: e.country_code,
+        order_by: [desc: fragment("count(*)")],
+        select: {e.country_code}
+      )
+
+    ClickhouseRepo.all(q)
+    |> Enum.map(fn {x} -> x end)
+    |> Enum.filter(fn c -> Enum.find(filter_search, false, fn x -> x == c end) end)
+    |> Enum.map(fn c -> Plausible.Stats.CountryName.to_alpha3(c) end)
+    |> Enum.slice(0..24)
+  end
+
+  def make_suggestions(site, _query, "goal", filter_search) do
+    Repo.all(from g in Plausible.Goal, where: g.domain == ^site.domain)
+    |> Enum.map(fn x -> if x.event_name, do: x.event_name, else: "Visit #{x.page_path}" end)
+    |> Enum.filter(fn goal ->
+      String.contains?(
+        String.downcase(goal),
+        String.downcase(filter_search)
+      )
+    end)
+  end
+
+  def make_suggestions(site, query, filter_name, filter_search) do
+    filter_search = if filter_search == nil, do: "", else: filter_search
+
+    filter_query =
+      if Enum.member?(["entry_page", "page", "exit_page"], filter_name),
+        do: "%#{String.replace(filter_search, "*", "")}%",
+        else: "%#{filter_search}%"
+
+    filter_name =
+      case filter_name do
+        "page" -> "pathname"
+        "source" -> "referrer_source"
+        "os" -> "operating_system"
+        "os_version" -> "operating_system_version"
+        "screen" -> "screen_size"
+        _ -> filter_name
+      end
+
+    q =
+      if(filter_name == "pathname",
+        do: base_query(site, query),
+        else: base_session_query(site, query)
+      )
+      |> from(
+        group_by: ^String.to_atom(filter_name),
+        order_by: [desc: fragment("count(*)")],
+        limit: 25
+      )
+
+    q =
+      case filter_name do
+        "pathname" ->
+          from(e in q,
+            select: {e.pathname},
+            where: fragment("? ilike ?", e.pathname, ^filter_query)
+          )
+
+        "entry_page" ->
+          from(e in q,
+            select: {e.entry_page},
+            where: fragment("? ilike ?", e.entry_page, ^filter_query)
+          )
+
+        "exit_page" ->
+          from(e in q,
+            select: {e.exit_page},
+            where: fragment("? ilike ?", e.exit_page, ^filter_query)
+          )
+
+        "referrer_source" ->
+          from(e in q,
+            select: {e.referrer_source},
+            where: fragment("? ilike ?", e.referrer_source, ^filter_query)
+          )
+
+        "utm_medium" ->
+          from(e in q,
+            select: {e.utm_medium},
+            where: fragment("? ilike ?", e.utm_medium, ^filter_query)
+          )
+
+        "utm_source" ->
+          from(e in q,
+            select: {e.utm_source},
+            where: fragment("? ilike ?", e.utm_source, ^filter_query)
+          )
+
+        "utm_campaign" ->
+          from(e in q,
+            select: {e.utm_campaign},
+            where: fragment("? ilike ?", e.utm_campaign, ^filter_query)
+          )
+
+        "referrer" ->
+          from(e in q,
+            select: {e.referrer},
+            where: fragment("? ilike ?", e.referrer, ^filter_query)
+          )
+
+        "browser" ->
+          from(e in q, select: {e.browser}, where: fragment("? ilike ?", e.browser, ^filter_query))
+
+        "browser_version" ->
+          from(e in q,
+            select: {e.browser_version},
+            where: fragment("? ilike ?", e.browser_version, ^filter_query)
+          )
+
+        "operating_system" ->
+          from(e in q,
+            select: {e.operating_system},
+            where: fragment("? ilike ?", e.operating_system, ^filter_query)
+          )
+
+        "operating_system_version" ->
+          from(e in q,
+            select: {e.operating_system_version},
+            where: fragment("? ilike ?", e.operating_system_version, ^filter_query)
+          )
+
+        "screen_size" ->
+          from(e in q,
+            select: {e.screen_size},
+            where: fragment("? ilike ?", e.screen_size, ^filter_query)
+          )
+      end
+
+    ClickhouseRepo.all(q)
+    |> Enum.map(fn {suggestion} -> suggestion end)
+    |> Enum.filter(fn suggestion -> suggestion != "" end)
   end
 end

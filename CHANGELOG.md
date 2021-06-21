@@ -10,7 +10,10 @@ All notable changes to this project will be documented in this file.
 - To authenticate against a local postgresql via socket authentication, the environment-variables
   `DATABASE_SOCKET_DIR` & `DATABASE_NAME` were added.
 - Time on Page metric available in detailed Top Pages report plausible/analytics#1007
-- Added `CLICKHOUSE_FLUSH_INTERVAL_MS` and `CLICKHOUSE_MAX_BUFFER_SIZE` configuration parameters
+- Wildcard based page, entry page and exit page filters plausible/analytics#1067
+- Exclusion filters for page, entry page and exit page filters plausible/analytics#1067
+- Menu (with auto-complete) to add new and edit existing filters directly plausible/analytics#1089
+- Added `CLICKHOUSE_FLUSH_INTERVAL_MS` and `CLICKHOUSE_MAX_BUFFER_SIZE` configuration parameters plausible/analytics#1073
 - Ability to invite users to sites with different roles plausible/analytics#1122
 
 ### Fixed
