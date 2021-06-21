@@ -2,8 +2,7 @@ import React from "react";
 import { withRouter, Redirect } from 'react-router-dom'
 
 import Datamap from 'datamaps'
-import AsyncSelect from 'react-select/async'
-import debounce from 'lodash.debounce'
+import SearchSelect from '../../components/search-select'
 import Modal from './modal'
 import { parseQuery, formattedFilters, navigateToQuery } from '../../query'
 import Transition from "../../../transition";
@@ -14,44 +13,34 @@ class FilterModal extends React.Component {
     super(props)
     this.state = {
       query: parseQuery(props.location.search, props.site),
-      selectedFilter: "",
+      selectedFilter: this.props.match.params.field || 'page',
       negated: false,
-      updatedValue: "",
-      inputValue: "",
-      forceReloadSuggestions: 0,
-      defaultOptions: []
+      filterValue: "",
     }
 
     this.editableGoals = Object.keys(this.state.query.filters).filter(filter => !['props'].includes(filter))
-    this.renderSelector = this.renderSelector.bind(this)
-    this.fetchSuggestions = this.fetchSuggestions.bind(this)
     this.handleKeydown = this.handleKeydown.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
-    this.fieldSelectRef = React.createRef()
-    this.debouncedFetchSuggestions = debounce((q, callback) => this.fetchSuggestions(q, callback), 150)
   }
 
   componentDidMount() {
-    this.setState({ selectedFilter: this.props.match.params.field })
-    this.fieldSelectRef.current.focus()
     document.addEventListener("keydown", this.handleKeydown)
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { query, selectedFilter, updatedValue, forceReloadSuggestions } = this.state
+    const { query, selectedFilter, filterValue } = this.state
 
     if (prevState.selectedFilter !== selectedFilter) {
       const negated = !!query.filters[selectedFilter] && query.filters[selectedFilter][0] == '!' && this.negationSupported(selectedFilter)
-      let updatedValue = negated ? query.filters[selectedFilter].slice(1) : (query.filters[selectedFilter] || "")
+      let filterValue = negated ? query.filters[selectedFilter].slice(1) : (query.filters[selectedFilter] || "")
 
       if (selectedFilter == 'country') {
         const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
-        const selectedCountry = allCountries.find((c) => c.id === updatedValue) || { properties: { name: updatedValue } };
-        updatedValue = selectedCountry.properties.name
+        const selectedCountry = allCountries.find((c) => c.id === filterValue) || { properties: { name: filterValue } };
+        filterValue = selectedCountry.properties.name
       }
 
-      if (selectedFilter) this.fetchSuggestions('', (defaultOptions) => this.setState({ defaultOptions }))
-      this.setState({ updatedValue, inputValue: updatedValue, negated, forceReloadSuggestions: forceReloadSuggestions + 1 })
+      this.setState({ filterValue, negated })
     }
   }
 
@@ -71,73 +60,43 @@ class FilterModal extends React.Component {
     return ['page', 'entry_page', 'exit_page'].includes(filter)
   }
 
-  fetchSuggestions(searchQuery = "", callback) {
-    const { query, selectedFilter } = this.state
+  fetchOptions(input) {
+    const {query, selectedFilter} = this.state
     const updatedQuery = { ...query, filters: { ...query.filters, [selectedFilter]: null } }
 
-    if (selectedFilter == 'country') {
-      const matchedCountries = Datamap.prototype.worldTopo.objects.world.geometries.filter(c => c.properties.name.includes(searchQuery.trim()))
+    if (selectedFilter === 'country') {
+      const matchedCountries = Datamap.prototype.worldTopo.objects.world.geometries.filter(c => c.properties.name.includes(input.trim()))
       const matches = matchedCountries.map(c => c.id)
 
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/suggestions/country`, updatedQuery, { q: matches })
+      return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/suggestions/country`, updatedQuery, { q: matches })
         .then((res) => {
-          const result = res.map(code => matchedCountries.filter(c => c.id == code)[0].properties.name).map(r => ({ label: r, value: r }))
-          callback(result)
+          return res.map(code => matchedCountries.filter(c => c.id == code)[0].properties.name)
         })
     } else {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/suggestions/${selectedFilter}`, updatedQuery, { q: searchQuery.trim() })
-        .then((res) => {
-          const result = res.map(r => ({ label: r, value: r }))
-          callback(result)
-        })
+      return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/suggestions/${selectedFilter}`, updatedQuery, { q: input.trim() })
     }
   }
 
-  renderSelector(filter) {
-    const { updatedValue, selectedFilter, inputValue, forceReloadSuggestions, defaultOptions } = this.state;
+  onInput(val) {
+    this.setState({filterValue: val})
+  }
 
-    if (!filter) return null
-
+  renderSearchSelector(filter) {
     return (
-      <AsyncSelect
-        key={`select-${selectedFilter}-${forceReloadSuggestions}`}
-        defaultOptions={inputValue == "" ? defaultOptions : true}
-        cacheOptions
-        loadOptions={(q, callback) => this.debouncedFetchSuggestions(q, callback)}
-        placeholder='Filter value'
-        maxMenuHeight={250}
-        tabSelectsValue={false}
-        classNamePrefix='filter-select'
-        blurInputOnSelect
-        noOptionsMessage={() => (
-          <span className="text-red-500 text-md flex mt-2 px-3">
-            <svg className="w-10 h-10 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span className="">No results found in current dashboard, try removing some filters, checking your input and ensuring this {formattedFilters[selectedFilter].toLowerCase()} exists</span>
-          </span>
-        )}
-        loadingMessage={() => (
-          <span>
-            Loading filter suggestions
-          </span>
-        )}
-        value={inputValue == '' ? { label: 'Enter a filter value', value: '' } : { label: updatedValue, value: `${updatedValue  } ` }}
-        onChange={({ value }, a) => {
-          this.setState({ updatedValue: value, inputValue: value, forceReloadSuggestions: forceReloadSuggestions + 1 })
-        }}
-        onInputChange={(value, { action }) => {
-          if (action == 'input-change') this.setState({ inputValue: value })
-          if (action == 'menu-close' || action == 'input-blur') this.setState(({inputValue}) => ({ updatedValue: inputValue }))
-        }}
-        inputValue={inputValue}
-        onBlur={() => this.setState({ forceReloadSuggestions: forceReloadSuggestions + 1 })}
-      />)
+      <SearchSelect
+        key={this.state.selectedFilter}
+        fetchOptions={this.fetchOptions.bind(this)}
+        initialSelectedItem={this.state.query.filters[this.state.selectedFilter]}
+        onInput={this.onInput.bind(this)}
+      />
+    )
   }
 
   handleSubmit() {
-    const { selectedFilter, negated, updatedValue } = this.state;
-    const validFilter = this.editableGoals.includes(selectedFilter) && updatedValue.trim()
+    const { selectedFilter, negated, filterValue } = this.state;
+    const validFilter = this.editableGoals.includes(selectedFilter) && filterValue.trim()
 
-    let finalFilterValue = (this.negationSupported(selectedFilter) && negated ? '!' : '') + updatedValue.trim()
+    let finalFilterValue = (this.negationSupported(selectedFilter) && negated ? '!' : '') + filterValue.trim()
     if (selectedFilter == 'country') {
       const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
       const selectedCountry = allCountries.find((c) => c.properties.name === finalFilterValue) || { id: finalFilterValue };
@@ -152,8 +111,8 @@ class FilterModal extends React.Component {
   }
 
   renderBody() {
-    const { selectedFilter, negated, updatedValue, query } = this.state;
-    const validFilter = this.editableGoals.includes(selectedFilter) && updatedValue.trim()
+    const { selectedFilter, negated, filterValue, query } = this.state;
+    const validFilter = this.editableGoals.includes(selectedFilter) && filterValue.trim()
 
     return (
       <>
@@ -167,7 +126,6 @@ class FilterModal extends React.Component {
               className="my-2 block w-full py-2 pl-3 pr-10 text-base border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300 cursor-pointer"
               placeholder="Select a Filter"
               onChange={(e) => this.setState({ selectedFilter: e.target.value })}
-              ref={this.fieldSelectRef}
             >
               <option disabled value="" className="hidden">Select a Filter</option>
               {this.editableGoals.map(filter => <option key={filter} value={filter}>{formattedFilters[filter]}</option>)}
@@ -188,7 +146,7 @@ class FilterModal extends React.Component {
               </div>
             )}
 
-            {this.renderSelector(selectedFilter)}
+            {this.renderSearchSelector(selectedFilter)}
 
             <button
               type="submit"
