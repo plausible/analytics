@@ -34,6 +34,7 @@ defmodule Plausible.Workers.ScheduleEmailReports do
             fragment("(? -> 'site_id')::int", job.args) == s.id and
               job.state not in ["completed", "discarded"],
           where: is_nil(job),
+          where: not s.locked,
           preload: [weekly_report: wr]
       )
 
@@ -73,6 +74,7 @@ defmodule Plausible.Workers.ScheduleEmailReports do
             fragment("(? -> 'site_id')::int", job.args) == s.id and
               job.state not in ["completed", "discarded"],
           where: is_nil(job),
+          where: not s.locked,
           preload: [monthly_report: mr]
       )
 

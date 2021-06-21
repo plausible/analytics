@@ -4,8 +4,12 @@
   var location = window.location
   var document = window.document
 
+  {{#if compat}}
+  var scriptEl = document.getElementById('plausible');
+  {{else}}
   var scriptEl = document.currentScript;
-  var endpoint = scriptEl.getAttribute('data-api') || new URL(scriptEl.src).origin + '/api/event'
+  {{/if}}
+  var endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint(scriptEl)
   var plausible_ignore = window.localStorage.plausible_ignore;
   {{#if exclusions}}
   var excludedPaths = scriptEl && scriptEl.getAttribute('data-exclude').split(',');
@@ -15,6 +19,18 @@
   function warn(reason) {
     console.warn('Ignoring Event: ' + reason);
   }
+
+  function defaultEndpoint(el) {
+    {{#if compat}}
+    var pathArray = el.src.split( '/' );
+    var protocol = pathArray[0];
+    var host = pathArray[2];
+    return protocol + '//' + host  + '/api/event';
+    {{else}}
+    return new URL(el.src).origin + '/api/event'
+    {{/if}}
+  }
+
 
   function trigger(eventName, options) {
     if (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(location.hostname) || location.protocol === 'file:') return warn('localhost');

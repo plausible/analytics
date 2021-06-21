@@ -9,10 +9,10 @@
     <div class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:mt-4">
       <div class="py-4 g:py-0 lg:col-span-3">
         <%= form_for @conn, "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/recipients", [class: "lg:hidden"], fn f -> %>
-          <%= select f, :tab, settings_tabs(), class: "dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100", onchange: "location.href = location.href.replace(/[^\/\/]*$/, event.target.value)", selected: List.last(@conn.path_info)  %>
+          <%= select f, :tab, settings_tabs(@conn), class: "dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100", onchange: "location.href = location.href.replace(/[^\/\/]*$/, event.target.value)", selected: List.last(@conn.path_info)  %>
         <% end %>
         <div class="hidden lg:block">
-          <%= for [key: key, value: val] <- settings_tabs() do %>
+          <%= for [key: key, value: val] <- settings_tabs(@conn) do %>
             <%= render("_settings_tab.html", this_tab: val, text: key, site: @site, conn: @conn) %>
           <% end %>
         </div>

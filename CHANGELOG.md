@@ -14,11 +14,14 @@ All notable changes to this project will be documented in this file.
 - Exclusion filters for page, entry page and exit page filters plausible/analytics#1067
 - Menu (with auto-complete) to add new and edit existing filters directly plausible/analytics#1089
 - Added `CLICKHOUSE_FLUSH_INTERVAL_MS` and `CLICKHOUSE_MAX_BUFFER_SIZE` configuration parameters plausible/analytics#1073
+- Ability to invite users to sites with different roles plausible/analytics#1122
 
 ### Fixed
 - Fix weekly report time range plausible/analytics#951
 - Make sure embedded dashboards can run when user has blocked third-party cookies plausible/analytics#971
 - Sites listing page will paginate if the user has a lot of sites plausible/analytics#994
+- Crash when changing theme on a loaded dashboard plausible/analytics#1123
+- UI fix for details button overlapping content on mobile plausible/analytics#1114
 
 ### Removed
 - Removes AppSignal monitoring package

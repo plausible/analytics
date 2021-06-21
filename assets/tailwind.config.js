@@ -45,7 +45,8 @@ module.exports = {
       backgroundOpacity: ['dark'],
       display: ['dark'],
       cursor: ['hover'],
-      justifyContent: ['responsive']
+      justifyContent: ['responsive'],
+      backgroundColor: ['odd', 'even'],
     }
   },
   plugins: [

@@ -1,10 +1,6 @@
 import React from 'react';
 
 export default class extends React.Component {
-  constructor(props) {
-    super(props)
-  }
-
   componentDidMount() {
     this.observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
@@ -24,7 +20,13 @@ export default class extends React.Component {
 
   render() {
     return (
-      <div ref={(el) => this.element = el} className={this.props.className} style={this.props.style}>{this.props.children}</div>
+      <div
+        ref={(el) => { this.element = el }}
+        className={this.props.className}
+        style={this.props.style}
+      >
+        {this.props.children}
+      </div>
     );
   }
 }

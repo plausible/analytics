@@ -247,8 +247,7 @@ blockquote {
 }
 
 .stats-item {
-  @apply mt-6;
-  width: 100%;
+  min-height: 436px;
 }
 
 @screen md {
@@ -257,6 +256,12 @@ blockquote {
     margin-right: 6px;
     width: calc(50% - 6px);
     position: relative;
+    min-height: initial;
+    height: 436px;
+  }
+
+  .stats-item__header {
+    height: inherit;
   }
 }
 
