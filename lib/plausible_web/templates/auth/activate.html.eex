@@ -47,7 +47,7 @@
     </div>
   <% end %>
 
-  <%= if !@invitation do %>
+  <%= if !@has_invitation do %>
     <div class="pt-12 pl-8 hidden md:block">
       <%= render(PlausibleWeb.AuthView, "_onboarding_steps.html", current_step: 1) %>
     </div>

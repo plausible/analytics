@@ -134,7 +134,11 @@ defmodule PlausibleWeb.AuthController do
 
   def activate_form(conn, _params) do
     user = conn.assigns[:current_user]
-    invitation = Repo.get_by(Plausible.Auth.Invitation, email: user.email)
+
+    has_invitation = Repo.exists?(
+      from i in Plausible.Auth.Invitation,
+      where: i.email == ^user.email
+    )
 
     has_code =
       Repo.exists?(
@@ -144,7 +148,7 @@ defmodule PlausibleWeb.AuthController do
 
     render(conn, "activate.html",
       has_pin: has_code,
-      invitation: invitation,
+      has_invitation: has_invitation,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end

@@ -7,7 +7,7 @@
     <% end %>
   </header>
   <div class="flow-root mt-6">
-    <ul class="-my-5 divide-y divide-gray-200">
+    <ul class="-my-5 divide-y divide-gray-200 dark:divide-gray-50">
       <%= for membership <- @site.memberships do %>
         <li class="py-4">
           <div class="flex items-center space-x-4">
@@ -15,7 +15,7 @@
               <%= gravatar(membership.user.email, class: "h-8 w-8 rounded-full") %>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-900 truncate">
+              <p class="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
                 <%= membership.user.name %>
               </p>
               <p class="text-sm text-gray-500 truncate">
