@@ -135,10 +135,11 @@ defmodule PlausibleWeb.AuthController do
   def activate_form(conn, _params) do
     user = conn.assigns[:current_user]
 
-    has_invitation = Repo.exists?(
-      from i in Plausible.Auth.Invitation,
-      where: i.email == ^user.email
-    )
+    has_invitation =
+      Repo.exists?(
+        from i in Plausible.Auth.Invitation,
+          where: i.email == ^user.email
+      )
 
     has_code =
       Repo.exists?(
