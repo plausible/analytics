@@ -156,11 +156,13 @@ defmodule PlausibleWeb.AuthController do
 
   def activate(conn, %{"code" => code}) do
     user = conn.assigns[:current_user]
+
     has_invitation =
       Repo.exists?(
         from i in Plausible.Auth.Invitation,
           where: i.email == ^user.email
       )
+
     {code, ""} = Integer.parse(code)
 
     case Auth.verify_email(user, code) do
