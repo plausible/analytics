@@ -156,12 +156,16 @@ defmodule PlausibleWeb.AuthController do
 
   def activate(conn, %{"code" => code}) do
     user = conn.assigns[:current_user]
-    invitation = Repo.get_by(Plausible.Auth.Invitation, email: user.email)
+    has_invitation =
+      Repo.exists?(
+        from i in Plausible.Auth.Invitation,
+          where: i.email == ^user.email
+      )
     {code, ""} = Integer.parse(code)
 
     case Auth.verify_email(user, code) do
       :ok ->
-        if invitation do
+        if has_invitation do
           redirect(conn, to: "/sites")
         else
           redirect(conn, to: "/sites/new")
@@ -171,7 +175,7 @@ defmodule PlausibleWeb.AuthController do
         render(conn, "activate.html",
           error: "Incorrect activation code",
           has_pin: true,
-          invitation: invitation,
+          has_invitation: has_invitation,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
@@ -179,7 +183,7 @@ defmodule PlausibleWeb.AuthController do
         render(conn, "activate.html",
           error: "Code is expired, please request another one",
           has_pin: false,
-          invitation: invitation,
+          has_invitation: has_invitation,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
     end
