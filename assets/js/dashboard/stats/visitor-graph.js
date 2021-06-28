@@ -100,6 +100,7 @@ class LineGraph extends React.Component {
   constructor(props) {
     super(props);
     this.regenerateChart = this.regenerateChart.bind(this);
+    this.updateWindowDimensions =  this.updateWindowDimensions.bind(this);
   }
 
   regenerateChart() {
@@ -157,6 +158,7 @@ class LineGraph extends React.Component {
           },
         },
         responsive: true,
+        onResize: this.updateWindowDimensions,
         elements: {line: {tension: 0}, point: {radius: 0}},
         onClick: this.onClick.bind(this),
         scales: {
@@ -206,6 +208,16 @@ class LineGraph extends React.Component {
       this.chart = this.regenerateChart();
       this.chart.update();
     }
+  }
+
+  /**
+   * The current ticks' limits are set to treat iPad (regular/Mini/Pro) as a regular screen.
+   * @param {*} chart - The chart instance.
+   * @param {*} dimensions - An object containing the new dimensions *of the chart.*
+   */
+  updateWindowDimensions(chart, dimensions) {
+    chart.options.scales.x.ticks.maxTicksLimit = dimensions.width < 720 ? 5 : 8
+    chart.options.scales.y.ticks.maxTicksLimit = dimensions.height < 233 ? 3 : 8
   }
 
   onClick(e) {
