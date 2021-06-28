@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - Sites listing page will paginate if the user has a lot of sites plausible/analytics#994
 - Crash when changing theme on a loaded dashboard plausible/analytics#1123
 - UI fix for details button overlapping content on mobile plausible/analytics#1114
+- UI fix for the main graph on mobile overlapping its tick items on both axis
 
 ### Removed
 - Removes AppSignal monitoring package
