@@ -49,9 +49,15 @@ db_socket_dir = get_var_from_path_or_env(config_dir, "DATABASE_SOCKET_DIR")
 admin_user = get_var_from_path_or_env(config_dir, "ADMIN_USER_NAME")
 admin_email = get_var_from_path_or_env(config_dir, "ADMIN_USER_EMAIL")
 
-admin_emails =
-  get_var_from_path_or_env(config_dir, "ADMIN_EMAILS", "")
+admin_user_ids =
+  get_var_from_path_or_env(config_dir, "ADMIN_USER_IDS", "")
   |> String.split(",")
+  |> Enum.map(fn id -> Integer.parse(id) end)
+  |> Enum.map(fn
+    {int, ""} -> int
+    _ -> nil
+  end)
+  |> Enum.filter(& &1)
 
 admin_pwd = get_var_from_path_or_env(config_dir, "ADMIN_USER_PWD")
 env = get_var_from_path_or_env(config_dir, "ENVIRONMENT", "prod")
@@ -162,7 +168,7 @@ config :plausible,
   admin_pwd: admin_pwd,
   environment: env,
   mailer_email: mailer_email,
-  admin_emails: admin_emails,
+  admin_user_ids: admin_user_ids,
   site_limit: site_limit,
   site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost
@@ -272,7 +278,9 @@ if config_env() == :prod && !disable_cron do
     # Every 15 minutes
     {"*/15 * * * *", Plausible.Workers.SpikeNotifier},
     # Every day at midnight
-    {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes}
+    {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes},
+    # Every day at 1am
+    {"0 1 * * *", Plausible.Workers.CleanInvitations}
   ]
 
   extra_cron = [
@@ -283,7 +291,9 @@ if config_env() == :prod && !disable_cron do
     # Daily at 15
     {"0 15 * * *", Plausible.Workers.NotifyAnnualRenewal},
     # Every 10 minutes
-    {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates}
+    {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates},
+    # Every midnight
+    {"0 0 * * *", Plausible.Workers.LockSites}
   ]
 
   base_queues = [
@@ -292,16 +302,18 @@ if config_env() == :prod && !disable_cron do
     send_email_reports: 1,
     spike_notifications: 1,
     fetch_tweets: 1,
-    clean_email_verification_codes: 1,
     check_stats_emails: 1,
-    site_setup_emails: 1
+    site_setup_emails: 1,
+    clean_email_verification_codes: 1,
+    clean_invitations: 1
   ]
 
   extra_queues = [
     provision_ssl_certificates: 1,
     trial_notification_emails: 1,
     check_usage: 1,
-    notify_annual_renewal: 1
+    notify_annual_renewal: 1,
+    lock_sites: 1
   ]
 
   # Keep 30 days history

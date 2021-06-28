@@ -2,7 +2,8 @@ defmodule Plausible.Auth.UserAdmin do
   use Plausible.Repo
 
   def custom_index_query(_conn, _schema, query) do
-    from(r in query, preload: [:subscription])
+    subscripton_q = from(s in Plausible.Billing.Subscription, order_by: [desc: s.inserted_at])
+    from(r in query, preload: [subscription: ^subscripton_q])
   end
 
   def form_fields(_) do

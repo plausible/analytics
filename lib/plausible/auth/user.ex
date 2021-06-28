@@ -29,8 +29,8 @@ defmodule Plausible.Auth.User do
     timestamps()
   end
 
-  def new(user, attrs \\ %{}) do
-    user
+  def new(attrs \\ %{}) do
+    %Plausible.Auth.User{}
     |> cast(attrs, @required)
     |> validate_required(@required)
     |> validate_length(:password, min: 6, message: "has to be at least 6 characters")
