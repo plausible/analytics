@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   use PlausibleWeb.ConnCase
+  use Plausible.Repo
   import Plausible.TestUtils
 
   setup %{conn: conn} do
@@ -124,6 +125,28 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         put(conn, "/api/v1/sites/shared-links", %{
           name: "Wordpress",
           site_id: "bad"
+        })
+
+      res = json_response(conn, 404)
+      assert res["error"] == "Site could not be found"
+    end
+
+    test "returns 404 when api key owner does not have permissions to create a shared link", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
+      Repo.update_all(
+        from(sm in Plausible.Site.Membership,
+          where: sm.site_id == ^site.id and sm.user_id == ^user.id
+        ),
+        set: [role: :viewer]
+      )
+
+      conn =
+        put(conn, "/api/v1/sites/shared-links", %{
+          site_id: site.domain,
+          name: "Wordpress"
         })
 
       res = json_response(conn, 404)

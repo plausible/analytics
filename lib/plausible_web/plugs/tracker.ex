@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Tracker do
   import Plug.Conn
   use Agent
 
-  base_variants = ["hash", "outbound-links", "exclusions"]
+  base_variants = ["hash", "outbound-links", "exclusions", "compat"]
 
   # Generates Power Set of all variants
   variants =

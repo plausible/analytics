@@ -9,8 +9,11 @@ defmodule Plausible.Site do
     field :domain, :string
     field :timezone, :string, default: "Etc/UTC"
     field :public, :boolean
+    field :locked, :boolean
 
     many_to_many :members, User, join_through: Plausible.Site.Membership
+    has_many :memberships, Plausible.Site.Membership
+    has_many :invitations, Plausible.Auth.Invitation
     has_one :google_auth, GoogleAuth
     has_one :weekly_report, Plausible.Site.WeeklyReport
     has_one :monthly_report, Plausible.Site.MonthlyReport
