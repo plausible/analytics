@@ -59,7 +59,7 @@ class FilterModal extends React.Component {
     const updatedQuery = { ...query, filters: { ...query.filters, [selectedFilter]: null } }
 
     if (selectedFilter === 'country') {
-      const matchedCountries = Datamap.prototype.worldTopo.objects.world.geometries.filter(c => c.properties.name.includes(input.trim()))
+      const matchedCountries = Datamap.prototype.worldTopo.objects.world.geometries.filter(c => c.properties.name.toLowerCase().includes(input.trim().toLowerCase()))
       const matches = matchedCountries.map(c => c.id)
 
       return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/suggestions/country`, updatedQuery, { q: matches })
