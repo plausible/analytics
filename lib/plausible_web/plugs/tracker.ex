@@ -63,6 +63,7 @@ defmodule PlausibleWeb.Tracker do
         conn
         |> put_resp_header("content-type", "application/javascript")
         |> put_resp_header("cross-origin-resource-policy", "cross-origin")
+        |> put_resp_header("access-control-allow-origin", "*")
         |> send_file(200, location)
         |> halt()
     end
