@@ -9,8 +9,8 @@ function selectInputText(e) {
 
 function ChevronDown() {
   return (
-    <svg className="text-indigo-500 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="6 9 12 15 18 9"></polyline>
+    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+      <path stroke="#6B7280" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 8l4 4 4-4"/>
     </svg>
   )
 }
@@ -81,7 +81,7 @@ export default function SearchSelect(props) {
   return (
     <div className="mt-1 relative">
       <div className="relative rounded-md shadow-sm" {...getToggleButtonProps()} {...getComboboxProps()}>
-        <input {...getInputProps({onKeyDown: keydown})} onFocus={selectInputText} placeholder="Enter a filter value" type="text" className={classNames('focus:ring-indigo-500 focus:border-indigo-500 block w-full pr-10 sm:text-sm border-gray-300 rounded-md', {'cursor-pointer': inputValue === '' && !isOpen})}  />
+        <input {...getInputProps({onKeyDown: keydown})} onFocus={selectInputText} placeholder="Enter a filter value" type="text" className={classNames('w-full pr-10 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300 block', {'cursor-pointer': inputValue === '' && !isOpen})}  />
         <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
           { !loading && <ChevronDown /> }
           { loading && <Spinner /> }

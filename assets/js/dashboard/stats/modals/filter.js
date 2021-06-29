@@ -18,7 +18,7 @@ class FilterModal extends React.Component {
       query,
       selectedFilter,
       negated: false,
-      filterValue: query.filters[selectedFilter],
+      filterValue: query.filters[selectedFilter] || '',
     }
 
     this.handleKeydown = this.handleKeydown.bind(this)
@@ -132,7 +132,7 @@ class FilterModal extends React.Component {
           <form className="flex flex-col" id="filter-form" onSubmit={this.handleSubmit}>
             <select
               value={selectedFilter}
-              className="my-2 block w-full py-2 pl-3 pr-10 text-base border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300 cursor-pointer"
+              className="my-2 block w-full pr-10 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300 cursor-pointer"
               placeholder="Select a Filter"
               onChange={(e) => this.setState({ selectedFilter: e.target.value })}
             >
