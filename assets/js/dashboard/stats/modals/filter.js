@@ -8,18 +8,27 @@ import { parseQuery, formattedFilters, navigateToQuery } from '../../query'
 import Transition from "../../../transition";
 import * as api from '../../api'
 
+function getFilterValue(selectedFilter, query) {
+  const negated = !!query.filters[selectedFilter] && query.filters[selectedFilter][0] === '!'
+  let filterValue = negated ? query.filters[selectedFilter].slice(1) : (query.filters[selectedFilter] || "")
+
+  if (selectedFilter == 'country') {
+    const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
+    const selectedCountry = allCountries.find((c) => c.id === filterValue) || { properties: { name: filterValue } };
+    filterValue = selectedCountry.properties.name
+  }
+
+  return {filterValue, negated}
+}
+
+
 class FilterModal extends React.Component {
   constructor(props) {
     super(props)
     const query = parseQuery(props.location.search, props.site)
     const selectedFilter = this.props.match.params.field || 'page'
 
-    this.state = {
-      query,
-      selectedFilter,
-      negated: false,
-      filterValue: query.filters[selectedFilter] || '',
-    }
+    this.state = Object.assign({selectedFilter, query}, getFilterValue(selectedFilter, query))
 
     this.handleKeydown = this.handleKeydown.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
@@ -27,23 +36,6 @@ class FilterModal extends React.Component {
 
   componentDidMount() {
     document.addEventListener("keydown", this.handleKeydown)
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    const { query, selectedFilter, filterValue } = this.state
-
-    if (prevState.selectedFilter !== selectedFilter) {
-      const negated = !!query.filters[selectedFilter] && query.filters[selectedFilter][0] == '!' && this.negationSupported(selectedFilter)
-      let filterValue = negated ? query.filters[selectedFilter].slice(1) : (query.filters[selectedFilter] || "")
-
-      if (selectedFilter == 'country') {
-        const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
-        const selectedCountry = allCountries.find((c) => c.id === filterValue) || { properties: { name: filterValue } };
-        filterValue = selectedCountry.properties.name
-      }
-
-      this.setState({ filterValue, negated })
-    }
   }
 
   componentWillUnmount() {
@@ -88,7 +80,7 @@ class FilterModal extends React.Component {
       <SearchSelect
         key={this.state.selectedFilter}
         fetchOptions={this.fetchOptions.bind(this)}
-        initialSelectedItem={this.state.query.filters[this.state.selectedFilter]}
+        initialSelectedItem={this.state.filterValue}
         onInput={this.onInput.bind(this)}
       />
     )
@@ -119,6 +111,10 @@ class FilterModal extends React.Component {
     this.selectFilterAndCloseModal(selectedFilter, finalFilterValue)
   }
 
+  updateSelectedFilter(e) {
+    this.setState(Object.assign({selectedFilter: e.target.value}, getFilterValue(e.target.value, this.state.query)))
+  }
+
   renderBody() {
     const { selectedFilter, negated, filterValue, query } = this.state;
     const editableFilters = Object.keys(this.state.query.filters).filter(filter => !['props'].includes(filter))
@@ -134,7 +130,7 @@ class FilterModal extends React.Component {
               value={selectedFilter}
               className="my-2 block w-full pr-10 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300 cursor-pointer"
               placeholder="Select a Filter"
-              onChange={(e) => this.setState({ selectedFilter: e.target.value })}
+              onChange={this.updateSelectedFilter.bind(this)}
             >
               <option disabled value="" className="hidden">Select a Filter</option>
               {editableFilters.map(filter => <option key={filter} value={filter}>{formattedFilters[filter]}</option>)}
@@ -155,7 +151,7 @@ class FilterModal extends React.Component {
               </div>
             )}
 
-            {this.renderSearchSelector(selectedFilter)}
+            {this.renderSearchSelector()}
 
             <button
               type="submit"
