@@ -11,14 +11,16 @@ import * as api from '../../api'
 class FilterModal extends React.Component {
   constructor(props) {
     super(props)
+    const query = parseQuery(props.location.search, props.site)
+    const selectedFilter = this.props.match.params.field || 'page'
+
     this.state = {
-      query: parseQuery(props.location.search, props.site),
-      selectedFilter: this.props.match.params.field || 'page',
+      query,
+      selectedFilter,
       negated: false,
-      filterValue: "",
+      filterValue: query.filters[selectedFilter],
     }
 
-    this.editableGoals = Object.keys(this.state.query.filters).filter(filter => !['props'].includes(filter))
     this.handleKeydown = this.handleKeydown.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
   }
@@ -92,9 +94,20 @@ class FilterModal extends React.Component {
     )
   }
 
+  selectFilterAndCloseModal(filterKey, filterValue) {
+    const queryString = new URLSearchParams(window.location.search)
+
+    if (filterValue) {
+      queryString.set(filterKey, filterValue)
+    } else {
+      queryString.delete(filterKey)
+    }
+
+    this.props.history.replace({pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: queryString.toString()})
+  }
+
   handleSubmit() {
     const { selectedFilter, negated, filterValue } = this.state;
-    const validFilter = this.editableGoals.includes(selectedFilter) && filterValue.trim()
 
     let finalFilterValue = (this.negationSupported(selectedFilter) && negated ? '!' : '') + filterValue.trim()
     if (selectedFilter == 'country') {
@@ -102,17 +115,13 @@ class FilterModal extends React.Component {
       const selectedCountry = allCountries.find((c) => c.properties.name === finalFilterValue) || { id: finalFilterValue };
       finalFilterValue = selectedCountry.id
     }
-    const finalizedQuery = new URLSearchParams(window.location.search)
-    finalizedQuery.set(selectedFilter, finalFilterValue)
 
-    if (validFilter) {
-      this.setState({ finalizedQuery })
-    }
+    this.selectFilterAndCloseModal(selectedFilter, finalFilterValue)
   }
 
   renderBody() {
     const { selectedFilter, negated, filterValue, query } = this.state;
-    const validFilter = this.editableGoals.includes(selectedFilter) && filterValue.trim()
+    const editableFilters = Object.keys(this.state.query.filters).filter(filter => !['props'].includes(filter))
 
     return (
       <>
@@ -122,13 +131,13 @@ class FilterModal extends React.Component {
         <main className="modal__content">
           <form className="flex flex-col" id="filter-form" onSubmit={this.handleSubmit}>
             <select
-              value={selectedFilter || ""}
+              value={selectedFilter}
               className="my-2 block w-full py-2 pl-3 pr-10 text-base border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300 cursor-pointer"
               placeholder="Select a Filter"
               onChange={(e) => this.setState({ selectedFilter: e.target.value })}
             >
               <option disabled value="" className="hidden">Select a Filter</option>
-              {this.editableGoals.map(filter => <option key={filter} value={filter}>{formattedFilters[filter]}</option>)}
+              {editableFilters.map(filter => <option key={filter} value={filter}>{formattedFilters[filter]}</option>)}
             </select>
 
             {this.negationSupported(selectedFilter) && (
@@ -150,7 +159,7 @@ class FilterModal extends React.Component {
 
             <button
               type="submit"
-              disabled={!validFilter}
+              disabled={filterValue.trim().length === 0}
               className="button mt-4 w-2/3 mx-auto"
             >
               {query.filters[selectedFilter] ? 'Update' : 'Add'} Filter
@@ -160,9 +169,7 @@ class FilterModal extends React.Component {
               <button
                 className="button mt-8 px-4 mx-auto flex bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-700 items-center"
                 onClick={() => {
-                  const finalizedQuery = new URLSearchParams(window.location.search)
-                  finalizedQuery.delete(selectedFilter)
-                  this.setState({ finalizedQuery })
+                  this.selectFilterAndCloseModal(selectedFilter, null)
                 }}
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -176,11 +183,6 @@ class FilterModal extends React.Component {
   }
 
   render() {
-    const { finalizedQuery } = this.state;
-
-    if (finalizedQuery)
-      return <Redirect to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: finalizedQuery.toString() }} />
-
     return (
       <Modal site={this.props.site} maxWidth="460px">
         { this.renderBody()}
