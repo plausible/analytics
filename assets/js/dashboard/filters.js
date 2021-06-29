@@ -1,6 +1,6 @@
 import React from 'react';
 import { withRouter, Link } from 'react-router-dom'
-import { countFilters, formattedFilters, navigateToQuery, removeQueryParam } from './query'
+import { countFilters, formattedFilters, navigateToQuery } from './query'
 import Datamap from 'datamaps'
 import Transition from "../transition.js";
 
