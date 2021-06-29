@@ -138,7 +138,7 @@ is_selfhost =
 
 {site_limit, ""} =
   config_dir
-  |> get_var_from_path_or_env("SITE_LIMIT", "20")
+  |> get_var_from_path_or_env("SITE_LIMIT", "50")
   |> Integer.parse()
 
 site_limit_exempt =
