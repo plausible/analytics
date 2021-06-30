@@ -144,12 +144,6 @@ export function toHuman(query) {
   }
 }
 
-export function removeQueryParam(search, parameter) {
-  const q = new URLSearchParams(search)
-  q.delete(parameter)
-  return q.toString()
-}
-
 export function eventName(query) {
   if (query.filters.goal) {
     if (query.filters.goal.startsWith('Visit ')) {

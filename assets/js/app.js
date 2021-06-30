@@ -1,5 +1,4 @@
 import "../css/app.css"
-import "../css/react-select.css"
 import "flatpickr/dist/flatpickr.min.css"
 import "./polyfills/closest"
 import 'abortcontroller-polyfill/dist/polyfill-patch-fetch'

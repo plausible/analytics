@@ -106,6 +106,8 @@ class DatePicker extends React.Component {
 
     if (keys.includes(e.key.toLowerCase())) {
       navigateToQuery(history, query, {...newSearch, ...(redirects[keys.indexOf(e.key.toLowerCase())])});
+    } else if (e.key.toLowerCase() === 'f') {
+      return history.push({pathname: `/${encodeURIComponent(this.props.site.domain)}/filter`, search: window.location.search})
     } else if (e.key.toLowerCase() === 'c') {
       this.setState({mode: 'calendar', open: true}, this.openCalendar);
     } else if (newSearch.date) {
