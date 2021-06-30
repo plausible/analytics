@@ -91,10 +91,10 @@ export default function SearchSelect(props) {
         { isOpen &&
         <ul className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
           { !loading && items.length == 0 &&
-          <li className="cursor-default select-none relative py-2 pl-3 pr-9">No results found</li>
+          <li className="text-gray-500 text-sm select-none py-2 px-3">No matches found in the current dashboard. Try selecting a different time range or searching for something different</li>
           }
           { loading && items.length == 0 &&
-          <li className="cursor-default select-none relative py-2 pl-3 pr-9">Loading options...</li>
+          <li className="text-gray-500 select-none py-2 px-3">Loading options...</li>
           }
 
           {
