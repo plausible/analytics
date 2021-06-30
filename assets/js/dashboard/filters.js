@@ -1,6 +1,7 @@
 import React from 'react';
 import { withRouter, Link } from 'react-router-dom'
 import { countFilters, formattedFilters, navigateToQuery } from './query'
+import { filterGroupForFilter } from './stats/modals/filter'
 import Datamap from 'datamaps'
 import Transition from "../transition.js";
 
@@ -187,7 +188,7 @@ class Filters extends React.Component {
       <div className="px-3 md:px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between" key={key + value}>
         <Link
           title={`Edit filter: ${formattedFilters[key]}`}
-          to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${key}`, search: window.location.search }}
+          to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}
           className="group flex w-full justify-between items-center"
         >
           {this.filterText(key, value, query)}
@@ -207,7 +208,7 @@ class Filters extends React.Component {
           </span>
         ) : (
           <>
-            <Link title={`Edit filter: ${formattedFilters[key]}`} className="filter-list-text flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${key}`, search: window.location.search }}>
+            <Link title={`Edit filter: ${formattedFilters[key]}`} className="filter-list-text flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}>
               {this.filterText(key, value, query)}
             </Link>
             <span className="filter-list-edit hidden h-full w-full px-2 cursor-pointer text-indigo-700 dark:text-indigo-500 items-center">

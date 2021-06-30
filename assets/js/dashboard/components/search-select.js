@@ -27,7 +27,6 @@ function Spinner() {
 export default function SearchSelect(props) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(false)
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false)
 
   function fetchOptions({inputValue, isOpen}) {
     setLoading(isOpen)
@@ -60,11 +59,9 @@ export default function SearchSelect(props) {
       props.onInput(changes.inputValue)
     },
     initialSelectedItem: props.initialSelectedItem,
-    onIsOpenChange: ({inputValue}) => {
-      if (!initialLoadComplete) {
-        fetchOptions({inputValue: inputValue, isOpen: true}).then(() => {
-          setInitialLoadComplete(true)
-        })
+    onIsOpenChange: ({isOpen, inputValue}) => {
+      if (isOpen) {
+        fetchOptions({inputValue, isOpen})
       }
     }
   })
