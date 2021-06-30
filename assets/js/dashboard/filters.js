@@ -126,7 +126,7 @@ class Filters extends React.Component {
       return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM campaign is <b>{value}</b></span>
     }
     if (key === "referrer") {
-      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Referrer is <b>{value}</b></span>
+      return <span className="inline-block max-w-2xs md:max-w-xs truncate">Referrer URL is <b>{value}</b></span>
     }
     if (key === "screen") {
       return <span className="inline-block max-w-2xs md:max-w-xs truncate">Screen size is <b>{value}</b></span>

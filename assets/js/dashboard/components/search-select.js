@@ -81,7 +81,7 @@ export default function SearchSelect(props) {
   return (
     <div className="mt-1 relative">
       <div className="relative rounded-md shadow-sm" {...getToggleButtonProps()} {...getComboboxProps()}>
-        <input {...getInputProps({onKeyDown: keydown})} onFocus={selectInputText} placeholder="Enter a filter value" type="text" className={classNames('w-full pr-10 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300 block', {'cursor-pointer': inputValue === '' && !isOpen})}  />
+        <input {...getInputProps({onKeyDown: keydown})} onFocus={selectInputText} placeholder={props.placeholder} type="text" className={classNames('w-full pr-10 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300 block', {'cursor-pointer': inputValue === '' && !isOpen})}  />
         <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
           { !loading && <ChevronDown /> }
           { loading && <Spinner /> }
