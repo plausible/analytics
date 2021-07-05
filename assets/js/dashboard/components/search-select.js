@@ -81,7 +81,7 @@ export default function SearchSelect(props) {
   return (
     <div className="mt-1 relative">
       <div className="relative rounded-md shadow-sm" {...getToggleButtonProps()} {...getComboboxProps()}>
-        <input {...getInputProps({onKeyDown: keydown})} onFocus={selectInputText} placeholder="Enter a filter value" type="text" className={classNames('w-full pr-10 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300 block', {'cursor-pointer': inputValue === '' && !isOpen})}  />
+        <input {...getInputProps({onKeyDown: keydown})} onFocus={selectInputText} placeholder={props.placeholder} type="text" className={classNames('w-full pr-10 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300 block', {'cursor-pointer': inputValue === '' && !isOpen})}  />
         <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
           { !loading && <ChevronDown /> }
           { loading && <Spinner /> }
@@ -89,17 +89,17 @@ export default function SearchSelect(props) {
       </div>
       <div {...getMenuProps()}>
         { isOpen &&
-        <ul className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+        <ul className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-900 shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
           { !loading && items.length == 0 &&
-          <li className="cursor-default select-none relative py-2 pl-3 pr-9">No results found</li>
+          <li className="text-gray-500 select-none py-2 px-3">No matches found in the current dashboard. Try selecting a different time range or searching for something different</li>
           }
           { loading && items.length == 0 &&
-          <li className="cursor-default select-none relative py-2 pl-3 pr-9">Loading options...</li>
+            <li className="text-gray-500 select-none py-2 px-3">Loading options...</li>
           }
 
           {
             items.map((item, index) => (
-              <li className={classNames("cursor-pointer select-none relative py-2 pl-3 pr-9", {'text-white bg-indigo-600': highlightedIndex === index, 'text-gray-900': highlightedIndex !== index})}
+              <li className={classNames("cursor-pointer select-none relative py-2 pl-3 pr-9", {'text-white bg-indigo-600': highlightedIndex === index, 'text-gray-900 dark:text-gray-100': highlightedIndex !== index})}
                 key={`${item}${index}`}
                 {...getItemProps({ item, index })}
               >

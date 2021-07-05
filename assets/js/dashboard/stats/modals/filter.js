@@ -21,14 +21,42 @@ function getFilterValue(selectedFilter, query) {
   return {filterValue, negated}
 }
 
+function withIndefiniteArticle(word) {
+  if (word.startsWith('UTM')) {
+    return 'a ' + word
+  } else if (['a', 'e', 'i', 'o', 'u'].some((vowel) => word.toLowerCase().startsWith(vowel))) {
+    return 'an ' + word
+  } else {
+    return 'a ' + word
+  }
+}
+
+const SECONDARY_FILTERS = {
+  'browser': 'browser_version',
+  'os': 'os_version',
+  'source': 'referrer',
+}
+
+const SECONDARY_TO_PRIMARY = Object.keys(SECONDARY_FILTERS)
+  .reduce((res, key) => Object.assign(res, {[SECONDARY_FILTERS[key]]: key}), {});
+
+function getVersionFilter(forFilter) {
+  return SECONDARY_FILTERS[forFilter]
+}
 
 class FilterModal extends React.Component {
   constructor(props) {
     super(props)
     const query = parseQuery(props.location.search, props.site)
-    const selectedFilter = this.props.match.params.field || 'page'
+    let selectedFilter = this.props.match.params.field || 'page'
+    let secondaryFilter;
 
-    this.state = Object.assign({selectedFilter, query}, getFilterValue(selectedFilter, query))
+    if (Object.values(SECONDARY_FILTERS).includes(selectedFilter)) {
+      selectedFilter = SECONDARY_TO_PRIMARY[selectedFilter]
+    }
+    secondaryFilter = SECONDARY_FILTERS[selectedFilter]
+
+    this.state = Object.assign({selectedFilter, query}, getFilterValue(selectedFilter, query), {secondaryFilterValue: query.filters[secondaryFilter] || ''})
 
     this.handleKeydown = this.handleKeydown.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
@@ -75,31 +103,68 @@ class FilterModal extends React.Component {
     this.setState({filterValue: val})
   }
 
-  renderSearchSelector(filter) {
+  renderSearchSelector() {
+    const {selectedFilter, filterValue} = this.state
+
     return (
       <SearchSelect
-        key={this.state.selectedFilter}
+        key={selectedFilter}
         fetchOptions={this.fetchOptions.bind(this)}
-        initialSelectedItem={this.state.filterValue}
+        initialSelectedItem={filterValue}
         onInput={this.onInput.bind(this)}
+        placeholder={`Select ${withIndefiniteArticle(formattedFilters[selectedFilter])}`}
       />
     )
   }
 
-  selectFilterAndCloseModal(filterKey, filterValue) {
+  fetchSecondaryOptions(filterName) {
+    const {query, selectedFilter} = this.state
+
+    return (input) => {
+      const {filterValue} = this.state
+      const updatedQuery = { ...query, filters: { ...query.filters, [selectedFilter]: filterValue, [filterName]: null } }
+
+      return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/suggestions/${filterName}`, updatedQuery, { q: input.trim() })
+    }
+  }
+
+  onSecondaryInput(val) {
+    this.setState({secondaryFilterValue: val})
+  }
+
+  renderVersionSelector() {
+    const {selectedFilter, filterValue, secondaryFilterValue} = this.state
+    const secondaryFilter = SECONDARY_FILTERS[selectedFilter]
+
+    if (secondaryFilter) {
+      return (
+        <SearchSelect
+          key={selectedFilter + filterValue + secondaryFilter}
+          fetchOptions={this.fetchSecondaryOptions(secondaryFilter)}
+          initialSelectedItem={secondaryFilterValue}
+          onInput={this.onSecondaryInput.bind(this)}
+          placeholder={`${formattedFilters[secondaryFilter]} (optional)`}
+        />
+      )
+    }
+  }
+
+  selectFiltersAndCloseModal(filters) {
     const queryString = new URLSearchParams(window.location.search)
 
-    if (filterValue) {
-      queryString.set(filterKey, filterValue)
-    } else {
-      queryString.delete(filterKey)
+    for (const entry of filters) {
+      if (entry.value) {
+        queryString.set(entry.filter, entry.value)
+      } else {
+        queryString.delete(entry.filter)
+      }
     }
 
     this.props.history.replace({pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: queryString.toString()})
   }
 
   handleSubmit() {
-    const { selectedFilter, negated, filterValue } = this.state;
+    const { selectedFilter, negated, filterValue, secondaryFilterValue } = this.state;
 
     let finalFilterValue = (this.negationSupported(selectedFilter) && negated ? '!' : '') + filterValue.trim()
     if (selectedFilter == 'country') {
@@ -108,7 +173,15 @@ class FilterModal extends React.Component {
       finalFilterValue = selectedCountry.id
     }
 
-    this.selectFilterAndCloseModal(selectedFilter, finalFilterValue)
+    const filters = [{filter: selectedFilter, value: finalFilterValue}]
+
+    const secondaryFilter = SECONDARY_FILTERS[selectedFilter]
+
+    if (secondaryFilter) {
+      filters.push({filter: secondaryFilter, value: secondaryFilterValue.trim()})
+    }
+
+    this.selectFiltersAndCloseModal(filters)
   }
 
   updateSelectedFilter(e) {
@@ -116,12 +189,12 @@ class FilterModal extends React.Component {
   }
 
   renderBody() {
-    const { selectedFilter, negated, filterValue, query } = this.state;
-    const editableFilters = Object.keys(this.state.query.filters).filter(filter => !['props'].includes(filter))
+    const { selectedFilter, negated, filterValue, secondaryFilterValue, query } = this.state;
+    const editableFilters = Object.keys(this.state.query.filters).filter(filter => !['props'].concat(Object.values(SECONDARY_FILTERS)).includes(filter))
 
     return (
       <>
-        <h1 className="text-xl font-bold dark:text-gray-100">{query.filters[selectedFilter] ? 'Edit' : 'Add'} Filter</h1>
+        <h1 className="text-xl font-bold dark:text-gray-100">{query.filters[selectedFilter] || query.filters[SECONDARY_FILTERS[selectedFilter]] ? 'Edit' : 'Add'} Filter</h1>
 
         <div className="my-4 border-b border-gray-300"></div>
         <main className="modal__content">
@@ -152,21 +225,22 @@ class FilterModal extends React.Component {
             )}
 
             {this.renderSearchSelector()}
+            {this.renderVersionSelector()}
 
             <div className="mt-6 flex items-center justify-start">
               <button
                 type="submit"
-                disabled={filterValue.trim().length === 0}
+                disabled={filterValue.trim().length === 0 && secondaryFilterValue.trim().length === 0}
                 className="button"
               >
-                {query.filters[selectedFilter] ? 'Update' : 'Add'} Filter
+                {query.filters[selectedFilter] || query.filters[SECONDARY_FILTERS[selectedFilter]] ? 'Update' : 'Add'} Filter
               </button>
 
               {query.filters[selectedFilter] && (
                 <button
                   className="ml-2 button px-4 flex bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-700 items-center"
                   onClick={() => {
-                    this.selectFilterAndCloseModal(selectedFilter, null)
+                    this.selectFiltersAndCloseModal([{filter: selectedFilter, value: null}, {filter: SECONDARY_FILTERS[selectedFilter], value: null}])
                   }}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
