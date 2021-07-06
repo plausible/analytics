@@ -10,11 +10,20 @@ function barWidth(count, all) {
   return count / maxVal * 100
 }
 
-export default function Bar({count, all, bg}) {
+export default function Bar({count, all, bg, text, content, maxWidthDeduction}) {
   const width = barWidth(count, all)
 
   return (
-    <div className={bg} style={{width: width + '%', height: '30px'}}>
+    <div
+      className="w-full relative"
+      style={{maxWidth: `calc(100% - ${maxWidthDeduction})`}}
+    >
+      <div
+        className={`absolute top-0 left-0 h-full ${bg || ''} ${text || ''}`}
+        style={{width: `${width}%`}}
+      >
+      </div>
+      {content}
     </div>
   )
 }
