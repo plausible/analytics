@@ -1,6 +1,8 @@
 import React from "react";
 import { withRouter } from "react-router-dom";
 import Flatpickr from "react-flatpickr";
+import classNames from 'classnames'
+import { ChevronDownIcon } from '@heroicons/react/solid'
 import {
   shiftDays,
   shiftMonths,
@@ -148,137 +150,8 @@ class DatePicker extends React.Component {
     return 'Realtime'
   }
 
-  renderArrow(period, prevDate, nextDate) {
-    const insertionDate = parseUTCDate(this.props.site.insertedAt);
-    const disabledLeft = isBefore(
-      parseUTCDate(prevDate),
-      insertionDate,
-      period
-    );
-    const disabledRight = isAfter(
-      parseUTCDate(nextDate),
-      nowForSite(this.props.site),
-      period
-    );
-
-    const leftClasses = `flex items-center px-2 border-r border-gray-300 rounded-l
-      dark:border-gray-500 dark:text-gray-100 ${
-      disabledLeft ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-200 dark:hover:bg-gray-900"
-    }`;
-    const rightClasses = `flex items-center px-2 rounded-r dark:text-gray-100 ${
-      disabledRight ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-200 dark:hover:bg-gray-900"
-    }`;
-    return (
-      <div className="flex rounded shadow bg-white mr-4 cursor-pointer dark:bg-gray-800">
-        <QueryButton
-          to={{ date: prevDate }}
-          query={this.props.query}
-          className={leftClasses}
-          disabled={disabledLeft}
-        >
-          <svg
-            className="feather h-4 w-4"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-        </QueryButton>
-        <QueryButton
-          to={{ date: nextDate }}
-          query={this.props.query}
-          className={rightClasses}
-          disabled={disabledRight}
-        >
-          <svg
-            className="feather h-4 w-4"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </QueryButton>
-      </div>
-    );
-  }
-
-  renderArrows() {
-    const { query } = this.props;
-
-    if (query.period === "month") {
-      const prevDate = formatISO(shiftMonths(query.date, -1));
-      const nextDate = formatISO(shiftMonths(query.date, 1));
-
-      return this.renderArrow("month", prevDate, nextDate);
-    } if (query.period === "day") {
-      const prevDate = formatISO(shiftDays(query.date, -1));
-      const nextDate = formatISO(shiftDays(query.date, 1));
-
-      return this.renderArrow("day", prevDate, nextDate);
-    }
-  }
-
   open() {
     this.setState({ mode: "menu", open: true });
-  }
-
-  renderDropDown() {
-    return (
-      <div
-        className="relative"
-        style={{ height: "35.5px", width: "190px" }}
-        ref={(node) => (this.dropDownNode = node)}
-      >
-        <div
-          onClick={this.open}
-          onKeyPress={this.open}
-          className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-4
-          pr-3 py-2 leading-tight cursor-pointer text-sm font-medium text-gray-800
-          dark:text-gray-200 h-full hover:bg-gray-200 dark:hover:bg-gray-900"
-          tabIndex="0"
-          role="button"
-          aria-haspopup="true"
-          aria-expanded="false"
-          aria-controls="datemenu"
-        >
-          <span className="mr-2">{this.timeFrameText()}</span>
-          <svg
-            className="text-indigo-500 h-4 w-4"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </div>
-
-        <Transition
-          show={this.state.open}
-          enter="transition ease-out duration-100 transform"
-          enterFrom="opacity-0 scale-95"
-          enterTo="opacity-100 scale-100"
-          leave="transition ease-in duration-75 transform"
-          leaveFrom="opacity-100 scale-100"
-          leaveTo="opacity-0 scale-95"
-        >
-          {this.renderDropDownContent()}
-        </Transition>
-      </div>
-    );
   }
 
   close() {
@@ -432,9 +305,40 @@ class DatePicker extends React.Component {
 
   render() {
     return (
-      <div className="flex justify-end ml-auto pl-2">
-        { this.renderArrows() }
-        { this.renderDropDown() }
+      <div
+        className={classNames('relative', this.props.className)}
+        ref={(node) => (this.dropDownNode = node)}
+      >
+        <div
+          onClick={this.open}
+          onKeyPress={this.open}
+          className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-3
+          py-2 leading-tight cursor-pointer text-xs md:text-sm text-gray-800
+          dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900"
+          tabIndex="0"
+          role="button"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="datemenu"
+        >
+          <span className="mr-2">
+            {this.props.leadingText}
+            <span className="font-medium">{this.timeFrameText()}</span>
+          </span>
+          <ChevronDownIcon className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
+        </div>
+
+        <Transition
+          show={this.state.open}
+          enter="transition ease-out duration-100 transform"
+          enterFrom="opacity-0 scale-95"
+          enterTo="opacity-100 scale-100"
+          leave="transition ease-in duration-75 transform"
+          leaveFrom="opacity-100 scale-100"
+          leaveTo="opacity-0 scale-95"
+        >
+          {this.renderDropDownContent()}
+        </Transition>
       </div>
     );
   }

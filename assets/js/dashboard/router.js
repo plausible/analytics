@@ -8,6 +8,7 @@ import EntryPagesModal from './stats/modals/entry-pages'
 import ExitPagesModal from './stats/modals/exit-pages'
 import CountriesModal from './stats/modals/countries'
 import FilterModal from './stats/modals/filter'
+import MobileFilters from './stats/modals/mobile-filters'
 
 import {BrowserRouter, Switch, Route, useLocation} from "react-router-dom";
 
@@ -51,7 +52,10 @@ export default function Router({site, loggedIn, currentUserRole}) {
           <Route path="/:domain/countries">
             <CountriesModal site={site} />
           </Route>
-          <Route path={["/:domain/filter/:field", "/:domain/filter"]}>
+          <Route path={["/:domain/filter/mobile"]}>
+            <MobileFilters site={site} />
+          </Route>
+          <Route path={["/:domain/filter/:field"]}>
             <FilterModal site={site} />
           </Route>
         </Switch>

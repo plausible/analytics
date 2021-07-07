@@ -2,6 +2,7 @@ import React, {useState, useCallback} from 'react'
 import {useCombobox} from 'downshift'
 import classNames from 'classnames'
 import debounce from 'debounce-promise'
+import { ChevronDownIcon } from '@heroicons/react/solid'
 
 function selectInputText(e) {
   e.target.select()
@@ -76,11 +77,11 @@ export default function SearchSelect(props) {
   }
 
   return (
-    <div className="mt-1 relative">
+    <div className="ml-2 relative w-full">
       <div className="relative rounded-md shadow-sm" {...getToggleButtonProps()} {...getComboboxProps()}>
         <input {...getInputProps({onKeyDown: keydown})} onFocus={selectInputText} placeholder={props.placeholder} type="text" className={classNames('w-full pr-10 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300 block', {'cursor-pointer': inputValue === '' && !isOpen})}  />
         <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-          { !loading && <ChevronDown /> }
+          { !loading && <ChevronDownIcon className="h-4 w-4 text-gray-500" /> }
           { loading && <Spinner /> }
         </div>
       </div>

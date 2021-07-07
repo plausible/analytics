@@ -1,12 +1,20 @@
-import React from "react";
+import React, { Fragment } from "react";
 import { withRouter, Redirect } from 'react-router-dom'
-
+import classNames from 'classnames'
 import Datamap from 'datamaps'
+import { Menu, Transition } from '@headlessui/react'
+import { ChevronDownIcon } from '@heroicons/react/solid'
+
 import SearchSelect from '../../components/search-select'
 import Modal from './modal'
 import { parseQuery, formattedFilters, navigateToQuery } from '../../query'
-import Transition from "../../../transition";
 import * as api from '../../api'
+
+function getCountryName(ISOCode) {
+  const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
+  const selectedCountry = allCountries.find((c) => c.id === ISOCode);
+  return selectedCountry.properties.name
+}
 
 function getFilterValue(filter, query) {
   const negated = !!query.filters[filter] && query.filters[filter][0] === '!'
@@ -21,6 +29,15 @@ function getFilterValue(filter, query) {
   return {filterValue, negated}
 }
 
+function getFormState(filterGroup, query) {
+  return FILTER_GROUPS[filterGroup].reduce((result, filter) => {
+    let filterValue = query.filters[filter] || ''
+    const type = filterValue[0] === '!' ? 'is_not' : 'is'
+    if (filter === 'country') filterValue = getCountryName(filterValue)
+    return Object.assign(result, {[filter]: {value: filterValue, type: type}})
+  }, {})
+}
+
 function withIndefiniteArticle(word) {
   if (word.startsWith('UTM')) {
     return 'a ' + word
@@ -31,7 +48,7 @@ function withIndefiniteArticle(word) {
   }
 }
 
-const FILTER_GROUPS = {
+export const FILTER_GROUPS = {
   'page': ['page'],
   'source': ['source', 'referrer'],
   'country': ['country'],
@@ -44,7 +61,7 @@ const FILTER_GROUPS = {
   'goal': ['goal']
 }
 
-function formatFilterGroup(filterGroup) {
+export function formatFilterGroup(filterGroup) {
   if (filterGroup === 'utm') {
     return 'UTM tags'
   } else {
@@ -69,10 +86,7 @@ class FilterModal extends React.Component {
     super(props)
     const query = parseQuery(props.location.search, props.site)
     const selectedFilterGroup = this.props.match.params.field || 'page'
-    const formState = FILTER_GROUPS[selectedFilterGroup].reduce((result, filter) => {
-      return Object.assign(result, {[filter]: query.filters[filter]})
-    }, {})
-    console.log(formState)
+    const formState = getFormState(selectedFilterGroup, query)
 
     this.state = Object.assign({selectedFilterGroup, query, formState})
   }
@@ -119,27 +133,104 @@ class FilterModal extends React.Component {
     }
   }
 
-  onInput(filter) {
+  onInput(filterName) {
     return (val) => {
-      const formState = Object.assign(
-        this.state.formState,
-        {[filter]: {value: val, negated: false}}
-      )
-
-      this.setState({formState})
+      this.setState({formState: Object.assign(this.state.formState, {
+        [filterName]: Object.assign(this.state.formState[filterName], {value: val})
+      })})
     }
+  }
+
+  setFilterType(filterName, newType) {
+    this.setState({formState: Object.assign(this.state.formState, {
+      [filterName]: Object.assign(this.state.formState[filterName], {type: newType})
+    })})
+  }
+
+  selectedFilterType(filter) {
+    return this.state.formState[filter].type
+  }
+
+  renderFilterTypeSelector(filterName) {
+    return (
+      <Menu as="div" className="relative inline-block text-left">
+        {({ open }) => (
+          <>
+            <div className="w-24">
+              <Menu.Button className="inline-flex justify-between items-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500">
+                { this.selectedFilterType(filterName) }
+                <ChevronDownIcon className="-mr-2 ml-2 h-4 w-4 text-gray-500" aria-hidden="true" />
+              </Menu.Button>
+            </div>
+
+            <Transition
+              show={open}
+              as={Fragment}
+              enter="transition ease-out duration-100"
+              enterFrom="transform opacity-0 scale-95"
+              enterTo="transform opacity-100 scale-100"
+              leave="transition ease-in duration-75"
+              leaveFrom="transform opacity-100 scale-100"
+              leaveTo="transform opacity-0 scale-95"
+            >
+              <Menu.Items
+                static
+                className="z-10 origin-top-left absolute left-0 mt-2 w-24 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
+              >
+                <div className="py-1">
+                  <Menu.Item>
+                    {({ active }) => (
+                      <span
+                        onClick={() => this.setFilterType(filterName, 'is')}
+                        className={classNames(
+                          active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+                          'cursor-pointer block px-4 py-2 text-sm'
+                        )}
+                      >
+                        is
+                      </span>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <span
+                        onClick={() => this.setFilterType(filterName, 'is_not')}
+                        className={classNames(
+                          active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+                          'cursor-pointer block px-4 py-2 text-sm'
+                        )}
+                      >
+                        is not
+                      </span>
+                    )}
+                  </Menu.Item>
+                </div>
+              </Menu.Items>
+            </Transition>
+          </>
+        )}
+      </Menu>
+    )
   }
 
   renderFilterInputs() {
     return FILTER_GROUPS[this.state.selectedFilterGroup].map((filter) => {
       return (
-        <SearchSelect
-          key={filter}
-          fetchOptions={this.fetchOptions(filter)}
-          initialSelectedItem={this.state.formState[filter]}
-          onInput={this.onInput(filter)}
-          placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`}
-        />
+        <div className="mt-4" key={filter}>
+          <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{ formattedFilters[filter] }</div>
+          <div className="flex items-start mt-1">
+            { this.renderFilterTypeSelector(filter) }
+
+            <SearchSelect
+              key={filter}
+              fetchOptions={this.fetchOptions(filter)}
+              initialSelectedItem={this.state.formState[filter].value}
+              onInput={this.onInput(filter)}
+              placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`}
+            />
+          </div>
+
+        </div>
       )
     })
   }
@@ -161,8 +252,8 @@ class FilterModal extends React.Component {
   handleSubmit() {
     const { formState } = this.state;
 
-    const filters = Object.entries(formState).reduce((res, [filterKey, {negated, value}]) => {
-      let finalFilterValue = (this.negationSupported(filterKey) && negated ? '!' : '') + value.trim()
+    const filters = Object.entries(formState).reduce((res, [filterKey, {type, value}]) => {
+      let finalFilterValue = (type === 'is_not' ? '!' : '') + value.trim()
 
       if (filterKey == 'country') {
         const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
@@ -178,45 +269,38 @@ class FilterModal extends React.Component {
   }
 
   updateSelectedFilterGroup(e) {
-    this.setState(Object.assign({selectedFilterGroup: e.target.value}, getFilterValue(e.target.value, this.state.query)))
+    this.setState({selectedFilterGroup: e.target.value, formState: getFormState(e.target.value, this.state.query)});
+  }
+
+  renderFilterSelector() {
+    const editableFilters = Object.keys(FILTER_GROUPS)
+    if (!this.props.match.params.field) {
+      return (
+        <select
+          value={this.state.selectedFilterGroup}
+          className="my-2 block w-full pr-10 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300 cursor-pointer"
+          placeholder="Select a Filter"
+          onChange={this.updateSelectedFilterGroup.bind(this)}
+        >
+          <option disabled value="" className="hidden">Select a Filter</option>
+          {editableFilters.map(filter => <option key={filter} value={filter}>{formatFilterGroup(filter)}</option>)}
+        </select>
+      )
+    }
   }
 
   renderBody() {
-    const { selectedFilterGroup, negated, filterValue, query } = this.state;
+    const { selectedFilterGroup, query } = this.state;
     const editableFilters = Object.keys(FILTER_GROUPS)
 
     return (
       <>
         <h1 className="text-xl font-bold dark:text-gray-100">Filter by {formatFilterGroup(selectedFilterGroup)}</h1>
 
-        <div className="my-4 border-b border-gray-300"></div>
+        <div className="mt-4 border-b border-gray-300"></div>
         <main className="modal__content">
           <form className="flex flex-col" id="filter-form" onSubmit={this.handleSubmit.bind(this)}>
-            <select
-              value={selectedFilterGroup}
-              className="my-2 block w-full pr-10 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300 cursor-pointer"
-              placeholder="Select a Filter"
-              onChange={this.updateSelectedFilterGroup.bind(this)}
-            >
-              <option disabled value="" className="hidden">Select a Filter</option>
-              {editableFilters.map(filter => <option key={filter} value={filter}>{formatFilterGroup(filter)}</option>)}
-            </select>
-
-            {this.negationSupported(selectedFilterGroup) && (
-              <div className="my-4 flex items-center">
-                <label className="text-gray-700 dark:text-gray-300 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="bg-gray-100 dark:bg-gray-900 text-indigo-600 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 mr-2 relative inline-flex flex-shrink-0 h-6 w-8 border-1 rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none"
-                    checked={negated}
-                    name="exclude"
-                    onChange={(e) => this.setState({ negated: e.target.checked })}
-                  />
-                  Exclude pages matching this filter
-                </label>
-              </div>
-            )}
-
+            {this.renderFilterSelector()}
             {this.renderFilterInputs()}
 
             <div className="mt-6 flex items-center justify-start">
