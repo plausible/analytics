@@ -19,9 +19,7 @@ end
 base_url = URI.parse(base_url)
 
 if base_url.scheme not in ["http", "https"] do
-  raise "BASE_URL must start with `http` or `https`. Currently configured as `#{
-          System.get_env("BASE_URL")
-        }`"
+  raise "BASE_URL must start with `http` or `https`. Currently configured as `#{System.get_env("BASE_URL")}`"
 end
 
 secret_key_base = get_var_from_path_or_env(config_dir, "SECRET_KEY_BASE", nil)

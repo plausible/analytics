@@ -122,9 +122,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&filters=#{
-            filters
-          }"
+          "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == %{
@@ -141,9 +139,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&filters=#{
-            filters
-          }&detailed=true"
+          "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&filters=#{filters}&detailed=true"
         )
 
       assert json_response(conn, 200) == %{
@@ -199,9 +195,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&filters=#{
-            filters
-          }"
+          "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == %{
@@ -218,9 +212,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&filters=#{
-            filters
-          }"
+          "/api/stats/#{site.domain}/referrers/10words?period=day&date=2019-01-01&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == %{

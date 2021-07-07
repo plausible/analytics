@@ -24,9 +24,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/browser-versions?period=day&date=2019-01-01&filters=#{
-            filters
-          }"
+          "/api/stats/#{site.domain}/browser-versions?period=day&date=2019-01-01&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [

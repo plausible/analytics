@@ -68,9 +68,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/property/#{prop_key}?period=day&date=2019-01-01&filters=#{
-            filters
-          }"
+          "/api/stats/#{site.domain}/property/#{prop_key}?period=day&date=2019-01-01&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [

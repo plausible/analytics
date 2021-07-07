@@ -198,9 +198,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       :ok
     else
       {:error,
-       "Error parsing `interval` parameter: invalid interval `#{interval}`. Valid intervals are #{
-         @valid_intervals_str
-       }"}
+       "Error parsing `interval` parameter: invalid interval `#{interval}`. Valid intervals are #{@valid_intervals_str}"}
     end
   end
 

@@ -24,9 +24,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/operating-system-versions?period=day&date=2019-01-01&filters=#{
-            filters
-          }"
+          "/api/stats/#{site.domain}/operating-system-versions?period=day&date=2019-01-01&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
