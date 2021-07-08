@@ -8,7 +8,6 @@ import numberFormatter from '../../number-formatter'
 import * as api from '../../api'
 import LazyLoader from '../../lazy-loader'
 
-const FALLBACK_WIDTH = 639
 const MOBILE_UPPER_WIDTH = 767
 const DEFAULT_WIDTH = 1080
 
@@ -34,7 +33,7 @@ export default class Conversions extends React.Component {
   }
 
   handleResize() {
-    this.setState({ viewport: window.innerWidth || FALLBACK_WIDTH });
+    this.setState({ viewport: window.innerWidth });
   }
 
   onVisible() {
