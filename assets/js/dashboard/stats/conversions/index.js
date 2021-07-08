@@ -87,9 +87,10 @@ export default class Conversions extends React.Component {
             all={this.state.goals}
             bg="bg-red-50 dark:bg-gray-500 dark:bg-opacity-15"
             text="dark:text-gray-300"
-            content={this.renderGoalText(goal.name)}
             maxWidthDeduction={this.getBarMaxWidth()}
-          />
+          >
+            {this.renderGoalText(goal.name)}
+          </Bar>
           <div className="dark:text-gray-200">
             <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.count)}</span>
             {viewport > MOBILE_UPPER_WIDTH && <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.total_count)}</span>}

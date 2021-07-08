@@ -95,9 +95,10 @@ export default class PropertyBreakdown extends React.Component {
           count={value.count}
           all={this.state.breakdown}
           bg="bg-red-50 dark:bg-gray-500 dark:bg-opacity-15"
-          content={this.renderPropContent(value, query)}
           maxWidthDeduction={this.getBarMaxWidth()}
-        />
+        >
+          {this.renderPropContent(value, query)}
+        </Bar>
         <div className="dark:text-gray-200">
           <span className="font-medium inline-block w-20 text-right">{numberFormatter(value.count)}</span>
           {

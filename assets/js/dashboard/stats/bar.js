@@ -10,7 +10,7 @@ function barWidth(count, all) {
   return count / maxVal * 100
 }
 
-export default function Bar({count, all, bg, text, content, maxWidthDeduction}) {
+export default function Bar({count, all, bg, text, maxWidthDeduction, children}) {
   const width = barWidth(count, all)
 
   return (
@@ -23,7 +23,7 @@ export default function Bar({count, all, bg, text, content, maxWidthDeduction}) 
         style={{width: `${width}%`}}
       >
       </div>
-      {content}
+      {children}
     </div>
   )
 }

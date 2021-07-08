@@ -53,15 +53,14 @@ export default class OperatingSystems extends React.Component {
           count={os.count}
           all={this.state.operatingSystems}
           bg="bg-green-50 dark:gray-500 dark:bg-opacity-15"
-          content={(
-            <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-words">
-              <Link className="block hover:underline" to={{search: query.toString()}}>
-                {os.name}
-              </Link>
-            </span>
-          )}
           maxWidthDeduction="6rem"
-        />
+        >
+          <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-words">
+            <Link className="block hover:underline" to={{search: query.toString()}}>
+              {os.name}
+            </Link>
+          </span>
+        </Bar>
         <span className="font-medium dark:text-gray-200">{numberFormatter(os.count)} <span className="inline-block w-8 text-xs text-right">({os.percentage}%)</span></span>
       </div>
     )

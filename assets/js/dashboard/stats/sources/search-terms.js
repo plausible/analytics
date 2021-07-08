@@ -40,15 +40,14 @@ export default class SearchTerms extends React.Component {
           count={term.count}
           all={this.state.searchTerms}
           bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
-          content={(
-            <span className="flex px-2 py-1.5 dark:text-gray-300 z-9 relative break-words">
-              <span className="block">
-                { term.name }
-              </span>
-            </span>
-          )}
           maxWidthDeduction="4rem"
-        />
+        >
+          <span className="flex px-2 py-1.5 dark:text-gray-300 z-9 relative break-words">
+            <span className="block">
+              { term.name }
+            </span>
+          </span>
+        </Bar>
         <span className="font-medium dark:text-gray-200">{numberFormatter(term.count)}</span>
       </div>
     )

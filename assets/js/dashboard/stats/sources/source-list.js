@@ -51,16 +51,22 @@ class AllSources extends React.Component {
           count={referrer.count}
           all={this.state.referrers}
           bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
-          content={(
-            <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-words">
-              <Link className="block hover:underline" to={{search: query.toString()}}>
-                <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} referrerPolicy="no-referrer" className="inline w-4 h-4 mr-2 -mt-px align-middle" />
-                { referrer.name }
-              </Link>
-            </span>
-          )}
           maxWidthDeduction="4rem"
-        />
+        >
+          <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-words">
+            <Link
+              className="block hover:underline"
+              to={{search: query.toString()}}
+            >
+              <img
+                src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`}
+                referrerPolicy="no-referrer"
+                className="inline w-4 h-4 mr-2 -mt-px align-middle"
+              />
+              { referrer.name }
+            </Link>
+          </span>
+        </Bar>
         <span className="font-medium dark:text-gray-200">{numberFormatter(referrer.count)}</span>
       </div>
     )
@@ -163,18 +169,17 @@ class UTMSources extends React.Component {
           count={referrer.count}
           all={this.state.referrers}
           bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
-          content={(
-            <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-words">
-              <Link 
-                className="block hover:underline"
-                to={{search: query.toString()}}
-              >
-                { referrer.name }
-              </Link>
-            </span>
-          )}
           maxWidthDeduction="4rem"
-        />
+        >
+          <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-words">
+            <Link 
+              className="block hover:underline"
+              to={{search: query.toString()}}
+            >
+              { referrer.name }
+            </Link>
+          </span>
+        </Bar>
         <span className="font-medium dark:text-gray-200">{numberFormatter(referrer.count)}</span>
       </div>
     )

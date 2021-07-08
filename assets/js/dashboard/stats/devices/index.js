@@ -80,18 +80,17 @@ class ScreenSizes extends React.Component {
           count={size.count}
           all={this.state.sizes}
           bg="bg-green-50 dark:bg-gray-500 dark:bg-opacity-15"
-          content={(
-            <span
-              tooltip={EXPLANATION[size.name]}
-              className="flex px-2 py-1.5 dark:text-gray-300"
-            >
-              <Link className="block hover:underline" to={{search: query.toString()}}>
-                {iconFor(size.name)} {size.name}
-              </Link>
-            </span>
-          )}
           maxWidthDeduction="6rem"
-        />
+        >
+          <span
+            tooltip={EXPLANATION[size.name]}
+            className="flex px-2 py-1.5 dark:text-gray-300"
+          >
+            <Link className="block hover:underline" to={{search: query.toString()}}>
+              {iconFor(size.name)} {size.name}
+            </Link>
+          </span>
+        </Bar>
         <span
           className="font-medium dark:text-gray-200"
         >

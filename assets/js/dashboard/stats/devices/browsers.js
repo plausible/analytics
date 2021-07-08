@@ -65,9 +65,10 @@ export default class Browsers extends React.Component {
           count={browser.count}
           all={this.state.browsers}
           bg="bg-green-50 dark:bg-gray-500 dark:bg-opacity-15"
-          content={this.renderBrowserContent(browser, query)}
           maxWidthDeduction="6rem"
-        />
+        >
+          {this.renderBrowserContent(browser, query)}
+        </Bar>
         <span className="font-medium dark:text-gray-200">
           {numberFormatter(browser.count)}
           <span className="inline-block w-8 text-xs text-right">({browser.percentage}%)</span>
