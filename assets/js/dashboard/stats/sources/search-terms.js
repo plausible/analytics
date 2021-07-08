@@ -36,14 +36,18 @@ export default class SearchTerms extends React.Component {
   renderSearchTerm(term) {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={term.name}>
-        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={term.count} all={this.state.searchTerms} bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15" />
-          <span className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}} >
-            <span className="block truncate">
+        <Bar
+          count={term.count}
+          all={this.state.searchTerms}
+          bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
+          maxWidthDeduction="4rem"
+        >
+          <span className="flex px-2 py-1.5 dark:text-gray-300 z-9 relative break-words">
+            <span className="block">
               { term.name }
             </span>
           </span>
-        </div>
+        </Bar>
         <span className="font-medium dark:text-gray-200">{numberFormatter(term.count)}</span>
       </div>
     )

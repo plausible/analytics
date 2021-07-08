@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - Crash when changing theme on a loaded dashboard plausible/analytics#1123
 - UI fix for details button overlapping content on mobile plausible/analytics#1114
 - UI fix for the main graph on mobile overlapping its tick items on both axis
+- UI fixes for text not showing properly in bars across multiple lines. This hides the totals on <768px and only shows the uniques and % to accommodate the goals text too.
 
 ### Removed
 - Removes AppSignal monitoring package

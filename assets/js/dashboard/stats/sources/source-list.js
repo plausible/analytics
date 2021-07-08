@@ -43,16 +43,30 @@ class AllSources extends React.Component {
     query.set('source', referrer.name)
 
     return (
-      <div className="flex items-center justify-between my-1 text-sm" key={referrer.name}>
-        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15" />
-          <span className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}} >
-            <Link className="block truncate hover:underline" to={{search: query.toString()}}>
-              <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} referrerPolicy="no-referrer" className="inline w-4 h-4 mr-2 -mt-px align-middle" />
+      <div
+        className="flex items-center justify-between my-1 text-sm"
+        key={referrer.name}
+      >
+        <Bar
+          count={referrer.count}
+          all={this.state.referrers}
+          bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
+          maxWidthDeduction="4rem"
+        >
+          <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-words">
+            <Link
+              className="block hover:underline"
+              to={{search: query.toString()}}
+            >
+              <img
+                src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`}
+                referrerPolicy="no-referrer"
+                className="inline w-4 h-4 mr-2 -mt-px align-middle"
+              />
               { referrer.name }
             </Link>
           </span>
-        </div>
+        </Bar>
         <span className="font-medium dark:text-gray-200">{numberFormatter(referrer.count)}</span>
       </div>
     )
@@ -147,15 +161,25 @@ class UTMSources extends React.Component {
     query.set(this.props.tab, referrer.name)
 
     return (
-      <div className="flex items-center justify-between my-1 text-sm" key={referrer.name}>
-        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15" />
-          <span className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}} >
-            <Link className="block truncate hover:underline" to={{search: query.toString()}}>
+      <div
+        className="flex items-center justify-between my-1 text-sm"
+        key={referrer.name}
+      >
+        <Bar
+          count={referrer.count}
+          all={this.state.referrers}
+          bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
+          maxWidthDeduction="4rem"
+        >
+          <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-words">
+            <Link 
+              className="block hover:underline"
+              to={{search: query.toString()}}
+            >
               { referrer.name }
             </Link>
           </span>
-        </div>
+        </Bar>
         <span className="font-medium dark:text-gray-200">{numberFormatter(referrer.count)}</span>
       </div>
     )
@@ -168,7 +192,7 @@ class UTMSources extends React.Component {
   renderList() {
     if (this.state.referrers && this.state.referrers.length > 0) {
       return (
-        <div class="flex flex-col flex-grow">
+        <div className="flex flex-col flex-grow">
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>{UTM_TAGS[this.props.tab].label}</span>
             <span>{this.label()}</span>
