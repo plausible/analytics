@@ -12,6 +12,7 @@ export default class Browsers extends React.Component {
     super(props)
     this.state = {loading: true}
     this.onVisible = this.onVisible.bind(this)
+    this.renderBrowserContent = this.renderBrowserContent.bind(this)
   }
 
   componentDidUpdate(prevProps) {
@@ -36,6 +37,20 @@ export default class Browsers extends React.Component {
     }
   }
 
+  label() {
+    return this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
+  }
+
+  renderBrowserContent(browser, query) {
+    return (
+        <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-words">
+          <Link className="block hover:underline" to={{search: query.toString()}}>
+            {browser.name}
+          </Link>
+        </span>
+    )
+  }
+
   renderBrowser(browser) {
     const query = new URLSearchParams(window.location.search)
     if (this.props.query.filters.browser) {
@@ -46,23 +61,21 @@ export default class Browsers extends React.Component {
 
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={browser.name}>
-        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
-          <Bar count={browser.count} all={this.state.browsers} bg="bg-green-50 dark:bg-gray-500 dark:bg-opacity-15" />
-          <span className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}} >
-            <Link className="block truncate hover:underline" to={{search: query.toString()}}>
-              {browser.name}
-            </Link>
-          </span>
-        </div>
-        <span className="font-medium dark:text-gray-200">{numberFormatter(browser.count)} <span className="inline-block w-8 text-xs text-right">({browser.percentage}%)</span></span>
+        <Bar
+          count={browser.count}
+          all={this.state.browsers}
+          bg="bg-green-50 dark:bg-gray-500 dark:bg-opacity-15"
+          maxWidthDeduction="6rem"
+        >
+          {this.renderBrowserContent(browser, query)}
+        </Bar>
+        <span className="font-medium dark:text-gray-200">
+          {numberFormatter(browser.count)}
+          <span className="inline-block w-8 text-xs text-right">({browser.percentage}%)</span>
+        </span>
       </div>
     )
   }
-
-  label() {
-    return this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
-  }
-
 
   renderList() {
     const key = this.props.query.filters.browser ? this.props.query.filters.browser + ' version' : 'Browser'

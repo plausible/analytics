@@ -76,22 +76,21 @@ class ScreenSizes extends React.Component {
 
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={size.name}>
-        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
-          <Bar
-            count={size.count}
-            all={this.state.sizes}
-            bg="bg-green-50 dark:bg-gray-500 dark:bg-opacity-15"
-          />
+        <Bar
+          count={size.count}
+          all={this.state.sizes}
+          bg="bg-green-50 dark:bg-gray-500 dark:bg-opacity-15"
+          maxWidthDeduction="6rem"
+        >
           <span
             tooltip={EXPLANATION[size.name]}
-            className="flex px-2 dark:text-gray-300"
-            style={{marginTop: '-26px'}}
+            className="flex px-2 py-1.5 dark:text-gray-300"
           >
-            <Link className="block truncate hover:underline" to={{search: query.toString()}}>
+            <Link className="block hover:underline" to={{search: query.toString()}}>
               {iconFor(size.name)} {size.name}
             </Link>
           </span>
-        </div>
+        </Bar>
         <span
           className="font-medium dark:text-gray-200"
         >
