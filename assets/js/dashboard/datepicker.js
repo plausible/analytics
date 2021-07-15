@@ -19,7 +19,7 @@ import {
   isBefore,
   isAfter,
 } from "./date";
-import Transition from "../transition";
+import { Transition } from '@headlessui/react'
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
 
 class DatePicker extends React.Component {
@@ -28,7 +28,7 @@ class DatePicker extends React.Component {
     this.handleKeydown = this.handleKeydown.bind(this);
     this.handleClick = this.handleClick.bind(this);
     this.openCalendar = this.openCalendar.bind(this);
-    this.open = this.open.bind(this);
+    this.toggle = this.toggle.bind(this);
     this.state = { mode: "menu", open: false };
   }
 
@@ -150,7 +150,7 @@ class DatePicker extends React.Component {
     return 'Realtime'
   }
 
-  open() {
+  toggle() {
     this.setState({ mode: "menu", open: true });
   }
 
@@ -187,7 +187,7 @@ class DatePicker extends React.Component {
         to={{from: false, to: false, period, ...opts}}
         onClick={this.close.bind(this)}
         query={this.props.query}
-        className={`${boldClass  } px-4 py-2 md:text-sm leading-tight hover:bg-gray-200
+        className={`${boldClass  } px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900
           dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 flex items-center justify-between`}
       >
         {text}
@@ -310,8 +310,8 @@ class DatePicker extends React.Component {
         ref={(node) => (this.dropDownNode = node)}
       >
         <div
-          onClick={this.open}
-          onKeyPress={this.open}
+          onClick={this.toggle}
+          onKeyPress={this.toggle}
           className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-3
           py-2 leading-tight cursor-pointer text-xs md:text-sm text-gray-800
           dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900"
@@ -330,12 +330,12 @@ class DatePicker extends React.Component {
 
         <Transition
           show={this.state.open}
-          enter="transition ease-out duration-100 transform"
-          enterFrom="opacity-0 scale-95"
-          enterTo="opacity-100 scale-100"
-          leave="transition ease-in duration-75 transform"
-          leaveFrom="opacity-100 scale-100"
-          leaveTo="opacity-0 scale-95"
+            enter="transition ease-out duration-100"
+            enterFrom="transform opacity-0 scale-95"
+            enterTo="transform opacity-100 scale-100"
+            leave="transition ease-in duration-75"
+            leaveFrom="transform opacity-100 scale-100"
+            leaveTo="transform opacity-0 scale-95"
         >
           {this.renderDropDownContent()}
         </Transition>

@@ -25,8 +25,8 @@ export default class CurrentVisitors extends React.Component {
     const { currentVisitors } = this.state;
     if (currentVisitors !== null) {
       return (
-        <Link to={{search: query.toString()}} className="block ml-1 sm:ml-2 mr-auto text-xs sm:text-sm font-bold text-gray-500 dark:text-gray-300">
-          <svg className="inline w-2 mr-1 sm:mr-2 text-green-500 fill-current" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+        <Link to={{search: query.toString()}} className="block ml-1 md:ml-2 mr-auto text-xs md:text-sm font-bold text-gray-500 dark:text-gray-300">
+          <svg className="inline w-2 mr-1 md:mr-2 text-green-500 fill-current" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
             <circle cx="8" cy="8" r="8"/>
           </svg>
           {currentVisitors} current visitor{currentVisitors === 1 ? '' : 's'}

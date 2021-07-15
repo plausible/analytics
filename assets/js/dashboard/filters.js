@@ -151,7 +151,7 @@ class Filters extends React.Component {
   render() {
     if (this.isMediumScreenOrLess()) {
       return (
-        <Collapse isOpen={this.props.mobileFiltersOpen} transition={`height 280ms cubic-bezier(.4, 0, .2, 1)`}>
+        <Collapse overflowOnExpanded isOpen={this.props.mobileFiltersOpen} transition={`height 280ms cubic-bezier(.4, 0, .2, 1)`}>
           <div id="filters" className={classNames('flex-grow flex-wrap', this.props.className)}>
             <Datepicker leadingText="Daterange: " className="mr-1 my-1" site={this.props.site} query={this.props.query} />
             {

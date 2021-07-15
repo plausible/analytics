@@ -13,8 +13,8 @@ function filterDropdownOption(site, option) {
         <Link
           to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${option}`, search: window.location.search }}
           className={classNames(
-            active ? 'bg-gray-100 text-gray-900' : 'text-gray-700 dark:text-gray-300',
-            'block px-4 py-2 text-sm'
+            active ? 'bg-gray-100 text-gray-900' : 'text-gray-800 dark:text-gray-300',
+            'block px-4 py-2 text-sm font-medium'
           )}
         >
           {formatFilterGroup(option)}
