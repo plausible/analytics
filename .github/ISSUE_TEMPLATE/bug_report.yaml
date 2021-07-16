@@ -29,8 +29,7 @@ body:
       options:
         - label: >-
             This is a bug report and not a feature request, nor asking for self-hosted support
-    validations:
-      required: true
+          required: true
   - type: textarea
     id: bug-description
     attributes:
