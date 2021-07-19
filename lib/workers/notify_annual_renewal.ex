@@ -9,19 +9,30 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
   Sends a notification at most 7 days and at least 1 day before the renewal of an annual subscription
   """
   def perform(_job) do
+    current_subscriptions = from(
+      s in Plausible.Billing.Subscription,
+      group_by: s.user_id,
+      select: %{
+        user_id: s.user_id,
+        inserted_at: max(s.inserted_at)
+      }
+    )
+
     users =
       Repo.all(
         from u in Plausible.Auth.User,
-          join: s in Plausible.Billing.Subscription,
-          on: s.user_id == u.id,
-          left_join: sent in "sent_renewal_notifications",
-          on: s.user_id == sent.user_id,
-          where: s.paddle_plan_id in @yearly_plans,
-          where:
-            s.next_bill_date > fragment("now()::date") and
-              s.next_bill_date <= fragment("now()::date + INTERVAL '7 days'"),
-          where: is_nil(sent.id) or sent.timestamp < fragment("now() - INTERVAL '1 month'"),
-          preload: [subscription: s]
+        join: cs in subquery(current_subscriptions),
+        on: cs.user_id == u.id,
+        join: s in Plausible.Billing.Subscription,
+        on: s.inserted_at == cs.inserted_at,
+        left_join: sent in "sent_renewal_notifications",
+        on: s.user_id == sent.user_id,
+        where: s.paddle_plan_id in @yearly_plans,
+        where:
+        s.next_bill_date > fragment("now()::date") and
+        s.next_bill_date <= fragment("now()::date + INTERVAL '7 days'"),
+        where: is_nil(sent.id) or sent.timestamp < fragment("now() - INTERVAL '1 month'"),
+        preload: [subscription: s]
       )
 
     for user <- users do

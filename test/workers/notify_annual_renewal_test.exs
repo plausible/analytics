@@ -39,6 +39,26 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
     assert_no_emails_delivered()
   end
 
+  test "ignores user with old yearly subscription that's been superseded by a newer one", %{user: user} do
+    insert(:subscription,
+      inserted_at: Timex.shift(Timex.now(), days: -1),
+      user: user,
+      paddle_plan_id: @yearly_plan,
+      next_bill_date: Timex.shift(Timex.today(), days: 5)
+    )
+
+    insert(:subscription,
+      inserted_at: Timex.now(),
+      user: user,
+      paddle_plan_id: @yearly_plan,
+      next_bill_date: Timex.shift(Timex.today(), days: 30)
+    )
+
+    NotifyAnnualRenewal.perform(nil)
+
+    assert_no_emails_delivered()
+  end
+
   test "sends renewal notification to user whose subscription is due for renewal in 7 days", %{
     user: user
   } do
