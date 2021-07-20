@@ -26,11 +26,11 @@ function filterDropdownOption(site, option) {
 
 export function FilterDropdown({site, className}) {
   return (
-    <Menu as="div" className={classNames('relative', className)}>
+    <Menu as="div" className={classNames('md:relative mr-2', className)}>
       {({ open }) => (
         <>
           <div>
-            <Menu.Button className="flex items-center text-xs md:text-sm font-medium leading-tight px-3 py-2 mr-2 cursor-pointer ml-auto text-gray-500 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900 rounded">
+            <Menu.Button className="flex items-center text-xs md:text-sm font-medium leading-tight px-3 py-2 cursor-pointer ml-auto text-gray-500 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900 rounded">
               <PlusIcon className="-ml-1 mr-1 h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />
               Add filter
             </Menu.Button>
@@ -48,9 +48,12 @@ export function FilterDropdown({site, className}) {
           >
             <Menu.Items
               static
-              className="origin-top-right z-10 absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-900 ring-1 ring-black ring-opacity-5 focus:outline-none"
+              className="absolute w-full left-0 right-0 md:w-56 md:absolute md:top-auto md:left-auto md:right-0 mt-2 origin-top-right z-10"
             >
-              <div className="py-1">
+              <div
+                className="rounded-md shadow-lg  bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5
+                font-medium text-gray-800 dark:text-gray-200"
+              >
                 { Object.keys(FILTER_GROUPS).map((option) => filterDropdownOption(site, option)) }
               </div>
             </Menu.Items>

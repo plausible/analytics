@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 import { withRouter } from "react-router-dom";
 import Flatpickr from "react-flatpickr";
 import classNames from 'classnames'
@@ -151,7 +151,8 @@ class DatePicker extends React.Component {
   }
 
   toggle() {
-    this.setState({ mode: "menu", open: true });
+    const newMode = this.state.mode === 'calendar' && !this.state.open ? 'menu' : this.state.mode
+    this.setState({ mode: newMode, open: !this.state.open });
   }
 
   close() {
@@ -201,11 +202,10 @@ class DatePicker extends React.Component {
       return (
         <div
           id="datemenu"
-          className="absolute mt-2 rounded shadow-md z-10"
-          style={{width: '235px', right: '-5px'}}
+          className="absolute w-full left-0 right-0 md:w-56 md:absolute md:top-auto md:left-auto md:right-0 mt-2 origin-top-right z-10"
         >
           <div
-            className="rounded bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5
+            className="rounded-md shadow-lg  bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5
             font-medium text-gray-800 dark:text-gray-200"
           >
             <div className="py-1">
@@ -232,7 +232,7 @@ class DatePicker extends React.Component {
               <span
                 onClick={() => this.setState({mode: 'calendar'}, this.openCalendar)}
                 onKeyPress={() => this.setState({mode: 'calendar'}, this.openCalendar)}
-                className="px-4 py-2 md:text-sm leading-tight hover:bg-gray-100
+                className="px-4 py-2 text-sm leading-tight hover:bg-gray-100
                   dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100
                   cursor-pointer flex items-center justify-between"
                 tabIndex="0"
@@ -252,19 +252,21 @@ class DatePicker extends React.Component {
       const insertionDate = new Date(this.props.site.insertedAt);
       const dayBeforeCreation = insertionDate - 86400000;
       return (
-        <Flatpickr
-          id="calendar"
-          options={{
-            mode: 'range',
-            maxDate: 'today',
-            minDate: dayBeforeCreation,
-            showMonths: 1,
-            static: true,
-            animate: true}}
-          ref={calendar => this.calendar = calendar}
-          className="invisible"
-          onChange={this.setCustomDate.bind(this)}
-        />
+        <div className="h-0">
+          <Flatpickr
+            id="calendar"
+            options={{
+              mode: 'range',
+              maxDate: 'today',
+              minDate: dayBeforeCreation,
+              showMonths: 1,
+              static: true,
+              animate: true}}
+            ref={calendar => this.calendar = calendar}
+            className="invisible"
+            onChange={this.setCustomDate.bind(this)}
+          />
+        </div>
         )
     }
   }
@@ -306,7 +308,7 @@ class DatePicker extends React.Component {
   render() {
     return (
       <div
-        className={classNames('relative', this.props.className)}
+        className={classNames('md:relative', this.props.className)}
         ref={(node) => (this.dropDownNode = node)}
       >
         <div
@@ -330,6 +332,7 @@ class DatePicker extends React.Component {
 
         <Transition
           show={this.state.open}
+          as={Fragment}
             enter="transition ease-out duration-100"
             enterFrom="transform opacity-0 scale-95"
             enterTo="transform opacity-100 scale-100"
