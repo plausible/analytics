@@ -39,7 +39,9 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
     assert_no_emails_delivered()
   end
 
-  test "ignores user with old yearly subscription that's been superseded by a newer one", %{user: user} do
+  test "ignores user with old yearly subscription that's been superseded by a newer one", %{
+    user: user
+  } do
     insert(:subscription,
       inserted_at: Timex.shift(Timex.now(), days: -1),
       user: user,

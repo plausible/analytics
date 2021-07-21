@@ -51,7 +51,7 @@ export default function Router({site, loggedIn, currentUserRole}) {
           <Route path="/:domain/countries">
             <CountriesModal site={site} />
           </Route>
-          <Route path={["/:domain/filter/:field", "/:domain/filter"]}>
+          <Route path={["/:domain/filter/:field"]}>
             <FilterModal site={site} />
           </Route>
         </Switch>
