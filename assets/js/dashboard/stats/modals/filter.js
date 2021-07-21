@@ -13,7 +13,7 @@ import * as api from '../../api'
 function getCountryName(ISOCode) {
   const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
   const selectedCountry = allCountries.find((c) => c.id === ISOCode);
-  return selectedCountry.properties.name
+  return selectedCountry && selectedCountry.properties.name
 }
 
 function getFilterValue(filter, query) {
@@ -23,7 +23,7 @@ function getFilterValue(filter, query) {
   if (filter == 'country') {
     const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
     const selectedCountry = allCountries.find((c) => c.id === filterValue) || { properties: { name: filterValue } };
-    filterValue = selectedCountry.properties.name
+    filterValue = selectedCountry && selectedCountry.properties.name
   }
 
   return {filterValue, negated}
