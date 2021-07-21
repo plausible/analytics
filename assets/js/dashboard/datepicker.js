@@ -314,7 +314,7 @@ class DatePicker extends React.Component {
         <div
           onClick={this.toggle}
           onKeyPress={this.toggle}
-          className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-3
+          className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-2 md:px-3
           py-2 leading-tight cursor-pointer text-xs md:text-sm text-gray-800
           dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900"
           tabIndex="0"
@@ -323,11 +323,11 @@ class DatePicker extends React.Component {
           aria-expanded="false"
           aria-controls="datemenu"
         >
-          <span className="mr-2">
+          <span className="mr-1 md:mr-2">
             {this.props.leadingText}
             <span className="font-medium">{this.timeFrameText()}</span>
           </span>
-          <ChevronDownIcon className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
+          <ChevronDownIcon className="hidden sm:inline-block h-4 w-4 md:h-5 md:w-5 text-gray-500" />
         </div>
 
         <Transition

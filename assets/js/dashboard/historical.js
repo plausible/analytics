@@ -4,7 +4,6 @@ import Datepicker from './datepicker'
 import DatepickerArrows from './datepicker-arrows'
 import SiteSwitcher from './site-switcher'
 import Filters from './filters'
-import { FilterDropdown, MobileFiltersLink } from './filter-selector'
 import CurrentVisitors from './stats/current-visitors'
 import VisitorGraph from './stats/visitor-graph'
 import Sources from './stats/sources'
@@ -42,20 +41,17 @@ class Historical extends React.Component {
       <div className="mb-12">
         <div id="stats-container-top"></div>
         <div className={`${navClass} top-0 sm:py-3 py-2 z-9 ${this.props.stuck && !this.props.site.embedded ? 'z-10 fullwidth-shadow bg-gray-50 dark:bg-gray-850' : ''}`}>
-          <div className="items-center w-full sm:flex">
+          <div className="items-center w-full flex">
             <div className="flex items-center w-full">
               <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} />
-              <CurrentVisitors timer={this.props.timer} site={this.props.site} />
-              <FilterDropdown site={this.props.site} className="hidden md:inline-block ml-auto" />
-              <MobileFiltersLink site={this.props.site} onClick={this.toggleMobileFilters} />
+              <CurrentVisitors timer={this.props.timer} site={this.props.site} query={this.props.query} />
+              <Filters className="flex" site={this.props.site} query={this.props.query} history={this.props.history} mobileFiltersOpen={this.state.mobileFiltersOpen} />
             </div>
-            <div className="flex hidden md:flex ml-auto pl-2">
+            <div className="flex ml-auto pl-2">
               <DatepickerArrows site={this.props.site} query={this.props.query} />
-              <Datepicker className="w-44" site={this.props.site} query={this.props.query} />
+              <Datepicker className="w-28 sm:w-36 md:w-44" site={this.props.site} query={this.props.query} />
             </div>
           </div>
-
-          <Filters className="flex" site={this.props.site} query={this.props.query} history={this.props.history} mobileFiltersOpen={this.state.mobileFiltersOpen} />
         </div>
         <VisitorGraph site={this.props.site} query={this.props.query} />
         <div className="items-start justify-between block w-full md:flex">

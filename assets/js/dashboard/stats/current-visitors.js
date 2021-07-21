@@ -1,6 +1,7 @@
 import React from 'react';
 import * as api from '../api'
 import { Link } from 'react-router-dom'
+import { appliedFilters } from '../query';
 
 export default class CurrentVisitors extends React.Component {
   constructor(props) {
@@ -19,6 +20,8 @@ export default class CurrentVisitors extends React.Component {
   }
 
   render() {
+    if (appliedFilters(this.props.query) !== []) { return null }
+
     const query = new URLSearchParams(window.location.search)
     query.set('period', 'realtime')
 
