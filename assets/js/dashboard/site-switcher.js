@@ -1,5 +1,5 @@
 import React from 'react';
-import Transition from "../transition.js";
+import { Transition } from '@headlessui/react'
 
 export default class SiteSwitcher extends React.Component {
   constructor() {
