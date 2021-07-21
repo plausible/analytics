@@ -1,5 +1,5 @@
 import React, { Fragment } from "react";
-import { withRouter, Redirect } from 'react-router-dom'
+import { withRouter } from 'react-router-dom'
 import classNames from 'classnames'
 import Datamap from 'datamaps'
 import { Menu, Transition } from '@headlessui/react'
@@ -7,46 +7,9 @@ import { ChevronDownIcon } from '@heroicons/react/solid'
 
 import SearchSelect from '../../components/search-select'
 import Modal from './modal'
-import { parseQuery, formattedFilters, navigateToQuery } from '../../query'
+import { parseQuery, formattedFilters } from '../../query'
 import * as api from '../../api'
-
-function getCountryName(ISOCode) {
-  const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
-  const selectedCountry = allCountries.find((c) => c.id === ISOCode);
-  return selectedCountry && selectedCountry.properties.name
-}
-
-function getFilterValue(filter, query) {
-  const negated = !!query.filters[filter] && query.filters[filter][0] === '!'
-  let filterValue = negated ? query.filters[filter].slice(1) : (query.filters[filter] || "")
-
-  if (filter == 'country') {
-    const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
-    const selectedCountry = allCountries.find((c) => c.id === filterValue) || { properties: { name: filterValue } };
-    filterValue = selectedCountry && selectedCountry.properties.name
-  }
-
-  return {filterValue, negated}
-}
-
-function getFormState(filterGroup, query) {
-  return FILTER_GROUPS[filterGroup].reduce((result, filter) => {
-    let filterValue = query.filters[filter] || ''
-    const type = filterValue[0] === '!' ? 'is_not' : 'is'
-    if (filter === 'country') filterValue = getCountryName(filterValue)
-    return Object.assign(result, {[filter]: {value: filterValue, type: type}})
-  }, {})
-}
-
-function withIndefiniteArticle(word) {
-  if (word.startsWith('UTM')) {
-    return 'a ' + word
-  } else if (['a', 'e', 'i', 'o', 'u'].some((vowel) => word.toLowerCase().startsWith(vowel))) {
-    return 'an ' + word
-  } else {
-    return 'a ' + word
-  }
-}
+import {apiPath, sitePath} from '../../url'
 
 export const FILTER_GROUPS = {
   'page': ['page'],
@@ -61,24 +24,51 @@ export const FILTER_GROUPS = {
   'goal': ['goal']
 }
 
+function getCountryName(ISOCode) {
+  const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
+  const selectedCountry = allCountries.find((c) => c.id === ISOCode);
+  return selectedCountry && selectedCountry.properties.name
+}
+
+function getFormState(filterGroup, query) {
+  return FILTER_GROUPS[filterGroup].reduce((result, filter) => {
+    let filterValue = query.filters[filter] || ''
+    const type = filterValue[0] === '!' ? 'is_not' : 'is'
+    if (filter === 'country') filterValue = getCountryName(filterValue)
+    return Object.assign(result, {[filter]: {value: filterValue, type}})
+  }, {})
+}
+
+function withIndefiniteArticle(word) {
+  if (word.startsWith('UTM')) {
+    return `a ${  word}`
+  } if (['a', 'e', 'i', 'o', 'u'].some((vowel) => word.toLowerCase().startsWith(vowel))) {
+    return `an ${  word}`
+  }
+    return `a ${  word}`
+
+}
+
 export function formatFilterGroup(filterGroup) {
   if (filterGroup === 'utm') {
     return 'UTM tags'
-  } else {
-    return formattedFilters[filterGroup]
   }
+    return formattedFilters[filterGroup]
+
 }
 
 export function filterGroupForFilter(filter) {
-  const filterToGroupMap = Object.entries(FILTER_GROUPS).reduce((filterToGroupMap, [group, filtersInGroup]) => {
-    for (const filter of filtersInGroup) {
-      filterToGroupMap[filter] = group
-    }
-    return filterToGroupMap
+  const map = Object.entries(FILTER_GROUPS).reduce((filterToGroupMap, [group, filtersInGroup]) => {
+    const filtersToAdd = {}
+    filtersInGroup.forEach((filterInGroup) => {
+      filtersToAdd[filterInGroup] = group
+    })
+
+    return { ...filterToGroupMap, ...filtersToAdd}
   }, {})
 
 
-  return filterToGroupMap[filter] || filter
+  return map[filter] || filter
 }
 
 class FilterModal extends React.Component {
@@ -88,7 +78,7 @@ class FilterModal extends React.Component {
     const selectedFilterGroup = this.props.match.params.field || 'page'
     const formState = getFormState(selectedFilterGroup, query)
 
-    this.state = Object.assign({selectedFilterGroup, query, formState})
+    this.state = {selectedFilterGroup, query, formState}
   }
 
   componentDidMount() {
@@ -100,15 +90,46 @@ class FilterModal extends React.Component {
   }
 
   handleKeydown(e) {
-    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.isComposing || e.keyCode === 229) return
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.isComposing || e.keyCode === 229) {
+      return
+    }
 
-    if (e.target.tagName == 'BODY' && e.key == 'Enter') {
+    if (e.target.tagName === 'BODY' && e.key === 'Enter') {
       this.handleSubmit()
     }
   }
 
-  negationSupported(filter) {
-    return ['page', 'entry_page', 'exit_page'].includes(filter)
+  handleSubmit() {
+    const { formState } = this.state;
+
+    const filters = Object.entries(formState).reduce((res, [filterKey, {type, value}]) => {
+      let finalFilterValue = (type === 'is_not' ? '!' : '') + value.trim()
+
+      if (filterKey === 'country') {
+        const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
+        const selectedCountry = allCountries.find((c) => c.properties.name === finalFilterValue) || { id: finalFilterValue };
+        finalFilterValue = selectedCountry.id
+      }
+
+      res.push({filter: filterKey, value: finalFilterValue})
+      return res
+    }, [])
+
+    this.selectFiltersAndCloseModal(filters)
+  }
+
+  onInput(filterName) {
+    return (val) => {
+      this.setState(prevState => ({formState: Object.assign(prevState.formState, {
+        [filterName]: Object.assign(prevState.formState[filterName], {value: val})
+      })}))
+    }
+  }
+
+  setFilterType(filterName, newType) {
+    this.setState(prevState => ({formState: Object.assign(prevState.formState, {
+      [filterName]: Object.assign(prevState.formState[filterName], {type: newType})
+    })}))
   }
 
   fetchOptions(filter) {
@@ -117,38 +138,60 @@ class FilterModal extends React.Component {
       const formFilters = Object.fromEntries(
         Object.entries(formState).map(([k, v]) => [k, v.value])
       )
-      const updatedQuery = { ...query, filters: { ...query.filters, ...formFilters, [filter]: null } }
+      const updatedQuery = {...query, filters: { ...query.filters, ...formFilters, [filter]: null }}
 
       if (filter === 'country') {
         const matchedCountries = Datamap.prototype.worldTopo.objects.world.geometries.filter(c => c.properties.name.toLowerCase().includes(input.trim().toLowerCase()))
         const matches = matchedCountries.map(c => c.id)
 
-        return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/suggestions/country`, updatedQuery, { q: matches })
-          .then((res) => {
-            return res.map(code => matchedCountries.filter(c => c.id == code)[0].properties.name)
-          })
-      } else {
-        return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/suggestions/${filter}`, updatedQuery, { q: input.trim() })
+        return api.get(apiPath(this.props.site, '/suggestions/country'), updatedQuery, { q: matches })
+          .then((res) => res.map(code => matchedCountries.filter(c => c.id === code)[0].properties.name))
       }
-    }
-  }
+        return api.get(apiPath(this.props.site, `/suggestions/${filter}`), updatedQuery, { q: input.trim() })
 
-  onInput(filterName) {
-    return (val) => {
-      this.setState({formState: Object.assign(this.state.formState, {
-        [filterName]: Object.assign(this.state.formState[filterName], {value: val})
-      })})
     }
-  }
-
-  setFilterType(filterName, newType) {
-    this.setState({formState: Object.assign(this.state.formState, {
-      [filterName]: Object.assign(this.state.formState[filterName], {type: newType})
-    })})
   }
 
   selectedFilterType(filter) {
     return this.state.formState[filter].type
+  }
+
+  isDisabled() {
+    return Object.entries(this.state.formState).every(([_key, {value: val}]) => !val)
+  }
+
+  selectFiltersAndCloseModal(filters) {
+    const queryString = new URLSearchParams(window.location.search)
+
+    filters.forEach((entry) => {
+      if (entry.value) {
+        queryString.set(entry.filter, entry.value)
+      } else {
+        queryString.delete(entry.filter)
+      }
+    })
+
+    this.props.history.replace({pathname: sitePath(this.props.site), search: queryString.toString()})
+  }
+
+  renderFilterInputs() {
+    return FILTER_GROUPS[this.state.selectedFilterGroup].map((filter) => (
+      <div className="mt-4" key={filter}>
+        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{ formattedFilters[filter] }</div>
+        <div className="flex items-start mt-1">
+          { this.renderFilterTypeSelector(filter) }
+
+          <SearchSelect
+            key={filter}
+            fetchOptions={this.fetchOptions(filter)}
+            initialSelectedItem={this.state.formState[filter].value}
+            onInput={this.onInput(filter)}
+            placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`}
+          />
+        </div>
+
+      </div>
+      ))
   }
 
   renderFilterTypeSelector(filterName) {
@@ -213,85 +256,9 @@ class FilterModal extends React.Component {
     )
   }
 
-  renderFilterInputs() {
-    return FILTER_GROUPS[this.state.selectedFilterGroup].map((filter) => {
-      return (
-        <div className="mt-4" key={filter}>
-          <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{ formattedFilters[filter] }</div>
-          <div className="flex items-start mt-1">
-            { this.renderFilterTypeSelector(filter) }
-
-            <SearchSelect
-              key={filter}
-              fetchOptions={this.fetchOptions(filter)}
-              initialSelectedItem={this.state.formState[filter].value}
-              onInput={this.onInput(filter)}
-              placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`}
-            />
-          </div>
-
-        </div>
-      )
-    })
-  }
-
-  selectFiltersAndCloseModal(filters) {
-    const queryString = new URLSearchParams(window.location.search)
-
-    for (const entry of filters) {
-      if (entry.value) {
-        queryString.set(entry.filter, entry.value)
-      } else {
-        queryString.delete(entry.filter)
-      }
-    }
-
-    this.props.history.replace({pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: queryString.toString()})
-  }
-
-  handleSubmit() {
-    const { formState } = this.state;
-
-    const filters = Object.entries(formState).reduce((res, [filterKey, {type, value}]) => {
-      let finalFilterValue = (type === 'is_not' ? '!' : '') + value.trim()
-
-      if (filterKey == 'country') {
-        const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
-        const selectedCountry = allCountries.find((c) => c.properties.name === finalFilterValue) || { id: finalFilterValue };
-        finalFilterValue = selectedCountry.id
-      }
-
-      res.push({filter: filterKey, value: finalFilterValue})
-      return res
-    }, [])
-
-    this.selectFiltersAndCloseModal(filters)
-  }
-
-  updateSelectedFilterGroup(e) {
-    this.setState({selectedFilterGroup: e.target.value, formState: getFormState(e.target.value, this.state.query)});
-  }
-
-  renderFilterSelector() {
-    const editableFilters = Object.keys(FILTER_GROUPS)
-    if (!this.props.match.params.field) {
-      return (
-        <select
-          value={this.state.selectedFilterGroup}
-          className="my-2 block w-full pr-10 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300 cursor-pointer"
-          placeholder="Select a Filter"
-          onChange={this.updateSelectedFilterGroup.bind(this)}
-        >
-          <option disabled value="" className="hidden">Select a Filter</option>
-          {editableFilters.map(filter => <option key={filter} value={filter}>{formatFilterGroup(filter)}</option>)}
-        </select>
-      )
-    }
-  }
 
   renderBody() {
     const { selectedFilterGroup, query } = this.state;
-    const editableFilters = Object.keys(FILTER_GROUPS)
 
     return (
       <>
@@ -300,19 +267,20 @@ class FilterModal extends React.Component {
         <div className="mt-4 border-b border-gray-300"></div>
         <main className="modal__content">
           <form className="flex flex-col" id="filter-form" onSubmit={this.handleSubmit.bind(this)}>
-            {this.renderFilterSelector()}
             {this.renderFilterInputs()}
 
             <div className="mt-6 flex items-center justify-start">
               <button
                 type="submit"
                 className="button"
+                disabled={this.isDisabled()}
               >
                 Save Filter
               </button>
 
               {query.filters[selectedFilterGroup] && (
                 <button
+                  type="button"
                   className="ml-2 button px-4 flex bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-700 items-center"
                   onClick={() => {
                     this.selectFiltersAndCloseModal([{filter: selectedFilterGroup, value: null}])
@@ -336,6 +304,8 @@ class FilterModal extends React.Component {
         <p className="mt-6 text-xs text-gray-500">Hint: You can use double asterisks to match any character e.g. /blog**</p>
       )
     }
+
+    return null
   }
 
   render() {
