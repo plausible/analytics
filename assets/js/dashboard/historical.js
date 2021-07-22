@@ -7,23 +7,13 @@ import Filters from './filters'
 import CurrentVisitors from './stats/current-visitors'
 import VisitorGraph from './stats/visitor-graph'
 import Sources from './stats/sources'
-import Pages from './stats/pages/'
+import Pages from './stats/pages'
 import Countries from './stats/countries'
 import Devices from './stats/devices'
 import Conversions from './stats/conversions'
 import { withPinnedHeader } from './pinned-header-hoc';
 
 class Historical extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {mobileFiltersOpen: false}
-    this.toggleMobileFilters = this.toggleMobileFilters.bind(this)
-  }
-
-  toggleMobileFilters() {
-    this.setState({mobileFiltersOpen: !this.state.mobileFiltersOpen})
-  }
-
   renderConversions() {
     if (this.props.site.hasGoals) {
       return (
@@ -32,6 +22,8 @@ class Historical extends React.Component {
         </div>
       )
     }
+
+    return null
   }
 
   render() {
@@ -45,7 +37,7 @@ class Historical extends React.Component {
             <div className="flex items-center w-full">
               <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} />
               <CurrentVisitors timer={this.props.timer} site={this.props.site} query={this.props.query} />
-              <Filters className="flex" site={this.props.site} query={this.props.query} history={this.props.history} mobileFiltersOpen={this.state.mobileFiltersOpen} />
+              <Filters className="flex" site={this.props.site} query={this.props.query} history={this.props.history} />
             </div>
             <div className="flex ml-auto pl-2">
               <DatepickerArrows site={this.props.site} query={this.props.query} />

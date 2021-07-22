@@ -92,7 +92,7 @@ function renderDropdownFilter(site, history, [key, value], query) {
   if (key === 'props') {
     return (
       <Menu.Item key={key}>
-        <div className="px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between" key={key + value}>
+        <div className="px-4 sm:py-2 py-3 text-sm leading-tight flex items-center justify-between" key={key + value}>
           <span className="inline-block w-full truncate">{filterText(key, value, query)}</span>
           <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>
             <XIcon className="w-4 h-4" />
@@ -104,7 +104,7 @@ function renderDropdownFilter(site, history, [key, value], query) {
 
   return (
     <Menu.Item key={key}>
-      <div className="px-3 md:px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between" key={key + value}>
+      <div className="px-3 md:px-4 sm:py-2 py-3 text-sm leading-tight flex items-center justify-between" key={key + value}>
         <Link
           title={`Edit filter: ${formattedFilters[key]}`}
           to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}
@@ -149,11 +149,11 @@ function DropdownContent({history, site, query, wrapped}) {
 
   return (
     <>
-      <div className="border-b border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 md:text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => setAddingFilter(true)}>
+      <div className="border-b border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => setAddingFilter(true)}>
         + Add filter
       </div>
       {appliedFilters(query).map((filter) => renderDropdownFilter(site, history, filter, query))}
-      <div className="border-t border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 md:text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => clearAllFilters(history, query)}>
+      <div className="border-t border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => clearAllFilters(history, query)}>
         Clear All Filters
       </div>
     </>
