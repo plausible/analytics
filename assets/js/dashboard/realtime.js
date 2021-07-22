@@ -1,15 +1,18 @@
 import React from 'react';
 
-import StickyNav from './pinned-header-hoc';
-import CurrentVisitors from './stats/current-visitors'
+import Datepicker from './datepicker'
+import DatepickerArrows from './datepicker-arrows'
+import SiteSwitcher from './site-switcher'
+import Filters from './filters'
 import VisitorGraph from './stats/visitor-graph'
 import Sources from './stats/sources'
-import Pages from './stats/pages/'
+import Pages from './stats/pages'
 import Countries from './stats/countries'
 import Devices from './stats/devices'
 import Conversions from './stats/conversions'
+import { withPinnedHeader } from './pinned-header-hoc';
 
-export default class Realtime extends React.Component {
+class Realtime extends React.Component {
   renderConversions() {
     if (this.props.site.hasGoals) {
       return (
@@ -18,6 +21,8 @@ export default class Realtime extends React.Component {
         </div>
       )
     }
+
+    return null
   }
 
   render() {
@@ -25,7 +30,19 @@ export default class Realtime extends React.Component {
 
     return (
       <div className="mb-12">
-        <StickyNav site={this.props.site} query={this.props.query} timer={this.props.timer} />
+        <div id="stats-container-top"></div>
+        <div className={`${navClass} top-0 sm:py-3 py-2 z-9 ${this.props.stuck && !this.props.site.embedded ? 'z-10 fullwidth-shadow bg-gray-50 dark:bg-gray-850' : ''}`}>
+          <div className="items-center w-full flex">
+            <div className="flex items-center w-full">
+              <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} />
+              <Filters className="flex" site={this.props.site} query={this.props.query} history={this.props.history} />
+            </div>
+            <div className="flex ml-auto pl-2">
+              <DatepickerArrows site={this.props.site} query={this.props.query} />
+              <Datepicker className="w-28 sm:w-36 md:w-44" site={this.props.site} query={this.props.query} />
+            </div>
+          </div>
+        </div>
         <VisitorGraph site={this.props.site} query={this.props.query} timer={this.props.timer} />
         <div className="items-start justify-between block w-full md:flex">
           <Sources site={this.props.site} query={this.props.query} timer={this.props.timer} />
@@ -41,3 +58,5 @@ export default class Realtime extends React.Component {
     )
   }
 }
+
+export default withPinnedHeader(Realtime, '#stats-container-top');

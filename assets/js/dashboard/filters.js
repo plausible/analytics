@@ -153,9 +153,11 @@ function DropdownContent({history, site, query, wrapped}) {
         + Add filter
       </div>
       {appliedFilters(query).map((filter) => renderDropdownFilter(site, history, filter, query))}
-      <div className="border-t border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => clearAllFilters(history, query)}>
-        Clear All Filters
-      </div>
+      <Menu.Item key="clear">
+        <div className="border-t border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => clearAllFilters(history, query)}>
+          Clear All Filters
+        </div>
+      </Menu.Item>
     </>
   )
 }
@@ -310,6 +312,7 @@ class Filters extends React.Component {
               leaveTo="transform opacity-0 scale-95"
             >
               <Menu.Items
+                static
                 className="absolute w-full left-0 right-0 md:w-72 md:absolute md:top-auto md:left-auto md:right-0 mt-2 origin-top-right z-10"
               >
                 <div
