@@ -31,58 +31,58 @@ function clearAllFilters(history, query) {
 
 function filterText(key, value, query) {
   if (key === "goal") {
-    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Completed goal <b>{value}</b></span>
+    return <>Completed goal <b>{value}</b></>
   }
   if (key === "props") {
     const [metaKey, metaValue] = Object.entries(value)[0]
     const eventName = query.filters.goal ? query.filters.goal : 'event'
-    return <span className="inline-block max-w-2xs md:max-w-xs truncate">{eventName}.{metaKey} is <b>{metaValue}</b></span>
+    return <>{eventName}.{metaKey} is <b>{metaValue}</b></>
   }
   if (key === "source") {
-    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Source: <b>{value}</b></span>
+    return <>Source: <b>{value}</b></>
   }
   if (key === "utm_medium") {
-    return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM medium: <b>{value}</b></span>
+    return <>UTM medium: <b>{value}</b></>
   }
   if (key === "utm_source") {
-    return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM source: <b>{value}</b></span>
+    return <>UTM source: <b>{value}</b></>
   }
   if (key === "utm_campaign") {
-    return <span className="inline-block max-w-2xs md:max-w-xs truncate">UTM campaign: <b>{value}</b></span>
+    return <>UTM campaign: <b>{value}</b></>
   }
   if (key === "referrer") {
-    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Referrer: <b>{value}</b></span>
+    return <>Referrer: <b>{value}</b></>
   }
   if (key === "screen") {
-    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Screen size: <b>{value}</b></span>
+    return <>Screen size: <b>{value}</b></>
   }
   if (key === "browser") {
-    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Browser: <b>{value}</b></span>
+    return <>Browser: <b>{value}</b></>
   }
   if (key === "browser_version") {
     const browserName = query.filters.browser ? query.filters.browser : 'Browser'
-    return <span className="inline-block max-w-2xs md:max-w-xs truncate">{browserName}.Version: <b>{value}</b></span>
+    return <>{browserName}.Version: <b>{value}</b></>
   }
   if (key === "os") {
-    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Operating System: <b>{value}</b></span>
+    return <>Operating System: <b>{value}</b></>
   }
   if (key === "os_version") {
     const osName = query.filters.os ? query.filters.os : 'OS'
-    return <span className="inline-block max-w-2xs md:max-w-xs truncate">{osName}.Version: <b>{value}</b></span>
+    return <>{osName}.Version: <b>{value}</b></>
   }
   if (key === "country") {
     const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
     const selectedCountry = allCountries.find((c) => c.id === value) || {properties: {name: value}};
-    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Country: <b>{selectedCountry.properties.name}</b></span>
+    return <>Country: <b>{selectedCountry.properties.name}</b></>
   }
   if (key === "page") {
-    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Page: <b>{value}</b></span>
+    return <>Page: <b>{value}</b></>
   }
   if (key === "entry_page") {
-    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Entry Page: <b>{value}</b></span>
+    return <>Entry Page: <b>{value}</b></>
   }
   if (key === "exit_page") {
-    return <span className="inline-block max-w-2xs md:max-w-xs truncate">Exit Page: <b>{value}</b></span>
+    return <>Exit Page: <b>{value}</b></>
   }
 
   throw new Error(`Unknown filter: ${key}`)
@@ -93,7 +93,7 @@ function renderDropdownFilter(site, history, [key, value], query) {
     return (
       <Menu.Item key={key}>
         <div className="px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between" key={key + value}>
-          {filterText(key, value, query)}
+          <span className="inline-block w-32 truncate">{filterText(key, value, query)}</span>
           <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>✕</b>
         </div>
       </Menu.Item>
@@ -108,7 +108,7 @@ function renderDropdownFilter(site, history, [key, value], query) {
           to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}
           className="group flex w-full justify-between items-center"
         >
-          {filterText(key, value, query)}
+          <span className="inline-block w-52 truncate">{filterText(key, value, query)}</span>
           <PencilIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
         </Link>
         <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>
@@ -249,12 +249,12 @@ class Filters extends React.Component {
       <span key={key} title={value} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
         {key === 'props' ? (
           <span className="flex w-full h-full items-center py-2 pl-3">
-            {filterText(key, value, query)}
+            <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(key, value, query)}</span>
           </span>
         ) : (
           <>
             <Link title={`Edit filter: ${formattedFilters[key]}`} className="flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}>
-              {filterText(key, value, query)}
+              <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(key, value, query)}</span>
             </Link>
           </>
         )}
@@ -328,7 +328,7 @@ class Filters extends React.Component {
 
     if (this.state.wrapped !== 2) {
       return (
-        <div id="filters">
+        <div id="filters" className="flex flex-wrap">
           {(appliedFilters(query).map((filter) => this.renderListFilter(history, filter, query)))}
         </div>
       );
