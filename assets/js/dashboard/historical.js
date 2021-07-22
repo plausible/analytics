@@ -1,7 +1,6 @@
 import React from 'react';
 
 import Datepicker from './datepicker'
-import DatepickerArrows from './datepicker-arrows'
 import SiteSwitcher from './site-switcher'
 import Filters from './filters'
 import CurrentVisitors from './stats/current-visitors'
@@ -39,10 +38,7 @@ class Historical extends React.Component {
               <CurrentVisitors timer={this.props.timer} site={this.props.site} query={this.props.query} />
               <Filters className="flex" site={this.props.site} query={this.props.query} history={this.props.history} />
             </div>
-            <div className="flex ml-auto pl-2">
-              <DatepickerArrows site={this.props.site} query={this.props.query} />
-              <Datepicker className="w-28 sm:w-36 md:w-44" site={this.props.site} query={this.props.query} />
-            </div>
+            <Datepicker site={this.props.site} query={this.props.query} />
           </div>
         </div>
         <VisitorGraph site={this.props.site} query={this.props.query} />

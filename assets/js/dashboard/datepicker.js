@@ -1,8 +1,8 @@
 import React, { Fragment } from "react";
 import { withRouter } from "react-router-dom";
 import Flatpickr from "react-flatpickr";
-import classNames from 'classnames'
 import { ChevronDownIcon } from '@heroicons/react/solid'
+import { Transition } from '@headlessui/react'
 import {
   shiftDays,
   shiftMonths,
@@ -19,15 +19,96 @@ import {
   isBefore,
   isAfter,
 } from "./date";
-import { Transition } from '@headlessui/react'
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
+
+function renderArrow(query, site, period, prevDate, nextDate) {
+  const insertionDate = parseUTCDate(site.insertedAt);
+  const disabledLeft = isBefore(
+    parseUTCDate(prevDate),
+    insertionDate,
+    period
+  );
+  const disabledRight = isAfter(
+    parseUTCDate(nextDate),
+    nowForSite(site),
+    period
+  );
+
+  const leftClasses = `flex items-center px-2 border-r border-gray-300 rounded-l
+      dark:border-gray-500 dark:text-gray-100 ${
+      disabledLeft ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
+    }`;
+  const rightClasses = `flex items-center px-2 rounded-r dark:text-gray-100 ${
+      disabledRight ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
+    }`;
+  return (
+    <div className="hidden md:flex rounded shadow bg-white mr-4 cursor-pointer dark:bg-gray-800">
+      <QueryButton
+        to={{ date: prevDate }}
+        query={query}
+        className={leftClasses}
+        disabled={disabledLeft}
+      >
+        <svg
+          className="feather h-4 w-4"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </QueryButton>
+      <QueryButton
+        to={{ date: nextDate }}
+        query={query}
+        className={rightClasses}
+        disabled={disabledRight}
+      >
+        <svg
+          className="feather h-4 w-4"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </QueryButton>
+    </div>
+  );
+}
+
+function DatePickerArrows({site, query}) {
+  if (query.period === "month") {
+    const prevDate = formatISO(shiftMonths(query.date, -1));
+    const nextDate = formatISO(shiftMonths(query.date, 1));
+
+    return renderArrow(query, site, "month", prevDate, nextDate);
+  } if (query.period === "day") {
+    const prevDate = formatISO(shiftDays(query.date, -1));
+    const nextDate = formatISO(shiftDays(query.date, 1));
+
+    return renderArrow(query, site, "day", prevDate, nextDate);
+  }
+
+  return null
+}
 
 class DatePicker extends React.Component {
   constructor(props) {
     super(props);
     this.handleKeydown = this.handleKeydown.bind(this);
     this.handleClick = this.handleClick.bind(this);
+    this.setCustomDate = this.setCustomDate.bind(this);
     this.openCalendar = this.openCalendar.bind(this);
+    this.close = this.close.bind(this);
     this.toggle = this.toggle.bind(this);
     this.state = { mode: "menu", open: false };
   }
@@ -46,7 +127,7 @@ class DatePicker extends React.Component {
     const { query, history } = this.props;
 
     if (e.target.tagName === 'INPUT') return true;
-    if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.keyCode === 229) return;
+    if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.keyCode === 229) return true;
 
     const newSearch = {
       period: false,
@@ -108,8 +189,6 @@ class DatePicker extends React.Component {
 
     if (keys.includes(e.key.toLowerCase())) {
       navigateToQuery(history, query, {...newSearch, ...(redirects[keys.indexOf(e.key.toLowerCase())])});
-    } else if (e.key.toLowerCase() === 'f') {
-      return history.push({pathname: `/${encodeURIComponent(this.props.site.domain)}/filter`, search: window.location.search})
     } else if (e.key.toLowerCase() === 'c') {
       this.setState({mode: 'calendar', open: true}, this.openCalendar);
     } else if (newSearch.date) {
@@ -121,6 +200,36 @@ class DatePicker extends React.Component {
     if (this.dropDownNode && this.dropDownNode.contains(e.target)) return;
 
     this.setState({ open: false });
+  }
+
+  setCustomDate(dates) {
+    if (dates.length === 2) {
+      const [from, to] = dates
+      if (formatISO(from) === formatISO(to)) {
+        navigateToQuery(
+          this.props.history,
+          this.props.query,
+          {
+            period: 'day',
+            date: formatISO(from),
+            from: false,
+            to: false,
+          }
+        )
+      } else {
+        navigateToQuery(
+          this.props.history,
+          this.props.query,
+          {
+            period: 'custom',
+            date: false,
+            from: formatISO(from),
+            to: formatISO(to),
+          }
+        )
+      }
+      this.close()
+    }
   }
 
   timeFrameText() {
@@ -152,11 +261,15 @@ class DatePicker extends React.Component {
 
   toggle() {
     const newMode = this.state.mode === 'calendar' && !this.state.open ? 'menu' : this.state.mode
-    this.setState({ mode: newMode, open: !this.state.open });
+    this.setState(prevState => ({ mode: newMode, open: !prevState.open }));
   }
 
   close() {
     this.setState({ open: false });
+  }
+
+  openCalendar() {
+    this.calendar && this.calendar.flatpickr.open();
   }
 
   renderLink(period, text, opts = {}) {
@@ -186,7 +299,7 @@ class DatePicker extends React.Component {
     return (
       <QueryLink
         to={{from: false, to: false, period, ...opts}}
-        onClick={this.close.bind(this)}
+        onClick={this.close}
         query={this.props.query}
         className={`${boldClass  } px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900
           dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 flex items-center justify-between`}
@@ -264,51 +377,17 @@ class DatePicker extends React.Component {
               animate: true}}
             ref={calendar => this.calendar = calendar}
             className="invisible"
-            onChange={this.setCustomDate.bind(this)}
+            onChange={this.setCustomDate}
           />
         </div>
         )
     }
   }
 
-  setCustomDate(dates) {
-    if (dates.length === 2) {
-      const [from, to] = dates
-      if (formatISO(from) === formatISO(to)) {
-        navigateToQuery(
-          this.props.history,
-          this.props.query,
-          {
-            period: 'day',
-            date: formatISO(from),
-            from: false,
-            to: false,
-          }
-        )
-      } else {
-        navigateToQuery(
-          this.props.history,
-          this.props.query,
-          {
-            period: 'custom',
-            date: false,
-            from: formatISO(from),
-            to: formatISO(to),
-          }
-        )
-      }
-      this.close()
-    }
-  }
-
-  openCalendar() {
-    this.calendar && this.calendar.flatpickr.open();
-  }
-
-  render() {
+  renderPicker() {
     return (
       <div
-        className={classNames('md:relative', this.props.className)}
+        className="w-28 sm:w-36 md:w-44 md:relative"
         ref={(node) => (this.dropDownNode = node)}
       >
         <div
@@ -333,17 +412,26 @@ class DatePicker extends React.Component {
         <Transition
           show={this.state.open}
           as={Fragment}
-            enter="transition ease-out duration-100"
-            enterFrom="transform opacity-0 scale-95"
-            enterTo="transform opacity-100 scale-100"
-            leave="transition ease-in duration-75"
-            leaveFrom="transform opacity-100 scale-100"
-            leaveTo="transform opacity-0 scale-95"
+          enter="transition ease-out duration-100"
+          enterFrom="transform opacity-0 scale-95"
+          enterTo="transform opacity-100 scale-100"
+          leave="transition ease-in duration-75"
+          leaveFrom="transform opacity-100 scale-100"
+          leaveTo="transform opacity-0 scale-95"
         >
           {this.renderDropDownContent()}
         </Transition>
       </div>
     );
+  }
+
+  render() {
+    return (
+      <div className="flex ml-auto pl-2">
+        <DatePickerArrows site={this.props.site} query={this.props.query} />
+        {this.renderPicker()}
+      </div>
+    )
   }
 }
 
