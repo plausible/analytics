@@ -93,8 +93,10 @@ function renderDropdownFilter(site, history, [key, value], query) {
     return (
       <Menu.Item key={key}>
         <div className="px-4 sm:py-2 py-3 md:text-sm leading-tight flex items-center justify-between" key={key + value}>
-          <span className="inline-block w-32 truncate">{filterText(key, value, query)}</span>
-          <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>✕</b>
+          <span className="inline-block w-full truncate">{filterText(key, value, query)}</span>
+          <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>
+            <XIcon className="w-4 h-4" />
+          </b>
         </div>
       </Menu.Item>
     )
@@ -107,8 +109,9 @@ function renderDropdownFilter(site, history, [key, value], query) {
           title={`Edit filter: ${formattedFilters[key]}`}
           to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}
           className="group flex w-full justify-between items-center"
+          style={{width: 'calc(100% - 1.5rem)'}}
         >
-          <span className="inline-block w-52 truncate">{filterText(key, value, query)}</span>
+          <span className="inline-block w-full truncate">{filterText(key, value, query)}</span>
           <PencilIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
         </Link>
         <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>
