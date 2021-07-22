@@ -32,7 +32,7 @@ export default class CurrentVisitors extends React.Component {
           <svg className="inline w-2 mr-1 md:mr-2 text-green-500 fill-current" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
             <circle cx="8" cy="8" r="8" />
           </svg>
-          {currentVisitors} current visitor{currentVisitors === 1 ? '' : 's'}
+          {currentVisitors} <span className="hidden sm:inline-block">current visitor{currentVisitors === 1 ? '' : 's'}</span>
         </Link>
       )
     }

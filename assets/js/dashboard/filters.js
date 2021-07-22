@@ -272,10 +272,11 @@ class Filters extends React.Component {
 
   renderDropdownButton() {
     if (this.state.wrapped === 2) {
+      const filterCount = appliedFilters(this.props.query).length
       return (
         <>
           <AdjustmentsIcon className="-ml-1 mr-1 h-4 w-4" aria-hidden="true" />
-          {appliedFilters(this.props.query).length} Filters
+          {filterCount} Filter{filterCount === 1 ? '' : 's'}
         </>
       )
     }
