@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Menu (with auto-complete) to add new and edit existing filters directly plausible/analytics#1089
 - Added `CLICKHOUSE_FLUSH_INTERVAL_MS` and `CLICKHOUSE_MAX_BUFFER_SIZE` configuration parameters plausible/analytics#1073
 - Ability to invite users to sites with different roles plausible/analytics#1122
+- Option to configure a custom name for the script file
 
 ### Fixed
 - Fix weekly report time range plausible/analytics#951
