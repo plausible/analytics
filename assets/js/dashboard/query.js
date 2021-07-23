@@ -44,13 +44,10 @@ export function parseQuery(querystring, site) {
   }
 }
 
-export function countFilters(query) {
-  let count = 0;
-  for (const filter of Object.values(query.filters)) {
-    if (filter) count++;
-  }
-
-  return count;
+export function appliedFilters(query) {
+  return Object.keys(query.filters)
+    .map((key) => [key, query.filters[key]])
+    .filter(([key, value]) => !!value);
 }
 
 function generateQueryString(data) {

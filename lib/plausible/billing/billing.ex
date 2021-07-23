@@ -25,7 +25,7 @@ defmodule Plausible.Billing do
     subscription = Repo.get_by!(Subscription, paddle_subscription_id: params["subscription_id"])
     changeset = Subscription.changeset(subscription, format_subscription(params))
 
-    Repo.update(changeset)
+    Repo.update(changeset) |> check_lock_status
   end
 
   def subscription_cancelled(params) do
