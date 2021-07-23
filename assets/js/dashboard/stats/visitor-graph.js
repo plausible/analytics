@@ -260,12 +260,12 @@ class LineGraph extends React.Component {
   }
 
   topStatNumberShort(stat) {
-    if (typeof(stat.duration) == 'number') {
-      return durationFormatter(stat.duration)
-    } else if (typeof(stat.count) == 'number') {
-      return numberFormatter(stat.count)
+    if (['visit duration', 'time on page'].includes(stat.name.toLowerCase())) {
+      return durationFormatter(stat.value)
+    } else if (['bounce rate', 'conversion rate'].includes(stat.name.toLowerCase())) {
+      return stat.value + '%'
     } else {
-      return stat.percentage + '%'
+      return numberFormatter(stat.value)
     }
   }
 

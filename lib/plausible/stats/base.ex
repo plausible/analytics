@@ -1,26 +1,13 @@
 defmodule Plausible.Stats.Base do
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Query, Filters}
 
   @no_ref "Direct / None"
-  @session_props [
-    "source",
-    "referrer",
-    "utm_medium",
-    "utm_source",
-    "utm_campaign",
-    "device",
-    "browser",
-    "browser_version",
-    "os",
-    "os_version",
-    "country"
-  ]
 
   def base_event_query(site, query) do
     events_q = query_events(site, query)
 
-    if Enum.any?(@session_props, &query.filters["visit:" <> &1]) do
+    if Enum.any?(Filters.visit_props(), &query.filters["visit:" <> &1]) do
       sessions_q =
         from(
           s in query_sessions(site, query),
@@ -48,9 +35,18 @@ defmodule Plausible.Stats.Base do
 
     q =
       case query.filters["event:page"] do
-        {:is, page} -> from(e in q, where: e.pathname == ^page)
-        {:member, list} -> from(e in q, where: e.pathname in ^list)
-        _ -> q
+        {:is, page} ->
+          from(e in q, where: e.pathname == ^page)
+
+        {:matches, glob_expr} ->
+          regex = page_regex(glob_expr)
+          from(e in q, where: fragment("match(?, ?)", e.pathname, ^regex))
+
+        {:member, list} ->
+          from(e in q, where: e.pathname in ^list)
+
+        _ ->
+          q
       end
 
     q =
@@ -58,6 +54,18 @@ defmodule Plausible.Stats.Base do
         {:is, name} -> from(e in q, where: e.name == ^name)
         {:member, list} -> from(e in q, where: e.name in ^list)
         _ -> q
+      end
+
+    q =
+      case goal_type(query) do
+        {:is, :page, path} ->
+          from(e in q, where: e.pathname == ^path)
+
+        {:is, :event, event} ->
+          from(e in q, where: e.name == ^event)
+
+        _ ->
+          q
       end
 
     Enum.reduce(query.filters, q, fn {filter_key, filter_value}, query ->
@@ -88,6 +96,7 @@ defmodule Plausible.Stats.Base do
   @api_prop_name_to_db %{
     "source" => "referrer_source",
     "device" => "screen_size",
+    "screen" => "screen_size",
     "os" => "operating_system",
     "os_version" => "operating_system_version",
     "country" => "country_code"
@@ -103,19 +112,22 @@ defmodule Plausible.Stats.Base do
       )
 
     sessions_q =
-      if query.filters["event:page"] do
-        case query.filters["event:page"] do
-          {:is, page} ->
-            from(e in sessions_q, where: e.entry_page == ^page)
+      case query.filters["event:page"] do
+        {:is, page} ->
+          from(e in sessions_q, where: e.entry_page == ^page)
 
-          {:member, list} ->
-            from(e in sessions_q, where: e.entry_page in ^list)
-        end
-      else
-        sessions_q
+        {:matches, glob_expr} ->
+          regex = page_regex(glob_expr)
+          from(s in sessions_q, where: fragment("match(?, ?)", s.entry_page, ^regex))
+
+        {:member, list} ->
+          from(e in sessions_q, where: e.entry_page in ^list)
+
+        _ ->
+          sessions_q
       end
 
-    Enum.reduce(@session_props, sessions_q, fn prop_name, sessions_q ->
+    Enum.reduce(Filters.visit_props(), sessions_q, fn prop_name, sessions_q ->
       filter = query.filters["visit:" <> prop_name]
       prop_name = Map.get(@api_prop_name_to_db, prop_name, prop_name)
 
@@ -123,6 +135,13 @@ defmodule Plausible.Stats.Base do
         {:is, value} ->
           where_target = [{String.to_existing_atom(prop_name), db_prop_val(prop_name, value)}]
           from(s in sessions_q, where: ^where_target)
+
+        {:is_not, value} ->
+          fragment_data = [
+            {String.to_existing_atom(prop_name), {:!=, db_prop_val(prop_name, value)}}
+          ]
+
+          from(s in sessions_q, where: fragment(^fragment_data))
 
         {:member, values} ->
           list = Enum.map(values, &db_prop_val(prop_name, &1))
@@ -138,6 +157,21 @@ defmodule Plausible.Stats.Base do
   defp db_prop_val("referrer_source", @no_ref), do: ""
   defp db_prop_val(_, val), do: val
 
+  defp goal_type(query) do
+    case query.filters["visit:goal"] do
+      {:is, "Visit " <> page} -> {:is, :page, page}
+      {:is, event} -> {:is, :event, event}
+      _ -> nil
+    end
+  end
+
+  defp utc_boundaries(%Query{period: "30m"}, _timezone) do
+    last_datetime = NaiveDateTime.utc_now() |> Timex.shift(seconds: 5)
+    first_datetime = NaiveDateTime.utc_now() |> Timex.shift(minutes: -30)
+
+    {first_datetime, last_datetime}
+  end
+
   defp utc_boundaries(%Query{date_range: date_range}, timezone) do
     {:ok, first} = NaiveDateTime.new(date_range.first, ~T[00:00:00])
 
@@ -152,5 +186,11 @@ defmodule Plausible.Stats.Base do
       |> Timex.Timezone.convert("UTC")
 
     {first_datetime, last_datetime}
+  end
+
+  def page_regex(expr) do
+    "^#{expr}\/?$"
+    |> String.replace(~r/\*\*/, ".*")
+    |> String.replace(~r/(?<!\.)\*/, "[^/]*")
   end
 end

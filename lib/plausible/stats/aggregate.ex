@@ -1,9 +1,10 @@
 defmodule Plausible.Stats.Aggregate do
+  alias Plausible.Stats.Query
   use Plausible.ClickhouseRepo
   import Plausible.Stats.Base
 
-  @event_metrics ["visitors", "pageviews"]
-  @session_metrics ["bounce_rate", "visit_duration"]
+  @event_metrics ["visitors", "pageviews", "events"]
+  @session_metrics ["visits", "bounce_rate", "visit_duration"]
 
   def aggregate(site, query, metrics) do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
@@ -11,12 +12,18 @@ defmodule Plausible.Stats.Aggregate do
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
     session_task = Task.async(fn -> aggregate_sessions(site, query, session_metrics) end)
 
-    Map.merge(
-      Task.await(event_task),
-      Task.await(session_task)
-    )
+    time_on_page_task =
+      if "time_on_page" in metrics do
+        Task.async(fn -> aggregate_time_on_page(site, query) end)
+      else
+        Task.async(fn -> %{} end)
+      end
+
+    Task.await(event_task)
+    |> Map.merge(Task.await(session_task))
+    |> Map.merge(Task.await(time_on_page_task))
     |> Enum.map(fn {metric, value} ->
-      {metric, %{value: value || 0}}
+      {metric, %{value: round(value || 0)}}
     end)
     |> Enum.into(%{})
   end
@@ -33,6 +40,12 @@ defmodule Plausible.Stats.Aggregate do
   defp select_event_metric("pageviews", q) do
     from(e in q,
       select_merge: %{pageviews: fragment("countIf(? = 'pageview')", e.name)}
+    )
+  end
+
+  defp select_event_metric("events", q) do
+    from(e in q,
+      select_merge: %{events: fragment("count(*)")}
     )
   end
 
@@ -55,7 +68,68 @@ defmodule Plausible.Stats.Aggregate do
     )
   end
 
+  defp select_session_metric("visits", q) do
+    from(s in q,
+      select_merge: %{visits: fragment("sum(?)", s.sign)}
+    )
+  end
+
   defp select_session_metric("visit_duration", q) do
     from(s in q, select_merge: %{visit_duration: fragment("round(avg(duration * sign))")})
+  end
+
+  defp aggregate_time_on_page(site, query) do
+    q =
+      from(
+        e in base_event_query(site, %Query{
+          query
+          | filters: Map.delete(query.filters, "event:page")
+        }),
+        select: {
+          fragment("? as p", e.pathname),
+          fragment("? as t", e.timestamp),
+          fragment("? as s", e.session_id)
+        },
+        order_by: [e.session_id, e.timestamp]
+      )
+
+    {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
+
+    {where_clause, where_arg} =
+      case query.filters["event:page"] do
+        {:is, page} ->
+          {"p=?", page}
+
+        {:matches, expr} ->
+          regex = page_regex(expr)
+          {"match(p, ?)", regex}
+      end
+
+    time_query = "
+      SELECT
+        avg(ifNotFinite(avgTime, null))
+      FROM
+        (SELECT
+          p,
+          sum(td)/count(case when p2 != p then 1 end) as avgTime
+        FROM
+          (SELECT
+            p,
+            p2,
+            sum(t2-t) as td
+          FROM
+            (SELECT
+            *,
+              neighbor(t, 1) as t2,
+              neighbor(p, 1) as p2,
+              neighbor(s, 1) as s2
+            FROM (#{base_query_raw}))
+          WHERE s=s2 AND #{where_clause}
+          GROUP BY p,p2,s)
+        GROUP BY p)"
+
+    {:ok, res} = ClickhouseRepo.query(time_query, base_query_raw_params ++ [where_arg])
+    [[time_on_page]] = res.rows
+    %{time_on_page: time_on_page}
   end
 end

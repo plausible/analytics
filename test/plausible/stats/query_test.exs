@@ -25,7 +25,7 @@ defmodule Plausible.Stats.QueryTest do
 
     assert q.date_range.first == Timex.today()
     assert q.date_range.last == Timex.today()
-    assert q.period == "realtime"
+    assert q.period == "30m"
   end
 
   test "parses month format" do

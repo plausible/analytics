@@ -117,7 +117,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
            }
   end
 
-  test "aggregates visitors, pageviews, bounce rate and visit duration", %{conn: conn, site: site} do
+  test "aggregates visitors, pageviews, visits, bounce rate and visit duration", %{
+    conn: conn,
+    site: site
+  } do
     populate_stats([
       build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
       build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2021-01-01 00:25:00]),
@@ -129,12 +132,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         "site_id" => site.domain,
         "period" => "day",
         "date" => "2021-01-01",
-        "metrics" => "pageviews,visitors,bounce_rate,visit_duration"
+        "metrics" => "pageviews,visits,visitors,bounce_rate,visit_duration"
       })
 
     assert json_response(conn, 200)["results"] == %{
              "pageviews" => %{"value" => 3},
              "visitors" => %{"value" => 2},
+             "visits" => %{"value" => 2},
              "bounce_rate" => %{"value" => 50},
              "visit_duration" => %{"value" => 750}
            }
@@ -647,6 +651,35 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                "visitors" => %{"value" => 2},
                "bounce_rate" => %{"value" => 50},
                "visit_duration" => %{"value" => 750}
+             }
+    end
+
+    test "can filter by page regex", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/"
+        ),
+        build(:pageview,
+          pathname: "/blog/post1"
+        ),
+        build(:pageview,
+          pathname: "/blog/post1"
+        ),
+        build(:pageview,
+          pathname: "/blog/post2"
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors",
+          "filters" => "event:page==/blog/**"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "visitors" => %{"value" => 3}
              }
     end
 

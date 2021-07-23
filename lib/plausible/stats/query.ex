@@ -35,7 +35,7 @@ defmodule Plausible.Stats.Query do
     date = today(tz)
 
     %__MODULE__{
-      period: "realtime",
+      period: "30m",
       interval: "minute",
       date_range: Date.range(date, date),
       filters: parse_filters(params)
@@ -152,6 +152,13 @@ defmodule Plausible.Stats.Query do
     __MODULE__.from(tz, Map.merge(params, %{"period" => "30d"}))
   end
 
+  def put_filter(query, key, val) do
+    %__MODULE__{
+      query
+      | filters: Map.put(query.filters, key, val)
+    }
+  end
+
   defp today(tz) do
     Timex.now(tz) |> Timex.to_date()
   end
@@ -184,12 +191,19 @@ defmodule Plausible.Stats.Query do
   defp parse_single_filter(str) do
     [key, val] =
       String.trim(str)
-      |> String.split("==")
+      |> String.split(["==", "!="], trim: true)
       |> Enum.map(&String.trim/1)
 
-    case String.split(val, "|") do
-      [single_value] -> {key, {:is, single_value}}
-      list -> {key, {:member, list}}
+    is_negated = String.contains?(str, "!=")
+    is_list = String.contains?(val, "|")
+    is_glob = String.contains?(val, "*")
+
+    cond do
+      is_list && is_glob -> raise "Not implemented"
+      is_list -> {key, {:member, String.split(val, "|")}}
+      is_glob -> {key, {:matches, val}}
+      is_negated -> {key, {:is_not, val}}
+      true -> {key, {:is, val}}
     end
   end
 end
