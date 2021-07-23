@@ -43,7 +43,7 @@ export default class SearchTerms extends React.Component {
           maxWidthDeduction="4rem"
         >
           <span className="flex px-2 py-1.5 dark:text-gray-300 z-9 relative break-all">
-            <span className="lg:truncate block">
+            <span className="md:truncate block">
               { term.name }
             </span>
           </span>

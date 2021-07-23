@@ -55,7 +55,7 @@ class AllSources extends React.Component {
         >
           <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
             <Link
-              className="lg:truncate block hover:underline"
+              className="md:truncate block hover:underline"
               to={{search: query.toString()}}
             >
               <img
@@ -173,7 +173,7 @@ class UTMSources extends React.Component {
         >
           <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
             <Link 
-              className="lg:truncate block hover:underline"
+              className="md:truncate block hover:underline"
               to={{search: query.toString()}}
             >
               { referrer.name }

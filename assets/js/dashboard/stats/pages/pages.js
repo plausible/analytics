@@ -56,7 +56,7 @@ export default class Visits extends React.Component {
           >
             <Link
               to={{pathname: window.location.pathname, search: query.toString()}}
-              className="lg:truncate block hover:underline"
+              className="md:truncate block hover:underline"
             >
               {page.name}
             </Link>

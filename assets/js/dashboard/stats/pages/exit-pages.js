@@ -49,7 +49,7 @@ export default class ExitPages extends React.Component {
           <span className="flex px-2 py-1.5 group dark:text-gray-300 z-9 relative break-all">
             <Link
               to={{pathname: window.location.pathname, search: query.toString()}}
-              className="lg:truncate block hover:underline"
+              className="md:truncate block hover:underline"
             >
               {page.name}
             </Link>

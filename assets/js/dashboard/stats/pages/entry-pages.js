@@ -49,7 +49,7 @@ export default class EntryPages extends React.Component {
           <span className="flex px-2 py-1.5 group dark:text-gray-300 relative break-all z-9">
             <Link
               to={{pathname: window.location.pathname, search: query.toString()}}
-              className="lg:truncate block hover:underline"
+              className="md:truncate block hover:underline"
             >
               {page.name}
             </Link>

@@ -59,7 +59,7 @@ export default class Conversions extends React.Component {
 
   renderGoalText(goalName) {
     if (this.props.query.period === 'realtime') {
-      return <span className="block px-2 py-1.5 relative z-9 lg:truncate break-all dark:text-gray-200">{goalName}</span>
+      return <span className="block px-2 py-1.5 relative z-9 md:truncate break-all dark:text-gray-200">{goalName}</span>
     } else {
       const query = new URLSearchParams(window.location.search)
       query.set('goal', goalName)
