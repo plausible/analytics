@@ -44,6 +44,22 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~ "<b>3</b> visitors in last 24h"
     end
 
+    test "shows invitations for user by email address", %{conn: conn, user: user} do
+      site = insert(:site)
+      insert(:invitation, email: user.email, site_id: site.id, inviter: build(:user))
+      conn = get(conn, "/sites")
+
+      assert html_response(conn, 200) =~ site.domain
+    end
+
+    test "invitations are case insensitive", %{conn: conn, user: user} do
+      site = insert(:site)
+      insert(:invitation, email: String.upcase(user.email), site_id: site.id, inviter: build(:user))
+      conn = get(conn, "/sites")
+
+      assert html_response(conn, 200) =~ site.domain
+    end
+
     test "paginates sites", %{conn: conn, user: user} do
       insert(:site, members: [user], domain: "test-site1.com")
       insert(:site, members: [user], domain: "test-site2.com")
