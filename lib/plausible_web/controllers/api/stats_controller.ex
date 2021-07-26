@@ -466,6 +466,42 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  def subdivisions1(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, params)
+    country_name = if params["country_name"], do: params["country_name"]
+
+    json(conn, Stats.subdivisions1(site, query, country_name))
+  end
+
+  def subdivisions2(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, params)
+    country_name = if params["country_name"], do: params["country_name"]
+
+    subdivision1_geoname_id =
+      if params["subdivision1_geoname_id"], do: params["subdivision1_geoname_id"]
+
+    json(conn, Stats.subdivisions2(site, query, country_name, subdivision1_geoname_id))
+  end
+
+  def cities(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, params)
+    country_name = if params["country_name"], do: params["country_name"]
+
+    subdivision1_geoname_id =
+      if params["subdivision1_geoname_id"], do: params["subdivision1_geoname_id"]
+
+    subdivision2_geoname_id =
+      if params["subdivision2_geoname_id"], do: params["subdivision2_geoname_id"]
+
+    json(
+      conn,
+      Stats.cities(site, query, country_name, subdivision1_geoname_id, subdivision2_geoname_id)
+    )
+  end
+
   def browsers(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params) |> Filters.add_prefix()

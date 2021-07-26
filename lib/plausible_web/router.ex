@@ -61,6 +61,9 @@ defmodule PlausibleWeb.Router do
     get "/:domain/entry-pages", StatsController, :entry_pages
     get "/:domain/exit-pages", StatsController, :exit_pages
     get "/:domain/countries", StatsController, :countries
+    get "/:domain/subdivisions1", StatsController, :subdivisions1
+    get "/:domain/subdivisions2", StatsController, :subdivisions2
+    get "/:domain/cities", StatsController, :cities
     get "/:domain/browsers", StatsController, :browsers
     get "/:domain/browser-versions", StatsController, :browser_versions
     get "/:domain/operating-systems", StatsController, :operating_systems

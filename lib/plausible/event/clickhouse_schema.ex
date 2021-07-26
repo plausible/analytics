@@ -19,6 +19,12 @@ defmodule Plausible.ClickhouseEvent do
     field :utm_campaign, :string, default: ""
 
     field :country_code, :string, default: ""
+    field :continent_geoname_id, :string, default: ""
+    field :country_geoname_id, :string, default: ""
+    field :subdivision1_geoname_id, :string, default: ""
+    field :subdivision2_geoname_id, :string, default: ""
+    field :city_geoname_id, :string, default: ""
+
     field :screen_size, :string, default: ""
     field :operating_system, :string, default: ""
     field :operating_system_version, :string, default: ""
@@ -50,6 +56,11 @@ defmodule Plausible.ClickhouseEvent do
         :utm_source,
         :utm_campaign,
         :country_code,
+        :continent_geoname_id,
+        :country_geoname_id,
+        :subdivision1_geoname_id,
+        :subdivision2_geoname_id,
+        :city_geoname_id,
         :screen_size,
         :"meta.key",
         :"meta.value"

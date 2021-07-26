@@ -25,6 +25,12 @@ defmodule Plausible.ClickhouseSession do
     field :referrer_source, :string
 
     field :country_code, :string
+    field :continent_geoname_id, :string, default: ""
+    field :country_geoname_id, :string, default: ""
+    field :subdivision1_geoname_id, :string, default: ""
+    field :subdivision2_geoname_id, :string, default: ""
+    field :city_geoname_id, :string, default: ""
+
     field :screen_size, :string
     field :operating_system, :string
     field :operating_system_version, :string
@@ -57,6 +63,11 @@ defmodule Plausible.ClickhouseSession do
       :utm_source,
       :utm_campaign,
       :country_code,
+      :continent_geoname_id,
+      :country_geoname_id,
+      :subdivision1_geoname_id,
+      :subdivision2_geoname_id,
+      :city_geoname_id,
       :screen_size
     ])
     |> validate_required([:hostname, :domain, :fingerprint, :is_bounce, :start])
