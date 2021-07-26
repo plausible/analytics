@@ -814,6 +814,75 @@ defmodule Plausible.Stats.Clickhouse do
     |> add_percentages
   end
 
+  def subdivisions1(site, query, country_name) do
+    country = Plausible.Stats.CountryName.to_alpha2(country_name)
+
+    ClickhouseRepo.all(
+      from e in base_query_w_sessions(site, query),
+        group_by: e.country_code,
+        group_by: e.subdivision1_geoname_id,
+        where: e.country_code == ^country,
+        order_by: [desc: uniq(e.user_id)],
+        select: %{
+          name:
+            fragment(
+              "if(? = '', 'Other', subdivision1_geoname_id) as subdivision1_geoname_id",
+              e.subdivision1_geoname_id
+            ),
+          count: uniq(e.user_id)
+        }
+    )
+    |> add_percentages
+  end
+
+  def subdivisions2(site, query, country_name, subdivision1_geoname_id) do
+    country = Plausible.Stats.CountryName.to_alpha2(country_name)
+    subdivision1 = if subdivision1_geoname_id != "Other", do: subdivision1_geoname_id, else: ""
+
+    ClickhouseRepo.all(
+      from e in base_query_w_sessions(site, query),
+        group_by: e.country_code,
+        group_by: e.subdivision1_geoname_id,
+        group_by: e.subdivision2_geoname_id,
+        where: e.country_code == ^country,
+        where: e.subdivision1_geoname_id == ^subdivision1,
+        order_by: [desc: uniq(e.user_id)],
+        select: %{
+          name:
+            fragment(
+              "if(? = '', 'Other', subdivision2_geoname_id) as subdivision2_geoname_id",
+              e.subdivision2_geoname_id
+            ),
+          count: uniq(e.user_id)
+        }
+    )
+    |> add_percentages
+  end
+
+  def cities(site, query, country_name, subdivision1_geoname_id, subdivision2_geoname_id) do
+    country = Plausible.Stats.CountryName.to_alpha2(country_name)
+    subdivision1 = if subdivision1_geoname_id != "Other", do: subdivision1_geoname_id, else: ""
+    subdivision2 = if subdivision2_geoname_id != "Other", do: subdivision2_geoname_id, else: ""
+
+    ClickhouseRepo.all(
+      from e in base_query_w_sessions(site, query),
+        group_by: e.country_code,
+        group_by: e.subdivision1_geoname_id,
+        group_by: e.subdivision2_geoname_id,
+        group_by: e.city_geoname_id,
+        where: e.country_code == ^country,
+        where: e.subdivision1_geoname_id == ^subdivision1,
+        where: e.subdivision2_geoname_id == ^subdivision2,
+        order_by: [desc: uniq(e.user_id)],
+        select: %{
+          name:
+            fragment("if(? = '', 'NA', city_geoname_id) as city_geoname_id", e.city_geoname_id),
+          count: uniq(e.user_id)
+        }
+    )
+    |> add_percentages
+  end
+
   def browsers(site, query, limit \\ 5) do
     ClickhouseRepo.all(
       from e in base_query_w_sessions(site, query),

@@ -76,7 +76,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       query = if uri && uri.query, do: URI.decode_query(uri.query), else: %{}
 
       ref = parse_referrer(uri, params["referrer"])
-      country_code = visitor_country(conn)
+      location_details = visitor_location_details(conn)
       salts = Plausible.Session.Salts.fetch()
 
       event_attrs = %{
@@ -89,7 +89,12 @@ defmodule PlausibleWeb.Api.ExternalController do
         utm_medium: query["utm_medium"],
         utm_source: query["utm_source"],
         utm_campaign: query["utm_campaign"],
-        country_code: country_code,
+        country_code: location_details[:country_code],
+        continent_geoname_id: location_details[:continent_geoname_id],
+        country_geoname_id: location_details[:country_geoname_id],
+        subdivision1_geoname_id: location_details[:subdivision1_geoname_id],
+        subdivision2_geoname_id: location_details[:subdivision2_geoname_id],
+        city_geoname_id: location_details[:city_geoname_id],
         operating_system: ua && os_name(ua),
         operating_system_version: ua && os_version(ua),
         browser: ua && browser_name(ua),
@@ -171,15 +176,61 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp visitor_country(conn) do
+  defp get_subdivision2_geoname_id(result) do
+    if result && result.subdivisions do
+      cond do
+        length(result.subdivisions) == 1 ->
+          Integer.to_string(Enum.at(result.subdivisions, 0).geoname_id)
+
+        length(result.subdivisions) > 1 ->
+          Integer.to_string(Enum.at(result.subdivisions, 1).geoname_id)
+
+        true ->
+          nil
+      end
+    else
+      nil
+    end
+  end
+
+  defp visitor_location_details(conn) do
     result =
       PlausibleWeb.RemoteIp.get(conn)
       |> Geolix.lookup()
       |> Map.get(:country)
 
-    if result && result.country do
-      result.country.iso_code
-    end
+    country_code = if result && result.country, do: result.country.iso_code, else: nil
+
+    continent_geoname_id =
+      if result && result.continent, do: Integer.to_string(result.continent.geoname_id), else: nil
+
+    country_geoname_id =
+      if result && result.country, do: Integer.to_string(result.country.geoname_id), else: nil
+
+    subdivision1_geoname_id =
+      if result && result.subdivisions && length(result.subdivisions) > 1,
+        do: Integer.to_string(Enum.at(result.subdivisions, 0).geoname_id),
+        else: country_geoname_id
+
+    subdivision2_geoname_id = get_subdivision2_geoname_id(result)
+
+    city_geoname_id =
+      if result && result.city,
+        do: Integer.to_string(result.city.geoname_id),
+        else:
+          if(result && result.subdivisions && length(result.subdivisions) > 1,
+            do: Integer.to_string(Enum.at(result.subdivisions, 1).geoname_id),
+            else: nil
+          )
+
+    _output = %{
+      country_code: country_code,
+      continent_geoname_id: continent_geoname_id,
+      country_geoname_id: country_geoname_id,
+      subdivision1_geoname_id: subdivision1_geoname_id,
+      subdivision2_geoname_id: subdivision2_geoname_id,
+      city_geoname_id: city_geoname_id
+    }
   end
 
   defp parse_referrer(_, nil), do: nil
