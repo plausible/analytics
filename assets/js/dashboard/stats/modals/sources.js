@@ -125,7 +125,7 @@ class SourcesModal extends React.Component {
         <div className="my-4 border-b border-gray-300 dark:border-gray-500"></div>
 
         <main className="modal__content">
-          <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
+          <table className="w-full table-striped table-fixed">
             <thead>
               <tr>
                 <th className="p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Source</th>

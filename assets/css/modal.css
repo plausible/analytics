@@ -31,7 +31,7 @@
   bottom: 0;
   background: rgba(0,0,0,0.6);
   z-index: 99;
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 

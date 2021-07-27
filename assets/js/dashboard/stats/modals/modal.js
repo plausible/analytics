@@ -42,32 +42,12 @@ class Modal extends React.Component {
     this.props.history.push(`/${encodeURIComponent(this.props.site.domain)}${this.props.location.search}`)
   }
 
-  /**
-   * @description
-   * Decide whether to set max-width, and if so, to what.
-   * If no max-width is available, set width instead to max-content.
-   */
-  getStyle() {
-    const { maxWidth } = this.props;
-    const styleObject = {};
-    if (maxWidth) {
-      styleObject.maxWidth = maxWidth;
-    } else {
-      styleObject.width = "max-content";
-    }
-    return styleObject;
-  }
-
   render() {
     return createPortal(
       <div className="modal is-open" onClick={this.props.onClick}>
         <div className="modal__overlay">
           <button className="modal__close"></button>
-          <div
-            ref={this.node}
-            className="modal__container dark:bg-gray-800"
-            style={this.getStyle()}
-          >
+          <div ref={this.node} className="modal__container dark:bg-gray-800" style={{maxWidth: this.props.maxWidth || '860px'}}>
             {this.props.children}
           </div>
 
