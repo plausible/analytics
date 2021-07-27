@@ -54,7 +54,13 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     test "invitations are case insensitive", %{conn: conn, user: user} do
       site = insert(:site)
-      insert(:invitation, email: String.upcase(user.email), site_id: site.id, inviter: build(:user))
+
+      insert(:invitation,
+        email: String.upcase(user.email),
+        site_id: site.id,
+        inviter: build(:user)
+      )
+
       conn = get(conn, "/sites")
 
       assert html_response(conn, 200) =~ site.domain
