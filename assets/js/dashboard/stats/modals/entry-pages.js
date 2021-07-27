@@ -102,7 +102,7 @@ class EntryPagesModal extends React.Component {
 
           <div className="my-4 border-b border-gray-300"></div>
           <main className="modal__content">
-            <table className="w-full table-striped table-fixed">
+            <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
               <thead>
                 <tr>
                   <th
