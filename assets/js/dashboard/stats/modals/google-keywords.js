@@ -81,7 +81,7 @@ class GoogleKeywordsModal extends React.Component {
       }
     } else if (this.state.searchTerms.length > 0) {
       return (
-        <table className="w-full table-striped table-fixed">
+        <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
           <thead>
             <tr>
               <th className="p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Search Term</th>
