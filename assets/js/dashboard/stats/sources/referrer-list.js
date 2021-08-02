@@ -72,16 +72,28 @@ export default class Referrers extends React.Component {
 
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={referrer.name}>
-        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15" />
-          <span className="flex px-2 group" style={{marginTop: '-26px'}} >
-            <LinkOption className="block truncate dark:text-gray-300" to={{search: query.toString()}} disabled={referrer.name === 'Direct / None'}>
-              <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} referrerPolicy="no-referrer" className="inline w-4 h-4 mr-2 -mt-px align-middle" />
+        <Bar
+          count={referrer.count}
+          all={this.state.referrers}
+          bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
+          maxWidthDeduction="4rem"
+        >
+          <span className="flex px-2 py-1.5 z-9 relative break-all group">
+            <LinkOption
+              className="block md:truncate dark:text-gray-300"
+              to={{search: query.toString()}}
+              disabled={referrer.name === 'Direct / None'}
+            >
+              <img
+                src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`}
+                referrerPolicy="no-referrer"
+                className="inline w-4 h-4 mr-2 -mt-px align-middle"
+              />
               { referrer.name }
             </LinkOption>
             { this.renderExternalLink(referrer) }
           </span>
-        </div>
+        </Bar>
         <span className="font-medium dark:text-gray-200">{numberFormatter(referrer.count)}</span>
       </div>
     )
@@ -94,20 +106,27 @@ export default class Referrers extends React.Component {
   renderList() {
     if (this.state.referrers.length > 0) {
       return (
-        <React.Fragment>
-          <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
+        <div className="flex flex-col flex-grow">
+          <div
+            className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400"
+          >
             <span>Referrer</span>
             <span>{ this.label() }</span>
           </div>
 
-          <FlipMove>
+          <FlipMove className="flex-grow">
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
-        </React.Fragment>
+        </div>
       )
-    } else {
-      return <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">No data yet</div>
     }
+    return (
+      <div
+        className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400"
+      >
+        No data yet
+      </div>
+    )
   }
 
   renderContent() {
@@ -123,13 +142,15 @@ export default class Referrers extends React.Component {
 
   render() {
     return (
-      <div className="relative p-4 bg-white rounded shadow-xl stats-item dark:bg-gray-825" style={{height: '436px'}}>
-        <LazyLoader onVisible={this.onVisible}>
+      <div
+        className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col dark:bg-gray-825 mt-6 w-full"
+      >
+        <LazyLoader onVisible={this.onVisible} className="flex flex-col flex-grow">
           <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
           { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
-            <FadeIn show={!this.state.loading}>
-              { this.renderContent() }
-            </FadeIn>
+          <FadeIn show={!this.state.loading}>
+            { this.renderContent() }
+          </FadeIn>
         </LazyLoader>
       </div>
     )

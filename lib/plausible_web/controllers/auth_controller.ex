@@ -36,7 +36,7 @@ defmodule PlausibleWeb.AuthController do
       conn
       |> redirect(to: "/login")
     else
-      user = Plausible.Auth.User.new(%Plausible.Auth.User{}, params["user"])
+      user = Plausible.Auth.User.new(params["user"])
 
       if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
         case Repo.insert(user) do
@@ -70,8 +70,76 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
+  def register_from_invitation_form(conn, %{"invitation_id" => invitation_id}) do
+    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) do
+      conn
+      |> redirect(to: "/login")
+    else
+      invitation = Repo.get_by(Plausible.Auth.Invitation, invitation_id: invitation_id)
+      changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
+
+      if invitation do
+        render(conn, "register_from_invitation_form.html",
+          changeset: changeset,
+          invitation: invitation,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+      else
+        render(conn, "invitation_expired.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+      end
+    end
+  end
+
+  def register_from_invitation(conn, %{"invitation_id" => invitation_id} = params) do
+    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) do
+      conn
+      |> redirect(to: "/login")
+    else
+      invitation = Repo.get_by(Plausible.Auth.Invitation, invitation_id: invitation_id)
+      user = Plausible.Auth.User.new(params["user"])
+
+      if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
+        case Repo.insert(user) do
+          {:ok, user} ->
+            code = Auth.issue_email_verification(user)
+            Logger.info("VERIFICATION CODE: #{code}")
+            email_template = PlausibleWeb.Email.activation_email(user, code)
+            Plausible.Mailer.send_email(email_template)
+
+            conn
+            |> put_session(:current_user_id, user.id)
+            |> put_resp_cookie("logged_in", "true",
+              http_only: false,
+              max_age: 60 * 60 * 24 * 365 * 5000
+            )
+            |> redirect(to: "/activate")
+
+          {:error, changeset} ->
+            render(conn, "register_from_invitation_form.html",
+              invitation: invitation,
+              changeset: changeset,
+              layout: {PlausibleWeb.LayoutView, "focus.html"}
+            )
+        end
+      else
+        render(conn, "register_from_invitation_form.html",
+          invitation: invitation,
+          changeset: user,
+          captcha_error: "Please complete the captcha to register",
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+      end
+    end
+  end
+
   def activate_form(conn, _params) do
     user = conn.assigns[:current_user]
+
+    has_invitation =
+      Repo.exists?(
+        from i in Plausible.Auth.Invitation,
+          where: i.email == ^user.email
+      )
 
     has_code =
       Repo.exists?(
@@ -81,22 +149,35 @@ defmodule PlausibleWeb.AuthController do
 
     render(conn, "activate.html",
       has_pin: has_code,
+      has_invitation: has_invitation,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
 
   def activate(conn, %{"code" => code}) do
     user = conn.assigns[:current_user]
+
+    has_invitation =
+      Repo.exists?(
+        from i in Plausible.Auth.Invitation,
+          where: i.email == ^user.email
+      )
+
     {code, ""} = Integer.parse(code)
 
     case Auth.verify_email(user, code) do
       :ok ->
-        redirect(conn, to: "/sites/new")
+        if has_invitation do
+          redirect(conn, to: "/sites")
+        else
+          redirect(conn, to: "/sites/new")
+        end
 
       {:error, :incorrect} ->
         render(conn, "activate.html",
           error: "Incorrect activation code",
           has_pin: true,
+          has_invitation: has_invitation,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
@@ -104,6 +185,7 @@ defmodule PlausibleWeb.AuthController do
         render(conn, "activate.html",
           error: "Code is expired, please request another one",
           has_pin: false,
+          has_invitation: has_invitation,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
     end
@@ -227,41 +309,77 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def login(conn, %{"email" => email, "password" => password}) do
-    alias Plausible.Auth.Password
+    with :ok <- check_ip_rate_limit(conn),
+         {:ok, user} <- find_user(email),
+         :ok <- check_user_rate_limit(user),
+         :ok <- check_password(user, password) do
+      login_dest = get_session(conn, :login_dest) || "/sites"
 
+      conn
+      |> put_session(:current_user_id, user.id)
+      |> put_resp_cookie("logged_in", "true",
+        http_only: false,
+        max_age: 60 * 60 * 24 * 365 * 5000
+      )
+      |> put_session(:login_dest, nil)
+      |> redirect(to: login_dest)
+    else
+      :wrong_password ->
+        render(conn, "login_form.html",
+          error: "Wrong email or password. Please try again.",
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
+      :user_not_found ->
+        Plausible.Auth.Password.dummy_calculation()
+
+        render(conn, "login_form.html",
+          error: "Wrong email or password. Please try again.",
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
+      {:rate_limit, _} ->
+        render_error(
+          conn,
+          429,
+          "Too many login attempts. Wait a minute before trying again."
+        )
+    end
+  end
+
+  @login_interval 60_000
+  @login_limit 5
+  defp check_ip_rate_limit(conn) do
+    ip_address = PlausibleWeb.RemoteIp.get(conn)
+
+    case Hammer.check_rate("login:ip:#{ip_address}", @login_interval, @login_limit) do
+      {:allow, _} -> :ok
+      {:deny, _} -> {:rate_limit, :ip_address}
+    end
+  end
+
+  defp find_user(email) do
     user =
       Repo.one(
         from u in Plausible.Auth.User,
           where: u.email == ^email
       )
 
-    if user do
-      if Password.match?(password, user.password_hash || "") do
-        login_dest = get_session(conn, :login_dest) || "/sites"
+    if user, do: {:ok, user}, else: :user_not_found
+  end
 
-        conn
-        |> put_session(:current_user_id, user.id)
-        |> put_resp_cookie("logged_in", "true",
-          http_only: false,
-          max_age: 60 * 60 * 24 * 365 * 5000
-        )
-        |> put_session(:login_dest, nil)
-        |> redirect(to: login_dest)
-      else
-        conn
-        |> render("login_form.html",
-          error: "Wrong email or password. Please try again.",
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
-      end
+  defp check_user_rate_limit(user) do
+    case Hammer.check_rate("login:user:#{user.id}", @login_interval, @login_limit) do
+      {:allow, _} -> :ok
+      {:deny, _} -> {:rate_limit, :user}
+    end
+  end
+
+  defp check_password(user, password) do
+    if Plausible.Auth.Password.match?(password, user.password_hash || "") do
+      :ok
     else
-      Password.dummy_calculation()
-
-      conn
-      |> render("login_form.html",
-        error: "Wrong email or password. Please try again.",
-        layout: {PlausibleWeb.LayoutView, "focus.html"}
-      )
+      :wrong_password
     end
   end
 

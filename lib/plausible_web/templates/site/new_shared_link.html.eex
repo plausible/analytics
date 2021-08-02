@@ -5,14 +5,14 @@
   <div class="my-4">
     <%= label f, :name, "Name", class: "block text-sm font-medium text-gray-700 dark:text-gray-100" %>
     <div class="mt-1">
-      <%= text_input f, :name, class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md", required: "required" %>
+      <%= text_input f, :name, class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md", required: "required", autocomplete: "off" %>
       <%= error_tag f, :name %>
     </div>
   </div>
   <div class="my-4">
     <%= label f, :password, "Password (optional)", class: "block text-sm font-medium text-gray-700 dark:text-gray-100" %>
     <div class="mt-1">
-      <%= password_input f, :password, class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" %>
+      <%= password_input f, :password, class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md", autocomplete: "off" %>
       <%= error_tag f, :password %>
       <p class="mt-2 text-sm text-gray-500">
         Password protection is optional. Please make sure you save it in a secure place. Once the link is created, we cannot reveal the password.

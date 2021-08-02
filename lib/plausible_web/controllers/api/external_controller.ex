@@ -220,8 +220,14 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   defp parse_body(conn) do
-    {:ok, body, _conn} = Plug.Conn.read_body(conn)
-    Jason.decode!(body)
+    case conn.body_params do
+      %Plug.Conn.Unfetched{} ->
+        {:ok, body, _conn} = Plug.Conn.read_body(conn)
+        Jason.decode!(body)
+
+      params ->
+        params
+    end
   end
 
   defp strip_www(nil), do: nil

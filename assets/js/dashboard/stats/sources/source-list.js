@@ -43,16 +43,30 @@ class AllSources extends React.Component {
     query.set('source', referrer.name)
 
     return (
-      <div className="flex items-center justify-between my-1 text-sm" key={referrer.name}>
-        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15" />
-          <span className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}} >
-            <Link className="block truncate hover:underline" to={{search: query.toString()}}>
-              <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} referrerPolicy="no-referrer" className="inline w-4 h-4 mr-2 -mt-px align-middle" />
+      <div
+        className="flex items-center justify-between my-1 text-sm"
+        key={referrer.name}
+      >
+        <Bar
+          count={referrer.count}
+          all={this.state.referrers}
+          bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
+          maxWidthDeduction="4rem"
+        >
+          <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
+            <Link
+              className="md:truncate block hover:underline"
+              to={{search: query.toString()}}
+            >
+              <img
+                src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`}
+                referrerPolicy="no-referrer"
+                className="inline w-4 h-4 mr-2 -mt-px align-middle"
+              />
               { referrer.name }
             </Link>
           </span>
-        </div>
+        </Bar>
         <span className="font-medium dark:text-gray-200">{numberFormatter(referrer.count)}</span>
       </div>
     )
@@ -99,7 +113,9 @@ class AllSources extends React.Component {
 
   render() {
     return (
-      <div className="relative p-4 bg-white rounded shadow-xl stats-item dark:bg-gray-825" style={{height: '436px'}}>
+      <div
+        className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col mt-6 w-full dark:bg-gray-825"
+      >
           { this.renderContent() }
       </div>
     )
@@ -145,15 +161,25 @@ class UTMSources extends React.Component {
     query.set(this.props.tab, referrer.name)
 
     return (
-      <div className="flex items-center justify-between my-1 text-sm" key={referrer.name}>
-        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={referrer.count} all={this.state.referrers} bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15" />
-          <span className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}} >
-            <Link className="block truncate hover:underline" to={{search: query.toString()}}>
+      <div
+        className="flex items-center justify-between my-1 text-sm"
+        key={referrer.name}
+      >
+        <Bar
+          count={referrer.count}
+          all={this.state.referrers}
+          bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
+          maxWidthDeduction="4rem"
+        >
+          <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
+            <Link 
+              className="md:truncate block hover:underline"
+              to={{search: query.toString()}}
+            >
               { referrer.name }
             </Link>
           </span>
-        </div>
+        </Bar>
         <span className="font-medium dark:text-gray-200">{numberFormatter(referrer.count)}</span>
       </div>
     )
@@ -166,17 +192,17 @@ class UTMSources extends React.Component {
   renderList() {
     if (this.state.referrers && this.state.referrers.length > 0) {
       return (
-        <React.Fragment>
+        <div className="flex flex-col flex-grow">
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>{UTM_TAGS[this.props.tab].label}</span>
             <span>{this.label()}</span>
           </div>
 
-          <FlipMove>
+          <FlipMove className="flex-grow">
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
           <MoreLink site={this.props.site} list={this.state.referrers} endpoint={UTM_TAGS[this.props.tab].endpoint} />
-        </React.Fragment>
+        </div>
       )
     } else {
       return <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">No data yet</div>
@@ -191,7 +217,7 @@ class UTMSources extends React.Component {
           { this.props.renderTabs() }
         </div>
         { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
+        <FadeIn show={!this.state.loading} className="flex flex-col flex-grow">
           { this.renderList() }
         </FadeIn>
       </React.Fragment>
@@ -200,7 +226,9 @@ class UTMSources extends React.Component {
 
   render() {
     return (
-      <div className="relative p-4 bg-white rounded shadow-xl stats-item dark:bg-gray-825" style={{height: '436px'}}>
+      <div
+        className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col dark:bg-gray-825 mt-6 w-full"
+      >
         { this.renderContent() }
       </div>
     )

@@ -5,7 +5,7 @@
     </div>
   <% end %>
   <div class="pt-6"></div>
-  <div id="stats-react-container" data-domain="<%= @site.domain %>" data-offset="<%= Timex.Timezone.total_offset(Timex.Timezone.get(@site.timezone)) %>" data-has-goals="<%= @has_goals %>" data-logged-in="<%= !!@conn.assigns[:current_user] %>" data-inserted-at="<%= @site.inserted_at %>" data-shared-link-auth="<%= assigns[:shared_link_auth] %>" data-embedded="<%= @conn.assigns[:embedded] %>" data-background="<%= @conn.assigns[:background] %>" data-selfhosted="<%= Application.get_env(:plausible, :is_selfhost) %>"></div>
+  <div id="stats-react-container" data-domain="<%= @site.domain %>" data-offset="<%= Timex.Timezone.total_offset(Timex.Timezone.get(@site.timezone)) %>" data-has-goals="<%= @has_goals %>" data-logged-in="<%= !!@conn.assigns[:current_user] %>" data-inserted-at="<%= @site.inserted_at %>" data-shared-link-auth="<%= assigns[:shared_link_auth] %>" data-embedded="<%= @conn.assigns[:embedded] %>" data-background="<%= @conn.assigns[:background] %>" data-selfhosted="<%= Application.get_env(:plausible, :is_selfhost) %>" data-current-user-role="<%= @conn.assigns[:current_user_role] %>"></div>
   <div id="modal_root"></div>
   <%= if !@conn.assigns[:current_user] && @conn.assigns[:demo] do %>
     <div class="bg-gray-50 dark:bg-gray-850">

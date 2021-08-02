@@ -1,0 +1,32 @@
+<div class="w-full max-w-lg mx-auto mt-8">
+  <div class="bg-white shadow sm:rounded-lg">
+    <div class="px-4 py-5 sm:px-8 sm:py-6">
+      <div class="mx-auto flex items-center justify-center rounded-full bg-green-100 h-12 w-12">
+        <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+      </div>
+      <h3 class="mt-6 text-center text-2xl leading-6 font-medium text-gray-900">
+        Site locked
+      </h3>
+
+      <%= if @conn.assigns[:current_user_role] == :owner do %>
+        <div class="mt-3 text-gray-500 text-center">
+          <p>
+            This site is locked because you don't have an active subscription. We are still counting stats in the background but your access to the dashboard is restricted. Subscribe with the link below to access your stats again.
+          </p>
+        </div>
+        <div class="mt-6 w-full text-center">
+          <%= link("Manage my subscription", to: "/settings", class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm") %>
+        </div>
+      <% else %>
+        <div class="mt-3 text-gray-500 text-center">
+          <p>
+            This site is currently locked and cannot be accessed. You can check back later or contact the site owner to unlock it.
+          </p>
+        </div>
+        <div class="mt-6 w-full text-center">
+          <%= link("Back to my sites", to: "/sites", class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm") %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
