@@ -29,21 +29,25 @@ export default class SearchTerms extends React.Component {
         loading: false,
         searchTerms: res.search_terms || [],
         notConfigured: res.not_configured,
-        isOwner: res.is_owner
+        isAdmin: res.is_admin
       }))
   }
 
   renderSearchTerm(term) {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={term.name}>
-        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 4rem)'}}>
-          <Bar count={term.count} all={this.state.searchTerms} bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15" />
-          <span className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}} >
-            <span className="block truncate">
+        <Bar
+          count={term.count}
+          all={this.state.searchTerms}
+          bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
+          maxWidthDeduction="4rem"
+        >
+          <span className="flex px-2 py-1.5 dark:text-gray-300 z-9 relative break-all">
+            <span className="md:truncate block">
               { term.name }
             </span>
           </span>
-        </div>
+        </Bar>
         <span className="font-medium dark:text-gray-200">{numberFormatter(term.count)}</span>
       </div>
     )
@@ -65,7 +69,7 @@ export default class SearchTerms extends React.Component {
           <RocketIcon />
           <div>The site is not connected to Google Search Keywords</div>
           <div>Cannot show search terms</div>
-          {this.state.isOwner && <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/search-console`} className="button mt-4">Connect with Google</a> }
+          {this.state.isAdmin && <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/search-console`} className="button mt-4">Connect with Google</a> }
         </div>
       )
     } else if (this.state.searchTerms.length > 0) {
@@ -107,9 +111,11 @@ export default class SearchTerms extends React.Component {
 
   render() {
     return (
-      <div className="stats-item relative bg-white dark:bg-gray-825 shadow-xl rounded p-4" style={{height: '436px'}}>
+      <div
+        className="stats-item flex flex-col relative bg-white dark:bg-gray-825 shadow-xl rounded p-4 mt-6 w-full"
+      >
         { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
+        <FadeIn show={!this.state.loading} className="flex-grow">
           { this.renderContent() }
         </FadeIn>
       </div>

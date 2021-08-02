@@ -9,6 +9,8 @@ defmodule PlausibleWeb.Endpoint do
   #
   # You should set gzip to true if you are running phx.digest
   # when deploying your static files in production.
+  plug PlausibleWeb.Tracker
+
   plug Plug.Static,
     at: "/",
     from: :plausible,
@@ -51,6 +53,5 @@ defmodule PlausibleWeb.Endpoint do
     extra: "SameSite=Lax"
 
   plug CORSPlug
-  plug PlausibleWeb.Tracker
   plug PlausibleWeb.Router
 end

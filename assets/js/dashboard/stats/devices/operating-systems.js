@@ -45,15 +45,22 @@ export default class OperatingSystems extends React.Component {
     }
 
     return (
-      <div className="flex items-center justify-between my-1 text-sm" key={os.name}>
-        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
-          <Bar count={os.count} all={this.state.operatingSystems} bg="bg-green-50 dark:gray-500 dark:bg-opacity-15" />
-          <span className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}}>
-            <Link className="block truncate hover:underline" to={{search: query.toString()}}>
+      <div
+        className="flex items-center justify-between my-1 text-sm"
+        key={os.name}
+      >
+        <Bar
+          count={os.count}
+          all={this.state.operatingSystems}
+          bg="bg-green-50 dark:gray-500 dark:bg-opacity-15"
+          maxWidthDeduction="6rem"
+        >
+          <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
+            <Link className="md:truncate block hover:underline" to={{search: query.toString()}}>
               {os.name}
             </Link>
           </span>
-        </div>
+        </Bar>
         <span className="font-medium dark:text-gray-200">{numberFormatter(os.count)} <span className="inline-block w-8 text-xs text-right">({os.percentage}%)</span></span>
       </div>
     )
@@ -83,9 +90,9 @@ export default class OperatingSystems extends React.Component {
 
   render() {
     return (
-      <LazyLoader onVisible={this.onVisible}>
+      <LazyLoader onVisible={this.onVisible} className="flex flex-col flex-grow">
         { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
+        <FadeIn show={!this.state.loading} className="flex-grow">
           { this.renderList() }
         </FadeIn>
       </LazyLoader>

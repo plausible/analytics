@@ -17,6 +17,26 @@ defmodule Plausible.BillingTest do
 
       assert Billing.usage(user) == 3
     end
+
+    test "only counts usage from sites where the user is the owner" do
+      user = insert(:user)
+
+      insert(:site,
+        domain: "site-with-no-views.com",
+        memberships: [
+          build(:site_membership, user: user, role: :owner)
+        ]
+      )
+
+      insert(:site,
+        domain: "test-site.com",
+        memberships: [
+          build(:site_membership, user: user, role: :admin)
+        ]
+      )
+
+      assert Billing.usage(user) == 0
+    end
   end
 
   describe "last_two_billing_cycles" do
@@ -66,6 +86,36 @@ defmodule Plausible.BillingTest do
       assert Billing.last_two_billing_months_usage(user, today) == {1, 1}
     end
 
+    test "only considers sites that the user owns" do
+      last_bill_date = ~D[2021-01-01]
+      today = ~D[2021-01-02]
+
+      user = insert(:user, subscription: build(:subscription, last_bill_date: last_bill_date))
+
+      owner_site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner)
+          ]
+        )
+
+      admin_site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :admin)
+          ]
+        )
+
+      create_pageviews([
+        %{domain: owner_site.domain, timestamp: ~N[2020-12-31 00:00:00]},
+        %{domain: admin_site.domain, timestamp: ~N[2020-12-31 00:00:00]},
+        %{domain: owner_site.domain, timestamp: ~N[2020-11-01 00:00:00]},
+        %{domain: admin_site.domain, timestamp: ~N[2020-11-01 00:00:00]}
+      ])
+
+      assert Billing.last_two_billing_months_usage(user, today) == {1, 1}
+    end
+
     test "gets event count from last month and this one" do
       user =
         insert(:user,
@@ -93,13 +143,15 @@ defmodule Plausible.BillingTest do
 
   describe "on_trial?" do
     test "is true with >= 0 trial days left" do
-      user = insert(:user)
+      user = insert(:user) |> Repo.preload(:subscription)
 
       assert Billing.on_trial?(user)
     end
 
     test "is false with < 0 trial days left" do
-      user = insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: -1))
+      user =
+        insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: -1))
+        |> Repo.preload(:subscription)
 
       refute Billing.on_trial?(user)
     end
@@ -181,13 +233,15 @@ defmodule Plausible.BillingTest do
         "passthrough" => user.id,
         "status" => "active",
         "next_bill_date" => "2019-06-01",
-        "unit_price" => "6.00"
+        "unit_price" => "6.00",
+        "currency" => "EUR"
       })
 
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
       assert subscription.paddle_subscription_id == @subscription_id
       assert subscription.next_bill_date == ~D[2019-06-01]
       assert subscription.next_bill_amount == "6.00"
+      assert subscription.currency_code == "EUR"
     end
 
     test "create with email address" do
@@ -203,13 +257,34 @@ defmodule Plausible.BillingTest do
         "cancel_url" => "cancel_url.com",
         "status" => "active",
         "next_bill_date" => "2019-06-01",
-        "unit_price" => "6.00"
+        "unit_price" => "6.00",
+        "currency" => "EUR"
       })
 
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
       assert subscription.paddle_subscription_id == @subscription_id
       assert subscription.next_bill_date == ~D[2019-06-01]
       assert subscription.next_bill_amount == "6.00"
+    end
+
+    test "unlocks sites if user has any locked sites" do
+      user = insert(:user)
+      site = insert(:site, locked: true, members: [user])
+
+      Billing.subscription_created(%{
+        "alert_name" => "subscription_created",
+        "subscription_id" => @subscription_id,
+        "subscription_plan_id" => @plan_id,
+        "update_url" => "update_url.com",
+        "cancel_url" => "cancel_url.com",
+        "passthrough" => user.id,
+        "status" => "active",
+        "next_bill_date" => "2019-06-01",
+        "unit_price" => "6.00",
+        "currency" => "EUR"
+      })
+
+      refute Repo.reload!(site).locked
     end
   end
 
@@ -227,12 +302,35 @@ defmodule Plausible.BillingTest do
         "passthrough" => user.id,
         "status" => "active",
         "next_bill_date" => "2019-06-01",
-        "new_unit_price" => "12.00"
+        "new_unit_price" => "12.00",
+        "currency" => "EUR"
       })
 
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
       assert subscription.paddle_plan_id == "new-plan-id"
       assert subscription.next_bill_amount == "12.00"
+    end
+
+    test "unlocks sites if subscription is changed from past_due to active" do
+      user = insert(:user)
+      subscription = insert(:subscription, user: user, status: "past_due")
+      site = insert(:site, locked: true, members: [user])
+
+      Billing.subscription_updated(%{
+        "alert_name" => "subscription_updated",
+        "subscription_id" => subscription.paddle_subscription_id,
+        "subscription_plan_id" => "new-plan-id",
+        "update_url" => "update_url.com",
+        "cancel_url" => "cancel_url.com",
+        "passthrough" => user.id,
+        "old_status" => "past_due",
+        "status" => "active",
+        "next_bill_date" => "2019-06-01",
+        "new_unit_price" => "12.00",
+        "currency" => "EUR"
+      })
+
+      refute Repo.reload!(site).locked
     end
   end
 

@@ -59,8 +59,7 @@ defmodule Plausible.Auth do
   end
 
   def create_user(name, email, pwd) do
-    %Auth.User{}
-    |> Auth.User.new(%{name: name, email: email, password: pwd, password_confirmation: pwd})
+    Auth.User.new(%{name: name, email: email, password: pwd, password_confirmation: pwd})
     |> Repo.insert()
   end
 
@@ -68,18 +67,30 @@ defmodule Plausible.Auth do
     Repo.get_by(Auth.User, opts)
   end
 
-  def user_completed_setup?(user) do
+  def has_active_sites?(user, roles \\ [:owner, :admin, :viewer]) do
     domains =
       Repo.all(
         from u in Plausible.Auth.User,
           where: u.id == ^user.id,
           join: sm in Plausible.Site.Membership,
           on: sm.user_id == u.id,
+          where: sm.role in ^roles,
           join: s in Plausible.Site,
           on: s.id == sm.site_id,
           select: s.domain
       )
 
     Stats.has_pageviews?(domains)
+  end
+
+  def user_owns_sites?(user) do
+    Repo.exists?(
+      from(s in Plausible.Site,
+        join: sm in Plausible.Site.Membership,
+        on: sm.site_id == s.id,
+        where: sm.user_id == ^user.id,
+        where: sm.role == :owner
+      )
+    )
   end
 end

@@ -5,11 +5,11 @@ We're super excited to have you on board!
 <br /><br />
 Here are five steps to get the most out of your Plausible experience:
 <br /><br />
-* Serve the script as a <%= link("first party connection from your custom domain", to: "https://docs.plausible.io/custom-domain") %><br />
-* <%= link("Enable email reports", to: "https://docs.plausible.io/email-reports/") %> and notifications for <%= link("traffic spikes", to: "https://docs.plausible.io/traffic-spikes/") %><br />
-* <%= link("Integrate with Search Console", to: "https://docs.plausible.io/google-search-console-integration/") %> to get keyword phrases people find your site with<br />
-* Set up some easy goals including <%= link("404 error pages", to: "https://docs.plausible.io/404-error-pages-tracking") %> and <%= link("outbound link clicks", to: "https://docs.plausible.io/outbound-link-click-tracking/") %><br />
-* <%= link("Opt out from counting your own visits", to: "https://docs.plausible.io/excluding/") %><br />
+* <%= link("Enable email reports", to: "https://docs.plausible.io/email-reports/") %> and notifications for <%= link("traffic spikes", to: "https://plausible.io/docs/traffic-spikes") %><br />
+* <%= link("Integrate with Search Console", to: "https://plausible.io/docs/google-search-console-integration") %> to get keyword phrases people find your site with<br />
+* Set up some easy goals including <%= link("404 error pages", to: "https://plausible.io/docs/404-error-pages-tracking") %> and <%= link("outbound link clicks", to: "https://plausible.io/docs/outbound-link-click-tracking/") %><br />
+* <%= link("Opt out from counting your own visits", to: "https://plausible.io/docs/excluding") %><br />
+* If you're concerned about adblockers, <%= link("set up a proxy to bypass them", to: "https://plausible.io/docs/proxy/introduction") %><br />
 <br /><br />
 Then you're ready to start exploring your fast loading, ethical and actionable <%= link("Plausible dashboard", to: "https://plausible.io/sites") %>.
 <br /><br />

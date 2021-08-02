@@ -7,6 +7,8 @@
 @import "tooltip.css";
 @import "flatpickr.css";
 
+[x-cloak] { display: none; }
+
 .button {
   @apply inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md leading-5 transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
 }
@@ -245,8 +247,7 @@ blockquote {
 }
 
 .stats-item {
-  @apply mt-6;
-  width: 100%;
+  min-height: 436px;
 }
 
 @screen md {
@@ -255,6 +256,12 @@ blockquote {
     margin-right: 6px;
     width: calc(50% - 6px);
     position: relative;
+    min-height: initial;
+    height: 436px;
+  }
+
+  .stats-item__header {
+    height: inherit;
   }
 }
 
@@ -306,5 +313,18 @@ iframe[hidden] {
 }
 
 .pagination-link[disabled] {
-  @apply cursor-default bg-gray-100 pointer-events-none;
+  @apply cursor-default bg-gray-100 dark:bg-gray-300 pointer-events-none;
 }
+
+.flatpickr-calendar.static.open {
+  top: 12px;
+}
+
+@media (max-width: 768px) {
+  .flatpickr-wrapper {
+    position: absolute!important;
+    right: 0!important;
+    left: 0!important;
+  }
+}
+

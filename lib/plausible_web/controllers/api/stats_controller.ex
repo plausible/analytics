@@ -104,6 +104,49 @@ defmodule PlausibleWeb.Api.StatsController do
         }
       end
 
+    time_on_page =
+      if query.filters["page"] do
+        [{success, duration}, {prev_success, prev_duration}] =
+          Task.yield_many(
+            [
+              Task.async(fn ->
+                {:ok, page_times} = Stats.page_times_by_page_url(site, query)
+
+                page_times
+              end),
+              Task.async(fn ->
+                {:ok, page_times} = Stats.page_times_by_page_url(site, prev_query)
+
+                page_times
+              end)
+            ],
+            5000
+          )
+          |> Enum.map(fn {task, response} ->
+            case response do
+              nil ->
+                Task.shutdown(task, :brutal_kill)
+                {nil, nil}
+
+              {:ok, page_times} ->
+                result = Enum.at(page_times.rows, 0)
+                result = if result, do: Enum.at(result, 0), else: nil
+                if result, do: {:ok, round(result)}, else: {nil, nil}
+
+              _ ->
+                response
+            end
+          end)
+
+        if success == :ok && prev_success == :ok do
+          %{
+            name: "Time on Page",
+            duration: duration,
+            change: percent_change(prev_duration, duration)
+          }
+        end
+      end
+
     stats =
       [
         %{
@@ -117,7 +160,8 @@ defmodule PlausibleWeb.Api.StatsController do
           change: percent_change(prev_pageviews, pageviews)
         },
         %{name: "Bounce rate", percentage: bounce_rate, change: change_bounce_rate},
-        visit_duration
+        visit_duration,
+        time_on_page
       ]
       |> Enum.filter(& &1)
 
@@ -140,11 +184,11 @@ defmodule PlausibleWeb.Api.StatsController do
   def sources(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
-    include = if params["include"], do: String.split(params["include"], ","), else: []
+    include_details = params["detailed"] == "true"
     limit = if params["limit"], do: String.to_integer(params["limit"])
     page = if params["page"], do: String.to_integer(params["page"])
     show_noref = params["show_noref"] == "true"
-    json(conn, Stats.top_sources(site, query, limit || 9, page || 1, show_noref, include))
+    json(conn, Stats.top_sources(site, query, limit || 9, page || 1, show_noref, include_details))
   end
 
   def utm_mediums(conn, params) do
@@ -187,8 +231,8 @@ defmodule PlausibleWeb.Api.StatsController do
       nil ->
         {_, total_visitors} = Stats.pageviews_and_visitors(site, query)
         user_id = get_session(conn, :current_user_id)
-        is_owner = user_id && Plausible.Sites.is_owner?(user_id, site)
-        json(conn, %{not_configured: true, is_owner: is_owner, total_visitors: total_visitors})
+        is_admin = user_id && Plausible.Sites.has_admin_access?(user_id, site)
+        json(conn, %{not_configured: true, is_admin: is_admin, total_visitors: total_visitors})
 
       {:ok, terms} ->
         {_, total_visitors} = Stats.pageviews_and_visitors(site, query)
@@ -203,10 +247,10 @@ defmodule PlausibleWeb.Api.StatsController do
   def referrer_drilldown(conn, %{"referrer" => referrer} = params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
-    include = if params["include"], do: String.split(params["include"], ","), else: []
+    include_details = params["detailed"] == "true"
     limit = params["limit"] || 9
 
-    referrers = Stats.referrer_drilldown(site, query, referrer, include, limit)
+    referrers = Stats.referrer_drilldown(site, query, referrer, include_details, limit)
     {_, total_visitors} = Stats.pageviews_and_visitors(site, query)
     json(conn, %{referrers: referrers, total_visitors: total_visitors})
   end
@@ -223,11 +267,11 @@ defmodule PlausibleWeb.Api.StatsController do
   def pages(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params)
-    include = if params["include"], do: String.split(params["include"], ","), else: []
+    include_details = params["detailed"] == "true"
     limit = if params["limit"], do: String.to_integer(params["limit"])
     page = if params["page"], do: String.to_integer(params["page"])
 
-    json(conn, Stats.top_pages(site, query, limit || 9, page || 1, include))
+    json(conn, Stats.top_pages(site, query, limit || 9, page || 1, include_details))
   end
 
   def entry_pages(conn, params) do
@@ -339,5 +383,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def handle_errors(conn, %{kind: kind, reason: reason}) do
     json(conn, %{error: Exception.format_banner(kind, reason)})
+  end
+
+  def filter_suggestions(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, params)
+
+    json(conn, Stats.make_suggestions(site, query, params["filter_name"], params["q"]))
   end
 end

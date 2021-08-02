@@ -1,6 +1,6 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
-import Chart from 'chart.js'
+import Chart from 'chart.js/auto';
 import { eventName, navigateToQuery } from '../query'
 import numberFormatter, {durationFormatter} from '../number-formatter'
 import * as api from '../api'
@@ -26,6 +26,7 @@ function buildDataSet(plot, present_index, ctx, label) {
         borderColor: 'rgba(101,116,205)',
         pointBackgroundColor: 'rgba(101,116,205)',
         backgroundColor: gradient,
+        fill: true
       },
       {
         label: label,
@@ -35,6 +36,7 @@ function buildDataSet(plot, present_index, ctx, label) {
         borderColor: 'rgba(101,116,205)',
         pointBackgroundColor: 'rgba(101,116,205)',
         backgroundColor: gradient,
+        fill: true
     }]
   } else {
     return [{
@@ -44,6 +46,7 @@ function buildDataSet(plot, present_index, ctx, label) {
       borderColor: 'rgba(101,116,205)',
       pointBackgroundColor: 'rgba(101,116,205)',
       backgroundColor: gradient,
+      fill: true
     }]
   }
 }
@@ -64,7 +67,7 @@ const DAYS_ABBREV = [
 ]
 
 function dateFormatter(interval, longForm) {
-  return function(isoDate) {
+  return function(isoDate, index, ticks) {
     let date = new Date(isoDate)
 
     if (interval === 'month') {
@@ -97,6 +100,7 @@ class LineGraph extends React.Component {
   constructor(props) {
     super(props);
     this.regenerateChart = this.regenerateChart.bind(this);
+    this.updateWindowDimensions =  this.updateWindowDimensions.bind(this);
   }
 
   regenerateChart() {
@@ -113,75 +117,71 @@ class LineGraph extends React.Component {
       },
       options: {
         animation: false,
-        legend: {display: false},
-        responsive: true,
-        elements: {line: {tension: 0}, point: {radius: 0}},
-        onClick: this.onClick.bind(this),
-        tooltips: {
-          mode: 'index',
-          intersect: false,
-          xPadding: 10,
-          yPadding: 10,
-          titleFontSize: 18,
-          footerFontSize: 14,
-          bodyFontSize: 14,
-          backgroundColor: 'rgba(25, 30, 56)',
-          titleMarginBottom: 8,
-          bodySpacing: 6,
-          footerMarginTop: 8,
-          xPadding: 16,
-          yPadding: 12,
-          multiKeyBackground: 'none',
-          callbacks: {
-            title: function(dataPoints) {
-              const data = dataPoints[0]
-              return dateFormatter(graphData.interval, true)(data.xLabel)
-            },
-            beforeBody: function() {
-              this.drawnLabels = {}
-            },
-            label: function(item) {
-              const dataset = this._data.datasets[item.datasetIndex]
-              if (!this.drawnLabels[dataset.label]) {
-                this.drawnLabels[dataset.label] = true
-                const pluralizedLabel = item.yLabel === 1 ? dataset.label.slice(0, -1) : dataset.label
-                return ` ${item.yLabel} ${pluralizedLabel}`
-              }
-            },
-            footer: function(dataPoints) {
-              if (graphData.interval === 'month') {
-                return 'Click to view month'
-              } else if (graphData.interval === 'date') {
-                return 'Click to view day'
+        plugins: {
+          legend: {display: false},
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            titleFont: {size: 18},
+            footerFont: {size: 14},
+            bodyFont: {size: 14},
+            backgroundColor: 'rgba(25, 30, 56)',
+            titleMarginBottom: 8,
+            bodySpacing: 6,
+            footerMarginTop: 8,
+            padding: {x: 10, y: 10},
+            multiKeyBackground: 'none',
+            callbacks: {
+              title: function(dataPoints) {
+                const data = dataPoints[0]
+                return dateFormatter(graphData.interval, true)(data.label)
+              },
+              beforeBody: function() {
+                this.drawnLabels = {}
+              },
+              label: function(item) {
+                const dataset = item.dataset
+                if (!this.drawnLabels[dataset.label]) {
+                  this.drawnLabels[dataset.label] = true
+                  const pluralizedLabel = item.formattedValue === "1" ? dataset.label.slice(0, -1) : dataset.label
+                  return ` ${item.formattedValue} ${pluralizedLabel}`
+                }
+              },
+              footer: function(dataPoints) {
+                if (graphData.interval === 'month') {
+                  return 'Click to view month'
+                } else if (graphData.interval === 'date') {
+                  return 'Click to view day'
+                }
               }
             }
-          }
+          },
         },
+        responsive: true,
+        onResize: this.updateWindowDimensions,
+        elements: {line: {tension: 0}, point: {radius: 0}},
+        onClick: this.onClick.bind(this),
         scales: {
-          yAxes: [{
+          y: {
+            beginAtZero: true,
             ticks: {
               callback: numberFormatter,
-              beginAtZero: true,
-              autoSkip: true,
               maxTicksLimit: 8,
-              fontColor: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
+              color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             },
-            gridLines: {
+            grid: {
               zeroLineColor: 'transparent',
               drawBorder: false,
             }
-          }],
-          xAxes: [{
-            gridLines: {
-              display: false,
-            },
+          },
+          x: {
+            grid: {display: false},
             ticks: {
-              autoSkip: true,
               maxTicksLimit: 8,
-              callback: dateFormatter(graphData.interval),
-              fontColor: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
+              callback: function(val, index, ticks) { return dateFormatter(graphData.interval)(this.getLabelForValue(val)) },
+              color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             }
-          }]
+          }
         }
       }
     });
@@ -204,14 +204,26 @@ class LineGraph extends React.Component {
     }
 
     if (prevProps.darkTheme !== this.props.darkTheme) {
+      this.chart.destroy();
       this.chart = this.regenerateChart();
       this.chart.update();
     }
   }
 
+  /**
+   * The current ticks' limits are set to treat iPad (regular/Mini/Pro) as a regular screen.
+   * @param {*} chart - The chart instance.
+   * @param {*} dimensions - An object containing the new dimensions *of the chart.*
+   */
+  updateWindowDimensions(chart, dimensions) {
+    chart.options.scales.x.ticks.maxTicksLimit = dimensions.width < 720 ? 5 : 8
+    chart.options.scales.y.ticks.maxTicksLimit = dimensions.height < 233 ? 3 : 8
+  }
+
   onClick(e) {
     const element = this.chart.getElementsAtEventForMode(e, 'index', {intersect: false})[0]
-    const date = element._chart.config.data.labels[element._index]
+    const date = this.chart.data.labels[element.index]
+
     if (this.props.graphData.interval === 'month') {
       navigateToQuery(
         this.props.history,
@@ -290,13 +302,15 @@ class LineGraph extends React.Component {
   }
 
   downloadLink() {
-    const endpoint = `/${encodeURIComponent(this.props.site.domain)}/visitors.csv${api.serializeQuery(this.props.query)}`
+    if (this.props.query.period !== 'realtime') {
+      const endpoint = `/${encodeURIComponent(this.props.site.domain)}/visitors.csv${api.serializeQuery(this.props.query)}`
 
-    return (
-      <a href={endpoint} download>
-        <svg className="absolute w-4 h-5 text-gray-700 feather dark:text-gray-300 -top-8 right-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-      </a>
-    )
+      return (
+        <a href={endpoint} download>
+          <svg className="absolute w-4 h-5 text-gray-700 feather dark:text-gray-300 -top-8 right-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        </a>
+      )
+    }
   }
 
   samplingNotice() {
@@ -375,7 +389,7 @@ export default class VisitorGraph extends React.Component {
   render() {
     return (
       <LazyLoader onVisible={this.onVisible}>
-        <div className="relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825 main-graph">
+        <div className="relative w-full bg-white rounded shadow-xl dark:bg-gray-825 main-graph">
           { this.state.loading && <div className="graph-inner"><div className="pt-24 mx-auto loading sm:pt-32 md:pt-48"><div></div></div></div> }
           { this.renderInner() }
         </div>

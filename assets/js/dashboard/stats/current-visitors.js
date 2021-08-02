@@ -1,7 +1,7 @@
 import React from 'react';
-import * as api from '../api'
 import { Link } from 'react-router-dom'
-import { countFilters } from '../query';
+import * as api from '../api'
+import { appliedFilters } from '../query';
 
 export default class CurrentVisitors extends React.Component {
   constructor(props) {
@@ -20,7 +20,7 @@ export default class CurrentVisitors extends React.Component {
   }
 
   render() {
-    if (countFilters(this.props.query) !== 0) { return null }
+    if (appliedFilters(this.props.query).length >= 1) { return null }
 
     const query = new URLSearchParams(window.location.search)
     query.set('period', 'realtime')
@@ -28,15 +28,15 @@ export default class CurrentVisitors extends React.Component {
     const { currentVisitors } = this.state;
     if (currentVisitors !== null) {
       return (
-        <Link to={{search: query.toString()}} className="block ml-2 mr-auto text-sm font-bold text-gray-500 dark:text-gray-300">
-          <svg className="inline w-2 mr-2 text-green-500 fill-current" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="8" cy="8" r="8"/>
+        <Link to={{search: query.toString()}} className="block ml-1 md:ml-2 mr-auto text-xs md:text-sm font-bold text-gray-500 dark:text-gray-300">
+          <svg className="inline w-2 mr-1 md:mr-2 text-green-500 fill-current" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="8" r="8" />
           </svg>
-          {currentVisitors} current visitor{currentVisitors === 1 ? '' : 's'}
+          {currentVisitors} <span className="hidden sm:inline-block">current visitor{currentVisitors === 1 ? '' : 's'}</span>
         </Link>
       )
-    } else {
-      return null
     }
+
+    return null
   }
 }

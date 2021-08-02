@@ -1,13 +1,17 @@
-(function(window, plausibleHost){
+(function(){
   'use strict';
 
   var location = window.location
   var document = window.document
 
-  var scriptEl = document.querySelector('[src*="' + plausibleHost +'"]')
-  var domain = scriptEl && scriptEl.getAttribute('data-domain')
+  {{#if compat}}
+  var scriptEl = document.getElementById('plausible');
+  {{else}}
+  var scriptEl = document.currentScript;
+  {{/if}}
+  var endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint(scriptEl)
   var plausible_ignore = window.localStorage.plausible_ignore;
-  {{#if exclusionMode}}
+  {{#if exclusions}}
   var excludedPaths = scriptEl && scriptEl.getAttribute('data-exclude').split(',');
   {{/if}}
   var lastPage;
@@ -16,11 +20,23 @@
     console.warn('Ignoring Event: ' + reason);
   }
 
+  function defaultEndpoint(el) {
+    {{#if compat}}
+    var pathArray = el.src.split( '/' );
+    var protocol = pathArray[0];
+    var host = pathArray[2];
+    return protocol + '//' + host  + '/api/event';
+    {{else}}
+    return new URL(el.src).origin + '/api/event'
+    {{/if}}
+  }
+
+
   function trigger(eventName, options) {
-    if (/^localhost$|^127(?:\.[0-9]+){0,2}\.[0-9]+$|^(?:0*\:)*?:?0*1$/.test(location.hostname) || location.protocol === 'file:') return warn('localhost');
+    if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') return warn('localhost');
     if (window.phantom || window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) return;
     if (plausible_ignore=="true") return warn('localStorage flag')
-    {{#if exclusionMode}}
+    {{#if exclusions}}
     if (excludedPaths)
       for (var i = 0; i < excludedPaths.length; i++)
         if (eventName == "pageview" && location.pathname.match(new RegExp('^' + excludedPaths[i].trim().replace(/\*\*/g, '.*').replace(/([^\.])\*/g, '$1[^\\s\/]*') + '\/?$')))
@@ -30,7 +46,7 @@
     var payload = {}
     payload.n = eventName
     payload.u = location.href
-    payload.d = domain
+    payload.d = scriptEl.getAttribute('data-domain')
     payload.r = document.referrer || null
     payload.w = window.innerWidth
     if (options && options.meta) {
@@ -39,12 +55,12 @@
     if (options && options.props) {
       payload.p = JSON.stringify(options.props)
     }
-    {{#if hashMode}}
+    {{#if hash}}
     payload.h = 1
     {{/if}}
 
     var request = new XMLHttpRequest();
-    request.open('POST', plausibleHost + '/api/event', true);
+    request.open('POST', endpoint, true);
     request.setRequestHeader('Content-Type', 'text/plain');
 
     request.send(JSON.stringify(payload));
@@ -57,7 +73,7 @@
   }
 
   function page() {
-    {{#unless hashMode}}
+    {{#unless hash}}
     if (lastPage === location.pathname) return;
     {{/unless}}
     lastPage = location.pathname
@@ -70,7 +86,7 @@
     }
   }
 
-  {{#if outboundLinks}}
+  {{#if outbound_links}}
   function handleOutbound(event) {
     var link = event.target;
     var middle = event.type == "auxclick" && event.which == 2;
@@ -101,39 +117,33 @@
   }
   {{/if}}
 
-  try {
-    {{#if hashMode}}
-    window.addEventListener('hashchange', page)
-    {{else}}
-    var his = window.history
-    if (his.pushState) {
-      var originalPushState = his['pushState']
-      his.pushState = function() {
-        originalPushState.apply(this, arguments)
-        page();
-      }
-      window.addEventListener('popstate', page)
+  {{#if hash}}
+  window.addEventListener('hashchange', page)
+  {{else}}
+  var his = window.history
+  if (his.pushState) {
+    var originalPushState = his['pushState']
+    his.pushState = function() {
+      originalPushState.apply(this, arguments)
+      page();
     }
-
-    {{/if}}
-    {{#if outboundLinks}}
-    registerOutboundLinkEvents()
-    {{/if}}
-
-
-    var queue = (window.plausible && window.plausible.q) || []
-    window.plausible = trigger
-    for (var i = 0; i < queue.length; i++) {
-      trigger.apply(this, queue[i])
-    }
-
-    if (document.visibilityState === 'prerender') {
-      document.addEventListener("visibilitychange", handleVisibilityChange);
-    } else {
-      page()
-    }
-  } catch (e) {
-    console.error(e)
-    new Image().src = plausibleHost + '/api/error?message=' +  encodeURIComponent(e.message);
+    window.addEventListener('popstate', page)
   }
-})(window, '<%= base_url %>');
+  {{/if}}
+
+  {{#if outbound_links}}
+  registerOutboundLinkEvents()
+  {{/if}}
+
+  var queue = (window.plausible && window.plausible.q) || []
+  window.plausible = trigger
+  for (var i = 0; i < queue.length; i++) {
+    trigger.apply(this, queue[i])
+  }
+
+  if (document.visibilityState === 'prerender') {
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+  } else {
+    page()
+  }
+})();

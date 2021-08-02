@@ -203,6 +203,38 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert get_session(conn, :current_user_id) == nil
       assert html_response(conn, 200) =~ "Enter your email and password"
     end
+
+    test "limits login attempts to 5 per minute" do
+      user = insert(:user, password: "password")
+
+      build_conn()
+      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> post("/login", email: user.email, password: "wrong")
+
+      build_conn()
+      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> post("/login", email: user.email, password: "wrong")
+
+      build_conn()
+      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> post("/login", email: user.email, password: "wrong")
+
+      build_conn()
+      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> post("/login", email: user.email, password: "wrong")
+
+      build_conn()
+      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> post("/login", email: user.email, password: "wrong")
+
+      conn =
+        build_conn()
+        |> put_req_header("x-forwarded-for", "1.1.1.1")
+        |> post("/login", email: user.email, password: "wrong")
+
+      assert get_session(conn, :current_user_id) == nil
+      assert html_response(conn, 429) =~ "Too many login attempts"
+    end
   end
 
   describe "GET /password/request-reset" do
@@ -269,6 +301,20 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = get(conn, "/settings")
       assert html_response(conn, 200) =~ "10k pageviews"
       assert html_response(conn, 200) =~ "monthly billing"
+    end
+
+    test "shows yearly subscription", %{conn: conn, user: user} do
+      insert(:subscription, paddle_plan_id: "590752", user: user)
+      conn = get(conn, "/settings")
+      assert html_response(conn, 200) =~ "100k pageviews"
+      assert html_response(conn, 200) =~ "yearly billing"
+    end
+
+    test "shows free subscription", %{conn: conn, user: user} do
+      insert(:subscription, paddle_plan_id: "free_10k", user: user)
+      conn = get(conn, "/settings")
+      assert html_response(conn, 200) =~ "10k pageviews"
+      assert html_response(conn, 200) =~ "N/A billing"
     end
   end
 

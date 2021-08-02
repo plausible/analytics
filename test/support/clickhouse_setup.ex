@@ -102,7 +102,7 @@ defmodule Plausible.Test.ClickhouseSetup do
         pathname: "/irrelevant",
         domain: "test-site.com",
         session_id: @conversion_1_session_id,
-        timestamp: ~N[2019-01-01 23:00:00]
+        timestamp: ~N[2019-01-01 23:00:01]
       },
       %{
         name: "pageview",

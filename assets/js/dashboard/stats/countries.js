@@ -34,7 +34,7 @@ class Countries extends React.Component {
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
       this.setState({loading: true, countries: null})
-      this.fetchCountries().then(this.drawMap.bind(this))
+      this.fetchCountries().then(this.drawMap)
     }
 
     if (this.props.darkTheme !== prevProps.darkTheme) {
@@ -42,7 +42,7 @@ class Countries extends React.Component {
         document.getElementById('map-container').removeChild(document.querySelector('.datamaps-hoverover'));
         document.getElementById('map-container').removeChild(document.querySelector('.datamap'));
       }
-      this.drawMap();
+      this.fetchCountries().then(this.drawMap)
     }
   }
 
@@ -148,7 +148,9 @@ class Countries extends React.Component {
 
   render() {
     return (
-      <div className="relative p-4 bg-white rounded shadow-xl stats-item dark:bg-gray-825" style={{height: '436px'}}>
+      <div
+        className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col dark:bg-gray-825 mt-6 w-full"
+      >
         <LazyLoader onVisible={this.onVisible}>
           { this.state.loading && <div className="mx-auto my-32 loading"><div></div></div> }
           <FadeIn show={!this.state.loading}>

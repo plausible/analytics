@@ -21,19 +21,24 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
-  def settings_tabs() do
+  def settings_tabs(conn) do
     [
       [key: "General", value: "general"],
+      [key: "People", value: "people"],
       [key: "Visibility", value: "visibility"],
       [key: "Goals", value: "goals"],
       [key: "Search Console", value: "search-console"],
       [key: "Email reports", value: "email-reports"],
-      if !is_selfhost() do
+      if !is_selfhost() && conn.assigns[:site].custom_domain do
         [key: "Custom domain", value: "custom-domain"]
       else
         nil
       end,
-      [key: "Danger zone", value: "danger-zone"]
+      if conn.assigns[:current_user_role] == :owner do
+        [key: "Danger zone", value: "danger-zone"]
+      else
+        nil
+      end
     ]
   end
 
@@ -47,9 +52,6 @@ defmodule PlausibleWeb.LayoutView do
 
       days when days == 0 ->
         "Trial ends today"
-
-      days when days < 0 ->
-        "Trial over, upgrade now"
     end
   end
 

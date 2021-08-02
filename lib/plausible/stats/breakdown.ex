@@ -71,9 +71,7 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp filter_converted_sessions(db_query, site, query) do
-    event = query.filters["event:name"]
-
-    if is_binary(event) do
+    if query.filters["event:name"] do
       converted_sessions =
         from(e in query_events(site, query),
           select: %{session_id: fragment("DISTINCT ?", e.session_id)}

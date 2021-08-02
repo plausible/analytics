@@ -1,80 +1,33 @@
 defmodule Plausible.Billing.Plans do
-  @monthly_plans [
-    %{product_id: "558018", cost: "$6", limit: 10_000, cycle: "monthly"},
-    %{product_id: "558745", cost: "$12", limit: 100_000, cycle: "monthly"},
-    %{product_id: "597485", cost: "$18", limit: 200_000, cycle: "monthly"},
-    %{product_id: "597487", cost: "$27", limit: 500_000, cycle: "monthly"},
-    %{product_id: "597642", cost: "$48", limit: 1_000_000, cycle: "monthly"},
-    %{product_id: "597309", cost: "$69", limit: 2_000_000, cycle: "monthly"},
-    %{product_id: "597311", cost: "$99", limit: 5_000_000, cycle: "monthly"},
-    %{product_id: "642352", cost: "$150", limit: 10_000_000, cycle: "monthly"},
-    %{product_id: "642355", cost: "$225", limit: 20_000_000, cycle: "monthly"},
-    %{product_id: "650652", cost: "$330", limit: 50_000_000, cycle: "monthly"}
+  @unlisted_plans_v1 [
+    %{limit: 150_000_000, yearly_product_id: "648089", yearly_cost: "$4800"}
   ]
 
-  @yearly_plans [
-    %{product_id: "572810", cost: "$48", monthly_cost: "$4", limit: 10_000, cycle: "yearly"},
-    %{product_id: "590752", cost: "$96", monthly_cost: "$8", limit: 100_000, cycle: "yearly"},
-    %{product_id: "597486", cost: "$144", monthly_cost: "$12", limit: 200_000, cycle: "yearly"},
-    %{product_id: "597488", cost: "$216", monthly_cost: "$18", limit: 500_000, cycle: "yearly"},
-    %{product_id: "597643", cost: "$384", monthly_cost: "$32", limit: 1_000_000, cycle: "yearly"},
-    %{product_id: "597310", cost: "$552", monthly_cost: "$46", limit: 2_000_000, cycle: "yearly"},
-    %{product_id: "597312", cost: "$792", monthly_cost: "$66", limit: 5_000_000, cycle: "yearly"},
-    %{
-      product_id: "642354",
-      cost: "$1200",
-      monthly_cost: "$100",
-      limit: 10_000_000,
-      cycle: "yearly"
-    },
-    %{
-      product_id: "642356",
-      cost: "$1800",
-      monthly_cost: "$150",
-      limit: 20_000_000,
-      cycle: "yearly"
-    },
-    %{
-      product_id: "650653",
-      cost: "$2640",
-      monthly_cost: "$220",
-      limit: 50_000_000,
-      cycle: "yearly"
-    },
-    %{
-      product_id: "648089",
-      cost: "$4800",
-      monthly_cost: "$400",
-      limit: 150_000_000,
-      cycle: "yearly"
-    }
+  @unlisted_plans_v2 [
+    %{limit: 10_000_000, monthly_product_id: "655350", yearly_cost: "$250"}
   ]
 
-  @all_plans @monthly_plans ++ @yearly_plans
+  @v2_pricing_date ~D[2021-05-13]
 
-  def plans do
-    monthly =
-      @monthly_plans
-      |> Enum.map(fn plan -> {String.to_atom(number_format(plan[:limit])), plan} end)
-      |> Enum.into(%{})
+  def plans_for(user) do
+    raw_plans =
+      if Timex.before?(user.inserted_at, @v2_pricing_date) do
+        plans_v1()
+      else
+        plans_v2()
+      end
 
-    yearly =
-      @yearly_plans
-      |> Enum.map(fn plan -> {String.to_atom(number_format(plan[:limit])), plan} end)
-      |> Enum.into(%{})
-
-    %{
-      monthly: monthly,
-      yearly: yearly
-    }
+    Enum.map(raw_plans, fn plan -> Map.put(plan, :volume, number_format(plan[:limit])) end)
   end
 
-  def yearly_plan_ids do
-    Enum.map(@yearly_plans, fn plan -> plan[:product_id] end)
+  def all_yearly_plan_ids do
+    Enum.map(all_plans(), fn plan -> plan[:yearly_product_id] end)
   end
 
   def for_product_id(product_id) do
-    Enum.find(@all_plans, fn plan -> plan[:product_id] == product_id end)
+    Enum.find(all_plans(), fn plan ->
+      product_id in [plan[:monthly_product_id], plan[:yearly_product_id]]
+    end)
   end
 
   def subscription_quota("free_10k"), do: "10k"
@@ -90,39 +43,47 @@ defmodule Plausible.Billing.Plans do
 
   def subscription_interval(product_id) do
     case for_product_id(product_id) do
-      nil -> raise "Unknown interval for subscription #{product_id}"
-      product -> product[:cycle]
+      nil ->
+        raise "Unknown interval for subscription #{product_id}"
+
+      plan ->
+        if product_id == plan[:monthly_product_id] do
+          "monthly"
+        else
+          "yearly"
+        end
     end
   end
 
-  def suggested_plan_name(usage) do
-    plan = suggested_plan(usage)
-    number_format(plan[:limit]) <> "/mo"
-  end
-
-  def suggested_plan_cost(usage) do
-    plan = suggested_plan(usage)
-    plan[:cost] <> "/mo"
-  end
-
-  def suggested_plan_cost_yearly(usage) do
-    plan = Enum.find(@yearly_plans, fn plan -> usage < plan[:limit] end)
-    plan[:monthly_cost] <> "/mo"
-  end
-
-  defp suggested_plan(usage) do
-    Enum.find(@monthly_plans, fn plan -> usage < plan[:limit] end)
-  end
+  def allowance(%Plausible.Billing.Subscription{paddle_plan_id: "free_10k"}), do: 10_000
 
   def allowance(subscription) do
-    found = Enum.find(@all_plans, fn plan -> plan[:product_id] == subscription.paddle_plan_id end)
+    found = for_product_id(subscription.paddle_plan_id)
 
     if found do
       Map.fetch!(found, :limit)
     end
   end
 
+  def suggested_plan(user, usage) do
+    Enum.find(plans_for(user), fn plan -> usage < plan[:limit] end)
+  end
+
   defp number_format(num) do
     PlausibleWeb.StatsView.large_number_format(num)
+  end
+
+  defp all_plans() do
+    plans_v1() ++ @unlisted_plans_v1 ++ plans_v2() ++ @unlisted_plans_v2
+  end
+
+  defp plans_v1() do
+    File.read!(Application.app_dir(:plausible) <> "/priv/plans_v1.json")
+    |> Jason.decode!(keys: :atoms)
+  end
+
+  defp plans_v2() do
+    File.read!(Application.app_dir(:plausible) <> "/priv/plans_v2.json")
+    |> Jason.decode!(keys: :atoms)
   end
 end
