@@ -46,10 +46,10 @@ export default class ExitPages extends React.Component {
           bg="bg-orange-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction="4rem"
         >
-          <span className="flex px-2 py-1.5 group dark:text-gray-300 z-9 relative break-words">
+          <span className="flex px-2 py-1.5 group dark:text-gray-300 z-9 relative break-all">
             <Link
               to={{pathname: window.location.pathname, search: query.toString()}}
-              className="block hover:underline"
+              className="md:truncate block hover:underline"
             >
               {page.name}
             </Link>

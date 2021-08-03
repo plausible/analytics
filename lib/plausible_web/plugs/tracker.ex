@@ -2,7 +2,9 @@ defmodule PlausibleWeb.Tracker do
   import Plug.Conn
   use Agent
 
+  custom_script_name = Application.get_env(:plausible, :custom_script_name)
   base_variants = ["hash", "outbound-links", "exclusions", "compat"]
+  base_filenames = ["plausible", custom_script_name]
 
   # Generates Power Set of all variants
   variants =
@@ -24,8 +26,8 @@ defmodule PlausibleWeb.Tracker do
         String.split(x, ".")
         |> Combination.permutate()
         |> Enum.map(fn p -> Enum.join(p, ".") end)
-        |> Enum.filter(fn permutation -> permutation != x end)
-        |> Enum.map(fn v -> "plausible.#{v}.js" end)
+        |> Enum.map(fn v -> Enum.map(base_filenames, fn filename -> "#{filename}.#{v}.js" end) end)
+        |> List.flatten()
 
       if Enum.count(variants) > 0 do
         {"plausible.#{x}.js", variants}
@@ -33,7 +35,7 @@ defmodule PlausibleWeb.Tracker do
     end)
     |> Enum.reject(fn x -> x == nil end)
     |> Enum.into(%{})
-    |> Map.put("plausible.js", ["analytics.js"])
+    |> Map.put("plausible.js", ["analytics.js", "#{custom_script_name}.js"])
 
   @templates files_available
   @aliases aliases_available
