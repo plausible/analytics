@@ -2,8 +2,8 @@ import React from "react";
 import { createPortal } from "react-dom";
 import { withRouter } from 'react-router-dom';
 
-// This corresponds to the iPad width in portrait mode. This does NOT cater to iPad Pro, which in this case is fine to be treated as a full desktop screen, as is the landscape mode for a regular iPad.
-const MAX_TABLET_WIDTH = 800;
+// This corresponds to the 'md' breakpoint on TailwindCSS.
+const MD_WIDTH = 768;
 // We assume that the dashboard is by default opened on a desktop. This is also a fall-back for when, for any reason, the width is not ascertained.
 const DEFAULT_WIDTH = 1080;
 
@@ -62,9 +62,9 @@ class Modal extends React.Component {
   /**
    * @description
    * Decide whether to set max-width, and if so, to what.
-   * If no max-width is available, set width instead to max-content.
-   * On >tablet, we use the same behaviour as before: limit max-width to 800 pixels.
-   * * Note that When a max-width comes from the parent component, we rely on that always.
+   * If no max-width is available, set width instead to min-content such that we can rely on widths set on th.
+   * On >md, we use the same behaviour as before: set width to 800 pixels.
+   * Note that When a max-width comes from the parent component, we rely on that *always*.
    */
   getStyle() {
     const { maxWidth } = this.props;
@@ -73,7 +73,7 @@ class Modal extends React.Component {
     if (maxWidth) {
       styleObject.maxWidth = maxWidth;
     } else {
-      styleObject.width = viewport > MAX_TABLET_WIDTH ? "800px" : "max-content";
+      styleObject.width = viewport <= MD_WIDTH ? "min-content" : "800px";
     }
     return styleObject;
   }

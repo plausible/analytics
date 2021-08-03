@@ -64,14 +64,14 @@ class CountriesModal extends React.Component {
               <thead>
                 <tr>
                   <th
-                    className="p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                    className="p-2 w-48 lg:w-1/2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
                     align="left"
                   >
                     Country
                   </th>
                   <th
                     // eslint-disable-next-line max-len
-                    className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                    className="p-2 w-32 lg:w-1/2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
                     align="right"
                   >
                     {this.label()}
