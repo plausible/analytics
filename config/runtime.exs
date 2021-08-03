@@ -136,6 +136,10 @@ is_selfhost =
   |> get_var_from_path_or_env("SELFHOST", "true")
   |> String.to_existing_atom()
 
+custom_script_name =
+  config_dir
+  |> get_var_from_path_or_env("CUSTOM_SCRIPT_NAME", "script")
+
 {site_limit, ""} =
   config_dir
   |> get_var_from_path_or_env("SITE_LIMIT", "50")
@@ -171,7 +175,8 @@ config :plausible,
   admin_user_ids: admin_user_ids,
   site_limit: site_limit,
   site_limit_exempt: site_limit_exempt,
-  is_selfhost: is_selfhost
+  is_selfhost: is_selfhost,
+  custom_script_name: custom_script_name
 
 config :plausible, :selfhost,
   disable_authentication: disable_auth,
