@@ -389,7 +389,7 @@ export default class VisitorGraph extends React.Component {
   render() {
     return (
       <LazyLoader onVisible={this.onVisible}>
-        <div className="relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825 main-graph">
+        <div className="relative w-full bg-white rounded shadow-xl dark:bg-gray-825 main-graph">
           { this.state.loading && <div className="graph-inner"><div className="pt-24 mx-auto loading sm:pt-32 md:pt-48"><div></div></div></div> }
           { this.renderInner() }
         </div>

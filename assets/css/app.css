@@ -315,3 +315,16 @@ iframe[hidden] {
 .pagination-link[disabled] {
   @apply cursor-default bg-gray-100 dark:bg-gray-300 pointer-events-none;
 }
+
+.flatpickr-calendar.static.open {
+  top: 12px;
+}
+
+@media (max-width: 768px) {
+  .flatpickr-wrapper {
+    position: absolute!important;
+    right: 0!important;
+    left: 0!important;
+  }
+}
+

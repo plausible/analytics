@@ -33,7 +33,7 @@
               <% end %>
               <li class="w-full sm:w-auto">
                 <div class="relative font-bold rounded">
-                  <div data-dropdown-trigger class="flex items-center p-1 m-1 rounded cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-900 dark:text-gray-100">
+                  <div data-dropdown-trigger class="flex items-center justify-end p-1 m-1 rounded cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-900 dark:text-gray-100">
                     <span class="pl-2 mr-2 truncate"><%= @conn.assigns[:current_user].name || @conn.assigns[:current_user].email %></span>
                     <svg style="height: 18px; transform: translateY(2px); fill: #606f7b;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 512 640" enable-background="new 0 0 512 512" xml:space="preserve"><g><circle cx="256" cy="52.8" r="50.8"/><circle cx="256" cy="256" r="50.8"/><circle cx="256" cy="459.2" r="50.8"/></g></svg>
                   </div>

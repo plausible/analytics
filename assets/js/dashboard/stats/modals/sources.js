@@ -1,7 +1,6 @@
 import React from "react";
 import { Link, withRouter } from 'react-router-dom'
 
-import Transition from "../../../transition.js";
 import FadeIn from '../../fade-in'
 import Modal from './modal'
 import * as api from '../../api'

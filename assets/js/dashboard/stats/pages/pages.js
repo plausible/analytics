@@ -52,11 +52,11 @@ export default class Visits extends React.Component {
           maxWidthDeduction="4rem"
         >
           <span
-            className="flex px-2 py-1.5 group dark:text-gray-300 relative z-9 break-words"
+            className="flex px-2 py-1.5 group dark:text-gray-300 relative z-9 break-all"
           >
             <Link
               to={{pathname: window.location.pathname, search: query.toString()}}
-              className="block hover:underline"
+              className="md:truncate block hover:underline"
             >
               {page.name}
             </Link>

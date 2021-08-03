@@ -310,6 +310,28 @@ defmodule Plausible.BillingTest do
       assert subscription.paddle_plan_id == "new-plan-id"
       assert subscription.next_bill_amount == "12.00"
     end
+
+    test "unlocks sites if subscription is changed from past_due to active" do
+      user = insert(:user)
+      subscription = insert(:subscription, user: user, status: "past_due")
+      site = insert(:site, locked: true, members: [user])
+
+      Billing.subscription_updated(%{
+        "alert_name" => "subscription_updated",
+        "subscription_id" => subscription.paddle_subscription_id,
+        "subscription_plan_id" => "new-plan-id",
+        "update_url" => "update_url.com",
+        "cancel_url" => "cancel_url.com",
+        "passthrough" => user.id,
+        "old_status" => "past_due",
+        "status" => "active",
+        "next_bill_date" => "2019-06-01",
+        "new_unit_price" => "12.00",
+        "currency" => "EUR"
+      })
+
+      refute Repo.reload!(site).locked
+    end
   end
 
   describe "subscription_cancelled" do
