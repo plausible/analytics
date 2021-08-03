@@ -33,7 +33,7 @@
 
 
   function trigger(eventName, options) {
-    {{#if !allow_local}}
+    {{#if !local}}
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') return warn('localhost');
     {{/if}}
     if (window.phantom || window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) return;
