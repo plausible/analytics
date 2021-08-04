@@ -71,10 +71,10 @@ export default class PropertyBreakdown extends React.Component {
 
   renderPropContent(value, query) {
     return (
-      <span className="flex px-2 py-1.5 group dark:text-gray-300 relative z-9 break-words">
+      <span className="flex px-2 py-1.5 group dark:text-gray-300 relative z-9 break-all">
         <Link
           to={{pathname: window.location.pathname, search: query.toString()}} 
-          className="hover:underline block"
+          className="md:truncate hover:underline block"
         >
           { value.name }
         </Link>

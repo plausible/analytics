@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Menu (with auto-complete) to add new and edit existing filters directly plausible/analytics#1089
 - Added `CLICKHOUSE_FLUSH_INTERVAL_MS` and `CLICKHOUSE_MAX_BUFFER_SIZE` configuration parameters plausible/analytics#1073
 - Ability to invite users to sites with different roles plausible/analytics#1122
+- Option to configure a custom name for the script file
 
 ### Fixed
 - Fix weekly report time range plausible/analytics#951
@@ -23,7 +24,7 @@ All notable changes to this project will be documented in this file.
 - Crash when changing theme on a loaded dashboard plausible/analytics#1123
 - UI fix for details button overlapping content on mobile plausible/analytics#1114
 - UI fix for the main graph on mobile overlapping its tick items on both axis
-- UI fixes for text not showing properly in bars across multiple lines. This hides the totals on <768px and only shows the uniques and % to accommodate the goals text too.
+- UI fixes for text not showing properly in bars across multiple lines. This hides the totals on <768px and only shows the uniques and % to accommodate the goals text too. Larger screens still truncate as usual.
 - Turn off autocomplete for name and password inputs in the _New shared link_ form.
 
 ### Removed
