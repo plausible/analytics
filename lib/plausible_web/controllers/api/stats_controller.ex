@@ -186,7 +186,7 @@ defmodule PlausibleWeb.Api.StatsController do
     query =
       Query.from(site.timezone, params)
       |> Filters.add_prefix()
-      |> maybe_hide_noref(params)
+      |> maybe_hide_noref("visit:source", params)
 
     pagination = parse_pagination(params)
 
@@ -202,9 +202,13 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def utm_mediums(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params)
+
+    query =
+      Query.from(site.timezone, params)
+      |> Filters.add_prefix()
+      |> maybe_hide_noref("visit:utm_medium", params)
+
     pagination = parse_pagination(params)
-    show_noref = params["show_noref"] == "true"
     metrics = ["visitors", "bounce_rate", "visit_duration"]
 
     res =
@@ -216,9 +220,13 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def utm_campaigns(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params)
+
+    query =
+      Query.from(site.timezone, params)
+      |> Filters.add_prefix()
+      |> maybe_hide_noref("visit:utm_campaign", params)
+
     pagination = parse_pagination(params)
-    show_noref = params["show_noref"] == "true"
     metrics = ["visitors", "bounce_rate", "visit_duration"]
 
     res =
@@ -230,9 +238,13 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def utm_sources(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params)
+
+    query =
+      Query.from(site.timezone, params)
+      |> Filters.add_prefix()
+      |> maybe_hide_noref("visit:utm_source", params)
+
     pagination = parse_pagination(params)
-    show_noref = params["show_noref"] == "true"
     metrics = ["visitors", "bounce_rate", "visit_duration"]
 
     res =
@@ -531,10 +543,10 @@ defmodule PlausibleWeb.Api.StatsController do
     end)
   end
 
-  defp maybe_hide_noref(query, params) do
+  defp maybe_hide_noref(query, property, params) do
     cond do
-      is_nil(query.filters["visit:source"]) and params["show_noref"] != "true" ->
-        new_filters = Map.put(query.filters, "visit:source", {:is_not, "Direct / None"})
+      is_nil(query.filters[property]) and params["show_noref"] != "true" ->
+        new_filters = Map.put(query.filters, property, {:is_not, "Direct / None"})
         %Query{query | filters: new_filters}
 
       true ->
