@@ -59,7 +59,7 @@ class AllSources extends React.Component {
               to={{search: query.toString()}}
             >
               <img
-                src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`}
+                src={`/favicon/sources/${referrer.name}`}
                 referrerPolicy="no-referrer"
                 className="inline w-4 h-4 mr-2 -mt-px align-middle"
               />
@@ -172,7 +172,7 @@ class UTMSources extends React.Component {
           maxWidthDeduction="4rem"
         >
           <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-words">
-            <Link 
+            <Link
               className="block hover:underline"
               to={{search: query.toString()}}
             >
