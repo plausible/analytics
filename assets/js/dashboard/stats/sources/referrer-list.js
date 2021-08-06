@@ -78,9 +78,9 @@ export default class Referrers extends React.Component {
           bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction="4rem"
         >
-          <span className="flex px-2 py-1.5 z-9 relative break-words group">
+          <span className="flex px-2 py-1.5 z-9 relative break-all group">
             <LinkOption
-              className="block dark:text-gray-300"
+              className="block md:truncate dark:text-gray-300"
               to={{search: query.toString()}}
               disabled={referrer.name === 'Direct / None'}
             >

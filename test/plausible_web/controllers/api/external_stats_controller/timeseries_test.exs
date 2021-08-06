@@ -49,10 +49,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
 
   @user_id 123
   test "shows hourly data for a certain date", %{conn: conn, site: site} do
-    populate_stats([
-      build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
-      build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2021-01-01 00:10:00]),
-      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 23:59:00])
+    populate_stats(site, [
+      build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:10:00]),
+      build(:pageview, timestamp: ~N[2021-01-01 23:59:00])
     ])
 
     conn =
@@ -60,7 +60,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
         "site_id" => site.domain,
         "period" => "day",
         "date" => "2021-01-01",
-        "metrics" => "visitors,pageviews,visit_duration,bounce_rate"
+        "metrics" => "visitors,pageviews,visits,visit_duration,bounce_rate"
       })
 
     assert json_response(conn, 200) == %{
@@ -68,6 +68,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 00:00:00",
                  "visitors" => 1,
+                 "visits" => 1,
                  "pageviews" => 2,
                  "visit_duration" => 600,
                  "bounce_rate" => 0
@@ -75,6 +76,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 01:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -82,6 +84,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 02:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -89,6 +92,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 03:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -96,6 +100,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 04:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -103,6 +108,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 05:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -110,6 +116,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 06:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -117,6 +124,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 07:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -124,6 +132,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 08:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -131,6 +140,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 09:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -138,6 +148,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 10:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -145,6 +156,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 11:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -152,6 +164,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 12:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -159,6 +172,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 13:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -166,6 +180,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 14:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -173,6 +188,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 15:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -180,6 +196,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 16:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -187,6 +204,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 17:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -194,6 +212,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 18:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -201,6 +220,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 19:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -208,6 +228,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 20:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -215,6 +236,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 21:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -222,6 +244,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 22:00:00",
                  "visitors" => 0,
+                 "visits" => 0,
                  "pageviews" => 0,
                  "visit_duration" => nil,
                  "bounce_rate" => nil
@@ -229,6 +252,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{
                  "date" => "2021-01-01 23:00:00",
                  "visitors" => 1,
+                 "visits" => 1,
                  "pageviews" => 1,
                  "visit_duration" => 0,
                  "bounce_rate" => 100

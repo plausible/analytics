@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, withRouter } from 'react-router-dom'
+import Datamap from 'datamaps'
 
 import Modal from './modal'
 import * as api from '../../api'
@@ -109,13 +110,17 @@ class CountriesModal extends React.Component {
     const query = new URLSearchParams(window.location.search)
     query.set('country', country.name)
 
+    const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
+    const thisCountry = allCountries.find((c) => c.id === country.name) || {properties: {name: country.name}};
+    const countryFullName = thisCountry.properties.name
+
     return (
       <tr className="text-sm dark:text-gray-200" key={country.name}>
         <td className="p-2">
         <b onClick={() => this.getSubdivisions1(country.name)} style={{ display: this.state.expanded_country != country.name ? "inline-block" : "none" }} className="mr-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"> + </b>
         <b onClick={() => this.setState({expanded_country: ''})} style={{ display: this.state.expanded_country == country.name ? "inline-block" : "none" }} className="mr-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"> - </b>
           <Link className="hover:underline" to={{search: query.toString(), pathname: '/' + encodeURIComponent(this.props.site.domain)}}>
-            {country.full_country_name}
+            {countryFullName}
           </Link>
           <div style={{ display: this.state.expanded_country == country.name ? "block" : "none" }}>
             { this.state.subdivisions1 && this.state.subdivisions1.length > 0 && this.state.expanded_country == country.name && this.state.subdivisions1.map(this.renderSubdivision1Name.bind(this, country.name)) }

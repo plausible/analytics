@@ -42,8 +42,8 @@ export default class SearchTerms extends React.Component {
           bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction="4rem"
         >
-          <span className="flex px-2 py-1.5 dark:text-gray-300 z-9 relative break-words">
-            <span className="block">
+          <span className="flex px-2 py-1.5 dark:text-gray-300 z-9 relative break-all">
+            <span className="md:truncate block">
               { term.name }
             </span>
           </span>

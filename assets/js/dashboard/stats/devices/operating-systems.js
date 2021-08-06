@@ -55,8 +55,8 @@ export default class OperatingSystems extends React.Component {
           bg="bg-green-50 dark:gray-500 dark:bg-opacity-15"
           maxWidthDeduction="6rem"
         >
-          <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-words">
-            <Link className="block hover:underline" to={{search: query.toString()}}>
+          <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
+            <Link className="md:truncate block hover:underline" to={{search: query.toString()}}>
               {os.name}
             </Link>
           </span>
