@@ -73,7 +73,7 @@ class Modal extends React.Component {
     if (maxWidth) {
       styleObject.maxWidth = maxWidth;
     } else {
-      styleObject.width = viewport <= MD_WIDTH ? "min-content" : "800px";
+      styleObject.width = viewport <= MD_WIDTH ? "min-content" : "860px";
     }
     return styleObject;
   }
