@@ -498,7 +498,13 @@ defmodule PlausibleWeb.Api.StatsController do
 
     json(
       conn,
-      Clickhouse.cities(site, query, country_name, subdivision1_geoname_id, subdivision2_geoname_id)
+      Clickhouse.cities(
+        site,
+        query,
+        country_name,
+        subdivision1_geoname_id,
+        subdivision2_geoname_id
+      )
     )
   end
 
