@@ -876,7 +876,10 @@ defmodule Plausible.Stats.Clickhouse do
         order_by: [desc: uniq(e.user_id)],
         select: %{
           name:
-            fragment("if(? = 0, 'NA', toString(city_geoname_id)) as city_geoname_id", e.city_geoname_id),
+            fragment(
+              "if(? = 0, 'NA', toString(city_geoname_id)) as city_geoname_id",
+              e.city_geoname_id
+            ),
           count: uniq(e.user_id)
         }
     )
