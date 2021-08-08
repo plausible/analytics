@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, withRouter } from 'react-router-dom'
 import Datamap from 'datamaps'
+import classNames from 'classnames'
 
 import Modal from './modal'
 import * as api from '../../api'
@@ -65,10 +66,13 @@ class CountriesModal extends React.Component {
   renderSubdivision1Name(country_name, subdivision1) {
     return (
         <div className="text-xs block p-2" key={country_name + ' / ' + subdivision1.name + ' Name'}>
-        <b onClick={() => this.getSubdivisions2(country_name, subdivision1.name)} style={{ display: this.state.expanded_subdivision1 != country_name + ' / ' + subdivision1.name ? "inline-block" : "none" }} className="mr-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"> + </b>
+        <b onClick={() => this.getSubdivisions2(country_name, subdivision1.name)} className={classNames("mr-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500",
+          {"inline-block": this.state.expanded_subdivision1 !== country_name + ' / ' + subdivision1.name},
+          {"hidden": this.state.expanded_subdivision1 === country_name + ' / ' + subdivision1.name})}> + </b>
         <b onClick={() => this.setState({expanded_subdivision1: ''})} style={{ display: this.state.expanded_subdivision1 == country_name + ' / ' + subdivision1.name ? "inline-block" : "none" }} className="mr-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"> - </b>
     {subdivision1.name}
-  <div style={{ display: this.state.expanded_subdivision1 == country_name + ' / ' + subdivision1.name ? "block" : "none" }}>
+  <div className={classNames({"block": this.state.expanded_subdivision1 === country_name + ' / ' + subdivision1.name},
+    {"hidden": this.state.expanded_subdivision1 !== country_name + ' / ' + subdivision1.name})}>
     { this.state.subdivisions2 && this.state.subdivisions2.length > 0 && this.state.expanded_subdivision1 == country_name + ' / ' + subdivision1.name && this.state.subdivisions2.map(this.renderSubdivision2Name.bind(this, country_name, subdivision1.name)) }
   </div>
     </div>
@@ -77,7 +81,9 @@ class CountriesModal extends React.Component {
 
   renderSubdivision1Count(country_name, subdivision1) {
     return (
-        <div style={{ display: this.state.expanded_country == country_name ? "block" : "none" }} className="p-2 font-normal" align="block right" key={country_name + ' / ' + subdivision1.name + ' Count'}>
+        <div className={classNames("p-2 font-normal",
+          {"block": this.state.expanded_country === country_name},
+          {"hidden": this.state.expanded_country !== country_name})} align="block right" key={country_name + ' / ' + subdivision1.name + ' Count'}>
         {numberFormatter(subdivision1.count)} <span className="inline-block text-xs text-right">({subdivision1.percentage}%)</span>
     { this.state.subdivisions2 && this.state.subdivisions2.length > 0 && this.state.expanded_subdivision1 == country_name + ' / ' + subdivision1.name && this.state.subdivisions2.map(this.renderSubdivision2Count.bind(this, country_name, subdivision1.name)) }
   </div>
@@ -87,10 +93,15 @@ class CountriesModal extends React.Component {
   renderSubdivision2Name(country_name, subdivision1_name, subdivision2) {
     return (
         <div className="text-xs block p-2" key={country_name + ' / ' + subdivision1_name + ' / ' + subdivision2.name + ' Name'}>
-        <b onClick={() => this.getCities(country_name, subdivision1_name, subdivision2.name)} style={{ display: this.state.expanded_subdivision2 != country_name + ' / ' + subdivision1_name + ' / ' + subdivision2.name ? "inline-block" : "none" }} className="mr-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"> + </b>
-        <b onClick={() => this.setState({expanded_subdivision2: ''})} style={{ display: this.state.expanded_subdivision2 == country_name + ' / ' + subdivision1_name + ' / ' + subdivision2.name ? "inline-block" : "none" }} className="mr-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"> - </b>
+        <b onClick={() => this.getCities(country_name, subdivision1_name, subdivision2.name)} className={classNames("mr-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500",
+          {"inline-block": this.state.expanded_subdivision2 !== country_name + ' / ' + subdivision1_name + ' / ' + subdivision2.name},
+          {"hidden": this.state.expanded_subdivision2 === country_name + ' / ' + subdivision1_name + ' / ' + subdivision2.name})}> + </b>
+        <b onClick={() => this.setState({expanded_subdivision2: ''})} className={classNames("mr-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500",
+          {"inline-block": this.state.expanded_subdivision2 === country_name + ' / ' + subdivision1_name + ' / ' + subdivision2.name},
+          {"hidden": this.state.expanded_subdivision2 !== country_name + ' / ' + subdivision1_name + ' / ' + subdivision2.name})}> - </b>
     {subdivision2.name}
-  <div style={{ display: this.state.expanded_subdivision2 == country_name + ' / ' + subdivision1_name + ' / ' + subdivision2.name ? "block" : "none" }}>
+  <div className={classNames({"block": this.state.expanded_subdivision2 === country_name + ' / ' + subdivision1_name + ' / ' + subdivision2.name},
+    {"hidden": this.state.expanded_subdivision2 !== country_name + ' / ' + subdivision1_name + ' / ' + subdivision2.name})}>
     { this.state.cities && this.state.cities.length > 0 && this.state.expanded_subdivision2 == country_name + ' / ' + subdivision1_name + ' / ' + subdivision2.name && this.state.cities.map(this.renderCityName.bind(this, country_name, subdivision2.name)) }
   </div>
     </div>
@@ -99,7 +110,9 @@ class CountriesModal extends React.Component {
 
   renderSubdivision2Count(country_name, subdivision1_name, subdivision2) {
     return (
-        <div style={{ display: this.state.expanded_country == country_name ? "block" : "none" }} className="p-2 font-normal" align="block right" key={country_name + ' / ' + subdivision1_name + ' / ' + subdivision2.name + ' Count'}>
+        <div className={classNames("p-2 font-normal",
+          {"block": this.state.expanded_country === country_name},
+          {"hidden": this.state.expanded_country !== country_name})} align="block right" key={country_name + ' / ' + subdivision1_name + ' / ' + subdivision2.name + ' Count'}>
         {numberFormatter(subdivision2.count)} <span className="inline-block text-xs text-right">({subdivision2.percentage}%)</span>
     { this.state.cities && this.state.cities.length > 0 && this.state.expanded_subdivision2 == country_name + ' / ' + subdivision1_name + ' / ' + subdivision2.name && this.state.cities.map(this.renderCityCount.bind(this, country_name, subdivision2.name)) }
   </div>
@@ -117,18 +130,24 @@ class CountriesModal extends React.Component {
     return (
       <tr className="text-sm dark:text-gray-200" key={country.name}>
         <td className="p-2">
-        <b onClick={() => this.getSubdivisions1(country.name)} style={{ display: this.state.expanded_country != country.name ? "inline-block" : "none" }} className="mr-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"> + </b>
-        <b onClick={() => this.setState({expanded_country: ''})} style={{ display: this.state.expanded_country == country.name ? "inline-block" : "none" }} className="mr-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"> - </b>
+        <b onClick={() => this.getSubdivisions1(country.name)} className={classNames("mr-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500",
+          {"inline-block": this.state.expanded_country !== country.name},
+          {"hidden": this.state.expanded_country === country.name})}> + </b>
+        <b onClick={() => this.setState({expanded_country: ''})} className={classNames("mr-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500",
+          {"inline-block": this.state.expanded_country === country.name},
+          {"hidden": this.state.expanded_country !== country.name})}> - </b>
           <Link className="hover:underline" to={{search: query.toString(), pathname: '/' + encodeURIComponent(this.props.site.domain)}}>
             {countryFullName}
           </Link>
-          <div style={{ display: this.state.expanded_country == country.name ? "block" : "none" }}>
+          <div className={classNames({"block": this.state.expanded_country === country.name},
+            {"hidden": this.state.expanded_country !== country.name})}>
             { this.state.subdivisions1 && this.state.subdivisions1.length > 0 && this.state.expanded_country == country.name && this.state.subdivisions1.map(this.renderSubdivision1Name.bind(this, country.name)) }
           </div>
         </td>
         <td className="p-2 w-32 font-medium" align="right">
           {numberFormatter(country.count)} <span className="inline-block text-xs w-8 text-right">({country.percentage}%)</span>
-          <div style={{ display: this.state.expanded_country == country.name ? "block" : "none" }}>
+          <div className={classNames({"block": this.state.expanded_country === country.name},
+    {"hidden": this.state.expanded_country !== country.name})}>
             { this.state.subdivisions1 && this.state.subdivisions1.length > 0 && this.state.expanded_country == country.name && this.state.subdivisions1.map(this.renderSubdivision1Count.bind(this, country.name)) }
           </div>
         </td>
