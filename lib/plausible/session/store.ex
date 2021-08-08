@@ -114,7 +114,6 @@ defmodule Plausible.Session.Store do
       utm_source: event.utm_source,
       utm_campaign: event.utm_campaign,
       country_code: event.country_code,
-      continent_geoname_id: event.continent_geoname_id,
       country_geoname_id: event.country_geoname_id,
       subdivision1_geoname_id: event.subdivision1_geoname_id,
       subdivision2_geoname_id: event.subdivision2_geoname_id,

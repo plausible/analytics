@@ -838,7 +838,7 @@ defmodule Plausible.Stats.Clickhouse do
         select: %{
           name:
             fragment(
-              "if(? = '', 'Other', subdivision1_geoname_id) as subdivision1_geoname_id",
+              "if(? = 0 , 'Other', toString(subdivision1_geoname_id)) as subdivision1_geoname_id",
               e.subdivision1_geoname_id
             ),
           count: uniq(e.user_id)
@@ -862,7 +862,7 @@ defmodule Plausible.Stats.Clickhouse do
         select: %{
           name:
             fragment(
-              "if(? = '', 'Other', subdivision2_geoname_id) as subdivision2_geoname_id",
+              "if(? = 0, 'Other', toString(subdivision2_geoname_id)) as subdivision2_geoname_id",
               e.subdivision2_geoname_id
             ),
           count: uniq(e.user_id)
@@ -888,7 +888,7 @@ defmodule Plausible.Stats.Clickhouse do
         order_by: [desc: uniq(e.user_id)],
         select: %{
           name:
-            fragment("if(? = '', 'NA', city_geoname_id) as city_geoname_id", e.city_geoname_id),
+            fragment("if(? = 0, 'NA', toString(city_geoname_id)) as city_geoname_id", e.city_geoname_id),
           count: uniq(e.user_id)
         }
     )
