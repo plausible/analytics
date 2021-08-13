@@ -29,6 +29,13 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp present_index_for(site, query, dates) do
     case query.interval do
+      "hour" ->
+        current_date =
+          Timex.now(site.timezone)
+          |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:00:00")
+
+        Enum.find_index(dates, &(&1 == current_date))
+
       "date" ->
         current_date =
           Timex.now(site.timezone)
@@ -36,10 +43,11 @@ defmodule PlausibleWeb.Api.StatsController do
 
         Enum.find_index(dates, &(&1 == current_date))
 
-      "hour" ->
+      "month" ->
         current_date =
           Timex.now(site.timezone)
-          |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
+          |> Timex.to_date()
+          |> Timex.beginning_of_month()
 
         Enum.find_index(dates, &(&1 == current_date))
 
