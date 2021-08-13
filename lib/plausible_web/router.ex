@@ -57,7 +57,6 @@ defmodule PlausibleWeb.Router do
     get "/:domain/utm_sources", StatsController, :utm_sources
     get "/:domain/utm_campaigns", StatsController, :utm_campaigns
     get "/:domain/referrers/:referrer", StatsController, :referrer_drilldown
-    get "/:domain/goal/referrers/:referrer", StatsController, :referrer_drilldown_for_goal
     get "/:domain/pages", StatsController, :pages
     get "/:domain/entry-pages", StatsController, :entry_pages
     get "/:domain/exit-pages", StatsController, :exit_pages

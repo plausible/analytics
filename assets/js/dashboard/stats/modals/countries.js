@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, withRouter } from 'react-router-dom'
+import Datamap from 'datamaps'
 
 import Modal from './modal'
 import * as api from '../../api'
@@ -28,6 +29,10 @@ class CountriesModal extends React.Component {
     const query = new URLSearchParams(window.location.search)
     query.set('country', country.name)
 
+    const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
+    const thisCountry = allCountries.find((c) => c.id === country.name) || {properties: {name: country.name}};
+    const countryFullName = thisCountry.properties.name
+
     return (
       <tr className="text-sm dark:text-gray-200" key={country.name}>
         <td className="p-2">
@@ -36,7 +41,7 @@ class CountriesModal extends React.Component {
             to={{search: query.toString(),
             pathname: `/${  encodeURIComponent(this.props.site.domain)}`}}
           >
-            {country.full_country_name}
+            {countryFullName}
           </Link>
         </td>
         <td className="p-2 w-32 font-medium" align="right">

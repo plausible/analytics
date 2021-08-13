@@ -79,6 +79,13 @@ defmodule Plausible.TestUtils do
     |> Plug.Conn.fetch_session()
   end
 
+  def populate_stats(site, events) do
+    Enum.map(events, fn event ->
+      Map.put(event, :domain, site.domain)
+    end)
+    |> populate_stats
+  end
+
   def populate_stats(events) do
     sessions =
       Enum.reduce(events, %{}, fn event, sessions ->
@@ -99,6 +106,12 @@ defmodule Plausible.TestUtils do
       Plausible.ClickhouseSession,
       Enum.map(Map.values(sessions), &schema_to_map/1)
     )
+  end
+
+  def relative_time(shifts) do
+    NaiveDateTime.utc_now()
+    |> Timex.shift(shifts)
+    |> NaiveDateTime.truncate(:second)
   end
 
   defp schema_to_map(schema) do
