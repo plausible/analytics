@@ -33,9 +33,9 @@
 
 
   function trigger(eventName, options) {
-    {{#if !local}}
+    {{#unless local}}
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') return warn('localhost');
-    {{/if}}
+    {{/unless}}
     if (window.phantom || window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) return;
     if (plausible_ignore=="true") return warn('localStorage flag')
     {{#if exclusions}}
