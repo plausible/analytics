@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Tracker do
   use Agent
 
   custom_script_name = Application.get_env(:plausible, :custom_script_name)
-  base_variants = ["hash", "outbound-links", "exclusions", "compat"]
+  base_variants = ["hash", "outbound-links", "exclusions", "compat", "local"]
   base_filenames = ["plausible", custom_script_name]
 
   # Generates Power Set of all variants
