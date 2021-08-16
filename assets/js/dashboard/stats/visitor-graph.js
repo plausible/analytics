@@ -270,10 +270,10 @@ class LineGraph extends React.Component {
   }
 
   topStatTooltip(stat) {
-    if (typeof(stat.count) == 'number') {
+    if (typeof(stat.value) == 'number') {
       let name = stat.name.toLowerCase()
-      name = stat.count === 1 ? name.slice(0, -1) : name
-      return stat.count.toLocaleString() + ' ' + name
+      name = stat.value === 1 ? name.slice(0, -1) : name
+      return stat.value.toLocaleString() + ' ' + name
     }
   }
 

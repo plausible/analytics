@@ -158,6 +158,7 @@ defmodule Plausible.Stats.Breakdown do
 
   defp breakdown_sessions(site, query, property, metrics, {limit, page}) do
     offset = (page - 1) * limit
+    query = treat_page_filter_as_entry_page(query)
 
     from(s in query_sessions(site, query),
       order_by: [desc: fragment("uniq(?)", s.user_id), asc: fragment("min(?)", s.start)],
@@ -168,7 +169,19 @@ defmodule Plausible.Stats.Breakdown do
     |> filter_converted_sessions(site, query)
     |> do_group_by(property)
     |> select_metrics(metrics)
+    |> IO.inspect()
     |> ClickhouseRepo.all()
+  end
+
+  defp treat_page_filter_as_entry_page(query) do
+    case query.filters["event:page"] do
+      nil ->
+        query
+
+      filter ->
+        new_filters = Map.put(query.filters, "visit:entry_page", filter)
+        %Query{query | filters: new_filters}
+    end
   end
 
   defp filter_converted_sessions(db_query, site, query) do

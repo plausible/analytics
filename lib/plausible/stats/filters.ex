@@ -11,7 +11,9 @@ defmodule Plausible.Stats.Filters do
     "browser_version",
     "os",
     "os_version",
-    "country"
+    "country",
+    "entry_page",
+    "exit_page"
   ]
 
   @event_props [

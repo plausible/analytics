@@ -73,9 +73,6 @@ defmodule Plausible.Stats.Base do
 
         nil ->
           q
-
-        _ ->
-          raise "Unknown goal type"
       end
 
     Enum.reduce(query.filters, q, fn {filter_key, filter_value}, query ->
@@ -120,28 +117,6 @@ defmodule Plausible.Stats.Base do
         where: s.domain == ^site.domain,
         where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
       )
-
-    sessions_q =
-      case query.filters["event:page"] do
-        {:is, page} ->
-          from(e in sessions_q, where: e.entry_page == ^page)
-
-        {:is_not, page} ->
-          from(e in sessions_q, where: e.entry_page != ^page)
-
-        {:matches, glob_expr} ->
-          regex = page_regex(glob_expr)
-          from(s in sessions_q, where: fragment("match(?, ?)", s.entry_page, ^regex))
-
-        {:member, list} ->
-          from(e in sessions_q, where: e.entry_page in ^list)
-
-        nil ->
-          sessions_q
-
-        _ ->
-          raise "Unknown filter type"
-      end
 
     Enum.reduce(Filters.visit_props(), sessions_q, fn prop_name, sessions_q ->
       filter = query.filters["visit:" <> prop_name]

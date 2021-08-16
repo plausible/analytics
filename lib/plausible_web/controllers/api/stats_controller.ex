@@ -334,8 +334,8 @@ defmodule PlausibleWeb.Api.StatsController do
     metrics = ["visitors", "visits", "visit_duration"]
 
     entry_pages =
-      Stats.breakdown(site, query, "event:page", metrics, pagination)
-      |> transform_keys(%{"page" => "name", "visits" => "entries", "visitors" => "count"})
+      Stats.breakdown(site, query, "visit:entry_page", metrics, pagination)
+      |> transform_keys(%{"entry_page" => "name", "visits" => "entries", "visitors" => "count"})
 
     json(conn, entry_pages)
   end
