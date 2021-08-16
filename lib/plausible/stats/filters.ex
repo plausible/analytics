@@ -28,21 +28,15 @@ defmodule Plausible.Stats.Filters do
       Enum.reduce(query.filters, %{}, fn {name, val}, new_filters ->
         cond do
           name == "country" ->
-            new_val = Plausible.Stats.CountryName.to_alpha2(val)
-            Map.put(new_filters, "visit:country", {:is, new_val})
-
-          name == "page" ->
-            if String.match?(val, ~r/\*/) do
-              Map.put(new_filters, "event:page", {:matches, val})
-            else
-              Map.put(new_filters, "event:page", {:is, val})
-            end
+            {filter_type, filter_val} = filter_value(name, val)
+            new_val = Plausible.Stats.CountryName.to_alpha2(filter_val)
+            Map.put(new_filters, "visit:country", {filter_type, new_val})
 
           name in (@visit_props ++ ["goal"]) ->
-            Map.put(new_filters, "visit:" <> name, {:is, val})
+            Map.put(new_filters, "visit:" <> name, filter_value(name, val))
 
           name in @event_props ->
-            Map.put(new_filters, "event:" <> name, {:is, val})
+            Map.put(new_filters, "event:" <> name, filter_value(name, val))
 
           name == "props" ->
             Enum.reduce(val, new_filters, fn {prop_key, prop_val}, new_filters ->
@@ -50,10 +44,26 @@ defmodule Plausible.Stats.Filters do
             end)
 
           true ->
-            Map.put(new_filters, name, {:is, val})
+            raise "Unknown filter prop"
         end
       end)
 
     %Plausible.Stats.Query{query | filters: new_filters}
+  end
+
+  defp filter_value(key, "!" <> val) do
+    if String.contains?(key, "page") && String.match?(val, ~r/\*/) do
+      {:does_not_match, val}
+    else
+      {:is_not, val}
+    end
+  end
+
+  defp filter_value(key, val) do
+    if String.contains?(key, "page") && String.match?(val, ~r/\*/) do
+      {:matches, val}
+    else
+      {:is, val}
+    end
   end
 end

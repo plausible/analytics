@@ -98,7 +98,10 @@ defmodule Plausible.Stats.Aggregate do
     {where_clause, where_arg} =
       case query.filters["event:page"] do
         {:is, page} ->
-          {"p=?", page}
+          {"p = ?", page}
+
+        {:is_not, page} ->
+          {"p != ?", page}
 
         {:matches, expr} ->
           regex = page_regex(expr)

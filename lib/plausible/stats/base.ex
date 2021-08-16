@@ -38,6 +38,9 @@ defmodule Plausible.Stats.Base do
         {:is, page} ->
           from(e in q, where: e.pathname == ^page)
 
+        {:is_not, page} ->
+          from(e in q, where: e.pathname != ^page)
+
         {:matches, glob_expr} ->
           regex = page_regex(glob_expr)
           from(e in q, where: fragment("match(?, ?)", e.pathname, ^regex))
@@ -45,15 +48,19 @@ defmodule Plausible.Stats.Base do
         {:member, list} ->
           from(e in q, where: e.pathname in ^list)
 
-        _ ->
+        nil ->
           q
+
+        _ ->
+          raise "Unknown filter type"
       end
 
     q =
       case query.filters["event:name"] do
         {:is, name} -> from(e in q, where: e.name == ^name)
         {:member, list} -> from(e in q, where: e.name in ^list)
-        _ -> q
+        nil -> q
+        _ -> raise "Unknown filter type"
       end
 
     q =
@@ -64,8 +71,11 @@ defmodule Plausible.Stats.Base do
         {:is, :event, event} ->
           from(e in q, where: e.name == ^event)
 
-        _ ->
+        nil ->
           q
+
+        _ ->
+          raise "Unknown goal type"
       end
 
     Enum.reduce(query.filters, q, fn {filter_key, filter_value}, query ->
@@ -116,6 +126,9 @@ defmodule Plausible.Stats.Base do
         {:is, page} ->
           from(e in sessions_q, where: e.entry_page == ^page)
 
+        {:is_not, page} ->
+          from(e in sessions_q, where: e.entry_page != ^page)
+
         {:matches, glob_expr} ->
           regex = page_regex(glob_expr)
           from(s in sessions_q, where: fragment("match(?, ?)", s.entry_page, ^regex))
@@ -123,8 +136,11 @@ defmodule Plausible.Stats.Base do
         {:member, list} ->
           from(e in sessions_q, where: e.entry_page in ^list)
 
-        _ ->
+        nil ->
           sessions_q
+
+        _ ->
+          raise "Unknown filter type"
       end
 
     Enum.reduce(Filters.visit_props(), sessions_q, fn prop_name, sessions_q ->
@@ -148,8 +164,11 @@ defmodule Plausible.Stats.Base do
           fragment_data = [{String.to_existing_atom(prop_name), {:in, list}}]
           from(s in sessions_q, where: fragment(^fragment_data))
 
-        _ ->
+        nil ->
           sessions_q
+
+        _ ->
+          raise "Unknown filter type"
       end
     end)
   end
