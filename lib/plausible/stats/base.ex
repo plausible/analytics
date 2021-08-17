@@ -50,9 +50,6 @@ defmodule Plausible.Stats.Base do
 
         nil ->
           q
-
-        _ ->
-          raise "Unknown filter type"
       end
 
     q =
@@ -60,13 +57,16 @@ defmodule Plausible.Stats.Base do
         {:is, name} -> from(e in q, where: e.name == ^name)
         {:member, list} -> from(e in q, where: e.name in ^list)
         nil -> q
-        _ -> raise "Unknown filter type"
       end
 
     q =
-      case goal_type(query) do
+      case query.filters["visit:goal"] do
         {:is, :page, path} ->
           from(e in q, where: e.pathname == ^path)
+
+        {:matches, :page, expr} ->
+          regex = page_regex(expr)
+          from(e in q, where: fragment("match(?, ?)", e.pathname, ^regex))
 
         {:is, :event, event} ->
           from(e in q, where: e.name == ^event)
@@ -153,14 +153,6 @@ defmodule Plausible.Stats.Base do
   defp db_prop_val("utm_source", @no_ref), do: ""
   defp db_prop_val("utm_campaign", @no_ref), do: ""
   defp db_prop_val(_, val), do: val
-
-  defp goal_type(query) do
-    case query.filters["visit:goal"] do
-      {:is, "Visit " <> page} -> {:is, :page, page}
-      {:is, event} -> {:is, :event, event}
-      _ -> nil
-    end
-  end
 
   defp utc_boundaries(%Query{period: "30m"}, _timezone) do
     last_datetime = NaiveDateTime.utc_now() |> Timex.shift(seconds: 5)

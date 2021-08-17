@@ -56,6 +56,7 @@ defmodule Plausible.Stats.Aggregate do
   defp aggregate_sessions(_, _, []), do: %{}
 
   defp aggregate_sessions(site, query, metrics) do
+    query = Query.treat_page_filter_as_entry_page(query)
     q = from(e in query_sessions(site, query), select: %{})
 
     Enum.reduce(metrics, q, &select_session_metric/2)

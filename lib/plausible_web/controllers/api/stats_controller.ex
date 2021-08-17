@@ -195,6 +195,7 @@ defmodule PlausibleWeb.Api.StatsController do
       Query.from(site.timezone, params)
       |> Filters.add_prefix()
       |> maybe_hide_noref("visit:source", params)
+      |> Query.treat_page_filter_as_entry_page()
 
     pagination = parse_pagination(params)
 
