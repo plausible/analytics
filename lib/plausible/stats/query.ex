@@ -1,5 +1,9 @@
 defmodule Plausible.Stats.Query do
-  defstruct date_range: nil, interval: nil, period: nil, filters: %{}
+  defstruct date_range: nil,
+            interval: nil,
+            period: nil,
+            filters: %{},
+            sample_threshold: 10_000_000
 
   def shift_back(%__MODULE__{period: "month"} = query, site) do
     # Querying current month to date
@@ -212,10 +216,14 @@ defmodule Plausible.Stats.Query do
 
     cond do
       is_list && is_glob -> raise "Not implemented"
+      key == "visit:goal" -> {key, parse_goal_filter(val)}
       is_list -> {key, {:member, String.split(val, "|")}}
       is_glob -> {key, {:matches, val}}
       is_negated -> {key, {:is_not, val}}
       true -> {key, {:is, val}}
     end
   end
+
+  defp parse_goal_filter("Visit " <> page), do: {:is, :page, page}
+  defp parse_goal_filter(event), do: {:is, :event, event}
 end

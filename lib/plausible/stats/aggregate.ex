@@ -3,8 +3,8 @@ defmodule Plausible.Stats.Aggregate do
   use Plausible.ClickhouseRepo
   import Plausible.Stats.Base
 
-  @event_metrics ["visitors", "pageviews", "events"]
-  @session_metrics ["visits", "bounce_rate", "visit_duration"]
+  @event_metrics ["visitors", "pageviews", "events", "sample_percent"]
+  @session_metrics ["visits", "bounce_rate", "visit_duration", "sample_percent"]
 
   def aggregate(site, query, metrics) do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
@@ -19,11 +19,11 @@ defmodule Plausible.Stats.Aggregate do
         Task.async(fn -> %{} end)
       end
 
-    Task.await(event_task)
-    |> Map.merge(Task.await(session_task))
+    Task.await(session_task)
+    |> Map.merge(Task.await(event_task))
     |> Map.merge(Task.await(time_on_page_task))
     |> Enum.map(fn {metric, value} ->
-      {metric, %{value: round(value || 0)}}
+      {metric, %{"value" => round(value || 0)}}
     end)
     |> Enum.into(%{})
   end
@@ -31,52 +31,19 @@ defmodule Plausible.Stats.Aggregate do
   defp aggregate_events(_, _, []), do: %{}
 
   defp aggregate_events(site, query, metrics) do
-    q = from(e in base_event_query(site, query), select: %{})
-
-    Enum.reduce(metrics, q, &select_event_metric/2)
+    from(e in base_event_query(site, query), select: %{})
+    |> select_event_metrics(metrics)
     |> ClickhouseRepo.one()
-  end
-
-  defp select_event_metric("pageviews", q) do
-    from(e in q,
-      select_merge: %{pageviews: fragment("countIf(? = 'pageview')", e.name)}
-    )
-  end
-
-  defp select_event_metric("events", q) do
-    from(e in q,
-      select_merge: %{events: fragment("count(*)")}
-    )
-  end
-
-  defp select_event_metric("visitors", q) do
-    from(e in q, select_merge: %{visitors: fragment("uniq(?)", e.user_id)})
   end
 
   defp aggregate_sessions(_, _, []), do: %{}
 
   defp aggregate_sessions(site, query, metrics) do
     query = Query.treat_page_filter_as_entry_page(query)
-    q = from(e in query_sessions(site, query), select: %{})
 
-    Enum.reduce(metrics, q, &select_session_metric/2)
+    from(e in query_sessions(site, query), select: %{})
+    |> select_session_metrics(metrics)
     |> ClickhouseRepo.one()
-  end
-
-  defp select_session_metric("bounce_rate", q) do
-    from(s in q,
-      select_merge: %{bounce_rate: fragment("round(sum(is_bounce * sign) / sum(sign) * 100)")}
-    )
-  end
-
-  defp select_session_metric("visits", q) do
-    from(s in q,
-      select_merge: %{visits: fragment("sum(?)", s.sign)}
-    )
-  end
-
-  defp select_session_metric("visit_duration", q) do
-    from(s in q, select_merge: %{visit_duration: fragment("round(avg(duration * sign))")})
   end
 
   defp aggregate_time_on_page(site, query) do
@@ -134,6 +101,6 @@ defmodule Plausible.Stats.Aggregate do
 
     {:ok, res} = ClickhouseRepo.query(time_query, base_query_raw_params ++ [where_arg])
     [[time_on_page]] = res.rows
-    %{time_on_page: time_on_page}
+    %{"time_on_page" => time_on_page}
   end
 end

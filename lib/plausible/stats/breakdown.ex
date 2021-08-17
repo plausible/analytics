@@ -101,10 +101,7 @@ defmodule Plausible.Stats.Breakdown do
           query
 
         pages ->
-          new_filters =
-            Map.put(query.filters, "event:page", {:member, Enum.map(pages, & &1["page"])})
-
-          %Query{query | filters: new_filters}
+          Query.put_filter(query, "visit:entry_page", {:member, Enum.map(pages, & &1["page"])})
       end
 
     {limit, _page} = pagination
@@ -123,6 +120,11 @@ defmodule Plausible.Stats.Breakdown do
 
   def breakdown(site, query, property, metrics, pagination) when property in @event_props do
     breakdown_events(site, query, property, metrics, pagination)
+  end
+
+  def breakdown(site, query, "visit:source", metrics, pagination) do
+    query = Query.treat_page_filter_as_entry_page(query)
+    breakdown_sessions(site, query, "visit:source", metrics, pagination)
   end
 
   def breakdown(site, query, property, metrics, pagination) do
@@ -167,7 +169,7 @@ defmodule Plausible.Stats.Breakdown do
     )
     |> filter_converted_sessions(site, query)
     |> do_group_by(property)
-    |> select_metrics(metrics)
+    |> select_session_metrics(metrics)
     |> ClickhouseRepo.all()
   end
 
@@ -425,70 +427,6 @@ defmodule Plausible.Stats.Breakdown do
       group_by: s.browser_version,
       select_merge: %{"browser_version" => s.browser_version}
     )
-  end
-
-  defp select_event_metrics(q, []), do: q
-
-  defp select_event_metrics(q, ["pageviews" | rest]) do
-    from(e in q,
-      select_merge: %{"pageviews" => fragment("countIf(? = 'pageview')", e.name)}
-    )
-    |> select_event_metrics(rest)
-  end
-
-  defp select_event_metrics(q, ["visitors" | rest]) do
-    from(e in q,
-      select_merge: %{"visitors" => fragment("uniq(?) as count", e.user_id)}
-    )
-    |> select_event_metrics(rest)
-  end
-
-  defp select_event_metrics(q, ["events" | rest]) do
-    from(e in q,
-      select_merge: %{"events" => fragment("count(*)")}
-    )
-    |> select_event_metrics(rest)
-  end
-
-  defp select_metrics(q, []), do: q
-
-  defp select_metrics(q, ["pageviews" | rest]) do
-    from(s in q,
-      select_merge: %{"pageviews" => fragment("sum(? * ?)", s.sign, s.pageviews)}
-    )
-    |> select_metrics(rest)
-  end
-
-  defp select_metrics(q, ["visitors" | rest]) do
-    from(s in q,
-      select_merge: %{"visitors" => fragment("uniq(?) as count", s.user_id)}
-    )
-    |> select_metrics(rest)
-  end
-
-  defp select_metrics(q, ["visits" | rest]) do
-    from(s in q,
-      select_merge: %{
-        "visits" => fragment("sum(?)", s.sign)
-      }
-    )
-    |> select_metrics(rest)
-  end
-
-  defp select_metrics(q, ["bounce_rate" | rest]) do
-    from(s in q,
-      select_merge: %{
-        "bounce_rate" => fragment("round(sum(? * ?) / sum(?) * 100)", s.is_bounce, s.sign, s.sign)
-      }
-    )
-    |> select_metrics(rest)
-  end
-
-  defp select_metrics(q, ["visit_duration" | rest]) do
-    from(s in q,
-      select_merge: %{"visit_duration" => fragment("round(avg(? * ?))", s.duration, s.sign)}
-    )
-    |> select_metrics(rest)
   end
 
   defp transform_keys(results, keys_to_replace) do

@@ -27,13 +27,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
               Task.async(fn -> Plausible.Stats.aggregate(site, query, metrics) end)
             ])
 
-          Enum.map(curr_result, fn {metric, %{value: current_val}} ->
-            %{value: prev_val} = prev_result[metric]
+          Enum.map(curr_result, fn {metric, %{"value" => current_val}} ->
+            %{"value" => prev_val} = prev_result[metric]
 
             {metric,
              %{
-               value: current_val,
-               change: percent_change(prev_val, current_val)
+               "value" => current_val,
+               "change" => percent_change(prev_val, current_val)
              }}
           end)
           |> Enum.into(%{})
