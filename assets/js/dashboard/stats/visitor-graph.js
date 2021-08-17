@@ -260,20 +260,20 @@ class LineGraph extends React.Component {
   }
 
   topStatNumberShort(stat) {
-    if (typeof(stat.duration) == 'number') {
-      return durationFormatter(stat.duration)
-    } else if (typeof(stat.count) == 'number') {
-      return numberFormatter(stat.count)
+    if (['visit duration', 'time on page'].includes(stat.name.toLowerCase())) {
+      return durationFormatter(stat.value)
+    } else if (['bounce rate', 'conversion rate'].includes(stat.name.toLowerCase())) {
+      return stat.value + '%'
     } else {
-      return stat.percentage + '%'
+      return numberFormatter(stat.value)
     }
   }
 
   topStatTooltip(stat) {
-    if (typeof(stat.count) == 'number') {
+    if (typeof(stat.value) == 'number') {
       let name = stat.name.toLowerCase()
-      name = stat.count === 1 ? name.slice(0, -1) : name
-      return stat.count.toLocaleString() + ' ' + name
+      name = stat.value === 1 ? name.slice(0, -1) : name
+      return stat.value.toLocaleString() + ' ' + name
     }
   }
 

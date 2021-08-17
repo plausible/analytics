@@ -29,7 +29,17 @@ function clearAllFilters(history, query) {
   );
 }
 
-function filterText(key, value, query) {
+function filterType(val) {
+  if (val.startsWith('!')) {
+    return ['is not', val.substr(1)]
+  }
+
+  return ['is', val]
+}
+
+function filterText(key, rawValue, query) {
+  const [type, value] = filterType(rawValue)
+
   if (key === "goal") {
     return <>Completed goal <b>{value}</b></>
   }
@@ -38,51 +48,24 @@ function filterText(key, value, query) {
     const eventName = query.filters.goal ? query.filters.goal : 'event'
     return <>{eventName}.{metaKey} is <b>{metaValue}</b></>
   }
-  if (key === "source") {
-    return <>Source: <b>{value}</b></>
-  }
-  if (key === "utm_medium") {
-    return <>UTM medium: <b>{value}</b></>
-  }
-  if (key === "utm_source") {
-    return <>UTM source: <b>{value}</b></>
-  }
-  if (key === "utm_campaign") {
-    return <>UTM campaign: <b>{value}</b></>
-  }
-  if (key === "referrer") {
-    return <>Referrer: <b>{value}</b></>
-  }
-  if (key === "screen") {
-    return <>Screen size: <b>{value}</b></>
-  }
-  if (key === "browser") {
-    return <>Browser: <b>{value}</b></>
-  }
   if (key === "browser_version") {
     const browserName = query.filters.browser ? query.filters.browser : 'Browser'
-    return <>{browserName}.Version: <b>{value}</b></>
-  }
-  if (key === "os") {
-    return <>Operating System: <b>{value}</b></>
+    return <>{browserName}.Version {type} <b>{value}</b></>
   }
   if (key === "os_version") {
     const osName = query.filters.os ? query.filters.os : 'OS'
-    return <>{osName}.Version: <b>{value}</b></>
+    return <>{osName}.Version {type} <b>{value}</b></>
   }
   if (key === "country") {
     const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
     const selectedCountry = allCountries.find((c) => c.id === value) || {properties: {name: value}};
-    return <>Country: <b>{selectedCountry.properties.name}</b></>
+    return <>Country {type} <b>{selectedCountry.properties.name}</b></>
   }
-  if (key === "page") {
-    return <>Page: <b>{value}</b></>
-  }
-  if (key === "entry_page") {
-    return <>Entry Page: <b>{value}</b></>
-  }
-  if (key === "exit_page") {
-    return <>Exit Page: <b>{value}</b></>
+
+  const formattedFilter = formattedFilters[key]
+
+  if (formattedFilter) {
+    return <>{formattedFilter} {type} <b>{value}</b></>
   }
 
   throw new Error(`Unknown filter: ${key}`)

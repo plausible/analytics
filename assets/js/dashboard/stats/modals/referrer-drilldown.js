@@ -149,10 +149,10 @@ class ReferrerDrilldownModal extends React.Component {
             <h1 className="text-xl font-semibold mb-0 leading-none dark:text-gray-200">{this.state.totalVisitors} visitors from {decodeURIComponent(this.props.match.params.referrer)}<br /> {toHuman(this.state.query)}</h1>
             {this.renderGoalText()}
 
-            <table className="w-full table-striped table-fixed mt-4">
+            <table className="w-max overflow-x-auto md:w-full table-striped table-fixed mt-4">
               <thead>
                 <tr>
-                  <th className="p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Referrer</th>
+                  <th className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Referrer</th>
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visitors</th>
                   {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Bounce rate</th>}
                   {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visit duration</th>}

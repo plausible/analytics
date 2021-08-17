@@ -80,7 +80,7 @@ defmodule Plausible.Factory do
       hostname: hostname,
       domain: hostname,
       pathname: "/",
-      timestamp: Timex.now(),
+      timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
       user_id: SipHash.hash!(hash_key(), UUID.uuid4()),
       session_id: SipHash.hash!(hash_key(), UUID.uuid4()),
       referrer: "",

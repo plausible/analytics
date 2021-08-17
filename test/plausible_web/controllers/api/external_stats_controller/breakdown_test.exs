@@ -59,6 +59,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    test "session metrics cannot be used with event:props:* property", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "property" => "event:props:url",
+          "metrics" => "visitors,bounce_rate",
+          "site_id" => site.domain
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Session metric `bounce_rate` cannot be queried for breakdown by `event:props:url`."
+             }
+    end
+
     test "session metrics cannot be used with event:name filter", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/breakdown", %{
@@ -71,6 +85,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       assert json_response(conn, 400) == %{
                "error" =>
                  "Session metric `bounce_rate` cannot be queried when using a filter on `event:name`."
+             }
+    end
+
+    test "session metrics cannot be used with event:props:* filter", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "property" => "event:page",
+          "filters" => "event:props:url==google.com",
+          "metrics" => "visitors,bounce_rate",
+          "site_id" => site.domain
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Session metric `bounce_rate` cannot be queried when using a filter on `event:props:url`."
              }
     end
   end
@@ -777,6 +806,141 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    test "event:page filter shows traffic sources directly to that page", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/ignore",
+          referrer_source: "Should not show up",
+          user_id: @user_id
+        ),
+        build(:pageview,
+          pathname: "/plausible.io",
+          user_id: @user_id
+        ),
+        build(:pageview,
+          pathname: "/plausible.io",
+          referrer_source: "Google"
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "visit:source",
+          "filters" => "event:page==/plausible.io"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"source" => "Google", "visitors" => 1}
+               ]
+             }
+    end
+
+    test "visit:goal pageview filter for breakdown by visit source", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "Bing",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/plausible.io",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:source",
+          "filters" => "visit:goal == Visit /plausible.io"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"source" => "Google", "visitors" => 1}
+               ]
+             }
+    end
+
+    test "visit:goal custom event filter for breakdown by visit source", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "Bing",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Register",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:source",
+          "filters" => "visit:goal == Register"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"source" => "Google", "visitors" => 1}
+               ]
+             }
+    end
+
+    test "visit:goal custom event filter for breakdown by event page", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event,
+          pathname: "/en/register",
+          name: "Register"
+        ),
+        build(:event,
+          pathname: "/en/register",
+          name: "Register"
+        ),
+        build(:event,
+          pathname: "/it/register",
+          name: "Register"
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "event:page",
+          "filters" => "visit:goal == Register"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"page" => "/en/register", "visitors" => 2},
+                 %{"page" => "/it/register", "visitors" => 1}
+               ]
+             }
+    end
+
     test "IN filter for event:page", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -945,6 +1109,29 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                ]
              }
     end
+
+    test "can use a is_not filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, browser: "Chrome"),
+        build(:pageview, browser: "Safari"),
+        build(:pageview, browser: "Safari"),
+        build(:pageview, browser: "Edge")
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "filters" => "visit:browser != Chrome",
+          "property" => "visit:browser"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"browser" => "Safari", "visitors" => 2},
+                 %{"browser" => "Edge", "visitors" => 1}
+               ]
+             }
+    end
   end
 
   describe "pagination" do
@@ -992,27 +1179,23 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
   describe "metrics" do
     test "all metrics for breakdown by visit prop", %{conn: conn, site: site} do
-      populate_stats([
+      populate_stats(site, [
         build(:pageview,
           user_id: 1,
           referrer_source: "Google",
-          domain: site.domain,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
           user_id: 1,
           referrer_source: "Google",
-          domain: site.domain,
           timestamp: ~N[2021-01-01 00:10:00]
         ),
         build(:pageview,
           referrer_source: "Google",
-          domain: site.domain,
           timestamp: ~N[2021-01-01 00:25:00]
         ),
         build(:pageview,
           referrer_source: "Twitter",
-          domain: site.domain,
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -1023,7 +1206,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "period" => "day",
           "date" => "2021-01-01",
           "property" => "visit:source",
-          "metrics" => "visitors,pageviews,bounce_rate,visit_duration"
+          "metrics" => "visitors,visits,pageviews,bounce_rate,visit_duration"
         })
 
       assert json_response(conn, 200) == %{
@@ -1031,6 +1214,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                  %{
                    "source" => "Google",
                    "visitors" => 2,
+                   "visits" => 2,
                    "bounce_rate" => 50,
                    "visit_duration" => 300,
                    "pageviews" => 3
@@ -1038,6 +1222,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                  %{
                    "source" => "Twitter",
                    "visitors" => 1,
+                   "visits" => 1,
                    "bounce_rate" => 100,
                    "visit_duration" => 0,
                    "pageviews" => 1

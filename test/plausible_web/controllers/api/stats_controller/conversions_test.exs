@@ -1,39 +1,69 @@
 defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   use PlausibleWeb.ConnCase
   import Plausible.TestUtils
+  @user_id 123
 
   describe "GET /api/stats/:domain/conversions" do
-    setup [:create_user, :log_in, :create_site]
+    setup [:create_user, :log_in, :create_new_site]
 
     test "returns mixed conversions in ordered by count", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/register"),
+        build(:pageview, pathname: "/register"),
+        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["A"]),
+        build(:event,
+          user_id: @user_id,
+          name: "Signup",
+          "meta.key": ["variant"],
+          "meta.value": ["A"]
+        ),
+        build(:event,
+          user_id: @user_id,
+          name: "Signup",
+          "meta.key": ["variant"],
+          "meta.value": ["B"]
+        )
+      ])
+
       insert(:goal, %{domain: site.domain, page_path: "/register"})
       insert(:goal, %{domain: site.domain, event_name: "Signup"})
 
-      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&date=2019-01-01")
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
 
       assert json_response(conn, 200) == [
                %{
                  "name" => "Signup",
-                 "count" => 3,
+                 "count" => 2,
                  "total_count" => 3,
                  "prop_names" => ["variant"],
-                 "conversion_rate" => 42.9
+                 "conversion_rate" => 33.3
                },
                %{
                  "name" => "Visit /register",
                  "count" => 2,
                  "total_count" => 2,
                  "prop_names" => nil,
-                 "conversion_rate" => 28.6
+                 "conversion_rate" => 33.3
                }
              ]
     end
   end
 
   describe "GET /api/stats/:domain/conversions - with goal filter" do
-    setup [:create_user, :log_in, :create_site]
+    setup [:create_user, :log_in, :create_new_site]
 
     test "returns only the conversion tha is filtered for", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/register"),
+        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["A"]),
+        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["A"]),
+        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"])
+      ])
+
       insert(:goal, %{domain: site.domain, page_path: "/register"})
       insert(:goal, %{domain: site.domain, event_name: "Signup"})
 
@@ -42,7 +72,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/conversions?period=day&date=2019-01-01&filters=#{filters}"
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -51,16 +81,25 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "count" => 3,
                  "total_count" => 3,
                  "prop_names" => ["variant"],
-                 "conversion_rate" => 42.9
+                 "conversion_rate" => 50
                }
              ]
     end
   end
 
   describe "GET /api/stats/:domain/property/:key" do
-    setup [:create_user, :log_in, :create_site]
+    setup [:create_user, :log_in, :create_new_site]
 
-    test "returns metadata breakdown for goal", %{conn: conn, site: site} do
+    test "returns property breakdown for goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/register"),
+        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["A"]),
+        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"]),
+        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"])
+      ])
+
       insert(:goal, %{domain: site.domain, event_name: "Signup"})
       filters = Jason.encode!(%{goal: "Signup"})
       prop_key = "variant"
@@ -68,14 +107,64 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/property/#{prop_key}?period=day&date=2019-01-01&filters=#{
-            filters
-          }"
+          "/api/stats/#{site.domain}/property/#{prop_key}?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
-               %{"count" => 2, "name" => "B", "total_count" => 2, "conversion_rate" => 28.6},
-               %{"count" => 1, "name" => "A", "total_count" => 1, "conversion_rate" => 14.3}
+               %{"count" => 2, "name" => "B", "total_count" => 2, "conversion_rate" => 33.3},
+               %{"count" => 1, "name" => "A", "total_count" => 1, "conversion_rate" => 16.7}
+             ]
+    end
+
+    test "returns (none) values in property breakdown for goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "Signup"),
+        build(:event, name: "Signup"),
+        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["A"]),
+        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"]),
+        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"]),
+        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"])
+      ])
+
+      insert(:goal, %{domain: site.domain, event_name: "Signup"})
+      filters = Jason.encode!(%{goal: "Signup"})
+      prop_key = "variant"
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/property/#{prop_key}?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"count" => 3, "name" => "B", "total_count" => 3, "conversion_rate" => 50.0},
+               %{"count" => 2, "name" => "(none)", "total_count" => 2, "conversion_rate" => 33.3},
+               %{"count" => 1, "name" => "A", "total_count" => 1, "conversion_rate" => 16.7}
+             ]
+    end
+
+    test "property breakdown with prop filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "Signup"),
+        build(:event, name: "Signup"),
+        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["A"]),
+        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"]),
+        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"]),
+        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"])
+      ])
+
+      insert(:goal, %{domain: site.domain, event_name: "Signup"})
+      filters = Jason.encode!(%{goal: "Signup", props: %{"variant" => "B"}})
+      prop_key = "variant"
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/property/#{prop_key}?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"count" => 3, "name" => "B", "total_count" => 3, "conversion_rate" => 100.0}
              ]
     end
   end
