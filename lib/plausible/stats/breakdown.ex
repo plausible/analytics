@@ -126,6 +126,7 @@ defmodule Plausible.Stats.Breakdown do
     query = Query.treat_page_filter_as_entry_page(query)
     breakdown_sessions(site, query, "visit:source", metrics, pagination)
   end
+
   def breakdown(site, query, property, metrics, pagination) do
     breakdown_sessions(site, query, property, metrics, pagination)
   end

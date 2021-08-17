@@ -38,6 +38,7 @@ defmodule Plausible.Stats.Timeseries do
 
   defp sessions_timeseries(site, query, metrics) do
     query = Query.treat_page_filter_as_entry_page(query)
+
     from(e in query_sessions(site, query),
       group_by: fragment("date"),
       order_by: fragment("date"),
