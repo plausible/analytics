@@ -58,8 +58,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp fetch_top_stats(site, %Query{period: "30m"} = query) do
     %{
-      visitors: %{value: visitors},
-      pageviews: %{value: pageviews}
+      "visitors" => %{"value" => visitors},
+      "pageviews" => %{"value" => pageviews}
     } = Stats.aggregate(site, query, ["visitors", "pageviews"])
 
     stats = [
@@ -77,7 +77,7 @@ defmodule PlausibleWeb.Api.StatsController do
       }
     ]
 
-    {stats, 100}
+    {stats, nil}
   end
 
   defp fetch_top_stats(site, %Query{filters: %{"visit:goal" => _goal}} = query) do
@@ -85,21 +85,21 @@ defmodule PlausibleWeb.Api.StatsController do
     prev_query = Query.shift_back(query, site)
 
     %{
-      visitors: %{value: unique_visitors}
+      "visitors" => %{"value" => unique_visitors}
     } = Stats.aggregate(site, %{query | filters: total_filter}, ["visitors"])
 
     %{
-      visitors: %{value: prev_unique_visitors}
+      "visitors" => %{"value" => prev_unique_visitors}
     } = Stats.aggregate(site, %{prev_query | filters: total_filter}, ["visitors"])
 
     %{
-      visitors: %{value: converted_visitors},
-      events: %{value: completions}
+      "visitors" => %{"value" => converted_visitors},
+      "events" => %{"value" => completions}
     } = Stats.aggregate(site, query, ["visitors", "events"])
 
     %{
-      visitors: %{value: prev_converted_visitors},
-      events: %{value: prev_completions}
+      "visitors" => %{"value" => prev_converted_visitors},
+      "events" => %{"value" => prev_completions}
     } = Stats.aggregate(site, prev_query, ["visitors", "events"])
 
     conversion_rate = calculate_cr(unique_visitors, converted_visitors)
@@ -128,7 +128,7 @@ defmodule PlausibleWeb.Api.StatsController do
       }
     ]
 
-    {stats, 0}
+    {stats, 100}
   end
 
   defp fetch_top_stats(site, query) do
@@ -136,9 +136,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       if query.filters["event:page"] do
-        ["visitors", "pageviews", "bounce_rate", "time_on_page"]
+        ["visitors", "pageviews", "bounce_rate", "time_on_page", "sample_percent"]
       else
-        ["visitors", "pageviews", "bounce_rate", "visit_duration"]
+        ["visitors", "pageviews", "bounce_rate", "visit_duration", "sample_percent"]
       end
 
     current_results = Stats.aggregate(site, query, metrics)
@@ -146,28 +146,28 @@ defmodule PlausibleWeb.Api.StatsController do
 
     stats =
       [
-        top_stats_entry(current_results, prev_results, "Unique visitors", :visitors),
-        top_stats_entry(current_results, prev_results, "Total pageviews", :pageviews),
-        top_stats_entry(current_results, prev_results, "Bounce rate", :bounce_rate),
-        top_stats_entry(current_results, prev_results, "Visit duration", :visit_duration),
-        top_stats_entry(current_results, prev_results, "Time on page", :time_on_page)
+        top_stats_entry(current_results, prev_results, "Unique visitors", "visitors"),
+        top_stats_entry(current_results, prev_results, "Total pageviews", "pageviews"),
+        top_stats_entry(current_results, prev_results, "Bounce rate", "bounce_rate"),
+        top_stats_entry(current_results, prev_results, "Visit duration", "visit_duration"),
+        top_stats_entry(current_results, prev_results, "Time on page", "time_on_page")
       ]
       |> Enum.filter(& &1)
 
-    {stats, 0}
+    {stats, current_results["sample_percent"]["value"]}
   end
 
   defp top_stats_entry(current_results, prev_results, name, key) do
     if current_results[key] do
       %{
         name: name,
-        value: current_results[key][:value],
-        change: calculate_change(key, prev_results[key][:value], current_results[key][:value])
+        value: current_results[key]["value"],
+        change: calculate_change(key, prev_results[key]["value"], current_results[key]["value"])
       }
     end
   end
 
-  defp calculate_change(:bounce_rate, old_count, new_count) do
+  defp calculate_change("bounce_rate", old_count, new_count) do
     if old_count > 0, do: new_count - old_count
   end
 
@@ -195,7 +195,6 @@ defmodule PlausibleWeb.Api.StatsController do
       Query.from(site.timezone, params)
       |> Filters.add_prefix()
       |> maybe_hide_noref("visit:source", params)
-      |> Query.treat_page_filter_as_entry_page()
 
     pagination = parse_pagination(params)
 
@@ -272,7 +271,7 @@ defmodule PlausibleWeb.Api.StatsController do
         google_api().fetch_stats(site, query, params["limit"] || 9)
       end
 
-    %{visitors: %{value: total_visitors}} = Stats.aggregate(site, query, ["visitors"])
+    %{"visitors" => %{"value" => total_visitors}} = Stats.aggregate(site, query, ["visitors"])
 
     case search_terms do
       nil ->
@@ -306,7 +305,7 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:referrer", metrics, pagination)
       |> transform_keys(%{"referrer" => "name", "visitors" => "count"})
 
-    %{visitors: %{value: total_visitors}} = Stats.aggregate(site, query, ["visitors"])
+    %{"visitors" => %{"value" => total_visitors}} = Stats.aggregate(site, query, ["visitors"])
     json(conn, %{referrers: referrers, total_visitors: total_visitors})
   end
 
@@ -468,7 +467,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     total_filter = Map.merge(query.filters, %{"visit:goal" => nil})
 
-    %{visitors: %{value: total_visitors}} =
+    %{"visitors" => %{"value" => total_visitors}} =
       Stats.aggregate(site, %{query | filters: total_filter}, ["visitors"])
 
     prop_names = Stats.props(site, query)
@@ -492,7 +491,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     total_filter = Map.merge(query.filters, %{"visit:goal" => nil})
 
-    %{visitors: %{value: unique_visitors}} =
+    %{"visitors" => %{"value" => unique_visitors}} =
       Stats.aggregate(site, %{query | filters: total_filter}, ["visitors"])
 
     prop_name = "event:props:" <> params["prop_name"]
