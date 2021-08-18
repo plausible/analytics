@@ -9,6 +9,12 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
 
+    query =
+      case query.filters["visit:goal"] do
+        nil -> Query.put_filter(query, "event:name", {:is, "pageview"})
+        _ -> query
+      end
+
     timeseries = Task.async(fn -> Stats.timeseries(site, query, ["visitors"]) end)
     {top_stats, sample_percent} = fetch_top_stats(site, query)
 
@@ -312,6 +318,12 @@ defmodule PlausibleWeb.Api.StatsController do
   def pages(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
+
+    query =
+      case query.filters["visit:goal"] do
+        nil -> Query.put_filter(query, "event:name", {:is, "pageview"})
+        _ -> query
+      end
 
     metrics =
       if params["detailed"],

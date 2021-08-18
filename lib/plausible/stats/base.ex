@@ -62,11 +62,8 @@ defmodule Plausible.Stats.Base do
         {:member, list} ->
           from(e in q, where: e.name in ^list)
 
-        # Logically, this isn't necessary and might even cause some confusion (request with no filters will still filter for event:name==pageviews).
         nil ->
-          from(e in q, where: e.name == "pageview")
-
-          # When removing this, however, sampling in clickhouse goes a bit weird (dashboard with 3m pageviews will start getting sampled which is weird)
+          q
       end
 
     q =
