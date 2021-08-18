@@ -216,7 +216,7 @@ defmodule Plausible.Stats.Query do
 
     cond do
       is_list && is_glob -> raise "Not implemented"
-      key == "visit:goal" -> {key, parse_goal_filter(val)}
+      key == "event:goal" -> {key, parse_goal_filter(val)}
       is_list -> {key, {:member, String.split(val, "|")}}
       is_glob -> {key, {:matches, val}}
       is_negated -> {key, {:is_not, val}}

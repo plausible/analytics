@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Breakdown do
   @session_metrics ["visits", "bounce_rate", "visit_duration"]
   @event_props ["event:page", "event:page_match", "event:name"]
 
-  def breakdown(site, query, "visit:goal", metrics, pagination) do
+  def breakdown(site, query, "event:goal", metrics, pagination) do
     {event_goals, pageview_goals} =
       Plausible.Repo.all(from g in Plausible.Goal, where: g.domain == ^site.domain)
       |> Enum.split_with(fn goal -> goal.event_name end)
@@ -47,7 +47,7 @@ defmodule Plausible.Stats.Breakdown do
       |> ClickhouseRepo.all()
       |> Enum.map(fn row -> Map.delete(row, "index") end)
 
-    zip_results(event_goals, page_goals, "visit:goal", metrics)
+    zip_results(event_goals, page_goals, "event:goal", metrics)
   end
 
   def breakdown(site, query, "event:props:" <> custom_prop, metrics, pagination) do
@@ -174,7 +174,7 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp filter_converted_sessions(db_query, site, query) do
-    if query.filters["event:name"] || query.filters["event:page"] || query.filters["visit:goal"] do
+    if query.filters["event:name"] || query.filters["event:page"] || query.filters["event:goal"] do
       converted_sessions =
         from(e in query_events(site, query),
           select: %{session_id: fragment("DISTINCT ?", e.session_id)}

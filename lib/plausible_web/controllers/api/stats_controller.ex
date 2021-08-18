@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
 
     query =
-      case query.filters["visit:goal"] do
+      case query.filters["event:goal"] do
         nil -> Query.put_filter(query, "event:name", {:is, "pageview"})
         _ -> query
       end
@@ -86,8 +86,8 @@ defmodule PlausibleWeb.Api.StatsController do
     {stats, nil}
   end
 
-  defp fetch_top_stats(site, %Query{filters: %{"visit:goal" => _goal}} = query) do
-    total_filter = Map.merge(query.filters, %{"visit:goal" => nil})
+  defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _goal}} = query) do
+    total_filter = Map.merge(query.filters, %{"event:goal" => nil})
     prev_query = Query.shift_back(query, site)
 
     %{
@@ -320,7 +320,7 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
 
     query =
-      case query.filters["visit:goal"] do
+      case query.filters["event:goal"] do
         nil -> Query.put_filter(query, "event:name", {:is, "pageview"})
         _ -> query
       end
@@ -362,8 +362,13 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:exit_page", metrics, {limit, page})
       |> transform_keys(%{"exit_page" => "name", "visits" => "exits", "visitors" => "count"})
 
-    page_filter_expr = Enum.map(exit_pages, & &1["page"]) |> Enum.join("|")
-    total_visits_query = Query.put_filter(query, "page", page_filter_expr)
+    pages = Enum.map(exit_pages, & &1["name"])
+
+    total_visits_query =
+      Query.put_filter(query, "event:page", {:member, pages})
+      |> Query.put_filter("event:goal", nil)
+      |> Query.put_filter("event:name", {:is, "pageview"})
+      |> Query.put_filter("visit:goal", query.filters["event:goal"])
 
     total_pageviews =
       Stats.breakdown(site, total_visits_query, "event:page", ["pageviews"], {limit, 1})
@@ -373,7 +378,7 @@ defmodule PlausibleWeb.Api.StatsController do
         exit_rate =
           case Enum.find(total_pageviews, &(&1["page"] == exit_page["name"])) do
             %{"pageviews" => pageviews} ->
-              round(exit_page["exits"] / pageviews * 100)
+              Float.floor(exit_page["exits"] / pageviews * 100)
 
             nil ->
               nil
@@ -477,7 +482,7 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
     pagination = parse_pagination(params)
 
-    total_filter = Map.merge(query.filters, %{"visit:goal" => nil})
+    total_filter = Map.merge(query.filters, %{"event:goal" => nil})
 
     %{"visitors" => %{"value" => total_visitors}} =
       Stats.aggregate(site, %{query | filters: total_filter}, ["visitors"])
@@ -485,7 +490,7 @@ defmodule PlausibleWeb.Api.StatsController do
     prop_names = Stats.props(site, query)
 
     conversions =
-      Stats.breakdown(site, query, "visit:goal", ["visitors", "events"], pagination)
+      Stats.breakdown(site, query, "event:goal", ["visitors", "events"], pagination)
       |> transform_keys(%{"goal" => "name", "visitors" => "count", "events" => "total_count"})
       |> Enum.map(fn goal ->
         goal
@@ -501,7 +506,7 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
     pagination = parse_pagination(params)
 
-    total_filter = Map.merge(query.filters, %{"visit:goal" => nil})
+    total_filter = Map.merge(query.filters, %{"event:goal" => nil})
 
     %{"visitors" => %{"value" => unique_visitors}} =
       Stats.aggregate(site, %{query | filters: total_filter}, ["visitors"])

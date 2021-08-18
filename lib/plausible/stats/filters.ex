@@ -45,7 +45,7 @@ defmodule Plausible.Stats.Filters do
                   {:is, :event, event}
               end
 
-            Map.put(new_filters, "visit:goal", filter)
+            Map.put(new_filters, "event:goal", filter)
 
           name in (@visit_props ++ ["goal"]) ->
             Map.put(new_filters, "visit:" <> name, filter_value(name, val))

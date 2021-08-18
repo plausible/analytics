@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Base do
   def base_event_query(site, query) do
     events_q = query_events(site, query)
 
-    if Enum.any?(Filters.visit_props(), &query.filters["visit:" <> &1]) do
+    if Enum.any?(Filters.visit_props() ++ ["goal"], &query.filters["visit:" <> &1]) do
       sessions_q =
         from(
           s in query_sessions(site, query),
@@ -67,7 +67,7 @@ defmodule Plausible.Stats.Base do
       end
 
     q =
-      case query.filters["visit:goal"] do
+      case query.filters["event:goal"] do
         {:is, :page, path} ->
           from(e in q, where: e.pathname == ^path)
 
@@ -126,6 +126,30 @@ defmodule Plausible.Stats.Base do
         where: s.domain == ^site.domain,
         where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
       )
+
+    sessions_q =
+      case query.filters["visit:goal"] do
+        nil ->
+          sessions_q
+
+        goal_filter ->
+          events_query =
+            Query.put_filter(query, "event:goal", goal_filter)
+            |> Query.put_filter("event:name", nil)
+            |> Query.put_filter("event:page", nil)
+
+          events_q =
+            from(
+              s in query_events(site, events_query),
+              select: %{session_id: fragment("DISTINCT ?", s.session_id)}
+            )
+
+          from(
+            s in sessions_q,
+            join: sq in subquery(events_q),
+            on: s.session_id == sq.session_id
+          )
+      end
 
     Enum.reduce(Filters.visit_props(), sessions_q, fn prop_name, sessions_q ->
       filter = query.filters["visit:" <> prop_name]
@@ -216,7 +240,7 @@ defmodule Plausible.Stats.Base do
   def select_session_metrics(q, ["visits" | rest]) do
     from(s in q,
       select_merge: %{
-        "visits" => fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign)
+        "visits" => fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.session_id)
       }
     )
     |> select_session_metrics(rest)

@@ -163,7 +163,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/exit-pages?period=day&date=2021-01-01")
 
       assert json_response(conn, 200) == [
-               %{"name" => "/page1", "count" => 2, "exits" => 2, "exit_rate" => 67},
+               %{"name" => "/page1", "count" => 2, "exits" => 2, "exit_rate" => 66},
                %{"name" => "/page2", "count" => 1, "exits" => 1, "exit_rate" => 100}
              ]
     end
