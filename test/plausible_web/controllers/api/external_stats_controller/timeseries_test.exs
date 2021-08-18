@@ -797,5 +797,42 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       assert first == %{"date" => "2021-01-01", "visitors" => 2}
       assert second == %{"date" => "2021-01-02", "visitors" => 1}
     end
+
+    test "filter with negated glob for pages", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/plausible.io",
+          timestamp: ~N[2021-01-02 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          timestamp: ~N[2021-01-02 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/blog/ignore",
+          timestamp: ~N[2021-01-02 00:00:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters" => "event:page!=/blog**"
+        })
+
+      %{"results" => [first, second | _rest]} = json_response(conn, 200)
+      assert first == %{"date" => "2021-01-01", "visitors" => 1}
+      assert second == %{"date" => "2021-01-02", "visitors" => 2}
+    end
   end
 end

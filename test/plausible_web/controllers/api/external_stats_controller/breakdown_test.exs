@@ -1334,5 +1334,65 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                ]
              }
     end
+
+    test "negated glob filter for pages", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/blog/ignore",
+          domain: site.domain
+        ),
+        build(:pageview,
+          pathname: "/blog",
+          domain: site.domain
+        ),
+        build(:pageview,
+          pathname: "/plausible.io",
+          domain: site.domain
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "event:page",
+          "filters" => "event:page!=/blog**"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"page" => "/plausible.io", "visitors" => 1}
+               ]
+             }
+    end
+
+    test "negated glob filter for sources", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/blog/ignore",
+          referrer_source: "Should not show"
+        ),
+        build(:pageview,
+          pathname: "/blog",
+          referrer_source: "Should not show"
+        ),
+        build(:pageview,
+          pathname: "/plausible.io",
+          referrer_source: "Google"
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "visit:source",
+          "filters" => "event:page!=/blog**"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"source" => "Google", "visitors" => 1}
+               ]
+             }
+    end
   end
 end

@@ -47,6 +47,10 @@ defmodule Plausible.Stats.Base do
           regex = page_regex(glob_expr)
           from(e in q, where: fragment("match(?, ?)", e.pathname, ^regex))
 
+        {:does_not_match, glob_expr} ->
+          regex = page_regex(glob_expr)
+          from(e in q, where: fragment("not(match(?, ?))", e.pathname, ^regex))
+
         {:member, list} ->
           from(e in q, where: e.pathname in ^list)
 
@@ -174,7 +178,13 @@ defmodule Plausible.Stats.Base do
 
         {:matches, expr} ->
           regex = page_regex(expr)
-          from(s in sessions_q, where: fragment("match(?, ?)", ^prop_name, ^regex))
+          prop_name = String.to_existing_atom(prop_name)
+          from(s in sessions_q, where: fragment("match(?, ?)", field(s, ^prop_name), ^regex))
+
+        {:does_not_match, expr} ->
+          regex = page_regex(expr)
+          prop_name = String.to_existing_atom(prop_name)
+          from(s in sessions_q, where: fragment("not(match(?, ?))", field(s, ^prop_name), ^regex))
 
         nil ->
           sessions_q

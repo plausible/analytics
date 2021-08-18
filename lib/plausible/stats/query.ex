@@ -171,7 +171,9 @@ defmodule Plausible.Stats.Query do
         query
 
       filter ->
-        put_filter(query, "visit:entry_page", filter)
+        query
+        |> put_filter("event:page", nil)
+        |> put_filter("visit:entry_page", filter)
     end
   end
 
@@ -216,6 +218,7 @@ defmodule Plausible.Stats.Query do
 
     cond do
       is_list && is_glob -> raise "Not implemented"
+      is_negated && is_glob -> {key, {:does_not_match, val}}
       key == "event:goal" -> {key, parse_goal_filter(val)}
       is_list -> {key, {:member, String.split(val, "|")}}
       is_glob -> {key, {:matches, val}}

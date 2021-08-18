@@ -74,6 +74,10 @@ defmodule Plausible.Stats.Aggregate do
         {:matches, expr} ->
           regex = page_regex(expr)
           {"match(p, ?)", regex}
+
+        {:does_not_match, expr} ->
+          regex = page_regex(expr)
+          {"not(match(p, ?))", regex}
       end
 
     time_query = "
