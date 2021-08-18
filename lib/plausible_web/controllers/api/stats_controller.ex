@@ -83,7 +83,7 @@ defmodule PlausibleWeb.Api.StatsController do
       }
     ]
 
-    {stats, nil}
+    {stats, 100}
   end
 
   defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _goal}} = query) do
