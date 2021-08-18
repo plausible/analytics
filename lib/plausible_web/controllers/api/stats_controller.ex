@@ -535,7 +535,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def filter_suggestions(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params)
+    query = Query.from(site.timezone, params) |> Filters.add_prefix()
 
     json(conn, Stats.filter_suggestions(site, query, params["filter_name"], params["q"]))
   end
