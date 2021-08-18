@@ -13,8 +13,8 @@ function buildDataSet(plot, present_index, ctx, label) {
   gradient.addColorStop(1, 'rgba(101,116,205, 0)');
 
   if (present_index) {
-    var dashedPart = plot.slice(present_index - 1);
-    var dashedPlot = (new Array(plot.length - dashedPart.length)).concat(dashedPart)
+    var dashedPart = plot.slice(present_index - 1, present_index + 1);
+    var dashedPlot = (new Array(present_index - 1)).concat(dashedPart)
     for(var i = present_index; i < plot.length; i++) {
       plot[i] = undefined
     }
