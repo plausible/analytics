@@ -87,16 +87,17 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _goal}} = query) do
-    total_filter = Map.merge(query.filters, %{"event:goal" => nil})
+    total_q = Query.remove_goal(query)
     prev_query = Query.shift_back(query, site)
+    prev_total_query = Query.shift_back(total_q, site)
 
     %{
       "visitors" => %{"value" => unique_visitors}
-    } = Stats.aggregate(site, %{query | filters: total_filter}, ["visitors"])
+    } = Stats.aggregate(site, total_q, ["visitors"])
 
     %{
       "visitors" => %{"value" => prev_unique_visitors}
-    } = Stats.aggregate(site, %{prev_query | filters: total_filter}, ["visitors"])
+    } = Stats.aggregate(site, prev_total_query, ["visitors"])
 
     %{
       "visitors" => %{"value" => converted_visitors},
@@ -483,10 +484,9 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
     pagination = parse_pagination(params)
 
-    total_filter = Map.merge(query.filters, %{"event:goal" => nil})
+    total_q = Query.remove_goal(query)
 
-    %{"visitors" => %{"value" => total_visitors}} =
-      Stats.aggregate(site, %{query | filters: total_filter}, ["visitors"])
+    %{"visitors" => %{"value" => total_visitors}} = Stats.aggregate(site, total_q, ["visitors"])
 
     prop_names = Stats.props(site, query)
 
@@ -507,10 +507,9 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
     pagination = parse_pagination(params)
 
-    total_filter = Map.merge(query.filters, %{"event:goal" => nil})
+    total_q = Query.remove_goal(query)
 
-    %{"visitors" => %{"value" => unique_visitors}} =
-      Stats.aggregate(site, %{query | filters: total_filter}, ["visitors"])
+    %{"visitors" => %{"value" => unique_visitors}} = Stats.aggregate(site, total_q, ["visitors"])
 
     prop_name = "event:props:" <> params["prop_name"]
 

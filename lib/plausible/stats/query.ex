@@ -171,6 +171,19 @@ defmodule Plausible.Stats.Query do
 
   def treat_page_filter_as_entry_page(q), do: q
 
+  def remove_goal(query) do
+    props =
+      Enum.map(query.filters, fn {key, val} -> key end)
+      |> Enum.filter(fn filter_key -> String.starts_with?(filter_key, "event:props:") end)
+
+    new_filters =
+      query.filters
+      |> Map.drop(props)
+      |> Map.delete("event:goal")
+
+    %__MODULE__{query | filters: new_filters}
+  end
+
   defp today(tz) do
     Timex.now(tz) |> Timex.to_date()
   end

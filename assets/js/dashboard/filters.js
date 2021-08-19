@@ -30,7 +30,7 @@ function clearAllFilters(history, query) {
 }
 
 function filterType(val) {
-  if (val.startsWith('!')) {
+  if (typeof(val) === 'string' && val.startsWith('!')) {
     return ['is not', val.substr(1)]
   }
 

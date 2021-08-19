@@ -16,38 +16,46 @@ defmodule Plausible.Stats.Breakdown do
     events = Enum.map(event_goals, & &1.event_name)
     event_query = %Query{query | filters: Map.put(query.filters, "event:name", {:member, events})}
 
-    event_goals =
-      breakdown(site, event_query, "event:name", metrics, pagination)
-      |> transform_keys(%{"name" => "goal"})
-
-    page_exprs = Enum.map(pageview_goals, & &1.page_path)
-    page_regexes = Enum.map(page_exprs, &page_regex/1)
+    event_results =
+      if Enum.any?(event_goals) do
+        breakdown(site, event_query, "event:name", metrics, pagination)
+        |> transform_keys(%{"name" => "goal"})
+      else
+        []
+      end
 
     {limit, page} = pagination
     offset = (page - 1) * limit
 
-    page_goals =
-      from(e in base_event_query(site, query),
-        order_by: [desc: fragment("uniq(?)", e.user_id)],
-        limit: ^limit,
-        offset: ^offset,
-        where:
-          fragment(
-            "notEmpty(multiMatchAllIndices(?, array(?)) as indices)",
-            e.pathname,
-            ^page_regexes
-          ),
-        group_by: fragment("index"),
-        select: %{
-          "index" => fragment("arrayJoin(indices) as index"),
-          "goal" => fragment("concat('Visit ', array(?)[index])", ^page_exprs)
-        }
-      )
-      |> select_event_metrics(metrics)
-      |> ClickhouseRepo.all()
-      |> Enum.map(fn row -> Map.delete(row, "index") end)
+    page_results =
+      if Enum.any?(pageview_goals) do
+        page_exprs = Enum.map(pageview_goals, & &1.page_path)
+        page_regexes = Enum.map(page_exprs, &page_regex/1)
 
-    zip_results(event_goals, page_goals, "event:goal", metrics)
+        from(e in base_event_query(site, query),
+          order_by: [desc: fragment("uniq(?)", e.user_id)],
+          limit: ^limit,
+          offset: ^offset,
+          where:
+            fragment(
+              "notEmpty(multiMatchAllIndices(?, array(?)) as indices)",
+              e.pathname,
+              ^page_regexes
+            ),
+          group_by: fragment("index"),
+          select: %{
+            "index" => fragment("arrayJoin(indices) as index"),
+            "goal" => fragment("concat('Visit ', array(?)[index])", ^page_exprs)
+          }
+        )
+        |> select_event_metrics(metrics)
+        |> ClickhouseRepo.all()
+        |> Enum.map(fn row -> Map.delete(row, "index") end)
+      else
+        []
+      end
+
+    zip_results(event_results, page_results, "event:goal", metrics)
   end
 
   def breakdown(site, query, "event:props:" <> custom_prop, metrics, pagination) do
