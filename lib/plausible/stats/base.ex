@@ -94,7 +94,7 @@ defmodule Plausible.Stats.Base do
           if filter_value == "(none)" do
             from(
               e in query,
-              where: fragment("not has(meta.key, ?)", ^prop_name)
+              where: fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name)
             )
           else
             from(
@@ -315,6 +315,13 @@ defmodule Plausible.Stats.Base do
   defp db_prop_val("utm_source", @no_ref), do: ""
   defp db_prop_val("utm_campaign", @no_ref), do: ""
   defp db_prop_val(_, val), do: val
+
+  defp utc_boundaries(%Query{period: "realtime"}, _timezone) do
+    last_datetime = NaiveDateTime.utc_now() |> Timex.shift(seconds: 5)
+    first_datetime = NaiveDateTime.utc_now() |> Timex.shift(minutes: -5)
+
+    {first_datetime, last_datetime}
+  end
 
   defp utc_boundaries(%Query{period: "30m"}, _timezone) do
     last_datetime = NaiveDateTime.utc_now() |> Timex.shift(seconds: 5)
