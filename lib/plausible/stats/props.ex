@@ -1,6 +1,5 @@
 defmodule Plausible.Stats.Props do
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.Query
   import Plausible.Stats.Base
 
   def props(site, query) do

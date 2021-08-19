@@ -173,7 +173,7 @@ defmodule Plausible.Stats.Query do
 
   def remove_goal(query) do
     props =
-      Enum.map(query.filters, fn {key, val} -> key end)
+      Enum.map(query.filters, fn {key, _val} -> key end)
       |> Enum.filter(fn filter_key -> String.starts_with?(filter_key, "event:props:") end)
 
     new_filters =
