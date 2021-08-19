@@ -145,12 +145,10 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
     test "property breakdown with prop filter", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:event, name: "Signup"),
-        build(:event, name: "Signup"),
-        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["A"]),
-        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"]),
-        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"]),
-        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"])
+        build(:pageview, user_id: 1),
+        build(:event, user_id: 1, name: "Signup", "meta.key": ["variant"], "meta.value": ["A"]),
+        build(:pageview, user_id: 2),
+        build(:event, user_id: 2, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"])
       ])
 
       insert(:goal, %{domain: site.domain, event_name: "Signup"})
@@ -164,7 +162,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"count" => 3, "name" => "B", "total_count" => 3, "conversion_rate" => 100.0}
+               %{"count" => 1, "name" => "B", "total_count" => 1, "conversion_rate" => 50.0}
              ]
     end
   end
