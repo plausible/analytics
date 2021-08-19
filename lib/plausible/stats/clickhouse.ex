@@ -568,7 +568,6 @@ defmodule Plausible.Stats.Clickhouse do
           Map.put(r, :exit_rate, nil)
         end
       end)
-      |> IO.inspect()
     else
       result
     end
