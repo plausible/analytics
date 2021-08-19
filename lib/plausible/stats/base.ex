@@ -33,15 +33,7 @@ defmodule Plausible.Stats.Base do
         where: e.domain == ^site.domain,
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
       )
-
-    q =
-      case query.sample_threshold do
-        "infinite" ->
-          q
-
-        threshold ->
-          from(e in q, hints: [sample: threshold])
-      end
+      |> add_sample_hint(query)
 
     q =
       case query.filters["event:page"] do
@@ -134,10 +126,10 @@ defmodule Plausible.Stats.Base do
     sessions_q =
       from(
         s in "sessions",
-        hints: [sample: query.sample_threshold],
         where: s.domain == ^site.domain,
         where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
       )
+      |> add_sample_hint(query)
 
     sessions_q =
       case {query.filters["visit:goal"], query.filters["visit:page"]} do
@@ -351,5 +343,15 @@ defmodule Plausible.Stats.Base do
     "^#{expr}\/?$"
     |> String.replace(~r/\*\*/, ".*")
     |> String.replace(~r/(?<!\.)\*/, "[^/]*")
+  end
+
+  defp add_sample_hint(db_q, query) do
+    case query.sample_threshold do
+      "infinite" ->
+        db_q
+
+      threshold ->
+        from(e in db_q, hints: [sample: threshold])
+    end
   end
 end
