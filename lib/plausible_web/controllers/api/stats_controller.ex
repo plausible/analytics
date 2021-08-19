@@ -15,7 +15,14 @@ defmodule PlausibleWeb.Api.StatsController do
         _ -> query
       end
 
-    timeseries = Task.async(fn -> Stats.timeseries(site, query, ["visitors"]) end)
+    timeseries_query =
+      if query.period == "realtime" do
+        %Query{query | period: "30m"}
+      else
+        query
+      end
+
+    timeseries = Task.async(fn -> Stats.timeseries(site, timeseries_query, ["visitors"]) end)
     {top_stats, sample_percent} = fetch_top_stats(site, query)
 
     timeseries_result = Task.await(timeseries)
@@ -62,11 +69,13 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp fetch_top_stats(site, %Query{period: "30m"} = query) do
+  defp fetch_top_stats(site, %Query{period: "realtime"} = query) do
+    query_30m = %Query{query | period: "30m"}
+
     %{
       "visitors" => %{"value" => visitors},
       "pageviews" => %{"value" => pageviews}
-    } = Stats.aggregate(site, query, ["visitors", "pageviews"])
+    } = Stats.aggregate(site, query_30m, ["visitors", "pageviews"])
 
     stats = [
       %{
@@ -482,6 +491,14 @@ defmodule PlausibleWeb.Api.StatsController do
   def conversions(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
+
+    query =
+      if query.period == "realtime" do
+        %Query{query | period: "30m"}
+      else
+        query
+      end
+
     pagination = parse_pagination(params)
 
     total_q = Query.remove_goal(query)

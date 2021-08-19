@@ -41,7 +41,7 @@ defmodule Plausible.Stats.Query do
     date = today(tz)
 
     %__MODULE__{
-      period: "30m",
+      period: "realtime",
       interval: "minute",
       date_range: Date.range(date, date),
       filters: parse_filters(params),
