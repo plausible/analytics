@@ -369,6 +369,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> Query.put_filter("event:goal", nil)
       |> Query.put_filter("event:name", {:is, "pageview"})
       |> Query.put_filter("visit:goal", query.filters["event:goal"])
+      |> Query.put_filter("visit:page", query.filters["event:page"])
 
     total_pageviews =
       Stats.breakdown(site, total_visits_query, "event:page", ["pageviews"], {limit, 1})

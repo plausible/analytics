@@ -165,17 +165,11 @@ defmodule Plausible.Stats.Query do
 
   def treat_page_filter_as_entry_page(%__MODULE__{filters: %{"visit:entry_page" => _}} = q), do: q
 
-  def treat_page_filter_as_entry_page(query) do
-    case query.filters["event:page"] do
-      nil ->
-        query
-
-      filter ->
-        query
-        |> put_filter("event:page", nil)
-        |> put_filter("visit:entry_page", filter)
-    end
+  def treat_page_filter_as_entry_page(%__MODULE__{filters: %{"event:page" => f}} = q) do
+    put_filter(q, "visit:entry_page", f)
   end
+
+  def treat_page_filter_as_entry_page(q), do: q
 
   defp today(tz) do
     Timex.now(tz) |> Timex.to_date()

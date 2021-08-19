@@ -173,22 +173,6 @@ defmodule Plausible.Stats.Breakdown do
     |> ClickhouseRepo.all()
   end
 
-  defp filter_converted_sessions(db_query, site, query) do
-    if query.filters["event:name"] || query.filters["event:page"] || query.filters["event:goal"] do
-      converted_sessions =
-        from(e in query_events(site, query),
-          select: %{session_id: fragment("DISTINCT ?", e.session_id)}
-        )
-
-      from(s in db_query,
-        join: cs in subquery(converted_sessions),
-        on: s.session_id == cs.session_id
-      )
-    else
-      db_query
-    end
-  end
-
   defp breakdown_events(_, _, _, [], _), do: []
 
   defp breakdown_events(site, query, property, metrics, {limit, page}) do

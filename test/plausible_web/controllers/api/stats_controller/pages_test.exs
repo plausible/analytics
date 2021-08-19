@@ -167,5 +167,91 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                %{"name" => "/page2", "count" => 1, "exits" => 1, "exit_rate" => 100}
              ]
     end
+
+    test "calculates correct exit rate when filtering for goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          user_id: 1,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: 1,
+          pathname: "/exit1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          user_id: 2,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: 2,
+          pathname: "/exit1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: 2,
+          pathname: "/exit2",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{"goal" => "Signup"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/exit-pages?period=day&date=2021-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"name" => "/exit1", "count" => 1, "exits" => 1, "exit_rate" => 50},
+               %{"name" => "/exit2", "count" => 1, "exits" => 1, "exit_rate" => 100}
+             ]
+    end
+
+    test "calculates correct exit rate when filtering for page", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          pathname: "/exit1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: 2,
+          pathname: "/exit1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: 2,
+          pathname: "/exit2",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: 3,
+          pathname: "/exit2",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: 3,
+          pathname: "/should-not-appear",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{"page" => "/exit1"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/exit-pages?period=day&date=2021-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"name" => "/exit1", "count" => 1, "exits" => 1, "exit_rate" => 50},
+               %{"name" => "/exit2", "count" => 1, "exits" => 1, "exit_rate" => 100}
+             ]
+    end
   end
 end

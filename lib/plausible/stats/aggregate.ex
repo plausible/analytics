@@ -42,6 +42,7 @@ defmodule Plausible.Stats.Aggregate do
     query = Query.treat_page_filter_as_entry_page(query)
 
     from(e in query_sessions(site, query), select: %{})
+    |> filter_converted_sessions(site, query)
     |> select_session_metrics(metrics)
     |> ClickhouseRepo.one()
   end

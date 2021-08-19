@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Base do
   def base_event_query(site, query) do
     events_q = query_events(site, query)
 
-    if Enum.any?(Filters.visit_props() ++ ["goal"], &query.filters["visit:" <> &1]) do
+    if Enum.any?(Filters.visit_props() ++ ["goal", "page"], &query.filters["visit:" <> &1]) do
       sessions_q =
         from(
           s in query_sessions(site, query),
@@ -132,15 +132,15 @@ defmodule Plausible.Stats.Base do
       )
 
     sessions_q =
-      case query.filters["visit:goal"] do
-        nil ->
+      case {query.filters["visit:goal"], query.filters["visit:page"]} do
+        {nil, nil} ->
           sessions_q
 
-        goal_filter ->
+        {goal_filter, page_filter} ->
           events_query =
             Query.put_filter(query, "event:goal", goal_filter)
             |> Query.put_filter("event:name", nil)
-            |> Query.put_filter("event:page", nil)
+            |> Query.put_filter("event:page", page_filter)
 
           events_q =
             from(
@@ -292,6 +292,22 @@ defmodule Plausible.Stats.Base do
       }
     )
     |> select_event_metrics(rest)
+  end
+
+  def filter_converted_sessions(db_query, site, query) do
+    if query.filters["event:name"] || query.filters["event:page"] || query.filters["event:goal"] do
+      converted_sessions =
+        from(e in query_events(site, query),
+          select: %{session_id: fragment("DISTINCT ?", e.session_id)}
+        )
+
+      from(s in db_query,
+        join: cs in subquery(converted_sessions),
+        on: s.session_id == cs.session_id
+      )
+    else
+      db_query
+    end
   end
 
   defp db_prop_val("referrer_source", @no_ref), do: ""
