@@ -30,10 +30,18 @@ defmodule Plausible.Stats.Base do
     q =
       from(
         e in "events",
-        hints: [sample: query.sample_threshold],
         where: e.domain == ^site.domain,
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
       )
+
+    q =
+      case query.sample_threshold do
+        "infinite" ->
+          q
+
+        threshold ->
+          from(e in q, hints: [sample: threshold])
+      end
 
     q =
       case query.filters["event:page"] do

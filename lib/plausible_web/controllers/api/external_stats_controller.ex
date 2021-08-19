@@ -12,6 +12,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   def aggregate(conn, params) do
     site = conn.assigns[:site]
+    params = Map.put(params, "sample_threshold", "infinite")
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
@@ -52,6 +53,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   def breakdown(conn, params) do
     site = conn.assigns[:site]
+    params = Map.put(params, "sample_threshold", "infinite")
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
@@ -124,6 +126,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   def timeseries(conn, params) do
     site = conn.assigns[:site]
+    params = Map.put(params, "sample_threshold", "infinite")
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
