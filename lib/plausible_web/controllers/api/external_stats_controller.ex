@@ -12,6 +12,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   def aggregate(conn, params) do
     site = conn.assigns[:site]
+    params = Map.put(params, "sample_threshold", "infinite")
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
@@ -27,13 +28,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
               Task.async(fn -> Plausible.Stats.aggregate(site, query, metrics) end)
             ])
 
-          Enum.map(curr_result, fn {metric, %{value: current_val}} ->
-            %{value: prev_val} = prev_result[metric]
+          Enum.map(curr_result, fn {metric, %{"value" => current_val}} ->
+            %{"value" => prev_val} = prev_result[metric]
 
             {metric,
              %{
-               value: current_val,
-               change: percent_change(prev_val, current_val)
+               "value" => current_val,
+               "change" => percent_change(prev_val, current_val)
              }}
           end)
           |> Enum.into(%{})
@@ -52,6 +53,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   def breakdown(conn, params) do
     site = conn.assigns[:site]
+    params = Map.put(params, "sample_threshold", "infinite")
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
@@ -79,15 +81,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
      "The `property` parameter is required. Please provide at least one property to show a breakdown by."}
   end
 
+  defp event_only_property?("event:name"), do: true
+  defp event_only_property?("event:props:" <> _), do: true
+  defp event_only_property?(_), do: false
+
   @event_metrics ["visitors", "pageviews"]
-  @session_metrics ["bounce_rate", "visit_duration"]
+  @session_metrics ["visits", "bounce_rate", "visit_duration"]
   defp parse_metrics(params, property, query) do
     metrics =
       Map.get(params, "metrics", "visitors")
       |> String.split(",")
 
+    event_only_filter = Map.keys(query.filters) |> Enum.find(&event_only_property?/1)
+
     valid_metrics =
-      if property == "event:name" || query.filters["event:name"] do
+      if event_only_property?(property) || event_only_filter do
         @event_metrics
       else
         @event_metrics ++ @session_metrics
@@ -97,13 +105,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
     if invalid_metric do
       cond do
-        property == "event:name" && invalid_metric in @session_metrics ->
+        event_only_property?(property) && invalid_metric in @session_metrics ->
           {:error,
-           "Session metric `#{invalid_metric}` cannot be queried for breakdown by `event:name`."}
+           "Session metric `#{invalid_metric}` cannot be queried for breakdown by `#{property}`."}
 
-        query.filters["event:name"] && invalid_metric in @session_metrics ->
+        event_only_filter && invalid_metric in @session_metrics ->
           {:error,
-           "Session metric `#{invalid_metric}` cannot be queried when using a filter on `event:name`."}
+           "Session metric `#{invalid_metric}` cannot be queried when using a filter on `#{
+             event_only_filter
+           }`."}
 
         true ->
           {:error,
@@ -116,6 +126,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   def timeseries(conn, params) do
     site = conn.assigns[:site]
+    params = Map.put(params, "sample_threshold", "infinite")
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),

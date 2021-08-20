@@ -8,7 +8,7 @@ import numberFormatter, {durationFormatter} from '../../number-formatter'
 import {parseQuery} from '../../query'
 
 const TITLES = {
-  sources: 'Top sources',
+  sources: 'Top Sources',
   utm_mediums: 'Top UTM mediums',
   utm_sources: 'Top UTM sources',
   utm_campaigns: 'Top UTM campaigns'
@@ -85,7 +85,10 @@ class SourcesModal extends React.Component {
     return (
       <tr className="text-sm dark:text-gray-200" key={source.name}>
         <td className="p-2">
-          <img src={`https://icons.duckduckgo.com/ip3/${source.url}.ico`} referrerPolicy="no-referrer" className="h-4 w-4 mr-2 align-middle inline" />
+          <img
+            src={`/favicon/sources/${encodeURIComponent(source.name)}`}
+            className="h-4 w-4 mr-2 align-middle inline"
+          />
           <Link className="hover:underline" to={{search: query.toString(), pathname: '/' + encodeURIComponent(this.props.site.domain)}}>{ source.name }</Link>
         </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(source.count)}</td>
@@ -125,10 +128,10 @@ class SourcesModal extends React.Component {
         <div className="my-4 border-b border-gray-300 dark:border-gray-500"></div>
 
         <main className="modal__content">
-          <table className="w-full table-striped table-fixed">
+          <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
             <thead>
               <tr>
-                <th className="p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Source</th>
+                <th className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Source</th>
                 <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{this.label()}</th>
                 {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Bounce rate</th>}
                 {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visit duration</th>}
