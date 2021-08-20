@@ -12,7 +12,7 @@
   "bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], [], "hexpm", "7af5c7e09fe1d40f76c8e4f9dd2be7cebd83909f31fee7cd0e9eadc567da8353"},
   "cachex": {:hex, :cachex, "3.3.0", "6f2ebb8f27491fe39121bd207c78badc499214d76c695658b19d6079beeca5c2", [:mix], [{:eternal, "~> 1.2", [hex: :eternal, repo: "hexpm", optional: false]}, {:jumper, "~> 1.0", [hex: :jumper, repo: "hexpm", optional: false]}, {:sleeplocks, "~> 1.1", [hex: :sleeplocks, repo: "hexpm", optional: false]}, {:unsafe, "~> 1.0", [hex: :unsafe, repo: "hexpm", optional: false]}], "hexpm", "d90e5ee1dde14cef33f6b187af4335b88748b72b30c038969176cd4e6ccc31a1"},
   "certifi": {:hex, :certifi, "2.6.1", "dbab8e5e155a0763eea978c913ca280a6b544bfa115633fa20249c3d396d9493", [:rebar3], [], "hexpm", "524c97b4991b3849dd5c17a631223896272c6b0af446778ba4675a1dff53bb7e"},
-  "clickhouse_ecto": {:git, "https://github.com/plausible/clickhouse_ecto.git", "07adb8da725346e4de6d376069192e9942fe7a5b", []},
+  "clickhouse_ecto": {:git, "https://github.com/plausible/clickhouse_ecto.git", "93d86c48230f85797555c348dbe9e8738d3b8cc2", []},
   "clickhousex": {:git, "https://github.com/plausible/clickhousex", "0832dd4b1af1f0eba1d1018c231bf0d8d281f031", []},
   "combination": {:hex, :combination, "0.0.3", "746aedca63d833293ec6e835aa1f34974868829b1486b1e1cb0685f0b2ae1f41", [:mix], [], "hexpm", "72b099f463df42ef7dc6371d250c7070b57b6c5902853f69deb894f79eda18ca"},
   "combine": {:hex, :combine, "0.10.0", "eff8224eeb56498a2af13011d142c5e7997a80c8f5b97c499f84c841032e429f", [:mix], [], "hexpm", "1b1dbc1790073076580d0d1d64e42eae2366583e7aecd455d1215b0d16f2451b"},

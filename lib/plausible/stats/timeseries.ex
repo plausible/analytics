@@ -5,7 +5,7 @@ defmodule Plausible.Stats.Timeseries do
   use Plausible.Stats.Fragments
 
   @event_metrics ["visitors", "pageviews"]
-  @session_metrics ["bounce_rate", "visit_duration"]
+  @session_metrics ["visits", "bounce_rate", "visit_duration"]
   def timeseries(site, query, metrics) do
     steps = buckets(query)
 
@@ -37,6 +37,8 @@ defmodule Plausible.Stats.Timeseries do
   end
 
   defp sessions_timeseries(site, query, metrics) do
+    query = Query.treat_page_filter_as_entry_page(query)
+
     from(e in query_sessions(site, query),
       group_by: fragment("date"),
       order_by: fragment("date"),
@@ -69,6 +71,10 @@ defmodule Plausible.Stats.Timeseries do
     end)
   end
 
+  defp buckets(%Query{period: "30m", interval: "minute"}) do
+    Enum.into(-30..-1, [])
+  end
+
   defp select_bucket(q, site, %Query{interval: "month"}) do
     from(
       e in q,
@@ -97,38 +103,13 @@ defmodule Plausible.Stats.Timeseries do
     )
   end
 
-  defp select_event_metrics(q, []), do: q
-
-  defp select_event_metrics(q, ["pageviews" | rest]) do
-    from(e in q,
-      select_merge: %{"pageviews" => fragment("countIf(? = 'pageview')", e.name)}
-    )
-    |> select_event_metrics(rest)
-  end
-
-  defp select_event_metrics(q, ["visitors" | rest]) do
-    from(e in q,
-      select_merge: %{"visitors" => fragment("uniq(?) as count", e.user_id)}
-    )
-    |> select_event_metrics(rest)
-  end
-
-  defp select_session_metrics(q, []), do: q
-
-  defp select_session_metrics(q, ["bounce_rate" | rest]) do
-    from(s in q,
+  defp select_bucket(q, _site, %Query{interval: "minute"}) do
+    from(
+      e in q,
       select_merge: %{
-        "bounce_rate" => bounce_rate()
+        "date" => fragment("dateDiff('minute', now(), ?) as date", e.timestamp)
       }
     )
-    |> select_session_metrics(rest)
-  end
-
-  defp select_session_metrics(q, ["visit_duration" | rest]) do
-    from(s in q,
-      select_merge: %{"visit_duration" => visit_duration()}
-    )
-    |> select_session_metrics(rest)
   end
 
   defp empty_row(date, metrics) do
@@ -136,6 +117,7 @@ defmodule Plausible.Stats.Timeseries do
       case metric do
         "pageviews" -> Map.merge(row, %{"pageviews" => 0})
         "visitors" -> Map.merge(row, %{"visitors" => 0})
+        "visits" -> Map.merge(row, %{"visits" => 0})
         "bounce_rate" -> Map.merge(row, %{"bounce_rate" => nil})
         "visit_duration" -> Map.merge(row, %{"visit_duration" => nil})
       end
