@@ -267,7 +267,8 @@ class Filters extends React.Component {
     return (
       <>
         <PlusIcon className="-ml-1 mr-1 h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />
-        Add filter
+        {/* This would have been a good use-case for JSX! But in the interest of keeping the breakpoint width logic with TailwindCSS, this is a better long-term way to deal with it. */}
+        <span className="sm:hidden">Filter</span><span className="hidden sm:inline-block">Add filter</span>
       </>
     )
   }
