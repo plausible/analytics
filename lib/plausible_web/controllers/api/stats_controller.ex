@@ -538,6 +538,18 @@ defmodule PlausibleWeb.Api.StatsController do
       |> Enum.map(fn prop ->
         Map.put(prop, "conversion_rate", calculate_cr(unique_visitors, prop["count"]))
       end)
+      |> Enum.map(fn prop ->
+        # TODO Only needs to be run for the url breakdown type.
+        # Figure out if the prop is a URL
+        uri = URI.parse(prop["name"])
+        if uri.host and uri.scheme do
+          # If it is, add a new key is_url to the map and return that.
+          Map.put(prop, "is_url", true)
+        else
+          # If not, return the map object as is.
+          prop
+        end
+      end)
 
     json(conn, props)
   end
