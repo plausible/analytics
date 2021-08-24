@@ -499,8 +499,6 @@ defmodule PlausibleWeb.Api.StatsController do
         query
       end
 
-    pagination = parse_pagination(params)
-
     total_q = Query.remove_goal(query)
 
     %{"visitors" => %{"value" => total_visitors}} = Stats.aggregate(site, total_q, ["visitors"])
@@ -508,7 +506,7 @@ defmodule PlausibleWeb.Api.StatsController do
     prop_names = Stats.props(site, query)
 
     conversions =
-      Stats.breakdown(site, query, "event:goal", ["visitors", "events"], pagination)
+      Stats.breakdown(site, query, "event:goal", ["visitors", "events"], {100, 1})
       |> transform_keys(%{"goal" => "name", "visitors" => "count", "events" => "total_count"})
       |> Enum.map(fn goal ->
         goal

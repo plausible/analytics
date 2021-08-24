@@ -34,15 +34,15 @@ function renderArrow(query, site, period, prevDate, nextDate) {
     period
   );
 
-  const leftClasses = `flex items-center px-2 border-r border-gray-300 rounded-l
+  const leftClasses = `flex items-center px-1 sm:px-2 border-r border-gray-300 rounded-l
       dark:border-gray-500 dark:text-gray-100 ${
       disabledLeft ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
     }`;
-  const rightClasses = `flex items-center px-2 rounded-r dark:text-gray-100 ${
+  const rightClasses = `flex items-center px-1 sm:px-2 rounded-r dark:text-gray-100 ${
       disabledRight ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
     }`;
   return (
-    <div className="hidden md:flex rounded shadow bg-white mr-4 cursor-pointer dark:bg-gray-800">
+    <div className="flex rounded shadow bg-white mr-2 sm:mr-4 cursor-pointer dark:bg-gray-800">
       <QueryButton
         to={{ date: prevDate }}
         query={query}
@@ -387,7 +387,7 @@ class DatePicker extends React.Component {
   renderPicker() {
     return (
       <div
-        className="w-28 sm:w-36 md:w-44 md:relative"
+        className="w-20 sm:w-36 md:w-44 md:relative"
         ref={(node) => (this.dropDownNode = node)}
       >
         <div
@@ -402,7 +402,7 @@ class DatePicker extends React.Component {
           aria-expanded="false"
           aria-controls="datemenu"
         >
-          <span className="mr-1 md:mr-2">
+          <span className="truncate mr-1 md:mr-2">
             {this.props.leadingText}
             <span className="font-medium">{this.timeFrameText()}</span>
           </span>

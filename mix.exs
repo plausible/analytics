@@ -68,7 +68,7 @@ defmodule Plausible.MixProject do
       {:poison, "~> 3.1"},
       {:ref_inspector, "~> 1.3"},
       {:timex, "~> 3.6"},
-      {:ua_inspector, "~> 0.18"},
+      {:ua_inspector, "~> 2.2"},
       {:bamboo, "~> 2.0"},
       {:hackney, "~> 1.8"},
       {:bamboo_phoenix, "~> 1.0.0"},
