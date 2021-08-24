@@ -84,7 +84,7 @@ class AllSources extends React.Component {
             <span>{this.label()}</span>
           </div>
 
-          <FlipMove>
+          <FlipMove className="flex-grow">
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
           <MoreLink site={this.props.site} list={this.state.referrers} endpoint="sources" />
@@ -97,13 +97,13 @@ class AllSources extends React.Component {
 
   renderContent() {
     return (
-      <LazyLoader onVisible={this.onVisible}>
+      <LazyLoader className="flex flex-col flex-grow" onVisible={this.onVisible}>
         <div id="sources" className="flex justify-between w-full">
           <h3 className="font-bold dark:text-gray-100">Top Sources</h3>
           { this.props.renderTabs() }
         </div>
         { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
+        <FadeIn show={!this.state.loading} className="flex flex-col flex-grow">
           { this.renderList() }
         </FadeIn>
       </LazyLoader>
