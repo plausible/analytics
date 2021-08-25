@@ -111,6 +111,8 @@ geolite2_country_db =
     Application.app_dir(:plausible) <> "/priv/geodb/dbip-country.mmdb"
   )
 
+ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", geolite2_country_db)
+
 disable_auth =
   config_dir
   |> get_var_from_path_or_env("DISABLE_AUTH", "false")
@@ -388,13 +390,13 @@ config :kaffy,
     ]
   ]
 
-if config_env() != :test && geolite2_country_db do
+if config_env() != :test do
   config :geolix,
     databases: [
       %{
-        id: :country,
+        id: :geolocation,
         adapter: Geolix.Adapter.MMDB2,
-        source: geolite2_country_db,
+        source: ip_geolocation_db,
         result_as: :raw
       }
     ]
