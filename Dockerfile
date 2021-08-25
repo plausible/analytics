@@ -41,8 +41,6 @@ RUN npm run deploy --prefix ./assets && \
     npm run deploy --prefix ./tracker && \
     mix phx.digest priv/static && \
     mix download_country_database && \
-    mix ref_inspector.download -f && \
-    mix ua_inspector.download -f && \
 # https://hexdocs.pm/sentry/Sentry.Sources.html#module-source-code-storage
     mix sentry_recompile
 
