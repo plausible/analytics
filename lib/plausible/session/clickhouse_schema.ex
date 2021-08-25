@@ -24,11 +24,10 @@ defmodule Plausible.ClickhouseSession do
     field :referrer, :string
     field :referrer_source, :string
 
-    field :country_code, :string
-    field :country_geoname_id, :integer
-    field :subdivision1_geoname_id, :integer
-    field :subdivision2_geoname_id, :integer
-    field :city_geoname_id, :integer
+    field :country_code, :string, default: ""
+    field :subdivision1_code, :string, default: ""
+    field :subdivision2_code, :string, default: ""
+    field :city_geoname_id, :integer, default: 0
 
     field :screen_size, :string
     field :operating_system, :string
@@ -63,8 +62,8 @@ defmodule Plausible.ClickhouseSession do
       :utm_campaign,
       :country_code,
       :country_geoname_id,
-      :subdivision1_geoname_id,
-      :subdivision2_geoname_id,
+      :subdivision1_code,
+      :subdivision2_code,
       :city_geoname_id,
       :screen_size
     ])

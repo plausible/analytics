@@ -832,59 +832,51 @@ defmodule Plausible.Stats.Clickhouse do
     ClickhouseRepo.all(
       from e in base_query_w_sessions(site, query),
         group_by: e.country_code,
-        group_by: e.subdivision1_geoname_id,
+        group_by: e.subdivision1_code,
         where: e.country_code == ^country,
         order_by: [desc: uniq(e.user_id)],
         select: %{
-          name:
-            fragment(
-              "if(? = 0 , 'Other', toString(subdivision1_geoname_id)) as subdivision1_geoname_id",
-              e.subdivision1_geoname_id
-            ),
+          name: fragment("if(? = '' , 'Other', ?)", e.subdivision1_code, e.subdivision1_code),
           count: uniq(e.user_id)
         }
     )
     |> add_percentages
   end
 
-  def subdivisions2(site, query, country_name, subdivision1_geoname_id) do
+  def subdivisions2(site, query, country_name, subdivision1_code) do
     country = Plausible.Stats.CountryName.to_alpha2(country_name)
-    subdivision1 = if subdivision1_geoname_id != "Other", do: subdivision1_geoname_id, else: ""
+    subdivision1 = if subdivision1_code != "Other", do: subdivision1_code, else: ""
 
     ClickhouseRepo.all(
       from e in base_query_w_sessions(site, query),
         group_by: e.country_code,
-        group_by: e.subdivision1_geoname_id,
-        group_by: e.subdivision2_geoname_id,
+        group_by: e.subdivision1_code,
+        group_by: e.subdivision2_code,
         where: e.country_code == ^country,
-        where: e.subdivision1_geoname_id == ^subdivision1,
+        where: e.subdivision1_code == ^subdivision1,
         order_by: [desc: uniq(e.user_id)],
         select: %{
-          name:
-            fragment(
-              "if(? = 0, 'Other', toString(subdivision2_geoname_id)) as subdivision2_geoname_id",
-              e.subdivision2_geoname_id
-            ),
+          name: fragment("if(? = '' , 'Other', ?)", e.subdivision2_code, e.subdivision2_code),
           count: uniq(e.user_id)
         }
     )
     |> add_percentages
   end
 
-  def cities(site, query, country_name, subdivision1_geoname_id, subdivision2_geoname_id) do
+  def cities(site, query, country_name, subdivision1_code, subdivision2_code) do
     country = Plausible.Stats.CountryName.to_alpha2(country_name)
-    subdivision1 = if subdivision1_geoname_id != "Other", do: subdivision1_geoname_id, else: ""
-    subdivision2 = if subdivision2_geoname_id != "Other", do: subdivision2_geoname_id, else: ""
+    subdivision1 = if subdivision1_code != "Other", do: subdivision1_code, else: ""
+    subdivision2 = if subdivision2_code != "Other", do: subdivision2_code, else: ""
 
     ClickhouseRepo.all(
       from e in base_query_w_sessions(site, query),
         group_by: e.country_code,
-        group_by: e.subdivision1_geoname_id,
-        group_by: e.subdivision2_geoname_id,
+        group_by: e.subdivision1_code,
+        group_by: e.subdivision2_code,
         group_by: e.city_geoname_id,
         where: e.country_code == ^country,
-        where: e.subdivision1_geoname_id == ^subdivision1,
-        where: e.subdivision2_geoname_id == ^subdivision2,
+        where: e.subdivision1_code == ^subdivision1,
+        where: e.subdivision2_code == ^subdivision2,
         order_by: [desc: uniq(e.user_id)],
         select: %{
           name:

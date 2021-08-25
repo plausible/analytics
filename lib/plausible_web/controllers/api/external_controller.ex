@@ -101,8 +101,8 @@ defmodule PlausibleWeb.Api.ExternalController do
         utm_campaign: query["utm_campaign"],
         country_code: location_details[:country_code],
         country_geoname_id: location_details[:country_geoname_id],
-        subdivision1_geoname_id: location_details[:subdivision1_geoname_id],
-        subdivision2_geoname_id: location_details[:subdivision2_geoname_id],
+        subdivision1_code: location_details[:subdivision1_code],
+        subdivision2_code: location_details[:subdivision2_code],
         city_geoname_id: location_details[:city_geoname_id],
         operating_system: ua && os_name(ua),
         operating_system_version: ua && os_version(ua),
@@ -201,23 +201,6 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp get_subdivision2_geoname_id(result) do
-    if result && result.subdivisions do
-      cond do
-        length(result.subdivisions) == 1 ->
-          Enum.at(result.subdivisions, 0).geoname_id
-
-        length(result.subdivisions) > 1 ->
-          Enum.at(result.subdivisions, 1).geoname_id
-
-        true ->
-          nil
-      end
-    else
-      nil
-    end
-  end
-
   defp visitor_location_details(conn) do
     result =
       PlausibleWeb.RemoteIp.get(conn)
@@ -225,29 +208,24 @@ defmodule PlausibleWeb.Api.ExternalController do
 
     country_code = if result && result.country, do: result.country.iso_code, else: nil
 
-    country_geoname_id = if result && result.country, do: result.country.geoname_id, else: nil
+    subdivision1_code =
+      if result && result.subdivisions && length(result.subdivisions) > 0 do
+        subdivision_code = Enum.at(result.subdivisions, 0).iso_code
+        country_code <> "-" <> subdivision_code
+      end
 
-    subdivision1_geoname_id =
-      if result && result.subdivisions && length(result.subdivisions) > 1,
-        do: Enum.at(result.subdivisions, 0).geoname_id,
-        else: country_geoname_id
+    subdivision2_code =
+      if result && result.subdivisions && length(result.subdivisions) > 1 do
+        subdivision_code = Enum.at(result.subdivisions, 1).iso_code
+        country_code <> "-" <> subdivision_code
+      end
 
-    subdivision2_geoname_id = get_subdivision2_geoname_id(result)
+    city_geoname_id = result && result.city && result.city.geoname_id
 
-    city_geoname_id =
-      if result && result.city,
-        do: result.city.geoname_id,
-        else:
-          if(result && result.subdivisions && length(result.subdivisions) > 1,
-            do: Enum.at(result.subdivisions, 1).geoname_id,
-            else: nil
-          )
-
-    _output = %{
+    %{
       country_code: country_code,
-      country_geoname_id: country_geoname_id,
-      subdivision1_geoname_id: subdivision1_geoname_id,
-      subdivision2_geoname_id: subdivision2_geoname_id,
+      subdivision1_code: subdivision1_code,
+      subdivision2_code: subdivision2_code,
       city_geoname_id: city_geoname_id
     }
   end
