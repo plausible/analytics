@@ -529,7 +529,7 @@ defmodule PlausibleWeb.Api.StatsController do
     prop_name = "event:props:" <> params["prop_name"]
 
     props =
-      Stats.breakdown(site, query, prop_name, ["visitors", "events"], pagination)
+      Stats.breakdown(site, query, prop_name, ["visitors", "events"], {100, 1})
       |> transform_keys(%{
         params["prop_name"] => "name",
         "visitors" => "count",
