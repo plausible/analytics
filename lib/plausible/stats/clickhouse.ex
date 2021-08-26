@@ -904,14 +904,14 @@ defmodule Plausible.Stats.Clickhouse do
         where: e.subdivision2_code == ^subdivision2,
         order_by: [desc: uniq(e.user_id)],
         select: %{
-          name:
-            fragment(
-              "if(? = 0, 'NA', toString(city_geoname_id)) as city_geoname_id",
-              e.city_geoname_id
-            ),
+          name: e.city_geoname_id,
           count: uniq(e.user_id)
         }
     )
+    |> Enum.map(fn stat ->
+      geoname_id = stat[:name]
+      Map.put(stat, :name, Plausible.Stats.CountryName.from_geoname_id(geoname_id, "N/A"))
+    end)
     |> add_percentages
   end
 
