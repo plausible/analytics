@@ -60,7 +60,7 @@ class PagesModal extends React.Component {
     return (
       <tr className="text-sm dark:text-gray-200" key={page.name}>
         <td className="p-2">
-          <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline">{page.name}</Link>
+          <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline block truncate">{page.name}</Link>
         </td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
         {this.showPageviews() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.pageviews)}</td> }
