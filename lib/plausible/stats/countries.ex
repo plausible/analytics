@@ -1,4 +1,17 @@
 defmodule Plausible.Stats.CountryName do
+  @iso3166_1_source Application.app_dir(:plausible, "priv/iso_3166-1.json")
+  @iso3166_2_source Application.app_dir(:plausible, "priv/iso_3166-2.json")
+
+  @subdivision_names File.read!(@iso3166_2_source)
+                     |> Jason.decode!()
+                     |> Map.get("3166-2")
+                     |> Enum.map(fn %{"code" => code, "name" => name} -> {code, name} end)
+                     |> Enum.into(%{})
+
+  @subdivision_codes @subdivision_names
+                     |> Enum.map(fn {code, name} -> {name, code} end)
+                     |> Enum.into(%{})
+
   @country_codes_to_names %{
     "AF" => "Afghanistan",
     "AX" => "Aland Islands",
@@ -507,5 +520,13 @@ defmodule Plausible.Stats.CountryName do
 
   def from_iso3166(code) do
     Map.get(@country_codes_to_names, code, code)
+  end
+
+  def from_iso3166_2(code) do
+    Map.get(@subdivision_names, code, code)
+  end
+
+  def to_iso3166_2(name) do
+    Map.get(@subdivision_codes, name, name)
   end
 end

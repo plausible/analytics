@@ -840,12 +840,22 @@ defmodule Plausible.Stats.Clickhouse do
           count: uniq(e.user_id)
         }
     )
+    |> Enum.map(fn stat ->
+      iso_code = stat[:name]
+
+      Map.put(stat, :name, Plausible.Stats.CountryName.from_iso3166_2(iso_code))
+    end)
     |> add_percentages
   end
 
   def subdivisions2(site, query, country_name, subdivision1_code) do
     country = Plausible.Stats.CountryName.to_alpha2(country_name)
-    subdivision1 = if subdivision1_code != "Other", do: subdivision1_code, else: ""
+
+    subdivision1 =
+      case subdivision1_code do
+        "Other" -> ""
+        name -> Plausible.Stats.CountryName.to_iso3166_2(name)
+      end
 
     ClickhouseRepo.all(
       from e in base_query_w_sessions(site, query),
@@ -860,13 +870,28 @@ defmodule Plausible.Stats.Clickhouse do
           count: uniq(e.user_id)
         }
     )
+    |> Enum.map(fn stat ->
+      iso_code = stat[:name]
+
+      Map.put(stat, :name, Plausible.Stats.CountryName.from_iso3166_2(iso_code))
+    end)
     |> add_percentages
   end
 
   def cities(site, query, country_name, subdivision1_code, subdivision2_code) do
     country = Plausible.Stats.CountryName.to_alpha2(country_name)
-    subdivision1 = if subdivision1_code != "Other", do: subdivision1_code, else: ""
-    subdivision2 = if subdivision2_code != "Other", do: subdivision2_code, else: ""
+
+    subdivision1 =
+      case subdivision1_code do
+        "Other" -> ""
+        name -> Plausible.Stats.CountryName.to_iso3166_2(name)
+      end
+
+    subdivision2 =
+      case subdivision2_code do
+        "Other" -> ""
+        name -> Plausible.Stats.CountryName.to_iso3166_2(name)
+      end
 
     ClickhouseRepo.all(
       from e in base_query_w_sessions(site, query),
