@@ -176,7 +176,9 @@ defmodule Plausible.Stats.Query do
   def treat_page_filter_as_entry_page(%__MODULE__{filters: %{"visit:entry_page" => _}} = q), do: q
 
   def treat_page_filter_as_entry_page(%__MODULE__{filters: %{"event:page" => f}} = q) do
-    put_filter(q, "visit:entry_page", f)
+    q
+    |> put_filter("visit:entry_page", f)
+    |> put_filter("event:page", nil)
   end
 
   def treat_page_filter_as_entry_page(q), do: q
@@ -190,6 +192,7 @@ defmodule Plausible.Stats.Query do
       query.filters
       |> Map.drop(props)
       |> Map.delete("event:goal")
+      |> Map.delete("event:name")
 
     %__MODULE__{query | filters: new_filters}
   end

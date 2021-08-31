@@ -9,12 +9,6 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
 
-    query =
-      case query.filters["event:goal"] do
-        nil -> Query.put_filter(query, "event:name", {:is, "pageview"})
-        _ -> query
-      end
-
     timeseries_query =
       if query.period == "realtime" do
         %Query{query | period: "30m"}
@@ -328,12 +322,6 @@ defmodule PlausibleWeb.Api.StatsController do
   def pages(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
-
-    query =
-      case query.filters["event:goal"] do
-        nil -> Query.put_filter(query, "event:name", {:is, "pageview"})
-        _ -> query
-      end
 
     metrics =
       if params["detailed"],
