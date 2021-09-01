@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Added `CLICKHOUSE_FLUSH_INTERVAL_MS` and `CLICKHOUSE_MAX_BUFFER_SIZE` configuration parameters plausible/analytics#1073
 - Ability to invite users to sites with different roles plausible/analytics#1122
 - Option to configure a custom name for the script file
+- Publish multi-platform docker images (amd64 & arm64)
 
 ### Fixed
 - Fix weekly report time range plausible/analytics#951
