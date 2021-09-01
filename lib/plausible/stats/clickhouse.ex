@@ -834,7 +834,8 @@ defmodule Plausible.Stats.Clickhouse do
         group_by: e.country_code,
         group_by: e.subdivision1_code,
         where: e.country_code == ^country,
-        order_by: [desc: uniq(e.user_id)],
+      order_by: [desc: uniq(e.user_id)],
+      limit: 9,
         select: %{
           name: fragment("if(? = '' , 'Other', ?)", e.subdivision1_code, e.subdivision1_code),
           count: uniq(e.user_id)
