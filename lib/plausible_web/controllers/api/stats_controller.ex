@@ -213,6 +213,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:source", metrics, pagination)
+      |> maybe_add_cr(site, query, pagination, "source", "visit:source")
       |> transform_keys(%{"source" => "name", "visitors" => "count"})
 
     json(conn, res)
@@ -231,6 +232,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_medium", metrics, pagination)
+      |> maybe_add_cr(site, query, pagination, "utm_medium", "visit:utm_medium")
       |> transform_keys(%{"utm_medium" => "name", "visitors" => "count"})
 
     json(conn, res)
@@ -249,6 +251,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_campaign", metrics, pagination)
+      |> maybe_add_cr(site, query, pagination, "utm_campaign", "visit:utm_campaign")
       |> transform_keys(%{"utm_campaign" => "name", "visitors" => "count"})
 
     json(conn, res)
@@ -267,6 +270,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_source", metrics, pagination)
+      |> maybe_add_cr(site, query, pagination, "utm_source", "visit:utm_source")
       |> transform_keys(%{"utm_source" => "name", "visitors" => "count"})
 
     json(conn, res)
@@ -578,6 +582,34 @@ defmodule PlausibleWeb.Api.StatsController do
 
       true ->
         query
+    end
+  end
+
+  defp add_cr(list, list_without_goals, key_name) do
+    Enum.map(list, fn item ->
+      without_goal = Enum.find(list_without_goals, fn s -> s[key_name] === item[key_name] end)
+
+      item
+      |> Map.put(:conversion_rate, calculate_cr(without_goal["visitors"], item["visitors"]))
+    end)
+  end
+
+  defp maybe_add_cr(list, site, query, pagination, key_name, filter_name) do
+    if Map.has_key?(query.filters, "event:goal") do
+      items = Enum.map(list, fn item -> item[key_name] end)
+
+      query_without_goal =
+        query
+        |> Query.put_filter(filter_name, {:member, items})
+        |> Query.remove_goal()
+
+      res_without_goal =
+        Stats.breakdown(site, query_without_goal, filter_name, ["visitors"], pagination)
+
+      list
+      |> add_cr(res_without_goal, key_name)
+    else
+      list
     end
   end
 end
