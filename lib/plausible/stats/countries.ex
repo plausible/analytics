@@ -19,6 +19,10 @@ defmodule Plausible.Stats.CountryName do
               |> Stream.map(fn [id, name | _rest] -> {String.to_integer(id), name} end)
               |> Enum.into(%{})
 
+  @city_codes @city_names
+              |> Enum.map(fn {code, name} -> {name, code} end)
+              |> Enum.into(%{})
+
   @country_codes_to_names %{
     "AF" => "Afghanistan",
     "AX" => "Aland Islands",
@@ -525,6 +529,17 @@ defmodule Plausible.Stats.CountryName do
     Map.get(@alpha2_codes, code, code)
   end
 
+  def search_alpha2(name_search_query) do
+    Enum.reduce(@country_codes_to_names, [], fn {code, name}, acc ->
+      matches =
+        name
+        |> String.downcase()
+        |> String.contains?(String.downcase(name_search_query))
+
+      if matches, do: [code | acc], else: acc
+    end)
+  end
+
   def from_iso3166(code) do
     Map.get(@country_codes_to_names, code, code)
   end
@@ -533,11 +548,37 @@ defmodule Plausible.Stats.CountryName do
     Map.get(@subdivision_names, code, code)
   end
 
+  def search_iso3166_2(name_search_query) do
+    Enum.reduce(@subdivision_names, [], fn {code, name}, acc ->
+      matches =
+        name
+        |> String.downcase()
+        |> String.contains?(String.downcase(name_search_query))
+
+      if matches, do: [code | acc], else: acc
+    end)
+  end
+
   def to_iso3166_2(name) do
     Map.get(@subdivision_codes, name, name)
   end
 
+  def search_geoname(name_search_query) do
+    Enum.reduce(@city_names, [], fn {code, name}, acc ->
+      matches =
+        name
+        |> String.downcase()
+        |> String.contains?(String.downcase(name_search_query))
+
+      if matches, do: [code | acc], else: acc
+    end)
+  end
+
   def from_geoname_id(geoname_id, default) do
-    Map.get(@city_names, geoname_id, default) |> IO.inspect()
+    Map.get(@city_names, geoname_id, default)
+  end
+
+  def to_geoname_id(city_name) do
+    Map.get(@city_codes, city_name)
   end
 end

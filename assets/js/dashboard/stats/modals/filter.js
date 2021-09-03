@@ -14,7 +14,7 @@ import {apiPath, sitePath} from '../../url'
 export const FILTER_GROUPS = {
   'page': ['page'],
   'source': ['source', 'referrer'],
-  'country': ['country'],
+  'country': ['country', 'region', 'city'],
   'screen': ['screen'],
   'browser': ['browser', 'browser_version'],
   'os': ['os', 'os_version'],
@@ -32,10 +32,22 @@ function getCountryName(ISOCode) {
 
 function getFormState(filterGroup, query) {
   return FILTER_GROUPS[filterGroup].reduce((result, filter) => {
-    let filterValue = query.filters[filter] || ''
+    const filterValue = query.filters[filter] || ''
+    let filterName = filterValue
+
     const type = filterValue[0] === '!' ? 'is_not' : 'is'
-    if (filter === 'country') filterValue = getCountryName(filterValue)
-    return Object.assign(result, {[filter]: {value: filterValue, type}})
+
+    if (filter === 'country') {
+      filterName = getCountryName(filterValue)
+    }
+
+    if (filter === 'region' && filterValue !== '') {
+      filterName = (new URLSearchParams(window.location.search)).get('region_name')
+    }
+    if (filter === 'city' && filterValue !== '') {
+      filterName = (new URLSearchParams(window.location.search)).get('city_name')
+    }
+    return Object.assign(result, {[filter]: {name: filterName, value: filterValue, type}})
   }, {})
 }
 
@@ -102,13 +114,16 @@ class FilterModal extends React.Component {
   handleSubmit() {
     const { formState } = this.state;
 
-    const filters = Object.entries(formState).reduce((res, [filterKey, {type, value}]) => {
+    const filters = Object.entries(formState).reduce((res, [filterKey, {type, value, name}]) => {
       let finalFilterValue = value
       if (filterKey === 'country') {
         const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
         const selectedCountry = allCountries.find((c) => c.properties.name === value) || { id: value };
         finalFilterValue = selectedCountry.id
       }
+
+      if (filterKey === 'region') { res.push({filter: 'region_name', value: name}) }
+      if (filterKey === 'city') { res.push({filter: 'city_name', value: name}) }
 
       finalFilterValue = (type === 'is_not' ? '!' : '') + finalFilterValue.trim()
 
@@ -119,10 +134,26 @@ class FilterModal extends React.Component {
     this.selectFiltersAndCloseModal(filters)
   }
 
-  onInput(filterName) {
-    return (val) => {
+  onSelect(filterName) {
+    if (this.state.selectedFilterGroup !== 'country') {
+      return () => {}
+    }
+
+    return (value) => {
       this.setState(prevState => ({formState: Object.assign(prevState.formState, {
-        [filterName]: Object.assign(prevState.formState[filterName], {value: val})
+        [filterName]: Object.assign(prevState.formState[filterName], {value: value.code, name: value.name})
+      })}))
+    }
+  }
+
+  onInput(filterName) {
+    if (this.state.selectedFilterGroup === 'country') {
+      return () => {}
+    }
+
+    return (value) => {
+      this.setState(prevState => ({formState: Object.assign(prevState.formState, {
+        [filterName]: Object.assign(prevState.formState[filterName], {value})
       })}))
     }
   }
@@ -137,18 +168,11 @@ class FilterModal extends React.Component {
     return (input) => {
       const {query, formState} = this.state
       const formFilters = Object.fromEntries(
-        Object.entries(formState).map(([k, v]) => [k, v.value])
+        Object.entries(formState).map(([k, v]) => [k, v.code || v.value])
       )
       const updatedQuery = {...query, filters: { ...query.filters, ...formFilters, [filter]: null }}
 
-      if (filter === 'country') {
-        const matchedCountries = Datamap.prototype.worldTopo.objects.world.geometries.filter(c => c.properties.name.toLowerCase().includes(input.trim().toLowerCase()))
-        const matches = matchedCountries.map(c => c.id)
-
-        return api.get(apiPath(this.props.site, '/suggestions/country'), updatedQuery, { q: matches })
-          .then((res) => res.map(code => matchedCountries.filter(c => c.id === code)[0].properties.name))
-      }
-        return api.get(apiPath(this.props.site, `/suggestions/${filter}`), updatedQuery, { q: input.trim() })
+      return api.get(apiPath(this.props.site, `/suggestions/${filter}`), updatedQuery, { q: input.trim() })
 
     }
   }
@@ -185,8 +209,9 @@ class FilterModal extends React.Component {
           <SearchSelect
             key={filter}
             fetchOptions={this.fetchOptions(filter)}
-            initialSelectedItem={this.state.formState[filter].value}
+            initialSelectedItem={this.state.formState[filter]}
             onInput={this.onInput(filter)}
+            onSelect={this.onSelect(filter)}
             placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`}
           />
         </div>

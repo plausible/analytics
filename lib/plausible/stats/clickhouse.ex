@@ -834,8 +834,8 @@ defmodule Plausible.Stats.Clickhouse do
         group_by: e.country_code,
         group_by: e.subdivision1_code,
         where: e.country_code == ^country,
-      order_by: [desc: uniq(e.user_id)],
-      limit: 9,
+        order_by: [desc: uniq(e.user_id)],
+        limit: 9,
         select: %{
           name: fragment("if(? = '' , 'Other', ?)", e.subdivision1_code, e.subdivision1_code),
           count: uniq(e.user_id)
@@ -879,17 +879,11 @@ defmodule Plausible.Stats.Clickhouse do
     |> add_percentages
   end
 
-  def cities(site, query, country_name, subdivision1_code, subdivision2_code) do
+  def cities(site, query, country_name, subdivision1_code) do
     country = Plausible.Stats.CountryName.to_alpha2(country_name)
 
     subdivision1 =
       case subdivision1_code do
-        "Other" -> ""
-        name -> Plausible.Stats.CountryName.to_iso3166_2(name)
-      end
-
-    subdivision2 =
-      case subdivision2_code do
         "Other" -> ""
         name -> Plausible.Stats.CountryName.to_iso3166_2(name)
       end
@@ -902,7 +896,6 @@ defmodule Plausible.Stats.Clickhouse do
         group_by: e.city_geoname_id,
         where: e.country_code == ^country,
         where: e.subdivision1_code == ^subdivision1,
-        where: e.subdivision2_code == ^subdivision2,
         order_by: [desc: uniq(e.user_id)],
         select: %{
           name: e.city_geoname_id,

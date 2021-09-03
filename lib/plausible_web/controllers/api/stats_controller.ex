@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.StatsController do
   use Plausible.Repo
   use Plug.ErrorHandler
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, Filters, Clickhouse}
+  alias Plausible.Stats.{Query, Filters}
 
   def main_graph(conn, params) do
     site = conn.assigns[:site]
@@ -466,46 +466,36 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  def subdivisions1(conn, params) do
+  def regions(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params)
-    country_name = if params["country_name"], do: params["country_name"]
+    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    pagination = parse_pagination(params)
 
-    json(conn, Clickhouse.subdivisions1(site, query, country_name))
-  end
+    countries =
+      Stats.breakdown(site, query, "visit:region", ["visitors"], pagination)
+      |> transform_keys(%{"region" => "name", "visitors" => "count"})
+      |> Enum.map(fn region ->
+        name = Stats.CountryName.from_iso3166_2(region["name"])
+        Map.put(region, "name", name)
+      end)
 
-  def subdivisions2(conn, params) do
-    site = conn.assigns[:site]
-    query = Query.from(site.timezone, params)
-    country_name = if params["country_name"], do: params["country_name"]
-
-    subdivision1_geoname_id =
-      if params["subdivision1_geoname_id"], do: params["subdivision1_geoname_id"]
-
-    json(conn, Clickhouse.subdivisions2(site, query, country_name, subdivision1_geoname_id))
+    json(conn, countries)
   end
 
   def cities(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params)
-    country_name = if params["country_name"], do: params["country_name"]
+    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    pagination = parse_pagination(params)
 
-    subdivision1_geoname_id =
-      if params["subdivision1_geoname_id"], do: params["subdivision1_geoname_id"]
+    cities =
+      Stats.breakdown(site, query, "visit:city", ["visitors"], pagination)
+      |> transform_keys(%{"city" => "code", "visitors" => "count"})
+      |> Enum.map(fn city ->
+        name = Stats.CountryName.from_geoname_id(city["code"], "N/A")
+        Map.put(city, "name", name)
+      end)
 
-    subdivision2_geoname_id =
-      if params["subdivision2_geoname_id"], do: params["subdivision2_geoname_id"]
-
-    json(
-      conn,
-      Clickhouse.cities(
-        site,
-        query,
-        country_name,
-        subdivision1_geoname_id,
-        subdivision2_geoname_id
-      )
-    )
+    json(conn, cities)
   end
 
   def browsers(conn, params) do

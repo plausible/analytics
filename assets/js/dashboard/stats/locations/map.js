@@ -13,13 +13,23 @@ import { withThemeConsumer } from '../../theme-consumer-hoc';
 
 import ListReport from './reports/list'
 
-function Subdivisions({query, site}) {
+function Regions({query, site}) {
   function fetchData() {
-    return api.get(`/api/stats/${encodeURIComponent(site.domain)}/subdivisions1`, query, {country_name: query.filters['country'], limit: 9})
+    return api.get(`/api/stats/${encodeURIComponent(site.domain)}/regions`, query, {country_name: query.filters.country, limit: 9})
   }
 
   return (
-    <ListReport title={'Regions'} fetchData={fetchData} filterKey={'subdivision1'} keyLabel={'Region'} query={query} />
+    <ListReport title="Regions" fetchData={fetchData} filter={{region: 'name'}} keyLabel="Region" query={query} />
+  )
+}
+
+function Cities({query, site}) {
+  function fetchData() {
+    return api.get(`/api/stats/${encodeURIComponent(site.domain)}/cities`, query, {limit: 9})
+  }
+
+  return (
+    <ListReport title="Cities" fetchData={fetchData} filter={{city: 'code', city_name: 'name'}} keyLabel="City" query={query} />
   )
 }
 
@@ -33,18 +43,9 @@ class Countries extends React.Component {
     this.onVisible = this.onVisible.bind(this)
   }
 
-  onVisible() {
-    this.fetchCountries().then(this.drawMap.bind(this))
-    window.addEventListener('resize', this.resizeMap);
-    if (this.props.timer) this.props.timer.onTick(this.updateCountries.bind(this))
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.resizeMap);
-  }
-
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
+      // eslint-disable-next-line react/no-did-update-set-state
       this.setState({loading: true, countries: null})
       this.fetchCountries().then(this.drawMap)
     }
@@ -58,18 +59,29 @@ class Countries extends React.Component {
     }
   }
 
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.resizeMap);
+  }
+
+  onVisible() {
+    this.fetchCountries().then(this.drawMap.bind(this))
+    window.addEventListener('resize', this.resizeMap);
+    if (this.props.timer) this.props.timer.onTick(this.updateCountries.bind(this))
+  }
+
   getDataset() {
-    var dataset = {};
+    const dataset = {};
 
     var onlyValues = this.state.countries.map(function(obj){ return obj.visitors });
     var maxValue = Math.max.apply(null, onlyValues);
 
-    var paletteScale = d3.scale.linear()
+    // eslint-disable-next-line no-undef
+    const paletteScale = d3.scale.linear()
       .domain([0,maxValue])
       .range([
         this.props.darkTheme ? "#2e3954" : "#f3ebff",
         this.props.darkTheme ? "#6366f1" : "#a779e9"
-      ]);
+      ])
 
     this.state.countries.forEach(function(item){
       dataset[item.name] = {numberOfThings: item.visitors, fillColor: paletteScale(item.visitors)};
@@ -94,7 +106,7 @@ class Countries extends React.Component {
   }
 
   drawMap() {
-    var dataset = this.getDataset();
+    const dataset = this.getDataset();
     const label = this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
     const defaultFill = this.props.darkTheme ? '#2d3747' : '#f8fafc'
     const highlightFill = this.props.darkTheme ? '#374151' : '#F5F5F5'
@@ -110,16 +122,14 @@ class Countries extends React.Component {
       geographyConfig: {
         borderColor,
         highlightBorderWidth: 2,
-        highlightFillColor: function(geo) {
-          return geo['fillColor'] || highlightFill;
-        },
+        highlightFillColor: (geo) => geo.fillColor || highlightFill,
         highlightBorderColor,
-        popupTemplate: function(geo, data) {
-          if (!data) { return ; }
+        popupTemplate: (geo, data) => {
+          if (!data) { return null; }
           const pluralizedLabel = data.numberOfThings === 1 ? label.slice(0, -1) : label
           return ['<div class="hoverinfo dark:bg-gray-800 dark:shadow-gray-850 dark:border-gray-850 dark:text-gray-200">',
             '<strong>', geo.properties.name, '</strong>',
-            '<br><strong class="dark:text-indigo-400">', numberFormatter(data.numberOfThings), '</strong> ' + pluralizedLabel,
+            '<br><strong class="dark:text-indigo-400">', numberFormatter(data.numberOfThings), '</strong>', pluralizedLabel,
             '</div>'].join('');
         }
       },
@@ -143,6 +153,8 @@ class Countries extends React.Component {
         <span className="text-xs text-gray-500 absolute bottom-4 right-3">IP Geolocation by <a target="_blank" href="https://db-ip.com" rel="noreferrer" className="text-indigo-600">DB-IP</a></span>
       )
     }
+
+    return null
   }
 
   renderBody() {
@@ -152,14 +164,20 @@ class Countries extends React.Component {
           <div className="mx-auto mt-4" style={{width: '100%', maxWidth: '475px', height: '335px'}} id="map-container"></div>
           <MoreLink site={this.props.site} list={this.state.countries} endpoint="countries" />
           { this.geolocationDbNotice() }
-        </React.Fragment>
+        </>
       )
     }
+
+    return null
   }
 
   render() {
-    if (this.props.query.filters['country']) {
-      return <Subdivisions site={this.props.site} query={this.props.query} />
+    if (this.props.query.filters.region) {
+      return <Cities site={this.props.site} query={this.props.query} />
+    }
+
+    if (this.props.query.filters.country) {
+      return <Regions site={this.props.site} query={this.props.query} />
     }
 
     return (

@@ -20,6 +20,8 @@
     "react/self-closing-comp": [0],
     "no-unused-expressions": [1, { "allowShortCircuit": true }],
     "no-unused-vars": [2, { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }],
+    "no-prototype-builtins": [0],
+    "react/jsx-props-no-spreading": [0],
     "jsx-a11y/click-events-have-key-events": [0],
     "jsx-a11y/no-static-element-interactions": [0],
     "react/no-did-update-set-state": [0]

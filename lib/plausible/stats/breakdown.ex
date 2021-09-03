@@ -338,6 +338,24 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
+  defp do_group_by(q, "visit:region") do
+    from(
+      s in q,
+      group_by: s.subdivision1_code,
+      where: s.subdivision1_code != "",
+      select_merge: %{"region" => s.subdivision1_code}
+    )
+  end
+
+  defp do_group_by(q, "visit:city") do
+    from(
+      s in q,
+      group_by: s.city_geoname_id,
+      where: s.city_geoname_id != 0,
+      select_merge: %{"city" => s.city_geoname_id}
+    )
+  end
+
   defp do_group_by(q, "visit:entry_page") do
     from(
       s in q,

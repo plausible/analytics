@@ -13,6 +13,7 @@ function removeFilter(key, history, query) {
     [key]: false
   }
   if (key === 'goal') { newOpts.props = false }
+  if (key === 'city') { newOpts.city_name = false }
   navigateToQuery(
     history,
     query,
@@ -60,6 +61,18 @@ function filterText(key, rawValue, query) {
     const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
     const selectedCountry = allCountries.find((c) => c.id === value) || {properties: {name: value}};
     return <>Country {type} <b>{selectedCountry.properties.name}</b></>
+  }
+
+  if (key === "region") {
+    const q = new URLSearchParams(window.location.search)
+    const regionName = q.get('region_name')
+    return <>Region {type} <b>{regionName}</b></>
+  }
+
+  if (key === "city") {
+    const q = new URLSearchParams(window.location.search)
+    const cityName = q.get('city_name')
+    return <>City {type} <b>{cityName}</b></>
   }
 
   const formattedFilter = formattedFilters[key]

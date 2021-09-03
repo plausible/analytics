@@ -36,7 +36,10 @@ export default class ListReport extends React.Component {
 
   renderListItem(listItem) {
     const query = new URLSearchParams(window.location.search)
-    query.set(this.props.filterKey, listItem.name)
+
+    Object.entries(this.props.filter).forEach((([key, valueKey]) => {
+      query.set(key, listItem[valueKey])
+    }))
 
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={listItem.name}>
@@ -54,7 +57,10 @@ export default class ListReport extends React.Component {
         </Bar>
         <span className="font-medium dark:text-gray-200">
           {numberFormatter(listItem.count)}
-          <span className="inline-block w-8 text-xs text-right">({listItem.percentage}%)</span>
+          {
+            listItem.percentage &&
+              <span className="inline-block w-8 text-xs text-right">({listItem.percentage}%)</span>
+          }
         </span>
       </div>
     )
