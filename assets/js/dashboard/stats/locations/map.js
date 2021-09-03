@@ -19,7 +19,7 @@ function Regions({query, site}) {
   }
 
   return (
-    <ListReport title="Regions" fetchData={fetchData} filter={{region: 'name'}} keyLabel="Region" query={query} />
+    <ListReport title="Regions" fetchData={fetchData} filter={{region: 'code', region_name: 'name'}} keyLabel="Region" query={query} />
   )
 }
 

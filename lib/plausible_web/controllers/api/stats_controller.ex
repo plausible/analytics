@@ -473,9 +473,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     countries =
       Stats.breakdown(site, query, "visit:region", ["visitors"], pagination)
-      |> transform_keys(%{"region" => "name", "visitors" => "count"})
+      |> transform_keys(%{"region" => "code", "visitors" => "count"})
       |> Enum.map(fn region ->
-        name = Stats.CountryName.from_iso3166_2(region["name"])
+        name = Stats.CountryName.from_iso3166_2(region["code"])
         Map.put(region, "name", name)
       end)
 
