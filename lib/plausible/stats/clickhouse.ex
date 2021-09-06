@@ -892,7 +892,9 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def has_pageviews?(site) do
-    ClickhouseRepo.exists?(from e in "events", where: e.domain == ^site.domain)
+    ClickhouseRepo.exists?(
+      from e in "events", where: e.domain == ^site.domain and e.name == "pageview"
+    )
   end
 
   def all_props(site, %Query{filters: %{"props" => meta}} = query) when is_map(meta) do

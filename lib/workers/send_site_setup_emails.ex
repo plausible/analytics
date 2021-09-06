@@ -46,7 +46,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
         Plausible.Sites.owner_for(site)
         |> Repo.preload(:subscription)
 
-      setup_completed = Stats.has_pageviews?(site)
+      setup_completed = Plausible.Sites.has_stats?(site)
       hours_passed = Timex.diff(Timex.now(), site.inserted_at, :hours)
 
       if !setup_completed && hours_passed > 47 do
@@ -69,7 +69,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
         Plausible.Sites.owner_for(site)
         |> Repo.preload(:subscription)
 
-      if Stats.has_pageviews?(site) do
+      if Plausible.Sites.has_stats?(site) do
         send_setup_success_email(owner, site)
       end
     end
