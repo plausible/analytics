@@ -2,7 +2,6 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
   use Plausible.Repo
   use Oban.Worker, queue: :site_setup_emails
   require Logger
-  alias Plausible.Stats.Clickhouse, as: Stats
 
   @impl Oban.Worker
   def perform(_job) do
