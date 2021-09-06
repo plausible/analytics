@@ -2,7 +2,6 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
   use Plausible.Repo
   use Oban.Worker, queue: :site_setup_emails
   require Logger
-  alias Plausible.Stats.Clickhouse, as: Stats
 
   @impl Oban.Worker
   def perform(_job) do
@@ -46,7 +45,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
         Plausible.Sites.owner_for(site)
         |> Repo.preload(:subscription)
 
-      setup_completed = Stats.has_pageviews?(site)
+      setup_completed = Plausible.Sites.has_stats?(site)
       hours_passed = Timex.diff(Timex.now(), site.inserted_at, :hours)
 
       if !setup_completed && hours_passed > 47 do
@@ -69,7 +68,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
         Plausible.Sites.owner_for(site)
         |> Repo.preload(:subscription)
 
-      if Stats.has_pageviews?(site) do
+      if Plausible.Sites.has_stats?(site) do
         send_setup_success_email(owner, site)
       end
     end
