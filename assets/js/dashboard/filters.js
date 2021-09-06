@@ -12,8 +12,9 @@ function removeFilter(key, history, query) {
   const newOpts = {
     [key]: false
   }
-  if (key === 'goal') { newOpts.props = false }
-  if (key === 'city') { newOpts.city_name = false }
+  if (key === 'goal')   { newOpts.props = false }
+  if (key === 'region') { newOpts.region_name = false }
+  if (key === 'city')   { newOpts.city_name = false }
   navigateToQuery(
     history,
     query,
