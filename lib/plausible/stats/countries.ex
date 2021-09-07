@@ -559,10 +559,6 @@ defmodule Plausible.Stats.CountryName do
     end)
   end
 
-  def to_iso3166_2(name) do
-    Map.get(@subdivision_codes, name, name)
-  end
-
   def search_geoname(name_search_query) do
     Enum.reduce(@city_names, [], fn {code, name}, acc ->
       matches =

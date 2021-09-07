@@ -36,11 +36,6 @@ defmodule Plausible.Stats.Filters do
             new_val = Plausible.Stats.CountryName.to_alpha2(filter_val)
             Map.put(new_filters, "visit:country", {filter_type, new_val})
 
-          name == "region" ->
-            {filter_type, filter_val} = filter_value(name, val)
-            new_val = Plausible.Stats.CountryName.to_iso3166_2(filter_val)
-            Map.put(new_filters, "visit:region", {filter_type, new_val})
-
           name == "goal" ->
             filter =
               case val do
