@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom'
 
 import FadeIn from '../../fade-in'
+import MoreLink from '../more-link'
 import numberFormatter from '../../number-formatter'
 import Bar from '../bar'
 import LazyLoader from '../../lazy-loader'
@@ -91,6 +92,7 @@ export default class ListReport extends React.Component {
           <FadeIn show={!this.state.loading} className="flex-grow">
             { this.renderList() }
           </FadeIn>
+          {this.props.detailsLink && !this.state.loading && <MoreLink url={this.props.detailsLink} list={this.state.list} />}
         </LazyLoader>
       </div>
     )

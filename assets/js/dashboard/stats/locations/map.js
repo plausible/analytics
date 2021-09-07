@@ -15,21 +15,35 @@ import ListReport from './reports/list'
 
 function Regions({query, site}) {
   function fetchData() {
-    return api.get(`/api/stats/${encodeURIComponent(site.domain)}/regions`, query, {country_name: query.filters.country, limit: 9})
+    return api.get(apiPath(site, '/regions'), query, {country_name: query.filters.country, limit: 9})
   }
 
   return (
-    <ListReport title="Regions" fetchData={fetchData} filter={{region: 'code', region_name: 'name'}} keyLabel="Region" query={query} />
+    <ListReport
+      title="Regions"
+      fetchData={fetchData}
+      filter={{region: 'code', region_name: 'name'}}
+      keyLabel="Region"
+      detailsLink={sitePath(site, '/regions')}
+      query={query}
+    />
   )
 }
 
 function Cities({query, site}) {
   function fetchData() {
-    return api.get(`/api/stats/${encodeURIComponent(site.domain)}/cities`, query, {limit: 9})
+    return api.get(apiPath(site, '/cities'), query, {limit: 9})
   }
 
   return (
-    <ListReport title="Cities" fetchData={fetchData} filter={{city: 'code', city_name: 'name'}} keyLabel="City" query={query} />
+    <ListReport
+      title="Cities"
+      fetchData={fetchData}
+      filter={{city: 'code', city_name: 'name'}}
+      keyLabel="City"
+      detailsLink={sitePath(site, '/cities')}
+      query={query}
+    />
   )
 }
 

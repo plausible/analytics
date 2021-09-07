@@ -7,7 +7,7 @@ import * as api from '../../api'
 import numberFormatter from '../../number-formatter'
 import {parseQuery} from '../../query'
 
-class CountriesModal extends React.Component {
+class ModalTable extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
@@ -17,46 +17,37 @@ class CountriesModal extends React.Component {
   }
 
   componentDidMount() {
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/countries`, this.state.query, {limit: 300})
-      .then((res) => this.setState({loading: false, countries: res}))
+    api.get(this.props.endpoint, this.state.query, {limit: 100})
+      .then((res) => this.setState({loading: false, list: res}))
   }
 
   label() {
-    if (this.state.query.period === 'realtime') {
-      return 'Current visitors'
-    }
-
-    if (this.showConversionRate()) {
-      return 'Conversions'
-    }
-
-    return 'Visitors'
+    return this.state.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
   }
 
-  showConversionRate() {
-    return !!this.state.query.filters.goal
-  }
-
-  renderCountry(country) {
+  renderTableItem(tableItem) {
     const query = new URLSearchParams(window.location.search)
-    query.set('country', country.name)
+
+    Object.entries(this.props.filter).forEach((([key, valueKey]) => {
+      query.set(key, tableItem[valueKey])
+    }))
 
     const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
-    const thisCountry = allCountries.find((c) => c.id === country.name) || {properties: {name: country.name}};
+    const thisCountry = allCountries.find((c) => c.id === tableItem.name) || {properties: {name: tableItem.name}};
     const countryFullName = thisCountry.properties.name
 
     return (
-      <tr className="text-sm dark:text-gray-200" key={country.name}>
+      <tr className="text-sm dark:text-gray-200" key={tableItem.name}>
         <td className="p-2">
           <Link className="hover:underline" to={{search: query.toString(), pathname: `/${encodeURIComponent(this.props.site.domain)}`}}>
             {countryFullName}
           </Link>
         </td>
-        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{country.total_visitors}</td> }
         <td className="p-2 w-32 font-medium" align="right">
-          {numberFormatter(country.visitors)} {!this.showConversionRate() && <span className="inline-block text-xs w-8 text-right">({country.percentage}%)</span>}
+          {numberFormatter(tableItem.count)}
+          {tableItem.percentage &&
+            <span className="inline-block text-xs w-8 text-right">({tableItem.percentage}%)</span> }
         </td>
-        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{country.conversion_rate}%</td> }
       </tr>
     )
   }
@@ -68,10 +59,10 @@ class CountriesModal extends React.Component {
       )
     }
 
-    if (this.state.countries) {
+    if (this.state.list) {
       return (
         <>
-          <h1 className="text-xl font-bold dark:text-gray-100">Top countries</h1>
+          <h1 className="text-xl font-bold dark:text-gray-100">{this.props.title}</h1>
 
           <div className="my-4 border-b border-gray-300 dark:border-gray-500"></div>
           <main className="modal__content">
@@ -82,9 +73,8 @@ class CountriesModal extends React.Component {
                     className="p-2 w-48 lg:w-1/2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
                     align="left"
                   >
-                    Country
+                    {this.props.keyLabel}
                   </th>
-                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Total visitors</th>}
                   <th
                     // eslint-disable-next-line max-len
                     className="p-2 w-32 lg:w-1/2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
@@ -92,11 +82,10 @@ class CountriesModal extends React.Component {
                   >
                     {this.label()}
                   </th>
-                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">CR</th>}
                 </tr>
               </thead>
               <tbody>
-                { this.state.countries.map(this.renderCountry.bind(this)) }
+                { this.state.list.map(this.renderTableItem.bind(this)) }
               </tbody>
             </table>
           </main>
@@ -116,4 +105,4 @@ class CountriesModal extends React.Component {
   }
 }
 
-export default withRouter(CountriesModal)
+export default withRouter(ModalTable)
