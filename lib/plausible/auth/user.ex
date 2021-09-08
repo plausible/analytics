@@ -73,6 +73,10 @@ defmodule Plausible.Auth.User do
     change(user, trial_expiry_date: trial_expiry())
   end
 
+  def end_trial(user) do
+    change(user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
+  end
+
   defp trial_expiry() do
     if Application.get_env(:plausible, :is_selfhost) do
       Timex.today() |> Timex.shift(years: 100)

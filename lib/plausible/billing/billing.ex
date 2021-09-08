@@ -104,7 +104,7 @@ defmodule Plausible.Billing do
     PaddleApi.update_subscription_preview(subscription.paddle_subscription_id, new_plan_id)
   end
 
-  def needs_to_upgrade?(%Plausible.Auth.User{trial_expiry_date: nil}), do: false
+  def needs_to_upgrade?(%Plausible.Auth.User{trial_expiry_date: nil}), do: true
 
   def needs_to_upgrade?(user) do
     if Timex.before?(user.trial_expiry_date, Timex.today()) do
