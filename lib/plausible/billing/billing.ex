@@ -104,6 +104,8 @@ defmodule Plausible.Billing do
     PaddleApi.update_subscription_preview(subscription.paddle_subscription_id, new_plan_id)
   end
 
+  def needs_to_upgrade?(%Plausible.Auth.User{trial_expiry_date: nil}), do: true
+
   def needs_to_upgrade?(user) do
     if Timex.before?(user.trial_expiry_date, Timex.today()) do
       !subscription_is_active?(user.subscription)
@@ -121,6 +123,8 @@ defmodule Plausible.Billing do
 
   defp subscription_is_active?(%Subscription{}), do: false
   defp subscription_is_active?(nil), do: false
+
+  def on_trial?(%Plausible.Auth.User{trial_expiry_date: nil}), do: false
 
   def on_trial?(user) do
     !subscription_is_active?(user.subscription) && trial_days_left(user) >= 0

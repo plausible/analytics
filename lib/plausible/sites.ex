@@ -22,7 +22,19 @@ defmodule Plausible.Sites do
 
         repo.insert(membership_changeset)
       end)
+      |> maybe_start_trial(user)
       |> Repo.transaction()
+    end
+  end
+
+  defp maybe_start_trial(multi, user) do
+    case user.trial_expiry_date do
+      nil ->
+        changeset = Plausible.Auth.User.start_trial(user)
+        Ecto.Multi.update(multi, :user, changeset)
+
+      _ ->
+        multi
     end
   end
 
