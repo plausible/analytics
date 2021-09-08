@@ -98,6 +98,12 @@ defmodule PlausibleWeb.AuthController do
       invitation = Repo.get_by(Plausible.Auth.Invitation, invitation_id: invitation_id)
       user = Plausible.Auth.User.new(params["user"])
 
+      user =
+        case invitation.role do
+          :owner -> user
+          _ -> Plausible.Auth.User.remove_trial_expiry(user)
+        end
+
       if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
         case Repo.insert(user) do
           {:ok, user} ->

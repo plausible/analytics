@@ -104,6 +104,19 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.exists?(Plausible.Site, domain: "example.com")
     end
 
+    test "starts trial if user does not have trial yet", %{conn: conn, user: user} do
+      Plausible.Auth.User.remove_trial_expiry(user) |> Repo.update!()
+
+      post(conn, "/sites", %{
+        "site" => %{
+          "domain" => "example.com",
+          "timezone" => "Europe/London"
+        }
+      })
+
+      assert Repo.reload!(user).trial_expiry_date
+    end
+
     test "sends welcome email if this is the user's first site", %{conn: conn} do
       post(conn, "/sites", %{
         "site" => %{
