@@ -12,6 +12,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   def aggregate(conn, params) do
     site = conn.assigns[:site]
+    params = Map.put(params, "sample_threshold", "infinite")
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
@@ -22,18 +23,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
           prev_query = Query.shift_back(query, site)
 
           [prev_result, curr_result] =
-            Task.await_many([
-              Task.async(fn -> Plausible.Stats.aggregate(site, prev_query, metrics) end),
-              Task.async(fn -> Plausible.Stats.aggregate(site, query, metrics) end)
-            ])
+            Task.await_many(
+              [
+                Task.async(fn -> Plausible.Stats.aggregate(site, prev_query, metrics) end),
+                Task.async(fn -> Plausible.Stats.aggregate(site, query, metrics) end)
+              ],
+              10_000
+            )
 
-          Enum.map(curr_result, fn {metric, %{value: current_val}} ->
-            %{value: prev_val} = prev_result[metric]
+          Enum.map(curr_result, fn {metric, %{"value" => current_val}} ->
+            %{"value" => prev_val} = prev_result[metric]
 
             {metric,
              %{
-               value: current_val,
-               change: percent_change(prev_val, current_val)
+               "value" => current_val,
+               "change" => percent_change(prev_val, current_val)
              }}
           end)
           |> Enum.into(%{})
@@ -52,6 +56,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   def breakdown(conn, params) do
     site = conn.assigns[:site]
+    params = Map.put(params, "sample_threshold", "infinite")
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
@@ -124,6 +129,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   def timeseries(conn, params) do
     site = conn.assigns[:site]
+    params = Map.put(params, "sample_threshold", "infinite")
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),

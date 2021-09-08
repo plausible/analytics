@@ -128,10 +128,10 @@ defmodule Plausible.Workers.CheckUsageTest do
       insert(:subscription,
         user: user,
         paddle_plan_id: @paddle_id_10k,
-        last_bill_date: Timex.shift(Timex.today(), months: -2, days: -1)
+        last_bill_date: ~D[2021-06-29]
       )
 
-      CheckUsage.perform(nil, billing_stub)
+      CheckUsage.perform(nil, billing_stub, ~D[2021-08-30])
 
       assert_email_delivered_with(
         to: [user],

@@ -98,6 +98,10 @@
 ##########
 # Android
 ##########
+- regex: 'Android; (\d+[\.\d]*); Mobile;'
+  name: 'Android'
+  version: '$1'
+
 - regex: '[ ]([\d\.]+)\) AppleWebKit.*ROBLOX Android App'
   name: 'Android'
   version: '$1'

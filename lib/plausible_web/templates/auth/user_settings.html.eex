@@ -226,6 +226,6 @@
     <span class="mt-6 bg-gray-300 button dark:bg-gray-800 hover:shadow-none">Delete my account</span>
     <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Your account cannot be deleted because you have an active subscription. If you want to delete your account, please cancel your subscription first.</p>
   <% else %>
-    <%= link("Delete my account", to: "/me", class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete", data: [confirm: "Deleting your account cannot be reversed. Are you sure?"]) %>
+    <%= link("Delete my account", to: "/me", class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete", data: [confirm: "Deleting your account will also delete all the sites that you own. This action cannot be reversed. Are you sure?"]) %>
   <% end %>
 </div>

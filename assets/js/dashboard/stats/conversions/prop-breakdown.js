@@ -9,6 +9,19 @@ import * as api from '../../api'
 const MOBILE_UPPER_WIDTH = 767
 const DEFAULT_WIDTH = 1080
 
+// https://stackoverflow.com/a/43467144
+function isValidHttpUrl(string) {
+  let url;
+
+  try {
+    url = new URL(string);
+  } catch (_) {
+    return false;
+  }
+
+  return url.protocol === "http:" || url.protocol === "https:";
+}
+
 export default class PropertyBreakdown extends React.Component {
   constructor(props) {
     super(props)
@@ -59,7 +72,7 @@ export default class PropertyBreakdown extends React.Component {
   }
 
   renderUrl(value) {
-    if (value.is_url) {
+    if (isValidHttpUrl(value.name)) {
       return (
         <a target="_blank" href={value.name} className="hidden group-hover:block">
           <svg className="inline h-4 w-4 ml-1 -mt-1 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
@@ -73,7 +86,7 @@ export default class PropertyBreakdown extends React.Component {
     return (
       <span className="flex px-2 py-1.5 group dark:text-gray-300 relative z-9 break-all">
         <Link
-          to={{pathname: window.location.pathname, search: query.toString()}} 
+          to={{pathname: window.location.pathname, search: query.toString()}}
           className="md:truncate hover:underline block"
         >
           { value.name }

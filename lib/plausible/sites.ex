@@ -26,6 +26,23 @@ defmodule Plausible.Sites do
     end
   end
 
+  def has_stats?(site) do
+    if site.has_stats do
+      true
+    else
+      has_stats = Plausible.Stats.Clickhouse.has_pageviews?(site)
+
+      if has_stats do
+        Plausible.Site.set_has_stats(site, true)
+        |> Repo.update()
+
+        true
+      else
+        false
+      end
+    end
+  end
+
   def create_shared_link(site, name, password \\ nil) do
     changes =
       SharedLink.changeset(

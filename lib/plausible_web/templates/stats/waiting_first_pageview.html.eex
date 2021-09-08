@@ -10,7 +10,7 @@
       })
   }
 
-  setInterval(updateStatus, 1500)
+  setInterval(updateStatus, 5000)
 </script>
 
 <div class="w-full max-w-md mx-auto mt-8">
