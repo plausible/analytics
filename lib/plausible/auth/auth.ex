@@ -1,7 +1,6 @@
 defmodule Plausible.Auth do
   use Plausible.Repo
   alias Plausible.Auth
-  alias Plausible.Stats.Clickhouse, as: Stats
 
   def issue_email_verification(user) do
     Repo.update_all(from(c in "email_verification_codes", where: c.user_id == ^user.id),
@@ -68,7 +67,7 @@ defmodule Plausible.Auth do
   end
 
   def has_active_sites?(user, roles \\ [:owner, :admin, :viewer]) do
-    domains =
+    sites =
       Repo.all(
         from u in Plausible.Auth.User,
           where: u.id == ^user.id,
@@ -77,10 +76,10 @@ defmodule Plausible.Auth do
           where: sm.role in ^roles,
           join: s in Plausible.Site,
           on: s.id == sm.site_id,
-          select: s.domain
+          select: s
       )
 
-    Stats.has_pageviews?(domains)
+    Enum.any?(sites, &Plausible.Sites.has_stats?/1)
   end
 
   def user_owns_sites?(user) do

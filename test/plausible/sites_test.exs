@@ -1,5 +1,6 @@
 defmodule Plausible.SitesTest do
   use Plausible.DataCase
+  import Plausible.TestUtils
   alias Plausible.Sites
 
   describe "is_member?" do
@@ -15,6 +16,37 @@ defmodule Plausible.SitesTest do
       site = insert(:site)
 
       refute Sites.is_member?(user.id, site)
+    end
+  end
+
+  describe "has_stats?" do
+    test "is false if site has no stats" do
+      site = insert(:site)
+
+      refute Sites.has_stats?(site)
+    end
+
+    test "is true if site has stats" do
+      site = insert(:site)
+
+      populate_stats(site, [
+        build(:pageview)
+      ])
+
+      assert Sites.has_stats?(site)
+    end
+
+    test "memoizes has_stats value" do
+      site = insert(:site)
+
+      populate_stats(site, [
+        build(:pageview)
+      ])
+
+      refute site.has_stats
+
+      assert Sites.has_stats?(site)
+      assert Repo.reload!(site).has_stats
     end
   end
 end

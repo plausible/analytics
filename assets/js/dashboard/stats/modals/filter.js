@@ -103,13 +103,14 @@ class FilterModal extends React.Component {
     const { formState } = this.state;
 
     const filters = Object.entries(formState).reduce((res, [filterKey, {type, value}]) => {
-      let finalFilterValue = (type === 'is_not' ? '!' : '') + value.trim()
-
+      let finalFilterValue = value
       if (filterKey === 'country') {
         const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
-        const selectedCountry = allCountries.find((c) => c.properties.name === finalFilterValue) || { id: finalFilterValue };
+        const selectedCountry = allCountries.find((c) => c.properties.name === value) || { id: value };
         finalFilterValue = selectedCountry.id
       }
+
+      finalFilterValue = (type === 'is_not' ? '!' : '') + finalFilterValue.trim()
 
       res.push({filter: filterKey, value: finalFilterValue})
       return res
@@ -234,19 +235,21 @@ class FilterModal extends React.Component {
                       </span>
                     )}
                   </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <span
-                        onClick={() => this.setFilterType(filterName, 'is_not')}
-                        className={classNames(
-                          active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                          'cursor-pointer block px-4 py-2 text-sm'
-                        )}
-                      >
-                        is not
-                      </span>
-                    )}
-                  </Menu.Item>
+                  { filterName !== 'goal' && (
+                    <Menu.Item>
+                      {({ active }) => (
+                        <span
+                          onClick={() => this.setFilterType(filterName, 'is_not')}
+                          className={classNames(
+                            active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+                            'cursor-pointer block px-4 py-2 text-sm'
+                          )}
+                        >
+                          is not
+                        </span>
+                      )}
+                    </Menu.Item>
+                  )}
                 </div>
               </Menu.Items>
             </Transition>

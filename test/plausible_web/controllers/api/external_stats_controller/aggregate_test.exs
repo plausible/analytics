@@ -654,35 +654,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
-    test "can filter by page regex", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview,
-          pathname: "/"
-        ),
-        build(:pageview,
-          pathname: "/blog/post1"
-        ),
-        build(:pageview,
-          pathname: "/blog/post1"
-        ),
-        build(:pageview,
-          pathname: "/blog/post2"
-        )
-      ])
-
-      conn =
-        get(conn, "/api/v1/stats/aggregate", %{
-          "site_id" => site.domain,
-          "period" => "day",
-          "metrics" => "visitors",
-          "filters" => "event:page==/blog/**"
-        })
-
-      assert json_response(conn, 200)["results"] == %{
-               "visitors" => %{"value" => 3}
-             }
-    end
-
     test "filtering by event:name", %{conn: conn, site: site} do
       populate_stats([
         build(:event,

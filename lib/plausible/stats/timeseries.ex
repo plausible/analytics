@@ -13,10 +13,13 @@ defmodule Plausible.Stats.Timeseries do
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
     [event_result, session_result] =
-      Task.await_many([
-        Task.async(fn -> events_timeseries(site, query, event_metrics) end),
-        Task.async(fn -> sessions_timeseries(site, query, session_metrics) end)
-      ])
+      Task.await_many(
+        [
+          Task.async(fn -> events_timeseries(site, query, event_metrics) end),
+          Task.async(fn -> sessions_timeseries(site, query, session_metrics) end)
+        ],
+        10_000
+      )
 
     Enum.map(steps, fn step ->
       empty_row(step, metrics)
@@ -37,6 +40,8 @@ defmodule Plausible.Stats.Timeseries do
   end
 
   defp sessions_timeseries(site, query, metrics) do
+    query = Query.treat_page_filter_as_entry_page(query)
+
     from(e in query_sessions(site, query),
       group_by: fragment("date"),
       order_by: fragment("date"),
@@ -108,49 +113,6 @@ defmodule Plausible.Stats.Timeseries do
         "date" => fragment("dateDiff('minute', now(), ?) as date", e.timestamp)
       }
     )
-  end
-
-  defp select_event_metrics(q, []), do: q
-
-  defp select_event_metrics(q, ["pageviews" | rest]) do
-    from(e in q,
-      select_merge: %{"pageviews" => fragment("countIf(? = 'pageview')", e.name)}
-    )
-    |> select_event_metrics(rest)
-  end
-
-  defp select_event_metrics(q, ["visitors" | rest]) do
-    from(e in q,
-      select_merge: %{"visitors" => fragment("uniq(?) as count", e.user_id)}
-    )
-    |> select_event_metrics(rest)
-  end
-
-  defp select_session_metrics(q, []), do: q
-
-  defp select_session_metrics(q, ["bounce_rate" | rest]) do
-    from(s in q,
-      select_merge: %{
-        "bounce_rate" => bounce_rate()
-      }
-    )
-    |> select_session_metrics(rest)
-  end
-
-  defp select_session_metrics(q, ["visits" | rest]) do
-    from(s in q,
-      select_merge: %{
-        "visits" => fragment("sum(?)", s.sign)
-      }
-    )
-    |> select_session_metrics(rest)
-  end
-
-  defp select_session_metrics(q, ["visit_duration" | rest]) do
-    from(s in q,
-      select_merge: %{"visit_duration" => visit_duration()}
-    )
-    |> select_session_metrics(rest)
   end
 
   defp empty_row(date, metrics) do

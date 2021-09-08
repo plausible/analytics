@@ -59,8 +59,7 @@ class AllSources extends React.Component {
               to={{search: query.toString()}}
             >
               <img
-                src={`/favicon/sources/${referrer.name}`}
-                referrerPolicy="no-referrer"
+                src={`/favicon/sources/${encodeURIComponent(referrer.name)}`}
                 className="inline w-4 h-4 mr-2 -mt-px align-middle"
               />
               { referrer.name }
@@ -85,7 +84,7 @@ class AllSources extends React.Component {
             <span>{this.label()}</span>
           </div>
 
-          <FlipMove>
+          <FlipMove className="flex-grow">
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
           <MoreLink site={this.props.site} list={this.state.referrers} endpoint="sources" />
@@ -98,13 +97,13 @@ class AllSources extends React.Component {
 
   renderContent() {
     return (
-      <LazyLoader onVisible={this.onVisible}>
+      <LazyLoader className="flex flex-col flex-grow" onVisible={this.onVisible}>
         <div id="sources" className="flex justify-between w-full">
           <h3 className="font-bold dark:text-gray-100">Top Sources</h3>
           { this.props.renderTabs() }
         </div>
         { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
+        <FadeIn show={!this.state.loading} className="flex flex-col flex-grow">
           { this.renderList() }
         </FadeIn>
       </LazyLoader>
@@ -173,7 +172,7 @@ class UTMSources extends React.Component {
         >
 
           <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
-            <Link 
+            <Link
               className="md:truncate block hover:underline"
               to={{search: query.toString()}}
             >
@@ -214,7 +213,7 @@ class UTMSources extends React.Component {
     return (
       <React.Fragment>
         <div className="flex justify-between w-full">
-          <h3 className="font-bold dark:text-gray-100">Top sources</h3>
+          <h3 className="font-bold dark:text-gray-100">Top Sources</h3>
           { this.props.renderTabs() }
         </div>
         { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }

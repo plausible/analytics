@@ -841,7 +841,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
-    test "visit:goal pageview filter for breakdown by visit source", %{conn: conn, site: site} do
+    test "event:goal pageview filter for breakdown by visit source", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           referrer_source: "Bing",
@@ -865,7 +865,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "period" => "day",
           "date" => "2021-01-01",
           "property" => "visit:source",
-          "filters" => "visit:goal == Visit /plausible.io"
+          "filters" => "event:goal == Visit /plausible.io"
         })
 
       assert json_response(conn, 200) == %{
@@ -875,7 +875,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
-    test "visit:goal custom event filter for breakdown by visit source", %{conn: conn, site: site} do
+    test "event:goal custom event filter for breakdown by visit source", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           referrer_source: "Bing",
@@ -899,7 +899,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "period" => "day",
           "date" => "2021-01-01",
           "property" => "visit:source",
-          "filters" => "visit:goal == Register"
+          "filters" => "event:goal == Register"
         })
 
       assert json_response(conn, 200) == %{
@@ -909,7 +909,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
-    test "visit:goal custom event filter for breakdown by event page", %{conn: conn, site: site} do
+    test "event:goal custom event filter for breakdown by event page", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event,
           pathname: "/en/register",
@@ -930,7 +930,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "site_id" => site.domain,
           "period" => "day",
           "property" => "event:page",
-          "filters" => "visit:goal == Register"
+          "filters" => "event:goal == Register"
         })
 
       assert json_response(conn, 200) == %{

@@ -122,6 +122,22 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                %{"name" => "DuckDuckGo", "count" => 1}
              ]
     end
+
+    test "shows sources for a page", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/page1", referrer_source: "Google"),
+        build(:pageview, pathname: "/page2", referrer_source: "Google"),
+        build(:pageview, user_id: 1, pathname: "/page2", referrer_source: "DuckDuckGo"),
+        build(:pageview, user_id: 1, pathname: "/page1", referrer_source: "DuckDuckGo")
+      ])
+
+      filters = Jason.encode!(%{"page" => "/page1"})
+      conn = get(conn, "/api/stats/#{site.domain}/sources?filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Google", "count" => 1}
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/utm_mediums" do

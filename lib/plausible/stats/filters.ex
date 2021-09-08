@@ -34,6 +34,19 @@ defmodule Plausible.Stats.Filters do
             new_val = Plausible.Stats.CountryName.to_alpha2(filter_val)
             Map.put(new_filters, "visit:country", {filter_type, new_val})
 
+          name == "goal" ->
+            filter =
+              case val do
+                "Visit " <> page ->
+                  {filter_type, filter_val} = filter_value(name, page)
+                  {filter_type, :page, filter_val}
+
+                event ->
+                  {:is, :event, event}
+              end
+
+            Map.put(new_filters, "event:goal", filter)
+
           name in (@visit_props ++ ["goal"]) ->
             Map.put(new_filters, "visit:" <> name, filter_value(name, val))
 
@@ -44,17 +57,20 @@ defmodule Plausible.Stats.Filters do
             Enum.reduce(val, new_filters, fn {prop_key, prop_val}, new_filters ->
               Map.put(new_filters, "event:props:" <> prop_key, {:is, prop_val})
             end)
-
-          true ->
-            raise "Unknown filter prop"
         end
       end)
+
+    new_filters =
+      case new_filters["event:goal"] do
+        nil -> Map.put(new_filters, "event:name", {:is, "pageview"})
+        _ -> new_filters
+      end
 
     %Plausible.Stats.Query{query | filters: new_filters}
   end
 
   defp filter_value(key, "!" <> val) do
-    if String.contains?(key, "page") && String.match?(val, ~r/\*/) do
+    if String.contains?(key, ["page", "goal"]) && String.match?(val, ~r/\*/) do
       {:does_not_match, val}
     else
       {:is_not, val}
@@ -62,7 +78,7 @@ defmodule Plausible.Stats.Filters do
   end
 
   defp filter_value(key, val) do
-    if String.contains?(key, "page") && String.match?(val, ~r/\*/) do
+    if String.contains?(key, ["page", "goal"]) && String.match?(val, ~r/\*/) do
       {:matches, val}
     else
       {:is, val}
