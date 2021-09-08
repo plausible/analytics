@@ -71,6 +71,116 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
+  describe "GET /register/invitations/:invitation_id" do
+    test "shows the register form", %{conn: conn} do
+      inviter = insert(:user)
+      site = insert(:site, members: [inviter])
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: inviter,
+          email: "user@email.co",
+          role: :admin
+        )
+
+      conn = get(conn, "/register/invitation/#{invitation.invitation_id}")
+
+      assert html_response(conn, 200) =~ "Enter your details"
+    end
+  end
+
+  describe "POST /register/invitation/:invitation_id" do
+    setup do
+      inviter = insert(:user)
+      site = insert(:site, members: [inviter])
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: inviter,
+          email: "user@email.co",
+          role: :admin
+        )
+
+      {:ok, %{site: site, invitation: invitation}}
+    end
+
+    test "registering sends an activation link", %{conn: conn, invitation: invitation} do
+      post(conn, "/register/invitation/#{invitation.invitation_id}",
+        user: %{
+          name: "Jane Doe",
+          email: "user@example.com",
+          password: "very-secret",
+          password_confirmation: "very-secret"
+        }
+      )
+
+      assert_delivered_email_matches(%{to: [{_, user_email}], subject: subject})
+      assert user_email == "user@example.com"
+      assert subject =~ "is your Plausible email verification code"
+    end
+
+    test "creates user record", %{conn: conn, invitation: invitation} do
+      post(conn, "/register/invitation/#{invitation.invitation_id}",
+        user: %{
+          name: "Jane Doe",
+          email: "user@example.com",
+          password: "very-secret",
+          password_confirmation: "very-secret"
+        }
+      )
+
+      user = Repo.get_by(Plausible.Auth.User, email: "user@example.com")
+      assert user.name == "Jane Doe"
+    end
+
+    test "leaves trial_expiry_date null when invitation role is not :owner", %{
+      conn: conn,
+      invitation: invitation
+    } do
+      post(conn, "/register/invitation/#{invitation.invitation_id}",
+        user: %{
+          name: "Jane Doe",
+          email: "user@example.com",
+          password: "very-secret",
+          password_confirmation: "very-secret"
+        }
+      )
+
+      user = Repo.get_by(Plausible.Auth.User, email: "user@example.com")
+      assert is_nil(user.trial_expiry_date)
+    end
+
+    test "logs the user in", %{conn: conn, invitation: invitation} do
+      conn =
+        post(conn, "/register/invitation/#{invitation.invitation_id}",
+          user: %{
+            name: "Jane Doe",
+            email: "user@example.com",
+            password: "very-secret",
+            password_confirmation: "very-secret"
+          }
+        )
+
+      assert get_session(conn, :current_user_id)
+    end
+
+    test "user is redirected to activation after registration", %{conn: conn} do
+      conn =
+        post(conn, "/register",
+          user: %{
+            name: "Jane Doe",
+            email: "user@example.com",
+            password: "very-secret",
+            password_confirmation: "very-secret"
+          }
+        )
+
+      assert redirected_to(conn) == "/activate"
+    end
+  end
+
   describe "GET /activate" do
     setup [:create_user, :log_in]
 
