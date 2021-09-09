@@ -93,7 +93,8 @@ defmodule Plausible.MixProject do
       {:envy, "~> 1.1.1"},
       {:phoenix_pagination, "~> 0.7.0"},
       {:hammer, "~> 6.0"},
-      {:public_suffix, git: "https://github.com/axelson/publicsuffix-elixir"}
+      {:public_suffix, git: "https://github.com/axelson/publicsuffix-elixir"},
+      {:iso_codes, "~> 0.1"}
     ]
   end
 

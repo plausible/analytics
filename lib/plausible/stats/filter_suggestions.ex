@@ -19,9 +19,11 @@ defmodule Plausible.Stats.FilterSuggestions do
     |> Enum.filter(fn c -> Enum.find(matches, false, fn x -> x == c end) end)
     |> Enum.slice(0..24)
     |> Enum.map(fn c ->
+      info = ISOCodes.ISO3166_1.get(c)
+
       %{
-        code: CountryName.to_alpha3(c),
-        name: CountryName.from_iso3166(c)
+        code: (info && info.alpha_3) || c,
+        name: (info && info.name) || c
       }
     end)
   end
@@ -37,9 +39,11 @@ defmodule Plausible.Stats.FilterSuggestions do
     )
     |> ClickhouseRepo.all()
     |> Enum.map(fn c ->
+      info = ISOCodes.ISO3166_2.get(c)
+
       %{
         code: c,
-        name: CountryName.from_iso3166_2(c)
+        name: (info && info.name) || c
       }
     end)
   end
