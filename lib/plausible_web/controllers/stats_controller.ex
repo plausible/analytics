@@ -60,9 +60,7 @@ defmodule PlausibleWeb.StatsController do
       |> Enum.join()
 
     filename =
-      "Plausible export #{domain} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{
-        Timex.format!(query.date_range.last, "{ISOdate} ")
-      }.csv"
+      "Plausible export #{domain} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.csv"
 
     conn
     |> put_resp_content_type("text/csv")

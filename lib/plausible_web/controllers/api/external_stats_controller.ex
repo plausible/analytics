@@ -114,9 +114,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
         event_only_filter && invalid_metric in @session_metrics ->
           {:error,
-           "Session metric `#{invalid_metric}` cannot be queried when using a filter on `#{
-             event_only_filter
-           }`."}
+           "Session metric `#{invalid_metric}` cannot be queried when using a filter on `#{event_only_filter}`."}
 
         true ->
           {:error,
@@ -212,9 +210,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       :ok
     else
       {:error,
-       "Error parsing `interval` parameter: invalid interval `#{interval}`. Valid intervals are #{
-         @valid_intervals_str
-       }"}
+       "Error parsing `interval` parameter: invalid interval `#{interval}`. Valid intervals are #{@valid_intervals_str}"}
     end
   end
 
