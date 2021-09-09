@@ -55,7 +55,7 @@ ENV LANG=C.UTF-8
 
 RUN apk update && apk upgrade
 
-RUN apk add --no-cache openssl ncurses
+RUN apk add --no-cache openssl ncurses libstdc++ libgcc
 
 COPY .gitlab/build-scripts/docker-entrypoint.sh /entrypoint.sh
 
