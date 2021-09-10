@@ -740,7 +740,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       conn
       |> put_req_header("user-agent", @user_agent)
-      |> put_req_header("x-forwarded-for", "127.0.0.2")
+      |> put_req_header("x-forwarded-for", "982.32.12.1")
       |> post("/api/event", params)
 
       [one, two] = get_events("user-id-test-domain-2.com")
