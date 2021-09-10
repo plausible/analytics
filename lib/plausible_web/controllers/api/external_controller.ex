@@ -195,11 +195,17 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp generate_user_id(conn, domain, hostname, salt) do
     user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
     ip_address = PlausibleWeb.RemoteIp.get(conn)
+    root_domain = get_root_domain(hostname)
 
-    if domain && hostname do
-      SipHash.hash!(salt, user_agent <> ip_address <> domain <> hostname)
+    if domain && root_domain do
+      SipHash.hash!(salt, user_agent <> ip_address <> domain <> root_domain)
     end
   end
+
+  defp get_root_domain(hostname) when is_binary(hostname) do
+    PublicSuffix.registrable_domain(hostname)
+  end
+  defp get_root_domain(hostname),  do: hostname
 
   defp calculate_screen_size(nil), do: nil
   defp calculate_screen_size(width) when width < 576, do: "Mobile"
