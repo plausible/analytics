@@ -205,7 +205,8 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp get_root_domain(hostname) when is_binary(hostname) do
     PublicSuffix.registrable_domain(hostname)
   end
-  defp get_root_domain(hostname),  do: hostname
+
+  defp get_root_domain(hostname), do: hostname
 
   defp calculate_screen_size(nil), do: nil
   defp calculate_screen_size(width) when width < 576, do: "Mobile"
