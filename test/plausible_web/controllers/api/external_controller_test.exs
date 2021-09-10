@@ -815,7 +815,9 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert one.user_id != two.user_id
     end
 
-    test "different hostname results in the same user ID when the root domain in the same", %{conn: conn} do
+    test "different hostname results in the same user ID when the root domain in the same", %{
+      conn: conn
+    } do
       params = %{
         url: "https://user-id-test-domain.com/",
         domain: "user-id-test-domain-6.com",
