@@ -12,6 +12,16 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     )
   end
 
+  defp get_events(domain) do
+    Plausible.Event.WriteBuffer.flush()
+
+    ClickhouseRepo.all(
+      from e in Plausible.ClickhouseEvent,
+        where: e.domain == ^domain,
+        order_by: [desc: e.timestamp]
+    )
+  end
+
   @user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
 
   describe "POST /api/event" do
@@ -357,340 +367,475 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == ""
       assert pageview.referrer_source == ""
     end
-  end
 
-  test "screen size is calculated from screen_width", %{conn: conn} do
-    params = %{
-      name: "pageview",
-      url: "http://gigride.live/",
-      screen_width: 480,
-      domain: "external-controller-test-16.com"
-    }
+    test "screen size is calculated from screen_width", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://gigride.live/",
+        screen_width: 480,
+        domain: "external-controller-test-16.com"
+      }
 
-    conn =
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-16.com")
+
+      assert response(conn, 202) == ""
+      assert pageview.screen_size == "Mobile"
+    end
+
+    test "screen size is nil if screen_width is missing", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://gigride.live/",
+        domain: "external-controller-test-17.com"
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-17.com")
+
+      assert response(conn, 202) == ""
+      assert pageview.screen_size == ""
+    end
+
+    test "can trigger a custom event", %{conn: conn} do
+      params = %{
+        name: "custom event",
+        url: "http://gigride.live/",
+        domain: "external-controller-test-18.com"
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      event = get_event("external-controller-test-18.com")
+
+      assert response(conn, 202) == ""
+      assert event.name == "custom event"
+    end
+
+    test "casts custom props to string", %{conn: conn} do
+      params = %{
+        name: "Signup",
+        url: "http://gigride.live/",
+        domain: "custom-prop-test.com",
+        props:
+          Jason.encode!(%{
+            bool_test: true,
+            number_test: 12
+          })
+      }
+
       conn
-      |> put_req_header("user-agent", @user_agent)
       |> post("/api/event", params)
 
-    pageview = get_event("external-controller-test-16.com")
+      event = get_event("custom-prop-test.com")
 
-    assert response(conn, 202) == ""
-    assert pageview.screen_size == "Mobile"
-  end
+      assert Map.get(event, :"meta.key") == ["bool_test", "number_test"]
+      assert Map.get(event, :"meta.value") == ["true", "12"]
+    end
 
-  test "screen size is nil if screen_width is missing", %{conn: conn} do
-    params = %{
-      name: "pageview",
-      url: "http://gigride.live/",
-      domain: "external-controller-test-17.com"
-    }
+    test "ignores malformed custom props", %{conn: conn} do
+      params = %{
+        name: "Signup",
+        url: "http://gigride.live/",
+        domain: "custom-prop-test-2.com",
+        props: "\"show-more:button\""
+      }
 
-    conn =
       conn
-      |> put_req_header("user-agent", @user_agent)
       |> post("/api/event", params)
 
-    pageview = get_event("external-controller-test-17.com")
+      event = get_event("custom-prop-test-2.com")
 
-    assert response(conn, 202) == ""
-    assert pageview.screen_size == ""
-  end
+      assert Map.get(event, :"meta.key") == []
+      assert Map.get(event, :"meta.value") == []
+    end
 
-  test "can trigger a custom event", %{conn: conn} do
-    params = %{
-      name: "custom event",
-      url: "http://gigride.live/",
-      domain: "external-controller-test-18.com"
-    }
+    test "ignores a malformed referrer URL", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://gigride.live/",
+        referrer: "https:://twitter.com",
+        domain: "external-controller-test-19.com"
+      }
 
-    conn =
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      event = get_event("external-controller-test-19.com")
+
+      assert response(conn, 202) == ""
+      assert event.referrer == ""
+    end
+
+    # Fake data is set up in config/test.exs
+    test "looks up the country from the ip address", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        domain: "external-controller-test-20.com",
+        url: "http://gigride.live/"
+      }
+
       conn
-      |> put_req_header("user-agent", @user_agent)
+      |> put_req_header("x-forwarded-for", "1.1.1.1")
       |> post("/api/event", params)
 
-    event = get_event("external-controller-test-18.com")
+      pageview = get_event("external-controller-test-20.com")
 
-    assert response(conn, 202) == ""
-    assert event.name == "custom event"
-  end
+      assert pageview.country_code == "US"
+    end
 
-  test "casts custom props to string", %{conn: conn} do
-    params = %{
-      name: "Signup",
-      url: "http://gigride.live/",
-      domain: "custom-prop-test.com",
-      props:
-        Jason.encode!(%{
-          bool_test: true,
-          number_test: 12
-        })
-    }
+    test "scrubs port from x-forwarded-for", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        domain: "external-controller-test-x-forwarded-for-port.com",
+        url: "http://gigride.live/"
+      }
 
-    conn
-    |> post("/api/event", params)
-
-    event = get_event("custom-prop-test.com")
-
-    assert Map.get(event, :"meta.key") == ["bool_test", "number_test"]
-    assert Map.get(event, :"meta.value") == ["true", "12"]
-  end
-
-  test "ignores malformed custom props", %{conn: conn} do
-    params = %{
-      name: "Signup",
-      url: "http://gigride.live/",
-      domain: "custom-prop-test-2.com",
-      props: "\"show-more:button\""
-    }
-
-    conn
-    |> post("/api/event", params)
-
-    event = get_event("custom-prop-test-2.com")
-
-    assert Map.get(event, :"meta.key") == []
-    assert Map.get(event, :"meta.value") == []
-  end
-
-  test "ignores a malformed referrer URL", %{conn: conn} do
-    params = %{
-      name: "pageview",
-      url: "http://gigride.live/",
-      referrer: "https:://twitter.com",
-      domain: "external-controller-test-19.com"
-    }
-
-    conn =
       conn
-      |> put_req_header("user-agent", @user_agent)
+      |> put_req_header("x-forwarded-for", "1.1.1.1:123")
       |> post("/api/event", params)
 
-    event = get_event("external-controller-test-19.com")
+      pageview = get_event("external-controller-test-x-forwarded-for-port.com")
 
-    assert response(conn, 202) == ""
-    assert event.referrer == ""
-  end
+      assert pageview.country_code == "US"
+    end
 
-  # Fake data is set up in config/test.exs
-  test "looks up the country from the ip address", %{conn: conn} do
-    params = %{
-      name: "pageview",
-      domain: "external-controller-test-20.com",
-      url: "http://gigride.live/"
-    }
+    test "works with ipv6 without port in x-forwarded-for", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        domain: "external-controller-test-x-forwarded-for-ipv6.com",
+        url: "http://gigride.live/"
+      }
 
-    conn
-    |> put_req_header("x-forwarded-for", "1.1.1.1")
-    |> post("/api/event", params)
-
-    pageview = get_event("external-controller-test-20.com")
-
-    assert pageview.country_code == "US"
-  end
-
-  test "scrubs port from x-forwarded-for", %{conn: conn} do
-    params = %{
-      name: "pageview",
-      domain: "external-controller-test-x-forwarded-for-port.com",
-      url: "http://gigride.live/"
-    }
-
-    conn
-    |> put_req_header("x-forwarded-for", "1.1.1.1:123")
-    |> post("/api/event", params)
-
-    pageview = get_event("external-controller-test-x-forwarded-for-port.com")
-
-    assert pageview.country_code == "US"
-  end
-
-  test "works with ipv6 without port in x-forwarded-for", %{conn: conn} do
-    params = %{
-      name: "pageview",
-      domain: "external-controller-test-x-forwarded-for-ipv6.com",
-      url: "http://gigride.live/"
-    }
-
-    conn
-    |> put_req_header("x-forwarded-for", "1:1:1:1:1:1:1:1")
-    |> post("/api/event", params)
-
-    pageview = get_event("external-controller-test-x-forwarded-for-ipv6.com")
-
-    assert pageview.country_code == "US"
-  end
-
-  test "works with ipv6 with a port number in x-forwarded-for", %{conn: conn} do
-    params = %{
-      name: "pageview",
-      domain: "external-controller-test-x-forwarded-for-ipv6-port.com",
-      url: "http://gigride.live/"
-    }
-
-    conn
-    |> put_req_header("x-forwarded-for", "[1:1:1:1:1:1:1:1]:123")
-    |> post("/api/event", params)
-
-    pageview = get_event("external-controller-test-x-forwarded-for-ipv6-port.com")
-
-    assert pageview.country_code == "US"
-  end
-
-  test "uses cloudflare's special header for client IP address if present", %{conn: conn} do
-    params = %{
-      name: "pageview",
-      domain: "external-controller-test-cloudflare.com",
-      url: "http://gigride.live/"
-    }
-
-    conn
-    |> put_req_header("x-forwarded-for", "0.0.0.0")
-    |> put_req_header("cf-connecting-ip", "1.1.1.1")
-    |> post("/api/event", params)
-
-    pageview = get_event("external-controller-test-cloudflare.com")
-
-    assert pageview.country_code == "US"
-  end
-
-  test "Uses the Forwarded header when cf-connecting-ip and x-forwarded-for are missing", %{
-    conn: conn
-  } do
-    params = %{
-      name: "pageview",
-      domain: "external-controller-test-forwarded.com",
-      url: "http://gigride.live/"
-    }
-
-    conn
-    |> put_req_header("forwarded", "by=0.0.0.0;for=1.1.1.1;host=somehost.com;proto=https")
-    |> post("/api/event", params)
-
-    pageview = get_event("external-controller-test-forwarded.com")
-
-    assert pageview.country_code == "US"
-  end
-
-  test "Forwarded header can parse ipv6", %{conn: conn} do
-    params = %{
-      name: "pageview",
-      domain: "external-controller-test-forwarded-ipv6.com",
-      url: "http://gigride.live/"
-    }
-
-    conn
-    |> put_req_header(
-      "forwarded",
-      "by=0.0.0.0;for=\"[1:1:1:1:1:1:1:1]\",for=0.0.0.0;host=somehost.com;proto=https"
-    )
-    |> post("/api/event", params)
-
-    pageview = get_event("external-controller-test-forwarded-ipv6.com")
-
-    assert pageview.country_code == "US"
-  end
-
-  test "URL is decoded", %{conn: conn} do
-    params = %{
-      name: "pageview",
-      url:
-        "http://www.example.com/opportunity/category/%D8%AC%D9%88%D8%A7%D8%A6%D8%B2-%D9%88%D9%85%D8%B3%D8%A7%D8%A8%D9%82%D8%A7%D8%AA",
-      domain: "external-controller-test-21.com"
-    }
-
-    conn
-    |> post("/api/event", params)
-
-    pageview = get_event("external-controller-test-21.com")
-
-    assert pageview.pathname == "/opportunity/category/جوائز-ومسابقات"
-  end
-
-  test "accepts shorthand map keys", %{conn: conn} do
-    params = %{
-      n: "pageview",
-      u: "http://www.example.com/opportunity",
-      d: "external-controller-test-22.com",
-      r: "https://facebook.com/page",
-      w: 300
-    }
-
-    conn
-    |> post("/api/event", params)
-
-    pageview = get_event("external-controller-test-22.com")
-
-    assert pageview.pathname == "/opportunity"
-    assert pageview.referrer_source == "Facebook"
-    assert pageview.referrer == "facebook.com/page"
-    assert pageview.screen_size == "Mobile"
-  end
-
-  test "records hash when in hash mode", %{conn: conn} do
-    params = %{
-      n: "pageview",
-      u: "http://www.example.com/#page-a",
-      d: "external-controller-test-23.com",
-      h: 1
-    }
-
-    conn
-    |> post("/api/event", params)
-
-    pageview = get_event("external-controller-test-23.com")
-
-    assert pageview.pathname == "/#page-a"
-  end
-
-  test "decodes URL pathname, fragment and search", %{conn: conn} do
-    params = %{
-      n: "pageview",
-      u:
-        "https://test.com/%EF%BA%9D%EF%BB%AD%EF%BA%8E%EF%BA%8B%EF%BA%AF-%EF%BB%AE%EF%BB%A4%EF%BA%B3%EF%BA%8E%EF%BA%92%EF%BB%97%EF%BA%8E%EF%BA%97?utm_source=%25balle%25",
-      d: "url-decode-test.com",
-      h: 1
-    }
-
-    conn
-    |> post("/api/event", params)
-
-    pageview = get_event("url-decode-test.com")
-
-    assert pageview.hostname == "test.com"
-    assert pageview.pathname == "/ﺝﻭﺎﺋﺯ-ﻮﻤﺳﺎﺒﻗﺎﺗ"
-    assert pageview.utm_source == "%balle%"
-  end
-
-  test "can use double quotes in query params", %{conn: conn} do
-    q = URI.encode_query(%{"utm_source" => "Something \"quoted\""})
-
-    params = %{
-      n: "pageview",
-      u: "https://test.com/?" <> q,
-      d: "quote-encode-test.com",
-      h: 1
-    }
-
-    conn
-    |> post("/api/event", params)
-
-    pageview = get_event("quote-encode-test.com")
-
-    assert pageview.utm_source == "Something \"quoted\""
-  end
-
-  test "responds 400 when required fields are missing", %{conn: conn} do
-    params = %{
-      domain: "some-domain.com",
-      name: "pageview"
-    }
-
-    conn =
       conn
-      |> put_req_header("user-agent", @user_agent)
+      |> put_req_header("x-forwarded-for", "1:1:1:1:1:1:1:1")
       |> post("/api/event", params)
 
-    assert response(conn, 400) == ""
+      pageview = get_event("external-controller-test-x-forwarded-for-ipv6.com")
+
+      assert pageview.country_code == "US"
+    end
+
+    test "works with ipv6 with a port number in x-forwarded-for", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        domain: "external-controller-test-x-forwarded-for-ipv6-port.com",
+        url: "http://gigride.live/"
+      }
+
+      conn
+      |> put_req_header("x-forwarded-for", "[1:1:1:1:1:1:1:1]:123")
+      |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-x-forwarded-for-ipv6-port.com")
+
+      assert pageview.country_code == "US"
+    end
+
+    test "uses cloudflare's special header for client IP address if present", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        domain: "external-controller-test-cloudflare.com",
+        url: "http://gigride.live/"
+      }
+
+      conn
+      |> put_req_header("x-forwarded-for", "0.0.0.0")
+      |> put_req_header("cf-connecting-ip", "1.1.1.1")
+      |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-cloudflare.com")
+
+      assert pageview.country_code == "US"
+    end
+
+    test "Uses the Forwarded header when cf-connecting-ip and x-forwarded-for are missing", %{
+      conn: conn
+    } do
+      params = %{
+        name: "pageview",
+        domain: "external-controller-test-forwarded.com",
+        url: "http://gigride.live/"
+      }
+
+      conn
+      |> put_req_header("forwarded", "by=0.0.0.0;for=1.1.1.1;host=somehost.com;proto=https")
+      |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-forwarded.com")
+
+      assert pageview.country_code == "US"
+    end
+
+    test "Forwarded header can parse ipv6", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        domain: "external-controller-test-forwarded-ipv6.com",
+        url: "http://gigride.live/"
+      }
+
+      conn
+      |> put_req_header(
+        "forwarded",
+        "by=0.0.0.0;for=\"[1:1:1:1:1:1:1:1]\",for=0.0.0.0;host=somehost.com;proto=https"
+      )
+      |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-forwarded-ipv6.com")
+
+      assert pageview.country_code == "US"
+    end
+
+    test "URL is decoded", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url:
+          "http://www.example.com/opportunity/category/%D8%AC%D9%88%D8%A7%D8%A6%D8%B2-%D9%88%D9%85%D8%B3%D8%A7%D8%A8%D9%82%D8%A7%D8%AA",
+        domain: "external-controller-test-21.com"
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-21.com")
+
+      assert pageview.pathname == "/opportunity/category/جوائز-ومسابقات"
+    end
+
+    test "accepts shorthand map keys", %{conn: conn} do
+      params = %{
+        n: "pageview",
+        u: "http://www.example.com/opportunity",
+        d: "external-controller-test-22.com",
+        r: "https://facebook.com/page",
+        w: 300
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-22.com")
+
+      assert pageview.pathname == "/opportunity"
+      assert pageview.referrer_source == "Facebook"
+      assert pageview.referrer == "facebook.com/page"
+      assert pageview.screen_size == "Mobile"
+    end
+
+    test "records hash when in hash mode", %{conn: conn} do
+      params = %{
+        n: "pageview",
+        u: "http://www.example.com/#page-a",
+        d: "external-controller-test-23.com",
+        h: 1
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-23.com")
+
+      assert pageview.pathname == "/#page-a"
+    end
+
+    test "decodes URL pathname, fragment and search", %{conn: conn} do
+      params = %{
+        n: "pageview",
+        u:
+          "https://test.com/%EF%BA%9D%EF%BB%AD%EF%BA%8E%EF%BA%8B%EF%BA%AF-%EF%BB%AE%EF%BB%A4%EF%BA%B3%EF%BA%8E%EF%BA%92%EF%BB%97%EF%BA%8E%EF%BA%97?utm_source=%25balle%25",
+        d: "url-decode-test.com",
+        h: 1
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      pageview = get_event("url-decode-test.com")
+
+      assert pageview.hostname == "test.com"
+      assert pageview.pathname == "/ﺝﻭﺎﺋﺯ-ﻮﻤﺳﺎﺒﻗﺎﺗ"
+      assert pageview.utm_source == "%balle%"
+    end
+
+    test "can use double quotes in query params", %{conn: conn} do
+      q = URI.encode_query(%{"utm_source" => "Something \"quoted\""})
+
+      params = %{
+        n: "pageview",
+        u: "https://test.com/?" <> q,
+        d: "quote-encode-test.com",
+        h: 1
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      pageview = get_event("quote-encode-test.com")
+
+      assert pageview.utm_source == "Something \"quoted\""
+    end
+
+    test "responds 400 when required fields are missing", %{conn: conn} do
+      params = %{
+        domain: "some-domain.com",
+        name: "pageview"
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      assert response(conn, 400) == ""
+    end
+  end
+
+  describe "user_id generation" do
+    test "with same IP address and user agent, the same user ID is generated", %{conn: conn} do
+      params = %{
+        url: "https://user-id-test-domain.com/",
+        domain: "user-id-test-domain.com",
+        name: "pageview"
+      }
+
+      conn
+      |> put_req_header("user-agent", @user_agent)
+      |> put_req_header("x-forwarded-for", "127.0.0.1")
+      |> post("/api/event", params)
+
+      conn
+      |> put_req_header("user-agent", @user_agent)
+      |> put_req_header("x-forwarded-for", "127.0.0.1")
+      |> post("/api/event", params)
+
+      [one, two] = get_events("user-id-test-domain.com")
+
+      assert one.user_id == two.user_id
+    end
+
+    test "different IP address results in different user ID", %{conn: conn} do
+      params = %{
+        url: "https://user-id-test-domain.com/",
+        domain: "user-id-test-domain-2.com",
+        name: "pageview"
+      }
+
+      conn
+      |> put_req_header("user-agent", @user_agent)
+      |> put_req_header("x-forwarded-for", "127.0.0.1")
+      |> post("/api/event", params)
+
+      conn
+      |> put_req_header("user-agent", @user_agent)
+      |> put_req_header("x-forwarded-for", "127.0.0.2")
+      |> post("/api/event", params)
+
+      [one, two] = get_events("user-id-test-domain-2.com")
+
+      assert one.user_id != two.user_id
+    end
+
+    test "different user agent results in different user ID", %{conn: conn} do
+      params = %{
+        url: "https://user-id-test-domain.com/",
+        domain: "user-id-test-domain-3.com",
+        name: "pageview"
+      }
+
+      conn
+      |> put_req_header("user-agent", @user_agent)
+      |> put_req_header("x-forwarded-for", "127.0.0.1")
+      |> post("/api/event", params)
+
+      conn
+      |> put_req_header("user-agent", @user_agent <> "!!")
+      |> put_req_header("x-forwarded-for", "127.0.0.1")
+      |> post("/api/event", params)
+
+      [one, two] = get_events("user-id-test-domain-3.com")
+
+      assert one.user_id != two.user_id
+    end
+
+    test "different domain value results in different user ID", %{conn: conn} do
+      params = %{
+        url: "https://user-id-test-domain.com/",
+        domain: "user-id-test-domain-4.com",
+        name: "pageview"
+      }
+
+      conn
+      |> put_req_header("user-agent", @user_agent)
+      |> put_req_header("x-forwarded-for", "127.0.0.1")
+      |> post("/api/event", params)
+
+      conn
+      |> put_req_header("user-agent", @user_agent)
+      |> put_req_header("x-forwarded-for", "127.0.0.1")
+      |> post("/api/event", Map.put(params, :domain, "other-domain.com"))
+
+      one = get_event("user-id-test-domain-4.com")
+      two = get_event("other-domain.com")
+
+      assert one.user_id != two.user_id
+    end
+
+    test "different hostname results in different user ID", %{conn: conn} do
+      params = %{
+        url: "https://user-id-test-domain.com/",
+        domain: "user-id-test-domain-5.com",
+        name: "pageview"
+      }
+
+      conn
+      |> put_req_header("user-agent", @user_agent)
+      |> put_req_header("x-forwarded-for", "127.0.0.1")
+      |> post("/api/event", params)
+
+      conn
+      |> put_req_header("user-agent", @user_agent)
+      |> put_req_header("x-forwarded-for", "127.0.0.1")
+      |> post("/api/event", Map.put(params, :url, "https://other-domain.com/"))
+
+      [one, two] = get_events("user-id-test-domain-5.com")
+
+      assert one.user_id != two.user_id
+    end
+
+    test "different hostname results in the same user ID when the root domain in the same", %{conn: conn} do
+      params = %{
+        url: "https://user-id-test-domain.com/",
+        domain: "user-id-test-domain-6.com",
+        name: "pageview"
+      }
+
+      conn
+      |> put_req_header("user-agent", @user_agent)
+      |> put_req_header("x-forwarded-for", "127.0.0.1")
+      |> post("/api/event", params)
+
+      conn
+      |> put_req_header("user-agent", @user_agent)
+      |> put_req_header("x-forwarded-for", "127.0.0.1")
+      |> post("/api/event", Map.put(params, :url, "https://app.user-id-test-domain.com/"))
+
+      [one, two] = get_events("user-id-test-domain-6.com")
+
+      assert one.user_id == two.user_id
+    end
   end
 
   describe "GET /api/health" do
