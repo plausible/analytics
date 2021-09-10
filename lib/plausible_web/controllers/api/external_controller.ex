@@ -175,10 +175,9 @@ defmodule PlausibleWeb.Api.ExternalController do
     result =
       PlausibleWeb.RemoteIp.get(conn)
       |> Geolix.lookup()
-      |> Map.get(:country)
 
-    if result && result.country do
-      result.country.iso_code
+    if result && result[:country] && result[:country].country do
+      result[:country].country.iso_code
     end
   end
 
