@@ -283,7 +283,10 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   describe "GET /api/stats/:domain/sources - with goal filter" do
     setup [:create_user, :log_in, :create_new_site]
 
-    test "returns top referrers for a custom goal including conversion_rate", %{conn: conn, site: site} do
+    test "returns top referrers for a custom goal including conversion_rate", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview,
           referrer_source: "Twitter",
@@ -311,7 +314,10 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
-    test "returns top referrers for a pageview goal including conversion_rate", %{conn: conn, site: site} do
+    test "returns top referrers for a pageview goal including conversion_rate", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview,
           referrer_source: "Twitter",
