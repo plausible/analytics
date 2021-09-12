@@ -98,6 +98,12 @@ defmodule PlausibleWeb.AuthController do
       invitation = Repo.get_by(Plausible.Auth.Invitation, invitation_id: invitation_id)
       user = Plausible.Auth.User.new(params["user"])
 
+      user =
+        case invitation.role do
+          :owner -> user
+          _ -> Plausible.Auth.User.remove_trial_expiry(user)
+        end
+
       if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
         case Repo.insert(user) do
           {:ok, user} ->
@@ -482,11 +488,15 @@ defmodule PlausibleWeb.AuthController do
   def delete_me(conn, params) do
     user =
       conn.assigns[:current_user]
-      |> Repo.preload(:sites)
+      |> Repo.preload(site_memberships: :site)
       |> Repo.preload(:subscription)
 
-    for site <- user.sites do
-      Repo.delete!(site)
+    for membership <- user.site_memberships do
+      Repo.delete!(membership)
+
+      if membership.role == :owner do
+        Repo.delete!(membership.site)
+      end
     end
 
     if user.subscription, do: Repo.delete!(user.subscription)

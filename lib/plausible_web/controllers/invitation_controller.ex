@@ -17,7 +17,9 @@ defmodule PlausibleWeb.InvitationController do
 
     multi =
       if invitation.role == :owner do
-        downgrade_previous_owner(Multi.new(), invitation.site)
+        Multi.new()
+        |> downgrade_previous_owner(invitation.site)
+        |> end_trial_of_new_owner(user)
       else
         Multi.new()
       end
@@ -35,9 +37,10 @@ defmodule PlausibleWeb.InvitationController do
       |> Multi.delete(:invitation, invitation)
 
     case Repo.transaction(multi) do
-      {:ok, _} ->
+      {:ok, changes} ->
+        updated_user = Map.get(changes, :user, user)
         notify_invitation_accepted(invitation)
-        Plausible.Billing.SiteLocker.check_sites_for(user)
+        Plausible.Billing.SiteLocker.check_sites_for(updated_user)
 
         conn
         |> put_flash(:success, "You now have access to #{invitation.site.domain}")
@@ -59,6 +62,14 @@ defmodule PlausibleWeb.InvitationController do
       )
 
     Multi.update_all(multi, :prev_owner, prev_owner, set: [role: :admin])
+  end
+
+  defp end_trial_of_new_owner(multi, new_owner) do
+    if Plausible.Billing.on_trial?(new_owner) do
+      Ecto.Multi.update(multi, :user, Plausible.Auth.User.end_trial(new_owner))
+    else
+      multi
+    end
   end
 
   def reject_invitation(conn, %{"invitation_id" => invitation_id}) do

@@ -347,7 +347,7 @@ defmodule Plausible.Stats.Base do
   end
 
   def page_regex(expr) do
-    "^#{expr}\/?$"
+    "^#{expr}$"
     |> String.replace(~r/\*\*/, ".*")
     |> String.replace(~r/(?<!\.)\*/, "[^/]*")
   end

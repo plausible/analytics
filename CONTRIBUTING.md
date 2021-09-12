@@ -9,21 +9,22 @@ Make sure Docker, Elixir, Erlang and Node.js are all installed on your developme
 ### Start the environment:
 
 1. Run both `make postgres` and `make clickhouse`.
-2. You can then get set up with the following bits in one go with `make install`.
-  1. Run `mix deps.get`. This will download the required Elixir dependencies.
-  2. Run `mix ecto.create`. This will create the required databases in both Postgres and Clickhouse.
-  3. Run `mix ecto.migrate` to build the database schema.
-  4. Run `npm ci --prefix assets` to install the required node dependencies.
+2. You can set up everything with `make install`, alternatively run each command seperately:
+    1. Run `mix deps.get`. This will download the required Elixir dependencies.
+    2. Run `mix ecto.create`. This will create the required databases in both Postgres and Clickhouse.
+    3. Run `mix ecto.migrate` to build the database schema.
+    4. Run `npm ci --prefix assets` to install the required node dependencies.
 3. Run `make server` or `mix phx.server` to start the Phoenix server.
 4. The system is now available on `localhost:8000`.
 
 ### Creating an account
 
 1. Navigate to `http://localhost:8000/register` and fill in the form.
-2. An e-mail won't actually be sent, but you can find the activation in the Phoenix logs in your terminal. Search for `%Bamboo.Email{assigns: %{link: "` and open the link listed.
+2. An e-mail won't actually be sent, but you can find the activation in the Phoenix logs in your terminal. Search for `[info] VERIFICATION CODE:`  and enter the verification code.
 3. Fill in the rest of the forms and for the domain use `dummy.site`
-4. Run `make dummy_event` from the terminal to generate a fake pageview event for the dummy site.
-5. You should now be all set!
+4. Skip the JS snippet and click start collecting data.
+5. Run `make dummy_event` from the terminal to generate a fake pageview event for the dummy site.
+6. You should now be all set!
 
 ### Stopping Docker containers
 

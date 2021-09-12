@@ -1,16 +1,15 @@
 defmodule PlausibleWeb.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.Stats.Clickhouse, as: Stats
   alias Plausible.Stats.Query
 
   plug PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export]
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
-    has_pageviews = Stats.has_pageviews?(site)
+    has_stats = Plausible.Sites.has_stats?(site)
 
     cond do
-      !site.locked && has_pageviews ->
+      !site.locked && has_stats ->
         demo = site.domain == PlausibleWeb.Endpoint.host()
         offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
 
@@ -26,7 +25,7 @@ defmodule PlausibleWeb.StatsController do
           demo: demo
         )
 
-      !site.locked && !has_pageviews ->
+      !site.locked && !has_stats ->
         conn
         |> assign(:skip_plausible_tracking, true)
         |> render("waiting_first_pageview.html", site: site)
@@ -61,9 +60,7 @@ defmodule PlausibleWeb.StatsController do
       |> Enum.join()
 
     filename =
-      "Plausible export #{domain} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{
-        Timex.format!(query.date_range.last, "{ISOdate} ")
-      }.csv"
+      "Plausible export #{domain} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.csv"
 
     conn
     |> put_resp_content_type("text/csv")

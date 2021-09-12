@@ -159,7 +159,15 @@
                     You've been invited to the <span x-text="selectedInvitation && selectedInvitation.site.domain"></span> analytics dashboard as <b class="capitalize" x-text="selectedInvitation && selectedInvitation.role">Admin</b>.
                   </p>
                   <p x-show="selectedInvitation && selectedInvitation.role === 'owner'" class="mt-2 text-sm text-gray-500">
-                    If you accept the ownership transfer, you will be responsible for billing.
+                  If you accept the ownership transfer, you will be responsible for billing going forward.
+                  <%= if is_nil(@current_user.trial_expiry_date) && is_nil(@current_user.subscription) do %>
+                    <br/><br />
+                    You will have to enter your card details immediately with no 30-day trial.
+                  <% end %>
+                  <%= if Plausible.Billing.on_trial?(@current_user) do %>
+                    <br/><br />
+                    Your 30-day free trial will end immediately and you will have to enter your card details to keep using Plausible.
+                  <% end %>
                   </p>
                 </div>
               </div>

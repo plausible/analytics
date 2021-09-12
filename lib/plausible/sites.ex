@@ -22,7 +22,36 @@ defmodule Plausible.Sites do
 
         repo.insert(membership_changeset)
       end)
+      |> maybe_start_trial(user)
       |> Repo.transaction()
+    end
+  end
+
+  defp maybe_start_trial(multi, user) do
+    case user.trial_expiry_date do
+      nil ->
+        changeset = Plausible.Auth.User.start_trial(user)
+        Ecto.Multi.update(multi, :user, changeset)
+
+      _ ->
+        multi
+    end
+  end
+
+  def has_stats?(site) do
+    if site.has_stats do
+      true
+    else
+      has_stats = Plausible.Stats.Clickhouse.has_pageviews?(site)
+
+      if has_stats do
+        Plausible.Site.set_has_stats(site, true)
+        |> Repo.update()
+
+        true
+      else
+        false
+      end
     end
   end
 

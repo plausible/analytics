@@ -23,10 +23,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
           prev_query = Query.shift_back(query, site)
 
           [prev_result, curr_result] =
-            Task.await_many([
-              Task.async(fn -> Plausible.Stats.aggregate(site, prev_query, metrics) end),
-              Task.async(fn -> Plausible.Stats.aggregate(site, query, metrics) end)
-            ])
+            Task.await_many(
+              [
+                Task.async(fn -> Plausible.Stats.aggregate(site, prev_query, metrics) end),
+                Task.async(fn -> Plausible.Stats.aggregate(site, query, metrics) end)
+              ],
+              10_000
+            )
 
           Enum.map(curr_result, fn {metric, %{"value" => current_val}} ->
             %{"value" => prev_val} = prev_result[metric]
@@ -111,9 +114,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
         event_only_filter && invalid_metric in @session_metrics ->
           {:error,
-           "Session metric `#{invalid_metric}` cannot be queried when using a filter on `#{
-             event_only_filter
-           }`."}
+           "Session metric `#{invalid_metric}` cannot be queried when using a filter on `#{event_only_filter}`."}
 
         true ->
           {:error,
@@ -209,9 +210,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       :ok
     else
       {:error,
-       "Error parsing `interval` parameter: invalid interval `#{interval}`. Valid intervals are #{
-         @valid_intervals_str
-       }"}
+       "Error parsing `interval` parameter: invalid interval `#{interval}`. Valid intervals are #{@valid_intervals_str}"}
     end
   end
 
