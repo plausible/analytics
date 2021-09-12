@@ -33,7 +33,7 @@ class AllSources extends React.Component {
     return this.props.query.period === 'realtime'
   }
 
-  hasGoalFilter() {
+  showConversionRate() {
     return !!this.props.query.filters.goal
   }
 
@@ -46,8 +46,7 @@ class AllSources extends React.Component {
     const query = new URLSearchParams(window.location.search)
     query.set('source', referrer.name)
 
-    const showCR = this.hasGoalFilter()
-    const maxWidthDeduction =  showCR ? "10rem" : "5rem"
+    const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
 
     return (
       <div
@@ -74,7 +73,7 @@ class AllSources extends React.Component {
           </span>
         </Bar>
         <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(referrer.count)}</span>
-        {showCR && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
+        {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
       </div>
     )
   }
@@ -84,8 +83,6 @@ class AllSources extends React.Component {
   }
 
   renderList() {
-    const showCR = this.hasGoalFilter()
-
     if (this.state.referrers && this.state.referrers.length > 0) {
       return (
         <React.Fragment>
@@ -93,7 +90,7 @@ class AllSources extends React.Component {
             <span>Source</span>
             <div className="text-right">
               <span className="inline-block w-20">{this.label()}</span>
-              {showCR && <span className="inline-block w-20">CR</span>}
+              {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
             </div>
           </div>
 
@@ -162,7 +159,7 @@ class UTMSources extends React.Component {
     return this.props.query.period === 'realtime'
   }
 
-  hasGoalFilter() {
+  showConversionRate() {
     return !!this.props.query.filters.goal
   }
 
@@ -175,8 +172,7 @@ class UTMSources extends React.Component {
   renderReferrer(referrer) {
     const query = new URLSearchParams(window.location.search)
     query.set(this.props.tab, referrer.name)
-    const showCR = this.hasGoalFilter()
-    const maxWidthDeduction =  showCR ? "10rem" : "5rem"
+    const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
 
     return (
       <div
@@ -200,7 +196,7 @@ class UTMSources extends React.Component {
           </span>
         </Bar>
         <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(referrer.count)}</span>
-        {showCR && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
+        {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
       </div>
     )
   }
@@ -210,8 +206,6 @@ class UTMSources extends React.Component {
   }
 
   renderList() {
-    const showCR = this.hasGoalFilter()
-
     if (this.state.referrers && this.state.referrers.length > 0) {
       return (
         <div className="flex flex-col flex-grow">
@@ -219,7 +213,7 @@ class UTMSources extends React.Component {
             <span>{UTM_TAGS[this.props.tab].label}</span>
             <div className="text-right">
               <span className="inline-block w-20">{this.label()}</span>
-              {showCR && <span className="inline-block w-20">CR</span>}
+              {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
             </div>
           </div>
 

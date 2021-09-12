@@ -54,6 +54,10 @@ class SourcesModal extends React.Component {
     return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
   }
 
+  showConversionRate() {
+    return !!this.state.query.filters.goal
+  }
+
   loadMore() {
     this.setState({loading: true, page: this.state.page + 1}, this.loadSources.bind(this))
   }
@@ -82,6 +86,8 @@ class SourcesModal extends React.Component {
     if (filter === 'utm_sources') query.set('utm_source', source.name)
     if (filter === 'utm_campaigns') query.set('utm_campaign', source.name)
 
+    console.log(source)
+
     return (
       <tr className="text-sm dark:text-gray-200" key={source.name}>
         <td className="p-2">
@@ -94,6 +100,7 @@ class SourcesModal extends React.Component {
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(source.count)}</td>
         {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(source)}</td> }
         {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatDuration(source)}</td> }
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{source.conversion_rate}%</td> }
       </tr>
     )
   }
@@ -135,6 +142,7 @@ class SourcesModal extends React.Component {
                 <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{this.label()}</th>
                 {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Bounce rate</th>}
                 {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visit duration</th>}
+                {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">CR</th>}
               </tr>
             </thead>
             <tbody>
