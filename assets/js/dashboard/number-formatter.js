@@ -49,7 +49,3 @@ export function durationFormatter(duration) {
     return `${seconds}s`
   }
 }
-
-export function percentageFormatter(num) {
-  return +(Math.round(num + "e+2")  + "e-2");
-}

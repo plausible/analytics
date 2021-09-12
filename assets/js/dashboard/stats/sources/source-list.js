@@ -6,7 +6,7 @@ import * as storage from '../../storage'
 import FadeIn from '../../fade-in'
 import Bar from '../bar'
 import MoreLink from '../more-link'
-import numberFormatter, {percentageFormatter} from '../../number-formatter'
+import numberFormatter from '../../number-formatter'
 import * as api from '../../api'
 import LazyLoader from '../../lazy-loader'
 
@@ -74,7 +74,7 @@ class AllSources extends React.Component {
           </span>
         </Bar>
         <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(referrer.count)}</span>
-        {showCR && <span className="font-medium dark:text-gray-200 w-20 text-right">{percentageFormatter(referrer.conversion_rate)}%</span>}
+        {showCR && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
       </div>
     )
   }
@@ -200,7 +200,7 @@ class UTMSources extends React.Component {
           </span>
         </Bar>
         <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(referrer.count)}</span>
-        {showCR && <span className="font-medium dark:text-gray-200 w-20 text-right">{percentageFormatter(referrer.conversion_rate)}%</span>}
+        {showCR && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
       </div>
     )
   }
