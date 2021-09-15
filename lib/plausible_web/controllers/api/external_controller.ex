@@ -73,6 +73,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       :ok
     else
       uri = params["url"] && URI.parse(params["url"])
+      host = if uri && uri.host == "", do: "(none)", else: uri && uri.host
       query = if uri && uri.query, do: URI.decode_query(uri.query), else: %{}
 
       ref = parse_referrer(uri, params["referrer"])
@@ -82,7 +83,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       event_attrs = %{
         timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
         name: params["name"],
-        hostname: strip_www(uri && uri.host),
+        hostname: strip_www(host),
         pathname: get_pathname(uri, params["hash_mode"]),
         referrer_source: get_referrer_source(query, ref),
         referrer: clean_referrer(ref),
