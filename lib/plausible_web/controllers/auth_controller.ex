@@ -82,7 +82,8 @@ defmodule PlausibleWeb.AuthController do
         render(conn, "register_from_invitation_form.html",
           changeset: changeset,
           invitation: invitation,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          layout: {PlausibleWeb.LayoutView, "focus.html"},
+          skip_plausible_tracking: true
         )
       else
         render(conn, "invitation_expired.html", layout: {PlausibleWeb.LayoutView, "focus.html"})

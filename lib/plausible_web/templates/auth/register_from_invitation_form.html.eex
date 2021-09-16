@@ -11,7 +11,7 @@
     <p class="text-xs text-gray-500 mt-1">No spam, guaranteed.</p>
     </div>
     <div class="mt-1">
-      <%= email_input f, :email, class: "dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300", placeholder: "example@email.com", value: @invitation.email, readonly: "readonly" %>
+      <%= email_input f, :email, class: "bg-gray-100 dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300", placeholder: "example@email.com", value: @invitation.email, readonly: "readonly" %>
     </div>
     <%= error_tag f, :email %>
   </div>
