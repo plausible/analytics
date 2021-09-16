@@ -840,6 +840,24 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     end
   end
 
+  test "defaults hostname to (none) when missing", %{conn: conn} do
+    params = %{
+      domain: "url-with-hostname-missing.com",
+      name: "pageview",
+      url: "file:///android_asset/www/index.html"
+    }
+
+    conn =
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> post("/api/event", Jason.encode!(params))
+
+    pageview = get_event("url-with-hostname-missing.com")
+
+    assert response(conn, 202) == ""
+    assert pageview.hostname == "(none)"
+  end
+
   describe "GET /api/health" do
     test "returns 200 OK", %{conn: conn} do
       conn = get(conn, "/api/health")

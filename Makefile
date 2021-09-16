@@ -2,7 +2,7 @@ install:
 	mix deps.get
 	mix ecto.create
 	mix ecto.migrate
-	npm ci --prefix assets
+	npm install --prefix assets
 
 server:
 	mix phx.server
