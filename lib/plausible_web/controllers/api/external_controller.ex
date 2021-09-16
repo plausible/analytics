@@ -202,6 +202,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
+  defp get_root_domain("(none)"), do: "(none)"
   defp get_root_domain(hostname) when is_binary(hostname) do
     PublicSuffix.registrable_domain(hostname)
   end
