@@ -20,7 +20,8 @@ defmodule PlausibleWeb.Site.MembershipController do
       conn,
       "invite_member_form.html",
       site: site,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
+      layout: {PlausibleWeb.LayoutView, "focus.html"},
+      skip_plausible_tracking: true
     )
   end
 
