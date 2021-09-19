@@ -42,6 +42,10 @@ class ExitPagesModal extends React.Component {
     }
   }
 
+  showConversionRate() {
+    return !!this.state.query.filters.goal
+  }
+
   renderPage(page) {
     const query = new URLSearchParams(window.location.search)
     query.set('exit_page', page.name)
@@ -54,6 +58,7 @@ class ExitPagesModal extends React.Component {
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.exits)}</td>
         <td className="p-2 w-32 font-medium" align="right">{this.formatPercentage(page.exit_rate)}</td>
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.conversion_rate)}%</td>}
       </tr>
     )
   }
@@ -87,6 +92,7 @@ class ExitPagesModal extends React.Component {
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Unique Exits</th>
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Total Exits</th>
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Exit Rate</th>
+                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">CR</th>}
                 </tr>
               </thead>
               <tbody>

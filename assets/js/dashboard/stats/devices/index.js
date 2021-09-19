@@ -57,7 +57,6 @@ class ScreenSizes extends React.Component {
     if (this.props.timer) this.props.timer.onTick(this.fetchScreenSizes.bind(this))
   }
 
-
   fetchScreenSizes() {
     api.get(
       `/api/stats/${encodeURIComponent(this.props.site.domain)}/screen-sizes`,
@@ -66,6 +65,11 @@ class ScreenSizes extends React.Component {
       .then((res) => this.setState({loading: false, sizes: res}))
   }
 
+  showConversionRate() {
+    return !!this.props.query.filters.goal
+  }
+
+
   label() {
     return this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
   }
@@ -73,6 +77,7 @@ class ScreenSizes extends React.Component {
   renderScreenSize(size) {
     const query = new URLSearchParams(window.location.search)
     query.set('screen', size.name)
+    const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
 
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={size.name}>
@@ -80,7 +85,7 @@ class ScreenSizes extends React.Component {
           count={size.count}
           all={this.state.sizes}
           bg="bg-green-50 dark:bg-gray-500 dark:bg-opacity-15"
-          maxWidthDeduction="6rem"
+          maxWidthDeduction={maxWidthDeduction}
         >
           <span
             tooltip={EXPLANATION[size.name]}
@@ -91,12 +96,10 @@ class ScreenSizes extends React.Component {
             </Link>
           </span>
         </Bar>
-        <span
-          className="font-medium dark:text-gray-200"
-        >
-          {numberFormatter(size.count)}
-          <span className="inline-block w-8 text-xs text-right">({size.percentage}%)</span>
+        <span className="font-medium dark:text-gray-200 text-right w-20">
+          {numberFormatter(size.count)} <span className="inline-block w-8 text-xs text-right">({size.percentage}%)</span>
         </span>
+        {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(size.conversion_rate)}%</span>}
       </div>
     )
   }
@@ -109,7 +112,10 @@ class ScreenSizes extends React.Component {
             className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500"
           >
             <span>Screen size</span>
-            <span>{ this.label() }</span>
+            <div className="text-right">
+              <span className="inline-block w-20">{ this.label() }</span>
+              {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
+            </div>
           </div>
           { this.state.sizes && this.state.sizes.map(this.renderScreenSize.bind(this)) }
         </React.Fragment>
@@ -146,14 +152,14 @@ export default class Devices extends React.Component {
     }
   }
 
-  
+
   setMode(mode) {
     return () => {
       storage.setItem(this.tabKey, mode)
       this.setState({mode})
     }
   }
-  
+
   renderContent() {
     switch (this.state.mode) {
       case 'browser':
@@ -190,7 +196,7 @@ export default class Devices extends React.Component {
         </li>
       )
     }
-    
+
     return (
       <li
         className="cursor-pointer hover:text-indigo-600"

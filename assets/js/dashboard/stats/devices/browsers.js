@@ -21,7 +21,7 @@ export default class Browsers extends React.Component {
       this.fetchBrowsers()
     }
   }
-  
+
   onVisible() {
     this.fetchBrowsers()
     if (this.props.timer) this.props.timer.onTick(this.fetchBrowsers.bind(this))
@@ -35,6 +35,10 @@ export default class Browsers extends React.Component {
       api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/browsers`, this.props.query)
         .then((res) => this.setState({loading: false, browsers: res}))
     }
+  }
+
+  showConversionRate() {
+    return !!this.props.query.filters.goal
   }
 
   label() {
@@ -58,6 +62,7 @@ export default class Browsers extends React.Component {
     } else {
       query.set('browser', browser.name)
     }
+    const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
 
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={browser.name}>
@@ -65,14 +70,14 @@ export default class Browsers extends React.Component {
           count={browser.count}
           all={this.state.browsers}
           bg="bg-green-50 dark:bg-gray-500 dark:bg-opacity-15"
-          maxWidthDeduction="6rem"
+          maxWidthDeduction={maxWidthDeduction}
         >
           {this.renderBrowserContent(browser, query)}
         </Bar>
-        <span className="font-medium dark:text-gray-200">
-          {numberFormatter(browser.count)}
-          <span className="inline-block w-8 text-xs text-right">({browser.percentage}%)</span>
+        <span className="font-medium dark:text-gray-200 text-right w-20">
+          {numberFormatter(browser.count)} <span className="inline-block w-8 text-xs"> ({browser.percentage}%)</span>
         </span>
+        {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(browser.conversion_rate)}%</span>}
       </div>
     )
   }
@@ -85,7 +90,10 @@ export default class Browsers extends React.Component {
         <React.Fragment>
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>{ key }</span>
-            <span>{ this.label() }</span>
+            <div className="text-right">
+              <span className="inline-block w-20">{ this.label() }</span>
+              {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
+            </div>
           </div>
           { this.state.browsers && this.state.browsers.map(this.renderBrowser.bind(this)) }
         </React.Fragment>

@@ -19,5 +19,26 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
                %{"name" => "Laptop", "count" => 1, "percentage" => 33}
              ]
     end
+
+    test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 1, screen_size: "Desktop"),
+        build(:pageview, user_id: 2, screen_size: "Desktop"),
+        build(:event, user_id: 1, name: "Signup")
+      ])
+
+      filters = Jason.encode!(%{"goal" => "Signup"})
+
+      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Desktop",
+                 "count" => 1,
+                 "percentage" => 100,
+                 "conversion_rate" => 50.0
+               }
+             ]
+    end
   end
 end
