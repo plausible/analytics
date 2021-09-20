@@ -8,5 +8,6 @@ want be up to date on security patches, make sure your Plausible image is up to 
 ## Reporting a Vulnerability
 
 If you've found a security vulnerability with the Plausible codebase, you can disclose it responsibly by sending a summary to security@plausible.io.
-We will review the potential threat and fix it as fast as we can. We are incredibly thankful for people who disclose vulnerabilities, unfortunately we do not
-have a bounty program in place yet.
+We will review the potential threat and fix it as fast as we can.
+
+While we do not have a bounty program in place yet, we are incredibly thankful for people who take the time to share their findings with us. Whether it's a tiny bug that you've found or a security vulnerability, all reports help us to continuously improve Plausible for everyone. Thank you!
