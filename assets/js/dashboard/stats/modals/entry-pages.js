@@ -56,6 +56,10 @@ class EntryPagesModal extends React.Component {
     return '-';
   }
 
+  showConversionRate() {
+    return !!this.state.query.filters.goal
+  }
+
   renderPage(page) {
     const query = new URLSearchParams(window.location.search)
     query.set('entry_page', page.name)
@@ -76,6 +80,7 @@ class EntryPagesModal extends React.Component {
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.entries)}</td>
         {this.showVisitDuration() && <td className="p-2 w-32 font-medium" align="right">{durationFormatter(page.visit_duration)}</td>}
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.conversion_rate)}%</td>}
       </tr>
     )
   }
@@ -125,6 +130,11 @@ class EntryPagesModal extends React.Component {
                     align="right"
                   >Visit Duration
                   </th>
+                  {this.showConversionRate() && <th
+                    className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                    align="right"
+                  >CR
+                  </th>}
                 </tr>
               </thead>
               <tbody>

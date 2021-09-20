@@ -44,6 +44,10 @@ class PagesModal extends React.Component {
     return this.state.query.period !== 'realtime' && !(filters.goal || filters.source || filters.referrer)
   }
 
+  showConversionRate() {
+    return !!this.state.query.filters.goal
+  }
+
   formatBounceRate(page) {
     if (typeof(page.bounce_rate) === 'number') {
       return page.bounce_rate + '%'
@@ -66,6 +70,7 @@ class PagesModal extends React.Component {
         {this.showPageviews() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.pageviews)}</td> }
         {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td> }
         {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{timeOnPage}</td> }
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{page.conversion_rate}%</td> }
       </tr>
     )
   }
@@ -104,6 +109,7 @@ class PagesModal extends React.Component {
                   {this.showPageviews() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Pageviews</th>}
                   {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Bounce rate</th>}
                   {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Time on Page</th>}
+                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">CR</th>}
                 </tr>
               </thead>
               <tbody>

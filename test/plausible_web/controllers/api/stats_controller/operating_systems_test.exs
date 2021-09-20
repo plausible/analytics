@@ -19,6 +19,23 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
                %{"name" => "Android", "count" => 1, "percentage" => 33}
              ]
     end
+
+    test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 1, operating_system: "Mac"),
+        build(:pageview, user_id: 2, operating_system: "Mac"),
+        build(:event, user_id: 1, name: "Signup")
+      ])
+
+      filters = Jason.encode!(%{"goal" => "Signup"})
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Mac", "count" => 1, "percentage" => 100, "conversion_rate" => 50.0}
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/operating-system-versions" do
