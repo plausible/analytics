@@ -31,12 +31,11 @@ defmodule Plausible.SiteAdmin do
   end
 
   defp get_owner_email(site) do
-    Enum.find(site.memberships, fn(m) -> m.role == :owner end).user.email
+    Enum.find(site.memberships, fn m -> m.role == :owner end).user.email
   end
 
   defp get_other_members_emails(site) do
-    memberships = Enum.reject(site.memberships, fn(m) -> m.role == :owner end)
-    Enum.map(memberships, fn(m) -> m.user.email end) |> Enum.join(", ")
+    memberships = Enum.reject(site.memberships, fn m -> m.role == :owner end)
+    Enum.map(memberships, fn m -> m.user.email end) |> Enum.join(", ")
   end
-
 end
