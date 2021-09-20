@@ -81,6 +81,23 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                %{"count" => 1, "name" => "/page2"}
              ]
     end
+
+    test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 1, pathname: "/"),
+        build(:pageview, user_id: 2, pathname: "/"),
+        build(:pageview, user_id: 3, pathname: "/"),
+        build(:event, user_id: 3, name: "Signup")
+      ])
+
+      filters = Jason.encode!(%{"goal" => "Signup"})
+
+      conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"count" => 1, "name" => "/", "conversion_rate" => 33.3}
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/entry-pages" do
@@ -133,6 +150,66 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                }
              ]
     end
+
+    test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/page1",
+          user_id: 1,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page1",
+          user_id: 2,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          user_id: 1,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page2",
+          user_id: 3,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page2",
+          user_id: 3,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:event,
+          name: "Signup",
+          user_id: 3,
+          timestamp: ~N[2021-01-01 00:15:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{"goal" => "Signup"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/entry-pages?period=day&date=2021-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "count" => 1,
+                 "entries" => 1,
+                 "name" => "/page2",
+                 "visit_duration" => 900,
+                 "conversion_rate" => 100.0
+               },
+               %{
+                 "count" => 1,
+                 "entries" => 1,
+                 "name" => "/page1",
+                 "visit_duration" => 0,
+                 "conversion_rate" => 50.0
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/exit-pages" do
@@ -168,7 +245,10 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    test "calculates correct exit rate when filtering for goal", %{conn: conn, site: site} do
+    test "calculates correct exit rate and conversion_rate when filtering for goal", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:event,
           name: "Signup",
@@ -206,8 +286,20 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "/exit1", "count" => 1, "exits" => 1, "exit_rate" => 50},
-               %{"name" => "/exit2", "count" => 1, "exits" => 1, "exit_rate" => 100}
+               %{
+                 "name" => "/exit1",
+                 "count" => 1,
+                 "exits" => 1,
+                 "exit_rate" => 50,
+                 "conversion_rate" => 100.0
+               },
+               %{
+                 "name" => "/exit2",
+                 "count" => 1,
+                 "exits" => 1,
+                 "exit_rate" => 100,
+                 "conversion_rate" => 100.0
+               }
              ]
     end
 

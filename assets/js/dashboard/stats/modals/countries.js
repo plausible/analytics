@@ -25,6 +25,10 @@ class CountriesModal extends React.Component {
     return this.state.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
   }
 
+  showConversionRate() {
+    return !!this.state.query.filters.goal
+  }
+
   renderCountry(country) {
     const query = new URLSearchParams(window.location.search)
     query.set('country', country.name)
@@ -47,6 +51,7 @@ class CountriesModal extends React.Component {
         <td className="p-2 w-32 font-medium" align="right">
           {numberFormatter(country.count)} <span className="inline-block text-xs w-8 text-right">({country.percentage}%)</span>
         </td>
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{country.conversion_rate}%</td> }
       </tr>
     )
   }
@@ -57,7 +62,7 @@ class CountriesModal extends React.Component {
         <div className="loading mt-32 mx-auto"><div></div></div>
       )
     }
-    
+
     if (this.state.countries) {
       return (
         <>
@@ -81,6 +86,7 @@ class CountriesModal extends React.Component {
                   >
                     {this.label()}
                   </th>
+                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">CR</th>}
                 </tr>
               </thead>
               <tbody>

@@ -29,6 +29,10 @@ export default class ExitPages extends React.Component {
     }
   }
 
+  showConversionRate() {
+    return !!this.props.query.filters.goal
+  }
+
   fetchPages() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/exit-pages`, this.props.query)
       .then((res) => this.setState({loading: false, pages: res}))
@@ -37,6 +41,7 @@ export default class ExitPages extends React.Component {
   renderPage(page) {
     const query = new URLSearchParams(window.location.search)
     query.set('exit_page', page.name)
+    const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
 
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={page.name}>
@@ -44,7 +49,7 @@ export default class ExitPages extends React.Component {
           count={page.count}
           all={this.state.pages}
           bg="bg-orange-50 dark:bg-gray-500 dark:bg-opacity-15"
-          maxWidthDeduction="4rem"
+          maxWidthDeduction={maxWidthDeduction}
         >
           <span className="flex px-2 py-1.5 group dark:text-gray-300 z-9 relative break-all">
             <Link
@@ -62,7 +67,8 @@ export default class ExitPages extends React.Component {
             </a>
           </span>
         </Bar>
-        <span className="font-medium dark:text-gray-200">{numberFormatter(page.count)}</span>
+        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(page.count)}</span>
+        {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(page.conversion_rate)}%</span>}
       </div>
     )
   }
@@ -73,7 +79,10 @@ export default class ExitPages extends React.Component {
         <React.Fragment>
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>Page url</span>
-            <span>Unique Exits</span>
+            <div className="text-right">
+              <span className="inline-block w-20">Unique Exits</span>
+              {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
+            </div>
           </div>
 
           <FlipMove>
