@@ -31,7 +31,7 @@ class Historical extends React.Component {
     return (
       <div className="mb-12">
         <div id="stats-container-top"></div>
-        <div className={`${navClass} top-0 sm:py-3 py-2 z-9 ${this.props.stuck && !this.props.site.embedded ? 'z-10 fullwidth-shadow bg-gray-50 dark:bg-gray-850' : ''}`}>
+        <div className={`${navClass} top-0 sm:py-3 py-2 z-10 ${this.props.stuck && !this.props.site.embedded ? 'fullwidth-shadow bg-gray-50 dark:bg-gray-850' : ''}`}>
           <div className="items-center w-full flex">
             <div className="flex items-center w-full">
               <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} />
