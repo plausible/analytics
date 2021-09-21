@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file.
 - Turn off autocomplete for name and password inputs in the _New shared link_ form.
 - Details modals are now responsive and take up less horizontal space on smaller screens to make it easier to scroll.
 - Fix reading config from file
+- Fix some links not opening correctly in new tab
 
 ### Removed
 - Removes AppSignal monitoring package
