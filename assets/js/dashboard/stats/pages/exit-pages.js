@@ -8,6 +8,7 @@ import MoreLink from '../more-link'
 import numberFormatter from '../../number-formatter'
 import { eventName } from '../../query'
 import * as api from '../../api'
+import * as url from '../../url'
 import LazyLoader from '../../lazy-loader'
 
 export default class ExitPages extends React.Component {
@@ -39,8 +40,6 @@ export default class ExitPages extends React.Component {
   }
 
   renderPage(page) {
-    const query = new URLSearchParams(window.location.search)
-    query.set('exit_page', page.name)
     const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
 
     return (
@@ -53,7 +52,7 @@ export default class ExitPages extends React.Component {
         >
           <span className="flex px-2 py-1.5 group dark:text-gray-300 z-9 relative break-all">
             <Link
-              to={{pathname: window.location.pathname, search: query.toString()}}
+              to={url.setQuery('exit_page', page.name)}
               className="md:truncate block hover:underline"
             >
               {page.name}
