@@ -8,6 +8,7 @@ import Bar from '../bar'
 import MoreLink from '../more-link'
 import numberFormatter from '../../number-formatter'
 import * as api from '../../api'
+import * as url from '../../url'
 import LazyLoader from '../../lazy-loader'
 
 class AllSources extends React.Component {
@@ -43,9 +44,6 @@ class AllSources extends React.Component {
   }
 
   renderReferrer(referrer) {
-    const query = new URLSearchParams(window.location.search)
-    query.set('source', referrer.name)
-
     const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
 
     return (
@@ -62,7 +60,7 @@ class AllSources extends React.Component {
           <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
             <Link
               className="md:truncate block hover:underline"
-              to={{search: query.toString()}}
+              to={url.setQuery('source', referrer.name)}
             >
               <img
                 src={`/favicon/sources/${encodeURIComponent(referrer.name)}`}
@@ -170,8 +168,6 @@ class UTMSources extends React.Component {
   }
 
   renderReferrer(referrer) {
-    const query = new URLSearchParams(window.location.search)
-    query.set(this.props.tab, referrer.name)
     const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
 
     return (
@@ -189,7 +185,7 @@ class UTMSources extends React.Component {
           <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
             <Link
               className="md:truncate block hover:underline"
-              to={{search: query.toString()}}
+              to={url.setQuery(this.props.tab, referrer.name)}
             >
               { referrer.name }
             </Link>

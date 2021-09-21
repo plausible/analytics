@@ -5,6 +5,7 @@ import FadeIn from '../../fade-in'
 import numberFormatter from '../../number-formatter'
 import Bar from '../bar'
 import * as api from '../../api'
+import * as url from '../../url'
 import LazyLoader from '../../lazy-loader'
 
 export default class OperatingSystems extends React.Component {
@@ -41,11 +42,11 @@ export default class OperatingSystems extends React.Component {
   }
 
   renderOperatingSystem(os) {
-    const query = new URLSearchParams(window.location.search)
+    let link;
     if (this.props.query.filters.os) {
-      query.set('os_version', os.name)
+      link = url.setQuery('os_version', os.name)
     } else {
-      query.set('os', os.name)
+      link = url.setQuery('os', os.name)
     }
     const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
 
@@ -61,7 +62,7 @@ export default class OperatingSystems extends React.Component {
           maxWidthDeduction={maxWidthDeduction}
         >
           <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
-            <Link className="md:truncate block hover:underline" to={{search: query.toString()}}>
+            <Link className="md:truncate block hover:underline" to={link}>
               {os.name}
             </Link>
           </span>
