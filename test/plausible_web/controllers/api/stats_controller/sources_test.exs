@@ -434,6 +434,10 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       populate_stats(site, [
         build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com"
+        ),
+        build(:pageview,
           referrer_source: "Google",
           referrer: "google.com"
         ),

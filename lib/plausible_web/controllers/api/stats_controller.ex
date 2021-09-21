@@ -278,7 +278,11 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def referrer_drilldown(conn, %{"referrer" => "Google"} = params) do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
-    query = Query.from(site.timezone, params)
+
+    query =
+      Query.from(site.timezone, params)
+      |> Query.put_filter("source", "Google")
+      |> Filters.add_prefix()
 
     search_terms =
       if site.google_auth && site.google_auth.property && !query.filters["goal"] do
