@@ -2,10 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom'
 
 import Bar from '../bar'
-import MoreLink from '../more-link'
 import PropBreakdown from './prop-breakdown'
 import numberFormatter from '../../number-formatter'
 import * as api from '../../api'
+import * as url from '../../url'
 import LazyLoader from '../../lazy-loader'
 
 const MOBILE_UPPER_WIDTH = 767
@@ -61,18 +61,15 @@ export default class Conversions extends React.Component {
     if (this.props.query.period === 'realtime') {
       return <span className="block px-2 py-1.5 relative z-9 md:truncate break-all dark:text-gray-200">{goalName}</span>
     } else {
-      const query = new URLSearchParams(window.location.search)
-      query.set('goal', goalName)
-
       return (
-        <Link to={{pathname: window.location.pathname, search: query.toString()}} className="block px-2 py-1.5 hover:underline relative z-9 break-all lg:truncate dark:text-gray-200">
+        <Link to={url.setQuery('goal', goalName)} className="block px-2 py-1.5 hover:underline relative z-9 break-all lg:truncate dark:text-gray-200">
           {goalName}
         </Link>
       )
     }
   }
 
- 
+
 
   renderGoal(goal) {
     const { viewport } = this.state;

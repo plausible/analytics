@@ -9,6 +9,7 @@ import FadeIn from '../../fade-in'
 import numberFormatter from '../../number-formatter'
 import Bar from '../bar'
 import * as api from '../../api'
+import * as url from '../../url'
 
 
 const EXPLANATION = {
@@ -91,7 +92,7 @@ class ScreenSizes extends React.Component {
             tooltip={EXPLANATION[size.name]}
             className="flex px-2 py-1.5 dark:text-gray-300"
           >
-            <Link className="md:truncate block hover:underline" to={{search: query.toString()}}>
+            <Link className="md:truncate block hover:underline" to={url.setQuery('screen', size.name)}>
               {iconFor(size.name)} {size.name}
             </Link>
           </span>
