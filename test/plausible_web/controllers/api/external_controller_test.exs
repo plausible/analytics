@@ -858,6 +858,24 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     assert pageview.hostname == "(none)"
   end
 
+  test "accepts chrome extension URLs", %{conn: conn} do
+    params = %{
+      domain: "chrome-extension-url.com",
+      name: "pageview",
+      url: "chrome-extension://liipgellkffekalgefpjolodblggkmjg/popup.html"
+    }
+
+    conn =
+      conn
+      |> put_req_header("content-type", "text/plain")
+      |> post("/api/event", Jason.encode!(params))
+
+    pageview = get_event("chrome-extension-url.com")
+
+    assert response(conn, 202) == ""
+    assert pageview.hostname == "liipgellkffekalgefpjolodblggkmjg"
+  end
+
   describe "GET /api/health" do
     test "returns 200 OK", %{conn: conn} do
       conn = get(conn, "/api/health")
