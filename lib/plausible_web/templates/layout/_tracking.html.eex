@@ -1,5 +1,10 @@
-<%= if !Application.get_env(:plausible, :is_selfhost) && !@conn.assigns[:skip_plausible_tracking] do %>
+<%= if Application.get_env(:plausible, :environment) == "prod" && !Application.get_env(:plausible, :is_selfhost) && !@conn.assigns[:skip_plausible_tracking] do %>
   <script defer src="https://testing-plausible-io-proxy.uku-taht.workers.dev/js/script.js"></script>
   <script defer src="<%="#{plausible_url()}/js/script.js"%>"></script>
+  <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+<% end %>
+
+<%= if Application.get_env(:plausible, :environment) == "dev" do %>
+  <script defer src="<%="#{plausible_url()}/js/plausible.local.js"%>"></script>
   <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
 <% end %>
