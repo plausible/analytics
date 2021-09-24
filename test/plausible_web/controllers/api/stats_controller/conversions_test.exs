@@ -38,14 +38,14 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "count" => 2,
                  "total_count" => 3,
                  "prop_names" => ["variant"],
-                 "conversion_rate" => 33.3
+                 "conversion_rate" => 50
                },
                %{
                  "name" => "Visit /register",
                  "count" => 2,
                  "total_count" => 2,
                  "prop_names" => nil,
-                 "conversion_rate" => 33.3
+                 "conversion_rate" => 50
                }
              ]
     end
@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         build(:pageview, pathname: "/"),
         build(:pageview, pathname: "/"),
         build(:pageview, pathname: "/register"),
-        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["A"]),
+        build(:pageview, pathname: "/register"),
         build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["A"]),
         build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"])
       ])
@@ -78,8 +78,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Signup",
-                 "count" => 3,
-                 "total_count" => 3,
+                 "count" => 2,
+                 "total_count" => 2,
                  "prop_names" => ["variant"],
                  "conversion_rate" => 50
                }
@@ -111,19 +111,19 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"count" => 2, "name" => "B", "total_count" => 2, "conversion_rate" => 33.3},
-               %{"count" => 1, "name" => "A", "total_count" => 1, "conversion_rate" => 16.7}
+               %{"count" => 2, "name" => "B", "total_count" => 2, "conversion_rate" => 66.7},
+               %{"count" => 1, "name" => "A", "total_count" => 1, "conversion_rate" => 33.3}
              ]
     end
 
     test "returns (none) values in property breakdown for goal", %{conn: conn, site: site} do
       populate_stats(site, [
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/register"),
         build(:event, name: "Signup"),
         build(:event, name: "Signup"),
-        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["A"]),
-        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"]),
-        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"]),
-        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"])
+        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["A"])
       ])
 
       insert(:goal, %{domain: site.domain, event_name: "Signup"})
@@ -137,9 +137,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"count" => 3, "name" => "B", "total_count" => 3, "conversion_rate" => 50.0},
-               %{"count" => 2, "name" => "(none)", "total_count" => 2, "conversion_rate" => 33.3},
-               %{"count" => 1, "name" => "A", "total_count" => 1, "conversion_rate" => 16.7}
+               %{"count" => 2, "name" => "(none)", "total_count" => 2, "conversion_rate" => 66.7},
+               %{"count" => 1, "name" => "A", "total_count" => 1, "conversion_rate" => 33.3}
              ]
     end
 

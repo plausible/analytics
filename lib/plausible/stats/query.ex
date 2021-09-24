@@ -192,7 +192,7 @@ defmodule Plausible.Stats.Query do
       query.filters
       |> Map.drop(props)
       |> Map.delete("event:goal")
-      |> Map.delete("event:name")
+      |> Map.put("event:name", {:is, "pageview"})
 
     %__MODULE__{query | filters: new_filters}
   end
