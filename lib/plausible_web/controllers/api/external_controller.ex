@@ -8,10 +8,10 @@ defmodule PlausibleWeb.Api.ExternalController do
 
     case create_event(conn, params) do
       :ok ->
-        conn |> send_resp(202, "")
+        conn |> put_status(202) |> text("ok")
 
-      :error ->
-        conn |> send_resp(400, "")
+      {:error, errors} ->
+        conn |> put_status(400) |> json(%{errors: errors})
     end
   end
 
@@ -122,10 +122,18 @@ defmodule PlausibleWeb.Api.ExternalController do
 
           {:cont, :ok}
         else
-          {:halt, :error}
+          errors = Ecto.Changeset.traverse_errors(changeset, &encode_error/1)
+          {:halt, {:error, errors}}
         end
       end)
     end
+  end
+
+  # https://hexdocs.pm/ecto/Ecto.Changeset.html#traverse_errors/2-examples
+  defp encode_error({msg, opts}) do
+    Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+      opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+    end)
   end
 
   defp is_bot?(%UAInspector.Result.Bot{}), do: true
