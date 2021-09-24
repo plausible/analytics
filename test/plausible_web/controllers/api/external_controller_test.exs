@@ -705,6 +705,25 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
                }
              }
     end
+
+    test "responds 400 with errors when domain is missing", %{conn: conn} do
+      params = %{
+        domain: nil,
+        url: "about:config",
+        name: "pageview"
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      assert json_response(conn, 400) == %{
+               "errors" => %{
+                 "domain" => ["can't be blank"]
+               }
+             }
+    end
   end
 
   describe "user_id generation" do
