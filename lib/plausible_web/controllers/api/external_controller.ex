@@ -56,6 +56,8 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
+  @no_domain_error {:error, %{domain: ["can't be blank"]}}
+
   defp create_event(conn, params) do
     params = %{
       "name" => params["n"] || params["name"],
@@ -100,7 +102,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         "meta.value": Map.values(params["meta"]) |> Enum.map(&Kernel.to_string/1)
       }
 
-      Enum.reduce_while(get_domains(params, uri), :error, fn domain, _res ->
+      Enum.reduce_while(get_domains(params, uri), @no_domain_error, fn domain, _res ->
         user_id = generate_user_id(conn, domain, event_attrs[:hostname], salts[:current])
 
         previous_user_id =
