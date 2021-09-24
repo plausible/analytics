@@ -5,8 +5,27 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
   def init([]), do: [:public, :viewer, :admin, :owner]
   def init(allowed_roles), do: allowed_roles
 
+  defp get_site_and_role(domain, nil) do
+    site = Repo.get_by(Plausible.Site, domain: domain)
+    {site, nil}
+  end
+
+  defp get_site_and_role(domain, user_id) do
+    Repo.one(
+      from s in Plausible.Site,
+        left_join: sm in Plausible.Site.Membership,
+        on: sm.site_id == s.id,
+        where: s.domain == ^domain,
+        where: sm.user_id == ^user_id or s.public,
+        select: {s, sm.role}
+    ) || {nil, nil}
+  end
+
   def call(conn, allowed_roles) do
-    site = Repo.get_by(Plausible.Site, domain: conn.params["domain"] || conn.params["website"])
+    domain = conn.params["domain"] || conn.params["website"]
+    user_id = get_session(conn, :current_user_id)
+    {site, membership_role} = get_site_and_role(domain, user_id)
+
     shared_link_auth = conn.params["auth"]
 
     shared_link_record =
@@ -15,9 +34,6 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
     if !site do
       PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt
     else
-      user_id = get_session(conn, :current_user_id)
-      membership_role = user_id && Plausible.Sites.role(user_id, site)
-
       role =
         cond do
           user_id && membership_role ->
