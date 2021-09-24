@@ -23,10 +23,6 @@ defmodule Plausible.Stats.Props do
         end)
       end
     else
-      query =
-        Plausible.Stats.Query.remove_goal(query)
-        |> Plausible.Stats.Query.put_filter("event:name", nil)
-
       ClickhouseRepo.all(
         from e in base_event_query(site, query),
           inner_lateral_join: meta in fragment("meta as m"),

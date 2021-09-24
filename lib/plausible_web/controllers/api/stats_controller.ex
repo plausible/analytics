@@ -508,7 +508,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
     %{"visitors" => %{"value" => total_visitors}} = Stats.aggregate(site, total_q, ["visitors"])
 
-    prop_names = Stats.props(site, query)
+    prop_names =
+      if query.filters["event:goal"] do
+        Stats.props(site, query)
+      else
+        %{}
+      end
 
     conversions =
       Stats.breakdown(site, query, "event:goal", ["visitors", "events"], {100, 1})

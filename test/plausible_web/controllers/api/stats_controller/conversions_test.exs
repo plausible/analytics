@@ -37,7 +37,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Signup",
                  "count" => 2,
                  "total_count" => 3,
-                 "prop_names" => ["variant"],
+                 "prop_names" => nil,
                  "conversion_rate" => 50
                },
                %{
