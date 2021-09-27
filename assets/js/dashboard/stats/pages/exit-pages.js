@@ -6,7 +6,6 @@ import FadeIn from '../../fade-in'
 import Bar from '../bar'
 import MoreLink from '../more-link'
 import numberFormatter from '../../number-formatter'
-import { eventName } from '../../query'
 import * as api from '../../api'
 import * as url from '../../url'
 import LazyLoader from '../../lazy-loader'
@@ -18,16 +17,16 @@ export default class ExitPages extends React.Component {
     this.onVisible = this.onVisible.bind(this)
   }
 
-  onVisible() {
-    this.fetchPages()
-    if (this.props.timer) this.props.timer.onTick(this.fetchPages.bind(this))
-  }
-
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
       this.setState({loading: true, pages: null})
       this.fetchPages()
     }
+  }
+
+  onVisible() {
+    this.fetchPages()
+    if (this.props.timer) this.props.timer.onTick(this.fetchPages.bind(this))
   }
 
   showConversionRate() {
@@ -60,6 +59,7 @@ export default class ExitPages extends React.Component {
             </Link>
             <a
               target="_blank"
+              rel="noreferrer"
               href={externalLink}
               className="hidden group-hover:block"
             >
@@ -76,7 +76,7 @@ export default class ExitPages extends React.Component {
   renderList() {
     if (this.state.pages && this.state.pages.length > 0) {
       return (
-        <React.Fragment>
+        <>
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>Page url</span>
             <div className="text-right">
@@ -88,11 +88,11 @@ export default class ExitPages extends React.Component {
           <FlipMove>
             { this.state.pages.map(this.renderPage.bind(this)) }
           </FlipMove>
-        </React.Fragment>
+        </>
       )
-    } else {
-      return <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">No data yet</div>
     }
+
+    return <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">No data yet</div>
   }
 
   render() {

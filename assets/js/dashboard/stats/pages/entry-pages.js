@@ -6,7 +6,6 @@ import FadeIn from '../../fade-in'
 import Bar from '../bar'
 import MoreLink from '../more-link'
 import numberFormatter from '../../number-formatter'
-import { eventName } from '../../query'
 import * as api from '../../api'
 import * as url from '../../url'
 import LazyLoader from '../../lazy-loader'
@@ -18,16 +17,16 @@ export default class EntryPages extends React.Component {
     this.onVisible = this.onVisible.bind(this)
   }
 
-  onVisible() {
-    this.fetchPages()
-    if (this.props.timer) this.props.timer.onTick(this.fetchPages.bind(this))
-  }
-
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
       this.setState({loading: true, pages: null})
       this.fetchPages()
     }
+  }
+
+  onVisible() {
+    this.fetchPages()
+    if (this.props.timer) this.props.timer.onTick(this.fetchPages.bind(this))
   }
 
   showConversionRate() {
@@ -60,6 +59,7 @@ export default class EntryPages extends React.Component {
             </Link>
             <a
               target="_blank"
+              rel="noreferrer"
               href={externalLink}
               className="hidden group-hover:block"
             >
