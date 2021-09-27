@@ -40,8 +40,7 @@ export default class Visits extends React.Component {
   }
 
   renderPage(page) {
-    const domain = new URL('https://' + this.props.site.domain)
-    const externalLink = 'https://' + domain.host  + page.name
+    const externalLink = url.externalLinkForPage(this.props.site.domain, page.name)
     const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
 
     return (
