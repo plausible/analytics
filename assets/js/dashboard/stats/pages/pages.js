@@ -6,7 +6,6 @@ import FadeIn from '../../fade-in'
 import Bar from '../bar'
 import MoreLink from '../more-link'
 import numberFormatter from '../../number-formatter'
-import { eventName } from '../../query'
 import * as api from '../../api'
 import * as url from '../../url'
 import LazyLoader from '../../lazy-loader'
@@ -18,16 +17,16 @@ export default class Visits extends React.Component {
     this.onVisible = this.onVisible.bind(this)
   }
 
-  onVisible() {
-    this.fetchPages()
-    if (this.props.timer) this.props.timer.onTick(this.fetchPages.bind(this))
-  }
-
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
       this.setState({loading: true, pages: null})
       this.fetchPages()
     }
+  }
+
+  onVisible() {
+    this.fetchPages()
+    if (this.props.timer) this.props.timer.onTick(this.fetchPages.bind(this))
   }
 
   showConversionRate() {
@@ -37,6 +36,14 @@ export default class Visits extends React.Component {
   fetchPages() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, this.props.query)
       .then((res) => this.setState({loading: false, pages: res}))
+  }
+
+  label() {
+    if (this.props.query.period === 'realtime') {
+      return 'Current visitors'
+    }
+
+    return 'Visitors'
   }
 
   renderPage(page) {
@@ -65,6 +72,7 @@ export default class Visits extends React.Component {
             </Link>
             <a
               target="_blank"
+              rel="noreferrer"
               href={externalLink}
               className="hidden group-hover:block"
             >
@@ -78,19 +86,10 @@ export default class Visits extends React.Component {
     )
   }
 
-  label() {
-    const filters = this.props.query.filters
-    if (this.props.query.period === 'realtime') {
-      return 'Current visitors'
-    } else {
-      return 'Visitors'
-    }
-  }
-
   renderList() {
     if (this.state.pages && this.state.pages.length > 0) {
       return (
-        <React.Fragment>
+        <>
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>Page url</span>
             <div className="text-right">
@@ -102,11 +101,11 @@ export default class Visits extends React.Component {
           <FlipMove>
             { this.state.pages.map(this.renderPage.bind(this)) }
           </FlipMove>
-        </React.Fragment>
+        </>
       )
-    } else {
-      return <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">No data yet</div>
     }
+
+    return <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">No data yet</div>
   }
 
   render() {

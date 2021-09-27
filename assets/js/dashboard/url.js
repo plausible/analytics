@@ -9,7 +9,7 @@ export function sitePath(site, path = '') {
 export function setQuery(key, value) {
   const query = new URLSearchParams(window.location.search)
   query.set(key, value)
-  return window.location.pathname + '?' + query.toString();
+  return `${window.location.pathname}?${query.toString()}`
 }
 
 export function externalLinkForPage(domain, page) {
