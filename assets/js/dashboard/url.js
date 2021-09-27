@@ -11,3 +11,8 @@ export function setQuery(key, value) {
   query.set(key, value)
   return window.location.pathname + '?' + query.toString();
 }
+
+export function externalLinkForPage(domain, page) {
+  const domainURL = new URL(`https://${domain}`)
+  return `https://${domainURL.host}${page}`
+}
