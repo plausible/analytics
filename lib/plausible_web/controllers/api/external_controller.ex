@@ -71,7 +71,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
     ua = parse_user_agent(conn)
 
-    if is_bot?(ua) do
+    if is_bot?(ua) || params["domain"] in Application.get_env(:plausible, :domain_blacklist) do
       :ok
     else
       uri = params["url"] && URI.parse(params["url"])

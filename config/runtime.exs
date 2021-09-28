@@ -129,6 +129,11 @@ log_level =
   |> get_var_from_path_or_env("LOG_LEVEL", "warn")
   |> String.to_existing_atom()
 
+domain_blacklist =
+  config_dir
+  |> get_var_from_path_or_env("DOMAIN_BLACKLIST", "")
+  |> String.split(",")
+
 is_selfhost =
   config_dir
   |> get_var_from_path_or_env("SELFHOST", "true")
@@ -174,7 +179,8 @@ config :plausible,
   site_limit: site_limit,
   site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost,
-  custom_script_name: custom_script_name
+  custom_script_name: custom_script_name,
+  domain_blacklist: domain_blacklist
 
 config :plausible, :selfhost,
   disable_authentication: disable_auth,
