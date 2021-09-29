@@ -38,6 +38,18 @@ export default class EntryPages extends React.Component {
       .then((res) => this.setState({loading: false, pages: res}))
   }
 
+  label() {
+    if (this.props.query.period === 'realtime') {
+      return 'Current visitors'
+    }
+
+    if (this.showConversionRate()) {
+      return 'Conversions'
+    }
+
+    return 'Unique Entrances'
+  }
+
   renderPage(page) {
     const externalLink = url.externalLinkForPage(this.props.site.domain, page.name)
     const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
@@ -80,7 +92,7 @@ export default class EntryPages extends React.Component {
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>Page url</span>
             <div className="text-right">
-              <span className="inline-block w-30">Unique Entrances</span>
+              <span className="inline-block w-30">{this.label()}</span>
               {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
             </div>
           </div>

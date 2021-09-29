@@ -45,10 +45,6 @@ class EntryPagesModal extends React.Component {
     this.setState({loading: true, page: page + 1}, this.loadPages.bind(this))
   }
 
-  showVisitDuration() {
-    return this.state.query.period !== 'realtime'
-  }
-
   formatBounceRate(page) {
     if (typeof(page.bounce_rate) === 'number') {
       return `${page.bounce_rate}%`;
@@ -58,6 +54,22 @@ class EntryPagesModal extends React.Component {
 
   showConversionRate() {
     return !!this.state.query.filters.goal
+  }
+
+  showExtra() {
+    return this.state.query.period !== 'realtime' && !this.showConversionRate()
+  }
+
+  label() {
+    if (this.state.query.period === 'realtime') {
+      return 'Current visitors'
+    }
+
+    if (this.showConversionRate()) {
+      return 'Conversions'
+    }
+
+    return 'Visitors'
   }
 
   renderPage(page) {
@@ -77,9 +89,10 @@ class EntryPagesModal extends React.Component {
             {page.name}
           </Link>
         </td>
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_visitors)}</td>}
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
-        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.entries)}</td>
-        {this.showVisitDuration() && <td className="p-2 w-32 font-medium" align="right">{durationFormatter(page.visit_duration)}</td>}
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.entries)}</td>}
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{durationFormatter(page.visit_duration)}</td>}
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.conversion_rate)}%</td>}
       </tr>
     )
@@ -115,26 +128,11 @@ class EntryPagesModal extends React.Component {
                     align="left"
                   >Page url
                   </th>
-                  <th
-                    className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
-                    align="right"
-                  >Unique Entrances
-                  </th>
-                  <th
-                    className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
-                    align="right"
-                  >Total Entrances
-                  </th>
-                  <th
-                    className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
-                    align="right"
-                  >Visit Duration
-                  </th>
-                  {this.showConversionRate() && <th
-                    className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
-                    align="right"
-                  >CR
-                  </th>}
+                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Total Visitors </th>}
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >{this.label()} </th>
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Total Entrances </th> }
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Visit Duration </th> }
+                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >CR </th>}
                 </tr>
               </thead>
               <tbody>

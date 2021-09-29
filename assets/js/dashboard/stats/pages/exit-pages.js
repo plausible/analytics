@@ -33,6 +33,18 @@ export default class ExitPages extends React.Component {
     return !!this.props.query.filters.goal
   }
 
+  label() {
+    if (this.props.query.period === 'realtime') {
+      return 'Current visitors'
+    }
+
+    if (this.showConversionRate()) {
+      return 'Conversions'
+    }
+
+    return 'Unique Exits'
+  }
+
   fetchPages() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/exit-pages`, this.props.query)
       .then((res) => this.setState({loading: false, pages: res}))
@@ -80,7 +92,7 @@ export default class ExitPages extends React.Component {
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>Page url</span>
             <div className="text-right">
-              <span className="inline-block w-20">Unique Exits</span>
+              <span className="inline-block w-20">{this.label()}</span>
               {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
             </div>
           </div>
