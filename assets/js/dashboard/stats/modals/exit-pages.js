@@ -46,6 +46,22 @@ class ExitPagesModal extends React.Component {
     return !!this.state.query.filters.goal
   }
 
+  showExtra() {
+    return this.state.query.period !== 'realtime' && !this.showConversionRate()
+  }
+
+  label() {
+    if (this.state.query.period === 'realtime') {
+      return 'Current visitors'
+    }
+
+    if (this.showConversionRate()) {
+      return 'Conversions'
+    }
+
+    return 'Visitors'
+  }
+
   renderPage(page) {
     const query = new URLSearchParams(window.location.search)
     query.set('exit_page', page.name)
@@ -55,9 +71,10 @@ class ExitPagesModal extends React.Component {
         <td className="p-2">
           <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline">{page.name}</Link>
         </td>
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_visitors)}</td>}
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
-        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.exits)}</td>
-        <td className="p-2 w-32 font-medium" align="right">{this.formatPercentage(page.exit_rate)}</td>
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.exits)}</td>}
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatPercentage(page.exit_rate)}</td>}
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.conversion_rate)}%</td>}
       </tr>
     )
@@ -89,9 +106,10 @@ class ExitPagesModal extends React.Component {
               <thead>
                 <tr>
                   <th className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Page url</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Unique Exits</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Total Exits</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Exit Rate</th>
+                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Total Visitors </th>}
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{this.label()}</th>
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Total Exits</th>}
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Exit Rate</th>}
                   {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">CR</th>}
                 </tr>
               </thead>

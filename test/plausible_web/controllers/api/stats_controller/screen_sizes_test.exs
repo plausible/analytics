@@ -34,6 +34,7 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Desktop",
+                 "total_visitors" => 2,
                  "count" => 1,
                  "percentage" => 100,
                  "conversion_rate" => 50.0

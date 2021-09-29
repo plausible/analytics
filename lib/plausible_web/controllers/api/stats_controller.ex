@@ -321,6 +321,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     referrers =
       Stats.breakdown(site, query, "visit:referrer", metrics, pagination)
+      |> maybe_add_cr(site, query, pagination, "referrer", "visit:referrer")
       |> transform_keys(%{"referrer" => "name", "visitors" => "count"})
 
     %{"visitors" => %{"value" => total_visitors}} = Stats.aggregate(site, query, ["visitors"])
@@ -608,6 +609,7 @@ defmodule PlausibleWeb.Api.StatsController do
       without_goal = Enum.find(list_without_goals, fn s -> s[key_name] === item[key_name] end)
 
       item
+      |> Map.put(:total_visitors, without_goal["visitors"])
       |> Map.put(:conversion_rate, calculate_cr(without_goal["visitors"], item["visitors"]))
     end)
   end

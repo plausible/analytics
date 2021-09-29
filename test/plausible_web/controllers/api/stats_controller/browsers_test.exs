@@ -32,7 +32,13 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&filters=#{filters}")
 
       assert json_response(conn, 200) == [
-               %{"name" => "Chrome", "count" => 1, "percentage" => 100, "conversion_rate" => 50.0}
+               %{
+                 "name" => "Chrome",
+                 "total_visitors" => 2,
+                 "count" => 1,
+                 "percentage" => 100,
+                 "conversion_rate" => 50.0
+               }
              ]
     end
   end

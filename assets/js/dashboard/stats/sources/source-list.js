@@ -77,7 +77,15 @@ class AllSources extends React.Component {
   }
 
   label() {
-    return this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
+    if (this.props.query.period === 'realtime') {
+      return 'Current visitors'
+    }
+
+    if (this.showConversionRate()) {
+      return 'Conversions'
+    }
+
+    return 'Visitors'
   }
 
   renderList() {
@@ -198,7 +206,15 @@ class UTMSources extends React.Component {
   }
 
   label() {
-    return this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
+    if (this.props.query.period === 'realtime') {
+      return 'Current visitors'
+    }
+
+    if (this.showConversionRate()) {
+      return 'Conversions'
+    }
+
+    return 'Visitors'
   }
 
   renderList() {

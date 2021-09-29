@@ -43,6 +43,10 @@ export default class Visits extends React.Component {
       return 'Current visitors'
     }
 
+    if (this.showConversionRate()) {
+      return 'Conversions'
+    }
+
     return 'Visitors'
   }
 
