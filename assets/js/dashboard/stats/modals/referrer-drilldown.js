@@ -27,6 +27,22 @@ class ReferrerDrilldownModal extends React.Component {
     return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
   }
 
+  showConversionRate() {
+    return !!this.state.query.filters.goal
+  }
+
+  label() {
+    if (this.state.query.period === 'realtime') {
+      return 'Current visitors'
+    }
+
+    if (this.showConversionRate()) {
+      return 'Conversions'
+    }
+
+    return 'Visitors'
+  }
+
   formatBounceRate(ref) {
     if (typeof(ref.bounce_rate) === 'number') {
       return ref.bounce_rate + '%'
@@ -107,9 +123,11 @@ class ReferrerDrilldownModal extends React.Component {
               { referrer.tweets.map(this.renderTweet) }
             </div>
           </td>
+          {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.total_visitors)}</td> }
           <td className="p-2 w-32 font-medium" align="right" valign="top">{numberFormatter(referrer.count)}</td>
           {this.showExtra() && <td className="p-2 w-32 font-medium" align="right" valign="top">{this.formatBounceRate(referrer)}</td> }
           {this.showExtra() && <td className="p-2 w-32 font-medium" align="right" valign="top">{this.formatDuration(referrer)}</td> }
+          {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{referrer.conversion_rate}%</td> }
         </tr>
       )
     } else {
@@ -118,9 +136,11 @@ class ReferrerDrilldownModal extends React.Component {
           <td className="p-2">
             { this.renderReferrerName(referrer) }
           </td>
+          {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.total_visitors)}</td> }
           <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.count)}</td>
           {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td> }
           {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatDuration(referrer)}</td> }
+          {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{referrer.conversion_rate}%</td> }
         </tr>
       )
     }
@@ -153,9 +173,11 @@ class ReferrerDrilldownModal extends React.Component {
               <thead>
                 <tr>
                   <th className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Referrer</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visitors</th>
+                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Total visitors</th>}
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{this.label()}</th>
                   {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Bounce rate</th>}
                   {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visit duration</th>}
+                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">CR</th>}
                 </tr>
               </thead>
               <tbody>

@@ -3,6 +3,7 @@
 
   var location = window.location
   var document = window.document
+  var localStorage = window.localStorage
 
   {{#if compat}}
   var scriptEl = document.getElementById('plausible');
@@ -10,7 +11,7 @@
   var scriptEl = document.currentScript;
   {{/if}}
   var endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint(scriptEl)
-  var plausible_ignore = window.localStorage.plausible_ignore;
+  var plausible_ignore = localStorage && localStorage.plausible_ignore;
   {{#if exclusions}}
   var excludedPaths = scriptEl && scriptEl.getAttribute('data-exclude').split(',');
   {{/if}}

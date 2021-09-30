@@ -20,7 +20,8 @@ defmodule PlausibleWeb.Site.MembershipController do
       conn,
       "invite_member_form.html",
       site: site,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
+      layout: {PlausibleWeb.LayoutView, "focus.html"},
+      skip_plausible_tracking: true
     )
   end
 
@@ -59,9 +60,7 @@ defmodule PlausibleWeb.Site.MembershipController do
       conn
       |> put_flash(
         :success,
-        "#{email} has been invited to #{site_domain} as #{
-          PlausibleWeb.SiteView.with_indefinite_article(role)
-        }"
+        "#{email} has been invited to #{site_domain} as #{PlausibleWeb.SiteView.with_indefinite_article(role)}"
       )
       |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
     end

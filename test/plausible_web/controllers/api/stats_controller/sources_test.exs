@@ -122,6 +122,22 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                %{"name" => "DuckDuckGo", "count" => 1}
              ]
     end
+
+    test "shows sources for a page", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/page1", referrer_source: "Google"),
+        build(:pageview, pathname: "/page2", referrer_source: "Google"),
+        build(:pageview, user_id: 1, pathname: "/page2", referrer_source: "DuckDuckGo"),
+        build(:pageview, user_id: 1, pathname: "/page1", referrer_source: "DuckDuckGo")
+      ])
+
+      filters = Jason.encode!(%{"page" => "/page1"})
+      conn = get(conn, "/api/stats/#{site.domain}/sources?filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Google", "count" => 1}
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/utm_mediums" do
@@ -267,7 +283,10 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   describe "GET /api/stats/:domain/sources - with goal filter" do
     setup [:create_user, :log_in, :create_new_site]
 
-    test "returns top referrers for a custom goal", %{conn: conn, site: site} do
+    test "returns top referrers for a custom goal including conversion_rate", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview,
           referrer_source: "Twitter",
@@ -291,11 +310,19 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "Twitter", "count" => 1}
+               %{
+                 "name" => "Twitter",
+                 "total_visitors" => 2,
+                 "count" => 1,
+                 "conversion_rate" => 50.0
+               }
              ]
     end
 
-    test "returns top referrers for a pageview goal", %{conn: conn, site: site} do
+    test "returns top referrers for a pageview goal including conversion_rate", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview,
           referrer_source: "Twitter",
@@ -319,7 +346,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "Twitter", "count" => 1}
+               %{
+                 "name" => "Twitter",
+                 "total_visitors" => 2,
+                 "count" => 1,
+                 "conversion_rate" => 50.0
+               }
              ]
     end
   end
@@ -412,6 +444,10 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       populate_stats(site, [
         build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com"
+        ),
+        build(:pageview,
           referrer_source: "Google",
           referrer: "google.com"
         ),
@@ -461,7 +497,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       assert json_response(conn, 200) == %{
                "total_visitors" => 1,
                "referrers" => [
-                 %{"name" => "10words.com", "count" => 1}
+                 %{
+                   "name" => "10words.com",
+                   "total_visitors" => 2,
+                   "conversion_rate" => 50.0,
+                   "count" => 1
+                 }
                ]
              }
     end
@@ -497,7 +538,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       assert json_response(conn, 200) == %{
                "total_visitors" => 1,
                "referrers" => [
-                 %{"name" => "10words.com", "count" => 1}
+                 %{
+                   "name" => "10words.com",
+                   "total_visitors" => 2,
+                   "conversion_rate" => 50.0,
+                   "count" => 1
+                 }
                ]
              }
     end

@@ -81,9 +81,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/browser_version?period=month&date=2019-01-01&filters=#{
-            filters
-          }"
+          "/api/stats/#{site.domain}/suggestions/browser_version?period=month&date=2019-01-01&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == ["78.0"]
@@ -101,9 +99,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/os_version?period=month&date=2019-01-01&filters=#{
-            filters
-          }"
+          "/api/stats/#{site.domain}/suggestions/os_version?period=month&date=2019-01-01&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == ["10.15"]
@@ -115,9 +111,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/os_version?period=month&date=2019-01-01&filters=#{
-            filters
-          }&q=11"
+          "/api/stats/#{site.domain}/suggestions/os_version?period=month&date=2019-01-01&filters=#{filters}&q=11"
         )
 
       assert json_response(conn, 200) == []

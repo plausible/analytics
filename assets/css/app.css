@@ -1,6 +1,7 @@
 /* purgecss start ignore */
 @tailwind base;
 @tailwind components;
+
 /* purgecss end ignore */
 @import "modal.css";
 @import "loader.css";
@@ -14,7 +15,7 @@
 }
 
 .button[disabled] {
-  @apply bg-gray-400 dark:bg-gray-600
+  @apply bg-gray-400 dark:bg-gray-600;
 }
 
 .button-outline {
@@ -69,6 +70,7 @@ blockquote {
 .main-graph {
   position: relative;
   height: 0;
+
   /* Formula is: (top row height + (graph height / graph width * 100%)) */
   padding-top: calc(168px + (451 / 1088 * 100%));
 }
@@ -115,7 +117,7 @@ blockquote {
   height: 10px;
 }
 
-.pulsating-circle:before {
+.pulsating-circle::before {
   content: '';
   position: relative;
   display: block;
@@ -129,7 +131,7 @@ blockquote {
   animation: pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
   @apply bg-green-500;
 }
-.pulsating-circle:after {
+.pulsating-circle::after {
   content: '';
   position: absolute;
   left: 0;
@@ -182,8 +184,6 @@ blockquote {
     top: -16px;
     right: 8px;
     left: auto;
-}
-.dropdown-content::before {
     border: 8px solid transparent;
     border-bottom-color: rgba(27,31,35,0.15);
 }
@@ -193,13 +193,11 @@ blockquote {
     content: "";
   }
 .dropdown-content::after {
-    border: 7px solid transparent;
-    border-bottom-color: #fff;
-}
-.dropdown-content::after {
     top: -14px;
     right: 9px;
     left: auto;
+    border: 7px solid transparent;
+    border-bottom-color: #fff;
 }
 
 .feather {
@@ -257,7 +255,7 @@ blockquote {
     width: calc(50% - 6px);
     position: relative;
     min-height: initial;
-    height: 436px;
+    height: 27.25rem;
   }
 
   .stats-item__header {
@@ -283,7 +281,7 @@ blockquote {
 
 .flatpickr-calendar.static.open {
   right: 2px;
-  top: calc(100% - 12px);
+  top: 12px;
 }
 
 .datamaps-subunit {
@@ -297,6 +295,7 @@ blockquote {
 
 .fullwidth-shadow::before {
   @apply absolute top-0 w-screen h-full bg-gray-50 dark:bg-gray-850;
+
   box-shadow: 0 4px 2px -2px rgba(0, 0, 0, 0.06);
   content: "";
   z-index: -1;
@@ -316,15 +315,11 @@ iframe[hidden] {
   @apply cursor-default bg-gray-100 dark:bg-gray-300 pointer-events-none;
 }
 
-.flatpickr-calendar.static.open {
-  top: 12px;
-}
-
 @media (max-width: 768px) {
   .flatpickr-wrapper {
-    position: absolute!important;
-    right: 0!important;
-    left: 0!important;
+    position: absolute !important;
+    right: 0 !important;
+    left: 0 !important;
   }
 }
 

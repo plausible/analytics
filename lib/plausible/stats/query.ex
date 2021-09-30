@@ -176,7 +176,9 @@ defmodule Plausible.Stats.Query do
   def treat_page_filter_as_entry_page(%__MODULE__{filters: %{"visit:entry_page" => _}} = q), do: q
 
   def treat_page_filter_as_entry_page(%__MODULE__{filters: %{"event:page" => f}} = q) do
-    put_filter(q, "visit:entry_page", f)
+    q
+    |> put_filter("visit:entry_page", f)
+    |> put_filter("event:page", nil)
   end
 
   def treat_page_filter_as_entry_page(q), do: q
@@ -190,6 +192,7 @@ defmodule Plausible.Stats.Query do
       query.filters
       |> Map.drop(props)
       |> Map.delete("event:goal")
+      |> Map.put("event:name", {:is, "pageview"})
 
     %__MODULE__{query | filters: new_filters}
   end
@@ -231,14 +234,10 @@ defmodule Plausible.Stats.Query do
 
     is_negated = String.contains?(str, "!=")
     is_list = String.contains?(val, "|")
-    is_glob = String.contains?(val, "*")
 
     cond do
-      is_list && is_glob -> raise "Not implemented"
-      is_negated && is_glob -> {key, {:does_not_match, val}}
       key == "event:goal" -> {key, parse_goal_filter(val)}
       is_list -> {key, {:member, String.split(val, "|")}}
-      is_glob -> {key, {:matches, val}}
       is_negated -> {key, {:is_not, val}}
       true -> {key, {:is, val}}
     end

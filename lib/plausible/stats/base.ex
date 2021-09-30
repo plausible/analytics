@@ -311,6 +311,7 @@ defmodule Plausible.Stats.Base do
   end
 
   defp db_prop_val("referrer_source", @no_ref), do: ""
+  defp db_prop_val("referrer", @no_ref), do: ""
   defp db_prop_val("utm_medium", @no_ref), do: ""
   defp db_prop_val("utm_source", @no_ref), do: ""
   defp db_prop_val("utm_campaign", @no_ref), do: ""
@@ -347,7 +348,7 @@ defmodule Plausible.Stats.Base do
   end
 
   def page_regex(expr) do
-    "^#{expr}\/?$"
+    "^#{expr}$"
     |> String.replace(~r/\*\*/, ".*")
     |> String.replace(~r/(?<!\.)\*/, "[^/]*")
   end

@@ -2,7 +2,7 @@
 # platform specific, it makes sense to build it in the docker
 
 #### Builder
-FROM hexpm/elixir:1.11.3-erlang-23.2.1-alpine-3.12.1 as buildcontainer
+FROM hexpm/elixir:1.12.2-erlang-24.0-alpine-3.13.3 as buildcontainer
 
 # preparation
 ARG APP_VER=0.0.1
@@ -41,8 +41,6 @@ RUN npm run deploy --prefix ./assets && \
     npm run deploy --prefix ./tracker && \
     mix phx.digest priv/static && \
     mix download_country_database && \
-    mix ref_inspector.download -f && \
-    mix ua_inspector.download -f && \
 # https://hexdocs.pm/sentry/Sentry.Sources.html#module-source-code-storage
     mix sentry_recompile
 
@@ -51,13 +49,13 @@ COPY rel rel
 RUN mix release plausible
 
 # Main Docker Image
-FROM alpine:3.12.1
+FROM alpine:3.13.3
 LABEL maintainer="tckb <tckb@tgrthi.me>"
 ENV LANG=C.UTF-8
 
 RUN apk update && apk upgrade
 
-RUN apk add --no-cache openssl ncurses
+RUN apk add --no-cache openssl ncurses libstdc++ libgcc
 
 COPY .gitlab/build-scripts/docker-entrypoint.sh /entrypoint.sh
 

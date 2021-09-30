@@ -6,9 +6,7 @@ defmodule Plausible.Google.Api do
     if Application.get_env(:plausible, :environment) == "test" do
       ""
     else
-      "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{
-        redirect_uri()
-      }&prompt=consent&response_type=code&access_type=offline&scope=#{@scope}&state=#{site_id}"
+      "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@scope}&state=#{site_id}"
     end
   end
 
@@ -16,9 +14,7 @@ defmodule Plausible.Google.Api do
     res =
       HTTPoison.post!(
         "https://www.googleapis.com/oauth2/v4/token",
-        "client_id=#{client_id()}&client_secret=#{client_secret()}&code=#{code}&grant_type=authorization_code&redirect_uri=#{
-          redirect_uri()
-        }",
+        "client_id=#{client_id()}&client_secret=#{client_secret()}&code=#{code}&grant_type=authorization_code&redirect_uri=#{redirect_uri()}",
         "Content-Type": "application/x-www-form-urlencoded"
       )
 
@@ -129,9 +125,7 @@ defmodule Plausible.Google.Api do
     res =
       HTTPoison.post!(
         "https://www.googleapis.com/oauth2/v4/token",
-        "client_id=#{client_id()}&client_secret=#{client_secret()}&refresh_token=#{
-          auth.refresh_token
-        }&grant_type=refresh_token&redirect_uri=#{redirect_uri()}",
+        "client_id=#{client_id()}&client_secret=#{client_secret()}&refresh_token=#{auth.refresh_token}&grant_type=refresh_token&redirect_uri=#{redirect_uri()}",
         "Content-Type": "application/x-www-form-urlencoded"
       )
 

@@ -41,6 +41,10 @@ export default class Referrers extends React.Component {
     return this.props.query.period === 'realtime'
   }
 
+  showConversionRate() {
+    return !!this.props.query.filters.goal
+  }
+
   fetchReferrers() {
     if (this.props.query.filters.source) {
       api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${encodeURIComponent(this.props.query.filters.source)}`, this.props.query, {show_noref: this.showNoRef()})
@@ -67,6 +71,7 @@ export default class Referrers extends React.Component {
   }
 
   renderReferrer(referrer) {
+    const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
     const query = new URLSearchParams(window.location.search)
     query.set('referrer', referrer.name)
 
@@ -76,7 +81,7 @@ export default class Referrers extends React.Component {
           count={referrer.count}
           all={this.state.referrers}
           bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
-          maxWidthDeduction="4rem"
+          maxWidthDeduction={maxWidthDeduction}
         >
           <span className="flex px-2 py-1.5 z-9 relative break-all group">
             <LinkOption
@@ -85,7 +90,7 @@ export default class Referrers extends React.Component {
               disabled={referrer.name === 'Direct / None'}
             >
               <img
-                src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`}
+                src={`/favicon/sources/${encodeURIComponent(referrer.name)}`}
                 referrerPolicy="no-referrer"
                 className="inline w-4 h-4 mr-2 -mt-px align-middle"
               />
@@ -95,12 +100,21 @@ export default class Referrers extends React.Component {
           </span>
         </Bar>
         <span className="font-medium dark:text-gray-200">{numberFormatter(referrer.count)}</span>
+        {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
       </div>
     )
   }
 
   label() {
-    return this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
+    if (this.props.query.period === 'realtime') {
+      return 'Current visitors'
+    }
+
+    if (this.showConversionRate()) {
+      return 'Conversions'
+    }
+
+    return 'Visitors'
   }
 
   renderList() {
@@ -108,10 +122,14 @@ export default class Referrers extends React.Component {
       return (
         <div className="flex flex-col flex-grow">
           <div
-            className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400"
+            className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500"
           >
             <span>Referrer</span>
-            <span>{ this.label() }</span>
+
+            <div className="text-right">
+              <span className="inline-block w-20">{this.label()}</span>
+              {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
+            </div>
           </div>
 
           <FlipMove className="flex-grow">

@@ -33,5 +33,45 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                }
              ]
     end
+
+    test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          country_code: "EE"
+        ),
+        build(:event, user_id: 1, name: "Signup"),
+        build(:pageview,
+          user_id: 2,
+          country_code: "EE"
+        ),
+        build(:pageview,
+          user_id: 3,
+          country_code: "GB"
+        ),
+        build(:event, user_id: 3, name: "Signup")
+      ])
+
+      filters = Jason.encode!(%{"goal" => "Signup"})
+
+      conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "GBR",
+                 "total_visitors" => 1,
+                 "count" => 1,
+                 "percentage" => 50,
+                 "conversion_rate" => 100.0
+               },
+               %{
+                 "name" => "EST",
+                 "total_visitors" => 2,
+                 "count" => 1,
+                 "percentage" => 50,
+                 "conversion_rate" => 50.0
+               }
+             ]
+    end
   end
 end

@@ -8,6 +8,7 @@ import Bar from '../bar'
 import MoreLink from '../more-link'
 import numberFormatter from '../../number-formatter'
 import * as api from '../../api'
+import * as url from '../../url'
 import LazyLoader from '../../lazy-loader'
 
 class AllSources extends React.Component {
@@ -33,14 +34,17 @@ class AllSources extends React.Component {
     return this.props.query.period === 'realtime'
   }
 
+  showConversionRate() {
+    return !!this.props.query.filters.goal
+  }
+
   fetchReferrers() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/sources`, this.props.query, {show_noref: this.showNoRef()})
-      .then((res) => this.setState({loading: false, referrers: res}))
+       .then((res) => this.setState({loading: false, referrers: res}))
   }
 
   renderReferrer(referrer) {
-    const query = new URLSearchParams(window.location.search)
-    query.set('source', referrer.name)
+    const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
 
     return (
       <div
@@ -51,12 +55,12 @@ class AllSources extends React.Component {
           count={referrer.count}
           all={this.state.referrers}
           bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
-          maxWidthDeduction="4rem"
+          maxWidthDeduction={maxWidthDeduction}
         >
           <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
             <Link
               className="md:truncate block hover:underline"
-              to={{search: query.toString()}}
+              to={url.setQuery('source', referrer.name)}
             >
               <img
                 src={`/favicon/sources/${encodeURIComponent(referrer.name)}`}
@@ -66,13 +70,22 @@ class AllSources extends React.Component {
             </Link>
           </span>
         </Bar>
-        <span className="font-medium dark:text-gray-200">{numberFormatter(referrer.count)}</span>
+        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(referrer.count)}</span>
+        {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
       </div>
     )
   }
 
   label() {
-    return this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
+    if (this.props.query.period === 'realtime') {
+      return 'Current visitors'
+    }
+
+    if (this.showConversionRate()) {
+      return 'Conversions'
+    }
+
+    return 'Visitors'
   }
 
   renderList() {
@@ -81,7 +94,10 @@ class AllSources extends React.Component {
         <React.Fragment>
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500">
             <span>Source</span>
-            <span>{this.label()}</span>
+            <div className="text-right">
+              <span className="inline-block w-20">{this.label()}</span>
+              {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
+            </div>
           </div>
 
           <FlipMove className="flex-grow">
@@ -149,6 +165,10 @@ class UTMSources extends React.Component {
     return this.props.query.period === 'realtime'
   }
 
+  showConversionRate() {
+    return !!this.props.query.filters.goal
+  }
+
   fetchReferrers() {
     const endpoint = UTM_TAGS[this.props.tab].endpoint
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/${endpoint}`, this.props.query, {show_noref: this.showNoRef()})
@@ -156,8 +176,7 @@ class UTMSources extends React.Component {
   }
 
   renderReferrer(referrer) {
-    const query = new URLSearchParams(window.location.search)
-    query.set(this.props.tab, referrer.name)
+    const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
 
     return (
       <div
@@ -168,25 +187,34 @@ class UTMSources extends React.Component {
           count={referrer.count}
           all={this.state.referrers}
           bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
-          maxWidthDeduction="4rem"
+          maxWidthDeduction={maxWidthDeduction}
         >
 
           <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
             <Link
               className="md:truncate block hover:underline"
-              to={{search: query.toString()}}
+              to={url.setQuery(this.props.tab, referrer.name)}
             >
               { referrer.name }
             </Link>
           </span>
         </Bar>
-        <span className="font-medium dark:text-gray-200">{numberFormatter(referrer.count)}</span>
+        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(referrer.count)}</span>
+        {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
       </div>
     )
   }
 
   label() {
-    return this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
+    if (this.props.query.period === 'realtime') {
+      return 'Current visitors'
+    }
+
+    if (this.showConversionRate()) {
+      return 'Conversions'
+    }
+
+    return 'Visitors'
   }
 
   renderList() {
@@ -195,7 +223,10 @@ class UTMSources extends React.Component {
         <div className="flex flex-col flex-grow">
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>{UTM_TAGS[this.props.tab].label}</span>
-            <span>{this.label()}</span>
+            <div className="text-right">
+              <span className="inline-block w-20">{this.label()}</span>
+              {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
+            </div>
           </div>
 
           <FlipMove className="flex-grow">

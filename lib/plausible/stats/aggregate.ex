@@ -19,9 +19,9 @@ defmodule Plausible.Stats.Aggregate do
         Task.async(fn -> %{} end)
       end
 
-    Task.await(session_task)
-    |> Map.merge(Task.await(event_task))
-    |> Map.merge(Task.await(time_on_page_task))
+    Task.await(session_task, 10_000)
+    |> Map.merge(Task.await(event_task, 10_000))
+    |> Map.merge(Task.await(time_on_page_task, 10_000))
     |> Enum.map(fn {metric, value} ->
       {metric, %{"value" => round(value || 0)}}
     end)

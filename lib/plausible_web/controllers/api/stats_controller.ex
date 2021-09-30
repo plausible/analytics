@@ -9,12 +9,6 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
 
-    query =
-      case query.filters["event:goal"] do
-        nil -> Query.put_filter(query, "event:name", {:is, "pageview"})
-        _ -> query
-      end
-
     timeseries_query =
       if query.period == "realtime" do
         %Query{query | period: "30m"}
@@ -219,6 +213,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:source", metrics, pagination)
+      |> maybe_add_cr(site, query, pagination, "source", "visit:source")
       |> transform_keys(%{"source" => "name", "visitors" => "count"})
 
     json(conn, res)
@@ -237,6 +232,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_medium", metrics, pagination)
+      |> maybe_add_cr(site, query, pagination, "utm_medium", "visit:utm_medium")
       |> transform_keys(%{"utm_medium" => "name", "visitors" => "count"})
 
     json(conn, res)
@@ -255,6 +251,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_campaign", metrics, pagination)
+      |> maybe_add_cr(site, query, pagination, "utm_campaign", "visit:utm_campaign")
       |> transform_keys(%{"utm_campaign" => "name", "visitors" => "count"})
 
     json(conn, res)
@@ -273,6 +270,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_source", metrics, pagination)
+      |> maybe_add_cr(site, query, pagination, "utm_source", "visit:utm_source")
       |> transform_keys(%{"utm_source" => "name", "visitors" => "count"})
 
     json(conn, res)
@@ -280,7 +278,11 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def referrer_drilldown(conn, %{"referrer" => "Google"} = params) do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
-    query = Query.from(site.timezone, params)
+
+    query =
+      Query.from(site.timezone, params)
+      |> Query.put_filter("source", "Google")
+      |> Filters.add_prefix()
 
     search_terms =
       if site.google_auth && site.google_auth.property && !query.filters["goal"] do
@@ -319,6 +321,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     referrers =
       Stats.breakdown(site, query, "visit:referrer", metrics, pagination)
+      |> maybe_add_cr(site, query, pagination, "referrer", "visit:referrer")
       |> transform_keys(%{"referrer" => "name", "visitors" => "count"})
 
     %{"visitors" => %{"value" => total_visitors}} = Stats.aggregate(site, query, ["visitors"])
@@ -329,12 +332,6 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
 
-    query =
-      case query.filters["event:goal"] do
-        nil -> Query.put_filter(query, "event:name", {:is, "pageview"})
-        _ -> query
-      end
-
     metrics =
       if params["detailed"],
         do: ["visitors", "pageviews", "bounce_rate", "time_on_page"],
@@ -344,6 +341,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     pages =
       Stats.breakdown(site, query, "event:page", metrics, pagination)
+      |> maybe_add_cr(site, query, pagination, "page", "event:page")
       |> transform_keys(%{"page" => "name", "visitors" => "count"})
 
     json(conn, pages)
@@ -357,6 +355,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     entry_pages =
       Stats.breakdown(site, query, "visit:entry_page", metrics, pagination)
+      |> maybe_add_cr(site, query, pagination, "entry_page", "visit:entry_page")
       |> transform_keys(%{"entry_page" => "name", "visits" => "entries", "visitors" => "count"})
 
     json(conn, entry_pages)
@@ -370,6 +369,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     exit_pages =
       Stats.breakdown(site, query, "visit:exit_page", metrics, {limit, page})
+      |> maybe_add_cr(site, query, {limit, page}, "exit_page", "visit:exit_page")
       |> transform_keys(%{"exit_page" => "name", "visits" => "exits", "visitors" => "count"})
 
     pages = Enum.map(exit_pages, & &1["name"])
@@ -407,6 +407,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     countries =
       Stats.breakdown(site, query, "visit:country", ["visitors"], {300, 1})
+      |> maybe_add_cr(site, query, {300, 1}, "country", "visit:country")
       |> transform_keys(%{"country" => "name", "visitors" => "count"})
       |> Enum.map(fn country ->
         alpha3 = Stats.CountryName.to_alpha3(country["name"])
@@ -424,6 +425,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     browsers =
       Stats.breakdown(site, query, "visit:browser", ["visitors"], pagination)
+      |> maybe_add_cr(site, query, pagination, "browser", "visit:browser")
       |> transform_keys(%{"browser" => "name", "visitors" => "count"})
       |> add_percentages
 
@@ -437,6 +439,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     versions =
       Stats.breakdown(site, query, "visit:browser_version", ["visitors"], pagination)
+      |> maybe_add_cr(site, query, pagination, "browser_version", "visit:browser_version")
       |> transform_keys(%{"browser_version" => "name", "visitors" => "count"})
       |> add_percentages
 
@@ -450,6 +453,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     systems =
       Stats.breakdown(site, query, "visit:os", ["visitors"], pagination)
+      |> maybe_add_cr(site, query, pagination, "os", "visit:os")
       |> transform_keys(%{"os" => "name", "visitors" => "count"})
       |> add_percentages
 
@@ -463,6 +467,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     versions =
       Stats.breakdown(site, query, "visit:os_version", ["visitors"], pagination)
+      |> maybe_add_cr(site, query, pagination, "os_version", "visit:os_version")
       |> transform_keys(%{"os_version" => "name", "visitors" => "count"})
       |> add_percentages
 
@@ -476,6 +481,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     sizes =
       Stats.breakdown(site, query, "visit:device", ["visitors"], pagination)
+      |> maybe_add_cr(site, query, pagination, "device", "visit:device")
       |> transform_keys(%{"device" => "name", "visitors" => "count"})
       |> add_percentages
 
@@ -503,7 +509,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
     %{"visitors" => %{"value" => total_visitors}} = Stats.aggregate(site, total_q, ["visitors"])
 
-    prop_names = Stats.props(site, query)
+    prop_names =
+      if query.filters["event:goal"] do
+        Stats.props(site, query)
+      else
+        %{}
+      end
 
     conversions =
       Stats.breakdown(site, query, "event:goal", ["visitors", "events"], {100, 1})
@@ -520,7 +531,6 @@ defmodule PlausibleWeb.Api.StatsController do
   def prop_breakdown(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
-    pagination = parse_pagination(params)
 
     total_q = Query.remove_goal(query)
 
@@ -529,7 +539,7 @@ defmodule PlausibleWeb.Api.StatsController do
     prop_name = "event:props:" <> params["prop_name"]
 
     props =
-      Stats.breakdown(site, query, prop_name, ["visitors", "events"], pagination)
+      Stats.breakdown(site, query, prop_name, ["visitors", "events"], {100, 1})
       |> transform_keys(%{
         params["prop_name"] => "name",
         "visitors" => "count",
@@ -591,6 +601,35 @@ defmodule PlausibleWeb.Api.StatsController do
 
       true ->
         query
+    end
+  end
+
+  defp add_cr(list, list_without_goals, key_name) do
+    Enum.map(list, fn item ->
+      without_goal = Enum.find(list_without_goals, fn s -> s[key_name] === item[key_name] end)
+
+      item
+      |> Map.put(:total_visitors, without_goal["visitors"])
+      |> Map.put(:conversion_rate, calculate_cr(without_goal["visitors"], item["visitors"]))
+    end)
+  end
+
+  defp maybe_add_cr(list, site, query, pagination, key_name, filter_name) do
+    if Map.has_key?(query.filters, "event:goal") do
+      items = Enum.map(list, fn item -> item[key_name] end)
+
+      query_without_goal =
+        query
+        |> Query.put_filter(filter_name, {:member, items})
+        |> Query.remove_goal()
+
+      res_without_goal =
+        Stats.breakdown(site, query_without_goal, filter_name, ["visitors"], pagination)
+
+      list
+      |> add_cr(res_without_goal, key_name)
+    else
+      list
     end
   end
 end

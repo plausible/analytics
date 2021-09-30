@@ -5,6 +5,7 @@ import FadeIn from '../../fade-in'
 import numberFormatter from '../../number-formatter'
 import Bar from '../bar'
 import * as api from '../../api'
+import * as url from '../../url'
 import LazyLoader from '../../lazy-loader'
 
 export default class OperatingSystems extends React.Component {
@@ -36,13 +37,18 @@ export default class OperatingSystems extends React.Component {
     }
   }
 
+  showConversionRate() {
+    return !!this.props.query.filters.goal
+  }
+
   renderOperatingSystem(os) {
-    const query = new URLSearchParams(window.location.search)
+    let link;
     if (this.props.query.filters.os) {
-      query.set('os_version', os.name)
+      link = url.setQuery('os_version', os.name)
     } else {
-      query.set('os', os.name)
+      link = url.setQuery('os', os.name)
     }
+    const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
 
     return (
       <div
@@ -53,15 +59,16 @@ export default class OperatingSystems extends React.Component {
           count={os.count}
           all={this.state.operatingSystems}
           bg="bg-green-50 dark:gray-500 dark:bg-opacity-15"
-          maxWidthDeduction="6rem"
+          maxWidthDeduction={maxWidthDeduction}
         >
           <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
-            <Link className="md:truncate block hover:underline" to={{search: query.toString()}}>
+            <Link className="md:truncate block hover:underline" to={link}>
               {os.name}
             </Link>
           </span>
         </Bar>
-        <span className="font-medium dark:text-gray-200">{numberFormatter(os.count)} <span className="inline-block w-8 text-xs text-right">({os.percentage}%)</span></span>
+        <span className="font-medium dark:text-gray-200 text-right w-20">{numberFormatter(os.count)} <span className="inline-block w-8 text-xs text-right">({os.percentage}%)</span></span>
+        {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(os.conversion_rate)}%</span>}
       </div>
     )
   }
@@ -78,7 +85,10 @@ export default class OperatingSystems extends React.Component {
         <React.Fragment>
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>{ key }</span>
-            <span>{ this.label() }</span>
+            <div className="text-right">
+              <span className="inline-block w-20">{ this.label() }</span>
+              {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
+            </div>
           </div>
           { this.state.operatingSystems && this.state.operatingSystems.map(this.renderOperatingSystem.bind(this)) }
         </React.Fragment>

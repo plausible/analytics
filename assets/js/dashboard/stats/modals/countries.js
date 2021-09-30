@@ -22,7 +22,19 @@ class CountriesModal extends React.Component {
   }
 
   label() {
-    return this.state.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
+    if (this.state.query.period === 'realtime') {
+      return 'Current visitors'
+    }
+
+    if (this.showConversionRate()) {
+      return 'Conversions'
+    }
+
+    return 'Visitors'
+  }
+
+  showConversionRate() {
+    return !!this.state.query.filters.goal
   }
 
   renderCountry(country) {
@@ -44,9 +56,11 @@ class CountriesModal extends React.Component {
             {countryFullName}
           </Link>
         </td>
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{country.total_visitors}</td> }
         <td className="p-2 w-32 font-medium" align="right">
-          {numberFormatter(country.count)} <span className="inline-block text-xs w-8 text-right">({country.percentage}%)</span>
+          {numberFormatter(country.count)} {!this.showConversionRate() && <span className="inline-block text-xs w-8 text-right">({country.percentage}%)</span>}
         </td>
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{country.conversion_rate}%</td> }
       </tr>
     )
   }
@@ -57,7 +71,7 @@ class CountriesModal extends React.Component {
         <div className="loading mt-32 mx-auto"><div></div></div>
       )
     }
-    
+
     if (this.state.countries) {
       return (
         <>
@@ -74,6 +88,7 @@ class CountriesModal extends React.Component {
                   >
                     Country
                   </th>
+                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Total visitors</th>}
                   <th
                     // eslint-disable-next-line max-len
                     className="p-2 w-32 lg:w-1/2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
@@ -81,6 +96,7 @@ class CountriesModal extends React.Component {
                   >
                     {this.label()}
                   </th>
+                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">CR</th>}
                 </tr>
               </thead>
               <tbody>
