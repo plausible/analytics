@@ -36,6 +36,7 @@ function buildDataSet(plot, present_index, ctx, label, isPrevious) {
         pointBorderColor: 'transparent',
         pointHoverRadius: 4,
         backgroundColor: gradient,
+        fill: true,
       },
       {
         label,
@@ -47,6 +48,7 @@ function buildDataSet(plot, present_index, ctx, label, isPrevious) {
         pointBorderColor: 'transparent',
         pointHoverRadius: 4,
         backgroundColor: gradient,
+        fill: true,
       }]
     } else {
       return [{
@@ -58,6 +60,7 @@ function buildDataSet(plot, present_index, ctx, label, isPrevious) {
         pointBorderColor: 'transparent',
         pointHoverRadius: 4,
         backgroundColor: gradient,
+        fill: true,
       }]
     }
   } else {
@@ -72,6 +75,7 @@ function buildDataSet(plot, present_index, ctx, label, isPrevious) {
       pointHoverBorderColor: 'transparent',
       pointHoverRadius: 4,
       backgroundColor: prev_gradient,
+      fill: true,
     }]
   }
 }
@@ -91,50 +95,41 @@ const DAYS_ABBREV = [
   "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
 ]
 
-const GRAPH_METRICS = [
-  'u_visitors',
-  'pageviews',
-  'bounce',
-  'duration',
-  'time',
-  'conversion_rate',
-  'u_conversions',
-  't_conversions'
-]
-
 const METRIC_MAPPING = {
-  'Unique visitors (last 30 min)': 'u_visitors',
+  'Unique visitors (last 30 min)': 'visitors',
   'Pageviews (last 30 min)': 'pageviews',
-  'Unique visitors': 'u_visitors',
-  'Unique conversions': 'u_conversions',
-  'Total conversions': 't_conversions',
-  'Conversion rate': 'conversion_rate',
-  'Visit duration': 'duration',
-  'Time on Page': 'time',
+  'Unique visitors': 'visitors',
+  'Visit duration': 'visit_duration',
   'Total pageviews': 'pageviews',
-  'Bounce rate': 'bounce',
+  'Bounce rate': 'bounce_rate',
+  // 'Time on Page': 'time',
+  // 'Conversion rate': 'conversion_rate',
+  // 'Unique conversions': 'u_conversions',
+  // 'Total conversions': 't_conversions',
 }
 
 const METRIC_LABELS = {
-  'u_visitors': 'Visitors',
+  'visitors': 'Visitors',
   'pageviews': 'Pageviews',
-  'bounce': 'Bounce Rate',
-  'duration': 'Visit Duration',
-  'time': 'Time on Page',
-  'conversion_rate': 'Conversion Rate',
-  'u_conversions': 'Converted Visitors',
-  't_conversions': 'Total Conversions'
+  'bounce_rate': 'Bounce Rate',
+  'visit_duration': 'Visit Duration',
+  // 'time': 'Time on Page',
+  // 'conversion_rate': 'Conversion Rate',
+  // 'u_conversions': 'Converted Visitors',
+  // 't_conversions': 'Total Conversions'
 }
 
+const GRAPH_METRICS = Object.keys(METRIC_LABELS)
+
 const METRIC_FORMATTER = {
-  'u_visitors': numberFormatter,
+  'visitors': numberFormatter,
   'pageviews': numberFormatter,
-  'bounce': (number) => (`${Math.max(number, 100)}%`),
-  'duration': durationFormatter,
-  'time': durationFormatter,
-  'conversion_rate': (number) => (`${Math.max(number, 100)}%`),
-  'u_conversions': numberFormatter,
-  't_conversions': numberFormatter
+  'bounce_rate': (number) => (`${number}%`),
+  'visit_duration': durationFormatter,
+  // 'time': durationFormatter,
+  // 'conversion_rate': (number) => (`${Math.max(number, 100)}%`),
+  // 'u_conversions': numberFormatter,
+  // 't_conversions': numberFormatter
 }
 
 function dateFormatter(interval, longForm) {
@@ -178,8 +173,8 @@ class LineGraph extends React.Component {
     const { graphData, comparison, metric } = this.props
     this.ctx = document.getElementById("main-graph-canvas").getContext('2d');
     const dataSet = buildDataSet(graphData.plot, graphData.present_index, this.ctx, METRIC_LABELS[metric])
-    const prev_dataSet = buildDataSet(graphData.prev_plot, false, this.ctx, METRIC_LABELS[metric], true)
-    const combinedDataSets = comparison.enabled ? [...dataSet, ...prev_dataSet] : dataSet;
+    const prev_dataSet = graphData.prev_plot && buildDataSet(graphData.prev_plot, false, this.ctx, METRIC_LABELS[metric], true)
+    const combinedDataSets = comparison.enabled && prev_dataSet ? [...dataSet, ...prev_dataSet] : dataSet;
 
     return new Chart(this.ctx, {
       type: 'line',
@@ -243,7 +238,7 @@ class LineGraph extends React.Component {
                 const point = data.raw || 0
 
                 const prev_data = tooltipModel.dataPoints.slice(-1)[0]
-                const prev_label = graphData.prev_labels[prev_data.dataIndex]
+                const prev_label = graphData.prev_labels && graphData.prev_labels[prev_data.dataIndex]
                 const prev_point = prev_data.raw || 0
                 const pct_change = point === prev_point ? 0 : prev_point === 0 ? 100 : Math.round(((point - prev_point) / prev_point * 100).toFixed(1))
 
@@ -322,7 +317,7 @@ class LineGraph extends React.Component {
           y: {
             beginAtZero: true,
             ticks: {
-              callback: numberFormatter,
+              callback: METRIC_FORMATTER[metric],
               maxTicksLimit: 8,
               color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             },
@@ -467,12 +462,8 @@ class LineGraph extends React.Component {
 
       return (
         <div className={`px-6 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
-          {stat.name === 'Current visitors' ?
+          {Object.keys(METRIC_MAPPING).includes(stat.name) ?
             (
-              <div className='text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex'>
-                {stat.name}
-              </div>
-            ) : (
               <div
                 className='text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap cursor-pointer flex'
                 title={metric == METRIC_MAPPING[stat.name] ?
@@ -483,8 +474,12 @@ class LineGraph extends React.Component {
                 tabIndex={0}
               >
                 {metric == METRIC_MAPPING[stat.name] &&
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
                 }
+                {stat.name}
+              </div>
+            ) : (
+              <div className='text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex'>
                 {stat.name}
               </div>
             )}
@@ -554,7 +549,7 @@ export default class VisitorGraph extends React.Component {
     super(props)
     this.state = {
       loading: true,
-      metric: storage.getItem('graph__metric') || 'u_visitors'
+      metric: storage.getItem('graph__metric') || 'visitors'
     }
     this.onVisible = this.onVisible.bind(this)
     this.updateMetric = this.updateMetric.bind(this)
