@@ -2,7 +2,6 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
   use Plausible.Repo
   use Oban.Worker, queue: :site_setup_emails
   require Logger
-  alias Plausible.Stats.Clickhouse, as: Stats
 
   @impl Oban.Worker
   def perform(_job) do
@@ -38,14 +37,15 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
         left_join: se in "setup_help_emails",
         on: se.site_id == s.id,
         where: is_nil(se.id),
-        where: s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval"),
-        preload: :members
+        where: s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval")
       )
 
     for site <- Repo.all(q) do
-      owner = List.first(site.members)
+      owner =
+        Plausible.Sites.owner_for(site)
+        |> Repo.preload(:subscription)
 
-      setup_completed = Stats.has_pageviews?(site)
+      setup_completed = Plausible.Sites.has_stats?(site)
       hours_passed = Timex.diff(Timex.now(), site.inserted_at, :hours)
 
       if !setup_completed && hours_passed > 47 do
@@ -60,14 +60,15 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
         left_join: se in "setup_success_emails",
         on: se.site_id == s.id,
         where: is_nil(se.id),
-        where: s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval"),
-        preload: :members
+        where: s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval")
       )
 
     for site <- Repo.all(q) do
-      owner = List.first(site.members)
+      owner =
+        Plausible.Sites.owner_for(site)
+        |> Repo.preload(:subscription)
 
-      if Stats.has_pageviews?(site) do
+      if Plausible.Sites.has_stats?(site) do
         send_setup_success_email(owner, site)
       end
     end

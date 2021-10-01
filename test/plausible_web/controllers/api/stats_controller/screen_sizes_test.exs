@@ -3,15 +3,42 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
   import Plausible.TestUtils
 
   describe "GET /api/stats/:domain/browsers" do
-    setup [:create_user, :log_in, :create_site]
+    setup [:create_user, :log_in, :create_new_site]
 
     test "returns screen sizes by new visitors", %{conn: conn, site: site} do
-      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&date=2019-01-01")
+      populate_stats(site, [
+        build(:pageview, screen_size: "Desktop"),
+        build(:pageview, screen_size: "Desktop"),
+        build(:pageview, screen_size: "Laptop")
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
 
       assert json_response(conn, 200) == [
-               %{"name" => "Desktop", "count" => 2, "percentage" => 50},
-               %{"name" => "Laptop", "count" => 1, "percentage" => 25},
-               %{"name" => "Mobile", "count" => 1, "percentage" => 25}
+               %{"name" => "Desktop", "count" => 2, "percentage" => 67},
+               %{"name" => "Laptop", "count" => 1, "percentage" => 33}
+             ]
+    end
+
+    test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 1, screen_size: "Desktop"),
+        build(:pageview, user_id: 2, screen_size: "Desktop"),
+        build(:event, user_id: 1, name: "Signup")
+      ])
+
+      filters = Jason.encode!(%{"goal" => "Signup"})
+
+      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Desktop",
+                 "total_visitors" => 2,
+                 "count" => 1,
+                 "percentage" => 100,
+                 "conversion_rate" => 50.0
+               }
              ]
     end
   end

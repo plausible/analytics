@@ -29,22 +29,22 @@ defmodule Plausible.Auth.User do
     timestamps()
   end
 
-  def new(user, attrs \\ %{}) do
-    user
+  def new(attrs \\ %{}) do
+    %Plausible.Auth.User{}
     |> cast(attrs, @required)
     |> validate_required(@required)
     |> validate_length(:password, min: 6, message: "has to be at least 6 characters")
     |> validate_length(:password, max: 64, message: "cannot be longer than 64 characters")
     |> validate_confirmation(:password)
     |> hash_password()
-    |> change(trial_expiry_date: trial_expiry())
+    |> start_trial
     |> unique_constraint(:email)
   end
 
   def changeset(user, attrs \\ %{}) do
     user
     |> cast(attrs, [:email, :name, :email_verified, :theme, :trial_expiry_date])
-    |> validate_required([:email, :name, :email_verified, :trial_expiry_date])
+    |> validate_required([:email, :name, :email_verified])
     |> unique_constraint(:email)
   end
 
@@ -64,6 +64,18 @@ defmodule Plausible.Auth.User do
   end
 
   def hash_password(changeset), do: changeset
+
+  def remove_trial_expiry(user) do
+    change(user, trial_expiry_date: nil)
+  end
+
+  def start_trial(user) do
+    change(user, trial_expiry_date: trial_expiry())
+  end
+
+  def end_trial(user) do
+    change(user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
+  end
 
   defp trial_expiry() do
     if Application.get_env(:plausible, :is_selfhost) do

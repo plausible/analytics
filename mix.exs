@@ -5,7 +5,7 @@ defmodule Plausible.MixProject do
     [
       app: :plausible,
       version: System.get_env("APP_VERSION", "0.0.1"),
-      elixir: "~> 1.10",
+      elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
@@ -68,7 +68,7 @@ defmodule Plausible.MixProject do
       {:poison, "~> 3.1"},
       {:ref_inspector, "~> 1.3"},
       {:timex, "~> 3.6"},
-      {:ua_inspector, "~> 0.18"},
+      {:ua_inspector, "~> 2.2"},
       {:bamboo, "~> 2.0"},
       {:hackney, "~> 1.8"},
       {:bamboo_phoenix, "~> 1.0.0"},
@@ -96,7 +96,8 @@ defmodule Plausible.MixProject do
       {:kaffy, "~> 0.9.0"},
       {:envy, "~> 1.1.1"},
       {:phoenix_pagination, "~> 0.7.0"},
-      {:hammer, "~> 6.0"}
+      {:hammer, "~> 6.0"},
+      {:public_suffix, git: "https://github.com/axelson/publicsuffix-elixir"}
     ]
   end
 

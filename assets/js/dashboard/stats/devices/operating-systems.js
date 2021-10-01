@@ -5,6 +5,7 @@ import FadeIn from '../../fade-in'
 import numberFormatter from '../../number-formatter'
 import Bar from '../bar'
 import * as api from '../../api'
+import * as url from '../../url'
 import LazyLoader from '../../lazy-loader'
 
 export default class OperatingSystems extends React.Component {
@@ -36,25 +37,38 @@ export default class OperatingSystems extends React.Component {
     }
   }
 
+  showConversionRate() {
+    return !!this.props.query.filters.goal
+  }
+
   renderOperatingSystem(os) {
-    const query = new URLSearchParams(window.location.search)
+    let link;
     if (this.props.query.filters.os) {
-      query.set('os_version', os.name)
+      link = url.setQuery('os_version', os.name)
     } else {
-      query.set('os', os.name)
+      link = url.setQuery('os', os.name)
     }
+    const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
 
     return (
-      <div className="flex items-center justify-between my-1 text-sm" key={os.name}>
-        <div className="w-full h-8" style={{maxWidth: 'calc(100% - 6rem)'}}>
-          <Bar count={os.count} all={this.state.operatingSystems} bg="bg-green-50 dark:gray-500 dark:bg-opacity-15" />
-          <span className="flex px-2 dark:text-gray-300" style={{marginTop: '-26px'}}>
-            <Link className="block truncate hover:underline" to={{search: query.toString()}}>
+      <div
+        className="flex items-center justify-between my-1 text-sm"
+        key={os.name}
+      >
+        <Bar
+          count={os.count}
+          all={this.state.operatingSystems}
+          bg="bg-green-50 dark:gray-500 dark:bg-opacity-15"
+          maxWidthDeduction={maxWidthDeduction}
+        >
+          <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
+            <Link className="md:truncate block hover:underline" to={link}>
               {os.name}
             </Link>
           </span>
-        </div>
-        <span className="font-medium dark:text-gray-200">{numberFormatter(os.count)} <span className="inline-block w-8 text-xs text-right">({os.percentage}%)</span></span>
+        </Bar>
+        <span className="font-medium dark:text-gray-200 text-right w-20">{numberFormatter(os.count)} <span className="inline-block w-8 text-xs text-right">({os.percentage}%)</span></span>
+        {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(os.conversion_rate)}%</span>}
       </div>
     )
   }
@@ -71,7 +85,10 @@ export default class OperatingSystems extends React.Component {
         <React.Fragment>
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>{ key }</span>
-            <span>{ this.label() }</span>
+            <div className="text-right">
+              <span className="inline-block w-20">{ this.label() }</span>
+              {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
+            </div>
           </div>
           { this.state.operatingSystems && this.state.operatingSystems.map(this.renderOperatingSystem.bind(this)) }
         </React.Fragment>
@@ -83,9 +100,9 @@ export default class OperatingSystems extends React.Component {
 
   render() {
     return (
-      <LazyLoader onVisible={this.onVisible}>
+      <LazyLoader onVisible={this.onVisible} className="flex flex-col flex-grow">
         { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
-        <FadeIn show={!this.state.loading}>
+        <FadeIn show={!this.state.loading} className="flex-grow">
           { this.renderList() }
         </FadeIn>
       </LazyLoader>

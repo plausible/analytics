@@ -1,8 +1,12 @@
 import React from 'react';
 
-export default function FadeIn({show, children}) {
-  const className = show ? "fade-enter-active" : "fade-enter"
-
-  return <div className={className}>{children}</div>
+export default function FadeIn({className, show, children}) {
+  return (
+    <div
+      className={`${className || ''} ${show ? "fade-enter-active" : "fade-enter"}`}
+    >
+      {children}
+    </div>
+)
 }
 

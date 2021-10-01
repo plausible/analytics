@@ -7,6 +7,7 @@ import PagesModal from './stats/modals/pages'
 import EntryPagesModal from './stats/modals/entry-pages'
 import ExitPagesModal from './stats/modals/exit-pages'
 import CountriesModal from './stats/modals/countries'
+import FilterModal from './stats/modals/filter'
 
 import {BrowserRouter, Switch, Route, useLocation} from "react-router-dom";
 
@@ -22,12 +23,12 @@ function ScrollToTop() {
   return null;
 }
 
-export default function Router({site, loggedIn}) {
+export default function Router({site, loggedIn, currentUserRole}) {
   return (
     <BrowserRouter>
       <Route path="/:domain">
         <ScrollToTop />
-        <Dash site={site} loggedIn={loggedIn} />
+        <Dash site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} />
         <Switch>
           <Route exact path={["/:domain/sources", "/:domain/utm_mediums", "/:domain/utm_sources", "/:domain/utm_campaigns"]}>
             <SourcesModal site={site} />
@@ -49,6 +50,9 @@ export default function Router({site, loggedIn}) {
           </Route>
           <Route path="/:domain/countries">
             <CountriesModal site={site} />
+          </Route>
+          <Route path={["/:domain/filter/:field"]}>
+            <FilterModal site={site} />
           </Route>
         </Switch>
       </Route>

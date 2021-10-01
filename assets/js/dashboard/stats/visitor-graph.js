@@ -171,6 +171,7 @@ class LineGraph extends React.Component {
   constructor(props) {
     super(props);
     this.regenerateChart = this.regenerateChart.bind(this);
+    this.updateWindowDimensions =  this.updateWindowDimensions.bind(this);
   }
 
   regenerateChart() {
@@ -314,6 +315,7 @@ class LineGraph extends React.Component {
           },
         },
         responsive: true,
+        onResize: this.updateWindowDimensions,
         elements: { line: { tension: 0.1 }, point: { radius: 0 } },
         onClick: this.onClick.bind(this),
         scales: {
@@ -390,6 +392,16 @@ class LineGraph extends React.Component {
     window.removeEventListener('mousemove', this.repositionTooltip)
   }
 
+  /**
+   * The current ticks' limits are set to treat iPad (regular/Mini/Pro) as a regular screen.
+   * @param {*} chart - The chart instance.
+   * @param {*} dimensions - An object containing the new dimensions *of the chart.*
+   */
+  updateWindowDimensions(chart, dimensions) {
+    chart.options.scales.x.ticks.maxTicksLimit = dimensions.width < 720 ? 5 : 8
+    chart.options.scales.y.ticks.maxTicksLimit = dimensions.height < 233 ? 3 : 8
+  }
+
   onClick(e) {
     const element = this.chart.getElementsAtEventForMode(e, 'index', { intersect: false })[0]
     const date = this.chart.data.labels[element.index]
@@ -430,20 +442,20 @@ class LineGraph extends React.Component {
   }
 
   topStatNumberShort(stat) {
-    if (typeof (stat.duration) == 'number') {
-      return durationFormatter(stat.duration)
-    } else if (typeof (stat.count) == 'number') {
-      return numberFormatter(stat.count)
+    if (['visit duration', 'time on page'].includes(stat.name.toLowerCase())) {
+      return durationFormatter(stat.value)
+    } else if (['bounce rate', 'conversion rate'].includes(stat.name.toLowerCase())) {
+      return stat.value + '%'
     } else {
-      return stat.percentage + '%'
+      return numberFormatter(stat.value)
     }
   }
 
   topStatTooltip(stat) {
-    if (typeof (stat.count) == 'number') {
+    if (typeof(stat.value) == 'number') {
       let name = stat.name.toLowerCase()
-      name = stat.count === 1 ? name.slice(0, -1) : name
-      return stat.count.toLocaleString() + ' ' + name
+      name = stat.value === 1 ? name.slice(0, -1) : name
+      return stat.value.toLocaleString() + ' ' + name
     }
   }
 
@@ -492,13 +504,15 @@ class LineGraph extends React.Component {
   }
 
   downloadLink() {
-    const endpoint = `/${encodeURIComponent(this.props.site.domain)}/visitors.csv${api.serializeQuery(this.props.query)}`
+    if (this.props.query.period !== 'realtime') {
+      const endpoint = `/${encodeURIComponent(this.props.site.domain)}/visitors.csv${api.serializeQuery(this.props.query)}`
 
-    return (
-      <a href={endpoint} download>
-        <svg className="absolute w-4 h-5 text-gray-700 feather dark:text-gray-300 -top-8 right-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-      </a>
-    )
+      return (
+        <a href={endpoint} download>
+          <svg className="absolute w-4 h-5 text-gray-700 feather dark:text-gray-300 -top-8 right-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        </a>
+      )
+    }
   }
 
   samplingNotice() {

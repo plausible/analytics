@@ -27,6 +27,15 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
       assert Enum.count(all_enqueued(worker: SendEmailReport)) == 1
     end
 
+    test "does not schedule a weekly report for locked site" do
+      site = insert(:site, locked: true, domain: "test-site.com", timezone: "US/Eastern")
+      insert(:weekly_report, site: site, recipients: ["user@email.com"])
+
+      perform_job(ScheduleEmailReports, %{})
+
+      assert Enum.empty?(all_enqueued(worker: SendEmailReport))
+    end
+
     test "schedules a new report as soon as a previous one is completed" do
       site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
@@ -58,8 +67,18 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
       insert(:monthly_report, site: site, recipients: ["user@email.com"])
 
       perform_job(ScheduleEmailReports, %{})
+      perform_job(ScheduleEmailReports, %{})
 
       assert Enum.count(all_enqueued(worker: SendEmailReport)) == 1
+    end
+
+    test "does not schedule a monthly report for locked site" do
+      site = insert(:site, locked: true, domain: "test-site.com", timezone: "US/Eastern")
+      insert(:monthly_report, site: site, recipients: ["user@email.com"])
+
+      perform_job(ScheduleEmailReports, %{})
+
+      assert Enum.empty?(all_enqueued(worker: SendEmailReport))
     end
 
     test "schedules a new report as soon as a previous one is completed" do

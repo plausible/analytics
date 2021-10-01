@@ -1,0 +1,10 @@
+Hey <%= user_salutation(@invitation.inviter) %>,
+<br /><br />
+<%= @invitation.email %> has accepted the ownership transfer of <%= @invitation.site.domain %>. They will be responsible for billing of it going
+forward and your role has been changed to <b>admin</b>.
+<%= link("Click here", to: Routes.site_url(PlausibleWeb.Endpoint, :settings_general, @invitation.site.domain)) %> to view site settings.
+<br /><br />
+Thanks,<br />
+Uku and Marko<br />
+--<br />
+<%= plausible_url() %><br />

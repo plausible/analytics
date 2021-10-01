@@ -30,6 +30,10 @@ defmodule Plausible.Factory do
     }
   end
 
+  def site_membership_factory do
+    %Plausible.Site.Membership{}
+  end
+
   def ch_session_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 
@@ -76,7 +80,7 @@ defmodule Plausible.Factory do
       hostname: hostname,
       domain: hostname,
       pathname: "/",
-      timestamp: Timex.now(),
+      timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
       user_id: SipHash.hash!(hash_key(), UUID.uuid4()),
       session_id: SipHash.hash!(hash_key(), UUID.uuid4()),
       referrer: "",
@@ -150,6 +154,14 @@ defmodule Plausible.Factory do
     %Plausible.Site.SharedLink{
       name: "Link name",
       slug: Nanoid.generate()
+    }
+  end
+
+  def invitation_factory do
+    %Plausible.Auth.Invitation{
+      invitation_id: Nanoid.generate(),
+      email: sequence(:email, &"email-#{&1}@example.com"),
+      role: :admin
     }
   end
 

@@ -31,14 +31,13 @@
   bottom: 0;
   background: rgba(0,0,0,0.6);
   z-index: 99;
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: auto;
 }
 
 .modal__container {
   background-color: #fff;
   padding: 1rem 2rem;
-  max-width: 860px;
   border-radius: 4px;
   margin: 50px auto;
   box-sizing: border-box;

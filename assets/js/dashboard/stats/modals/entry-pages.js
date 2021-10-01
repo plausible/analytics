@@ -1,6 +1,6 @@
 import React from "react";
-import { Link } from 'react-router-dom'
-import { withRouter } from 'react-router-dom'
+import { Link , withRouter } from 'react-router-dom'
+
 
 import Modal from './modal'
 import * as api from '../../api'
@@ -26,24 +26,50 @@ class EntryPagesModal extends React.Component {
   loadPages() {
     const {query, page, pages} = this.state;
 
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`, query, {limit: 100, page})
-      .then((res) => this.setState((state) => ({loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100})))
+    api.get(
+      `/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`,
+      query,
+      {limit: 100, page}
+    )
+      .then(
+        (res) => this.setState((state) => ({
+          loading: false,
+          pages: state.pages.concat(res),
+          moreResultsAvailable: res.length === 100
+        }))
+      )
   }
 
   loadMore() {
-    this.setState({loading: true, page: this.state.page + 1}, this.loadPages.bind(this))
-  }
-
-  showVisitDuration() {
-    return this.state.query.period !== 'realtime'
+    const { page } = this.state;
+    this.setState({loading: true, page: page + 1}, this.loadPages.bind(this))
   }
 
   formatBounceRate(page) {
     if (typeof(page.bounce_rate) === 'number') {
-      return page.bounce_rate + '%'
-    } else {
-      return '-'
+      return `${page.bounce_rate}%`;
     }
+    return '-';
+  }
+
+  showConversionRate() {
+    return !!this.state.query.filters.goal
+  }
+
+  showExtra() {
+    return this.state.query.period !== 'realtime' && !this.showConversionRate()
+  }
+
+  label() {
+    if (this.state.query.period === 'realtime') {
+      return 'Current visitors'
+    }
+
+    if (this.showConversionRate()) {
+      return 'Conversions'
+    }
+
+    return 'Visitors'
   }
 
   renderPage(page) {
@@ -53,11 +79,21 @@ class EntryPagesModal extends React.Component {
     return (
       <tr className="text-sm dark:text-gray-200" key={page.name}>
         <td className="p-2">
-          <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline">{page.name}</Link>
+          <Link
+            to={{
+              pathname: `/${encodeURIComponent(this.props.site.domain)}`,
+              search: query.toString()
+            }}
+            className="hover:underline"
+          >
+            {page.name}
+          </Link>
         </td>
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_visitors)}</td>}
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
-        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.entries)}</td>
-        {this.showVisitDuration() && <td className="p-2 w-32 font-medium" align="right">{durationFormatter(page.visit_duration)}</td>}
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.entries)}</td>}
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{durationFormatter(page.visit_duration)}</td>}
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.conversion_rate)}%</td>}
       </tr>
     )
   }
@@ -79,18 +115,24 @@ class EntryPagesModal extends React.Component {
   renderBody() {
     if (this.state.pages) {
       return (
-        <React.Fragment>
+        <>
           <h1 className="text-xl font-bold dark:text-gray-100">Entry Pages</h1>
 
           <div className="my-4 border-b border-gray-300"></div>
           <main className="modal__content">
-            <table className="w-full table-striped table-fixed">
+            <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
               <thead>
                 <tr>
-                  <th className="p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Page url</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Unique Entrances</th>
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Total Entrances</th>
-                  {<th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visit Duration</th>}
+                  <th
+                    className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                    align="left"
+                  >Page url
+                  </th>
+                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Total Visitors </th>}
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >{this.label()} </th>
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Total Entrances </th> }
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Visit Duration </th> }
+                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >CR </th>}
                 </tr>
               </thead>
               <tbody>
@@ -98,7 +140,7 @@ class EntryPagesModal extends React.Component {
               </tbody>
             </table>
           </main>
-        </React.Fragment>
+        </>
       )
     }
   }

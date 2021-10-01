@@ -10,12 +10,26 @@ All notable changes to this project will be documented in this file.
 - To authenticate against a local postgresql via socket authentication, the environment-variables
   `DATABASE_SOCKET_DIR` & `DATABASE_NAME` were added.
 - Time on Page metric available in detailed Top Pages report plausible/analytics#1007
-- Added `CLICKHOUSE_FLUSH_INTERVAL_MS` and `CLICKHOUSE_MAX_BUFFER_SIZE` configuration parameters
+- Wildcard based page, entry page and exit page filters plausible/analytics#1067
+- Exclusion filters for page, entry page and exit page filters plausible/analytics#1067
+- Menu (with auto-complete) to add new and edit existing filters directly plausible/analytics#1089
+- Added `CLICKHOUSE_FLUSH_INTERVAL_MS` and `CLICKHOUSE_MAX_BUFFER_SIZE` configuration parameters plausible/analytics#1073
+- Ability to invite users to sites with different roles plausible/analytics#1122
+- Option to configure a custom name for the script file
+- Add Conversion Rate to Top Sources, Top Pages Devices, Countries when filtered by a goal plausible/analytics#1299
 
 ### Fixed
 - Fix weekly report time range plausible/analytics#951
 - Make sure embedded dashboards can run when user has blocked third-party cookies plausible/analytics#971
 - Sites listing page will paginate if the user has a lot of sites plausible/analytics#994
+- Crash when changing theme on a loaded dashboard plausible/analytics#1123
+- UI fix for details button overlapping content on mobile plausible/analytics#1114
+- UI fix for the main graph on mobile overlapping its tick items on both axis
+- UI fixes for text not showing properly in bars across multiple lines. This hides the totals on <768px and only shows the uniques and % to accommodate the goals text too. Larger screens still truncate as usual.
+- Turn off autocomplete for name and password inputs in the _New shared link_ form.
+- Details modals are now responsive and take up less horizontal space on smaller screens to make it easier to scroll.
+- Fix reading config from file
+- Fix some links not opening correctly in new tab
 
 ### Removed
 - Removes AppSignal monitoring package

@@ -18,14 +18,14 @@ defmodule Plausible.Billing do
 
     changeset = Subscription.changeset(%Subscription{}, format_subscription(params))
 
-    Repo.insert(changeset)
+    Repo.insert(changeset) |> check_lock_status
   end
 
   def subscription_updated(params) do
     subscription = Repo.get_by!(Subscription, paddle_subscription_id: params["subscription_id"])
     changeset = Subscription.changeset(subscription, format_subscription(params))
 
-    Repo.update(changeset)
+    Repo.update(changeset) |> check_lock_status
   end
 
   def subscription_cancelled(params) do
@@ -104,6 +104,8 @@ defmodule Plausible.Billing do
     PaddleApi.update_subscription_preview(subscription.paddle_subscription_id, new_plan_id)
   end
 
+  def needs_to_upgrade?(%Plausible.Auth.User{trial_expiry_date: nil}), do: true
+
   def needs_to_upgrade?(user) do
     if Timex.before?(user.trial_expiry_date, Timex.today()) do
       !subscription_is_active?(user.subscription)
@@ -119,10 +121,12 @@ defmodule Plausible.Billing do
     subscription.next_bill_date && !Timex.before?(subscription.next_bill_date, Timex.today())
   end
 
-  defp subscription_is_active?(_), do: false
+  defp subscription_is_active?(%Subscription{}), do: false
+  defp subscription_is_active?(nil), do: false
+
+  def on_trial?(%Plausible.Auth.User{trial_expiry_date: nil}), do: false
 
   def on_trial?(user) do
-    user = Repo.preload(user, :subscription)
     !subscription_is_active?(user.subscription) && trial_days_left(user) >= 0
   end
 
@@ -135,8 +139,8 @@ defmodule Plausible.Billing do
     pageviews + custom_events
   end
 
-  defp get_usage_for_billing_cycle(user, cycle) do
-    domains = Enum.map(user.sites, & &1.domain)
+  defp get_usage_for_billing_cycle(sites, cycle) do
+    domains = Enum.map(sites, & &1.domain)
 
     ClickhouseRepo.one(
       from e in "events",
@@ -149,11 +153,11 @@ defmodule Plausible.Billing do
 
   def last_two_billing_months_usage(user, today \\ Timex.today()) do
     {first, second} = last_two_billing_cycles(user, today)
-    user = Repo.preload(user, :sites)
+    sites = Plausible.Sites.owned_by(user)
 
     {
-      get_usage_for_billing_cycle(user, first),
-      get_usage_for_billing_cycle(user, second)
+      get_usage_for_billing_cycle(sites, first),
+      get_usage_for_billing_cycle(sites, second)
     }
   end
 
@@ -178,9 +182,9 @@ defmodule Plausible.Billing do
   end
 
   def usage_breakdown(user) do
-    user = Repo.preload(user, :sites)
+    sites = Plausible.Sites.owned_by(user)
 
-    Enum.reduce(user.sites, {0, 0}, fn site, {pageviews, custom_events} ->
+    Enum.reduce(sites, {0, 0}, fn site, {pageviews, custom_events} ->
       usage = Plausible.Stats.Clickhouse.usage(site)
 
       {pageviews + Map.get(usage, "pageviews", 0),
@@ -220,6 +224,17 @@ defmodule Plausible.Billing do
   defp present?(""), do: false
   defp present?(nil), do: false
   defp present?(_), do: true
+
+  defp check_lock_status({:ok, subscription}) do
+    user =
+      Repo.get(Plausible.Auth.User, subscription.user_id)
+      |> Map.put(:subscription, subscription)
+
+    Plausible.Billing.SiteLocker.check_sites_for(user)
+    {:ok, subscription}
+  end
+
+  defp check_lock_status(err), do: err
 
   defp paddle_api(), do: Application.fetch_env!(:plausible, :paddle_api)
 end

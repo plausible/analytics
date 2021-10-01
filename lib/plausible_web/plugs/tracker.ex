@@ -2,7 +2,8 @@ defmodule PlausibleWeb.Tracker do
   import Plug.Conn
   use Agent
 
-  base_variants = ["hash", "outbound-links", "exclusions"]
+  base_variants = ["hash", "outbound-links", "exclusions", "compat", "local"]
+  base_filenames = ["plausible", "script"]
 
   # Generates Power Set of all variants
   variants =
@@ -24,8 +25,8 @@ defmodule PlausibleWeb.Tracker do
         String.split(x, ".")
         |> Combination.permutate()
         |> Enum.map(fn p -> Enum.join(p, ".") end)
-        |> Enum.filter(fn permutation -> permutation != x end)
-        |> Enum.map(fn v -> "plausible.#{v}.js" end)
+        |> Enum.map(fn v -> Enum.map(base_filenames, fn filename -> "#{filename}.#{v}.js" end) end)
+        |> List.flatten()
 
       if Enum.count(variants) > 0 do
         {"plausible.#{x}.js", variants}
@@ -33,7 +34,7 @@ defmodule PlausibleWeb.Tracker do
     end)
     |> Enum.reject(fn x -> x == nil end)
     |> Enum.into(%{})
-    |> Map.put("plausible.js", ["analytics.js"])
+    |> Map.put("plausible.js", ["analytics.js", "script.js"])
 
   @templates files_available
   @aliases aliases_available
@@ -62,7 +63,9 @@ defmodule PlausibleWeb.Tracker do
 
         conn
         |> put_resp_header("content-type", "application/javascript")
+        |> put_resp_header("x-content-type-options", "nosniff")
         |> put_resp_header("cross-origin-resource-policy", "cross-origin")
+        |> put_resp_header("access-control-allow-origin", "*")
         |> send_file(200, location)
         |> halt()
     end

@@ -1,5 +1,11 @@
 defmodule Plausible.Stats.Query do
-  defstruct date_range: nil, interval: nil, period: nil, filters: %{}
+  defstruct date_range: nil,
+            interval: nil,
+            period: nil,
+            filters: %{},
+            sample_threshold: 10_000_000
+
+  @default_sample_threshold 10_000_000
 
   def shift_back(%__MODULE__{period: "month"} = query, site) do
     # Querying current month to date
@@ -38,7 +44,8 @@ defmodule Plausible.Stats.Query do
       period: "realtime",
       interval: "minute",
       date_range: Date.range(date, date),
-      filters: parse_filters(params)
+      filters: parse_filters(params),
+      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
     }
   end
 
@@ -49,7 +56,8 @@ defmodule Plausible.Stats.Query do
       period: "day",
       date_range: Date.range(date, date),
       interval: "hour",
-      filters: parse_filters(params)
+      filters: parse_filters(params),
+      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
     }
   end
 
@@ -61,7 +69,8 @@ defmodule Plausible.Stats.Query do
       period: "7d",
       date_range: Date.range(start_date, end_date),
       interval: "date",
-      filters: parse_filters(params)
+      filters: parse_filters(params),
+      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
     }
   end
 
@@ -73,7 +82,8 @@ defmodule Plausible.Stats.Query do
       period: "30d",
       date_range: Date.range(start_date, end_date),
       interval: "date",
-      filters: parse_filters(params)
+      filters: parse_filters(params),
+      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
     }
   end
 
@@ -87,7 +97,8 @@ defmodule Plausible.Stats.Query do
       period: "month",
       date_range: Date.range(start_date, end_date),
       interval: "date",
-      filters: parse_filters(params)
+      filters: parse_filters(params),
+      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
     }
   end
 
@@ -104,7 +115,8 @@ defmodule Plausible.Stats.Query do
       period: "6mo",
       date_range: Date.range(start_date, end_date),
       interval: Map.get(params, "interval", "month"),
-      filters: parse_filters(params)
+      filters: parse_filters(params),
+      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
     }
   end
 
@@ -121,7 +133,8 @@ defmodule Plausible.Stats.Query do
       period: "12mo",
       date_range: Date.range(start_date, end_date),
       interval: Map.get(params, "interval", "month"),
-      filters: parse_filters(params)
+      filters: parse_filters(params),
+      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
     }
   end
 
@@ -144,12 +157,44 @@ defmodule Plausible.Stats.Query do
       period: "custom",
       date_range: Date.range(from_date, to_date),
       interval: Map.get(params, "interval", "date"),
-      filters: parse_filters(params)
+      filters: parse_filters(params),
+      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
     }
   end
 
   def from(tz, params) do
     __MODULE__.from(tz, Map.merge(params, %{"period" => "30d"}))
+  end
+
+  def put_filter(query, key, val) do
+    %__MODULE__{
+      query
+      | filters: Map.put(query.filters, key, val)
+    }
+  end
+
+  def treat_page_filter_as_entry_page(%__MODULE__{filters: %{"visit:entry_page" => _}} = q), do: q
+
+  def treat_page_filter_as_entry_page(%__MODULE__{filters: %{"event:page" => f}} = q) do
+    q
+    |> put_filter("visit:entry_page", f)
+    |> put_filter("event:page", nil)
+  end
+
+  def treat_page_filter_as_entry_page(q), do: q
+
+  def remove_goal(query) do
+    props =
+      Enum.map(query.filters, fn {key, _val} -> key end)
+      |> Enum.filter(fn filter_key -> String.starts_with?(filter_key, "event:props:") end)
+
+    new_filters =
+      query.filters
+      |> Map.drop(props)
+      |> Map.delete("event:goal")
+      |> Map.put("event:name", {:is, "pageview"})
+
+    %__MODULE__{query | filters: new_filters}
   end
 
   defp today(tz) do
@@ -184,12 +229,20 @@ defmodule Plausible.Stats.Query do
   defp parse_single_filter(str) do
     [key, val] =
       String.trim(str)
-      |> String.split("==")
+      |> String.split(["==", "!="], trim: true)
       |> Enum.map(&String.trim/1)
 
-    case String.split(val, "|") do
-      [single_value] -> {key, {:is, single_value}}
-      list -> {key, {:member, list}}
+    is_negated = String.contains?(str, "!=")
+    is_list = String.contains?(val, "|")
+
+    cond do
+      key == "event:goal" -> {key, parse_goal_filter(val)}
+      is_list -> {key, {:member, String.split(val, "|")}}
+      is_negated -> {key, {:is_not, val}}
+      true -> {key, {:is, val}}
     end
   end
+
+  defp parse_goal_filter("Visit " <> page), do: {:is, :page, page}
+  defp parse_goal_filter(event), do: {:is, :event, event}
 end

@@ -8,10 +8,10 @@ defmodule PlausibleWeb.Api.ExternalController do
 
     case create_event(conn, params) do
       :ok ->
-        conn |> send_resp(202, "")
+        conn |> put_status(202) |> text("ok")
 
-      :error ->
-        conn |> send_resp(400, "")
+      {:error, errors} ->
+        conn |> put_status(400) |> json(%{errors: errors})
     end
   end
 
@@ -56,6 +56,8 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
+  @no_domain_error {:error, %{domain: ["can't be blank"]}}
+
   defp create_event(conn, params) do
     params = %{
       "name" => params["n"] || params["name"],
@@ -69,10 +71,11 @@ defmodule PlausibleWeb.Api.ExternalController do
 
     ua = parse_user_agent(conn)
 
-    if is_bot?(ua) do
+    if is_bot?(ua) || params["domain"] in Application.get_env(:plausible, :domain_blacklist) do
       :ok
     else
       uri = params["url"] && URI.parse(params["url"])
+      host = if uri && uri.host == "", do: "(none)", else: uri && uri.host
       query = if uri && uri.query, do: URI.decode_query(uri.query), else: %{}
 
       ref = parse_referrer(uri, params["referrer"])
@@ -82,7 +85,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       event_attrs = %{
         timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
         name: params["name"],
-        hostname: strip_www(uri && uri.host),
+        hostname: strip_www(host),
         pathname: get_pathname(uri, params["hash_mode"]),
         referrer_source: get_referrer_source(query, ref),
         referrer: clean_referrer(ref),
@@ -99,7 +102,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         "meta.value": Map.values(params["meta"]) |> Enum.map(&Kernel.to_string/1)
       }
 
-      Enum.reduce_while(get_domains(params, uri), :error, fn domain, _res ->
+      Enum.reduce_while(get_domains(params, uri), @no_domain_error, fn domain, _res ->
         user_id = generate_user_id(conn, domain, event_attrs[:hostname], salts[:current])
 
         previous_user_id =
@@ -121,10 +124,18 @@ defmodule PlausibleWeb.Api.ExternalController do
 
           {:cont, :ok}
         else
-          {:halt, :error}
+          errors = Ecto.Changeset.traverse_errors(changeset, &encode_error/1)
+          {:halt, {:error, errors}}
         end
       end)
     end
+  end
+
+  # https://hexdocs.pm/ecto/Ecto.Changeset.html#traverse_errors/2-examples
+  defp encode_error({msg, opts}) do
+    Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+      opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+    end)
   end
 
   defp is_bot?(%UAInspector.Result.Bot{}), do: true
@@ -175,10 +186,9 @@ defmodule PlausibleWeb.Api.ExternalController do
     result =
       PlausibleWeb.RemoteIp.get(conn)
       |> Geolix.lookup()
-      |> Map.get(:country)
 
-    if result && result.country do
-      result.country.iso_code
+    if result && result[:country] && result[:country].country do
+      result[:country].country.iso_code
     end
   end
 
@@ -195,9 +205,19 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp generate_user_id(conn, domain, hostname, salt) do
     user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
     ip_address = PlausibleWeb.RemoteIp.get(conn)
+    root_domain = get_root_domain(hostname)
 
-    if domain && hostname do
-      SipHash.hash!(salt, user_agent <> ip_address <> domain <> hostname)
+    if domain && root_domain do
+      SipHash.hash!(salt, user_agent <> ip_address <> domain <> root_domain)
+    end
+  end
+
+  defp get_root_domain(nil), do: "(none)"
+
+  defp get_root_domain(hostname) do
+    case PublicSuffix.registrable_domain(hostname) do
+      domain when is_binary(domain) -> domain
+      _ -> hostname
     end
   end
 

@@ -51,7 +51,15 @@ unknown:
       - omg.yahoo.com
       - match.yahoo.net
 
-
+  Yandex Maps:
+    parameters:
+      - text
+    domains:
+      - maps.yandex.ru
+      - maps.yandex.ua
+      - maps.yandex.com
+      - maps.yandex.by
+      - n.maps.yandex.ru
 
 # #######################################################################################################
 #
@@ -79,6 +87,10 @@ email:
     domains:
       - mail.aol.com
 
+  Beeline:
+    domains:
+      - post.ru
+
   Bigpond:
     domains:
       - webmail.bigpond.com
@@ -98,6 +110,10 @@ email:
   Dodo:
     domains:
       - webmail.dodo.com.au
+
+  E1.ru:
+    domains:
+      - mail.e1.ru
 
   Freenet:
     domains:
@@ -120,6 +136,16 @@ email:
   iPrimus:
     domains:
       - webmail.iprimus.com.au
+
+  Mail.ru:
+    domains:
+      - e.mail.ru
+      - touch.mail.ru
+
+  Mastermail:
+    domains:
+      - mastermail.ru
+      - m.mastermail.ru
 
   Mynet Mail:
     domains:
@@ -147,13 +173,30 @@ email:
       - mail.live.com
       - outlook.live.com
 
+  QIP:
+    domains:
+      - mail.qip.ru
+
   QQ Mail:
     domains:
-      - mail.qq.com  
+      - mail.qq.com
+      - exmail.qq.com
+
+  Rambler:
+    domains:
+      - mail.rambler.ru 
 
   Seznam Mail:
     domains:
       - email.seznam.cz
+
+  Sibmail:
+    domains:
+      - sibmail.com
+
+  Ukr.net:
+    domains:
+      - mail.ukr.net
 
   Virgin:
     domains:
@@ -166,6 +209,14 @@ email:
   Westnet:
     domains:
       - webmail.westnet.com.au
+
+  Yandex:
+    domains:
+      - mail.yandex.ru
+      - mail.yandex.com
+      - mail.yandex.kz
+      - mail.yandex.ua
+      - mail.yandex.by
 
   Yahoo! Mail:
     domains:
@@ -208,6 +259,7 @@ social:
   Instagram:
     domains:
       - instagram.com
+      - l.instagram.com
 
   Youtube:
     domains:
@@ -237,7 +289,9 @@ social:
 
   Vkontakte:
     domains:
+      - m.vk.com
       - vk.com
+      - away.vk.com
       - vkontakte.ru
 
   Tagged:
@@ -300,6 +354,7 @@ social:
   Odnoklassniki:
     domains:
       - odnoklassniki.ru
+      - ok.ru
 
   Viadeo:
     domains:
@@ -470,7 +525,7 @@ social:
   Pocket:
     domains:
       - getpocket.com
-      
+
   ITU Sozluk:
     domains:
       - itusozluk.com
@@ -501,7 +556,7 @@ social:
 
   Donanimhaber:
     domains:
-      - donanimhaber.com 
+      - donanimhaber.com
 
   Disqus:
     domains:
@@ -513,9 +568,17 @@ social:
     domains:
       - quora.com
 
-    Whirlpool:
-      domains:
-        - forums.whirlpool.net.au
+  Skype:
+    domains:
+      - web.skype.com
+
+  WhatsApp:
+    domains:
+      - web.whatsapp.com
+
+  Whirlpool:
+    domains:
+      - forums.whirlpool.net.au
 
 # #######################################################################################################
 #
@@ -542,6 +605,13 @@ search:
       - su
     domains:
       - search.1und1.de
+
+  2gis:
+    domains:
+      - 2gis.ru
+      - www.2gis.ru
+      - link.2gis.ru
+      - www.link.2gis.ru
 
   360.cn:
     parameters:
@@ -2969,6 +3039,12 @@ search:
       - www.toile.com
       - web.toile.com
 
+  Liveinternet:
+    parameters:
+      - q
+    domains:
+      - liveinternet.ru
+
   Looksmart:
     parameters:
       - key
@@ -2999,6 +3075,8 @@ search:
     parameters:
       - q
     domains:
+      - mail.ru
+      - m.mail.ru
       - go.mail.ru
 
   Mamma:
@@ -3085,6 +3163,7 @@ search:
       - searchfor
       - searchFor
     domains:
+      - mysearch.com
       - www.mysearch.com
       - ms114.mysearch.com
       - ms146.mysearch.com
@@ -3167,7 +3246,7 @@ search:
     domains:
       - busca.orange.es
       - search.orange.co.uk
-      - lemoteur.orange.fr   
+      - lemoteur.orange.fr
 
   Paperball:
     parameters:
@@ -3219,6 +3298,13 @@ search:
       - www.qualigo.ch
       - www.qualigo.de
       - www.qualigo.nl
+
+  Qwant:
+    parameters:
+      - q
+    domains:
+      - www.qwant.com
+      - lite.qwant.com
 
   Rakuten:
     parameters:
@@ -3337,6 +3423,18 @@ search:
     domains:
       - sosodesktop.com
       - search.sosodesktop.com
+
+  Shenma:
+    parameters:
+      - q
+    domains:
+      - so.m.sm.cn
+      - yz.m.sm.cn
+      - m.sm.cn
+      - quark.sm.cn
+      - m.sp.sm.cn
+      - m.yz2.sm.cn
+      - m.yz.sm.cn
 
   Snapdo:
     parameters:
@@ -3598,6 +3696,8 @@ search:
       - au.yahoo.com
       - br.search.yahoo.com
       - br.yahoo.com
+      - ca.search.yahoo.com
+      - ca.yahoo.com
       - cade.searchde.yahoo.com
       - cade.yahoo.com
       - chinese.searchinese.yahoo.com
@@ -3614,8 +3714,12 @@ search:
       - espanol.yahoo.com
       - fr.search.yahoo.com
       - fr.yahoo.com
+      - hk.search.yahoo.com
+      - hk.yahoo.com
       - ie.search.yahoo.com
       - ie.yahoo.com
+      - in.search.yahoo.com
+      - in.yahoo.com
       - it.search.yahoo.com
       - it.yahoo.com
       - kr.search.yahoo.com
@@ -3630,11 +3734,17 @@ search:
       - one.searchn.yahoo.com
       - qc.search.yahoo.com
       - qc.yahoo.com
+      - ru.search.yahoo.com
+      - ru.yahoo.com
       - se.search.yahoo.com
       - se.yahoo.com
       - search.searcharch.yahoo.com
+      - tw.search.yahoo.com
+      - tw.yahoo.com
       - uk.search.yahoo.com
       - uk.yahoo.com
+      - us.search.yahoo.com
+      - us.yahoo.com
       - www.yahoo.co.jp
       - search.yahoo.co.jp
       # powered by Yahoo
@@ -3668,6 +3778,10 @@ search:
       - www.yandex.ua
       - www.yandex.com
       - www.yandex.by
+      - clck.yandex.ru
+      - clck.yandex.ua
+      - clck.yandex.com
+      - clck.yandex.by
 
   Yandex Images:
     parameters:
@@ -3676,6 +3790,7 @@ search:
       - images.yandex.ru
       - images.yandex.ua
       - images.yandex.com
+      - images.yandex.by
 
   Yasni:
     parameters:
@@ -3759,9 +3874,30 @@ paid:
     domains:
       - adform.net
 
+  ADFOX:
+    domains:
+      - adfox.ru
+      - www.adfox.ru
+      - ads.adfox.ru
+      - www.ads.adfox.ru
+
+  Adition:
+    domains:
+      - adition.com
+
+  AdNET:
+    domains:
+      - adnet.de
+
   AdRoll:
     domains:
       - adroll.com
+
+  AdSpirit:
+    domains:
+      - adspirit.de
+      - rtbcity.com
+      - plusperformance.com
 
   AppNexus:
     domains:
@@ -3821,6 +3957,12 @@ paid:
     domains:
       - lfstmedia.com
 
+  LowerMyBills:
+    parameters:
+      - leadid
+    domains:
+      - lowermybills.com
+
   Jivox:
     domains:
       - jivox.com
@@ -3861,6 +4003,11 @@ paid:
     domains:
       - farm.plista.com
 
+  Price.ru:
+    domains:
+      - price.ru
+      - v.price.ru
+
   PubMatic:
     domains:
       - sshowads.pubmatic.com
@@ -3900,6 +4047,10 @@ paid:
       - api.taboola.com
       - taboola.com
 
+  Torg.Mail.ru:
+    domains:
+      - torg.mail.ru
+
   Tribal Fusion:
     domains:
       - cdnx.tribalfusion.com
@@ -3908,6 +4059,19 @@ paid:
     domains:
       - www.whitepages.com.au
       - mobile.whitepages.com.au
+
+  Yandex.Direct:
+    domains:
+      - an.yandex.ru
+      - yabs.yandex.ru
+      - yabs.yandex.ua
+      - yabs.yandex.com
+      - yabs.yandex.by
+
+  Yandex.Market:
+    domains:
+      - market.yandex.ru
+      - m.market.yandex.ru
 
   Yieldmo:
     domains:

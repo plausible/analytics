@@ -3,29 +3,73 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
   import Plausible.TestUtils
 
   describe "GET /api/stats/:domain/countries" do
-    setup [:create_user, :log_in, :create_site]
+    setup [:create_user, :log_in, :create_new_site]
 
     test "returns top countries by new visitors", %{conn: conn, site: site} do
-      conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&date=2019-01-01")
+      populate_stats(site, [
+        build(:pageview,
+          country_code: "EE"
+        ),
+        build(:pageview,
+          country_code: "EE"
+        ),
+        build(:pageview,
+          country_code: "GB"
+        )
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/countries?period=day")
 
       assert json_response(conn, 200) == [
                %{
                  "name" => "EST",
-                 "full_country_name" => "Estonia",
                  "count" => 2,
-                 "percentage" => 50
+                 "percentage" => 67
                },
                %{
                  "name" => "GBR",
-                 "full_country_name" => "United Kingdom",
                  "count" => 1,
-                 "percentage" => 25
+                 "percentage" => 33
+               }
+             ]
+    end
+
+    test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          country_code: "EE"
+        ),
+        build(:event, user_id: 1, name: "Signup"),
+        build(:pageview,
+          user_id: 2,
+          country_code: "EE"
+        ),
+        build(:pageview,
+          user_id: 3,
+          country_code: "GB"
+        ),
+        build(:event, user_id: 3, name: "Signup")
+      ])
+
+      filters = Jason.encode!(%{"goal" => "Signup"})
+
+      conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "GBR",
+                 "total_visitors" => 1,
+                 "count" => 1,
+                 "percentage" => 50,
+                 "conversion_rate" => 100.0
                },
                %{
-                 "name" => "USA",
-                 "full_country_name" => "United States",
+                 "name" => "EST",
+                 "total_visitors" => 2,
                  "count" => 1,
-                 "percentage" => 25
+                 "percentage" => 50,
+                 "conversion_rate" => 50.0
                }
              ]
     end

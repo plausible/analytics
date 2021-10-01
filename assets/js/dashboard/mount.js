@@ -20,6 +20,7 @@ if (container) {
   }
 
   const loggedIn = container.dataset.loggedIn === 'true'
+  const currentUserRole = container.dataset.currentUserRole
   const sharedLinkAuth = container.dataset.sharedLinkAuth
   if (sharedLinkAuth) {
     api.setSharedLinkAuth(sharedLinkAuth)
@@ -27,7 +28,7 @@ if (container) {
 
   const app = (
     <ErrorBoundary>
-      <Router site={site} loggedIn={loggedIn} />
+      <Router site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} />
     </ErrorBoundary>
   )
 

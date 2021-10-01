@@ -44,6 +44,28 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~ "<b>3</b> visitors in last 24h"
     end
 
+    test "shows invitations for user by email address", %{conn: conn, user: user} do
+      site = insert(:site)
+      insert(:invitation, email: user.email, site_id: site.id, inviter: build(:user))
+      conn = get(conn, "/sites")
+
+      assert html_response(conn, 200) =~ site.domain
+    end
+
+    test "invitations are case insensitive", %{conn: conn, user: user} do
+      site = insert(:site)
+
+      insert(:invitation,
+        email: String.upcase(user.email),
+        site_id: site.id,
+        inviter: build(:user)
+      )
+
+      conn = get(conn, "/sites")
+
+      assert html_response(conn, 200) =~ site.domain
+    end
+
     test "paginates sites", %{conn: conn, user: user} do
       insert(:site, members: [user], domain: "test-site1.com")
       insert(:site, members: [user], domain: "test-site2.com")
@@ -80,6 +102,19 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert redirected_to(conn) == "/example.com/snippet"
       assert Repo.exists?(Plausible.Site, domain: "example.com")
+    end
+
+    test "starts trial if user does not have trial yet", %{conn: conn, user: user} do
+      Plausible.Auth.User.remove_trial_expiry(user) |> Repo.update!()
+
+      post(conn, "/sites", %{
+        "site" => %{
+          "domain" => "example.com",
+          "timezone" => "Europe/London"
+        }
+      })
+
+      assert Repo.reload!(user).trial_expiry_date
     end
 
     test "sends welcome email if this is the user's first site", %{conn: conn} do
