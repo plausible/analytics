@@ -461,7 +461,7 @@ class LineGraph extends React.Component {
       border = index % 2 === 0 ? border + ' border-r lg:border-r-0' : border
 
       return (
-        <div className={`px-6 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
+        <div className={`px-4 md:px-6 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
           {Object.keys(METRIC_MAPPING).includes(stat.name) ?
             (
               <div
@@ -476,7 +476,8 @@ class LineGraph extends React.Component {
                 {metric == METRIC_MAPPING[stat.name] &&
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
                 }
-                {stat.name}
+                {stat.name.split('(')[0]}
+                {stat.name.split('(').length > 1 ? (<span className="hidden sm:inline-block ml-1"> {"(" + stat.name.split('(')[1]}</span>) : null}
               </div>
             ) : (
               <div className='text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex'>
