@@ -334,6 +334,10 @@ class LineGraph extends React.Component {
               color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             }
           }
+        },
+        interaction: {
+          mode: 'index',
+          intersect: false,
         }
       }
     });
