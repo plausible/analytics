@@ -25,7 +25,11 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-01 23:00:00])
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&metric=pageviews")
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&metric=pageviews"
+        )
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
@@ -43,7 +47,11 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&metric=visitors")
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&metric=visitors"
+        )
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
@@ -59,7 +67,11 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=visitors")
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=visitors"
+        )
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
@@ -407,7 +419,11 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=pageviews")
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=pageviews"
+        )
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
@@ -423,7 +439,11 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2021-02-01&metric=pageviews")
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-02-01&metric=pageviews"
+        )
 
       assert %{"prev_plot" => prev_plot} = json_response(conn, 200)
 
@@ -443,7 +463,11 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=bounce_rate")
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=bounce_rate"
+        )
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
@@ -459,7 +483,11 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2021-02-01&metric=bounce_rate")
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-02-01&metric=bounce_rate"
+        )
 
       assert %{"prev_plot" => prev_plot} = json_response(conn, 200)
 
@@ -486,7 +514,11 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=visit_duration")
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=visit_duration"
+        )
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
@@ -509,7 +541,11 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2021-02-01&metric=visit_duration")
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-02-01&metric=visit_duration"
+        )
 
       assert %{"prev_plot" => prev_plot} = json_response(conn, 200)
 
