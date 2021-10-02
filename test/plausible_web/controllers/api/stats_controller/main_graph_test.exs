@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   import Plausible.TestUtils
   @user_id 123
 
-  describe "GET /api/stats/main-graph/visitors - plot" do
+  describe "GET /api/stats/main-graph - default plot" do
     setup [:create_user, :log_in, :create_new_site]
 
     test "displays pageviews for the last 30 minutes in realtime graph", %{conn: conn, site: site} do
@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: relative_time(minutes: -5))
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/visitors?period=realtime")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=realtime&metric=pageviews")
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
@@ -25,7 +25,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-01 23:00:00])
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/visitors?period=day&date=2021-01-01")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&metric=pageviews")
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
@@ -43,7 +43,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/visitors?period=day&date=2021-01-01")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&metric=visitors")
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/visitors?period=month&date=2021-01-01")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=visitors")
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
@@ -71,11 +71,11 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     # TODO: missing 6, 12 months, 30 days
   end
 
-  describe "GET /api/stats/main-graph/visitors - labels" do
+  describe "GET /api/stats/main-graph - default labels" do
     setup [:create_user, :log_in, :create_site]
 
     test "shows last 30 days", %{conn: conn, site: site} do
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/visitors?period=30d")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=30d&metric=visitors")
       assert %{"labels" => labels} = json_response(conn, 200)
 
       {:ok, first} = Timex.today() |> Timex.shift(days: -30) |> Timex.format("{ISOdate}")
@@ -85,7 +85,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "shows last 7 days", %{conn: conn, site: site} do
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/visitors?period=7d")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=7d&metric=visitors")
       assert %{"labels" => labels} = json_response(conn, 200)
 
       {:ok, first} = Timex.today() |> Timex.shift(days: -6) |> Timex.format("{ISOdate}")
@@ -95,7 +95,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
-  describe "GET /api/stats/main-graph/visitors - top stats" do
+  describe "GET /api/stats/main-graph - default top stats" do
     setup [:create_user, :log_in, :create_new_site]
 
     test "counts distinct user ids", %{conn: conn, site: site} do
@@ -105,7 +105,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview)
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/visitors?period=day")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day")
 
       res = json_response(conn, 200)
       assert %{"name" => "Unique visitors", "value" => 2, "change" => 100} in res["top_stats"]
@@ -118,7 +118,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview)
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/visitors?period=day")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day")
 
       res = json_response(conn, 200)
       assert %{"name" => "Total pageviews", "value" => 3, "change" => 100} in res["top_stats"]
@@ -131,7 +131,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview)
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/visitors?period=day")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day")
 
       res = json_response(conn, 200)
       assert %{"name" => "Bounce rate", "value" => 50, "change" => nil} in res["top_stats"]
@@ -152,7 +152,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/visitors?period=day&date=2021-01-01")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01")
 
       res = json_response(conn, 200)
       assert %{"name" => "Visit duration", "value" => 450, "change" => 100} in res["top_stats"]
@@ -181,7 +181,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph/visitors?period=day&date=2021-01-01&filters=#{filters}"
+          "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&filters=#{filters}"
         )
 
       res = json_response(conn, 200)
@@ -189,7 +189,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
-  describe "GET /api/stats/main-graph/visitors - realtime top stats" do
+  describe "GET /api/stats/main-graph - realtime top stats" do
     setup [:create_user, :log_in, :create_new_site]
 
     test "shows current visitors (last 5 minutes)", %{conn: conn, site: site} do
@@ -199,7 +199,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: relative_time(minutes: -1))
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/visitors?period=realtime")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=realtime")
 
       res = json_response(conn, 200)
       assert %{"name" => "Current visitors", "value" => 2} in res["top_stats"]
@@ -212,7 +212,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: relative_time(minutes: -1))
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/visitors?period=realtime")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=realtime")
 
       res = json_response(conn, 200)
       assert %{"name" => "Unique visitors (last 30 min)", "value" => 2} in res["top_stats"]
@@ -226,14 +226,14 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: relative_time(minutes: -1))
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/visitors?period=realtime")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=realtime")
 
       res = json_response(conn, 200)
       assert %{"name" => "Pageviews (last 30 min)", "value" => 3} in res["top_stats"]
     end
   end
 
-  describe "GET /api/stats/main-graph/visitors - filtered for goal" do
+  describe "GET /api/stats/main-graph - filtered for goal" do
     setup [:create_user, :log_in, :create_new_site]
 
     test "returns total unique visitors", %{conn: conn, site: site} do
@@ -249,7 +249,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph/visitors?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/main-graph?period=day&filters=#{filters}"
         )
 
       res = json_response(conn, 200)
@@ -269,7 +269,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph/visitors?period=month&filters=#{filters}"
+          "/api/stats/#{site.domain}/main-graph?period=month&filters=#{filters}"
         )
 
       res = json_response(conn, 200)
@@ -289,7 +289,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph/visitors?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/main-graph?period=day&filters=#{filters}"
         )
 
       res = json_response(conn, 200)
@@ -298,7 +298,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
-  describe "GET /api/stats/main-graph/visitors - top stats - filters" do
+  describe "GET /api/stats/main-graph - top stats - filters" do
     setup [:create_user, :log_in, :create_new_site]
 
     test "returns only visitors from a country based on alpha3 code", %{conn: conn, site: site} do
@@ -313,7 +313,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph/visitors?period=month&filters=#{filters}"
+          "/api/stats/#{site.domain}/main-graph?period=month&filters=#{filters}"
         )
 
       res = json_response(conn, 200)
@@ -332,7 +332,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph/visitors?period=month&filters=#{filters}"
+          "/api/stats/#{site.domain}/main-graph?period=month&filters=#{filters}"
         )
 
       res = json_response(conn, 200)
@@ -351,7 +351,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph/visitors?period=month&filters=#{filters}"
+          "/api/stats/#{site.domain}/main-graph?period=month&filters=#{filters}"
         )
 
       res = json_response(conn, 200)
@@ -370,7 +370,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph/visitors?period=month&filters=#{filters}"
+          "/api/stats/#{site.domain}/main-graph?period=month&filters=#{filters}"
         )
 
       res = json_response(conn, 200)
@@ -389,7 +389,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph/visitors?period=month&filters=#{filters}"
+          "/api/stats/#{site.domain}/main-graph?period=month&filters=#{filters}"
         )
 
       res = json_response(conn, 200)
@@ -397,7 +397,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
-  describe "GET /api/stats/main-graph/pageviews - plot" do
+  describe "GET /api/stats/main-graph - pageviews plot" do
     setup [:create_user, :log_in, :create_new_site]
 
     test "displays pageviews for a month", %{conn: conn, site: site} do
@@ -407,7 +407,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/pageviews?period=month&date=2021-01-01")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=pageviews")
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
@@ -423,7 +423,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/pageviews?period=month&date=2021-02-01")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2021-02-01&metric=pageviews")
 
       assert %{"prev_plot" => prev_plot} = json_response(conn, 200)
 
@@ -433,7 +433,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
-  describe "GET /api/stats/main-graph/bounce_rate - plot" do
+  describe "GET /api/stats/main-graph - bounce_rate plot" do
     setup [:create_user, :log_in, :create_new_site]
 
     test "displays bounce_rate for a month", %{conn: conn, site: site} do
@@ -443,7 +443,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/bounce_rate?period=month&date=2021-01-01")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=bounce_rate")
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
@@ -459,7 +459,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/bounce_rate?period=month&date=2021-02-01")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2021-02-01&metric=bounce_rate")
 
       assert %{"prev_plot" => prev_plot} = json_response(conn, 200)
 
@@ -469,7 +469,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
-  describe "GET /api/stats/main-graph/visit_duration - plot" do
+  describe "GET /api/stats/main-graph - visit_duration plot" do
     setup [:create_user, :log_in, :create_new_site]
 
     test "displays visit_duration for a month", %{conn: conn, site: site} do
@@ -486,7 +486,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/visit_duration?period=month&date=2021-01-01")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=visit_duration")
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
@@ -509,7 +509,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/main-graph/visit_duration?period=month&date=2021-02-01")
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&date=2021-02-01&metric=visit_duration")
 
       assert %{"prev_plot" => prev_plot} = json_response(conn, 200)
 

@@ -365,6 +365,7 @@ class LineGraph extends React.Component {
 
   componentDidUpdate(prevProps) {
     const { graphData, comparison, metric, darkTheme } = this.props;
+    const tooltip = document.getElementById('chartjs-tooltip');
 
     if (
       graphData !== prevProps.graphData ||
@@ -375,6 +376,10 @@ class LineGraph extends React.Component {
       this.chart.destroy();
       this.chart = this.regenerateChart();
       this.chart.update();
+
+      if (tooltip) {
+        tooltip.style.opacity = 0;
+      }
     }
 
     if (!metric) {
@@ -600,7 +605,7 @@ export default class VisitorGraph extends React.Component {
   }
 
   fetchGraphData() {
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/main-graph/${this.state.metric || 'none'}`, this.props.query)
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/main-graph`, this.props.query, {metric: this.state.metric || 'none'})
       .then((res) => {
         this.setState({ loading: false, graphData: res })
         return res
