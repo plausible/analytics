@@ -1,4 +1,4 @@
-<nav class="relative z-10 py-8">
+<nav class="relative z-20 py-8">
   <div class="container">
     <nav class="relative flex items-center justify-between sm:h-10 md:justify-center">
       <div class="flex items-center flex-1 md:absolute md:inset-y-0 md:left-0">
@@ -38,7 +38,7 @@
                     <svg style="height: 18px; transform: translateY(2px); fill: #606f7b;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 512 640" enable-background="new 0 0 512 512" xml:space="preserve"><g><circle cx="256" cy="52.8" r="50.8"/><circle cx="256" cy="256" r="50.8"/><circle cx="256" cy="459.2" r="50.8"/></g></svg>
                   </div>
 
-                  <div data-dropdown style="top: 42px; right: 0px; width: 185px;" class="absolute right-0 z-10 hidden bg-white border border-gray-300 rounded shadow-md dropdown-content dark:bg-gray-800 dark:border-gray-500">
+                  <div data-dropdown style="top: 42px; right: 0px; width: 185px;" class="absolute right-0 z-30 hidden bg-white border border-gray-300 rounded shadow-md dropdown-content dark:bg-gray-800 dark:border-gray-500">
                     <%= link("Settings", to: "/settings", class: "block py-2 px-2 border-b border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-gray-100") %>
                     <%= link("Log out", to: "/logout", class: "block py-2 px-2 hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-gray-100") %>
                   </div>
