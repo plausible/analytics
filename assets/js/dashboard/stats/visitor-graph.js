@@ -456,7 +456,9 @@ class LineGraph extends React.Component {
   }
 
   topStatTooltip(stat) {
-    if (typeof(stat.value) == 'number') {
+    if (['visit duration', 'time on page', 'bounce rate', 'conversion rate'].includes(stat.name.toLowerCase())) {
+      return null
+    } else {
       let name = stat.name.toLowerCase()
       name = stat.value === 1 ? name.slice(0, -1) : name
       return stat.value.toLocaleString() + ' ' + name
