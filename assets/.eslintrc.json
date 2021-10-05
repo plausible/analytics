@@ -2,7 +2,11 @@
   "env": {
     "browser": true
   },
-  "extends": ["airbnb", "prettier"],
+  "extends": ["eslint:recommended",
+    "plugin:react/recommended",
+    "prettier"
+  ],
+  "parser": "babel-eslint",
   "plugins": ["prettier"],
   "rules": {
     "max-len": [0, {"code": 120}],
@@ -11,6 +15,7 @@
     "react/destructuring-assignment": [0],
     "react/prop-types": [0],
     "max-classes-per-file": [0],
+    "react/display-name": [0],
     "react/jsx-one-expression-per-line": [0],
     "react/self-closing-comp": [0],
     "no-unused-expressions": [1, { "allowShortCircuit": true }],
@@ -18,5 +23,14 @@
     "jsx-a11y/click-events-have-key-events": [0],
     "jsx-a11y/no-static-element-interactions": [0],
     "react/no-did-update-set-state": [0]
+  },
+  "settings": {
+    "react": {
+      "createClass": "createReactClass", // Regex for Component Factory to use,
+                                         // default to "createReactClass"
+      "pragma": "React",  // Pragma to use, default to "React"
+      "fragment": "Fragment",  // Fragment to use (may be a property of <pragma>), default to "Fragment"
+      "version": "detect"
+    }
   }
 }

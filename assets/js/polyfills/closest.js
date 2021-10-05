@@ -6,6 +6,7 @@ if (window.Element && !Element.prototype.closest) {
             el = this;
         do {
             i = matches.length;
+            // eslint-disable-next-line no-empty
             while (--i >= 0 && matches.item(i) !== el) {};
         } while ((i < 0) && (el = el.parentElement));
         return el;
