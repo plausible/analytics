@@ -42,9 +42,6 @@ db_url =
     "postgres://postgres:postgres@plausible_db:5432/plausible_db"
   )
 
-db_ssl_enabled =
-  get_var_from_path_or_env(config_dir, "DATABASE_SSL", "false") |> String.to_existing_atom()
-
 db_socket_dir = get_var_from_path_or_env(config_dir, "DATABASE_SOCKET_DIR")
 
 admin_user = get_var_from_path_or_env(config_dir, "ADMIN_USER_NAME")
@@ -195,9 +192,7 @@ config :plausible, PlausibleWeb.Endpoint,
   secret_key_base: secret_key_base
 
 if is_nil(db_socket_dir) do
-  config :plausible, Plausible.Repo,
-    url: db_url,
-    ssl: db_ssl_enabled
+  config :plausible, Plausible.Repo, url: db_url
 else
   config :plausible, Plausible.Repo,
     socket_dir: db_socket_dir,
