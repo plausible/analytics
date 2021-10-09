@@ -79,7 +79,7 @@ defmodule Plausible.Stats.Breakdown do
       end
 
     results = breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
-    zip_results(none_result, results, custom_prop, metrics) |> Enum.slice(0..limit-1)
+    zip_results(none_result, results, custom_prop, metrics) |> Enum.slice(0..(limit - 1))
   end
 
   def breakdown(site, query, "event:page", metrics, pagination) do
