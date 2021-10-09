@@ -59,18 +59,15 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   def breakdown(site, query, "event:props:" <> custom_prop, metrics, pagination) do
+    {limit, _} = pagination
+
     none_result =
       if !Enum.any?(query.filters, fn {key, _} -> String.starts_with?(key, "event:props") end) do
         none_filters = Map.put(query.filters, "event:props:" <> custom_prop, {:is, "(none)"})
         none_query = %Query{query | filters: none_filters}
 
-        {limit, page} = pagination
-        offset = (page - 1) * limit
-
         from(e in base_event_query(site, none_query),
           order_by: [desc: fragment("uniq(?)", e.user_id)],
-          limit: ^limit,
-          offset: ^offset,
           select: %{},
           select_merge: %{^custom_prop => "(none)"},
           having: fragment("uniq(?)", e.user_id) > 0
@@ -82,7 +79,7 @@ defmodule Plausible.Stats.Breakdown do
       end
 
     results = breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
-    zip_results(none_result, results, custom_prop, metrics)
+    zip_results(none_result, results, custom_prop, metrics) |> Enum.slice(0..limit-1)
   end
 
   def breakdown(site, query, "event:page", metrics, pagination) do

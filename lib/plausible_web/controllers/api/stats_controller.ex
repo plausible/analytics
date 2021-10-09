@@ -531,6 +531,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def prop_breakdown(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    pagination = parse_pagination(params)
 
     total_q = Query.remove_goal(query)
 
@@ -539,7 +540,7 @@ defmodule PlausibleWeb.Api.StatsController do
     prop_name = "event:props:" <> params["prop_name"]
 
     props =
-      Stats.breakdown(site, query, prop_name, ["visitors", "events"], {100, 1})
+      Stats.breakdown(site, query, prop_name, ["visitors", "events"], pagination)
       |> transform_keys(%{
         params["prop_name"] => "name",
         "visitors" => "count",

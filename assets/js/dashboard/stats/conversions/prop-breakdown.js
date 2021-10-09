@@ -39,6 +39,9 @@ export default class PropertyBreakdown extends React.Component {
       loading: true,
       propKey: propKey,
       viewport: DEFAULT_WIDTH,
+      breakdown: [],
+      page: 1,
+      moreResultsAvailable: false
     }
 
     this.handleResize = this.handleResize.bind(this);
@@ -66,9 +69,17 @@ export default class PropertyBreakdown extends React.Component {
 
   fetchPropBreakdown() {
     if (this.props.query.filters['goal']) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/property/${encodeURIComponent(this.state.propKey)}`, this.props.query)
-        .then((res) => this.setState({loading: false, breakdown: res}))
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/property/${encodeURIComponent(this.state.propKey)}`, this.props.query, {limit: 100, page: this.state.page})
+        .then((res) => this.setState((state) => ({
+            loading: false,
+            breakdown: state.breakdown.concat(res),
+            moreResultsAvailable: res.length === 100
+          })))
     }
+  }
+
+  loadMore() {
+    this.setState({loading: true, page: this.state.page + 1}, this.fetchPropBreakdown.bind(this))
   }
 
   renderUrl(value) {
@@ -131,15 +142,25 @@ export default class PropertyBreakdown extends React.Component {
 
   changePropKey(newKey) {
     storage.setItem(this.storageKey, newKey)
-    this.setState({propKey: newKey, loading: true}, this.fetchPropBreakdown)
+    this.setState({propKey: newKey, loading: true, breakdown: [], page: 1, moreResultsAvailable: false}, this.fetchPropBreakdown)
+  }
+
+  renderLoading() {
+    if (this.state.loading) {
+      return <div className="px-4 py-2"><div className="loading sm mx-auto"><div></div></div></div>
+    } else if (this.state.moreResultsAvailable) {
+      return (
+        <div className="w-full text-center my-4">
+          <button onClick={this.loadMore.bind(this)} type="button" className="button">
+            Load more
+          </button>
+        </div>
+      )
+    }
   }
 
   renderBody() {
-    if (this.state.loading) {
-      return <div className="px-4 py-2"><div className="loading sm mx-auto"><div></div></div></div>
-    } else {
-      return this.state.breakdown.map((propValue) => this.renderPropValue(propValue))
-    }
+    return this.state.breakdown.map((propValue) => this.renderPropValue(propValue))
   }
 
   renderPill(key) {
@@ -162,6 +183,7 @@ export default class PropertyBreakdown extends React.Component {
           </ul>
         </div>
         { this.renderBody() }
+        { this.renderLoading()}
       </div>
     )
   }
