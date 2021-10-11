@@ -1,8 +1,8 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
 import Chart from 'chart.js/auto';
-import { eventName, navigateToQuery } from '../query'
-import numberFormatter, { durationFormatter } from '../number-formatter'
+import { navigateToQuery } from '../query'
+import numberFormatter, {durationFormatter} from '../number-formatter'
 import * as api from '../api'
 import * as storage from '../storage'
 import { ThemeContext } from '../theme-context'
@@ -133,7 +133,7 @@ const METRIC_FORMATTER = {
 }
 
 function dateFormatter(interval, longForm) {
-  return function (isoDate, index, ticks) {
+  return function(isoDate, _index, _ticks) {
     let date = new Date(isoDate)
 
     if (interval === 'month') {
@@ -330,7 +330,7 @@ class LineGraph extends React.Component {
             grid: { display: false },
             ticks: {
               maxTicksLimit: 8,
-              callback: function (val, index, ticks) { return dateFormatter(graphData.interval)(this.getLabelForValue(val)) },
+              callback: function(val, _index, _ticks) { return dateFormatter(graphData.interval)(this.getLabelForValue(val)) },
               color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             }
           }
@@ -554,7 +554,7 @@ class LineGraph extends React.Component {
   }
 }
 
-LineGraph = withRouter(withComparisonConsumer(LineGraph))
+const LineGraphWithRouter = withRouter(withComparisonConsumer(LineGraph))
 
 export default class VisitorGraph extends React.Component {
   constructor(props) {
@@ -622,7 +622,7 @@ export default class VisitorGraph extends React.Component {
       return (
         <ThemeContext.Consumer>
           {theme => (
-            <LineGraph graphData={graphData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} />
+            <LineGraphWithRouter graphData={graphData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} />
           )}
         </ThemeContext.Consumer>
       )

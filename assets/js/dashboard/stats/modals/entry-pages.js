@@ -24,7 +24,7 @@ class EntryPagesModal extends React.Component {
   }
 
   loadPages() {
-    const {query, page, pages} = this.state;
+    const {query, page} = this.state;
 
     api.get(
       `/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`,
