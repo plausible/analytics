@@ -48,7 +48,7 @@ if (registerForm) {
         registerForm.submit();
       }
     }
-
+    /* eslint-disable-next-line no-undef */
     plausible('Signup', {callback: submitForm});
   })
 }
@@ -94,7 +94,7 @@ function showChangelogNotification(el) {
 const embedButton = document.getElementById('generate-embed')
 
 if (embedButton) {
-  embedButton.addEventListener('click', function(e) {
+  embedButton.addEventListener('click', function(_e) {
     const baseUrl = document.getElementById('base-url').value
     const embedCode = document.getElementById('embed-code')
     const theme = document.getElementById('theme').value.toLowerCase()

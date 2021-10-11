@@ -3,7 +3,9 @@
   "license": "MIT",
   "scripts": {
     "deploy": "$(npm bin)/webpack --mode production",
-    "watch": "$(npm bin)/webpack --mode development --watch"
+    "watch": "$(npm bin)/webpack --mode development --watch",
+    "format": "$(npm bin)/prettier --write {css,js}/**",
+    "lint": "$(npm bin)/eslint js/**"
   },
   "dependencies": {
     "@babel/core": "^7.14.3",
@@ -47,8 +49,8 @@
     "webpack-cli": "^4.7.0"
   },
   "devDependencies": {
+    "babel-eslint": "^10.1.0",
     "eslint": "^7.2.0",
-    "eslint-config-airbnb": "^18.2.0",
     "eslint-config-prettier": "^7.0.0",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-jsx-a11y": "^6.4.1",
