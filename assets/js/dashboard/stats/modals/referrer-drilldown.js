@@ -62,7 +62,7 @@ class ReferrerDrilldownModal extends React.Component {
   renderExternalLink(name) {
     if (name !== 'Direct / None') {
       return (
-        <a target="_blank" href={'//' + name} className="hidden group-hover:block">
+        <a target="_blank" href={'//' + name} rel="noreferrer" className="hidden group-hover:block">
           <svg className="inline h-4 w-4 ml-1 -mt-1 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
         </a>
       )
@@ -92,14 +92,14 @@ class ReferrerDrilldownModal extends React.Component {
     return (
       <div key={tweet.tweet_id}>
         <div className={"flex items-center my-4" + border} >
-          <a className="flex items-center group" href={authorUrl} target="_blank">
+          <a className="flex items-center group" href={authorUrl} target="_blank" rel="noreferrer">
             <img className="rounded-full w-8" src={tweet.author_image} />
             <div className="ml-2 leading-tight">
               <div className="font-bold group-hover:text-blue-500">{tweet.author_name}</div>
               <div className="text-xs text-gray-500 dark:text-gray-400">@{tweet.author_handle}</div>
             </div>
           </a>
-          <a className="ml-auto twitter-icon" href={tweetUrl} target="_blank"></a>
+          <a className="ml-auto twitter-icon" href={tweetUrl} target="_blank" rel="noreferrer"></a>
         </div>
         <div className="my-2 cursor-text tweet-text whitespace-pre-wrap" dangerouslySetInnerHTML={{__html: tweet.text}}>
         </div>

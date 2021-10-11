@@ -1,0 +1,25 @@
+name: NPM CI
+
+on:
+  push:
+    branches: [master, stable]
+  pull_request:
+    branches: [master, stable]
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Read .tool-versions
+      uses: marocchino/tool-versions-action@v1
+      id: versions
+    - name: Set up Node
+    - uses: actions/setup-node@v2
+      with:
+        node-version: ${{steps.versions.outputs.nodejs}}
+    - run: npm install
+    - run: npm run lint
+    - run: npm run check-format
