@@ -5,6 +5,7 @@
     "deploy": "$(npm bin)/webpack --mode production",
     "watch": "$(npm bin)/webpack --mode development --watch",
     "format": "$(npm bin)/prettier --write {css,js}/**",
+    "check-format": "$(npm bin)/prettier --check {css,js}/**",
     "lint": "$(npm bin)/eslint js/**"
   },
   "dependencies": {
