@@ -19,8 +19,8 @@ function buildDataSet(plot, present_index, ctx, label, isPrevious) {
 
   if (!isPrevious) {
     if (present_index) {
-      var dashedPart = plot.slice(present_index - 1);
-      var dashedPlot = (new Array(plot.length - dashedPart.length)).concat(dashedPart)
+      var dashedPart = plot.slice(present_index - 1, present_index + 1);
+      var dashedPlot = (new Array(present_index - 1)).concat(dashedPart)
       const _plot = [...plot]
       for (var i = present_index; i < _plot.length; i++) {
         _plot[i] = undefined
