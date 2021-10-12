@@ -20,6 +20,6 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: ${{steps.versions.outputs.nodejs}}
-    - run: npm install
-    - run: npm run lint
-    - run: npm run check-format
+    - run: npm install --prefix ./assets
+    - run: npm run lint --prefix ./assets
+    - run: npm run check-format --prefix ./assets
