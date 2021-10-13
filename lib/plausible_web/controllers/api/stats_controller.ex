@@ -26,41 +26,19 @@ defmodule PlausibleWeb.Api.StatsController do
       })
     end
 
-    prev_timeseries_query = Query.shift_back(timeseries_query, site)
-
     timeseries_task =
       Task.async(fn -> Stats.timeseries(site, timeseries_query, [selected_metric]) end)
 
-    prev_timeseries_task =
-      Task.async(fn -> Stats.timeseries(site, prev_timeseries_query, [selected_metric]) end)
-
-    [timeseries_result, prev_timeseries_result] =
-      Task.await_many([timeseries_task, prev_timeseries_task])
+    timeseries_result = Task.await(timeseries_task)
 
     plot = Enum.map(timeseries_result, fn row -> row[selected_metric] || 0 end)
     labels = Enum.map(timeseries_result, fn row -> row["date"] end)
     present_index = present_index_for(site, query, labels)
 
-    prev_plot =
-      if query.period == "realtime" do
-        nil
-      else
-        Enum.map(prev_timeseries_result, fn row -> row[selected_metric] || 0 end)
-      end
-
-    prev_labels =
-      if query.period == "realtime" do
-        nil
-      else
-        Enum.map(prev_timeseries_result, fn row -> row["date"] end)
-      end
-
     json(conn, %{
       plot: plot,
       labels: labels,
       present_index: present_index,
-      prev_plot: prev_plot,
-      prev_labels: prev_labels,
       top_stats: top_stats,
       interval: query.interval,
       sample_percent: sample_percent

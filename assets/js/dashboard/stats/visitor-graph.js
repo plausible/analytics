@@ -119,8 +119,6 @@ const METRIC_LABELS = {
   // 't_conversions': 'Total Conversions'
 }
 
-const GRAPH_METRICS = Object.keys(METRIC_LABELS)
-
 const METRIC_FORMATTER = {
   'visitors': numberFormatter,
   'pageviews': numberFormatter,
@@ -224,6 +222,39 @@ class LineGraph extends React.Component {
                 return bodyItem.lines;
               }
 
+              function renderLabel(label, prev_label) {
+                const formattedLabel = dateFormatter(graphData.interval, true)(label)
+                const prev_formattedLabel = prev_label && dateFormatter(graphData.interval, true)(prev_label)
+
+                if (graphData.interval === 'month') {
+                  return !prev_label ? `${formattedLabel} ${(new Date(label)).getUTCFullYear()}` : `${prev_formattedLabel} ${(new Date(prev_label)).getUTCFullYear()}`
+                }
+
+                if (graphData.interval === 'date') {
+                  return !prev_label ? formattedLabel : prev_formattedLabel
+                }
+
+                if (graphData.interval === 'hour') {
+                  return !prev_label ? `${dateFormatter("date", true)(label)}, ${formattedLabel}` : `${dateFormatter("date", true)(prev_label)}, ${dateFormatter(graphData.interval, true)(prev_label)}`
+                }
+
+                return !prev_label ? formattedLabel : prev_formattedLabel
+              }
+
+              // function renderComparison(change) {
+              //   const formattedComparison = numberFormatter(Math.abs(change))
+
+              //   if (change > 0) {
+              //     return `<span class='text-green-500 font-bold'>${formattedComparison}%</span>`
+              //   }
+              //   if (change < 0) {
+              //     return `<span class='text-red-400 font-bold'>${formattedComparison}%</span>`
+              //   }
+              //   if (change === 0) {
+              //     return `<span class='font-bold'>0%</span>`
+              //   }
+              // }
+
               // Set Tooltip Body
               if (tooltipModel.body) {
                 var bodyLines = tooltipModel.body.map(getBody);
@@ -237,67 +268,24 @@ class LineGraph extends React.Component {
                 const label = graphData.labels[data.dataIndex]
                 const point = data.raw || 0
 
-                const prev_data = tooltipModel.dataPoints.slice(-1)[0]
-                const prev_label = graphData.prev_labels && graphData.prev_labels[prev_data.dataIndex]
-                const prev_point = prev_data.raw || 0
-                const pct_change = point === prev_point ? 0 : prev_point === 0 ? 100 : Math.round(((point - prev_point) / prev_point * 100).toFixed(1))
-
-                function renderLabel(isPrevious) {
-                  const formattedLabel = dateFormatter(graphData.interval, true)(label)
-                  const prev_formattedLabel = dateFormatter(graphData.interval, true)(prev_label)
-
-                  if (graphData.interval === 'month') {
-                    return !isPrevious ? `${formattedLabel} ${(new Date(label)).getUTCFullYear()}` : `${prev_formattedLabel} ${(new Date(prev_label)).getUTCFullYear()}`
-                  }
-
-                  if (graphData.interval === 'date') {
-                    return !isPrevious ? formattedLabel : prev_formattedLabel
-                  }
-
-                  if (graphData.interval === 'hour') {
-                    return !isPrevious ? `${dateFormatter("date", true)(label)}, ${formattedLabel}` : `${dateFormatter("date", true)(prev_label)}, ${dateFormatter(graphData.interval, true)(prev_label)}`
-                  }
-
-                  return !isPrevious ? formattedLabel : prev_formattedLabel
-                }
-
-                function renderComparison(change) {
-                  const formattedComparison = numberFormatter(Math.abs(change))
-
-                  if (change > 0) {
-                    return `<span class='text-green-500 font-bold'>${formattedComparison}%</span>`
-                  }
-                  if (change < 0) {
-                    return `<span class='text-red-400 font-bold'>${formattedComparison}%</span>`
-                  }
-                  if (change === 0) {
-                    return `<span class='font-bold'>0%</span>`
-                  }
-                }
+                // const prev_data = tooltipModel.dataPoints.slice(-1)[0]
+                // const prev_label = graphData.prev_labels && graphData.prev_labels[prev_data.dataIndex]
+                // const prev_point = prev_data.raw || 0
+                // const pct_change = point === prev_point ? 0 : prev_point === 0 ? 100 : Math.round(((point - prev_point) / prev_point * 100).toFixed(1))
 
                 let innerHtml = `
                 <div class='text-gray-100 flex flex-col'>
                   <div class='flex justify-between items-center'>
                       <span class='font-bold mr-4 text-lg'>${METRIC_LABELS[metric]}</span>
-                      ${graphData.interval === 'minute' || !comparison.enabled ? '' : renderComparison(pct_change)}
                   </div>
                   <div class='flex flex-col'>
                     <div class='flex flex-row justify-between items-center'>
                       <span class='flex items-center mr-4'>
                         <div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(101,116,205)'></div>
-                        <span>${renderLabel()}</span>
+                        <span>${renderLabel(label)}</span>
                       </span>
                       <span>${METRIC_FORMATTER[metric](point)}</span>
                     </div>
-                    ${graphData.interval === 'minute' || !comparison.enabled ? '' : `
-                      <div class='flex flex-row justify-between items-center mt-1'>
-                        <span class='flex items-center mr-4'>
-                          <div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(166,187,210,0.5)'></div>
-                          <span>${renderLabel(true)}</span>
-                        </span>
-                        <span>${METRIC_FORMATTER[metric](prev_point)}</span>
-                      </div>
-                    `}
                   </div>
                   <span class='font-bold text-'>${graphData.interval === 'month' ? 'Click to view month' : graphData.interval === 'date' ? 'Click to view day' : ''}</span>
                 </div>
