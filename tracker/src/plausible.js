@@ -15,7 +15,6 @@
   {{#if exclusions}}
   var excludedPaths = scriptEl && scriptEl.getAttribute('data-exclude').split(',');
   {{/if}}
-  var lastPage;
 
   function warn(reason) {
     console.warn('Ignoring Event: ' + reason);
@@ -75,20 +74,6 @@
     }
   }
 
-  function page() {
-    {{#unless hash}}
-    if (lastPage === location.pathname) return;
-    {{/unless}}
-    lastPage = location.pathname
-    trigger('pageview')
-  }
-
-  function handleVisibilityChange() {
-    if (!lastPage && document.visibilityState === 'visible') {
-      page()
-    }
-  }
-
   {{#if outbound_links}}
   function handleOutbound(event) {
     var link = event.target;
@@ -120,20 +105,6 @@
   }
   {{/if}}
 
-  {{#if hash}}
-  window.addEventListener('hashchange', page)
-  {{else}}
-  var his = window.history
-  if (his.pushState) {
-    var originalPushState = his['pushState']
-    his.pushState = function() {
-      originalPushState.apply(this, arguments)
-      page();
-    }
-    window.addEventListener('popstate', page)
-  }
-  {{/if}}
-
   {{#if outbound_links}}
   registerOutboundLinkEvents()
   {{/if}}
@@ -144,9 +115,42 @@
     trigger.apply(this, queue[i])
   }
 
-  if (document.visibilityState === 'prerender') {
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-  } else {
-    page()
-  }
+  {{#unless manual}}
+    var lastPage;
+
+    function page() {
+      {{#unless hash}}
+      if (lastPage === location.pathname) return;
+      {{/unless}}
+      lastPage = location.pathname
+      trigger('pageview')
+    }
+
+    {{#if hash}}
+    window.addEventListener('hashchange', page)
+    {{else}}
+    var his = window.history
+    if (his.pushState) {
+      var originalPushState = his['pushState']
+      his.pushState = function() {
+        originalPushState.apply(this, arguments)
+        page();
+      }
+      window.addEventListener('popstate', page)
+    }
+    {{/if}}
+
+    function handleVisibilityChange() {
+      if (!lastPage && document.visibilityState === 'visible') {
+        page()
+      }
+    }
+
+
+    if (document.visibilityState === 'prerender') {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+    } else {
+      page()
+    }
+  {{/unless}}
 })();

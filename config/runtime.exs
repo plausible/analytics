@@ -188,7 +188,7 @@ config :plausible, :selfhost,
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [host: base_url.host, scheme: base_url.scheme, port: base_url.port],
-  http: [port: port],
+  http: [port: port, transport_options: [max_connections: :infinity]],
   secret_key_base: secret_key_base
 
 if is_nil(db_socket_dir) do

@@ -1,7 +1,7 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
 import Chart from 'chart.js/auto';
-import { eventName, navigateToQuery } from '../query'
+import { navigateToQuery } from '../query'
 import numberFormatter, {durationFormatter} from '../number-formatter'
 import * as api from '../api'
 import {ThemeContext} from '../theme-context'
@@ -67,7 +67,7 @@ const DAYS_ABBREV = [
 ]
 
 function dateFormatter(interval, longForm) {
-  return function(isoDate, index, ticks) {
+  return function(isoDate, _index, _ticks) {
     let date = new Date(isoDate)
 
     if (interval === 'month') {
@@ -147,7 +147,7 @@ class LineGraph extends React.Component {
                   return ` ${item.formattedValue} ${pluralizedLabel}`
                 }
               },
-              footer: function(dataPoints) {
+              footer: function(_dataPoints) {
                 if (graphData.interval === 'month') {
                   return 'Click to view month'
                 } else if (graphData.interval === 'date') {
@@ -178,7 +178,7 @@ class LineGraph extends React.Component {
             grid: {display: false},
             ticks: {
               maxTicksLimit: 8,
-              callback: function(val, index, ticks) { return dateFormatter(graphData.interval)(this.getLabelForValue(val)) },
+              callback: function(val, _index, _ticks) { return dateFormatter(graphData.interval)(this.getLabelForValue(val)) },
               color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             }
           }
@@ -345,7 +345,7 @@ class LineGraph extends React.Component {
   }
 }
 
-LineGraph = withRouter(LineGraph)
+const LineGraphWithRouter = withRouter(LineGraph)
 
 export default class VisitorGraph extends React.Component {
   constructor(props) {
@@ -379,7 +379,7 @@ export default class VisitorGraph extends React.Component {
       return (
         <ThemeContext.Consumer>
           {theme => (
-            <LineGraph graphData={this.state.graphData} site={this.props.site} query={this.props.query} darkTheme={theme}/>
+            <LineGraphWithRouter graphData={this.state.graphData} site={this.props.site} query={this.props.query} darkTheme={theme}/>
           )}
         </ThemeContext.Consumer>
       )

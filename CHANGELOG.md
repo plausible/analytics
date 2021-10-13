@@ -31,6 +31,7 @@ All notable changes to this project will be documented in this file.
 - Fix reading config from file
 - Fix some links not opening correctly in new tab
 - UI fix for more than one row of custom event properties plausible/analytics#1383
+- UI fix for user menu and time picker overlapping plausible/analytics#1352
 
 ### Removed
 - Removes AppSignal monitoring package

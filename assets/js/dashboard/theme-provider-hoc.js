@@ -9,7 +9,7 @@ export const withThemeProvider = (WrappedComponent) => {
         dark: document.querySelector('html').classList.contains('dark') || false
       };
 
-      this.mutationObserver = new MutationObserver((mutationsList, observer) => {
+      this.mutationObserver = new MutationObserver((mutationsList, _observer) => {
         mutationsList.forEach(mutation => {
           if (mutation.attributeName === 'class') {
             this.setState({ dark: mutation.target.classList.contains('dark') });

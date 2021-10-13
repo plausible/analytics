@@ -814,6 +814,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         build(:pageview,
           pathname: "/ignore",
           referrer_source: "Should not show up",
+          utm_medium: "Should not show up",
+          utm_source: "Should not show up",
+          utm_campaign: "Should not show up",
           user_id: @user_id
         ),
         build(:pageview,
@@ -822,23 +825,28 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         ),
         build(:pageview,
           pathname: "/plausible.io",
-          referrer_source: "Google"
+          referrer_source: "Google",
+          utm_medium: "Google",
+          utm_source: "Google",
+          utm_campaign: "Google"
         )
       ])
 
-      conn =
-        get(conn, "/api/v1/stats/breakdown", %{
-          "site_id" => site.domain,
-          "period" => "day",
-          "property" => "visit:source",
-          "filters" => "event:page==/plausible.io"
-        })
+      for property <- ["source", "utm_medium", "utm_source", "utm_campaign"] do
+        conn =
+          get(conn, "/api/v1/stats/breakdown", %{
+            "site_id" => site.domain,
+            "period" => "day",
+            "property" => "visit:" <> property,
+            "filters" => "event:page==/plausible.io"
+          })
 
-      assert json_response(conn, 200) == %{
-               "results" => [
-                 %{"source" => "Google", "visitors" => 1}
-               ]
-             }
+        assert json_response(conn, 200) == %{
+                 "results" => [
+                   %{property => "Google", "visitors" => 1}
+                 ]
+               }
+      end
     end
 
     test "event:goal pageview filter for breakdown by visit source", %{conn: conn, site: site} do
