@@ -464,17 +464,14 @@ class LineGraph extends React.Component {
           {Object.keys(METRIC_MAPPING).includes(stat.name) ?
             (
               <div
-                className='text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap cursor-pointer flex'
-                title={metric == METRIC_MAPPING[stat.name] ?
+                className={`text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap cursor-pointer flex w-content ${metric === METRIC_MAPPING[stat.name] ? 'text-indigo-700 dark:text-indigo-500 border-b-2 border-indigo-700 dark:border-indigo-500' : 'hover:text-indigo-600 dark:hover:text-indigo-600 cursor-pointer'}`}
+                title={metric === METRIC_MAPPING[stat.name] ?
                   `Hide ${METRIC_LABELS[METRIC_MAPPING[stat.name]].toLowerCase()} from graph` :
                   `Show ${METRIC_LABELS[METRIC_MAPPING[stat.name]].toLowerCase()} on graph`
                 }
                 onClick={() => { updateMetric(stat.name) }}
                 tabIndex={0}
               >
-                {metric == METRIC_MAPPING[stat.name] &&
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
-                }
                 {stat.name.split('(')[0]}
                 {stat.name.split('(').length > 1 ? (<span className="hidden sm:inline-block ml-1"> {"(" + stat.name.split('(')[1]}</span>) : null}
               </div>

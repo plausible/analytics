@@ -23,6 +23,7 @@ module.exports = {
       },
       width: {
         '31percent': '31%',
+        'content': 'fit-content'
       },
       opacity: {
         '15': '0.15',
