@@ -303,7 +303,7 @@ class LineGraph extends React.Component {
 
   downloadLink() {
     if (this.props.query.period !== 'realtime') {
-      const endpoint = `/${encodeURIComponent(this.props.site.domain)}/visitors.csv${api.serializeQuery(this.props.query)}`
+      const endpoint = `/${encodeURIComponent(this.props.site.domain)}/export${api.serializeQuery(this.props.query)}`
 
       return (
         <a href={endpoint} download>

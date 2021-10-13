@@ -232,7 +232,7 @@ defmodule PlausibleWeb.Router do
     delete "/:website", SiteController, :delete_site
     delete "/:website/stats", SiteController, :reset_stats
 
-    get "/:domain/visitors.csv", StatsController, :csv_export
+    get "/:domain/export", StatsController, :csv_export
     get "/:domain/*path", StatsController, :stats
   end
 end
