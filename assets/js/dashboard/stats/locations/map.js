@@ -6,7 +6,6 @@ import * as d3 from "d3"
 import numberFormatter from '../../number-formatter'
 import FadeIn from '../../fade-in'
 import LazyLoader from '../../lazy-loader'
-import Bar from '../bar'
 import MoreLink from '../more-link'
 import * as api from '../../api'
 import { navigateToQuery } from '../../query'
