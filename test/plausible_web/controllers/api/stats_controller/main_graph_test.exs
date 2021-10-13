@@ -431,26 +431,6 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert List.first(plot) == 2
       assert List.last(plot) == 1
     end
-
-    test "displays pageviews for previous month", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
-      ])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-02-01&metric=pageviews"
-        )
-
-      assert %{"prev_plot" => prev_plot} = json_response(conn, 200)
-
-      assert Enum.count(prev_plot) == 28
-      assert List.first(prev_plot) == 0
-      assert List.last(prev_plot) == 1
-    end
   end
 
   describe "GET /api/stats/main-graph - bounce_rate plot" do
@@ -474,26 +454,6 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.count(plot) == 31
       assert List.first(plot) == 0
       assert List.last(plot) == 100
-    end
-
-    test "displays bounce_rate for previous month", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, timestamp: ~N[2021-01-03 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-01-03 00:10:00]),
-        build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
-      ])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-02-01&metric=bounce_rate"
-        )
-
-      assert %{"prev_plot" => prev_plot} = json_response(conn, 200)
-
-      assert Enum.count(prev_plot) == 28
-      assert List.first(prev_plot) == 0
-      assert List.last(prev_plot) == 100
     end
   end
 
@@ -525,33 +485,6 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.count(plot) == 31
       assert List.first(plot) == 0
       assert List.last(plot) == 300
-    end
-
-    test "displays visit_duration for previous month", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview,
-          pathname: "/page3",
-          user_id: @user_id,
-          timestamp: ~N[2021-01-31 00:10:00]
-        ),
-        build(:pageview,
-          pathname: "/page2",
-          user_id: @user_id,
-          timestamp: ~N[2021-01-31 00:20:00]
-        )
-      ])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-02-01&metric=visit_duration"
-        )
-
-      assert %{"prev_plot" => prev_plot} = json_response(conn, 200)
-
-      assert Enum.count(prev_plot) == 28
-      assert List.first(prev_plot) == 0
-      assert List.last(prev_plot) == 600
     end
   end
 end
