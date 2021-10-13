@@ -11,7 +11,7 @@ const labelFor = {
 	'cities': 'Cities',
 }
 
-export default class Geo extends React.Component {
+export default class Locations extends React.Component {
 	constructor(props) {
     super(props)
     this.tabKey = `geoTab__${  props.site.domain}`
@@ -71,7 +71,7 @@ export default class Geo extends React.Component {
         >
           <div className="w-full flex justify-between">
             <h3 className="font-bold dark:text-gray-100">
-              {labelFor[this.state.mode] || 'Geolocation'}
+              {labelFor[this.state.mode] || 'Locations'}
             </h3>
             <ul className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
               { this.renderPill('Map', 'map') }
