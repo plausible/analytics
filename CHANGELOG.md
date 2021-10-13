@@ -30,6 +30,7 @@ All notable changes to this project will be documented in this file.
 - Details modals are now responsive and take up less horizontal space on smaller screens to make it easier to scroll.
 - Fix reading config from file
 - Fix some links not opening correctly in new tab
+- UI fix for more than one row of custom event properties plausible/analytics#1383
 - UI fix for user menu and time picker overlapping plausible/analytics#1352
 
 ### Removed
