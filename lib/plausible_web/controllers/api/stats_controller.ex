@@ -404,9 +404,10 @@ defmodule PlausibleWeb.Api.StatsController do
   def countries(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    pagination = parse_pagination(params)
 
     countries =
-      Stats.breakdown(site, query, "visit:country", ["visitors"], {300, 1})
+      Stats.breakdown(site, query, "visit:country", ["visitors"], pagination)
       |> maybe_add_cr(site, query, {300, 1}, "country", "visit:country")
       |> transform_keys(%{"country" => "name", "visitors" => "count"})
       |> Enum.map(fn country ->
