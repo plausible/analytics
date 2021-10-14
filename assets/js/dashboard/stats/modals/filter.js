@@ -201,9 +201,9 @@ class FilterModal extends React.Component {
         {({ open }) => (
           <>
             <div className="w-24">
-              <Menu.Button className="inline-flex justify-between items-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500">
+              <Menu.Button className="inline-flex justify-between items-center w-full rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-850 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-indigo-500">
                 { this.selectedFilterType(filterName) }
-                <ChevronDownIcon className="-mr-2 ml-2 h-4 w-4 text-gray-500" aria-hidden="true" />
+                <ChevronDownIcon className="-mr-2 ml-2 h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
               </Menu.Button>
             </div>
 
@@ -219,7 +219,7 @@ class FilterModal extends React.Component {
             >
               <Menu.Items
                 static
-                className="z-10 origin-top-left absolute left-0 mt-2 w-24 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
+                className="z-10 origin-top-left absolute left-0 mt-2 w-24 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none"
               >
                 <div className="py-1">
                   <Menu.Item>
@@ -227,7 +227,7 @@ class FilterModal extends React.Component {
                       <span
                         onClick={() => this.setFilterType(filterName, 'is')}
                         className={classNames(
-                          active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+                          active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-200',
                           'cursor-pointer block px-4 py-2 text-sm'
                         )}
                       >
@@ -241,7 +241,7 @@ class FilterModal extends React.Component {
                         <span
                           onClick={() => this.setFilterType(filterName, 'is_not')}
                           className={classNames(
-                            active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+                            active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-200',
                             'cursor-pointer block px-4 py-2 text-sm'
                           )}
                         >

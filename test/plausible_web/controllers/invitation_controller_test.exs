@@ -121,6 +121,27 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert Timex.before?(Repo.reload!(user).trial_expiry_date, Timex.today())
       assert Repo.reload!(site).locked
     end
+
+    test "ownership transfer - if new owner does not have a trial - will set trial_expiry_date to yesterday",
+         %{
+           conn: conn,
+           user: user
+         } do
+      Repo.update_all(from(u in Plausible.Auth.User, where: u.id == ^user.id),
+        set: [trial_expiry_date: nil]
+      )
+
+      inviter = insert(:user)
+      site = insert(:site, locked: false)
+
+      invitation =
+        insert(:invitation, site_id: site.id, inviter: inviter, email: user.email, role: :owner)
+
+      post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+
+      assert Timex.before?(Repo.reload!(user).trial_expiry_date, Timex.today())
+      assert Repo.reload!(site).locked
+    end
   end
 
   describe "POST /sites/invitations/:invitation_id/reject" do

@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - Option to configure a custom name for the script file
 - Add Conversion Rate to Top Sources, Top Pages Devices, Countries when filtered by a goal plausible/analytics#1299
 - Add list view for countries report in dashboard plausible/analytics#1381
+- Add ability to view more than 100 custom goal properties plausible/analytics#1353
 
 ### Fixed
 - Fix weekly report time range plausible/analytics#951
@@ -31,6 +32,8 @@ All notable changes to this project will be documented in this file.
 - Details modals are now responsive and take up less horizontal space on smaller screens to make it easier to scroll.
 - Fix reading config from file
 - Fix some links not opening correctly in new tab
+- UI fix for more than one row of custom event properties plausible/analytics#1383
+- UI fix for user menu and time picker overlapping plausible/analytics#1352
 
 ### Removed
 - Removes AppSignal monitoring package
