@@ -570,7 +570,11 @@ defmodule PlausibleWeb.Api.StatsController do
         |> Map.put(:conversion_rate, calculate_cr(total_visitors, goal["count"]))
       end)
 
-    json(conn, conversions)
+    if params["csv"] do
+      conversions |> to_csv(["name", "count", "total_count"])
+    else
+      json(conn, conversions)
+    end
   end
 
   def prop_breakdown(conn, params) do

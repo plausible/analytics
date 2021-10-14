@@ -78,6 +78,7 @@ defmodule PlausibleWeb.StatsController do
       {'browsers.csv', Api.StatsController.browsers(conn, params)},
       {'operating_systems.csv', Api.StatsController.operating_systems(conn, params)},
       {'devices.csv', Api.StatsController.screen_sizes(conn, params)},
+      {'conversions.csv', Api.StatsController.conversions(conn, params)}
     ]
 
     {:ok, {_, zip_content}} = :zip.create(filename, csvs, [:memory])
