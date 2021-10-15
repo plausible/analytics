@@ -3,15 +3,15 @@ import Datamap from 'datamaps'
 import { withRouter } from 'react-router-dom'
 import * as d3 from "d3"
 
-import numberFormatter from '../number-formatter'
-import FadeIn from '../fade-in'
-import LazyLoader from '../lazy-loader'
-import MoreLink from './more-link'
-import * as api from '../api'
-import { navigateToQuery } from '../query'
-import { withThemeConsumer } from '../theme-consumer-hoc';
+import numberFormatter from '../../number-formatter'
+import FadeIn from '../../fade-in'
+import LazyLoader from '../../lazy-loader'
+import MoreLink from '../more-link'
+import * as api from '../../api'
+import { navigateToQuery } from '../../query'
+import { withThemeConsumer } from '../../theme-consumer-hoc';
 
-class Countries extends React.Component {
+class CountriesMap extends React.Component {
   constructor(props) {
     super(props)
     this.resizeMap = this.resizeMap.bind(this)
@@ -137,8 +137,7 @@ class Countries extends React.Component {
     if (this.state.countries) {
       return (
         <React.Fragment>
-          <h3 className="font-bold dark:text-gray-100">Countries</h3>
-          <div className="mx-auto mt-6" style={{width: '100%', maxWidth: '475px', height: '335px'}} id="map-container"></div>
+          <div className="mx-auto mt-4" style={{width: '100%', maxWidth: '475px', height: '335px'}} id="map-container"></div>
           <MoreLink site={this.props.site} list={this.state.countries} endpoint="countries" />
           { this.geolocationDbNotice() }
         </React.Fragment>
@@ -148,18 +147,14 @@ class Countries extends React.Component {
 
   render() {
     return (
-      <div
-        className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col dark:bg-gray-825 mt-6 w-full"
-      >
-        <LazyLoader onVisible={this.onVisible}>
-          { this.state.loading && <div className="mx-auto my-32 loading"><div></div></div> }
-          <FadeIn show={!this.state.loading}>
-            { this.renderBody() }
-          </FadeIn>
-        </LazyLoader>
-      </div>
+      <LazyLoader onVisible={this.onVisible}>
+        { this.state.loading && <div className="mx-auto my-32 loading"><div></div></div> }
+        <FadeIn show={!this.state.loading}>
+          { this.renderBody() }
+        </FadeIn>
+      </LazyLoader>
     )
   }
 }
 
-export default withRouter(withThemeConsumer(Countries))
+export default withRouter(withThemeConsumer(CountriesMap))

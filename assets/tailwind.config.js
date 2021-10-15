@@ -48,6 +48,7 @@ module.exports = {
       cursor: ['hover'],
       justifyContent: ['responsive'],
       backgroundColor: ['odd', 'even'],
+      shadow: ['dark']
     }
   },
   plugins: [

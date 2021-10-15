@@ -39,6 +39,9 @@ export default class PropertyBreakdown extends React.Component {
       loading: true,
       propKey: propKey,
       viewport: DEFAULT_WIDTH,
+      breakdown: [],
+      page: 1,
+      moreResultsAvailable: false
     }
 
     this.handleResize = this.handleResize.bind(this);
@@ -66,9 +69,17 @@ export default class PropertyBreakdown extends React.Component {
 
   fetchPropBreakdown() {
     if (this.props.query.filters['goal']) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/property/${encodeURIComponent(this.state.propKey)}`, this.props.query)
-        .then((res) => this.setState({loading: false, breakdown: res}))
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/property/${encodeURIComponent(this.state.propKey)}`, this.props.query, {limit: 100, page: this.state.page})
+        .then((res) => this.setState((state) => ({
+            loading: false,
+            breakdown: state.breakdown.concat(res),
+            moreResultsAvailable: res.length === 100
+          })))
     }
+  }
+
+  loadMore() {
+    this.setState({loading: true, page: this.state.page + 1}, this.fetchPropBreakdown.bind(this))
   }
 
   renderUrl(value) {
@@ -131,37 +142,48 @@ export default class PropertyBreakdown extends React.Component {
 
   changePropKey(newKey) {
     storage.setItem(this.storageKey, newKey)
-    this.setState({propKey: newKey, loading: true}, this.fetchPropBreakdown)
+    this.setState({propKey: newKey, loading: true, breakdown: [], page: 1, moreResultsAvailable: false}, this.fetchPropBreakdown)
+  }
+
+  renderLoading() {
+    if (this.state.loading) {
+      return <div className="px-4 py-2"><div className="loading sm mx-auto"><div></div></div></div>
+    } else if (this.state.moreResultsAvailable) {
+      return (
+        <div className="w-full text-center my-4">
+          <button onClick={this.loadMore.bind(this)} type="button" className="button">
+            Load more
+          </button>
+        </div>
+      )
+    }
   }
 
   renderBody() {
-    if (this.state.loading) {
-      return <div className="px-4 py-2"><div className="loading sm mx-auto"><div></div></div></div>
-    } else {
-      return this.state.breakdown.map((propValue) => this.renderPropValue(propValue))
-    }
+    return this.state.breakdown.map((propValue) => this.renderPropValue(propValue))
   }
 
   renderPill(key) {
     const isActive = this.state.propKey === key
 
     if (isActive) {
-      return <li key={key} className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold border-b-2 border-indigo-700 dark:border-indigo-500 ">{key}</li>
+      return <li key={key} className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold border-b-2 border-indigo-700 dark:border-indigo-500 mr-2">{key}</li>
     } else {
-      return <li key={key} className="hover:text-indigo-600 cursor-pointer" onClick={this.changePropKey.bind(this, key)}>{key}</li>
+      return <li key={key} className="hover:text-indigo-600 cursor-pointer mr-2" onClick={this.changePropKey.bind(this, key)}>{key}</li>
     }
   }
 
   render() {
     return (
-      <div className="w-full pl-6 mt-4">
-        <div className="flex items-center pb-1">
-          <span className="text-xs font-bold text-gray-600 dark:text-gray-300">Breakdown by:</span>
-          <ul className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2 leading-5 pl-1">
+      <div className="w-full pl-3 sm:pl-6 mt-4">
+        <div className="flex-col sm:flex-row flex items-center pb-1">
+          <span className="text-xs font-bold text-gray-600 dark:text-gray-300 self-start sm:self-auto mb-1 sm:mb-0">Breakdown by:</span>
+          <ul className="flex flex-wrap font-medium text-xs text-gray-500 dark:text-gray-400 leading-5 pl-1 sm:pl-2">
             { this.props.goal.prop_names.map(this.renderPill.bind(this)) }
           </ul>
         </div>
         { this.renderBody() }
+        { this.renderLoading()}
       </div>
     )
   }

@@ -29,7 +29,7 @@
           <%= form_for Plausible.Site.GoogleAuth.changeset(@site.google_auth), "/#{URI.encode_www_form(@site.domain)}/settings/google", [class: "max-w-xs"], fn f -> %>
             <div class="my-6">
               <div class="inline-block relative w-full">
-                <%= select f, :property, domains, prompt: "(Choose property)", class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
+                <%= select f, :property, domains, prompt: "(Choose property)", class: "dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100" %>
               </div>
             </div>
 
