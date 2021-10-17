@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- New UTM Tags `utm_content` and `utm_term` plausible/analytics#515
 - New parameter `metrics` for the `/api/v1/stats/timeseries` endpoint plausible/analytics#952
 - CSV export now includes pageviews, bounce rate and visit duration in addition to visitors plausible/analytics#952
 - Send stats to multiple dashboards by configuring a comma-separated list of domains plausible/analytics#968

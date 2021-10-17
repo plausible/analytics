@@ -113,6 +113,8 @@ defmodule Plausible.Session.Store do
       utm_medium: event.utm_medium,
       utm_source: event.utm_source,
       utm_campaign: event.utm_campaign,
+      utm_content: event.utm_content,
+      utm_term: event.utm_term,
       country_code: event.country_code,
       screen_size: event.screen_size,
       operating_system: event.operating_system,

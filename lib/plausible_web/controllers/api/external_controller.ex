@@ -92,6 +92,8 @@ defmodule PlausibleWeb.Api.ExternalController do
         utm_medium: query["utm_medium"],
         utm_source: query["utm_source"],
         utm_campaign: query["utm_campaign"],
+        utm_content: query["utm_content"],
+        utm_term: query["utm_term"],
         country_code: country_code,
         operating_system: ua && os_name(ua),
         operating_system_version: ua && os_version(ua),

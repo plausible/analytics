@@ -383,6 +383,66 @@ defmodule Plausible.Stats.Clickhouse do
     |> ClickhouseRepo.all()
   end
 
+  def utm_content(site, query, limit \\ 9, page \\ 1, show_noref \\ false) do
+    offset = (page - 1) * limit
+
+    q =
+      from(
+        s in base_session_query(site, query),
+        group_by: s.utm_content,
+        order_by: [desc: uniq(s.user_id), asc: min(s.start)],
+        limit: ^limit,
+        offset: ^offset,
+        select: %{
+          name: coalesce_string(s.utm_content, @no_ref),
+          count: uniq(s.user_id),
+          bounce_rate: bounce_rate(),
+          visit_duration: visit_duration()
+        }
+      )
+
+    q =
+      if show_noref do
+        q
+      else
+        from(s in q, where: s.utm_content != "")
+      end
+
+    q
+    |> filter_converted_sessions(site, query)
+    |> ClickhouseRepo.all()
+  end
+
+  def utm_term(site, query, limit \\ 9, page \\ 1, show_noref \\ false) do
+    offset = (page - 1) * limit
+
+    q =
+      from(
+        s in base_session_query(site, query),
+        group_by: s.utm_term,
+        order_by: [desc: uniq(s.user_id), asc: min(s.start)],
+        limit: ^limit,
+        offset: ^offset,
+        select: %{
+          name: coalesce_string(s.utm_term, @no_ref),
+          count: uniq(s.user_id),
+          bounce_rate: bounce_rate(),
+          visit_duration: visit_duration()
+        }
+      )
+
+    q =
+      if show_noref do
+        q
+      else
+        from(s in q, where: s.utm_term != "")
+      end
+
+    q
+    |> filter_converted_sessions(site, query)
+    |> ClickhouseRepo.all()
+  end
+
   def utm_sources(site, query, limit \\ 9, page \\ 1, show_noref \\ false) do
     offset = (page - 1) * limit
 
@@ -1191,6 +1251,22 @@ defmodule Plausible.Stats.Clickhouse do
       end
 
     sessions_q =
+      if query.filters["utm_content"] do
+        utm_content = query.filters["utm_content"]
+        from(s in sessions_q, where: s.utm_content == ^utm_content)
+      else
+        sessions_q
+      end
+
+    sessions_q =
+      if query.filters["utm_term"] do
+        utm_term = query.filters["utm_term"]
+        from(s in sessions_q, where: s.utm_term == ^utm_term)
+      else
+        sessions_q
+      end
+
+    sessions_q =
       if query.filters["referrer"] do
         ref = query.filters["referrer"]
         from(s in sessions_q, where: s.referrer == ^ref)
@@ -1211,7 +1287,8 @@ defmodule Plausible.Stats.Clickhouse do
 
     q =
       if query.filters["source"] || query.filters["referrer"] || query.filters["utm_medium"] ||
-           query.filters["utm_source"] || query.filters["utm_campaign"] || query.filters["screen"] ||
+           query.filters["utm_source"] || query.filters["utm_campaign"] ||
+           query.filters["utm_content"] || query.filters["utm_term"] || query.filters["screen"] ||
            query.filters["browser"] || query.filters["browser_version"] || query.filters["os"] ||
            query.filters["os_version"] || query.filters["country"] || query.filters["entry_page"] ||
            query.filters["exit_page"] do
@@ -1265,7 +1342,8 @@ defmodule Plausible.Stats.Clickhouse do
       )
 
     if query.filters["source"] || query.filters["referrer"] || query.filters["utm_medium"] ||
-         query.filters["utm_source"] || query.filters["utm_campaign"] || query.filters["screen"] ||
+         query.filters["utm_source"] || query.filters["utm_campaign"] ||
+         query.filters["utm_content"] || query.filters["utm_term"] || query.filters["screen"] ||
          query.filters["browser"] || query.filters["browser_version"] || query.filters["os"] ||
          query.filters["os_version"] || query.filters["country"] || query.filters["entry_page"] ||
          query.filters["exit_page"] || query.filters["page"] || query.filters["goal"] do
@@ -1374,6 +1452,22 @@ defmodule Plausible.Stats.Clickhouse do
         q
       end
 
+    q =
+      if query.filters["utm_content"] do
+        utm_content = query.filters["utm_content"]
+        from(s in q, where: s.utm_content == ^utm_content)
+      else
+        q
+      end
+
+    q =
+      if query.filters["utm_term"] do
+        utm_term = query.filters["utm_term"]
+        from(s in q, where: s.utm_term == ^utm_term)
+      else
+        q
+      end
+
     q = include_path_filter_entry(q, query.filters["entry_page"])
 
     q = include_path_filter_exit(q, query.filters["exit_page"])
@@ -1464,6 +1558,22 @@ defmodule Plausible.Stats.Clickhouse do
       if query.filters["utm_campaign"] do
         utm_campaign = query.filters["utm_campaign"]
         from(e in q, where: e.utm_campaign == ^utm_campaign)
+      else
+        q
+      end
+
+    q =
+      if query.filters["utm_content"] do
+        utm_content = query.filters["utm_content"]
+        from(e in q, where: e.utm_content == ^utm_content)
+      else
+        q
+      end
+
+    q =
+      if query.filters["utm_term"] do
+        utm_term = query.filters["utm_term"]
+        from(e in q, where: e.utm_term == ^utm_term)
       else
         q
       end
@@ -1757,6 +1867,18 @@ defmodule Plausible.Stats.Clickhouse do
           from(e in q,
             select: {e.utm_campaign},
             where: fragment("? ilike ?", e.utm_campaign, ^filter_query)
+          )
+
+        "utm_content" ->
+          from(e in q,
+            select: {e.utm_content},
+            where: fragment("? ilike ?", e.utm_content, ^filter_query)
+          )
+
+        "utm_term" ->
+          from(e in q,
+            select: {e.utm_term},
+            where: fragment("? ilike ?", e.utm_term, ^filter_query)
           )
 
         "referrer" ->

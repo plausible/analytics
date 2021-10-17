@@ -5,6 +5,8 @@ defmodule Plausible.Stats.Filters do
     "utm_medium",
     "utm_source",
     "utm_campaign",
+    "utm_content",
+    "utm_term",
     "screen",
     "device",
     "browser",
