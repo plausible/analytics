@@ -10,7 +10,9 @@ const TITLES = {
   sources: 'Top Sources',
   utm_mediums: 'Top UTM mediums',
   utm_sources: 'Top UTM sources',
-  utm_campaigns: 'Top UTM campaigns'
+  utm_campaigns: 'Top UTM campaigns',
+  utm_contents: 'Top UTM contents',
+  utm_terms: 'Top UTM Terms'
 }
 
 class SourcesModal extends React.Component {
@@ -84,6 +86,8 @@ class SourcesModal extends React.Component {
     if (filter === 'utm_mediums') query.set('utm_medium', source.name)
     if (filter === 'utm_sources') query.set('utm_source', source.name)
     if (filter === 'utm_campaigns') query.set('utm_campaign', source.name)
+    if (filter === 'utm_contents') query.set('utm_content', source.name)
+    if (filter === 'utm_terms') query.set('utm_term', source.name)
 
     console.log(source)
 

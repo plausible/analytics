@@ -141,6 +141,8 @@ const UTM_TAGS = {
   utm_medium: {label: 'UTM Medium', endpoint: 'utm_mediums'},
   utm_source: {label: 'UTM Source', endpoint: 'utm_sources'},
   utm_campaign: {label: 'UTM Campaign', endpoint: 'utm_campaigns'},
+  utm_content: {label: 'UTM Content', endpoint: 'utm_contents'},
+  utm_term: {label: 'UTM Term', endpoint: 'utm_terms'},
 }
 
 class UTMSources extends React.Component {
@@ -292,6 +294,8 @@ export default class SourceList extends React.Component {
         <li className={this.state.tab === 'utm_medium' ? activeClass : defaultClass} onClick={this.setTab('utm_medium')}>Medium</li>
         <li className={this.state.tab === 'utm_source' ? activeClass : defaultClass} onClick={this.setTab('utm_source')}>Source</li>
         <li className={this.state.tab === 'utm_campaign' ? activeClass : defaultClass} onClick={this.setTab('utm_campaign')}>Campaign</li>
+        <li className={this.state.tab === 'utm_content' ? activeClass : defaultClass} onClick={this.setTab('utm_content')}>Content</li>
+        <li className={this.state.tab === 'utm_term' ? activeClass : defaultClass} onClick={this.setTab('utm_term')}>Term</li>
       </ul>
     )
   }
@@ -304,6 +308,10 @@ export default class SourceList extends React.Component {
     } else if (this.state.tab === 'utm_source') {
       return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
     } else if (this.state.tab === 'utm_campaign') {
+      return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
+    } else if (this.state.tab === 'utm_content') {
+      return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
+    } else if (this.state.tab === 'utm_term') {
       return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
     }
   }

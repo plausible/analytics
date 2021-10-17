@@ -21,6 +21,8 @@ defmodule Plausible.Session.StoreTest do
         utm_medium: "medium",
         utm_source: "source",
         utm_campaign: "campaign",
+        utm_content: "content",
+        utm_term: "term",
         browser: "browser",
         browser_version: "55",
         country_code: "EE",
@@ -47,6 +49,8 @@ defmodule Plausible.Session.StoreTest do
     assert session.utm_medium == event.utm_medium
     assert session.utm_source == event.utm_source
     assert session.utm_campaign == event.utm_campaign
+    assert session.utm_content == event.utm_content
+    assert session.utm_term == event.utm_term
     assert session.country_code == event.country_code
     assert session.screen_size == event.screen_size
     assert session.operating_system == event.operating_system

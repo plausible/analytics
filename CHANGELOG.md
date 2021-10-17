@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Delete a site and all related data through the Sites API
 - Subscribed users can see their Paddle invoices from the last 12 months under the user settings
 - Allow custom styles to be passed to embedded iframe plausible/analytics#1522
+- New UTM Tags `utm_content` and `utm_term` plausible/analytics#515
 
 ### Fixed
 - UI fix where multi-line text in pills would not be underlined properly on small screens.

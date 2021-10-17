@@ -200,6 +200,18 @@ defmodule Plausible.Stats.FilterSuggestions do
             where: fragment("? ilike ?", e.utm_campaign, ^filter_query)
           )
 
+        "utm_content" ->
+          from(e in q,
+            select: {e.utm_content},
+            where: fragment("? ilike ?", e.utm_content, ^filter_query)
+          )
+
+        "utm_term" ->
+          from(e in q,
+            select: {e.utm_term},
+            where: fragment("? ilike ?", e.utm_term, ^filter_query)
+          )
+
         "referrer" ->
           from(e in q,
             select: {e.referrer},

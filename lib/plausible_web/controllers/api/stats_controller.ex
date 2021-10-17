@@ -287,6 +287,44 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  def utm_contents(conn, params) do
+    site = conn.assigns[:site]
+
+    query =
+      Query.from(site.timezone, params)
+      |> Filters.add_prefix()
+      |> maybe_hide_noref("visit:utm_content", params)
+
+    pagination = parse_pagination(params)
+    metrics = ["visitors", "bounce_rate", "visit_duration"]
+
+    res =
+      Stats.breakdown(site, query, "visit:utm_content", metrics, pagination)
+      |> maybe_add_cr(site, query, pagination, "utm_content", "visit:utm_content")
+      |> transform_keys(%{"utm_content" => "name", "visitors" => "count"})
+
+    json(conn, res)
+  end
+
+  def utm_terms(conn, params) do
+    site = conn.assigns[:site]
+
+    query =
+      Query.from(site.timezone, params)
+      |> Filters.add_prefix()
+      |> maybe_hide_noref("visit:utm_term", params)
+
+    pagination = parse_pagination(params)
+    metrics = ["visitors", "bounce_rate", "visit_duration"]
+
+    res =
+      Stats.breakdown(site, query, "visit:utm_term", metrics, pagination)
+      |> maybe_add_cr(site, query, pagination, "utm_term", "visit:utm_term")
+      |> transform_keys(%{"utm_term" => "name", "visitors" => "count"})
+
+    json(conn, res)
+  end
+
   def utm_sources(conn, params) do
     site = conn.assigns[:site]
 

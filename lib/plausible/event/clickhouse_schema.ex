@@ -17,6 +17,8 @@ defmodule Plausible.ClickhouseEvent do
     field :utm_medium, :string, default: ""
     field :utm_source, :string, default: ""
     field :utm_campaign, :string, default: ""
+    field :utm_content, :string, default: ""
+    field :utm_term, :string, default: ""
 
     field :country_code, :string, default: ""
     field :subdivision1_code, :string, default: ""
@@ -53,6 +55,8 @@ defmodule Plausible.ClickhouseEvent do
         :utm_medium,
         :utm_source,
         :utm_campaign,
+        :utm_content,
+        :utm_term,
         :country_code,
         :subdivision1_code,
         :subdivision2_code,

@@ -248,6 +248,22 @@ defmodule Plausible.Stats.Clickhouse do
         q
       end
 
+    q =
+      if query.filters["utm_content"] do
+        utm_content = query.filters["utm_content"]
+        from(s in q, where: s.utm_content == ^utm_content)
+      else
+        q
+      end
+
+    q =
+      if query.filters["utm_term"] do
+        utm_term = query.filters["utm_term"]
+        from(s in q, where: s.utm_term == ^utm_term)
+      else
+        q
+      end
+
     q = include_path_filter_entry(q, query.filters["entry_page"])
 
     q = include_path_filter_exit(q, query.filters["exit_page"])
@@ -338,6 +354,22 @@ defmodule Plausible.Stats.Clickhouse do
       if query.filters["utm_campaign"] do
         utm_campaign = query.filters["utm_campaign"]
         from(e in q, where: e.utm_campaign == ^utm_campaign)
+      else
+        q
+      end
+
+    q =
+      if query.filters["utm_content"] do
+        utm_content = query.filters["utm_content"]
+        from(e in q, where: e.utm_content == ^utm_content)
+      else
+        q
+      end
+
+    q =
+      if query.filters["utm_term"] do
+        utm_term = query.filters["utm_term"]
+        from(e in q, where: e.utm_term == ^utm_term)
       else
         q
       end
