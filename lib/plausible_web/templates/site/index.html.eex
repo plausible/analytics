@@ -1,7 +1,7 @@
 <div x-data="{selectedInvitation: null, invitationOpen: false, invitations: <%= Enum.map(@invitations, &({&1.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode! %>}" @keydown.escape.window="invitationOpen = false" class="container pt-6">
 
   <%= if @needs_to_upgrade do %>
-    <div class="rounded-md bg-yellow-50 p-4">
+    <div class="rounded-md bg-yellow-100 p-4">
       <div class="flex">
         <div class="flex-shrink-0">
           <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

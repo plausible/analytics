@@ -38,6 +38,7 @@ defmodule Plausible.Auth.User do
     |> validate_confirmation(:password)
     |> hash_password()
     |> start_trial
+    |> set_email_verified
     |> unique_constraint(:email)
   end
 
@@ -82,6 +83,14 @@ defmodule Plausible.Auth.User do
       Timex.today() |> Timex.shift(years: 100)
     else
       Timex.today() |> Timex.shift(days: 30)
+    end
+  end
+
+  defp set_email_verified(user) do
+    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :enable_email_verification) do
+      change(user, email_verified: false)
+    else
+      change(user, email_verified: true)
     end
   end
 end

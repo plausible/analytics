@@ -41,18 +41,16 @@ defmodule PlausibleWeb.AuthController do
       if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
         case Repo.insert(user) do
           {:ok, user} ->
-            code = Auth.issue_email_verification(user)
-            Logger.info("VERIFICATION CODE: #{code}")
-            email_template = PlausibleWeb.Email.activation_email(user, code)
-            Plausible.Mailer.send_email(email_template)
+            conn = set_user_session(conn, user)
 
-            conn
-            |> put_session(:current_user_id, user.id)
-            |> put_resp_cookie("logged_in", "true",
-              http_only: false,
-              max_age: 60 * 60 * 24 * 365 * 5000
-            )
-            |> redirect(to: "/activate")
+            case user.email_verified do
+              false ->
+                send_email_verification(user)
+                redirect(conn, to: "/activate")
+
+              true ->
+                redirect(conn, to: "/sites/new")
+            end
 
           {:error, changeset} ->
             render(conn, "register_form.html",
@@ -108,18 +106,16 @@ defmodule PlausibleWeb.AuthController do
       if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
         case Repo.insert(user) do
           {:ok, user} ->
-            code = Auth.issue_email_verification(user)
-            Logger.info("VERIFICATION CODE: #{code}")
-            email_template = PlausibleWeb.Email.activation_email(user, code)
-            Plausible.Mailer.send_email(email_template)
+            conn = set_user_session(conn, user)
 
-            conn
-            |> put_session(:current_user_id, user.id)
-            |> put_resp_cookie("logged_in", "true",
-              http_only: false,
-              max_age: 60 * 60 * 24 * 365 * 5000
-            )
-            |> redirect(to: "/activate")
+            case user.email_verified do
+              false ->
+                send_email_verification(user)
+                redirect(conn, to: "/activate")
+
+              true ->
+                redirect(conn, to: "/sites")
+            end
 
           {:error, changeset} ->
             render(conn, "register_from_invitation_form.html",
@@ -137,6 +133,22 @@ defmodule PlausibleWeb.AuthController do
         )
       end
     end
+  end
+
+  defp send_email_verification(user) do
+    code = Auth.issue_email_verification(user)
+    Logger.info("VERIFICATION CODE: #{code}")
+    email_template = PlausibleWeb.Email.activation_email(user, code)
+    Plausible.Mailer.send_email(email_template)
+  end
+
+  defp set_user_session(conn, user) do
+    conn
+    |> put_session(:current_user_id, user.id)
+    |> put_resp_cookie("logged_in", "true",
+      http_only: false,
+      max_age: 60 * 60 * 24 * 365 * 5000
+    )
   end
 
   def activate_form(conn, _params) do

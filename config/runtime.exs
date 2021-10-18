@@ -116,6 +116,11 @@ disable_auth =
   |> get_var_from_path_or_env("DISABLE_AUTH", "false")
   |> String.to_existing_atom()
 
+enable_email_verification =
+  config_dir
+  |> get_var_from_path_or_env("ENABLE_EMAIL_VERIFICATION", "false")
+  |> String.to_existing_atom()
+
 disable_registration =
   config_dir
   |> get_var_from_path_or_env("DISABLE_REGISTRATION", "false")
@@ -184,6 +189,7 @@ config :plausible,
 
 config :plausible, :selfhost,
   disable_authentication: disable_auth,
+  enable_email_verification: enable_email_verification,
   disable_registration: if(!disable_auth, do: disable_registration, else: false)
 
 config :plausible, PlausibleWeb.Endpoint,
