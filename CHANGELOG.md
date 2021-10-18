@@ -34,9 +34,13 @@ All notable changes to this project will be documented in this file.
 - Fix some links not opening correctly in new tab
 - UI fix for more than one row of custom event properties plausible/analytics#1383
 - UI fix for user menu and time picker overlapping plausible/analytics#1352
+- Respect the `path` component of BASE_URL to allow subfolder installatons
 
 ### Removed
 - Removes AppSignal monitoring package
+
+### Changes
+- Disable email verification by default. Added a configuration option `ENABLE_EMAIL_VERIFICATION=true` if you want to keep the old behaviour
 
 ## [1.3] - 2021-04-14
 
