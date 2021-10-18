@@ -194,9 +194,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       PlausibleWeb.RemoteIp.get(conn)
       |> Geolix.lookup()
 
-    if result && result[:country] && result[:country].country do
-      result[:country].country.iso_code
-    end
+    get_in(result, [:country, :country, :iso_code])
   end
 
   defp parse_referrer(_, nil), do: nil

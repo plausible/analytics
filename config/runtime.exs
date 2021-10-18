@@ -386,7 +386,8 @@ if config_env() != :test && geolite2_country_db do
       %{
         id: :country,
         adapter: Geolix.Adapter.MMDB2,
-        source: geolite2_country_db
+        source: geolite2_country_db,
+        result_as: :raw
       }
     ]
 end
