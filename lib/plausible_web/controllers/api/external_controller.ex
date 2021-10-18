@@ -50,9 +50,16 @@ defmodule PlausibleWeb.Api.ExternalController do
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
 
     if user_agent do
-      Cachex.fetch!(:user_agents, user_agent, fn ua ->
-        {:commit, UAInspector.parse(ua)}
-      end)
+      res =
+        Cachex.fetch(:user_agents, user_agent, fn ua ->
+          UAInspector.parse(ua)
+        end)
+
+      case res do
+        {:ok, user_agent} -> user_agent
+        {:commit, user_agent} -> user_agent
+        _ -> nil
+      end
     end
   end
 
