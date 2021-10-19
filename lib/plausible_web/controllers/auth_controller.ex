@@ -553,6 +553,6 @@ defmodule PlausibleWeb.AuthController do
 
     site = Repo.get(Plausible.Site, site_id)
 
-    redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/search-console")
+    redirect(conn, to: Routes.site_path(conn, :settings_google_integration, site.domain))
   end
 end

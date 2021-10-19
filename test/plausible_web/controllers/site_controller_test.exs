@@ -365,7 +365,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       updated_auth = Repo.one(Plausible.Site.GoogleAuth)
       assert updated_auth.property == "some-new-property.com"
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/search-console"
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/google-integration"
     end
   end
 
@@ -377,7 +377,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = delete(conn, "/#{site.domain}/settings/google")
 
       refute Repo.exists?(Plausible.Site.GoogleAuth)
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/search-console"
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/google-integration"
     end
   end
 

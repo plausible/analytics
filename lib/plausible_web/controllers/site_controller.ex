@@ -220,7 +220,7 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def settings_search_console(conn, _params) do
+  def settings_google_integration(conn, _params) do
     site =
       conn.assigns[:site]
       |> Repo.preload([:google_auth, :custom_domain])
@@ -232,7 +232,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> assign(:skip_plausible_tracking, true)
-    |> render("settings_search_console.html",
+    |> render("settings_google_integration.html",
       site: site,
       search_console_domains: search_console_domains,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
@@ -285,7 +285,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Google integration saved successfully")
-    |> redirect(to: Routes.site_path(conn, :settings_search_console, site.domain))
+    |> redirect(to: Routes.site_path(conn, :settings_google_integration, site.domain))
   end
 
   def delete_google_auth(conn, _params) do
@@ -297,7 +297,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Google account unlinked from Plausible")
-    |> redirect(to: Routes.site_path(conn, :settings_search_console, site.domain))
+    |> redirect(to: Routes.site_path(conn, :settings_google_integration, site.domain))
   end
 
   def update_settings(conn, %{"site" => site_params}) do

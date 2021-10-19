@@ -1,5 +1,7 @@
 defmodule Plausible.Google.Api do
-  @scope URI.encode_www_form("https://www.googleapis.com/auth/webmasters.readonly email")
+  @scope URI.encode_www_form(
+           "https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly email"
+         )
   @verified_permission_levels ["siteOwner", "siteFullUser", "siteRestrictedUser"]
 
   def authorize_url(site_id) do
