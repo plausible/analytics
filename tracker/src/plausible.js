@@ -47,7 +47,13 @@
 
     var payload = {}
     payload.n = eventName
+    {{#if aggregate}}
+    var specifiedLocation = scriptEl.getAttribute('data-location');
+    var locationGetter = window[scriptEl.getAttribute('data-get-location')] || function() { return location.href };
+    payload.u = specifiedLocation || locationGetter();
+    {{else}}
     payload.u = location.href
+    {{/if}}
     payload.d = scriptEl.getAttribute('data-domain')
     payload.r = document.referrer || null
     payload.w = window.innerWidth
