@@ -47,7 +47,7 @@
 
     var payload = {}
     payload.n = eventName
-    {{#if aggregate}}
+    {{#if custom_location}}
     var specifiedLocation = scriptEl.getAttribute('data-location');
     var locationGetter = window[scriptEl.getAttribute('data-get-location')] || function() { return location.href };
     payload.u = specifiedLocation || locationGetter();
