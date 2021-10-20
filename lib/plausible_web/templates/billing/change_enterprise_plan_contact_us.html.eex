@@ -1,0 +1,16 @@
+<div class="mx-auto mt-6 text-center">
+  <h1 class="text-3xl font-black dark:text-gray-100">Change subscription plan</h1>
+</div>
+
+<div class="w-full max-w-lg px-4 mx-auto mt-4">
+  <div class="flex-1 p-8 mt-8 bg-white rounded shadow-md dark:bg-gray-800">
+    <div class="w-full pb-4 dark:text-gray-100">
+      <span>Need to change your limits?</span>
+    </div>
+
+    <ul class="w-full py-4 dark:text-gray-100">
+      <span>Your account is on an enterprise plan. If you want to increase or decrease the limits on your account, please contact us at enterprise@plausible.io</span>
+    </ul>
+
+  </div>
+</div>

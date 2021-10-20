@@ -1,0 +1,8 @@
+Automated notice about an account that has gone over their enteprise plan limit.
+
+Customer email: <% @user.email %>
+Last billing cycle: <%= date_format(@last_cycle.first) %> to <%= date_format(@last_cycle.last) %>
+Usage: <%= PlausibleWeb.StatsView.large_number_format(@usage) %> billable pageviews
+
+--<br />
+<%= plausible_url() %><br />

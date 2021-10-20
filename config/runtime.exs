@@ -377,6 +377,14 @@ config :kaffy,
       resources: [
         site: [schema: Plausible.Site, admin: Plausible.SiteAdmin]
       ]
+    ],
+    billing: [
+      resources: [
+        enterprise_plan: [
+          schema: Plausible.Billing.EnterprisePlan,
+          admin: Plausible.Billing.EnterprisePlanAdmin
+        ]
+      ]
     ]
   ]
 

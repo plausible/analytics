@@ -6,20 +6,122 @@ defmodule PlausibleWeb.BillingController do
 
   plug PlausibleWeb.RequireAccountPlug
 
-  def admin_email do
-    Application.get_env(:plausible, :admin_email)
+  def upgrade(conn, _params) do
+    user =
+      conn.assigns[:current_user]
+      |> Repo.preload(:enterprise_plan)
+
+    cond do
+      user.subscription && user.subscription.status == "active" ->
+        redirect(conn, to: Routes.billing_path(conn, :change_plan_form))
+
+      user.enterprise_plan ->
+        redirect(conn,
+          to: Routes.billing_path(conn, :upgrade_enterprise_plan, user.enterprise_plan.id)
+        )
+
+      true ->
+        render(conn, "upgrade.html",
+          usage: Plausible.Billing.usage(user),
+          user: user,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+    end
   end
 
-  def change_plan_form(conn, _params) do
-    subscription = Billing.active_subscription_for(conn.assigns[:current_user].id)
+  def upgrade_enterprise_plan(conn, %{"plan_id" => plan_id}) do
+    user =
+      conn.assigns[:current_user]
+      |> Repo.preload(:enterprise_plan)
 
-    if subscription do
-      render(conn, "change_plan.html",
-        subscription: subscription,
+    if user.enterprise_plan && user.enterprise_plan.id == String.to_integer(plan_id) do
+      usage = Plausible.Billing.usage(conn.assigns[:current_user])
+
+      render(conn, "upgrade_to_plan.html",
+        usage: usage,
+        user: user,
         layout: {PlausibleWeb.LayoutView, "focus.html"}
       )
     else
-      redirect(conn, to: "/billing/upgrade")
+      render_error(conn, 404)
+    end
+  end
+
+  def upgrade_to_plan(conn, %{"plan_id" => plan_id}) do
+    plan = Plausible.Billing.Plans.for_product_id(plan_id)
+
+    if plan do
+      cycle = if plan[:monthly_product_id] == plan_id, do: "monthly", else: "yearly"
+      plan = Map.merge(plan, %{cycle: cycle, product_id: plan_id})
+      usage = Plausible.Billing.usage(conn.assigns[:current_user])
+
+      render(conn, "upgrade_to_plan.html",
+        usage: usage,
+        plan: plan,
+        user: conn.assigns[:current_user],
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
+      )
+    else
+      render_error(conn, 404)
+    end
+  end
+
+  def upgrade_success(conn, _params) do
+    render(conn, "upgrade_success.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+  end
+
+  def change_plan_form(conn, _params) do
+    user =
+      conn.assigns[:current_user]
+      |> Repo.preload(:enterprise_plan)
+
+    subscription = Billing.active_subscription_for(user.id)
+
+    cond do
+      subscription && user.enterprise_plan ->
+        redirect(conn,
+          to: Routes.billing_path(conn, :change_enterprise_plan, user.enterprise_plan.id)
+        )
+
+      subscription ->
+        render(conn, "change_plan.html",
+          subscription: subscription,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
+      true ->
+        redirect(conn, to: Routes.billing_path(conn, :upgrade))
+    end
+  end
+
+  def change_enterprise_plan(conn, %{"plan_id" => plan_id}) do
+    user =
+      conn.assigns[:current_user]
+      |> Repo.preload(:enterprise_plan)
+
+    cond do
+      is_nil(user.subscription) ->
+        redirect(conn, to: "/billing/upgrade")
+
+      is_nil(user.enterprise_plan) ->
+        render_error(conn, 404)
+
+      user.enterprise_plan.id !== String.to_integer(plan_id) ->
+        render_error(conn, 404)
+
+      user.enterprise_plan.paddle_plan_id == user.subscription.paddle_plan_id ->
+        render(conn, "change_enterprise_plan_contact_us.html",
+          user: user,
+          plan: user.enterprise_plan,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
+      true ->
+        render(conn, "change_enterprise_plan.html",
+          user: user,
+          plan: user.enterprise_plan,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
     end
   end
 
@@ -76,40 +178,5 @@ defmodule PlausibleWeb.BillingController do
         )
         |> redirect(to: "/settings")
     end
-  end
-
-  def upgrade(conn, _params) do
-    usage = Plausible.Billing.usage(conn.assigns[:current_user])
-    today = Timex.today()
-
-    render(conn, "upgrade.html",
-      usage: usage,
-      today: today,
-      user: conn.assigns[:current_user],
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
-  end
-
-  def upgrade_to_plan(conn, %{"plan_id" => plan_id}) do
-    plan = Plausible.Billing.Plans.for_product_id(plan_id)
-
-    if plan do
-      cycle = if plan[:monthly_product_id] == plan_id, do: "monthly", else: "yearly"
-      plan = Map.merge(plan, %{cycle: cycle, product_id: plan_id})
-      usage = Plausible.Billing.usage(conn.assigns[:current_user])
-
-      render(conn, "upgrade_to_plan.html",
-        usage: usage,
-        plan: plan,
-        user: conn.assigns[:current_user],
-        layout: {PlausibleWeb.LayoutView, "focus.html"}
-      )
-    else
-      render_error(conn, 404)
-    end
-  end
-
-  def upgrade_success(conn, _params) do
-    render(conn, "upgrade_success.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 end

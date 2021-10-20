@@ -38,31 +38,47 @@ defmodule Plausible.Workers.CheckUsage do
         from u in Plausible.Auth.User,
           join: s in Plausible.Billing.Subscription,
           on: s.user_id == u.id,
+          left_join: ep in Plausible.Billing.EnterprisePlan,
+          on: ep.user_id == u.id,
           where: s.status == "active",
           where: not is_nil(s.last_bill_date),
           # Accounts for situations like last_bill_date==2021-01-31 AND today==2021-03-01. Since February never reaches the 31st day, the account is checked on 2021-03-01.
           where:
             least(day_of_month(s.last_bill_date), day_of_month(last_day_of_month(^yesterday))) ==
               day_of_month(^yesterday),
-          preload: [subscription: s]
+          preload: [subscription: s, enterprise_plan: ep]
       )
 
     for subscriber <- active_subscribers do
       allowance = Plausible.Billing.Plans.allowance(subscriber.subscription)
       {last_last_month, last_month} = billing_mod.last_two_billing_months_usage(subscriber)
+      is_over_limit = last_last_month > allowance && last_month > allowance
 
-      if last_last_month > allowance && last_month > allowance do
-        {_, last_cycle} = billing_mod.last_two_billing_cycles(subscriber)
-        suggested_plan = Plausible.Billing.Plans.suggested_plan(subscriber, last_month)
+      cond do
+        is_over_limit && subscriber.enterprise_plan ->
+          {_, last_cycle} = billing_mod.last_two_billing_cycles(subscriber)
 
-        template =
-          PlausibleWeb.Email.over_limit_email(subscriber, last_month, last_cycle, suggested_plan)
+          template =
+            PlausibleWeb.Email.enterprise_over_limit_email(subscriber, last_month, last_cycle)
 
-        try do
-          Plausible.Mailer.send_email(template)
-        rescue
-          _ -> nil
-        end
+          Plausible.Mailer.send_email_safe(template)
+
+        is_over_limit ->
+          {_, last_cycle} = billing_mod.last_two_billing_cycles(subscriber)
+          suggested_plan = Plausible.Billing.Plans.suggested_plan(subscriber, last_month)
+
+          template =
+            PlausibleWeb.Email.over_limit_email(
+              subscriber,
+              last_month,
+              last_cycle,
+              suggested_plan
+            )
+
+          Plausible.Mailer.send_email_safe(template)
+
+        true ->
+          nil
       end
     end
 

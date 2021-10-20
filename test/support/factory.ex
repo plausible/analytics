@@ -116,6 +116,15 @@ defmodule Plausible.Factory do
     }
   end
 
+  def enterprise_plan_factory do
+    %Plausible.Billing.EnterprisePlan{
+      paddle_plan_id: sequence(:paddle_plan_id, &"plan-#{&1}"),
+      billing_interval: :monthly,
+      monthly_pageview_limit: 1_000_000,
+      hourly_api_request_limit: 3000
+    }
+  end
+
   def google_auth_factory do
     %Plausible.Site.GoogleAuth{
       email: sequence(:google_auth_email, &"email-#{&1}@email.com"),

@@ -25,6 +25,7 @@ defmodule Plausible.Auth.User do
     has_many :api_keys, Plausible.Auth.ApiKey
     has_one :google_auth, Plausible.Site.GoogleAuth
     has_one :subscription, Plausible.Billing.Subscription
+    has_one :enterprise_plan, Plausible.Billing.EnterprisePlan
 
     timestamps()
   end

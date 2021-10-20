@@ -1,4 +1,6 @@
 defmodule Plausible.Billing.Plans do
+  use Plausible.Repo
+
   @unlisted_plans_v1 [
     %{limit: 150_000_000, yearly_product_id: "648089", yearly_cost: "$4800"}
   ]
@@ -30,21 +32,15 @@ defmodule Plausible.Billing.Plans do
     end)
   end
 
-  def subscription_quota("free_10k"), do: "10k"
-
-  def subscription_quota(product_id) do
-    case for_product_id(product_id) do
-      nil -> raise "Unknown quota for subscription #{product_id}"
-      product -> number_format(product[:limit])
-    end
-  end
-
   def subscription_interval("free_10k"), do: "N/A"
 
   def subscription_interval(product_id) do
     case for_product_id(product_id) do
       nil ->
-        raise "Unknown interval for subscription #{product_id}"
+        enterprise_plan =
+          Repo.get_by(Plausible.Billing.EnterprisePlan, paddle_plan_id: product_id)
+
+        enterprise_plan && enterprise_plan.billing_interval
 
       plan ->
         if product_id == plan[:monthly_product_id] do
@@ -62,6 +58,11 @@ defmodule Plausible.Billing.Plans do
 
     if found do
       Map.fetch!(found, :limit)
+    else
+      enterprise_plan =
+        Repo.get_by(Plausible.Billing.EnterprisePlan, paddle_plan_id: subscription.paddle_plan_id)
+
+      enterprise_plan && enterprise_plan.monthly_pageview_limit
     end
   end
 
