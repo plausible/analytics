@@ -24,13 +24,19 @@ defmodule PlausibleWeb.Api.StatsController do
     labels = Enum.map(timeseries_result, fn row -> row["date"] end)
     present_index = present_index_for(site, query, labels)
 
+    imported_plot =
+      if site.has_imported_stats do
+        Enum.map(plot, &(&1 / 2))
+      end
+
     json(conn, %{
       plot: plot,
       labels: labels,
       present_index: present_index,
       top_stats: top_stats,
       interval: query.interval,
-      sample_percent: sample_percent
+      sample_percent: sample_percent,
+      imported_plot: imported_plot
     })
   end
 
