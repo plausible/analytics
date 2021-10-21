@@ -4,9 +4,10 @@ defmodule PlausibleWeb.Api.StatsController do
   use Plug.ErrorHandler
   alias Plausible.Stats
   alias Plausible.Stats.{Query, Filters}
+  alias Plausible.Google
 
   def main_graph(conn, params) do
-    site = conn.assigns[:site]
+    site = conn.assigns[:site] |> Repo.preload(:google_auth)
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
 
     timeseries_query =
@@ -24,13 +25,19 @@ defmodule PlausibleWeb.Api.StatsController do
     labels = Enum.map(timeseries_result, fn row -> row["date"] end)
     present_index = present_index_for(site, query, labels)
 
+    google_plot =
+      if site.google_auth && site.google_auth.analytics do
+        Enum.map(plot, &(&1 / 2))
+      end
+
     json(conn, %{
       plot: plot,
       labels: labels,
       present_index: present_index,
       top_stats: top_stats,
       interval: query.interval,
-      sample_percent: sample_percent
+      sample_percent: sample_percent,
+      google_plot: google_plot
     })
   end
 
