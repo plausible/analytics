@@ -682,4 +682,48 @@ defmodule PlausibleWeb.SiteController do
     |> put_flash(:success, "Custom domain deleted successfully")
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
   end
+
+  def enable_google_search_console(conn, _params) do
+    site = conn.assigns[:site] |> Repo.preload(:google_auth)
+
+    if site.google_auth do
+      Plausible.Site.GoogleAuth.changeset(site.google_auth, %{search_console: true})
+      |> Repo.update!()
+    end
+
+    redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/google-integration")
+  end
+
+  def disable_google_search_console(conn, _params) do
+    site = conn.assigns[:site] |> Repo.preload(:google_auth)
+
+    if site.google_auth do
+      Plausible.Site.GoogleAuth.changeset(site.google_auth, %{search_console: false})
+      |> Repo.update!()
+    end
+
+    redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/google-integration")
+  end
+
+  def enable_google_analytics(conn, _params) do
+    site = conn.assigns[:site] |> Repo.preload(:google_auth)
+
+    if site.google_auth do
+      Plausible.Site.GoogleAuth.changeset(site.google_auth, %{analytics: true})
+      |> Repo.update!()
+    end
+
+    redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/google-integration")
+  end
+
+  def disable_google_analytics(conn, _params) do
+    site = conn.assigns[:site] |> Repo.preload(:google_auth)
+
+    if site.google_auth do
+      Plausible.Site.GoogleAuth.changeset(site.google_auth, %{analytics: false})
+      |> Repo.update!()
+    end
+
+    redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/google-integration")
+  end
 end

@@ -19,21 +19,31 @@ defmodule Plausible.Site.GoogleAuth do
 
   def changeset(auth, attrs \\ %{}) do
     auth
-    |> cast(attrs, [:refresh_token, :access_token, :expires, :email, :user_id, :site_id])
-    |> validate_required([:refresh_token, :access_token, :expires, :email, :user_id, :site_id])
+    |> cast(attrs, [
+      :refresh_token,
+      :access_token,
+      :expires,
+      :email,
+      :user_id,
+      :site_id,
+      :search_console,
+      :analytics
+    ])
+    |> validate_required([
+      :refresh_token,
+      :access_token,
+      :expires,
+      :email,
+      :user_id,
+      :site_id,
+      :search_console,
+      :analytics
+    ])
     |> unique_constraint(:site)
   end
 
   def set_property(auth, attrs \\ %{}) do
     auth
     |> cast(attrs, [:property])
-  end
-
-  def set_search_console(auth, enabled) do
-    put_change(auth, :search_console, enabled)
-  end
-
-  def set_google_analytics(auth, enabled) do
-    put_change(auth, :analytics, enabled)
   end
 end

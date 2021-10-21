@@ -234,6 +234,17 @@ defmodule PlausibleWeb.Router do
     delete "/:website", SiteController, :delete_site
     delete "/:website/stats", SiteController, :reset_stats
 
+    post "/:website/settings/google-search-console/enable",
+         SiteController,
+         :enable_google_search_console
+
+    post "/:website/settings/google-search-console/disable",
+         SiteController,
+         :disable_google_search_console
+
+    post "/:website/settings/google-analytics/enable", SiteController, :enable_google_analytics
+    post "/:website/settings/google-analytics/disable", SiteController, :disable_google_analytics
+
     get "/:domain/export", StatsController, :csv_export
     get "/:domain/*path", StatsController, :stats
   end
