@@ -35,7 +35,7 @@
   <%= if Keyword.get(Application.get_env(:plausible, :google), :client_id) do %>
     <%= if @site.google_auth do %>
       <div class="py-2"></div>
-      <%= if 0 do %>
+      <%= if @search_console do %>
         <%= case @search_console_domains do %>
           <% {:ok, domains} -> %>
             <%= if @site.google_auth.property && !(@site.google_auth.property in domains) do %>
@@ -86,7 +86,11 @@
 
   <%= if Keyword.get(Application.get_env(:plausible, :google), :client_id) do %>
     <%= if @site.google_auth do %>
-      TODO
+      <%= if @google_analytics do %>
+        Google analytics display is enabled.
+      <% else %>
+        Google analytics display is disabled.
+      <% end %>
     <% else %>
       <div class="text-gray-700 dark:text-gray-300 mt-8">
         NB: You also need to set up your site to use <%= link("Google Analytics Reporting API", to: "https://search.google.com/search-console/about") %>. <%= link("Read the docs", to: "https://docs.plausible.io/google-analytics-display", class: "text-indigo-500") %>

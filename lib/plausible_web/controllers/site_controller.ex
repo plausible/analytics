@@ -225,8 +225,15 @@ defmodule PlausibleWeb.SiteController do
       conn.assigns[:site]
       |> Repo.preload([:google_auth, :custom_domain])
 
-    search_console_domains =
+    {search_console, google_analytics} =
       if site.google_auth do
+        {site.google_auth.search_console, site.google_auth.analytics}
+      else
+        {false, false}
+      end
+
+    search_console_domains =
+      if search_console do
         Plausible.Google.Api.fetch_verified_properties(site.google_auth)
       end
 
@@ -234,7 +241,9 @@ defmodule PlausibleWeb.SiteController do
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_google_integration.html",
       site: site,
+      search_console: search_console,
       search_console_domains: search_console_domains,
+      google_analytics: google_analytics,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end

@@ -8,6 +8,8 @@ defmodule Plausible.Site.GoogleAuth do
     field :refresh_token, :string
     field :access_token, :string
     field :expires, :naive_datetime
+    field :search_console, :boolean
+    field :analytics, :boolean
 
     belongs_to :user, Plausible.Auth.User
     belongs_to :site, Plausible.Site
@@ -25,5 +27,13 @@ defmodule Plausible.Site.GoogleAuth do
   def set_property(auth, attrs \\ %{}) do
     auth
     |> cast(attrs, [:property])
+  end
+
+  def set_search_console(auth, enabled) do
+    put_change(auth, :search_console, enabled)
+  end
+
+  def set_google_analytics(auth, enabled) do
+    put_change(auth, :analytics, enabled)
   end
 end
