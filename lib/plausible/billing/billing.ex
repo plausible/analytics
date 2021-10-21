@@ -18,14 +18,18 @@ defmodule Plausible.Billing do
 
     changeset = Subscription.changeset(%Subscription{}, format_subscription(params))
 
-    Repo.insert(changeset) |> check_lock_status
+    Repo.insert(changeset)
+    |> check_lock_status
+    |> maybe_adjust_api_key_limits
   end
 
   def subscription_updated(params) do
     subscription = Repo.get_by!(Subscription, paddle_subscription_id: params["subscription_id"])
     changeset = Subscription.changeset(subscription, format_subscription(params))
 
-    Repo.update(changeset) |> check_lock_status
+    Repo.update(changeset)
+    |> check_lock_status
+    |> maybe_adjust_api_key_limits
   end
 
   def subscription_cancelled(params) do
@@ -235,6 +239,24 @@ defmodule Plausible.Billing do
   end
 
   defp check_lock_status(err), do: err
+
+  defp maybe_adjust_api_key_limits({:ok, subscription}) do
+    plan =
+      Repo.get_by(Plausible.Billing.EnterprisePlan,
+        user_id: subscription.user_id,
+        paddle_plan_id: subscription.paddle_plan_id
+      )
+
+    if plan do
+      user_id = subscription.user_id
+      api_keys = from(key in Plausible.Auth.ApiKey, where: key.user_id == ^user_id)
+      Repo.update_all(api_keys, set: [hourly_request_limit: plan.hourly_api_request_limit])
+    end
+
+    {:ok, subscription}
+  end
+
+  defp maybe_adjust_api_key_limits(err), do: err
 
   defp paddle_api(), do: Application.fetch_env!(:plausible, :paddle_api)
 end
