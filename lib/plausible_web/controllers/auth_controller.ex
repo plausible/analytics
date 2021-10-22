@@ -5,7 +5,14 @@ defmodule PlausibleWeb.AuthController do
   require Logger
 
   plug PlausibleWeb.RequireLoggedOutPlug
-       when action in [:register_form, :register, :login_form, :login]
+       when action in [
+              :register_form,
+              :register,
+              :register_from_invitation_form,
+              :register_from_invitation,
+              :login_form,
+              :login
+            ]
 
   plug PlausibleWeb.RequireAccountPlug
        when action in [
@@ -84,7 +91,10 @@ defmodule PlausibleWeb.AuthController do
           skip_plausible_tracking: true
         )
       else
-        render(conn, "invitation_expired.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+        render(conn, "invitation_expired.html",
+          layout: {PlausibleWeb.LayoutView, "focus.html"},
+          skip_plausible_tracking: true
+        )
       end
     end
   end
@@ -121,7 +131,8 @@ defmodule PlausibleWeb.AuthController do
             render(conn, "register_from_invitation_form.html",
               invitation: invitation,
               changeset: changeset,
-              layout: {PlausibleWeb.LayoutView, "focus.html"}
+              layout: {PlausibleWeb.LayoutView, "focus.html"},
+              skip_plausible_tracking: true
             )
         end
       else
@@ -129,7 +140,8 @@ defmodule PlausibleWeb.AuthController do
           invitation: invitation,
           changeset: user,
           captcha_error: "Please complete the captcha to register",
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          layout: {PlausibleWeb.LayoutView, "focus.html"},
+          skip_plausible_tracking: true
         )
       end
     end
