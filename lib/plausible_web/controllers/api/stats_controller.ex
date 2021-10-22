@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     google_plot =
       if site.google_auth && site.google_auth.analytics do
-        Enum.map(plot, &(&1 / 2))
+        Google.Api.fetch_analytics(site, timeseries_query, labels)
       end
 
     json(conn, %{

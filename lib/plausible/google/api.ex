@@ -115,6 +115,96 @@ defmodule Plausible.Google.Api do
     end
   end
 
+  def fetch_analytics(site, query, labels) do
+    with {:ok, auth} <- refresh_if_needed(site.google_auth) do
+      do_fetch_analytics(auth, query, labels)
+    end
+  end
+
+  @doc """
+  API reference:
+  https://developers.google.com/analytics/devguides/reporting/core/v4/rest/v4/reports/batchGet#ReportRequest
+
+  Dimensions reference: https://ga-dev-tools.web.app/dimensions-metrics-explorer/time
+  """
+  def do_fetch_analytics(auth, query, labels) do
+    dimension =
+      case query.interval do
+        "month" -> "ga:yearMonth"
+        "week" -> "ga:week"
+        "date" -> "ga:date"
+      end
+
+    res =
+      HTTPoison.post!(
+        "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
+        Jason.encode!(%{
+          reportRequests: [
+            %{
+              viewId: "",
+              dateRanges: [
+                %{
+                  startDate: Date.to_iso8601(query.date_range.first),
+                  endDate: Date.to_iso8601(query.date_range.last)
+                }
+              ],
+              dimensions: [
+                %{name: dimension, histogramBuckets: []}
+              ],
+              metrics: [%{expression: "ga:users"}],
+              hideTotals: true,
+              hideValueRanges: true
+            }
+          ]
+        }),
+        Authorization: "Bearer #{auth.access_token}"
+      )
+
+    case res.status_code do
+      200 ->
+        results =
+          Jason.decode!(res.body)
+          |> Map.get("reports", [%{}])
+          |> List.first()
+          |> Map.get("data", %{})
+          |> Map.get("rows", [])
+          |> Enum.map(&parse_report_result/1)
+          |> Enum.filter(& &1)
+          |> Map.new()
+
+        labels
+        |> Enum.map(fn date ->
+          Map.get(results, String.replace(to_string(date), "-", ""), 0)
+        end)
+
+      _ ->
+        Sentry.capture_message("Error fetching Google queries", extra: Jason.decode!(res.body))
+        nil
+    end
+  end
+
+  defp parse_report_result(row) do
+    date =
+      Map.get(row, "dimensions", [nil])
+      |> List.first()
+
+    count =
+      Map.get(row, "metrics", [nil])
+      |> List.first()
+      |> Map.get("values", [nil])
+      |> List.first()
+
+    if is_nil(date) || is_nil(count) do
+      nil
+    else
+      if String.length(date) == 6 do
+        {date <> "01", String.to_integer(count)}
+      else
+        {date, String.to_integer(count)}
+      end
+    end
+  end
+
   defp refresh_if_needed(auth) do
     if Timex.before?(auth.expires, Timex.now() |> Timex.shift(seconds: 30)) do
       refresh_token(auth)
