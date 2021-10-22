@@ -121,7 +121,8 @@ defmodule Plausible.Factory do
       paddle_plan_id: sequence(:paddle_plan_id, &"plan-#{&1}"),
       billing_interval: :monthly,
       monthly_pageview_limit: 1_000_000,
-      hourly_api_request_limit: 3000
+      hourly_api_request_limit: 3000,
+      site_limit: 100
     }
   end
 

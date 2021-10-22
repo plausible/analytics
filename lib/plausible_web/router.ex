@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.Firewall
   end
 
-  if Application.get_env(:plausible, :environment) == "dev" do
+  if Mix.env() == :dev do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
   end
 

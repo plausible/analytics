@@ -128,7 +128,7 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  def enterprise_over_limit_email(user, usage, last_cycle) do
+  def enterprise_over_limit_email(user, usage, last_cycle, site_usage, site_allowance) do
     base_email()
     |> to("enterprise@plausible.io")
     |> tag("enterprise-over-limit")
@@ -136,7 +136,9 @@ defmodule PlausibleWeb.Email do
     |> render("enterprise_over_limit.html", %{
       user: user,
       usage: usage,
-      last_cycle: last_cycle
+      last_cycle: last_cycle,
+      site_usage: site_usage,
+      site_allowance: site_allowance
     })
   end
 

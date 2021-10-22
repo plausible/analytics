@@ -14,7 +14,8 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
       paddle_plan_id: nil,
       billing_interval: %{choices: [{"Yearly", "yearly"}, {"Monthly", "monthly"}]},
       monthly_pageview_limit: nil,
-      hourly_api_request_limit: nil
+      hourly_api_request_limit: nil,
+      site_limit: nil
     ]
   end
 
@@ -29,7 +30,8 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
       paddle_plan_id: nil,
       billing_interval: nil,
       monthly_pageview_limit: nil,
-      hourly_api_request_limit: nil
+      hourly_api_request_limit: nil,
+      site_limit: nil
     ]
   end
 

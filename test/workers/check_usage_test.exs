@@ -31,6 +31,9 @@ defmodule Plausible.Workers.CheckUsageTest do
   } do
     billing_stub =
       Plausible.Billing
+      |> stub(:last_two_billing_cycles, fn _user ->
+        {Date.range(Timex.today(), Timex.today()), Date.range(Timex.today(), Timex.today())}
+      end)
       |> stub(:last_two_billing_months_usage, fn _user -> {9_000, 11_000} end)
 
     insert(:subscription,
@@ -68,31 +71,64 @@ defmodule Plausible.Workers.CheckUsageTest do
     )
   end
 
-  test "checks usage for enterprise customer, sends usage information to enterprise@plausible.io",
-       %{
-         user: user
-       } do
-    billing_stub =
-      Plausible.Billing
-      |> stub(:last_two_billing_months_usage, fn _user -> {1_100_000, 1_100_000} end)
-      |> stub(:last_two_billing_cycles, fn _user ->
-        {Date.range(Timex.today(), Timex.today()), Date.range(Timex.today(), Timex.today())}
-      end)
+  describe "enterprise customers" do
+    test "checks billable pageview usage for enterprise customer, sends usage information to enterprise@plausible.io",
+         %{
+           user: user
+         } do
+      billing_stub =
+        Plausible.Billing
+        |> stub(:last_two_billing_months_usage, fn _user -> {1_100_000, 1_100_000} end)
+        |> stub(:last_two_billing_cycles, fn _user ->
+          {Date.range(Timex.today(), Timex.today()), Date.range(Timex.today(), Timex.today())}
+        end)
 
-    enterprise_plan = insert(:enterprise_plan, user: user, monthly_pageview_limit: 1_000_000)
+      enterprise_plan = insert(:enterprise_plan, user: user, monthly_pageview_limit: 1_000_000)
 
-    insert(:subscription,
-      user: user,
-      paddle_plan_id: enterprise_plan.paddle_plan_id,
-      last_bill_date: Timex.shift(Timex.today(), days: -1)
-    )
+      insert(:subscription,
+        user: user,
+        paddle_plan_id: enterprise_plan.paddle_plan_id,
+        last_bill_date: Timex.shift(Timex.today(), days: -1)
+      )
 
-    CheckUsage.perform(nil, billing_stub)
+      CheckUsage.perform(nil, billing_stub)
 
-    assert_email_delivered_with(
-      to: [{nil, "enterprise@plausible.io"}],
-      subject: "#{user.email} has outgrown their enterprise plan"
-    )
+      assert_email_delivered_with(
+        to: [{nil, "enterprise@plausible.io"}],
+        subject: "#{user.email} has outgrown their enterprise plan"
+      )
+    end
+
+    test "checks site limit for enterprise customer, sends usage information to enterprise@plausible.io",
+         %{
+           user: user
+         } do
+      billing_stub =
+        Plausible.Billing
+        |> stub(:last_two_billing_months_usage, fn _user -> {1, 1} end)
+        |> stub(:last_two_billing_cycles, fn _user ->
+          {Date.range(Timex.today(), Timex.today()), Date.range(Timex.today(), Timex.today())}
+        end)
+
+      enterprise_plan = insert(:enterprise_plan, user: user, site_limit: 2)
+
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+
+      insert(:subscription,
+        user: user,
+        paddle_plan_id: enterprise_plan.paddle_plan_id,
+        last_bill_date: Timex.shift(Timex.today(), days: -1)
+      )
+
+      CheckUsage.perform(nil, billing_stub)
+
+      assert_email_delivered_with(
+        to: [{nil, "enterprise@plausible.io"}],
+        subject: "#{user.email} has outgrown their enterprise plan"
+      )
+    end
   end
 
   describe "timing" do

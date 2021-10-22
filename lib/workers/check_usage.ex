@@ -50,38 +50,80 @@ defmodule Plausible.Workers.CheckUsage do
       )
 
     for subscriber <- active_subscribers do
-      allowance = Plausible.Billing.Plans.allowance(subscriber.subscription)
-      {last_last_month, last_month} = billing_mod.last_two_billing_months_usage(subscriber)
-      is_over_limit = last_last_month > allowance && last_month > allowance
-
-      cond do
-        is_over_limit && subscriber.enterprise_plan ->
-          {_, last_cycle} = billing_mod.last_two_billing_cycles(subscriber)
-
-          template =
-            PlausibleWeb.Email.enterprise_over_limit_email(subscriber, last_month, last_cycle)
-
-          Plausible.Mailer.send_email_safe(template)
-
-        is_over_limit ->
-          {_, last_cycle} = billing_mod.last_two_billing_cycles(subscriber)
-          suggested_plan = Plausible.Billing.Plans.suggested_plan(subscriber, last_month)
-
-          template =
-            PlausibleWeb.Email.over_limit_email(
-              subscriber,
-              last_month,
-              last_cycle,
-              suggested_plan
-            )
-
-          Plausible.Mailer.send_email_safe(template)
-
-        true ->
-          nil
+      if subscriber.enterprise_plan do
+        check_enterprise_subscriber(subscriber, billing_mod)
+      else
+        check_regular_subscriber(subscriber, billing_mod)
       end
     end
 
     :ok
+  end
+
+  def check_enterprise_subscriber(subscriber, billing_mod) do
+    pageview_limit = check_pageview_limit(subscriber, billing_mod)
+    site_limit = check_site_limit(subscriber)
+
+    case {pageview_limit, site_limit} do
+      {{:within_limit, _}, {:within_limit, _}} ->
+        nil
+
+      {{_, {last_cycle, last_cycle_usage}}, {_, {site_usage, site_allowance}}} ->
+        template =
+          PlausibleWeb.Email.enterprise_over_limit_email(
+            subscriber,
+            last_cycle_usage,
+            last_cycle,
+            site_usage,
+            site_allowance
+          )
+
+        Plausible.Mailer.send_email_safe(template)
+    end
+  end
+
+  defp check_regular_subscriber(subscriber, billing_mod) do
+    case check_pageview_limit(subscriber, billing_mod) do
+      {:over_limit, {last_cycle, last_cycle_usage}} ->
+        suggested_plan = Plausible.Billing.Plans.suggested_plan(subscriber, last_cycle)
+
+        template =
+          PlausibleWeb.Email.over_limit_email(
+            subscriber,
+            last_cycle_usage,
+            last_cycle,
+            suggested_plan
+          )
+
+        Plausible.Mailer.send_email_safe(template)
+
+      _ ->
+        nil
+    end
+  end
+
+  defp check_pageview_limit(subscriber, billing_mod) do
+    allowance = Plausible.Billing.Plans.allowance(subscriber.subscription)
+    {_, last_cycle} = billing_mod.last_two_billing_cycles(subscriber)
+
+    {last_last_cycle_usage, last_cycle_usage} =
+      billing_mod.last_two_billing_months_usage(subscriber)
+
+    if last_last_cycle_usage > allowance && last_cycle_usage > allowance do
+      {:over_limit, {last_cycle, last_cycle_usage, allowance}}
+    else
+      {:within_limit, {last_cycle, last_cycle_usage}}
+    end
+  end
+
+  defp check_site_limit(subscriber) do
+    allowance = subscriber.enterprise_plan.site_limit
+    total_sites = Plausible.Sites.count_owned_by(subscriber)
+
+    if total_sites >= allowance do
+      {:over_limit, {total_sites, allowance}}
+    else
+      {:within_limit, {total_sites, allowance}}
+    end
   end
 end
