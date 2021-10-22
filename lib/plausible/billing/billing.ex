@@ -1,7 +1,6 @@
 defmodule Plausible.Billing do
   use Plausible.Repo
   alias Plausible.Billing.{Subscription, PaddleApi}
-  use Plausible.ClickhouseRepo
 
   def active_subscription_for(user_id) do
     Repo.get_by(Subscription, user_id: user_id, status: "active")
@@ -143,25 +142,19 @@ defmodule Plausible.Billing do
     pageviews + custom_events
   end
 
-  defp get_usage_for_billing_cycle(sites, cycle) do
-    domains = Enum.map(sites, & &1.domain)
-
-    ClickhouseRepo.one(
-      from e in "events",
-        where: e.domain in ^domains,
-        where: fragment("toDate(?)", e.timestamp) >= ^cycle.first,
-        where: fragment("toDate(?)", e.timestamp) <= ^cycle.last,
-        select: fragment("count(*)")
-    )
-  end
-
   def last_two_billing_months_usage(user, today \\ Timex.today()) do
     {first, second} = last_two_billing_cycles(user, today)
     sites = Plausible.Sites.owned_by(user)
 
+    usage_for_sites = fn sites, date_range ->
+      domains = Enum.map(sites, & &1.domain)
+      {pageviews, custom_events} = Plausible.Stats.Clickhouse.usage_breakdown(domains, date_range)
+      pageviews + custom_events
+    end
+
     {
-      get_usage_for_billing_cycle(sites, first),
-      get_usage_for_billing_cycle(sites, second)
+      usage_for_sites.(sites, first),
+      usage_for_sites.(sites, second)
     }
   end
 

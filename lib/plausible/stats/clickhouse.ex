@@ -175,16 +175,24 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def usage_breakdown(domains) do
-    q = Plausible.Stats.Query.from("UTC", %{"period" => "30d"})
-    {first_datetime, last_datetime} = utc_boundaries(q, "UTC")
+    range =
+      Date.range(
+        Timex.shift(Timex.today(), days: -30),
+        Timex.today()
+      )
 
+    usage_breakdown(domains, range)
+  end
+
+  def usage_breakdown(domains, date_range) do
     Enum.chunk_every(domains, 300)
     |> Enum.reduce({0, 0}, fn domains, {pageviews_total, custom_events_total} ->
       {chunk_pageviews, chunk_custom_events} =
         ClickhouseRepo.one(
           from e in "events",
             where: e.domain in ^domains,
-            where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
+            where: fragment("toDate(?)", e.timestamp) >= ^date_range.first,
+            where: fragment("toDate(?)", e.timestamp) <= ^date_range.last,
             select: {
               fragment("countIf(? = 'pageview')", e.name),
               fragment("countIf(? != 'pageview')", e.name)
