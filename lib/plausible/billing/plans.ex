@@ -9,12 +9,17 @@ defmodule Plausible.Billing.Plans do
     %{limit: 10_000_000, monthly_product_id: "655350", yearly_cost: "$250"}
   ]
 
-  @v2_pricing_date ~D[2021-05-13]
-
   def plans_for(user) do
+    v1_plans = plans_v1()
+
+    v1_plan_ids =
+      v1_plans
+      |> Enum.map(fn plan -> [plan[:monthly_product_id], plan[:yearly_product_id]] end)
+      |> List.flatten()
+
     raw_plans =
-      if Timex.before?(user.inserted_at, @v2_pricing_date) do
-        plans_v1()
+      if user.subscription && user.subscription.paddle_plan_id in v1_plan_ids do
+        v1_plans
       else
         plans_v2()
       end
