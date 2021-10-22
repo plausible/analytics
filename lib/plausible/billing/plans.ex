@@ -10,6 +10,7 @@ defmodule Plausible.Billing.Plans do
   ]
 
   def plans_for(user) do
+    user = Repo.preload(user, :subscription)
     v1_plans = plans_v1()
 
     v1_plan_ids =
