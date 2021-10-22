@@ -148,7 +148,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      Application.put_env(:plausible, :site_limit, 3)
+      # default site limit defined in config/.test.env
       insert(:site, members: [user])
       insert(:site, members: [user])
       insert(:site, members: [user])
@@ -172,8 +172,29 @@ defmodule PlausibleWeb.SiteControllerTest do
         set: [inserted_at: ~N[2020-01-01 00:00:00]]
       )
 
-      Application.put_env(:plausible, :site_limit, 3)
       insert(:site, members: [user])
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert redirected_to(conn) == "/example.com/snippet"
+      assert Repo.exists?(Plausible.Site, domain: "example.com")
+    end
+
+    test "allows enterprise accounts to create unlimited sites", %{
+      conn: conn,
+      user: user
+    } do
+      insert(:enterprise_plan, user: user)
+
       insert(:site, members: [user])
       insert(:site, members: [user])
       insert(:site, members: [user])

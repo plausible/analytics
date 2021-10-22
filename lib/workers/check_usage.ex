@@ -110,7 +110,7 @@ defmodule Plausible.Workers.CheckUsage do
       billing_mod.last_two_billing_months_usage(subscriber)
 
     if last_last_cycle_usage > allowance && last_cycle_usage > allowance do
-      {:over_limit, {last_cycle, last_cycle_usage, allowance}}
+      {:over_limit, {last_cycle, last_cycle_usage}}
     else
       {:within_limit, {last_cycle, last_cycle_usage}}
     end

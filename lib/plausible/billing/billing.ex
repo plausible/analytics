@@ -197,10 +197,13 @@ defmodule Plausible.Billing do
   """
   @limit_accounts_since ~D[2021-05-05]
   def sites_limit(user) do
+    user = Plausible.Repo.preload(user, :enterprise_plan)
+
     cond do
       Timex.before?(user.inserted_at, @limit_accounts_since) -> nil
       Application.get_env(:plausible, :is_selfhost) -> nil
       user.email in Application.get_env(:plausible, :site_limit_exempt) -> nil
+      user.enterprise_plan -> nil
       true -> Application.get_env(:plausible, :site_limit)
     end
   end
