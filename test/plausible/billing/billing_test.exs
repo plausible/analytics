@@ -11,11 +11,22 @@ defmodule Plausible.BillingTest do
       assert Billing.usage(user) == 0
     end
 
-    test "counts the total number of events" do
+    test "counts the total number of events from all sites the user owns" do
       user = insert(:user)
-      insert(:site, domain: "test-site.com", members: [user])
+      site1 = insert(:site, members: [user])
+      site2 = insert(:site, members: [user])
 
-      assert Billing.usage(user) == 3
+      populate_stats(site1, [
+        build(:pageview),
+        build(:pageview)
+      ])
+
+      populate_stats(site2, [
+        build(:pageview),
+        build(:event, name: "custom events")
+      ])
+
+      assert Billing.usage(user) == 4
     end
 
     test "only counts usage from sites where the user is the owner" do

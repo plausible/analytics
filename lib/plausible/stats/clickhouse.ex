@@ -174,21 +174,25 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
-  def usage(site) do
-    q = Plausible.Stats.Query.from(site.timezone, %{"period" => "30d"})
-    {first_datetime, last_datetime} = utc_boundaries(q, site.timezone)
+  def usage_breakdown(domains) do
+    q = Plausible.Stats.Query.from("UTC", %{"period" => "30d"})
+    {first_datetime, last_datetime} = utc_boundaries(q, "UTC")
 
-    ClickhouseRepo.all(
-      from e in "events",
-        where: e.domain == ^site.domain,
-        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
-        group_by: fragment("name"),
-        select: {
-          fragment("if(? = 'pageview', 'pageviews', 'custom_events') as name", e.name),
-          fragment("count(*)")
-        }
-    )
-    |> Enum.into(%{})
+    Enum.chunk_every(domains, 300)
+    |> Enum.reduce({0, 0}, fn domains, {pageviews_total, custom_events_total} ->
+      {chunk_pageviews, chunk_custom_events} =
+        ClickhouseRepo.one(
+          from e in "events",
+            where: e.domain in ^domains,
+            where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
+            select: {
+              fragment("countIf(? = 'pageview')", e.name),
+              fragment("countIf(? != 'pageview')", e.name)
+            }
+        )
+
+      {pageviews_total + chunk_pageviews, custom_events_total + chunk_custom_events}
+    end)
   end
 
   def pageviews_and_visitors(site, query) do

@@ -186,14 +186,8 @@ defmodule Plausible.Billing do
   end
 
   def usage_breakdown(user) do
-    sites = Plausible.Sites.owned_by(user)
-
-    Enum.reduce(sites, {0, 0}, fn site, {pageviews, custom_events} ->
-      usage = Plausible.Stats.Clickhouse.usage(site)
-
-      {pageviews + Map.get(usage, "pageviews", 0),
-       custom_events + Map.get(usage, "custom_events", 0)}
-    end)
+    domains = Plausible.Sites.owned_by(user) |> Enum.map(& &1.domain)
+    Plausible.Stats.Clickhouse.usage_breakdown(domains)
   end
 
   @doc """
