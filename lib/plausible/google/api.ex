@@ -115,9 +115,9 @@ defmodule Plausible.Google.Api do
     end
   end
 
-  def fetch_analytics(site, query, labels) do
+  def fetch_analytics(site, query, until, labels) do
     with {:ok, auth} <- refresh_if_needed(site.google_auth) do
-      do_fetch_analytics(auth, query, labels)
+      do_fetch_analytics(auth, query, until, labels)
     end
   end
 
@@ -127,7 +127,7 @@ defmodule Plausible.Google.Api do
 
   Dimensions reference: https://ga-dev-tools.web.app/dimensions-metrics-explorer/time
   """
-  def do_fetch_analytics(auth, query, labels) do
+  def do_fetch_analytics(auth, query, until, labels) do
     dimension =
       case query.interval do
         "month" -> "ga:yearMonth"
@@ -145,7 +145,7 @@ defmodule Plausible.Google.Api do
               dateRanges: [
                 %{
                   startDate: Date.to_iso8601(query.date_range.first),
-                  endDate: Date.to_iso8601(query.date_range.last)
+                  endDate: Date.to_iso8601(until)
                 }
               ],
               dimensions: [
@@ -174,7 +174,11 @@ defmodule Plausible.Google.Api do
 
         labels
         |> Enum.map(fn date ->
-          Map.get(results, String.replace(to_string(date), "-", ""), 0)
+          if Date.compare(date, until) != :gt do
+            Map.get(results, String.replace(to_string(date), "-", ""), 0)
+          else
+            nil
+          end
         end)
 
       _ ->

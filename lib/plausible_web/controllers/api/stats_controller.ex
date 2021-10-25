@@ -27,7 +27,11 @@ defmodule PlausibleWeb.Api.StatsController do
 
     google_plot =
       if site.google_auth && site.google_auth.analytics do
-        Google.Api.fetch_analytics(site, timeseries_query, labels)
+        until = NaiveDateTime.to_date(Stats.Clickhouse.pageviews_begin(site))
+
+        if Date.compare(timeseries_query.date_range.first, until) != :gt do
+          Google.Api.fetch_analytics(site, timeseries_query, until, labels)
+        end
       end
 
     json(conn, %{
