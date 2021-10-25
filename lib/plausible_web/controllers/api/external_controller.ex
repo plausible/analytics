@@ -83,7 +83,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     else
       uri = params["url"] && URI.parse(params["url"])
       host = if uri && uri.host == "", do: "(none)", else: uri && uri.host
-      query = if uri && uri.query, do: URI.decode_query(uri.query), else: %{}
+      query = decode_query_params(uri)
 
       ref = parse_referrer(uri, params["referrer"])
       country_code = visitor_country(conn)
@@ -347,4 +347,15 @@ defmodule PlausibleWeb.Api.ExternalController do
        do: true
 
   defp right_uri?(_), do: false
+
+  defp decode_query_params(nil), do: nil
+  defp decode_query_params(%URI{query: nil}), do: nil
+
+  defp decode_query_params(%URI{query: query_part}) do
+    try do
+      URI.decode_query(query_part)
+    rescue
+      _ -> nil
+    end
+  end
 end
