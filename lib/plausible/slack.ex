@@ -4,7 +4,7 @@ defmodule Plausible.Slack do
   def notify(text) do
     Task.start(fn ->
       if env() == "prod" && !self_hosted() do
-        HTTPoison.post!(webhook_url(), Poison.encode!(%{text: text}))
+        HTTPoison.post!(webhook_url(), Jason.encode!(%{text: text}))
       else
         Logger.debug(text)
       end
