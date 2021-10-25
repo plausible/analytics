@@ -83,8 +83,7 @@ defmodule Plausible.Google.Api do
           endDate: Date.to_iso8601(query.date_range.last),
           dimensions: ["query"],
           rowLimit: limit,
-          dimensionFilterGroups: filter_groups || %{},
-          dataState: "all"
+          dimensionFilterGroups: filter_groups || %{}
         }),
         "Content-Type": "application/json",
         Authorization: "Bearer #{auth.access_token}"
