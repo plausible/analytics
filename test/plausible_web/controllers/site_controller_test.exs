@@ -300,14 +300,16 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "updates the timezone", %{conn: conn, site: site} do
-      put(conn, "/#{site.domain}/settings", %{
-        "site" => %{
-          "timezone" => "Europe/London"
-        }
-      })
+      conn =
+        put(conn, "/#{site.domain}/settings", %{
+          "site" => %{
+            "timezone" => "Europe/London"
+          }
+        })
 
       updated = Repo.get(Plausible.Site, site.id)
       assert updated.timezone == "Europe/London"
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/general"
     end
   end
 
@@ -315,10 +317,11 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "makes the site public", %{conn: conn, site: site} do
-      post(conn, "/sites/#{site.domain}/make-public")
+      conn = post(conn, "/sites/#{site.domain}/make-public")
 
       updated = Repo.get(Plausible.Site, site.id)
       assert updated.public
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/visibility"
     end
   end
 
@@ -326,10 +329,11 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "makes the site private", %{conn: conn, site: site} do
-      post(conn, "/sites/#{site.domain}/make-private")
+      conn = post(conn, "/sites/#{site.domain}/make-private")
 
       updated = Repo.get(Plausible.Site, site.id)
       refute updated.public
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/visibility"
     end
   end
 
@@ -354,12 +358,14 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "updates google auth property", %{conn: conn, user: user, site: site} do
       insert(:google_auth, user: user, site: site)
 
-      put(conn, "/#{site.domain}/settings/google", %{
-        "google_auth" => %{"property" => "some-new-property.com"}
-      })
+      conn =
+        put(conn, "/#{site.domain}/settings/google", %{
+          "google_auth" => %{"property" => "some-new-property.com"}
+        })
 
       updated_auth = Repo.one(Plausible.Site.GoogleAuth)
       assert updated_auth.property == "some-new-property.com"
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/search-console"
     end
   end
 
@@ -368,9 +374,10 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     test "deletes associated google auth", %{conn: conn, user: user, site: site} do
       insert(:google_auth, user: user, site: site)
-      delete(conn, "/#{site.domain}/settings/google")
+      conn = delete(conn, "/#{site.domain}/settings/google")
 
       refute Repo.exists?(Plausible.Site.GoogleAuth)
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/search-console"
     end
   end
 
@@ -388,31 +395,35 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "creates a pageview goal for the website", %{conn: conn, site: site} do
-      post(conn, "/#{site.domain}/goals", %{
-        goal: %{
-          page_path: "/success",
-          event_name: ""
-        }
-      })
+      conn =
+        post(conn, "/#{site.domain}/goals", %{
+          goal: %{
+            page_path: "/success",
+            event_name: ""
+          }
+        })
 
       goal = Repo.one(Plausible.Goal)
 
       assert goal.page_path == "/success"
       assert goal.event_name == nil
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
     end
 
     test "creates a custom event goal for the website", %{conn: conn, site: site} do
-      post(conn, "/#{site.domain}/goals", %{
-        goal: %{
-          page_path: "",
-          event_name: "Signup"
-        }
-      })
+      conn =
+        post(conn, "/#{site.domain}/goals", %{
+          goal: %{
+            page_path: "",
+            event_name: "Signup"
+          }
+        })
 
       goal = Repo.one(Plausible.Goal)
 
       assert goal.event_name == "Signup"
       assert goal.page_path == nil
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
     end
   end
 
@@ -422,9 +433,10 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "lists goals for the site", %{conn: conn, site: site} do
       goal = insert(:goal, domain: site.domain, event_name: "Custom event")
 
-      delete(conn, "/#{site.domain}/goals/#{goal.id}")
+      conn = delete(conn, "/#{site.domain}/goals/#{goal.id}")
 
       assert Repo.aggregate(Plausible.Goal, :count, :id) == 0
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
     end
   end
 
