@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
+  alias PlausibleWeb.Api
   alias Plausible.Stats.Query
 
   plug PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export]
@@ -37,9 +38,9 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  def csv_export(conn, %{"domain" => domain}) do
+  def csv_export(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, conn.params)
+    query = Query.from(site.timezone, params)
 
     metrics =
       if query.filters["event:name"] do
@@ -52,20 +53,40 @@ defmodule PlausibleWeb.StatsController do
 
     headers = ["date" | metrics]
 
-    csv_content =
+    visitors =
       Enum.map(graph, fn row -> Enum.map(headers, &row[&1]) end)
       |> (fn data -> [headers | data] end).()
       |> CSV.encode()
-      |> Enum.into([])
       |> Enum.join()
 
     filename =
-      "Plausible export #{domain} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.csv"
+      "Plausible export #{params["domain"]} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.zip"
+
+    params = Map.put(params, "limit", "1000")
+    params = Map.put(params, "csv", "True")
+
+    csvs = [
+      {'visitors.csv', visitors},
+      {'sources.csv', Api.StatsController.sources(conn, params)},
+      {'utm_mediums.csv', Api.StatsController.utm_mediums(conn, params)},
+      {'utm_sources.csv', Api.StatsController.utm_sources(conn, params)},
+      {'utm_campaigns.csv', Api.StatsController.utm_campaigns(conn, params)},
+      {'pages.csv', Api.StatsController.pages(conn, params)},
+      {'entry_pages.csv', Api.StatsController.entry_pages(conn, params)},
+      {'exit_pages.csv', Api.StatsController.exit_pages(conn, params)},
+      {'countries.csv', Api.StatsController.countries(conn, params)},
+      {'browsers.csv', Api.StatsController.browsers(conn, params)},
+      {'operating_systems.csv', Api.StatsController.operating_systems(conn, params)},
+      {'devices.csv', Api.StatsController.screen_sizes(conn, params)},
+      {'conversions.csv', Api.StatsController.conversions(conn, params)}
+    ]
+
+    {:ok, {_, zip_content}} = :zip.create(filename, csvs, [:memory])
 
     conn
-    |> put_resp_content_type("text/csv")
+    |> put_resp_content_type("application/zip")
     |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
-    |> send_resp(200, csv_content)
+    |> send_resp(200, zip_content)
   end
 
   def shared_link(conn, %{"slug" => domain, "auth" => auth}) do

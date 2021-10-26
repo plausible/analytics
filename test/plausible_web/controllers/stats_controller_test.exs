@@ -44,29 +44,169 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
-  describe "GET /:website/visitors.csv" do
-    setup [:create_user, :log_in, :create_site]
+  describe "GET /:website/export" do
+    setup [:create_user, :create_new_site, :log_in]
 
-    test "exports graph as csv", %{conn: conn, site: site} do
-      today = Timex.today() |> Timex.format!("{ISOdate}")
+    test "exports data in zipped csvs", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          country_code: "EE",
+          timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -1),
+          referrer_source: "Google"
+        ),
+        build(:pageview,
+          utm_campaign: "ads",
+          timestamp: Timex.shift(~N[2021-10-20 12:00:00], days: -1)
+        )
+      ])
 
-      conn = get(conn, "/" <> site.domain <> "/visitors.csv")
-      assert response(conn, 200) =~ "visitors,pageviews,bounce_rate,visit_duration"
-      assert response(conn, 200) =~ "#{today},3,3,0,0"
+      conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20")
+      assert conn.status == 200
+
+      assert {"content-type", "application/zip; charset=utf-8"} =
+               List.keyfind(conn.resp_headers, "content-type", 0)
+
+      {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
+
+      assert_csv(
+        zip,
+        'visitors.csv',
+        "date,visitors,pageviews,bounce_rate,visit_duration\r\n2021-09-20,0,0,,\r\n2021-09-21,0,0,,\r\n2021-09-22,0,0,,\r\n2021-09-23,0,0,,\r\n2021-09-24,0,0,,\r\n2021-09-25,0,0,,\r\n2021-09-26,0,0,,\r\n2021-09-27,0,0,,\r\n2021-09-28,0,0,,\r\n2021-09-29,0,0,,\r\n2021-09-30,0,0,,\r\n2021-10-01,0,0,,\r\n2021-10-02,0,0,,\r\n2021-10-03,0,0,,\r\n2021-10-04,0,0,,\r\n2021-10-05,0,0,,\r\n2021-10-06,0,0,,\r\n2021-10-07,0,0,,\r\n2021-10-08,0,0,,\r\n2021-10-09,0,0,,\r\n2021-10-10,0,0,,\r\n2021-10-11,0,0,,\r\n2021-10-12,0,0,,\r\n2021-10-13,0,0,,\r\n2021-10-14,0,0,,\r\n2021-10-15,0,0,,\r\n2021-10-16,0,0,,\r\n2021-10-17,0,0,,\r\n2021-10-18,0,0,,\r\n2021-10-19,1,1,100,0\r\n2021-10-20,1,1,100,0\r\n"
+      )
+
+      assert_csv(zip, 'sources.csv', "name,count,bounce_rate,visit_duration\r\nGoogle,1,,\r\n")
+      assert_csv(zip, 'utm_mediums.csv', "name,count,bounce_rate,visit_duration\r\n")
+      assert_csv(zip, 'utm_sources.csv', "name,count,bounce_rate,visit_duration\r\n")
+
+      assert_csv(
+        zip,
+        'utm_campaigns.csv',
+        "name,count,bounce_rate,visit_duration\r\nads,1,100,0\r\n"
+      )
+
+      assert_csv(zip, 'pages.csv', "name,count,bounce_rate,time_on_page\r\n/,2,,\r\n")
+      assert_csv(zip, 'entry_pages.csv', "name,count,entries,visit_duration\r\n/,2,2,0\r\n")
+      assert_csv(zip, 'exit_pages.csv', "name,count,exits,exit_rate\r\n/,2,2,100.0\r\n")
+      assert_csv(zip, 'countries.csv', "name,count\r\nEST,1\r\n")
+      assert_csv(zip, 'browsers.csv', "name,count\r\n,2\r\n")
+      assert_csv(zip, 'operating_systems.csv', "name,count\r\n,2\r\n")
+      assert_csv(zip, 'devices.csv', "name,count\r\n,2\r\n")
+      assert_csv(zip, 'conversions.csv', "name,count,total_count\r\n")
     end
   end
 
-  describe "GET /:website/visitors.csv - via shared link" do
-    test "exports graph as csv", %{conn: conn} do
-      site = insert(:site, domain: "test-site.com")
+  describe "GET /:website/export - via shared link" do
+    test "exports data in zipped csvs", %{conn: conn} do
+      site = insert(:site, domain: "new-site.com")
       link = insert(:shared_link, site: site)
 
-      today = Timex.today() |> Timex.format!("{ISOdate}")
+      populate_stats(site, [
+        build(:pageview,
+          country_code: "EE",
+          timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -1),
+          referrer_source: "Google"
+        ),
+        build(:pageview,
+          utm_campaign: "ads",
+          timestamp: Timex.shift(~N[2021-10-20 12:00:00], days: -1)
+        )
+      ])
 
-      conn = get(conn, "/" <> site.domain <> "/visitors.csv?auth=#{link.slug}")
-      assert response(conn, 200) =~ "visitors,pageviews,bounce_rate,visit_duration"
-      assert response(conn, 200) =~ "#{today},3,3,0,0"
+      conn = get(conn, "/" <> site.domain <> "/export?auth=#{link.slug}&date=2021-10-20")
+      assert conn.status == 200
+
+      assert {"content-type", "application/zip; charset=utf-8"} =
+               List.keyfind(conn.resp_headers, "content-type", 0)
+
+      {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
+
+      assert_csv(
+        zip,
+        'visitors.csv',
+        "date,visitors,pageviews,bounce_rate,visit_duration\r\n2021-09-20,0,0,,\r\n2021-09-21,0,0,,\r\n2021-09-22,0,0,,\r\n2021-09-23,0,0,,\r\n2021-09-24,0,0,,\r\n2021-09-25,0,0,,\r\n2021-09-26,0,0,,\r\n2021-09-27,0,0,,\r\n2021-09-28,0,0,,\r\n2021-09-29,0,0,,\r\n2021-09-30,0,0,,\r\n2021-10-01,0,0,,\r\n2021-10-02,0,0,,\r\n2021-10-03,0,0,,\r\n2021-10-04,0,0,,\r\n2021-10-05,0,0,,\r\n2021-10-06,0,0,,\r\n2021-10-07,0,0,,\r\n2021-10-08,0,0,,\r\n2021-10-09,0,0,,\r\n2021-10-10,0,0,,\r\n2021-10-11,0,0,,\r\n2021-10-12,0,0,,\r\n2021-10-13,0,0,,\r\n2021-10-14,0,0,,\r\n2021-10-15,0,0,,\r\n2021-10-16,0,0,,\r\n2021-10-17,0,0,,\r\n2021-10-18,0,0,,\r\n2021-10-19,1,1,100,0\r\n2021-10-20,1,1,100,0\r\n"
+      )
+
+      assert_csv(zip, 'sources.csv', "name,count,bounce_rate,visit_duration\r\nGoogle,1,,\r\n")
+      assert_csv(zip, 'utm_mediums.csv', "name,count,bounce_rate,visit_duration\r\n")
+      assert_csv(zip, 'utm_sources.csv', "name,count,bounce_rate,visit_duration\r\n")
+
+      assert_csv(
+        zip,
+        'utm_campaigns.csv',
+        "name,count,bounce_rate,visit_duration\r\nads,1,100,0\r\n"
+      )
+
+      assert_csv(zip, 'pages.csv', "name,count,bounce_rate,time_on_page\r\n/,2,,\r\n")
+      assert_csv(zip, 'entry_pages.csv', "name,count,entries,visit_duration\r\n/,2,2,0\r\n")
+      assert_csv(zip, 'exit_pages.csv', "name,count,exits,exit_rate\r\n/,2,2,100.0\r\n")
+      assert_csv(zip, 'countries.csv', "name,count\r\nEST,1\r\n")
+      assert_csv(zip, 'browsers.csv', "name,count\r\n,2\r\n")
+      assert_csv(zip, 'operating_systems.csv', "name,count\r\n,2\r\n")
+      assert_csv(zip, 'devices.csv', "name,count\r\n,2\r\n")
+      assert_csv(zip, 'conversions.csv', "name,count,total_count\r\n")
     end
+  end
+
+  describe "GET /:website/export - for past 6 months" do
+    setup [:create_user, :create_new_site, :log_in]
+
+    test "exports 6 months of data in zipped csvs", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          timestamp: relative_time(minutes: -1)
+        ),
+        build(:pageview,
+          timestamp: relative_time(months: -1),
+          country_code: "EE",
+          browser: "ABrowserName"
+        ),
+        build(:pageview,
+          timestamp: relative_time(months: -5),
+          utm_campaign: "ads",
+          country_code: "EE",
+          referrer_source: "Google",
+          browser: "ABrowserName"
+        )
+      ])
+
+      conn = get(conn, "/" <> site.domain <> "/export?period=6mo&date=2021-10-20")
+      assert conn.status == 200
+
+      assert {"content-type", "application/zip; charset=utf-8"} =
+               List.keyfind(conn.resp_headers, "content-type", 0)
+
+      {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
+
+      assert_csv(
+        zip,
+        'visitors.csv',
+        "date,visitors,pageviews,bounce_rate,visit_duration\r\n2021-05-01,1,1,100,0\r\n2021-06-01,0,0,,\r\n2021-07-01,0,0,,\r\n2021-08-01,0,0,,\r\n2021-09-01,1,1,100,0\r\n2021-10-01,1,1,100,0\r\n"
+      )
+
+      assert_csv(zip, 'sources.csv', "name,count,bounce_rate,visit_duration\r\nGoogle,1,,\r\n")
+      assert_csv(zip, 'utm_mediums.csv', "name,count,bounce_rate,visit_duration\r\n")
+      assert_csv(zip, 'utm_sources.csv', "name,count,bounce_rate,visit_duration\r\n")
+
+      assert_csv(
+        zip,
+        'utm_campaigns.csv',
+        "name,count,bounce_rate,visit_duration\r\nads,1,100,0\r\n"
+      )
+
+      assert_csv(zip, 'pages.csv', "name,count,bounce_rate,time_on_page\r\n/,3,,\r\n")
+      assert_csv(zip, 'entry_pages.csv', "name,count,entries,visit_duration\r\n/,3,3,0\r\n")
+      assert_csv(zip, 'exit_pages.csv', "name,count,exits,exit_rate\r\n/,3,3,100.0\r\n")
+      assert_csv(zip, 'countries.csv', "name,count\r\nEST,2\r\n")
+      assert_csv(zip, 'browsers.csv', "name,count\r\nABrowserName,2\r\n,1\r\n")
+      assert_csv(zip, 'operating_systems.csv', "name,count\r\n,3\r\n")
+      assert_csv(zip, 'devices.csv', "name,count\r\n,3\r\n")
+      assert_csv(zip, 'conversions.csv', "name,count,total_count\r\n")
+    end
+  end
+
+  defp assert_csv(zip, fileName, string) do
+    {_, contents} = List.keyfind(zip, fileName, 0)
+    assert to_string(contents) == string
   end
 
   describe "GET /share/:slug" do
