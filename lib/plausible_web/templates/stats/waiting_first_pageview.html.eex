@@ -21,7 +21,7 @@
       <div class="block pulsating-circle"></div>
       <p class="text-gray-600 dark:text-gray-400 text-xs absolute left-0 bottom-0 mb-6 w-full text-center leading-normal">
         Need to see the snippet again? <%= link("Click here", to: "/#{URI.encode_www_form(@site.domain)}/snippet", class: "text-indigo-600 text-underline")%><br />
-        Not working? <%= link("Troubleshoot the integration", to: "https://plausible.io/docs/troubleshoot-integration#keep-seeing-a-blinking-green-dot", class: "text-indigo-600 text-underline") %> with our guide
+        Not working? <%= link("Troubleshoot the integration", to: "https://plausible.io/docs/troubleshoot-integration#keep-seeing-a-blinking-green-dot", class: "text-indigo-600 text-underline", rel: "noreferrer") %> with our guide
         <%= if Application.get_env(:plausible, :is_selfhost) do %>
            first<br /> Still not working? Ask on our <%= link("community-supported forum", to: "https://github.com/plausible/analytics/discussions", class: "text-indigo-600 text-underline" ) %>
         <% else %>
