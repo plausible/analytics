@@ -709,13 +709,22 @@ defmodule PlausibleWeb.SiteController do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
 
     if site.google_auth do
-      view_id = Plausible.Google.Api.get_analytics_view_id(site)
+      case Plausible.Google.Api.get_analytics_view_id(site) do
+        nil ->
+          conn
+          |> put_flash(:error, "Could not find #{site.domain} in linked Google Account")
+          |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/google-integration")
 
-      Plausible.Site.GoogleAuth.changeset(site.google_auth, %{analytics: view_id})
-      |> Repo.update!()
+        view_id ->
+          site.google_auth
+          |> Plausible.Site.GoogleAuth.changeset(%{analytics: view_id})
+          |> Repo.update!()
+
+          redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/google-integration")
+      end
+    else
+      redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/google-integration")
     end
-
-    redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/google-integration")
   end
 
   def disable_google_analytics(conn, _params) do
