@@ -547,7 +547,8 @@ defmodule PlausibleWeb.AuthController do
       access_token: res["access_token"],
       expires: NaiveDateTime.utc_now() |> NaiveDateTime.add(res["expires_in"]),
       user_id: conn.assigns[:current_user].id,
-      site_id: site_id
+      site_id: site_id,
+      search_console: false
     })
     |> Repo.insert!()
 
