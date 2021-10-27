@@ -709,7 +709,9 @@ defmodule PlausibleWeb.SiteController do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
 
     if site.google_auth do
-      Plausible.Site.GoogleAuth.changeset(site.google_auth, %{analytics: true})
+      view_id = Plausible.Google.Api.get_analytics_view_id(site)
+
+      Plausible.Site.GoogleAuth.changeset(site.google_auth, %{analytics: view_id})
       |> Repo.update!()
     end
 
@@ -720,7 +722,7 @@ defmodule PlausibleWeb.SiteController do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
 
     if site.google_auth do
-      Plausible.Site.GoogleAuth.changeset(site.google_auth, %{analytics: false})
+      Plausible.Site.GoogleAuth.changeset(site.google_auth, %{analytics: nil})
       |> Repo.update!()
     end
 

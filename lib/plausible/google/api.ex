@@ -115,6 +115,36 @@ defmodule Plausible.Google.Api do
     end
   end
 
+  def get_analytics_view_id(site) do
+    with {:ok, auth} <- refresh_if_needed(site.google_auth) do
+      do_get_analytics_view_id(site, auth)
+    end
+  end
+
+  def do_get_analytics_view_id(site, auth) do
+    res =
+      HTTPoison.get!(
+        "https://www.googleapis.com/analytics/v3/management/accounts/~all/webproperties/~all/profiles",
+        Authorization: "Bearer #{auth.access_token}"
+      )
+
+    case res.status_code do
+      200 ->
+        Jason.decode!(res.body)
+        |> Map.get("items")
+        |> Enum.map(fn item ->
+          uri = URI.parse(Map.get(item, "websiteUrl"))
+          {uri.host, Map.get(item, "id")}
+        end)
+        |> Map.new()
+        |> Map.get(site.domain)
+
+      _ ->
+        Sentry.capture_message("Error fetching Google view ID", extra: Jason.decode!(res.body))
+        nil
+    end
+  end
+
   def fetch_analytics(site, query, until, labels) do
     with {:ok, auth} <- refresh_if_needed(site.google_auth) do
       do_fetch_analytics(auth, query, until, labels)
@@ -141,7 +171,7 @@ defmodule Plausible.Google.Api do
         Jason.encode!(%{
           reportRequests: [
             %{
-              viewId: "",
+              viewId: auth.analytics,
               dateRanges: [
                 %{
                   startDate: Date.to_iso8601(query.date_range.first),

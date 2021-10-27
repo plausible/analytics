@@ -9,7 +9,7 @@ defmodule Plausible.Site.GoogleAuth do
     field :access_token, :string
     field :expires, :naive_datetime
     field :search_console, :boolean
-    field :analytics, :boolean
+    field :analytics, :string
 
     belongs_to :user, Plausible.Auth.User
     belongs_to :site, Plausible.Site
@@ -36,8 +36,7 @@ defmodule Plausible.Site.GoogleAuth do
       :email,
       :user_id,
       :site_id,
-      :search_console,
-      :analytics
+      :search_console
     ])
     |> unique_constraint(:site)
   end
