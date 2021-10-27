@@ -32,9 +32,11 @@ defmodule PlausibleWeb.StatsController do
         |> render("waiting_first_pageview.html", site: site)
 
       site.locked ->
+        owner = Plausible.Sites.owner_for(site)
+
         conn
         |> assign(:skip_plausible_tracking, true)
-        |> render("site_locked.html", site: site)
+        |> render("site_locked.html", owner: owner, site: site)
     end
   end
 
