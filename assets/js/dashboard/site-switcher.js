@@ -46,7 +46,7 @@ export default class SiteSwitcher extends React.Component {
   }
 
   handleKeydown(e) {
-    const { query, history, site } = this.props;
+    const { site } = this.props;
     const { sites } = this.state;
 
     if (e.target.tagName === 'INPUT') return true;

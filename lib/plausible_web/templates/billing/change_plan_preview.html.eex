@@ -36,7 +36,7 @@
 
     <div class="pt-6"></div>
 
-    <div class="py-2 text-lg font-bold">Next payment</div>
+    <div class="py-4 dark:text-gray-100 text-lg font-bold">Next payment</div>
 
 
     <div class="flex flex-col">

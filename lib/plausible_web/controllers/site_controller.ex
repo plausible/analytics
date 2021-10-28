@@ -86,7 +86,7 @@ defmodule PlausibleWeb.SiteController do
 
         conn
         |> put_session(site.domain <> "_offer_email_report", true)
-        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/snippet")
+        |> redirect(to: Routes.site_path(conn, :add_snippet, site.domain))
 
       {:error, :site, changeset, _} ->
         render(conn, "new.html",
@@ -142,7 +142,7 @@ defmodule PlausibleWeb.SiteController do
       {:ok, _} ->
         conn
         |> put_flash(:success, "Goal created successfully")
-        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/goals")
+        |> redirect(to: Routes.site_path(conn, :settings_goals, site.domain))
 
       {:error, changeset} ->
         conn
@@ -160,11 +160,11 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Goal deleted successfully")
-    |> redirect(to: "/#{URI.encode_www_form(website)}/settings/goals")
+    |> redirect(to: Routes.site_path(conn, :settings_goals, website))
   end
 
   def settings(conn, %{"website" => website}) do
-    redirect(conn, to: "/#{URI.encode_www_form(website)}/settings/general")
+    redirect(conn, to: Routes.site_path(conn, :settings_general, website))
   end
 
   def settings_general(conn, _params) do
@@ -285,7 +285,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Google integration saved successfully")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/search-console")
+    |> redirect(to: Routes.site_path(conn, :settings_search_console, site.domain))
   end
 
   def delete_google_auth(conn, _params) do
@@ -297,7 +297,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Google account unlinked from Plausible")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/search-console")
+    |> redirect(to: Routes.site_path(conn, :settings_search_console, site.domain))
   end
 
   def update_settings(conn, %{"site" => site_params}) do
@@ -312,7 +312,7 @@ defmodule PlausibleWeb.SiteController do
         conn
         |> put_session(site_session_key, nil)
         |> put_flash(:success, "Your site settings have been saved")
-        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
 
       {:error, changeset} ->
         render(conn, "settings_general.html", site: site, changeset: changeset)
@@ -347,7 +347,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Stats for #{site.domain} are now public.")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
+    |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
   end
 
   def make_private(conn, _params) do
@@ -358,7 +358,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Stats for #{site.domain} are now private.")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
+    |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
   end
 
   def enable_weekly_report(conn, _params) do

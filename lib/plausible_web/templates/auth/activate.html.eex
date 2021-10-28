@@ -21,7 +21,11 @@
       <ol class="list-disc text-xs text-gray-500 leading-tight space-y-1 mt-1">
         <li>Check your spam folder</li>
         <li><%= link("Send a new code", class: "underline text-indigo-600", to: "/activate/request-code", method: :post) %> to <%= @conn.assigns[:current_user].email %></li>
-        <li>Contact <a class="underline text-indigo-600" href="mailto:support@plausible.io">support@plausible.io</a> if the problem persists</li>
+        <%= if Application.get_env(:plausible, :is_selfhost) do %>
+          <li>Ask on our <%= link("community-supported forum", to: "https://github.com/plausible/analytics/discussions", class: "text-indigo-600 underline" ) %></li>
+        <% else %>
+          <li>Contact <a class="underline text-indigo-600" href="mailto:support@plausible.io">support@plausible.io</a> if the problem persists</li>
+        <% end %>
       </ol>
       <div class="mt-4 text-sm dark:text-gray-100">
         Entered the wrong email address?

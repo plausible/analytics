@@ -302,7 +302,7 @@ class DatePicker extends React.Component {
         onClick={this.close}
         query={this.props.query}
         className={`${boldClass  } px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900
-          dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 flex items-center justify-between`}
+          dark:hover:bg-gray-900 dark:hover:text-gray-100 flex items-center justify-between`}
       >
         {text}
         <span className='font-normal'>{keybinds[text]}</span>

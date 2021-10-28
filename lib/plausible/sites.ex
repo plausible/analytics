@@ -124,6 +124,17 @@ defmodule Plausible.Sites do
     )
   end
 
+  def count_owned_by(user) do
+    Repo.one(
+      from s in Plausible.Site,
+        join: sm in Plausible.Site.Membership,
+        on: sm.site_id == s.id,
+        where: sm.role == :owner,
+        where: sm.user_id == ^user.id,
+        select: count(sm)
+    )
+  end
+
   def owner_for(site) do
     Repo.one(
       from u in Plausible.Auth.User,
