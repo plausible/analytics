@@ -24,7 +24,7 @@ class ExitPagesModal extends React.Component {
   }
 
   loadPages() {
-    const {query, page, pages} = this.state;
+    const {query, page} = this.state;
 
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/exit-pages`, query, {limit: 100, page})
       .then((res) => this.setState((state) => ({loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100})))

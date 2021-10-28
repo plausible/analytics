@@ -1,0 +1,9 @@
+Automated notice about an enterprise account that has gone over their limits. <br /><br />
+
+Customer email: <%= @user.email %><br />
+Last billing cycle: <%= date_format(@last_cycle.first) %> to <%= date_format(@last_cycle.last) %><br >
+Pageview Usage: <%= PlausibleWeb.StatsView.large_number_format(@usage) %> billable pageviews<br />
+Site usage: <%= @site_usage %> / <%= @site_allowance %> allowed sites<br />
+
+--<br />
+<%= plausible_url() %><br />

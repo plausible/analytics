@@ -118,6 +118,11 @@ disable_auth =
   |> get_var_from_path_or_env("DISABLE_AUTH", "false")
   |> String.to_existing_atom()
 
+enable_email_verification =
+  config_dir
+  |> get_var_from_path_or_env("ENABLE_EMAIL_VERIFICATION", "false")
+  |> String.to_existing_atom()
+
 disable_registration =
   config_dir
   |> get_var_from_path_or_env("DISABLE_REGISTRATION", "false")
@@ -186,11 +191,12 @@ config :plausible,
 
 config :plausible, :selfhost,
   disable_authentication: disable_auth,
+  enable_email_verification: enable_email_verification,
   disable_registration: if(!disable_auth, do: disable_registration, else: false)
 
 config :plausible, PlausibleWeb.Endpoint,
-  url: [host: base_url.host, scheme: base_url.scheme, port: base_url.port],
-  http: [port: port],
+  url: [scheme: base_url.scheme, host: base_url.host, path: base_url.path, port: base_url.port],
+  http: [port: port, transport_options: [max_connections: :infinity]],
   secret_key_base: secret_key_base
 
 %{
@@ -388,6 +394,14 @@ config :kaffy,
       resources: [
         site: [schema: Plausible.Site, admin: Plausible.SiteAdmin]
       ]
+    ],
+    billing: [
+      resources: [
+        enterprise_plan: [
+          schema: Plausible.Billing.EnterprisePlan,
+          admin: Plausible.Billing.EnterprisePlanAdmin
+        ]
+      ]
     ]
   ]
 
@@ -397,7 +411,8 @@ if config_env() != :test && geolite2_country_db do
       %{
         id: :country,
         adapter: Geolix.Adapter.MMDB2,
-        source: geolite2_country_db
+        source: geolite2_country_db,
+        result_as: :raw
       }
     ]
 end

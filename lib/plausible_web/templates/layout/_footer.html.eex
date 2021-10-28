@@ -30,22 +30,22 @@
             </h4>
             <ul class="mt-4">
               <li>
-                <a href="https://plausible.io/simple-web-analytics" class="text-base text-gray-300 leading-6 hover:text-white">
+                <a ref="noreferrer" href="https://plausible.io/simple-web-analytics" class="text-base text-gray-300 leading-6 hover:text-white">
                   Simple metrics
                 </a>
               </li>
               <li class="mt-4">
-                <a href="https://plausible.io/lightweight-web-analytics" class="text-base text-gray-300 leading-6 hover:text-white">
+                <a rel="noferrer" href="https://plausible.io/lightweight-web-analytics" class="text-base text-gray-300 leading-6 hover:text-white">
                   Lightweight script
                 </a>
               </li>
               <li class="mt-4">
-                <a href="https://plausible.io/privacy-focused-web-analytics" class="text-base text-gray-300 leading-6 hover:text-white">
+                <a ref="noreferrer" href="https://plausible.io/privacy-focused-web-analytics" class="text-base text-gray-300 leading-6 hover:text-white">
                   Privacy focused
                 </a>
               </li>
               <li class="mt-4">
-                <a href="https://plausible.io/open-source-website-analytics" class="text-base text-gray-300 leading-6 hover:text-white">
+                <a rel="noreferrer" href="https://plausible.io/open-source-website-analytics" class="text-base text-gray-300 leading-6 hover:text-white">
                   Open source
                 </a>
               </li>
@@ -57,12 +57,12 @@
             </h4>
             <ul class="mt-4">
               <li>
-                <a href="https://plausible.io/vs-google-analytics" class="text-base text-gray-300 leading-6 hover:text-white">
+                <a ref="noferrer" href="https://plausible.io/vs-google-analytics" class="text-base text-gray-300 leading-6 hover:text-white">
                   vs Google Analytics
                 </a>
               </li>
               <li class="mt-4">
-                <a href="https://plausible.io/vs-matomo" class="text-base text-gray-300 leading-6 hover:text-white">
+                <a ref="noferrer" href="https://plausible.io/vs-matomo" class="text-base text-gray-300 leading-6 hover:text-white">
                   vs Matomo
                 </a>
               </li>
@@ -77,12 +77,12 @@
             </h4>
             <ul class="mt-4">
               <li>
-                <a href="https://plausible.io/blog" class="text-base text-gray-300 leading-6 hover:text-white">
+                <a ref="noferrer" href="https://plausible.io/blog" class="text-base text-gray-300 leading-6 hover:text-white">
                   Blog
                 </a>
               </li>
             <li class="mt-4">
-                <a target="_blank" href="https://docs.plausible.io/" class="text-base text-gray-300 leading-6 hover:text-white">
+                <a ref="noferrer" target="_blank" href="https://plausible.io/docs" class="text-base text-gray-300 leading-6 hover:text-white">
                   Documentation
                 </a>
               </li>
@@ -92,7 +92,7 @@
                 </a>
               </li>
               <li class="mt-4">
-                <a target="_blank" href="https://plausible.io/forum" class="text-base text-gray-300 leading-6 hover:text-white">
+                <a  rel="noreferrer" target="_blank" href="https://plausible.io/forum" class="text-base text-gray-300 leading-6 hover:text-white">
                   Forum
                 </a>
               </li>

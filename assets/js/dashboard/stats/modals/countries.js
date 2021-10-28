@@ -17,7 +17,7 @@ class CountriesModal extends React.Component {
   }
 
   componentDidMount() {
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/countries`, this.state.query, {limit: 100})
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/countries`, this.state.query, {limit: 300})
       .then((res) => this.setState({loading: false, countries: res}))
   }
 

@@ -47,7 +47,7 @@ export function parseQuery(querystring, site) {
 export function appliedFilters(query) {
   return Object.keys(query.filters)
     .map((key) => [key, query.filters[key]])
-    .filter(([key, value]) => !!value);
+    .filter(([_key, value]) => !!value);
 }
 
 function generateQueryString(data) {
@@ -89,7 +89,7 @@ class QueryLink extends React.Component {
   }
 
   render() {
-    const { history, query, to, ...props } = this.props
+    const { to, ...props } = this.props
     return (
       <Link
         {...props}
