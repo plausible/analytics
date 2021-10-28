@@ -1,5 +1,6 @@
 {
   "repository": {},
+  "version": "1.4.0",
   "license": "MIT",
   "scripts": {
     "deploy": "$(npm bin)/webpack --mode production",
