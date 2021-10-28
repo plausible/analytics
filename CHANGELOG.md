@@ -1,7 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+
 ## Unreleased
+
+### Added
+- Data exported via the download button will contain CSV data for all visible graps in a zip file.
+
+### Fixed
+- Fixes database error when pathname contains a question mark
+
+## v1.4.0
 
 ### Added
 - New parameter `metrics` for the `/api/v1/stats/timeseries` endpoint plausible/analytics#952
