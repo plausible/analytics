@@ -1,7 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+
 ## Unreleased
+
+### Added
+- Data exported via the download button will contain CSV data for all visible graps in a zip file.
+
+### Fixed
+- Fixes database error when pathname contains a question mark
+
+## v1.4.0
 
 ### Added
 - New parameter `metrics` for the `/api/v1/stats/timeseries` endpoint plausible/analytics#952
@@ -19,7 +28,6 @@ All notable changes to this project will be documented in this file.
 - Add Conversion Rate to Top Sources, Top Pages Devices, Countries when filtered by a goal plausible/analytics#1299
 - Add list view for countries report in dashboard plausible/analytics#1381
 - Add ability to view more than 100 custom goal properties plausible/analytics#1353
-- Data exported via the download button will contain CSV data for all visible graps in a zip file.
 
 ### Fixed
 - Fix weekly report time range plausible/analytics#951
