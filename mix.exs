@@ -36,16 +36,6 @@ defmodule Plausible.MixProject do
       mod: {Plausible.Application, []},
       extra_applications: [
         :logger,
-        :sentry,
-        :runtime_tools,
-        :timex,
-        :ua_inspector,
-        :ref_inspector,
-        :bamboo,
-        :bamboo_smtp,
-        :ssl,
-        :appsignal,
-        :cachex,
         :runtime_tools
       ]
     ]
@@ -60,8 +50,6 @@ defmodule Plausible.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:appsignal, "~> 2.0"},
-      {:appsignal_phoenix, "~> 2.0.3"},
       {:bcrypt_elixir, "~> 2.0"},
       {:combination, "~> 0.0.3"},
       {:cors_plug, "~> 2.0"},
