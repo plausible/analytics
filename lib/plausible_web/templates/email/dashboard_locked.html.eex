@@ -1,0 +1,25 @@
+Hey <%= user_salutation(@user) %>,
+<br /><br />
+Last week we sent a reminder that your traffic has exceeded your Plausible Analytics subscription tier two months in a row.
+<br /><br />
+Your dashboard is now locked. We're still counting your stats, but you no longer have access to the stats. As you have outgrown your subscription tier, we kindly ask you to upgrade your subscription to accommodate your new traffic levels.
+<br /><br />
+Click here to go to your site settings. In the last billing cycle (<%= date_format(@last_cycle.first) %> to <%= date_format(@last_cycle.last) %>), your account has used <%= PlausibleWeb.StatsView.large_number_format(@usage) %> billable pageviews.
+<%= if @usage <= 20_000_000 do %>
+Based on that we recommend you select the <%= @suggested_plan[:volume] %>/mo plan.
+<br /><br />
+You can upgrade your subscription using our self-serve platform. The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire.
+<br /><br />
+<a href="https://plausible.io/settings">Click here</a> to go to your site settings. You can upgrade your subscription tier by clicking the 'change plan' link.
+<% else %>
+This is more than our standard plans, so please reply back to this email to get a quote for your volume.
+<% end %>
+<br /><br />
+The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire. We will unlock your dashboard immediately after your account has been upgraded to the appropriate tier.
+<br /><br />
+Thanks for understanding and for being a Plausible subscriber!
+<br /><br />
+Thanks,<br />
+Uku and Marko<br />
+--<br />
+<%= plausible_url() %><br />

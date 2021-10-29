@@ -49,6 +49,17 @@ defmodule Plausible.Billing.SiteLockerTest do
       refute Repo.reload!(site).locked
     end
 
+    test "does not lock user who has an active subscription and is on grace period" do
+      user = insert(:user, grace_period_end: Timex.shift(Timex.today(), days: 1))
+      insert(:subscription, status: "active", user: user)
+      user = Repo.preload(user, :subscription)
+      site = insert(:site, members: [user])
+
+      SiteLocker.check_sites_for(user)
+
+      refute Repo.reload!(site).locked
+    end
+
     test "locks user who cancelled subscription and the cancelled subscription has expired" do
       user = insert(:user)
 
@@ -65,6 +76,31 @@ defmodule Plausible.Billing.SiteLockerTest do
       SiteLocker.check_sites_for(user)
 
       refute Repo.reload!(site).locked
+    end
+
+    test "locks all sites if user has active subscription but grace period has ended" do
+      user = insert(:user, grace_period_end: Timex.shift(Timex.today(), days: -1))
+      insert(:subscription, status: "active", user: user)
+      user = Repo.preload(user, :subscription)
+      site = insert(:site, members: [user])
+
+      SiteLocker.check_sites_for(user)
+
+      assert Repo.reload!(site).locked
+    end
+
+    test "sends email if grace period has ended" do
+      user = insert(:user, grace_period_end: Timex.shift(Timex.today(), days: -1))
+      insert(:subscription, status: "active", user: user)
+      user = Repo.preload(user, :subscription)
+      insert(:site, members: [user])
+
+      SiteLocker.check_sites_for(user)
+
+      assert_email_delivered_with(
+        to: [user],
+        subject: "[Action required] Your Plausible dashboard is now locked"
+      )
     end
 
     test "locks all sites if user has no trial or active subscription" do

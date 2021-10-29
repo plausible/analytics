@@ -107,13 +107,19 @@ defmodule Plausible.Billing do
     PaddleApi.update_subscription_preview(subscription.paddle_subscription_id, new_plan_id)
   end
 
-  def needs_to_upgrade?(%Plausible.Auth.User{trial_expiry_date: nil}), do: true
+  def needs_to_upgrade?(%Plausible.Auth.User{trial_expiry_date: nil}), do: {true, :no_trial}
 
   def needs_to_upgrade?(user) do
-    if Timex.before?(user.trial_expiry_date, Timex.today()) do
-      !subscription_is_active?(user.subscription)
-    else
-      false
+    trial_is_over = Timex.before?(user.trial_expiry_date, Timex.today())
+    subscription_active = subscription_is_active?(user.subscription)
+
+    grace_period_ended =
+      user.grace_period_end && Timex.before?(user.grace_period_end, Timex.today())
+
+    cond do
+      trial_is_over && !subscription_active -> {true, :no_active_subscription}
+      grace_period_ended -> {true, :grace_period_ended}
+      true -> false
     end
   end
 

@@ -142,6 +142,19 @@ defmodule PlausibleWeb.Email do
     })
   end
 
+  def dashboard_locked(user, usage, last_cycle, suggested_plan) do
+    base_email()
+    |> to(user)
+    |> tag("dashboard-locked")
+    |> subject("[Action required] Your Plausible dashboard is now locked")
+    |> render("dashboard_locked.html", %{
+      user: user,
+      usage: usage,
+      last_cycle: last_cycle,
+      suggested_plan: suggested_plan
+    })
+  end
+
   def yearly_renewal_notification(user) do
     date = Timex.format!(user.subscription.next_bill_date, "{Mfull} {D}, {YYYY}")
 
