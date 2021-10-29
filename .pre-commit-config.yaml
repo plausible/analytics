@@ -7,6 +7,7 @@ repos:
       - id: prettier
         files: "assets/js|assets/css"
         args: [--config, assets/.prettierrc.json]
+
   - repo: https://github.com/awebdeveloper/pre-commit-stylelint
     rev: 'f792d6b'
     hooks:
@@ -14,6 +15,7 @@ repos:
         additional_dependencies:
           - stylelint@13.2.1
           - stylelint-config-standard@20.0.0
+
   - repo: https://github.com/pre-commit/mirrors-eslint
     rev: 'v7.15.0'
     hooks:
@@ -30,3 +32,15 @@ repos:
     rev: v1.0.0
     hooks:
       - id: mix-format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: check-yaml
+      - id: destroyed-symlinks
+      - id: end-of-file-fixer
+        exclude: priv/tracker/js
+      - id: mixed-line-ending
+      - id: trailing-whitespace
