@@ -96,6 +96,7 @@ defmodule Plausible.Workers.CheckUsage do
           )
 
         Plausible.Mailer.send_email_safe(template)
+        Plausible.Auth.User.start_grace_period(subscriber) |> Repo.update()
 
       _ ->
         nil

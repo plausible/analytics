@@ -17,6 +17,7 @@ defmodule Plausible.Auth.User do
     field :name, :string
     field :last_seen, :naive_datetime
     field :trial_expiry_date, :date
+    field :grace_period_end, :date
     field :theme, :string
     field :email_verified, :boolean
 
@@ -77,6 +78,10 @@ defmodule Plausible.Auth.User do
 
   def end_trial(user) do
     change(user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
+  end
+
+  def start_grace_period(user) do
+    change(user, grace_period_end: Timex.today() |> Timex.shift(days: 7))
   end
 
   defp trial_expiry() do
