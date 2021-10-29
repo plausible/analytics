@@ -67,7 +67,7 @@ class PagesModal extends React.Component {
           <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline block truncate">{page.name}</Link>
         </td>
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{page.total_visitors}</td> }
-        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
+        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.visitors)}</td>
         {this.showPageviews() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.pageviews)}</td> }
         {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td> }
         {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{timeOnPage}</td> }

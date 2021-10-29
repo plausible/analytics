@@ -52,7 +52,7 @@ class AllSources extends React.Component {
         key={referrer.name}
       >
         <Bar
-          count={referrer.count}
+          count={referrer.visitors}
           all={this.state.referrers}
           bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction={maxWidthDeduction}
@@ -70,7 +70,7 @@ class AllSources extends React.Component {
             </Link>
           </span>
         </Bar>
-        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(referrer.count)}</span>
+        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(referrer.visitors)}</span>
         {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
       </div>
     )
@@ -184,7 +184,7 @@ class UTMSources extends React.Component {
         key={referrer.name}
       >
         <Bar
-          count={referrer.count}
+          count={referrer.visitors}
           all={this.state.referrers}
           bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction={maxWidthDeduction}
@@ -199,7 +199,7 @@ class UTMSources extends React.Component {
             </Link>
           </span>
         </Bar>
-        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(referrer.count)}</span>
+        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(referrer.visitors)}</span>
         {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
       </div>
     )

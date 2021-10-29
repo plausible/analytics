@@ -79,7 +79,7 @@ export default class Conversions extends React.Component {
       <div className="my-2 text-sm" key={goal.name}>
         <div className="flex items-center justify-between my-2">
           <Bar
-            count={goal.count}
+            count={goal.visitors}
             all={this.state.goals}
             bg="bg-red-50 dark:bg-gray-500 dark:bg-opacity-15"
             maxWidthDeduction={this.getBarMaxWidth()}
@@ -87,7 +87,7 @@ export default class Conversions extends React.Component {
             {this.renderGoalText(goal.name)}
           </Bar>
           <div className="dark:text-gray-200">
-            <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.count)}</span>
+            <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.visitors)}</span>
             {viewport > MOBILE_UPPER_WIDTH && <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.total_count)}</span>}
             <span className="inline-block w-20 font-medium text-right">{goal.conversion_rate}%</span>
           </div>

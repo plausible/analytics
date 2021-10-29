@@ -35,15 +35,15 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Signup",
-                 "count" => 2,
-                 "total_count" => 3,
+                 "visitors" => 2,
+                 "total_conversions" => 3,
                  "prop_names" => nil,
                  "conversion_rate" => 50
                },
                %{
                  "name" => "Visit /register",
-                 "count" => 2,
-                 "total_count" => 2,
+                 "visitors" => 2,
+                 "total_conversions" => 2,
                  "prop_names" => nil,
                  "conversion_rate" => 50
                }
@@ -78,8 +78,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Signup",
-                 "count" => 2,
-                 "total_count" => 2,
+                 "visitors" => 2,
+                 "total_conversions" => 2,
                  "prop_names" => ["variant"],
                  "conversion_rate" => 50
                }
@@ -111,8 +111,18 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"count" => 2, "name" => "B", "total_count" => 2, "conversion_rate" => 66.7},
-               %{"count" => 1, "name" => "A", "total_count" => 1, "conversion_rate" => 33.3}
+               %{
+                 "visitors" => 2,
+                 "name" => "B",
+                 "total_conversions" => 2,
+                 "conversion_rate" => 66.7
+               },
+               %{
+                 "visitors" => 1,
+                 "name" => "A",
+                 "total_conversions" => 1,
+                 "conversion_rate" => 33.3
+               }
              ]
     end
 
@@ -137,8 +147,18 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"count" => 2, "name" => "(none)", "total_count" => 2, "conversion_rate" => 66.7},
-               %{"count" => 1, "name" => "A", "total_count" => 1, "conversion_rate" => 33.3}
+               %{
+                 "visitors" => 2,
+                 "name" => "(none)",
+                 "total_conversions" => 2,
+                 "conversion_rate" => 66.7
+               },
+               %{
+                 "visitors" => 1,
+                 "name" => "A",
+                 "total_conversions" => 1,
+                 "conversion_rate" => 33.3
+               }
              ]
     end
 
@@ -161,7 +181,12 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"count" => 1, "name" => "B", "total_count" => 1, "conversion_rate" => 50.0}
+               %{
+                 "visitors" => 1,
+                 "name" => "B",
+                 "total_conversions" => 1,
+                 "conversion_rate" => 50.0
+               }
              ]
     end
   end
@@ -190,58 +215,58 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "conversion_rate" => 100.0,
-                 "count" => 8,
+                 "visitors" => 8,
                  "name" => "Visit /**",
-                 "total_count" => 8,
+                 "total_conversions" => 8,
                  "prop_names" => nil
                },
                %{
                  "conversion_rate" => 37.5,
-                 "count" => 3,
+                 "visitors" => 3,
                  "name" => "Visit /*",
-                 "total_count" => 3,
+                 "total_conversions" => 3,
                  "prop_names" => nil
                },
                %{
                  "conversion_rate" => 37.5,
-                 "count" => 3,
+                 "visitors" => 3,
                  "name" => "Visit /signup/**",
-                 "total_count" => 3,
+                 "total_conversions" => 3,
                  "prop_names" => nil
                },
                %{
                  "conversion_rate" => 25.0,
-                 "count" => 2,
+                 "visitors" => 2,
                  "name" => "Visit /billing**/success",
-                 "total_count" => 2,
+                 "total_conversions" => 2,
                  "prop_names" => nil
                },
                %{
                  "conversion_rate" => 25.0,
-                 "count" => 2,
+                 "visitors" => 2,
                  "name" => "Visit /reg*",
-                 "total_count" => 2,
+                 "total_conversions" => 2,
                  "prop_names" => nil
                },
                %{
                  "conversion_rate" => 12.5,
-                 "count" => 1,
+                 "visitors" => 1,
                  "name" => "Visit /billing*/success",
-                 "total_count" => 1,
+                 "total_conversions" => 1,
                  "prop_names" => nil
                },
                %{
                  "conversion_rate" => 12.5,
-                 "count" => 1,
+                 "visitors" => 1,
                  "name" => "Visit /register",
-                 "total_count" => 1,
+                 "total_conversions" => 1,
                  "prop_names" => nil
                },
                %{
                  "conversion_rate" => 12.5,
-                 "count" => 1,
+                 "visitors" => 1,
                  "name" => "Visit /signup/*",
-                 "total_count" => 1,
+                 "total_conversions" => 1,
                  "prop_names" => nil
                }
              ]

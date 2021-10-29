@@ -44,7 +44,7 @@ class GoogleKeywordsModal extends React.Component {
 
         <tr className="text-sm dark:text-gray-200" key={term.name}>
           <td className="p-2 truncate">{term.name}</td>
-          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(term.count)}</td>
+          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(term.visitors)}</td>
         </tr>
       </React.Fragment>
     )

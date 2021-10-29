@@ -83,7 +83,7 @@ class ScreenSizes extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={size.name}>
         <Bar
-          count={size.count}
+          count={size.visitors}
           all={this.state.sizes}
           bg="bg-green-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction={maxWidthDeduction}
@@ -98,7 +98,7 @@ class ScreenSizes extends React.Component {
           </span>
         </Bar>
         <span className="font-medium dark:text-gray-200 text-right w-20">
-          {numberFormatter(size.count)} <span className="inline-block w-8 text-xs text-right">({size.percentage}%)</span>
+          {numberFormatter(size.visitors)} <span className="inline-block w-8 text-xs text-right">({size.percentage}%)</span>
         </span>
         {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(size.conversion_rate)}%</span>}
       </div>

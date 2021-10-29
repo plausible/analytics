@@ -124,7 +124,7 @@ class ReferrerDrilldownModal extends React.Component {
             </div>
           </td>
           {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.total_visitors)}</td> }
-          <td className="p-2 w-32 font-medium" align="right" valign="top">{numberFormatter(referrer.count)}</td>
+          <td className="p-2 w-32 font-medium" align="right" valign="top">{numberFormatter(referrer.visitors)}</td>
           {this.showExtra() && <td className="p-2 w-32 font-medium" align="right" valign="top">{this.formatBounceRate(referrer)}</td> }
           {this.showExtra() && <td className="p-2 w-32 font-medium" align="right" valign="top">{this.formatDuration(referrer)}</td> }
           {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{referrer.conversion_rate}%</td> }
@@ -137,7 +137,7 @@ class ReferrerDrilldownModal extends React.Component {
             { this.renderReferrerName(referrer) }
           </td>
           {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.total_visitors)}</td> }
-          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.count)}</td>
+          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.visitors)}</td>
           {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td> }
           {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatDuration(referrer)}</td> }
           {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{referrer.conversion_rate}%</td> }

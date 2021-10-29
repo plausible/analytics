@@ -68,7 +68,7 @@ export default class Browsers extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={browser.name}>
         <Bar
-          count={browser.count}
+          count={browser.visitors}
           all={this.state.browsers}
           bg="bg-green-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction={maxWidthDeduction}
@@ -76,7 +76,7 @@ export default class Browsers extends React.Component {
           {this.renderBrowserContent(browser, link)}
         </Bar>
         <span className="font-medium dark:text-gray-200 text-right w-20">
-          {numberFormatter(browser.count)} <span className="inline-block w-8 text-xs"> ({browser.percentage}%)</span>
+          {numberFormatter(browser.visitors)} <span className="inline-block w-8 text-xs"> ({browser.percentage}%)</span>
         </span>
         {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(browser.conversion_rate)}%</span>}
       </div>

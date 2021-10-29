@@ -115,7 +115,7 @@ export default class PropertyBreakdown extends React.Component {
     return (
       <div className="flex items-center justify-between my-2" key={value.name}>
         <Bar
-          count={value.count}
+          count={value.visitors}
           all={this.state.breakdown}
           bg="bg-red-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction={this.getBarMaxWidth()}
@@ -123,7 +123,7 @@ export default class PropertyBreakdown extends React.Component {
           {this.renderPropContent(value, query)}
         </Bar>
         <div className="dark:text-gray-200">
-          <span className="font-medium inline-block w-20 text-right">{numberFormatter(value.count)}</span>
+          <span className="font-medium inline-block w-20 text-right">{numberFormatter(value.visitors)}</span>
           {
             viewport > MOBILE_UPPER_WIDTH ?
             (
