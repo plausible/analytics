@@ -115,4 +115,3 @@ export default class Browsers extends React.Component {
     )
   }
 }
-

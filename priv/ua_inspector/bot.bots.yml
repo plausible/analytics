@@ -112,7 +112,7 @@
   name: 'Castro 2'
   category: 'Service Agent'
   url: 'http://supertop.co/castro/'
-  producer: 
+  producer:
     name: 'Supertop'
     url: 'http://supertop.co'
 
@@ -941,7 +941,7 @@
   category: 'Crawler'
   producer:
     name: 'Nuzzel'
-    url: https://www.nuzzel.com/ 
+    url: https://www.nuzzel.com/
 
 - regex: 'Octopus [0-9]'
   name: 'Octopus'

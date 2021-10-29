@@ -1718,7 +1718,7 @@
   version: '$1'
   engine:
     default: 'WebKit'
-    
+
 #Dorado
 - regex: 'Dorado WAP-Browser[/ ](\d+[\.\d]+)'
   name: 'Dorado'
@@ -1752,4 +1752,3 @@
 - regex: 'GOGGalaxyClient/(?:(\d+[\.\d]+))?'
   name: 'GOG Galaxy'
   version: '$1'
-  

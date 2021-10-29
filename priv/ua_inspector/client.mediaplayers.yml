@@ -32,7 +32,7 @@
 - regex: 'FlyCast(?:/([\d\.]+))?'
   name: 'FlyCast'
   version: '$1'
-  
+
 - regex: 'foobar2000(?:/([\d\.]+))?'
   name: 'Foobar2000'
   version: '$1'

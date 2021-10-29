@@ -12,8 +12,6 @@
   name: 'Tizen'
   version: '$1'
 
-
-
 ##########
 ## Sailfish OS
 ###########
@@ -34,8 +32,7 @@
 - regex: '(?:Windows Phone (?:OS)?|wds)[ ]?(\d+[\.\d]+)'
   name: 'Windows Phone'
   version: '$1'
-  
-  
+
 - regex: 'XBLWP7|Windows Phone'
   name: 'Windows Phone'
   version: ''
@@ -43,17 +40,15 @@
 - regex: 'Windows CE(?: (\d+[\.\d]+))?'
   name: 'Windows CE'
   version: '$1'
-  
-  
+
 - regex: '(?:IEMobile|Windows ?Mobile)(?: (\d+[\.\d]+))?'
   name: 'Windows Mobile'
   version: '$1'
-  
-  
+
 - regex: 'Windows NT 6.2; ARM;'
   name: 'Windows RT'
   version: ''
-  
+
 - regex: 'Windows NT 6.3; ARM;'
   name: 'Windows RT'
   version: '8.1'
@@ -109,7 +104,7 @@
 - regex: '(?:(?:Orca-)?Android|Adr)[ /](?:[a-z]+ )?(\d+[\.\d]*)'
   name: 'Android'
   version: '$1'
-  
+
 - regex: 'Android|Silk-Accelerated=[a-z]{4,5}'
   name: 'Android'
   version: ''
@@ -125,8 +120,8 @@
 - regex: 'BeyondPod|AntennaPod|Podkicker|DoggCatcher|Player FM|okhttp|Podcatcher Deluxe'
   name: 'Android'
   version: ''
-  
-  
+
+
 ##########
 # AmigaOS
 ##########
@@ -208,7 +203,7 @@
   name: 'MorphOS'
   version: '$1'
 
-  
+
 ##########
 # Windows
 ##########
@@ -284,7 +279,7 @@
   name: 'Haiku OS'
   version: ''
 
-  
+
 ##########
 # iOS
 ##########
@@ -492,7 +487,7 @@
 - regex: 'Mac[ +]OS[ +]X(?:[ /](?:Version )?(\d+(?:[_\.]\d+)+))?'
   name: 'Mac'
   version: '$1'
-  
+
 - regex: 'Mac (\d+(?:[_\.]\d+)+)'
   name: 'Mac'
   version: '$1'
@@ -500,40 +495,36 @@
 - regex: 'Darwin|Macintosh|Mac_PowerPC|PPC|Mac PowerPC|iMac|MacBook'
   name: 'Mac'
   version: ''
-  
-  
-  
+
 ##########
 # ChromeOS
 ##########
 - regex: 'CrOS [a-z0-9_]+ .* Chrome/(\d+[\.\d]+)'
   name: 'Chrome OS'
   version: '$1'
-  
-  
-  
+
 ##########
 # BlackBerry
 ##########
 - regex: '(?:BB10;.+Version|Black[Bb]erry[0-9a-z]+|Black[Bb]erry.+Version)/(\d+[\.\d]+)'
   name: 'BlackBerry OS'
   version: '$1'
-  
-  
+
+
 - regex: 'RIM Tablet OS (\d+[\.\d]+)'
   name: 'BlackBerry Tablet OS'
   version: '$1'
-  
-  
+
+
 - regex: 'RIM Tablet OS|QNX|Play[Bb]ook'
   name: 'BlackBerry Tablet OS'
   version: ''
-  
-  
+
+
 - regex: 'BlackBerry'
   name: 'BlackBerry OS'
   version: ''
-  
+
 - regex: 'bPod'
   name: 'BlackBerry OS'
   version: ''
@@ -545,8 +536,6 @@
 - regex: 'BeOS'
   name: 'BeOS'
   version: ''
-
-
 
 
 ##########
@@ -580,23 +569,21 @@
 - regex: 'SymbianOS/(\d+[\.\d]+)'
   name: 'Symbian OS'
   version: '$1'
-  
-  
+
+
 - regex: 'MeeGo|WeTab'
   name: 'MeeGo'
   version: ''
-  
-  
+
+
 - regex: 'Symbian(?: OS)?|SymbOS'
   name: 'Symbian OS'
   version: ''
-  
-  
+
+
 - regex: 'Nokia'
   name: 'Symbian'
   version: ''
-
-
 
 ##########
 # Firefox OS
@@ -628,8 +615,8 @@
 - regex: 'bada(?:[ /](\d+[\.\d]+))'
   name: 'Bada'
   version: '$1'
-  
-  
+
+
 - regex: 'bada'
   name: 'Bada'
   version: ''
@@ -647,24 +634,24 @@
   name: 'Brew'
   version: ''
 
-  
+
 ##########
 # Web TV
 ##########
 - regex: 'GoogleTV(?:[ /](\d+[\.\d]+))?'
   name: 'Google TV'
   version: '$1'
-  
-  
+
+
 - regex: 'AppleTV(?:/?(\d+[\.\d]+))?'
   name: 'Apple TV'
   version: '$1'
-  
-  
+
+
 - regex: 'WebTV/(\d+[\.\d]+)'
   name: 'WebTV'
   version: '$1'
-  
+
 
 ##########
 # Remix OS
@@ -688,54 +675,52 @@
 - regex: '(?:SunOS|Solaris)(?:[/ ](\d+[\.\d]+))?'
   name: 'Solaris'
   version: '$1'
-  
-  
+
+
 - regex: 'AIX(?:[/ ]?(\d+[\.\d]+))?'
   name: 'AIX'
   version: '$1'
-  
-  
+
+
 - regex: 'HP-UX(?:[/ ]?(\d+[\.\d]+))?'
   name: 'HP-UX'
   version: '$1'
-  
-  
+
+
 - regex: 'FreeBSD(?:[/ ]?(\d+[\.\d]+))?'
   name: 'FreeBSD'
   version: '$1'
-  
-  
+
+
 - regex: 'NetBSD(?:[/ ]?(\d+[\.\d]+))?'
   name: 'NetBSD'
   version: '$1'
-  
-  
+
+
 - regex: 'OpenBSD(?:[/ ]?(\d+[\.\d]+))?'
   name: 'OpenBSD'
   version: '$1'
-  
-  
+
+
 - regex: 'DragonFly(?:[/ ]?(\d+[\.\d]+))?'
   name: 'DragonFly'
   version: '$1'
-  
-  
+
+
 - regex: 'Syllable(?:[/ ]?(\d+[\.\d]+))?'
   name: 'Syllable'
   version: '$1'
-  
-  
+
+
 - regex: 'IRIX(?:;64)?(?:[/ ]?(\d+[\.\d]+))'
   name: 'IRIX'
   version: '$1'
-  
-  
+
+
 - regex: 'OSF1(?:[/ ]?v?(\d+[\.\d]+))?'
   name: 'OSF1'
   version: '$1'
-  
-  
-  
+
 ##########
 # Gaming Console
 ##########
@@ -746,36 +731,30 @@
 - regex: 'PlayStation ?([3|4])'
   name: 'PlayStation'
   version: '$1'
-  
-  
+
+
 - regex: 'Xbox|KIN\.(?:One|Two)'
   name: 'Xbox'
   version: '360'
-  
-  
-  
+
 ##########
 # Mobile Gaming Console
 ##########
 - regex: 'Nitro|Nintendo ([3]?DS[i]?)'
   name: 'Nintendo Mobile'
   version: '$1'
-  
-  
+
+
 - regex: 'PlayStation ((?:Portable|Vita))'
   name: 'PlayStation Portable'
   version: '$1'
-  
-  
-  
+
 ##########
 # IBM
 ##########
 - regex: 'OS/2'
   name: 'OS/2'
   version: ''
-  
-
 
 ###########
 # Linux (Generic)
@@ -783,5 +762,3 @@
 - regex: 'Linux(?:OS)?[^a-z]'
   name: 'GNU/Linux'
   version: ''
-
-
