@@ -206,6 +206,10 @@ defmodule Plausible.Stats.Breakdown do
     |> ClickhouseRepo.all()
   end
 
+  defp breakdown_time_on_page(_site, _query, []) do
+    []
+  end
+
   defp breakdown_time_on_page(site, query, pages) do
     q =
       from(
