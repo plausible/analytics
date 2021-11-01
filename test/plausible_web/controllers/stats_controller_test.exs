@@ -143,15 +143,15 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "exports 6 months of data in zipped csvs", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          timestamp: relative_time(minutes: -1)
+          timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -1)
         ),
         build(:pageview,
-          timestamp: relative_time(months: -1),
+          timestamp: Timex.shift(~N[2021-10-20 12:00:00], months: -1),
           country_code: "EE",
           browser: "ABrowserName"
         ),
         build(:pageview,
-          timestamp: relative_time(months: -5),
+          timestamp: Timex.shift(~N[2021-10-20 12:00:00], months: -5),
           utm_campaign: "ads",
           country_code: "EE",
           referrer_source: "Google",
