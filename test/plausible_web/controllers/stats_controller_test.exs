@@ -130,7 +130,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       "name,unique_exits,total_exits,exit_rate\r\n/,2,2,100.0\r\n"
     )
 
-    assert_csv(zip, 'countries.csv', "name,visitors\r\nEST,1\r\n")
+    assert_csv(zip, 'countries.csv', "name,visitors\r\nEstonia,1\r\n")
     assert_csv(zip, 'browsers.csv', "name,visitors\r\n,2\r\n")
     assert_csv(zip, 'operating_systems.csv', "name,visitors\r\n,2\r\n")
     assert_csv(zip, 'devices.csv', "name,visitors\r\n,2\r\n")
@@ -202,7 +202,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         "name,unique_exits,total_exits,exit_rate\r\n/,3,3,100.0\r\n"
       )
 
-      assert_csv(zip, 'countries.csv', "name,visitors\r\nEST,2\r\n")
+      assert_csv(zip, 'countries.csv', "name,visitors\r\nEstonia,2\r\n")
       assert_csv(zip, 'browsers.csv', "name,visitors\r\nABrowserName,2\r\n,1\r\n")
       assert_csv(zip, 'operating_systems.csv', "name,visitors\r\n,3\r\n")
       assert_csv(zip, 'devices.csv', "name,visitors\r\n,3\r\n")
