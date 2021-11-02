@@ -180,7 +180,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert_csv(
         zip,
         'visitors.csv',
-        "date,visitors,pageviews,bounce_rate,visit_duration\r\n2021-05-01,0,0,,\r\n2021-06-01,1,1,100,0\r\n2021-07-01,0,0,,\r\n2021-08-01,0,0,,\r\n2021-09-01,0,0,,\r\n2021-10-01,1,1,100,0\r\n"
+        "date,visitors,pageviews,bounce_rate,visit_duration\r\n2021-05-01,1,1,100,0\r\n2021-06-01,0,0,,\r\n2021-07-01,0,0,,\r\n2021-08-01,0,0,,\r\n2021-09-01,1,1,100,0\r\n2021-10-01,1,1,100,0\r\n"
       )
 
       assert_csv(zip, 'sources.csv', "name,count,bounce_rate,visit_duration\r\nGoogle,1,,\r\n")
