@@ -64,7 +64,7 @@ defmodule PlausibleWeb.StatsController do
     filename =
       "Plausible export #{params["domain"]} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.zip"
 
-    params = Map.merge(params, %{"limit" => "1000", "csv" => "True", "detailed" => "True"})
+    params = Map.merge(params, %{"limit" => "300", "csv" => "True", "detailed" => "True"})
 
     csvs = [
       {'sources.csv', fn -> Api.StatsController.sources(conn, params) end},
