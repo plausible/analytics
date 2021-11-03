@@ -5,7 +5,8 @@ defmodule Plausible.Repo.Migrations.AddAnalyticsToGoogleAuth do
   def change do
     alter table(:google_auth) do
       add :search_console, :boolean, null: false, default: true
-      add :analytics, :string, null: true, default: nil
+      add :analytics, :bool, null: false, default: false
+      add :view_id, :string, null: true, default: nil
     end
   end
 end

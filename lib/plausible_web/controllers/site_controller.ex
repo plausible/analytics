@@ -237,6 +237,11 @@ defmodule PlausibleWeb.SiteController do
         Plausible.Google.Api.fetch_verified_properties(site.google_auth)
       end
 
+    google_analytics_profiles =
+      if google_analytics do
+        Plausible.Google.Api.get_analytics_view_ids(site.google_auth)
+      end
+
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_google_integration.html",
@@ -244,6 +249,7 @@ defmodule PlausibleWeb.SiteController do
       search_console: search_console,
       search_console_domains: search_console_domains,
       google_analytics: google_analytics,
+      google_analytics_profiles: google_analytics_profiles,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -289,7 +295,7 @@ defmodule PlausibleWeb.SiteController do
   def update_google_auth(conn, %{"google_auth" => attrs}) do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
 
-    Plausible.Site.GoogleAuth.set_property(site.google_auth, attrs)
+    Plausible.Site.GoogleAuth.update(site.google_auth, attrs)
     |> Repo.update!()
 
     conn
@@ -709,29 +715,18 @@ defmodule PlausibleWeb.SiteController do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
 
     if site.google_auth do
-      case Plausible.Google.Api.get_analytics_view_id(site) do
-        nil ->
-          conn
-          |> put_flash(:error, "Could not find #{site.domain} in linked Google Account")
-          |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/google-integration")
-
-        view_id ->
-          site.google_auth
-          |> Plausible.Site.GoogleAuth.changeset(%{analytics: view_id})
-          |> Repo.update!()
-
-          redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/google-integration")
-      end
-    else
-      redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/google-integration")
+      Plausible.Site.GoogleAuth.changeset(site.google_auth, %{analytics: true})
+      |> Repo.update!()
     end
+
+    redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/google-integration")
   end
 
   def disable_google_analytics(conn, _params) do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
 
     if site.google_auth do
-      Plausible.Site.GoogleAuth.changeset(site.google_auth, %{analytics: nil})
+      Plausible.Site.GoogleAuth.changeset(site.google_auth, %{analytics: false})
       |> Repo.update!()
     end
 

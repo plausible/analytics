@@ -9,7 +9,8 @@ defmodule Plausible.Site.GoogleAuth do
     field :access_token, :string
     field :expires, :naive_datetime
     field :search_console, :boolean
-    field :analytics, :string
+    field :analytics, :boolean
+    field :view_id, :string
 
     belongs_to :user, Plausible.Auth.User
     belongs_to :site, Plausible.Site
@@ -41,8 +42,8 @@ defmodule Plausible.Site.GoogleAuth do
     |> unique_constraint(:site)
   end
 
-  def set_property(auth, attrs \\ %{}) do
+  def update(auth, attrs \\ %{}) do
     auth
-    |> cast(attrs, [:property])
+    |> cast(attrs, [:property, :view_id])
   end
 end
