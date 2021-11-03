@@ -109,4 +109,3 @@ export default class OperatingSystems extends React.Component {
     )
   }
 }
-
