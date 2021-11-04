@@ -56,7 +56,7 @@ export default class OperatingSystems extends React.Component {
         key={os.name}
       >
         <Bar
-          count={os.count}
+          count={os.visitors}
           all={this.state.operatingSystems}
           bg="bg-green-50 dark:gray-500 dark:bg-opacity-15"
           maxWidthDeduction={maxWidthDeduction}
@@ -67,7 +67,7 @@ export default class OperatingSystems extends React.Component {
             </Link>
           </span>
         </Bar>
-        <span className="font-medium dark:text-gray-200 text-right w-20">{numberFormatter(os.count)} <span className="inline-block w-8 text-xs text-right">({os.percentage}%)</span></span>
+        <span className="font-medium dark:text-gray-200 text-right w-20">{numberFormatter(os.visitors)} <span className="inline-block w-8 text-xs text-right">({os.percentage}%)</span></span>
         {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(os.conversion_rate)}%</span>}
       </div>
     )

@@ -25,8 +25,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn = get(conn, "/api/stats/#{site.domain}/sources")
 
       assert json_response(conn, 200) == [
-               %{"name" => "Google", "count" => 2},
-               %{"name" => "DuckDuckGo", "count" => 1}
+               %{"name" => "Google", "visitors" => 2},
+               %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
     end
 
@@ -60,13 +60,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Google",
-                 "count" => 1,
+                 "visitors" => 1,
                  "bounce_rate" => 0,
                  "visit_duration" => 900
                },
                %{
                  "name" => "DuckDuckGo",
-                 "count" => 1,
+                 "visitors" => 1,
                  "bounce_rate" => 100,
                  "visit_duration" => 0
                }
@@ -95,8 +95,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn = get(conn, "/api/stats/#{site.domain}/sources?period=realtime")
 
       assert json_response(conn, 200) == [
-               %{"name" => "Google", "count" => 2},
-               %{"name" => "DuckDuckGo", "count" => 1}
+               %{"name" => "Google", "visitors" => 2},
+               %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
     end
 
@@ -119,7 +119,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn = get(conn, "/api/stats/#{site.domain}/sources?limit=1&page=2")
 
       assert json_response(conn, 200) == [
-               %{"name" => "DuckDuckGo", "count" => 1}
+               %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
     end
 
@@ -135,7 +135,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn = get(conn, "/api/stats/#{site.domain}/sources?filters=#{filters}")
 
       assert json_response(conn, 200) == [
-               %{"name" => "Google", "count" => 1}
+               %{"name" => "Google", "visitors" => 1}
              ]
     end
   end
@@ -170,13 +170,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "social",
-                 "count" => 1,
+                 "visitors" => 1,
                  "bounce_rate" => 0,
                  "visit_duration" => 900
                },
                %{
                  "name" => "email",
-                 "count" => 1,
+                 "visitors" => 1,
                  "bounce_rate" => 100,
                  "visit_duration" => 0
                }
@@ -218,13 +218,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "august",
-                 "count" => 2,
+                 "visitors" => 2,
                  "bounce_rate" => 100,
                  "visit_duration" => 0
                },
                %{
                  "name" => "profile",
-                 "count" => 1,
+                 "visitors" => 1,
                  "bounce_rate" => 0,
                  "visit_duration" => 900
                }
@@ -266,13 +266,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "newsletter",
-                 "count" => 2,
+                 "visitors" => 2,
                  "bounce_rate" => 100,
                  "visit_duration" => 0
                },
                %{
                  "name" => "Twitter",
-                 "count" => 1,
+                 "visitors" => 1,
                  "bounce_rate" => 0,
                  "visit_duration" => 900
                }
@@ -313,7 +313,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                %{
                  "name" => "Twitter",
                  "total_visitors" => 2,
-                 "count" => 1,
+                 "visitors" => 1,
                  "conversion_rate" => 50.0
                }
              ]
@@ -349,7 +349,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                %{
                  "name" => "Twitter",
                  "total_visitors" => 2,
-                 "count" => 1,
+                 "visitors" => 1,
                  "conversion_rate" => 50.0
                }
              ]
@@ -388,8 +388,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       assert json_response(conn, 200) == %{
                "total_visitors" => 3,
                "referrers" => [
-                 %{"name" => "10words.com", "count" => 2},
-                 %{"name" => "10words.com/page1", "count" => 1}
+                 %{"name" => "10words.com", "visitors" => 2},
+                 %{"name" => "10words.com/page1", "visitors" => 1}
                ]
              }
     end
@@ -431,7 +431,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                "referrers" => [
                  %{
                    "name" => "10words.com",
-                   "count" => 2,
+                   "visitors" => 2,
                    "bounce_rate" => 50.0,
                    "visit_duration" => 450
                  }
@@ -501,7 +501,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                    "name" => "10words.com",
                    "total_visitors" => 2,
                    "conversion_rate" => 50.0,
-                   "count" => 1
+                   "visitors" => 1
                  }
                ]
              }
@@ -542,7 +542,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                    "name" => "10words.com",
                    "total_visitors" => 2,
                    "conversion_rate" => 50.0,
-                   "count" => 1
+                   "visitors" => 1
                  }
                ]
              }

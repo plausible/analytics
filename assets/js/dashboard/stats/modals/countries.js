@@ -58,7 +58,7 @@ class CountriesModal extends React.Component {
         </td>
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{country.total_visitors}</td> }
         <td className="p-2 w-32 font-medium" align="right">
-          {numberFormatter(country.count)} {!this.showConversionRate() && <span className="inline-block text-xs w-8 text-right">({country.percentage}%)</span>}
+          {numberFormatter(country.visitors)} {!this.showConversionRate() && <span className="inline-block text-xs w-8 text-right">({country.percentage}%)</span>}
         </td>
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{country.conversion_rate}%</td> }
       </tr>

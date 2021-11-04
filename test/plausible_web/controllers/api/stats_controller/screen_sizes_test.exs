@@ -15,8 +15,8 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
       conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
 
       assert json_response(conn, 200) == [
-               %{"name" => "Desktop", "count" => 2, "percentage" => 67},
-               %{"name" => "Laptop", "count" => 1, "percentage" => 33}
+               %{"name" => "Desktop", "visitors" => 2, "percentage" => 67},
+               %{"name" => "Laptop", "visitors" => 1, "percentage" => 33}
              ]
     end
 
@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
                %{
                  "name" => "Desktop",
                  "total_visitors" => 2,
-                 "count" => 1,
+                 "visitors" => 1,
                  "percentage" => 100,
                  "conversion_rate" => 50.0
                }

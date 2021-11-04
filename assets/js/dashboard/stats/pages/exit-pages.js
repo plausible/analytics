@@ -57,8 +57,9 @@ export default class ExitPages extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={page.name}>
         <Bar
-          count={page.count}
+          count={page.unique_exits}
           all={this.state.pages}
+					plot="unique_exits"
           bg="bg-orange-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction={maxWidthDeduction}
         >
@@ -79,7 +80,7 @@ export default class ExitPages extends React.Component {
             </a>
           </span>
         </Bar>
-        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(page.count)}</span>
+        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(page.unique_exits)}</span>
         {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(page.conversion_rate)}%</span>}
       </div>
     )

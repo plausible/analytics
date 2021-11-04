@@ -15,8 +15,8 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       conn = get(conn, "/api/stats/#{site.domain}/operating-systems?period=day")
 
       assert json_response(conn, 200) == [
-               %{"name" => "Mac", "count" => 2, "percentage" => 67},
-               %{"name" => "Android", "count" => 1, "percentage" => 33}
+               %{"name" => "Mac", "visitors" => 2, "percentage" => 67},
+               %{"name" => "Android", "visitors" => 1, "percentage" => 33}
              ]
     end
 
@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
                %{
                  "name" => "Mac",
                  "total_visitors" => 2,
-                 "count" => 1,
+                 "visitors" => 1,
                  "percentage" => 100,
                  "conversion_rate" => 50.0
                }
@@ -64,8 +64,8 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "10.16", "count" => 2, "percentage" => 67},
-               %{"name" => "10.15", "count" => 1, "percentage" => 33}
+               %{"name" => "10.16", "visitors" => 2, "percentage" => 67},
+               %{"name" => "10.15", "visitors" => 1, "percentage" => 33}
              ]
     end
   end

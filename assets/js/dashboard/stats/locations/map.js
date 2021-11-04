@@ -49,7 +49,7 @@ class CountriesMap extends React.Component {
   getDataset() {
     var dataset = {};
 
-    var onlyValues = this.state.countries.map(function(obj){ return obj.count });
+    var onlyValues = this.state.countries.map(function(obj){ return obj.visitors });
     var maxValue = Math.max.apply(null, onlyValues);
 
     var paletteScale = d3.scale.linear()
@@ -60,7 +60,7 @@ class CountriesMap extends React.Component {
       ]);
 
     this.state.countries.forEach(function(item){
-      dataset[item.name] = {numberOfThings: item.count, fillColor: paletteScale(item.count)};
+      dataset[item.name] = {numberOfThings: item.visitors, fillColor: paletteScale(item.visitors)};
     });
 
     return dataset

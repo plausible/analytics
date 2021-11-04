@@ -59,7 +59,7 @@ export default class Countries extends React.Component {
         key={country.name}
       >
         <Bar
-          count={country.count}
+          count={country.visitors}
           all={this.state.countries}
           bg="bg-orange-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction={maxWidthDeduction}
@@ -75,7 +75,7 @@ export default class Countries extends React.Component {
             </Link>
           </span>
         </Bar>
-        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(country.count)}</span>
+        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(country.visitors)}</span>
         {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(country.conversion_rate)}%</span>}
       </div>
     )

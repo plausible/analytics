@@ -60,7 +60,7 @@ export default class Visits extends React.Component {
         key={page.name}
       >
         <Bar
-          count={page.count}
+          count={page.visitors}
           all={this.state.pages}
           bg="bg-orange-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction={maxWidthDeduction}
@@ -84,7 +84,7 @@ export default class Visits extends React.Component {
             </a>
           </span>
         </Bar>
-        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(page.count)}</span>
+        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(page.visitors)}</span>
         {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(page.conversion_rate)}%</span>}
       </div>
     )

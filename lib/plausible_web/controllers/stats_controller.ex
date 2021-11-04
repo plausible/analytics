@@ -64,24 +64,29 @@ defmodule PlausibleWeb.StatsController do
     filename =
       "Plausible export #{params["domain"]} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.zip"
 
-    params = Map.put(params, "limit", "1000")
-    params = Map.put(params, "csv", "True")
+    params = Map.merge(params, %{"limit" => "300", "csv" => "True", "detailed" => "True"})
 
     csvs = [
-      {'visitors.csv', visitors},
-      {'sources.csv', Api.StatsController.sources(conn, params)},
-      {'utm_mediums.csv', Api.StatsController.utm_mediums(conn, params)},
-      {'utm_sources.csv', Api.StatsController.utm_sources(conn, params)},
-      {'utm_campaigns.csv', Api.StatsController.utm_campaigns(conn, params)},
-      {'pages.csv', Api.StatsController.pages(conn, params)},
-      {'entry_pages.csv', Api.StatsController.entry_pages(conn, params)},
-      {'exit_pages.csv', Api.StatsController.exit_pages(conn, params)},
-      {'countries.csv', Api.StatsController.countries(conn, params)},
-      {'browsers.csv', Api.StatsController.browsers(conn, params)},
-      {'operating_systems.csv', Api.StatsController.operating_systems(conn, params)},
-      {'devices.csv', Api.StatsController.screen_sizes(conn, params)},
-      {'conversions.csv', Api.StatsController.conversions(conn, params)}
+      {'sources.csv', fn -> Api.StatsController.sources(conn, params) end},
+      {'utm_mediums.csv', fn -> Api.StatsController.utm_mediums(conn, params) end},
+      {'utm_sources.csv', fn -> Api.StatsController.utm_sources(conn, params) end},
+      {'utm_campaigns.csv', fn -> Api.StatsController.utm_campaigns(conn, params) end},
+      {'pages.csv', fn -> Api.StatsController.pages(conn, params) end},
+      {'entry_pages.csv', fn -> Api.StatsController.entry_pages(conn, params) end},
+      {'exit_pages.csv', fn -> Api.StatsController.exit_pages(conn, params) end},
+      {'countries.csv', fn -> Api.StatsController.countries(conn, params) end},
+      {'browsers.csv', fn -> Api.StatsController.browsers(conn, params) end},
+      {'operating_systems.csv', fn -> Api.StatsController.operating_systems(conn, params) end},
+      {'devices.csv', fn -> Api.StatsController.screen_sizes(conn, params) end},
+      {'conversions.csv', fn -> Api.StatsController.conversions(conn, params) end}
     ]
+
+    csvs =
+      csvs
+      |> Enum.map(fn {file, task} -> {file, Task.async(task)} end)
+      |> Enum.map(fn {file, task} -> {file, Task.await(task)} end)
+
+    csvs = [{'visitors.csv', visitors} | csvs]
 
     {:ok, {_, zip_content}} = :zip.create(filename, csvs, [:memory])
 
