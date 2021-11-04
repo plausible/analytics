@@ -79,16 +79,17 @@ export default class Conversions extends React.Component {
       <div className="my-2 text-sm" key={goal.name}>
         <div className="flex items-center justify-between my-2">
           <Bar
-            count={goal.visitors}
+            count={goal.unique_conversions}
             all={this.state.goals}
             bg="bg-red-50 dark:bg-gray-500 dark:bg-opacity-15"
             maxWidthDeduction={this.getBarMaxWidth()}
+            plot="unique_conversions"
           >
             {this.renderGoalText(goal.name)}
           </Bar>
           <div className="dark:text-gray-200">
-            <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.visitors)}</span>
-            {viewport > MOBILE_UPPER_WIDTH && <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.total_count)}</span>}
+            <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.unique_conversions)}</span>
+            {viewport > MOBILE_UPPER_WIDTH && <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.total_conversions)}</span>}
             <span className="inline-block w-20 font-medium text-right">{goal.conversion_rate}%</span>
           </div>
         </div>
