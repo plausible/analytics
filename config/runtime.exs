@@ -28,8 +28,8 @@ case secret_key_base do
   nil ->
     raise "SECRET_KEY_BASE configuration option is required. See https://plausible.io/docs/self-hosting-configuration#server"
 
-  key when byte_size(key) < 64 ->
-    raise "SECRET_KEY_BASE must be at least 64 bytes long. See https://plausible.io/docs/self-hosting-configuration#server"
+  key when byte_size(key) < 32 ->
+    raise "SECRET_KEY_BASE must be at least 32 bytes long. See https://plausible.io/docs/self-hosting-configuration#server"
 
   _ ->
     nil
