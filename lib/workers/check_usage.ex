@@ -104,13 +104,13 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   defp check_pageview_limit(subscriber, billing_mod) do
-    allowance = Plausible.Billing.Plans.allowance(subscriber.subscription)
+    allowance = Plausible.Billing.Plans.allowance(subscriber.subscription) * 1.1
     {_, last_cycle} = billing_mod.last_two_billing_cycles(subscriber)
 
     {last_last_cycle_usage, last_cycle_usage} =
       billing_mod.last_two_billing_months_usage(subscriber)
 
-    if last_last_cycle_usage > allowance && last_cycle_usage > allowance do
+    if last_last_cycle_usage >= allowance && last_cycle_usage >= allowance do
       {:over_limit, {last_cycle, last_cycle_usage}}
     else
       {:within_limit, {last_cycle, last_cycle_usage}}

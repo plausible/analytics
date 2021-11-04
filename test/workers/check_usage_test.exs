@@ -49,6 +49,28 @@ defmodule Plausible.Workers.CheckUsageTest do
     assert Repo.reload(user).grace_period == nil
   end
 
+  test "does not send an email if account is over the limit by less than 10%", %{
+    user: user
+  } do
+    billing_stub =
+      Plausible.Billing
+      |> stub(:last_two_billing_cycles, fn _user ->
+        {Date.range(Timex.today(), Timex.today()), Date.range(Timex.today(), Timex.today())}
+      end)
+      |> stub(:last_two_billing_months_usage, fn _user -> {10_999, 11_000} end)
+
+    insert(:subscription,
+      user: user,
+      paddle_plan_id: @paddle_id_10k,
+      last_bill_date: Timex.shift(Timex.today(), days: -1)
+    )
+
+    CheckUsage.perform(nil, billing_stub)
+
+    assert_no_emails_delivered()
+    assert Repo.reload(user).grace_period == nil
+  end
+
   test "sends an email when an account is over their limit for two consecutive billing months", %{
     user: user
   } do
