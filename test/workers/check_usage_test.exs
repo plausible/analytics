@@ -69,7 +69,7 @@ defmodule Plausible.Workers.CheckUsageTest do
 
     assert_email_delivered_with(
       to: [user],
-      subject: "You have outgrown your Plausible subscription tier"
+      subject: "[Action required] You have outgrown your Plausible subscription tier"
     )
 
     assert Repo.reload(user).grace_period_end == Timex.shift(Timex.today(), days: 7)
@@ -156,7 +156,7 @@ defmodule Plausible.Workers.CheckUsageTest do
 
       assert_email_delivered_with(
         to: [user],
-        subject: "You have outgrown your Plausible subscription tier"
+        subject: "[Action required] You have outgrown your Plausible subscription tier"
       )
     end
 
@@ -202,7 +202,7 @@ defmodule Plausible.Workers.CheckUsageTest do
 
       assert_email_delivered_with(
         to: [user],
-        subject: "You have outgrown your Plausible subscription tier"
+        subject: "[Action required] You have outgrown your Plausible subscription tier"
       )
     end
   end

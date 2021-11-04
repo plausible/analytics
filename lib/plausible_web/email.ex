@@ -119,7 +119,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("over-limit")
-    |> subject("You have outgrown your Plausible subscription tier")
+    |> subject("[Action required] You have outgrown your Plausible subscription tier")
     |> render("over_limit.html", %{
       user: user,
       usage: usage,
