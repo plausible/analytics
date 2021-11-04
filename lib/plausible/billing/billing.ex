@@ -17,19 +17,28 @@ defmodule Plausible.Billing do
 
     changeset = Subscription.changeset(%Subscription{}, format_subscription(params))
 
-    Repo.insert(changeset)
-    |> check_lock_status
-    |> maybe_adjust_api_key_limits
+    Repo.insert(changeset) |> after_subscription_update
   end
 
   def subscription_updated(params) do
     subscription = Repo.get_by!(Subscription, paddle_subscription_id: params["subscription_id"])
     changeset = Subscription.changeset(subscription, format_subscription(params))
 
-    Repo.update(changeset)
+    Repo.update(changeset) |> after_subscription_update
+  end
+
+  defp after_subscription_update({:ok, subscription}) do
+    user =
+      Repo.get(Plausible.Auth.User, subscription.user_id)
+      |> Map.put(:subscription, subscription)
+
+    {:ok, user}
+    |> maybe_remove_grace_period
     |> check_lock_status
     |> maybe_adjust_api_key_limits
   end
+
+  defp after_subscription_update(err), do: err
 
   def subscription_cancelled(params) do
     subscription =
@@ -114,7 +123,7 @@ defmodule Plausible.Billing do
     subscription_active = subscription_is_active?(user.subscription)
 
     grace_period_ended =
-      user.grace_period_end && Timex.before?(user.grace_period_end, Timex.today())
+      user.grace_period && Timex.before?(user.grace_period.end_date, Timex.today())
 
     cond do
       trial_is_over && !subscription_active -> {true, :no_active_subscription}
@@ -225,31 +234,48 @@ defmodule Plausible.Billing do
   defp present?(nil), do: false
   defp present?(_), do: true
 
-  defp check_lock_status({:ok, subscription}) do
-    user =
-      Repo.get(Plausible.Auth.User, subscription.user_id)
-      |> Map.put(:subscription, subscription)
+  defp maybe_remove_grace_period({:ok, user}) do
+    alias Plausible.Auth.GracePeriod
 
+    case user.grace_period do
+      %GracePeriod{allowance_required: allowance_required} ->
+        new_allowance = Plausible.Billing.Plans.allowance(user.subscription)
+
+        if new_allowance > allowance_required do
+          Plausible.Auth.User.remove_grace_period(user)
+          |> Repo.update()
+        else
+          {:ok, user}
+        end
+
+      _ ->
+        {:ok, user}
+    end
+  end
+
+  defp maybe_remove_grace_period(err), do: err
+
+  defp check_lock_status({:ok, user}) do
     Plausible.Billing.SiteLocker.check_sites_for(user)
-    {:ok, subscription}
+    {:ok, user}
   end
 
   defp check_lock_status(err), do: err
 
-  defp maybe_adjust_api_key_limits({:ok, subscription}) do
+  defp maybe_adjust_api_key_limits({:ok, user}) do
     plan =
       Repo.get_by(Plausible.Billing.EnterprisePlan,
-        user_id: subscription.user_id,
-        paddle_plan_id: subscription.paddle_plan_id
+        user_id: user.id,
+        paddle_plan_id: user.subscription.paddle_plan_id
       )
 
     if plan do
-      user_id = subscription.user_id
+      user_id = user.id
       api_keys = from(key in Plausible.Auth.ApiKey, where: key.user_id == ^user_id)
       Repo.update_all(api_keys, set: [hourly_request_limit: plan.hourly_api_request_limit])
     end
 
-    {:ok, subscription}
+    {:ok, user}
   end
 
   defp maybe_adjust_api_key_limits(err), do: err

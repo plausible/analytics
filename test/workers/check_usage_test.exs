@@ -24,7 +24,7 @@ defmodule Plausible.Workers.CheckUsageTest do
     CheckUsage.perform(nil)
 
     assert_no_emails_delivered()
-    assert Repo.reload(user).grace_period_end == nil
+    assert Repo.reload(user).grace_period == nil
   end
 
   test "does not send an email if account has been over the limit for one billing month", %{
@@ -46,7 +46,7 @@ defmodule Plausible.Workers.CheckUsageTest do
     CheckUsage.perform(nil, billing_stub)
 
     assert_no_emails_delivered()
-    assert Repo.reload(user).grace_period_end == nil
+    assert Repo.reload(user).grace_period == nil
   end
 
   test "sends an email when an account is over their limit for two consecutive billing months", %{
@@ -72,7 +72,7 @@ defmodule Plausible.Workers.CheckUsageTest do
       subject: "[Action required] You have outgrown your Plausible subscription tier"
     )
 
-    assert Repo.reload(user).grace_period_end == Timex.shift(Timex.today(), days: 7)
+    assert Repo.reload(user).grace_period.end_date == Timex.shift(Timex.today(), days: 7)
   end
 
   describe "enterprise customers" do

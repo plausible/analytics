@@ -3,7 +3,7 @@ defmodule Plausible.Repo.Migrations.GracePeriodEnd do
 
   def change do
     alter table(:users) do
-      add :grace_period_end, :date
+      add :grace_period, :map
     end
   end
 end

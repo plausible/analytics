@@ -50,7 +50,14 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "does not lock user who has an active subscription and is on grace period" do
-      user = insert(:user, grace_period_end: Timex.shift(Timex.today(), days: 1))
+      user =
+        insert(:user,
+          grace_period: %Plausible.Auth.GracePeriod{
+            end_date: Timex.shift(Timex.today(), days: 1),
+            allowance_required: 10_000
+          }
+        )
+
       insert(:subscription, status: "active", user: user)
       user = Repo.preload(user, :subscription)
       site = insert(:site, members: [user])
@@ -79,7 +86,14 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "locks all sites if user has active subscription but grace period has ended" do
-      user = insert(:user, grace_period_end: Timex.shift(Timex.today(), days: -1))
+      user =
+        insert(:user,
+          grace_period: %Plausible.Auth.GracePeriod{
+            end_date: Timex.shift(Timex.today(), days: -1),
+            allowance_required: 10_000
+          }
+        )
+
       insert(:subscription, status: "active", user: user)
       user = Repo.preload(user, :subscription)
       site = insert(:site, members: [user])
@@ -90,7 +104,14 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "sends email if grace period has ended" do
-      user = insert(:user, grace_period_end: Timex.shift(Timex.today(), days: -1))
+      user =
+        insert(:user,
+          grace_period: %Plausible.Auth.GracePeriod{
+            end_date: Timex.shift(Timex.today(), days: -1),
+            allowance_required: 10_000
+          }
+        )
+
       insert(:subscription, status: "active", user: user)
       user = Repo.preload(user, :subscription)
       insert(:site, members: [user])
