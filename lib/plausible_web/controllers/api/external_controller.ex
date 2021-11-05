@@ -205,14 +205,13 @@ defmodule PlausibleWeb.Api.ExternalController do
     result =
       PlausibleWeb.RemoteIp.get(conn)
       |> Geolix.lookup()
-      |> Map.get(:geolocation)
 
-    country_code = get_in(result, [:country, :iso_code])
-    city_geoname_id = get_in(result, [:city, :geoname_id])
+    country_code = get_in(result, [:geolocation, :country, :iso_code])
+    city_geoname_id = get_in(result, [:geolocation, :city, :geoname_id])
 
     subdivision1_code =
       case result do
-        %{subdivisions: [%{iso_code: iso_code} | _rest]} ->
+        %{geolocation: %{subdivisions: [%{iso_code: iso_code} | _rest]}} ->
           country_code <> "-" <> iso_code
 
         _ ->
@@ -221,7 +220,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
     subdivision2_code =
       case result do
-        %{subdivisions: [_first, %{iso_code: iso_code} | _rest]} ->
+        %{geolocation: %{subdivisions: [_first, %{iso_code: iso_code} | _rest]}} ->
           country_code <> "-" <> iso_code
 
         _ ->
