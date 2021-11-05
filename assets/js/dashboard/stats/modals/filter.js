@@ -200,24 +200,32 @@ class FilterModal extends React.Component {
   }
 
   renderFilterInputs() {
-    return FILTER_GROUPS[this.state.selectedFilterGroup].map((filter) => (
-      <div className="mt-4" key={filter}>
-        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{ formattedFilters[filter] }</div>
-        <div className="flex items-start mt-1">
-          { this.renderFilterTypeSelector(filter) }
+    const groups = FILTER_GROUPS[this.state.selectedFilterGroup].filter((filterName) => {
+      if (['city', 'region'].includes(filterName)) {
+        return this.props.site.cities
+      }
+      return true
+    })
 
-          <SearchSelect
-            key={filter}
-            fetchOptions={this.fetchOptions(filter)}
-            initialSelectedItem={this.state.formState[filter]}
-            onInput={this.onInput(filter)}
-            onSelect={this.onSelect(filter)}
-            placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`}
-          />
+    return groups.map((filter) => {
+      return (
+        <div className="mt-4" key={filter}>
+          <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{ formattedFilters[filter] }</div>
+          <div className="flex items-start mt-1">
+            { this.renderFilterTypeSelector(filter) }
+
+            <SearchSelect
+              key={filter}
+              fetchOptions={this.fetchOptions(filter)}
+              initialSelectedItem={this.state.formState[filter]}
+              onInput={this.onInput(filter)}
+              onSelect={this.onSelect(filter)}
+              placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`}
+            />
+          </div>
         </div>
-
-      </div>
-      ))
+      )
+    })
   }
 
   renderFilterTypeSelector(filterName) {

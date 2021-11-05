@@ -45,7 +45,7 @@ export default class ListReport extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={listItem.name}>
         <Bar
-          count={listItem.count}
+          count={listItem.visitors}
           all={this.state.list}
           bg="bg-green-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction="6rem"
@@ -57,7 +57,7 @@ export default class ListReport extends React.Component {
           </span>
         </Bar>
         <span className="font-medium dark:text-gray-200">
-          {numberFormatter(listItem.count)}
+          {numberFormatter(listItem.visitors)}
           {
             listItem.percentage &&
               <span className="inline-block w-8 text-xs text-right">({listItem.percentage}%)</span>
@@ -85,17 +85,13 @@ export default class ListReport extends React.Component {
 
   render() {
     return (
-      <div className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col dark:bg-gray-825 mt-6 w-full">
-        <LazyLoader onVisible={this.onVisible} className="flex flex-col flex-grow">
-          <h3 className="font-bold dark:text-gray-100">{this.props.title}</h3>
-          { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
-          <FadeIn show={!this.state.loading} className="flex-grow">
-            { this.renderList() }
-          </FadeIn>
-          {this.props.detailsLink && !this.state.loading && <MoreLink url={this.props.detailsLink} list={this.state.list} />}
-        </LazyLoader>
-      </div>
+      <LazyLoader onVisible={this.onVisible} className="flex flex-col flex-grow">
+        { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
+        <FadeIn show={!this.state.loading} className="flex-grow">
+          { this.renderList() }
+        </FadeIn>
+        {this.props.detailsLink && !this.state.loading && <MoreLink url={this.props.detailsLink} list={this.state.list} />}
+      </LazyLoader>
     )
   }
 }
-
