@@ -580,13 +580,13 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "event:goal", ["visitors", "events"], {100, 1})
       |> transform_keys(%{
         "goal" => "name",
-        "count" => "unique_conversions",
+        "visitors" => "unique_conversions",
         "events" => "total_conversions"
       })
       |> Enum.map(fn goal ->
         goal
         |> Map.put(:prop_names, prop_names[goal["name"]])
-        |> Map.put(:conversion_rate, calculate_cr(total_visitors, goal["visitors"]))
+        |> Map.put(:conversion_rate, calculate_cr(total_visitors, goal["unique_conversions"]))
       end)
 
     if params["csv"] do
