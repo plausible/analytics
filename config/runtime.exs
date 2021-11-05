@@ -83,6 +83,8 @@ ch_db_url =
 ### Mandatory params End
 
 sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
+honeycomb_api_key = get_var_from_path_or_env(config_dir, "HONEYCOMB_API_KEY")
+honeycomb_dataset = get_var_from_path_or_env(config_dir, "HONEYCOMB_DATASET")
 paddle_auth_code = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_AUTH_CODE")
 google_cid = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_ID")
 google_secret = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_SECRET")
@@ -408,6 +410,21 @@ config :logger, Sentry.LoggerBackend,
   capture_log_messages: true,
   level: :error,
   excluded_domains: []
+
+if honeycomb_api_key && honeycomb_dataset do
+  config :opentelemetry, :processors,
+    otel_batch_processor: %{
+      exporter:
+        {:opentelemetry_exporter,
+         %{
+           endpoints: ['https://api.honeycomb.io:443'],
+           headers: [
+             {"x-honeycomb-team", honeycomb_api_key},
+             {"x-honeycomb-dataset", honeycomb_dataset}
+           ]
+         }}
+    }
+end
 
 config :tzdata,
        :data_dir,

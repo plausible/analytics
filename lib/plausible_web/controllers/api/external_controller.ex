@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Api.ExternalController do
   use PlausibleWeb, :controller
+  use OpenTelemetryDecorator
   require Logger
 
   def event(conn, _params) do
@@ -46,6 +47,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     })
   end
 
+  @decorate trace("ingest.parse_user_agent")
   defp parse_user_agent(conn) do
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
 
@@ -197,6 +199,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
+  @decorate trace("ingest.geolocation")
   defp visitor_country(conn) do
     result =
       PlausibleWeb.RemoteIp.get(conn)
@@ -205,6 +208,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     get_in(result, [:country, :country, :iso_code])
   end
 
+  @decorate trace("ingest.parse_referrer")
   defp parse_referrer(_, nil), do: nil
 
   defp parse_referrer(uri, referrer_str) do
