@@ -230,7 +230,7 @@ defmodule Plausible.Stats.Breakdown do
     time_query = "
       SELECT
         p,
-        sum(td)/count(case when p2 != p then 1 end) as avgTime
+        round(sum(td)/count(case when p2 != p then 1 end)) as avgTime
       FROM
         (SELECT
           p,
@@ -248,10 +248,7 @@ defmodule Plausible.Stats.Breakdown do
       GROUP BY p"
 
     {:ok, res} = ClickhouseRepo.query(time_query, base_query_raw_params ++ [pages])
-
-    res.rows
-    |> Enum.map(fn [page, time] -> {page, Kernel.round(time)} end)
-    |> Enum.into(%{})
+    res.rows |> Enum.map(fn [page, time] -> {page, time} end) |> Enum.into(%{})
   end
 
   defp do_group_by(
