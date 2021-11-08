@@ -130,6 +130,8 @@ defmodule PlausibleWeb.StatsControllerTest do
         browser: "ABrowserName"
       )
     ])
+
+    insert(:goal, %{domain: site.domain, page_path: "/some-other-page"})
   end
 
   describe "GET /share/:slug" do
