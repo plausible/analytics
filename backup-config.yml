@@ -1,0 +1,10 @@
+general:
+  remote_storage: s3
+clickhouse:
+  username: default
+  password: ""
+s3:
+  access_key: "3KBJJYJN29XWX0R8D59M"
+  secret_key: "WVIqTPPu76ZDMW7XlLeAVgU0FkNZeCwzapBN9slq"
+  bucket: "plausible-backups-test"
+  endpoint: "s3.eu-central-1.wasabisys.com"
