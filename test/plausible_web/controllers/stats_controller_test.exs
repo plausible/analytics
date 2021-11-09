@@ -48,20 +48,9 @@ defmodule PlausibleWeb.StatsControllerTest do
     setup [:create_user, :create_new_site, :log_in]
 
     test "exports data in zipped csvs", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview,
-          country_code: "EE",
-          timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -1),
-          referrer_source: "Google"
-        ),
-        build(:pageview,
-          utm_campaign: "ads",
-          timestamp: Timex.shift(~N[2021-10-20 12:00:00], days: -1)
-        )
-      ])
-
+      populate_exported_stats(site)
       conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20")
-      assert_default_zip(conn)
+      assert_zip(conn, "30d")
     end
   end
 
@@ -70,24 +59,23 @@ defmodule PlausibleWeb.StatsControllerTest do
       site = insert(:site, domain: "new-site.com")
       link = insert(:shared_link, site: site)
 
-      populate_stats(site, [
-        build(:pageview,
-          country_code: "EE",
-          timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -1),
-          referrer_source: "Google"
-        ),
-        build(:pageview,
-          utm_campaign: "ads",
-          timestamp: Timex.shift(~N[2021-10-20 12:00:00], days: -1)
-        )
-      ])
-
+      populate_exported_stats(site)
       conn = get(conn, "/" <> site.domain <> "/export?auth=#{link.slug}&date=2021-10-20")
-      assert_default_zip(conn)
+      assert_zip(conn, "30d")
     end
   end
 
-  defp assert_default_zip(conn) do
+  describe "GET /:website/export - for past 6 months" do
+    setup [:create_user, :create_new_site, :log_in]
+
+    test "exports 6 months of data in zipped csvs", %{conn: conn, site: site} do
+      populate_exported_stats(site)
+      conn = get(conn, "/" <> site.domain <> "/export?period=6mo&date=2021-10-20")
+      assert_zip(conn, "6m")
+    end
+  end
+
+  defp assert_zip(conn, folder) do
     assert conn.status == 200
 
     assert {"content-type", "application/zip; charset=utf-8"} =
@@ -95,124 +83,55 @@ defmodule PlausibleWeb.StatsControllerTest do
 
     {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
 
-    assert_csv(
-      zip,
-      'visitors.csv',
-      "date,visitors,pageviews,bounce_rate,visit_duration\r\n2021-09-20,0,0,,\r\n2021-09-21,0,0,,\r\n2021-09-22,0,0,,\r\n2021-09-23,0,0,,\r\n2021-09-24,0,0,,\r\n2021-09-25,0,0,,\r\n2021-09-26,0,0,,\r\n2021-09-27,0,0,,\r\n2021-09-28,0,0,,\r\n2021-09-29,0,0,,\r\n2021-09-30,0,0,,\r\n2021-10-01,0,0,,\r\n2021-10-02,0,0,,\r\n2021-10-03,0,0,,\r\n2021-10-04,0,0,,\r\n2021-10-05,0,0,,\r\n2021-10-06,0,0,,\r\n2021-10-07,0,0,,\r\n2021-10-08,0,0,,\r\n2021-10-09,0,0,,\r\n2021-10-10,0,0,,\r\n2021-10-11,0,0,,\r\n2021-10-12,0,0,,\r\n2021-10-13,0,0,,\r\n2021-10-14,0,0,,\r\n2021-10-15,0,0,,\r\n2021-10-16,0,0,,\r\n2021-10-17,0,0,,\r\n2021-10-18,0,0,,\r\n2021-10-19,1,1,100,0\r\n2021-10-20,1,1,100,0\r\n"
-    )
+    folder = Path.expand(folder, "test/plausible_web/controllers/CSVs")
 
-    assert_csv(
-      zip,
-      'sources.csv',
-      "name,visitors,bounce_rate,visit_duration\r\nGoogle,1,100,0\r\n"
-    )
-
-    assert_csv(zip, 'utm_mediums.csv', "name,visitors,bounce_rate,visit_duration\r\n")
-    assert_csv(zip, 'utm_sources.csv', "name,visitors,bounce_rate,visit_duration\r\n")
-
-    assert_csv(
-      zip,
-      'utm_campaigns.csv',
-      "name,visitors,bounce_rate,visit_duration\r\nads,1,100,0\r\n"
-    )
-
-    assert_csv(zip, 'pages.csv', "name,visitors,bounce_rate,time_on_page\r\n/,2,100,\r\n")
-
-    assert_csv(
-      zip,
-      'entry_pages.csv',
-      "name,unique_entrances,total_entrances,visit_duration\r\n/,2,2,0\r\n"
-    )
-
-    assert_csv(
-      zip,
-      'exit_pages.csv',
-      "name,unique_exits,total_exits,exit_rate\r\n/,2,2,100.0\r\n"
-    )
-
-    assert_csv(zip, 'countries.csv', "name,visitors\r\nEstonia,1\r\n")
-    assert_csv(zip, 'browsers.csv', "name,visitors\r\n,2\r\n")
-    assert_csv(zip, 'operating_systems.csv', "name,visitors\r\n,2\r\n")
-    assert_csv(zip, 'devices.csv', "name,visitors\r\n,2\r\n")
-    assert_csv(zip, 'conversions.csv', "name,unique_conversions,total_conversions\r\n")
+    Enum.map(zip, &assert_csv(&1, folder))
   end
 
-  describe "GET /:website/export - for past 6 months" do
-    setup [:create_user, :create_new_site, :log_in]
+  defp assert_csv({file, downloaded}, folder) do
+    file = Path.expand(file, folder)
 
-    test "exports 6 months of data in zipped csvs", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview,
-          timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -1)
-        ),
-        build(:pageview,
-          timestamp: Timex.shift(~N[2021-10-20 12:00:00], months: -1),
-          country_code: "EE",
-          browser: "ABrowserName"
-        ),
-        build(:pageview,
-          timestamp: Timex.shift(~N[2021-10-20 12:00:00], months: -5),
-          utm_campaign: "ads",
-          country_code: "EE",
-          referrer_source: "Google",
-          browser: "ABrowserName"
-        )
-      ])
-
-      conn = get(conn, "/" <> site.domain <> "/export?period=6mo&date=2021-10-20")
-      assert conn.status == 200
-
-      assert {"content-type", "application/zip; charset=utf-8"} =
-               List.keyfind(conn.resp_headers, "content-type", 0)
-
-      {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
-
-      assert_csv(
-        zip,
-        'visitors.csv',
-        "date,visitors,pageviews,bounce_rate,visit_duration\r\n2021-05-01,1,1,100,0\r\n2021-06-01,0,0,,\r\n2021-07-01,0,0,,\r\n2021-08-01,0,0,,\r\n2021-09-01,1,1,100,0\r\n2021-10-01,1,1,100,0\r\n"
-      )
-
-      assert_csv(
-        zip,
-        'sources.csv',
-        "name,visitors,bounce_rate,visit_duration\r\nGoogle,1,100,0\r\n"
-      )
-
-      assert_csv(zip, 'utm_mediums.csv', "name,visitors,bounce_rate,visit_duration\r\n")
-      assert_csv(zip, 'utm_sources.csv', "name,visitors,bounce_rate,visit_duration\r\n")
-
-      assert_csv(
-        zip,
-        'utm_campaigns.csv',
-        "name,visitors,bounce_rate,visit_duration\r\nads,1,100,0\r\n"
-      )
-
-      assert_csv(zip, 'pages.csv', "name,visitors,bounce_rate,time_on_page\r\n/,3,100,\r\n")
-
-      assert_csv(
-        zip,
-        'entry_pages.csv',
-        "name,unique_entrances,total_entrances,visit_duration\r\n/,3,3,0\r\n"
-      )
-
-      assert_csv(
-        zip,
-        'exit_pages.csv',
-        "name,unique_exits,total_exits,exit_rate\r\n/,3,3,100.0\r\n"
-      )
-
-      assert_csv(zip, 'countries.csv', "name,visitors\r\nEstonia,2\r\n")
-      assert_csv(zip, 'browsers.csv', "name,visitors\r\nABrowserName,2\r\n,1\r\n")
-      assert_csv(zip, 'operating_systems.csv', "name,visitors\r\n,3\r\n")
-      assert_csv(zip, 'devices.csv', "name,visitors\r\n,3\r\n")
-      assert_csv(zip, 'conversions.csv', "name,unique_conversions,total_conversions\r\n")
-    end
+    {:ok, content} = File.read(file)
+    assert downloaded == content
   end
 
-  defp assert_csv(zip, fileName, string) do
-    {_, contents} = List.keyfind(zip, fileName, 0)
-    assert to_string(contents) == string
+  defp populate_exported_stats(site) do
+    populate_stats(site, [
+      build(:pageview,
+        country_code: "EE",
+        pathname: "/",
+        timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -1),
+        referrer_source: "Google",
+        user_id: 123
+      ),
+      build(:pageview,
+        country_code: "EE",
+        pathname: "/some-other-page",
+        timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -2),
+        referrer_source: "Google",
+        user_id: 123
+      ),
+      build(:pageview,
+        pathname: "/",
+        utm_campaign: "ads",
+        timestamp: Timex.shift(~N[2021-10-20 12:00:00], days: -1),
+        browser: "ABrowserName"
+      ),
+      build(:pageview,
+        timestamp: Timex.shift(~N[2021-10-20 12:00:00], months: -1),
+        country_code: "EE",
+        browser: "ABrowserName"
+      ),
+      build(:pageview,
+        timestamp: Timex.shift(~N[2021-10-20 12:00:00], months: -5),
+        utm_campaign: "ads",
+        country_code: "EE",
+        referrer_source: "Google",
+        browser: "ABrowserName"
+      )
+    ])
+
+    insert(:goal, %{domain: site.domain, page_path: "/some-other-page"})
   end
 
   describe "GET /share/:slug" do

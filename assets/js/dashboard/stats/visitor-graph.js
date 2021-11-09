@@ -304,12 +304,18 @@ class LineGraph extends React.Component {
     return stats
   }
 
+  pollExportReady() {
+    if (document.cookie.includes('exporting')) {
+      setTimeout(this.pollExportReady.bind(this), 1000);
+    } else {
+      this.setState({exported: false})
+    }
+  }
+
   downloadSpinner() {
     this.setState({exported: true});
-    setTimeout(
-      () => this.setState({exported: false}),
-      4000
-    );
+    document.cookie = "exporting=";
+    setTimeout(this.pollExportReady.bind(this), 1000);
   }
 
   downloadLink() {

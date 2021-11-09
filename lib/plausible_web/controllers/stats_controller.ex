@@ -93,6 +93,7 @@ defmodule PlausibleWeb.StatsController do
     conn
     |> put_resp_content_type("application/zip")
     |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
+    |> delete_resp_cookie("exporting")
     |> send_resp(200, zip_content)
   end
 
