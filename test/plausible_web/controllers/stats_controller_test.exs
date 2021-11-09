@@ -75,6 +75,18 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
+  describe "GET /:website/export - with path filter" do
+    setup [:create_user, :create_new_site, :log_in]
+
+    test "exports filtered data in zipped csvs", %{conn: conn, site: site} do
+      populate_exported_stats(site)
+
+      filters = Jason.encode!(%{page: "/some-other-page"})
+      conn = get(conn, "/#{site.domain}/export?date=2021-10-20&filters=#{filters}")
+      assert_zip(conn, "30d-filtered")
+    end
+  end
+
   defp assert_zip(conn, folder) do
     assert conn.status == 200
 

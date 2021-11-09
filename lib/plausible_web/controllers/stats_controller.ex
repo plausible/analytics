@@ -2,7 +2,7 @@ defmodule PlausibleWeb.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias PlausibleWeb.Api
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Query, Filters}
 
   plug PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export]
 
@@ -42,17 +42,10 @@ defmodule PlausibleWeb.StatsController do
 
   def csv_export(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params)
+    query = Query.from(site.timezone, params) |> Filters.add_prefix()
 
-    metrics =
-      if query.filters["event:name"] do
-        ["visitors", "pageviews"]
-      else
-        ["visitors", "pageviews", "bounce_rate", "visit_duration"]
-      end
-
+    metrics = ["visitors", "pageviews", "bounce_rate", "visit_duration"]
     graph = Plausible.Stats.timeseries(site, query, metrics)
-
     headers = ["date" | metrics]
 
     visitors =
