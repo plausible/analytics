@@ -682,6 +682,8 @@ defmodule PlausibleWeb.Api.StatsController do
     end)
   end
 
+  defp maybe_add_cr([], _site, _query, _pagination, _key_name, _filter_name), do: []
+
   defp maybe_add_cr(list, site, query, pagination, key_name, filter_name) do
     if Map.has_key?(query.filters, "event:goal") do
       items = Enum.map(list, fn item -> item[key_name] end)
