@@ -56,6 +56,7 @@ defmodule Plausible.Application do
     OpentelemetryPhoenix.setup()
     OpentelemetryEcto.setup([:plausible, :repo])
     OpentelemetryEcto.setup([:plausible, :clickhouse_repo])
+    OpentelemetryOban.setup()
   end
 
   def report_cache_stats() do
