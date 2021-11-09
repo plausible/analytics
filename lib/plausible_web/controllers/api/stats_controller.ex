@@ -611,10 +611,15 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, prop_name, ["visitors", "events"], pagination)
       |> transform_keys(%{
         params["prop_name"] => "name",
-        "events" => "total_conversions"
+        "events" => "total_conversions",
+        "visitors" => "unique_conversions"
       })
       |> Enum.map(fn prop ->
-        Map.put(prop, "conversion_rate", calculate_cr(unique_visitors, prop["visitors"]))
+        Map.put(
+          prop,
+          "conversion_rate",
+          calculate_cr(unique_visitors, prop["unique_conversions"])
+        )
       end)
 
     json(conn, props)

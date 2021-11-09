@@ -112,13 +112,13 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "visitors" => 2,
+                 "unique_conversions" => 2,
                  "name" => "B",
                  "total_conversions" => 2,
                  "conversion_rate" => 66.7
                },
                %{
-                 "visitors" => 1,
+                 "unique_conversions" => 1,
                  "name" => "A",
                  "total_conversions" => 1,
                  "conversion_rate" => 33.3
@@ -148,13 +148,13 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "visitors" => 2,
+                 "unique_conversions" => 2,
                  "name" => "(none)",
                  "total_conversions" => 2,
                  "conversion_rate" => 66.7
                },
                %{
-                 "visitors" => 1,
+                 "unique_conversions" => 1,
                  "name" => "A",
                  "total_conversions" => 1,
                  "conversion_rate" => 33.3
@@ -182,7 +182,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "visitors" => 1,
+                 "unique_conversions" => 1,
                  "name" => "B",
                  "total_conversions" => 1,
                  "conversion_rate" => 50.0
