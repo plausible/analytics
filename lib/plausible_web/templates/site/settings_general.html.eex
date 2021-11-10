@@ -61,10 +61,28 @@
       <div class="py-2"></div>
       <span class="text-gray-700 dark:text-gray-300">Linked Google account: <b><%= @site.google_auth.email %></b></span>
 
-      <%= link("Unlink Google account", to: "/#{URI.encode_www_form(@site.domain)}/settings/google", class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
+      <%= case @google_profiles do %>
+        <% {:ok, profiles} -> %>
+          <p class="text-gray-700 dark:text-gray-300 mt-6">
+          Select the Google Analytics profile you would like to use to fetch data from.
+          </p>
+
+          <%= form_for @conn, "/#{URI.encode_www_form(@site.domain)}/settings/google-import", [class: "max-w-xs"], fn f -> %>
+            <div class="my-6">
+              <div class="inline-block relative w-full">
+                <%= select f, :profile, profiles, prompt: "(Choose profile)", class: "dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100" %>
+              </div>
+            </div>
+            <%= submit "Save", class: "button" %>
+          <% end %>
+
+        <% {:error, error} -> %>
+          <p class="text-gray-700 dark:text-gray-300 mt-6">The following error occurred when fetching your Google Analytics profiles.</p>
+          <p class="text-red-700 font-medium mt-3"><%= error %></p>
+      <% end %>
 
     <% else %>
-      <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(@site.id), class: "button mt-8") %>
+      <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(@site.id, "general"), class: "button mt-8") %>
     <% end %>
   <% else %>
     <div class="my-8 text-center text-lg">

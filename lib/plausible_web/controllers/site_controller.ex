@@ -172,10 +172,16 @@ defmodule PlausibleWeb.SiteController do
       conn.assigns[:site]
       |> Repo.preload([:custom_domain, :google_auth])
 
+    google_profiles =
+      if site.google_auth do
+        Plausible.Google.Api.get_analytics_view_ids(site)
+      end
+
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_general.html",
       site: site,
+      google_profiles: google_profiles,
       changeset: Plausible.Site.changeset(site, %{}),
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )

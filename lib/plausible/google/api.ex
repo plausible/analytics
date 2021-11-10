@@ -1,12 +1,14 @@
 defmodule Plausible.Google.Api do
-  @scope URI.encode_www_form("https://www.googleapis.com/auth/webmasters.readonly email")
+  @scope URI.encode_www_form(
+           "https://www.googleapis.com/auth/webmasters.readonly email https://www.googleapis.com/auth/analytics.readonly"
+         )
   @verified_permission_levels ["siteOwner", "siteFullUser", "siteRestrictedUser"]
 
-  def authorize_url(site_id) do
+  def authorize_url(site_id, redirect_to) do
     if Application.get_env(:plausible, :environment) == "test" do
       ""
     else
-      "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@scope}&state=#{site_id}"
+      "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@scope}&state=" <> Jason.encode!([site_id, redirect_to])
     end
   end
 
@@ -110,6 +112,39 @@ defmodule Plausible.Google.Api do
       _ ->
         Sentry.capture_message("Error fetching Google queries", extra: Jason.decode!(res.body))
         {:error, :unknown}
+    end
+  end
+
+  def get_analytics_view_ids(site) do
+    with {:ok, auth} <- refresh_if_needed(site.google_auth) do
+      do_get_analytics_view_ids(auth)
+    end
+  end
+
+  def do_get_analytics_view_ids(auth) do
+    res =
+      HTTPoison.get!(
+        "https://www.googleapis.com/analytics/v3/management/accounts/~all/webproperties/~all/profiles",
+        Authorization: "Bearer #{auth.access_token}"
+      )
+
+    case res.status_code do
+      200 ->
+        profiles =
+          Jason.decode!(res.body)
+          |> Map.get("items")
+          |> Enum.map(fn item ->
+            uri = URI.parse(Map.get(item, "websiteUrl"))
+            name = Map.get(item, "name")
+            {"#{uri.host} - #{name}", Map.get(item, "id")}
+          end)
+          |> Map.new()
+
+        {:ok, profiles}
+
+      _ ->
+        Sentry.capture_message("Error fetching Google view ID", extra: Jason.decode!(res.body))
+        {:error, res.body}
     end
   end
 
