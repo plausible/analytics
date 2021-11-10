@@ -83,7 +83,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       filters = Jason.encode!(%{page: "/some-other-page"})
       conn = get(conn, "/#{site.domain}/export?date=2021-10-20&filters=#{filters}")
-      assert_zip(conn, "30d-filtered")
+      assert_zip(conn, "30d-filter-path")
     end
   end
 
@@ -140,10 +140,27 @@ defmodule PlausibleWeb.StatsControllerTest do
         country_code: "EE",
         referrer_source: "Google",
         browser: "ABrowserName"
+      ),
+      build(:event,
+        timestamp: Timex.shift(~N[2021-10-20 12:00:00], days: -1),
+        name: "Signup",
+        "meta.key": ["variant"],
+        "meta.value": ["A"]
       )
     ])
 
-    insert(:goal, %{domain: site.domain, page_path: "/some-other-page"})
+    insert(:goal, %{domain: site.domain, event_name: "Signup"})
+  end
+
+  describe "GET /:website/export - with goal filter" do
+    setup [:create_user, :create_new_site, :log_in]
+
+    test "exports goal-filtered data in zipped csvs", %{conn: conn, site: site} do
+      populate_exported_stats(site)
+      filters = Jason.encode!(%{goal: "Signup"})
+      conn = get(conn, "/#{site.domain}/export?date=2021-10-20&filters=#{filters}")
+      assert_zip(conn, "30d-filter-goal")
+    end
   end
 
   describe "GET /share/:slug" do

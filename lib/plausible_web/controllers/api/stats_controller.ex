@@ -611,13 +611,49 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, prop_name, ["visitors", "events"], pagination)
       |> transform_keys(%{
         params["prop_name"] => "name",
-        "events" => "total_conversions"
+        "events" => "total_conversions",
+        "visitors" => "unique_conversions"
       })
       |> Enum.map(fn prop ->
-        Map.put(prop, "conversion_rate", calculate_cr(unique_visitors, prop["visitors"]))
+        Map.put(
+          prop,
+          "conversion_rate",
+          calculate_cr(unique_visitors, prop["unique_conversions"])
+        )
       end)
 
-    json(conn, props)
+    if params["csv"] do
+      props
+    else
+      json(conn, props)
+    end
+  end
+
+  def all_props_breakdown(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+
+    headers = ["prop", "name", "unique_conversions", "total_conversions"]
+
+    prop_names =
+      if query.filters["event:goal"] do
+        {_, _, goal} = query.filters["event:goal"]
+
+        Stats.props(site, query)
+        |> Map.get(goal, [])
+      else
+        []
+      end
+
+    values =
+      prop_names
+      |> Enum.map(fn prop ->
+        prop_breakdown(conn, Map.put(params, "prop_name", prop))
+        |> Enum.map(&Map.put(&1, "prop", prop))
+      end)
+      |> Enum.concat()
+
+    to_csv(values, headers)
   end
 
   def current_visitors(conn, _) do
