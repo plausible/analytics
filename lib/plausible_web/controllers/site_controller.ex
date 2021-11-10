@@ -170,7 +170,7 @@ defmodule PlausibleWeb.SiteController do
   def settings_general(conn, _params) do
     site =
       conn.assigns[:site]
-      |> Repo.preload(:custom_domain)
+      |> Repo.preload([:custom_domain, :google_auth])
 
     conn
     |> assign(:skip_plausible_tracking, true)
