@@ -640,7 +640,7 @@ defmodule PlausibleWeb.Api.StatsController do
         {_, _, goal} = query.filters["event:goal"]
 
         Stats.props(site, query)
-        |> Map.get(goal)
+        |> Map.get(goal, [])
       else
         []
       end
