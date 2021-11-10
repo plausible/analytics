@@ -428,11 +428,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         name: "Signup",
         url: "http://gigride.live/",
         domain: "custom-prop-test.com",
-        props:
-          Jason.encode!(%{
-            bool_test: true,
-            number_test: 12
-          })
+        props: %{
+          bool_test: true,
+          number_test: 12
+        }
       }
 
       conn
@@ -461,11 +460,28 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert Map.get(event, :"meta.value") == []
     end
 
-    test "ignores custom prop with array value", %{conn: conn} do
+    test "can send props stringified", %{conn: conn} do
       params = %{
         name: "Signup",
         url: "http://gigride.live/",
         domain: "custom-prop-test-3.com",
+        props: Jason.encode!(%{number_test: 12})
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      event = get_event("custom-prop-test-3.com")
+
+      assert Map.get(event, :"meta.key") == ["number_test"]
+      assert Map.get(event, :"meta.value") == ["12"]
+    end
+
+    test "ignores custom prop with array value", %{conn: conn} do
+      params = %{
+        name: "Signup",
+        url: "http://gigride.live/",
+        domain: "custom-prop-test-4.com",
         props: Jason.encode!(%{wat: ["some-thing"]})
       }
 
@@ -473,7 +489,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert conn.status == 202
 
-      event = get_event("custom-prop-test-3.com")
+      event = get_event("custom-prop-test-4.com")
 
       assert Map.get(event, :"meta.key") == []
       assert Map.get(event, :"meta.value") == []
