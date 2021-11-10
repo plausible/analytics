@@ -239,5 +239,7 @@ defmodule PlausibleWeb.Router do
 
     get "/:domain/export", StatsController, :csv_export
     get "/:domain/*path", StatsController, :stats
+
+    post "/:website/settings/google-import", SiteController, :import_from_google
   end
 end

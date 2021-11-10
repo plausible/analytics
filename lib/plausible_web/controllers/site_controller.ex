@@ -623,4 +623,31 @@ defmodule PlausibleWeb.SiteController do
     |> put_flash(:success, "Custom domain deleted successfully")
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
   end
+
+  def import_from_google(conn, %{"profile" => profile}) do
+    site =
+      conn.assigns[:site]
+      |> Repo.preload(:google_auth)
+
+    cond do
+      site.has_imported_stats ->
+        conn
+        |> put_flash(:error, "Third party data already imported")
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+
+      profile == "" ->
+        conn
+        |> put_flash(:error, "A Google Analytics profile must be selected")
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+
+      true ->
+        site.google_auth
+        |> Plausible.Site.changeset(%{has_imported_stats: true})
+        |> Repo.update!()
+
+        conn
+        |> put_flash(:success, "Google Analytics data successfully imported")
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+    end
+  end
 end
