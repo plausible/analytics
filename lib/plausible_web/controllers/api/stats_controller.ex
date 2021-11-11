@@ -446,7 +446,7 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:country", ["visitors"], pagination)
       |> maybe_add_cr(site, query, {300, 1}, "country", "visit:country")
       |> transform_keys(%{"country" => "name"})
-      |> add_percentages
+      |> maybe_add_percentages(query)
 
     if params["csv"] do
       countries
@@ -475,7 +475,7 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:browser", ["visitors"], pagination)
       |> maybe_add_cr(site, query, pagination, "browser", "visit:browser")
       |> transform_keys(%{"browser" => "name"})
-      |> add_percentages
+      |> maybe_add_percentages(query)
 
     if params["csv"] do
       browsers |> to_csv(["name", "visitors"])
@@ -493,7 +493,7 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:browser_version", ["visitors"], pagination)
       |> maybe_add_cr(site, query, pagination, "browser_version", "visit:browser_version")
       |> transform_keys(%{"browser_version" => "name"})
-      |> add_percentages
+      |> maybe_add_percentages(query)
 
     json(conn, versions)
   end
@@ -507,7 +507,7 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:os", ["visitors"], pagination)
       |> maybe_add_cr(site, query, pagination, "os", "visit:os")
       |> transform_keys(%{"os" => "name"})
-      |> add_percentages
+      |> maybe_add_percentages(query)
 
     if params["csv"] do
       systems |> to_csv(["name", "visitors"])
@@ -525,7 +525,7 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:os_version", ["visitors"], pagination)
       |> maybe_add_cr(site, query, pagination, "os_version", "visit:os_version")
       |> transform_keys(%{"os_version" => "name"})
-      |> add_percentages
+      |> maybe_add_percentages(query)
 
     json(conn, versions)
   end
@@ -539,7 +539,7 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:device", ["visitors"], pagination)
       |> maybe_add_cr(site, query, pagination, "device", "visit:device")
       |> transform_keys(%{"device" => "name"})
-      |> add_percentages
+      |> maybe_add_percentages(query)
 
     if params["csv"] do
       sizes |> to_csv(["name", "visitors"])
@@ -689,12 +689,16 @@ defmodule PlausibleWeb.Api.StatsController do
     {limit, page}
   end
 
-  defp add_percentages(stat_list) do
-    total = Enum.reduce(stat_list, 0, fn %{"visitors" => count}, total -> total + count end)
+  defp maybe_add_percentages(stat_list, query) do
+    if Map.has_key?(query.filters, "event:goal") do
+      stat_list
+    else
+      total = Enum.reduce(stat_list, 0, fn %{"visitors" => count}, total -> total + count end)
 
-    Enum.map(stat_list, fn stat ->
-      Map.put(stat, "percentage", round(stat["visitors"] / total * 100))
-    end)
+      Enum.map(stat_list, fn stat ->
+        Map.put(stat, "percentage", round(stat["visitors"] / total * 100))
+      end)
+    end
   end
 
   defp maybe_hide_noref(query, property, params) do
