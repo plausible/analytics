@@ -1,4 +1,6 @@
 defmodule Plausible.Google.Api do
+  alias Plausible.Imported
+
   @scope URI.encode_www_form(
            "https://www.googleapis.com/auth/webmasters.readonly email https://www.googleapis.com/auth/analytics.readonly"
          )
@@ -8,7 +10,8 @@ defmodule Plausible.Google.Api do
     if Application.get_env(:plausible, :environment) == "test" do
       ""
     else
-      "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@scope}&state=" <> Jason.encode!([site_id, redirect_to])
+      "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@scope}&state=" <>
+        Jason.encode!([site_id, redirect_to])
     end
   end
 
@@ -146,6 +149,96 @@ defmodule Plausible.Google.Api do
         Sentry.capture_message("Error fetching Google view ID", extra: Jason.decode!(res.body))
         {:error, res.body}
     end
+  end
+
+  def import_analytics(site, profile) do
+    with {:ok, auth} <- refresh_if_needed(site.google_auth) do
+      do_import_analytics(site, auth, profile)
+    end
+  end
+
+  @doc """
+  API reference:
+  https://developers.google.com/analytics/devguides/reporting/core/v4/rest/v4/reports/batchGet#ReportRequest
+
+  Dimensions reference: https://ga-dev-tools.web.app/dimensions-metrics-explorer
+  """
+  def do_import_analytics(site, auth, profile) do
+    end_date =
+      Plausible.Stats.Clickhouse.pageviews_begin(site)
+      |> NaiveDateTime.to_date()
+
+    start_date = Date.add(end_date, -365)
+
+    request = %{
+      auth: auth,
+      profile: profile,
+      start_date: Date.to_iso8601(start_date),
+      end_date: Date.to_iso8601(end_date)
+    }
+
+    visitors =
+      fetch_analytic_report(request, ["ga:date"], [
+        "ga:users",
+        "ga:pageviews",
+        "ga:bounceRate",
+        "ga:avgSessionDuration"
+      ])
+
+    case visitors do
+      {:ok, data} ->
+        maybe_error =
+          List.first(data["reports"])["data"]["rows"]
+          |> Enum.map(&Imported.Visitors.from_google_analytics(site.domain, &1))
+          |> Enum.map(&Plausible.ClickhouseRepo.insert(&1, on_conflict: :replace_all))
+          |> Keyword.get(:error)
+
+        case maybe_error do
+          nil ->
+            {:ok, nil}
+
+          error ->
+            {:error, error}
+        end
+
+      {:error, error} ->
+        Sentry.capture_message("Error fetching Google analytics data", extra: error)
+        {:error, error}
+    end
+  end
+
+  defp fetch_analytic_report(request, dimensions, metrics) do
+    res =
+      HTTPoison.post!(
+        "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
+        Jason.encode!(%{
+          reportRequests: [
+            %{
+              viewId: request.profile,
+              dateRanges: [
+                %{
+                  startDate: request.start_date,
+                  endDate: request.end_date
+                }
+              ],
+              dimensions: Enum.map(dimensions, &%{name: &1, histogramBuckets: []}),
+              metrics: Enum.map(metrics, &%{expression: &1}),
+              hideTotals: true,
+              hideValueRanges: true
+            }
+          ]
+        }),
+        Authorization: "Bearer #{request.auth.access_token}"
+      )
+
+    status =
+      if res.status_code == 200 do
+        :ok
+      else
+        :error
+      end
+
+    {status, Jason.decode!(res.body)}
   end
 
   defp refresh_if_needed(auth) do
