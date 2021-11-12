@@ -61,14 +61,12 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                  "name" => "GBR",
                  "total_visitors" => 1,
                  "visitors" => 1,
-                 "percentage" => 50,
                  "conversion_rate" => 100.0
                },
                %{
                  "name" => "EST",
                  "total_visitors" => 2,
                  "visitors" => 1,
-                 "percentage" => 50,
                  "conversion_rate" => 50.0
                }
              ]

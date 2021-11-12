@@ -37,7 +37,6 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
                  "name" => "Mac",
                  "total_visitors" => 2,
                  "visitors" => 1,
-                 "percentage" => 100,
                  "conversion_rate" => 50.0
                }
              ]
