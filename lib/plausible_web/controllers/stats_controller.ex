@@ -40,6 +40,11 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
+  @doc """
+  The export is limited to 300 entries for other reports and 100 entries for pages because bigger result sets
+  start causing failures. Since we request data like time on page or bounce_rate for pages in a separate query
+  using the IN filter, it causes the requests to balloon in payload size.
+  """
   def csv_export(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
@@ -58,15 +63,16 @@ defmodule PlausibleWeb.StatsController do
       "Plausible export #{params["domain"]} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.zip"
 
     params = Map.merge(params, %{"limit" => "300", "csv" => "True", "detailed" => "True"})
+    limited_params = Map.merge(params, %{"limit" => "100"})
 
     csvs = [
       {'sources.csv', fn -> Api.StatsController.sources(conn, params) end},
       {'utm_mediums.csv', fn -> Api.StatsController.utm_mediums(conn, params) end},
       {'utm_sources.csv', fn -> Api.StatsController.utm_sources(conn, params) end},
       {'utm_campaigns.csv', fn -> Api.StatsController.utm_campaigns(conn, params) end},
-      {'pages.csv', fn -> Api.StatsController.pages(conn, params) end},
+      {'pages.csv', fn -> Api.StatsController.pages(conn, limited_params) end},
       {'entry_pages.csv', fn -> Api.StatsController.entry_pages(conn, params) end},
-      {'exit_pages.csv', fn -> Api.StatsController.exit_pages(conn, params) end},
+      {'exit_pages.csv', fn -> Api.StatsController.exit_pages(conn, limited_params) end},
       {'countries.csv', fn -> Api.StatsController.countries(conn, params) end},
       {'browsers.csv', fn -> Api.StatsController.browsers(conn, params) end},
       {'operating_systems.csv', fn -> Api.StatsController.operating_systems(conn, params) end},

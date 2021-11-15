@@ -616,6 +616,8 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  defp calculate_cr(nil, converted_visitors), do: 100.0
+
   defp calculate_cr(unique_visitors, converted_visitors) do
     if unique_visitors > 0,
       do: Float.round(converted_visitors / unique_visitors * 100, 1),
