@@ -616,7 +616,7 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp calculate_cr(nil, converted_visitors), do: 100.0
+  defp calculate_cr(nil, _converted_visitors), do: 100.0
 
   defp calculate_cr(unique_visitors, converted_visitors) do
     if unique_visitors > 0,
