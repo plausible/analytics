@@ -25,7 +25,7 @@ jobs:
             --health-retries 5
 
       clickhouse:
-        image: yandex/clickhouse-server:20
+        image: yandex/clickhouse-server:21.11
         ports:
           - 8123:8123
         env:
