@@ -55,10 +55,14 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
+  def on_grace_period?(nil), do: false
+
   def on_grace_period?(user) do
     user.grace_period &&
       Timex.diff(user.grace_period.end_date, Timex.today(), :days) >= 0
   end
+
+  def grace_period_over?(nil), do: false
 
   def grace_period_over?(user) do
     user.grace_period &&
