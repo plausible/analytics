@@ -11,7 +11,7 @@ defmodule Plausible.Site do
     field :public, :boolean
     field :locked, :boolean
     field :has_stats, :boolean
-    field :has_imported_stats, :boolean
+    field :has_imported_stats, :string
 
     many_to_many :members, User, join_through: Plausible.Site.Membership
     has_many :memberships, Plausible.Site.Membership

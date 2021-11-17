@@ -241,5 +241,6 @@ defmodule PlausibleWeb.Router do
     get "/:domain/*path", StatsController, :stats
 
     post "/:website/settings/google-import", SiteController, :import_from_google
+    delete "/:website/settings/forget-imported", SiteController, :forget_imported
   end
 end

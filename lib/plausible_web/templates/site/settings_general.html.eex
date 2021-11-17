@@ -57,32 +57,45 @@
   </header>
 
   <%= if Keyword.get(Application.get_env(:plausible, :google), :client_id) do %>
-    <%= if @site.google_auth do %>
-      <div class="py-2"></div>
-      <span class="text-gray-700 dark:text-gray-300">Linked Google account: <b><%= @site.google_auth.email %></b></span>
+    <%= cond do %>
+      <% @imported_from -> %>
+        <li class="py-4 flex items-center justify-between space-x-4">
+          <div class="flex flex-col">
+            <p class="text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">
+            Forget Imported Data
+            </p>
+            <p class="text-sm leading-5 text-gray-500 dark:text-gray-200">
+            Removes all data imported from <%= @imported_from %>
+            </p>
+          </div>
+          <%= link("Forget imported stats", to: "/#{URI.encode_www_form(@site.domain)}/settings/forget-imported", method: :delete, class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150") %>
+        </li>
+      <% @site.google_auth -> %>
+        <div class="py-2"></div>
+        <span class="text-gray-700 dark:text-gray-300">Linked Google account: <b><%= @site.google_auth.email %></b></span>
 
-      <%= case @google_profiles do %>
-        <% {:ok, profiles} -> %>
-          <p class="text-gray-700 dark:text-gray-300 mt-6">
-          Select the Google Analytics profile you would like to import data from.
-          </p>
+        <%= case @google_profiles do %>
+          <% {:ok, profiles} -> %>
+            <p class="text-gray-700 dark:text-gray-300 mt-6">
+            Select the Google Analytics profile you would like to import data from.
+            </p>
 
-          <%= form_for @conn, "/#{URI.encode_www_form(@site.domain)}/settings/google-import", [class: "max-w-xs"], fn f -> %>
-            <div class="my-6">
-              <div class="inline-block relative w-full">
-                <%= select f, :profile, profiles, prompt: "(Choose profile)", class: "dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100" %>
+            <%= form_for @conn, "/#{URI.encode_www_form(@site.domain)}/settings/google-import", [class: "max-w-xs"], fn f -> %>
+              <div class="my-6">
+                <div class="inline-block relative w-full">
+                  <%= select f, :profile, profiles, prompt: "(Choose profile)", class: "dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100" %>
+                </div>
               </div>
-            </div>
-            <%= submit "Import", class: "button" %>
-          <% end %>
+              <%= submit "Import", class: "button" %>
+            <% end %>
 
-        <% {:error, error} -> %>
-          <p class="text-gray-700 dark:text-gray-300 mt-6">The following error occurred when fetching your Google Analytics profiles.</p>
-          <p class="text-red-700 font-medium mt-3"><%= error %></p>
-      <% end %>
+          <% {:error, error} -> %>
+            <p class="text-gray-700 dark:text-gray-300 mt-6">The following error occurred when fetching your Google Analytics profiles.</p>
+            <p class="text-red-700 font-medium mt-3"><%= error %></p>
+        <% end %>
 
-    <% else %>
-      <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(@site.id, "general"), class: "button mt-8") %>
+      <% true -> %>
+        <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(@site.id, "general"), class: "button mt-8") %>
     <% end %>
   <% else %>
     <div class="my-8 text-center text-lg">

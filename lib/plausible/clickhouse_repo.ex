@@ -17,4 +17,9 @@ defmodule Plausible.ClickhouseRepo do
     Ecto.Adapters.SQL.query!(__MODULE__, events_sql, [domain])
     Ecto.Adapters.SQL.query!(__MODULE__, sessions_sql, [domain])
   end
+
+  def clear_imported_stats_for(domain) do
+    visitors_sql = "ALTER TABLE imported_visitors DELETE WHERE domain = ?"
+    Ecto.Adapters.SQL.query!(__MODULE__, visitors_sql, [domain])
+  end
 end
