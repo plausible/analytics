@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Api.StatsController do
   use Plug.ErrorHandler
   alias Plausible.Stats
   alias Plausible.Stats.{Query, Filters}
+  alias Plausible.Imported
 
   def main_graph(conn, params) do
     site = conn.assigns[:site]
@@ -26,7 +27,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     imported_plot =
       if site.has_imported_stats do
-        Enum.map(plot, &(&1 / 2))
+        Imported.Visitors.timeseries(site, query)
       end
 
     json(conn, %{

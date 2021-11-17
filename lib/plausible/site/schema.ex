@@ -27,7 +27,7 @@ defmodule Plausible.Site do
 
   def changeset(site, attrs \\ %{}) do
     site
-    |> cast(attrs, [:domain, :timezone])
+    |> cast(attrs, [:domain, :timezone, :has_imported_stats])
     |> validate_required([:domain, :timezone])
     |> validate_format(:domain, ~r/^[a-zA-Z0-9\-\.\/\:]*$/,
       message: "only letters, numbers, slashes and period allowed"

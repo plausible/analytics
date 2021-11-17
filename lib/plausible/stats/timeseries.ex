@@ -52,7 +52,7 @@ defmodule Plausible.Stats.Timeseries do
     |> ClickhouseRepo.all()
   end
 
-  defp buckets(%Query{interval: "month"} = query) do
+  def buckets(%Query{interval: "month"} = query) do
     n_buckets = Timex.diff(query.date_range.last, query.date_range.first, :months)
 
     Enum.map(n_buckets..0, fn shift ->
@@ -62,11 +62,11 @@ defmodule Plausible.Stats.Timeseries do
     end)
   end
 
-  defp buckets(%Query{interval: "date"} = query) do
+  def buckets(%Query{interval: "date"} = query) do
     Enum.into(query.date_range, [])
   end
 
-  defp buckets(%Query{interval: "hour"} = query) do
+  def buckets(%Query{interval: "hour"} = query) do
     Enum.map(0..23, fn step ->
       Timex.to_datetime(query.date_range.first)
       |> Timex.shift(hours: step)
@@ -74,11 +74,11 @@ defmodule Plausible.Stats.Timeseries do
     end)
   end
 
-  defp buckets(%Query{period: "30m", interval: "minute"}) do
+  def buckets(%Query{period: "30m", interval: "minute"}) do
     Enum.into(-30..-1, [])
   end
 
-  defp select_bucket(q, site, %Query{interval: "month"}) do
+  def select_bucket(q, site, %Query{interval: "month"}) do
     from(
       e in q,
       select_merge: %{
@@ -88,7 +88,7 @@ defmodule Plausible.Stats.Timeseries do
     )
   end
 
-  defp select_bucket(q, site, %Query{interval: "date"}) do
+  def select_bucket(q, site, %Query{interval: "date"}) do
     from(
       e in q,
       select_merge: %{
@@ -97,7 +97,7 @@ defmodule Plausible.Stats.Timeseries do
     )
   end
 
-  defp select_bucket(q, site, %Query{interval: "hour"}) do
+  def select_bucket(q, site, %Query{interval: "hour"}) do
     from(
       e in q,
       select_merge: %{
@@ -106,7 +106,7 @@ defmodule Plausible.Stats.Timeseries do
     )
   end
 
-  defp select_bucket(q, _site, %Query{interval: "minute"}) do
+  def select_bucket(q, _site, %Query{interval: "minute"}) do
     from(
       e in q,
       select_merge: %{
