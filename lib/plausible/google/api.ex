@@ -177,27 +177,48 @@ defmodule Plausible.Google.Api do
       end_date: Date.to_iso8601(end_date)
     }
 
-    visitors =
-      fetch_analytic_report(request, ["ga:date"], [
-        "ga:users",
-        "ga:pageviews",
-        "ga:bounceRate",
-        "ga:avgSessionDuration"
-      ])
+    request_data = [
+      # Visitors
+      {
+        ["ga:date"],
+        [
+          "ga:users",
+          "ga:pageviews",
+          "ga:bounceRate",
+          "ga:avgSessionDuration"
+        ]
+      },
+      # Sources
+      {
+        ["ga:date", "ga:source"],
+        ["ga:users"]
+      }
+    ]
 
-    case visitors do
+    response = fetch_analytic_reports(request, request_data)
+
+    case response do
       {:ok, data} ->
         maybe_error =
-          List.first(data["reports"])["data"]["rows"]
-          |> Enum.map(&Imported.Visitors.from_google_analytics(site.domain, &1))
-          |> Enum.map(&Plausible.ClickhouseRepo.insert(&1, on_conflict: :replace_all))
+          ["visitors", "sources"]
+          |> Enum.with_index()
+          |> Enum.map(fn {metric, index} ->
+            Task.async(fn ->
+              Enum.fetch!(data, index)
+              |> Imported.from_google_analytics(site.domain, metric)
+            end)
+          end)
+          |> Enum.map(&Task.await/1)
           |> Keyword.get(:error)
 
         case maybe_error do
           nil ->
             {:ok, nil}
 
-          error ->
+          {:error, error} ->
+            Plausible.ClickhouseRepo.clear_imported_stats_for(site.domain)
+
+            Sentry.capture_message("Error saving Google analytics data", extra: error)
             {:error, error}
         end
 
@@ -207,38 +228,40 @@ defmodule Plausible.Google.Api do
     end
   end
 
-  defp fetch_analytic_report(request, dimensions, metrics) do
+  defp fetch_analytic_reports(request, request_data) do
+    reports =
+      Enum.map(request_data, fn {dimensions, metrics} ->
+        %{
+          viewId: request.profile,
+          dateRanges: [
+            %{
+              startDate: request.start_date,
+              endDate: request.end_date
+            }
+          ],
+          dimensions: Enum.map(dimensions, &%{name: &1, histogramBuckets: []}),
+          metrics: Enum.map(metrics, &%{expression: &1}),
+          hideTotals: true,
+          hideValueRanges: true
+        }
+      end)
+
     res =
       HTTPoison.post!(
         "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
-        Jason.encode!(%{
-          reportRequests: [
-            %{
-              viewId: request.profile,
-              dateRanges: [
-                %{
-                  startDate: request.start_date,
-                  endDate: request.end_date
-                }
-              ],
-              dimensions: Enum.map(dimensions, &%{name: &1, histogramBuckets: []}),
-              metrics: Enum.map(metrics, &%{expression: &1}),
-              hideTotals: true,
-              hideValueRanges: true
-            }
-          ]
-        }),
+        Jason.encode!(%{reportRequests: reports}),
         Authorization: "Bearer #{request.auth.access_token}"
       )
 
-    status =
-      if res.status_code == 200 do
-        :ok
-      else
-        :error
-      end
+    if res.status_code == 200 do
+      data =
+        Jason.decode!(res.body)["reports"]
+        |> Enum.map(& &1["data"]["rows"])
 
-    {status, Jason.decode!(res.body)}
+      {:ok, data}
+    else
+      {:error, Jason.decode!(res.body)}
+    end
   end
 
   defp refresh_if_needed(auth) do

@@ -174,7 +174,7 @@ defmodule PlausibleWeb.SiteController do
 
     google_profiles =
       if is_nil(site.has_imported_stats) and site.google_auth do
-          Plausible.Google.Api.get_analytics_view_ids(site)
+        Plausible.Google.Api.get_analytics_view_ids(site)
       end
 
     conn
@@ -653,8 +653,13 @@ defmodule PlausibleWeb.SiteController do
             |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
 
           {:error, error} ->
+            message =
+              error
+              |> Map.get("error")
+              |> Map.get("message")
+
             conn
-            |> put_flash(:error, "Error while fetching: #{error}")
+            |> put_flash(:error, "Error while fetching: #{message}")
             |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
         end
     end
