@@ -168,7 +168,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp validate_custom_props(props) do
     is_valid =
       Enum.all?(props, fn {_key, val} ->
-        !is_list(val)
+        !is_list(val) && !is_map(val)
       end)
 
     if is_valid, do: :ok, else: :invalid_props
