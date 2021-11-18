@@ -4,12 +4,15 @@ defmodule PlausibleWeb.Api.ExternalController do
   require Logger
 
   def event(conn, _params) do
-    params = parse_body(conn)
-    Sentry.Context.set_extra_context(%{request: params})
-
-    case create_event(conn, params) do
-      :ok ->
-        conn |> put_status(202) |> text("ok")
+    with {:ok, params} <- parse_body(conn),
+         _ <- Sentry.Context.set_extra_context(%{request: params}),
+         :ok <- create_event(conn, params) do
+      conn |> put_status(202) |> text("ok")
+    else
+      {:error, :invalid_json} ->
+        conn
+        |> put_status(400)
+        |> json(%{errors: %{request: "Unable to parse request body as json"}})
 
       {:error, errors} ->
         conn |> put_status(400) |> json(%{errors: errors})
@@ -273,10 +276,14 @@ defmodule PlausibleWeb.Api.ExternalController do
     case conn.body_params do
       %Plug.Conn.Unfetched{} ->
         {:ok, body, _conn} = Plug.Conn.read_body(conn)
-        Jason.decode!(body)
+
+        case Jason.decode(body) do
+          {:ok, params} -> {:ok, params}
+          _ -> {:error, :invalid_json}
+        end
 
       params ->
-        params
+        {:ok, params}
     end
   end
 

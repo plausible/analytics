@@ -68,6 +68,15 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.pathname == "/"
     end
 
+    test "returns error if JSON cannot be parsed", %{conn: conn} do
+      conn =
+        conn
+        |> put_req_header("content-type", "text/plain")
+        |> post("/api/event", "")
+
+      assert conn.status == 400
+    end
+
     test "can send to multiple dashboards by listing multiple domains", %{conn: conn} do
       params = %{
         name: "pageview",
