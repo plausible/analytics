@@ -355,6 +355,32 @@ defmodule Plausible.Stats.Base do
     |> String.replace(~r/(?<!\.)\*/, "[^/]*")
   end
 
+  def merge_imported(q, %Plausible.Site{has_imported_stats: nil}, _, _), do: q
+
+  def merge_imported(q, site, query, "visit:source") do
+    if site.has_imported_stats do
+      {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
+
+      imported_q =
+        from(
+          i in "imported_sources",
+          group_by: i.source,
+          where: i.domain == ^site.domain,
+          where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
+          select: %{source: i.source, visitors: sum(i.visitors)}
+        )
+
+      from(s in q,
+        join: i in subquery(imported_q),
+        on: s.source == i.source
+      )
+    else
+      q
+    end
+  end
+
+  def merge_imported(q, _, _, _), do: q
+
   defp add_sample_hint(db_q, query) do
     case query.sample_threshold do
       "infinite" ->
