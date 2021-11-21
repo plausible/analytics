@@ -48,7 +48,14 @@
     var payload = {}
     payload.n = eventName
     {{#if manual}}
-    payload.u = typeof options.u == typeof trigger ? options.u() : (options.u || location.href)
+    {{#if compat}}
+    payload.u = location.href
+    if (options && options.u) {
+      payload.u = typeof options.u == typeof trigger ? options.u() : options.u
+    }
+    {{else}}
+    payload.u = typeof options?.u == typeof trigger ? options.u() : (options?.u || location.href)
+    {{/if}}
     {{else}}
     payload.u = location.href
     {{/if}}
