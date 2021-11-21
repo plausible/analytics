@@ -47,7 +47,11 @@
 
     var payload = {}
     payload.n = eventName
+    {{#if manual}}
+    payload.u = typeof options.u == typeof trigger ? options.u() : (options.u || location.href)
+    {{else}}
     payload.u = location.href
+    {{/if}}
     payload.d = scriptEl.getAttribute('data-domain')
     payload.r = document.referrer || null
     payload.w = window.innerWidth
