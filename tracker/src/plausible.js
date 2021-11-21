@@ -51,10 +51,10 @@
     {{#if compat}}
     payload.u = location.href
     if (options && options.u) {
-      payload.u = typeof options.u == typeof trigger ? options.u() : options.u
+      payload.u = options.u
     }
     {{else}}
-    payload.u = typeof options?.u == typeof trigger ? options.u() : (options?.u || location.href)
+    payload.u = options?.u || location.href
     {{/if}}
     {{else}}
     payload.u = location.href
