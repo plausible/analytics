@@ -48,14 +48,7 @@
     var payload = {}
     payload.n = eventName
     {{#if manual}}
-    {{#if compat}}
-    payload.u = location.href
-    if (options && options.u) {
-      payload.u = options.u
-    }
-    {{else}}
-    payload.u = options?.u || location.href
-    {{/if}}
+    payload.u = options && options.u ? options.u : location.href
     {{else}}
     payload.u = location.href
     {{/if}}
