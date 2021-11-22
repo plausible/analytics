@@ -60,12 +60,6 @@ defmodule Plausible.Stats.Filters do
         end
       end)
 
-    new_filters =
-      case new_filters["event:goal"] do
-        nil -> Map.put(new_filters, "event:name", {:is, "pageview"})
-        _ -> new_filters
-      end
-
     %Plausible.Stats.Query{query | filters: new_filters}
   end
 
