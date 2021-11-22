@@ -127,7 +127,7 @@ defmodule Plausible.Stats.Base do
       from(
         s in "sessions",
         where: s.domain == ^site.domain,
-        where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
+        where: s.start >= ^first_datetime and s.start < ^last_datetime
       )
       |> add_sample_hint(query)
 
