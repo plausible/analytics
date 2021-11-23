@@ -119,7 +119,7 @@ defmodule Plausible.Stats.Timeseries do
     Enum.reduce(metrics, %{"date" => date}, fn metric, row ->
       case metric do
         "pageviews" -> Map.merge(row, %{"pageviews" => 0})
-        "visitors" -> Map.merge(row, %{"visitors" => 0})
+        "visitors" -> Map.merge(row, %{visitors: 0})
         "visits" -> Map.merge(row, %{"visits" => 0})
         "bounce_rate" -> Map.merge(row, %{"bounce_rate" => nil})
         "visit_duration" -> Map.merge(row, %{"visit_duration" => nil})

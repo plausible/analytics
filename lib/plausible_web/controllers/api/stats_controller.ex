@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Api.StatsController do
     {top_stats, sample_percent} = fetch_top_stats(site, query)
 
     timeseries_result = Task.await(timeseries)
-    plot = Enum.map(timeseries_result, fn row -> row["visitors"] end)
+    plot = Enum.map(timeseries_result, fn row -> row[:visitors] end)
     labels = Enum.map(timeseries_result, fn row -> row["date"] end)
     present_index = present_index_for(site, query, labels)
 
@@ -220,8 +220,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:source", metrics, pagination)
+      |> IO.inspect()
       |> maybe_add_cr(site, query, pagination, "source", "visit:source")
-      |> transform_keys(%{"source" => "name"})
+      |> transform_keys(%{source: "name"})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
@@ -446,6 +447,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     pages =
       Stats.breakdown(site, query, "event:page", metrics, pagination)
+      |> transform_keys(%{visitors: "visitors"})
       |> maybe_add_cr(site, query, pagination, "page", "event:page")
       |> transform_keys(%{"page" => "name"})
 
@@ -824,7 +826,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{
         params["prop_name"] => "name",
         "events" => "total_conversions",
-        "visitors" => "unique_conversions"
+        :visitors => "unique_conversions"
       })
       |> Enum.map(fn prop ->
         Map.put(

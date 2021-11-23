@@ -216,7 +216,7 @@ defmodule Plausible.Stats.Base do
   def select_event_metrics(q, ["visitors" | rest]) do
     from(e in q,
       select_merge: %{
-        "visitors" => fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
+        visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
       }
     )
     |> select_event_metrics(rest)
@@ -268,7 +268,7 @@ defmodule Plausible.Stats.Base do
   def select_session_metrics(q, ["visitors" | rest]) do
     from(s in q,
       select_merge: %{
-        "visitors" => fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id)
+        visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id)
       }
     )
     |> select_session_metrics(rest)
@@ -355,31 +355,35 @@ defmodule Plausible.Stats.Base do
     |> String.replace(~r/(?<!\.)\*/, "[^/]*")
   end
 
-  def merge_imported(q, %Plausible.Site{has_imported_stats: nil}, _, _), do: q
+  def merge_imported(q, %Plausible.Site{has_imported_stats: nil}, _, _, _), do: q
 
-  def merge_imported(q, site, query, "visit:source") do
-    if site.has_imported_stats do
-      {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
+  def merge_imported(q, site, query, "visit:source", {limit, page}) do
+    offset = (page - 1) * limit
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
-      imported_q =
-        from(
-          i in "imported_sources",
-          group_by: i.source,
-          where: i.domain == ^site.domain,
-          where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
-          select: %{source: i.source, visitors: sum(i.visitors)}
-        )
-
-      from(s in q,
-        join: i in subquery(imported_q),
-        on: s.source == i.source
+    imported_q =
+      from(
+        i in "imported_sources",
+        group_by: i.source,
+        where: i.domain == ^site.domain,
+        where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
+        select: %{source: i.source, visitors: sum(i.visitors)}
       )
-    else
-      q
-    end
+
+    from(s in Ecto.Query.subquery(q),
+      full_join: i in subquery(imported_q),
+      on: s.source == i.source,
+      select: %{
+        source: fragment("if(empty(?), ?, ?)", s.source, i.source, s.source),
+        visitors: fragment("toUInt64(?) + toUInt64(?)", s.visitors, i.visitors)
+      },
+      order_by: [desc: fragment("toUInt64(?) + toUInt64(?)", s.visitors, i.visitors)],
+      limit: ^limit,
+      offset: ^offset
+    )
   end
 
-  def merge_imported(q, _, _, _), do: q
+  def merge_imported(q, _, _, _, _), do: q
 
   defp add_sample_hint(db_q, query) do
     case query.sample_threshold do

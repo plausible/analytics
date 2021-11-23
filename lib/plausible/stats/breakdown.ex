@@ -92,7 +92,9 @@ defmodule Plausible.Stats.Breakdown do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
-    event_result = breakdown_events(site, query, "event:page", event_metrics, pagination)
+    event_result =
+      breakdown_events(site, query, "event:page", event_metrics, pagination)
+      |> transform_keys(%{visitors: "visitors"})
 
     event_result =
       if "time_on_page" in metrics do
@@ -148,6 +150,7 @@ defmodule Plausible.Stats.Breakdown do
 
   def breakdown(site, query, property, metrics, pagination) do
     breakdown_sessions(site, query, property, metrics, pagination)
+    |> transform_keys(%{visitors: "visitors"})
   end
 
   defp zip_results(event_result, session_result, property, metrics) do
@@ -189,7 +192,7 @@ defmodule Plausible.Stats.Breakdown do
     |> filter_converted_sessions(site, query)
     |> do_group_by(property)
     |> select_session_metrics(metrics)
-    |> merge_imported(site, query, property)
+    |> merge_imported(site, query, property, {limit, page})
     |> ClickhouseRepo.all()
   end
 
@@ -327,7 +330,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.referrer_source,
       select_merge: %{
-        "source" => fragment("if(empty(?), ?, ?)", s.referrer_source, @no_ref, s.referrer_source)
+        source: fragment("if(empty(?), ?, ?)", s.referrer_source, @no_ref, s.referrer_source)
       }
     )
   end
