@@ -12,6 +12,8 @@ defmodule Plausible.Stats.Filters do
     "os",
     "os_version",
     "country",
+    "region",
+    "city",
     "entry_page",
     "exit_page"
   ]

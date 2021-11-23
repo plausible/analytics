@@ -48,11 +48,7 @@ class CountriesModal extends React.Component {
     return (
       <tr className="text-sm dark:text-gray-200" key={country.name}>
         <td className="p-2">
-          <Link
-            className="hover:underline"
-            to={{search: query.toString(),
-            pathname: `/${  encodeURIComponent(this.props.site.domain)}`}}
-          >
+          <Link className="hover:underline" to={{search: query.toString(), pathname: `/${encodeURIComponent(this.props.site.domain)}`}}>
             {countryFullName}
           </Link>
         </td>
@@ -107,6 +103,8 @@ class CountriesModal extends React.Component {
         </>
       )
     }
+
+    return null
   }
 
   render() {

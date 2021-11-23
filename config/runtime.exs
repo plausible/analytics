@@ -113,6 +113,8 @@ geolite2_country_db =
     Application.app_dir(:plausible) <> "/priv/geodb/dbip-country.mmdb"
   )
 
+ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", geolite2_country_db)
+
 disable_auth =
   config_dir
   |> get_var_from_path_or_env("DISABLE_AUTH", "false")
@@ -144,6 +146,11 @@ domain_blacklist =
 is_selfhost =
   config_dir
   |> get_var_from_path_or_env("SELFHOST", "true")
+  |> String.to_existing_atom()
+
+show_cities =
+  config_dir
+  |> get_var_from_path_or_env("SHOW_CITIES", "false")
   |> String.to_existing_atom()
 
 custom_script_name =
@@ -186,6 +193,7 @@ config :plausible,
   site_limit: site_limit,
   site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost,
+  show_cities: show_cities,
   custom_script_name: custom_script_name,
   domain_blacklist: domain_blacklist
 
@@ -390,13 +398,13 @@ config :kaffy,
     ]
   ]
 
-if config_env() != :test && geolite2_country_db do
+if config_env() != :test do
   config :geolix,
     databases: [
       %{
-        id: :country,
+        id: :geolocation,
         adapter: Geolix.Adapter.MMDB2,
-        source: geolite2_country_db,
+        source: ip_geolocation_db,
         result_as: :raw
       }
     ]

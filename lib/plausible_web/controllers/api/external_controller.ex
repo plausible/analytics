@@ -91,7 +91,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       query = decode_query_params(uri)
 
       ref = parse_referrer(uri, params["referrer"])
-      country_code = visitor_country(conn)
+      location_details = visitor_location_details(conn)
       salts = Plausible.Session.Salts.fetch()
 
       event_attrs = %{
@@ -104,7 +104,11 @@ defmodule PlausibleWeb.Api.ExternalController do
         utm_medium: query["utm_medium"],
         utm_source: query["utm_source"],
         utm_campaign: query["utm_campaign"],
-        country_code: country_code,
+        country_code: location_details[:country_code],
+        country_geoname_id: location_details[:country_geoname_id],
+        subdivision1_code: location_details[:subdivision1_code],
+        subdivision2_code: location_details[:subdivision2_code],
+        city_geoname_id: location_details[:city_geoname_id],
         operating_system: ua && os_name(ua),
         operating_system_version: ua && os_version(ua),
         browser: ua && browser_name(ua),
@@ -216,12 +220,38 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   @decorate trace("ingest.geolocation")
-  defp visitor_country(conn) do
+  defp visitor_location_details(conn) do
     result =
       PlausibleWeb.RemoteIp.get(conn)
       |> Geolix.lookup()
 
-    get_in(result, [:country, :country, :iso_code])
+    country_code = get_in(result, [:geolocation, :country, :iso_code])
+    city_geoname_id = get_in(result, [:geolocation, :city, :geoname_id])
+
+    subdivision1_code =
+      case result do
+        %{geolocation: %{subdivisions: [%{iso_code: iso_code} | _rest]}} ->
+          country_code <> "-" <> iso_code
+
+        _ ->
+          ""
+      end
+
+    subdivision2_code =
+      case result do
+        %{geolocation: %{subdivisions: [_first, %{iso_code: iso_code} | _rest]}} ->
+          country_code <> "-" <> iso_code
+
+        _ ->
+          ""
+      end
+
+    %{
+      country_code: country_code,
+      subdivision1_code: subdivision1_code,
+      subdivision2_code: subdivision2_code,
+      city_geoname_id: city_geoname_id
+    }
   end
 
   @decorate trace("ingest.parse_referrer")
