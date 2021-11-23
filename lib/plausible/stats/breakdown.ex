@@ -230,7 +230,7 @@ defmodule Plausible.Stats.Breakdown do
     time_query = "
       SELECT
         p,
-        sum(td)/count(case when p2 != p then 1 end) as avgTime
+        round(sum(td)/count(case when p2 != p then 1 end)) as avgTime
       FROM
         (SELECT
           p,

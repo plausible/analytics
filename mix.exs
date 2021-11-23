@@ -17,7 +17,7 @@ defmodule Plausible.MixProject do
       releases: [
         plausible: [
           include_executables_for: [:unix],
-          applications: [plausible: :permanent],
+          applications: [plausible: :permanent, opentelemetry: :temporary],
           steps: [:assemble, :tar]
         ]
       ],
@@ -93,7 +93,14 @@ defmodule Plausible.MixProject do
       {:envy, "~> 1.1.1"},
       {:phoenix_pagination, "~> 0.7.0"},
       {:hammer, "~> 6.0"},
-      {:public_suffix, git: "https://github.com/axelson/publicsuffix-elixir"}
+      {:public_suffix, git: "https://github.com/axelson/publicsuffix-elixir"},
+      {:telemetry, "~> 1.0", override: true},
+      {:opentelemetry, "1.0.0-rc.3"},
+      {:open_telemetry_decorator, "~> 1.0.0-rc.3"},
+      {:opentelemetry_exporter, "1.0.0-rc.3"},
+      {:opentelemetry_phoenix, "1.0.0-rc.5"},
+      {:opentelemetry_ecto, "1.0.0-rc.3"},
+      {:opentelemetry_oban, "~> 0.2.0-rc.2"}
     ]
   end
 

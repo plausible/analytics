@@ -36,7 +36,6 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                  "name" => "Chrome",
                  "total_visitors" => 2,
                  "visitors" => 1,
-                 "percentage" => 100,
                  "conversion_rate" => 50.0
                }
              ]

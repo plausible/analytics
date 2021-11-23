@@ -1,6 +1,6 @@
 <div x-data="{selectedInvitation: null, invitationOpen: false, invitations: <%= Enum.map(@invitations, &({&1.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode! %>}" @keydown.escape.window="invitationOpen = false" class="container pt-6">
 
-  <%= if @needs_to_upgrade do %>
+  <%= if @needs_to_upgrade == {true, :no_active_subscription} do %>
     <div class="rounded-md bg-yellow-100 p-4">
       <div class="flex">
         <div class="flex-shrink-0">

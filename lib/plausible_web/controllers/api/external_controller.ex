@@ -1,14 +1,18 @@
 defmodule PlausibleWeb.Api.ExternalController do
   use PlausibleWeb, :controller
+  use OpenTelemetryDecorator
   require Logger
 
   def event(conn, _params) do
-    params = parse_body(conn)
-    Sentry.Context.set_extra_context(%{request: params})
-
-    case create_event(conn, params) do
-      :ok ->
-        conn |> put_status(202) |> text("ok")
+    with {:ok, params} <- parse_body(conn),
+         _ <- Sentry.Context.set_extra_context(%{request: params}),
+         :ok <- create_event(conn, params) do
+      conn |> put_status(202) |> text("ok")
+    else
+      {:error, :invalid_json} ->
+        conn
+        |> put_status(400)
+        |> json(%{errors: %{request: "Unable to parse request body as json"}})
 
       {:error, errors} ->
         conn |> put_status(400) |> json(%{errors: errors})
@@ -46,6 +50,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     })
   end
 
+  @decorate trace("ingest.parse_user_agent")
   defp parse_user_agent(conn) do
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
 
@@ -159,8 +164,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp parse_meta(params) do
     raw_meta = params["m"] || params["meta"] || params["p"] || params["props"]
 
-    with raw_json when not is_nil(raw_meta) <- raw_meta,
-         {:ok, parsed_json} when is_map(parsed_json) <- Jason.decode(raw_json),
+    with {:ok, parsed_json} <- decode_raw_props(raw_meta),
          :ok <- validate_custom_props(parsed_json) do
       parsed_json
     else
@@ -171,11 +175,25 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp validate_custom_props(props) do
     is_valid =
       Enum.all?(props, fn {_key, val} ->
-        !is_list(val)
+        !is_list(val) && !is_map(val)
       end)
 
     if is_valid, do: :ok, else: :invalid_props
   end
+
+  defp decode_raw_props(props) when is_map(props), do: {:ok, props}
+
+  defp decode_raw_props(raw_json) when is_binary(raw_json) do
+    case Jason.decode(raw_json) do
+      {:ok, parsed_props} when is_map(parsed_props) ->
+        {:ok, parsed_props}
+
+      _ ->
+        :not_a_map
+    end
+  end
+
+  defp decode_raw_props(_), do: :bad_format
 
   defp get_domains(params, uri) do
     if params["domain"] do
@@ -201,6 +219,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
+  @decorate trace("ingest.geolocation")
   defp visitor_location_details(conn) do
     result =
       PlausibleWeb.RemoteIp.get(conn)
@@ -235,6 +254,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     }
   end
 
+  @decorate trace("ingest.parse_referrer")
   defp parse_referrer(_, nil), do: nil
 
   defp parse_referrer(uri, referrer_str) do
@@ -286,10 +306,14 @@ defmodule PlausibleWeb.Api.ExternalController do
     case conn.body_params do
       %Plug.Conn.Unfetched{} ->
         {:ok, body, _conn} = Plug.Conn.read_body(conn)
-        Jason.decode!(body)
+
+        case Jason.decode(body) do
+          {:ok, params} -> {:ok, params}
+          _ -> {:error, :invalid_json}
+        end
 
       params ->
-        params
+        {:ok, params}
     end
   end
 

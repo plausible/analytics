@@ -112,6 +112,7 @@ defmodule Plausible.Factory do
       status: "active",
       next_bill_amount: "6.00",
       next_bill_date: Timex.today(),
+      last_bill_date: Timex.today(),
       currency_code: "USD"
     }
   end
