@@ -521,7 +521,7 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
     pagination = parse_pagination(params)
 
-    countries =
+    regions =
       Stats.breakdown(site, query, "visit:region", ["visitors"], pagination)
       |> transform_keys(%{"region" => "code"})
       |> Enum.map(fn region ->
@@ -529,7 +529,17 @@ defmodule PlausibleWeb.Api.StatsController do
         Map.put(region, "name", name)
       end)
 
-    json(conn, countries)
+    if params["csv"] do
+      if Map.has_key?(query.filters, "event:goal") do
+        regions
+        |> transform_keys(%{"visitors" => "conversions"})
+        |> to_csv(["name", "conversions", "conversion_rate"])
+      else
+        regions |> to_csv(["name", "visitors"])
+      end
+    else
+      json(conn, regions)
+    end
   end
 
   def cities(conn, params) do
@@ -545,7 +555,17 @@ defmodule PlausibleWeb.Api.StatsController do
         Map.put(city, "name", name)
       end)
 
-    json(conn, cities)
+    if params["csv"] do
+      if Map.has_key?(query.filters, "event:goal") do
+        cities
+        |> transform_keys(%{"visitors" => "conversions"})
+        |> to_csv(["name", "conversions", "conversion_rate"])
+      else
+        cities |> to_csv(["name", "visitors"])
+      end
+    else
+      json(conn, cities)
+    end
   end
 
   def browsers(conn, params) do
