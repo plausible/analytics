@@ -58,7 +58,7 @@ defmodule Plausible.MixProject do
       {:jason, "~> 1.2"},
       {:phoenix, "~> 1.5.0"},
       {:phoenix_ecto, "~> 4.0"},
-      {:phoenix_html, "~> 2.11"},
+      {:phoenix_html, "~> 2.12"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_pubsub, "~> 2.0"},
       {:plug_cowboy, "~> 2.3"},
