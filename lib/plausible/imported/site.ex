@@ -1,5 +1,5 @@
 defmodule Plausible.Imported do
-  alias Plausible.Imported.{Visitors, Sources}
+  alias Plausible.Imported
 
   def forget(site) do
     Plausible.ClickhouseRepo.clear_imported_stats_for(site.domain)
@@ -30,7 +30,7 @@ defmodule Plausible.Imported do
       |> Enum.map(&Integer.parse/1)
       |> Enum.map(&elem(&1, 0))
 
-    Visitors.new(%{
+    Imported.Visitors.new(%{
       domain: domain,
       timestamp: format_timestamp(timestamp),
       visitors: visitors,
@@ -46,16 +46,44 @@ defmodule Plausible.Imported do
        }) do
     {visitors, ""} = Integer.parse(value)
 
-    source =
-      case source do
-        "(direct)" -> ""
-        src -> src
-      end
+    source = if source == "(direct)", do: "", else: source
 
-    Sources.new(%{
+    Imported.Sources.new(%{
       domain: domain,
       timestamp: format_timestamp(timestamp),
       source: source,
+      visitors: visitors
+    })
+  end
+
+  defp new_from_google_analytics(domain, "utm_mediums", %{
+         "dimensions" => [timestamp, medium],
+         "metrics" => [%{"values" => [value]}]
+       }) do
+    {visitors, ""} = Integer.parse(value)
+
+    medium = if medium == "(none)", do: "", else: medium
+
+    Imported.UtmMediums.new(%{
+      domain: domain,
+      timestamp: format_timestamp(timestamp),
+      medium: medium,
+      visitors: visitors
+    })
+  end
+
+  defp new_from_google_analytics(domain, "utm_campaigns", %{
+         "dimensions" => [timestamp, campaign],
+         "metrics" => [%{"values" => [value]}]
+       }) do
+    {visitors, ""} = Integer.parse(value)
+
+    campaign = if campaign == "(not set)", do: "", else: campaign
+
+    Imported.UtmCampaigns.new(%{
+      domain: domain,
+      timestamp: format_timestamp(timestamp),
+      campaign: campaign,
       visitors: visitors
     })
   end

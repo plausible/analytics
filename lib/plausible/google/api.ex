@@ -192,7 +192,17 @@ defmodule Plausible.Google.Api do
       {
         ["ga:date", "ga:source"],
         ["ga:users"]
-      }
+      },
+      # UTM Mediums
+      {
+        ["ga:date", "ga:medium"],
+        ["ga:users"]
+      },
+      # UTM Campaigns
+      {
+        ["ga:date", "ga:campaign"],
+        ["ga:users"]
+      },
     ]
 
     response = fetch_analytic_reports(request, request_data)
@@ -200,7 +210,7 @@ defmodule Plausible.Google.Api do
     case response do
       {:ok, data} ->
         maybe_error =
-          ["visitors", "sources"]
+          ["visitors", "sources", "utm_mediums", "utm_campaigns"]
           |> Enum.with_index()
           |> Enum.map(fn {metric, index} ->
             Task.async(fn ->
