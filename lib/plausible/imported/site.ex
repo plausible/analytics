@@ -46,6 +46,12 @@ defmodule Plausible.Imported do
        }) do
     {visitors, ""} = Integer.parse(value)
 
+    source =
+      case source do
+        "(direct)" -> ""
+        src -> src
+      end
+
     Sources.new(%{
       domain: domain,
       timestamp: format_timestamp(timestamp),

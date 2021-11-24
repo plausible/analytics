@@ -7,7 +7,7 @@ defmodule Plausible.Imported.Sources do
   schema "imported_sources" do
     field :domain, :string
     field :timestamp, :naive_datetime
-    field :source, :string
+    field :source, :string, default: ""
     field :visitors, :integer
   end
 
@@ -26,7 +26,6 @@ defmodule Plausible.Imported.Sources do
     |> validate_required([
       :domain,
       :timestamp,
-      :source,
       :visitors
     ])
   end
