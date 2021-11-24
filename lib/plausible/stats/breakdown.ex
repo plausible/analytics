@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Breakdown do
   alias Plausible.Stats.Query
   @no_ref "Direct / None"
 
-  @event_metrics ["visitors", "pageviews", "events"]
+  @event_metrics [:visitors, "pageviews", "events"]
   @session_metrics ["visits", "bounce_rate", "visit_duration"]
   @event_props ["event:page", "event:page_match", "event:name"]
 
@@ -92,9 +92,7 @@ defmodule Plausible.Stats.Breakdown do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
-    event_result =
-      breakdown_events(site, query, "event:page", event_metrics, pagination)
-      |> transform_keys(%{visitors: "visitors"})
+    event_result = breakdown_events(site, query, "event:page", event_metrics, pagination)
 
     event_result =
       if "time_on_page" in metrics do
@@ -150,11 +148,10 @@ defmodule Plausible.Stats.Breakdown do
 
   def breakdown(site, query, property, metrics, pagination) do
     breakdown_sessions(site, query, property, metrics, pagination)
-    |> transform_keys(%{visitors: "visitors"})
   end
 
   defp zip_results(event_result, session_result, property, metrics) do
-    sort_by = if Enum.member?(metrics, "visitors"), do: "visitors", else: List.first(metrics)
+    sort_by = if Enum.member?(metrics, :visitors), do: :visitors, else: List.first(metrics)
 
     property =
       property

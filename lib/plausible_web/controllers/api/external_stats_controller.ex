@@ -133,6 +133,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
            "The metric `#{invalid_metric}` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#get-apiv1statsbreakdown"}
       end
     else
+      metrics = metrics |> Enum.map(fn item ->
+        case item do
+          "visitors" -> :visitors
+          metric -> metric
+        end
+      end)
       {:ok, metrics}
     end
   end
