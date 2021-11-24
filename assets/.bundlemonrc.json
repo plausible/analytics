@@ -1,5 +1,6 @@
 {
   "baseDir": "../priv/",
+  "reportOutput": ["github"],
   "files": [
     {
       "path": "static/js/*.js"
