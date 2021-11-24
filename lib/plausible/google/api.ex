@@ -202,7 +202,7 @@ defmodule Plausible.Google.Api do
       {
         ["ga:date", "ga:campaign"],
         ["ga:users"]
-      },
+      }
     ]
 
     response = fetch_analytic_reports(request, request_data)
