@@ -1,12 +1,30 @@
 import React from 'react';
 
 import * as storage from '../../storage'
-import Countries from './countries';
 import CountriesMap from './map'
 
 import * as api from '../../api'
 import {apiPath, sitePath} from '../../url'
 import ListReport from '../reports/list'
+
+function Countries({query, site}) {
+  function fetchData() {
+    return api.get(apiPath(site, '/countries'), query, {limit: 9}).then((res) => {
+      return res.map(row => Object.assign({}, row, {percentage: undefined}))
+    })
+  }
+
+  return (
+    <ListReport
+      title="Countries"
+      fetchData={fetchData}
+      filter={{country: 'code', country_name: 'name'}}
+      keyLabel="Country"
+      detailsLink={sitePath(site, '/countries')}
+      query={query}
+    />
+  )
+}
 
 function Regions({query, site}) {
   function fetchData() {
