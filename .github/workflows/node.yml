@@ -23,3 +23,8 @@ jobs:
     - run: npm install --prefix ./assets
     - run: npm run lint --prefix ./assets
     - run: npm run check-format --prefix ./assets
+    - name: Run BundleMon
+      run: npm run bundlemon --prefix ./assets
+      env:
+        BUNDLEMON_PROJECT_ID: "619e0b6ad4a54a00089861ac"
+        CI_COMMIT_SHA: ${{github.event.pull_request.head.sha || github.sha}} # important!

@@ -7,7 +7,8 @@
     "watch": "$(npm bin)/webpack --mode development --watch",
     "format": "$(npm bin)/prettier --write {css,js}/**",
     "check-format": "$(npm bin)/prettier --check {css,js}/**",
-    "lint": "$(npm bin)/eslint js/**"
+    "lint": "$(npm bin)/eslint js/**",
+    "bundlemon": "$(npm bin)/bundlemon"
   },
   "dependencies": {
     "@babel/core": "^7.14.3",
@@ -52,6 +53,7 @@
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",
+    "bundlemon": "^1.2.0",
     "eslint": "^7.2.0",
     "eslint-config-prettier": "^7.0.0",
     "eslint-plugin-import": "^2.22.1",
