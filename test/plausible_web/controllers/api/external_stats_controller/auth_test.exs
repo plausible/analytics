@@ -52,6 +52,33 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
            }
   end
 
+  test "can access with correct API key and site ID", %{conn: conn, user: user, api_key: api_key} do
+    site = insert(:site, members: [user])
+
+    conn =
+      conn
+      |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key}")
+      |> get("/api/v1/stats/aggregate", %{"site_id" => site.domain, "metrics" => "pageviews"})
+
+    assert json_response(conn, 200) == %{
+             "results" => %{"pageviews" => %{"value" => 0}}
+           }
+  end
+
+  test "can access as an admin", %{conn: conn, user: user, api_key: api_key} do
+    Application.put_env(:plausible, :admin_user_ids, [user.id])
+    site = insert(:site)
+
+    conn =
+      conn
+      |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key}")
+      |> get("/api/v1/stats/aggregate", %{"site_id" => site.domain, "metrics" => "pageviews"})
+
+    assert json_response(conn, 200) == %{
+             "results" => %{"pageviews" => %{"value" => 0}}
+           }
+  end
+
   test "limits the rate of API requests", %{user: user} do
     api_key = insert(:api_key, user_id: user.id, hourly_request_limit: 3)
 
