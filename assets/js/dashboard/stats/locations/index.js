@@ -16,7 +16,6 @@ function Countries({query, site}) {
 
   return (
     <ListReport
-      title="Countries"
       fetchData={fetchData}
       filter={{country: 'code', country_name: 'name'}}
       keyLabel="Country"
@@ -34,7 +33,6 @@ function Regions({query, site}) {
 
   return (
     <ListReport
-      title="Regions"
       fetchData={fetchData}
       filter={{region: 'code', region_name: 'name'}}
       keyLabel="Region"
@@ -52,7 +50,6 @@ function Cities({query, site}) {
 
   return (
     <ListReport
-      title="Cities"
       fetchData={fetchData}
       filter={{city: 'code', city_name: 'name'}}
       keyLabel="City"

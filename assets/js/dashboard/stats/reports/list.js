@@ -65,8 +65,10 @@ export default class ListReport extends React.Component {
           bg={`${lightBackground} dark:bg-gray-500 dark:bg-opacity-15`}
           maxWidthDeduction={maxWidthDeduction}
         >
-          <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
+          <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all" tooltip={this.props.tooltipText && this.props.tooltipText(listItem)}>
             <Link className="md:truncate block hover:underline" to={{search: query.toString()}}>
+              {this.props.renderIcon && this.props.renderIcon(listItem)}
+              {this.props.renderIcon && ' '}
               {listItem.name}
             </Link>
           </span>
