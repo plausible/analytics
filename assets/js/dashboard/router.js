@@ -8,7 +8,6 @@ import GoogleKeywordsModal from './stats/modals/google-keywords'
 import PagesModal from './stats/modals/pages'
 import EntryPagesModal from './stats/modals/entry-pages'
 import ExitPagesModal from './stats/modals/exit-pages'
-import CountriesModal from './stats/modals/countries'
 import ModalTable from './stats/modals/table'
 import FilterModal from './stats/modals/filter'
 
@@ -50,7 +49,7 @@ export default function Router({site, loggedIn, currentUserRole}) {
             <ExitPagesModal site={site} />
           </Route>
           <Route path="/:domain/countries">
-            <CountriesModal site={site} />
+            <ModalTable title="Top countries" site={site} endpoint={`/api/stats/${encodeURIComponent(site.domain)}/countries`} filter={{country: 'code', country_name: 'name'}} keyLabel="Country" />
           </Route>
           <Route path="/:domain/regions">
             <ModalTable title="Top regions" site={site} endpoint={`/api/stats/${encodeURIComponent(site.domain)}/regions`} filter={{region: 'code', region_name: 'name'}} keyLabel="Region" />

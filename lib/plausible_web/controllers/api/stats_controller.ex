@@ -487,14 +487,14 @@ defmodule PlausibleWeb.Api.StatsController do
     countries =
       Stats.breakdown(site, query, "visit:country", ["visitors"], pagination)
       |> maybe_add_cr(site, query, {300, 1}, "country", "visit:country")
-      |> transform_keys(%{"country" => "name"})
+      |> transform_keys(%{"country" => "code"})
       |> maybe_add_percentages(query)
 
     if params["csv"] do
       countries =
         countries
         |> Enum.map(fn country ->
-          iso3166 = Stats.CountryName.from_iso3166(country["name"])
+          iso3166 = Stats.CountryName.from_iso3166(country["code"])
           Map.put(country, "name", iso3166)
         end)
 
@@ -508,8 +508,9 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       countries =
         Enum.map(countries, fn country ->
-          alpha3 = Stats.CountryName.to_alpha3(country["name"])
-          Map.put(country, "name", alpha3)
+          name = Stats.CountryName.from_iso3166(country["code"])
+          code = Stats.CountryName.to_alpha3(country["code"])
+          Map.merge(country, %{"name" => name, "code" => code})
         end)
 
       json(conn, countries)

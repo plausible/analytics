@@ -1,16 +1,94 @@
 import React from 'react';
-import { Link } from 'react-router-dom'
 
 import * as storage from '../../storage'
-import LazyLoader from '../../lazy-loader'
-import Browsers from './browsers'
-import OperatingSystems from './operating-systems'
-import FadeIn from '../../fade-in'
-import numberFormatter from '../../number-formatter'
-import Bar from '../bar'
+import ListReport from '../reports/list'
 import * as api from '../../api'
 import * as url from '../../url'
 
+function Browsers({query, site}) {
+  function fetchData() {
+    return api.get(url.apiPath(site, '/browsers'), query)
+  }
+
+  return (
+    <ListReport
+      fetchData={fetchData}
+      filter={{browser: 'name'}}
+      keyLabel="Browser"
+      query={query}
+    />
+  )
+}
+
+function BrowserVersions({query, site}) {
+  function fetchData() {
+    return api.get(url.apiPath(site, '/browser-versions'), query)
+  }
+
+  return (
+    <ListReport
+      fetchData={fetchData}
+      filter={{browser_version: 'name'}}
+      keyLabel={query.filters.browser + ' version'}
+      query={query}
+    />
+  )
+}
+
+function OperatingSystems({query, site}) {
+  function fetchData() {
+    return api.get(url.apiPath(site, '/operating-systems'), query)
+  }
+
+  return (
+    <ListReport
+      fetchData={fetchData}
+      filter={{os: 'name'}}
+      keyLabel="Operating system"
+      query={query}
+    />
+  )
+}
+
+function OperatingSystemVersions({query, site}) {
+  function fetchData() {
+    return api.get(url.apiPath(site, '/operating-system-versions'), query)
+  }
+
+  return (
+    <ListReport
+      fetchData={fetchData}
+      filter={{os_version: 'name'}}
+      keyLabel={query.filters.os + ' version'}
+      query={query}
+    />
+  )
+}
+
+function ScreenSizes({query, site}) {
+  function fetchData() {
+    return api.get(url.apiPath(site, '/screen-sizes'), query)
+  }
+
+  function renderIcon(screenSize) {
+    return iconFor(screenSize.name)
+  }
+
+  function renderTooltipText(screenSize) {
+    return EXPLANATION[screenSize.name]
+  }
+
+  return (
+    <ListReport
+      fetchData={fetchData}
+      filter={{screen: 'name'}}
+      keyLabel="Screen size"
+      query={query}
+      renderIcon={renderIcon}
+      tooltipText={renderTooltipText}
+    />
+  )
+}
 
 const EXPLANATION = {
   'Mobile': 'up to 576px',
@@ -39,110 +117,6 @@ function iconFor(screenSize) {
   }
 }
 
-class ScreenSizes extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {loading: true}
-    this.onVisible = this.onVisible.bind(this)
-  }
-
-  componentDidUpdate(prevProps) {
-    if (this.props.query !== prevProps.query) {
-      this.setState({loading: true, sizes: null})
-      this.fetchScreenSizes()
-    }
-  }
-
-  onVisible() {
-    this.fetchScreenSizes()
-    if (this.props.timer) this.props.timer.onTick(this.fetchScreenSizes.bind(this))
-  }
-
-  fetchScreenSizes() {
-    api.get(
-      `/api/stats/${encodeURIComponent(this.props.site.domain)}/screen-sizes`,
-      this.props.query
-    )
-      .then((res) => this.setState({loading: false, sizes: res}))
-  }
-
-  showConversionRate() {
-    return !!this.props.query.filters.goal
-  }
-
-
-  label() {
-    return this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
-  }
-
-  renderScreenSize(size) {
-    const query = new URLSearchParams(window.location.search)
-    query.set('screen', size.name)
-    const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
-
-    return (
-      <div className="flex items-center justify-between my-1 text-sm" key={size.name}>
-        <Bar
-          count={size.visitors}
-          all={this.state.sizes}
-          bg="bg-green-50 dark:bg-gray-500 dark:bg-opacity-15"
-          maxWidthDeduction={maxWidthDeduction}
-        >
-          <span
-            tooltip={EXPLANATION[size.name]}
-            className="flex px-2 py-1.5 dark:text-gray-300"
-          >
-            <Link className="md:truncate block hover:underline" to={url.setQuery('screen', size.name)}>
-              {iconFor(size.name)} {size.name}
-            </Link>
-          </span>
-        </Bar>
-        <span className="font-medium dark:text-gray-200 text-right w-20">
-          {numberFormatter(size.visitors)} <span className="inline-block w-8 text-xs text-right">({size.percentage}%)</span>
-        </span>
-        {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(size.conversion_rate)}%</span>}
-      </div>
-    )
-  }
-
-  renderList() {
-    if (this.state.sizes && this.state.sizes.length > 0) {
-      return (
-        <React.Fragment>
-          <div
-            className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500"
-          >
-            <span>Screen size</span>
-            <div className="text-right">
-              <span className="inline-block w-20">{ this.label() }</span>
-              {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
-            </div>
-          </div>
-          { this.state.sizes && this.state.sizes.map(this.renderScreenSize.bind(this)) }
-        </React.Fragment>
-      )
-    }
-    return (
-      <div
-        className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400"
-      >
-        No data yet
-      </div>
-    )
-  }
-
-  render() {
-    return (
-      <LazyLoader onVisible={this.onVisible} className="flex flex-col flex-grow">
-        { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
-        <FadeIn show={!this.state.loading} class="flex-grow">
-          { this.renderList() }
-        </FadeIn>
-      </LazyLoader>
-    )
-  }
-}
-
 export default class Devices extends React.Component {
   constructor(props) {
     super(props)
@@ -164,23 +138,19 @@ export default class Devices extends React.Component {
   renderContent() {
     switch (this.state.mode) {
       case 'browser':
+        if (this.props.query.filters.browser) {
+          return <BrowserVersions site={this.props.site} query={this.props.query} timer={this.props.timer} />
+        }
         return <Browsers site={this.props.site} query={this.props.query} timer={this.props.timer} />
       case 'os':
-        return (
-          <OperatingSystems
-            site={this.props.site}
-            query={this.props.query}
-            timer={this.props.timer}
-          />
-        )
+        if (this.props.query.filters.os) {
+          return <OperatingSystemVersions site={this.props.site} query={this.props.query} timer={this.props.timer} />
+        }
+        return <OperatingSystems site={this.props.site} query={this.props.query} timer={this.props.timer} />
       case 'size':
       default:
         return (
-          <ScreenSizes
-            site={this.props.site}
-            query={this.props.query}
-            timer={this.props.timer}
-          />
+          <ScreenSizes site={this.props.site} query={this.props.query} timer={this.props.timer} />
         )
     }
   }

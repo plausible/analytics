@@ -32,7 +32,19 @@ export default class ListReport extends React.Component {
   }
 
   label() {
-    return this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
+    if (this.props.query.period === 'realtime') {
+      return 'Current visitors'
+    }
+
+    if (this.showConversionRate()) {
+      return 'Conversions'
+    }
+
+    return 'Visitors'
+  }
+
+  showConversionRate() {
+    return !!this.props.query.filters.goal
   }
 
   renderListItem(listItem) {
@@ -42,27 +54,34 @@ export default class ListReport extends React.Component {
       query.set(key, listItem[valueKey])
     }))
 
+    const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
+    const lightBackground = this.props.color || 'bg-green-50'
+
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={listItem.name}>
         <Bar
           count={listItem.visitors}
           all={this.state.list}
-          bg="bg-green-50 dark:bg-gray-500 dark:bg-opacity-15"
-          maxWidthDeduction="6rem"
+          bg={`${lightBackground} dark:bg-gray-500 dark:bg-opacity-15`}
+          maxWidthDeduction={maxWidthDeduction}
         >
-          <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
+          <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all" tooltip={this.props.tooltipText && this.props.tooltipText(listItem)}>
             <Link className="md:truncate block hover:underline" to={{search: query.toString()}}>
+              {this.props.renderIcon && this.props.renderIcon(listItem)}
+              {this.props.renderIcon && ' '}
               {listItem.name}
             </Link>
           </span>
         </Bar>
-        <span className="font-medium dark:text-gray-200">
+        <span className="font-medium dark:text-gray-200 w-20 text-right">
           {numberFormatter(listItem.visitors)}
           {
-            listItem.percentage &&
-              <span className="inline-block w-8 text-xs text-right">({listItem.percentage}%)</span>
+            listItem.percentage >= 0
+              ? <span className="inline-block w-8 text-xs text-right">({listItem.percentage}%)</span>
+              : null
           }
         </span>
+        {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{listItem.conversion_rate}%</span>}
       </div>
     )
   }
@@ -73,7 +92,10 @@ export default class ListReport extends React.Component {
         <>
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>{ this.props.keyLabel }</span>
-            <span>{ this.label() }</span>
+            <span className="text-right">
+              <span className="inline-block w-20">{this.label()}</span>
+              {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
+            </span>
           </div>
           { this.state.list && this.state.list.map(this.renderListItem.bind(this)) }
         </>

@@ -1,12 +1,30 @@
 import React from 'react';
 
 import * as storage from '../../storage'
-import Countries from './countries';
 import CountriesMap from './map'
 
 import * as api from '../../api'
 import {apiPath, sitePath} from '../../url'
 import ListReport from '../reports/list'
+
+function Countries({query, site}) {
+  function fetchData() {
+    return api.get(apiPath(site, '/countries'), query, {limit: 9}).then((res) => {
+      return res.map(row => Object.assign({}, row, {percentage: undefined}))
+    })
+  }
+
+  return (
+    <ListReport
+      fetchData={fetchData}
+      filter={{country: 'code', country_name: 'name'}}
+      keyLabel="Country"
+      detailsLink={sitePath(site, '/countries')}
+      query={query}
+      color="bg-orange-50"
+    />
+  )
+}
 
 function Regions({query, site}) {
   function fetchData() {
@@ -15,12 +33,12 @@ function Regions({query, site}) {
 
   return (
     <ListReport
-      title="Regions"
       fetchData={fetchData}
       filter={{region: 'code', region_name: 'name'}}
       keyLabel="Region"
       detailsLink={sitePath(site, '/regions')}
       query={query}
+      color="bg-orange-50"
     />
   )
 }
@@ -32,12 +50,12 @@ function Cities({query, site}) {
 
   return (
     <ListReport
-      title="Cities"
       fetchData={fetchData}
       filter={{city: 'code', city_name: 'name'}}
       keyLabel="City"
       detailsLink={sitePath(site, '/cities')}
       query={query}
+      color="bg-orange-50"
     />
   )
 }
