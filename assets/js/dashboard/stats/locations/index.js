@@ -22,6 +22,7 @@ function Countries({query, site}) {
       keyLabel="Country"
       detailsLink={sitePath(site, '/countries')}
       query={query}
+      color="bg-orange-50"
     />
   )
 }
@@ -39,6 +40,7 @@ function Regions({query, site}) {
       keyLabel="Region"
       detailsLink={sitePath(site, '/regions')}
       query={query}
+      color="bg-orange-50"
     />
   )
 }
@@ -56,6 +58,7 @@ function Cities({query, site}) {
       keyLabel="City"
       detailsLink={sitePath(site, '/cities')}
       query={query}
+      color="bg-orange-50"
     />
   )
 }

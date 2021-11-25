@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 import * as storage from '../../storage'
 import LazyLoader from '../../lazy-loader'
-import Browsers from './browsers'
+import ListReport from '../reports/list'
 import OperatingSystems from './operating-systems'
 import FadeIn from '../../fade-in'
 import numberFormatter from '../../number-formatter'
@@ -11,6 +11,37 @@ import Bar from '../bar'
 import * as api from '../../api'
 import * as url from '../../url'
 
+function Browsers({query, site}) {
+  function fetchData() {
+    return api.get(url.apiPath(site, '/browsers'), query)
+  }
+
+  return (
+    <ListReport
+      title="Browsers"
+      fetchData={fetchData}
+      filter={{browser: 'name'}}
+      keyLabel="Browser"
+      query={query}
+    />
+  )
+}
+
+function BrowserVersions({query, site}) {
+  function fetchData() {
+    return api.get(url.apiPath(site, '/browser-versions'), query)
+  }
+
+  return (
+    <ListReport
+      title="Browser versions"
+      fetchData={fetchData}
+      filter={{browser_version: 'name'}}
+      keyLabel={query.filters.browser + ' version'}
+      query={query}
+    />
+  )
+}
 
 const EXPLANATION = {
   'Mobile': 'up to 576px',
@@ -164,6 +195,9 @@ export default class Devices extends React.Component {
   renderContent() {
     switch (this.state.mode) {
       case 'browser':
+        if (this.props.query.filters.browser) {
+          return <BrowserVersions site={this.props.site} query={this.props.query} timer={this.props.timer} />
+        }
         return <Browsers site={this.props.site} query={this.props.query} timer={this.props.timer} />
       case 'os':
         return (
