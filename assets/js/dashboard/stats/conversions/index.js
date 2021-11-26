@@ -14,6 +14,7 @@ const DEFAULT_WIDTH = 1080
 export default class Conversions extends React.Component {
   constructor(props) {
     super(props)
+    this.htmlNode = React.createRef()
     this.state = {
       loading: true,
       viewport: DEFAULT_WIDTH,
@@ -42,7 +43,8 @@ export default class Conversions extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
-      this.setState({loading: true, goals: null})
+      const height = this.htmlNode.current.element.offsetHeight
+      this.setState({loading: true, goals: null, prevHeight: height})
       this.fetchConversions()
     }
   }
@@ -54,7 +56,7 @@ export default class Conversions extends React.Component {
 
   fetchConversions() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/conversions`, this.props.query)
-      .then((res) => this.setState({loading: false, goals: res}))
+      .then((res) => this.setState({loading: false, goals: res, prevHeight: null}))
   }
 
   renderGoalText(goalName) {
@@ -123,7 +125,7 @@ export default class Conversions extends React.Component {
 
   render() {
     return (
-      <LazyLoader className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825" style={{minHeight: '94px'}} onVisible={this.onVisible}>
+      <LazyLoader className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825" style={{minHeight: '132px', height: this.state.prevHeight ?? 'auto'}} onVisible={this.onVisible} ref={this.htmlNode}>
         { this.renderInner() }
       </LazyLoader>
     )
