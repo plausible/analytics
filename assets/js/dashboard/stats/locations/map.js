@@ -9,7 +9,6 @@ import LazyLoader from '../../lazy-loader'
 import MoreLink from '../more-link'
 import * as api from '../../api'
 import { navigateToQuery } from '../../query'
-import { withThemeConsumer } from '../../theme-consumer-hoc';
 
 class Countries extends React.Component {
   constructor(props) {
@@ -17,7 +16,10 @@ class Countries extends React.Component {
     this.resizeMap = this.resizeMap.bind(this)
     this.drawMap = this.drawMap.bind(this)
     this.getDataset = this.getDataset.bind(this)
-    this.state = {loading: true}
+    this.state = {
+      loading: true,
+      darkTheme: document.querySelector('html').classList.contains('dark') || false
+    }
     this.onVisible = this.onVisible.bind(this)
   }
 
@@ -25,14 +27,6 @@ class Countries extends React.Component {
     if (this.props.query !== prevProps.query) {
       // eslint-disable-next-line react/no-did-update-set-state
       this.setState({loading: true, countries: null})
-      this.fetchCountries().then(this.drawMap)
-    }
-
-    if (this.props.darkTheme !== prevProps.darkTheme) {
-      if (document.getElementById('map-container')) {
-        document.getElementById('map-container').removeChild(document.querySelector('.datamaps-hoverover'));
-        document.getElementById('map-container').removeChild(document.querySelector('.datamap'));
-      }
       this.fetchCountries().then(this.drawMap)
     }
   }
@@ -57,8 +51,8 @@ class Countries extends React.Component {
     const paletteScale = d3.scale.linear()
       .domain([0,maxValue])
       .range([
-        this.props.darkTheme ? "#2e3954" : "#f3ebff",
-        this.props.darkTheme ? "#6366f1" : "#a779e9"
+        this.state.darkTheme ? "#2e3954" : "#f3ebff",
+        this.state.darkTheme ? "#6366f1" : "#a779e9"
       ])
 
     this.state.countries.forEach(function(item){
@@ -86,10 +80,10 @@ class Countries extends React.Component {
   drawMap() {
     const dataset = this.getDataset();
     const label = this.props.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
-    const defaultFill = this.props.darkTheme ? '#2d3747' : '#f8fafc'
-    const highlightFill = this.props.darkTheme ? '#374151' : '#F5F5F5'
-    const borderColor = this.props.darkTheme ? '#1f2937' : '#dae1e7'
-    const highlightBorderColor = this.props.darkTheme ? '#4f46e5' : '#a779e9'
+    const defaultFill = this.state.darkTheme ? '#2d3747' : '#f8fafc'
+    const highlightFill = this.state.darkTheme ? '#374151' : '#F5F5F5'
+    const borderColor = this.state.darkTheme ? '#1f2937' : '#dae1e7'
+    const highlightBorderColor = this.state.darkTheme ? '#4f46e5' : '#a779e9'
 
     this.map = new Datamap({
       element: document.getElementById('map-container'),
@@ -161,4 +155,4 @@ class Countries extends React.Component {
   }
 }
 
-export default withRouter(withThemeConsumer(Countries))
+export default withRouter(Countries)
