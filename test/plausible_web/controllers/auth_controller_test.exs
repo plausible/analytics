@@ -28,6 +28,20 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert subject =~ "is your Plausible email verification code"
     end
 
+    test "user is redirected to activate page after registration", %{conn: conn} do
+      conn =
+        post(conn, "/register",
+          user: %{
+            name: "Jane Doe",
+            email: "user@example.com",
+            password: "very-secret",
+            password_confirmation: "very-secret"
+          }
+        )
+
+      assert redirected_to(conn, 302) == "/activate"
+    end
+
     test "creates user record", %{conn: conn} do
       post(conn, "/register",
         user: %{
@@ -119,6 +133,23 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert_delivered_email_matches(%{to: [{_, user_email}], subject: subject})
       assert user_email == "user@example.com"
       assert subject =~ "is your Plausible email verification code"
+    end
+
+    test "user is redirected to activate page after registration", %{
+      conn: conn,
+      invitation: invitation
+    } do
+      conn =
+        post(conn, "/register/invitation/#{invitation.invitation_id}",
+          user: %{
+            name: "Jane Doe",
+            email: "user@example.com",
+            password: "very-secret",
+            password_confirmation: "very-secret"
+          }
+        )
+
+      assert redirected_to(conn, 302) == "/activate"
     end
 
     test "creates user record", %{conn: conn, invitation: invitation} do
@@ -224,6 +255,12 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert user_email == user.email
       assert subject =~ "is your Plausible email verification code"
     end
+
+    test "redirets user to /activate", %{conn: conn} do
+      conn = post(conn, "/activate/request-code")
+
+      assert redirected_to(conn, 302) == "/activate"
+    end
   end
 
   describe "POST /activate" do
@@ -264,6 +301,23 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert user.email_verified
       assert redirected_to(conn) == "/sites/new"
+    end
+
+    test "redirects to /sites if user has invitation", %{conn: conn, user: user} do
+      site = insert(:site)
+      insert(:invitation, inviter: build(:user), site: site, email: user.email)
+      Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
+      post(conn, "/activate/request-code")
+
+      code =
+        Repo.one(
+          from c in "email_verification_codes", where: c.user_id == ^user.id, select: c.code
+        )
+        |> Integer.to_string()
+
+      conn = post(conn, "/activate", %{code: code})
+
+      assert redirected_to(conn) == "/sites"
     end
 
     test "removes the user association from the verification code", %{conn: conn, user: user} do
@@ -396,6 +450,14 @@ defmodule PlausibleWeb.AuthControllerTest do
       user = Plausible.Repo.get(User, user.id)
       assert Password.match?("new-password", user.password_hash)
     end
+
+    test "with valid token - redirects the user to login", %{conn: conn} do
+      user = insert(:user)
+      token = Token.sign_password_reset(user.email)
+      conn = post(conn, "/password/reset", %{token: token, password: "new-password"})
+
+      assert redirected_to(conn, 302) == "/login"
+    end
   end
 
   describe "GET /settings" do
@@ -436,6 +498,12 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       user = Plausible.Repo.get(Plausible.Auth.User, user.id)
       assert user.name == "New name"
+    end
+
+    test "redirects user to /settings", %{conn: conn} do
+      conn = put(conn, "/settings", %{"user" => %{"name" => "New name"}})
+
+      assert redirected_to(conn, 302) == "/settings"
     end
   end
 

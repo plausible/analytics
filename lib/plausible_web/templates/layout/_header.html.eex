@@ -21,16 +21,14 @@
                   <% end %>
                 </li>
               <% end %>
-              <%= if Plausible.Billing.on_trial?(@conn.assigns[:current_user]) do %>
+              <%= if Plausible.Billing.on_trial?(@conn.assigns[:current_user]) && !Application.get_env(:plausible, :is_selfhost) do %>
                 <li class="hidden mr-6 sm:block">
                   <%= link(trial_notificaton(@conn.assigns[:current_user]), to: "/settings", class: "font-bold text-sm text-yellow-900 dark:text-yellow-900 rounded p-2 bg-yellow-100 dark:bg-yellow-100", style: "line-height: 40px;") %>
                 </li>
               <% end %>
-              <%= if !Application.get_env(:plausible, :is_selfhost) do %>
-                <li class="hidden mr-6 sm:block">
-                  <%= link("Docs", to: "https://docs.plausible.io", class: "font-bold rounded m-1 p-1 hover:bg-gray-200 dark:hover:bg-gray-900 dark:text-gray-100", style: "line-height: 40px;", target: "_blank") %>
-                </li>
-              <% end %>
+              <li class="hidden mr-6 sm:block">
+                <%= link("Docs", to: "https://plausible.io/docs", class: "font-bold rounded m-1 p-1 hover:bg-gray-200 dark:hover:bg-gray-900 dark:text-gray-100", style: "line-height: 40px;", target: "_blank", rel: "noreferrer") %>
+              </li>
               <li class="w-full sm:w-auto">
                 <div class="relative font-bold rounded">
                   <div data-dropdown-trigger class="flex items-center justify-end p-1 m-1 rounded cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-900 dark:text-gray-100">

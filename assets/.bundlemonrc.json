@@ -1,0 +1,15 @@
+{
+  "baseDir": "../priv/",
+  "reportOutput": ["github"],
+  "files": [
+    {
+      "path": "static/js/*.js"
+    },
+    {
+      "path": "static/css/app.css"
+    },
+    {
+      "path": "tracker/js/plausible.js"
+    }
+  ]
+}

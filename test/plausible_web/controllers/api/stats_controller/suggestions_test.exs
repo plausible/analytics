@@ -45,10 +45,44 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/country?period=month&date=2019-01-01&q=GBR,UKR,URY,USA"
+          "/api/stats/#{site.domain}/suggestions/country?period=month&date=2019-01-01&q=Unit"
         )
 
-      assert json_response(conn, 200) == ["USA"]
+      assert json_response(conn, 200) == [%{"code" => "USA", "name" => "United States"}]
+    end
+
+    test "returns suggestions for regions", %{conn: conn, user: user} do
+      {:ok, [site: site]} = create_new_site(%{user: user})
+
+      populate_stats(site, [
+        build(:pageview, country_code: "EE", subdivision1_code: "EE-37"),
+        build(:pageview, country_code: "EE", subdivision1_code: "EE-39")
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/region?q=Har"
+        )
+
+      assert json_response(conn, 200) == [%{"code" => "EE-37", "name" => "Harjumaa"}]
+    end
+
+    test "returns suggestions for cities", %{conn: conn, user: user} do
+      {:ok, [site: site]} = create_new_site(%{user: user})
+
+      populate_stats(site, [
+        build(:pageview, country_code: "EE", subdivision1_code: "EE-37", city_geoname_id: 588_409),
+        build(:pageview, country_code: "EE", subdivision1_code: "EE-39", city_geoname_id: 591_632)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/city?q=Kär"
+        )
+
+      assert json_response(conn, 200) == [%{"code" => "591632", "name" => "Kärdla"}]
     end
 
     test "returns suggestions for countries without country in search", %{conn: conn, site: site} do

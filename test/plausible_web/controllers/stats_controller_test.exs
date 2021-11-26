@@ -32,34 +32,134 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert html_response(conn, 200) =~ "stats-react-container"
     end
 
+    test "shows locked page if page is locked", %{conn: conn, user: user} do
+      locked_site = insert(:site, locked: true, members: [user])
+      conn = get(conn, "/" <> locked_site.domain)
+      assert html_response(conn, 200) =~ "Site locked"
+    end
+
     test "can not view stats of someone else's website", %{conn: conn} do
       conn = get(conn, "/some-other-site.com")
       assert html_response(conn, 404) =~ "There&#39;s nothing here"
     end
   end
 
-  describe "GET /:website/visitors.csv" do
-    setup [:create_user, :log_in, :create_site]
+  describe "GET /:website/export" do
+    setup [:create_user, :create_new_site, :log_in]
 
-    test "exports graph as csv", %{conn: conn, site: site} do
-      today = Timex.today() |> Timex.format!("{ISOdate}")
-
-      conn = get(conn, "/" <> site.domain <> "/visitors.csv")
-      assert response(conn, 200) =~ "visitors,pageviews,bounce_rate,visit_duration"
-      assert response(conn, 200) =~ "#{today},3,3,0,0"
+    test "exports data in zipped csvs", %{conn: conn, site: site} do
+      populate_exported_stats(site)
+      conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20")
+      assert_zip(conn, "30d")
     end
   end
 
-  describe "GET /:website/visitors.csv - via shared link" do
-    test "exports graph as csv", %{conn: conn} do
-      site = insert(:site, domain: "test-site.com")
+  describe "GET /:website/export - via shared link" do
+    test "exports data in zipped csvs", %{conn: conn} do
+      site = insert(:site, domain: "new-site.com")
       link = insert(:shared_link, site: site)
 
-      today = Timex.today() |> Timex.format!("{ISOdate}")
+      populate_exported_stats(site)
+      conn = get(conn, "/" <> site.domain <> "/export?auth=#{link.slug}&date=2021-10-20")
+      assert_zip(conn, "30d")
+    end
+  end
 
-      conn = get(conn, "/" <> site.domain <> "/visitors.csv?auth=#{link.slug}")
-      assert response(conn, 200) =~ "visitors,pageviews,bounce_rate,visit_duration"
-      assert response(conn, 200) =~ "#{today},3,3,0,0"
+  describe "GET /:website/export - for past 6 months" do
+    setup [:create_user, :create_new_site, :log_in]
+
+    test "exports 6 months of data in zipped csvs", %{conn: conn, site: site} do
+      populate_exported_stats(site)
+      conn = get(conn, "/" <> site.domain <> "/export?period=6mo&date=2021-10-20")
+      assert_zip(conn, "6m")
+    end
+  end
+
+  describe "GET /:website/export - with path filter" do
+    setup [:create_user, :create_new_site, :log_in]
+
+    test "exports filtered data in zipped csvs", %{conn: conn, site: site} do
+      populate_exported_stats(site)
+
+      filters = Jason.encode!(%{page: "/some-other-page"})
+      conn = get(conn, "/#{site.domain}/export?date=2021-10-20&filters=#{filters}")
+      assert_zip(conn, "30d-filter-path")
+    end
+  end
+
+  defp assert_zip(conn, folder) do
+    assert conn.status == 200
+
+    assert {"content-type", "application/zip; charset=utf-8"} =
+             List.keyfind(conn.resp_headers, "content-type", 0)
+
+    {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
+
+    folder = Path.expand(folder, "test/plausible_web/controllers/CSVs")
+
+    Enum.map(zip, &assert_csv(&1, folder))
+  end
+
+  defp assert_csv({file, downloaded}, folder) do
+    file = Path.expand(file, folder)
+
+    {:ok, content} = File.read(file)
+    assert downloaded == content
+  end
+
+  defp populate_exported_stats(site) do
+    populate_stats(site, [
+      build(:pageview,
+        country_code: "EE",
+        pathname: "/",
+        timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -1),
+        referrer_source: "Google",
+        user_id: 123
+      ),
+      build(:pageview,
+        country_code: "EE",
+        pathname: "/some-other-page",
+        timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -2),
+        referrer_source: "Google",
+        user_id: 123
+      ),
+      build(:pageview,
+        pathname: "/",
+        utm_campaign: "ads",
+        timestamp: Timex.shift(~N[2021-10-20 12:00:00], days: -1),
+        browser: "ABrowserName"
+      ),
+      build(:pageview,
+        timestamp: Timex.shift(~N[2021-10-20 12:00:00], months: -1),
+        country_code: "EE",
+        browser: "ABrowserName"
+      ),
+      build(:pageview,
+        timestamp: Timex.shift(~N[2021-10-20 12:00:00], months: -5),
+        utm_campaign: "ads",
+        country_code: "EE",
+        referrer_source: "Google",
+        browser: "ABrowserName"
+      ),
+      build(:event,
+        timestamp: Timex.shift(~N[2021-10-20 12:00:00], days: -1),
+        name: "Signup",
+        "meta.key": ["variant"],
+        "meta.value": ["A"]
+      )
+    ])
+
+    insert(:goal, %{domain: site.domain, event_name: "Signup"})
+  end
+
+  describe "GET /:website/export - with goal filter" do
+    setup [:create_user, :create_new_site, :log_in]
+
+    test "exports goal-filtered data in zipped csvs", %{conn: conn, site: site} do
+      populate_exported_stats(site)
+      filters = Jason.encode!(%{goal: "Signup"})
+      conn = get(conn, "/#{site.domain}/export?date=2021-10-20&filters=#{filters}")
+      assert_zip(conn, "30d-filter-goal")
     end
   end
 

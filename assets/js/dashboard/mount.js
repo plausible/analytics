@@ -16,7 +16,8 @@ if (container) {
     insertedAt: container.dataset.insertedAt,
     embedded: container.dataset.embedded,
     background: container.dataset.background,
-    selfhosted: container.dataset.selfhosted === 'true'
+    selfhosted: container.dataset.selfhosted === 'true',
+    cities: container.dataset.cities === 'true'
   }
 
   const loggedIn = container.dataset.loggedIn === 'true'

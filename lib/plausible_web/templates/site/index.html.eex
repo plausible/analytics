@@ -1,7 +1,7 @@
 <div x-data="{selectedInvitation: null, invitationOpen: false, invitations: <%= Enum.map(@invitations, &({&1.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode! %>}" @keydown.escape.window="invitationOpen = false" class="container pt-6">
 
-  <%= if @needs_to_upgrade do %>
-    <div class="rounded-md bg-yellow-50 p-4">
+  <%= if @needs_to_upgrade == {true, :no_active_subscription} do %>
+    <div class="rounded-md bg-yellow-100 p-4">
       <div class="flex">
         <div class="flex-shrink-0">
           <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -39,7 +39,7 @@
       <div class="group cursor-pointer" @click="invitationOpen = true; selectedInvitation = invitations['<%= invitation.invitation_id %>']">
         <li class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
           <div class="w-full flex items-center justify-between space-x-4">
-            <img src="https://icons.duckduckgo.com/ip3/<%= invitation.site.domain %>.ico" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='https://icons.duckduckgo.com/ip3/placeholder.ico';" class="w-4 h-4 flex-shrink-0 mt-px">
+            <img src="/favicon/sources/<%= invitation.site.domain %>.ico" onerror="this.onerror=null; this.src='/favicon/sources/placeholder.ico';" class="w-4 h-4 flex-shrink-0 mt-px">
             <div class="flex-1 truncate -mt-px">
               <h3 class="text-gray-900 font-medium text-lg truncate dark:text-gray-100"><%= invitation.site.domain %></h3>
             </div>
@@ -64,7 +64,7 @@
         <%= link(to: "/" <> URI.encode_www_form(site.domain)) do %>
           <li class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
             <div class="w-full flex items-center justify-between space-x-4">
-              <img src="https://icons.duckduckgo.com/ip3/<%= site.domain %>.ico" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='https://icons.duckduckgo.com/ip3/placeholder.ico';" class="w-4 h-4 flex-shrink-0 mt-px">
+              <img src="/favicon/sources/<%= site.domain %>.ico" class="w-4 h-4 flex-shrink-0 mt-px">
               <div class="flex-1 truncate -mt-px">
                 <h3 class="text-gray-900 font-medium text-lg truncate dark:text-gray-100"><%= site.domain %></h3>
               </div>

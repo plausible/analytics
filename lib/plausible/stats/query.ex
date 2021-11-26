@@ -3,9 +3,9 @@ defmodule Plausible.Stats.Query do
             interval: nil,
             period: nil,
             filters: %{},
-            sample_threshold: 10_000_000
+            sample_threshold: 20_000_000
 
-  @default_sample_threshold 10_000_000
+  @default_sample_threshold 20_000_000
 
   def shift_back(%__MODULE__{period: "month"} = query, site) do
     # Querying current month to date
@@ -192,7 +192,6 @@ defmodule Plausible.Stats.Query do
       query.filters
       |> Map.drop(props)
       |> Map.delete("event:goal")
-      |> Map.put("event:name", {:is, "pageview"})
 
     %__MODULE__{query | filters: new_filters}
   end

@@ -36,7 +36,7 @@
     {{#unless local}}
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') return warn('localhost');
     {{/unless}}
-    if (window.phantom || window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) return;
+    if (window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) return;
     if (plausible_ignore=="true") return warn('localStorage flag')
     {{#if exclusions}}
     if (excludedPaths)
@@ -47,7 +47,11 @@
 
     var payload = {}
     payload.n = eventName
+    {{#if manual}}
+    payload.u = options && options.u ? options.u : location.href
+    {{else}}
     payload.u = location.href
+    {{/if}}
     payload.d = scriptEl.getAttribute('data-domain')
     payload.r = document.referrer || null
     payload.w = window.innerWidth

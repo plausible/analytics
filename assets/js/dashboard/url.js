@@ -2,8 +2,12 @@ export function apiPath(site, path = '') {
   return `/api/stats/${encodeURIComponent(site.domain)}${path}`
 }
 
-export function sitePath(site, path = '') {
+export function siteBasePath(site, path = '') {
   return `/${encodeURIComponent(site.domain)}${path}`
+}
+
+export function sitePath(site, path = '') {
+  siteBasePath(site, path) + window.location.search
 }
 
 export function setQuery(key, value) {

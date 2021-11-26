@@ -53,7 +53,7 @@ FROM alpine:3.13.3
 LABEL maintainer="tckb <tckb@tgrthi.me>"
 ENV LANG=C.UTF-8
 
-RUN apk update && apk upgrade
+RUN apk upgrade --no-cache
 
 RUN apk add --no-cache openssl ncurses libstdc++ libgcc
 

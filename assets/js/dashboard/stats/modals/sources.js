@@ -97,7 +97,7 @@ class SourcesModal extends React.Component {
           <Link className="hover:underline" to={{search: query.toString(), pathname: '/' + encodeURIComponent(this.props.site.domain)}}>{ source.name }</Link>
         </td>
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(source.total_visitors)}</td> }
-        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(source.count)}</td>
+        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(source.visitors)}</td>
         {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(source)}</td> }
         {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatDuration(source)}</td> }
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{source.conversion_rate}%</td> }

@@ -1,4 +1,6 @@
 defmodule Plausible.Billing.Plans do
+  use Plausible.Repo
+
   @unlisted_plans_v1 [
     %{limit: 150_000_000, yearly_product_id: "648089", yearly_cost: "$4800"}
   ]
@@ -7,12 +9,18 @@ defmodule Plausible.Billing.Plans do
     %{limit: 10_000_000, monthly_product_id: "655350", yearly_cost: "$250"}
   ]
 
-  @v2_pricing_date ~D[2021-05-13]
-
   def plans_for(user) do
+    user = Repo.preload(user, :subscription)
+    v1_plans = plans_v1()
+
+    v1_plan_ids =
+      v1_plans
+      |> Enum.map(fn plan -> [plan[:monthly_product_id], plan[:yearly_product_id]] end)
+      |> List.flatten()
+
     raw_plans =
-      if Timex.before?(user.inserted_at, @v2_pricing_date) do
-        plans_v1()
+      if user.subscription && user.subscription.paddle_plan_id in v1_plan_ids do
+        v1_plans
       else
         plans_v2()
       end
@@ -30,21 +38,15 @@ defmodule Plausible.Billing.Plans do
     end)
   end
 
-  def subscription_quota("free_10k"), do: "10k"
-
-  def subscription_quota(product_id) do
-    case for_product_id(product_id) do
-      nil -> raise "Unknown quota for subscription #{product_id}"
-      product -> number_format(product[:limit])
-    end
-  end
-
   def subscription_interval("free_10k"), do: "N/A"
 
   def subscription_interval(product_id) do
     case for_product_id(product_id) do
       nil ->
-        raise "Unknown interval for subscription #{product_id}"
+        enterprise_plan =
+          Repo.get_by(Plausible.Billing.EnterprisePlan, paddle_plan_id: product_id)
+
+        enterprise_plan && enterprise_plan.billing_interval
 
       plan ->
         if product_id == plan[:monthly_product_id] do
@@ -62,6 +64,11 @@ defmodule Plausible.Billing.Plans do
 
     if found do
       Map.fetch!(found, :limit)
+    else
+      enterprise_plan =
+        Repo.get_by(Plausible.Billing.EnterprisePlan, paddle_plan_id: subscription.paddle_plan_id)
+
+      enterprise_plan && enterprise_plan.monthly_pageview_limit
     end
   end
 

@@ -1,7 +1,8 @@
 defmodule PlausibleWeb.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.Stats.Query
+  alias PlausibleWeb.Api
+  alias Plausible.Stats.{Query, Filters}
 
   plug PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export]
 
@@ -31,41 +32,69 @@ defmodule PlausibleWeb.StatsController do
         |> render("waiting_first_pageview.html", site: site)
 
       site.locked ->
+        owner = Plausible.Sites.owner_for(site)
+
         conn
         |> assign(:skip_plausible_tracking, true)
-        |> render("site_locked.html", site: site)
+        |> render("site_locked.html", owner: owner, site: site)
     end
   end
 
-  def csv_export(conn, %{"domain" => domain}) do
+  @doc """
+  The export is limited to 300 entries for other reports and 100 entries for pages because bigger result sets
+  start causing failures. Since we request data like time on page or bounce_rate for pages in a separate query
+  using the IN filter, it causes the requests to balloon in payload size.
+  """
+  def csv_export(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, conn.params)
+    query = Query.from(site.timezone, params) |> Filters.add_prefix()
 
-    metrics =
-      if query.filters["event:name"] do
-        ["visitors", "pageviews"]
-      else
-        ["visitors", "pageviews", "bounce_rate", "visit_duration"]
-      end
-
+    metrics = ["visitors", "pageviews", "bounce_rate", "visit_duration"]
     graph = Plausible.Stats.timeseries(site, query, metrics)
-
     headers = ["date" | metrics]
 
-    csv_content =
+    visitors =
       Enum.map(graph, fn row -> Enum.map(headers, &row[&1]) end)
       |> (fn data -> [headers | data] end).()
       |> CSV.encode()
-      |> Enum.into([])
       |> Enum.join()
 
     filename =
-      "Plausible export #{domain} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.csv"
+      "Plausible export #{params["domain"]} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.zip"
+
+    params = Map.merge(params, %{"limit" => "300", "csv" => "True", "detailed" => "True"})
+    limited_params = Map.merge(params, %{"limit" => "100"})
+
+    csvs = [
+      {'sources.csv', fn -> Api.StatsController.sources(conn, params) end},
+      {'utm_mediums.csv', fn -> Api.StatsController.utm_mediums(conn, params) end},
+      {'utm_sources.csv', fn -> Api.StatsController.utm_sources(conn, params) end},
+      {'utm_campaigns.csv', fn -> Api.StatsController.utm_campaigns(conn, params) end},
+      {'pages.csv', fn -> Api.StatsController.pages(conn, limited_params) end},
+      {'entry_pages.csv', fn -> Api.StatsController.entry_pages(conn, params) end},
+      {'exit_pages.csv', fn -> Api.StatsController.exit_pages(conn, limited_params) end},
+      {'countries.csv', fn -> Api.StatsController.countries(conn, params) end},
+      {'browsers.csv', fn -> Api.StatsController.browsers(conn, params) end},
+      {'operating_systems.csv', fn -> Api.StatsController.operating_systems(conn, params) end},
+      {'devices.csv', fn -> Api.StatsController.screen_sizes(conn, params) end},
+      {'conversions.csv', fn -> Api.StatsController.conversions(conn, params) end},
+      {'prop_breakdown.csv', fn -> Api.StatsController.all_props_breakdown(conn, params) end}
+    ]
+
+    csvs =
+      csvs
+      |> Enum.map(fn {file, task} -> {file, Task.async(task)} end)
+      |> Enum.map(fn {file, task} -> {file, Task.await(task)} end)
+
+    csvs = [{'visitors.csv', visitors} | csvs]
+
+    {:ok, {_, zip_content}} = :zip.create(filename, csvs, [:memory])
 
     conn
-    |> put_resp_content_type("text/csv")
+    |> put_resp_content_type("application/zip")
     |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
-    |> send_resp(200, csv_content)
+    |> delete_resp_cookie("exporting")
+    |> send_resp(200, zip_content)
   end
 
   def shared_link(conn, %{"slug" => domain, "auth" => auth}) do
