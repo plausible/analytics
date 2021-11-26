@@ -1,7 +1,6 @@
 import React, { Fragment } from "react";
 import { withRouter } from 'react-router-dom'
 import classNames from 'classnames'
-import Datamap from 'datamaps'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/solid'
 
@@ -9,7 +8,7 @@ import SearchSelect from '../../components/search-select'
 import Modal from './modal'
 import { parseQuery, formattedFilters } from '../../query'
 import * as api from '../../api'
-import {apiPath, sitePath} from '../../url'
+import {apiPath, siteBasePath} from '../../url'
 
 export const FILTER_GROUPS = {
   'page': ['page'],
@@ -24,12 +23,6 @@ export const FILTER_GROUPS = {
   'goal': ['goal']
 }
 
-function getCountryName(ISOCode) {
-  const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
-  const selectedCountry = allCountries.find((c) => c.id === ISOCode);
-  return selectedCountry && selectedCountry.properties.name
-}
-
 function getFormState(filterGroup, query) {
   return FILTER_GROUPS[filterGroup].reduce((result, filter) => {
     const filterValue = query.filters[filter] || ''
@@ -37,10 +30,9 @@ function getFormState(filterGroup, query) {
 
     const type = filterValue[0] === '!' ? 'is_not' : 'is'
 
-    if (filter === 'country') {
-      filterName = getCountryName(filterValue)
+    if (filter === 'country' && filterValue !== '') {
+      filterName = (new URLSearchParams(window.location.search)).get('country_name')
     }
-
     if (filter === 'region' && filterValue !== '') {
       filterName = (new URLSearchParams(window.location.search)).get('region_name')
     }
@@ -115,16 +107,11 @@ class FilterModal extends React.Component {
     const { formState } = this.state;
 
     const filters = Object.entries(formState).reduce((res, [filterKey, {type, value, name}]) => {
-      let finalFilterValue = value
-      if (filterKey === 'country') {
-        const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
-        const selectedCountry = allCountries.find((c) => c.properties.name === value) || { id: value };
-        finalFilterValue = selectedCountry.id
-      }
-
+      if (filterKey === 'country') { res.push({filter: 'country_name', value: name}) }
       if (filterKey === 'region') { res.push({filter: 'region_name', value: name}) }
       if (filterKey === 'city') { res.push({filter: 'city_name', value: name}) }
 
+      let finalFilterValue = value
       finalFilterValue = (type === 'is_not' ? '!' : '') + finalFilterValue.trim()
 
       res.push({filter: filterKey, value: finalFilterValue})
@@ -196,7 +183,7 @@ class FilterModal extends React.Component {
       }
     })
 
-    this.props.history.replace({pathname: sitePath(this.props.site), search: queryString.toString()})
+    this.props.history.replace({pathname: siteBasePath(this.props.site), search: queryString.toString()})
   }
 
   renderFilterInputs() {
