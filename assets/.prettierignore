@@ -1,0 +1,6 @@
+node_modules/
+static/images/
+.*.json
+.*rc
+*.json
+*.config.js

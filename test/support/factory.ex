@@ -112,7 +112,18 @@ defmodule Plausible.Factory do
       status: "active",
       next_bill_amount: "6.00",
       next_bill_date: Timex.today(),
+      last_bill_date: Timex.today(),
       currency_code: "USD"
+    }
+  end
+
+  def enterprise_plan_factory do
+    %Plausible.Billing.EnterprisePlan{
+      paddle_plan_id: sequence(:paddle_plan_id, &"plan-#{&1}"),
+      billing_interval: :monthly,
+      monthly_pageview_limit: 1_000_000,
+      hourly_api_request_limit: 3000,
+      site_limit: 100
     }
   end
 

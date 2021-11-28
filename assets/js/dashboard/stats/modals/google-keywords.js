@@ -4,7 +4,6 @@ import { Link, withRouter } from 'react-router-dom'
 import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter from '../../number-formatter'
-import Bar from '../bar'
 import {parseQuery, toHuman} from '../../query'
 import RocketIcon from './rocket-icon'
 
@@ -45,7 +44,7 @@ class GoogleKeywordsModal extends React.Component {
 
         <tr className="text-sm dark:text-gray-200" key={term.name}>
           <td className="p-2 truncate">{term.name}</td>
-          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(term.count)}</td>
+          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(term.visitors)}</td>
         </tr>
       </React.Fragment>
     )

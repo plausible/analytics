@@ -37,7 +37,7 @@ export default class SearchTerms extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={term.name}>
         <Bar
-          count={term.count}
+          count={term.visitors}
           all={this.state.searchTerms}
           bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction="4rem"
@@ -48,7 +48,7 @@ export default class SearchTerms extends React.Component {
             </span>
           </span>
         </Bar>
-        <span className="font-medium dark:text-gray-200">{numberFormatter(term.count)}</span>
+        <span className="font-medium dark:text-gray-200">{numberFormatter(term.visitors)}</span>
       </div>
     )
   }
@@ -91,7 +91,7 @@ export default class SearchTerms extends React.Component {
           <RocketIcon />
           <div>Could not find any search terms for this period</div>
           <div>Google Search Console data is sampled and delayed by 24-36h</div>
-          <div>Read more on <a href="https://docs.plausible.io/google-search-console-integration/#i-dont-see-google-search-query-data-in-my-dashboard" target="_blank" className="hover:underline text-indigo-700 dark:text-indigo-500">our documentation</a></div>
+          <div>Read more on <a href="https://docs.plausible.io/google-search-console-integration/#i-dont-see-google-search-query-data-in-my-dashboard" target="_blank" rel="noreferrer" className="hover:underline text-indigo-700 dark:text-indigo-500">our documentation</a></div>
         </div>
       )
     }

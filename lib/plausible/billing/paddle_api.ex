@@ -21,8 +21,8 @@ defmodule Plausible.Billing.PaddleApi do
       quantity: 1
     }
 
-    {:ok, response} = HTTPoison.post(@update_preview_endpoint, Poison.encode!(params), @headers)
-    body = Poison.decode!(response.body)
+    {:ok, response} = HTTPoison.post(@update_preview_endpoint, Jason.encode!(params), @headers)
+    body = Jason.decode!(response.body)
 
     if body["success"] do
       {:ok, body["response"]}
@@ -45,8 +45,8 @@ defmodule Plausible.Billing.PaddleApi do
         quantity: 1
       })
 
-    {:ok, response} = HTTPoison.post(@update_endpoint, Poison.encode!(params), @headers)
-    body = Poison.decode!(response.body)
+    {:ok, response} = HTTPoison.post(@update_endpoint, Jason.encode!(params), @headers)
+    body = Jason.decode!(response.body)
 
     if body["success"] do
       {:ok, body["response"]}
@@ -64,8 +64,8 @@ defmodule Plausible.Billing.PaddleApi do
       subscription_id: paddle_subscription_id
     }
 
-    {:ok, response} = HTTPoison.post(@get_endpoint, Poison.encode!(params), @headers)
-    body = Poison.decode!(response.body)
+    {:ok, response} = HTTPoison.post(@get_endpoint, Jason.encode!(params), @headers)
+    body = Jason.decode!(response.body)
 
     if body["success"] do
       [subscription] = body["response"]

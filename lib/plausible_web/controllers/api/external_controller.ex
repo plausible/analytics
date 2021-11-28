@@ -1,14 +1,18 @@
 defmodule PlausibleWeb.Api.ExternalController do
   use PlausibleWeb, :controller
+  use OpenTelemetryDecorator
   require Logger
 
   def event(conn, _params) do
-    params = parse_body(conn)
-    Sentry.Context.set_extra_context(%{request: params})
-
-    case create_event(conn, params) do
-      :ok ->
-        conn |> put_status(202) |> text("ok")
+    with {:ok, params} <- parse_body(conn),
+         _ <- Sentry.Context.set_extra_context(%{request: params}),
+         :ok <- create_event(conn, params) do
+      conn |> put_status(202) |> text("ok")
+    else
+      {:error, :invalid_json} ->
+        conn
+        |> put_status(400)
+        |> json(%{errors: %{request: "Unable to parse request body as json"}})
 
       {:error, errors} ->
         conn |> put_status(400) |> json(%{errors: errors})
@@ -46,13 +50,21 @@ defmodule PlausibleWeb.Api.ExternalController do
     })
   end
 
+  @decorate trace("ingest.parse_user_agent")
   defp parse_user_agent(conn) do
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
 
     if user_agent do
-      Cachex.fetch!(:user_agents, user_agent, fn ua ->
-        {:commit, UAInspector.parse(ua)}
-      end)
+      res =
+        Cachex.fetch(:user_agents, user_agent, fn ua ->
+          UAInspector.parse(ua)
+        end)
+
+      case res do
+        {:ok, user_agent} -> user_agent
+        {:commit, user_agent} -> user_agent
+        _ -> nil
+      end
     end
   end
 
@@ -76,10 +88,10 @@ defmodule PlausibleWeb.Api.ExternalController do
     else
       uri = params["url"] && URI.parse(params["url"])
       host = if uri && uri.host == "", do: "(none)", else: uri && uri.host
-      query = if uri && uri.query, do: URI.decode_query(uri.query), else: %{}
+      query = decode_query_params(uri)
 
       ref = parse_referrer(uri, params["referrer"])
-      country_code = visitor_country(conn)
+      location_details = visitor_location_details(conn)
       salts = Plausible.Session.Salts.fetch()
 
       event_attrs = %{
@@ -92,7 +104,11 @@ defmodule PlausibleWeb.Api.ExternalController do
         utm_medium: query["utm_medium"],
         utm_source: query["utm_source"],
         utm_campaign: query["utm_campaign"],
-        country_code: country_code,
+        country_code: location_details[:country_code],
+        country_geoname_id: location_details[:country_geoname_id],
+        subdivision1_code: location_details[:subdivision1_code],
+        subdivision2_code: location_details[:subdivision2_code],
+        city_geoname_id: location_details[:city_geoname_id],
         operating_system: ua && os_name(ua),
         operating_system_version: ua && os_version(ua),
         browser: ua && browser_name(ua),
@@ -148,15 +164,36 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp parse_meta(params) do
     raw_meta = params["m"] || params["meta"] || params["p"] || params["props"]
 
-    if raw_meta do
-      case Jason.decode(raw_meta) do
-        {:ok, props} when is_map(props) -> props
-        _ -> %{}
-      end
+    with {:ok, parsed_json} <- decode_raw_props(raw_meta),
+         :ok <- validate_custom_props(parsed_json) do
+      parsed_json
     else
-      %{}
+      _ -> %{}
     end
   end
+
+  defp validate_custom_props(props) do
+    is_valid =
+      Enum.all?(props, fn {_key, val} ->
+        !is_list(val) && !is_map(val)
+      end)
+
+    if is_valid, do: :ok, else: :invalid_props
+  end
+
+  defp decode_raw_props(props) when is_map(props), do: {:ok, props}
+
+  defp decode_raw_props(raw_json) when is_binary(raw_json) do
+    case Jason.decode(raw_json) do
+      {:ok, parsed_props} when is_map(parsed_props) ->
+        {:ok, parsed_props}
+
+      _ ->
+        :not_a_map
+    end
+  end
+
+  defp decode_raw_props(_), do: :bad_format
 
   defp get_domains(params, uri) do
     if params["domain"] do
@@ -182,16 +219,42 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp visitor_country(conn) do
+  @decorate trace("ingest.geolocation")
+  defp visitor_location_details(conn) do
     result =
       PlausibleWeb.RemoteIp.get(conn)
       |> Geolix.lookup()
 
-    if result && result[:country] && result[:country].country do
-      result[:country].country.iso_code
-    end
+    country_code = get_in(result, [:geolocation, :country, :iso_code])
+    city_geoname_id = get_in(result, [:geolocation, :city, :geoname_id])
+
+    subdivision1_code =
+      case result do
+        %{geolocation: %{subdivisions: [%{iso_code: iso_code} | _rest]}} ->
+          country_code <> "-" <> iso_code
+
+        _ ->
+          ""
+      end
+
+    subdivision2_code =
+      case result do
+        %{geolocation: %{subdivisions: [_first, %{iso_code: iso_code} | _rest]}} ->
+          country_code <> "-" <> iso_code
+
+        _ ->
+          ""
+      end
+
+    %{
+      country_code: country_code,
+      subdivision1_code: subdivision1_code,
+      subdivision2_code: subdivision2_code,
+      city_geoname_id: city_geoname_id
+    }
   end
 
+  @decorate trace("ingest.parse_referrer")
   defp parse_referrer(_, nil), do: nil
 
   defp parse_referrer(uri, referrer_str) do
@@ -243,10 +306,14 @@ defmodule PlausibleWeb.Api.ExternalController do
     case conn.body_params do
       %Plug.Conn.Unfetched{} ->
         {:ok, body, _conn} = Plug.Conn.read_body(conn)
-        Jason.decode!(body)
+
+        case Jason.decode(body) do
+          {:ok, params} -> {:ok, params}
+          _ -> {:error, :invalid_json}
+        end
 
       params ->
-        params
+        {:ok, params}
     end
   end
 
@@ -334,4 +401,15 @@ defmodule PlausibleWeb.Api.ExternalController do
        do: true
 
   defp right_uri?(_), do: false
+
+  defp decode_query_params(nil), do: nil
+  defp decode_query_params(%URI{query: nil}), do: nil
+
+  defp decode_query_params(%URI{query: query_part}) do
+    try do
+      URI.decode_query(query_part)
+    rescue
+      _ -> nil
+    end
+  end
 end

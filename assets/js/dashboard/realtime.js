@@ -6,7 +6,7 @@ import Filters from './filters'
 import VisitorGraph from './stats/visitor-graph'
 import Sources from './stats/sources'
 import Pages from './stats/pages'
-import Countries from './stats/countries'
+import Locations from './stats/locations'
 import Devices from './stats/devices'
 import Conversions from './stats/conversions'
 import { withPinnedHeader } from './pinned-header-hoc';
@@ -45,7 +45,7 @@ class Realtime extends React.Component {
           <Pages site={this.props.site} query={this.props.query} timer={this.props.timer} />
         </div>
         <div className="items-start justify-between block w-full md:flex">
-          <Countries site={this.props.site} query={this.props.query} timer={this.props.timer} />
+          <Locations site={this.props.site} query={this.props.query} timer={this.props.timer} />
           <Devices site={this.props.site} query={this.props.query} timer={this.props.timer} />
         </div>
 

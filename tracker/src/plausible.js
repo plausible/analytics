@@ -15,7 +15,6 @@
   {{#if exclusions}}
   var excludedPaths = scriptEl && scriptEl.getAttribute('data-exclude').split(',');
   {{/if}}
-  var lastPage;
 
   function warn(reason) {
     console.warn('Ignoring Event: ' + reason);
@@ -37,7 +36,7 @@
     {{#unless local}}
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') return warn('localhost');
     {{/unless}}
-    if (window.phantom || window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) return;
+    if (window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) return;
     if (plausible_ignore=="true") return warn('localStorage flag')
     {{#if exclusions}}
     if (excludedPaths)
@@ -48,7 +47,11 @@
 
     var payload = {}
     payload.n = eventName
+    {{#if manual}}
+    payload.u = options && options.u ? options.u : location.href
+    {{else}}
     payload.u = location.href
+    {{/if}}
     payload.d = scriptEl.getAttribute('data-domain')
     payload.r = document.referrer || null
     payload.w = window.innerWidth
@@ -72,20 +75,6 @@
       if (request.readyState == 4) {
         options && options.callback && options.callback()
       }
-    }
-  }
-
-  function page() {
-    {{#unless hash}}
-    if (lastPage === location.pathname) return;
-    {{/unless}}
-    lastPage = location.pathname
-    trigger('pageview')
-  }
-
-  function handleVisibilityChange() {
-    if (!lastPage && document.visibilityState === 'visible') {
-      page()
     }
   }
 
@@ -120,20 +109,6 @@
   }
   {{/if}}
 
-  {{#if hash}}
-  window.addEventListener('hashchange', page)
-  {{else}}
-  var his = window.history
-  if (his.pushState) {
-    var originalPushState = his['pushState']
-    his.pushState = function() {
-      originalPushState.apply(this, arguments)
-      page();
-    }
-    window.addEventListener('popstate', page)
-  }
-  {{/if}}
-
   {{#if outbound_links}}
   registerOutboundLinkEvents()
   {{/if}}
@@ -144,9 +119,42 @@
     trigger.apply(this, queue[i])
   }
 
-  if (document.visibilityState === 'prerender') {
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-  } else {
-    page()
-  }
+  {{#unless manual}}
+    var lastPage;
+
+    function page() {
+      {{#unless hash}}
+      if (lastPage === location.pathname) return;
+      {{/unless}}
+      lastPage = location.pathname
+      trigger('pageview')
+    }
+
+    {{#if hash}}
+    window.addEventListener('hashchange', page)
+    {{else}}
+    var his = window.history
+    if (his.pushState) {
+      var originalPushState = his['pushState']
+      his.pushState = function() {
+        originalPushState.apply(this, arguments)
+        page();
+      }
+      window.addEventListener('popstate', page)
+    }
+    {{/if}}
+
+    function handleVisibilityChange() {
+      if (!lastPage && document.visibilityState === 'visible') {
+        page()
+      }
+    }
+
+
+    if (document.visibilityState === 'prerender') {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+    } else {
+      page()
+    }
+  {{/unless}}
 })();

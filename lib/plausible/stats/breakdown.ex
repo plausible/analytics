@@ -59,18 +59,15 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   def breakdown(site, query, "event:props:" <> custom_prop, metrics, pagination) do
+    {limit, _} = pagination
+
     none_result =
       if !Enum.any?(query.filters, fn {key, _} -> String.starts_with?(key, "event:props") end) do
         none_filters = Map.put(query.filters, "event:props:" <> custom_prop, {:is, "(none)"})
         none_query = %Query{query | filters: none_filters}
 
-        {limit, page} = pagination
-        offset = (page - 1) * limit
-
         from(e in base_event_query(site, none_query),
           order_by: [desc: fragment("uniq(?)", e.user_id)],
-          limit: ^limit,
-          offset: ^offset,
           select: %{},
           select_merge: %{^custom_prop => "(none)"},
           having: fragment("uniq(?)", e.user_id) > 0
@@ -82,7 +79,13 @@ defmodule Plausible.Stats.Breakdown do
       end
 
     results = breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
-    zip_results(none_result, results, custom_prop, metrics)
+    zipped = zip_results(none_result, results, custom_prop, metrics)
+
+    if Enum.find_index(zipped, fn value -> value[custom_prop] == "(none)" end) == limit do
+      Enum.slice(zipped, 0..(limit - 1))
+    else
+      zipped
+    end
   end
 
   def breakdown(site, query, "event:page", metrics, pagination) do
@@ -130,9 +133,15 @@ defmodule Plausible.Stats.Breakdown do
     breakdown_events(site, query, property, metrics, pagination)
   end
 
-  def breakdown(site, query, "visit:source", metrics, pagination) do
+  def breakdown(site, query, property, metrics, pagination)
+      when property in [
+             "visit:source",
+             "visit:utm_medium",
+             "visit:utm_source",
+             "visit:utm_campaign"
+           ] do
     query = Query.treat_page_filter_as_entry_page(query)
-    breakdown_sessions(site, query, "visit:source", metrics, pagination)
+    breakdown_sessions(site, query, property, metrics, pagination)
   end
 
   def breakdown(site, query, property, metrics, pagination) do
@@ -197,6 +206,10 @@ defmodule Plausible.Stats.Breakdown do
     |> ClickhouseRepo.all()
   end
 
+  defp breakdown_time_on_page(_site, _query, []) do
+    []
+  end
+
   defp breakdown_time_on_page(site, query, pages) do
     q =
       from(
@@ -217,7 +230,7 @@ defmodule Plausible.Stats.Breakdown do
     time_query = "
       SELECT
         p,
-        sum(td)/count(case when p2 != p then 1 end) as avgTime
+        round(sum(td)/count(case when p2 != p then 1 end)) as avgTime
       FROM
         (SELECT
           p,
@@ -322,6 +335,24 @@ defmodule Plausible.Stats.Breakdown do
       group_by: s.country_code,
       where: s.country_code != "\0\0",
       select_merge: %{"country" => s.country_code}
+    )
+  end
+
+  defp do_group_by(q, "visit:region") do
+    from(
+      s in q,
+      group_by: s.subdivision1_code,
+      where: s.subdivision1_code != "",
+      select_merge: %{"region" => s.subdivision1_code}
+    )
+  end
+
+  defp do_group_by(q, "visit:city") do
+    from(
+      s in q,
+      group_by: s.city_geoname_id,
+      where: s.city_geoname_id != 0,
+      select_merge: %{"city" => s.city_geoname_id}
     )
   end
 

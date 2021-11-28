@@ -758,6 +758,175 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                ]
              }
     end
+
+    test "breakdown by custom event property, with (none)", %{conn: conn, site: site} do
+      populate_stats([
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["cost"],
+          "meta.value": ["16"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["cost"],
+          "meta.value": ["16"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["cost"],
+          "meta.value": ["14"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["cost"],
+          "meta.value": ["14"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:26:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:props:cost",
+          "filters" => "event:name==Purchase"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"cost" => "16", "visitors" => 2},
+                 %{"cost" => "14", "visitors" => 2},
+                 %{"cost" => "(none)", "visitors" => 1}
+               ]
+             }
+    end
+
+    test "breakdown by custom event property, limited", %{conn: conn, site: site} do
+      populate_stats([
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["cost"],
+          "meta.value": ["16"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["cost"],
+          "meta.value": ["16"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["cost"],
+          "meta.value": ["18"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["cost"],
+          "meta.value": ["14"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["cost"],
+          "meta.value": ["14"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:26:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:props:cost",
+          "filters" => "event:name==Purchase",
+          "limit" => 2
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"cost" => "14", "visitors" => 2},
+                 %{"cost" => "16", "visitors" => 2}
+               ]
+             }
+    end
+
+    test "breakdown by custom event property, paginated", %{conn: conn, site: site} do
+      populate_stats([
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["cost"],
+          "meta.value": ["16"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["cost"],
+          "meta.value": ["16"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["cost"],
+          "meta.value": ["18"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["cost"],
+          "meta.value": ["14"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["cost"],
+          "meta.value": ["14"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:26:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:props:cost",
+          "filters" => "event:name==Purchase",
+          "limit" => 2,
+          "page" => 2
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"cost" => "18", "visitors" => 1}
+               ]
+             }
+    end
   end
 
   describe "filtering" do
@@ -814,6 +983,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         build(:pageview,
           pathname: "/ignore",
           referrer_source: "Should not show up",
+          utm_medium: "Should not show up",
+          utm_source: "Should not show up",
+          utm_campaign: "Should not show up",
           user_id: @user_id
         ),
         build(:pageview,
@@ -822,23 +994,28 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         ),
         build(:pageview,
           pathname: "/plausible.io",
-          referrer_source: "Google"
+          referrer_source: "Google",
+          utm_medium: "Google",
+          utm_source: "Google",
+          utm_campaign: "Google"
         )
       ])
 
-      conn =
-        get(conn, "/api/v1/stats/breakdown", %{
-          "site_id" => site.domain,
-          "period" => "day",
-          "property" => "visit:source",
-          "filters" => "event:page==/plausible.io"
-        })
+      for property <- ["source", "utm_medium", "utm_source", "utm_campaign"] do
+        conn =
+          get(conn, "/api/v1/stats/breakdown", %{
+            "site_id" => site.domain,
+            "period" => "day",
+            "property" => "visit:" <> property,
+            "filters" => "event:page==/plausible.io"
+          })
 
-      assert json_response(conn, 200) == %{
-               "results" => [
-                 %{"source" => "Google", "visitors" => 1}
-               ]
-             }
+        assert json_response(conn, 200) == %{
+                 "results" => [
+                   %{property => "Google", "visitors" => 1}
+                 ]
+               }
+      end
     end
 
     test "event:goal pageview filter for breakdown by visit source", %{conn: conn, site: site} do

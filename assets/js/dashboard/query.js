@@ -37,6 +37,8 @@ export function parseQuery(querystring, site) {
       'os': q.get('os'),
       'os_version': q.get('os_version'),
       'country': q.get('country'),
+      'region': q.get('region'),
+      'city': q.get('city'),
       'page': q.get('page'),
       'entry_page': q.get('entry_page'),
       'exit_page': q.get('exit_page')
@@ -47,7 +49,7 @@ export function parseQuery(querystring, site) {
 export function appliedFilters(query) {
   return Object.keys(query.filters)
     .map((key) => [key, query.filters[key]])
-    .filter(([key, value]) => !!value);
+    .filter(([_key, value]) => !!value);
 }
 
 function generateQueryString(data) {
@@ -89,7 +91,7 @@ class QueryLink extends React.Component {
   }
 
   render() {
-    const { history, query, to, ...props } = this.props
+    const { to, ...props } = this.props
     return (
       <Link
         {...props}
@@ -102,26 +104,24 @@ class QueryLink extends React.Component {
 const QueryLinkWithRouter = withRouter(QueryLink)
 export { QueryLinkWithRouter as QueryLink };
 
-class QueryButton extends React.Component {
-  render() {
-    const { history, query, to, disabled, className, children } = this.props
-    return (
-      <button
-        className={className}
-        onClick={(event) => {
-          event.preventDefault()
-          navigateToQuery(history, query, to)
-          if (this.props.onClick) this.props.onClick(event)
-          history.push({ pathname: window.location.pathname, search: generateQueryString(to) })
-        }}
-        type="button"
-        disabled={disabled}
-      >
-        {children}
-      </button>
-    )
-  }
+function QueryButton({history, query, to, disabled, className, children, onClick}) {
+  return (
+    <button
+      className={className}
+      onClick={(event) => {
+        event.preventDefault()
+        navigateToQuery(history, query, to)
+        if (onClick) onClick(event)
+        history.push({ pathname: window.location.pathname, search: generateQueryString(to) })
+      }}
+      type="button"
+      disabled={disabled}
+    >
+      {children}
+    </button>
+  )
 }
+
 const QueryButtonWithRouter = withRouter(QueryButton)
 export { QueryButtonWithRouter as QueryButton };
 
@@ -139,6 +139,7 @@ export function toHuman(query) {
   } if (query.period === '12mo') {
     return 'in the last 12 months'
   }
+  return ''
 }
 
 export function eventName(query) {
@@ -165,6 +166,8 @@ export const formattedFilters = {
   'os': 'Operating System',
   'os_version': 'Operating System Version',
   'country': 'Country',
+  'region': 'Region',
+  'city': 'City',
   'page': 'Page',
   'entry_page': 'Entry Page',
   'exit_page': 'Exit Page'

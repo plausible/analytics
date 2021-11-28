@@ -24,7 +24,7 @@ class ExitPagesModal extends React.Component {
   }
 
   loadPages() {
-    const {query, page, pages} = this.state;
+    const {query, page} = this.state;
 
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/exit-pages`, query, {limit: 100, page})
       .then((res) => this.setState((state) => ({loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100})))
@@ -72,8 +72,8 @@ class ExitPagesModal extends React.Component {
           <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline">{page.name}</Link>
         </td>
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_visitors)}</td>}
-        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.exits)}</td>}
+        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.unique_exits)}</td>
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_exits)}</td>}
         {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatPercentage(page.exit_rate)}</td>}
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.conversion_rate)}%</td>}
       </tr>

@@ -21,23 +21,24 @@ defmodule Plausible.Workers.SpikeNotifier do
     for notification <- notifications do
       query = Query.from(notification.site.timezone, %{"period" => "realtime"})
       current_visitors = clickhouse.current_visitors(notification.site, query)
-      sources = clickhouse.top_sources(notification.site, query, 3, 1, true)
-      notify(notification, current_visitors, sources)
+
+      if current_visitors >= notification.threshold do
+        sources = clickhouse.top_sources(notification.site, query, 3, 1, true)
+        notify(notification, current_visitors, sources)
+      end
     end
 
     :ok
   end
 
   def notify(notification, current_visitors, sources) do
-    if current_visitors >= notification.threshold do
-      for recipient <- notification.recipients do
-        send_notification(recipient, notification.site, current_visitors, sources)
-      end
-
-      notification
-      |> SpikeNotification.was_sent()
-      |> Repo.update()
+    for recipient <- notification.recipients do
+      send_notification(recipient, notification.site, current_visitors, sources)
     end
+
+    notification
+    |> SpikeNotification.was_sent()
+    |> Repo.update()
   end
 
   defp send_notification(recipient, site, current_visitors, sources) do

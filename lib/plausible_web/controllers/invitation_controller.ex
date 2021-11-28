@@ -65,7 +65,7 @@ defmodule PlausibleWeb.InvitationController do
   end
 
   defp end_trial_of_new_owner(multi, new_owner) do
-    if Plausible.Billing.on_trial?(new_owner) do
+    if Plausible.Billing.on_trial?(new_owner) || is_nil(new_owner.trial_expiry_date) do
       Ecto.Multi.update(multi, :user, Plausible.Auth.User.end_trial(new_owner))
     else
       multi

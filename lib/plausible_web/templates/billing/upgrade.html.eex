@@ -25,7 +25,6 @@
           'GBP': '£'
         }[plan.currency]
 
-        console.log(plan)
         return currency + plan.price.net
       },
       fetchPlans() {

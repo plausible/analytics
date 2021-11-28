@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.Firewall
   end
 
-  if Application.get_env(:plausible, :environment) == "dev" do
+  if Mix.env() == :dev do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
   end
 
@@ -61,6 +61,8 @@ defmodule PlausibleWeb.Router do
     get "/:domain/entry-pages", StatsController, :entry_pages
     get "/:domain/exit-pages", StatsController, :exit_pages
     get "/:domain/countries", StatsController, :countries
+    get "/:domain/regions", StatsController, :regions
+    get "/:domain/cities", StatsController, :cities
     get "/:domain/browsers", StatsController, :browsers
     get "/:domain/browser-versions", StatsController, :browser_versions
     get "/:domain/operating-systems", StatsController, :operating_systems
@@ -147,6 +149,8 @@ defmodule PlausibleWeb.Router do
     post "/billing/change-plan/:new_plan_id", BillingController, :change_plan
     get "/billing/upgrade", BillingController, :upgrade
     get "/billing/upgrade/:plan_id", BillingController, :upgrade_to_plan
+    get "/billing/upgrade/enterprise/:plan_id", BillingController, :upgrade_enterprise_plan
+    get "/billing/change-plan/enterprise/:plan_id", BillingController, :change_enterprise_plan
     get "/billing/upgrade-success", BillingController, :upgrade_success
 
     get "/sites", SiteController, :index
@@ -232,7 +236,7 @@ defmodule PlausibleWeb.Router do
     delete "/:website", SiteController, :delete_site
     delete "/:website/stats", SiteController, :reset_stats
 
-    get "/:domain/visitors.csv", StatsController, :csv_export
+    get "/:domain/export", StatsController, :csv_export
     get "/:domain/*path", StatsController, :stats
   end
 end

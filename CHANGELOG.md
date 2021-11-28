@@ -1,7 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+
 ## Unreleased
+
+### Added
+- Data exported via the download button will contain CSV data for all visible graps in a zip file.
+- Region and city-level geolocation plausible/analytics#1449
+- The `u` option can now be used in the `manual` extension to specify a URL when triggering events.
+
+## v1.4.1
+
+### Fixed
+- Fixes database error when pathname contains a question mark
+
+## v1.4.0
 
 ### Added
 - New parameter `metrics` for the `/api/v1/stats/timeseries` endpoint plausible/analytics#952
@@ -17,6 +30,8 @@ All notable changes to this project will be documented in this file.
 - Ability to invite users to sites with different roles plausible/analytics#1122
 - Option to configure a custom name for the script file
 - Add Conversion Rate to Top Sources, Top Pages Devices, Countries when filtered by a goal plausible/analytics#1299
+- Add list view for countries report in dashboard plausible/analytics#1381
+- Add ability to view more than 100 custom goal properties plausible/analytics#1353
 
 ### Fixed
 - Fix weekly report time range plausible/analytics#951
@@ -30,9 +45,15 @@ All notable changes to this project will be documented in this file.
 - Details modals are now responsive and take up less horizontal space on smaller screens to make it easier to scroll.
 - Fix reading config from file
 - Fix some links not opening correctly in new tab
+- UI fix for more than one row of custom event properties plausible/analytics#1383
+- UI fix for user menu and time picker overlapping plausible/analytics#1352
+- Respect the `path` component of BASE_URL to allow subfolder installatons
 
 ### Removed
 - Removes AppSignal monitoring package
+
+### Changes
+- Disable email verification by default. Added a configuration option `ENABLE_EMAIL_VERIFICATION=true` if you want to keep the old behaviour
 
 ## [1.3] - 2021-04-14
 

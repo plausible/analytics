@@ -12,7 +12,7 @@
       <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
         <p>
         We are moving away from CNAME-based custom domains. If you're concerned about adblockers, we recommend
-        <%= link("setting up a proxy", class: "underline text-yellow-800 dark:text-yellow-400", to: "https://plausible.io/docs/proxy/introduction", target: "_blank") %> for your analytics script instead.
+        <%= link("setting up a proxy", class: "underline text-yellow-800 dark:text-yellow-400", to: "https://plausible.io/docs/proxy/introduction", target: "_blank", rel: "noferrer") %> for your analytics script instead.
         </p>
       </div>
     </div>
