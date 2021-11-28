@@ -4,7 +4,6 @@ import { Transition } from '@headlessui/react'
 export default class SiteSwitcher extends React.Component {
   constructor() {
     super()
-    this.handleClick = this.handleClick.bind(this)
     this.handleKeydown = this.handleKeydown.bind(this);
     this.populateSites = this.populateSites.bind(this);
     this.state = {
@@ -60,10 +59,13 @@ export default class SiteSwitcher extends React.Component {
 
   }
 
-  toggle() {
+  toggle(e) {
+    e.preventDefault();
     if (!this.props.loggedIn) return;
 
-    this.setState({open: !this.state.open})
+    this.setState((prevState) => ({
+      open: !prevState.open
+    }))
 
     if (!this.state.sites) {
       this.populateSites();
