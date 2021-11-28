@@ -9,6 +9,10 @@ All notable changes to this project will be documented in this file.
 - Region and city-level geolocation plausible/analytics#1449
 - The `u` option can now be used in the `manual` extension to specify a URL when triggering events.
 
+### Fixed
+
+- UI fix to align footer columns
+
 ## v1.4.1
 
 ### Fixed
