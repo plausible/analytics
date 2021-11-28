@@ -284,7 +284,7 @@ export default class SourceList extends React.Component {
   }
 
   renderTabs() {
-    const activeClass = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold border-b-2 border-indigo-700 dark:border-indigo-500'
+    const activeClass = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading'
     const defaultClass = 'hover:text-indigo-600 cursor-pointer'
     return (
       <ul className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">

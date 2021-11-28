@@ -47,7 +47,7 @@ export default class Pages extends React.Component {
     if (isActive) {
       return (
         <li
-          className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold border-b-2 border-indigo-700 dark:border-indigo-500"
+          className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading"
         >
           {name}
         </li>

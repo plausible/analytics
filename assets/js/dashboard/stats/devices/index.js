@@ -161,7 +161,7 @@ export default class Devices extends React.Component {
     if (isActive) {
       return (
         <li
-          className="inline-block h-5 font-bold text-indigo-700 border-b-2 border-indigo-700 dark:text-indigo-500 dark:border-indigo-500"
+          className="inline-block h-5 font-bold text-indigo-700 active-prop-heading dark:text-indigo-500"
         >
           {name}
         </li>

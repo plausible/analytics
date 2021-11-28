@@ -168,7 +168,7 @@ export default class PropertyBreakdown extends React.Component {
     const isActive = this.state.propKey === key
 
     if (isActive) {
-      return <li key={key} className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold border-b-2 border-indigo-700 dark:border-indigo-500 mr-2">{key}</li>
+      return <li key={key} className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold mr-2 active-prop-heading">{key}</li>
     } else {
       return <li key={key} className="hover:text-indigo-600 cursor-pointer mr-2" onClick={this.changePropKey.bind(this, key)}>{key}</li>
     }
