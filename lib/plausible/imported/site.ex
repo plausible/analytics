@@ -184,7 +184,7 @@ defmodule Plausible.Imported do
     Imported.OperatingSystems.new(%{
       domain: domain,
       timestamp: format_timestamp(timestamp),
-      os: os,
+      operating_system: os,
       version: version,
       visitors: visitors
     })

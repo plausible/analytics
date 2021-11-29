@@ -7,7 +7,7 @@ defmodule Plausible.Imported.OperatingSystems do
   schema "imported_operating_systems" do
     field :domain, :string
     field :timestamp, :naive_datetime
-    field :os, :string
+    field :operating_system, :string
     field :version, :string
     field :visitors, :integer
   end
@@ -19,7 +19,7 @@ defmodule Plausible.Imported.OperatingSystems do
       [
         :domain,
         :timestamp,
-        :os,
+        :operating_system,
         :version,
         :visitors
       ],

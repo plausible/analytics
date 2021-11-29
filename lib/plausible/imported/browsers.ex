@@ -4,7 +4,7 @@ defmodule Plausible.Imported.Browsers do
   import Ecto.Changeset
 
   @primary_key false
-  schema "imported_utm_mediums" do
+  schema "imported_browsers" do
     field :domain, :string
     field :timestamp, :naive_datetime
     field :browser, :string
@@ -20,7 +20,7 @@ defmodule Plausible.Imported.Browsers do
         :domain,
         :timestamp,
         :browser,
-        :versions,
+        :version,
         :visitors
       ],
       empty_values: [nil, ""]
