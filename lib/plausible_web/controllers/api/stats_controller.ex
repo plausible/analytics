@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     imported_plot =
       if params["filters"] == "{}" && site.has_imported_stats do
-        Imported.Visitors.timeseries(site, query)
+        Imported.Visitors.timeseries(site, timeseries_query)
       end
 
     json(conn, %{
