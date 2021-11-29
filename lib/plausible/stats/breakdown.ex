@@ -5,7 +5,7 @@ defmodule Plausible.Stats.Breakdown do
   @no_ref "Direct / None"
 
   @event_metrics [:visitors, "pageviews", "events"]
-  @session_metrics ["visits", "bounce_rate", "visit_duration"]
+  @session_metrics [:visits, "bounce_rate", :visit_duration]
   @event_props ["event:page", "event:page_match", "event:name"]
 
   def breakdown(site, query, "event:goal", metrics, pagination) do
@@ -119,7 +119,7 @@ defmodule Plausible.Stats.Breakdown do
 
     session_result =
       breakdown_sessions(site, new_query, "visit:entry_page", session_metrics, {limit, 1})
-      |> transform_keys(%{"entry_page" => "page"})
+      |> transform_keys(%{entry_page: "page"})
 
     zip_results(
       event_result,
@@ -363,7 +363,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.entry_page,
-      select_merge: %{"entry_page" => s.entry_page}
+      select_merge: %{entry_page: s.entry_page}
     )
   end
 
@@ -371,7 +371,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.exit_page,
-      select_merge: %{"exit_page" => s.exit_page}
+      select_merge: %{exit_page: s.exit_page}
     )
   end
 

@@ -247,10 +247,10 @@ defmodule Plausible.Stats.Base do
     |> select_session_metrics(rest)
   end
 
-  def select_session_metrics(q, ["visits" | rest]) do
+  def select_session_metrics(q, [:visits | rest]) do
     from(s in q,
       select_merge: %{
-        "visits" => fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.session_id)
+        visits: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.session_id)
       }
     )
     |> select_session_metrics(rest)
@@ -275,10 +275,10 @@ defmodule Plausible.Stats.Base do
     |> select_session_metrics(rest)
   end
 
-  def select_session_metrics(q, ["visit_duration" | rest]) do
+  def select_session_metrics(q, [:visit_duration | rest]) do
     from(s in q,
       select_merge: %{
-        "visit_duration" =>
+        :visit_duration =>
           fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))")
       }
     )
@@ -364,7 +364,9 @@ defmodule Plausible.Stats.Base do
              "visit:source",
              "visit:utm_medium",
              "visit:utm_source",
-             "visit:utm_campaign"
+             "visit:utm_campaign",
+             "visit:entry_page",
+             "visit:exit_page"
            ] do
     offset = (page - 1) * limit
     {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
@@ -407,6 +409,12 @@ defmodule Plausible.Stats.Base do
 
         :utm_campaign ->
           imported_q |> select_merge([i], %{utm_campaign: i.utm_campaign})
+
+        :entry_page ->
+          imported_q |> select_merge([i], %{entry_page: i.entry_page})
+
+        :exit_page ->
+          imported_q |> select_merge([i], %{exit_page: i.exit_page})
       end
 
     q =
@@ -445,6 +453,18 @@ defmodule Plausible.Stats.Base do
         |> select_merge([i, s], %{
           utm_campaign:
             fragment("if(empty(?), ?, ?)", s.utm_campaign, i.utm_campaign, s.utm_campaign)
+        })
+
+      :entry_page ->
+        q
+        |> select_merge([i, s], %{
+          entry_page: fragment("if(empty(?), ?, ?)", s.entry_page, i.entry_page, s.entry_page)
+        })
+
+      :exit_page ->
+        q
+        |> select_merge([i, s], %{
+          exit_page: fragment("if(empty(?), ?, ?)", s.exit_page, i.exit_page, s.exit_page)
         })
     end
   end

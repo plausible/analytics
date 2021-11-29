@@ -155,7 +155,7 @@ defmodule PlausibleWeb.Api.StatsController do
       if query.filters["event:page"] do
         [:visitors, "pageviews", "bounce_rate", "time_on_page", "sample_percent"]
       else
-        [:visitors, "pageviews", "bounce_rate", "visit_duration", "sample_percent"]
+        [:visitors, "pageviews", "bounce_rate", :visit_duration, "sample_percent"]
       end
 
     current_results = Stats.aggregate(site, query, metrics)
@@ -166,7 +166,7 @@ defmodule PlausibleWeb.Api.StatsController do
         top_stats_entry(current_results, prev_results, "Unique visitors", :visitors),
         top_stats_entry(current_results, prev_results, "Total pageviews", "pageviews"),
         top_stats_entry(current_results, prev_results, "Bounce rate", "bounce_rate"),
-        top_stats_entry(current_results, prev_results, "Visit duration", "visit_duration"),
+        top_stats_entry(current_results, prev_results, "Visit duration", :visit_duration),
         top_stats_entry(current_results, prev_results, "Time on page", "time_on_page")
       ]
       |> Enum.filter(& &1)
@@ -216,7 +216,7 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
 
     metrics =
-      if params["detailed"], do: [:visitors, "bounce_rate", "visit_duration"], else: [:visitors]
+      if params["detailed"], do: [:visitors, "bounce_rate", :visit_duration], else: [:visitors]
 
     res =
       Stats.breakdown(site, query, "visit:source", metrics, pagination)
@@ -247,7 +247,7 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
 
     metrics =
-      if params["detailed"], do: [:visitors, "bounce_rate", "visit_duration"], else: [:visitors]
+      if params["detailed"], do: [:visitors, "bounce_rate", :visit_duration], else: [:visitors]
 
     res =
       Stats.breakdown(site, query, "visit:utm_medium", metrics, pagination)
@@ -278,7 +278,7 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
 
     metrics =
-      if params["detailed"], do: [:visitors, "bounce_rate", "visit_duration"], else: [:visitors]
+      if params["detailed"], do: [:visitors, "bounce_rate", :visit_duration], else: [:visitors]
 
     res =
       Stats.breakdown(site, query, "visit:utm_campaign", metrics, pagination)
@@ -367,7 +367,7 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
 
     metrics =
-      if params["detailed"], do: [:visitors, "bounce_rate", "visit_duration"], else: [:visitors]
+      if params["detailed"], do: [:visitors, "bounce_rate", :visit_duration], else: [:visitors]
 
     res =
       Stats.breakdown(site, query, "visit:utm_source", metrics, pagination)
@@ -428,7 +428,7 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
 
     metrics =
-      if params["detailed"], do: [:visitors, "bounce_rate", "visit_duration"], else: [:visitors]
+      if params["detailed"], do: [:visitors, "bounce_rate", :visit_duration], else: [:visitors]
 
     referrers =
       Stats.breakdown(site, query, "visit:referrer", metrics, pagination)
@@ -472,15 +472,15 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
     pagination = parse_pagination(params)
-    metrics = [:visitors, "visits", "visit_duration"]
+    metrics = [:visitors, :visits, :visit_duration]
 
     entry_pages =
       Stats.breakdown(site, query, "visit:entry_page", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, "entry_page", "visit:entry_page")
+      |> maybe_add_cr(site, query, pagination, :entry_page, "visit:entry_page")
       |> transform_keys(%{
-        "entry_page" => "name",
+        :entry_page => "name",
         :visitors => "unique_entrances",
-        "visits" => "total_entrances"
+        :visits => "total_entrances"
       })
 
     if params["csv"] do
@@ -500,15 +500,15 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
     {limit, page} = parse_pagination(params)
-    metrics = [:visitors, "visits"]
+    metrics = [:visitors, :visits]
 
     exit_pages =
       Stats.breakdown(site, query, "visit:exit_page", metrics, {limit, page})
-      |> maybe_add_cr(site, query, {limit, page}, "exit_page", "visit:exit_page")
+      |> maybe_add_cr(site, query, {limit, page}, :exit_page, "visit:exit_page")
       |> transform_keys(%{
-        "exit_page" => "name",
+        :exit_page => "name",
         :visitors => "unique_exits",
-        "visits" => "total_exits"
+        :visits => "total_exits"
       })
 
     pages = Enum.map(exit_pages, & &1["name"])
