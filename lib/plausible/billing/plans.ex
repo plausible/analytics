@@ -38,18 +38,19 @@ defmodule Plausible.Billing.Plans do
     end)
   end
 
-  def subscription_interval("free_10k"), do: "N/A"
+  def subscription_interval(%Plausible.Billing.Subscription{paddle_plan_id: "free_10k"}),
+    do: "N/A"
 
-  def subscription_interval(product_id) do
-    case for_product_id(product_id) do
+  def subscription_interval(subscription) do
+    case for_product_id(subscription.paddle_plan_id) do
       nil ->
         enterprise_plan =
-          Repo.get_by(Plausible.Billing.EnterprisePlan, paddle_plan_id: product_id)
+          Repo.get_by(Plausible.Billing.EnterprisePlan, user_id: subscription.user_id)
 
         enterprise_plan && enterprise_plan.billing_interval
 
       plan ->
-        if product_id == plan[:monthly_product_id] do
+        if subscription.paddle_plan_id == plan[:monthly_product_id] do
           "monthly"
         else
           "yearly"

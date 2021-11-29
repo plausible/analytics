@@ -44,4 +44,29 @@ defmodule Plausible.Billing.PlansTest do
       assert Plans.allowance(subscription) == 100_000
     end
   end
+
+  describe "subscription_interval" do
+    test "is based on the plan if user is on a standard plan" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
+
+      assert Plans.subscription_interval(user.subscription) == "monthly"
+    end
+
+    test "is N/A for free plan" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: "free_10k"))
+
+      assert Plans.subscription_interval(user.subscription) == "N/A"
+    end
+
+    test "is based on the enterprise plan if user is on an enterprise plan" do
+      user = insert(:user)
+
+      enterprise_plan = insert(:enterprise_plan, user_id: user.id, billing_interval: :yearly)
+
+      subscription =
+        insert(:subscription, user_id: user.id, paddle_plan_id: enterprise_plan.paddle_plan_id)
+
+      assert Plans.subscription_interval(subscription) == :yearly
+    end
+  end
 end

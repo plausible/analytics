@@ -19,7 +19,7 @@ defmodule PlausibleWeb.AuthView do
   end
 
   def subscription_interval(subscription) do
-    Plans.subscription_interval(subscription.paddle_plan_id)
+    Plans.subscription_interval(subscription)
   end
 
   def delimit_integer(number) do
