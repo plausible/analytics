@@ -7,7 +7,7 @@ export function siteBasePath(site, path = '') {
 }
 
 export function sitePath(site, path = '') {
-  siteBasePath(site, path) + window.location.search
+  return siteBasePath(site, path) + window.location.search
 }
 
 export function setQuery(key, value) {
