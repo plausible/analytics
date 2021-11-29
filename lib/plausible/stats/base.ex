@@ -367,6 +367,7 @@ defmodule Plausible.Stats.Base do
              "visit:utm_campaign",
              "visit:entry_page",
              "visit:exit_page",
+             "visit:country",
              "visit:device",
              "visit:browser",
              "visit:os"
@@ -376,6 +377,9 @@ defmodule Plausible.Stats.Base do
 
     {table, dim} =
       case property do
+        "visit:country" ->
+          {"imported_countries", :country}
+
         "visit:os" ->
           {"imported_operating_systems", :operating_system}
 
@@ -405,6 +409,7 @@ defmodule Plausible.Stats.Base do
           imported_q
       end
 
+    # TODO: DRY
     imported_q =
       case dim do
         :source ->
@@ -424,6 +429,9 @@ defmodule Plausible.Stats.Base do
 
         :exit_page ->
           imported_q |> select_merge([i], %{exit_page: i.exit_page})
+
+        :country ->
+          imported_q |> select_merge([i], %{country: i.country})
 
         :device ->
           imported_q |> select_merge([i], %{device: i.device})
@@ -447,6 +455,7 @@ defmodule Plausible.Stats.Base do
         offset: ^offset
       )
 
+    # TODO: DRY
     case dim do
       :source ->
         q
@@ -483,6 +492,12 @@ defmodule Plausible.Stats.Base do
         q
         |> select_merge([i, s], %{
           exit_page: fragment("if(empty(?), ?, ?)", s.exit_page, i.exit_page, s.exit_page)
+        })
+
+      :country ->
+        q
+        |> select_merge([i, s], %{
+          country: fragment("if(empty(?), ?, ?)", s.country, i.country, s.country)
         })
 
       :device ->

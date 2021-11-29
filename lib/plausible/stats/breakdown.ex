@@ -337,7 +337,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.country_code,
       where: s.country_code != "\0\0",
-      select_merge: %{"country" => s.country_code}
+      select_merge: %{country: s.country_code}
     )
   end
 

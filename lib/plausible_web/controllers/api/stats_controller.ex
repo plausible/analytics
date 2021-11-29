@@ -557,8 +557,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
     countries =
       Stats.breakdown(site, query, "visit:country", [:visitors], pagination)
-      |> maybe_add_cr(site, query, {300, 1}, "country", "visit:country")
-      |> transform_keys(%{"country" => "code"})
+      |> maybe_add_cr(site, query, {300, 1}, :country, "visit:country")
+      |> transform_keys(%{country: "code"})
       |> maybe_add_percentages(query)
 
     if params["csv"] do
