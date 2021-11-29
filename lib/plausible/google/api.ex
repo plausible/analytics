@@ -211,12 +211,12 @@ defmodule Plausible.Google.Api do
       # Entry pages
       {
         ["ga:date", "ga:landingPagePath"],
-        ["ga:users"]
+        ["ga:users", "ga:entrances", "ga:sessionDuration"]
       },
       # Exit pages
       {
         ["ga:date", "ga:exitPagePath"],
-        ["ga:users"]
+        ["ga:users", "ga:exits"]
       },
       # Country
       {

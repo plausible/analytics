@@ -108,29 +108,36 @@ defmodule Plausible.Imported do
 
   defp new_from_google_analytics(domain, "entry_pages", %{
          "dimensions" => [timestamp, entry_page],
-         "metrics" => [%{"values" => [value]}]
+         "metrics" => [%{"values" => [visitors, entrances, visit_duration]}]
        }) do
-    {visitors, ""} = Integer.parse(value)
+    {visitors, ""} = Integer.parse(visitors)
+    {entrances, ""} = Integer.parse(entrances)
+
+    {visit_duration, _} = Integer.parse(visit_duration)
 
     Imported.EntryPages.new(%{
       domain: domain,
       timestamp: format_timestamp(timestamp),
       entry_page: entry_page,
-      visitors: visitors
+      visitors: visitors,
+      entrances: entrances,
+      visit_duration: visit_duration
     })
   end
 
   defp new_from_google_analytics(domain, "exit_pages", %{
          "dimensions" => [timestamp, exit_page],
-         "metrics" => [%{"values" => [value]}]
+         "metrics" => [%{"values" => [value, exits]}]
        }) do
     {visitors, ""} = Integer.parse(value)
+    {exits, ""} = Integer.parse(exits)
 
     Imported.ExitPages.new(%{
       domain: domain,
       timestamp: format_timestamp(timestamp),
       exit_page: exit_page,
-      visitors: visitors
+      visitors: visitors,
+      exits: exits
     })
   end
 

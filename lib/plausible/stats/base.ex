@@ -425,10 +425,15 @@ defmodule Plausible.Stats.Base do
           imported_q |> select_merge([i], %{utm_campaign: i.utm_campaign})
 
         :entry_page ->
-          imported_q |> select_merge([i], %{entry_page: i.entry_page})
+          imported_q
+          |> select_merge([i], %{
+            entry_page: i.entry_page,
+            visits: sum(i.entrances),
+            visit_duration: sum(i.visit_duration),
+          })
 
         :exit_page ->
-          imported_q |> select_merge([i], %{exit_page: i.exit_page})
+          imported_q |> select_merge([i], %{exit_page: i.exit_page, visits: sum(i.exits)})
 
         :country ->
           imported_q |> select_merge([i], %{country: i.country})
@@ -485,13 +490,20 @@ defmodule Plausible.Stats.Base do
       :entry_page ->
         q
         |> select_merge([i, s], %{
-          entry_page: fragment("if(empty(?), ?, ?)", s.entry_page, i.entry_page, s.entry_page)
+          entry_page: fragment("if(empty(?), ?, ?)", s.entry_page, i.entry_page, s.entry_page),
+          visits: fragment("toUInt64(?) + toUInt64(coalesce(?, 0))", s.visits, i.visits),
+          # TODO:  This fragment is not correct.
+          visit_duration: fragment(
+            "(? + ? * ?) / (? + ?)",
+            i.visit_duration, s.visit_duration, s.visits, s.visits, i.visits
+          )
         })
 
       :exit_page ->
         q
         |> select_merge([i, s], %{
-          exit_page: fragment("if(empty(?), ?, ?)", s.exit_page, i.exit_page, s.exit_page)
+          exit_page: fragment("if(empty(?), ?, ?)", s.exit_page, i.exit_page, s.exit_page),
+          visits: fragment("toUInt64(?) + toUInt64(coalesce(?, 0))", s.visits, i.visits)
         })
 
       :country ->

@@ -9,6 +9,9 @@ defmodule Plausible.Imported.EntryPages do
     field :timestamp, :naive_datetime
     field :entry_page, :string
     field :visitors, :integer
+    field :entrances, :integer
+    # Sum total
+    field :visit_duration, :integer
   end
 
   def new(attrs) do
@@ -19,14 +22,19 @@ defmodule Plausible.Imported.EntryPages do
         :domain,
         :timestamp,
         :entry_page,
-        :visitors
+        :visitors,
+        :entrances,
+        :visit_duration
       ],
       empty_values: [nil, ""]
     )
     |> validate_required([
       :domain,
       :timestamp,
-      :visitors
+      :entry_page,
+      :visitors,
+      :entrances,
+      :visit_duration
     ])
   end
 end

@@ -9,6 +9,7 @@ defmodule Plausible.Imported.ExitPages do
     field :timestamp, :naive_datetime
     field :exit_page, :string
     field :visitors, :integer
+    field :exits, :integer
   end
 
   def new(attrs) do
@@ -19,14 +20,17 @@ defmodule Plausible.Imported.ExitPages do
         :domain,
         :timestamp,
         :exit_page,
-        :visitors
+        :visitors,
+        :exits
       ],
       empty_values: [nil, ""]
     )
     |> validate_required([
       :domain,
       :timestamp,
-      :visitors
+      :exit_page,
+      :visitors,
+      :exits
     ])
   end
 end

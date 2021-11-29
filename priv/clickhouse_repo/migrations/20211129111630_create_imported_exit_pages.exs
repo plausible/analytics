@@ -7,6 +7,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedExitPages do
       add :timestamp, :naive_datetime
       add :exit_page, :string
       add :visitors, :UInt64
+      add :exits, :UInt64
     end
   end
 end
