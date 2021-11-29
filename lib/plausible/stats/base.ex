@@ -356,6 +356,7 @@ defmodule Plausible.Stats.Base do
   end
 
   def merge_imported(q, %Plausible.Site{has_imported_stats: nil}, _, _, _), do: q
+  def merge_imported(q, _, %Query{with_imported: false}, _, _), do: q
 
   def merge_imported(q, site, query, "visit:source", {limit, page}) do
     offset = (page - 1) * limit
