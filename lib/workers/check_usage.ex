@@ -104,7 +104,18 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   defp check_pageview_limit(subscriber, billing_mod) do
-    allowance = Plausible.Billing.Plans.allowance(subscriber.subscription) * 1.1
+    allowance =
+      case Plausible.Billing.Plans.allowance(subscriber.subscription) do
+        allowance when is_number(allowance) ->
+          allowance * 1.1
+
+        _allowance ->
+          Sentry.capture_message("Unable to calculate allowance",
+            user: subscriber,
+            subscription: subscriber.subscription
+          )
+      end
+
     {_, last_cycle} = billing_mod.last_two_billing_cycles(subscriber)
 
     {last_last_cycle_usage, last_cycle_usage} =

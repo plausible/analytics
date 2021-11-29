@@ -26,6 +26,12 @@ defmodule Plausible.Billing.PlansTest do
       assert Plans.allowance(user.subscription) == 10_000
     end
 
+    test "free_10k has 10k allowance" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: "free_10k"))
+
+      assert Plans.allowance(user.subscription) == 10_000
+    end
+
     test "is based on the enterprise plan if user is on an enterprise plan" do
       user = insert(:user)
 
