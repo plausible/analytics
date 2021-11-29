@@ -1,11 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-
 ## Unreleased
 
 ### Added
 - Data exported via the download button will contain CSV data for all visible graps in a zip file.
+
+## v1.4.2
+
+### Fixed
+- Fixes database error when filtered for goal with empty data
+
+## v1.4.1
 
 ### Fixed
 - Fixes database error when pathname contains a question mark
