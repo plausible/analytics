@@ -671,8 +671,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
     browsers =
       Stats.breakdown(site, query, "visit:browser", [:visitors], pagination)
-      |> maybe_add_cr(site, query, pagination, "browser", "visit:browser")
-      |> transform_keys(%{"browser" => "name"})
+      |> maybe_add_cr(site, query, pagination, :browser, "visit:browser")
+      |> transform_keys(%{browser: "name"})
       |> maybe_add_percentages(query)
 
     if params["csv"] do
@@ -709,8 +709,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
     systems =
       Stats.breakdown(site, query, "visit:os", [:visitors], pagination)
-      |> maybe_add_cr(site, query, pagination, "os", "visit:os")
-      |> transform_keys(%{"os" => "name"})
+      |> maybe_add_cr(site, query, pagination, :operating_system, "visit:os")
+      |> transform_keys(%{operating_system: "name"})
       |> maybe_add_percentages(query)
 
     if params["csv"] do
@@ -747,8 +747,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
     sizes =
       Stats.breakdown(site, query, "visit:device", [:visitors], pagination)
-      |> maybe_add_cr(site, query, pagination, "device", "visit:device")
-      |> transform_keys(%{"device" => "name"})
+      |> maybe_add_cr(site, query, pagination, :device, "visit:device")
+      |> transform_keys(%{device: "name"})
       |> maybe_add_percentages(query)
 
     if params["csv"] do

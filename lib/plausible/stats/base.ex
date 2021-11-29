@@ -366,14 +366,23 @@ defmodule Plausible.Stats.Base do
              "visit:utm_source",
              "visit:utm_campaign",
              "visit:entry_page",
-             "visit:exit_page"
+             "visit:exit_page",
+             "visit:device",
+             "visit:browser",
+             "visit:os"
            ] do
     offset = (page - 1) * limit
     {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
-    dim = String.trim_leading(property, "visit:")
-    table = "imported_#{dim}s"
-    dim = String.to_atom(dim)
+    {table, dim} =
+      case property do
+        "visit:os" ->
+          {"imported_operating_systems", :operating_system}
+
+        _ ->
+          dim = String.trim_leading(property, "visit:")
+          {"imported_#{dim}s", String.to_atom(dim)}
+      end
 
     imported_q =
       from(
@@ -415,6 +424,15 @@ defmodule Plausible.Stats.Base do
 
         :exit_page ->
           imported_q |> select_merge([i], %{exit_page: i.exit_page})
+
+        :device ->
+          imported_q |> select_merge([i], %{device: i.device})
+
+        :browser ->
+          imported_q |> select_merge([i], %{browser: i.browser})
+
+        :operating_system ->
+          imported_q |> select_merge([i], %{operating_system: i.operating_system})
       end
 
     q =
@@ -465,6 +483,30 @@ defmodule Plausible.Stats.Base do
         q
         |> select_merge([i, s], %{
           exit_page: fragment("if(empty(?), ?, ?)", s.exit_page, i.exit_page, s.exit_page)
+        })
+
+      :device ->
+        q
+        |> select_merge([i, s], %{
+          device: fragment("if(empty(?), ?, ?)", s.device, i.device, s.device)
+        })
+
+      :browser ->
+        q
+        |> select_merge([i, s], %{
+          browser: fragment("if(empty(?), ?, ?)", s.browser, i.browser, s.browser)
+        })
+
+      :operating_system ->
+        q
+        |> select_merge([i, s], %{
+          operating_system:
+            fragment(
+              "if(empty(?), ?, ?)",
+              s.operating_system,
+              i.operating_system,
+              s.operating_system
+            )
         })
     end
   end

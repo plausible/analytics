@@ -439,7 +439,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.screen_size,
-      select_merge: %{"device" => s.screen_size}
+      select_merge: %{device: s.screen_size}
     )
   end
 
@@ -447,7 +447,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.operating_system,
-      select_merge: %{"os" => s.operating_system}
+      select_merge: %{operating_system: s.operating_system}
     )
   end
 
@@ -463,7 +463,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.browser,
-      select_merge: %{"browser" => s.browser}
+      select_merge: %{browser: s.browser}
     )
   end
 
