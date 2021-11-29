@@ -26,7 +26,7 @@ defmodule PlausibleWeb.Api.StatsController do
     present_index = present_index_for(site, query, labels)
 
     imported_plot =
-      if site.has_imported_stats do
+      if params["filters"] == "{}" && site.has_imported_stats do
         Imported.Visitors.timeseries(site, query)
       end
 
