@@ -202,6 +202,41 @@ defmodule Plausible.Google.Api do
       {
         ["ga:date", "ga:campaign"],
         ["ga:users"]
+      },
+      # Pages
+      {
+        ["ga:date", "ga:pagePath"],
+        ["ga:users"]
+      },
+      # Entry pages
+      {
+        ["ga:date", "ga:landingPagePath"],
+        ["ga:users"]
+      },
+      # Exit pages
+      {
+        ["ga:date", "ga:exitPagePath"],
+        ["ga:users"]
+      },
+      # Country
+      {
+        ["ga:date", "ga:countryIsoCode"],
+        ["ga:users"]
+      },
+      # Device
+      {
+        ["ga:date", "ga:deviceCategory"],
+        ["ga:users"]
+      },
+      # Browser
+      {
+        ["ga:date", "ga:browser", "ga:browserVersion"],
+        ["ga:users"]
+      },
+      # OS
+      {
+        ["ga:date", "ga:operatingSystem", "ga:operatingSystemVersion"],
+        ["ga:users"]
       }
     ]
 
@@ -210,7 +245,19 @@ defmodule Plausible.Google.Api do
     case response do
       {:ok, data} ->
         maybe_error =
-          ["visitors", "sources", "utm_mediums", "utm_campaigns"]
+          [
+            "visitors",
+            "sources",
+            "utm_mediums",
+            "utm_campaigns",
+            "pages",
+            "entry_pages",
+            "exit_pages",
+            "countries",
+            "devices",
+            "browsers",
+            "operating_systems"
+          ]
           |> Enum.with_index()
           |> Enum.map(fn {metric, index} ->
             Task.async(fn ->

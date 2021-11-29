@@ -88,6 +88,106 @@ defmodule Plausible.Imported do
     })
   end
 
+  defp new_from_google_analytics(domain, "pages", %{
+         "dimensions" => [timestamp, page],
+         "metrics" => [%{"values" => [value]}]
+       }) do
+    {visitors, ""} = Integer.parse(value)
+
+    Imported.Pages.new(%{
+      domain: domain,
+      timestamp: format_timestamp(timestamp),
+      page: page,
+      visitors: visitors
+    })
+  end
+
+  defp new_from_google_analytics(domain, "entry_pages", %{
+         "dimensions" => [timestamp, entry_page],
+         "metrics" => [%{"values" => [value]}]
+       }) do
+    {visitors, ""} = Integer.parse(value)
+
+    Imported.EntryPages.new(%{
+      domain: domain,
+      timestamp: format_timestamp(timestamp),
+      entry_page: entry_page,
+      visitors: visitors
+    })
+  end
+
+  defp new_from_google_analytics(domain, "exit_pages", %{
+         "dimensions" => [timestamp, exit_page],
+         "metrics" => [%{"values" => [value]}]
+       }) do
+    {visitors, ""} = Integer.parse(value)
+
+    Imported.ExitPages.new(%{
+      domain: domain,
+      timestamp: format_timestamp(timestamp),
+      exit_page: exit_page,
+      visitors: visitors
+    })
+  end
+
+  defp new_from_google_analytics(domain, "countries", %{
+         "dimensions" => [timestamp, country],
+         "metrics" => [%{"values" => [value]}]
+       }) do
+    {visitors, ""} = Integer.parse(value)
+
+    Imported.Countries.new(%{
+      domain: domain,
+      timestamp: format_timestamp(timestamp),
+      country: country,
+      visitors: visitors
+    })
+  end
+
+  defp new_from_google_analytics(domain, "devices", %{
+         "dimensions" => [timestamp, device],
+         "metrics" => [%{"values" => [value]}]
+       }) do
+    {visitors, ""} = Integer.parse(value)
+
+    Imported.Devices.new(%{
+      domain: domain,
+      timestamp: format_timestamp(timestamp),
+      device: device,
+      visitors: visitors
+    })
+  end
+
+  defp new_from_google_analytics(domain, "browsers", %{
+         "dimensions" => [timestamp, browser, version],
+         "metrics" => [%{"values" => [value]}]
+       }) do
+    {visitors, ""} = Integer.parse(value)
+
+    Imported.Browsers.new(%{
+      domain: domain,
+      timestamp: format_timestamp(timestamp),
+      browser: browser,
+      version: version,
+      visitors: visitors
+    })
+  end
+
+  defp new_from_google_analytics(domain, "operating_systems", %{
+         "dimensions" => [timestamp, os, version],
+         "metrics" => [%{"values" => [value]}]
+       }) do
+    {visitors, ""} = Integer.parse(value)
+
+    Imported.OperatingSystems.new(%{
+      domain: domain,
+      timestamp: format_timestamp(timestamp),
+      os: os,
+      version: version,
+      visitors: visitors
+    })
+  end
+
   defp format_timestamp(timestamp) do
     {year, monthday} = String.split_at(timestamp, 4)
     {month, day} = String.split_at(monthday, 2)
