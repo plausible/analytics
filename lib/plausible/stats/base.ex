@@ -363,13 +363,29 @@ defmodule Plausible.Stats.Base do
     {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
     imported_q =
-      from(
-        i in "imported_sources",
-        group_by: i.source,
-        where: i.domain == ^site.domain,
-        where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
-        select: %{source: i.source, visitors: sum(i.visitors)}
-      )
+      case query.filters["visitor:source"] do
+        {:is_not, is_not} ->
+          # TODO: make this no_ref is actually being excluded.
+          # This is needed as the Top Sources panel expects these filtered.
+          is_not = if is_not == @no_ref, do: "", else: is_not
+
+          from(
+            i in "imported_sources",
+            group_by: i.source,
+            where: i.domain == ^site.domain and i.source != ^is_not,
+            where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
+            select: %{source: i.source, visitors: sum(i.visitors)}
+          )
+
+        _ ->
+          from(
+            i in "imported_sources",
+            group_by: i.source,
+            where: i.domain == ^site.domain,
+            where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
+            select: %{source: i.source, visitors: sum(i.visitors)}
+          )
+      end
 
     from(s in Ecto.Query.subquery(q),
       full_join: i in subquery(imported_q),
