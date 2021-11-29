@@ -240,10 +240,19 @@ defmodule Plausible.Google.Api do
       }
     ]
 
-    response = fetch_analytic_reports(request, request_data)
+    # batchGet can receive a maximum of 5 requests.
+    responses =
+      request_data
+      |> Enum.chunk_every(5)
+      |> Enum.map(&fetch_analytic_reports(&1, request))
 
-    case response do
-      {:ok, data} ->
+    case Keyword.get(responses, :error) do
+      nil ->
+        data =
+          responses
+          |> Enum.map(fn {:ok, resp} -> resp end)
+          |> Enum.concat()
+
         maybe_error =
           [
             "visitors",
@@ -279,13 +288,13 @@ defmodule Plausible.Google.Api do
             {:error, error}
         end
 
-      {:error, error} ->
+      error ->
         Sentry.capture_message("Error fetching Google analytics data", extra: error)
         {:error, error}
     end
   end
 
-  defp fetch_analytic_reports(request, request_data) do
+  defp fetch_analytic_reports(request_data, request) do
     reports =
       Enum.map(request_data, fn {dimensions, metrics} ->
         %{
