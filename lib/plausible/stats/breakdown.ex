@@ -390,7 +390,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.utm_medium,
       select_merge: %{
-        "utm_medium" => fragment("if(empty(?), ?, ?)", s.utm_medium, @no_ref, s.utm_medium)
+        utm_medium: fragment("if(empty(?), ?, ?)", s.utm_medium, @no_ref, s.utm_medium)
       }
     )
   end
@@ -400,7 +400,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.utm_source,
       select_merge: %{
-        "utm_source" => fragment("if(empty(?), ?, ?)", s.utm_source, @no_ref, s.utm_source)
+        utm_source: fragment("if(empty(?), ?, ?)", s.utm_source, @no_ref, s.utm_source)
       }
     )
   end
@@ -410,7 +410,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.utm_campaign,
       select_merge: %{
-        "utm_campaign" => fragment("if(empty(?), ?, ?)", s.utm_campaign, @no_ref, s.utm_campaign)
+        utm_campaign: fragment("if(empty(?), ?, ?)", s.utm_campaign, @no_ref, s.utm_campaign)
       }
     )
   end

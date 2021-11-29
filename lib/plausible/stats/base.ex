@@ -1,6 +1,7 @@
 defmodule Plausible.Stats.Base do
   use Plausible.ClickhouseRepo
   alias Plausible.Stats.{Query, Filters}
+  import Ecto.Query
 
   @no_ref "Direct / None"
 
@@ -358,46 +359,94 @@ defmodule Plausible.Stats.Base do
   def merge_imported(q, %Plausible.Site{has_imported_stats: nil}, _, _, _), do: q
   def merge_imported(q, _, %Query{with_imported: false}, _, _), do: q
 
-  def merge_imported(q, site, query, "visit:source", {limit, page}) do
+  def merge_imported(q, site, query, property, {limit, page})
+      when property in [
+             "visit:source",
+             "visit:utm_medium",
+             "visit:utm_source",
+             "visit:utm_campaign"
+           ] do
     offset = (page - 1) * limit
     {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
-    imported_q =
-      case query.filters["visitor:source"] do
-        {:is_not, is_not} ->
-          # TODO: make this no_ref is actually being excluded.
-          # This is needed as the Top Sources panel expects these filtered.
-          is_not = if is_not == @no_ref, do: "", else: is_not
+    dim = String.trim_leading(property, "visit:")
+    table = "imported_#{dim}s"
+    dim = String.to_atom(dim)
 
-          from(
-            i in "imported_sources",
-            group_by: i.source,
-            where: i.domain == ^site.domain and i.source != ^is_not,
-            where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
-            select: %{source: i.source, visitors: sum(i.visitors)}
-          )
+    imported_q =
+      from(
+        i in table,
+        group_by: field(i, ^dim),
+        where: i.domain == ^site.domain,
+        where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
+        select: %{visitors: sum(i.visitors)}
+      )
+
+    imported_q =
+      case query.filters[property] do
+        {:is_not, value} ->
+          # TODO: make this no_ref is actually being excluded.
+          # This is needed as the sources panel expects these filtered.
+          value = if value == @no_ref, do: "", else: value
+          where(imported_q, [i], field(i, ^dim) != ^value)
 
         _ ->
-          from(
-            i in "imported_sources",
-            group_by: i.source,
-            where: i.domain == ^site.domain,
-            where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
-            select: %{source: i.source, visitors: sum(i.visitors)}
-          )
+          imported_q
       end
 
-    from(s in Ecto.Query.subquery(q),
-      full_join: i in subquery(imported_q),
-      on: s.source == i.source,
-      select: %{
-        source: fragment("if(empty(?), ?, ?)", s.source, i.source, s.source),
-        visitors: fragment("toUInt64(?) + toUInt64(?)", s.visitors, i.visitors)
-      },
-      order_by: [desc: fragment("toUInt64(?) + toUInt64(?)", s.visitors, i.visitors)],
-      limit: ^limit,
-      offset: ^offset
-    )
+    imported_q =
+      case dim do
+        :source ->
+          imported_q |> select_merge([i], %{source: i.source})
+
+        :utm_medium ->
+          imported_q |> select_merge([i], %{utm_medium: i.utm_medium})
+
+        :utm_source ->
+          imported_q |> select_merge([i], %{utm_source: i.utm_source})
+
+        :utm_campaign ->
+          imported_q |> select_merge([i], %{utm_campaign: i.utm_campaign})
+      end
+
+    q =
+      from(s in Ecto.Query.subquery(q),
+        full_join: i in subquery(imported_q),
+        on: field(s, ^dim) == field(i, ^dim),
+        select: %{
+          :visitors => fragment("toUInt64(?) + toUInt64(?)", s.visitors, i.visitors)
+        },
+        order_by: [desc: fragment("toUInt64(?) + toUInt64(?)", s.visitors, i.visitors)],
+        limit: ^limit,
+        offset: ^offset
+      )
+
+    case dim do
+      :source ->
+        q
+        |> select_merge([i, s], %{
+          source: fragment("if(empty(?), ?, ?)", s.source, i.source, s.source)
+        })
+
+      :utm_medium ->
+        q
+        |> select_merge([i, s], %{
+          utm_medium: fragment("if(empty(?), ?, ?)", s.utm_medium, i.utm_medium, s.utm_medium)
+        })
+
+      :utm_source ->
+        q
+        |> select_merge([i, s], %{
+          utm_source: fragment("if(empty(?), ?, ?)", s.utm_source, i.utm_source, s.utm_source)
+        })
+
+      :utm_campaign ->
+        q
+        |> select_merge([i, s], %{
+          utm_campaign:
+            fragment("if(empty(?), ?, ?)", s.utm_campaign, i.utm_campaign, s.utm_campaign)
+        })
+    end
   end
 
   def merge_imported(q, _, _, _, _), do: q

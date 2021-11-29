@@ -245,7 +245,9 @@ defmodule PlausibleWeb.Api.StatsController do
       |> maybe_hide_noref("visit:utm_medium", params)
 
     pagination = parse_pagination(params)
-    metrics = [:visitors, "bounce_rate", "visit_duration"]
+
+    metrics =
+      if params["detailed"], do: [:visitors, "bounce_rate", "visit_duration"], else: [:visitors]
 
     res =
       Stats.breakdown(site, query, "visit:utm_medium", metrics, pagination)
@@ -274,7 +276,9 @@ defmodule PlausibleWeb.Api.StatsController do
       |> maybe_hide_noref("visit:utm_campaign", params)
 
     pagination = parse_pagination(params)
-    metrics = [:visitors, "bounce_rate", "visit_duration"]
+
+    metrics =
+      if params["detailed"], do: [:visitors, "bounce_rate", "visit_duration"], else: [:visitors]
 
     res =
       Stats.breakdown(site, query, "visit:utm_campaign", metrics, pagination)
@@ -361,7 +365,9 @@ defmodule PlausibleWeb.Api.StatsController do
       |> maybe_hide_noref("visit:utm_source", params)
 
     pagination = parse_pagination(params)
-    metrics = [:visitors, "bounce_rate", "visit_duration"]
+
+    metrics =
+      if params["detailed"], do: [:visitors, "bounce_rate", "visit_duration"], else: [:visitors]
 
     res =
       Stats.breakdown(site, query, "visit:utm_source", metrics, pagination)
