@@ -18,4 +18,24 @@ defmodule Plausible.Billing.PlansTest do
       assert List.first(Plans.plans_for(user))[:monthly_product_id] == @v2_plan_id
     end
   end
+
+  describe "allowance" do
+    test "is based on the plan if user is on a standard plan" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
+
+      assert Plans.allowance(user.subscription) == 10_000
+    end
+
+    test "is based on the enterprise plan if user is on an enterprise plan" do
+      user = insert(:user)
+
+      enterprise_plan =
+        insert(:enterprise_plan, user_id: user.id, monthly_pageview_limit: 100_000)
+
+      subscription =
+        insert(:subscription, user_id: user.id, paddle_plan_id: enterprise_plan.paddle_plan_id)
+
+      assert Plans.allowance(subscription) == 100_000
+    end
+  end
 end
