@@ -58,6 +58,8 @@ defmodule Plausible.Imported do
     })
   end
 
+  # TODO: utm_sources. Google reports sources and utm_sources unified.
+
   defp new_from_google_analytics(domain, "utm_mediums", %{
          "dimensions" => [timestamp, medium],
          "metrics" => [%{"values" => [value]}]
