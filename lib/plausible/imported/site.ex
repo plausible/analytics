@@ -8,8 +8,10 @@ defmodule Plausible.Imported do
   def from_google_analytics(data, domain, metric) do
     maybe_error =
       data
-      |> Enum.map(&new_from_google_analytics(domain, metric, &1))
-      |> Enum.map(&Plausible.ClickhouseRepo.insert(&1, on_conflict: :replace_all))
+      |> Enum.map(fn row ->
+        new_from_google_analytics(domain, metric, row)
+        |> Plausible.ClickhouseRepo.insert(on_conflict: :replace_all)
+      end)
       |> Keyword.get(:error)
 
     case maybe_error do

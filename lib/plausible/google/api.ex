@@ -265,7 +265,7 @@ defmodule Plausible.Google.Api do
               |> Imported.from_google_analytics(site.domain, metric)
             end)
           end)
-          |> Enum.map(&Task.await/1)
+          |> Enum.map(&Task.await(&1, 120_000))
           |> Keyword.get(:error)
 
         case maybe_error do
@@ -299,7 +299,14 @@ defmodule Plausible.Google.Api do
           dimensions: Enum.map(dimensions, &%{name: &1, histogramBuckets: []}),
           metrics: Enum.map(metrics, &%{expression: &1}),
           hideTotals: true,
-          hideValueRanges: true
+          hideValueRanges: true,
+          orderBys: [
+            %{
+              fieldName: "ga:date",
+              sortOrder: "DESCENDING"
+            }
+          ],
+          pageSize: 100_000
         }
       end)
 
