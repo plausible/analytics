@@ -19,7 +19,7 @@ blocks:
             - echo $DOCKER_PASSWORD | docker login --username "$DOCKER_USERNAME" --password-stdin
             - cache restore docker-$SEMAPHORE_GIT_BRANCH
             - docker load -i caches/$SEMAPHORE_GIT_DIR.tar &>/dev/null | true
-            - docker build -f Dockerfile --build-arg APP_VER=1.1.$SEMAPHORE_WORKFLOW_NUMBER -t payout1/$SEMAPHORE_GIT_DIR:latest .
+            - DOCKER_BUILDKIT=0 docker build -f Dockerfile --build-arg APP_VER=1.1.$SEMAPHORE_WORKFLOW_NUMBER -t payout1/$SEMAPHORE_GIT_DIR:latest .
             - mkdir -p caches
             - docker save -o caches/$SEMAPHORE_GIT_DIR.tar payout1/$SEMAPHORE_GIT_DIR:latest
             - cache store docker-$SEMAPHORE_GIT_BRANCH-$SEMAPHORE_WORKFLOW_NUMBER caches
