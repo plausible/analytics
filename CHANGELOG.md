@@ -13,6 +13,10 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
 
+### Fixed
+
+- UI fix to align footer columns
+
 ## v1.4.1
 
 ### Fixed

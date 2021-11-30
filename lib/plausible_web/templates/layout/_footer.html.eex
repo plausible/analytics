@@ -51,7 +51,7 @@
               </li>
             </ul>
           </div>
-          <div class="mt-12 md:mt-0">
+          <div class="mt-32 md:mt-0">
             <h4 class="text-sm font-semibold tracking-wider text-gray-400 uppercase leading-5">
               Comparisons
             </h4>
@@ -68,10 +68,9 @@
               </li>
             </ul>
           </div>
-
         </div>
         <div class="md:grid md:grid-cols-2 md:gap-8">
-          <div class="mt-12 md:mt-0">
+          <div>
             <h4 class="text-sm font-semibold tracking-wider text-gray-400 uppercase leading-5">
               Community
             </h4>
@@ -108,7 +107,7 @@
               </li>
             </ul>
           </div>
-          <div>
+          <div class="mt-12 md:mt-0">
             <h4 class="text-sm font-semibold tracking-wider text-gray-400 uppercase leading-5">
               Company
             </h4>
