@@ -90,8 +90,8 @@ class EntryPagesModal extends React.Component {
           </Link>
         </td>
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_visitors)}</td>}
-        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.count)}</td>
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.entries)}</td>}
+        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.unique_entrances)}</td>
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_entrances)}</td>}
         {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{durationFormatter(page.visit_duration)}</td>}
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.conversion_rate)}%</td>}
       </tr>

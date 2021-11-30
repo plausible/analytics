@@ -25,7 +25,7 @@ export default function SearchSelect(props) {
   function fetchOptions({inputValue, isOpen}) {
     setLoading(isOpen)
 
-    return props.fetchOptions(inputValue).then((loadedItems) => {
+    return props.fetchOptions(inputValue || '').then((loadedItems) => {
       setLoading(false)
       setItems(loadedItems)
     })
@@ -45,9 +45,16 @@ export default function SearchSelect(props) {
     closeMenu,
   } = useCombobox({
     items,
+    itemToString: (item) => item.hasOwnProperty('name') ? item.name : item,
     onInputValueChange: (changes) => {
       debouncedFetchOptions(changes)
       props.onInput(changes.inputValue)
+      if (changes.inputValue === '') {
+        props.onSelect({name: '', code: ''})
+      }
+    },
+    onSelectedItemChange: (changes) => {
+      props.onSelect(changes.selectedItem)
     },
     initialSelectedItem: props.initialSelectedItem,
     onIsOpenChange: (state) => {
@@ -87,10 +94,10 @@ export default function SearchSelect(props) {
               items.map((item, index) => (
                 <li
                   className={classNames("cursor-pointer select-none relative py-2 pl-3 pr-9", {'text-white bg-indigo-600': highlightedIndex === index, 'text-gray-900 dark:text-gray-100': highlightedIndex !== index})}
-                  key={`${item}`}
+                  key={`${item.name ? item.name : item}`}
                   {...getItemProps({ item, index })}
                 >
-                  {item}
+                  {item.name ? item.name : item}
                 </li>
               ))
             }

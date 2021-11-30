@@ -115,7 +115,8 @@ export default class PropertyBreakdown extends React.Component {
     return (
       <div className="flex items-center justify-between my-2" key={value.name}>
         <Bar
-          count={value.count}
+          count={value.unique_conversions}
+          plot="unique_conversions"
           all={this.state.breakdown}
           bg="bg-red-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction={this.getBarMaxWidth()}
@@ -123,13 +124,13 @@ export default class PropertyBreakdown extends React.Component {
           {this.renderPropContent(value, query)}
         </Bar>
         <div className="dark:text-gray-200">
-          <span className="font-medium inline-block w-20 text-right">{numberFormatter(value.count)}</span>
+          <span className="font-medium inline-block w-20 text-right">{numberFormatter(value.unique_conversions)}</span>
           {
             viewport > MOBILE_UPPER_WIDTH ?
             (
               <span
                 className="font-medium inline-block w-20 text-right"
-              >{numberFormatter(value.total_count)}
+              >{numberFormatter(value.total_conversions)}
               </span>
             )
             : null
@@ -167,7 +168,7 @@ export default class PropertyBreakdown extends React.Component {
     const isActive = this.state.propKey === key
 
     if (isActive) {
-      return <li key={key} className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold border-b-2 border-indigo-700 dark:border-indigo-500 mr-2">{key}</li>
+      return <li key={key} className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold mr-2 active-prop-heading">{key}</li>
     } else {
       return <li key={key} className="hover:text-indigo-600 cursor-pointer mr-2" onClick={this.changePropKey.bind(this, key)}>{key}</li>
     }

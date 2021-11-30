@@ -2,9 +2,9 @@ Hey <%= user_salutation(@user) %>,
 <br /><br />
 Thanks for being a Plausible Analytics subscriber!
 <br /><br />
-This is a friendly reminder that your traffic has exceeded your subscription tier two months in a row. Congrats on all that traffic!
+This is a notice that your traffic has exceeded your subscription tier two months in a row. Congrats on all that traffic!
 <br /><br />
-We don't enforce any hard limits at the moment, we're still counting your stats and you have access to your dashboard, but we kindly ask you to upgrade your subscription plan to accommodate your new traffic levels.
+In order to keep your stats running, we require you to upgrade your account to accommodate your new traffic levels. If you do not upgrade your account within the next 7 days, we will lock your sites and they won't be accessible.
 <br /><br />
 In the last billing cycle (<%= date_format(@last_cycle.first) %> to <%= date_format(@last_cycle.last) %>), your account has used <%= PlausibleWeb.StatsView.large_number_format(@usage) %> billable pageviews.
 <%= if @usage <= 20_000_000 do %>
@@ -16,8 +16,6 @@ You can upgrade your subscription using our self-serve platform. The new charge 
 <% else %>
 This is more than our standard plans, so please reply back to this email to get a quote for your volume.
 <% end %>
-<br /><br />
-Were the last two months extraordinary and you don't expect these higher traffic levels to continue? Reply to this email and we'll figure it out.
 <br /><br />
 Have questions or need help with anything? Just reply to this email and we'll gladly help.
 <br /><br />

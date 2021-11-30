@@ -331,8 +331,7 @@ defmodule PlausibleWeb.SiteController do
   def delete_site(conn, _params) do
     site = conn.assigns[:site]
 
-    Repo.delete!(site)
-    Plausible.ClickhouseRepo.clear_stats_for(site.domain)
+    Plausible.Sites.delete!(site)
 
     conn
     |> put_flash(:success, "Site deleted successfully along with all pageviews")

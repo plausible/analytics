@@ -1,11 +1,67 @@
 import React from 'react';
 
 import * as storage from '../../storage'
-import Countries from './countries';
 import CountriesMap from './map'
 
+import * as api from '../../api'
+import {apiPath, sitePath} from '../../url'
+import ListReport from '../reports/list'
+
+function Countries({query, site}) {
+  function fetchData() {
+    return api.get(apiPath(site, '/countries'), query, {limit: 9}).then((res) => {
+      return res.map(row => Object.assign({}, row, {percentage: undefined}))
+    })
+  }
+
+  return (
+    <ListReport
+      fetchData={fetchData}
+      filter={{country: 'code', country_name: 'name'}}
+      keyLabel="Country"
+      detailsLink={sitePath(site, '/countries')}
+      query={query}
+      color="bg-orange-50"
+    />
+  )
+}
+
+function Regions({query, site}) {
+  function fetchData() {
+    return api.get(apiPath(site, '/regions'), query, {country_name: query.filters.country, limit: 9})
+  }
+
+  return (
+    <ListReport
+      fetchData={fetchData}
+      filter={{region: 'code', region_name: 'name'}}
+      keyLabel="Region"
+      detailsLink={sitePath(site, '/regions')}
+      query={query}
+      color="bg-orange-50"
+    />
+  )
+}
+
+function Cities({query, site}) {
+  function fetchData() {
+    return api.get(apiPath(site, '/cities'), query, {limit: 9})
+  }
+
+  return (
+    <ListReport
+      fetchData={fetchData}
+      filter={{city: 'code', city_name: 'name'}}
+      keyLabel="City"
+      detailsLink={sitePath(site, '/cities')}
+      query={query}
+      color="bg-orange-50"
+    />
+  )
+}
+
+
 const labelFor = {
-	'map': 'Countries Map',
 	'countries': 'Countries',
 	'regions': 'Regions',
 	'cities': 'Cities',
@@ -30,6 +86,10 @@ export default class Locations extends React.Component {
 
 	renderContent() {
     switch(this.state.mode) {
+		case "cities":
+      return <Cities site={this.props.site} query={this.props.query} timer={this.props.timer}/>
+		case "regions":
+      return <Regions site={this.props.site} query={this.props.query} timer={this.props.timer}/>
 		case "countries":
       return <Countries site={this.props.site} query={this.props.query} timer={this.props.timer}/>
     case "map":
@@ -44,7 +104,7 @@ export default class Locations extends React.Component {
     if (isActive) {
       return (
         <li
-          className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold border-b-2 border-indigo-700 dark:border-indigo-500"
+          className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading"
         >
           {name}
         </li>
@@ -76,8 +136,8 @@ export default class Locations extends React.Component {
             <ul className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
               { this.renderPill('Map', 'map') }
               { this.renderPill('Countries', 'countries') }
-              {/* { this.renderPill('Regions', 'regions') } */}
-              {/* { this.renderPill('Cities', 'cities') } */}
+              { this.props.site.cities && this.renderPill('Regions', 'regions') }
+              { this.props.site.cities && this.renderPill('Cities', 'cities') }
             </ul>
           </div>
           { this.renderContent() }
