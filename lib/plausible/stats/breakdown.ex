@@ -206,6 +206,10 @@ defmodule Plausible.Stats.Breakdown do
     |> ClickhouseRepo.all()
   end
 
+  defp breakdown_time_on_page(_site, _query, []) do
+    []
+  end
+
   defp breakdown_time_on_page(site, query, pages) do
     q =
       from(
@@ -226,7 +230,7 @@ defmodule Plausible.Stats.Breakdown do
     time_query = "
       SELECT
         p,
-        sum(td)/count(case when p2 != p then 1 end) as avgTime
+        round(sum(td)/count(case when p2 != p then 1 end)) as avgTime
       FROM
         (SELECT
           p,
@@ -331,6 +335,24 @@ defmodule Plausible.Stats.Breakdown do
       group_by: s.country_code,
       where: s.country_code != "\0\0",
       select_merge: %{"country" => s.country_code}
+    )
+  end
+
+  defp do_group_by(q, "visit:region") do
+    from(
+      s in q,
+      group_by: s.subdivision1_code,
+      where: s.subdivision1_code != "",
+      select_merge: %{"region" => s.subdivision1_code}
+    )
+  end
+
+  defp do_group_by(q, "visit:city") do
+    from(
+      s in q,
+      group_by: s.city_geoname_id,
+      where: s.city_geoname_id != 0,
+      select_merge: %{"city" => s.city_geoname_id}
     )
   end
 

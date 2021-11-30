@@ -76,12 +76,13 @@
   <div class="max-w-xl mt-4">
     <div>
       <label for="embed-link" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Enter shared link</label>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-200">Only public shared links without password protection can be embedded</p>
       <div class="mt-1">
         <input type="text" name="embed-link" id="embed-link" onclick="this.select()" class="block w-full border-gray-300 dark:border-gray-700 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-900 dark:text-gray-300">
       </div>
     </div>
 
-    <div class="mt-2">
+    <div class="mt-4">
       <label for="theme" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select theme</label>
       <select id="theme" name="theme" class="block w-full py-2 pl-3 pr-10 mt-1 text-base border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300">
         <option selected>Light</option>
@@ -90,12 +91,12 @@
       </select>
     </div>
 
-    <div class="mt-2">
+    <div class="mt-4">
       <label for="background" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Custom background colour (optional)</label>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-200">Hint: try using `transparent` background to blend the dashboard with your site background</p>
       <div class="mt-1">
         <input type="text" name="background" id="background" class="block w-full border-gray-300 dark:border-gray-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300" placeholder="#F9FAFB">
       </div>
-      <p class="mt-1 text-xs text-gray-500 dark:text-gray-200">Hint: try using `transparent` background to blend the dashboard with your site background</p>
     </div>
   </div>
 

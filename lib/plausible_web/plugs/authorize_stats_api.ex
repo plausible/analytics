@@ -46,9 +46,11 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
   defp verify_access(api_key, site_id) do
     site = Repo.get_by(Plausible.Site, domain: site_id)
     is_member = site && Plausible.Sites.is_member?(api_key.user_id, site)
+    is_admin = api_key.user_id in admin_user_ids()
 
     cond do
       site && is_member -> {:ok, site}
+      site && is_admin -> {:ok, site}
       true -> {:error, :invalid_api_key}
     end
   end
@@ -76,5 +78,9 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
       {:allow, _} -> :ok
       {:deny, _} -> {:error, :rate_limit, api_key.hourly_request_limit}
     end
+  end
+
+  defp admin_user_ids() do
+    Application.get_env(:plausible, :admin_user_ids)
   end
 end

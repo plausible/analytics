@@ -21,7 +21,7 @@ config :plausible,
 config :geolix,
   databases: [
     %{
-      id: :country,
+      id: :geolocation,
       adapter: Geolix.Adapter.Fake,
       data: %{
         {1, 1, 1, 1} => %{country: %{iso_code: "US"}},

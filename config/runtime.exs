@@ -28,8 +28,8 @@ case secret_key_base do
   nil ->
     raise "SECRET_KEY_BASE configuration option is required. See https://plausible.io/docs/self-hosting-configuration#server"
 
-  key when byte_size(key) < 64 ->
-    raise "SECRET_KEY_BASE must be at least 64 bytes long. See https://plausible.io/docs/self-hosting-configuration#server"
+  key when byte_size(key) < 32 ->
+    raise "SECRET_KEY_BASE must be at least 32 bytes long. See https://plausible.io/docs/self-hosting-configuration#server"
 
   _ ->
     nil
@@ -83,6 +83,8 @@ ch_db_url =
 ### Mandatory params End
 
 sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
+honeycomb_api_key = get_var_from_path_or_env(config_dir, "HONEYCOMB_API_KEY")
+honeycomb_dataset = get_var_from_path_or_env(config_dir, "HONEYCOMB_DATASET")
 paddle_auth_code = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_AUTH_CODE")
 google_cid = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_ID")
 google_secret = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_SECRET")
@@ -112,6 +114,7 @@ geolite2_country_db =
   )
 
 appsignal_api_key = System.get_env("APPSIGNAL_API_KEY")
+ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", geolite2_country_db)
 
 disable_auth =
   config_dir
@@ -144,6 +147,11 @@ domain_blacklist =
 is_selfhost =
   config_dir
   |> get_var_from_path_or_env("SELFHOST", "true")
+  |> String.to_existing_atom()
+
+show_cities =
+  config_dir
+  |> get_var_from_path_or_env("SHOW_CITIES", "false")
   |> String.to_existing_atom()
 
 custom_script_name =
@@ -186,6 +194,7 @@ config :plausible,
   site_limit: site_limit,
   site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost,
+  show_cities: show_cities,
   custom_script_name: custom_script_name,
   domain_blacklist: domain_blacklist
 
@@ -405,13 +414,13 @@ config :kaffy,
     ]
   ]
 
-if config_env() != :test && geolite2_country_db do
+if config_env() != :test do
   config :geolix,
     databases: [
       %{
-        id: :country,
+        id: :geolocation,
         adapter: Geolix.Adapter.MMDB2,
-        source: geolite2_country_db,
+        source: ip_geolocation_db,
         result_as: :raw
       }
     ]
@@ -425,6 +434,21 @@ config :logger, Sentry.LoggerBackend,
   capture_log_messages: true,
   level: :error,
   excluded_domains: []
+
+if honeycomb_api_key && honeycomb_dataset do
+  config :opentelemetry, :processors,
+    otel_batch_processor: %{
+      exporter:
+        {:opentelemetry_exporter,
+         %{
+           endpoints: ['https://api.honeycomb.io:443'],
+           headers: [
+             {"x-honeycomb-team", honeycomb_api_key},
+             {"x-honeycomb-dataset", honeycomb_dataset}
+           ]
+         }}
+    }
+end
 
 config :tzdata,
        :data_dir,

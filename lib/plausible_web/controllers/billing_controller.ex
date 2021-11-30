@@ -153,7 +153,7 @@ defmodule PlausibleWeb.BillingController do
         msg =
           case e do
             %{"code" => 147} ->
-              "We were unable to charge your card. Make sure your payment details are up to date and try again."
+              "We were unable to charge your card. Click 'update billing info' to update your payment details and try again."
 
             %{"message" => msg} when not is_nil(msg) ->
               msg
@@ -172,10 +172,7 @@ defmodule PlausibleWeb.BillingController do
         )
 
         conn
-        |> put_flash(
-          :error,
-          "Something went wrong. Please try again or contact support at support@plausible.io"
-        )
+        |> put_flash(:error, msg)
         |> redirect(to: "/settings")
     end
   end

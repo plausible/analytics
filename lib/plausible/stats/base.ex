@@ -117,7 +117,9 @@ defmodule Plausible.Stats.Base do
     "screen" => "screen_size",
     "os" => "operating_system",
     "os_version" => "operating_system_version",
-    "country" => "country_code"
+    "country" => "country_code",
+    "region" => "subdivision1_code",
+    "city" => "city_geoname_id"
   }
 
   def query_sessions(site, query) do
@@ -127,7 +129,7 @@ defmodule Plausible.Stats.Base do
       from(
         s in "sessions",
         where: s.domain == ^site.domain,
-        where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
+        where: s.start >= ^first_datetime and s.start < ^last_datetime
       )
       |> add_sample_hint(query)
 
@@ -157,33 +159,30 @@ defmodule Plausible.Stats.Base do
 
     Enum.reduce(Filters.visit_props(), sessions_q, fn prop_name, sessions_q ->
       filter = query.filters["visit:" <> prop_name]
-      prop_name = Map.get(@api_prop_name_to_db, prop_name, prop_name)
+
+      prop_name =
+        Map.get(@api_prop_name_to_db, prop_name, prop_name)
+        |> String.to_existing_atom()
 
       case filter do
         {:is, value} ->
-          where_target = [{String.to_existing_atom(prop_name), db_prop_val(prop_name, value)}]
-          from(s in sessions_q, where: ^where_target)
+          value = db_prop_val(prop_name, value)
+          from(s in sessions_q, where: fragment("? = ?", field(s, ^prop_name), ^value))
 
         {:is_not, value} ->
-          fragment_data = [
-            {String.to_existing_atom(prop_name), {:!=, db_prop_val(prop_name, value)}}
-          ]
-
-          from(s in sessions_q, where: fragment(^fragment_data))
+          value = db_prop_val(prop_name, value)
+          from(s in sessions_q, where: fragment("? != ?", field(s, ^prop_name), ^value))
 
         {:member, values} ->
           list = Enum.map(values, &db_prop_val(prop_name, &1))
-          fragment_data = [{String.to_existing_atom(prop_name), {:in, list}}]
-          from(s in sessions_q, where: fragment(^fragment_data))
+          from(s in sessions_q, where: fragment("? in tuple(?)", field(s, ^prop_name), ^list))
 
         {:matches, expr} ->
           regex = page_regex(expr)
-          prop_name = String.to_existing_atom(prop_name)
           from(s in sessions_q, where: fragment("match(?, ?)", field(s, ^prop_name), ^regex))
 
         {:does_not_match, expr} ->
           regex = page_regex(expr)
-          prop_name = String.to_existing_atom(prop_name)
           from(s in sessions_q, where: fragment("not(match(?, ?))", field(s, ^prop_name), ^regex))
 
         nil ->
@@ -310,11 +309,11 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  defp db_prop_val("referrer_source", @no_ref), do: ""
-  defp db_prop_val("referrer", @no_ref), do: ""
-  defp db_prop_val("utm_medium", @no_ref), do: ""
-  defp db_prop_val("utm_source", @no_ref), do: ""
-  defp db_prop_val("utm_campaign", @no_ref), do: ""
+  defp db_prop_val(:referrer_source, @no_ref), do: ""
+  defp db_prop_val(:referrer, @no_ref), do: ""
+  defp db_prop_val(:utm_medium, @no_ref), do: ""
+  defp db_prop_val(:utm_source, @no_ref), do: ""
+  defp db_prop_val(:utm_campaign, @no_ref), do: ""
   defp db_prop_val(_, val), do: val
 
   defp utc_boundaries(%Query{period: "realtime"}, _timezone) do

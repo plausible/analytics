@@ -12,4 +12,3 @@ elif [ "$1" = 'db' ]; then
 fi
 
 exec "$@"
-

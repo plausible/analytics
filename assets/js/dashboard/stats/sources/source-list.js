@@ -52,7 +52,7 @@ class AllSources extends React.Component {
         key={referrer.name}
       >
         <Bar
-          count={referrer.count}
+          count={referrer.visitors}
           all={this.state.referrers}
           bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction={maxWidthDeduction}
@@ -70,7 +70,7 @@ class AllSources extends React.Component {
             </Link>
           </span>
         </Bar>
-        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(referrer.count)}</span>
+        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(referrer.visitors)}</span>
         {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
       </div>
     )
@@ -184,7 +184,7 @@ class UTMSources extends React.Component {
         key={referrer.name}
       >
         <Bar
-          count={referrer.count}
+          count={referrer.visitors}
           all={this.state.referrers}
           bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction={maxWidthDeduction}
@@ -199,7 +199,7 @@ class UTMSources extends React.Component {
             </Link>
           </span>
         </Bar>
-        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(referrer.count)}</span>
+        <span className="font-medium dark:text-gray-200 w-20 text-right">{numberFormatter(referrer.visitors)}</span>
         {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
       </div>
     )
@@ -284,7 +284,7 @@ export default class SourceList extends React.Component {
   }
 
   renderTabs() {
-    const activeClass = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold border-b-2 border-indigo-700 dark:border-indigo-500'
+    const activeClass = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading'
     const defaultClass = 'hover:text-indigo-600 cursor-pointer'
     return (
       <ul className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
