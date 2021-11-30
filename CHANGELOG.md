@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Data exported via the download button will contain CSV data for all visible graps in a zip file.
 - Region and city-level geolocation plausible/analytics#1449
 - The `u` option can now be used in the `manual` extension to specify a URL when triggering events.
+- Delete a site and all related data through the Sites API
 
 ### Fixed
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
