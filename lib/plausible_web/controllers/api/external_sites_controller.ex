@@ -27,6 +27,17 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  def delete_site(conn, %{"site_id" => site_id}) do
+    site = Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner])
+
+    if site do
+      Sites.delete!(site)
+      json(conn, %{"deleted" => true})
+    else
+      H.not_found(conn, "Site could not be found")
+    end
+  end
+
   defp expect_param_key(params, key) do
     case Map.fetch(params, key) do
       :error -> {:missing, key}

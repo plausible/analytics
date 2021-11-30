@@ -77,6 +77,44 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     end
   end
 
+  describe "DELETE /api/v1/sites/:site_id" do
+    setup :create_new_site
+
+    test "delete a site by it's domain", %{conn: conn, site: site} do
+      conn = delete(conn, "/api/v1/sites/" <> site.domain)
+
+      assert json_response(conn, 200) == %{"deleted" => true}
+    end
+
+    test "is 404 when site cannot be found", %{conn: conn} do
+      conn = delete(conn, "/api/v1/sites/foobar.baz")
+
+      assert json_response(conn, 404) == %{"error" => "Site could not be found"}
+    end
+
+    test "cannot delete a site that the user does not own", %{conn: conn, user: user} do
+      site = insert(:site, members: [])
+      insert(:site_membership, user: user, site: site, role: :admin)
+      conn = delete(conn, "/api/v1/sites/" <> site.domain)
+
+      assert json_response(conn, 404) == %{"error" => "Site could not be found"}
+    end
+
+    test "cannot access with a bad API key scope", %{conn: conn, site: site, user: user} do
+      api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
+
+      conn =
+        conn
+        |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
+        |> delete("/api/v1/sites/" <> site.domain)
+
+      assert json_response(conn, 401) == %{
+               "error" =>
+                 "Invalid API key. Please make sure you're using a valid API key with access to the resource you've requested."
+             }
+    end
+  end
+
   describe "PUT /api/v1/sites/shared-links" do
     setup :create_site
 
