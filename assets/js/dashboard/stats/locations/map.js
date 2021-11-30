@@ -56,7 +56,7 @@ class Countries extends React.Component {
       ])
 
     this.state.countries.forEach(function(item){
-      dataset[item.name] = {numberOfThings: item.visitors, fillColor: paletteScale(item.visitors)};
+      dataset[item.code] = {numberOfThings: item.visitors, fillColor: paletteScale(item.visitors)};
     });
 
     return dataset
@@ -69,7 +69,7 @@ class Countries extends React.Component {
   }
 
   fetchCountries() {
-    return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/countries`, this.props.query)
+    return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/countries`, this.props.query, {limit: 300})
       .then((res) => this.setState({loading: false, countries: res}))
   }
 
@@ -100,8 +100,8 @@ class Countries extends React.Component {
           if (!data) { return null; }
           const pluralizedLabel = data.numberOfThings === 1 ? label.slice(0, -1) : label
           return ['<div class="hoverinfo dark:bg-gray-800 dark:shadow-gray-850 dark:border-gray-850 dark:text-gray-200">',
-            '<strong>', geo.properties.name, '</strong>',
-            '<br><strong class="dark:text-indigo-400">', numberFormatter(data.numberOfThings), '</strong>', pluralizedLabel,
+            '<strong>', geo.properties.name, ' </strong>',
+            '<br><strong class="dark:text-indigo-400">', numberFormatter(data.numberOfThings), '</strong> ', pluralizedLabel,
             '</div>'].join('');
         }
       },
