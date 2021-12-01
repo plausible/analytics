@@ -220,7 +220,7 @@ defmodule Plausible.Google.Api do
       },
       # Country
       {
-        ["ga:date", "ga:countryIsoCode"],
+        ["ga:date", "ga:countryIsoCode", "ga:regionIsoCode", "ga:cityId"],
         ["ga:users"]
       },
       # Device

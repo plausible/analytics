@@ -1,13 +1,15 @@
-defmodule Plausible.Imported.Countries do
+defmodule Plausible.Imported.Locations do
   use Ecto.Schema
   use Plausible.ClickhouseRepo
   import Ecto.Changeset
 
   @primary_key false
-  schema "imported_countries" do
+  schema "imported_locations" do
     field :domain, :string
     field :timestamp, :naive_datetime
     field :country, :string
+    field :region, :string
+    field :city, :string
     field :visitors, :integer
   end
 
@@ -19,6 +21,8 @@ defmodule Plausible.Imported.Countries do
         :domain,
         :timestamp,
         :country,
+        :region,
+        :city,
         :visitors
       ],
       empty_values: [nil, ""]

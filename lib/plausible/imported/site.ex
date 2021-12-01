@@ -142,15 +142,17 @@ defmodule Plausible.Imported do
   end
 
   defp new_from_google_analytics(domain, "countries", %{
-         "dimensions" => [timestamp, country],
+         "dimensions" => [timestamp, country, region, city],
          "metrics" => [%{"values" => [value]}]
        }) do
     {visitors, ""} = Integer.parse(value)
 
-    Imported.Countries.new(%{
+    Imported.Locations.new(%{
       domain: domain,
       timestamp: format_timestamp(timestamp),
       country: country,
+      region: region,
+      city: city,
       visitors: visitors
     })
   end
