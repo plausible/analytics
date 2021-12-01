@@ -28,7 +28,7 @@ defmodule Plausible.ClickhouseRepo do
       "imported_pages",
       "imported_entry_pages",
       "imported_exit_pages",
-      "imported_countries",
+      "imported_locations",
       "imported_devices",
       "imported_browsers",
       "imported_operating_systems"

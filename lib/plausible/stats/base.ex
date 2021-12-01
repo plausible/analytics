@@ -377,7 +377,7 @@ defmodule Plausible.Stats.Base do
     {table, dim} =
       case property do
         "visit:country" ->
-          {"imported_countries", :country}
+          {"imported_locations", :country}
 
         "visit:os" ->
           {"imported_operating_systems", :operating_system}
