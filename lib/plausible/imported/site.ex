@@ -93,18 +93,18 @@ defmodule Plausible.Imported do
   end
 
   defp new_from_google_analytics(domain, "pages", %{
-         "dimensions" => [timestamp, page, pageviews, time_on_page],
-         "metrics" => [%{"values" => [value]}]
+         "dimensions" => [timestamp, page],
+         "metrics" => [%{"values" => [value, pageviews, time_on_page]}]
        }) do
     {visitors, ""} = Integer.parse(value)
     {pageviews, ""} = Integer.parse(pageviews)
-    {time_on_page, ""} = Integer.parse(time_on_page)
+    {time_on_page, _} = Integer.parse(time_on_page)
 
     Imported.Pages.new(%{
       domain: domain,
       timestamp: format_timestamp(timestamp),
       page: page,
-      visitors: visitors
+      visitors: visitors,
       pageviews: pageviews,
       time_on_page: time_on_page
     })

@@ -205,8 +205,8 @@ defmodule Plausible.Google.Api do
       },
       # Pages
       {
-        ["ga:date", "ga:pagePath", "ga:pageviews", "ga:timeOnPage"],
-        ["ga:users"]
+        ["ga:date", "ga:pagePath"],
+        ["ga:users", "ga:pageviews", "ga:timeOnPage"]
       },
       # Entry pages
       {

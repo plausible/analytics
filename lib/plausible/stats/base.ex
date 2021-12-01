@@ -370,7 +370,8 @@ defmodule Plausible.Stats.Base do
              "visit:country",
              "visit:device",
              "visit:browser",
-             "visit:os"
+             "visit:os",
+             "event:page"
            ] do
     {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
@@ -381,6 +382,9 @@ defmodule Plausible.Stats.Base do
 
         "visit:os" ->
           {"imported_operating_systems", :operating_system}
+
+        "event:page" ->
+          {"imported_pages", :page}
 
         _ ->
           dim = String.trim_leading(property, "visit:")
@@ -404,6 +408,9 @@ defmodule Plausible.Stats.Base do
           value = if value == @no_ref, do: "", else: value
           where(imported_q, [i], field(i, ^dim) != ^value)
 
+        {:member, list} ->
+          where(imported_q, [i], field(i, ^dim) in ^list)
+
         _ ->
           imported_q
       end
@@ -422,6 +429,14 @@ defmodule Plausible.Stats.Base do
 
         :utm_campaign ->
           imported_q |> select_merge([i], %{utm_campaign: i.utm_campaign})
+
+        :page ->
+          imported_q
+          |> select_merge([i], %{
+            page: i.page,
+            pageviews: sum(i.pageviews),
+            time_on_page: sum(i.time_on_page)
+          })
 
         :entry_page ->
           imported_q
@@ -457,7 +472,6 @@ defmodule Plausible.Stats.Base do
         order_by: [desc: fragment("toUInt64(?) + toUInt64(?)", s.visitors, i.visitors)]
       )
 
-    # TODO: DRY
     case dim do
       :source ->
         q
@@ -484,16 +498,30 @@ defmodule Plausible.Stats.Base do
             fragment("if(empty(?), ?, ?)", s.utm_campaign, i.utm_campaign, s.utm_campaign)
         })
 
+      :page ->
+        q
+        |> select_merge([i, s], %{
+          page: fragment("if(empty(?), ?, ?)", s.entry_page, i.entry_page, s.entry_page),
+          pageviews: fragment("? + coalesce(?, 0)", s.pageviews, i.pageviews),
+          # TODO:  This fragment is not correct.
+          #time_on_page: fragment()
+        })
+
       :entry_page ->
         q
         |> select_merge([i, s], %{
           entry_page: fragment("if(empty(?), ?, ?)", s.entry_page, i.entry_page, s.entry_page),
           visits: fragment("toUInt64(?) + toUInt64(coalesce(?, 0))", s.visits, i.visits),
           # TODO:  This fragment is not correct.
-          visit_duration: fragment(
-            "(? + ? * ?) / (? + ?)",
-            i.visit_duration, s.visit_duration, s.visits, s.visits, i.visits
-          )
+          visit_duration:
+            fragment(
+              "(? + ? * ?) / (? + ?)",
+              i.visit_duration,
+              s.visit_duration,
+              s.visits,
+              s.visits,
+              i.visits
+            )
         })
 
       :exit_page ->
