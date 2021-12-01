@@ -9,6 +9,8 @@ defmodule Plausible.Imported.Pages do
     field :timestamp, :naive_datetime
     field :page, :string
     field :visitors, :integer
+    field :pageviews, :integer
+    field :time_on_page, :integer
   end
 
   def new(attrs) do
@@ -19,7 +21,9 @@ defmodule Plausible.Imported.Pages do
         :domain,
         :timestamp,
         :page,
-        :visitors
+        :visitors,
+        :pageviews,
+        :time_on_page
       ],
       empty_values: [nil, ""]
     )

@@ -7,6 +7,8 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedPages do
       add :timestamp, :naive_datetime
       add :page, :string
       add :visitors, :UInt64
+      add :pageviews, :UInt64
+      add :time_on_page, :UInt64
     end
   end
 end
