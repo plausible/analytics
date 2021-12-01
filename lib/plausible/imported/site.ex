@@ -166,7 +166,7 @@ defmodule Plausible.Imported do
     Imported.Devices.new(%{
       domain: domain,
       timestamp: format_timestamp(timestamp),
-      device: device,
+      device: String.capitalize(device),
       visitors: visitors
     })
   end
