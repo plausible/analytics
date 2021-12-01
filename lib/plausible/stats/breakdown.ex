@@ -177,35 +177,30 @@ defmodule Plausible.Stats.Breakdown do
 
   defp breakdown_sessions(_, _, _, [], _), do: []
 
-  defp breakdown_sessions(site, query, property, metrics, {limit, page}) do
-    offset = (page - 1) * limit
-
+  defp breakdown_sessions(site, query, property, metrics, pagination) do
     from(s in query_sessions(site, query),
       order_by: [desc: fragment("uniq(?)", s.user_id), asc: fragment("min(?)", s.start)],
-      limit: ^limit,
-      offset: ^offset,
       select: %{}
     )
     |> filter_converted_sessions(site, query)
     |> do_group_by(property)
     |> select_session_metrics(metrics)
-    |> merge_imported(site, query, property, {limit, page})
+    |> merge_imported(site, query, property)
+    |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
   end
 
   defp breakdown_events(_, _, _, [], _), do: []
 
-  defp breakdown_events(site, query, property, metrics, {limit, page}) do
-    offset = (page - 1) * limit
-
+  defp breakdown_events(site, query, property, metrics, pagination) do
     from(e in base_event_query(site, query),
       order_by: [desc: fragment("uniq(?)", e.user_id)],
-      limit: ^limit,
-      offset: ^offset,
       select: %{}
     )
     |> do_group_by(property)
     |> select_event_metrics(metrics)
+    # |> merge_imported(site, query, property)
+    |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
   end
 
@@ -482,5 +477,13 @@ defmodule Plausible.Stats.Breakdown do
       end)
       |> Enum.into(%{})
     end)
+  end
+
+  defp apply_pagination(q, {limit, page}) do
+    offset = (page - 1) * limit
+
+    q
+    |> Ecto.Query.limit(^limit)
+    |> Ecto.Query.offset(^offset)
   end
 end

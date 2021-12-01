@@ -356,10 +356,10 @@ defmodule Plausible.Stats.Base do
     |> String.replace(~r/(?<!\.)\*/, "[^/]*")
   end
 
-  def merge_imported(q, %Plausible.Site{has_imported_stats: nil}, _, _, _), do: q
-  def merge_imported(q, _, %Query{with_imported: false}, _, _), do: q
+  def merge_imported(q, %Plausible.Site{has_imported_stats: nil}, _, _), do: q
+  def merge_imported(q, _, %Query{with_imported: false}, _), do: q
 
-  def merge_imported(q, site, query, property, {limit, page})
+  def merge_imported(q, site, query, property)
       when property in [
              "visit:source",
              "visit:utm_medium",
@@ -372,7 +372,6 @@ defmodule Plausible.Stats.Base do
              "visit:browser",
              "visit:os"
            ] do
-    offset = (page - 1) * limit
     {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
     {table, dim} =
@@ -429,7 +428,7 @@ defmodule Plausible.Stats.Base do
           |> select_merge([i], %{
             entry_page: i.entry_page,
             visits: sum(i.entrances),
-            visit_duration: sum(i.visit_duration),
+            visit_duration: sum(i.visit_duration)
           })
 
         :exit_page ->
@@ -455,9 +454,7 @@ defmodule Plausible.Stats.Base do
         select: %{
           :visitors => fragment("toUInt64(?) + toUInt64(?)", s.visitors, i.visitors)
         },
-        order_by: [desc: fragment("toUInt64(?) + toUInt64(?)", s.visitors, i.visitors)],
-        limit: ^limit,
-        offset: ^offset
+        order_by: [desc: fragment("toUInt64(?) + toUInt64(?)", s.visitors, i.visitors)]
       )
 
     # TODO: DRY
@@ -538,7 +535,7 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  def merge_imported(q, _, _, _, _), do: q
+  def merge_imported(q, _, _, _), do: q
 
   defp add_sample_hint(db_q, query) do
     case query.sample_threshold do
