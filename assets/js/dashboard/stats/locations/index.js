@@ -14,6 +14,10 @@ function Countries({query, site}) {
     })
   }
 
+  function renderIcon(country) {
+    return site.cities && <span className="mr-1">{country.flag}</span>
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
@@ -21,6 +25,7 @@ function Countries({query, site}) {
       keyLabel="Country"
       detailsLink={sitePath(site, '/countries')}
       query={query}
+      renderIcon={renderIcon}
       color="bg-orange-50"
     />
   )
@@ -31,6 +36,10 @@ function Regions({query, site}) {
     return api.get(apiPath(site, '/regions'), query, {country_name: query.filters.country, limit: 9})
   }
 
+  function renderIcon(region) {
+    return <span className="mr-1">{region.country_flag}</span>
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
@@ -38,6 +47,7 @@ function Regions({query, site}) {
       keyLabel="Region"
       detailsLink={sitePath(site, '/regions')}
       query={query}
+      renderIcon={renderIcon}
       color="bg-orange-50"
     />
   )

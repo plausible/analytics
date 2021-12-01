@@ -49,10 +49,10 @@ export default function Router({site, loggedIn, currentUserRole}) {
             <ExitPagesModal site={site} />
           </Route>
           <Route path="/:domain/countries">
-            <ModalTable title="Top countries" site={site} endpoint={`/api/stats/${encodeURIComponent(site.domain)}/countries`} filter={{country: 'code', country_name: 'name'}} keyLabel="Country" />
+            <ModalTable title="Top countries" site={site} endpoint={`/api/stats/${encodeURIComponent(site.domain)}/countries`} filter={{country: 'code', country_name: 'name'}} keyLabel="Country" renderIcon={(row) => site.cities && renderCountryIcon(row)} />
           </Route>
           <Route path="/:domain/regions">
-            <ModalTable title="Top regions" site={site} endpoint={`/api/stats/${encodeURIComponent(site.domain)}/regions`} filter={{region: 'code', region_name: 'name'}} keyLabel="Region" />
+            <ModalTable title="Top regions" site={site} endpoint={`/api/stats/${encodeURIComponent(site.domain)}/regions`} filter={{region: 'code', region_name: 'name'}} keyLabel="Region" renderIcon={renderRegionIcon} />
           </Route>
           <Route path="/:domain/cities">
             <ModalTable title="Top cities" site={site} endpoint={`/api/stats/${encodeURIComponent(site.domain)}/cities`} filter={{city: 'code', city_name: 'name'}} keyLabel="City" />
@@ -64,4 +64,12 @@ export default function Router({site, loggedIn, currentUserRole}) {
       </Route>
     </BrowserRouter>
   );
+}
+
+function renderCountryIcon(country) {
+  return <span className="mr-1">{country.flag}</span>
+}
+
+function renderRegionIcon(region) {
+  return <span className="mr-1">{region.country_flag}</span>
 }

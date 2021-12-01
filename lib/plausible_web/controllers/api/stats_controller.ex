@@ -494,8 +494,8 @@ defmodule PlausibleWeb.Api.StatsController do
       countries =
         countries
         |> Enum.map(fn country ->
-          iso3166 = Stats.CountryName.from_iso3166(country["code"])
-          Map.put(country, "name", iso3166)
+          country_iso_info = ISOCodes.ISO3166_1.get(country["code"])
+          Map.put(country, "name", country_iso_info.name)
         end)
 
       if Map.has_key?(query.filters, "event:goal") do
@@ -507,10 +507,14 @@ defmodule PlausibleWeb.Api.StatsController do
       end
     else
       countries =
-        Enum.map(countries, fn country ->
-          name = Stats.CountryName.from_iso3166(country["code"])
-          code = Stats.CountryName.to_alpha3(country["code"])
-          Map.merge(country, %{"name" => name, "code" => code})
+        Enum.map(countries, fn row ->
+          country = ISOCodes.ISO3166_1.get(row["code"])
+
+          Map.merge(row, %{
+            "name" => country.name,
+            "flag" => country.flag,
+            "code" => country.alpha_3
+          })
         end)
 
       json(conn, countries)
@@ -526,8 +530,11 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:region", ["visitors"], pagination)
       |> transform_keys(%{"region" => "code"})
       |> Enum.map(fn region ->
-        name = Stats.CountryName.from_iso3166_2(region["code"])
-        Map.put(region, "name", name)
+        country_code = region["code"] |> String.split("-") |> List.first()
+
+        region_entry = ISOCodes.ISO3166_2.get(region["code"])
+        country_entry = ISOCodes.ISO3166_1.get(country_code)
+        Map.merge(region, %{"name" => region_entry.name, "country_flag" => country_entry.flag})
       end)
 
     json(conn, countries)
