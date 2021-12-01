@@ -252,7 +252,7 @@ defmodule PlausibleWeb.Api.StatsController do
     res =
       Stats.breakdown(site, query, "visit:utm_medium", metrics, pagination)
       |> maybe_add_cr(site, query, pagination, "utm_medium", "visit:utm_medium")
-      |> transform_keys(%{"utm_medium" => "name"})
+      |> transform_keys(%{utm_medium: "name"})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
@@ -283,7 +283,7 @@ defmodule PlausibleWeb.Api.StatsController do
     res =
       Stats.breakdown(site, query, "visit:utm_campaign", metrics, pagination)
       |> maybe_add_cr(site, query, pagination, "utm_campaign", "visit:utm_campaign")
-      |> transform_keys(%{"utm_campaign" => "name"})
+      |> transform_keys(%{utm_campaign: "name"})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
@@ -372,7 +372,7 @@ defmodule PlausibleWeb.Api.StatsController do
     res =
       Stats.breakdown(site, query, "visit:utm_source", metrics, pagination)
       |> maybe_add_cr(site, query, pagination, "utm_source", "visit:utm_source")
-      |> transform_keys(%{"utm_source" => "name"})
+      |> transform_keys(%{utm_source: "name"})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
