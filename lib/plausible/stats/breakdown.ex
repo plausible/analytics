@@ -5,7 +5,7 @@ defmodule Plausible.Stats.Breakdown do
   @no_ref "Direct / None"
 
   @event_metrics [:visitors, "pageviews", "events"]
-  @session_metrics [:visits, "bounce_rate", :visit_duration]
+  @session_metrics [:visits, :bounce_rate, :visit_duration]
   @event_props ["event:page", "event:page_match", "event:name"]
 
   def breakdown(site, query, "event:goal", metrics, pagination) do

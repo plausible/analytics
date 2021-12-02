@@ -101,7 +101,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   defp event_only_property?(_), do: false
 
   @event_metrics ["visitors", "pageviews", "events"]
-  @session_metrics [:visits, "bounce_rate", :visit_duration]
+  @session_metrics [:visits, :bounce_rate, :visit_duration]
   defp parse_metrics(params, property, query) do
     metrics =
       Map.get(params, "metrics", "visitors")

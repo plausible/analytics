@@ -237,10 +237,10 @@ defmodule Plausible.Stats.Base do
 
   def select_session_metrics(q, []), do: q
 
-  def select_session_metrics(q, ["bounce_rate" | rest]) do
+  def select_session_metrics(q, [:bounce_rate | rest]) do
     from(s in q,
       select_merge: %{
-        "bounce_rate" =>
+        bounce_rate:
           fragment("toUInt32(ifNotFinite(round(sum(is_bounce * sign) / sum(sign) * 100), 0))")
       }
     )
