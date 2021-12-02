@@ -364,6 +364,18 @@ class LineGraph extends React.Component {
     }
   }
 
+  importedNotice() {
+    const hasImported = this.props.graphData.has_imported
+
+    if (hasImported) {
+      return (
+        <div tooltip={`Stats include data imported from ${hasImported}.`} className="absolute cursor-pointer -top-8 right-14 lg:-top-20 lg:right-8">
+          { hasImported[0].toUpperCase() }
+        </div>
+      )
+    }
+  }
+
   render() {
     const extraClass = this.props.graphData.interval === 'hour' ? '' : 'cursor-pointer'
 
@@ -375,6 +387,7 @@ class LineGraph extends React.Component {
         <div className="relative px-2">
           { this.downloadLink() }
           { this.samplingNotice() }
+          { this.importedNotice() }
           <canvas id="main-graph-canvas" className={'mt-4 ' + extraClass} width="1054" height="342"></canvas>
         </div>
       </div>
