@@ -6,15 +6,10 @@ import numberFormatter, {durationFormatter} from '../util/number-formatter'
 import * as api from '../api'
 import LazyLoader from '../components/lazy-loader'
 
-function buildDataSet(graphData, ctx, label) {
+function buildDataSet(plot, present_index, ctx, label) {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
   gradient.addColorStop(0, 'rgba(101,116,205, 0.2)');
   gradient.addColorStop(1, 'rgba(101,116,205, 0)');
-
-  const present_index = graphData.present_index;
-  var plot = graphData.plot;
-  var imported_plot = graphData.imported_plot;
-  var data = [];
 
   if (present_index) {
     var dashedPart = plot.slice(present_index - 1, present_index + 1);
@@ -23,7 +18,7 @@ function buildDataSet(graphData, ctx, label) {
       plot[i] = undefined
     }
 
-    data.push(...[{
+    return [{
         label: label,
         data: plot,
         borderWidth: 3,
@@ -41,9 +36,9 @@ function buildDataSet(graphData, ctx, label) {
         pointBackgroundColor: 'rgba(101,116,205)',
         backgroundColor: gradient,
         fill: true
-    }])
+    }]
   } else {
-    data.push({
+    return [{
       label: label,
       data: plot,
       borderWidth: 3,
@@ -51,20 +46,8 @@ function buildDataSet(graphData, ctx, label) {
       pointBackgroundColor: 'rgba(101,116,205)',
       backgroundColor: gradient,
       fill: true
-    })
-  };
-
-  if (imported_plot) {
-    data.push({
-      label: label,
-      data: imported_plot,
-      borderWidth: 3,
-      borderColor: 'rgba(205,116,101)',
-      fill: false
-    })
+    }]
   }
-
-  return data;
 }
 
 const MONTHS = [
@@ -126,7 +109,7 @@ class LineGraph extends React.Component {
     const {graphData} = this.props
     this.ctx = document.getElementById("main-graph-canvas").getContext('2d');
     const label = this.props.query.filters.goal ? 'Converted visitors' : graphData.interval === 'minute' ? 'Pageviews' : 'Visitors'
-    const dataSet = buildDataSet(graphData, this.ctx, label)
+    const dataSet = buildDataSet(graphData.plot, graphData.present_index, this.ctx, label)
 
     return new Chart(this.ctx, {
       type: 'line',
@@ -213,7 +196,7 @@ class LineGraph extends React.Component {
   componentDidUpdate(prevProps) {
     if (this.props.graphData !== prevProps.graphData) {
       const label = this.props.query.filters.goal ? 'Converted visitors' : this.props.graphData.interval === 'minute' ? 'Pageviews' : 'Visitors'
-      const newDataset = buildDataSet(this.props.graphData, this.ctx, label)
+      const newDataset = buildDataSet(this.props.graphData.plot, this.props.graphData.present_index, this.ctx, label)
 
       for (let i = 0; i < newDataset[0].data.length; i++) {
         this.chart.data.datasets[0].data[i] = newDataset[0].data[i]
