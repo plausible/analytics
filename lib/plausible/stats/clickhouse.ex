@@ -474,29 +474,11 @@ defmodule Plausible.Stats.Clickhouse do
         )
       end
 
-    referring_urls =
-      ClickhouseRepo.all(q)
-      |> Enum.map(fn ref ->
-        url = if ref[:name] !== "", do: URI.parse("http://" <> ref[:name]).host
-        Map.put(ref, :url, url)
-      end)
-
-    if referrer == "Twitter" do
-      urls = Enum.map(referring_urls, & &1[:name])
-
-      tweets =
-        Repo.all(
-          from t in Plausible.Twitter.Tweet,
-            where: t.link in ^urls
-        )
-        |> Enum.group_by(& &1.link)
-
-      Enum.map(referring_urls, fn url ->
-        Map.put(url, :tweets, tweets[url[:name]])
-      end)
-    else
-      referring_urls
-    end
+    ClickhouseRepo.all(q)
+    |> Enum.map(fn ref ->
+      url = if ref[:name] !== "", do: URI.parse("http://" <> ref[:name]).host
+      Map.put(ref, :url, url)
+    end)
   end
 
   def referrer_drilldown_for_goal(site, query, referrer) do

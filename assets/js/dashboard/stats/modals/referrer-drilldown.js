@@ -5,7 +5,6 @@ import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter, {durationFormatter} from '../../number-formatter'
 import {parseQuery, toHuman} from '../../query'
-import {formatFullDate} from '../../date'
 
 class ReferrerDrilldownModal extends React.Component {
   constructor(props) {
@@ -84,66 +83,19 @@ class ReferrerDrilldownModal extends React.Component {
     )
   }
 
-  renderTweet(tweet, index) {
-    const authorUrl = `https://twitter.com/${tweet.author_handle}`
-    const tweetUrl = `${authorUrl}/status/${tweet.tweet_id}`
-    const border = index === 0 ? '' : ' pt-4 border-t border-gray-300 dark:border-gray-500'
-
-    return (
-      <div key={tweet.tweet_id}>
-        <div className={"flex items-center my-4" + border} >
-          <a className="flex items-center group" href={authorUrl} target="_blank" rel="noreferrer">
-            <img className="rounded-full w-8" src={tweet.author_image} />
-            <div className="ml-2 leading-tight">
-              <div className="font-bold group-hover:text-blue-500">{tweet.author_name}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">@{tweet.author_handle}</div>
-            </div>
-          </a>
-          <a className="ml-auto twitter-icon" href={tweetUrl} target="_blank" rel="noreferrer"></a>
-        </div>
-        <div className="my-2 cursor-text tweet-text whitespace-pre-wrap" dangerouslySetInnerHTML={{__html: tweet.text}}>
-        </div>
-        <div className="text-xs text-gray-700 dark:text-gray-300 font-medium">
-          {formatFullDate(new Date(tweet.created))}
-        </div>
-      </div>
-    )
-  }
-
   renderReferrer(referrer) {
-    if (referrer.tweets) {
-      return (
-        <tr className="text-sm dark:text-gray-200" key={referrer.name}>
-          <td className="p-2">
-            { this.renderReferrerName(referrer) }
-            <span className="text-gray-500 ml-2 text-xs">
-              appears in {referrer.tweets.length} tweets
-            </span>
-            <div className="my-4 pl-4 border-l-2 border-gray-300 dark:border-gray-500">
-              { referrer.tweets.map(this.renderTweet) }
-            </div>
-          </td>
-          {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.total_visitors)}</td> }
-          <td className="p-2 w-32 font-medium" align="right" valign="top">{numberFormatter(referrer.visitors)}</td>
-          {this.showExtra() && <td className="p-2 w-32 font-medium" align="right" valign="top">{this.formatBounceRate(referrer)}</td> }
-          {this.showExtra() && <td className="p-2 w-32 font-medium" align="right" valign="top">{this.formatDuration(referrer)}</td> }
-          {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{referrer.conversion_rate}%</td> }
-        </tr>
-      )
-    } else {
-      return (
-        <tr className="text-sm dark:text-gray-200" key={referrer.name}>
-          <td className="p-2">
-            { this.renderReferrerName(referrer) }
-          </td>
-          {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.total_visitors)}</td> }
-          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.visitors)}</td>
-          {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td> }
-          {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatDuration(referrer)}</td> }
-          {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{referrer.conversion_rate}%</td> }
-        </tr>
-      )
-    }
+    return (
+      <tr className="text-sm dark:text-gray-200" key={referrer.name}>
+        <td className="p-2">
+          { this.renderReferrerName(referrer) }
+        </td>
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.total_visitors)}</td> }
+        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.visitors)}</td>
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td> }
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatDuration(referrer)}</td> }
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{referrer.conversion_rate}%</td> }
+      </tr>
+    )
   }
 
   renderGoalText() {

@@ -137,7 +137,7 @@ export default class Locations extends React.Component {
         className="stats-item flex flex-col w-full mt-6 stats-item--has-header"
       >
         <div
-          className="stats-item__header flex flex-col flex-grow bg-white dark:bg-gray-825 shadow-xl rounded p-4 relative"
+          className="stats-item-header flex flex-col flex-grow bg-white dark:bg-gray-825 shadow-xl rounded p-4 relative"
         >
           <div className="w-full flex justify-between">
             <h3 className="font-bold dark:text-gray-100">

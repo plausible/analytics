@@ -184,7 +184,7 @@ export default class Devices extends React.Component {
         className="stats-item flex flex-col mt-6 stats-item--has-header w-full"
       >
         <div
-          className="stats-item__header flex flex-col flex-grow relative p-4 bg-white rounded shadow-xl dark:bg-gray-825"
+          className="stats-item-header flex flex-col flex-grow relative p-4 bg-white rounded shadow-xl dark:bg-gray-825"
         >
           <div className="flex justify-between w-full">
             <h3 className="font-bold dark:text-gray-100">Devices</h3>

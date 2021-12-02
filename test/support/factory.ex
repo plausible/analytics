@@ -142,17 +142,6 @@ defmodule Plausible.Factory do
     }
   end
 
-  def tweet_factory do
-    %Plausible.Twitter.Tweet{
-      tweet_id: UUID.uuid4(),
-      author_handle: "author-handle",
-      author_name: "author-name",
-      author_image: "pic.twitter.com/author.png",
-      text: "tweet-text",
-      created: Timex.now()
-    }
-  end
-
   def weekly_report_factory do
     %Plausible.Site.WeeklyReport{}
   end

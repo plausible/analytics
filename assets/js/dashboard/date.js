@@ -44,11 +44,6 @@ export function formatDayShort(date) {
   return `${date.getDate()} ${formatMonth(date).substring(0, 3)}`;
 }
 
-export function formatFullDate(date) {
-  const shortDate = formatMonth(date).substring(0, 3)
-  return `${shortDate} ${date.getDate()}, ${date.getFullYear()}`;
-}
-
 export function parseUTCDate(dateString) {
   var date = new Date(dateString);
   return new Date(date.getTime() + date.getTimezoneOffset() * 60000);
