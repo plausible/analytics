@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
 
-import * as storage from '../../storage'
+import * as storage from '../../util/storage'
 import Bar from '../bar'
-import numberFormatter from '../../number-formatter'
+import numberFormatter from '../../util/number-formatter'
 import * as api from '../../api'
 
 const MOBILE_UPPER_WIDTH = 767

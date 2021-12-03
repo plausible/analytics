@@ -2,14 +2,14 @@ import React from 'react';
 import { Link } from 'react-router-dom'
 import FlipMove from 'react-flip-move';
 
-import * as storage from '../../storage'
+import * as storage from '../../util/storage'
 import FadeIn from '../../fade-in'
 import Bar from '../bar'
 import MoreLink from '../more-link'
-import numberFormatter from '../../number-formatter'
+import numberFormatter from '../../util/number-formatter'
 import * as api from '../../api'
-import * as url from '../../url'
-import LazyLoader from '../../lazy-loader'
+import * as url from '../../util/url'
+import LazyLoader from '../../components/lazy-loader'
 
 class AllSources extends React.Component {
   constructor(props) {

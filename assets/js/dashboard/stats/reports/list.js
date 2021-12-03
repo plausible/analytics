@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom'
 
 import FadeIn from '../../fade-in'
 import MoreLink from '../more-link'
-import numberFormatter from '../../number-formatter'
+import numberFormatter from '../../util/number-formatter'
 import Bar from '../bar'
-import LazyLoader from '../../lazy-loader'
+import LazyLoader from '../../components/lazy-loader'
 
 export default class ListReport extends React.Component {
   constructor(props) {
@@ -40,11 +40,36 @@ export default class ListReport extends React.Component {
       return 'Conversions'
     }
 
-    return 'Visitors'
+    return this.valueLabel()
   }
 
   showConversionRate() {
     return !!this.props.query.filters.goal
+  }
+
+  valueKey() {
+    return this.props.valueKey || 'visitors'
+  }
+
+  valueLabel() {
+    return this.props.valueLabel || 'Visitors'
+  }
+
+  renderExternalLink(item) {
+    if (this.props.externalLinkDest) {
+      const dest = this.props.externalLinkDest(item)
+
+      return (
+        <a
+          target="_blank"
+          rel="noreferrer"
+          href={dest}
+          className="hidden group-hover:block"
+        >
+          <svg className="inline w-4 h-4 ml-1 -mt-1 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
+        </a>
+      )
+    }
   }
 
   renderListItem(listItem) {
@@ -60,21 +85,23 @@ export default class ListReport extends React.Component {
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={listItem.name}>
         <Bar
-          count={listItem.visitors}
+          count={listItem[this.valueKey()]}
           all={this.state.list}
           bg={`${lightBackground} dark:bg-gray-500 dark:bg-opacity-15`}
           maxWidthDeduction={maxWidthDeduction}
+          plot={this.valueKey()}
         >
-          <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all" tooltip={this.props.tooltipText && this.props.tooltipText(listItem)}>
+          <span className="flex px-2 py-1.5 group dark:text-gray-300 relative z-9 break-all" tooltip={this.props.tooltipText && this.props.tooltipText(listItem)}>
             <Link className="md:truncate block hover:underline" to={{search: query.toString()}}>
               {this.props.renderIcon && this.props.renderIcon(listItem)}
               {this.props.renderIcon && ' '}
               {listItem.name}
             </Link>
+            { this.renderExternalLink(listItem) }
           </span>
         </Bar>
         <span className="font-medium dark:text-gray-200 w-20 text-right">
-          {numberFormatter(listItem.visitors)}
+          {numberFormatter(listItem[this.valueKey()])}
           {
             listItem.percentage >= 0
               ? <span className="inline-block w-8 text-xs text-right">({listItem.percentage}%)</span>
@@ -93,7 +120,7 @@ export default class ListReport extends React.Component {
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>{ this.props.keyLabel }</span>
             <span className="text-right">
-              <span className="inline-block w-20">{this.label()}</span>
+              <span className="inline-block w-30">{this.label()}</span>
               {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
             </span>
           </div>

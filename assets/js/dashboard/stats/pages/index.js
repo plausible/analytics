@@ -1,9 +1,79 @@
 import React from 'react';
 
-import * as storage from '../../storage'
-import Visits from './pages'
-import EntryPages from './entry-pages'
-import ExitPages from './exit-pages'
+import * as storage from '../../util/storage'
+import * as url from '../../util/url'
+import * as api from '../../api'
+import ListReport from './../reports/list'
+
+function EntryPages({query, site}) {
+  function fetchData() {
+    return api.get(url.apiPath(site, '/entry-pages'), query, {limit: 9})
+  }
+
+  function externalLinkDest(page) {
+    return url.externalLinkForPage(site.domain, page.name)
+  }
+
+  return (
+    <ListReport
+      fetchData={fetchData}
+      filter={{entry_page: 'entry_page'}}
+      keyLabel="Entry page"
+      valueLabel="Unique Entrances"
+      valueKey="unique_entrances"
+      detailsLink={url.sitePath(site, '/entry-pages')}
+      query={query}
+      externalLinkDest={externalLinkDest}
+      color="bg-orange-50"
+    />
+  )
+}
+
+function ExitPages({query, site}) {
+  function fetchData() {
+    return api.get(url.apiPath(site, '/exit-pages'), query, {limit: 9})
+  }
+
+  function externalLinkDest(page) {
+    return url.externalLinkForPage(site.domain, page.name)
+  }
+
+  return (
+    <ListReport
+      fetchData={fetchData}
+      filter={{exit_page: 'exit_page'}}
+      keyLabel="Exit page"
+      valueLabel="Unique Exits"
+      valueKey="unique_exits"
+      detailsLink={url.sitePath(site, '/exit-pages')}
+      query={query}
+      externalLinkDest={externalLinkDest}
+      color="bg-orange-50"
+    />
+  )
+}
+
+function TopPages({query, site}) {
+  function fetchData() {
+    return api.get(url.apiPath(site, '/pages'), query, {limit: 9})
+  }
+
+  function externalLinkDest(page) {
+    return url.externalLinkForPage(site.domain, page.name)
+  }
+
+  return (
+    <ListReport
+      fetchData={fetchData}
+      filter={{page: 'page'}}
+      keyLabel="Page"
+      detailsLink={url.sitePath(site, '/pages')}
+      query={query}
+      externalLinkDest={externalLinkDest}
+      color="bg-orange-50"
+    />
+  )
+}
 
 const labelFor = {
 	'pages': 'Top Pages',
@@ -36,7 +106,7 @@ export default class Pages extends React.Component {
       return <ExitPages site={this.props.site} query={this.props.query} timer={this.props.timer} />
     case "pages":
     default:
-      return <Visits site={this.props.site} query={this.props.query} timer={this.props.timer} />
+      return <TopPages site={this.props.site} query={this.props.query} timer={this.props.timer} />
     }
   }
 

@@ -3,9 +3,9 @@ import Datamap from 'datamaps'
 import { withRouter } from 'react-router-dom'
 import * as d3 from "d3"
 
-import numberFormatter from '../../number-formatter'
+import numberFormatter from '../../util/number-formatter'
 import FadeIn from '../../fade-in'
-import LazyLoader from '../../lazy-loader'
+import LazyLoader from '../../components/lazy-loader'
 import MoreLink from '../more-link'
 import * as api from '../../api'
 import { navigateToQuery } from '../../query'
