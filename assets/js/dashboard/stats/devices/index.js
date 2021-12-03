@@ -1,9 +1,9 @@
 import React from 'react';
 
-import * as storage from '../../storage'
+import * as storage from '../../util/storage'
 import ListReport from '../reports/list'
 import * as api from '../../api'
-import * as url from '../../url'
+import * as url from '../../util/url'
 
 function Browsers({query, site}) {
   function fetchData() {

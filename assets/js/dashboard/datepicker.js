@@ -18,7 +18,7 @@ import {
   parseUTCDate,
   isBefore,
   isAfter,
-} from "./date";
+} from "./util/date";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
 
 function renderArrow(query, site, period, prevDate, nextDate) {

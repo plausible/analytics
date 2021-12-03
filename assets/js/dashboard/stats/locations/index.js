@@ -1,10 +1,10 @@
 import React from 'react';
 
-import * as storage from '../../storage'
+import * as storage from '../../util/storage'
 import CountriesMap from './map'
 
 import * as api from '../../api'
-import {apiPath, sitePath} from '../../url'
+import {apiPath, sitePath} from '../../util/url'
 import ListReport from '../reports/list'
 
 function Countries({query, site}) {

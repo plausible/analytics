@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
-import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './date'
-import * as storage from './storage'
+import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './util/date'
+import * as storage from './util/storage'
 
 const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'custom']
 
