@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   use Plausible.Repo
   use Plug.ErrorHandler
   alias Plausible.Sites
+  alias Plausible.Goals
   alias PlausibleWeb.Api.Helpers, as: H
 
   def create_site(conn, params) do
@@ -74,6 +75,73 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
       {:missing, "name"} ->
         H.bad_request(conn, "Parameter `name` is required to create a shared link")
+
+      e ->
+        H.bad_request(conn, "Something went wrong: #{inspect(e)}")
+    end
+  end
+
+  def find_or_create_goal(conn, params) do
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, goal_type} <- expect_param_key(params, "goal_type"),
+         {:ok, goal_value} <- expect_param_key(params, "goal_value"),
+         site when not is_nil(site) <-
+           Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin]) do
+
+      if goal_type in ["event","page"] do
+
+        if goal_type == "event" do
+          goal = Repo.get_by(Plausible.Goal, domain: site_id, event_name: goal_value)
+
+          goal =
+            case goal do
+              nil -> Goals.create(site, %{"event_name" => goal_value})
+              event_name -> {:ok, event_name}
+            end
+
+          case goal do
+            {:ok, event_name}->
+              json(conn, %{
+                domain: site_id,
+                event_name: event_name
+              })
+          end
+        end
+
+        if goal_type == "page" do
+          goal = Repo.get_by(Plausible.Goal, domain: site_id, page_path: goal_value)
+
+          goal =
+            case goal do
+              nil -> Goals.create(site, %{"page_path" => goal_value})
+              page_path -> {:ok, page_path}
+            end
+
+          case goal do
+            {:ok, page_path}->
+              json(conn, %{
+                domain: site_id,
+                page_path: page_path
+              })
+          end
+        end
+
+      else
+        H.not_found(conn, "Invalid event type")
+      end
+
+    else
+      nil ->
+        H.not_found(conn, "Goal could not be found")
+
+      {:missing, "site_id"} ->
+        H.bad_request(conn, "Parameter `site_id` is required to create a goal")
+
+      {:missing, "goal_type"} ->
+        H.bad_request(conn, "Parameter `goal_type` is required to create a goal")
+      
+      {:missing, "goal_value"} ->
+        H.bad_request(conn, "Parameter `goal_value` is required to create a goal")
 
       e ->
         H.bad_request(conn, "Something went wrong: #{inspect(e)}")
