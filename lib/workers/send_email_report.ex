@@ -2,7 +2,7 @@ defmodule Plausible.Workers.SendEmailReport do
   use Plausible.Repo
   use Oban.Worker, queue: :send_email_reports, max_attempts: 1
   alias Plausible.Stats.Query
-  alias Plausible.Stats.Clickhouse, as: Stats
+  alias Plausible.Stats
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"interval" => "weekly", "site_id" => site_id}}) do
@@ -49,28 +49,29 @@ defmodule Plausible.Workers.SendEmailReport do
   end
 
   defp send_report(email, site, name, unsubscribe_link, query) do
-    {pageviews, unique_visitors} = Stats.pageviews_and_visitors(site, query)
+    prev_query = Query.shift_back(query, site)
+    curr_period = Stats.aggregate(site, query, ["pageviews", "visitors", "bounce_rate"])
+    prev_period = Stats.aggregate(site, prev_query, ["pageviews", "visitors", "bounce_rate"])
 
-    {change_pageviews, change_visitors} =
-      Stats.compare_pageviews_and_visitors(site, query, {pageviews, unique_visitors})
+    change_pageviews = Stats.Compare.calculate_change("pageviews", prev_period, curr_period)
+    change_visitors = Stats.Compare.calculate_change("visitors", prev_period, curr_period)
+    change_bounce_rate = Stats.Compare.calculate_change("bounce_rate", prev_period, curr_period)
 
-    bounce_rate = Stats.bounce_rate(site, query)
-    prev_bounce_rate = Stats.bounce_rate(site, Query.shift_back(query, site))
-    change_bounce_rate = if prev_bounce_rate > 0, do: bounce_rate - prev_bounce_rate
-    referrers = Stats.top_sources(site, query, 5, 1, [])
-    pages = Stats.top_pages(site, query, 5, 1, [])
+    source_query = Query.put_filter(query, "visit:source", {:is_not, "Direct / None"})
+    sources = Stats.breakdown(site, source_query, "visit:source", ["visitors"], {5, 1})
+    pages = Stats.breakdown(site, query, "event:page", ["visitors"], {5, 1})
     user = Plausible.Auth.find_user_by(email: email)
     login_link = user && Plausible.Sites.is_member?(user.id, site)
 
     template =
       PlausibleWeb.Email.weekly_report(email, site,
-        unique_visitors: unique_visitors,
+        unique_visitors: curr_period["visitors"]["value"],
         change_visitors: change_visitors,
-        pageviews: pageviews,
+        pageviews: curr_period["pageviews"]["value"],
         change_pageviews: change_pageviews,
-        bounce_rate: bounce_rate,
+        bounce_rate: curr_period["bounce_rate"]["value"],
         change_bounce_rate: change_bounce_rate,
-        referrers: referrers,
+        sources: sources,
         unsubscribe_link: unsubscribe_link,
         login_link: login_link,
         pages: pages,

@@ -101,7 +101,8 @@ defmodule Plausible.MixProject do
       {:opentelemetry_exporter, "1.0.0-rc.3"},
       {:opentelemetry_phoenix, "1.0.0-rc.5"},
       {:opentelemetry_ecto, "1.0.0-rc.3"},
-      {:opentelemetry_oban, "~> 0.2.0-rc.2"}
+      {:opentelemetry_oban, "~> 0.2.0-rc.2"},
+      {:floki, "~> 0.32.0", only: :test}
     ]
   end
 
