@@ -8,7 +8,6 @@ defmodule Plausible.Imported.Browsers do
     field :domain, :string
     field :timestamp, :naive_datetime
     field :browser, :string
-    field :version, :string
     field :visitors, :integer
   end
 
@@ -20,7 +19,6 @@ defmodule Plausible.Imported.Browsers do
         :domain,
         :timestamp,
         :browser,
-        :version,
         :visitors
       ],
       empty_values: [nil, ""]

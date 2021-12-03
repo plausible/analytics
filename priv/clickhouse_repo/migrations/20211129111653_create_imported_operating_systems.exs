@@ -6,7 +6,6 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedOperatingSystems do
       add :domain, :string
       add :timestamp, :naive_datetime
       add :operating_system, :string
-      add :version, :string
       add :visitors, :UInt64
     end
   end

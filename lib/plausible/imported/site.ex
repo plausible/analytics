@@ -176,7 +176,7 @@ defmodule Plausible.Imported do
   end
 
   defp new_from_google_analytics(domain, "browsers", %{
-         "dimensions" => [timestamp, browser, version],
+         "dimensions" => [timestamp, browser],
          "metrics" => [%{"values" => [value]}]
        }) do
     {visitors, ""} = Integer.parse(value)
@@ -185,13 +185,12 @@ defmodule Plausible.Imported do
       domain: domain,
       timestamp: format_timestamp(timestamp),
       browser: browser,
-      version: version,
       visitors: visitors
     })
   end
 
   defp new_from_google_analytics(domain, "operating_systems", %{
-         "dimensions" => [timestamp, os, version],
+         "dimensions" => [timestamp, os],
          "metrics" => [%{"values" => [value]}]
        }) do
     {visitors, ""} = Integer.parse(value)
@@ -200,7 +199,6 @@ defmodule Plausible.Imported do
       domain: domain,
       timestamp: format_timestamp(timestamp),
       operating_system: os,
-      version: version,
       visitors: visitors
     })
   end

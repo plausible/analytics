@@ -230,12 +230,12 @@ defmodule Plausible.Google.Api do
       },
       # Browser
       {
-        ["ga:date", "ga:browser", "ga:browserVersion"],
+        ["ga:date", "ga:browser"],
         ["ga:users"]
       },
       # OS
       {
-        ["ga:date", "ga:operatingSystem", "ga:operatingSystemVersion"],
+        ["ga:date", "ga:operatingSystem"],
         ["ga:users"]
       }
     ]
