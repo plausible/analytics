@@ -8,7 +8,8 @@ server:
 	mix phx.server
 
 clickhouse:
-	docker run --detach -p 8123:8123 --ulimit nofile=262144:262144 --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse --name plausible_clickhouse yandex/clickhouse-server:21.3.2.5
+	# docker run --detach -p 8123:8123 --ulimit nofile=262144:262144 --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse --name plausible_clickhouse yandex/clickhouse-server:21.3.2.5
+	docker run --detach -p 8123:8123 --ulimit nofile=262144:262144 --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse --name plausible_clickhouse clickhouse/clickhouse-server:latest
 
 clickhouse-stop:
 	docker stop plausible_clickhouse && docker rm plausible_clickhouse
@@ -18,6 +19,12 @@ postgres:
 
 postgres-stop:
 	docker stop plausible_db && docker rm plausible_db
+
+pgadmin:
+	docker run --detach -e "PGADMIN_DEFAULT_EMAIL=name@example.com" -e "PGADMIN_DEFAULT_PASSWORD=admin" -p 7082:80 --name plausible_dbadmin dpage/pgadmin4
+
+pgadmin-stop:
+	docker stop plausible_dbadmin && docker rm plausible_dbadmin
 
 dummy_event:
 	curl 'http://localhost:8000/api/event' \
