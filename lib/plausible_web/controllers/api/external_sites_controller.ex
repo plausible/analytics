@@ -134,7 +134,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
     else
       nil ->
-        H.not_found(conn, "Goal could not be found")
+        H.not_found(conn, "Site could not be found")
 
       {:missing, "site_id"} ->
         H.bad_request(conn, "Parameter `site_id` is required to create a goal")
@@ -165,7 +165,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       end
     else
       nil ->
-        H.not_found(conn, "Goal could not be found")
+        H.not_found(conn, "Site could not be found")
       
       {:missing, "site_id"} ->
         H.bad_request(conn, "Parameter `site_id` is required to create a goal")

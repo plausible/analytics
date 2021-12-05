@@ -259,7 +259,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         })
 
       res = json_response(conn, 404)
-      assert res["error"] == "Goal could not be found"
+      assert res["error"] == "Site could not be found"
     end
 
     test "returns 404 when api key owner does not have permissions to create a goal", %{
@@ -282,7 +282,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         })
 
       res = json_response(conn, 404)
-      assert res["error"] == "Goal could not be found"
+      assert res["error"] == "Site could not be found"
     end
 
     test "returns 400 when goal type missing", %{conn: conn, site: site} do
@@ -352,7 +352,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         site_id: site.domain
       })
 
-      assert json_response(conn, 404) == %{"error" => "Goal could not be found"}
+      assert json_response(conn, 404) == %{"error" => "Site could not be found"}
     end
 
     test "cannot access with a bad API key scope", %{conn: conn, site: site, user: user} do
