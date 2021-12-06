@@ -9,12 +9,10 @@ All notable changes to this project will be documented in this file.
 - Region and city-level geolocation plausible/analytics#1449
 - The `u` option can now be used in the `manual` extension to specify a URL when triggering events.
 - Delete a site and all related data through the Sites API
+- Subscribed users can see their Paddle invoices from the last 12 months under the user settings
 
 ### Fixed
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
-
-### Fixed
-
 - UI fix to align footer columns
 
 ## v1.4.1
