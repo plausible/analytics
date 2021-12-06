@@ -1,10 +1,11 @@
 import React from 'react';
-import { withRouter } from 'react-router-dom'
+import { withRouter, Link } from 'react-router-dom'
 import Chart from 'chart.js/auto';
 import { navigateToQuery } from '../query'
 import numberFormatter, {durationFormatter} from '../util/number-formatter'
 import * as api from '../api'
 import LazyLoader from '../components/lazy-loader'
+import * as url from '../url'
 
 function buildDataSet(plot, present_index, ctx, label) {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
@@ -351,10 +352,16 @@ class LineGraph extends React.Component {
     const hasImported = this.props.graphData.has_imported
 
     if (hasImported) {
+      const target = this.props.query.with_imported || false ?
+        url.setQuery('with_imported', false) :
+        window.location.pathname;
+
       return (
-        <div tooltip={`Stats include data imported from ${hasImported}.`} className="absolute cursor-pointer -top-8 right-14 lg:-top-20 lg:right-8">
-          { hasImported[0].toUpperCase() }
-        </div>
+        <Link to={target}>
+          <div tooltip={`Stats include data imported from ${hasImported}.`} className="absolute cursor-pointer -top-8 right-14 lg:-top-20 lg:right-8">
+            { hasImported[0].toUpperCase() }
+          </div>
+        </Link>
       )
     }
   }
