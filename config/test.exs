@@ -18,6 +18,8 @@ config :plausible,
   paddle_api: Plausible.PaddleApi.Mock,
   google_api: Plausible.Google.Api.Mock
 
+config :bamboo, :refute_timeout, 10
+
 config :geolix,
   databases: [
     %{
