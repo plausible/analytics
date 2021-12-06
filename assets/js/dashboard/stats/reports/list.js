@@ -104,7 +104,7 @@ export default class ListReport extends React.Component {
           {numberFormatter(listItem[this.valueKey()])}
           {
             listItem.percentage >= 0
-              ? <span className="inline-block w-8 text-xs text-right">({listItem.percentage}%)</span>
+              ? <span className="inline-block w-8 pl-1 text-xs text-right">({listItem.percentage}%)</span>
               : null
           }
         </span>

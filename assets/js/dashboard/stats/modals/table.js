@@ -43,7 +43,7 @@ class ModalTable extends React.Component {
         <td className="p-2 w-32 font-medium" align="right">
           {numberFormatter(tableItem.visitors)}
           {tableItem.percentage >= 0 &&
-            <span className="inline-block text-xs w-8 text-right">({tableItem.percentage}%)</span> }
+            <span className="inline-block text-xs w-8 pl-1 text-right">({tableItem.percentage}%)</span> }
         </td>
       </tr>
     )
