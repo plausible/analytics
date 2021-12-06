@@ -23,10 +23,10 @@ defmodule PlausibleWeb.AuthView do
   end
 
   def format_invoices(invoice_list) do
-    Enum.map(invoice_list, fn (invoice) ->
+    Enum.map(invoice_list, fn invoice ->
       %{
         date: Map.get(invoice, "payout_date") |> format_invoice_date(),
-        amount: Map.get(invoice, "amount") / 1 |> :erlang.float_to_binary(decimals: 2),
+        amount: (Map.get(invoice, "amount") / 1) |> :erlang.float_to_binary(decimals: 2),
         currency: Map.get(invoice, "currency"),
         url: Map.get(invoice, "receipt_url")
       }

@@ -10,13 +10,24 @@ defmodule Plausible.Billing.Plans do
   ]
 
   @sandbox_plans [
-    %{limit: 10_000, monthly_product_id: "19878", yearly_product_id: "20127",  monthly_cost: "$6", yearly_cost: "$60"}
+    %{
+      limit: 10_000,
+      monthly_product_id: "19878",
+      yearly_product_id: "20127",
+      monthly_cost: "$6",
+      yearly_cost: "$60"
+    }
   ]
 
   def plans_for(user) do
     case Application.get_env(:plausible, :environment) do
-      "dev" -> Enum.map(@sandbox_plans, fn plan -> Map.put(plan, :volume, number_format(plan[:limit])) end)
-      _ -> real_plans_for(user)
+      "dev" ->
+        Enum.map(@sandbox_plans, fn plan ->
+          Map.put(plan, :volume, number_format(plan[:limit]))
+        end)
+
+      _ ->
+        real_plans_for(user)
     end
   end
 

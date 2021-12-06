@@ -490,7 +490,12 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "shows invoices for subscribed user", %{conn: conn, user: user} do
-      insert(:subscription, paddle_plan_id: "558018", paddle_subscription_id: "redundant", user: user)
+      insert(:subscription,
+        paddle_plan_id: "558018",
+        paddle_subscription_id: "redundant",
+        user: user
+      )
+
       conn = get(conn, "/settings")
       assert html_response(conn, 200) =~ "Dec 24, 2020"
       assert html_response(conn, 200) =~ "€11.11"
@@ -499,7 +504,12 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "shows 'something went wrong' on failed invoice request'", %{conn: conn, user: user} do
-      insert(:subscription, paddle_plan_id: "558018", paddle_subscription_id: "invalid_subscription_id", user: user)
+      insert(:subscription,
+        paddle_plan_id: "558018",
+        paddle_subscription_id: "invalid_subscription_id",
+        user: user
+      )
+
       conn = get(conn, "/settings")
       assert html_response(conn, 200) =~ "Invoices"
       assert html_response(conn, 200) =~ "Something went wrong"

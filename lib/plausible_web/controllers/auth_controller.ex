@@ -440,8 +440,7 @@ defmodule PlausibleWeb.AuthController do
     user = conn.assigns[:current_user]
     changeset = Auth.User.changeset(user)
 
-    {usage_pageviews, usage_custom_events} =
-      Plausible.Billing.usage_breakdown(user)
+    {usage_pageviews, usage_custom_events} = Plausible.Billing.usage_breakdown(user)
 
     render(conn, "user_settings.html",
       user: user |> Repo.preload(:api_keys),
