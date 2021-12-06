@@ -54,6 +54,8 @@ export default class SiteSwitcher extends React.Component {
   }
 
   handleKeydown(e) {
+    if (!this.props.loggedIn) return;
+    
     const { site } = this.props;
     const { sites } = this.state;
 
