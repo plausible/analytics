@@ -22,6 +22,22 @@ defmodule PlausibleWeb.AuthView do
     Plans.subscription_interval(subscription)
   end
 
+  def format_invoices(invoice_list) do
+    Enum.map(invoice_list, fn (invoice) ->
+      %{
+        date: Map.get(invoice, "payout_date") |> format_invoice_date(),
+        amount: Map.get(invoice, "amount") / 1 |> :erlang.float_to_binary(decimals: 2),
+        currency: Map.get(invoice, "currency"),
+        url: Map.get(invoice, "receipt_url")
+      }
+    end)
+  end
+
+  defp format_invoice_date(date_string) do
+    [y, m, d] = String.split(date_string, "-") |> Enum.map(&String.to_integer/1)
+    Timex.Date.new!(y, m, d) |> Timex.format!("{Mshort} {D}, {YYYY}")
+  end
+
   def delimit_integer(number) do
     Integer.to_charlist(number)
     |> :lists.reverse()

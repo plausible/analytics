@@ -75,6 +75,36 @@ defmodule Plausible.Billing.PaddleApi do
     end
   end
 
+  def get_invoices(nil), do: {:error, :no_subscription}
+  def get_invoices(subscription) do
+    config = get_config()
+
+    params = %{
+      vendor_id: config[:vendor_id],
+      vendor_auth_code: config[:vendor_auth_code],
+      subscription_id: subscription.paddle_subscription_id,
+      is_paid: 1,
+      from: Timex.shift(Timex.today(), years: -1) |> Timex.format!("{YYYY}-{0M}-{0D}"),
+      to: Timex.shift(Timex.today(), days: 1) |> Timex.format!("{YYYY}-{0M}-{0D}")
+    }
+
+    {:ok, response} = HTTPoison.post(invoices_endpoint(), Jason.encode!(params), @headers)
+    body = Jason.decode!(response.body)
+
+    if body["success"] && body["response"] != [] do
+      body["response"]
+    else
+      {:error, :request_failed}
+    end
+  end
+
+  defp invoices_endpoint() do
+    case Application.get_env(:plausible, :environment) do
+      "dev" -> "https://sandbox-vendors.paddle.com/api/2.0/subscription/payments"
+      _ -> "https://vendors.paddle.com/api/2.0/subscription/payments"
+    end
+  end
+
   defp get_config() do
     Application.get_env(:plausible, :paddle)
   end
