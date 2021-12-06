@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - API route `PUT /api/v1/sites/goals` with form params `site_id`, `goal_type` and `goal_value` with supported types `event` and `page`
+- API route `PUT /api/v1/sites/goals/:goal_id` with form params `site_id`, `goal_type` and `goal_value` with supported types `event` and `page`
 - API route `DELETE /api/v1/sites/goals/:goal_id` with form params `site_id`
 
 ### Added

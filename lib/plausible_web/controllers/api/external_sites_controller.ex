@@ -87,49 +87,45 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
          {:ok, goal_value} <- expect_param_key(params, "goal_value"),
          site when not is_nil(site) <-
            Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin]) do
-
-      if goal_type in ["event","page"] do
-
-        if goal_type == "event" do
+      case goal_type do
+        "event" ->
           goal = Repo.get_by(Plausible.Goal, domain: site_id, event_name: goal_value)
 
           goal =
             case goal do
               nil -> Goals.create(site, %{"event_name" => goal_value})
-              event -> {:ok, event}
+              goal -> {:ok, goal}
             end
 
           case goal do
-            {:ok, event} ->
+            {:ok, goal} ->
               json(conn, %{
                 domain: site_id,
-                goal_id: event.id,
-                event_name: event.event_name
+                goal_id: goal.id,
+                event_name: goal.event_name
               })
+            nil -> H.not_found(conn, "Goal could not be found")
           end
-        end
-
-        if goal_type == "page" do
+        "page" ->
           goal = Repo.get_by(Plausible.Goal, domain: site_id, page_path: goal_value)
 
           goal =
             case goal do
               nil -> Goals.create(site, %{"page_path" => goal_value})
-              event -> {:ok, event}
+              goal -> {:ok, goal}
             end
 
           case goal do
-            {:ok, event} ->
+            {:ok, goal} ->
               json(conn, %{
                 domain: site_id,
-                goal_id: event.id,
-                page_path: event.page_path
+                goal_id: goal.id,
+                page_path: goal.page_path
               })
+            nil -> H.not_found(conn, "Goal could not be found")
           end
-        end
-
-      else
-        H.not_found(conn, "Invalid event type")
+        _ ->
+          H.not_found(conn, "Invalid goal type")
       end
 
     else
@@ -150,11 +146,60 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  def update_goal(conn, params) do
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, goal_id} <- expect_param_key(params, "goal_id"),
+         {:ok, goal_type} <- expect_param_key(params, "goal_type"),
+         {:ok, goal_value} <- expect_param_key(params, "goal_value"),
+         site when not is_nil(site) <-
+           Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin]) do
+      case goal_type do
+        "event" ->
+          goal = Goals.update(goal_id, %{"domain" => site_id, "event_name" => goal_value})
+
+          case goal do
+            {:ok, _goal} ->
+              json(conn, %{"updated" => true})
+            {:error, _goal} -> H.not_found(conn, "Site or Goal could not be found")
+          end
+        "page" ->
+          goal = Goals.update(goal_id, %{"domain" => site_id, "page_path" => goal_value})
+
+          case goal do
+            {:ok, _goal} ->
+              json(conn, %{"updated" => true})
+            {:error, _goal} -> H.not_found(conn, "Site or Goal could not be found")
+          end
+        _ ->
+          H.not_found(conn, "Invalid goal type")
+      end
+
+    else
+      nil ->
+        H.not_found(conn, "Site could not be found")
+
+      {:missing, "site_id"} ->
+        H.bad_request(conn, "Parameter `site_id` is required to update a goal")
+      
+      {:missing, "goal_id"} ->
+        H.bad_request(conn, "Parameter `goal_id` is required to update a goal")
+
+      {:missing, "goal_type"} ->
+        H.bad_request(conn, "Parameter `goal_type` is required to update a goal")
+      
+      {:missing, "goal_value"} ->
+        H.bad_request(conn, "Parameter `goal_value` is required to update a goal")
+
+      e ->
+        H.bad_request(conn, "Something went wrong: #{inspect(e)}")
+    end
+  end
+
   def delete_goal(conn, params) do
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
          {:ok, goal_id} <- expect_param_key(params, "goal_id"),
          site when not is_nil(site) <-
-          Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin]) do
+          Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner]) do
       goal = Repo.get_by(Plausible.Goal, id: goal_id)
 
       if goal do
@@ -168,7 +213,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
         H.not_found(conn, "Site could not be found")
       
       {:missing, "site_id"} ->
-        H.bad_request(conn, "Parameter `site_id` is required to create a goal")
+        H.bad_request(conn, "Parameter `site_id` is required to delete a goal")
 
       {:missing, "goal_id"} ->
         H.bad_request(conn, "Parameter `goal_id` is required to delete a goal")
