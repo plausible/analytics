@@ -17,7 +17,7 @@ function EntryPages({query, site}) {
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{entry_page: 'entry_page'}}
+      filter={{entry_page: 'name'}}
       keyLabel="Entry page"
       valueLabel="Unique Entrances"
       valueKey="unique_entrances"
@@ -41,7 +41,7 @@ function ExitPages({query, site}) {
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{exit_page: 'exit_page'}}
+      filter={{exit_page: 'name'}}
       keyLabel="Exit page"
       valueLabel="Unique Exits"
       valueKey="unique_exits"
@@ -65,7 +65,7 @@ function TopPages({query, site}) {
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{page: 'page'}}
+      filter={{page: 'name'}}
       keyLabel="Page"
       detailsLink={url.sitePath(site, '/pages')}
       query={query}
