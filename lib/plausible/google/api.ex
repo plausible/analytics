@@ -190,7 +190,7 @@ defmodule Plausible.Google.Api do
       },
       # Sources
       {
-        ["ga:date", "ga:source"],
+        ["ga:date", "ga:fullReferrer"],
         ["ga:users"]
       },
       # UTM Mediums

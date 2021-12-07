@@ -48,12 +48,12 @@ defmodule Plausible.Imported do
        }) do
     {visitors, ""} = Integer.parse(value)
 
-    source = if source == "(direct)", do: "", else: source
+    source = if source == "(direct)", do: nil, else: source
 
     Imported.Sources.new(%{
       domain: domain,
       timestamp: format_timestamp(timestamp),
-      source: source,
+      source: Imported.Sources.parse(source),
       visitors: visitors
     })
   end
