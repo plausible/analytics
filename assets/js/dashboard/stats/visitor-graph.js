@@ -352,13 +352,15 @@ class LineGraph extends React.Component {
     const hasImported = this.props.graphData.has_imported
 
     if (hasImported) {
-      const target = this.props.query.with_imported || false ?
+      const withImported = this.props.query.with_imported
+      const strike = withImported ? "" : " line-through"
+      const target = withImported || false ?
         url.setQuery('with_imported', false) :
         window.location.pathname;
 
       return (
         <Link to={target}>
-          <div tooltip={`Stats include data imported from ${hasImported}.`} className="absolute cursor-pointer -top-8 right-14 lg:-top-20 lg:right-8">
+          <div tooltip={`Stats include data imported from ${hasImported}.`} className={"absolute cursor-pointer -top-8 right-14 lg:-top-20 lg:right-8" + strike}>
             { hasImported[0].toUpperCase() }
           </div>
         </Link>
