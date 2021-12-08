@@ -200,7 +200,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         put(conn, "/api/v1/sites/goals", %{
           site_id: site.domain,
           goal_type: "event",
-          goal_value: "Signup"
+          event_name: "Signup"
         })
 
       res = json_response(conn, 200)
@@ -212,7 +212,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         put(conn, "/api/v1/sites/goals", %{
           site_id: site.domain,
           goal_type: "page",
-          goal_value: "/signup"
+          page_path: "/signup"
         })
 
       res = json_response(conn, 200)
@@ -224,7 +224,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         put(conn, "/api/v1/sites/goals", %{
           site_id: site.domain,
           goal_type: "event",
-          goal_value: "Signup"
+          event_name: "Signup"
         })
 
       %{"goal_id" => goal_id} = json_response(conn, 200)
@@ -233,7 +233,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         put(conn, "/api/v1/sites/goals", %{
           site_id: site.domain,
           goal_type: "event",
-          goal_value: "Signup"
+          event_name: "Signup"
         })
 
       assert %{"goal_id" => ^goal_id} = json_response(conn, 200)
@@ -243,7 +243,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       conn =
         put(conn, "/api/v1/sites/goals", %{
           goal_type: "event",
-          goal_value: "Signup"
+          event_name: "Signup"
         })
 
       res = json_response(conn, 400)
@@ -254,7 +254,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       conn =
         put(conn, "/api/v1/sites/goals", %{
           goal_type: "event",
-          goal_value: "Signup",
+          event_name: "Signup",
           site_id: "bad"
         })
 
@@ -278,7 +278,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         put(conn, "/api/v1/sites/goals", %{
           site_id: site.domain,
           goal_type: "event",
-          goal_value: "Signup"
+          event_name: "Signup"
         })
 
       res = json_response(conn, 404)
@@ -289,14 +289,14 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       conn =
         put(conn, "/api/v1/sites/goals", %{
           site_id: site.domain,
-          goal_value: "Signup"
+          event_name: "Signup"
         })
 
       res = json_response(conn, 400)
       assert res["error"] == "Parameter `goal_type` is required to create a goal"
     end
 
-    test "returns 400 when goal value missing", %{conn: conn, site: site} do
+    test "returns 400 when goal event name missing", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
           site_id: site.domain,
@@ -304,72 +304,18 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         })
 
       res = json_response(conn, 400)
-      assert res["error"] == "Parameter `goal_value` is required to create a goal"
+      assert res["error"] == "Parameter `event_name` is required to create a goal"
     end
-  end
-
-  describe "PUT /api/v1/sites/goals/:goal_id" do
-    setup :create_new_site
-
-    test "update a goal by it's id", %{conn: conn, site: site} do
+    
+    test "returns 400 when goal page path missing", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
           site_id: site.domain,
-          goal_type: "event",
-          goal_value: "Signup"
+          goal_type: "page"
         })
 
-      %{"goal_id" => goal_id} = json_response(conn, 200)
-
-      conn = put(conn, "/api/v1/sites/goals/#{goal_id}", %{
-        site_id: site.domain,
-        goal_type: "event",
-        goal_value: "Signin"
-      })
-
-      assert json_response(conn, 200) == %{"updated" => true}
-    end
-
-    test "is 404 when goal cannot be found", %{conn: conn, site: site} do
-      conn = put(conn, "/api/v1/sites/goals/0", %{
-        site_id: site.domain,
-        goal_type: "event",
-        goal_value: "Signin"
-      })
-
-      assert json_response(conn, 404) == %{"error" => "Site or Goal could not be found"}
-    end
-
-    test "cannot update a goal belongs to a site that the user does not own", %{conn: conn, user: user} do
-      site = insert(:site, members: [])
-      insert(:site_membership, user: user, site: site, role: :admin)
-      
-      conn = put(conn, "/api/v1/sites/goals/1", %{
-        site_id: site.domain,
-        goal_type: "event",
-        goal_value: "Signin"
-      })
-
-      assert json_response(conn, 404) == %{"error" => "Site or Goal could not be found"}
-    end
-
-    test "cannot access with a bad API key scope", %{conn: conn, site: site, user: user} do
-      api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
-
-      conn =
-        conn
-        |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
-      
-      conn = put(conn, "/api/v1/sites/goals/1", %{
-        site_id: site.domain,
-        goal_type: "event",
-        goal_value: "Signin"
-      })
-
-      assert json_response(conn, 401) == %{
-               "error" =>
-                 "Invalid API key. Please make sure you're using a valid API key with access to the resource you've requested."
-             }
+      res = json_response(conn, 400)
+      assert res["error"] == "Parameter `page_path` is required to create a goal"
     end
   end
   
@@ -381,7 +327,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         put(conn, "/api/v1/sites/goals", %{
           site_id: site.domain,
           goal_type: "event",
-          goal_value: "Signup"
+          event_name: "Signup"
         })
 
       %{"goal_id" => goal_id} = json_response(conn, 200)
