@@ -7,18 +7,6 @@ defmodule Plausible.Goals do
 
     Goal.changeset(%Goal{}, params) |> Repo.insert()
   end
-  
-  def update(id, params) do
-    params = Map.merge(params, %{"domain" => params["domain"]})
-    goal = Repo.get_by(Goal, id: id, domain: params["domain"])
-
-    if goal do
-      changeset = Goal.changeset(goal, params)
-      Repo.update(changeset)
-    else
-      {:error, nil}
-    end
-  end
 
   def for_site(domain) do
     Repo.all(
