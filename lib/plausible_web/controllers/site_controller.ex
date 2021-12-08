@@ -302,9 +302,20 @@ defmodule PlausibleWeb.SiteController do
 
     Repo.delete!(site.google_auth)
 
-    conn
-    |> put_flash(:success, "Google account unlinked from Plausible")
-    |> redirect(to: Routes.site_path(conn, :settings_search_console, site.domain))
+    conn = put_flash(conn, :success, "Google account unlinked from Plausible")
+
+    panel =
+      conn.path_info
+      |> List.last()
+      |> String.split("-")
+      |> List.last()
+
+    case panel do
+      "search" ->
+        redirect(conn, to: Routes.site_path(conn, :settings_search_console, site.domain))
+      "import" ->
+        redirect(conn, to: Routes.site_path(conn, :settings_general, site.domain))
+    end
   end
 
   def update_settings(conn, %{"site" => site_params}) do

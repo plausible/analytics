@@ -233,7 +233,8 @@ defmodule PlausibleWeb.Router do
     delete "/:website/goals/:id", SiteController, :delete_goal
     put "/:website/settings", SiteController, :update_settings
     put "/:website/settings/google", SiteController, :update_google_auth
-    delete "/:website/settings/google", SiteController, :delete_google_auth
+    delete "/:website/settings/google-search", SiteController, :delete_google_auth
+    delete "/:website/settings/google-import", SiteController, :delete_google_auth
     delete "/:website", SiteController, :delete_site
     delete "/:website/stats", SiteController, :reset_stats
 
