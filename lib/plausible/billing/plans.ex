@@ -16,6 +16,13 @@ defmodule Plausible.Billing.Plans do
       yearly_product_id: "20127",
       monthly_cost: "$6",
       yearly_cost: "$60"
+    },
+    %{
+      limit: 100_000,
+      monthly_product_id: "20657",
+      yearly_product_id: "20658",
+      monthly_cost: "$12.34",
+      yearly_cost: "$120.34"
     }
   ]
 
@@ -104,7 +111,10 @@ defmodule Plausible.Billing.Plans do
   end
 
   defp all_plans() do
-    plans_v1() ++ @unlisted_plans_v1 ++ plans_v2() ++ @unlisted_plans_v2 ++ sandbox_plans()
+    case Application.get_env(:plausible, :environment) do
+      "dev" -> @sandbox_plans
+      _ -> plans_v1() ++ @unlisted_plans_v1 ++ plans_v2() ++ @unlisted_plans_v2
+    end
   end
 
   defp plans_v1() do
@@ -115,12 +125,5 @@ defmodule Plausible.Billing.Plans do
   defp plans_v2() do
     File.read!(Application.app_dir(:plausible) <> "/priv/plans_v2.json")
     |> Jason.decode!(keys: :atoms)
-  end
-
-  defp sandbox_plans() do
-    case Application.get_env(:plausible, :environment) do
-      "dev" -> @sandbox_plans
-      _ -> []
-    end
   end
 end

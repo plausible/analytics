@@ -139,22 +139,37 @@
   <% invoice_list -> %>
     <div class="max-w-2xl px-8 pt-6 pb-8 mx-auto mt-16 bg-white border-t-2 border-orange-200 rounded rounded-t-none shadow-md dark:bg-gray-800">
       <h2 class="text-xl font-black dark:text-gray-100">Invoices</h2>
-
       <div class="my-4 border-b border-gray-300 dark:border-gray-500"></div>
-
-      <div class="grid grid-cols-3 text-center text-black dark:text-gray-100 mt-4 border-b border-gray-300 dark:border-gray-500">
-        <p class="">Date</p>
-        <p class="">Amount</p>
-        <p class="">Invoice</p>
-      </div>
-
-      <%= for invoice <- format_invoices(invoice_list) do %>
-        <div class="grid grid-cols-3 py-1 text-center text-black dark:text-gray-100 border-b border-gray-300 dark:border-gray-500">
-          <p><%= invoice.date %></p>
-          <p><%= PlausibleWeb.BillingView.present_currency(invoice.currency) <> invoice.amount %></p>
-          <%= link("Link", to: invoice.url, class: "text-indigo-500", target: "_blank") %>
-        </div>
-      <% end %>
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead>
+          <tr>
+            <th scope="col" class="py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              Date
+            </th>
+            <th scope="col" class="py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              Amount
+            </th>
+            <th scope="col" class="py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              Invoice
+            </th>
+          </tr>
+        </thead>
+        <%= for invoice <- format_invoices(invoice_list) do %>
+          <tbody class="divide-y divide-gray-200">
+            <tr>
+              <td class="py-4 text-sm text-gray-800 dark:text-gray-200 font-medium">
+                <%= invoice.date %>
+              </td>
+              <td class="py-4 text-sm text-gray-800 dark:text-gray-200">
+                <%= invoice.currency <> invoice.amount %>
+              </td>
+              <td class="py-4 text-sm text-indigo-500">
+                <%= link("Link", to: invoice.url, target: "_blank" ) %>
+              </td>
+            </tr>
+          </tbody>
+        <% end %>
+      </table>
     </div>
   <% end %>
 

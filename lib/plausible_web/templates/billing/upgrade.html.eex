@@ -35,11 +35,8 @@
           productIds.push(plan.yearly_product_id)
         })
         
-        var paddleDomain = 'https://checkout.paddle.com'
-        if ('<%= Application.get_env(:plausible, :environment) %>' === 'dev') {
-          paddleDomain = 'https://sandbox-checkout.paddle.com'
-        }
-        fetchJsonp(paddleDomain + '/api/2.0/prices?product_ids=' + productIds.join(','))
+        var checkoutDomain = '<%= Plausible.Billing.PaddleApi.checkout_domain() %>'
+        fetchJsonp(checkoutDomain + '/api/2.0/prices?product_ids=' + productIds.join(','))
           .then((res) => res.json())
           .then((data) => {
             this.localizedPlans = data.response.products

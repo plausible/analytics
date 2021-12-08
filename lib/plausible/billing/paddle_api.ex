@@ -85,17 +85,22 @@ defmodule Plausible.Billing.PaddleApi do
       vendor_auth_code: config[:vendor_auth_code],
       subscription_id: subscription.paddle_subscription_id,
       is_paid: 1,
-      from: Timex.shift(Timex.today(), years: -1) |> Timex.format!("{YYYY}-{0M}-{0D}"),
+      from: Timex.shift(Timex.today(), years: -5) |> Timex.format!("{YYYY}-{0M}-{0D}"),
       to: Timex.shift(Timex.today(), days: 1) |> Timex.format!("{YYYY}-{0M}-{0D}")
     }
 
-    {:ok, response} = HTTPoison.post(invoices_endpoint(), Jason.encode!(params), @headers)
-    body = Jason.decode!(response.body)
+    case HTTPoison.post(invoices_endpoint(), Jason.encode!(params), @headers) do
+      {:ok, response} ->
+        body = Jason.decode!(response.body)
 
-    if body["success"] && body["response"] != [] do
-      body["response"]
-    else
-      {:error, :request_failed}
+        if body["success"] && body["response"] != [] do
+          body["response"] |> last_12_invoices()
+        else
+          {:error, :request_failed}
+        end
+
+      {:error, _reason} ->
+        {:error, :request_failed}
     end
   end
 
@@ -103,6 +108,20 @@ defmodule Plausible.Billing.PaddleApi do
     case Application.get_env(:plausible, :environment) do
       "dev" -> "https://sandbox-vendors.paddle.com/api/2.0/subscription/payments"
       _ -> "https://vendors.paddle.com/api/2.0/subscription/payments"
+    end
+  end
+
+  defp last_12_invoices(invoice_list) do
+    Enum.sort(invoice_list, fn %{"payout_date" => d1}, %{"payout_date" => d2} ->
+      Date.compare(Date.from_iso8601!(d1), Date.from_iso8601!(d2)) == :gt
+    end)
+    |> Enum.take(12)
+  end
+
+  def checkout_domain() do
+    case Application.get_env(:plausible, :environment) do
+      "dev" -> "https://sandbox-checkout.paddle.com"
+      _ -> "https://checkout.paddle.com"
     end
   end
 
