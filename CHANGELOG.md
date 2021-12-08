@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - The `u` option can now be used in the `manual` extension to specify a URL when triggering events.
 - Delete a site and all related data through the Sites API
 - Subscribed users can see their Paddle invoices from the last 12 months under the user settings
+- Allow custom styles to be passed to embedded iframe plausible/analytics#1522
 
 ### Fixed
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
