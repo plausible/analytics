@@ -326,3 +326,7 @@ iframe[hidden] {
   }
 
 }
+
+/* This class is used for styling embedded dashboards. Do not remove. */
+/* stylelint-disable */
+.date-option-group { }

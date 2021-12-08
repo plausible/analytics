@@ -319,29 +319,25 @@ class DatePicker extends React.Component {
         >
           <div
             className="rounded-md shadow-lg  bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5
-            font-medium text-gray-800 dark:text-gray-200"
+            font-medium text-gray-800 dark:text-gray-200 date-options"
           >
-            <div className="py-1">
+            <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
               {this.renderLink("day", "Today")}
               {this.renderLink("realtime", "Realtime")}
             </div>
-            <div className="border-t border-gray-200 dark:border-gray-500"></div>
-            <div className="py-1">
+            <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
               {this.renderLink("7d", "Last 7 days")}
               {this.renderLink("30d", "Last 30 days")}
             </div>
-            <div className="border-t border-gray-200 dark:border-gray-500"></div>
-            <div className="py-1">
+            <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
               { this.renderLink('month', 'Month to Date') }
               { this.renderLink('month', 'Last month', {date: lastMonth(this.props.site)}) }
             </div>
-            <div className="border-t border-gray-200 dark:border-gray-500"></div>
-            <div className="py-1">
+            <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
               {this.renderLink("6mo", "Last 6 months")}
               {this.renderLink("12mo", "Last 12 months")}
             </div>
-            <div className="border-t border-gray-200 dark:border-gray-500"></div>
-            <div className="py-1">
+            <div className="py-1 date-option-group">
               <span
                 onClick={() => this.setState({mode: 'calendar'}, this.openCalendar)}
                 onKeyPress={() => this.setState({mode: 'calendar'}, this.openCalendar)}
