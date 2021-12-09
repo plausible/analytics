@@ -111,7 +111,8 @@ class Countries extends React.Component {
             this.props.history,
             this.props.query,
             {
-              country: geography.id
+              country: geography.id,
+              country_name: geography.properties.name
             }
           )
         })
