@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- API route `PUT /api/v1/sites/goals` with form params `site_id`, `event_name` and/or `page_path`, and `goal_type` with supported types `event` and `page`
+- API route `DELETE /api/v1/sites/goals/:goal_id` with form params `site_id`
+
+### Added
 - Data exported via the download button will contain CSV data for all visible graps in a zip file.
 - Region and city-level geolocation plausible/analytics#1449
 - The `u` option can now be used in the `manual` extension to specify a URL when triggering events.

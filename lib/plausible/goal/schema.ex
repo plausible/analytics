@@ -2,6 +2,7 @@ defmodule Plausible.Goal do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive {Jason.Encoder, only: [:domain, :event_name, :page_path]}
   schema "goals" do
     field :domain, :string
     field :event_name, :string

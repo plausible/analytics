@@ -88,6 +88,8 @@ defmodule PlausibleWeb.Router do
     post "/", ExternalSitesController, :create_site
     delete "/:site_id", ExternalSitesController, :delete_site
     put "/shared-links", ExternalSitesController, :find_or_create_shared_link
+    put "/goals", ExternalSitesController, :find_or_create_goal
+    delete "/goals/:goal_id", ExternalSitesController, :delete_goal
   end
 
   scope "/api", PlausibleWeb do
