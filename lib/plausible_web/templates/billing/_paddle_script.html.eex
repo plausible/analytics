@@ -1,0 +1,7 @@
+<script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js"></script>
+<script>
+  <%= if Application.get_env(:plausible, :environment) == "dev" do %>
+    Paddle.Environment.set('sandbox');
+  <% end %>
+  Paddle.Setup({vendor: <%= Application.get_env(:plausible, :paddle) |> Keyword.fetch!(:vendor_id) %> });
+</script>

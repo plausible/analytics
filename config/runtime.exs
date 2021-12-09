@@ -86,6 +86,7 @@ sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
 honeycomb_api_key = get_var_from_path_or_env(config_dir, "HONEYCOMB_API_KEY")
 honeycomb_dataset = get_var_from_path_or_env(config_dir, "HONEYCOMB_DATASET")
 paddle_auth_code = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_AUTH_CODE")
+paddle_vendor_id = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_ID")
 google_cid = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_ID")
 google_secret = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_SECRET")
 slack_hook_url = get_var_from_path_or_env(config_dir, "SLACK_WEBHOOK")
@@ -220,7 +221,9 @@ config :sentry,
   enable_source_code_context: true,
   root_source_code_path: [File.cwd!()]
 
-config :plausible, :paddle, vendor_auth_code: paddle_auth_code
+config :plausible, :paddle,
+  vendor_auth_code: paddle_auth_code,
+  vendor_id: paddle_vendor_id
 
 config :plausible, :google,
   client_id: google_cid,

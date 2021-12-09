@@ -34,8 +34,9 @@
           productIds.push(plan.monthly_product_id)
           productIds.push(plan.yearly_product_id)
         })
-
-        fetchJsonp('https://checkout.paddle.com/api/2.0/prices?product_ids=' + productIds.join(','))
+        
+        var checkoutDomain = '<%= Plausible.Billing.PaddleApi.checkout_domain() %>'
+        fetchJsonp(checkoutDomain + '/api/2.0/prices?product_ids=' + productIds.join(','))
           .then((res) => res.json())
           .then((data) => {
             this.localizedPlans = data.response.products
@@ -124,5 +125,4 @@
   Questions? Contact <%= link("support@plausible.io", to: "mailto: support@plausible.io", class: "text-indigo-500") %>
 </div>
 
-<script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js"></script>
-<script>Paddle.Setup({vendor: 49430})</script>
+<%= render("_paddle_script.html") %>
