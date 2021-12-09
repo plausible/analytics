@@ -182,7 +182,7 @@ defmodule Plausible.Imported do
     "Android Browser" => "Mobile App",
     "Safari (in-app)" => "Mobile App",
     "User-Agent: Mozilla" => "Firefox",
-    "(not set)" => "",
+    "(not set)" => ""
   }
 
   defp new_from_google_analytics(domain, "browsers", %{
@@ -194,7 +194,7 @@ defmodule Plausible.Imported do
     Imported.Browsers.new(%{
       domain: domain,
       timestamp: format_timestamp(timestamp),
-      browser: Map.get(@browser_google_to_plausible, browser, browser)
+      browser: Map.get(@browser_google_to_plausible, browser, browser),
       visitors: visitors
     })
   end
@@ -202,7 +202,7 @@ defmodule Plausible.Imported do
   @os_google_to_plausible %{
     "Macintosh" => "Mac",
     "Linux" => "GNU/Linux",
-    "(not set)" => "",
+    "(not set)" => ""
   }
 
   defp new_from_google_analytics(domain, "operating_systems", %{

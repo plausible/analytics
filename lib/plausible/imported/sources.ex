@@ -33,7 +33,7 @@ defmodule Plausible.Imported.Sources do
   @search_engines %{
     "google" => "Google",
     "bing" => "Bing",
-    "duckduckgo" => "DuckDuckGo",
+    "duckduckgo" => "DuckDuckGo"
   }
 
   def parse(nil), do: nil

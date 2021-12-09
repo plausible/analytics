@@ -313,6 +313,7 @@ defmodule PlausibleWeb.SiteController do
     case panel do
       "search" ->
         redirect(conn, to: Routes.site_path(conn, :settings_search_console, site.domain))
+
       "import" ->
         redirect(conn, to: Routes.site_path(conn, :settings_general, site.domain))
     end
