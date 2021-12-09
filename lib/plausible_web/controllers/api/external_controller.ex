@@ -332,6 +332,9 @@ defmodule PlausibleWeb.Api.ExternalController do
       %UAInspector.Result.Client{name: "Firefox Mobile"} -> "Firefox"
       %UAInspector.Result.Client{name: "Firefox Mobile iOS"} -> "Firefox"
       %UAInspector.Result.Client{name: "Opera Mobile"} -> "Opera"
+      %UAInspector.Result.Client{name: "Opera Mini"} -> "Opera"
+      %UAInspector.Result.Client{name: "Opera Mini iOS"} -> "Opera"
+      %UAInspector.Result.Client{name: "Yandex Browser Lite"} -> "Yandex Browser"
       %UAInspector.Result.Client{name: "Chrome Webview"} -> "Mobile App"
       %UAInspector.Result.Client{type: "mobile app"} -> "Mobile App"
       client -> client.name
