@@ -131,13 +131,13 @@ defmodule Plausible.Stats.FilterSuggestions do
     filter_search = if filter_search == nil, do: "", else: filter_search
 
     filter_query =
-      if Enum.member?(["entry_page", "page", "exit_page"], filter_name),
+      if Enum.member?(["entry_page", :page, "exit_page"], filter_name),
         do: "%#{String.replace(filter_search, "*", "")}%",
         else: "%#{filter_search}%"
 
     filter_name =
       case filter_name do
-        "page" -> "pathname"
+        :page -> "pathname"
         "source" -> "referrer_source"
         "os" -> "operating_system"
         "os_version" -> "operating_system_version"

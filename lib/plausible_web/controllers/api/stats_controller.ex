@@ -28,7 +28,7 @@ defmodule PlausibleWeb.Api.StatsController do
     plot =
       if query.with_imported && site.has_imported_stats do
         Imported.Visitors.timeseries(site, timeseries_query)
-        |> Enum.zip_with(plot, & &1 + &2)
+        |> Enum.zip_with(plot, &(&1 + &2))
       else
         plot
       end
@@ -77,9 +77,9 @@ defmodule PlausibleWeb.Api.StatsController do
     query_30m = %Query{query | period: "30m"}
 
     %{
-      :visitors => %{"value" => visitors},
-      "pageviews" => %{"value" => pageviews}
-    } = Stats.aggregate(site, query_30m, [:visitors, "pageviews"])
+      visitors: %{"value" => visitors},
+      pageviews: %{"value" => pageviews}
+    } = Stats.aggregate(site, query_30m, [:visitors, :pageviews])
 
     stats = [
       %{
@@ -156,9 +156,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       if query.filters["event:page"] do
-        [:visitors, "pageviews", :bounce_rate, "time_on_page", "sample_percent"]
+        [:visitors, :pageviews, :bounce_rate, "time_on_page", "sample_percent"]
       else
-        [:visitors, "pageviews", :bounce_rate, :visit_duration, "sample_percent"]
+        [:visitors, :pageviews, :bounce_rate, :visit_duration, "sample_percent"]
       end
 
     current_results = Stats.aggregate(site, query, metrics)
@@ -167,7 +167,7 @@ defmodule PlausibleWeb.Api.StatsController do
     stats =
       [
         top_stats_entry(current_results, prev_results, "Unique visitors", :visitors),
-        top_stats_entry(current_results, prev_results, "Total pageviews", "pageviews"),
+        top_stats_entry(current_results, prev_results, "Total pageviews", :pageviews),
         top_stats_entry(current_results, prev_results, "Bounce rate", :bounce_rate),
         top_stats_entry(current_results, prev_results, "Visit duration", :visit_duration),
         top_stats_entry(current_results, prev_results, "Time on page", "time_on_page")
@@ -448,15 +448,15 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       if params["detailed"],
-        do: [:visitors, "pageviews", :bounce_rate, "time_on_page"],
+        do: [:visitors, :pageviews, :bounce_rate, "time_on_page"],
         else: [:visitors]
 
     pagination = parse_pagination(params)
 
     pages =
       Stats.breakdown(site, query, "event:page", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, "page", "event:page")
-      |> transform_keys(%{"page" => "name", visitors: "visitors"})
+      |> maybe_add_cr(site, query, pagination, :page, "event:page")
+      |> transform_keys(%{page: "name", visitors: "visitors"})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
@@ -524,13 +524,13 @@ defmodule PlausibleWeb.Api.StatsController do
       |> Query.put_filter("visit:page", query.filters["event:page"])
 
     total_pageviews =
-      Stats.breakdown(site, total_visits_query, "event:page", ["pageviews"], {limit, 1})
+      Stats.breakdown(site, total_visits_query, "event:page", [:pageviews], {limit, 1})
 
     exit_pages =
       Enum.map(exit_pages, fn exit_page ->
         exit_rate =
-          case Enum.find(total_pageviews, &(&1["page"] == exit_page["name"])) do
-            %{"pageviews" => pageviews} ->
+          case Enum.find(total_pageviews, &(&1[:page] == exit_page["name"])) do
+            %{pageviews: pageviews} ->
               Float.floor(exit_page["total_exits"] / pageviews * 100)
 
             nil ->

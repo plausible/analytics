@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Timeseries do
   import Plausible.Stats.Base
   use Plausible.Stats.Fragments
 
-  @event_metrics [:visitors, "pageviews"]
+  @event_metrics [:visitors, :pageviews]
   @session_metrics [:visits, :bounce_rate, :visit_duration]
   def timeseries(site, query, metrics) do
     steps = buckets(query)
@@ -118,7 +118,7 @@ defmodule Plausible.Stats.Timeseries do
   defp empty_row(date, metrics) do
     Enum.reduce(metrics, %{"date" => date}, fn metric, row ->
       case metric do
-        "pageviews" -> Map.merge(row, %{"pageviews" => 0})
+        :pageviews -> Map.merge(row, %{pageviews: 0})
         :visitors -> Map.merge(row, %{visitors: 0})
         :visits -> Map.merge(row, %{visits: 0})
         :bounce_rate -> Map.merge(row, %{bounce_rate: nil})

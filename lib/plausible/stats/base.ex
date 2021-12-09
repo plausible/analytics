@@ -197,10 +197,10 @@ defmodule Plausible.Stats.Base do
 
   def select_event_metrics(q, []), do: q
 
-  def select_event_metrics(q, ["pageviews" | rest]) do
+  def select_event_metrics(q, [:pageviews | rest]) do
     from(e in q,
       select_merge: %{
-        "pageviews" =>
+        pageviews:
           fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name)
       }
     )
@@ -256,10 +256,10 @@ defmodule Plausible.Stats.Base do
     |> select_session_metrics(rest)
   end
 
-  def select_session_metrics(q, ["pageviews" | rest]) do
+  def select_session_metrics(q, [:pageviews | rest]) do
     from(s in q,
       select_merge: %{
-        "pageviews" =>
+        pageviews:
           fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
       }
     )
@@ -356,10 +356,10 @@ defmodule Plausible.Stats.Base do
     |> String.replace(~r/(?<!\.)\*/, "[^/]*")
   end
 
-  def merge_imported(q, %Plausible.Site{has_imported_stats: nil}, _, _), do: q
-  def merge_imported(q, _, %Query{with_imported: false}, _), do: q
+  def merge_imported(q, %Plausible.Site{has_imported_stats: nil}, _, _, _), do: q
+  def merge_imported(q, _, %Query{with_imported: false}, _, _), do: q
 
-  def merge_imported(q, site, query, property)
+  def merge_imported(q, site, query, property, metrics)
       when property in [
              "visit:source",
              "visit:utm_medium",
@@ -415,7 +415,6 @@ defmodule Plausible.Stats.Base do
           imported_q
       end
 
-    # TODO: DRY
     imported_q =
       case dim do
         :source ->
@@ -447,7 +446,8 @@ defmodule Plausible.Stats.Base do
           })
 
         :exit_page ->
-          imported_q |> select_merge([i], %{exit_page: i.exit_page, visits: sum(i.exits)})
+          imported_q
+          |> select_merge([i], %{exit_page: i.exit_page, visits: sum(i.exits)})
 
         :country ->
           imported_q |> select_merge([i], %{country: i.country})
@@ -465,12 +465,21 @@ defmodule Plausible.Stats.Base do
     q =
       from(s in Ecto.Query.subquery(q),
         full_join: i in subquery(imported_q),
-        on: field(s, ^dim) == field(i, ^dim),
-        select: %{
-          :visitors => fragment("toUInt64(?) + toUInt64(?)", s.visitors, i.visitors)
-        },
-        order_by: [desc: fragment("toUInt64(?) + toUInt64(?)", s.visitors, i.visitors)]
+        on: field(s, ^dim) == field(i, ^dim)
       )
+
+    q =
+      if :visitors in metrics do
+        q
+        |> select_merge([i, s], %{
+          :visitors => fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors)
+        })
+        |> order_by([i, s],
+          desc: fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors)
+        )
+      else
+        q
+      end
 
     case dim do
       :source ->
@@ -501,18 +510,27 @@ defmodule Plausible.Stats.Base do
       :page ->
         q
         |> select_merge([i, s], %{
-          page: fragment("if(empty(?), ?, ?)", s.entry_page, i.entry_page, s.entry_page),
-          pageviews: fragment("? + coalesce(?, 0)", s.pageviews, i.pageviews),
-          # TODO:  This fragment is not correct.
-          #time_on_page: fragment()
+          page: fragment("if(empty(?), ?, ?)", i.page, s.page, i.page)
+          # time_on_page: fragment(
+          #  "coalesce(?, 0) + coalesce(?, 0) * coalesce(?, 0)",
+          #  i.time_on_page, s.pageviews, s.time_on_page
+          # ),
         })
+
+        if :pageviews in metrics do
+          q
+          |> select_merge([i, s], %{
+            pageviews: fragment("coalesce(?, 0) + coalesce(?, 0)", s.pageviews, i.pageviews)
+          })
+        else
+          q
+        end
 
       :entry_page ->
         q
         |> select_merge([i, s], %{
-          entry_page: fragment("if(empty(?), ?, ?)", s.entry_page, i.entry_page, s.entry_page),
-          visits: fragment("toUInt64(?) + toUInt64(coalesce(?, 0))", s.visits, i.visits),
-          # TODO:  This fragment is not correct.
+          entry_page: fragment("if(empty(?), ?, ?)", i.entry_page, s.entry_page, i.entry_page),
+          visits: fragment("? + ?", s.visits, i.visits),
           visit_duration:
             fragment(
               "(? + ? * ?) / (? + ?)",
@@ -527,8 +545,8 @@ defmodule Plausible.Stats.Base do
       :exit_page ->
         q
         |> select_merge([i, s], %{
-          exit_page: fragment("if(empty(?), ?, ?)", s.exit_page, i.exit_page, s.exit_page),
-          visits: fragment("toUInt64(?) + toUInt64(coalesce(?, 0))", s.visits, i.visits)
+          exit_page: fragment("if(empty(?), ?, ?)", i.exit_page, s.exit_page, i.exit_page),
+          visits: fragment("coalesce(?, 0) + coalesce(?, 0)", s.visits, i.visits)
         })
 
       :country ->
@@ -563,7 +581,7 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  def merge_imported(q, _, _, _), do: q
+  def merge_imported(q, _, _, _, _), do: q
 
   defp add_sample_hint(db_q, query) do
     case query.sample_threshold do

@@ -258,8 +258,8 @@ defmodule Plausible.Stats.Query do
   defp parse_goal_filter(event), do: {:is, :event, event}
 
   defp include_imported(default, params) do
-    (default &&
-    params["filters"] == "{}" &&
-    params["with_imported"] == "true")
+    default &&
+      params["filters"] == "{}" &&
+      params["with_imported"] == "true"
   end
 end

@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Breakdown do
   alias Plausible.Stats.Query
   @no_ref "Direct / None"
 
-  @event_metrics [:visitors, "pageviews", "events"]
+  @event_metrics [:visitors, :pageviews, "events"]
   @session_metrics [:visits, :bounce_rate, :visit_duration]
   @event_props ["event:page", "event:page_match", "event:name"]
 
@@ -96,11 +96,11 @@ defmodule Plausible.Stats.Breakdown do
 
     event_result =
       if "time_on_page" in metrics do
-        pages = Enum.map(event_result, & &1["page"])
+        pages = Enum.map(event_result, & &1[:page])
         time_on_page_result = breakdown_time_on_page(site, query, pages)
 
         Enum.map(event_result, fn row ->
-          Map.put(row, "time_on_page", time_on_page_result[row["page"]])
+          Map.put(row, "time_on_page", time_on_page_result[row[:page]])
         end)
       else
         event_result
@@ -112,19 +112,19 @@ defmodule Plausible.Stats.Breakdown do
           query
 
         pages ->
-          Query.put_filter(query, "visit:entry_page", {:member, Enum.map(pages, & &1["page"])})
+          Query.put_filter(query, "visit:entry_page", {:member, Enum.map(pages, & &1[:page])})
       end
 
     {limit, _page} = pagination
 
     session_result =
       breakdown_sessions(site, new_query, "visit:entry_page", session_metrics, {limit, 1})
-      |> transform_keys(%{entry_page: "page"})
+      |> transform_keys(%{entry_page: :page})
 
     zip_results(
       event_result,
       session_result,
-      "event:page",
+      :page,
       metrics
     )
   end
@@ -154,10 +154,14 @@ defmodule Plausible.Stats.Breakdown do
     sort_by = if Enum.member?(metrics, :visitors), do: :visitors, else: List.first(metrics)
 
     property =
-      property
-      |> String.trim_leading("event:")
-      |> String.trim_leading("visit:")
-      |> String.trim_leading("props:")
+      if is_binary(property) do
+        property
+        |> String.trim_leading("event:")
+        |> String.trim_leading("visit:")
+        |> String.trim_leading("props:")
+      else
+        property
+      end
 
     null_row = Enum.map(metrics, fn metric -> {metric, nil} end) |> Enum.into(%{})
 
@@ -185,7 +189,7 @@ defmodule Plausible.Stats.Breakdown do
     |> filter_converted_sessions(site, query)
     |> do_group_by(property)
     |> select_session_metrics(metrics)
-    |> merge_imported(site, query, property)
+    |> merge_imported(site, query, property, metrics)
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
   end
@@ -199,7 +203,7 @@ defmodule Plausible.Stats.Breakdown do
     )
     |> do_group_by(property)
     |> select_event_metrics(metrics)
-    # |> merge_imported(site, query, property)
+    |> merge_imported(site, query, property, metrics)
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
   end
@@ -296,7 +300,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       e in q,
       group_by: e.pathname,
-      select_merge: %{"page" => e.pathname}
+      select_merge: %{page: e.pathname}
     )
   end
 
