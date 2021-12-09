@@ -206,7 +206,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       res = json_response(conn, 200)
       assert res["event_name"] == "Signup"
     end
-    
+
     test "can add a goal as page to a site", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
@@ -306,7 +306,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       res = json_response(conn, 400)
       assert res["error"] == "Parameter `event_name` is required to create a goal"
     end
-    
+
     test "returns 400 when goal page path missing", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
@@ -318,7 +318,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert res["error"] == "Parameter `page_path` is required to create a goal"
     end
   end
-  
+
   describe "DELETE /api/v1/sites/goals/:goal_id" do
     setup :create_new_site
 
@@ -332,28 +332,34 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
       %{"goal_id" => goal_id} = json_response(conn, 200)
 
-      conn = delete(conn, "/api/v1/sites/goals/#{goal_id}", %{
-        site_id: site.domain
-      })
+      conn =
+        delete(conn, "/api/v1/sites/goals/#{goal_id}", %{
+          site_id: site.domain
+        })
 
       assert json_response(conn, 200) == %{"deleted" => true}
     end
 
     test "is 404 when goal cannot be found", %{conn: conn, site: site} do
-      conn = delete(conn, "/api/v1/sites/goals/0", %{
-        site_id: site.domain
-      })
+      conn =
+        delete(conn, "/api/v1/sites/goals/0", %{
+          site_id: site.domain
+        })
 
       assert json_response(conn, 404) == %{"error" => "Goal could not be found"}
     end
 
-    test "cannot delete a goal belongs to a site that the user does not own", %{conn: conn, user: user} do
+    test "cannot delete a goal belongs to a site that the user does not own", %{
+      conn: conn,
+      user: user
+    } do
       site = insert(:site, members: [])
       insert(:site_membership, user: user, site: site, role: :admin)
 
-      conn = delete(conn, "/api/v1/sites/goals/1", %{
-        site_id: site.domain
-      })
+      conn =
+        delete(conn, "/api/v1/sites/goals/1", %{
+          site_id: site.domain
+        })
 
       assert json_response(conn, 404) == %{"error" => "Site could not be found"}
     end
@@ -364,10 +370,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       conn =
         conn
         |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
-      
-      conn = delete(conn, "/api/v1/sites/goals/1", %{
-        site_id: site.domain
-      })
+
+      conn =
+        delete(conn, "/api/v1/sites/goals/1", %{
+          site_id: site.domain
+        })
 
       assert json_response(conn, 401) == %{
                "error" =>
