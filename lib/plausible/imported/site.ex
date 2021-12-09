@@ -175,6 +175,16 @@ defmodule Plausible.Imported do
     })
   end
 
+  @browser_google_to_plausible %{
+    "User-Agent:Opera" => "Opera",
+    "Mozilla Compatible Agent" => "Mobile App",
+    "Android Webview" => "Mobile App",
+    "Android Browser" => "Mobile App",
+    "Safari (in-app)" => "Mobile App",
+    "User-Agent: Mozilla" => "Firefox",
+    "(not set)" => "",
+  }
+
   defp new_from_google_analytics(domain, "browsers", %{
          "dimensions" => [timestamp, browser],
          "metrics" => [%{"values" => [value]}]
@@ -184,10 +194,16 @@ defmodule Plausible.Imported do
     Imported.Browsers.new(%{
       domain: domain,
       timestamp: format_timestamp(timestamp),
-      browser: browser,
+      browser: Map.get(@browser_google_to_plausible, browser, browser)
       visitors: visitors
     })
   end
+
+  @os_google_to_plausible %{
+    "Macintosh" => "Mac",
+    "Linux" => "GNU/Linux",
+    "(not set)" => "",
+  }
 
   defp new_from_google_analytics(domain, "operating_systems", %{
          "dimensions" => [timestamp, os],
@@ -198,7 +214,7 @@ defmodule Plausible.Imported do
     Imported.OperatingSystems.new(%{
       domain: domain,
       timestamp: format_timestamp(timestamp),
-      operating_system: os,
+      operating_system: Map.get(@os_google_to_plausible, os, os),
       visitors: visitors
     })
   end
