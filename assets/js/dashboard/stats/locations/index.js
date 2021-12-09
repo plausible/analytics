@@ -58,6 +58,10 @@ function Cities({query, site}) {
     return api.get(apiPath(site, '/cities'), query, {limit: 9})
   }
 
+  function renderIcon(city) {
+    return site.cities && <span className="mr-1">{city.country_flag}</span>
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
@@ -65,6 +69,7 @@ function Cities({query, site}) {
       keyLabel="City"
       detailsLink={sitePath(site, '/cities')}
       query={query}
+      renderIcon={renderIcon}
       color="bg-orange-50"
     />
   )

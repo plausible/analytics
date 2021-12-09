@@ -55,7 +55,7 @@ export default function Router({site, loggedIn, currentUserRole}) {
             <ModalTable title="Top regions" site={site} endpoint={`/api/stats/${encodeURIComponent(site.domain)}/regions`} filter={{region: 'code', region_name: 'name'}} keyLabel="Region" renderIcon={renderRegionIcon} />
           </Route>
           <Route path="/:domain/cities">
-            <ModalTable title="Top cities" site={site} endpoint={`/api/stats/${encodeURIComponent(site.domain)}/cities`} filter={{city: 'code', city_name: 'name'}} keyLabel="City" />
+            <ModalTable title="Top cities" site={site} endpoint={`/api/stats/${encodeURIComponent(site.domain)}/cities`} filter={{city: 'code', city_name: 'name'}} keyLabel="City" renderIcon={renderCityIcon} />
           </Route>
           <Route path={["/:domain/filter/:field"]}>
             <FilterModal site={site} />
@@ -64,6 +64,10 @@ export default function Router({site, loggedIn, currentUserRole}) {
       </Route>
     </BrowserRouter>
   );
+}
+
+function renderCityIcon(city) {
+  return <span className="mr-1">{city.country_flag}</span>
 }
 
 function renderCountryIcon(country) {

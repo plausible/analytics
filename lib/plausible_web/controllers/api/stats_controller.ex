@@ -494,8 +494,8 @@ defmodule PlausibleWeb.Api.StatsController do
       countries =
         countries
         |> Enum.map(fn country ->
-          country_iso_info = ISOCodes.ISO3166_1.get(country["code"])
-          Map.put(country, "name", country_iso_info.name)
+          country_info = Location.get_country(country["code"])
+          Map.put(country, "name", country_info.name)
         end)
 
       if Map.has_key?(query.filters, "event:goal") do
@@ -508,7 +508,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       countries =
         Enum.map(countries, fn row ->
-          country = ISOCodes.ISO3166_1.get(row["code"])
+          country = Location.get_country(row["code"])
 
           Map.merge(row, %{
             "name" => country.name,
@@ -530,10 +530,8 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:region", ["visitors"], pagination)
       |> transform_keys(%{"region" => "code"})
       |> Enum.map(fn region ->
-        country_code = region["code"] |> String.split("-") |> List.first()
-
-        region_entry = ISOCodes.ISO3166_2.get(region["code"])
-        country_entry = ISOCodes.ISO3166_1.get(country_code)
+        region_entry = Location.get_subdivision(region["code"])
+        country_entry = Location.get_country(region_entry.country_code)
         Map.merge(region, %{"name" => region_entry.name, "country_flag" => country_entry.flag})
       end)
 
@@ -549,8 +547,18 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:city", ["visitors"], pagination)
       |> transform_keys(%{"city" => "code"})
       |> Enum.map(fn city ->
-        name = Stats.CountryName.from_geoname_id(city["code"], "N/A")
-        Map.put(city, "name", name)
+        city_info = Location.get_city(city["code"])
+
+        if city_info do
+          country_info = Location.get_country(city_info.country_code)
+
+          Map.merge(city, %{
+            "name" => city_info.name,
+            "country_flag" => country_info.flag
+          })
+        else
+          Map.merge(city, %{"name" => "N/A"})
+        end
       end)
 
     json(conn, cities)

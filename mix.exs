@@ -85,7 +85,7 @@ defmodule Plausible.MixProject do
       {:sshex, "2.2.1"},
       {:geolix, "~> 1.0"},
       {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
-      {:iso_codes, git: "https://github.com/plausible/iso_codes"},
+      {:location, git: "https://github.com/plausible/location.git"},
       {:geolix_adapter_mmdb2, "~> 0.5.0"},
       {:cachex, "~> 3.4"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
