@@ -229,10 +229,18 @@ defmodule Plausible.Stats.Breakdown do
 
     {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
 
+    with_imported = query.with_imported && site.has_imported_stats
+    select =
+      if with_imported do
+        "sum(td), count(case when p2 != p then 1 end)"
+      else
+        "round(sum(td)/count(case when p2 != p then 1 end))"
+      end
+
     time_query = "
       SELECT
         p,
-        round(sum(td)/count(case when p2 != p then 1 end)) as avgTime
+        #{select}
       FROM
         (SELECT
           p,
@@ -250,7 +258,40 @@ defmodule Plausible.Stats.Breakdown do
       GROUP BY p"
 
     {:ok, res} = ClickhouseRepo.query(time_query, base_query_raw_params ++ [pages])
-    res.rows |> Enum.map(fn [page, time] -> {page, time} end) |> Enum.into(%{})
+
+    if with_imported do
+      # Imported page views have pre-calculated values
+      {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
+
+      res =
+        res.rows
+        |> Enum.map(fn [page, time, visits] -> {page, {time, visits}} end)
+        |> Enum.into(%{})
+
+      from(
+        i in "imported_pages",
+        group_by: i.page,
+        where: i.domain == ^site.domain,
+        where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
+        where: i.page in ^pages,
+        select: %{
+          page: i.page,
+          pageviews: sum(i.pageviews),
+          time_on_page: sum(i.time_on_page),
+        }
+      )
+      |> ClickhouseRepo.all()
+      |> Enum.reduce(res, fn %{page: page, pageviews: pageviews, time_on_page: time}, res ->
+        {restime, resviews} = Map.get(res, page, {0, 0})
+        Map.put(res, page, {restime + time, resviews + pageviews})
+      end)
+      |> Enum.map(fn {page, {time, pageviews}} ->
+        {page, time / pageviews}
+      end)
+      |> Enum.into(%{})
+    else
+      res.rows |> Enum.map(fn [page, time] -> {page, time} end) |> Enum.into(%{})
+    end
   end
 
   defp do_group_by(

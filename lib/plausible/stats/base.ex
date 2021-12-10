@@ -511,10 +511,6 @@ defmodule Plausible.Stats.Base do
         q
         |> select_merge([i, s], %{
           page: fragment("if(empty(?), ?, ?)", i.page, s.page, i.page)
-          # time_on_page: fragment(
-          #  "coalesce(?, 0) + coalesce(?, 0) * coalesce(?, 0)",
-          #  i.time_on_page, s.pageviews, s.time_on_page
-          # ),
         })
 
         if :pageviews in metrics do
