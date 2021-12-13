@@ -20,7 +20,7 @@ defmodule Plausible.Stats.FilterSuggestions do
     |> Enum.slice(0..24)
     |> Enum.map(fn match ->
       %{
-        code: match.alpha_3,
+        code: match.alpha_2,
         name: match.name
       }
     end)

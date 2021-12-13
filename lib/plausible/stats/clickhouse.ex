@@ -218,7 +218,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     q =
       if query.filters["country"] do
-        country = Plausible.Stats.CountryName.to_alpha2(query.filters["country"])
+        country = query.filters["country"]
         from(s in q, where: s.country_code == ^country)
       else
         q
@@ -312,7 +312,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     q =
       if query.filters["country"] do
-        country = Plausible.Stats.CountryName.to_alpha2(query.filters["country"])
+        country = query.filters["country"]
         from(s in q, where: s.country_code == ^country)
       else
         q
