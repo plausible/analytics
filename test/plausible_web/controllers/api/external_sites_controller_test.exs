@@ -227,7 +227,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           event_name: "Signup"
         })
 
-      %{"goal_id" => goal_id} = json_response(conn, 200)
+      %{"id" => goal_id} = json_response(conn, 200)
 
       conn =
         put(conn, "/api/v1/sites/goals", %{
@@ -236,7 +236,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           event_name: "Signup"
         })
 
-      assert %{"goal_id" => ^goal_id} = json_response(conn, 200)
+      assert %{"id" => ^goal_id} = json_response(conn, 200)
     end
 
     test "returns 400 when site id missing", %{conn: conn} do
@@ -330,7 +330,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           event_name: "Signup"
         })
 
-      %{"goal_id" => goal_id} = json_response(conn, 200)
+      %{"id" => goal_id} = json_response(conn, 200)
 
       conn =
         delete(conn, "/api/v1/sites/goals/#{goal_id}", %{
@@ -354,7 +354,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       user: user
     } do
       site = insert(:site, members: [])
-      insert(:site_membership, user: user, site: site, role: :admin)
+      insert(:site_membership, user: user, site: site, role: :viewer)
 
       conn =
         delete(conn, "/api/v1/sites/goals/1", %{
