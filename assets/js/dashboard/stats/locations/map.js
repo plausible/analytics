@@ -113,7 +113,7 @@ class Countries extends React.Component {
             this.props.history,
             this.props.query,
             {
-              country: country.alpha_2,
+              country: country.code,
               country_name: country.name
             }
           )

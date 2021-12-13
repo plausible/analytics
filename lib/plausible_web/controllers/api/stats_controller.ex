@@ -514,7 +514,7 @@ defmodule PlausibleWeb.Api.StatsController do
             "name" => country.name,
             "flag" => country.flag,
             "alpha_3" => country.alpha_3,
-            "alpha_2" => country.alpha_2
+            "code" => country.alpha_2
           })
         end)
 
