@@ -81,6 +81,7 @@ export default class ListReport extends React.Component {
 
     const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
     const lightBackground = this.props.color || 'bg-green-50'
+    const noop = () => {}
 
     return (
       <div className="flex items-center justify-between my-1 text-sm" key={listItem.name}>
@@ -92,7 +93,7 @@ export default class ListReport extends React.Component {
           plot={this.valueKey()}
         >
           <span className="flex px-2 py-1.5 group dark:text-gray-300 relative z-9 break-all" tooltip={this.props.tooltipText && this.props.tooltipText(listItem)}>
-            <Link className="md:truncate block hover:underline" to={{search: query.toString()}}>
+            <Link onClick={this.props.onClick || noop} className="md:truncate block hover:underline" to={{search: query.toString()}}>
               {this.props.renderIcon && this.props.renderIcon(listItem)}
               {this.props.renderIcon && ' '}
               {listItem.name}

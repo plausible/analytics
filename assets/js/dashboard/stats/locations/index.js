@@ -7,7 +7,7 @@ import * as api from '../../api'
 import {apiPath, sitePath} from '../../util/url'
 import ListReport from '../reports/list'
 
-function Countries({query, site}) {
+function Countries({query, site, onClick}) {
   function fetchData() {
     return api.get(apiPath(site, '/countries'), query, {limit: 9}).then((res) => {
       return res.map(row => Object.assign({}, row, {percentage: undefined}))
@@ -22,6 +22,7 @@ function Countries({query, site}) {
     <ListReport
       fetchData={fetchData}
       filter={{country: 'code', country_name: 'name'}}
+      onClick={onClick}
       keyLabel="Country"
       detailsLink={sitePath(site, '/countries')}
       query={query}
@@ -31,7 +32,7 @@ function Countries({query, site}) {
   )
 }
 
-function Regions({query, site}) {
+function Regions({query, site, onClick}) {
   function fetchData() {
     return api.get(apiPath(site, '/regions'), query, {country_name: query.filters.country, limit: 9})
   }
@@ -44,6 +45,7 @@ function Regions({query, site}) {
     <ListReport
       fetchData={fetchData}
       filter={{region: 'code', region_name: 'name'}}
+      onClick={onClick}
       keyLabel="Region"
       detailsLink={sitePath(site, '/regions')}
       query={query}
@@ -85,6 +87,8 @@ const labelFor = {
 export default class Locations extends React.Component {
 	constructor(props) {
     super(props)
+    this.onCountryFilter = this.onCountryFilter.bind(this)
+    this.onRegionFilter = this.onRegionFilter.bind(this)
     this.tabKey = `geoTab__${  props.site.domain}`
     const storedTab = storage.getItem(this.tabKey)
     this.state = {
@@ -99,14 +103,22 @@ export default class Locations extends React.Component {
     }
   }
 
+  onCountryFilter() {
+    this.setMode('regions')()
+  }
+
+  onRegionFilter() {
+    this.setMode('cities')()
+  }
+
 	renderContent() {
     switch(this.state.mode) {
 		case "cities":
       return <Cities site={this.props.site} query={this.props.query} timer={this.props.timer}/>
 		case "regions":
-      return <Regions site={this.props.site} query={this.props.query} timer={this.props.timer}/>
+      return <Regions onClick={this.onRegionFilter} site={this.props.site} query={this.props.query} timer={this.props.timer}/>
 		case "countries":
-      return <Countries site={this.props.site} query={this.props.query} timer={this.props.timer}/>
+      return <Countries onClick={this.onCountryFilter} site={this.props.site} query={this.props.query} timer={this.props.timer}/>
     case "map":
     default:
       return <CountriesMap site={this.props.site} query={this.props.query} timer={this.props.timer}/>
