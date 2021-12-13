@@ -56,7 +56,7 @@ class Countries extends React.Component {
       ])
 
     this.state.countries.forEach(function(item){
-      dataset[item.code] = {numberOfThings: item.visitors, fillColor: paletteScale(item.visitors)};
+      dataset[item.alpha_3] = {numberOfThings: item.visitors, fillColor: paletteScale(item.visitors)};
     });
 
     return dataset
@@ -107,12 +107,14 @@ class Countries extends React.Component {
       },
       done: (datamap) => {
         datamap.svg.selectAll('.datamaps-subunit').on('click', (geography) => {
+          const country = this.state.countries.find(c => c.alpha_3 === geography.id)
+
           navigateToQuery(
             this.props.history,
             this.props.query,
             {
-              country: geography.id,
-              country_name: geography.properties.name
+              country: country.code,
+              country_name: country.name
             }
           )
         })

@@ -18,6 +18,8 @@ RUN apk add --no-cache git nodejs yarn python3 npm ca-certificates wget gnupg ma
     npm install npm@latest -g && \
     npm install -g webpack
 
+RUN wget https://s3.eu-central-1.wasabisys.com/plausible-application/geonames.csv -q
+
 COPY mix.exs ./
 COPY mix.lock ./
 RUN mix local.hex --force && \
@@ -42,7 +44,8 @@ RUN npm run deploy --prefix ./assets && \
     mix phx.digest priv/static && \
     mix download_country_database && \
 # https://hexdocs.pm/sentry/Sentry.Sources.html#module-source-code-storage
-    mix sentry_recompile
+    mix sentry_recompile && \
+    mv geonames.csv ./priv/geonames.csv
 
 WORKDIR /app
 COPY rel rel
@@ -66,6 +69,7 @@ COPY --from=buildcontainer /app/_build/prod/rel/plausible /app
 RUN chown -R plausibleuser:plausibleuser /app
 USER plausibleuser
 WORKDIR /app
+ENV GEONAMES_SOURCE_FILE=/app/lib/plausible-0.0.1/priv/geonames.csv
 ENTRYPOINT ["/entrypoint.sh"]
 EXPOSE 8000
 CMD ["run"]

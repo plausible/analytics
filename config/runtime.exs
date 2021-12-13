@@ -111,6 +111,7 @@ geolite2_country_db =
   )
 
 ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", geolite2_country_db)
+geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
 
 disable_auth =
   config_dir
@@ -398,6 +399,10 @@ if config_env() != :test do
         result_as: :raw
       }
     ]
+end
+
+if geonames_source_file do
+  config :location, :geonames_source_file, geonames_source_file
 end
 
 config :logger,

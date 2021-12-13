@@ -513,7 +513,8 @@ defmodule PlausibleWeb.Api.StatsController do
           Map.merge(row, %{
             "name" => country.name,
             "flag" => country.flag,
-            "code" => country.alpha_3
+            "alpha_3" => country.alpha_3,
+            "code" => country.alpha_2
           })
         end)
 

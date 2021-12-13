@@ -2,10 +2,9 @@ defmodule Plausible.Stats.FilterSuggestions do
   use Plausible.Repo
   use Plausible.ClickhouseRepo
   import Plausible.Stats.Base
-  alias Plausible.Stats.CountryName
 
   def filter_suggestions(site, query, "country", filter_search) do
-    matches = Plausible.Stats.CountryName.search_alpha2(filter_search)
+    matches = Location.search_country(filter_search)
 
     q =
       from(
@@ -16,12 +15,13 @@ defmodule Plausible.Stats.FilterSuggestions do
       )
 
     ClickhouseRepo.all(q)
-    |> Enum.filter(fn c -> Enum.find(matches, false, fn x -> x == c end) end)
+    |> Enum.map(fn c -> Enum.find(matches, fn x -> x.alpha_2 == c end) end)
+    |> Enum.filter(& &1)
     |> Enum.slice(0..24)
-    |> Enum.map(fn c ->
+    |> Enum.map(fn match ->
       %{
-        code: CountryName.to_alpha3(c),
-        name: CountryName.from_iso3166(c)
+        code: match.alpha_2,
+        name: match.name
       }
     end)
   end
@@ -37,15 +37,17 @@ defmodule Plausible.Stats.FilterSuggestions do
     )
     |> ClickhouseRepo.all()
     |> Enum.map(fn c ->
+      subdiv = Location.get_subdivision(c)
+
       %{
         code: c,
-        name: CountryName.from_iso3166_2(c)
+        name: subdiv.name
       }
     end)
   end
 
   def filter_suggestions(site, query, "region", filter_search) do
-    matches = Plausible.Stats.CountryName.search_iso3166_2(filter_search)
+    matches = Location.search_subdivision(filter_search)
 
     q =
       from(
@@ -56,12 +58,13 @@ defmodule Plausible.Stats.FilterSuggestions do
       )
 
     ClickhouseRepo.all(q)
-    |> Enum.filter(fn c -> Enum.find(matches, false, fn x -> x == c end) end)
+    |> Enum.map(fn c -> Enum.find(matches, fn x -> x.code == c end) end)
+    |> Enum.filter(& &1)
     |> Enum.slice(0..24)
-    |> Enum.map(fn c ->
+    |> Enum.map(fn subdiv ->
       %{
-        code: c,
-        name: CountryName.from_iso3166_2(c)
+        code: subdiv.code,
+        name: subdiv.name
       }
     end)
   end
@@ -77,15 +80,17 @@ defmodule Plausible.Stats.FilterSuggestions do
     )
     |> ClickhouseRepo.all()
     |> Enum.map(fn c ->
+      city = Location.get_city(c)
+
       %{
         code: Integer.to_string(c),
-        name: CountryName.from_geoname_id(c, "N/A")
+        name: (city && city.name) || "N/A"
       }
     end)
   end
 
   def filter_suggestions(site, query, "city", filter_search) do
-    matches = Plausible.Stats.CountryName.search_geoname(filter_search)
+    filter_search = String.downcase(filter_search)
 
     q =
       from(
@@ -93,16 +98,20 @@ defmodule Plausible.Stats.FilterSuggestions do
         group_by: e.city_geoname_id,
         order_by: [desc: fragment("count(*)")],
         select: e.city_geoname_id,
-        where: e.city_geoname_id != 0
+        where: e.city_geoname_id != 0,
+        limit: 5000
       )
 
     ClickhouseRepo.all(q)
-    |> Enum.filter(fn c -> Enum.find(matches, false, fn x -> x == c end) end)
+    |> Enum.map(fn c -> Location.get_city(c) end)
+    |> Enum.filter(fn city ->
+      city && String.contains?(String.downcase(city.name), filter_search)
+    end)
     |> Enum.slice(0..24)
     |> Enum.map(fn c ->
       %{
-        code: Integer.to_string(c),
-        name: CountryName.from_geoname_id(c, "N/A")
+        code: Integer.to_string(c.id),
+        name: c.name
       }
     end)
   end
