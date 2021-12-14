@@ -106,7 +106,7 @@ export default class Locations extends React.Component {
     }
 
     if (this.state.mode === 'regions' && isRemovingFilter('country')) {
-      this.setMode('countries')()
+      this.setMode(this.countriesRestoreMode || 'countries')()
     }
   }
 
@@ -117,8 +117,11 @@ export default class Locations extends React.Component {
     }
   }
 
-  onCountryFilter() {
-    this.setMode('regions')()
+  onCountryFilter(mode) {
+    return () => {
+      this.countriesRestoreMode = mode
+      this.setMode('regions')()
+    }
   }
 
   onRegionFilter() {
@@ -132,10 +135,10 @@ export default class Locations extends React.Component {
 		case "regions":
       return <Regions onClick={this.onRegionFilter} site={this.props.site} query={this.props.query} timer={this.props.timer}/>
 		case "countries":
-      return <Countries onClick={this.onCountryFilter} site={this.props.site} query={this.props.query} timer={this.props.timer}/>
+      return <Countries onClick={this.onCountryFilter('countries')} site={this.props.site} query={this.props.query} timer={this.props.timer}/>
     case "map":
     default:
-      return <CountriesMap site={this.props.site} query={this.props.query} timer={this.props.timer}/>
+      return <CountriesMap onClick={this.onCountryFilter('map')} site={this.props.site} query={this.props.query} timer={this.props.timer}/>
     }
   }
 

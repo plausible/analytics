@@ -109,14 +109,19 @@ class Countries extends React.Component {
         datamap.svg.selectAll('.datamaps-subunit').on('click', (geography) => {
           const country = this.state.countries.find(c => c.alpha_3 === geography.id)
 
-          navigateToQuery(
-            this.props.history,
-            this.props.query,
-            {
-              country: country.code,
-              country_name: country.name
-            }
-          )
+          if (country) {
+            this.props.onClick()
+
+            navigateToQuery(
+              this.props.history,
+              this.props.query,
+              {
+                country: country.code,
+                country_name: country.name
+              }
+            )
+          }
+
         })
       }
     });
