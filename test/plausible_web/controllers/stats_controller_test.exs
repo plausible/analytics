@@ -193,6 +193,16 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
       assert Plug.Conn.get_resp_header(conn, "x-frame-options") == []
     end
+
+    test "shows locked page if page is locked", %{conn: conn} do
+      site = insert(:site, domain: "test-site.com", locked: true)
+      link = insert(:shared_link, site: site)
+
+      conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
+
+      assert html_response(conn, 200) =~ "Site locked"
+      refute String.contains?(html_response(conn, 200), "Back to my sites")
+    end
   end
 
   describe "POST /share/:slug/authenticate" do

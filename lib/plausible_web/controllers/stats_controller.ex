@@ -162,22 +162,32 @@ defmodule PlausibleWeb.StatsController do
   end
 
   defp render_shared_link(conn, shared_link) do
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> put_resp_header("x-robots-tag", "noindex")
-    |> delete_resp_header("x-frame-options")
-    |> render("stats.html",
-      site: shared_link.site,
-      has_goals: Plausible.Sites.has_goals?(shared_link.site),
-      title: "Plausible · " <> shared_link.site.domain,
-      offer_email_report: false,
-      demo: false,
-      skip_plausible_tracking: true,
-      shared_link_auth: shared_link.slug,
-      embedded: conn.params["embed"] == "true",
-      background: conn.params["background"],
-      theme: conn.params["theme"]
-    )
+    cond do
+      !shared_link.site.locked ->
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> put_resp_header("x-robots-tag", "noindex")
+        |> delete_resp_header("x-frame-options")
+        |> render("stats.html",
+          site: shared_link.site,
+          has_goals: Plausible.Sites.has_goals?(shared_link.site),
+          title: "Plausible · " <> shared_link.site.domain,
+          offer_email_report: false,
+          demo: false,
+          skip_plausible_tracking: true,
+          shared_link_auth: shared_link.slug,
+          embedded: conn.params["embed"] == "true",
+          background: conn.params["background"],
+          theme: conn.params["theme"]
+        )
+
+      shared_link.site.locked ->
+        owner = Plausible.Sites.owner_for(shared_link.site)
+
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("site_locked.html", owner: owner, site: shared_link.site)
+    end
   end
 
   defp remove_email_report_banner(conn, site) do
