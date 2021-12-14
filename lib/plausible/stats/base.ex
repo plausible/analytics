@@ -223,10 +223,10 @@ defmodule Plausible.Stats.Base do
     |> select_event_metrics(rest)
   end
 
-  def select_event_metrics(q, ["sample_percent" | rest]) do
+  def select_event_metrics(q, [:sample_percent | rest]) do
     from(e in q,
       select_merge: %{
-        "sample_percent" =>
+        sample_percent:
           fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
       }
     )
@@ -285,10 +285,10 @@ defmodule Plausible.Stats.Base do
     |> select_session_metrics(rest)
   end
 
-  def select_session_metrics(q, ["sample_percent" | rest]) do
+  def select_session_metrics(q, [:sample_percent | rest]) do
     from(e in q,
       select_merge: %{
-        "sample_percent" =>
+        sample_percent:
           fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
       }
     )

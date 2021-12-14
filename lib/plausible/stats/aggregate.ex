@@ -3,8 +3,8 @@ defmodule Plausible.Stats.Aggregate do
   use Plausible.ClickhouseRepo
   import Plausible.Stats.Base
 
-  @event_metrics [:visitors, :pageviews, "events", "sample_percent"]
-  @session_metrics [:visits, :bounce_rate, :visit_duration, "sample_percent"]
+  @event_metrics [:visitors, :pageviews, "events", :sample_percent]
+  @session_metrics [:visits, :bounce_rate, :visit_duration, :sample_percent]
 
   def aggregate(site, query, metrics) do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
