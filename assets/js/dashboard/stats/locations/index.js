@@ -96,6 +96,20 @@ export default class Locations extends React.Component {
     }
   }
 
+  componentDidUpdate(prevProps) {
+    const isRemovingFilter = (filterName) => {
+      return prevProps.query.filters[filterName] && !this.props.query.filters[filterName]
+    }
+
+    if (this.state.mode === 'cities' && isRemovingFilter('region')) {
+      this.setMode('regions')()
+    }
+
+    if (this.state.mode === 'regions' && isRemovingFilter('country')) {
+      this.setMode('countries')()
+    }
+  }
+
   setMode(mode) {
     return () => {
       storage.setItem(this.tabKey, mode)
