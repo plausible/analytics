@@ -204,6 +204,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         })
 
       res = json_response(conn, 200)
+      assert res["goal_type"] == "event"
       assert res["event_name"] == "Signup"
     end
 
@@ -216,6 +217,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         })
 
       res = json_response(conn, 200)
+      assert res["goal_type"] == "page"
       assert res["page_path"] == "/signup"
     end
 
