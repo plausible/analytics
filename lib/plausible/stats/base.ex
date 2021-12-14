@@ -443,9 +443,15 @@ defmodule Plausible.Stats.Base do
             imported_q
             |> select_merge([i], %{
               entry_page: i.entry_page,
-              visits: sum(i.entrances),
-              visit_duration: sum(i.visit_duration)
+              visits: sum(i.entrances)
             })
+
+          imported_q =
+            if :visit_duration in metrics do
+              select_merge(imported_q, [i], %{visit_duration: sum(i.visit_duration)})
+            else
+              imported_q
+            end
 
           if :bounce_rate in metrics do
             select_merge(imported_q, [i], %{bounces: sum(i.bounces)})
@@ -531,15 +537,33 @@ defmodule Plausible.Stats.Base do
         end
 
       :entry_page ->
-        # TODO: Reverse-engineering the native data bounces to combine with imported data is inefficient.
-        # Instead both queries should fetch bounces and visits and be used as subqueries to a main query
-        # that calculates bounce_rate.
+        # TODO: Reverse-engineering the native data bounces and total visit
+        # durations to combine with imported data is inefficient. Instead both
+        # queries should fetch bounces/total_visit_duration and visits and be
+        # used as subqueries to a main query that then find the bounce rate/avg
+        # visit_duration.
         q =
           q
           |> select_merge([s, i], %{
             entry_page: fragment("if(empty(?), ?, ?)", i.entry_page, s.entry_page, i.entry_page),
             visits: fragment("? + ?", s.visits, i.visits)
           })
+
+        q =
+          if :visit_duration in metrics do
+            select_merge(q, [s, i], %{
+              visit_duration: fragment(
+                "(? + ? * ?) / (? + ?)",
+                i.visit_duration,
+                s.visit_duration,
+                s.visits,
+                s.visits,
+                i.visits
+              )
+            })
+          else
+            q
+          end
 
         if :bounce_rate in metrics do
           select_merge(q, [s, i], %{
