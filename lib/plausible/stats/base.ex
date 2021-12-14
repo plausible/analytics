@@ -241,7 +241,8 @@ defmodule Plausible.Stats.Base do
     from(s in q,
       select_merge: %{
         bounce_rate:
-          fragment("toUInt32(ifNotFinite(round(sum(is_bounce * sign) / sum(sign) * 100), 0))")
+          fragment("toUInt32(ifNotFinite(round(sum(is_bounce * sign) / sum(sign) * 100), 0))"),
+        visits: fragment("toUInt32(sum(sign))")
       }
     )
     |> select_session_metrics(rest)
@@ -438,12 +439,19 @@ defmodule Plausible.Stats.Base do
           })
 
         :entry_page ->
-          imported_q
-          |> select_merge([i], %{
-            entry_page: i.entry_page,
-            visits: sum(i.entrances),
-            visit_duration: sum(i.visit_duration)
-          })
+          imported_q =
+            imported_q
+            |> select_merge([i], %{
+              entry_page: i.entry_page,
+              visits: sum(i.entrances),
+              visit_duration: sum(i.visit_duration)
+            })
+
+          if :bounce_rate in metrics do
+            select_merge(imported_q, [i], %{bounces: sum(i.bounces)})
+          else
+            imported_q
+          end
 
         :exit_page ->
           imported_q
@@ -523,20 +531,26 @@ defmodule Plausible.Stats.Base do
         end
 
       :entry_page ->
-        q
-        |> select_merge([i, s], %{
-          entry_page: fragment("if(empty(?), ?, ?)", i.entry_page, s.entry_page, i.entry_page),
-          visits: fragment("? + ?", s.visits, i.visits),
-          visit_duration:
-            fragment(
-              "(? + ? * ?) / (? + ?)",
-              i.visit_duration,
-              s.visit_duration,
-              s.visits,
-              s.visits,
-              i.visits
+        # TODO: Reverse-engineering the native data bounces to combine with imported data is inefficient.
+        # Instead both queries should fetch bounces and visits and be used as subqueries to a main query
+        # that calculates bounce_rate.
+        q =
+          q
+          |> select_merge([s, i], %{
+            entry_page: fragment("if(empty(?), ?, ?)", i.entry_page, s.entry_page, i.entry_page),
+            visits: fragment("? + ?", s.visits, i.visits)
+          })
+
+        if :bounce_rate in metrics do
+          select_merge(q, [s, i], %{
+            bounce_rate: fragment(
+              "round(100 * (coalesce(?, 0) + coalesce((? * ? / 100), 0)) / (coalesce(?, 0) + coalesce(?, 0)))",
+              i.bounces, s.bounce_rate, s.visits, i.visits, s.visits
             )
-        })
+          })
+        else
+          q
+        end
 
       :exit_page ->
         q
