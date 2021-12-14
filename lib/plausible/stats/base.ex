@@ -479,10 +479,10 @@ defmodule Plausible.Stats.Base do
     q =
       if :visitors in metrics do
         q
-        |> select_merge([i, s], %{
+        |> select_merge([s, i], %{
           :visitors => fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors)
         })
-        |> order_by([i, s],
+        |> order_by([s, i],
           desc: fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors)
         )
       else
@@ -492,38 +492,38 @@ defmodule Plausible.Stats.Base do
     case dim do
       :source ->
         q
-        |> select_merge([i, s], %{
+        |> select_merge([s, i], %{
           source: fragment("if(empty(?), ?, ?)", s.source, i.source, s.source)
         })
 
       :utm_medium ->
         q
-        |> select_merge([i, s], %{
+        |> select_merge([s, i], %{
           utm_medium: fragment("if(empty(?), ?, ?)", s.utm_medium, i.utm_medium, s.utm_medium)
         })
 
       :utm_source ->
         q
-        |> select_merge([i, s], %{
+        |> select_merge([s, i], %{
           utm_source: fragment("if(empty(?), ?, ?)", s.utm_source, i.utm_source, s.utm_source)
         })
 
       :utm_campaign ->
         q
-        |> select_merge([i, s], %{
+        |> select_merge([s, i], %{
           utm_campaign:
             fragment("if(empty(?), ?, ?)", s.utm_campaign, i.utm_campaign, s.utm_campaign)
         })
 
       :page ->
         q
-        |> select_merge([i, s], %{
+        |> select_merge([s, i], %{
           page: fragment("if(empty(?), ?, ?)", i.page, s.page, i.page)
         })
 
         if :pageviews in metrics do
           q
-          |> select_merge([i, s], %{
+          |> select_merge([s, i], %{
             pageviews: fragment("coalesce(?, 0) + coalesce(?, 0)", s.pageviews, i.pageviews)
           })
         else
@@ -554,7 +554,7 @@ defmodule Plausible.Stats.Base do
 
       :exit_page ->
         q
-        |> select_merge([i, s], %{
+        |> select_merge([s, i], %{
           exit_page: fragment("if(empty(?), ?, ?)", i.exit_page, s.exit_page, i.exit_page),
           visits: fragment("coalesce(?, 0) + coalesce(?, 0)", s.visits, i.visits)
         })
