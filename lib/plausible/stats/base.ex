@@ -552,14 +552,15 @@ defmodule Plausible.Stats.Base do
         q =
           if :visit_duration in metrics do
             select_merge(q, [s, i], %{
-              visit_duration: fragment(
-                "(? + ? * ?) / (? + ?)",
-                i.visit_duration,
-                s.visit_duration,
-                s.visits,
-                s.visits,
-                i.visits
-              )
+              visit_duration:
+                fragment(
+                  "(? + ? * ?) / (? + ?)",
+                  i.visit_duration,
+                  s.visit_duration,
+                  s.visits,
+                  s.visits,
+                  i.visits
+                )
             })
           else
             q
@@ -567,10 +568,15 @@ defmodule Plausible.Stats.Base do
 
         if :bounce_rate in metrics do
           select_merge(q, [s, i], %{
-            bounce_rate: fragment(
-              "round(100 * (coalesce(?, 0) + coalesce((? * ? / 100), 0)) / (coalesce(?, 0) + coalesce(?, 0)))",
-              i.bounces, s.bounce_rate, s.visits, i.visits, s.visits
-            )
+            bounce_rate:
+              fragment(
+                "round(100 * (coalesce(?, 0) + coalesce((? * ? / 100), 0)) / (coalesce(?, 0) + coalesce(?, 0)))",
+                i.bounces,
+                s.bounce_rate,
+                s.visits,
+                i.visits,
+                s.visits
+              )
           })
         else
           q
