@@ -112,10 +112,11 @@ defmodule Plausible.Imported do
 
   defp new_from_google_analytics(domain, "entry_pages", %{
          "dimensions" => [timestamp, entry_page],
-         "metrics" => [%{"values" => [visitors, entrances, visit_duration]}]
+         "metrics" => [%{"values" => [visitors, entrances, visit_duration, bounces]}]
        }) do
     {visitors, ""} = Integer.parse(visitors)
     {entrances, ""} = Integer.parse(entrances)
+    {bounces, ""} = Integer.parse(bounces)
 
     {visit_duration, _} = Integer.parse(visit_duration)
 
@@ -125,7 +126,8 @@ defmodule Plausible.Imported do
       entry_page: entry_page,
       visitors: visitors,
       entrances: entrances,
-      visit_duration: visit_duration
+      visit_duration: visit_duration,
+      bounces: bounces
     })
   end
 

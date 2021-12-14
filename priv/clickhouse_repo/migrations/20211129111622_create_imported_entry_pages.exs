@@ -9,6 +9,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedEntryPages do
       add :visitors, :UInt64
       add :entrances, :UInt64
       add :visit_duration, :UInt64
+      add :bounces, :UInt32
     end
   end
 end

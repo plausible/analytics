@@ -10,6 +10,7 @@ defmodule Plausible.Imported.EntryPages do
     field :entry_page, :string
     field :visitors, :integer
     field :entrances, :integer
+    field :bounces, :integer
     # Sum total
     field :visit_duration, :integer
   end

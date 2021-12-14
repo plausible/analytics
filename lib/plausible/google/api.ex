@@ -211,7 +211,7 @@ defmodule Plausible.Google.Api do
       # Entry pages
       {
         ["ga:date", "ga:landingPagePath"],
-        ["ga:users", "ga:entrances", "ga:sessionDuration"]
+        ["ga:users", "ga:entrances", "ga:sessionDuration", "ga:bounces"]
       },
       # Exit pages
       {
