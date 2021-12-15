@@ -66,6 +66,11 @@
                   vs Matomo
                 </a>
               </li>
+              <li class="mt-4">
+                <a ref="noferrer" href="https://plausible.io/vs-cloudflare-web-analytics" class="text-base text-gray-300 leading-6 hover:text-white">
+                  vs Cloudflare
+                </a>
+              </li>
             </ul>
           </div>
         </div>
