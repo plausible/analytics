@@ -9,6 +9,9 @@ defmodule Plausible.Imported.UtmMediums do
     field :timestamp, :naive_datetime
     field :utm_medium, :string, default: ""
     field :visitors, :integer
+    field :bounces, :integer
+    # Sum total
+    field :visit_duration, :integer
   end
 
   def new(attrs) do

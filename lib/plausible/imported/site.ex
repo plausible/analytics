@@ -44,9 +44,11 @@ defmodule Plausible.Imported do
 
   defp new_from_google_analytics(domain, "sources", %{
          "dimensions" => [timestamp, source],
-         "metrics" => [%{"values" => [value]}]
+         "metrics" => [%{"values" => [visitors, bounces, visit_duration]}]
        }) do
-    {visitors, ""} = Integer.parse(value)
+    {visitors, ""} = Integer.parse(visitors)
+    {bounces, ""} = Integer.parse(bounces)
+    {visit_duration, _} = Integer.parse(visit_duration)
 
     source = if source == "(direct)", do: nil, else: source
 
@@ -54,7 +56,9 @@ defmodule Plausible.Imported do
       domain: domain,
       timestamp: format_timestamp(timestamp),
       source: Imported.Sources.parse(source),
-      visitors: visitors
+      visitors: visitors,
+      bounces: bounces,
+      visit_duration: visit_duration
     })
   end
 
@@ -62,9 +66,11 @@ defmodule Plausible.Imported do
 
   defp new_from_google_analytics(domain, "utm_mediums", %{
          "dimensions" => [timestamp, medium],
-         "metrics" => [%{"values" => [value]}]
+         "metrics" => [%{"values" => [visitors, bounces, visit_duration]}]
        }) do
-    {visitors, ""} = Integer.parse(value)
+    {visitors, ""} = Integer.parse(visitors)
+    {bounces, ""} = Integer.parse(bounces)
+    {visit_duration, _} = Integer.parse(visit_duration)
 
     medium = if medium == "(none)", do: "", else: medium
 
@@ -72,15 +78,19 @@ defmodule Plausible.Imported do
       domain: domain,
       timestamp: format_timestamp(timestamp),
       medium: medium,
-      visitors: visitors
+      visitors: visitors,
+      bounces: bounces,
+      visit_duration: visit_duration
     })
   end
 
   defp new_from_google_analytics(domain, "utm_campaigns", %{
          "dimensions" => [timestamp, campaign],
-         "metrics" => [%{"values" => [value]}]
+         "metrics" => [%{"values" => [visitors, bounces, visit_duration]}]
        }) do
-    {visitors, ""} = Integer.parse(value)
+    {visitors, ""} = Integer.parse(visitors)
+    {bounces, ""} = Integer.parse(bounces)
+    {visit_duration, _} = Integer.parse(visit_duration)
 
     campaign = if campaign == "(not set)", do: "", else: campaign
 
@@ -88,7 +98,9 @@ defmodule Plausible.Imported do
       domain: domain,
       timestamp: format_timestamp(timestamp),
       campaign: campaign,
-      visitors: visitors
+      visitors: visitors,
+      bounces: bounces,
+      visit_duration: visit_duration
     })
   end
 

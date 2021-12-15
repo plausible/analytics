@@ -9,6 +9,9 @@ defmodule Plausible.Imported.UtmSources do
     field :timestamp, :naive_datetime
     field :utm_source, :string, default: ""
     field :visitors, :integer
+    field :bounces, :integer
+    # Sum total
+    field :visit_duration, :integer
   end
 
   def new(attrs) do

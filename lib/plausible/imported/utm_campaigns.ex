@@ -9,6 +9,9 @@ defmodule Plausible.Imported.UtmCampaigns do
     field :timestamp, :naive_datetime
     field :utm_campaign, :string, default: ""
     field :visitors, :integer
+    field :bounces, :integer
+    # Sum total
+    field :visit_duration, :integer
   end
 
   def new(attrs) do

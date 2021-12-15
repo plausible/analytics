@@ -191,17 +191,17 @@ defmodule Plausible.Google.Api do
       # Sources
       {
         ["ga:date", "ga:fullReferrer"],
-        ["ga:users"]
+        ["ga:users", "ga:bounces", "ga:sessionDuration"]
       },
       # UTM Mediums
       {
         ["ga:date", "ga:medium"],
-        ["ga:users"]
+        ["ga:users", "ga:bounces", "ga:sessionDuration"]
       },
       # UTM Campaigns
       {
         ["ga:date", "ga:campaign"],
-        ["ga:users"]
+        ["ga:users", "ga:bounces", "ga:sessionDuration"]
       },
       # Pages
       {
