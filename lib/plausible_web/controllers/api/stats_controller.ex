@@ -301,9 +301,19 @@ defmodule PlausibleWeb.Api.StatsController do
     res =
       Stats.breakdown(site, query, "visit:utm_content", metrics, pagination)
       |> maybe_add_cr(site, query, pagination, "utm_content", "visit:utm_content")
-      |> transform_keys(%{"utm_content" => "name", "visitors" => "count"})
+      |> transform_keys(%{"utm_content" => "name"})
 
-    json(conn, res)
+    if params["csv"] do
+      if Map.has_key?(query.filters, "event:goal") do
+        res
+        |> transform_keys(%{"visitors" => "conversions"})
+        |> to_csv(["name", "conversions", "conversion_rate"])
+      else
+        res |> to_csv(["name", "visitors", "bounce_rate", "visit_duration"])
+      end
+    else
+      json(conn, res)
+    end
   end
 
   def utm_terms(conn, params) do
@@ -320,9 +330,19 @@ defmodule PlausibleWeb.Api.StatsController do
     res =
       Stats.breakdown(site, query, "visit:utm_term", metrics, pagination)
       |> maybe_add_cr(site, query, pagination, "utm_term", "visit:utm_term")
-      |> transform_keys(%{"utm_term" => "name", "visitors" => "count"})
+      |> transform_keys(%{"utm_term" => "name"})
 
-    json(conn, res)
+    if params["csv"] do
+      if Map.has_key?(query.filters, "event:goal") do
+        res
+        |> transform_keys(%{"visitors" => "conversions"})
+        |> to_csv(["name", "conversions", "conversion_rate"])
+      else
+        res |> to_csv(["name", "visitors", "bounce_rate", "visit_duration"])
+      end
+    else
+      json(conn, res)
+    end
   end
 
   def utm_sources(conn, params) do

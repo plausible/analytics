@@ -104,7 +104,8 @@ defmodule PlausibleWeb.StatsControllerTest do
     file = Path.expand(file, folder)
 
     {:ok, content} = File.read(file)
-    assert downloaded == content
+    msg = "CSV file comparison failed (#{file})"
+    assert downloaded == content, message: msg, left: downloaded, right: content
   end
 
   defp populate_exported_stats(site) do
@@ -125,7 +126,11 @@ defmodule PlausibleWeb.StatsControllerTest do
       ),
       build(:pageview,
         pathname: "/",
+        utm_medium: "search",
         utm_campaign: "ads",
+        utm_source: "google",
+        utm_content: "content",
+        utm_term: "term",
         timestamp: Timex.shift(~N[2021-10-20 12:00:00], days: -1),
         browser: "ABrowserName"
       ),
