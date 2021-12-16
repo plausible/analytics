@@ -268,20 +268,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   test "breakdown by visit:utm_campaign", %{conn: conn, site: site} do
-    populate_stats([
+    populate_stats(site, [
       build(:pageview,
         utm_campaign: "ads",
-        domain: site.domain,
         timestamp: ~N[2021-01-01 00:00:00]
       ),
       build(:pageview,
         utm_campaign: "ads",
-        domain: site.domain,
         timestamp: ~N[2021-01-01 00:25:00]
       ),
       build(:pageview,
         utm_campaign: "",
-        domain: site.domain,
         timestamp: ~N[2021-01-01 00:00:00]
       )
     ])
@@ -298,6 +295,70 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              "results" => [
                %{"utm_campaign" => "ads", "visitors" => 2},
                %{"utm_campaign" => "Direct / None", "visitors" => 1}
+             ]
+           }
+  end
+
+  test "breakdown by visit:utm_content", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:pageview,
+        utm_content: "Content1",
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:pageview,
+        utm_content: "Content1",
+        timestamp: ~N[2021-01-01 00:25:00]
+      ),
+      build(:pageview,
+        utm_content: "",
+        timestamp: ~N[2021-01-01 00:00:00]
+      )
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "property" => "visit:utm_content"
+      })
+
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"utm_content" => "Content1", "visitors" => 2},
+               %{"utm_content" => "Direct / None", "visitors" => 1}
+             ]
+           }
+  end
+
+  test "breakdown by visit:utm_term", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:pageview,
+        utm_term: "Term1",
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:pageview,
+        utm_term: "Term1",
+        timestamp: ~N[2021-01-01 00:25:00]
+      ),
+      build(:pageview,
+        utm_term: "",
+        timestamp: ~N[2021-01-01 00:00:00]
+      )
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "property" => "visit:utm_term"
+      })
+
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"utm_term" => "Term1", "visitors" => 2},
+               %{"utm_term" => "Direct / None", "visitors" => 1}
              ]
            }
   end
