@@ -10,8 +10,9 @@ defmodule Plausible.Imported.Visitors do
     field :timestamp, :naive_datetime
     field :visitors, :integer
     field :pageviews, :integer
-    field :bounce_rate, :integer
-    field :avg_visit_duration, :integer
+    field :bounces, :integer
+    # Sum total
+    field :visit_duration, :integer
   end
 
   def new(attrs) do
@@ -23,8 +24,8 @@ defmodule Plausible.Imported.Visitors do
         :timestamp,
         :visitors,
         :pageviews,
-        :bounce_rate,
-        :avg_visit_duration
+        :bounces,
+        :visit_duration
       ],
       empty_values: [nil, ""]
     )
@@ -33,8 +34,8 @@ defmodule Plausible.Imported.Visitors do
       :timestamp,
       :visitors,
       :pageviews,
-      :bounce_rate,
-      :avg_visit_duration
+      :bounces,
+      :visit_duration
     ])
   end
 

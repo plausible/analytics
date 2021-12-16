@@ -27,7 +27,7 @@ defmodule Plausible.Imported do
          "dimensions" => [timestamp],
          "metrics" => [%{"values" => values}]
        }) do
-    [visitors, pageviews, bounce_rate, avg_session_duration] =
+    [visitors, pageviews, bounces, visit_duration] =
       values
       |> Enum.map(&Integer.parse/1)
       |> Enum.map(&elem(&1, 0))
@@ -37,8 +37,8 @@ defmodule Plausible.Imported do
       timestamp: format_timestamp(timestamp),
       visitors: visitors,
       pageviews: pageviews,
-      bounce_rate: bounce_rate,
-      avg_visit_duration: avg_session_duration
+      bounces: bounces,
+      visit_duration: visit_duration
     })
   end
 

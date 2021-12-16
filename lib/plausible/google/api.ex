@@ -184,8 +184,8 @@ defmodule Plausible.Google.Api do
         [
           "ga:users",
           "ga:pageviews",
-          "ga:bounceRate",
-          "ga:avgSessionDuration"
+          "ga:bounces",
+          "ga:sessionDuration"
         ]
       },
       # Sources
