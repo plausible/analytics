@@ -21,6 +21,8 @@ defmodule Plausible.ClickhouseSession do
     field :utm_medium, :string
     field :utm_source, :string
     field :utm_campaign, :string
+    field :utm_content, :string
+    field :utm_term, :string
     field :referrer, :string
     field :referrer_source, :string
 
@@ -60,6 +62,8 @@ defmodule Plausible.ClickhouseSession do
       :utm_medium,
       :utm_source,
       :utm_campaign,
+      :utm_content,
+      :utm_term,
       :country_code,
       :country_geoname_id,
       :subdivision1_code,

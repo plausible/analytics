@@ -314,6 +314,8 @@ defmodule Plausible.Stats.Base do
   defp db_prop_val(:utm_medium, @no_ref), do: ""
   defp db_prop_val(:utm_source, @no_ref), do: ""
   defp db_prop_val(:utm_campaign, @no_ref), do: ""
+  defp db_prop_val(:utm_content, @no_ref), do: ""
+  defp db_prop_val(:utm_term, @no_ref), do: ""
   defp db_prop_val(_, val), do: val
 
   defp utc_boundaries(%Query{period: "realtime"}, _timezone) do
