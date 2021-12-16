@@ -404,8 +404,6 @@ defmodule Plausible.Stats.Base do
     imported_q =
       case query.filters[property] do
         {:is_not, value} ->
-          # TODO: make this no_ref is actually being excluded.
-          # This is needed as the sources panel expects these filtered.
           value = if value == @no_ref, do: "", else: value
           where(imported_q, [i], field(i, ^dim) != ^value)
 
@@ -419,16 +417,28 @@ defmodule Plausible.Stats.Base do
     imported_q =
       case dim do
         :source ->
-          imported_q |> select_merge([i], %{source: i.source})
+          imported_q
+          |> select_merge([i], %{
+            source: fragment("if(empty(?), ?, ?)", i.source, @no_ref, i.source)
+          })
 
         :utm_medium ->
-          imported_q |> select_merge([i], %{utm_medium: i.utm_medium})
+          imported_q
+          |> select_merge([i], %{
+            utm_medium: fragment("if(empty(?), ?, ?)", i.utm_medium, @no_ref, i.utm_medium)
+          })
 
         :utm_source ->
-          imported_q |> select_merge([i], %{utm_source: i.utm_source})
+          imported_q
+          |> select_merge([i], %{
+            utm_source: fragment("if(empty(?), ?, ?)", i.utm_source, @no_ref, i.utm_source)
+          })
 
         :utm_campaign ->
-          imported_q |> select_merge([i], %{utm_campaign: i.utm_campaign})
+          imported_q
+          |> select_merge([i], %{
+            utm_campaign: fragment("if(empty(?), ?, ?)", i.utm_campaign, @no_ref, i.utm_campaign)
+          })
 
         :page ->
           imported_q
@@ -439,25 +449,11 @@ defmodule Plausible.Stats.Base do
           })
 
         :entry_page ->
-          imported_q =
-            imported_q
-            |> select_merge([i], %{
-              entry_page: i.entry_page,
-              visits: sum(i.entrances)
-            })
-
-          imported_q =
-            if :visit_duration in metrics do
-              select_merge(imported_q, [i], %{visit_duration: sum(i.visit_duration)})
-            else
-              imported_q
-            end
-
-          if :bounce_rate in metrics do
-            select_merge(imported_q, [i], %{bounces: sum(i.bounces)})
-          else
-            imported_q
-          end
+          imported_q
+          |> select_merge([i], %{
+            entry_page: i.entry_page,
+            visits: sum(i.entrances)
+          })
 
         :exit_page ->
           imported_q
@@ -476,24 +472,16 @@ defmodule Plausible.Stats.Base do
           imported_q |> select_merge([i], %{operating_system: i.operating_system})
       end
 
+    imported_q =
+      imported_q
+      |> select_imported_metrics(metrics)
+
     q =
       from(s in Ecto.Query.subquery(q),
         full_join: i in subquery(imported_q),
         on: field(s, ^dim) == field(i, ^dim)
       )
-
-    q =
-      if :visitors in metrics do
-        q
-        |> select_merge([s, i], %{
-          :visitors => fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors)
-        })
-        |> order_by([s, i],
-          desc: fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors)
-        )
-      else
-        q
-      end
+      |> select_joined_metrics(metrics)
 
     case dim do
       :source ->
@@ -537,50 +525,11 @@ defmodule Plausible.Stats.Base do
         end
 
       :entry_page ->
-        # TODO: Reverse-engineering the native data bounces and total visit
-        # durations to combine with imported data is inefficient. Instead both
-        # queries should fetch bounces/total_visit_duration and visits and be
-        # used as subqueries to a main query that then find the bounce rate/avg
-        # visit_duration.
-        q =
-          q
-          |> select_merge([s, i], %{
-            entry_page: fragment("if(empty(?), ?, ?)", i.entry_page, s.entry_page, i.entry_page),
-            visits: fragment("? + ?", s.visits, i.visits)
-          })
-
-        q =
-          if :visit_duration in metrics do
-            select_merge(q, [s, i], %{
-              visit_duration:
-                fragment(
-                  "(? + ? * ?) / (? + ?)",
-                  i.visit_duration,
-                  s.visit_duration,
-                  s.visits,
-                  s.visits,
-                  i.visits
-                )
-            })
-          else
-            q
-          end
-
-        if :bounce_rate in metrics do
-          select_merge(q, [s, i], %{
-            bounce_rate:
-              fragment(
-                "round(100 * (coalesce(?, 0) + coalesce((? * ? / 100), 0)) / (coalesce(?, 0) + coalesce(?, 0)))",
-                i.bounces,
-                s.bounce_rate,
-                s.visits,
-                i.visits,
-                s.visits
-              )
-          })
-        else
-          q
-        end
+        q
+        |> select_merge([s, i], %{
+          entry_page: fragment("if(empty(?), ?, ?)", i.entry_page, s.entry_page, i.entry_page),
+          visits: fragment("? + ?", s.visits, i.visits)
+        })
 
       :exit_page ->
         q
@@ -622,6 +571,83 @@ defmodule Plausible.Stats.Base do
   end
 
   def merge_imported(q, _, _, _, _), do: q
+
+  def select_imported_metrics(q, []), do: q
+
+  def select_imported_metrics(q, [:bounce_rate | rest]) do
+    q
+    |> select_merge([i], %{
+      bounces: sum(i.bounces),
+      visits: sum(i.visits)
+    })
+    |> select_imported_metrics(rest)
+  end
+
+  def select_imported_metrics(q, [:visit_duration | rest]) do
+    q
+    |> select_merge([i], %{visit_duration: sum(i.visit_duration)})
+    |> select_imported_metrics(rest)
+  end
+
+  def select_imported_metrics(q, [_ | rest]) do
+    q
+    |> select_imported_metrics(rest)
+  end
+
+  def select_joined_metrics(q, []), do: q
+  # TODO: Reverse-engineering the native data bounces and total visit
+  # durations to combine with imported data is inefficient. Instead both
+  # queries should fetch bounces/total_visit_duration and visits and be
+  # used as subqueries to a main query that then find the bounce rate/avg
+  # visit_duration.
+
+  def select_joined_metrics(q, [:visitors | rest]) do
+    q
+    |> select_merge([s, i], %{
+      :visitors => fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors)
+    })
+    |> order_by([s, i],
+      desc: fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors)
+    )
+    |> select_joined_metrics(rest)
+  end
+
+  def select_joined_metrics(q, [:bounce_rate | rest]) do
+    q
+    |> select_merge([s, i], %{
+      bounce_rate:
+        fragment(
+          "round(100 * (coalesce(?, 0) + coalesce((? * ? / 100), 0)) / (coalesce(?, 0) + coalesce(?, 0)))",
+          i.bounces,
+          s.bounce_rate,
+          s.visits,
+          i.visits,
+          s.visits
+        )
+    })
+    |> select_joined_metrics(rest)
+  end
+
+  def select_joined_metrics(q, [:visit_duration | rest]) do
+    q
+    |> select_merge([s, i], %{
+      visit_duration:
+        fragment(
+          "(? + ? * ?) / (? + ?)",
+          i.visit_duration,
+          s.visit_duration,
+          s.visits,
+          s.visits,
+          i.visits
+        )
+    })
+    |> select_joined_metrics(rest)
+  end
+
+  def select_joined_metrics(q, [_ | rest]) do
+    q
+    |> select_joined_metrics(rest)
+  end
 
   defp add_sample_hint(db_q, query) do
     case query.sample_threshold do
