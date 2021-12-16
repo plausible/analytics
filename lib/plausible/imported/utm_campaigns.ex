@@ -9,6 +9,7 @@ defmodule Plausible.Imported.UtmCampaigns do
     field :timestamp, :naive_datetime
     field :utm_campaign, :string, default: ""
     field :visitors, :integer
+    field :visits, :integer
     field :bounces, :integer
     # Sum total
     field :visit_duration, :integer
@@ -22,14 +23,20 @@ defmodule Plausible.Imported.UtmCampaigns do
         :domain,
         :timestamp,
         :utm_campaign,
-        :visitors
+        :visitors,
+        :visits,
+        :bounces,
+        :visit_duration
       ],
       empty_values: [nil, ""]
     )
     |> validate_required([
       :domain,
       :timestamp,
-      :visitors
+      :visitors,
+      :visits,
+      :bounces,
+      :visit_duration
     ])
   end
 end

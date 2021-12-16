@@ -25,6 +25,7 @@ defmodule Plausible.Imported.EntryPages do
         :entry_page,
         :visitors,
         :entrances,
+        :bounces,
         :visit_duration
       ],
       empty_values: [nil, ""]
@@ -35,6 +36,7 @@ defmodule Plausible.Imported.EntryPages do
       :entry_page,
       :visitors,
       :entrances,
+      :bounces,
       :visit_duration
     ])
   end

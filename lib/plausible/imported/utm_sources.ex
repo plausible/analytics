@@ -9,6 +9,7 @@ defmodule Plausible.Imported.UtmSources do
     field :timestamp, :naive_datetime
     field :utm_source, :string, default: ""
     field :visitors, :integer
+    field :visits, :integer
     field :bounces, :integer
     # Sum total
     field :visit_duration, :integer
@@ -22,14 +23,20 @@ defmodule Plausible.Imported.UtmSources do
         :domain,
         :timestamp,
         :utm_source,
-        :visitors
+        :visitors,
+        :visits,
+        :bounces,
+        :visit_duration
       ],
       empty_values: [nil, ""]
     )
     |> validate_required([
       :domain,
       :timestamp,
-      :visitors
+      :visitors,
+      :visits,
+      :bounces,
+      :visit_duration
     ])
   end
 end
