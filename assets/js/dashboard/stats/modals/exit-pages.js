@@ -4,7 +4,7 @@ import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import * as api from '../../api'
-import numberFormatter from '../../number-formatter'
+import numberFormatter from '../../util/number-formatter'
 import {parseQuery} from '../../query'
 
 class ExitPagesModal extends React.Component {

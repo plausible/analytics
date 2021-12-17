@@ -56,6 +56,8 @@ defmodule PlausibleWeb.Router do
     get "/:domain/utm_mediums", StatsController, :utm_mediums
     get "/:domain/utm_sources", StatsController, :utm_sources
     get "/:domain/utm_campaigns", StatsController, :utm_campaigns
+    get "/:domain/utm_contents", StatsController, :utm_contents
+    get "/:domain/utm_terms", StatsController, :utm_terms
     get "/:domain/referrers/:referrer", StatsController, :referrer_drilldown
     get "/:domain/pages", StatsController, :pages
     get "/:domain/entry-pages", StatsController, :entry_pages
@@ -86,7 +88,10 @@ defmodule PlausibleWeb.Router do
     pipe_through [:public_api, PlausibleWeb.AuthorizeSitesApiPlug]
 
     post "/", ExternalSitesController, :create_site
+    delete "/:site_id", ExternalSitesController, :delete_site
     put "/shared-links", ExternalSitesController, :find_or_create_shared_link
+    put "/goals", ExternalSitesController, :find_or_create_goal
+    delete "/goals/:goal_id", ExternalSitesController, :delete_goal
   end
 
   scope "/api", PlausibleWeb do

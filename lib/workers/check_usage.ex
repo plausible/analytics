@@ -40,6 +40,7 @@ defmodule Plausible.Workers.CheckUsage do
           on: s.user_id == u.id,
           left_join: ep in Plausible.Billing.EnterprisePlan,
           on: ep.user_id == u.id,
+          where: is_nil(u.grace_period),
           where: s.status == "active",
           where: not is_nil(s.last_bill_date),
           # Accounts for situations like last_bill_date==2021-01-31 AND today==2021-03-01. Since February never reaches the 31st day, the account is checked on 2021-03-01.

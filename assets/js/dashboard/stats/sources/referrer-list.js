@@ -5,9 +5,9 @@ import FlipMove from 'react-flip-move';
 import FadeIn from '../../fade-in'
 import Bar from '../bar'
 import MoreLink from '../more-link'
-import numberFormatter from '../../number-formatter'
+import numberFormatter from '../../util/number-formatter'
 import * as api from '../../api'
-import LazyLoader from '../../lazy-loader'
+import LazyLoader from '../../components/lazy-loader'
 
 function LinkOption(props) {
   if (props.disabled) {

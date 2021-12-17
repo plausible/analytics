@@ -280,5 +280,5 @@ defmodule Plausible.Billing do
 
   defp maybe_adjust_api_key_limits(err), do: err
 
-  defp paddle_api(), do: Application.fetch_env!(:plausible, :paddle_api)
+  def paddle_api(), do: Application.fetch_env!(:plausible, :paddle_api)
 end

@@ -1,4 +1,4 @@
-import {formatISO} from './date'
+import {formatISO} from './util/date'
 
 let abortController = new AbortController()
 let SHARED_LINK_AUTH = null

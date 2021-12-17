@@ -12,12 +12,12 @@ import Devices from './stats/devices'
 import Conversions from './stats/conversions'
 import { withPinnedHeader } from './pinned-header-hoc';
 
-class Historical extends React.Component {
-  renderConversions() {
-    if (this.props.site.hasGoals) {
+function Historical(props) {
+  function renderConversions() {
+    if (props.site.hasGoals) {
       return (
         <div className="items-start justify-between block w-full mt-6 md:flex">
-          <Conversions site={this.props.site} query={this.props.query} />
+          <Conversions site={props.site} query={props.query} />
         </div>
       )
     }
@@ -25,35 +25,33 @@ class Historical extends React.Component {
     return null
   }
 
-  render() {
-    const navClass = this.props.site.embedded ? 'relative' : 'sticky'
+  const navClass = props.site.embedded ? 'relative' : 'sticky'
 
-    return (
-      <div className="mb-12">
-        <div id="stats-container-top"></div>
-        <div className={`${navClass} top-0 sm:py-3 py-2 z-10 ${this.props.stuck && !this.props.site.embedded ? 'fullwidth-shadow bg-gray-50 dark:bg-gray-850' : ''}`}>
-          <div className="items-center w-full flex">
-            <div className="flex items-center w-full">
-              <SiteSwitcher site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} />
-              <CurrentVisitors timer={this.props.timer} site={this.props.site} query={this.props.query} />
-              <Filters className="flex" site={this.props.site} query={this.props.query} history={this.props.history} />
-            </div>
-            <Datepicker site={this.props.site} query={this.props.query} />
+  return (
+    <div className="mb-12">
+      <div id="stats-container-top"></div>
+      <div className={`${navClass} top-0 sm:py-3 py-2 z-10 ${props.stuck && !props.site.embedded ? 'fullwidth-shadow bg-gray-50 dark:bg-gray-850' : ''}`}>
+        <div className="items-center w-full flex">
+          <div className="flex items-center w-full">
+            <SiteSwitcher site={props.site} loggedIn={props.loggedIn} currentUserRole={props.currentUserRole} />
+            <CurrentVisitors timer={props.timer} site={props.site} query={props.query} />
+            <Filters className="flex" site={props.site} query={props.query} history={props.history} />
           </div>
+          <Datepicker site={props.site} query={props.query} />
         </div>
-        <VisitorGraph site={this.props.site} query={this.props.query} />
-        <div className="items-start justify-between block w-full md:flex">
-          <Sources site={this.props.site} query={this.props.query} />
-          <Pages site={this.props.site} query={this.props.query} />
-        </div>
-        <div className="items-start justify-between block w-full md:flex">
-          <Locations site={this.props.site} query={this.props.query} />
-          <Devices site={this.props.site} query={this.props.query} />
-        </div>
-        { this.renderConversions() }
       </div>
-    )
-  }
+      <VisitorGraph site={props.site} query={props.query} />
+      <div className="items-start justify-between block w-full md:flex">
+        <Sources site={props.site} query={props.query} />
+        <Pages site={props.site} query={props.query} />
+      </div>
+      <div className="items-start justify-between block w-full md:flex">
+        <Locations site={props.site} query={props.query} />
+        <Devices site={props.site} query={props.query} />
+      </div>
+      { renderConversions() }
+    </div>
+  )
 }
 
 export default withPinnedHeader(Historical, '#stats-container-top');
