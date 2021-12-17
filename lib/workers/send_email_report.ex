@@ -78,10 +78,6 @@ defmodule Plausible.Workers.SendEmailReport do
         name: name
       )
 
-    try do
-      Plausible.Mailer.send_email(template)
-    rescue
-      _ -> nil
-    end
+    Plausible.Mailer.send_email_safe(template)
   end
 end
