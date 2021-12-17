@@ -93,7 +93,7 @@ defmodule PlausibleWeb.Site.MembershipController do
       |> Repo.preload([:site, :inviter])
 
     PlausibleWeb.Email.ownership_transfer_request(invitation, user)
-    |> Plausible.Mailer.send_email()
+    |> Plausible.Mailer.send_email_safe()
 
     conn
     |> put_flash(:success, "Site transfer request has been sent to #{email}")
