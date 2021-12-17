@@ -9,7 +9,36 @@ defmodule Plausible.Billing.Plans do
     %{limit: 10_000_000, monthly_product_id: "655350", yearly_cost: "$250"}
   ]
 
+  @sandbox_plans [
+    %{
+      limit: 10_000,
+      monthly_product_id: "19878",
+      yearly_product_id: "20127",
+      monthly_cost: "$6",
+      yearly_cost: "$60"
+    },
+    %{
+      limit: 100_000,
+      monthly_product_id: "20657",
+      yearly_product_id: "20658",
+      monthly_cost: "$12.34",
+      yearly_cost: "$120.34"
+    }
+  ]
+
   def plans_for(user) do
+    case Application.get_env(:plausible, :environment) do
+      "dev" ->
+        Enum.map(@sandbox_plans, fn plan ->
+          Map.put(plan, :volume, number_format(plan[:limit]))
+        end)
+
+      _ ->
+        real_plans_for(user)
+    end
+  end
+
+  def real_plans_for(user) do
     user = Repo.preload(user, :subscription)
     v1_plans = plans_v1()
 
@@ -82,7 +111,10 @@ defmodule Plausible.Billing.Plans do
   end
 
   defp all_plans() do
-    plans_v1() ++ @unlisted_plans_v1 ++ plans_v2() ++ @unlisted_plans_v2
+    case Application.get_env(:plausible, :environment) do
+      "dev" -> @sandbox_plans
+      _ -> plans_v1() ++ @unlisted_plans_v1 ++ plans_v2() ++ @unlisted_plans_v2
+    end
   end
 
   defp plans_v1() do

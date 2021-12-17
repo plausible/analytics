@@ -58,10 +58,6 @@ defmodule Plausible.Workers.SpikeNotifier do
         dashboard_link
       )
 
-    try do
-      Plausible.Mailer.send_email(template)
-    rescue
-      _ -> nil
-    end
+    Plausible.Mailer.send_email_safe(template)
   end
 end

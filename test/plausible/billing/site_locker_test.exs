@@ -124,6 +124,33 @@ defmodule Plausible.Billing.SiteLockerTest do
       )
     end
 
+    test "does not send grace period email if site is already locked" do
+      user =
+        insert(:user,
+          grace_period: %Plausible.Auth.GracePeriod{
+            end_date: Timex.shift(Timex.today(), days: -1),
+            allowance_required: 10_000,
+            is_over: false
+          }
+        )
+
+      insert(:subscription, status: "active", user: user)
+      user = Repo.preload(user, :subscription)
+      insert(:site, members: [user])
+
+      SiteLocker.check_sites_for(user)
+
+      assert_email_delivered_with(
+        to: [user],
+        subject: "[Action required] Your Plausible dashboard is now locked"
+      )
+
+      user = Repo.reload!(user) |> Repo.preload(:subscription)
+      SiteLocker.check_sites_for(user)
+
+      assert_no_emails_delivered()
+    end
+
     test "locks all sites if user has no trial or active subscription" do
       user =
         insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))

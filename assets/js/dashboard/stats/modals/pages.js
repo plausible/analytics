@@ -4,7 +4,7 @@ import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import * as api from '../../api'
-import numberFormatter, {durationFormatter} from '../../number-formatter'
+import numberFormatter, {durationFormatter} from '../../util/number-formatter'
 import {parseQuery} from '../../query'
 
 class PagesModal extends React.Component {

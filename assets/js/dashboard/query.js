@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
-import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './date'
-import * as storage from './storage'
+import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './util/date'
+import * as storage from './util/storage'
 
 const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'custom']
 
@@ -30,6 +30,8 @@ export function parseQuery(querystring, site) {
       'utm_medium': q.get('utm_medium'),
       'utm_source': q.get('utm_source'),
       'utm_campaign': q.get('utm_campaign'),
+      'utm_content': q.get('utm_content'),
+      'utm_term': q.get('utm_term'),
       'referrer': q.get('referrer'),
       'screen': q.get('screen'),
       'browser': q.get('browser'),
@@ -159,6 +161,8 @@ export const formattedFilters = {
   'utm_medium': 'UTM Medium',
   'utm_source': 'UTM Source',
   'utm_campaign': 'UTM Campaign',
+  'utm_content': 'UTM Content',
+  'utm_term': 'UTM Term',
   'referrer': 'Referrer URL',
   'screen': 'Screen size',
   'browser': 'Browser',
