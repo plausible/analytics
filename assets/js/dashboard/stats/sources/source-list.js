@@ -295,6 +295,7 @@ export default class SourceList extends React.Component {
     const defaultClass = 'hover:text-indigo-600 cursor-pointer truncate text-left'
     const dropdownOptions = ['utm_medium', 'utm_source', 'utm_campaign']
     let buttonText = UTM_TAGS[this.state.tab] ? UTM_TAGS[this.state.tab].label : 'Campaigns'
+    buttonText = buttonText.replace(/^UTM /, '')
 
     return (
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
