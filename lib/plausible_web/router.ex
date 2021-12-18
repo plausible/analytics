@@ -84,6 +84,13 @@ defmodule PlausibleWeb.Router do
     get "/timeseries", ExternalStatsController, :timeseries
   end
 
+  scope "/api/v1/events", PlausibleWeb.Api do
+    pipe_through [:public_api, PlausibleWeb.AuthorizeEventsApiPlug]
+
+    get "/", ExternalEventsController, :list
+    get "/:event_id/properties", ExternalEventsController, :properties
+  end
+
   scope "/api/v1/sites", PlausibleWeb.Api do
     pipe_through [:public_api, PlausibleWeb.AuthorizeSitesApiPlug]
 

@@ -6,7 +6,7 @@ defmodule Plausible.Auth.ApiKey do
   @optional [:key, :scopes, :hourly_request_limit]
   schema "api_keys" do
     field :name, :string
-    field :scopes, {:array, :string}, default: ["stats:read:*"]
+    field :scopes, {:array, :string}, default: ["stats:read:*", "events:read:*"]
     field :hourly_request_limit, :integer, default: 600
 
     field :key, :string, virtual: true
