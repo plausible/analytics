@@ -398,8 +398,9 @@ defmodule Plausible.Stats.Base do
         group_by: field(i, ^dim),
         where: i.domain == ^site.domain,
         where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
-        select: %{visitors: sum(i.visitors)}
+        select: %{}
       )
+      |> select_imported_metrics(metrics)
 
     imported_q =
       case query.filters[property] do
@@ -444,7 +445,6 @@ defmodule Plausible.Stats.Base do
           imported_q
           |> select_merge([i], %{
             page: i.page,
-            pageviews: sum(i.pageviews),
             time_on_page: sum(i.time_on_page)
           })
 
@@ -471,10 +471,6 @@ defmodule Plausible.Stats.Base do
         :operating_system ->
           imported_q |> select_merge([i], %{operating_system: i.operating_system})
       end
-
-    imported_q =
-      imported_q
-      |> select_imported_metrics(metrics)
 
     q =
       from(s in Ecto.Query.subquery(q),
@@ -514,15 +510,6 @@ defmodule Plausible.Stats.Base do
         |> select_merge([s, i], %{
           page: fragment("if(empty(?), ?, ?)", i.page, s.page, i.page)
         })
-
-        if :pageviews in metrics do
-          q
-          |> select_merge([s, i], %{
-            pageviews: fragment("coalesce(?, 0) + coalesce(?, 0)", s.pageviews, i.pageviews)
-          })
-        else
-          q
-        end
 
       :entry_page ->
         q
@@ -570,9 +557,41 @@ defmodule Plausible.Stats.Base do
     end
   end
 
+  def merge_imported(q, site, query, :aggregate, metrics) do
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
+
+    imported_q =
+      from(
+        i in "imported_visitors",
+        where: i.domain == ^site.domain,
+        where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
+        select: %{}
+      )
+      |> select_imported_metrics(metrics)
+
+    from(
+      s in subquery(q),
+      cross_join: i in subquery(imported_q),
+      select: %{}
+    )
+    |> select_joined_metrics(metrics)
+  end
+
   def merge_imported(q, _, _, _, _), do: q
 
   def select_imported_metrics(q, []), do: q
+
+  def select_imported_metrics(q, [:visitors | rest]) do
+    q
+    |> select_merge([i], %{visitors: sum(i.visitors)})
+    |> select_imported_metrics(rest)
+  end
+
+  def select_imported_metrics(q, [:pageviews | rest]) do
+    q
+    |> select_merge([i], %{pageviews: sum(i.pageviews)})
+    |> select_imported_metrics(rest)
+  end
 
   def select_imported_metrics(q, [:bounce_rate | rest]) do
     q
@@ -609,6 +628,14 @@ defmodule Plausible.Stats.Base do
     |> order_by([s, i],
       desc: fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors)
     )
+    |> select_joined_metrics(rest)
+  end
+
+  def select_joined_metrics(q, [:pageviews | rest]) do
+    q
+    |> select_merge([s, i], %{
+      pageviews: fragment("coalesce(?, 0) + coalesce(?, 0)", s.pageviews, i.pageviews)
+    })
     |> select_joined_metrics(rest)
   end
 

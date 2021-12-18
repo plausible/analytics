@@ -11,6 +11,7 @@ defmodule Plausible.Imported.Visitors do
     field :visitors, :integer
     field :pageviews, :integer
     field :bounces, :integer
+    field :visits, :integer
     # Sum total
     field :visit_duration, :integer
   end
@@ -25,6 +26,7 @@ defmodule Plausible.Imported.Visitors do
         :visitors,
         :pageviews,
         :bounces,
+        :visits,
         :visit_duration
       ],
       empty_values: [nil, ""]
@@ -35,6 +37,7 @@ defmodule Plausible.Imported.Visitors do
       :visitors,
       :pageviews,
       :bounces,
+      :visits,
       :visit_duration
     ])
   end

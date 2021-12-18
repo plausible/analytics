@@ -185,6 +185,7 @@ defmodule Plausible.Google.Api do
           "ga:users",
           "ga:pageviews",
           "ga:bounces",
+          "ga:sessions",
           "ga:sessionDuration"
         ]
       },

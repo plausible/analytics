@@ -7,7 +7,8 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
       add :timestamp, :naive_datetime
       add :visitors, :UInt64
       add :pageviews, :UInt64
-      add :bounces, :UInt32
+      add :bounces, :UInt64
+      add :visits, :UInt64
       add :visit_duration, :UInt64
     end
   end
