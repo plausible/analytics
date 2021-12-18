@@ -86,13 +86,10 @@ sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
 honeycomb_api_key = get_var_from_path_or_env(config_dir, "HONEYCOMB_API_KEY")
 honeycomb_dataset = get_var_from_path_or_env(config_dir, "HONEYCOMB_DATASET")
 paddle_auth_code = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_AUTH_CODE")
+paddle_vendor_id = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_ID")
 google_cid = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_ID")
 google_secret = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_SECRET")
 slack_hook_url = get_var_from_path_or_env(config_dir, "SLACK_WEBHOOK")
-twitter_consumer_key = get_var_from_path_or_env(config_dir, "TWITTER_CONSUMER_KEY")
-twitter_consumer_secret = get_var_from_path_or_env(config_dir, "TWITTER_CONSUMER_SECRET")
-twitter_token = get_var_from_path_or_env(config_dir, "TWITTER_ACCESS_TOKEN")
-twitter_token_secret = get_var_from_path_or_env(config_dir, "TWITTER_ACCESS_TOKEN_SECRET")
 postmark_api_key = get_var_from_path_or_env(config_dir, "POSTMARK_API_KEY")
 
 cron_enabled =
@@ -114,6 +111,7 @@ geolite2_country_db =
   )
 
 ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", geolite2_country_db)
+geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
 
 disable_auth =
   config_dir
@@ -224,7 +222,9 @@ config :sentry,
   enable_source_code_context: true,
   root_source_code_path: [File.cwd!()]
 
-config :plausible, :paddle, vendor_auth_code: paddle_auth_code
+config :plausible, :paddle,
+  vendor_auth_code: paddle_auth_code,
+  vendor_id: paddle_vendor_id
 
 config :plausible, :google,
   client_id: google_cid,
@@ -271,12 +271,6 @@ case mailer_adapter do
     raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
 end
 
-config :plausible, :twitter,
-  consumer_key: twitter_consumer_key,
-  consumer_secret: twitter_consumer_secret,
-  token: twitter_token,
-  token_secret: twitter_token_secret
-
 config :plausible, :custom_domain_server,
   user: custom_domain_server_user,
   password: custom_domain_server_password,
@@ -296,8 +290,6 @@ if config_env() == :prod && !disable_cron do
     {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
     # hourly
     {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
-    # Daily at midnight
-    {"0 0 * * *", Plausible.Workers.FetchTweets},
     # Daily at midday
     {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
     # Every 15 minutes
@@ -326,7 +318,6 @@ if config_env() == :prod && !disable_cron do
     schedule_email_reports: 1,
     send_email_reports: 1,
     spike_notifications: 1,
-    fetch_tweets: 1,
     check_stats_emails: 1,
     site_setup_emails: 1,
     clean_email_verification_codes: 1,
@@ -408,6 +399,10 @@ if config_env() != :test do
         result_as: :raw
       }
     ]
+end
+
+if geonames_source_file do
+  config :location, :geonames_source_file, geonames_source_file
 end
 
 config :logger,

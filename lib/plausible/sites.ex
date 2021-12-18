@@ -145,6 +145,11 @@ defmodule Plausible.Sites do
     )
   end
 
+  def delete!(site) do
+    Repo.delete!(site)
+    Plausible.ClickhouseRepo.clear_stats_for(site.domain)
+  end
+
   def add_custom_domain(site, custom_domain) do
     CustomDomain.changeset(%CustomDomain{}, %{
       site_id: site.id,

@@ -2,11 +2,10 @@ import React from 'react';
 import { withRouter } from 'react-router-dom'
 import Chart from 'chart.js/auto';
 import { navigateToQuery } from '../query'
-import numberFormatter, {durationFormatter} from '../number-formatter'
+import numberFormatter, {durationFormatter} from '../util/number-formatter'
 import * as api from '../api'
 import * as storage from '../storage'
-import { ThemeContext } from '../theme-context'
-import LazyLoader from '../lazy-loader'
+import LazyLoader from '../components/lazy-loader'
 import { withComparisonConsumer } from '../comparison-consumer-hoc'
 
 function buildDataSet(plot, present_index, ctx, label, isPrevious) {
@@ -376,6 +375,7 @@ class LineGraph extends React.Component {
     if (!metric) {
       this.chart.destroy();
     }
+
   }
 
   componentWillUnmount() {
@@ -629,14 +629,12 @@ export default class VisitorGraph extends React.Component {
   renderInner() {
     const { query, site } = this.props;
     const { graphData, metric } = this.state;
+    
+    const theme = document.querySelector('html').classList.contains('dark') || false
 
     if (graphData) {
       return (
-        <ThemeContext.Consumer>
-          {theme => (
-            <LineGraphWithRouter graphData={graphData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} />
-          )}
-        </ThemeContext.Consumer>
+          <LineGraphWithRouter graphData={graphData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} />
       )
     }
   }
