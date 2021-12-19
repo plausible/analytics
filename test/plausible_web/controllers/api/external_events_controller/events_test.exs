@@ -32,20 +32,22 @@ defmodule PlausibleWeb.Api.ExternalSitesController.EventsTest do
       conn
       |> get("/api/v1/events", %{"site_id" => site.domain})
 
-    assert json_response(conn, 200) == [
-             %{
-               "event_type" => "custom",
-               "id" => cusom_event.id,
-               "name" => "404",
-               "props" => []
-             },
-             %{
-               "event_type" => "pageview",
-               "id" => pageview_event.id,
-               "name" => "Visit /test",
-               "props" => []
-             }
-           ]
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{
+                 "event_type" => "custom",
+                 "id" => cusom_event.id,
+                 "name" => "404",
+                 "props" => []
+               },
+               %{
+                 "event_type" => "pageview",
+                 "id" => pageview_event.id,
+                 "name" => "Visit /test",
+                 "props" => []
+               }
+             ]
+           }
   end
 
   test "custom properties are returned", %{
@@ -92,12 +94,12 @@ defmodule PlausibleWeb.Api.ExternalSitesController.EventsTest do
       conn
       |> get("/api/v1/events", %{"site_id" => site.domain})
 
-    response = json_response(conn, 200)
+    res =
+      Enum.map(json_response(conn, 200)["results"], fn item ->
+        Map.update(item, "props", [], fn x -> Enum.sort(x) end)
+      end)
 
-    response =
-      Enum.map(response, fn item -> Map.update(item, "props", [], fn x -> Enum.sort(x) end) end)
-
-    assert response == [
+    assert res == [
              %{
                "event_type" => "custom",
                "id" => cusom_event.id,

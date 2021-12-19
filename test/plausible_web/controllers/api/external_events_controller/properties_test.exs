@@ -43,8 +43,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController.PropertiesTest do
       conn
       |> get("/api/v1/events/#{cusom_event.id}/properties", %{"site_id" => site.domain})
 
-    response = json_response(conn, 200)
-    assert Enum.sort(response) == ["OS", "method", "version"]
+    assert Enum.sort(json_response(conn, 200)["results"]) == ["OS", "method", "version"]
   end
 
   test "event not belonging to the domain is not returned", %{

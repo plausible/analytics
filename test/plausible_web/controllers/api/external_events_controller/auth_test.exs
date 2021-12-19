@@ -75,9 +75,11 @@ defmodule PlausibleWeb.Api.ExternalSitesController.AuthTest do
         conn
         |> get("/api/v1/events", %{"site_id" => site.domain})
 
-      assert json_response(conn, 200) == [
-               %{"event_type" => "custom", "id" => event.id, "name" => "404", "props" => []}
-             ]
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"event_type" => "custom", "id" => event.id, "name" => "404", "props" => []}
+               ]
+             }
     end
 
     test "can access as an admin", %{conn: conn, user: user} do
@@ -89,9 +91,11 @@ defmodule PlausibleWeb.Api.ExternalSitesController.AuthTest do
         conn
         |> get("/api/v1/events", %{"site_id" => site.domain})
 
-      assert json_response(conn, 200) == [
-               %{"event_type" => "custom", "id" => event.id, "name" => "404", "props" => []}
-             ]
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"event_type" => "custom", "id" => event.id, "name" => "404", "props" => []}
+               ]
+             }
     end
 
     test "limits the rate of API requests", %{user: user} do
@@ -186,7 +190,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController.AuthTest do
         conn
         |> get("/api/v1/events/#{event.id}/properties", %{"site_id" => site.domain})
 
-      assert json_response(conn, 200) == []
+      assert json_response(conn, 200) == %{"results" => []}
     end
 
     test "can access as an admin", %{conn: conn, user: user} do
@@ -198,7 +202,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController.AuthTest do
         conn
         |> get("/api/v1/events/#{event.id}/properties", %{"site_id" => site.domain})
 
-      assert json_response(conn, 200) == []
+      assert json_response(conn, 200) == %{"results" => []}
     end
 
     test "limits the rate of API requests", %{user: user} do

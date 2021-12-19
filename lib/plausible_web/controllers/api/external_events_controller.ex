@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Api.ExternalEventsController do
 
   def list(conn, _params) do
     site = conn.assigns[:site]
-    json(conn, EventProps.props(site))
+    json(conn, %{"results" => EventProps.props(site)})
   end
 
   def properties(conn, params) do
@@ -17,7 +17,7 @@ defmodule PlausibleWeb.Api.ExternalEventsController do
       event = Repo.get_by(Plausible.Goal, id: event_id, domain: site.domain)
 
       if event do
-        json(conn, EventProps.props(site, event.event_name))
+        json(conn, %{"results" => EventProps.props(site, event.event_name)})
       else
         H.not_found(conn, "Event could not be found")
       end
