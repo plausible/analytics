@@ -60,13 +60,13 @@
     <% end %>
 
     <%= for site <- @sites do %>
-      <div class="relative group">
+      <div class="relative">
         <%= link(to: "/" <> URI.encode_www_form(site.domain)) do %>
           <li class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
             <div class="w-full flex items-center justify-between space-x-4">
               <img src="/favicon/sources/<%= site.domain %>.ico" class="w-4 h-4 flex-shrink-0 mt-px">
-              <div class="flex-1 truncate -mt-px">
-                <h3 class="text-gray-900 font-medium text-lg truncate dark:text-gray-100"><%= site.domain %></h3>
+              <div class="flex-1 -mt-px w-full">
+                <h3 class="text-gray-900 font-medium text-lg truncate dark:text-gray-100" style="width: calc(100% - 4rem)"><%= site.domain %></h3>
               </div>
             </div>
             <div class="pl-8 mt-2 flex items-center justify-between">
