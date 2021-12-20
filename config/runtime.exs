@@ -97,12 +97,6 @@ cron_enabled =
   |> get_var_from_path_or_env("CRON_ENABLED", "false")
   |> String.to_existing_atom()
 
-custom_domain_server_ip = get_var_from_path_or_env(config_dir, "CUSTOM_DOMAIN_SERVER_IP")
-custom_domain_server_user = get_var_from_path_or_env(config_dir, "CUSTOM_DOMAIN_SERVER_USER")
-
-custom_domain_server_password =
-  get_var_from_path_or_env(config_dir, "CUSTOM_DOMAIN_SERVER_PASSWORD")
-
 geolite2_country_db =
   get_var_from_path_or_env(
     config_dir,
@@ -271,11 +265,6 @@ case mailer_adapter do
     raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
 end
 
-config :plausible, :custom_domain_server,
-  user: custom_domain_server_user,
-  password: custom_domain_server_password,
-  ip: custom_domain_server_ip
-
 config :plausible, PlausibleWeb.Firewall,
   blocklist:
     get_var_from_path_or_env(config_dir, "IP_BLOCKLIST", "")
@@ -307,8 +296,6 @@ if config_env() == :prod && !disable_cron do
     {"0 14 * * *", Plausible.Workers.CheckUsage},
     # Daily at 15
     {"0 15 * * *", Plausible.Workers.NotifyAnnualRenewal},
-    # Every 10 minutes
-    {"*/10 * * * *", Plausible.Workers.ProvisionSslCertificates},
     # Every midnight
     {"0 0 * * *", Plausible.Workers.LockSites}
   ]
