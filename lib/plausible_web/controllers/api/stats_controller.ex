@@ -287,6 +287,64 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  def utm_contents(conn, params) do
+    site = conn.assigns[:site]
+
+    query =
+      Query.from(site.timezone, params)
+      |> Filters.add_prefix()
+      |> maybe_hide_noref("visit:utm_content", params)
+
+    pagination = parse_pagination(params)
+    metrics = ["visitors", "bounce_rate", "visit_duration"]
+
+    res =
+      Stats.breakdown(site, query, "visit:utm_content", metrics, pagination)
+      |> maybe_add_cr(site, query, pagination, "utm_content", "visit:utm_content")
+      |> transform_keys(%{"utm_content" => "name"})
+
+    if params["csv"] do
+      if Map.has_key?(query.filters, "event:goal") do
+        res
+        |> transform_keys(%{"visitors" => "conversions"})
+        |> to_csv(["name", "conversions", "conversion_rate"])
+      else
+        res |> to_csv(["name", "visitors", "bounce_rate", "visit_duration"])
+      end
+    else
+      json(conn, res)
+    end
+  end
+
+  def utm_terms(conn, params) do
+    site = conn.assigns[:site]
+
+    query =
+      Query.from(site.timezone, params)
+      |> Filters.add_prefix()
+      |> maybe_hide_noref("visit:utm_term", params)
+
+    pagination = parse_pagination(params)
+    metrics = ["visitors", "bounce_rate", "visit_duration"]
+
+    res =
+      Stats.breakdown(site, query, "visit:utm_term", metrics, pagination)
+      |> maybe_add_cr(site, query, pagination, "utm_term", "visit:utm_term")
+      |> transform_keys(%{"utm_term" => "name"})
+
+    if params["csv"] do
+      if Map.has_key?(query.filters, "event:goal") do
+        res
+        |> transform_keys(%{"visitors" => "conversions"})
+        |> to_csv(["name", "conversions", "conversion_rate"])
+      else
+        res |> to_csv(["name", "visitors", "bounce_rate", "visit_duration"])
+      end
+    else
+      json(conn, res)
+    end
+  end
+
   def utm_sources(conn, params) do
     site = conn.assigns[:site]
 
@@ -487,15 +545,15 @@ defmodule PlausibleWeb.Api.StatsController do
     countries =
       Stats.breakdown(site, query, "visit:country", ["visitors"], pagination)
       |> maybe_add_cr(site, query, {300, 1}, "country", "visit:country")
-      |> transform_keys(%{"country" => "name"})
+      |> transform_keys(%{"country" => "code"})
       |> maybe_add_percentages(query)
 
     if params["csv"] do
       countries =
         countries
         |> Enum.map(fn country ->
-          iso3166 = Stats.CountryName.from_iso3166(country["name"])
-          Map.put(country, "name", iso3166)
+          country_info = Location.get_country(country["code"])
+          Map.put(country, "name", country_info.name)
         end)
 
       if Map.has_key?(query.filters, "event:goal") do
@@ -507,9 +565,15 @@ defmodule PlausibleWeb.Api.StatsController do
       end
     else
       countries =
-        Enum.map(countries, fn country ->
-          alpha3 = Stats.CountryName.to_alpha3(country["name"])
-          Map.put(country, "name", alpha3)
+        Enum.map(countries, fn row ->
+          country = Location.get_country(row["code"])
+
+          Map.merge(row, %{
+            "name" => country.name,
+            "flag" => country.flag,
+            "alpha_3" => country.alpha_3,
+            "code" => country.alpha_2
+          })
         end)
 
       json(conn, countries)
@@ -525,8 +589,9 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:region", ["visitors"], pagination)
       |> transform_keys(%{"region" => "code"})
       |> Enum.map(fn region ->
-        name = Stats.CountryName.from_iso3166_2(region["code"])
-        Map.put(region, "name", name)
+        region_entry = Location.get_subdivision(region["code"])
+        country_entry = Location.get_country(region_entry.country_code)
+        Map.merge(region, %{"name" => region_entry.name, "country_flag" => country_entry.flag})
       end)
 
     json(conn, countries)
@@ -541,8 +606,18 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:city", ["visitors"], pagination)
       |> transform_keys(%{"city" => "code"})
       |> Enum.map(fn city ->
-        name = Stats.CountryName.from_geoname_id(city["code"], "N/A")
-        Map.put(city, "name", name)
+        city_info = Location.get_city(city["code"])
+
+        if city_info do
+          country_info = Location.get_country(city_info.country_code)
+
+          Map.merge(city, %{
+            "name" => city_info.name,
+            "country_flag" => country_info.flag
+          })
+        else
+          Map.merge(city, %{"name" => "N/A"})
+        end
       end)
 
     json(conn, cities)

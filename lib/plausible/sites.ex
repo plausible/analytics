@@ -1,6 +1,6 @@
 defmodule Plausible.Sites do
   use Plausible.Repo
-  alias Plausible.Site.{CustomDomain, SharedLink}
+  alias Plausible.Site.SharedLink
 
   def create(user, params) do
     count = Enum.count(owned_by(user))
@@ -145,11 +145,8 @@ defmodule Plausible.Sites do
     )
   end
 
-  def add_custom_domain(site, custom_domain) do
-    CustomDomain.changeset(%CustomDomain{}, %{
-      site_id: site.id,
-      domain: custom_domain
-    })
-    |> Repo.insert()
+  def delete!(site) do
+    Repo.delete!(site)
+    Plausible.ClickhouseRepo.clear_stats_for(site.domain)
   end
 end

@@ -58,7 +58,7 @@ defmodule Plausible.MixProject do
       {:jason, "~> 1.2"},
       {:phoenix, "~> 1.5.0"},
       {:phoenix_ecto, "~> 4.0"},
-      {:phoenix_html, "~> 2.11"},
+      {:phoenix_html, "~> 2.12"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_pubsub, "~> 2.0"},
       {:plug_cowboy, "~> 2.3"},
@@ -82,9 +82,9 @@ defmodule Plausible.MixProject do
       {:nanoid, "~> 2.0.2"},
       {:siphash, "~> 3.2"},
       {:oban, "~> 2.0"},
-      {:sshex, "2.2.1"},
       {:geolix, "~> 1.0"},
       {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
+      {:location, git: "https://github.com/plausible/location.git"},
       {:geolix_adapter_mmdb2, "~> 0.5.0"},
       {:cachex, "~> 3.4"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
@@ -100,7 +100,8 @@ defmodule Plausible.MixProject do
       {:opentelemetry_exporter, "1.0.0-rc.3"},
       {:opentelemetry_phoenix, "1.0.0-rc.5"},
       {:opentelemetry_ecto, "1.0.0-rc.3"},
-      {:opentelemetry_oban, "~> 0.2.0-rc.2"}
+      {:opentelemetry_oban, "~> 0.2.0-rc.2"},
+      {:floki, "~> 0.32.0", only: :test}
     ]
   end
 

@@ -1,3 +1,18 @@
+defimpl Jason.Encoder, for: Plausible.Goal do
+  def encode(value, opts) do
+    goal_type =
+      cond do
+        value.event_name -> :event
+        value.page_path -> :page
+      end
+
+    value
+    |> Map.put(:goal_type, goal_type)
+    |> Map.take([:id, :domain, :goal_type, :event_name, :page_path])
+    |> Jason.Encode.map(opts)
+  end
+end
+
 defmodule Plausible.Goal do
   use Ecto.Schema
   import Ecto.Changeset

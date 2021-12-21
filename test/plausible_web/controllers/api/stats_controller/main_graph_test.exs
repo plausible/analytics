@@ -301,14 +301,14 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   describe "GET /api/stats/main-graph - top stats - filters" do
     setup [:create_user, :log_in, :create_new_site]
 
-    test "returns only visitors from a country based on alpha3 code", %{conn: conn, site: site} do
+    test "returns only visitors from a country based on alpha2 code", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, country_code: "US"),
         build(:pageview, country_code: "US"),
         build(:pageview, country_code: "EE")
       ])
 
-      filters = Jason.encode!(%{country: "USA"})
+      filters = Jason.encode!(%{country: "US"})
 
       conn =
         get(

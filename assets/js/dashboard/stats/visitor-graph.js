@@ -2,10 +2,9 @@ import React from 'react';
 import { withRouter } from 'react-router-dom'
 import Chart from 'chart.js/auto';
 import { navigateToQuery } from '../query'
-import numberFormatter, {durationFormatter} from '../number-formatter'
+import numberFormatter, {durationFormatter} from '../util/number-formatter'
 import * as api from '../api'
-import {ThemeContext} from '../theme-context'
-import LazyLoader from '../lazy-loader'
+import LazyLoader from '../components/lazy-loader'
 
 function buildDataSet(plot, present_index, ctx, label) {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
@@ -205,12 +204,6 @@ class LineGraph extends React.Component {
 
       this.chart.update()
     }
-
-    if (prevProps.darkTheme !== this.props.darkTheme) {
-      this.chart.destroy();
-      this.chart = this.regenerateChart();
-      this.chart.update();
-    }
   }
 
   /**
@@ -403,12 +396,10 @@ export default class VisitorGraph extends React.Component {
 
   renderInner() {
     if (this.state.graphData) {
+      const theme = document.querySelector('html').classList.contains('dark') || false
+
       return (
-        <ThemeContext.Consumer>
-          {theme => (
-            <LineGraphWithRouter graphData={this.state.graphData} site={this.props.site} query={this.props.query} darkTheme={theme}/>
-          )}
-        </ThemeContext.Consumer>
+        <LineGraphWithRouter graphData={this.state.graphData} site={this.props.site} query={this.props.query} darkTheme={theme}/>
       )
     }
   }

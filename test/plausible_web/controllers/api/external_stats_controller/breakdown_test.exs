@@ -268,20 +268,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   test "breakdown by visit:utm_campaign", %{conn: conn, site: site} do
-    populate_stats([
+    populate_stats(site, [
       build(:pageview,
         utm_campaign: "ads",
-        domain: site.domain,
         timestamp: ~N[2021-01-01 00:00:00]
       ),
       build(:pageview,
         utm_campaign: "ads",
-        domain: site.domain,
         timestamp: ~N[2021-01-01 00:25:00]
       ),
       build(:pageview,
         utm_campaign: "",
-        domain: site.domain,
         timestamp: ~N[2021-01-01 00:00:00]
       )
     ])
@@ -298,6 +295,70 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              "results" => [
                %{"utm_campaign" => "ads", "visitors" => 2},
                %{"utm_campaign" => "Direct / None", "visitors" => 1}
+             ]
+           }
+  end
+
+  test "breakdown by visit:utm_content", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:pageview,
+        utm_content: "Content1",
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:pageview,
+        utm_content: "Content1",
+        timestamp: ~N[2021-01-01 00:25:00]
+      ),
+      build(:pageview,
+        utm_content: "",
+        timestamp: ~N[2021-01-01 00:00:00]
+      )
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "property" => "visit:utm_content"
+      })
+
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"utm_content" => "Content1", "visitors" => 2},
+               %{"utm_content" => "Direct / None", "visitors" => 1}
+             ]
+           }
+  end
+
+  test "breakdown by visit:utm_term", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:pageview,
+        utm_term: "Term1",
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:pageview,
+        utm_term: "Term1",
+        timestamp: ~N[2021-01-01 00:25:00]
+      ),
+      build(:pageview,
+        utm_term: "",
+        timestamp: ~N[2021-01-01 00:00:00]
+      )
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "property" => "visit:utm_term"
+      })
+
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"utm_term" => "Term1", "visitors" => 2},
+               %{"utm_term" => "Direct / None", "visitors" => 1}
              ]
            }
   end
@@ -523,6 +584,65 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                "results" => [
                  %{"name" => "Signup", "visitors" => 2},
                  %{"name" => "pageview", "visitors" => 1}
+               ]
+             }
+    end
+
+    test "can breakdown by event:name with visitors and events metrics", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview,
+          domain: site.domain,
+          pathname: "/non-existing",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "404",
+          domain: site.domain,
+          pathname: "/non-existing",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          domain: site.domain,
+          pathname: "/non-existing",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:01]
+        ),
+        build(:pageview,
+          domain: site.domain,
+          pathname: "/non-existing",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:02]
+        ),
+        build(:event,
+          name: "404",
+          domain: site.domain,
+          pathname: "/non-existing",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:02]
+        ),
+        build(:pageview,
+          domain: site.domain,
+          pathname: "/non-existing",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:03]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:name",
+          "metrics" => "visitors,events"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"name" => "pageview", "visitors" => 1, "events" => 4},
+                 %{"name" => "404", "visitors" => 1, "events" => 2}
                ]
              }
     end
@@ -1489,7 +1609,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "period" => "day",
           "date" => "2021-01-01",
           "property" => "event:page",
-          "metrics" => "visitors,pageviews,bounce_rate,visit_duration"
+          "metrics" => "visitors,pageviews,events,bounce_rate,visit_duration"
         })
 
       assert json_response(conn, 200) == %{
@@ -1499,14 +1619,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                    "visitors" => 2,
                    "bounce_rate" => 50,
                    "visit_duration" => 300,
-                   "pageviews" => 2
+                   "pageviews" => 2,
+                   "events" => 2
                  },
                  %{
                    "page" => "/plausible.io",
                    "visitors" => 2,
                    "bounce_rate" => 100,
                    "visit_duration" => 0,
-                   "pageviews" => 2
+                   "pageviews" => 2,
+                   "events" => 2
                  }
                ]
              }

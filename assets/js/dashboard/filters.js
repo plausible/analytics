@@ -2,7 +2,6 @@ import React, { Fragment, useState } from 'react';
 import { Link, withRouter } from 'react-router-dom'
 import { AdjustmentsIcon, PlusIcon, XIcon, PencilIcon } from '@heroicons/react/solid'
 import classNames from 'classnames'
-import Datamap from 'datamaps'
 import { Menu, Transition } from '@headlessui/react'
 
 import { appliedFilters, navigateToQuery, formattedFilters } from './query'
@@ -12,9 +11,11 @@ function removeFilter(key, history, query) {
   const newOpts = {
     [key]: false
   }
-  if (key === 'goal')   { newOpts.props = false }
-  if (key === 'region') { newOpts.region_name = false }
-  if (key === 'city')   { newOpts.city_name = false }
+  if (key === 'goal')    { newOpts.props = false }
+  if (key === 'country') { newOpts.country_name = false }
+  if (key === 'region')  { newOpts.region_name = false }
+  if (key === 'city')    { newOpts.city_name = false }
+
   navigateToQuery(
     history,
     query,
@@ -59,9 +60,9 @@ function filterText(key, rawValue, query) {
     return <>{osName}.Version {type} <b>{value}</b></>
   }
   if (key === "country") {
-    const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
-    const selectedCountry = allCountries.find((c) => c.id === value) || {properties: {name: value}};
-    return <>Country {type} <b>{selectedCountry.properties.name}</b></>
+    const q = new URLSearchParams(window.location.search)
+    const countryName = q.get('country_name')
+    return <>Country {type} <b>{countryName}</b></>
   }
 
   if (key === "region") {
