@@ -1,6 +1,6 @@
 import React from 'react';
 import { ComparisonContext } from './comparison-context'
-import * as storage from './storage'
+import * as storage from './util/storage'
 
 
 export const withComparisonProvider = (WrappedComponent) => {

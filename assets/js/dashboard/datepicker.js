@@ -20,7 +20,6 @@ import {
   isAfter,
 } from "./util/date";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
-import { withComparisonConsumer } from "./comparison-consumer-hoc";
 
 function renderArrow(query, site, period, prevDate, nextDate) {
   const insertionDate = parseUTCDate(site.insertedAt);
@@ -444,4 +443,4 @@ class DatePicker extends React.Component {
   }
 }
 
-export default withComparisonConsumer(withRouter(DatePicker));
+export default withRouter(DatePicker);
