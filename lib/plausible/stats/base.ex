@@ -671,6 +671,12 @@ defmodule Plausible.Stats.Base do
     |> select_joined_metrics(rest)
   end
 
+  def select_joined_metrics(q, [:sample_percent | rest]) do
+    q
+    |> select_merge([s, i], %{sample_percent: s.sample_percent})
+    |> select_joined_metrics(rest)
+  end
+
   def select_joined_metrics(q, [_ | rest]) do
     q
     |> select_joined_metrics(rest)
