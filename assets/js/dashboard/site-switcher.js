@@ -87,13 +87,6 @@ export default class SiteSwitcher extends React.Component {
     if (this.props.loggedIn && !this.state.sites) {
       this.populateSites();
     }
-
-    /**
-     * React doesn't seem to prioritise its own events when events are bubbling, and is unable to stop its events from propagating to the document's (root) event listeners which are attached on the DOM.
-     * 
-     * A simple trick is to hook up our own click event listener via a ref node, which allows React to manage events in this situation better between the two.
-     */
-     e.stopPropagation();
   }
 
   renderSiteLink(domain, index) {
