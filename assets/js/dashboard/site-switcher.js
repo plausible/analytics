@@ -127,7 +127,7 @@ export default class SiteSwitcher extends React.Component {
       return <div className="px-4 py-6"><div className="loading sm mx-auto"><div></div></div></div>
     } else if (this.state.error) {
       return <div className="mx-auto px-4 py-6 dark:text-gray-100">Something went wrong, try again</div>
-    } else if (this.props.loggedIn) {
+    } else if (!this.props.loggedIn) {
       return (
         <React.Fragment>
           <div className="py-1">
