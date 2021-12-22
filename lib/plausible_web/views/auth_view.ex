@@ -19,7 +19,19 @@ defmodule PlausibleWeb.AuthView do
   end
 
   def subscription_interval(subscription) do
-    Plans.subscription_interval(subscription.paddle_plan_id)
+    Plans.subscription_interval(subscription)
+  end
+
+  def format_invoices(invoice_list) do
+    Enum.map(invoice_list, fn invoice ->
+      %{
+        date:
+          invoice["payout_date"] |> Date.from_iso8601!() |> Timex.format!("{Mshort} {D}, {YYYY}"),
+        amount: (invoice["amount"] / 1) |> :erlang.float_to_binary(decimals: 2),
+        currency: invoice["currency"] |> PlausibleWeb.BillingView.present_currency(),
+        url: invoice["receipt_url"]
+      }
+    end)
   end
 
   def delimit_integer(number) do

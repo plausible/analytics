@@ -488,6 +488,37 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "10k pageviews"
       assert html_response(conn, 200) =~ "N/A billing"
     end
+
+    test "shows invoices for subscribed user", %{conn: conn, user: user} do
+      insert(:subscription,
+        paddle_plan_id: "558018",
+        paddle_subscription_id: "redundant",
+        user: user
+      )
+
+      conn = get(conn, "/settings")
+      assert html_response(conn, 200) =~ "Dec 24, 2020"
+      assert html_response(conn, 200) =~ "€11.11"
+      assert html_response(conn, 200) =~ "Nov 24, 2020"
+      assert html_response(conn, 200) =~ "$22.00"
+    end
+
+    test "shows 'something went wrong' on failed invoice request'", %{conn: conn, user: user} do
+      insert(:subscription,
+        paddle_plan_id: "558018",
+        paddle_subscription_id: "invalid_subscription_id",
+        user: user
+      )
+
+      conn = get(conn, "/settings")
+      assert html_response(conn, 200) =~ "Invoices"
+      assert html_response(conn, 200) =~ "Something went wrong"
+    end
+
+    test "does not show invoice section for a user with no subscription", %{conn: conn} do
+      conn = get(conn, "/settings")
+      assert !(html_response(conn, 200) =~ "Invoices")
+    end
   end
 
   describe "PUT /settings" do

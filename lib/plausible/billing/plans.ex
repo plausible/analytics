@@ -9,7 +9,36 @@ defmodule Plausible.Billing.Plans do
     %{limit: 10_000_000, monthly_product_id: "655350", yearly_cost: "$250"}
   ]
 
+  @sandbox_plans [
+    %{
+      limit: 10_000,
+      monthly_product_id: "19878",
+      yearly_product_id: "20127",
+      monthly_cost: "$6",
+      yearly_cost: "$60"
+    },
+    %{
+      limit: 100_000,
+      monthly_product_id: "20657",
+      yearly_product_id: "20658",
+      monthly_cost: "$12.34",
+      yearly_cost: "$120.34"
+    }
+  ]
+
   def plans_for(user) do
+    case Application.get_env(:plausible, :environment) do
+      "dev" ->
+        Enum.map(@sandbox_plans, fn plan ->
+          Map.put(plan, :volume, number_format(plan[:limit]))
+        end)
+
+      _ ->
+        real_plans_for(user)
+    end
+  end
+
+  def real_plans_for(user) do
     user = Repo.preload(user, :subscription)
     v1_plans = plans_v1()
 
@@ -38,18 +67,19 @@ defmodule Plausible.Billing.Plans do
     end)
   end
 
-  def subscription_interval("free_10k"), do: "N/A"
+  def subscription_interval(%Plausible.Billing.Subscription{paddle_plan_id: "free_10k"}),
+    do: "N/A"
 
-  def subscription_interval(product_id) do
-    case for_product_id(product_id) do
+  def subscription_interval(subscription) do
+    case for_product_id(subscription.paddle_plan_id) do
       nil ->
         enterprise_plan =
-          Repo.get_by(Plausible.Billing.EnterprisePlan, paddle_plan_id: product_id)
+          Repo.get_by(Plausible.Billing.EnterprisePlan, user_id: subscription.user_id)
 
         enterprise_plan && enterprise_plan.billing_interval
 
       plan ->
-        if product_id == plan[:monthly_product_id] do
+        if subscription.paddle_plan_id == plan[:monthly_product_id] do
           "monthly"
         else
           "yearly"
@@ -66,7 +96,7 @@ defmodule Plausible.Billing.Plans do
       Map.fetch!(found, :limit)
     else
       enterprise_plan =
-        Repo.get_by(Plausible.Billing.EnterprisePlan, paddle_plan_id: subscription.paddle_plan_id)
+        Repo.get_by(Plausible.Billing.EnterprisePlan, user_id: subscription.user_id)
 
       enterprise_plan && enterprise_plan.monthly_pageview_limit
     end
@@ -81,7 +111,10 @@ defmodule Plausible.Billing.Plans do
   end
 
   defp all_plans() do
-    plans_v1() ++ @unlisted_plans_v1 ++ plans_v2() ++ @unlisted_plans_v2
+    case Application.get_env(:plausible, :environment) do
+      "dev" -> @sandbox_plans
+      _ -> plans_v1() ++ @unlisted_plans_v1 ++ plans_v2() ++ @unlisted_plans_v2
+    end
   end
 
   defp plans_v1() do

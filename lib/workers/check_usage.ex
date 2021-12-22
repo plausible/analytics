@@ -40,6 +40,7 @@ defmodule Plausible.Workers.CheckUsage do
           on: s.user_id == u.id,
           left_join: ep in Plausible.Billing.EnterprisePlan,
           on: ep.user_id == u.id,
+          where: is_nil(u.grace_period),
           where: s.status == "active",
           where: not is_nil(s.last_bill_date),
           # Accounts for situations like last_bill_date==2021-01-31 AND today==2021-03-01. Since February never reaches the 31st day, the account is checked on 2021-03-01.
@@ -104,7 +105,18 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   defp check_pageview_limit(subscriber, billing_mod) do
-    allowance = Plausible.Billing.Plans.allowance(subscriber.subscription) * 1.1
+    allowance =
+      case Plausible.Billing.Plans.allowance(subscriber.subscription) do
+        allowance when is_number(allowance) ->
+          allowance * 1.1
+
+        _allowance ->
+          Sentry.capture_message("Unable to calculate allowance",
+            user: subscriber,
+            subscription: subscriber.subscription
+          )
+      end
+
     {_, last_cycle} = billing_mod.last_two_billing_cycles(subscriber)
 
     {last_last_cycle_usage, last_cycle_usage} =

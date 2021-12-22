@@ -24,6 +24,7 @@ defmodule Plausible.Application do
     setup_opentelemetry()
     setup_sentry()
     setup_cache_stats()
+    Location.load_all()
     Application.put_env(:plausible, :server_start, Timex.now())
     Supervisor.start_link(children, opts)
   end

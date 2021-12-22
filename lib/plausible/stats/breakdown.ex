@@ -138,7 +138,9 @@ defmodule Plausible.Stats.Breakdown do
              "visit:source",
              "visit:utm_medium",
              "visit:utm_source",
-             "visit:utm_campaign"
+             "visit:utm_campaign",
+             "visit:utm_content",
+             "visit:utm_term"
            ] do
     query = Query.treat_page_filter_as_entry_page(query)
     breakdown_sessions(site, query, property, metrics, pagination)
@@ -408,6 +410,26 @@ defmodule Plausible.Stats.Breakdown do
       group_by: s.utm_campaign,
       select_merge: %{
         "utm_campaign" => fragment("if(empty(?), ?, ?)", s.utm_campaign, @no_ref, s.utm_campaign)
+      }
+    )
+  end
+
+  defp do_group_by(q, "visit:utm_content") do
+    from(
+      s in q,
+      group_by: s.utm_content,
+      select_merge: %{
+        "utm_content" => fragment("if(empty(?), ?, ?)", s.utm_content, @no_ref, s.utm_content)
+      }
+    )
+  end
+
+  defp do_group_by(q, "visit:utm_term") do
+    from(
+      s in q,
+      group_by: s.utm_term,
+      select_merge: %{
+        "utm_term" => fragment("if(empty(?), ?, ?)", s.utm_term, @no_ref, s.utm_term)
       }
     )
   end

@@ -104,6 +104,8 @@ defmodule PlausibleWeb.Api.ExternalController do
         utm_medium: query["utm_medium"],
         utm_source: query["utm_source"],
         utm_campaign: query["utm_campaign"],
+        utm_content: query["utm_content"],
+        utm_term: query["utm_term"],
         country_code: location_details[:country_code],
         country_geoname_id: location_details[:country_geoname_id],
         subdivision1_code: location_details[:subdivision1_code],
@@ -332,6 +334,9 @@ defmodule PlausibleWeb.Api.ExternalController do
       %UAInspector.Result.Client{name: "Firefox Mobile"} -> "Firefox"
       %UAInspector.Result.Client{name: "Firefox Mobile iOS"} -> "Firefox"
       %UAInspector.Result.Client{name: "Opera Mobile"} -> "Opera"
+      %UAInspector.Result.Client{name: "Opera Mini"} -> "Opera"
+      %UAInspector.Result.Client{name: "Opera Mini iOS"} -> "Opera"
+      %UAInspector.Result.Client{name: "Yandex Browser Lite"} -> "Yandex Browser"
       %UAInspector.Result.Client{name: "Chrome Webview"} -> "Mobile App"
       %UAInspector.Result.Client{type: "mobile app"} -> "Mobile App"
       client -> client.name

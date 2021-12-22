@@ -22,14 +22,18 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "code" => "EST",
+                 "code" => "EE",
+                 "alpha_3" => "EST",
                  "name" => "Estonia",
+                 "flag" => "🇪🇪",
                  "visitors" => 2,
                  "percentage" => 67
                },
                %{
-                 "code" => "GBR",
+                 "code" => "GB",
+                 "alpha_3" => "GBR",
                  "name" => "United Kingdom",
+                 "flag" => "🇬🇧",
                  "visitors" => 1,
                  "percentage" => 33
                }
@@ -60,15 +64,19 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "code" => "GBR",
+                 "code" => "GB",
+                 "alpha_3" => "GBR",
                  "name" => "United Kingdom",
+                 "flag" => "🇬🇧",
                  "total_visitors" => 1,
                  "visitors" => 1,
                  "conversion_rate" => 100.0
                },
                %{
-                 "code" => "EST",
+                 "code" => "EE",
+                 "alpha_3" => "EST",
                  "name" => "Estonia",
+                 "flag" => "🇪🇪",
                  "total_visitors" => 2,
                  "visitors" => 1,
                  "conversion_rate" => 50.0

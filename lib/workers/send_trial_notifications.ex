@@ -50,33 +50,25 @@ defmodule Plausible.Workers.SendTrialNotifications do
 
   defp send_one_week_reminder(user) do
     PlausibleWeb.Email.trial_one_week_reminder(user)
-    |> send_email()
+    |> Plausible.Mailer.send_email_safe()
   end
 
   defp send_tomorrow_reminder(user) do
     usage = Plausible.Billing.usage_breakdown(user)
 
     PlausibleWeb.Email.trial_upgrade_email(user, "tomorrow", usage)
-    |> send_email()
+    |> Plausible.Mailer.send_email_safe()
   end
 
   defp send_today_reminder(user) do
     usage = Plausible.Billing.usage_breakdown(user)
 
     PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)
-    |> send_email()
+    |> Plausible.Mailer.send_email_safe()
   end
 
   defp send_over_reminder(user) do
     PlausibleWeb.Email.trial_over_email(user)
-    |> send_email()
-  end
-
-  defp send_email(email) do
-    try do
-      Plausible.Mailer.send_email(email)
-    rescue
-      _ -> nil
-    end
+    |> Plausible.Mailer.send_email_safe()
   end
 end

@@ -97,6 +97,28 @@ defmodule Plausible.Workers.CheckUsageTest do
     assert Repo.reload(user).grace_period.end_date == Timex.shift(Timex.today(), days: 7)
   end
 
+  test "skips checking users who already have a grace period", %{user: user} do
+    Plausible.Auth.User.start_grace_period(user, 12_000) |> Repo.update()
+
+    billing_stub =
+      Plausible.Billing
+      |> stub(:last_two_billing_months_usage, fn _user -> {11_000, 11_000} end)
+      |> stub(:last_two_billing_cycles, fn _user ->
+        {Date.range(Timex.today(), Timex.today()), Date.range(Timex.today(), Timex.today())}
+      end)
+
+    insert(:subscription,
+      user: user,
+      paddle_plan_id: @paddle_id_10k,
+      last_bill_date: Timex.shift(Timex.today(), days: -1)
+    )
+
+    CheckUsage.perform(nil, billing_stub)
+
+    assert_no_emails_delivered()
+    assert Repo.reload(user).grace_period.allowance_required == 12_000
+  end
+
   test "reccommends a plan to upgrade to", %{
     user: user
   } do

@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   use Plausible.Repo
   use Plug.ErrorHandler
   alias Plausible.Sites
+  alias Plausible.Goals
   alias PlausibleWeb.Api.Helpers, as: H
 
   def create_site(conn, params) do
@@ -24,6 +25,17 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
           error:
             "Your account has reached the limit of #{limit} sites per account. Please contact hello@plausible.io to unlock more sites."
         })
+    end
+  end
+
+  def delete_site(conn, %{"site_id" => site_id}) do
+    site = Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner])
+
+    if site do
+      Sites.delete!(site)
+      json(conn, %{"deleted" => true})
+    else
+      H.not_found(conn, "Site could not be found")
     end
   end
 
@@ -63,6 +75,53 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
       {:missing, "name"} ->
         H.bad_request(conn, "Parameter `name` is required to create a shared link")
+
+      e ->
+        H.bad_request(conn, "Something went wrong: #{inspect(e)}")
+    end
+  end
+
+  def find_or_create_goal(conn, params) do
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, _} <- expect_param_key(params, "goal_type"),
+         site when not is_nil(site) <-
+           Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin]),
+         {:ok, goal} <- Goals.find_or_create(site, params) do
+      json(conn, goal)
+    else
+      nil ->
+        H.not_found(conn, "Site could not be found")
+
+      {:missing, param} ->
+        H.bad_request(conn, "Parameter `#{param}` is required to create a goal")
+
+      e ->
+        H.bad_request(conn, "Something went wrong: #{inspect(e)}")
+    end
+  end
+
+  def delete_goal(conn, params) do
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, goal_id} <- expect_param_key(params, "goal_id"),
+         site when not is_nil(site) <-
+           Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin]) do
+      goal = Repo.get_by(Plausible.Goal, id: goal_id)
+
+      if goal do
+        Goals.delete(goal_id)
+        json(conn, %{"deleted" => true})
+      else
+        H.not_found(conn, "Goal could not be found")
+      end
+    else
+      nil ->
+        H.not_found(conn, "Site could not be found")
+
+      {:missing, "site_id"} ->
+        H.bad_request(conn, "Parameter `site_id` is required to delete a goal")
+
+      {:missing, "goal_id"} ->
+        H.bad_request(conn, "Parameter `goal_id` is required to delete a goal")
 
       e ->
         H.bad_request(conn, "Something went wrong: #{inspect(e)}")

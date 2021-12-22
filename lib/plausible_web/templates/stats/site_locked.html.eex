@@ -38,9 +38,11 @@
             This site is currently locked and cannot be accessed. You can check back later or contact the site owner to unlock it.
             </p>
           </div>
-          <div class="mt-6 w-full text-center">
-            <%= link("Back to my sites", to: "/sites", class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm") %>
-          </div>
+          <%= if @conn.assigns[:current_user] do %>
+            <div class="mt-6 w-full text-center">
+              <%= link("Back to my sites", to: "/sites", class: "inline-flex items-center px-4 py-2 border border-transparent shadow-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm") %>
+            </div>
+          <% end %>
       <% end %>
     </div>
   </div>

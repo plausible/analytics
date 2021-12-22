@@ -5,9 +5,22 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- API route `PUT /api/v1/sites/goals` with form params `site_id`, `event_name` and/or `page_path`, and `goal_type` with supported types `event` and `page`
+- API route `DELETE /api/v1/sites/goals/:goal_id` with form params `site_id`
+- The public breakdown endpoint can be queried with the "events" metric
+
+### Added
 - Data exported via the download button will contain CSV data for all visible graps in a zip file.
 - Region and city-level geolocation plausible/analytics#1449
 - The `u` option can now be used in the `manual` extension to specify a URL when triggering events.
+- Delete a site and all related data through the Sites API
+- Subscribed users can see their Paddle invoices from the last 12 months under the user settings
+- Allow custom styles to be passed to embedded iframe plausible/analytics#1522
+- New UTM Tags `utm_content` and `utm_term` plausible/analytics#515
+
+### Fixed
+- UI fix where multi-line text in pills would not be underlined properly on small screens.
+- UI fix to align footer columns
 
 ## v1.4.1
 

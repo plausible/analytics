@@ -2,9 +2,9 @@ import React from 'react';
 import { withRouter } from 'react-router-dom'
 import Chart from 'chart.js/auto';
 import { navigateToQuery } from '../query'
-import numberFormatter, {durationFormatter} from '../number-formatter'
+import numberFormatter, {durationFormatter} from '../util/number-formatter'
 import * as api from '../api'
-import LazyLoader from '../lazy-loader'
+import LazyLoader from '../components/lazy-loader'
 
 function buildDataSet(plot, present_index, ctx, label) {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);

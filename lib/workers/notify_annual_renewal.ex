@@ -40,11 +40,11 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
       case user.subscription.status do
         "active" ->
           template = PlausibleWeb.Email.yearly_renewal_notification(user)
-          Plausible.Mailer.send_email(template)
+          Plausible.Mailer.send_email_safe(template)
 
         "deleted" ->
           template = PlausibleWeb.Email.yearly_expiration_notification(user)
-          Plausible.Mailer.send_email(template)
+          Plausible.Mailer.send_email_safe(template)
 
         _ ->
           Sentry.capture_message("Invalid subscription for renewal", user: user)
