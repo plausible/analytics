@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
 - UI fix to align footer columns
+- Guests can now use the favicon to toggle additional info about the site bing viewed (such as in public embeds).
 
 ## v1.4.1
 
