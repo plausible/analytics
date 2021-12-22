@@ -4,9 +4,11 @@ import { Transition } from '@headlessui/react'
 export default class SiteSwitcher extends React.Component {
   constructor() {
     super()
-    this.handleClick = this.handleClick.bind(this)
+    this.handleClick = this.handleClick.bind(this);
     this.handleKeydown = this.handleKeydown.bind(this);
     this.populateSites = this.populateSites.bind(this);
+    this.toggle = this.toggle.bind(this);
+    this.siteSwitcherButton = React.createRef();
     this.state = {
       open: false,
       sites: null,
@@ -17,13 +19,15 @@ export default class SiteSwitcher extends React.Component {
 
   componentDidMount() {
     this.populateSites();
+    this.siteSwitcherButton.current.addEventListener("click", this.toggle);
     document.addEventListener("keydown", this.handleKeydown);
-    document.addEventListener('mousedown', this.handleClick, false);
+    document.addEventListener('click', this.handleClick, false);
   }
-
+  
   componentWillUnmount() {
+    this.siteSwitcherButton.current.removeEventListener("click", this.toggle);
     document.removeEventListener("keydown", this.handleKeydown);
-    document.removeEventListener('mousedown', this.handleClick, false);
+    document.removeEventListener('click', this.handleClick, false);
   }
 
   populateSites() {
@@ -39,10 +43,14 @@ export default class SiteSwitcher extends React.Component {
   }
 
   handleClick(e) {
+    // If this is an interaction with the dropdown menu itself, do nothing.
     if (this.dropDownNode && this.dropDownNode.contains(e.target)) return;
+
+    // If the dropdown is not open, do nothing.
     if (!this.state.open) return;
 
-    this.setState({open: false})
+    // In any other case, close it.
+    this.setState({ open: false });
   }
 
   handleKeydown(e) {
@@ -60,10 +68,19 @@ export default class SiteSwitcher extends React.Component {
 
   }
 
-  toggle() {
+  toggle(e) {
+    /**
+     * React doesn't seem to prioritise its own events when events are bubbling, and is unable to stop its events from propagating to the document's (root) event listeners which are attached on the DOM.
+     * 
+     * A simple trick is to hook up our own click event listener via a ref node, which allows React to manage events in this situation better between the two.
+     */
+    e.stopPropagation();
+    e.preventDefault();
     if (!this.props.loggedIn) return;
 
-    this.setState({open: !this.state.open})
+    this.setState((prevState) => ({
+      open: !prevState.open
+    }))
 
     if (!this.state.sites) {
       this.populateSites();
@@ -138,7 +155,7 @@ export default class SiteSwitcher extends React.Component {
 
     return (
       <div className="relative inline-block text-left mr-2 sm:mr-4">
-        <button onClick={this.toggle.bind(this)} className={`inline-flex items-center md:text-lg w-full rounded-md py-2 leading-5 font-bold text-gray-700 dark:text-gray-300 focus:outline-none transition ease-in-out duration-150 ${hoverClass}`}>
+        <button ref={this.siteSwitcherButton} className={`inline-flex items-center md:text-lg w-full rounded-md py-2 leading-5 font-bold text-gray-700 dark:text-gray-300 focus:outline-none transition ease-in-out duration-150 ${hoverClass}`}>
 
           <img src={`https://icons.duckduckgo.com/ip3/${this.props.site.domain}.ico`} onError={(e)=>{e.target.onerror = null; e.target.src="https://icons.duckduckgo.com/ip3/placeholder.ico"}} referrerPolicy="no-referrer" className="inline w-4 mr-1 md:mr-2 align-middle" />
           <span className="hidden sm:inline-block">{this.props.site.domain}</span>

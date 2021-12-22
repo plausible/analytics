@@ -88,7 +88,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   defp event_only_property?("event:props:" <> _), do: true
   defp event_only_property?(_), do: false
 
-  @event_metrics ["visitors", "pageviews"]
+  @event_metrics ["visitors", "pageviews", "events"]
   @session_metrics ["visits", "bounce_rate", "visit_duration"]
   defp parse_metrics(params, property, query) do
     metrics =

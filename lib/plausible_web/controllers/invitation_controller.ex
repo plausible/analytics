@@ -19,7 +19,7 @@ defmodule PlausibleWeb.InvitationController do
       if invitation.role == :owner do
         Multi.new()
         |> downgrade_previous_owner(invitation.site)
-        |> end_trial_of_new_owner(user)
+        |> maybe_end_trial_of_new_owner(user)
       else
         Multi.new()
       end
@@ -64,6 +64,12 @@ defmodule PlausibleWeb.InvitationController do
     Multi.update_all(multi, :prev_owner, prev_owner, set: [role: :admin])
   end
 
+  defp maybe_end_trial_of_new_owner(multi, new_owner) do
+    if !Application.get_env(:plausible, :is_selfhost) do
+      end_trial_of_new_owner(multi, new_owner)
+    end
+  end
+
   defp end_trial_of_new_owner(multi, new_owner) do
     if Plausible.Billing.on_trial?(new_owner) || is_nil(new_owner.trial_expiry_date) do
       Ecto.Multi.update(multi, :user, Plausible.Auth.User.end_trial(new_owner))
@@ -87,22 +93,22 @@ defmodule PlausibleWeb.InvitationController do
 
   defp notify_invitation_accepted(%Invitation{role: :owner} = invitation) do
     PlausibleWeb.Email.ownership_transfer_accepted(invitation)
-    |> Plausible.Mailer.send_email()
+    |> Plausible.Mailer.send_email_safe()
   end
 
   defp notify_invitation_accepted(invitation) do
     PlausibleWeb.Email.invitation_accepted(invitation)
-    |> Plausible.Mailer.send_email()
+    |> Plausible.Mailer.send_email_safe()
   end
 
   defp notify_invitation_rejected(%Invitation{role: :owner} = invitation) do
     PlausibleWeb.Email.ownership_transfer_rejected(invitation)
-    |> Plausible.Mailer.send_email()
+    |> Plausible.Mailer.send_email_safe()
   end
 
   defp notify_invitation_rejected(invitation) do
     PlausibleWeb.Email.invitation_rejected(invitation)
-    |> Plausible.Mailer.send_email()
+    |> Plausible.Mailer.send_email_safe()
   end
 
   def remove_invitation(conn, %{"invitation_id" => invitation_id}) do

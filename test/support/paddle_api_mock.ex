@@ -25,4 +25,29 @@ defmodule Plausible.PaddleApi.Mock do
        }
      }}
   end
+
+  def get_invoices(nil), do: {:error, :no_subscription}
+
+  def get_invoices(subscription) do
+    case subscription.paddle_subscription_id do
+      "invalid_subscription_id" ->
+        {:error, :request_failed}
+
+      _ ->
+        [
+          %{
+            "amount" => 11.11,
+            "currency" => "EUR",
+            "payout_date" => "2020-12-24",
+            "receipt_url" => "https://some-receipt-url.com"
+          },
+          %{
+            "amount" => 22,
+            "currency" => "USD",
+            "payout_date" => "2020-11-24",
+            "receipt_url" => "https://other-receipt-url.com"
+          }
+        ]
+    end
+  end
 end

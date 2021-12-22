@@ -48,7 +48,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
           "/api/stats/#{site.domain}/suggestions/country?period=month&date=2019-01-01&q=Unit"
         )
 
-      assert json_response(conn, 200) == [%{"code" => "USA", "name" => "United States"}]
+      assert json_response(conn, 200) == [%{"code" => "US", "name" => "United States"}]
     end
 
     test "returns suggestions for regions", %{conn: conn, user: user} do

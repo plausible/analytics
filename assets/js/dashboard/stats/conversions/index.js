@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom'
 
 import Bar from '../bar'
 import PropBreakdown from './prop-breakdown'
-import numberFormatter from '../../number-formatter'
+import numberFormatter from '../../util/number-formatter'
 import * as api from '../../api'
-import * as url from '../../url'
-import LazyLoader from '../../lazy-loader'
+import * as url from '../../util/url'
+import LazyLoader from '../../components/lazy-loader'
 
 const MOBILE_UPPER_WIDTH = 767
 const DEFAULT_WIDTH = 1080
