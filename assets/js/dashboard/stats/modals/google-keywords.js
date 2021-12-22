@@ -3,7 +3,7 @@ import { Link, withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import * as api from '../../api'
-import numberFormatter from '../../number-formatter'
+import numberFormatter from '../../util/number-formatter'
 import {parseQuery, toHuman} from '../../query'
 import RocketIcon from './rocket-icon'
 

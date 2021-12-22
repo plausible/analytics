@@ -60,6 +60,51 @@ defmodule Plausible.Workers.SendEmailReportTest do
       assert html_body =~
                ~s(<span id="visitors" style="line-height: 24px; font-size: 20px;">2</span>)
     end
+
+    test "includes the correct stats" do
+      site = insert(:site, domain: "test-site.com")
+      insert(:weekly_report, site: site, recipients: ["user@email.com"])
+      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "Google",
+          user_id: 123,
+          timestamp: Timex.shift(now, days: -7)
+        ),
+        build(:pageview, user_id: 123, timestamp: Timex.shift(now, days: -7)),
+        build(:pageview, timestamp: Timex.shift(now, days: -7))
+      ])
+
+      perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
+
+      assert_delivered_email_matches(%{
+        to: [nil: "user@email.com"],
+        html_body: html_body
+      })
+
+      {:ok, document} = Floki.parse_document(html_body)
+
+      visitors = Floki.find(document, "#visitors") |> Floki.text()
+      assert visitors == "2"
+
+      pageviews = Floki.find(document, "#pageviews") |> Floki.text()
+      assert pageviews == "3"
+
+      referrer = Floki.find(document, ".referrer") |> List.first()
+      referrer_name = referrer |> Floki.find("#referrer-name") |> Floki.text()
+      referrer_count = referrer |> Floki.find("#referrer-count") |> Floki.text()
+
+      assert referrer_name == "Google"
+      assert referrer_count == "1"
+
+      page = Floki.find(document, ".page") |> List.first()
+      page_name = page |> Floki.find("#page-name") |> Floki.text()
+      page_count = page |> Floki.find("#page-count") |> Floki.text()
+
+      assert page_name == "/"
+      assert page_count == "2"
+    end
   end
 
   describe "monthly_reports" do

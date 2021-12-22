@@ -1,10 +1,9 @@
 import React from "react";
 import { Link, withRouter } from 'react-router-dom'
-import Datamap from 'datamaps'
 
 import Modal from './modal'
 import * as api from '../../api'
-import numberFormatter from '../../number-formatter'
+import numberFormatter from '../../util/number-formatter'
 import {parseQuery} from '../../query'
 
 class ModalTable extends React.Component {
@@ -32,21 +31,19 @@ class ModalTable extends React.Component {
       query.set(key, tableItem[valueKey])
     }))
 
-    const allCountries = Datamap.prototype.worldTopo.objects.world.geometries;
-    const thisCountry = allCountries.find((c) => c.id === tableItem.name) || {properties: {name: tableItem.name}};
-    const countryFullName = thisCountry.properties.name
-
     return (
       <tr className="text-sm dark:text-gray-200" key={tableItem.name}>
         <td className="p-2">
           <Link className="hover:underline" to={{search: query.toString(), pathname: `/${encodeURIComponent(this.props.site.domain)}`}}>
-            {countryFullName}
+            {this.props.renderIcon && this.props.renderIcon(tableItem)}
+            {this.props.renderIcon && ' '}
+            {tableItem.name}
           </Link>
         </td>
         <td className="p-2 w-32 font-medium" align="right">
           {numberFormatter(tableItem.visitors)}
-          {tableItem.percentage &&
-            <span className="inline-block text-xs w-8 text-right">({tableItem.percentage}%)</span> }
+          {tableItem.percentage >= 0 &&
+            <span className="inline-block text-xs w-8 pl-1 text-right">({tableItem.percentage}%)</span> }
         </td>
       </tr>
     )

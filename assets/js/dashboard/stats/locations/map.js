@@ -3,9 +3,9 @@ import Datamap from 'datamaps'
 import { withRouter } from 'react-router-dom'
 import * as d3 from "d3"
 
-import numberFormatter from '../../number-formatter'
+import numberFormatter from '../../util/number-formatter'
 import FadeIn from '../../fade-in'
-import LazyLoader from '../../lazy-loader'
+import LazyLoader from '../../components/lazy-loader'
 import MoreLink from '../more-link'
 import * as api from '../../api'
 import { navigateToQuery } from '../../query'
@@ -56,7 +56,7 @@ class Countries extends React.Component {
       ])
 
     this.state.countries.forEach(function(item){
-      dataset[item.name] = {numberOfThings: item.visitors, fillColor: paletteScale(item.visitors)};
+      dataset[item.alpha_3] = {numberOfThings: item.visitors, fillColor: paletteScale(item.visitors)};
     });
 
     return dataset
@@ -69,7 +69,7 @@ class Countries extends React.Component {
   }
 
   fetchCountries() {
-    return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/countries`, this.props.query)
+    return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/countries`, this.props.query, {limit: 300})
       .then((res) => this.setState({loading: false, countries: res}))
   }
 
@@ -100,20 +100,28 @@ class Countries extends React.Component {
           if (!data) { return null; }
           const pluralizedLabel = data.numberOfThings === 1 ? label.slice(0, -1) : label
           return ['<div class="hoverinfo dark:bg-gray-800 dark:shadow-gray-850 dark:border-gray-850 dark:text-gray-200">',
-            '<strong>', geo.properties.name, '</strong>',
-            '<br><strong class="dark:text-indigo-400">', numberFormatter(data.numberOfThings), '</strong>', pluralizedLabel,
+            '<strong>', geo.properties.name, ' </strong>',
+            '<br><strong class="dark:text-indigo-400">', numberFormatter(data.numberOfThings), '</strong> ', pluralizedLabel,
             '</div>'].join('');
         }
       },
       done: (datamap) => {
         datamap.svg.selectAll('.datamaps-subunit').on('click', (geography) => {
-          navigateToQuery(
-            this.props.history,
-            this.props.query,
-            {
-              country: geography.id
-            }
-          )
+          const country = this.state.countries.find(c => c.alpha_3 === geography.id)
+
+          if (country) {
+            this.props.onClick()
+
+            navigateToQuery(
+              this.props.history,
+              this.props.query,
+              {
+                country: country.code,
+                country_name: country.name
+              }
+            )
+          }
+
         })
       }
     });

@@ -5,6 +5,8 @@ defmodule Plausible.Stats.Filters do
     "utm_medium",
     "utm_source",
     "utm_campaign",
+    "utm_content",
+    "utm_term",
     "screen",
     "device",
     "browser",
@@ -31,11 +33,6 @@ defmodule Plausible.Stats.Filters do
     new_filters =
       Enum.reduce(query.filters, %{}, fn {name, val}, new_filters ->
         cond do
-          name == "country" ->
-            {filter_type, filter_val} = filter_value(name, val)
-            new_val = Plausible.Stats.CountryName.to_alpha2(filter_val)
-            Map.put(new_filters, "visit:country", {filter_type, new_val})
-
           name == "goal" ->
             filter =
               case val do

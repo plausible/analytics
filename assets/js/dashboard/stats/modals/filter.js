@@ -8,7 +8,7 @@ import SearchSelect from '../../components/search-select'
 import Modal from './modal'
 import { parseQuery, formattedFilters } from '../../query'
 import * as api from '../../api'
-import {apiPath, siteBasePath} from '../../url'
+import {apiPath, siteBasePath} from '../../util/url'
 
 export const FILTER_GROUPS = {
   'page': ['page'],

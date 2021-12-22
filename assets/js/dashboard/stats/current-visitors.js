@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
 import * as api from '../api'
-import * as url from '../url'
+import * as url from '../util/url'
 import { appliedFilters } from '../query';
 
 export default class CurrentVisitors extends React.Component {
