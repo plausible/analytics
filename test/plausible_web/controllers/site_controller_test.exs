@@ -374,7 +374,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     test "deletes associated google auth", %{conn: conn, user: user, site: site} do
       insert(:google_auth, user: user, site: site)
-      conn = delete(conn, "/#{site.domain}/settings/google")
+      conn = delete(conn, "/#{site.domain}/settings/google-search")
 
       refute Repo.exists?(Plausible.Site.GoogleAuth)
       assert redirected_to(conn, 302) == "/#{site.domain}/settings/search-console"
