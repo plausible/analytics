@@ -606,61 +606,6 @@ defmodule PlausibleWeb.SiteController do
     redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
   end
 
-  def new_custom_domain(conn, _params) do
-    site = conn.assigns[:site]
-    changeset = Plausible.Site.CustomDomain.changeset(%Plausible.Site.CustomDomain{}, %{})
-
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> render("new_custom_domain.html",
-      site: site,
-      changeset: changeset,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
-  end
-
-  def custom_domain_dns_setup(conn, _params) do
-    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
-
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> render("custom_domain_dns_setup.html",
-      site: site,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
-  end
-
-  def custom_domain_snippet(conn, _params) do
-    site =
-      conn.assigns[:site]
-      |> Repo.preload(:custom_domain)
-
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> render("custom_domain_snippet.html",
-      site: site,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
-  end
-
-  def add_custom_domain(conn, %{"custom_domain" => domain}) do
-    site = conn.assigns[:site]
-
-    case Sites.add_custom_domain(site, domain["domain"]) do
-      {:ok, _custom_domain} ->
-        redirect(conn, to: "/sites/#{URI.encode_www_form(site.domain)}/custom-domains/dns-setup")
-
-      {:error, changeset} ->
-        conn
-        |> assign(:skip_plausible_tracking, true)
-        |> render("new_custom_domain.html",
-          site: site,
-          changeset: changeset,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
-    end
-  end
-
   def delete_custom_domain(conn, _params) do
     site =
       conn.assigns[:site]

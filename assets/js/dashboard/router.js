@@ -30,7 +30,7 @@ export default function Router({site, loggedIn, currentUserRole}) {
         <ScrollToTop />
         <Dash site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} />
         <Switch>
-          <Route exact path={["/:domain/sources", "/:domain/utm_medium", "/:domain/utm_source", "/:domain/utm_campaign", "/:domain/utm_content", "/:domain/utm_term" ]}>
+          <Route exact path={["/:domain/sources", "/:domain/utm_mediums", "/:domain/utm_sources", "/:domain/utm_campaigns", "/:domain/utm_contents", "/:domain/utm_terms" ]}>
             <SourcesModal site={site} />
           </Route>
           <Route exact path="/:domain/referrers/Google">
