@@ -1,10 +1,6 @@
 defmodule PlausibleWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :plausible
 
-  if Application.get_env(:appsignal, :config) do
-    use Appsignal.Phoenix
-  end
-
   # Serve at "/" the static files from "priv/static" directory.
   #
   # You should set gzip to true if you are running phx.digest
