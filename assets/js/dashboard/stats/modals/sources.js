@@ -79,6 +79,17 @@ class SourcesModal extends React.Component {
     }
   }
 
+  icon(source) {
+    if (this.currentFilter() === 'sources') {
+      return (
+        <img
+          src={`/favicon/sources/${encodeURIComponent(source.name)}`}
+          className="h-4 w-4 mr-2 align-middle inline"
+        />
+      )
+    }
+  }
+
   renderSource(source) {
     const query = new URLSearchParams(window.location.search)
     const filter = this.currentFilter()
@@ -89,15 +100,10 @@ class SourcesModal extends React.Component {
     if (filter === 'utm_contents') query.set('utm_content', source.name)
     if (filter === 'utm_terms') query.set('utm_term', source.name)
 
-    console.log(source)
-
     return (
       <tr className="text-sm dark:text-gray-200" key={source.name}>
         <td className="p-2">
-          <img
-            src={`/favicon/sources/${encodeURIComponent(source.name)}`}
-            className="h-4 w-4 mr-2 align-middle inline"
-          />
+          { this.icon(source) }
           <Link className="hover:underline" to={{search: query.toString(), pathname: '/' + encodeURIComponent(this.props.site.domain)}}>{ source.name }</Link>
         </td>
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(source.total_visitors)}</td> }

@@ -82,7 +82,6 @@ defmodule Plausible.MixProject do
       {:nanoid, "~> 2.0.2"},
       {:siphash, "~> 3.2"},
       {:oban, "~> 2.0"},
-      {:sshex, "2.2.1"},
       {:geolix, "~> 1.0"},
       {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
       {:location, git: "https://github.com/plausible/location.git"},
