@@ -221,6 +221,96 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
+  @city_overrides %{
+    # UK
+    # Shadwell -> London
+    6_690_595 => 2_643_743,
+    # City of London -> London
+    2_643_741 => 2_643_743,
+    # South Bank -> London
+    6_545_251 => 2_643_743,
+    # Soho -> London
+    6_545_173 => 2_643_743,
+    # Whitechapel -> London
+    2_634_112 => 2_643_743,
+    # King's Cross -> London
+    6_690_589 => 2_643_743,
+    # Poplar -> London
+    2_640_091 => 2_643_743,
+    # Hackney -> London
+    2_647_694 => 2_643_743,
+
+    # India
+    # Navi Mumbai -> Mumbai
+    6_619_347 => 1_275_339,
+
+    # Germany
+    # Bezirk Tempelhof-Schöneberg -> Berlin
+    3_336_297 => 2_950_159,
+    # Bezirk Mitte -> Berlin
+    2_870_912 => 2_950_159,
+    # Bezirk Charlottenburg-Wilmersdorf -> Berlin
+    3_336_294 => 2_950_159,
+    # Bezirk Friedrichshain-Kreuzberg -> Berlin
+    3_336_295 => 2_950_159,
+    # Moosach -> Munich
+    8_351_447 => 2_867_714,
+    # Schwabing-Freimann -> Munich
+    8_351_448 => 2_867_714,
+    # Stadtbezirk 06 -> Düsseldorf
+    6_947_276 => 2_934_246,
+    # Stadtbezirk 04 -> Düsseldorf
+    6_947_274 => 2_934_246,
+    # Köln-Ehrenfeld -> Köln
+    6_947_479 => 2_886_242,
+    # Köln-Lindenthal- -> Köln
+    6_947_481 => 2_886_242,
+    # Beuel -> Bonn
+    2_949_619 => 2_946_447,
+
+    # Austria
+    # Gemeindebezirk Floridsdorf -> Vienna
+    2_779_467 => 2_761_369,
+    # Gemeindebezirk Leopoldstadt -> Vienna
+    2_772_614 => 2_761_369,
+    # Gemeindebezirk Landstrasse -> Vienna
+    2_773_040 => 2_761_369,
+    # Urfahr -> Linz
+    2_762_518 => 2_772_400,
+
+    # Netherlands
+    # Schiphol-Rijk -> Amsterdam
+    10_173_838 => 2_759_794,
+
+    # Czech republic
+    # Praha 5 -> Prague
+    11_951_220 => 3_067_696,
+    # Praha 4 -> Prague
+    11_951_218 => 3_067_696,
+    # Praha 11 -> Prague
+    11_951_232 => 3_067_696,
+    # Praha 10 -> Prague
+    11_951_210 => 3_067_696,
+    # Praha 4 -> Prague
+    8_378_772 => 3_067_696,
+
+    # Estonia
+    # Kristiine linnaosa -> Tallinn
+    11_050_530 => 588_409,
+    # Kesklinna linnaosa -> Tallinn
+    11_053_706 => 588_409,
+    # Lasnamäe linnaosa -> Tallinn
+    11_050_526 => 588_409,
+    # Põhja-Tallinna linnaosa -> Tallinn
+    11_049_594 => 588_409,
+    # Mustamäe linnaosa -> Tallinn
+    11_050_531 => 588_409,
+    # Haabersti linnaosa -> Tallinn
+    11_053_707 => 588_409,
+    # Viimsi -> Tallinn
+    587_629 => 588_409
+  }
+
   @decorate trace("ingest.geolocation")
   defp visitor_location_details(conn) do
     result =
@@ -252,7 +342,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       country_code: country_code,
       subdivision1_code: subdivision1_code,
       subdivision2_code: subdivision2_code,
-      city_geoname_id: city_geoname_id
+      city_geoname_id: Map.get(@city_overrides, city_geoname_id, city_geoname_id)
     }
   end
 

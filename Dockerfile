@@ -44,7 +44,6 @@ RUN npm run deploy --prefix ./assets && \
     mix phx.digest priv/static && \
     mix download_country_database && \
 # https://hexdocs.pm/sentry/Sentry.Sources.html#module-source-code-storage
-    mix sentry_recompile
     mix sentry_recompile && \
     mv geonames.csv ./priv/geonames.csv
 
