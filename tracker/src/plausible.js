@@ -3,7 +3,6 @@
 
   var location = window.location
   var document = window.document
-  var localStorage = window.localStorage
 
   {{#if compat}}
   var scriptEl = document.getElementById('plausible');
@@ -11,7 +10,6 @@
   var scriptEl = document.currentScript;
   {{/if}}
   var endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint(scriptEl)
-  var plausible_ignore = localStorage && localStorage.plausible_ignore;
   {{#if exclusions}}
   var excludedPaths = scriptEl && scriptEl.getAttribute('data-exclude').split(',');
   {{/if}}
@@ -37,7 +35,13 @@
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') return warn('localhost');
     {{/unless}}
     if (window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) return;
-    if (plausible_ignore=="true") return warn('localStorage flag')
+    try {
+      if (window.localStorage.plausible_ignore=="true") {
+        return warn('localStorage flag')
+      }
+    } catch (e) {
+
+    }
     {{#if exclusions}}
     if (excludedPaths)
       for (var i = 0; i < excludedPaths.length; i++)
