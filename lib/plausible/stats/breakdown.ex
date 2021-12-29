@@ -121,12 +121,15 @@ defmodule Plausible.Stats.Breakdown do
       breakdown_sessions(site, new_query, "visit:entry_page", session_metrics, {limit, 1})
       |> transform_keys(%{entry_page: :page})
 
+    metrics = metrics ++ [:page]
+
     zip_results(
       event_result,
       session_result,
       :page,
       metrics
     )
+    |> Enum.map(&Map.take(&1, metrics))
   end
 
   def breakdown(site, query, property, metrics, pagination) when property in @event_props do
@@ -143,7 +146,17 @@ defmodule Plausible.Stats.Breakdown do
              "visit:utm_term"
            ] do
     query = Query.treat_page_filter_as_entry_page(query)
-    breakdown_sessions(site, query, property, metrics, pagination)
+
+    results = breakdown_sessions(site, query, property, metrics, pagination)
+
+    prop_result =
+      property
+      |> String.split(":")
+      |> Enum.at(1)
+      |> String.to_existing_atom()
+
+    metrics = metrics ++ [prop_result]
+    Enum.map(results, &Map.take(&1, metrics))
   end
 
   def breakdown(site, query, property, metrics, pagination) do
@@ -488,7 +501,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.operating_system,
-      select_merge: %{operating_system: s.operating_system}
+      select_merge: %{os: s.operating_system}
     )
   end
 

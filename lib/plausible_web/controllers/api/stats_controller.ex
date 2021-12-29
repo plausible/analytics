@@ -30,6 +30,7 @@ defmodule PlausibleWeb.Api.StatsController do
         plot =
           Imported.Visitors.timeseries(site, timeseries_query)
           |> Enum.zip_with(plot, &(&1 + &2))
+
         {plot, site.has_imported_stats}
       else
         {plot, false}
@@ -251,8 +252,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     pagination = parse_pagination(params)
 
-    metrics =
-      if params["detailed"], do: [:visitors, :bounce_rate, :visit_duration], else: [:visitors]
+    metrics = [:visitors, :bounce_rate, :visit_duration]
 
     res =
       Stats.breakdown(site, query, "visit:utm_medium", metrics, pagination)
@@ -282,8 +282,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     pagination = parse_pagination(params)
 
-    metrics =
-      if params["detailed"], do: [:visitors, :bounce_rate, :visit_duration], else: [:visitors]
+    metrics = [:visitors, :bounce_rate, :visit_duration]
 
     res =
       Stats.breakdown(site, query, "visit:utm_campaign", metrics, pagination)
@@ -371,8 +370,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     pagination = parse_pagination(params)
 
-    metrics =
-      if params["detailed"], do: [:visitors, :bounce_rate, :visit_duration], else: [:visitors]
+    metrics = [:visitors, :bounce_rate, :visit_duration]
 
     res =
       Stats.breakdown(site, query, "visit:utm_source", metrics, pagination)
@@ -439,6 +437,7 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:referrer", metrics, pagination)
       |> maybe_add_cr(site, query, pagination, "referrer", "visit:referrer")
       |> transform_keys(%{"referrer" => "name"})
+      |> Enum.map(&Map.drop(&1, [:visits]))
 
     %{:visitors => %{"value" => total_visitors}} = Stats.aggregate(site, query, [:visitors])
     json(conn, %{referrers: referrers, total_visitors: total_visitors})
@@ -714,8 +713,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
     systems =
       Stats.breakdown(site, query, "visit:os", [:visitors], pagination)
-      |> maybe_add_cr(site, query, pagination, :operating_system, "visit:os")
-      |> transform_keys(%{operating_system: "name"})
+      |> maybe_add_cr(site, query, pagination, :os, "visit:os")
+      |> transform_keys(%{os: "name"})
       |> maybe_add_percentages(query)
 
     if params["csv"] do

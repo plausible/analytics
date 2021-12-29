@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
           Plausible.Stats.aggregate(site, query, metrics)
         end
 
-      json(conn, %{"results" => results})
+      json(conn, %{"results" => Map.take(results, metrics)})
     else
       {:error, msg} ->
         conn
@@ -133,16 +133,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
            "The metric `#{invalid_metric}` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#get-apiv1statsbreakdown"}
       end
     else
-      metrics =
-        metrics
-        |> Enum.map(fn item ->
-          case item do
-            "visitors" -> :visitors
-            metric -> metric
-          end
-        end)
-
-      {:ok, metrics}
+      {:ok, Enum.map(metrics, &String.to_atom/1)}
     end
   end
 
@@ -156,7 +147,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          query <- Query.from(site.timezone, params),
          {:ok, metrics} <- parse_metrics(params, nil, query) do
       graph = Plausible.Stats.timeseries(site, query, metrics)
-      json(conn, %{"results" => graph})
+      metrics = metrics ++ ["date"]
+      json(conn, %{"results" => Enum.map(graph, &Map.take(&1, metrics))})
     else
       {:error, msg} ->
         conn
