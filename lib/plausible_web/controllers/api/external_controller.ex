@@ -308,7 +308,11 @@ defmodule PlausibleWeb.Api.ExternalController do
     # Haabersti linnaosa -> Tallinn
     11_053_707 => 588_409,
     # Viimsi -> Tallinn
-    587_629 => 588_409
+    587_629 => 588_409,
+
+    # Sweden
+    # Södermalm => Stockholm
+    2_676_209 => 2_673_730
   }
 
   @decorate trace("ingest.geolocation")
