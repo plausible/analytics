@@ -13,7 +13,6 @@ function compilefile(input, output, templateVars = {}) {
   const template = Handlebars.compile(code)
   const rendered = template(templateVars)
   const result = uglify.minify(rendered)
-  console.log(result)
   fs.writeFileSync(output, result.code)
 }
 

@@ -34,7 +34,7 @@
           productIds.push(plan.monthly_product_id)
           productIds.push(plan.yearly_product_id)
         })
-        
+
         var checkoutDomain = '<%= Plausible.Billing.PaddleApi.checkout_domain() %>'
         fetchJsonp(checkoutDomain + '/api/2.0/prices?product_ids=' + productIds.join(','))
           .then((res) => res.json())
