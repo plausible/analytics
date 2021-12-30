@@ -9,8 +9,6 @@ import LazyLoader from '../../components/lazy-loader'
 import {GraphTooltip, buildDataSet, dateFormatter} from './graph-util';
 import TopStats from './top-stats';
 
-// TODO: Tests
-
 export const METRIC_MAPPING = {
   'Unique visitors (last 30 min)': 'visitors',
   'Pageviews (last 30 min)': 'pageviews',
