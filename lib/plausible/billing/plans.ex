@@ -48,8 +48,10 @@ defmodule Plausible.Billing.Plans do
           sandbox_plans
 
         true ->
-          case Application.get_env(:plausible, :environment) do
-            _ -> v3_plans
+          cond do
+            Application.get_env(:plausible, :environment) == "dev" -> sandbox_plans
+            Timex.before?(user.inserted_at, ~D[2022-01-01]) -> v2_plans
+            true -> v3_plans
           end
       end
 
