@@ -27,31 +27,32 @@ defmodule Plausible.Billing.Plans do
   ]
 
   def plans_for(user) do
-    case Application.get_env(:plausible, :environment) do
-      "dev" ->
-        Enum.map(@sandbox_plans, fn plan ->
-          Map.put(plan, :volume, number_format(plan[:limit]))
-        end)
-
-      _ ->
-        real_plans_for(user)
-    end
-  end
-
-  def real_plans_for(user) do
     user = Repo.preload(user, :subscription)
+    sandbox_plans = plans_sandbox()
     v1_plans = plans_v1()
-
-    v1_plan_ids =
-      v1_plans
-      |> Enum.map(fn plan -> [plan[:monthly_product_id], plan[:yearly_product_id]] end)
-      |> List.flatten()
+    v2_plans = plans_v2()
+    v3_plans = plans_v3()
 
     raw_plans =
-      if user.subscription && user.subscription.paddle_plan_id in v1_plan_ids do
-        v1_plans
-      else
-        plans_v2()
+      cond do
+        contains?(v1_plans, user.subscription) ->
+          v1_plans
+
+        contains?(v2_plans, user.subscription) ->
+          v2_plans
+
+        contains?(v3_plans, user.subscription) ->
+          v3_plans
+
+        contains?(sandbox_plans, user.subscription) ->
+          sandbox_plans
+
+        true ->
+          cond do
+            Application.get_env(:plausible, :environment) == "dev" -> sandbox_plans
+            Timex.before?(user.inserted_at, ~D[2022-01-01]) -> v2_plans
+            true -> v3_plans
+          end
       end
 
     Enum.map(raw_plans, fn plan -> Map.put(plan, :volume, number_format(plan[:limit])) end)
@@ -106,15 +107,21 @@ defmodule Plausible.Billing.Plans do
     Enum.find(plans_for(user), fn plan -> usage < plan[:limit] end)
   end
 
+  defp contains?(_plans, nil), do: false
+
+  defp contains?(plans, subscription) do
+    Enum.any?(plans, fn plan ->
+      plan[:monthly_product_id] == subscription.paddle_plan_id ||
+        plan[:yearly_product_id] == subscription.paddle_plan_id
+    end)
+  end
+
   defp number_format(num) do
     PlausibleWeb.StatsView.large_number_format(num)
   end
 
   defp all_plans() do
-    case Application.get_env(:plausible, :environment) do
-      "dev" -> @sandbox_plans
-      _ -> plans_v1() ++ @unlisted_plans_v1 ++ plans_v2() ++ @unlisted_plans_v2
-    end
+    plans_v1() ++ @unlisted_plans_v1 ++ plans_v2() ++ @unlisted_plans_v2 ++ plans_sandbox()
   end
 
   defp plans_v1() do
@@ -125,5 +132,17 @@ defmodule Plausible.Billing.Plans do
   defp plans_v2() do
     File.read!(Application.app_dir(:plausible) <> "/priv/plans_v2.json")
     |> Jason.decode!(keys: :atoms)
+  end
+
+  defp plans_v3() do
+    File.read!(Application.app_dir(:plausible) <> "/priv/plans_v3.json")
+    |> Jason.decode!(keys: :atoms)
+  end
+
+  defp plans_sandbox() do
+    case Application.get_env(:plausible, :environment) do
+      "dev" -> @sandbox_plans
+      _ -> []
+    end
   end
 end

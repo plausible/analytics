@@ -34,7 +34,7 @@ function Countries({query, site, onClick}) {
 
 function Regions({query, site, onClick}) {
   function fetchData() {
-    return api.get(apiPath(site, '/regions'), query, {country_name: query.filters.country, limit: 9})
+    return api.get(apiPath(site, '/regions'), query, {limit: 9})
   }
 
   function renderIcon(region) {
