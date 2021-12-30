@@ -25,15 +25,23 @@ defmodule PlausibleWeb.Api.StatsController do
     labels = Enum.map(timeseries_result, fn row -> row["date"] end)
     present_index = present_index_for(site, query, labels)
 
-    {plot, has_imported} =
+    {plot, with_imported, source} =
       if query.with_imported && site.has_imported_stats do
+        # Showing imported data.
         plot =
           Imported.Visitors.timeseries(site, timeseries_query)
           |> Enum.zip_with(plot, &(&1 + &2))
 
-        {plot, site.has_imported_stats}
+        {plot, true, site.has_imported_stats}
       else
-        {plot, false}
+        if Map.get(params, "filters", "{}") != "{}" do
+          # Hiding imported data due to filtering.
+          # Setting source to "" hides imported indicator from main graph.
+          {plot, false, ""}
+        else
+          # Hiding imported data either by request or because there is none.
+          {plot, false, site.has_imported_stats || ""}
+        end
       end
 
     json(conn, %{
@@ -43,7 +51,8 @@ defmodule PlausibleWeb.Api.StatsController do
       top_stats: top_stats,
       interval: query.interval,
       sample_percent: sample_percent,
-      has_imported: has_imported
+      with_imported: with_imported,
+      imported_source: source,
     })
   end
 

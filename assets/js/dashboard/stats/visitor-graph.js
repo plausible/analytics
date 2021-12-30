@@ -5,7 +5,7 @@ import { navigateToQuery } from '../query'
 import numberFormatter, {durationFormatter} from '../util/number-formatter'
 import * as api from '../api'
 import LazyLoader from '../components/lazy-loader'
-import * as url from '../url'
+import * as url from '../util/url'
 
 function buildDataSet(plot, present_index, ctx, label) {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
@@ -351,21 +351,21 @@ class LineGraph extends React.Component {
   }
 
   importedNotice() {
-    const hasImported = this.props.graphData.has_imported
+    const source = this.props.graphData.imported_source;
 
-    if (hasImported) {
-      const withImported = this.props.query.with_imported
+    if (source) {
+      const withImported = this.props.graphData.with_imported;
       const strike = withImported ? "" : " line-through"
       const target = withImported || false ?
         url.setQuery('with_imported', false) :
         window.location.pathname;
-
+      const tip = withImported ? "" : "do not ";
 
       return (
         <Link to={target} className="w-4 h-4">
-          <div tooltip={`Stats include data imported from ${hasImported}.`} className="cursor-pointer flex-auto w-4 h-4">
+          <div tooltip={`Stats ${tip}include data imported from ${source}.`} className="cursor-pointer flex-auto w-4 h-4">
             <svg className="absolute text-gray-300 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <text x="4" y="18" fontSize="24" fill="currentColor" className={"text-gray-700 dark:text-gray-300" + strike}>{ hasImported[0].toUpperCase() }</text>
+              <text x="4" y="18" fontSize="24" fill="currentColor" className={"text-gray-700 dark:text-gray-300" + strike}>{ source[0].toUpperCase() }</text>
             </svg>
           </div>
         </Link>
