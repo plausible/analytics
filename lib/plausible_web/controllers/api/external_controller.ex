@@ -312,7 +312,19 @@ defmodule PlausibleWeb.Api.ExternalController do
 
     # Sweden
     # Södermalm => Stockholm
-    2_676_209 => 2_673_730
+    2_676_209 => 2_673_730,
+
+    # Mexico
+    # Miguel Hidalgo Villa Olímpica -> Mexico city
+    11_561_026 => 3_530_597,
+    # Zedec Santa Fe -> Mexico city
+    3_517_471 => 3_530_597,
+    #  Fuentes del Pedregal-> Mexico city
+    11_562_596 => 3_530_597,
+    #  Centro -> Mexico city
+    9_179_691 => 3_530_597,
+    #  Cuauhtémoc-> Mexico city
+    12_266_959 => 3_530_597
   }
 
   @decorate trace("ingest.geolocation")
