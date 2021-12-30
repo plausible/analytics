@@ -8,7 +8,13 @@ defmodule PlausibleWeb.Api.StatsController do
   def main_graph(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
-    selected_metric = if !params["metric"] || params["metric"] == "conversions" do "visitors" else params["metric"] end
+
+    selected_metric =
+      if !params["metric"] || params["metric"] == "conversions" do
+        "visitors"
+      else
+        params["metric"]
+      end
 
     timeseries_query =
       if query.period == "realtime" do
