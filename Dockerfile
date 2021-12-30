@@ -74,7 +74,7 @@ RUN chown -R plausibleuser:plausibleuser /app && \
 
 USER plausibleuser
 WORKDIR /app
-ENV GEONAMES_SOURCE_FILE=/app/lib/plausible-0.0.1/priv/geonames.csv
+ENV GEONAMES_SOURCE_FILE=/app/lib/plausible-$APP_VER/priv/geonames.csv
 ENTRYPOINT ["/entrypoint.sh"]
 EXPOSE 8000
 CMD ["run"]
