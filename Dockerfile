@@ -53,6 +53,7 @@ RUN mix release plausible
 
 # Main Docker Image
 FROM alpine:3.13.3
+ARG APP_VER=0.0.1
 LABEL maintainer="tckb <tckb@tgrthi.me>"
 ENV LANG=C.UTF-8
 
