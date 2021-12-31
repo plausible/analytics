@@ -204,6 +204,16 @@ defmodule Plausible.Google.Api do
         ["ga:date", "ga:campaign"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
+      # UTM Terms
+      {
+        ["ga:date", "ga:keyword"],
+        ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
+      },
+      # UTM Content
+      {
+        ["ga:date", "ga:adContent"],
+        ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
+      },
       # Pages
       {
         ["ga:date", "ga:pagePath"],
@@ -260,6 +270,8 @@ defmodule Plausible.Google.Api do
             "sources",
             "utm_mediums",
             "utm_campaigns",
+            "utm_terms",
+            "utm_content",
             "pages",
             "entry_pages",
             "exit_pages",

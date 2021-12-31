@@ -111,6 +111,50 @@ defmodule Plausible.Imported do
     })
   end
 
+  defp new_from_google_analytics(domain, "utm_terms", %{
+         "dimensions" => [timestamp, term],
+         "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
+       }) do
+    {visitors, ""} = Integer.parse(visitors)
+    {visits, ""} = Integer.parse(visits)
+    {bounces, ""} = Integer.parse(bounces)
+    {visit_duration, _} = Integer.parse(visit_duration)
+
+    term = if term == "(not set)" or term == "(not provided)", do: "", else: term
+
+    Imported.UtmTerms.new(%{
+      domain: domain,
+      timestamp: format_timestamp(timestamp),
+      utm_term: term,
+      visitors: visitors,
+      visits: visits,
+      bounces: bounces,
+      visit_duration: visit_duration
+    })
+  end
+
+  defp new_from_google_analytics(domain, "utm_content", %{
+         "dimensions" => [timestamp, content],
+         "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
+       }) do
+    {visitors, ""} = Integer.parse(visitors)
+    {visits, ""} = Integer.parse(visits)
+    {bounces, ""} = Integer.parse(bounces)
+    {visit_duration, _} = Integer.parse(visit_duration)
+
+    content = if content == "(not set)", do: "", else: content
+
+    Imported.UtmContent.new(%{
+      domain: domain,
+      timestamp: format_timestamp(timestamp),
+      utm_content: content,
+      visitors: visitors,
+      visits: visits,
+      bounces: bounces,
+      visit_duration: visit_duration
+    })
+  end
+
   defp new_from_google_analytics(domain, "pages", %{
          "dimensions" => [timestamp, page],
          "metrics" => [%{"values" => [value, pageviews, time_on_page]}]
