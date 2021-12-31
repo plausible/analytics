@@ -29,11 +29,18 @@ defmodule PlausibleWeb.Api.StatsController do
     labels = Enum.map(timeseries_result, fn row -> row["date"] end)
     present_index = present_index_for(site, query, labels)
 
+    full_weeks = if query.interval == "week" do
+      Enum.map(labels, fn label -> {label, Enum.member?(query.date_range, Timex.beginning_of_week(label)) && Enum.member?(query.date_range, Timex.end_of_week(label))} end) |> Enum.into(%{})
+    else
+      nil
+    end
+
     json(conn, %{
       plot: plot,
       labels: labels,
       present_index: present_index,
-      interval: query.interval
+      interval: query.interval,
+      full_weeks: full_weeks
     })
   end
 
@@ -65,6 +72,14 @@ defmodule PlausibleWeb.Api.StatsController do
 
         Enum.find_index(dates, &(&1 == current_date))
 
+      "week" ->
+        current_date =
+          Timex.now(site.timezone)
+          |> Timex.to_date()
+          |> date_or_weekstart(query)
+
+        Enum.find_index(dates, &(&1 == current_date))
+
       "month" ->
         current_date =
           Timex.now(site.timezone)
@@ -74,7 +89,11 @@ defmodule PlausibleWeb.Api.StatsController do
         Enum.find_index(dates, &(&1 == current_date))
 
       "minute" ->
-        nil
+        current_date =
+          Timex.now(site.timezone)
+          |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}:00")
+
+        Enum.find_index(dates, &(&1 == current_date))
     end
   end
 
@@ -941,5 +960,15 @@ defmodule PlausibleWeb.Api.StatsController do
     |> (fn res -> [headers | res] end).()
     |> CSV.encode()
     |> Enum.join()
+  end
+
+  defp date_or_weekstart(date, query) do
+    weekstart = Timex.beginning_of_week(date)
+
+    if Enum.member?(query.date_range, weekstart) do
+      weekstart
+    else
+      date
+    end
   end
 end

@@ -15,37 +15,59 @@ const DAYS_ABBREV = [
   "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
 ]
 
-export const dateFormatter = (interval, longForm) => {
+export const dateFormatter = (interval, longForm, period, full) => {
   return function(isoDate, _index, _ticks) {
-    let date = new Date(isoDate)
+    let date = new Date(isoDate);
+    let date_ = date.getUTCDate();
+    let day, month, hours, ampm, minutes;
 
     if (interval === 'month') {
       return MONTHS[date.getUTCMonth()];
+    } else if (interval === 'week') {
+      day = DAYS_ABBREV[date.getUTCDay()];
+      month = MONTHS_ABBREV[date.getUTCMonth()];
+      if (longForm) {
+        return `${full ? 'W' : 'Partial w'}eek of ` + date_ + ' ' + month;
+      } else {
+        return date_ + ' ' + month;
+      }
     } else if (interval === 'date') {
-      var day = DAYS_ABBREV[date.getUTCDay()];
-      var date_ = date.getUTCDate();
-      var month = MONTHS_ABBREV[date.getUTCMonth()];
-      return day + ', ' + date_ + ' ' + month;
+      day = DAYS_ABBREV[date.getUTCDay()];
+      month = MONTHS_ABBREV[date.getUTCMonth()];
+      if (longForm) {
+        return day + ', ' + date_ + ' ' + month;
+      } else {
+        return date_ + ' ' + month;
+      }
     } else if (interval === 'hour') {
       const parts = isoDate.split(/[^0-9]/);
       date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5])
-      var hours = date.getHours(); // Not sure why getUTCHours doesn't work here
-      var ampm = hours >= 12 ? 'pm' : 'am';
+      hours = date.getHours(); // Not sure why getUTCHours doesn't work here
+      ampm = hours >= 12 ? 'pm' : 'am';
       hours = hours % 12;
       hours = hours ? hours : 12; // the hour '0' should be '12'
       return hours + ampm;
-    } else if (interval === 'minute') {
+    } else if (interval === 'minute' && period === 'realtime') {
       if (longForm) {
         const minutesAgo = Math.abs(isoDate)
         return minutesAgo === 1 ? '1 minute ago' : minutesAgo + ' minutes ago'
       } else {
         return isoDate + 'm'
       }
+    } else if (interval === 'minute') {
+      const parts = isoDate.split(/[^0-9]/);
+      date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5])
+      hours = date.getHours();
+      minutes = date.getMinutes();
+      ampm = hours >= 12 ? 'pm' : 'am';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      return hours + ':' + (minutes < 10 ? `0${minutes}` : minutes) + ampm;
     }
   }
 }
 
-export const GraphTooltip = (graphData, metric, offset) => {
+export const GraphTooltip = (graphData, metric, offset, query) => {
 	return (context) => {
 		const tooltipModel = context.tooltip;
 
@@ -78,8 +100,8 @@ export const GraphTooltip = (graphData, metric, offset) => {
 		}
 
 		function renderLabel(label, prev_label) {
-			const formattedLabel = dateFormatter(graphData.interval, true)(label)
-			const prev_formattedLabel = prev_label && dateFormatter(graphData.interval, true)(prev_label)
+			const formattedLabel = dateFormatter(graphData.interval, true, query.period, graphData.interval === 'week' && graphData.full_weeks[label])(label)
+			const prev_formattedLabel = prev_label && dateFormatter(graphData.interval, true, query.period, graphData.interval === 'week' && graphData.full_weeks[prev_label])(prev_label)
 
 			if (graphData.interval === 'month') {
 				return !prev_label ? `${formattedLabel} ${(new Date(label)).getUTCFullYear()}` : `${prev_formattedLabel} ${(new Date(prev_label)).getUTCFullYear()}`
@@ -90,7 +112,14 @@ export const GraphTooltip = (graphData, metric, offset) => {
 			}
 
 			if (graphData.interval === 'hour') {
-				return !prev_label ? `${dateFormatter("date", true)(label)}, ${formattedLabel}` : `${dateFormatter("date", true)(prev_label)}, ${dateFormatter(graphData.interval, true)(prev_label)}`
+        return `${dateFormatter("date", true, query.period)(label)}, ${formattedLabel}`
+      }
+
+      if (graphData.interval === 'minute') {
+        if (query.period === 'realtime') {
+          return dateFormatter(graphData.interval, true, query.period)(label)
+        }
+        return `${dateFormatter("date", true, query.period)(label)}, ${formattedLabel}`
 			}
 
 			return !prev_label ? formattedLabel : prev_formattedLabel

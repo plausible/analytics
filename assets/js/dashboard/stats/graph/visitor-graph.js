@@ -8,6 +8,9 @@ import * as storage from '../../util/storage'
 import LazyLoader from '../../components/lazy-loader'
 import {GraphTooltip, buildDataSet, dateFormatter} from './graph-util';
 import TopStats from './top-stats';
+import IntervalPicker from './interval-picker';
+import { isToday } from '../../util/date';
+import FadeIn from '../../fade-in';
 
 export const METRIC_MAPPING = {
   'Unique visitors (last 30 min)': 'visitors',
@@ -55,7 +58,7 @@ class LineGraph extends React.Component {
   }
 
   regenerateChart() {
-    const { graphData, metric } = this.props
+    const { graphData, metric, query, site } = this.props
     const graphEl = document.getElementById("main-graph-canvas")
     this.ctx = graphEl.getContext('2d');
     const dataSet = buildDataSet(graphData.plot, graphData.present_index, this.ctx, METRIC_LABELS[metric])
@@ -77,7 +80,7 @@ class LineGraph extends React.Component {
             mode: 'index',
             intersect: false,
             position: 'average',
-            external: GraphTooltip(graphData, metric, graphEl.getBoundingClientRect())
+            external: GraphTooltip(graphData, metric, graphEl.getBoundingClientRect(), query)
           },
         },
         responsive: true,
@@ -101,7 +104,21 @@ class LineGraph extends React.Component {
             grid: { display: false },
             ticks: {
               maxTicksLimit: 8,
-              callback: function(val, _index, _ticks) { return dateFormatter(graphData.interval)(this.getLabelForValue(val)) },
+              callback: function (val, _index, _ticks) {
+                if (graphData.interval === 'hour' && query.period !== 'day') {
+                  return `${dateFormatter("date", false, query.period)(this.getLabelForValue(val))}, ${dateFormatter(graphData.interval, false, query.period)(this.getLabelForValue(val))}`
+                }
+
+                if (graphData.interval === 'minute' && !isToday(site, query.date)) {
+                  return `${dateFormatter("date", false, query.period)(this.getLabelForValue(val))}, ${dateFormatter("hour", false, query.period)(this.getLabelForValue(val))}`
+                }
+
+                if (graphData.interval === 'minute' && query.period !== 'realtime') {
+                  return dateFormatter("hour", false, query.period)(this.getLabelForValue(val))
+                }
+
+                return dateFormatter(graphData.interval, false, query.period)(this.getLabelForValue(val))
+              },
               color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             }
           }
@@ -224,49 +241,39 @@ class LineGraph extends React.Component {
 
       if (this.state.exported) {
         return (
-          <svg className="animate-spin h-4 w-4 text-indigo-500 absolute -top-8 right-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
+          <span className="w-6 h-6 flex items-center justify-center">
+            <svg className="animate-spin h-4 w-4 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </span>
         )
       } else {
         const endpoint = `/${encodeURIComponent(this.props.site.domain)}/export${api.serializeQuery(this.props.query)}`
 
         return (
-          <a href={endpoint} download onClick={this.downloadSpinner.bind(this)}>
-            <svg className="absolute w-4 h-5 text-gray-700 feather dark:text-gray-300 -top-8 right-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <a className="w-6 h-6 flex items-center justify-center" href={endpoint} download onClick={this.downloadSpinner.bind(this)}>
+            <svg className="w-4 h-5 text-gray-700 feather dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           </a>
         )
       }
     }
   }
 
-  samplingNotice() {
-    const samplePercent = this.props.topStatData && this.props.topStatData.sample_percent
-
-    if (samplePercent < 100) {
-      return (
-        <div tooltip={`Stats based on a ${samplePercent}% sample of all visitors`} className="absolute cursor-pointer -top-20 right-8">
-          <svg className="w-4 h-4 text-gray-300 dark:text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-      )
-    }
-  }
-
   render() {
-    const { updateMetric, metric, topStatData, query } = this.props
+    const { updateMetric, metric, topStatData, query, site, graphData } = this.props
     const extraClass = this.props.graphData && this.props.graphData.interval === 'hour' ? '' : 'cursor-pointer'
 
     return (
       <div className="graph-inner">
         <div className="flex flex-wrap">
-          <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData}/>
+          {topStatData && <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData}/>}
+        </div>
+        <div className="flex absolute w-full -ml-2 justify-end pr-8 items-center">
+          <IntervalPicker site={site} query={query} graphData={graphData} positionClasses="right-8 top-5 md:top-6"/>
+          {this.downloadLink()}
         </div>
         {this.props.metric && this.props.graphData && <div className="relative px-2">
-          {this.downloadLink()}
-          {this.samplingNotice()}
           <canvas id="main-graph-canvas" className={'mt-4 ' + extraClass} width="1054" height="342"></canvas>
         </div>}
       </div>
@@ -345,6 +352,10 @@ export default class VisitorGraph extends React.Component {
         this.setState((state) => ({ loading: state.loading-2, graphData: res }))
         return res
       })
+      .catch((err) => {
+        console.log(err)
+        this.setState((state) => ({ loading: state.loading-2, graphData: false }))
+      })
     } else {
       this.setState((state) => ({ loading: state.loading-2, graphData: null }))
     }
@@ -364,11 +375,11 @@ export default class VisitorGraph extends React.Component {
 
     const theme = document.querySelector('html').classList.contains('dark') || false
 
-    if ((loading <= 1 && topStatData) || (topStatData && graphData)) {
-      return (
-          <LineGraphWithRouter graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} />
-      )
-    }
+    return (
+      <FadeIn show={(loading <= 1 && topStatData) || (topStatData && graphData)}>
+        <LineGraphWithRouter graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} />
+      </FadeIn>
+    )
   }
 
   render() {

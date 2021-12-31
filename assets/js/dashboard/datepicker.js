@@ -134,6 +134,7 @@ class DatePicker extends React.Component {
       from: false,
       to: false,
       date: false,
+    interval: false,
     };
 
     const insertionDate = parseUTCDate(site.insertedAt);
@@ -224,6 +225,7 @@ class DatePicker extends React.Component {
             date: formatISO(from),
             from: false,
             to: false,
+            interval: false
           }
         )
       } else {
@@ -308,7 +310,7 @@ class DatePicker extends React.Component {
 
     return (
       <QueryLink
-        to={{from: false, to: false, period, ...opts}}
+        to={{from: false, to: false, interval: false, period, ...opts}}
         onClick={this.close}
         query={this.props.query}
         className={`${boldClass  } px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900

@@ -62,12 +62,31 @@ defmodule Plausible.Stats.Timeseries do
     end)
   end
 
+  defp buckets(%Query{interval: "week"} = query) do
+    n_buckets = Timex.diff(query.date_range.last, query.date_range.first, :weeks)
+
+    Enum.map(0..n_buckets, fn shift ->
+      query.date_range.first
+      |> Timex.shift(weeks: shift)
+      |> date_or_weekstart(query)
+    end)
+  end
+
   defp buckets(%Query{interval: "date"} = query) do
     Enum.into(query.date_range, [])
   end
 
   defp buckets(%Query{interval: "hour"} = query) do
-    Enum.map(0..23, fn step ->
+    n_hours = Timex.diff(query.date_range.last, query.date_range.first, :hours)
+
+    n_buckets =
+      if n_hours == 0 do
+        23
+      else
+        n_hours
+      end
+
+    Enum.map(0..n_buckets, fn step ->
       Timex.to_datetime(query.date_range.first)
       |> Timex.shift(hours: step)
       |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
@@ -78,12 +97,45 @@ defmodule Plausible.Stats.Timeseries do
     Enum.into(-30..-1, [])
   end
 
+  defp buckets(%Query{interval: "minute"} = query) do
+    n_minutes = Timex.diff(query.date_range.last, query.date_range.first, :minutes)
+
+    n_buckets =
+      if n_minutes == 0 do
+        1440
+      else
+        n_minutes
+      end
+
+    Enum.map(0..n_buckets, fn step ->
+      Timex.to_datetime(query.date_range.first)
+      |> Timex.shift(minutes: step)
+      |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
+    end)
+  end
+
   defp select_bucket(q, site, %Query{interval: "month"}) do
     from(
       e in q,
       select_merge: %{
         "date" =>
           fragment("toStartOfMonth(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
+      }
+    )
+  end
+
+  defp select_bucket(q, site, %Query{interval: "week"} = query) do
+    {first_datetime, _} = utc_boundaries(query, site.timezone)
+
+    from(
+      e in q,
+      select_merge: %{
+        "date" =>
+          fragment("
+            if(toMonday(toTimeZone(?, ?)) < toDate(?),
+              toDate(?),
+              toMonday(toTimeZone(?, ?))
+            )  as date", e.timestamp, ^site.timezone, ^first_datetime, ^first_datetime, e.timestamp, ^site.timezone)
       }
     )
   end
@@ -106,13 +158,32 @@ defmodule Plausible.Stats.Timeseries do
     )
   end
 
-  defp select_bucket(q, _site, %Query{interval: "minute"}) do
+  defp select_bucket(q, _site, %Query{interval: "minute", period: "30m"}) do
     from(
       e in q,
       select_merge: %{
         "date" => fragment("dateDiff('minute', now(), ?) as date", e.timestamp)
       }
     )
+  end
+
+  defp select_bucket(q, site, %Query{interval: "minute"}) do
+    from(
+      e in q,
+      select_merge: %{
+        "date" => fragment("toStartOfMinute(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
+      }
+    )
+  end
+
+  defp date_or_weekstart(date, query) do
+    weekstart = Timex.beginning_of_week(date)
+
+    if Enum.member?(query.date_range, weekstart) do
+      weekstart
+    else
+      date
+    end
   end
 
   defp empty_row(date, metrics) do

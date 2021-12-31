@@ -5,24 +5,53 @@ import * as storage from './util/storage'
 
 const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'custom']
 
+const ORDERED_PERIODS = ['realtime', 'day', '7d', 'month', '30d', '6mo', '12mo']
+const INTERVALS = ["month", "week", "date", "hour", "minute"]
+
 export function parseQuery(querystring, site) {
   const q = new URLSearchParams(querystring)
   let period = q.get('period')
-  const periodKey = `period__${  site.domain}`
+  let interval = q.get('interval')
+  const periodKey = `period__${site.domain}`
+  const intervalKey = `interval__${site.domain}`
 
   if (PERIODS.includes(period)) {
     if (period !== 'custom' && period !== 'realtime') storage.setItem(periodKey, period)
   } else if (storage.getItem(periodKey)) {
       period = storage.getItem(periodKey)
-    } else {
-      period = '30d'
-    }
+  } else {
+    period = '30d'
+  }
+
+  if (INTERVALS.includes(interval)) {
+    storage.setItem(intervalKey, interval)
+  } else if (storage.getItem(intervalKey)) {
+    interval = storage.getItem(intervalKey)
+  } else {
+    interval = undefined
+  }
+
+  // ensure intervals are longer than period
+  if (period !== 'custom') {
+    if (INTERVALS.indexOf(interval) == 0 && ORDERED_PERIODS.indexOf(period) < 5) interval = undefined
+    if (INTERVALS.indexOf(interval) == 1 && ORDERED_PERIODS.indexOf(period) < 3) interval = undefined
+    if (INTERVALS.indexOf(interval) == 2 && ORDERED_PERIODS.indexOf(period) < 2) interval = undefined
+    if (INTERVALS.indexOf(interval) == 3 && ORDERED_PERIODS.indexOf(period) < 1) interval = undefined
+
+    // ensure minute interval is not used with period longer than 7d
+    if (INTERVALS.indexOf(interval) == 4 && ORDERED_PERIODS.indexOf(period) > 1) interval = undefined
+    // ensure hour interval is not used with period longer than one month
+    if (INTERVALS.indexOf(interval) == 3 && ORDERED_PERIODS.indexOf(period) > 4) interval = undefined
+  } else {
+    if (interval === 'minute') interval = undefined
+  }
 
   return {
     period,
     date: q.get('date') ? parseUTCDate(q.get('date')) : nowForSite(site),
     from: q.get('from') ? parseUTCDate(q.get('from')) : undefined,
     to: q.get('to') ? parseUTCDate(q.get('to')) : undefined,
+    interval,
     filters: {
       'goal': q.get('goal'),
       'props': JSON.parse(q.get('props')),
