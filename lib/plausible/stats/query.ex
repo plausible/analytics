@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Query do
             interval: nil,
             period: nil,
             filters: %{},
-            sample_threshold: 20_000_000
+            sample_threshold: 20_000_000,
             with_imported: true
 
   @default_sample_threshold 20_000_000
