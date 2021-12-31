@@ -40,8 +40,6 @@ export default class TopStats extends React.Component {
   render() {
     const { updateMetric, metric, topStatData, query } = this.props
 
-		console.log(topStatData.top_stats, METRIC_MAPPING)
-
     const stats = topStatData && topStatData.top_stats.map((stat, index) => {
       let border = index > 0 ? 'lg:border-l border-gray-300' : ''
       border = index % 2 === 0 ? border + ' border-r lg:border-r-0' : border

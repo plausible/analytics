@@ -281,7 +281,7 @@ export default class VisitorGraph extends React.Component {
     super(props)
     this.state = {
       loading: 2,
-      metric: storage.getItem('graph__metric') || 'visitors'
+      metric: storage.getItem(`metric__${this.props.site.domain}`) || 'visitors'
     }
     this.onVisible = this.onVisible.bind(this)
     this.updateMetric = this.updateMetric.bind(this)
@@ -312,7 +312,7 @@ export default class VisitorGraph extends React.Component {
       this.fetchGraphData()
     }
 
-    const savedMetric = storage.getItem('graph__metric')
+    const savedMetric = storage.getItem(`metric__${this.props.site.domain}`)
     const topStatLabels = topStatData && topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
     const prevTopStatLabels = prevState.topStatData && prevState.topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
     if (topStatLabels && `${topStatLabels}` !== `${prevTopStatLabels}`) {
@@ -330,10 +330,10 @@ export default class VisitorGraph extends React.Component {
 
   updateMetric(newMetric) {
     if (newMetric === this.state.metric) {
-      storage.setItem('graph__metric', "")
+      storage.setItem(`metric__${this.props.site.domain}`, "")
       this.setState({ metric: "" })
     } else {
-      storage.setItem('graph__metric', newMetric)
+      storage.setItem(`metric__${this.props.site.domain}`, newMetric)
       this.setState({ metric: newMetric })
     }
   }
