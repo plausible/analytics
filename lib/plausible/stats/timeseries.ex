@@ -53,7 +53,12 @@ defmodule Plausible.Stats.Timeseries do
   end
 
   defp buckets(%Query{interval: "month"} = query) do
-    n_buckets = Timex.diff(query.date_range.last |> Timex.end_of_month(), query.date_range.first |> Timex.beginning_of_month(), :months)
+    n_buckets =
+      Timex.diff(
+        query.date_range.last |> Timex.end_of_month(),
+        query.date_range.first |> Timex.beginning_of_month(),
+        :months
+      )
 
     Enum.map(n_buckets..0, fn shift ->
       query.date_range.last
@@ -131,11 +136,19 @@ defmodule Plausible.Stats.Timeseries do
       e in q,
       select_merge: %{
         "date" =>
-          fragment("
+          fragment(
+            "
             if(toMonday(toTimeZone(?, ?)) < toDate(?),
               toDate(?),
               toMonday(toTimeZone(?, ?))
-            )  as date", e.timestamp, ^site.timezone, ^first_datetime, ^first_datetime, e.timestamp, ^site.timezone)
+            )  as date",
+            e.timestamp,
+            ^site.timezone,
+            ^first_datetime,
+            ^first_datetime,
+            e.timestamp,
+            ^site.timezone
+          )
       }
     )
   end
@@ -171,7 +184,8 @@ defmodule Plausible.Stats.Timeseries do
     from(
       e in q,
       select_merge: %{
-        "date" => fragment("toStartOfMinute(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
+        "date" =>
+          fragment("toStartOfMinute(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
       }
     )
   end

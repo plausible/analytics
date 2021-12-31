@@ -9,7 +9,6 @@ import LazyLoader from '../../components/lazy-loader'
 import {GraphTooltip, buildDataSet, dateFormatter, INTERVALS, ORDERED_PERIODS} from './graph-util';
 import TopStats from './top-stats';
 import IntervalPicker from './interval-picker';
-import { isToday } from '../../util/date';
 import FadeIn from '../../fade-in';
 
 export const METRIC_MAPPING = {
@@ -58,7 +57,7 @@ class LineGraph extends React.Component {
   }
 
   regenerateChart() {
-    const { graphData, metric, query, site } = this.props
+    const { graphData, metric, query } = this.props
     const graphEl = document.getElementById("main-graph-canvas")
     this.ctx = graphEl.getContext('2d');
     const dataSet = buildDataSet(graphData.plot, graphData.present_index, this.ctx, METRIC_LABELS[metric])

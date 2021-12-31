@@ -29,15 +29,26 @@ defmodule PlausibleWeb.Api.StatsController do
     labels = Enum.map(timeseries_result, fn row -> row["date"] end)
     present_index = present_index_for(site, query, labels)
 
-    full_intervals = if query.interval == "week" do
-      Enum.map(labels, fn label -> {label, Enum.member?(query.date_range, Timex.beginning_of_week(label)) && Enum.member?(query.date_range, Timex.end_of_week(label))} end) |> Enum.into(%{})
-    else
-      if query.interval == "month" do
-        Enum.map(labels, fn label -> {label, Enum.member?(query.date_range, Timex.beginning_of_month(label)) && Enum.member?(query.date_range, Timex.end_of_month(label))} end) |> Enum.into(%{})
+    full_intervals =
+      if query.interval == "week" do
+        Enum.map(labels, fn label ->
+          {label,
+           Enum.member?(query.date_range, Timex.beginning_of_week(label)) &&
+             Enum.member?(query.date_range, Timex.end_of_week(label))}
+        end)
+        |> Enum.into(%{})
       else
-        nil
+        if query.interval == "month" do
+          Enum.map(labels, fn label ->
+            {label,
+             Enum.member?(query.date_range, Timex.beginning_of_month(label)) &&
+               Enum.member?(query.date_range, Timex.end_of_month(label))}
+          end)
+          |> Enum.into(%{})
+        else
+          nil
+        end
       end
-    end
 
     json(conn, %{
       plot: plot,
