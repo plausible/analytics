@@ -187,12 +187,7 @@ class FilterModal extends React.Component {
   }
 
   renderFilterInputs() {
-    const groups = FILTER_GROUPS[this.state.selectedFilterGroup].filter((filterName) => {
-      if (['city', 'region'].includes(filterName)) {
-        return this.props.site.cities
-      }
-      return true
-    })
+    const groups = FILTER_GROUPS[this.state.selectedFilterGroup]
 
     return groups.map((filter) => {
       return (

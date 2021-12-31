@@ -140,11 +140,6 @@ is_selfhost =
   |> get_var_from_path_or_env("SELFHOST", "true")
   |> String.to_existing_atom()
 
-show_cities =
-  config_dir
-  |> get_var_from_path_or_env("SHOW_CITIES", "false")
-  |> String.to_existing_atom()
-
 custom_script_name =
   config_dir
   |> get_var_from_path_or_env("CUSTOM_SCRIPT_NAME", "script")
@@ -185,7 +180,6 @@ config :plausible,
   site_limit: site_limit,
   site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost,
-  show_cities: show_cities,
   custom_script_name: custom_script_name,
   domain_blacklist: domain_blacklist
 
