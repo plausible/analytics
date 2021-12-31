@@ -6,7 +6,7 @@ import numberFormatter, {durationFormatter} from '../../util/number-formatter'
 import * as api from '../../api'
 import * as storage from '../../util/storage'
 import LazyLoader from '../../components/lazy-loader'
-import {GraphTooltip, buildDataSet, dateFormatter} from './graph-util';
+import {GraphTooltip, buildDataSet, dateFormatter, INTERVALS, ORDERED_PERIODS} from './graph-util';
 import TopStats from './top-stats';
 import IntervalPicker from './interval-picker';
 import { isToday } from '../../util/date';
@@ -109,10 +109,6 @@ class LineGraph extends React.Component {
                   return `${dateFormatter("date", false, query.period)(this.getLabelForValue(val))}, ${dateFormatter(graphData.interval, false, query.period)(this.getLabelForValue(val))}`
                 }
 
-                if (graphData.interval === 'minute' && !isToday(site, query.date)) {
-                  return `${dateFormatter("date", false, query.period)(this.getLabelForValue(val))}, ${dateFormatter("hour", false, query.period)(this.getLabelForValue(val))}`
-                }
-
                 if (graphData.interval === 'minute' && query.period !== 'realtime') {
                   return dateFormatter("hour", false, query.period)(this.getLabelForValue(val))
                 }
@@ -157,15 +153,18 @@ class LineGraph extends React.Component {
     const { graphData, metric, darkTheme } = this.props;
     const tooltip = document.getElementById('chartjs-tooltip');
 
-    if (metric && graphData && (
+    if (
       graphData !== prevProps.graphData ||
       darkTheme !== prevProps.darkTheme
-    )) {
-      if (this.chart) {
-        this.chart.destroy();
+    ) {
+
+      if (metric && graphData) {
+        if (this.chart) {
+          this.chart.destroy();
+        }
+        this.chart = this.regenerateChart();
+        this.chart.update();
       }
-      this.chart = this.regenerateChart();
-      this.chart.update();
 
       if (tooltip) {
         tooltip.style.opacity = 0;
@@ -175,7 +174,6 @@ class LineGraph extends React.Component {
     if (!metric && this.chart) {
       this.chart.destroy();
     }
-
   }
 
   componentWillUnmount() {
@@ -252,8 +250,8 @@ class LineGraph extends React.Component {
         const endpoint = `/${encodeURIComponent(this.props.site.domain)}/export${api.serializeQuery(this.props.query)}`
 
         return (
-          <a className="w-6 h-6 flex items-center justify-center" href={endpoint} download onClick={this.downloadSpinner.bind(this)}>
-            <svg className="w-4 h-5 text-gray-700 feather dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <a className="w-6 h-6 flex items-center justify-center text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600" href={endpoint} download onClick={this.downloadSpinner.bind(this)}>
+            <svg className="w-4 h-5 feather" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           </a>
         )
       }
@@ -269,8 +267,8 @@ class LineGraph extends React.Component {
         <div className="flex flex-wrap">
           {topStatData && <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData}/>}
         </div>
-        <div className="flex absolute w-full -ml-2 justify-end pr-8 items-center">
-          <IntervalPicker site={site} query={query} graphData={graphData} positionClasses="right-8 top-5 md:top-6"/>
+        <div className="flex absolute w-full justify-end pr-8 items-center z-9">
+          <IntervalPicker site={site} query={query} graphData={graphData} positionClasses="right-8 top-5 md:top-6" updateInterval={this.props.updateInterval}/>
           {this.downloadLink()}
         </div>
         {this.props.metric && this.props.graphData && <div className="relative px-2">
@@ -288,35 +286,75 @@ export default class VisitorGraph extends React.Component {
     super(props)
     this.state = {
       loading: 2,
-      metric: storage.getItem('graph__metric') || 'visitors'
+      metric: storage.getItem('graph__metric') || 'visitors',
+      interval: storage.getItem(`interval__${this.props.site.domain}`)
     }
     this.onVisible = this.onVisible.bind(this)
     this.updateMetric = this.updateMetric.bind(this)
     this.fetchTopStatData = this.fetchTopStatData.bind(this)
     this.fetchGraphData = this.fetchGraphData.bind(this)
+    this.validateInterval = this.validateInterval.bind(this)
+    this.updateInterval = this.updateInterval.bind(this)
+  }
+
+  validateInterval() {
+    const interval = this.state.interval || storage.getItem(`interval__${this.props.site.domain}`)
+    const period = this.props.query && this.props.query.period
+
+    const outOfRangeInterval = period !== 'custom' && (
+      // ensure intervals are longer than period
+      (INTERVALS.indexOf(interval) == 0 && ORDERED_PERIODS.indexOf(period) < 5) ||
+      (INTERVALS.indexOf(interval) == 1 && ORDERED_PERIODS.indexOf(period) < 3) ||
+      (INTERVALS.indexOf(interval) == 2 && ORDERED_PERIODS.indexOf(period) < 2) ||
+      (INTERVALS.indexOf(interval) == 3 && ORDERED_PERIODS.indexOf(period) < 1) ||
+      // ensure minute interval is not used with period longer than realtime
+      (INTERVALS.indexOf(interval) == 4 && ORDERED_PERIODS.indexOf(period) > 0) ||
+      // ensure hour interval is not used with period longer than one month
+      (INTERVALS.indexOf(interval) == 3 && ORDERED_PERIODS.indexOf(period) > 4))
+
+    if (!interval || !INTERVALS.includes(interval) || outOfRangeInterval) {
+      this.setState({interval: undefined}, () => {
+        this.setState({loading: 1, graphData: null})
+        this.fetchGraphData()
+      })
+    } else {
+      this.setState({loading: 1, graphData: null})
+      this.fetchGraphData()
+    }
+  }
+
+  updateInterval(interval) {
+    if (INTERVALS.includes(interval)) {
+      this.setState({interval}, this.validateInterval)
+      storage.setItem(`interval__${this.props.site.domain}`, interval)
+    }
   }
 
   onVisible() {
-    this.fetchGraphData()
+    this.validateInterval()
     this.fetchTopStatData()
     if (this.props.timer) {
-      this.props.timer.onTick(this.fetchGraphData)
+      this.props.timer.onTick(this.validateInterval)
       this.props.timer.onTick(this.fetchTopStatData)
     }
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { metric, topStatData } = this.state;
+    const { metric, topStatData, interval } = this.state;
 
     if (this.props.query !== prevProps.query) {
       this.setState({ loading: 3, graphData: null, topStatData: null })
-      this.fetchGraphData()
+      this.validateInterval()
       this.fetchTopStatData()
     }
 
     if (metric !== prevState.metric) {
       this.setState({loading: 1, graphData: null})
-      this.fetchGraphData()
+      this.validateInterval()
+    }
+
+    if (interval !== prevState.interval && interval) {
+      this.validateInterval()
     }
 
     const savedMetric = storage.getItem('graph__metric')
@@ -347,7 +385,7 @@ export default class VisitorGraph extends React.Component {
 
   fetchGraphData() {
     if (this.state.metric) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/main-graph`, this.props.query, {metric: this.state.metric || 'none'})
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/main-graph`, this.props.query, {metric: this.state.metric || 'none', interval: this.state.interval})
       .then((res) => {
         this.setState((state) => ({ loading: state.loading-2, graphData: res }))
         return res
@@ -377,7 +415,7 @@ export default class VisitorGraph extends React.Component {
 
     return (
       <FadeIn show={(loading <= 1 && topStatData) || (topStatData && graphData)}>
-        <LineGraphWithRouter graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} />
+        <LineGraphWithRouter graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} updateInterval={this.updateInterval}/>
       </FadeIn>
     )
   }

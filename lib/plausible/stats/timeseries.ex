@@ -53,7 +53,7 @@ defmodule Plausible.Stats.Timeseries do
   end
 
   defp buckets(%Query{interval: "month"} = query) do
-    n_buckets = Timex.diff(query.date_range.last, query.date_range.first, :months)
+    n_buckets = Timex.diff(query.date_range.last |> Timex.end_of_month(), query.date_range.first |> Timex.beginning_of_month(), :months)
 
     Enum.map(n_buckets..0, fn shift ->
       query.date_range.last

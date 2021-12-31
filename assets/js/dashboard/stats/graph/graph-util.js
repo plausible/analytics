@@ -15,6 +15,9 @@ const DAYS_ABBREV = [
   "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
 ]
 
+export const ORDERED_PERIODS = ['realtime', 'day', '7d', 'month', '30d', '6mo', '12mo']
+export const INTERVALS = ["month", "week", "date", "hour", "minute"]
+
 export const dateFormatter = (interval, longForm, period, full) => {
   return function(isoDate, _index, _ticks) {
     let date = new Date(isoDate);
@@ -22,7 +25,11 @@ export const dateFormatter = (interval, longForm, period, full) => {
     let day, month, hours, ampm, minutes;
 
     if (interval === 'month') {
-      return MONTHS[date.getUTCMonth()];
+      if (longForm) {
+        return (full ? '' : 'Partial ') + MONTHS[date.getUTCMonth()];
+      } else {
+        return MONTHS[date.getUTCMonth()];
+      }
     } else if (interval === 'week') {
       day = DAYS_ABBREV[date.getUTCDay()];
       month = MONTHS_ABBREV[date.getUTCMonth()];
@@ -100,8 +107,8 @@ export const GraphTooltip = (graphData, metric, offset, query) => {
 		}
 
 		function renderLabel(label, prev_label) {
-			const formattedLabel = dateFormatter(graphData.interval, true, query.period, graphData.interval === 'week' && graphData.full_weeks[label])(label)
-			const prev_formattedLabel = prev_label && dateFormatter(graphData.interval, true, query.period, graphData.interval === 'week' && graphData.full_weeks[prev_label])(prev_label)
+			const formattedLabel = dateFormatter(graphData.interval, true, query.period, ['week', 'month'].includes(graphData.interval) && graphData.full_intervals[label])(label)
+			const prev_formattedLabel = prev_label && dateFormatter(graphData.interval, true, query.period, ['week', 'month'].includes(graphData.interval) && graphData.full_intervals[prev_label])(prev_label)
 
 			if (graphData.interval === 'month') {
 				return !prev_label ? `${formattedLabel} ${(new Date(label)).getUTCFullYear()}` : `${prev_formattedLabel} ${(new Date(prev_label)).getUTCFullYear()}`

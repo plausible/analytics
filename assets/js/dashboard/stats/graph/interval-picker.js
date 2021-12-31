@@ -1,6 +1,5 @@
 import { Transition } from '@headlessui/react';
 import React, { Component, Fragment } from 'react';
-import { QueryLink } from '../../query';
 
 export default class IntervalPicker extends Component {
 	constructor(props) {
@@ -33,7 +32,7 @@ export default class IntervalPicker extends Component {
 		const currentInterval = (graphData && graphData.interval) || query.interval;
 
 		const INTERVAL_MAPPING = {
-			'day': ['minute', 'hour'],
+			'day': ['hour'],
 			'7d': ['hour', 'date'],
 			'month': ['date', 'week'],
 			'30d': ['date', 'week'],
@@ -43,7 +42,6 @@ export default class IntervalPicker extends Component {
 		}
 
 		const INTERVAL_LABELS = {
-			'minute': 'Minutes',
 			'hour': 'Hours',
 			'date': 'Days',
 			'week': 'Weeks',
@@ -69,16 +67,14 @@ export default class IntervalPicker extends Component {
 									{INTERVAL_LABELS[interval]}
 								</div>
 							) : (
-								<QueryLink
-									to={{interval}}
-									onClick={this.close}
-									query={query}
+								<a
+									onClick={() => {this.props.updateInterval(interval); this.setState({ open: false })}}
 									key={interval}
 									className="px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900
-									dark:hover:bg-gray-900 dark:hover:text-gray-100 flex items-center justify-between"
+									dark:hover:bg-gray-900 dark:hover:text-gray-100 flex items-center justify-between cursor-pointer"
 								>
 									{INTERVAL_LABELS[interval]}
-								</QueryLink>
+								</a>
 							)
 						))}
 					</div>
@@ -95,7 +91,7 @@ export default class IntervalPicker extends Component {
 		return (
 			<div ref={node => this.dropDownNode = node}>
 				<svg
-					className="h-5 text-gray-700 dark:text-gray-300 cursor-pointer mr-4"
+					className="h-5 text-gray-700 dark:text-gray-300 cursor-pointer mr-4 hover:text-indigo-600 dark:hover:text-indigo-600"
 					onClick={() => this.setState((state) => ({ open: !state.open }))}
           onKeyPress={() => this.setState((state) => ({ open: !state.open }))}
 					fill="currentColor"
