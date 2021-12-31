@@ -210,7 +210,7 @@ defmodule Plausible.Imported do
     })
   end
 
-  defp new_from_google_analytics(domain, "countries", %{
+  defp new_from_google_analytics(domain, "locations", %{
          "dimensions" => [timestamp, country, region, city],
          "metrics" => [%{"values" => [value]}]
        }) do

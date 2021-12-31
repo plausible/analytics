@@ -229,7 +229,7 @@ defmodule Plausible.Google.Api do
         ["ga:date", "ga:exitPagePath"],
         ["ga:users", "ga:exits"]
       },
-      # Country
+      # Locations
       {
         ["ga:date", "ga:countryIsoCode", "ga:regionIsoCode", "ga:cityId"],
         ["ga:users"]
@@ -275,7 +275,7 @@ defmodule Plausible.Google.Api do
             "pages",
             "entry_pages",
             "exit_pages",
-            "countries",
+            "locations",
             "devices",
             "browsers",
             "operating_systems"
