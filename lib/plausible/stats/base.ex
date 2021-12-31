@@ -366,6 +366,8 @@ defmodule Plausible.Stats.Base do
              "visit:utm_medium",
              "visit:utm_source",
              "visit:utm_campaign",
+             "visit:utm_term",
+             "visit:utm_content",
              "visit:entry_page",
              "visit:exit_page",
              "visit:country",
@@ -378,6 +380,9 @@ defmodule Plausible.Stats.Base do
 
     {table, dim} =
       case property do
+        "visit:utm_content" ->
+          {"imported_utm_content", :utm_content}
+
         "visit:country" ->
           {"imported_locations", :country}
 
@@ -439,6 +444,18 @@ defmodule Plausible.Stats.Base do
           imported_q
           |> select_merge([i], %{
             utm_campaign: fragment("if(empty(?), ?, ?)", i.utm_campaign, @no_ref, i.utm_campaign)
+          })
+
+        :utm_term ->
+          imported_q
+          |> select_merge([i], %{
+            utm_term: fragment("if(empty(?), ?, ?)", i.utm_term, @no_ref, i.utm_term)
+          })
+
+        :utm_content ->
+          imported_q
+          |> select_merge([i], %{
+            utm_content: fragment("if(empty(?), ?, ?)", i.utm_content, @no_ref, i.utm_content)
           })
 
         :page ->
@@ -503,6 +520,18 @@ defmodule Plausible.Stats.Base do
         |> select_merge([s, i], %{
           utm_campaign:
             fragment("if(empty(?), ?, ?)", s.utm_campaign, i.utm_campaign, s.utm_campaign)
+        })
+
+      :utm_term ->
+        q
+        |> select_merge([s, i], %{
+          utm_term: fragment("if(empty(?), ?, ?)", s.utm_term, i.utm_term, s.utm_term)
+        })
+
+      :utm_content ->
+        q
+        |> select_merge([s, i], %{
+          utm_content: fragment("if(empty(?), ?, ?)", s.utm_content, i.utm_content, s.utm_content)
         })
 
       :page ->

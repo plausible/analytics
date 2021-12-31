@@ -474,7 +474,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.utm_content,
       select_merge: %{
-        "utm_content" => fragment("if(empty(?), ?, ?)", s.utm_content, @no_ref, s.utm_content)
+        utm_content: fragment("if(empty(?), ?, ?)", s.utm_content, @no_ref, s.utm_content)
       }
     )
   end
@@ -484,7 +484,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.utm_term,
       select_merge: %{
-        "utm_term" => fragment("if(empty(?), ?, ?)", s.utm_term, @no_ref, s.utm_term)
+        utm_term: fragment("if(empty(?), ?, ?)", s.utm_term, @no_ref, s.utm_term)
       }
     )
   end

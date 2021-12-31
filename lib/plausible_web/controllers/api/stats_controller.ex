@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Api.StatsController do
       interval: query.interval,
       sample_percent: sample_percent,
       with_imported: with_imported,
-      imported_source: source,
+      imported_source: source
     })
   end
 
@@ -320,20 +320,20 @@ defmodule PlausibleWeb.Api.StatsController do
       |> maybe_hide_noref("visit:utm_content", params)
 
     pagination = parse_pagination(params)
-    metrics = ["visitors", "bounce_rate", "visit_duration"]
+    metrics = [:visitors, :bounce_rate, :visit_duration]
 
     res =
       Stats.breakdown(site, query, "visit:utm_content", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, "utm_content", "visit:utm_content")
-      |> transform_keys(%{"utm_content" => "name"})
+      |> maybe_add_cr(site, query, pagination, :utm_content, "visit:utm_content")
+      |> transform_keys(%{utm_content: "name"})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         res
-        |> transform_keys(%{"visitors" => "conversions"})
+        |> transform_keys(%{visitors: "conversions"})
         |> to_csv(["name", "conversions", "conversion_rate"])
       else
-        res |> to_csv(["name", "visitors", "bounce_rate", "visit_duration"])
+        res |> to_csv(["name", :visitors, :bounce_rate, :visit_duration])
       end
     else
       json(conn, res)
@@ -349,20 +349,20 @@ defmodule PlausibleWeb.Api.StatsController do
       |> maybe_hide_noref("visit:utm_term", params)
 
     pagination = parse_pagination(params)
-    metrics = ["visitors", "bounce_rate", "visit_duration"]
+    metrics = [:visitors, :bounce_rate, :visit_duration]
 
     res =
       Stats.breakdown(site, query, "visit:utm_term", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, "utm_term", "visit:utm_term")
-      |> transform_keys(%{"utm_term" => "name"})
+      |> maybe_add_cr(site, query, pagination, :utm_term, "visit:utm_term")
+      |> transform_keys(%{utm_term: "name"})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         res
-        |> transform_keys(%{"visitors" => "conversions"})
+        |> transform_keys(%{visitors: "conversions"})
         |> to_csv(["name", "conversions", "conversion_rate"])
       else
-        res |> to_csv(["name", "visitors", "bounce_rate", "visit_duration"])
+        res |> to_csv(["name", :visitors, :bounce_rate, :visit_duration])
       end
     else
       json(conn, res)
