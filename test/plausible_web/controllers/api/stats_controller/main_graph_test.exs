@@ -333,26 +333,34 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
     test "shows imperfect week-split month on week scale with full week indicators", %{conn: conn, site: site} do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&metric=visitors&interval=week&date=2021-09-01")
-      assert %{"labels" => labels, "full_weeks" => full_weeks} = json_response(conn, 200)
+      assert %{"labels" => labels, "full_intervals" => full_intervals} = json_response(conn, 200)
 
       assert labels == ["2021-09-01", "2021-09-06", "2021-09-13", "2021-09-20", "2021-09-27"]
-      assert full_weeks == %{"2021-09-01" => false, "2021-09-06" => true, "2021-09-13" => true, "2021-09-20" => true, "2021-09-27" => false}
+      assert full_intervals == %{"2021-09-01" => false, "2021-09-06" => true, "2021-09-13" => true, "2021-09-20" => true, "2021-09-27" => false}
     end
 
     test "shows half-perfect week-split month on week scale with full week indicators", %{conn: conn, site: site} do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=month&metric=visitors&interval=week&date=2021-10-01")
-      assert %{"labels" => labels, "full_weeks" => full_weeks} = json_response(conn, 200)
+      assert %{"labels" => labels, "full_intervals" => full_intervals} = json_response(conn, 200)
 
       assert labels == ["2021-10-01", "2021-10-04", "2021-10-11", "2021-10-18", "2021-10-25"]
-      assert full_weeks == %{"2021-10-01" => false, "2021-10-04" => true, "2021-10-11" => true, "2021-10-18" => true, "2021-10-25" => true}
+      assert full_intervals == %{"2021-10-01" => false, "2021-10-04" => true, "2021-10-11" => true, "2021-10-18" => true, "2021-10-25" => true}
     end
 
     test "shows perfect week-split range on week scale with full week indicators", %{conn: conn, site: site} do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=custom&metric=visitors&interval=week&from=2020-12-21&to=2021-02-07")
-      assert %{"labels" => labels, "full_weeks" => full_weeks} = json_response(conn, 200)
+      assert %{"labels" => labels, "full_intervals" => full_intervals} = json_response(conn, 200)
 
       assert labels == ["2020-12-21", "2020-12-28", "2021-01-04", "2021-01-11", "2021-01-18", "2021-01-25", "2021-02-01"]
-      assert full_weeks == %{"2020-12-21" => true, "2020-12-28" => true, "2021-01-04" => true, "2021-01-11" => true, "2021-01-18" => true, "2021-01-25" => true, "2021-02-01" => true}
+      assert full_intervals == %{"2020-12-21" => true, "2020-12-28" => true, "2021-01-04" => true, "2021-01-11" => true, "2021-01-18" => true, "2021-01-25" => true, "2021-02-01" => true}
+    end
+
+    test "shows imperfect month-split period on month scale with full month indicators", %{conn: conn, site: site} do
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=custom&metric=visitors&interval=month&from=2021-09-06&to=2021-12-13")
+      assert %{"labels" => labels, "full_intervals" => full_intervals} = json_response(conn, 200)
+
+      assert labels == ["2021-09-01", "2021-10-01", "2021-11-01", "2021-12-01"]
+      assert full_intervals == %{"2021-09-01" => false, "2021-10-01" => true, "2021-11-01" => true, "2021-12-01" => false}
     end
   end
 end
