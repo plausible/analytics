@@ -17,7 +17,7 @@ export const FILTER_GROUPS = {
   'screen': ['screen'],
   'browser': ['browser', 'browser_version'],
   'os': ['os', 'os_version'],
-  'utm': ['utm_medium', 'utm_source', 'utm_campaign'],
+  'utm': ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
   'entry_page': ['entry_page'],
   'exit_page': ['exit_page'],
   'goal': ['goal']
@@ -187,12 +187,7 @@ class FilterModal extends React.Component {
   }
 
   renderFilterInputs() {
-    const groups = FILTER_GROUPS[this.state.selectedFilterGroup].filter((filterName) => {
-      if (['city', 'region'].includes(filterName)) {
-        return this.props.site.cities
-      }
-      return true
-    })
+    const groups = FILTER_GROUPS[this.state.selectedFilterGroup]
 
     return groups.map((filter) => {
       return (

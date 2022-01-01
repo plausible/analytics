@@ -54,6 +54,8 @@ export default class SiteSwitcher extends React.Component {
   }
 
   handleKeydown(e) {
+    if (!this.props.loggedIn) return;
+    
     const { site } = this.props;
     const { sites } = this.state;
 
@@ -82,20 +84,21 @@ export default class SiteSwitcher extends React.Component {
       open: !prevState.open
     }))
 
-    if (!this.state.sites) {
+    if (this.props.loggedIn && !this.state.sites) {
       this.populateSites();
     }
   }
 
   renderSiteLink(domain, index) {
     const extraClass = domain === this.props.site.domain ? 'font-medium text-gray-900 dark:text-gray-100 cursor-default font-bold' : 'hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100'
+    const showHotkey = !this.props.loggedIn
     return (
       <a href={domain === this.props.site.domain ? null : `/${encodeURIComponent(domain)}`} key={domain} className={`flex items-center justify-between truncate px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 ${extraClass}`}>
         <span>
           <img src={`/favicon/sources/${encodeURIComponent(domain)}`} className="inline w-4 mr-2 align-middle" />
           <span className="truncate inline-block align-middle max-w-3xs pr-2">{domain}</span>
         </span>
-        {index < 9 && <span>{index+1}</span>}
+        {showHotkey ? index < 9 && <span>{index+1}</span> : null}
       </a>
     )
   }
@@ -116,11 +119,22 @@ export default class SiteSwitcher extends React.Component {
     }
   }
 
+  /**
+   * Render a dropdown regardless of whether the user is logged in or not. In case they are not logged in (such as in an embed), the dropdown merely contains the current domain name.
+   */
   renderDropdown() {
     if (this.state.loading) {
       return <div className="px-4 py-6"><div className="loading sm mx-auto"><div></div></div></div>
     } else if (this.state.error) {
       return <div className="mx-auto px-4 py-6 dark:text-gray-100">Something went wrong, try again</div>
+    } else if (!this.props.loggedIn) {
+      return (
+        <React.Fragment>
+          <div className="py-1">
+            { [this.props.site.domain].map(this.renderSiteLink.bind(this)) }
+          </div>
+        </React.Fragment>
+      )
     } else {
       return (
         <React.Fragment>
