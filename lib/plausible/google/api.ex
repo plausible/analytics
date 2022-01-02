@@ -231,7 +231,7 @@ defmodule Plausible.Google.Api do
       },
       # Locations
       {
-        ["ga:date", "ga:countryIsoCode", "ga:regionIsoCode", "ga:cityId"],
+        ["ga:date", "ga:countryIsoCode", "ga:regionIsoCode"],
         ["ga:users"]
       },
       # Device

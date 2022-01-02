@@ -211,17 +211,19 @@ defmodule Plausible.Imported do
   end
 
   defp new_from_google_analytics(domain, "locations", %{
-         "dimensions" => [timestamp, country, region, city],
+         "dimensions" => [timestamp, country, region],
          "metrics" => [%{"values" => [value]}]
        }) do
     {visitors, ""} = Integer.parse(value)
+    country = if country == "(not set)", do: "", else: country
+    region = if region == "(not set)", do: "", else: region
 
     Imported.Locations.new(%{
       domain: domain,
       timestamp: format_timestamp(timestamp),
       country: country,
       region: region,
-      city: city,
+      city: 0,
       visitors: visitors
     })
   end
