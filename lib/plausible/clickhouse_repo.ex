@@ -25,6 +25,8 @@ defmodule Plausible.ClickhouseRepo do
       "imported_utm_mediums",
       "imported_utm_sources",
       "imported_utm_campaigns",
+      "imported_utm_content",
+      "imported_utm_terms",
       "imported_pages",
       "imported_entry_pages",
       "imported_exit_pages",
