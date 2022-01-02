@@ -371,6 +371,8 @@ defmodule Plausible.Stats.Base do
              "visit:entry_page",
              "visit:exit_page",
              "visit:country",
+             "visit:region",
+             "visit:city",
              "visit:device",
              "visit:browser",
              "visit:os",
@@ -385,6 +387,12 @@ defmodule Plausible.Stats.Base do
 
         "visit:country" ->
           {"imported_locations", :country}
+
+        "visit:region" ->
+          {"imported_locations", :region}
+
+        "visit:city" ->
+          {"imported_locations", :city}
 
         "visit:os" ->
           {"imported_operating_systems", :os}
@@ -479,6 +487,16 @@ defmodule Plausible.Stats.Base do
         :country ->
           imported_q |> select_merge([i], %{country: i.country})
 
+        :region ->
+          imported_q
+            |> select_merge([i], %{region: i.region})
+            |> where([i], i.region != "")
+
+        :city ->
+          imported_q
+            |> select_merge([i], %{city: i.city})
+            |> where([i], i.city != 0)
+
         :device ->
           imported_q |> select_merge([i], %{device: i.device})
 
@@ -558,6 +576,18 @@ defmodule Plausible.Stats.Base do
         q
         |> select_merge([i, s], %{
           country: fragment("if(empty(?), ?, ?)", s.country, i.country, s.country)
+        })
+
+      :region ->
+        q
+        |> select_merge([i, s], %{
+          region: fragment("if(empty(?), ?, ?)", s.region, i.region, s.region)
+        })
+
+      :city ->
+        q
+        |> select_merge([i, s], %{
+          city: fragment("coalesce(?, ?)", s.city, i.city)
         })
 
       :device ->

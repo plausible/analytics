@@ -400,7 +400,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.subdivision1_code,
       where: s.subdivision1_code != "",
-      select_merge: %{"region" => s.subdivision1_code}
+      select_merge: %{region: s.subdivision1_code}
     )
   end
 
@@ -409,7 +409,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.city_geoname_id,
       where: s.city_geoname_id != 0,
-      select_merge: %{"city" => s.city_geoname_id}
+      select_merge: %{city: s.city_geoname_id}
     )
   end
 
