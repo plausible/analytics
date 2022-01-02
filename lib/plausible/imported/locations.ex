@@ -7,9 +7,9 @@ defmodule Plausible.Imported.Locations do
   schema "imported_locations" do
     field :domain, :string
     field :timestamp, :naive_datetime
-    field :country, :string
-    field :region, :string
-    field :city, :string
+    field :country, :string, default: ""
+    field :region, :string, default: ""
+    field :city, :integer, default: 0
     field :visitors, :integer
   end
 

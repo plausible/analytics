@@ -7,7 +7,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedLocations do
       add :timestamp, :naive_datetime
       add :country, :string
       add :region, :string
-      add :city, :string
+      add :city, :UInt64
       add :visitors, :UInt64
     end
   end

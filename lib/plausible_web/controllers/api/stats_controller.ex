@@ -612,8 +612,8 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
 
     regions =
-      Stats.breakdown(site, query, "visit:region", ["visitors"], pagination)
-      |> transform_keys(%{"region" => "code"})
+      Stats.breakdown(site, query, "visit:region", [:visitors], pagination)
+      |> transform_keys(%{region: "code"})
       |> Enum.map(fn region ->
         region_entry = Location.get_subdivision(region["code"])
 
@@ -645,8 +645,8 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
 
     cities =
-      Stats.breakdown(site, query, "visit:city", ["visitors"], pagination)
-      |> transform_keys(%{"city" => "code"})
+      Stats.breakdown(site, query, "visit:city", [:visitors], pagination)
+      |> transform_keys(%{city: "code"})
       |> Enum.map(fn city ->
         city_info = Location.get_city(city["code"])
 
