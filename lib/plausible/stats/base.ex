@@ -402,7 +402,7 @@ defmodule Plausible.Stats.Base do
 
         _ ->
           dim = String.trim_leading(property, "visit:")
-          {"imported_#{dim}s", String.to_atom(dim)}
+          {"imported_#{dim}s", String.to_existing_atom(dim)}
       end
 
     imported_q =
