@@ -273,7 +273,7 @@ defmodule Plausible.Imported do
   }
 
   defp new_from_google_analytics(domain, "operating_systems", %{
-         "dimensions" => [timestamp, os],
+         "dimensions" => [timestamp, operating_system],
          "metrics" => [%{"values" => [value]}]
        }) do
     {visitors, ""} = Integer.parse(value)
@@ -281,7 +281,7 @@ defmodule Plausible.Imported do
     Imported.OperatingSystems.new(%{
       domain: domain,
       timestamp: format_timestamp(timestamp),
-      operating_system: Map.get(@os_google_to_plausible, os, os),
+      operating_system: Map.get(@os_google_to_plausible, operating_system, operating_system),
       visitors: visitors
     })
   end

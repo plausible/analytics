@@ -205,6 +205,8 @@ defmodule Plausible.Stats.Breakdown do
     |> merge_imported(site, query, property, metrics)
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
+    # TODO: migrate schema field to 'os'
+    |> transform_keys(%{operating_system: :os})
   end
 
   defp breakdown_events(_, _, _, [], _), do: []
@@ -219,6 +221,8 @@ defmodule Plausible.Stats.Breakdown do
     |> merge_imported(site, query, property, metrics)
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
+    # TODO: migrate schema field to 'os'
+    |> transform_keys(%{operating_system: :os})
   end
 
   defp breakdown_time_on_page(_site, _query, []) do
@@ -501,7 +505,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.operating_system,
-      select_merge: %{os: s.operating_system}
+      select_merge: %{operating_system: s.operating_system}
     )
   end
 

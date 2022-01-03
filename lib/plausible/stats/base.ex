@@ -395,7 +395,7 @@ defmodule Plausible.Stats.Base do
           {"imported_locations", :city}
 
         "visit:os" ->
-          {"imported_operating_systems", :os}
+          {"imported_operating_systems", :operating_system}
 
         "event:page" ->
           {"imported_pages", :page}
@@ -503,8 +503,8 @@ defmodule Plausible.Stats.Base do
         :browser ->
           imported_q |> select_merge([i], %{browser: i.browser})
 
-        :os ->
-          imported_q |> select_merge([i], %{os: i.operating_system})
+        :operating_system ->
+          imported_q |> select_merge([i], %{operating_system: i.operating_system})
       end
 
     q =
@@ -602,15 +602,15 @@ defmodule Plausible.Stats.Base do
           browser: fragment("if(empty(?), ?, ?)", s.browser, i.browser, s.browser)
         })
 
-      :os ->
+      :operating_system ->
         q
         |> select_merge([i, s], %{
-          os:
+          operating_system:
             fragment(
               "if(empty(?), ?, ?)",
-              s.os,
-              i.os,
-              s.os
+              s.operating_system,
+              i.operating_system,
+              s.operating_system
             )
         })
     end
