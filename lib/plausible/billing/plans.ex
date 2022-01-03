@@ -102,7 +102,11 @@ defmodule Plausible.Billing.Plans do
       if enterprise_plan do
         enterprise_plan.monthly_pageview_limit
       else
-        Sentry.capture_message("Unknown allowance for plan", extra: %{subscription: subscription})
+        Sentry.capture_message("Unknown allowance for plan",
+          extra: %{
+            paddle_plan_id: subscription.paddle_plan_id
+          }
+        )
       end
     end
   end
