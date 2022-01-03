@@ -99,7 +99,11 @@ defmodule Plausible.Billing.Plans do
       enterprise_plan =
         Repo.get_by(Plausible.Billing.EnterprisePlan, user_id: subscription.user_id)
 
-      enterprise_plan && enterprise_plan.monthly_pageview_limit
+      if enterprise_plan do
+        enterprise_plan.monthly_pageview_limit
+      else
+        Sentry.capture_message("Unknown allowance for plan", extra: %{subscription: subscription})
+      end
     end
   end
 
