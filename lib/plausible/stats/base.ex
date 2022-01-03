@@ -489,13 +489,13 @@ defmodule Plausible.Stats.Base do
 
         :region ->
           imported_q
-            |> select_merge([i], %{region: i.region})
-            |> where([i], i.region != "")
+          |> select_merge([i], %{region: i.region})
+          |> where([i], i.region != "")
 
         :city ->
           imported_q
-            |> select_merge([i], %{city: i.city})
-            |> where([i], i.city != 0)
+          |> select_merge([i], %{city: i.city})
+          |> where([i], i.city != 0)
 
         :device ->
           imported_q |> select_merge([i], %{device: i.device})
