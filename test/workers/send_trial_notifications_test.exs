@@ -2,6 +2,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
   use Plausible.DataCase
   use Bamboo.Test
   use Oban.Testing, repo: Plausible.Repo
+  import Plausible.TestUtils
   alias Plausible.Workers.SendTrialNotifications
 
   test "does not send a notification if user didn't create a site" do
@@ -17,7 +18,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
 
   test "does not send a notification if user created a site but there are no pageviews" do
     user = insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 7))
-    insert(:site, domain: "some-nonexistent-site.com", members: [user])
+    insert(:site, members: [user])
 
     perform_job(SendTrialNotifications, %{})
 
@@ -27,12 +28,14 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
   test "does not send a notification if user is a collaborator on sites but not an owner" do
     user = insert(:user, trial_expiry_date: Timex.now())
 
-    insert(:site,
-      domain: "test-site.com",
-      memberships: [
-        build(:site_membership, user: user, role: :admin)
-      ]
-    )
+    site =
+      insert(:site,
+        memberships: [
+          build(:site_membership, user: user, role: :admin)
+        ]
+      )
+
+    populate_stats(site, [build(:pageview, domain: site.domain)])
 
     perform_job(SendTrialNotifications, %{})
 
@@ -42,7 +45,8 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
   describe "with site and pageviews" do
     test "sends a reminder 7 days before trial ends (16 days after user signed up)" do
       user = insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 7))
-      insert(:site, domain: "test-site.com", members: [user])
+      site = insert(:site, members: [user])
+      populate_stats(site, [build(:pageview, domain: site.domain)])
 
       perform_job(SendTrialNotifications, %{})
 
@@ -51,7 +55,13 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
 
     test "sends an upgrade email the day before the trial ends" do
       user = insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 1))
-      insert(:site, domain: "test-site.com", members: [user])
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [
+        build(:pageview, domain: site.domain),
+        build(:pageview, domain: site.domain),
+        build(:pageview, domain: site.domain)
+      ])
 
       perform_job(SendTrialNotifications, %{})
 
@@ -60,7 +70,13 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
 
     test "sends an upgrade email the day the trial ends" do
       user = insert(:user, trial_expiry_date: Timex.today())
-      insert(:site, domain: "test-site.com", members: [user])
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [
+        build(:pageview, domain: site.domain),
+        build(:pageview, domain: site.domain),
+        build(:pageview, domain: site.domain)
+      ])
 
       perform_job(SendTrialNotifications, %{})
 
@@ -87,7 +103,13 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
 
     test "sends a trial over email the day after the trial ends" do
       user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
-      insert(:site, domain: "test-site.com", members: [user])
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [
+        build(:pageview, domain: site.domain),
+        build(:pageview, domain: site.domain),
+        build(:pageview, domain: site.domain)
+      ])
 
       perform_job(SendTrialNotifications, %{})
 
@@ -96,7 +118,14 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
 
     test "does not send a notification if user has a subscription" do
       user = insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 7))
-      insert(:site, domain: "test-site.com", members: [user])
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [
+        build(:pageview, domain: site.domain),
+        build(:pageview, domain: site.domain),
+        build(:pageview, domain: site.domain)
+      ])
+
       insert(:subscription, user: user)
 
       perform_job(SendTrialNotifications, %{})
