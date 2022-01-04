@@ -466,15 +466,15 @@ defmodule PlausibleWeb.Api.StatsController do
     pages =
       Stats.breakdown(site, query, "event:page", metrics, pagination)
       |> maybe_add_cr(site, query, pagination, :page, "event:page")
-      |> transform_keys(%{page: "name", visitors: "visitors"})
+      |> transform_keys(%{page: "name"})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         pages
-        |> transform_keys(%{"visitors" => "conversions"})
+        |> transform_keys(%{visitors: "conversions"})
         |> to_csv(["name", "conversions", "conversion_rate"])
       else
-        pages |> to_csv(["name", "visitors", :bounce_rate, "time_on_page"])
+        pages |> to_csv(["name", :visitors, :bounce_rate, "time_on_page"])
       end
     else
       json(conn, pages)
@@ -629,10 +629,10 @@ defmodule PlausibleWeb.Api.StatsController do
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         regions
-        |> transform_keys(%{"visitors" => "conversions"})
+        |> transform_keys(%{visitors: "conversions"})
         |> to_csv(["name", "conversions", "conversion_rate"])
       else
-        regions |> to_csv(["name", "visitors"])
+        regions |> to_csv(["name", :visitors])
       end
     else
       json(conn, regions)
@@ -667,10 +667,10 @@ defmodule PlausibleWeb.Api.StatsController do
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         cities
-        |> transform_keys(%{"visitors" => "conversions"})
+        |> transform_keys(%{visitors: "conversions"})
         |> to_csv(["name", "conversions", "conversion_rate"])
       else
-        cities |> to_csv(["name", "visitors"])
+        cities |> to_csv(["name", :visitors])
       end
     else
       json(conn, cities)
