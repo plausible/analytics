@@ -117,22 +117,22 @@ defmodule PlausibleWeb.Api.StatsController do
     prev_total_query = Query.shift_back(total_q, site)
 
     %{
-      :visitors => %{"value" => unique_visitors}
+      visitors: %{"value" => unique_visitors}
     } = Stats.aggregate(site, total_q, [:visitors])
 
     %{
-      :visitors => %{"value" => prev_unique_visitors}
+      visitors: %{"value" => prev_unique_visitors}
     } = Stats.aggregate(site, prev_total_query, [:visitors])
 
     %{
-      :visitors => %{"value" => converted_visitors},
-      "events" => %{"value" => completions}
-    } = Stats.aggregate(site, query, [:visitors, "events"])
+      visitors: %{"value" => converted_visitors},
+      events: %{"value" => completions}
+    } = Stats.aggregate(site, query, [:visitors, :events])
 
     %{
-      :visitors => %{"value" => prev_converted_visitors},
-      "events" => %{"value" => prev_completions}
-    } = Stats.aggregate(site, prev_query, [:visitors, "events"])
+      visitors: %{"value" => prev_converted_visitors},
+      events: %{"value" => prev_completions}
+    } = Stats.aggregate(site, prev_query, [:visitors, :events])
 
     conversion_rate = calculate_cr(unique_visitors, converted_visitors)
     prev_conversion_rate = calculate_cr(prev_unique_visitors, prev_converted_visitors)
@@ -808,11 +808,11 @@ defmodule PlausibleWeb.Api.StatsController do
       end
 
     conversions =
-      Stats.breakdown(site, query, "event:goal", [:visitors, "events"], {100, 1})
+      Stats.breakdown(site, query, "event:goal", [:visitors, :events], {100, 1})
       |> transform_keys(%{
         "goal" => "name",
         :visitors => "unique_conversions",
-        "events" => "total_conversions"
+        :events => "total_conversions"
       })
       |> Enum.map(fn goal ->
         goal
@@ -839,10 +839,10 @@ defmodule PlausibleWeb.Api.StatsController do
     prop_name = "event:props:" <> params["prop_name"]
 
     props =
-      Stats.breakdown(site, query, prop_name, [:visitors, "events"], pagination)
+      Stats.breakdown(site, query, prop_name, [:visitors, :events], pagination)
       |> transform_keys(%{
         params["prop_name"] => "name",
-        "events" => "total_conversions",
+        :events => "total_conversions",
         :visitors => "unique_conversions"
       })
       |> Enum.map(fn prop ->

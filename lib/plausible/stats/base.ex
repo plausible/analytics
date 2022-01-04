@@ -207,9 +207,9 @@ defmodule Plausible.Stats.Base do
     |> select_event_metrics(rest)
   end
 
-  def select_event_metrics(q, ["events" | rest]) do
+  def select_event_metrics(q, [:events | rest]) do
     from(e in q,
-      select_merge: %{"events" => fragment("toUInt64(round(count(*) * any(_sample_factor)))")}
+      select_merge: %{events: fragment("toUInt64(round(count(*) * any(_sample_factor)))")}
     )
     |> select_event_metrics(rest)
   end
