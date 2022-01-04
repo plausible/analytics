@@ -359,6 +359,7 @@ defmodule Plausible.Stats.Base do
 
   def merge_imported(q, %Plausible.Site{has_imported_stats: nil}, _, _, _), do: q
   def merge_imported(q, _, %Query{with_imported: false}, _, _), do: q
+  def merge_imported(q, _, _, _, [:events | _]), do: q
 
   def merge_imported(q, site, query, property, metrics)
       when property in [
