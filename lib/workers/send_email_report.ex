@@ -50,26 +50,26 @@ defmodule Plausible.Workers.SendEmailReport do
 
   defp send_report(email, site, name, unsubscribe_link, query) do
     prev_query = Query.shift_back(query, site)
-    curr_period = Stats.aggregate(site, query, ["pageviews", "visitors", "bounce_rate"])
-    prev_period = Stats.aggregate(site, prev_query, ["pageviews", "visitors", "bounce_rate"])
+    curr_period = Stats.aggregate(site, query, [:pageviews, :visitors, :bounce_rate])
+    prev_period = Stats.aggregate(site, prev_query, [:pageviews, :visitors, :bounce_rate])
 
-    change_pageviews = Stats.Compare.calculate_change("pageviews", prev_period, curr_period)
-    change_visitors = Stats.Compare.calculate_change("visitors", prev_period, curr_period)
-    change_bounce_rate = Stats.Compare.calculate_change("bounce_rate", prev_period, curr_period)
+    change_pageviews = Stats.Compare.calculate_change(:pageviews, prev_period, curr_period)
+    change_visitors = Stats.Compare.calculate_change(:visitors, prev_period, curr_period)
+    change_bounce_rate = Stats.Compare.calculate_change(:bounce_rate, prev_period, curr_period)
 
     source_query = Query.put_filter(query, "visit:source", {:is_not, "Direct / None"})
-    sources = Stats.breakdown(site, source_query, "visit:source", ["visitors"], {5, 1})
-    pages = Stats.breakdown(site, query, "event:page", ["visitors"], {5, 1})
+    sources = Stats.breakdown(site, source_query, "visit:source", [:visitors], {5, 1})
+    pages = Stats.breakdown(site, query, "event:page", [:visitors], {5, 1})
     user = Plausible.Auth.find_user_by(email: email)
     login_link = user && Plausible.Sites.is_member?(user.id, site)
 
     template =
       PlausibleWeb.Email.weekly_report(email, site,
-        unique_visitors: curr_period["visitors"]["value"],
+        unique_visitors: curr_period[:visitors]["value"],
         change_visitors: change_visitors,
-        pageviews: curr_period["pageviews"]["value"],
+        pageviews: curr_period[:pageviews]["value"],
         change_pageviews: change_pageviews,
-        bounce_rate: curr_period["bounce_rate"]["value"],
+        bounce_rate: curr_period[:bounce_rate]["value"],
         change_bounce_rate: change_bounce_rate,
         sources: sources,
         unsubscribe_link: unsubscribe_link,
