@@ -57,6 +57,11 @@
     payload.u = location.href
     {{/if}}
     payload.d = scriptEl.getAttribute('data-domain')
+
+    if (eventName == "pageview_end") {
+      return navigator.sendBeacon(endpoint, JSON.stringify(payload))
+    }
+
     payload.r = document.referrer || null
     payload.w = window.innerWidth
     if (options && options.meta) {
@@ -131,7 +136,7 @@
       if (lastPage === location.pathname) return;
       {{/unless}}
       lastPage = location.pathname
-      trigger('pageview')
+      //trigger('pageview')
     }
 
     {{#if hash}}
@@ -154,11 +159,22 @@
       }
     }
 
+    function handlePageviewEnd() {
+      if (document.visibilityState === 'visible') return;
+      trigger("pageview_end");
+    }
 
     if (document.visibilityState === 'prerender') {
       document.addEventListener("visibilitychange", handleVisibilityChange);
     } else {
       page()
     }
+
+    {{#if beacon}}
+    document.addEventListener("visibilitychange", handlePageviewEnd);
+    document.addEventListener("pagehide", handlePageviewEnd); //pointless?
+    window.addEventListener("beforeunload", handlePageviewEnd); //pointless?
+    {{/if}}
+
   {{/unless}}
 })();

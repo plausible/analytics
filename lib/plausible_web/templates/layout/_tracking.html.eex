@@ -11,7 +11,7 @@
   <% end %>
 
   <%= if Application.get_env(:plausible, :environment) == "dev" do %>
-    <script defer src="<%="#{plausible_url()}/js/plausible.local.js"%>"></script>
+    <script defer src="<%="#{plausible_url()}/js/plausible.local.beacon.js"%>"></script>
     <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
   <% end %>
 <% end %>
