@@ -178,9 +178,10 @@ defmodule Plausible.Google.Api do
       end_date: Date.to_iso8601(end_date)
     }
 
+    # Each element is: {dataset, dimensions, metrics}
     request_data = [
-      # Visitors
       {
+        "visitors",
         ["ga:dateHour"],
         [
           "ga:users",
@@ -190,63 +191,63 @@ defmodule Plausible.Google.Api do
           "ga:sessionDuration"
         ]
       },
-      # Sources
       {
+        "sources",
         ["ga:dateHour", "ga:fullReferrer"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
-      # UTM Mediums
       {
+        "utm_mediums",
         ["ga:dateHour", "ga:medium"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
-      # UTM Campaigns
       {
+        "utm_campaigns",
         ["ga:dateHour", "ga:campaign"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
-      # UTM Terms
       {
+        "utm_terms",
         ["ga:dateHour", "ga:keyword"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
-      # UTM Content
       {
+        "utm_content",
         ["ga:dateHour", "ga:adContent"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
-      # Pages
       {
+        "pages",
         ["ga:dateHour", "ga:pagePath"],
         ["ga:users", "ga:pageviews", "ga:timeOnPage"]
       },
-      # Entry pages
       {
+        "entry_pages",
         ["ga:dateHour", "ga:landingPagePath"],
         ["ga:users", "ga:entrances", "ga:sessionDuration", "ga:bounces"]
       },
-      # Exit pages
       {
+        "exit_pages",
         ["ga:dateHour", "ga:exitPagePath"],
         ["ga:users", "ga:exits"]
       },
-      # Locations
       {
+        "locations",
         ["ga:dateHour", "ga:countryIsoCode", "ga:regionIsoCode"],
         ["ga:users"]
       },
-      # Device
       {
+        "devices",
         ["ga:dateHour", "ga:deviceCategory"],
         ["ga:users"]
       },
-      # Browser
       {
+        "browsers",
         ["ga:dateHour", "ga:browser"],
         ["ga:users"]
       },
-      # OS
       {
+        "operating_systems",
         ["ga:dateHour", "ga:operatingSystem"],
         ["ga:users"]
       }
@@ -260,34 +261,15 @@ defmodule Plausible.Google.Api do
 
     case Keyword.get(responses, :error) do
       nil ->
-        data =
-          responses
-          |> Enum.map(fn {:ok, resp} -> resp end)
-          |> Enum.concat()
-
         {:ok, timezone} = get_profile_timezone(auth, profile)
 
         maybe_error =
-          [
-            "visitors",
-            "sources",
-            "utm_mediums",
-            "utm_campaigns",
-            "utm_terms",
-            "utm_content",
-            "pages",
-            "entry_pages",
-            "exit_pages",
-            "locations",
-            "devices",
-            "browsers",
-            "operating_systems"
-          ]
-          |> Enum.with_index()
-          |> Enum.map(fn {metric, index} ->
+          responses
+          |> Enum.map(fn {:ok, resp} -> resp end)
+          |> Enum.concat()
+          |> Enum.map(fn {dataset, data} ->
             Task.async(fn ->
-              Enum.fetch!(data, index)
-              |> Imported.from_google_analytics(site.domain, metric, timezone)
+              Imported.from_google_analytics(data, site.domain, dataset, timezone)
             end)
           end)
           |> Enum.map(&Task.await(&1, 120_000))
@@ -312,7 +294,7 @@ defmodule Plausible.Google.Api do
 
   defp fetch_analytic_reports(request_data, request) do
     reports =
-      Enum.map(request_data, fn {dimensions, metrics} ->
+      Enum.map(request_data, fn {_, dimensions, metrics} ->
         %{
           viewId: request.profile,
           dateRanges: [
@@ -345,7 +327,12 @@ defmodule Plausible.Google.Api do
     if res.status_code == 200 do
       data =
         Jason.decode!(res.body)["reports"]
-        |> Enum.map(& &1["data"]["rows"])
+        |> Enum.with_index()
+        |> Enum.map(fn {report, index} ->
+          {dataset, _, _} = Enum.at(request_data, index)
+          {dataset, report["data"]["rows"]}
+        end)
+        |> Map.new()
 
       {:ok, data}
     else
