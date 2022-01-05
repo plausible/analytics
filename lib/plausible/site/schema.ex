@@ -11,7 +11,7 @@ defmodule Plausible.Site do
     field :public, :boolean
     field :locked, :boolean
     field :has_stats, :boolean
-    field :has_imported_stats, :string
+    field :imported_source, :string
 
     many_to_many :members, User, join_through: Plausible.Site.Membership
     has_many :memberships, Plausible.Site.Membership
@@ -27,7 +27,7 @@ defmodule Plausible.Site do
 
   def changeset(site, attrs \\ %{}) do
     site
-    |> cast(attrs, [:domain, :timezone, :has_imported_stats])
+    |> cast(attrs, [:domain, :timezone, :imported_source])
     |> validate_required([:domain, :timezone])
     |> validate_format(:domain, ~r/^[a-zA-Z0-9\-\.\/\:]*$/,
       message: "only letters, numbers, slashes and period allowed"

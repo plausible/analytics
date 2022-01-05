@@ -25,13 +25,13 @@ defmodule PlausibleWeb.Api.StatsController do
     present_index = present_index_for(site, query, labels)
 
     {plot, with_imported, source} =
-      if query.with_imported && site.has_imported_stats do
+      if query.with_imported && site.imported_source do
         # Showing imported data.
         plot =
           Stats.Imported.timeseries(site, timeseries_query)
           |> Enum.zip_with(plot, &(&1 + &2))
 
-        {plot, true, site.has_imported_stats}
+        {plot, true, site.imported_source}
       else
         if Map.get(params, "filters", "{}") != "{}" do
           # Hiding imported data due to filtering.
@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Api.StatsController do
           {plot, false, ""}
         else
           # Hiding imported data either by request or because there is none.
-          {plot, false, site.has_imported_stats || ""}
+          {plot, false, site.imported_source || ""}
         end
       end
 

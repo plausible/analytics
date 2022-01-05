@@ -173,7 +173,7 @@ defmodule PlausibleWeb.SiteController do
       |> Repo.preload([:custom_domain, :google_auth])
 
     google_profiles =
-      if is_nil(site.has_imported_stats) and site.google_auth do
+      if is_nil(site.imported_source) and site.google_auth do
         Plausible.Google.Api.get_analytics_view_ids(site)
       end
 
@@ -182,7 +182,7 @@ defmodule PlausibleWeb.SiteController do
     |> render("settings_general.html",
       site: site,
       google_profiles: google_profiles,
-      imported_from: site.has_imported_stats,
+      imported_from: site.imported_source,
       changeset: Plausible.Site.changeset(site, %{}),
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
@@ -643,9 +643,9 @@ defmodule PlausibleWeb.SiteController do
       |> Repo.preload(:google_auth)
 
     cond do
-      site.has_imported_stats ->
+      site.imported_source ->
         conn
-        |> put_flash(:error, "Data already imported from: #{site.has_imported_stats}")
+        |> put_flash(:error, "Data already imported from: #{site.imported_source}")
         |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
 
       profile == "" ->
@@ -657,7 +657,7 @@ defmodule PlausibleWeb.SiteController do
         case Plausible.Google.Api.import_analytics(site, profile) do
           {:ok, _} ->
             site
-            |> Plausible.Site.changeset(%{has_imported_stats: "Google Analytics"})
+            |> Plausible.Site.changeset(%{imported_source: "Google Analytics"})
             |> Repo.update!()
 
             conn
@@ -681,11 +681,11 @@ defmodule PlausibleWeb.SiteController do
     site = conn.assigns[:site]
 
     cond do
-      site.has_imported_stats ->
+      site.imported_source ->
         Plausible.Imported.forget(site)
 
         site
-        |> Plausible.Site.changeset(%{has_imported_stats: nil})
+        |> Plausible.Site.changeset(%{imported_source: nil})
         |> Repo.update!()
 
         conn

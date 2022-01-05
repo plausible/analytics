@@ -25,7 +25,7 @@ defmodule Plausible.Stats.Imported do
     |> Enum.map(fn step -> Map.get(result, step, 0) end)
   end
 
-  def merge_imported(q, %Plausible.Site{has_imported_stats: nil}, _, _, _), do: q
+  def merge_imported(q, %Plausible.Site{imported_source: nil}, _, _, _), do: q
   def merge_imported(q, _, %Query{with_imported: false}, _, _), do: q
   def merge_imported(q, _, _, _, [:events | _]), do: q
 
