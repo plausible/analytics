@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Api.StatsController do
   use Plug.ErrorHandler
   alias Plausible.Stats
   alias Plausible.Stats.{Query, Filters}
-  alias Plausible.Imported
 
   def main_graph(conn, params) do
     site = conn.assigns[:site]
@@ -29,7 +28,7 @@ defmodule PlausibleWeb.Api.StatsController do
       if query.with_imported && site.has_imported_stats do
         # Showing imported data.
         plot =
-          Imported.Visitors.timeseries(site, timeseries_query)
+          Stats.Imported.timeseries(site, timeseries_query)
           |> Enum.zip_with(plot, &(&1 + &2))
 
         {plot, true, site.has_imported_stats}

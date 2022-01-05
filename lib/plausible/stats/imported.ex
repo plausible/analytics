@@ -1,10 +1,29 @@
 defmodule Plausible.Stats.Imported do
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Query, Timeseries}
   import Plausible.Stats.Base
   import Ecto.Query
 
   @no_ref "Direct / None"
+
+  def timeseries(site, query) do
+    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
+
+    result =
+      from(v in "imported_visitors",
+        group_by: fragment("date"),
+        where: v.domain == ^site.domain,
+        where: v.timestamp >= ^first_datetime and v.timestamp < ^last_datetime,
+        select: %{"visitors" => sum(v.visitors)}
+      )
+      |> Timeseries.select_bucket(site, query)
+      |> ClickhouseRepo.all()
+      |> Enum.map(fn row -> {row["date"], row["visitors"]} end)
+      |> Map.new()
+
+    Timeseries.buckets(query)
+    |> Enum.map(fn step -> Map.get(result, step, 0) end)
+  end
 
   def merge_imported(q, %Plausible.Site{has_imported_stats: nil}, _, _, _), do: q
   def merge_imported(q, _, %Query{with_imported: false}, _, _), do: q
