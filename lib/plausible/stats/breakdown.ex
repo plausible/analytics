@@ -95,12 +95,12 @@ defmodule Plausible.Stats.Breakdown do
     event_result = breakdown_events(site, query, "event:page", event_metrics, pagination)
 
     event_result =
-      if "time_on_page" in metrics do
+      if :time_on_page in metrics do
         pages = Enum.map(event_result, & &1[:page])
         time_on_page_result = breakdown_time_on_page(site, query, pages)
 
         Enum.map(event_result, fn row ->
-          Map.put(row, "time_on_page", time_on_page_result[row[:page]])
+          Map.put(row, :time_on_page, time_on_page_result[row[:page]])
         end)
       else
         event_result

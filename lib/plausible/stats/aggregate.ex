@@ -13,7 +13,7 @@ defmodule Plausible.Stats.Aggregate do
     session_task = Task.async(fn -> aggregate_sessions(site, query, session_metrics) end)
 
     time_on_page_task =
-      if "time_on_page" in metrics do
+      if :time_on_page in metrics do
         Task.async(fn -> aggregate_time_on_page(site, query) end)
       else
         Task.async(fn -> %{} end)
@@ -108,6 +108,6 @@ defmodule Plausible.Stats.Aggregate do
 
     {:ok, res} = ClickhouseRepo.query(time_query, base_query_raw_params ++ [where_arg])
     [[time_on_page]] = res.rows
-    %{"time_on_page" => time_on_page}
+    %{time_on_page: time_on_page}
   end
 end
