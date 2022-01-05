@@ -1,5 +1,6 @@
 defmodule Plausible.Google.Api do
   alias Plausible.Imported
+  use Timex
 
   @scope URI.encode_www_form(
            "https://www.googleapis.com/auth/webmasters.readonly email https://www.googleapis.com/auth/analytics.readonly"
@@ -180,7 +181,7 @@ defmodule Plausible.Google.Api do
     request_data = [
       # Visitors
       {
-        ["ga:date"],
+        ["ga:dateHour"],
         [
           "ga:users",
           "ga:pageviews",
@@ -191,62 +192,62 @@ defmodule Plausible.Google.Api do
       },
       # Sources
       {
-        ["ga:date", "ga:fullReferrer"],
+        ["ga:dateHour", "ga:fullReferrer"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       # UTM Mediums
       {
-        ["ga:date", "ga:medium"],
+        ["ga:dateHour", "ga:medium"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       # UTM Campaigns
       {
-        ["ga:date", "ga:campaign"],
+        ["ga:dateHour", "ga:campaign"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       # UTM Terms
       {
-        ["ga:date", "ga:keyword"],
+        ["ga:dateHour", "ga:keyword"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       # UTM Content
       {
-        ["ga:date", "ga:adContent"],
+        ["ga:dateHour", "ga:adContent"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       # Pages
       {
-        ["ga:date", "ga:pagePath"],
+        ["ga:dateHour", "ga:pagePath"],
         ["ga:users", "ga:pageviews", "ga:timeOnPage"]
       },
       # Entry pages
       {
-        ["ga:date", "ga:landingPagePath"],
+        ["ga:dateHour", "ga:landingPagePath"],
         ["ga:users", "ga:entrances", "ga:sessionDuration", "ga:bounces"]
       },
       # Exit pages
       {
-        ["ga:date", "ga:exitPagePath"],
+        ["ga:dateHour", "ga:exitPagePath"],
         ["ga:users", "ga:exits"]
       },
       # Locations
       {
-        ["ga:date", "ga:countryIsoCode", "ga:regionIsoCode"],
+        ["ga:dateHour", "ga:countryIsoCode", "ga:regionIsoCode"],
         ["ga:users"]
       },
       # Device
       {
-        ["ga:date", "ga:deviceCategory"],
+        ["ga:dateHour", "ga:deviceCategory"],
         ["ga:users"]
       },
       # Browser
       {
-        ["ga:date", "ga:browser"],
+        ["ga:dateHour", "ga:browser"],
         ["ga:users"]
       },
       # OS
       {
-        ["ga:date", "ga:operatingSystem"],
+        ["ga:dateHour", "ga:operatingSystem"],
         ["ga:users"]
       }
     ]
@@ -263,6 +264,8 @@ defmodule Plausible.Google.Api do
           responses
           |> Enum.map(fn {:ok, resp} -> resp end)
           |> Enum.concat()
+
+        {:ok, timezone} = get_profile_timezone(auth, profile)
 
         maybe_error =
           [
@@ -284,7 +287,7 @@ defmodule Plausible.Google.Api do
           |> Enum.map(fn {metric, index} ->
             Task.async(fn ->
               Enum.fetch!(data, index)
-              |> Imported.from_google_analytics(site.domain, metric)
+              |> Imported.from_google_analytics(site.domain, metric, timezone)
             end)
           end)
           |> Enum.map(&Task.await(&1, 120_000))
@@ -324,7 +327,7 @@ defmodule Plausible.Google.Api do
           hideValueRanges: true,
           orderBys: [
             %{
-              fieldName: "ga:date",
+              fieldName: "ga:dateHour",
               sortOrder: "DESCENDING"
             }
           ],
@@ -347,6 +350,34 @@ defmodule Plausible.Google.Api do
       {:ok, data}
     else
       {:error, Jason.decode!(res.body)}
+    end
+  end
+
+  defp get_profile_timezone(auth, profile) do
+    res =
+      HTTPoison.get!(
+        "https://www.googleapis.com/analytics/v3/management/accounts/~all/webproperties/~all/profiles",
+        Authorization: "Bearer #{auth.access_token}"
+      )
+
+    case res.status_code do
+      200 ->
+        timezone_info =
+          Jason.decode!(res.body)
+          |> Map.get("items")
+          |> Enum.map(fn item -> {Map.get(item, "id"), Map.get(item, "timezone")} end)
+          |> Map.new()
+          |> Map.get(profile)
+          |> Timezone.get()
+
+        {:ok, timezone_info}
+
+      _ ->
+        Sentry.capture_message("Error fetching Google view ID during import",
+          extra: Jason.decode!(res.body)
+        )
+
+        {:error, res.body}
     end
   end
 
