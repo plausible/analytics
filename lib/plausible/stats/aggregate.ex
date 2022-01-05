@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Aggregate do
   alias Plausible.Stats.Query
   use Plausible.ClickhouseRepo
-  import Plausible.Stats.Base
+  import Plausible.Stats.{Base, Imported}
 
   @event_metrics [:visitors, :pageviews, :events, :sample_percent]
   @session_metrics [:visits, :bounce_rate, :visit_duration, :sample_percent]

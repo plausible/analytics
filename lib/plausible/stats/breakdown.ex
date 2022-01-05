@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.Breakdown do
   use Plausible.ClickhouseRepo
-  import Plausible.Stats.Base
+  import Plausible.Stats.{Base, Imported}
   alias Plausible.Stats.Query
   @no_ref "Direct / None"
 
