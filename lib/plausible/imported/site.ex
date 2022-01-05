@@ -287,12 +287,6 @@ defmodule Plausible.Imported do
   end
 
   defp format_timestamp(timestamp) do
-    {year, monthday} = String.split_at(timestamp, 4)
-    {month, day} = String.split_at(monthday, 2)
-
-    [year, month, day]
-    |> Enum.map(&Kernel.elem(Integer.parse(&1), 0))
-    |> List.to_tuple()
-    |> (&NaiveDateTime.from_erl!({&1, {12, 0, 0}})).()
+    Timex.Parse.DateTime.Parser.parse!(timestamp, "{YYYY}{M}{D}")
   end
 end
