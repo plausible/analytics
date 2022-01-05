@@ -154,7 +154,8 @@ defmodule Plausible.Google.Api do
 
   def import_analytics(site, profile) do
     with {:ok, auth} <- refresh_if_needed(site.google_auth) do
-      do_import_analytics(site, auth, profile)
+      {:ok, timezone} = get_profile_timezone(auth, profile)
+      do_import_analytics(site, auth, profile, timezone)
     end
   end
 
@@ -164,7 +165,7 @@ defmodule Plausible.Google.Api do
 
   Dimensions reference: https://ga-dev-tools.web.app/dimensions-metrics-explorer
   """
-  def do_import_analytics(site, auth, profile) do
+  def do_import_analytics(site, auth, profile, timezone) do
     end_date =
       Plausible.Stats.Clickhouse.pageviews_begin(site)
       |> NaiveDateTime.to_date()
@@ -261,8 +262,6 @@ defmodule Plausible.Google.Api do
 
     case Keyword.get(responses, :error) do
       nil ->
-        {:ok, timezone} = get_profile_timezone(auth, profile)
-
         maybe_error =
           responses
           |> Enum.map(fn {:ok, resp} -> resp end)
