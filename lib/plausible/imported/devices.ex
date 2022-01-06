@@ -5,7 +5,7 @@ defmodule Plausible.Imported.Devices do
 
   @primary_key false
   schema "imported_devices" do
-    field :domain, :string
+    field :site_id, :integer
     field :timestamp, :naive_datetime
     field :device, :string
     field :visitors, :integer
@@ -16,7 +16,7 @@ defmodule Plausible.Imported.Devices do
     |> cast(
       attrs,
       [
-        :domain,
+        :site_id,
         :timestamp,
         :device,
         :visitors
@@ -24,7 +24,7 @@ defmodule Plausible.Imported.Devices do
       empty_values: [nil, ""]
     )
     |> validate_required([
-      :domain,
+      :site_id,
       :timestamp,
       :visitors
     ])

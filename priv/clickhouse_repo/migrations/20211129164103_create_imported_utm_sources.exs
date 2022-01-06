@@ -3,7 +3,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedUtmSources do
 
   def change do
     create_if_not_exists table(:imported_utm_sources, engine: "MergeTree() ORDER BY (timestamp) SETTINGS index_granularity = 1") do
-      add :domain, :string
+      add :site_id, :UInt64
       add :timestamp, :naive_datetime
       add :utm_source, :string
       add :visitors, :UInt64

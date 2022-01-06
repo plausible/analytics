@@ -5,7 +5,7 @@ defmodule Plausible.Imported.Visitors do
 
   @primary_key false
   schema "imported_visitors" do
-    field :domain, :string
+    field :site_id, :integer
     field :timestamp, :naive_datetime
     field :visitors, :integer
     field :pageviews, :integer
@@ -20,7 +20,7 @@ defmodule Plausible.Imported.Visitors do
     |> cast(
       attrs,
       [
-        :domain,
+        :site_id,
         :timestamp,
         :visitors,
         :pageviews,
@@ -31,7 +31,7 @@ defmodule Plausible.Imported.Visitors do
       empty_values: [nil, ""]
     )
     |> validate_required([
-      :domain,
+      :site_id,
       :timestamp,
       :visitors,
       :pageviews,

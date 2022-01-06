@@ -5,7 +5,7 @@ defmodule Plausible.Imported.Locations do
 
   @primary_key false
   schema "imported_locations" do
-    field :domain, :string
+    field :site_id, :integer
     field :timestamp, :naive_datetime
     field :country, :string, default: ""
     field :region, :string, default: ""
@@ -18,7 +18,7 @@ defmodule Plausible.Imported.Locations do
     |> cast(
       attrs,
       [
-        :domain,
+        :site_id,
         :timestamp,
         :country,
         :region,
@@ -28,7 +28,7 @@ defmodule Plausible.Imported.Locations do
       empty_values: [nil, ""]
     )
     |> validate_required([
-      :domain,
+      :site_id,
       :timestamp,
       :visitors
     ])

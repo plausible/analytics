@@ -5,7 +5,7 @@ defmodule Plausible.Imported.Browsers do
 
   @primary_key false
   schema "imported_browsers" do
-    field :domain, :string
+    field :site_id, :integer
     field :timestamp, :naive_datetime
     field :browser, :string
     field :visitors, :integer
@@ -16,7 +16,7 @@ defmodule Plausible.Imported.Browsers do
     |> cast(
       attrs,
       [
-        :domain,
+        :site_id,
         :timestamp,
         :browser,
         :visitors
@@ -24,7 +24,7 @@ defmodule Plausible.Imported.Browsers do
       empty_values: [nil, ""]
     )
     |> validate_required([
-      :domain,
+      :site_id,
       :timestamp,
       :visitors
     ])

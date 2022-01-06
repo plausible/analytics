@@ -5,7 +5,7 @@ defmodule Plausible.Imported.UtmTerms do
 
   @primary_key false
   schema "imported_utm_terms" do
-    field :domain, :string
+    field :site_id, :integer
     field :timestamp, :naive_datetime
     field :utm_term, :string, default: ""
     field :visitors, :integer
@@ -20,7 +20,7 @@ defmodule Plausible.Imported.UtmTerms do
     |> cast(
       attrs,
       [
-        :domain,
+        :site_id,
         :timestamp,
         :utm_term,
         :visitors,
@@ -31,7 +31,7 @@ defmodule Plausible.Imported.UtmTerms do
       empty_values: [nil, ""]
     )
     |> validate_required([
-      :domain,
+      :site_id,
       :timestamp,
       :visitors,
       :visits,

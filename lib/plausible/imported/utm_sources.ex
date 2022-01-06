@@ -5,7 +5,7 @@ defmodule Plausible.Imported.UtmSources do
 
   @primary_key false
   schema "imported_utm_sources" do
-    field :domain, :string
+    field :site_id, :integer
     field :timestamp, :naive_datetime
     field :utm_source, :string, default: ""
     field :visitors, :integer
@@ -20,7 +20,7 @@ defmodule Plausible.Imported.UtmSources do
     |> cast(
       attrs,
       [
-        :domain,
+        :site_id,
         :timestamp,
         :utm_source,
         :visitors,
@@ -31,7 +31,7 @@ defmodule Plausible.Imported.UtmSources do
       empty_values: [nil, ""]
     )
     |> validate_required([
-      :domain,
+      :site_id,
       :timestamp,
       :visitors,
       :visits,

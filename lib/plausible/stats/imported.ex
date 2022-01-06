@@ -12,7 +12,7 @@ defmodule Plausible.Stats.Imported do
     result =
       from(v in "imported_visitors",
         group_by: fragment("date"),
-        where: v.domain == ^site.domain,
+        where: v.site_id == ^site.id,
         where: v.timestamp >= ^first_datetime and v.timestamp < ^last_datetime,
         select: %{"visitors" => sum(v.visitors)}
       )
@@ -78,7 +78,7 @@ defmodule Plausible.Stats.Imported do
       from(
         i in table,
         group_by: field(i, ^dim),
-        where: i.domain == ^site.domain,
+        where: i.site_id == ^site.id,
         where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
         select: %{}
       )
@@ -291,7 +291,7 @@ defmodule Plausible.Stats.Imported do
     imported_q =
       from(
         i in "imported_visitors",
-        where: i.domain == ^site.domain,
+        where: i.site_id == ^site.id,
         where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
         select: %{}
       )

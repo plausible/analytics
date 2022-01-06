@@ -289,7 +289,7 @@ defmodule Plausible.Stats.Breakdown do
       from(
         i in "imported_pages",
         group_by: i.page,
-        where: i.domain == ^site.domain,
+        where: i.site_id == ^site.id,
         where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
         where: i.page in ^pages,
         select: %{

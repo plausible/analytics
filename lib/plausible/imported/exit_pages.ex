@@ -5,7 +5,7 @@ defmodule Plausible.Imported.ExitPages do
 
   @primary_key false
   schema "imported_exit_pages" do
-    field :domain, :string
+    field :site_id, :integer
     field :timestamp, :naive_datetime
     field :exit_page, :string
     field :visitors, :integer
@@ -17,7 +17,7 @@ defmodule Plausible.Imported.ExitPages do
     |> cast(
       attrs,
       [
-        :domain,
+        :site_id,
         :timestamp,
         :exit_page,
         :visitors,
@@ -26,7 +26,7 @@ defmodule Plausible.Imported.ExitPages do
       empty_values: [nil, ""]
     )
     |> validate_required([
-      :domain,
+      :site_id,
       :timestamp,
       :exit_page,
       :visitors,

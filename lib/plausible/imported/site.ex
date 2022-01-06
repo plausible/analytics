@@ -3,14 +3,14 @@ defmodule Plausible.Imported do
   use Timex
 
   def forget(site) do
-    Plausible.ClickhouseRepo.clear_imported_stats_for(site.domain)
+    Plausible.ClickhouseRepo.clear_imported_stats_for(site.site_id)
   end
 
-  def from_google_analytics(data, domain, metric, timezone) do
+  def from_google_analytics(data, site_id, metric, timezone) do
     maybe_error =
       data
       |> Enum.map(fn row ->
-        new_from_google_analytics(domain, timezone, metric, row)
+        new_from_google_analytics(site_id, timezone, metric, row)
         |> Plausible.ClickhouseRepo.insert(on_conflict: :replace_all)
       end)
       |> Keyword.get(:error)
@@ -24,7 +24,7 @@ defmodule Plausible.Imported do
     end
   end
 
-  defp new_from_google_analytics(domain, timezone, "visitors", %{
+  defp new_from_google_analytics(site_id, timezone, "visitors", %{
          "dimensions" => [timestamp],
          "metrics" => [%{"values" => values}]
        }) do
@@ -34,7 +34,7 @@ defmodule Plausible.Imported do
       |> Enum.map(&elem(&1, 0))
 
     Imported.Visitors.new(%{
-      domain: domain,
+      site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       visitors: visitors,
       pageviews: pageviews,
@@ -44,7 +44,7 @@ defmodule Plausible.Imported do
     })
   end
 
-  defp new_from_google_analytics(domain, timezone, "sources", %{
+  defp new_from_google_analytics(site_id, timezone, "sources", %{
          "dimensions" => [timestamp, source],
          "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
        }) do
@@ -56,7 +56,7 @@ defmodule Plausible.Imported do
     source = if source == "(direct)", do: nil, else: source
 
     Imported.Sources.new(%{
-      domain: domain,
+      site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       source: Imported.Sources.parse(source),
       visitors: visitors,
@@ -68,7 +68,7 @@ defmodule Plausible.Imported do
 
   # TODO: utm_sources. Google reports sources and utm_sources unified.
 
-  defp new_from_google_analytics(domain, timezone, "utm_mediums", %{
+  defp new_from_google_analytics(site_id, timezone, "utm_mediums", %{
          "dimensions" => [timestamp, medium],
          "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
        }) do
@@ -80,7 +80,7 @@ defmodule Plausible.Imported do
     medium = if medium == "(none)", do: "", else: medium
 
     Imported.UtmMediums.new(%{
-      domain: domain,
+      site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       medium: medium,
       visitors: visitors,
@@ -90,7 +90,7 @@ defmodule Plausible.Imported do
     })
   end
 
-  defp new_from_google_analytics(domain, timezone, "utm_campaigns", %{
+  defp new_from_google_analytics(site_id, timezone, "utm_campaigns", %{
          "dimensions" => [timestamp, campaign],
          "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
        }) do
@@ -102,7 +102,7 @@ defmodule Plausible.Imported do
     campaign = if campaign == "(not set)", do: "", else: campaign
 
     Imported.UtmCampaigns.new(%{
-      domain: domain,
+      site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       campaign: campaign,
       visitors: visitors,
@@ -112,7 +112,7 @@ defmodule Plausible.Imported do
     })
   end
 
-  defp new_from_google_analytics(domain, timezone, "utm_terms", %{
+  defp new_from_google_analytics(site_id, timezone, "utm_terms", %{
          "dimensions" => [timestamp, term],
          "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
        }) do
@@ -124,7 +124,7 @@ defmodule Plausible.Imported do
     term = if term == "(not set)" or term == "(not provided)", do: "", else: term
 
     Imported.UtmTerms.new(%{
-      domain: domain,
+      site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       utm_term: term,
       visitors: visitors,
@@ -134,7 +134,7 @@ defmodule Plausible.Imported do
     })
   end
 
-  defp new_from_google_analytics(domain, timezone, "utm_content", %{
+  defp new_from_google_analytics(site_id, timezone, "utm_content", %{
          "dimensions" => [timestamp, content],
          "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
        }) do
@@ -146,7 +146,7 @@ defmodule Plausible.Imported do
     content = if content == "(not set)", do: "", else: content
 
     Imported.UtmContent.new(%{
-      domain: domain,
+      site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       utm_content: content,
       visitors: visitors,
@@ -156,7 +156,7 @@ defmodule Plausible.Imported do
     })
   end
 
-  defp new_from_google_analytics(domain, timezone, "pages", %{
+  defp new_from_google_analytics(site_id, timezone, "pages", %{
          "dimensions" => [timestamp, page],
          "metrics" => [%{"values" => [value, pageviews, time_on_page]}]
        }) do
@@ -165,7 +165,7 @@ defmodule Plausible.Imported do
     {time_on_page, _} = Integer.parse(time_on_page)
 
     Imported.Pages.new(%{
-      domain: domain,
+      site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       page: page,
       visitors: visitors,
@@ -174,7 +174,7 @@ defmodule Plausible.Imported do
     })
   end
 
-  defp new_from_google_analytics(domain, timezone, "entry_pages", %{
+  defp new_from_google_analytics(site_id, timezone, "entry_pages", %{
          "dimensions" => [timestamp, entry_page],
          "metrics" => [%{"values" => [visitors, entrances, visit_duration, bounces]}]
        }) do
@@ -185,7 +185,7 @@ defmodule Plausible.Imported do
     {visit_duration, _} = Integer.parse(visit_duration)
 
     Imported.EntryPages.new(%{
-      domain: domain,
+      site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       entry_page: entry_page,
       visitors: visitors,
@@ -195,7 +195,7 @@ defmodule Plausible.Imported do
     })
   end
 
-  defp new_from_google_analytics(domain, timezone, "exit_pages", %{
+  defp new_from_google_analytics(site_id, timezone, "exit_pages", %{
          "dimensions" => [timestamp, exit_page],
          "metrics" => [%{"values" => [value, exits]}]
        }) do
@@ -203,7 +203,7 @@ defmodule Plausible.Imported do
     {exits, ""} = Integer.parse(exits)
 
     Imported.ExitPages.new(%{
-      domain: domain,
+      site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       exit_page: exit_page,
       visitors: visitors,
@@ -211,7 +211,7 @@ defmodule Plausible.Imported do
     })
   end
 
-  defp new_from_google_analytics(domain, timezone, "locations", %{
+  defp new_from_google_analytics(site_id, timezone, "locations", %{
          "dimensions" => [timestamp, country, region],
          "metrics" => [%{"values" => [value]}]
        }) do
@@ -220,7 +220,7 @@ defmodule Plausible.Imported do
     region = if region == "(not set)", do: "", else: region
 
     Imported.Locations.new(%{
-      domain: domain,
+      site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       country: country,
       region: region,
@@ -229,14 +229,14 @@ defmodule Plausible.Imported do
     })
   end
 
-  defp new_from_google_analytics(domain, timezone, "devices", %{
+  defp new_from_google_analytics(site_id, timezone, "devices", %{
          "dimensions" => [timestamp, device],
          "metrics" => [%{"values" => [value]}]
        }) do
     {visitors, ""} = Integer.parse(value)
 
     Imported.Devices.new(%{
-      domain: domain,
+      site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       device: String.capitalize(device),
       visitors: visitors
@@ -253,14 +253,14 @@ defmodule Plausible.Imported do
     "(not set)" => ""
   }
 
-  defp new_from_google_analytics(domain, timezone, "browsers", %{
+  defp new_from_google_analytics(site_id, timezone, "browsers", %{
          "dimensions" => [timestamp, browser],
          "metrics" => [%{"values" => [value]}]
        }) do
     {visitors, ""} = Integer.parse(value)
 
     Imported.Browsers.new(%{
-      domain: domain,
+      site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       browser: Map.get(@browser_google_to_plausible, browser, browser),
       visitors: visitors
@@ -273,14 +273,14 @@ defmodule Plausible.Imported do
     "(not set)" => ""
   }
 
-  defp new_from_google_analytics(domain, timezone, "operating_systems", %{
+  defp new_from_google_analytics(site_id, timezone, "operating_systems", %{
          "dimensions" => [timestamp, operating_system],
          "metrics" => [%{"values" => [value]}]
        }) do
     {visitors, ""} = Integer.parse(value)
 
     Imported.OperatingSystems.new(%{
-      domain: domain,
+      site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       operating_system: Map.get(@os_google_to_plausible, operating_system, operating_system),
       visitors: visitors

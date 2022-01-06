@@ -268,7 +268,7 @@ defmodule Plausible.Google.Api do
           |> Enum.concat()
           |> Enum.map(fn {dataset, data} ->
             Task.async(fn ->
-              Imported.from_google_analytics(data, site.domain, dataset, timezone)
+              Imported.from_google_analytics(data, site.id, dataset, timezone)
             end)
           end)
           |> Enum.map(&Task.await(&1, 120_000))

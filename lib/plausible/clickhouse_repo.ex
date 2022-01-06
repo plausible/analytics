@@ -18,7 +18,7 @@ defmodule Plausible.ClickhouseRepo do
     Ecto.Adapters.SQL.query!(__MODULE__, sessions_sql, [domain])
   end
 
-  def clear_imported_stats_for(domain) do
+  def clear_imported_stats_for(site_id) do
     [
       "imported_visitors",
       "imported_sources",
@@ -36,8 +36,8 @@ defmodule Plausible.ClickhouseRepo do
       "imported_operating_systems"
     ]
     |> Enum.map(fn table ->
-      sql = "ALTER TABLE #{table} DELETE WHERE domain = ?"
-      Ecto.Adapters.SQL.query!(__MODULE__, sql, [domain])
+      sql = "ALTER TABLE #{table} DELETE WHERE site_id = ?"
+      Ecto.Adapters.SQL.query!(__MODULE__, sql, [site_id])
     end)
   end
 end

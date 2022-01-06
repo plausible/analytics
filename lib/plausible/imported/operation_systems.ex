@@ -5,7 +5,7 @@ defmodule Plausible.Imported.OperatingSystems do
 
   @primary_key false
   schema "imported_operating_systems" do
-    field :domain, :string
+    field :site_id, :integer
     field :timestamp, :naive_datetime
     field :operating_system, :string
     field :visitors, :integer
@@ -16,7 +16,7 @@ defmodule Plausible.Imported.OperatingSystems do
     |> cast(
       attrs,
       [
-        :domain,
+        :site_id,
         :timestamp,
         :operating_system,
         :visitors
@@ -24,7 +24,7 @@ defmodule Plausible.Imported.OperatingSystems do
       empty_values: [nil, ""]
     )
     |> validate_required([
-      :domain,
+      :site_id,
       :timestamp,
       :visitors
     ])
