@@ -333,8 +333,6 @@ defmodule PlausibleWeb.Api.ExternalController do
     11_746_746 => 2_624_652,
     # Aarhus N -> Aarhus
     11_746_890 => 2_624_652,
-    # Aarhus N -> Aarhus
-    11_746_890 => 2_624_652,
 
     # Mexico
     # Miguel Hidalgo Villa Olímpica -> Mexico city
