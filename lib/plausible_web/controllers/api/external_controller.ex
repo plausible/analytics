@@ -311,8 +311,30 @@ defmodule PlausibleWeb.Api.ExternalController do
     587_629 => 588_409,
 
     # Sweden
-    # Södermalm => Stockholm
+    # Södermalm -> Stockholm
     2_676_209 => 2_673_730,
+    
+    # Slovakia
+    # Bratislava -> Bratislava
+    3_343_955 => 3_060_972,
+    
+    # Denmark
+    # København SV -> Copenhagen
+    11_747_123 => 2_618_425,
+    # København NV -> Copenhagen
+    11_746_894 => 2_618_425,
+    # Odense S -> Odense
+    11_746_825 => 2_615_876,
+    # Odense M -> Odense
+    11_746_974 => 2_615_876,
+    # Odense SØ -> Odense
+    11_746_888 => 2_615_876,
+    # Aarhus C -> Aarhus
+    11_746_746 => 2_624_652,
+    # Aarhus N -> Aarhus
+    11_746_890 => 2_624_652,
+    # Aarhus N -> Aarhus
+    11_746_890 => 2_624_652,
 
     # Mexico
     # Miguel Hidalgo Villa Olímpica -> Mexico city
