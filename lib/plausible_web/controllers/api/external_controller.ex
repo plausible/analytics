@@ -313,11 +313,11 @@ defmodule PlausibleWeb.Api.ExternalController do
     # Sweden
     # Södermalm -> Stockholm
     2_676_209 => 2_673_730,
-    
+
     # Slovakia
     # Bratislava -> Bratislava
     3_343_955 => 3_060_972,
-    
+
     # Denmark
     # København SV -> Copenhagen
     11_747_123 => 2_618_425,
