@@ -134,7 +134,7 @@ defmodule Plausible.Imported do
     })
   end
 
-  defp new_from_google_analytics(site_id, timezone, "utm_content", %{
+  defp new_from_google_analytics(site_id, timezone, "utm_contents", %{
          "dimensions" => [timestamp, content],
          "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
        }) do
@@ -145,7 +145,7 @@ defmodule Plausible.Imported do
 
     content = if content == "(not set)", do: "", else: content
 
-    Imported.UtmContent.new(%{
+    Imported.UtmContents.new(%{
       site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       utm_content: content,

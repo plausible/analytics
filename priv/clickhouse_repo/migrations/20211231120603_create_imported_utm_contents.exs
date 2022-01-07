@@ -1,8 +1,8 @@
-defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedUtmContent do
+defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedUtmContents do
   use Ecto.Migration
 
   def change do
-    create_if_not_exists table(:imported_utm_content, engine: "MergeTree() ORDER BY (timestamp) SETTINGS index_granularity = 1") do
+    create_if_not_exists table(:imported_utm_contents, engine: "MergeTree() ORDER BY (timestamp) SETTINGS index_granularity = 1") do
       add :site_id, :UInt64
       add :timestamp, :naive_datetime
       add :utm_content, :string

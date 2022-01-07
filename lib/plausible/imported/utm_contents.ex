@@ -1,10 +1,10 @@
-defmodule Plausible.Imported.UtmContent do
+defmodule Plausible.Imported.UtmContents do
   use Ecto.Schema
   use Plausible.ClickhouseRepo
   import Ecto.Changeset
 
   @primary_key false
-  schema "imported_utm_content" do
+  schema "imported_utm_contents" do
     field :site_id, :integer
     field :timestamp, :naive_datetime
     field :utm_content, :string, default: ""

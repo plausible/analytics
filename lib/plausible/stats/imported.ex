@@ -51,9 +51,6 @@ defmodule Plausible.Stats.Imported do
 
     {table, dim} =
       case property do
-        "visit:utm_content" ->
-          {"imported_utm_content", :utm_content}
-
         "visit:country" ->
           {"imported_locations", :country}
 

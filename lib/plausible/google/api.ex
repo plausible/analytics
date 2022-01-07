@@ -213,7 +213,7 @@ defmodule Plausible.Google.Api do
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       {
-        "utm_content",
+        "utm_contents",
         ["ga:dateHour", "ga:adContent"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
