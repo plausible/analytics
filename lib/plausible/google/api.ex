@@ -170,12 +170,9 @@ defmodule Plausible.Google.Api do
       Plausible.Stats.Clickhouse.pageviews_begin(site)
       |> NaiveDateTime.to_date()
 
-    start_date = Date.add(end_date, -365)
-
     request = %{
       auth: auth,
       profile: profile,
-      start_date: Date.to_iso8601(start_date),
       end_date: Date.to_iso8601(end_date)
     }
 
@@ -298,7 +295,7 @@ defmodule Plausible.Google.Api do
           viewId: request.profile,
           dateRanges: [
             %{
-              startDate: request.start_date,
+              startDate: "2005-01-01",  # The earliest valid date
               endDate: request.end_date
             }
           ],
