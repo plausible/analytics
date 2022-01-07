@@ -564,7 +564,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def countries(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+
+    query =
+      Query.from(site.timezone, params)
+      |> Filters.add_prefix()
+      |> Query.put_filter("visit:country", {:is_not, "\0\0"})
+
     pagination = parse_pagination(params)
 
     countries =
@@ -616,7 +621,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def regions(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+
+    query =
+      Query.from(site.timezone, params)
+      |> Filters.add_prefix()
+      |> Query.put_filter("visit:region", {:is_not, ""})
+
     pagination = parse_pagination(params)
 
     regions =
@@ -649,7 +659,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def cities(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+
+    query =
+      Query.from(site.timezone, params)
+      |> Filters.add_prefix()
+      |> Query.put_filter("visit:city", {:is_not, 0})
+
     pagination = parse_pagination(params)
 
     cities =
