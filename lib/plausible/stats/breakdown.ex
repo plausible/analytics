@@ -147,16 +147,15 @@ defmodule Plausible.Stats.Breakdown do
            ] do
     query = Query.treat_page_filter_as_entry_page(query)
 
-    results = breakdown_sessions(site, query, property, metrics, pagination)
-
-    prop_result =
-      property
-      |> String.split(":")
-      |> Enum.at(1)
-      |> String.to_existing_atom()
-
-    metrics = metrics ++ [prop_result]
-    Enum.map(results, &Map.take(&1, metrics))
+    # "visits" is fetched when querying bounce rate and visit duration, as it
+    # is needed to calculate these from imported data. Let's remove it from the
+    # result if it wasn't requested.
+    if (:bounce_rate in metrics or :visit_duration in metrics) and :visits not in metrics do
+      breakdown_sessions(site, query, property, metrics, pagination)
+      |> Enum.map(&Map.delete(&1, :visits))
+    else
+      breakdown_sessions(site, query, property, metrics, pagination)
+    end
   end
 
   def breakdown(site, query, property, metrics, pagination) do
