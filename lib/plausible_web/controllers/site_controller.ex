@@ -657,7 +657,7 @@ defmodule PlausibleWeb.SiteController do
         case Plausible.Google.Api.import_analytics(site, profile) do
           {:ok, _} ->
             site
-            |> Plausible.Site.changeset(%{imported_source: "Google Analytics"})
+            |> Plausible.Site.set_imported_source("Google Analytics")
             |> Repo.update!()
 
             conn
@@ -680,7 +680,7 @@ defmodule PlausibleWeb.SiteController do
         Plausible.Imported.forget(site)
 
         site
-        |> Plausible.Site.changeset(%{imported_source: nil})
+        |> Plausible.Site.set_imported_source(nil)
         |> Repo.update!()
 
         conn
