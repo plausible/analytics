@@ -259,27 +259,34 @@ defmodule Plausible.Google.Api do
 
     case Keyword.get(responses, :error) do
       nil ->
-        maybe_error =
+        results =
           responses
           |> Enum.map(fn {:ok, resp} -> resp end)
           |> Enum.concat()
-          |> Enum.map(fn {dataset, data} ->
-            Task.async(fn ->
-              Imported.from_google_analytics(data, site.id, dataset, timezone)
+
+        if Enum.any?(results, fn {_, val} -> val end) do
+          maybe_error =
+            results
+            |> Enum.map(fn {dataset, data} ->
+              Task.async(fn ->
+                Imported.from_google_analytics(data, site.id, dataset, timezone)
+              end)
             end)
-          end)
-          |> Enum.map(&Task.await(&1, 120_000))
-          |> Keyword.get(:error)
+            |> Enum.map(&Task.await(&1, 120_000))
+            |> Keyword.get(:error)
 
-        case maybe_error do
-          nil ->
-            {:ok, nil}
+          case maybe_error do
+            nil ->
+              {:ok, nil}
 
-          {:error, error} ->
-            Plausible.ClickhouseRepo.clear_imported_stats_for(site.domain)
+            {:error, error} ->
+              Plausible.ClickhouseRepo.clear_imported_stats_for(site.domain)
 
-            Sentry.capture_message("Error saving Google analytics data", extra: error)
-            {:error, error}
+              Sentry.capture_message("Error saving Google analytics data", extra: error)
+              {:error, error["error"]["message"]}
+          end
+        else
+          {:error, "No Google Analytics data found."}
         end
 
       error ->
@@ -295,7 +302,8 @@ defmodule Plausible.Google.Api do
           viewId: request.profile,
           dateRanges: [
             %{
-              startDate: "2005-01-01",  # The earliest valid date
+              # The earliest valid date
+              startDate: "2005-01-01",
               endDate: request.end_date
             }
           ],
@@ -332,7 +340,7 @@ defmodule Plausible.Google.Api do
 
       {:ok, data}
     else
-      {:error, Jason.decode!(res.body)}
+      {:error, Jason.decode!(res.body)["error"]["message"]}
     end
   end
 

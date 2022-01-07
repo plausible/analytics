@@ -3,8 +3,10 @@ defmodule Plausible.Imported do
   use Timex
 
   def forget(site) do
-    Plausible.ClickhouseRepo.clear_imported_stats_for(site.site_id)
+    Plausible.ClickhouseRepo.clear_imported_stats_for(site.id)
   end
+
+  def from_google_analytics(nil, _site_id, _metric, _timezone), do: {:ok, nil}
 
   def from_google_analytics(data, site_id, metric, timezone) do
     maybe_error =
@@ -20,7 +22,7 @@ defmodule Plausible.Imported do
         {:ok, nil}
 
       error ->
-        {:error, error}
+        {:error, error.errors}
     end
   end
 

@@ -665,13 +665,8 @@ defmodule PlausibleWeb.SiteController do
             |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
 
           {:error, error} ->
-            message =
-              error
-              |> Map.get("error")
-              |> Map.get("message")
-
             conn
-            |> put_flash(:error, "Error while fetching: #{message}")
+            |> put_flash(:error, "Error while fetching: #{error}")
             |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
         end
     end
