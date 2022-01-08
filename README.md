@@ -85,6 +85,8 @@ database for stats. On the frontend we use [TailwindCSS](https://tailwindcss.com
 
 For anyone wishing to contribute to Plausible, we recommend taking a look at [our contributor guide](https://github.com/plausible/analytics/blob/master/CONTRIBUTING.md).
 
+<a href="https://github.com/facebook/docusaurus/graphs/contributors"><img src="https://opencollective.com/plausible/contributors.svg?width=800&button=false" /></a>
+
 ## Feedback & Roadmap
 
 We welcome feedback from our community. We have a public roadmap driven by the features suggested by the community members. Take a look at our [feedback board](https://plausible.io/feedback) and our [public roadmap](https://plausible.io/roadmap) directly here on GitHub. Please let us know if you have any requests and vote on open issues so we can better prioritize.
