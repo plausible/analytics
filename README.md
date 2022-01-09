@@ -85,7 +85,7 @@ database for stats. On the frontend we use [TailwindCSS](https://tailwindcss.com
 
 For anyone wishing to contribute to Plausible, we recommend taking a look at [our contributor guide](https://github.com/plausible/analytics/blob/master/CONTRIBUTING.md).
 
-<a href="https://github.com/facebook/docusaurus/graphs/contributors"><img src="https://opencollective.com/plausible/contributors.svg?width=800&button=false" /></a>
+<a href="https://github.com/plausible/analytics/graphs/contributors"><img src="https://opencollective.com/plausible/contributors.svg?width=800&button=false" /></a>
 
 ## Feedback & Roadmap
 
