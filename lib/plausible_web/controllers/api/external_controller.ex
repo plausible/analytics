@@ -332,6 +332,22 @@ defmodule PlausibleWeb.Api.ExternalController do
     # Schiphol-Rijk -> Amsterdam
     10_173_838 => 2_759_794,
     
+    # Romania
+    # Sector 1 -> Bucharest,
+    11_055_041 => 683_506,
+    # Sector 2 -> Bucharest
+    11_055_040 => 683_506,
+    # Sector 3 -> Bucharest
+    11_055_044 => 683_506,
+    # Sector 4 -> Bucharest
+    11_055_042 => 683_506,
+    # Sector 5 -> Bucharest
+    11_055_043    => 683_506,
+    # Sector 6 -> Bucharest
+    11_055_039 => 683_506,
+    # Bucuresti -> Bucharest
+    6_691_781 => 683_506,
+    
     # Slovakia
     # Bratislava -> Bratislava
     3_343_955 => 3_060_972,
