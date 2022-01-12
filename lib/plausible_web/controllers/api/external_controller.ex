@@ -231,7 +231,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     2_773_040 => 2_761_369,
     # Urfahr -> Linz
     2_762_518 => 2_772_400,
-    
+
     # Canada
     # Old Toronto -> Toronto
     8_436_019 => 6_167_865,
@@ -243,7 +243,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     6_948_711 => 6_167_865,
     # North York -> Toronto
     6_091_104 => 6_167_865,
-    
+
     # Czech republic
     # Praha 5 -> Prague
     11_951_220 => 3_067_696,
@@ -255,7 +255,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     11_951_210 => 3_067_696,
     # Praha 4 -> Prague
     8_378_772 => 3_067_696,
-    
+
     # Denmark
     # København SV -> Copenhagen
     11_747_123 => 2_618_425,
@@ -271,7 +271,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     11_746_746 => 2_624_652,
     # Aarhus N -> Aarhus
     11_746_890 => 2_624_652,
-    
+
     # Estonia
     # Kristiine linnaosa -> Tallinn
     11_050_530 => 588_409,
@@ -287,7 +287,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     11_053_707 => 588_409,
     # Viimsi -> Tallinn
     587_629 => 588_409,
-    
+
     # Germany
     # Bezirk Tempelhof-Schöneberg -> Berlin
     3_336_297 => 2_950_159,
@@ -311,11 +311,11 @@ defmodule PlausibleWeb.Api.ExternalController do
     6_947_481 => 2_886_242,
     # Beuel -> Bonn
     2_949_619 => 2_946_447,
-    
+
     # India
     # Navi Mumbai -> Mumbai
     6_619_347 => 1_275_339,
-    
+
     # Mexico
     # Miguel Hidalgo Villa Olímpica -> Mexico city
     11_561_026 => 3_530_597,
@@ -327,11 +327,11 @@ defmodule PlausibleWeb.Api.ExternalController do
     9_179_691 => 3_530_597,
     #  Cuauhtémoc-> Mexico city
     12_266_959 => 3_530_597,
-    
+
     # Netherlands
     # Schiphol-Rijk -> Amsterdam
     10_173_838 => 2_759_794,
-    
+
     # Romania
     # Sector 1 -> Bucharest,
     11_055_041 => 683_506,
@@ -342,24 +342,24 @@ defmodule PlausibleWeb.Api.ExternalController do
     # Sector 4 -> Bucharest
     11_055_042 => 683_506,
     # Sector 5 -> Bucharest
-    11_055_043    => 683_506,
+    11_055_043 => 683_506,
     # Sector 6 -> Bucharest
     11_055_039 => 683_506,
     # Bucuresti -> Bucharest
     6_691_781 => 683_506,
-    
+
     # Slovakia
     # Bratislava -> Bratislava
     3_343_955 => 3_060_972,
-    
+
     # Sweden
     # Södermalm -> Stockholm
     2_676_209 => 2_673_730,
-    
+
     # Switzerland
     # Vorstädte -> Basel
     11_789_440 => 2_661_604,
-    
+
     # UK
     # Shadwell -> London
     6_690_595 => 2_643_743,
