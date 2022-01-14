@@ -70,7 +70,8 @@ defmodule Plausible.Session.StoreTest do
         domain: event1.domain,
         user_id: event1.user_id,
         name: "pageview",
-        timestamp: timestamp
+        timestamp: timestamp,
+        screen_size: "Desktop"
       )
 
     Store.on_event(event1, nil, store)
@@ -80,6 +81,7 @@ defmodule Plausible.Session.StoreTest do
     assert session.duration == 10
     assert session.pageviews == 2
     assert session.events == 2
+    assert session.screen_size == "Desktop"
   end
 
   test "calculates duration correctly for out-of-order events", %{store: store} do
