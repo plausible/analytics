@@ -229,6 +229,20 @@ defmodule PlausibleWeb.Api.ExternalController do
     2_772_614 => 2_761_369,
     # Gemeindebezirk Landstrasse -> Vienna
     2_773_040 => 2_761_369,
+    # Gemeindebezirk Donaustadt -> Vienna
+    2_780_851 => 2_761_369,
+    # Gemeindebezirk Favoriten -> Vienna
+    2_779_776 => 2_761_369,
+    # Gemeindebezirk Währing -> Vienna
+    2_762_091 => 2_761_369,
+    # Gemeindebezirk Wieden -> Vienna
+    2_761_393 => 2_761_369,
+    # Gemeindebezirk Innere Stadt -> Vienna
+    2_775_259 => 2_761_369,
+    # Gemeindebezirk Alsergrund -> Vienna
+    2_782_729 => 2_761_369,
+    # Gemeindebezirk Liesing -> Vienna
+    2_772_484 => 2_761_369,
     # Urfahr -> Linz
     2_762_518 => 2_772_400,
 
