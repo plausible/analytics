@@ -183,7 +183,6 @@ defmodule Plausible.Imported do
     {visitors, ""} = Integer.parse(visitors)
     {entrances, ""} = Integer.parse(entrances)
     {bounces, ""} = Integer.parse(bounces)
-
     {visit_duration, _} = Integer.parse(visit_duration)
 
     Imported.EntryPages.new(%{
@@ -215,11 +214,14 @@ defmodule Plausible.Imported do
 
   defp new_from_google_analytics(site_id, timezone, "locations", %{
          "dimensions" => [timestamp, country, region],
-         "metrics" => [%{"values" => [value]}]
+         "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
        }) do
-    {visitors, ""} = Integer.parse(value)
     country = if country == "(not set)", do: "", else: country
     region = if region == "(not set)", do: "", else: region
+    {visitors, ""} = Integer.parse(visitors)
+    {visits, ""} = Integer.parse(visits)
+    {bounces, ""} = Integer.parse(bounces)
+    {visit_duration, _} = Integer.parse(visit_duration)
 
     Imported.Locations.new(%{
       site_id: site_id,
@@ -227,21 +229,30 @@ defmodule Plausible.Imported do
       country: country,
       region: region,
       city: 0,
-      visitors: visitors
+      visitors: visitors,
+      visits: visits,
+      bounces: bounces,
+      visit_duration: visit_duration
     })
   end
 
   defp new_from_google_analytics(site_id, timezone, "devices", %{
          "dimensions" => [timestamp, device],
-         "metrics" => [%{"values" => [value]}]
+         "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
        }) do
-    {visitors, ""} = Integer.parse(value)
+    {visitors, ""} = Integer.parse(visitors)
+    {visits, ""} = Integer.parse(visits)
+    {bounces, ""} = Integer.parse(bounces)
+    {visit_duration, _} = Integer.parse(visit_duration)
 
     Imported.Devices.new(%{
       site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       device: String.capitalize(device),
-      visitors: visitors
+      visitors: visitors,
+      visits: visits,
+      bounces: bounces,
+      visit_duration: visit_duration
     })
   end
 
@@ -257,15 +268,21 @@ defmodule Plausible.Imported do
 
   defp new_from_google_analytics(site_id, timezone, "browsers", %{
          "dimensions" => [timestamp, browser],
-         "metrics" => [%{"values" => [value]}]
+         "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
        }) do
-    {visitors, ""} = Integer.parse(value)
+    {visitors, ""} = Integer.parse(visitors)
+    {visits, ""} = Integer.parse(visits)
+    {bounces, ""} = Integer.parse(bounces)
+    {visit_duration, _} = Integer.parse(visit_duration)
 
     Imported.Browsers.new(%{
       site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       browser: Map.get(@browser_google_to_plausible, browser, browser),
-      visitors: visitors
+      visitors: visitors,
+      visits: visits,
+      bounces: bounces,
+      visit_duration: visit_duration
     })
   end
 
@@ -277,15 +294,21 @@ defmodule Plausible.Imported do
 
   defp new_from_google_analytics(site_id, timezone, "operating_systems", %{
          "dimensions" => [timestamp, operating_system],
-         "metrics" => [%{"values" => [value]}]
+         "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
        }) do
-    {visitors, ""} = Integer.parse(value)
+    {visitors, ""} = Integer.parse(visitors)
+    {visits, ""} = Integer.parse(visits)
+    {bounces, ""} = Integer.parse(bounces)
+    {visit_duration, _} = Integer.parse(visit_duration)
 
     Imported.OperatingSystems.new(%{
       site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
       operating_system: Map.get(@os_google_to_plausible, operating_system, operating_system),
-      visitors: visitors
+      visitors: visitors,
+      visits: visits,
+      bounces: bounces,
+      visit_duration: visit_duration
     })
   end
 

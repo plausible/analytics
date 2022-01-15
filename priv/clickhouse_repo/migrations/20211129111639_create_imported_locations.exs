@@ -9,6 +9,9 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedLocations do
       add :region, :string
       add :city, :UInt64
       add :visitors, :UInt64
+      add :visits, :UInt64
+      add :visit_duration, :UInt64
+      add :bounces, :UInt32
     end
   end
 end

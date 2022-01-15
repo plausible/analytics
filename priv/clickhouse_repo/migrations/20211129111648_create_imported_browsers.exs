@@ -7,6 +7,9 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedBrowsers do
       add :timestamp, :naive_datetime
       add :browser, :string
       add :visitors, :UInt64
+      add :visits, :UInt64
+      add :visit_duration, :UInt64
+      add :bounces, :UInt32
     end
   end
 end

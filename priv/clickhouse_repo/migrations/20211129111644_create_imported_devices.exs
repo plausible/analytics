@@ -7,6 +7,9 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedDevices do
       add :timestamp, :naive_datetime
       add :device, :string
       add :visitors, :UInt64
+      add :visits, :UInt64
+      add :visit_duration, :UInt64
+      add :bounces, :UInt32
     end
   end
 end

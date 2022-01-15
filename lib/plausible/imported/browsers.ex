@@ -9,6 +9,10 @@ defmodule Plausible.Imported.Browsers do
     field :timestamp, :naive_datetime
     field :browser, :string
     field :visitors, :integer
+    field :visits, :integer
+    field :bounces, :integer
+    # Sum total
+    field :visit_duration, :integer
   end
 
   def new(attrs) do
@@ -19,14 +23,20 @@ defmodule Plausible.Imported.Browsers do
         :site_id,
         :timestamp,
         :browser,
-        :visitors
+        :visitors,
+        :visits,
+        :bounces,
+        :visit_duration
       ],
       empty_values: [nil, ""]
     )
     |> validate_required([
       :site_id,
       :timestamp,
-      :visitors
+      :visitors,
+      :visits,
+      :bounces,
+      :visit_duration
     ])
   end
 end

@@ -232,22 +232,22 @@ defmodule Plausible.Google.Api do
       {
         "locations",
         ["ga:dateHour", "ga:countryIsoCode", "ga:regionIsoCode"],
-        ["ga:users"]
+        ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       {
         "devices",
         ["ga:dateHour", "ga:deviceCategory"],
-        ["ga:users"]
+        ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       {
         "browsers",
         ["ga:dateHour", "ga:browser"],
-        ["ga:users"]
+        ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       {
         "operating_systems",
         ["ga:dateHour", "ga:operatingSystem"],
-        ["ga:users"]
+        ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       }
     ]
 

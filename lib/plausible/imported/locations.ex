@@ -11,6 +11,10 @@ defmodule Plausible.Imported.Locations do
     field :region, :string, default: ""
     field :city, :integer, default: 0
     field :visitors, :integer
+    field :visits, :integer
+    field :bounces, :integer
+    # Sum total
+    field :visit_duration, :integer
   end
 
   def new(attrs) do
@@ -23,14 +27,20 @@ defmodule Plausible.Imported.Locations do
         :country,
         :region,
         :city,
-        :visitors
+        :visitors,
+        :visits,
+        :bounces,
+        :visit_duration
       ],
       empty_values: [nil, ""]
     )
     |> validate_required([
       :site_id,
       :timestamp,
-      :visitors
+      :visitors,
+      :visits,
+      :bounces,
+      :visit_duration
     ])
   end
 end
