@@ -383,7 +383,6 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp visitor_location_details(conn) do
     result =
       PlausibleWeb.RemoteIp.get(conn)
-      |> IO.inspect()
       |> Geolix.lookup()
 
     country_code = get_in(result, [:geolocation, :country, :iso_code])
