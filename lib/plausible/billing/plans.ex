@@ -6,7 +6,7 @@ defmodule Plausible.Billing.Plans do
   ]
 
   @unlisted_plans_v2 [
-    %{limit: 10_000_000, monthly_product_id: "655350", yearly_cost: "$250"}
+    %{limit: 10_000_000, monthly_product_id: "655350", monthly_cost: "$250"}
   ]
 
   @sandbox_plans [
