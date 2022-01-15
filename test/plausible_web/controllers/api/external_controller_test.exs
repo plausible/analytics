@@ -623,6 +623,23 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.country_code == "US"
     end
 
+    test "uses BunnyCDN's custom header for client IP address if present", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        domain: "external-controller-test-bunny.com",
+        url: "http://gigride.live/"
+      }
+
+      conn
+      |> put_req_header("x-forwarded-for", "0.0.0.0")
+      |> put_req_header("b-forwarded-for", "1.1.1.1,9.9.9.9")
+      |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-bunny.com")
+
+      assert pageview.country_code == "US"
+    end
+
     test "Uses the Forwarded header when cf-connecting-ip and x-forwarded-for are missing", %{
       conn: conn
     } do
