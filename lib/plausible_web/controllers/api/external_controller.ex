@@ -359,6 +359,14 @@ defmodule PlausibleWeb.Api.ExternalController do
     # Switzerland
     # Vorstädte -> Basel
     11_789_440 => 2_661_604,
+    # Zürich (Kreis 11) / Oerlikon -> Zürich
+    2_659_310 => 2_657_896,
+    # Zürich (Kreis 3) / Alt-Wiedikon -> Zürich
+    2_658_007 => 2_657_896,
+    # Zürich (Kreis 5) -> Zürich
+    6_295_521 => 2_657_896,
+    # Zürich (Kreis 1) / Hochschulen -> Zürich
+    6_295_489 => 2_657_896,
 
     # UK
     # Shadwell -> London
