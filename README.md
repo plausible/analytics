@@ -52,6 +52,8 @@ We choose the subscription business model rather than the business model of surv
 
 The easiest way to get started with Plausible is with [our official managed service in the Cloud](https://plausible.io/#pricing). It takes 2 minutes to start counting your stats with a worldwide CDN, high availability, backups, security and maintenance all done for you by us.
 
+In order to be compliant with the GDPR and the Schrems II ruling, all visitor data for our managed service in the Cloud is exclusively processed on servers and cloud infrastructure owned and operated by European providers. Your website data never leaves the EU.
+
 Our managed hosting can save a substantial amount of developer time and resources. For most sites this ends up being the best value option and the revenue goes to funding the maintenance and further development of Plausible. So you’ll be supporting open source software and getting a great service!
 
 ### Can Plausible Analytics be self-hosted?
