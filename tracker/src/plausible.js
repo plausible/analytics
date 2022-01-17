@@ -29,6 +29,11 @@
     {{/if}}
   }
 
+  function pageview_end() {
+    if (lastEventId !== null) {
+      
+    }
+  }
 
   function trigger(eventName, options) {
     {{#unless local}}
@@ -136,7 +141,7 @@
       if (lastPage === location.pathname) return;
       {{/unless}}
       lastPage = location.pathname
-      //trigger('pageview')
+      trigger('pageview')
     }
 
     {{#if hash}}
@@ -172,8 +177,8 @@
 
     {{#if beacon}}
     document.addEventListener("visibilitychange", handlePageviewEnd);
-    document.addEventListener("pagehide", handlePageviewEnd); //pointless?
-    window.addEventListener("beforeunload", handlePageviewEnd); //pointless?
+    document.addEventListener("pagehide", handlePageviewEnd);
+    window.addEventListener("beforeunload", handlePageviewEnd);
     {{/if}}
 
   {{/unless}}

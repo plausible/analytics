@@ -12,6 +12,7 @@ defmodule Plausible.Application do
       {Phoenix.PubSub, name: Plausible.PubSub},
       PlausibleWeb.Endpoint,
       Plausible.Event.WriteBuffer,
+      Plausible.Event.Store,
       Plausible.Session.WriteBuffer,
       Plausible.Session.Store,
       Plausible.Session.Salts,

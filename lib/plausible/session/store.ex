@@ -33,21 +33,14 @@ defmodule Plausible.Session.Store do
     active = is_active?(found_session, event)
 
     updated_sessions =
-      cond do
-        found_session && active ->
-          new_session = update_session(found_session, event)
-          buffer.insert([%{new_session | sign: 1}, %{found_session | sign: -1}])
-          Map.put(sessions, session_key, new_session)
-
-        found_session && !active ->
-          new_session = new_session_from_event(event)
-          buffer.insert([new_session])
-          Map.put(sessions, session_key, new_session)
-
-        true ->
-          new_session = new_session_from_event(event)
-          buffer.insert([new_session])
-          Map.put(sessions, session_key, new_session)
+      if found_session && active do
+        new_session = update_session(found_session, event)
+        buffer.insert([%{new_session | sign: 1}, %{found_session | sign: -1}])
+        Map.put(sessions, session_key, new_session)
+      else
+        new_session = new_session_from_event(event)
+        buffer.insert([new_session])
+        Map.put(sessions, session_key, new_session)
       end
 
     session_id = updated_sessions[session_key].session_id
@@ -60,18 +53,12 @@ defmodule Plausible.Session.Store do
     active = is_active?(found_session, event)
 
     updated_sessions =
-      cond do
-        found_session && active ->
-          new_session = update_session(found_session, event)
-          Map.put(sessions, session_key, new_session)
-
-        found_session && !active ->
-          new_session = new_session_from_event(event)
-          Map.put(sessions, session_key, new_session)
-
-        true ->
-          new_session = new_session_from_event(event)
-          Map.put(sessions, session_key, new_session)
+      if found_session && active do
+        new_session = update_session(found_session, event)
+        Map.put(sessions, session_key, new_session)
+      else
+        new_session = new_session_from_event(event)
+        Map.put(sessions, session_key, new_session)
       end
 
     updated_sessions

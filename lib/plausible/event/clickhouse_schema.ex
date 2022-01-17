@@ -3,14 +3,17 @@ defmodule Plausible.ClickhouseEvent do
   import Ecto.Changeset
 
   @primary_key false
-  schema "events" do
-    field :name, :string
+  schema "events_v2" do
+    field :name,                        :string
     field :domain, :string
     field :hostname, :string
     field :pathname, :string
     field :user_id, :integer
     field :session_id, :integer
+    field :event_id, :integer
     field :timestamp, :naive_datetime
+    field :duration, :integer, default: 0
+    field :sign, :integer, default: 1
 
     field :referrer, :string, default: ""
     field :referrer_source, :string, default: ""

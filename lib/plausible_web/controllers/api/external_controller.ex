@@ -3,11 +3,13 @@ defmodule PlausibleWeb.Api.ExternalController do
   use OpenTelemetryDecorator
   require Logger
 
+  @no_domain_error {:error, %{domain: ["can't be blank"]}}
+
   def event(conn, _params) do
     with {:ok, params} <- parse_body(conn),
          _ <- Sentry.Context.set_extra_context(%{request: params}),
-         :ok <- create_event(conn, params) do
-      conn |> put_status(202) |> text("ok")
+         resp <- create_event(conn, params) do
+      conn |> put_status(202) |> text(resp)
     else
       {:error, :invalid_json} ->
         conn
@@ -68,19 +70,37 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  @no_domain_error {:error, %{domain: ["can't be blank"]}}
-
   defp create_event(conn, params) do
-    params = %{
-      "name" => params["n"] || params["name"],
-      "url" => params["u"] || params["url"],
-      "referrer" => params["r"] || params["referrer"],
-      "domain" => params["d"] || params["domain"],
-      "screen_width" => params["w"] || params["screen_width"],
-      "hash_mode" => params["h"] || params["hashMode"],
-      "meta" => parse_meta(params)
-    }
+    case params["n"] || params["name"] do
+      "pageview_end" ->
+        params = %{
+          "name" => "pageview_end",
+          "event_id" => params["e"] || params["event_id"],
+          "timestamp" => params["timestamp"] || default_timestamp()
+        }
+        handle_pageview_end(params)
+      _other_event ->
+        params = %{
+          "name" => params["n"] || params["name"],
+          "url" => params["u"] || params["url"],
+          "referrer" => params["r"] || params["referrer"],
+          "domain" => params["d"] || params["domain"],
+          "screen_width" => params["w"] || params["screen_width"],
+          "hash_mode" => params["h"] || params["hashMode"],
+          "meta" => parse_meta(params),
+          "timestamp" => params["timestamp"]  || default_timestamp()
+        }
+        handle_event(conn, params)
+    end
+  end
 
+  def handle_pageview_end(event_params) do
+    IO.inspect("Updating event with id: #{event_params["event_id"]}")
+    Plausible.Event.Store.on_pageview_end(event_params)
+    :ok
+  end
+
+  def handle_event(conn, params) do
     ua = parse_user_agent(conn)
 
     if is_bot?(ua) || params["domain"] in Application.get_env(:plausible, :domain_blacklist) do
@@ -95,7 +115,8 @@ defmodule PlausibleWeb.Api.ExternalController do
       salts = Plausible.Session.Salts.fetch()
 
       event_attrs = %{
-        timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
+        timestamp: Map.get(params, "timestamp", default_timestamp()),
+        sign: 1,
         name: params["name"],
         hostname: strip_www(host),
         pathname: get_pathname(uri, params["hash_mode"]),
@@ -136,11 +157,12 @@ defmodule PlausibleWeb.Api.ExternalController do
           event = Ecto.Changeset.apply_changes(changeset)
           session_id = Plausible.Session.Store.on_event(event, previous_user_id)
 
-          event
-          |> Map.put(:session_id, session_id)
-          |> Plausible.Event.WriteBuffer.insert()
+          response =
+            event
+            |> Map.put(:session_id, session_id)
+            |> Plausible.Event.Store.on_event()
 
-          {:cont, :ok}
+          {:cont, response}
         else
           errors = Ecto.Changeset.traverse_errors(changeset, &encode_error/1)
           {:halt, {:error, errors}}
@@ -614,5 +636,9 @@ defmodule PlausibleWeb.Api.ExternalController do
     rescue
       _ -> nil
     end
+  end
+
+  defp default_timestamp() do
+    NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
   end
 end
