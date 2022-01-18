@@ -552,7 +552,7 @@ defmodule PlausibleWeb.Api.StatsController do
       countries =
         countries
         |> Enum.map(fn country ->
-          country_info = Location.get_country(country["code"])
+          country_info = get_country(country["code"])
           Map.put(country, "name", country_info.name)
         end)
 
@@ -566,24 +566,14 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       countries =
         Enum.map(countries, fn row ->
-          country = Location.get_country(row["code"])
+          country = get_country(row["code"])
 
-          if country do
-            Map.merge(row, %{
-              "name" => country.name,
-              "flag" => country.flag,
-              "alpha_3" => country.alpha_3,
-              "code" => country.alpha_2
-            })
-          else
-            Sentry.capture_message("Could not find country info", extra: %{code: row["code"]})
-
-            Map.merge(row, %{
-              "name" => row["code"],
-              "alpha_3" => row["code"],
-              "code" => row["code"]
-            })
-          end
+          Map.merge(row, %{
+            "name" => country.name,
+            "flag" => country.flag,
+            "alpha_3" => country.alpha_3,
+            "code" => country.alpha_2
+          })
         end)
 
       json(conn, countries)
@@ -602,7 +592,7 @@ defmodule PlausibleWeb.Api.StatsController do
         region_entry = Location.get_subdivision(region["code"])
 
         if region do
-          country_entry = Location.get_country(region_entry.country_code)
+          country_entry = get_country(region_entry.country_code)
           Map.merge(region, %{"name" => region_entry.name, "country_flag" => country_entry.flag})
         else
           Sentry.capture_message("Could not find region info", extra: %{code: region["code"]})
@@ -635,7 +625,7 @@ defmodule PlausibleWeb.Api.StatsController do
         city_info = Location.get_city(city["code"])
 
         if city_info do
-          country_info = Location.get_country(city_info.country_code)
+          country_info = get_country(city_info.country_code)
 
           Map.merge(city, %{
             "name" => city_info.name,
@@ -964,5 +954,22 @@ defmodule PlausibleWeb.Api.StatsController do
     |> (fn res -> [headers | res] end).()
     |> CSV.encode()
     |> Enum.join()
+  end
+
+  defp get_country(code) do
+    case Location.get_country(code) do
+      nil ->
+        Sentry.capture_message("Could not find country info", extra: %{code: code})
+
+        %Location.Country{
+          alpha_2: code,
+          alpha_3: "N/A",
+          name: code,
+          flag: nil
+        }
+
+      country ->
+        country
+    end
   end
 end
