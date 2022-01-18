@@ -591,7 +591,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> Enum.map(fn region ->
         region_entry = Location.get_subdivision(region["code"])
 
-        if region do
+        if region_entry do
           country_entry = get_country(region_entry.country_code)
           Map.merge(region, %{"name" => region_entry.name, "country_flag" => country_entry.flag})
         else
