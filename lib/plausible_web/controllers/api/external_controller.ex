@@ -385,7 +385,10 @@ defmodule PlausibleWeb.Api.ExternalController do
       PlausibleWeb.RemoteIp.get(conn)
       |> Geolix.lookup()
 
-    country_code = get_in(result, [:geolocation, :country, :iso_code])
+    country_code =
+      get_in(result, [:geolocation, :country, :iso_code])
+      |> ignore_unknown_country
+
     city_geoname_id = get_in(result, [:geolocation, :city, :geoname_id])
 
     subdivision1_code =
@@ -413,6 +416,9 @@ defmodule PlausibleWeb.Api.ExternalController do
       city_geoname_id: Map.get(@city_overrides, city_geoname_id, city_geoname_id)
     }
   end
+
+  defp ignore_unknown_country("ZZ"), do: nil
+  defp ignore_unknown_country(country), do: country
 
   @decorate trace("ingest.parse_referrer")
   defp parse_referrer(_, nil), do: nil

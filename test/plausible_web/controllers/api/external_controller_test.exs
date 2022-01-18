@@ -558,6 +558,22 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.country_code == "US"
     end
 
+    test "ignores unknown country code ZZ", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        domain: "external-controller-test-zz-country.com",
+        url: "http://gigride.live/"
+      }
+
+      conn
+      |> put_req_header("x-forwarded-for", "0.0.0.0")
+      |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-zz-country.com")
+
+      assert pageview.country_code == <<0, 0>>
+    end
+
     test "scrubs port from x-forwarded-for", %{conn: conn} do
       params = %{
         name: "pageview",
