@@ -331,6 +331,10 @@ defmodule PlausibleWeb.Api.ExternalController do
     # Netherlands
     # Schiphol-Rijk -> Amsterdam
     10_173_838 => 2_759_794,
+    
+    # Norway
+    # Nordre Aker District -> Oslo
+    6_940_981 => 3_143_244,
 
     # Romania
     # Sector 1 -> Bucharest,
