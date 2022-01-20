@@ -76,6 +76,8 @@ defmodule PlausibleWeb.StatsController do
       {'entry_pages.csv', fn -> Api.StatsController.entry_pages(conn, params) end},
       {'exit_pages.csv', fn -> Api.StatsController.exit_pages(conn, limited_params) end},
       {'countries.csv', fn -> Api.StatsController.countries(conn, params) end},
+      {'regions.csv', fn -> Api.StatsController.regions(conn, params) end},
+      {'cities.csv', fn -> Api.StatsController.cities(conn, params) end},
       {'browsers.csv', fn -> Api.StatsController.browsers(conn, params) end},
       {'operating_systems.csv', fn -> Api.StatsController.operating_systems(conn, params) end},
       {'devices.csv', fn -> Api.StatsController.screen_sizes(conn, params) end},
