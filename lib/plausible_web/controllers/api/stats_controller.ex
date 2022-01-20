@@ -1012,6 +1012,7 @@ defmodule PlausibleWeb.Api.StatsController do
       weekstart
     else
       date
+    end
   end
 
   defp get_country(code) do
