@@ -345,6 +345,14 @@ defmodule PlausibleWeb.Api.ExternalController do
     # Netherlands
     # Schiphol-Rijk -> Amsterdam
     10_173_838 => 2_759_794,
+    # Westpoort -> Amsterdam
+    11_525_047 => 2_759_794,
+    # Amsterdam-Zuidoost -> Amsterdam
+    6_544_881 => 2_759_794,
+    # Loosduinen -> The Hague
+    11_525_037 => 2_747_373,
+    # Laak -> The Hague
+    11_525_042 => 2_747_373,
 
     # Norway
     # Nordre Aker District -> Oslo
