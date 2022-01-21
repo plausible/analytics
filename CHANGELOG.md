@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file.
 
 
 ## Unreleased
+- Added `LISTEN_IP` configuration parameter plausible/analytics#1189
 
 ### Added
 - API route `PUT /api/v1/sites/goals` with form params `site_id`, `event_name` and/or `page_path`, and `goal_type` with supported types `event` and `page`

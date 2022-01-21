@@ -7,6 +7,18 @@ end
 
 config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
 
+# Listen IP supports IPv4 and IPv6 addresses.
+listen_ip = (
+  str = get_var_from_path_or_env(config_dir, "LISTEN_IP") || "0.0.0.0"
+  case :inet.parse_address(String.to_charlist(str)) do
+    {:ok, ip_addr} ->
+      ip_addr
+
+    {:error, reason} ->
+      raise "Invalid LISTEN_IP '#{str}' error: #{inspect(reason)}"
+  end
+)
+
 # System.get_env does not accept a non string default
 port = get_var_from_path_or_env(config_dir, "PORT") || 8000
 
@@ -190,7 +202,7 @@ config :plausible, :selfhost,
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [scheme: base_url.scheme, host: base_url.host, path: base_url.path, port: base_url.port],
-  http: [port: port, transport_options: [max_connections: :infinity]],
+  http: [port: port, ip: listen_ip, transport_options: [max_connections: :infinity]],
   secret_key_base: secret_key_base
 
 if is_nil(db_socket_dir) do
