@@ -8,16 +8,18 @@ end
 config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
 
 # Listen IP supports IPv4 and IPv6 addresses.
-listen_ip = (
-  str = get_var_from_path_or_env(config_dir, "LISTEN_IP") || "0.0.0.0"
-  case :inet.parse_address(String.to_charlist(str)) do
-    {:ok, ip_addr} ->
-      ip_addr
+listen_ip =
+  (
+    str = get_var_from_path_or_env(config_dir, "LISTEN_IP") || "127.0.0.1"
 
-    {:error, reason} ->
-      raise "Invalid LISTEN_IP '#{str}' error: #{inspect(reason)}"
-  end
-)
+    case :inet.parse_address(String.to_charlist(str)) do
+      {:ok, ip_addr} ->
+        ip_addr
+
+      {:error, reason} ->
+        raise "Invalid LISTEN_IP '#{str}' error: #{inspect(reason)}"
+    end
+  )
 
 # System.get_env does not accept a non string default
 port = get_var_from_path_or_env(config_dir, "PORT") || 8000
