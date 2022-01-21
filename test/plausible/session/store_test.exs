@@ -71,7 +71,15 @@ defmodule Plausible.Session.StoreTest do
         user_id: event1.user_id,
         name: "pageview",
         timestamp: timestamp,
-        screen_size: "Desktop"
+        country_code: "US",
+        subdivision1_code: "SUB1",
+        subdivision2_code: "SUB2",
+        city_geoname_id: 12312,
+        screen_size: "Desktop",
+        operating_system: "Mac",
+        operating_system_version: "11",
+        browser: "Firefox",
+        browser_version: "10"
       )
 
     Store.on_event(event1, nil, store)
@@ -81,6 +89,14 @@ defmodule Plausible.Session.StoreTest do
     assert session.duration == 10
     assert session.pageviews == 2
     assert session.events == 2
+    assert session.country_code == "US"
+    assert session.subdivision1_code == "SUB1"
+    assert session.subdivision2_code == "SUB2"
+    assert session.city_geoname_id == 12312
+    assert session.operating_system == "Mac"
+    assert session.operating_system_version == "11"
+    assert session.browser == "Firefox"
+    assert session.browser_version == "10"
     assert session.screen_size == "Desktop"
   end
 
