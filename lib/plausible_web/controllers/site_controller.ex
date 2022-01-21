@@ -654,21 +654,13 @@ defmodule PlausibleWeb.SiteController do
         |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
 
       true ->
-        case Plausible.Google.Api.import_analytics(site, profile) do
-          {:ok, _} ->
-            site
-            |> Plausible.Site.set_imported_source("Google Analytics")
-            |> Repo.update!()
+        %{"site_id" => site.id, "profile" => profile}
+        |> Plausible.Workers.ImportGoogleAnalytics.new()
+        |> Oban.insert()
 
-            conn
-            |> put_flash(:success, "Google Analytics data successfully imported")
-            |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
-
-          {:error, error} ->
-            conn
-            |> put_flash(:error, "Error while fetching: #{error}")
-            |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
-        end
+        conn
+        |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
     end
   end
 

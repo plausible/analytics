@@ -320,7 +320,8 @@ if config_env() == :prod && !disable_cron do
     check_stats_emails: 1,
     site_setup_emails: 1,
     clean_email_verification_codes: 1,
-    clean_invitations: 1
+    clean_invitations: 1,
+    google_analytics_imports: 1
   ]
 
   extra_queues = [
@@ -340,7 +341,7 @@ if config_env() == :prod && !disable_cron do
 else
   config :plausible, Oban,
     repo: Plausible.Repo,
-    queues: false,
+    queues: [google_analytics_imports: 1],
     plugins: false
 end
 
