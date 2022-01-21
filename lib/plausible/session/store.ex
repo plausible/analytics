@@ -91,6 +91,8 @@ defmodule Plausible.Session.Store do
         duration: Timex.diff(event.timestamp, session.start, :second) |> abs,
         pageviews:
           if(event.name == "pageview", do: session.pageviews + 1, else: session.pageviews),
+        screen_size:
+          if(session.screen_size == "", do: event.screen_size, else: session.screen_size),
         events: session.events + 1
     }
   end

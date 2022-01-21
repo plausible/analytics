@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Subscribed users can see their Paddle invoices from the last 12 months under the user settings
 - Allow custom styles to be passed to embedded iframe plausible/analytics#1522
 - New UTM Tags `utm_content` and `utm_term` plausible/analytics#515
+- If a session was started without a screen_size it is updated if an event with screen_size occurs
 
 ### Fixed
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
