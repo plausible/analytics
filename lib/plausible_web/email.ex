@@ -280,6 +280,29 @@ defmodule PlausibleWeb.Email do
     )
   end
 
+  def import_success(email, site) do
+    base_email()
+    |> to(email)
+    |> tag("import-success-email")
+    |> subject("Google Analytics data imported for #{site.domain}")
+    |> render("google_analytics_import.html", %{
+      site: site,
+      link: PlausibleWeb.Endpoint.url() <> "/" <> URI.encode_www_form(site.domain),
+      success: true
+    })
+  end
+
+  def import_failure(email, site) do
+    base_email()
+    |> to(email)
+    |> tag("import-failure-email")
+    |> subject("Google Analytics import failed for #{site.domain}")
+    |> render("google_analytics_import.html", %{
+      site: site,
+      success: false
+    })
+  end
+
   defp base_email() do
     mailer_from = Application.get_env(:plausible, :mailer_email)
 
