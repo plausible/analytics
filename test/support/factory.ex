@@ -26,7 +26,8 @@ defmodule Plausible.Factory do
 
     %Plausible.Site{
       domain: domain,
-      timezone: "UTC"
+      timezone: "UTC",
+      imported_source: "Google Analytics"
     }
   end
 
@@ -177,6 +178,19 @@ defmodule Plausible.Factory do
       key: key,
       key_hash: Plausible.Auth.ApiKey.do_hash(key),
       key_prefix: binary_part(key, 0, 6)
+    }
+  end
+
+  @today Timex.today() |> Timex.to_naive_datetime()
+
+  def imported_browsers_factory do
+    %Plausible.Imported.Browsers{
+      timestamp: @today,
+      browser: "",
+      visitors: 1,
+      visits: 1,
+      bounces: 0,
+      visit_duration: 10
     }
   end
 

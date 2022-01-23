@@ -40,6 +40,27 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                }
              ]
     end
+
+    test "returns top browsers including imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, browser: "Chrome"),
+        build(:imported_browsers, browser: "Chrome"),
+        build(:imported_browsers, browser: "Firefox")
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Chrome", "visitors" => 1, "percentage" => 100}
+             ]
+
+      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&with_imported=true")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Chrome", "visitors" => 2, "percentage" => 67},
+               %{"name" => "Firefox", "visitors" => 1, "percentage" => 33}
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/browser-versions" do

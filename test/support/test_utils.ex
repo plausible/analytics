@@ -81,12 +81,32 @@ defmodule Plausible.TestUtils do
 
   def populate_stats(site, events) do
     Enum.map(events, fn event ->
-      Map.put(event, :domain, site.domain)
+      case event do
+        %Plausible.ClickhouseEvent{} ->
+          Map.put(event, :domain, site.domain)
+        _ ->
+          Map.put(event, :site_id, site.id)
+      end
     end)
     |> populate_stats
   end
 
   def populate_stats(events) do
+    {native, imported} =
+      Enum.split_with(events, fn event ->
+        case event do
+          %Plausible.ClickhouseEvent{} ->
+            true
+          _ ->
+            false
+        end
+      end)
+
+    if native, do: populate_native_stats(native)
+    if imported, do: populate_imported_stats(imported)
+  end
+
+  defp populate_native_stats(events) do
     sessions =
       Enum.reduce(events, %{}, fn event, sessions ->
         Plausible.Session.Store.reconcile_event(sessions, event)
@@ -106,6 +126,10 @@ defmodule Plausible.TestUtils do
       Plausible.ClickhouseSession,
       Enum.map(Map.values(sessions), &schema_to_map/1)
     )
+  end
+
+  defp populate_imported_stats(events) do
+    Enum.map(events, &Plausible.ClickhouseRepo.insert!/1)
   end
 
   def relative_time(shifts) do
