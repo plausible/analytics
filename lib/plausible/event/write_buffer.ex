@@ -25,7 +25,6 @@ defmodule Plausible.Event.WriteBuffer do
 
   def handle_cast({:insert, events}, %{buffer: buffer} = state) do
     new_buffer = events ++ buffer
-
     if length(new_buffer) >= max_buffer_size() do
       Logger.info("Buffer full, flushing to disk")
       Process.cancel_timer(state[:timer])
@@ -63,7 +62,7 @@ defmodule Plausible.Event.WriteBuffer do
 
       events ->
         Logger.info("Flushing #{length(events)} events")
-        events = Enum.map(events, &(Map.from_struct(&1) |> Map.delete(:__meta__)))
+        events = Enum.map(events, &(Map.from_struct(&1) |> Map.delete(:__meta__))) |> Enum.reverse()
         Plausible.ClickhouseRepo.insert_all(Plausible.ClickhouseEvent, events)
     end
   end

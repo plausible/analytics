@@ -4,6 +4,8 @@ defmodule Plausible.Event.Store do
   require Logger
 
   @garbage_collect_interval_milliseconds 60 * 1000
+  @no_event_id_error {:error, %{event_id: ["can't be blank"]}}
+  @ignoring_message "Ignoring pageview_end event"
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
@@ -17,54 +19,84 @@ defmodule Plausible.Event.Store do
   end
 
   def on_pageview_end(event_params, pid \\ __MODULE__) do
-    GenServer.cast(pid, {:on_pageview_end, event_params})
-    :ok
+    GenServer.call(pid, {:on_pageview_end, event_params})
   end
 
-  def on_event(event, pid \\ __MODULE__) do
-    GenServer.call(pid, {:on_event, event})
-  end
-
-  def handle_cast(
-        {:on_pageview_end, event_params},
-        %{event_memory: event_memory, buffer: buffer} = state
-      ) do
-    event_id = event_params["event_id"] |> String.to_integer()
-    pageview_end_timestamp = event_params["timestamp"]
-
-    found_pageview = event_memory[event_id]
-
-    # create the new updated pageview, insert cancel and update rows in the buffer
-    new_duration = Timex.diff(pageview_end_timestamp, found_pageview.timestamp, :second) + found_pageview.duration
-    updated_pageview = %{found_pageview | duration: new_duration, timestamp: pageview_end_timestamp}
-
-    buffer.insert([%{updated_pageview | sign: 1}, %{found_pageview | sign: -1}])
-
-    # update that event in event_memory
-    updated_event_memory = %{event_memory | event_id => updated_pageview}
-    {:noreply, %{state | event_memory: updated_event_memory}}
+  def on_event(event, event_id \\ nil, pid \\ __MODULE__) do
+    GenServer.call(pid, {:on_event, event, event_id})
   end
 
   def handle_call(
-        {:on_event, event},
+        {:on_pageview_end, event_params},
+        _from,
+        %{event_memory: event_memory, buffer: buffer} = state
+      ) do
+    if event_params["event_id"] do
+      event_id = event_params["event_id"] |> String.to_integer()
+      case event_memory[event_id] do
+        nil -> {:reply, {:ok, @ignoring_message}, state}
+        _event_list ->
+          updated_event_memory = end_pageviews(buffer, event_memory, event_id, event_params["timestamp"])
+          {:reply, {:ok, "ok"}, %{state | event_memory: updated_event_memory}}
+      end
+    else
+      {:reply, @no_event_id_error, state}
+    end
+  end
+
+  def handle_call(
+        {:on_event, event, event_id},
         _from,
         %{event_memory: event_memory, buffer: buffer} = state
       ) do
     case event.name do
       "pageview" ->
-        new_event_id = generate_event_id()
-        new_event = Map.put(event, :event_id, new_event_id)
-        buffer.insert([new_event])
+        event_id = if event_id, do: event_id, else: generate_event_id()
 
-        updated_event_memory = Map.put(event_memory, new_event_id, new_event)
+        event =
+          event
+          |> Map.put(:event_id, event_id)
+          |> Map.put(:sign, 1)
 
-        {:reply, new_event_id, %{state | event_memory: updated_event_memory}}
-      _ ->
         buffer.insert([event])
+
+        updated_event_memory = remember_event(event_memory, event_id, event)
+
+        {:reply, event_id, %{state | event_memory: updated_event_memory}}
+
+      _other ->
+        buffer.insert([
+          event
+          |> Map.put(:sign, 1)
+          |> Map.put(:event_id, generate_event_id())
+        ])
+
         {:reply, "ok", state}
     end
   end
 
+  defp end_pageviews(buffer, event_memory, event_id, end_timestamp) do
+    new_event_list =
+      Enum.map(event_memory[event_id], fn pageview ->
+        new_duration = Timex.diff(end_timestamp, pageview.timestamp, :second)
+        updated_pageview = %{pageview | duration: new_duration}
+
+        buffer.insert([%{updated_pageview | sign: 1}, %{pageview | sign: -1}])
+        updated_pageview
+      end)
+
+    %{event_memory | event_id => new_event_list}
+  end
+
+  def remember_event(event_memory, event_id, event) do
+    case event_memory[event_id] do
+      nil ->
+        Map.put(event_memory, event_id, [event])
+      event_list ->
+        new_event_list = event_list ++ [event]
+        Map.put(event_memory, event_id, new_event_list)
+    end
+  end
 
   def handle_info(:garbage_collect, state) do
     Logger.debug("Event store collecting garbage")
@@ -72,11 +104,11 @@ defmodule Plausible.Event.Store do
     now = Timex.now()
 
     new_event_memory =
-      Enum.reduce(state[:event_memory], %{}, fn {event_id, event} , acc ->
+      Enum.reduce(state[:event_memory], %{}, fn {event_id, event}, acc ->
         if Timex.diff(now, event.timestamp, :second) <= forget_event_after() do
           Map.put(acc, event_id, event)
         else
-          # forget the session
+          # forget the event
           acc
         end
       end)
@@ -87,9 +119,9 @@ defmodule Plausible.Event.Store do
       Process.send_after(self(), :garbage_collect, @garbage_collect_interval_milliseconds)
 
     Logger.debug(fn ->
-      n_old = Enum.count(state[:sessions])
+      n_old = Enum.count(state[:event_memory])
       n_new = Enum.count(new_event_memory)
-      "Removed #{n_old - n_new} sessions from store"
+      "Removed #{n_old - n_new} events from store"
     end)
 
     {:noreply, %{state | event_memory: new_event_memory, timer: new_timer}}

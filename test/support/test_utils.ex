@@ -40,7 +40,7 @@ defmodule Plausible.TestUtils do
   def create_events(events) do
     events =
       Enum.map(events, fn event ->
-        Factory.build(:event, event) |> Map.from_struct() |> Map.delete(:__meta__)
+        Factory.build(:event, event) |> Map.from_struct() |> Map.delete(:__meta__) |> Map.put(:sign, 1)
       end)
 
     Plausible.ClickhouseRepo.insert_all("events_v2", events)

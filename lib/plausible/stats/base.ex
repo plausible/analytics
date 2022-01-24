@@ -29,7 +29,7 @@ defmodule Plausible.Stats.Base do
 
     q =
       from(
-        e in "events",
+        e in "events_v2",
         where: e.domain == ^site.domain,
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
       )

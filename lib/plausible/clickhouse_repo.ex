@@ -12,7 +12,7 @@ defmodule Plausible.ClickhouseRepo do
   end
 
   def clear_stats_for(domain) do
-    events_sql = "ALTER TABLE events DELETE WHERE domain = ?"
+    events_sql = "ALTER TABLE events_v2 DELETE WHERE domain = ?"
     sessions_sql = "ALTER TABLE sessions DELETE WHERE domain = ?"
     Ecto.Adapters.SQL.query!(__MODULE__, events_sql, [domain])
     Ecto.Adapters.SQL.query!(__MODULE__, sessions_sql, [domain])

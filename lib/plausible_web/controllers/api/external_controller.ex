@@ -8,8 +8,8 @@ defmodule PlausibleWeb.Api.ExternalController do
   def event(conn, _params) do
     with {:ok, params} <- parse_body(conn),
          _ <- Sentry.Context.set_extra_context(%{request: params}),
-         resp <- create_event(conn, params) do
-      conn |> put_status(202) |> text(resp)
+         {:ok, response} <- create_event(conn, params) do
+      conn |> put_status(202) |> text(response)
     else
       {:error, :invalid_json} ->
         conn
@@ -78,8 +78,8 @@ defmodule PlausibleWeb.Api.ExternalController do
           "event_id" => params["e"] || params["event_id"],
           "timestamp" => params["timestamp"] || default_timestamp()
         }
-        handle_pageview_end(params)
-      _other_event ->
+        Plausible.Event.Store.on_pageview_end(params)
+      _other ->
         params = %{
           "name" => params["n"] || params["name"],
           "url" => params["u"] || params["url"],
@@ -94,17 +94,11 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  def handle_pageview_end(event_params) do
-    IO.inspect("Updating event with id: #{event_params["event_id"]}")
-    Plausible.Event.Store.on_pageview_end(event_params)
-    :ok
-  end
-
   def handle_event(conn, params) do
     ua = parse_user_agent(conn)
 
     if is_bot?(ua) || params["domain"] in Application.get_env(:plausible, :domain_blacklist) do
-      :ok
+      {:ok, "ok"}
     else
       uri = params["url"] && URI.parse(params["url"])
       host = if uri && uri.host == "", do: "(none)", else: uri && uri.host
@@ -112,11 +106,9 @@ defmodule PlausibleWeb.Api.ExternalController do
 
       ref = parse_referrer(uri, params["referrer"])
       location_details = visitor_location_details(conn)
-      salts = Plausible.Session.Salts.fetch()
 
       event_attrs = %{
         timestamp: Map.get(params, "timestamp", default_timestamp()),
-        sign: 1,
         name: params["name"],
         hostname: strip_www(host),
         pathname: get_pathname(uri, params["hash_mode"]),
@@ -141,33 +133,51 @@ defmodule PlausibleWeb.Api.ExternalController do
         "meta.value": Map.values(params["meta"]) |> Enum.map(&Kernel.to_string/1)
       }
 
-      Enum.reduce_while(get_domains(params, uri), @no_domain_error, fn domain, _res ->
-        user_id = generate_user_id(conn, domain, event_attrs[:hostname], salts[:current])
+      domains = get_domains(params, uri)
+      store_event_for_all_domains(conn, domains, event_attrs)
+    end
+  end
 
-        previous_user_id =
-          salts[:previous] &&
-            generate_user_id(conn, domain, event_attrs[:hostname], salts[:previous])
+  defp store_event_for_all_domains(conn, domains, event_attrs) do
+    Enum.reduce_while(domains, @no_domain_error, fn domain, acc_response ->
+      response = case acc_response do
+        @no_domain_error -> store_event(conn, domain, event_attrs)
+        {:ok, event_id} -> store_event(conn, domain, event_attrs, event_id)
+      end
 
-        changeset =
-          event_attrs
-          |> Map.merge(%{domain: domain, user_id: user_id})
-          |> Plausible.ClickhouseEvent.new()
+      case response do
+        {:ok, event_id} -> {:cont, {:ok, event_id}}
+        {:error, errors} -> {:halt, {:error, errors}}
+      end
+    end)
+  end
 
-        if changeset.valid? do
-          event = Ecto.Changeset.apply_changes(changeset)
-          session_id = Plausible.Session.Store.on_event(event, previous_user_id)
+  defp store_event(conn, domain, event_attrs, event_id \\ nil) do
+    salts = Plausible.Session.Salts.fetch()
+    user_id = generate_user_id(conn, domain, event_attrs[:hostname], salts[:current])
 
-          response =
-            event
-            |> Map.put(:session_id, session_id)
-            |> Plausible.Event.Store.on_event()
+    previous_user_id =
+      salts[:previous] &&
+        generate_user_id(conn, domain, event_attrs[:hostname], salts[:previous])
 
-          {:cont, response}
-        else
-          errors = Ecto.Changeset.traverse_errors(changeset, &encode_error/1)
-          {:halt, {:error, errors}}
-        end
-      end)
+    changeset =
+      event_attrs
+      |> Map.merge(%{domain: domain, user_id: user_id})
+      |> Plausible.ClickhouseEvent.new()
+
+    if changeset.valid? do
+      event = Ecto.Changeset.apply_changes(changeset)
+      session_id = Plausible.Session.Store.on_event(event, previous_user_id)
+
+      response =
+        event
+        |> Map.put(:session_id, session_id)
+        |> Plausible.Event.Store.on_event(event_id)
+
+      {:ok, response}
+    else
+      errors = Ecto.Changeset.traverse_errors(changeset, &encode_error/1)
+      {:error, errors}
     end
   end
 
@@ -219,7 +229,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp decode_raw_props(_), do: :bad_format
 
-  defp get_domains(params, uri) do
+  def get_domains(params, uri) do
     if params["domain"] do
       String.split(params["domain"], ",")
       |> Enum.map(&String.trim/1)

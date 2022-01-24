@@ -4,7 +4,7 @@ defmodule Plausible.ClickhouseEvent do
 
   @primary_key false
   schema "events_v2" do
-    field :name,                        :string
+    field :name, :string
     field :domain, :string
     field :hostname, :string
     field :pathname, :string
@@ -13,7 +13,7 @@ defmodule Plausible.ClickhouseEvent do
     field :event_id, :integer
     field :timestamp, :naive_datetime
     field :duration, :integer, default: 0
-    field :sign, :integer, default: 1
+    field :sign, :integer
 
     field :referrer, :string, default: ""
     field :referrer_source, :string, default: ""

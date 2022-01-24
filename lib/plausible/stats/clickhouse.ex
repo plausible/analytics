@@ -20,7 +20,7 @@ defmodule Plausible.Stats.Clickhouse do
     |> Enum.reduce({0, 0}, fn domains, {pageviews_total, custom_events_total} ->
       {chunk_pageviews, chunk_custom_events} =
         ClickhouseRepo.one(
-          from e in "events",
+          from e in "events_v2",
             where: e.domain in ^domains,
             where: fragment("toDate(?)", e.timestamp) >= ^date_range.first,
             where: fragment("toDate(?)", e.timestamp) <= ^date_range.last,
@@ -130,7 +130,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def has_pageviews?(domains) when is_list(domains) do
     ClickhouseRepo.exists?(
-      from e in "events",
+      from e in "events_v2",
         select: e.timestamp,
         where: fragment("? IN tuple(?)", e.domain, ^domains)
     )
@@ -138,7 +138,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def has_pageviews?(site) do
     ClickhouseRepo.exists?(
-      from e in "events", where: e.domain == ^site.domain and e.name == "pageview"
+      from e in "events_v2", where: e.domain == ^site.domain and e.name == "pageview"
     )
   end
 
@@ -148,7 +148,7 @@ defmodule Plausible.Stats.Clickhouse do
     domains = Enum.map(sites, & &1.domain)
 
     ClickhouseRepo.all(
-      from e in "events",
+      from e in "events_v2",
         group_by: e.domain,
         where: fragment("? IN tuple(?)", e.domain, ^domains),
         where: e.timestamp > fragment("now() - INTERVAL 24 HOUR"),
@@ -280,7 +280,7 @@ defmodule Plausible.Stats.Clickhouse do
     {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
 
     q =
-      from(e in "events",
+      from(e in "events_v2",
         hints: ["SAMPLE 10000000"],
         where: e.domain == ^site.domain,
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime

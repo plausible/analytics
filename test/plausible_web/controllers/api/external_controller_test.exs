@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-1.com")
 
-      assert response(conn, 202) == "ok"
+      assert response(conn, 202) == to_string(pageview.event_id)
       assert pageview.hostname == "gigride.live"
       assert pageview.domain == "external-controller-test-1.com"
       assert pageview.pathname == "/"
@@ -62,7 +62,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-text-plain.com")
 
-      assert response(conn, 202) == "ok"
+      assert response(conn, 202) == to_string(pageview.event_id)
       assert pageview.hostname == "gigride.live"
       assert pageview.domain == "external-controller-test-text-plain.com"
       assert pageview.pathname == "/"
@@ -91,9 +91,14 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      assert response(conn, 202) == "ok"
-      assert get_event("test-domain1.com")
-      assert get_event("test-domain2.com")
+      event1 = get_event("test-domain1.com")
+      event2 = get_event("test-domain2.com")
+
+      assert event1
+      assert event2
+      assert response(conn, 202) == to_string(event1.event_id)
+      assert response(conn, 202) == to_string(event2.event_id)
+
     end
 
     test "www. is stripped from domain", %{conn: conn} do
@@ -186,7 +191,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-6.com")
 
-      assert response(conn, 202) == "ok"
+      assert response(conn, 202) == to_string(pageview.event_id)
       assert pageview.operating_system == "Mac"
       assert pageview.operating_system_version == "10.13"
       assert pageview.browser == "Chrome"
@@ -208,7 +213,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-7.com")
 
-      assert response(conn, 202) == "ok"
+      assert response(conn, 202) == to_string(pageview.event_id)
       assert pageview.referrer_source == "Facebook"
     end
 
@@ -227,7 +232,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-8.com")
 
-      assert response(conn, 202) == "ok"
+      assert response(conn, 202) == to_string(pageview.event_id)
       assert pageview.referrer == "facebook.com/page"
       assert pageview.referrer_source == "Facebook"
     end
@@ -247,7 +252,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-9.com")
 
-      assert response(conn, 202) == "ok"
+      assert response(conn, 202) == to_string(pageview.event_id)
       assert pageview.referrer_source == ""
     end
 
@@ -266,7 +271,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-10.com")
 
-      assert response(conn, 202) == "ok"
+      assert response(conn, 202) == to_string(pageview.event_id)
       assert pageview.referrer_source == ""
     end
 
@@ -285,7 +290,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-11.com")
 
-      assert response(conn, 202) == "ok"
+      assert response(conn, 202) == to_string(pageview.event_id)
       assert pageview.referrer_source == "blog.gigride.live"
     end
 
@@ -354,7 +359,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-14.com")
 
-      assert response(conn, 202) == "ok"
+      assert response(conn, 202) == to_string(pageview.event_id)
       assert pageview.referrer_source == "indiehackers.com"
     end
 
@@ -373,7 +378,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-15.com")
 
-      assert response(conn, 202) == "ok"
+      assert response(conn, 202) == to_string(pageview.event_id)
       assert pageview.referrer_source == ""
     end
 
@@ -392,7 +397,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-16.com")
 
-      assert response(conn, 202) == "ok"
+      assert response(conn, 202) == to_string(pageview.event_id)
       assert pageview.screen_size == "Mobile"
     end
 
@@ -410,7 +415,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event("external-controller-test-17.com")
 
-      assert response(conn, 202) == "ok"
+      assert response(conn, 202) == to_string(pageview.event_id)
       assert pageview.screen_size == ""
     end
 
@@ -535,10 +540,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      event = get_event("external-controller-test-19.com")
+      pageview = get_event("external-controller-test-19.com")
 
-      assert response(conn, 202) == "ok"
-      assert event.referrer == ""
+      assert response(conn, 202) == to_string(pageview.event_id)
+      assert pageview.referrer == ""
     end
 
     # Fake data is set up in config/test.exs
@@ -987,7 +992,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     pageview = get_event("url-with-hostname-missing.com")
 
-    assert response(conn, 202) == "ok"
+    assert response(conn, 202) == to_string(pageview.event_id)
     assert pageview.hostname == "(none)"
   end
 
@@ -1005,7 +1010,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     pageview = get_event("chrome-extension-url.com")
 
-    assert response(conn, 202) == "ok"
+    assert response(conn, 202) == to_string(pageview.event_id)
     assert pageview.hostname == "liipgellkffekalgefpjolodblggkmjg"
   end
 

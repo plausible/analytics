@@ -8,7 +8,7 @@ defmodule Plausible.Stats.CurrentVisitors do
       |> Timex.shift(minutes: -5)
 
     ClickhouseRepo.one(
-      from e in "events",
+      from e in "events_v2",
         where: e.domain == ^site.domain,
         where: e.timestamp >= ^first_datetime,
         select: uniq(e.user_id)

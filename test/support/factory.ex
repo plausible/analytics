@@ -79,6 +79,8 @@ defmodule Plausible.Factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 
     %Plausible.ClickhouseEvent{
+      sign: 1,
+      event_id: SipHash.hash!(hash_key(), UUID.uuid4()),
       hostname: hostname,
       domain: hostname,
       pathname: "/",

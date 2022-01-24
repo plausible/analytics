@@ -255,7 +255,7 @@ defmodule Plausible.Stats.Breakdown do
 
   defp do_group_by(
          %Ecto.Query{
-           from: %Ecto.Query.FromExpr{source: {"events", _}},
+           from: %Ecto.Query.FromExpr{source: {"events_v2", _}},
            joins: [%Ecto.Query.JoinExpr{source: {"meta", _}}]
          } = q,
          "event:props:" <> prop
@@ -270,7 +270,7 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp do_group_by(
-         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events", _}}} = q,
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events_v2", _}}} = q,
          "event:props:" <> prop
        ) do
     from(
@@ -283,7 +283,7 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp do_group_by(
-         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events", _}}} = q,
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events_v2", _}}} = q,
          "event:name"
        ) do
     from(
@@ -294,7 +294,7 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp do_group_by(
-         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events", _}}} = q,
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events_v2", _}}} = q,
          "event:page"
        ) do
     from(
@@ -305,7 +305,7 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp do_group_by(
-         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events", _}}} = q,
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events_v2", _}}} = q,
          "event:page_match"
        ) do
     case Map.get(q, :__private_match_sources__) do
