@@ -169,7 +169,7 @@ export const formattedFilters = {
   'browser_version': 'Browser Version',
   'os': 'Operating System',
   'os_version': 'Operating System Version',
-  'country': 'Location',
+  'country': 'Country',
   'region': 'Region',
   'city': 'City',
   'page': 'Page',
