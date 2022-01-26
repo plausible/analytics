@@ -1,10 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## v1.4.4
+
+### Fixed
+- Fix vulnerability with password reset emails
+
+## v1.4.3
+
+### Fixed
+- Make sure that ownership transfer can be made in self-hosted without creating a trial
+
+## v1.4.3
 
 ### Added
-- Data exported via the download button will contain CSV data for all visible graps in a zip file.
+- Data exported via the download button will contain CSV data for all visible graphs in a zip file.
 
 ## v1.4.2
 
