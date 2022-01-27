@@ -76,10 +76,21 @@ defmodule PlausibleWeb.BillingControllerTest do
       user: user
     } do
       insert(:subscription, user: user)
-      plan = insert(:enterprise_plan, user: user)
+
+      plan =
+        insert(:enterprise_plan,
+          user: user,
+          monthly_pageview_limit: 1000,
+          hourly_api_request_limit: 500,
+          site_limit: 100
+        )
+
       conn = get(conn, "/billing/change-plan/enterprise/#{plan.id}")
 
       assert html_response(conn, 200) =~ "Change subscription plan"
+      assert html_response(conn, 200) =~ "Up to <b>1k</b> monthly pageviews"
+      assert html_response(conn, 200) =~ "Up to <b>500</b> hourly api requests"
+      assert html_response(conn, 200) =~ "Up to <b>100</b> sites"
     end
 
     test "renders 404 is user does not have enterprise plan", %{conn: conn, user: user} do

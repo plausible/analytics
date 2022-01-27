@@ -6,7 +6,7 @@ defmodule Plausible.Billing.Plans do
   ]
 
   @unlisted_plans_v2 [
-    %{limit: 10_000_000, monthly_product_id: "655350", yearly_cost: "$250"}
+    %{limit: 10_000_000, monthly_product_id: "655350", monthly_cost: "$250"}
   ]
 
   @sandbox_plans [
@@ -99,7 +99,15 @@ defmodule Plausible.Billing.Plans do
       enterprise_plan =
         Repo.get_by(Plausible.Billing.EnterprisePlan, user_id: subscription.user_id)
 
-      enterprise_plan && enterprise_plan.monthly_pageview_limit
+      if enterprise_plan do
+        enterprise_plan.monthly_pageview_limit
+      else
+        Sentry.capture_message("Unknown allowance for plan",
+          extra: %{
+            paddle_plan_id: subscription.paddle_plan_id
+          }
+        )
+      end
     end
   end
 
@@ -121,7 +129,8 @@ defmodule Plausible.Billing.Plans do
   end
 
   defp all_plans() do
-    plans_v1() ++ @unlisted_plans_v1 ++ plans_v2() ++ @unlisted_plans_v2 ++ plans_sandbox()
+    plans_v1() ++
+      @unlisted_plans_v1 ++ plans_v2() ++ @unlisted_plans_v2 ++ plans_v3() ++ plans_sandbox()
   end
 
   defp plans_v1() do

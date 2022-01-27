@@ -277,7 +277,8 @@ defmodule Plausible.Stats.Base do
   def select_session_metrics(q, ["visit_duration" | rest]) do
     from(s in q,
       select_merge: %{
-        "visit_duration" => fragment("toUInt32(ifNotFinite(round(avg(duration * sign)), 0))")
+        "visit_duration" =>
+          fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))")
       }
     )
     |> select_session_metrics(rest)

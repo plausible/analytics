@@ -27,7 +27,8 @@ config :geolix,
       adapter: Geolix.Adapter.Fake,
       data: %{
         {1, 1, 1, 1} => %{country: %{iso_code: "US"}},
-        {1, 1, 1, 1, 1, 1, 1, 1} => %{country: %{iso_code: "US"}}
+        {1, 1, 1, 1, 1, 1, 1, 1} => %{country: %{iso_code: "US"}},
+        {0, 0, 0, 0} => %{country: %{iso_code: "ZZ"}}
       }
     }
   ]
