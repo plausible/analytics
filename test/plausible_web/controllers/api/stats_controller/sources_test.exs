@@ -30,6 +30,39 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
+    test "returns top sources with imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, referrer_source: "Google", referrer: "google.com"),
+        build(:pageview, referrer_source: "Google", referrer: "google.com"),
+        build(:pageview, referrer_source: "DuckDuckGo", referrer: "duckduckgo.com")
+      ])
+
+      populate_stats(site, [
+        build(:imported_sources,
+          source: "Google",
+          visitors: 2
+        ),
+        build(:imported_sources,
+          source: "DuckDuckGo",
+          visitors: 1
+        )
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/sources")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Google", "visitors" => 2},
+               %{"name" => "DuckDuckGo", "visitors" => 1}
+             ]
+
+      conn = get(conn, "/api/stats/#{site.domain}/sources?with_imported=true")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Google", "visitors" => 4},
+               %{"name" => "DuckDuckGo", "visitors" => 2}
+             ]
+    end
+
     test "calculates bounce rate and visit duration for sources", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -69,6 +102,92 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  "visitors" => 1,
                  "bounce_rate" => 100,
                  "visit_duration" => 0
+               }
+             ]
+    end
+
+    test "calculates bounce rate and visit duration for sources with imported data", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      populate_stats(site, [
+        build(:imported_sources,
+          source: "Google",
+          timestamp: ~N[2021-01-01 00:00:00],
+          visitors: 2,
+          visits: 3,
+          bounces: 1,
+          visit_duration: 900
+        ),
+        build(:imported_sources,
+          source: "DuckDuckGo",
+          timestamp: ~N[2021-01-01 00:00:00],
+          visitors: 1,
+          visits: 1,
+          visit_duration: 100,
+          bounces: 0
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&detailed=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Google",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 900
+               },
+               %{
+                 "name" => "DuckDuckGo",
+                 "visitors" => 1,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0
+               }
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&detailed=true&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Google",
+                 "visitors" => 3,
+                 "bounce_rate" => 25,
+                 "visit_duration" => 450.0
+               },
+               %{
+                 "name" => "DuckDuckGo",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 50
                }
              ]
     end
@@ -113,6 +232,9 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         build(:pageview,
           referrer_source: "DuckDuckGo",
           referrer: "duckduckgo.com"
+        ),
+        build(:imported_sources,
+          source: "DuckDuckGo"
         )
       ])
 
@@ -120,6 +242,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       assert json_response(conn, 200) == [
                %{"name" => "DuckDuckGo", "visitors" => 1}
+             ]
+
+      conn = get(conn, "/api/stats/#{site.domain}/sources?limit=1&page=2&with_imported=true")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "DuckDuckGo", "visitors" => 2}
              ]
     end
 
