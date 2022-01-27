@@ -43,6 +43,7 @@ defmodule Plausible.ClickhouseEvent do
     |> cast(
       attrs,
       [
+        :event_id,
         :name,
         :domain,
         :hostname,

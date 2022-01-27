@@ -200,7 +200,7 @@ defmodule Plausible.Stats.Base do
     from(e in q,
       select_merge: %{
         "pageviews" =>
-          fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name)
+          fragment("toUInt64(round(sumIf(sign, ? = 'pageview') * any(_sample_factor)))", e.name)
       }
     )
     |> select_event_metrics(rest)
@@ -208,7 +208,7 @@ defmodule Plausible.Stats.Base do
 
   def select_event_metrics(q, ["events" | rest]) do
     from(e in q,
-      select_merge: %{"events" => fragment("toUInt64(round(count(*) * any(_sample_factor)))")}
+      select_merge: %{"events" => fragment("toUInt64(round(sum(sign) * any(_sample_factor)))")}
     )
     |> select_event_metrics(rest)
   end
@@ -217,6 +217,16 @@ defmodule Plausible.Stats.Base do
     from(e in q,
       select_merge: %{
         "visitors" => fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
+      }
+    )
+    |> select_event_metrics(rest)
+  end
+
+  def select_event_metrics(q, ["time_on_page" | rest]) do
+    from(e in q,
+      select_merge: %{
+        "time_on_page" =>
+          fragment("toUInt64(round(sumIf(duration * sign, ? = 'pageview') / sumIf(sign, ? = 'pageview') * any(_sample_factor)))", e.name, e.name)
       }
     )
     |> select_event_metrics(rest)

@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Breakdown do
   alias Plausible.Stats.Query
   @no_ref "Direct / None"
 
-  @event_metrics ["visitors", "pageviews", "events"]
+  @event_metrics ["visitors", "pageviews", "events", "time_on_page"]
   @session_metrics ["visits", "bounce_rate", "visit_duration"]
   @event_props ["event:page", "event:page_match", "event:name"]
 
@@ -93,18 +93,6 @@ defmodule Plausible.Stats.Breakdown do
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
     event_result = breakdown_events(site, query, "event:page", event_metrics, pagination)
-
-    event_result =
-      if "time_on_page" in metrics do
-        pages = Enum.map(event_result, & &1["page"])
-        time_on_page_result = breakdown_time_on_page(site, query, pages)
-
-        Enum.map(event_result, fn row ->
-          Map.put(row, "time_on_page", time_on_page_result[row["page"]])
-        end)
-      else
-        event_result
-      end
 
     new_query =
       case event_result do

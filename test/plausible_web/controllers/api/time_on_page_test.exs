@@ -16,6 +16,13 @@ defmodule PlausibleWeb.Api.VisitDurationTest do
     Process.sleep(10)
     Plausible.Event.WriteBuffer.flush()
 
+    # domain = site.domain
+    # events = ClickhouseRepo.all(
+    #   from e in "events_v2",
+    #   where: e.domain == ^domain,
+    #   select: [e.name, e.timestamp, e.session_id, e.duration]
+    # ) |> IO.inspect()
+
     # At this point the database should have 5 entries with 3 state rows and 2 cancel rows.
     # SELECT sign * duration from events_v2 FINAL -> should return 15
 
@@ -23,7 +30,11 @@ defmodule PlausibleWeb.Api.VisitDurationTest do
     assert List.first(json_response(conn, 200))["time_on_page"] == 15
   end
 
-  test "custom events are not merged in events_v2 table", %{conn: conn, site: site} do
+  test "pageview after pageview_end still ends previous pageview" do
+    assert false
+  end
+
+  test "custom events are not merged in events_v2 table", %{site: site} do
 
     send_custom_event(site.domain, ~N[2022-01-01 00:00:00], "custom event 1")
     send_custom_event(site.domain, ~N[2022-01-01 00:00:05], "custom event 2")
@@ -46,7 +57,7 @@ defmodule PlausibleWeb.Api.VisitDurationTest do
     assert Enum.member?(events, "custom event 3")
   end
 
-  test "ends duplicate multi-domain pageviews with one pageview_end event", %{conn: conn} do
+  test "ends duplicate multi-domain pageviews with one pageview_end event" do
     domain1 = "test-multiple-pageviews-end-1.com"
     domain2 = "test-multiple-pageviews-end-2.com"
 
@@ -61,11 +72,11 @@ defmodule PlausibleWeb.Api.VisitDurationTest do
       where: e.domain == ^domain1 or e.domain == ^domain2,
       select: [e.domain, e.duration]
     )
-    assert Enum.member?(events, ["test-multiple-pageviews-end-1.com", 46])
-    assert Enum.member?(events, ["test-multiple-pageviews-end-2.com", 46])
+    assert Enum.member?(events, [domain1, 46])
+    assert Enum.member?(events, [domain2, 46])
   end
 
-  test "pageview_end without event_id is ignored", %{conn: conn} do
+  test "pageview_end without event_id is ignored" do
     conn = send_pageview_end(nil, ~N[2022-01-01 00:00:46])
     assert json_response(conn, 400) == %{
       "errors" => %{
@@ -74,7 +85,7 @@ defmodule PlausibleWeb.Api.VisitDurationTest do
     }
   end
 
-  test "pageview_end with event_id not corresponding to any event is ignored", %{conn: conn} do
+  test "pageview_end with event_id not corresponding to any event is ignored" do
     conn = send_pageview_end("123", ~N[2022-01-01 00:00:46])
     assert response(conn, 202) == "Ignoring pageview_end event"
   end

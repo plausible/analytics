@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   require Logger
 
   @no_domain_error {:error, %{domain: ["can't be blank"]}}
+  @no_event_id_error {:error, %{event_id: ["can't be blank"]}}
 
   def event(conn, _params) do
     with {:ok, params} <- parse_body(conn),
@@ -73,12 +74,14 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp create_event(conn, params) do
     case params["n"] || params["name"] do
       "pageview_end" ->
-        params = %{
-          "name" => "pageview_end",
-          "event_id" => params["e"] || params["event_id"],
-          "timestamp" => params["timestamp"] || default_timestamp()
-        }
-        Plausible.Event.Store.on_pageview_end(params)
+        event_id = params["e"] || params["event_id"]
+        if event_id do
+          event_id = String.to_integer(event_id)
+          timestamp = params["timestamp"] || default_timestamp()
+          Plausible.Event.Store.on_pageview_end(event_id, timestamp)
+        else
+          @no_event_id_error
+        end
       _other ->
         params = %{
           "name" => params["n"] || params["name"],
@@ -108,6 +111,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       location_details = visitor_location_details(conn)
 
       event_attrs = %{
+        event_id: generate_event_id(),
         timestamp: Map.get(params, "timestamp", default_timestamp()),
         name: params["name"],
         hostname: strip_www(host),
@@ -139,20 +143,15 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   defp store_event_for_all_domains(conn, domains, event_attrs) do
-    Enum.reduce_while(domains, @no_domain_error, fn domain, acc_response ->
-      response = case acc_response do
-        @no_domain_error -> store_event(conn, domain, event_attrs)
-        {:ok, event_id} -> store_event(conn, domain, event_attrs, event_id)
-      end
-
-      case response do
+    Enum.reduce_while(domains, @no_domain_error, fn domain, _acc ->
+      case store_event(conn, domain, event_attrs) do
         {:ok, event_id} -> {:cont, {:ok, event_id}}
         {:error, errors} -> {:halt, {:error, errors}}
       end
     end)
   end
 
-  defp store_event(conn, domain, event_attrs, event_id \\ nil) do
+  defp store_event(conn, domain, event_attrs) do
     salts = Plausible.Session.Salts.fetch()
     user_id = generate_user_id(conn, domain, event_attrs[:hostname], salts[:current])
 
@@ -172,7 +171,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       response =
         event
         |> Map.put(:session_id, session_id)
-        |> Plausible.Event.Store.on_event(event_id)
+        |> Plausible.Event.Store.on_event()
 
       {:ok, response}
     else
@@ -647,6 +646,8 @@ defmodule PlausibleWeb.Api.ExternalController do
       _ -> nil
     end
   end
+
+  defp generate_event_id(), do: :crypto.strong_rand_bytes(8) |> :binary.decode_unsigned()
 
   defp default_timestamp() do
     NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)

@@ -4,7 +4,6 @@ defmodule Plausible.Event.Store do
   require Logger
 
   @garbage_collect_interval_milliseconds 60 * 1000
-  @no_event_id_error {:error, %{event_id: ["can't be blank"]}}
   @ignoring_message "Ignoring pageview_end event"
 
   def start_link(opts) do
@@ -18,57 +17,44 @@ defmodule Plausible.Event.Store do
     {:ok, %{timer: timer, event_memory: %{}, buffer: buffer}}
   end
 
-  def on_pageview_end(event_params, pid \\ __MODULE__) do
-    GenServer.call(pid, {:on_pageview_end, event_params})
+  def on_pageview_end(event_id, timestamp, pid \\ __MODULE__) do
+    GenServer.call(pid, {:on_pageview_end, event_id, timestamp})
   end
 
-  def on_event(event, event_id \\ nil, pid \\ __MODULE__) do
-    GenServer.call(pid, {:on_event, event, event_id})
+  def on_event(event, pid \\ __MODULE__) do
+    GenServer.call(pid, {:on_event, event})
   end
 
   def handle_call(
-        {:on_pageview_end, event_params},
+        {:on_pageview_end, event_id, timestamp},
         _from,
         %{event_memory: event_memory, buffer: buffer} = state
       ) do
-    if event_params["event_id"] do
-      event_id = event_params["event_id"] |> String.to_integer()
-      case event_memory[event_id] do
-        nil -> {:reply, {:ok, @ignoring_message}, state}
-        _event_list ->
-          updated_event_memory = end_pageviews(buffer, event_memory, event_id, event_params["timestamp"])
-          {:reply, {:ok, "ok"}, %{state | event_memory: updated_event_memory}}
-      end
-    else
-      {:reply, @no_event_id_error, state}
+    case event_memory[event_id] do
+      nil -> {:reply, {:ok, @ignoring_message}, state}
+      _event_list ->
+        updated_event_memory = end_pageviews(buffer, event_memory, event_id, timestamp)
+        {:reply, {:ok, "ok"}, %{state | event_memory: updated_event_memory}}
     end
+
   end
 
   def handle_call(
-        {:on_event, event, event_id},
+        {:on_event, event},
         _from,
         %{event_memory: event_memory, buffer: buffer} = state
       ) do
     case event.name do
       "pageview" ->
-        event_id = if event_id, do: event_id, else: generate_event_id()
-
-        event =
-          event
-          |> Map.put(:event_id, event_id)
-          |> Map.put(:sign, 1)
-
+        event = Map.put(event, :sign, 1)
         buffer.insert([event])
-
-        updated_event_memory = remember_event(event_memory, event_id, event)
-
-        {:reply, event_id, %{state | event_memory: updated_event_memory}}
+        updated_event_memory = remember_event(event_memory, event.event_id, event)
+        {:reply, event.event_id, %{state | event_memory: updated_event_memory}}
 
       _other ->
         buffer.insert([
           event
           |> Map.put(:sign, 1)
-          |> Map.put(:event_id, generate_event_id())
         ])
 
         {:reply, "ok", state}
@@ -127,6 +113,5 @@ defmodule Plausible.Event.Store do
     {:noreply, %{state | event_memory: new_event_memory, timer: new_timer}}
   end
 
-  defp generate_event_id(), do: :crypto.strong_rand_bytes(8) |> :binary.decode_unsigned()
   defp forget_event_after(), do: 60 * 30
 end
