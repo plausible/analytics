@@ -84,6 +84,7 @@ defmodule Plausible.TestUtils do
       case event do
         %Plausible.ClickhouseEvent{} ->
           Map.put(event, :domain, site.domain)
+
         _ ->
           Map.put(event, :site_id, site.id)
       end
@@ -97,6 +98,7 @@ defmodule Plausible.TestUtils do
         case event do
           %Plausible.ClickhouseEvent{} ->
             true
+
           _ ->
             false
         end

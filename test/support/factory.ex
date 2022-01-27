@@ -183,10 +183,152 @@ defmodule Plausible.Factory do
 
   @today Timex.today() |> Timex.to_naive_datetime()
 
+  def imported_visitors_factory do
+    %Plausible.Imported.Visitors{
+      timestamp: @today,
+      visitors: 1,
+      pageviews: 1,
+      bounces: 0,
+      visits: 1,
+      visit_duration: 10
+    }
+  end
+
+  def imported_sources_factory do
+    %Plausible.Imported.Sources{
+      timestamp: @today,
+      source: "",
+      visitors: 1,
+      visits: 1,
+      bounces: 0,
+      visit_duration: 10
+    }
+  end
+
+  def imported_utm_mediums_factory do
+    %Plausible.Imported.UtmMediums{
+      timestamp: @today,
+      utm_medium: "",
+      visitors: 1,
+      visits: 1,
+      bounces: 0,
+      visit_duration: 10
+    }
+  end
+
+  def imported_utm_sources_factory do
+    %Plausible.Imported.UtmSources{
+      timestamp: @today,
+      utm_source: "",
+      visitors: 1,
+      visits: 1,
+      bounces: 0,
+      visit_duration: 10
+    }
+  end
+
+  def imported_utm_campaigns_factory do
+    %Plausible.Imported.UtmCampaigns{
+      timestamp: @today,
+      utm_campaign: "",
+      visitors: 1,
+      visits: 1,
+      bounces: 0,
+      visit_duration: 10
+    }
+  end
+
+  def imported_utm_terms_factory do
+    %Plausible.Imported.UtmTerms{
+      timestamp: @today,
+      utm_term: "",
+      visitors: 1,
+      visits: 1,
+      bounces: 0,
+      visit_duration: 10
+    }
+  end
+
+  def imported_utm_contents_factory do
+    %Plausible.Imported.UtmContents{
+      timestamp: @today,
+      utm_content: "",
+      visitors: 1,
+      visits: 1,
+      bounces: 0,
+      visit_duration: 10
+    }
+  end
+
+  def imported_pages_factory do
+    %Plausible.Imported.Pages{
+      timestamp: @today,
+      page: "",
+      visitors: 1,
+      pageviews: 1,
+      time_on_page: 10
+    }
+  end
+
+  def imported_entry_pages_factory do
+    %Plausible.Imported.EntryPages{
+      timestamp: @today,
+      entry_page: "",
+      visitors: 1,
+      entrances: 1,
+      bounces: 0,
+      visit_duration: 10
+    }
+  end
+
+  def imported_exit_pages_factory do
+    %Plausible.Imported.ExitPages{
+      timestamp: @today,
+      exit_page: "",
+      visitors: 1,
+      exits: 1
+    }
+  end
+
+  def imported_locations_factory do
+    %Plausible.Imported.Locations{
+      timestamp: @today,
+      country: "",
+      region: "",
+      city: 0,
+      visitors: 1,
+      visits: 1,
+      bounces: 0,
+      visit_duration: 10
+    }
+  end
+
+  def imported_devices_factory do
+    %Plausible.Imported.Devices{
+      timestamp: @today,
+      device: "",
+      visitors: 1,
+      visits: 1,
+      bounces: 0,
+      visit_duration: 10
+    }
+  end
+
   def imported_browsers_factory do
     %Plausible.Imported.Browsers{
       timestamp: @today,
       browser: "",
+      visitors: 1,
+      visits: 1,
+      bounces: 0,
+      visit_duration: 10
+    }
+  end
+
+  def imported_operating_systems_factory do
+    %Plausible.Imported.OperatingSystems{
+      timestamp: @today,
+      operating_system: "",
       visitors: 1,
       visits: 1,
       bounces: 0,
