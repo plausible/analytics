@@ -7,6 +7,20 @@ end
 
 config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
 
+# Listen IP supports IPv4 and IPv6 addresses.
+listen_ip =
+  (
+    str = get_var_from_path_or_env(config_dir, "LISTEN_IP") || "127.0.0.1"
+
+    case :inet.parse_address(String.to_charlist(str)) do
+      {:ok, ip_addr} ->
+        ip_addr
+
+      {:error, reason} ->
+        raise "Invalid LISTEN_IP '#{str}' error: #{inspect(reason)}"
+    end
+  )
+
 # System.get_env does not accept a non string default
 port = get_var_from_path_or_env(config_dir, "PORT") || 8000
 
@@ -141,11 +155,6 @@ is_selfhost =
   |> get_var_from_path_or_env("SELFHOST", "true")
   |> String.to_existing_atom()
 
-show_cities =
-  config_dir
-  |> get_var_from_path_or_env("SHOW_CITIES", "false")
-  |> String.to_existing_atom()
-
 custom_script_name =
   config_dir
   |> get_var_from_path_or_env("CUSTOM_SCRIPT_NAME", "script")
@@ -186,7 +195,6 @@ config :plausible,
   site_limit: site_limit,
   site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost,
-  show_cities: show_cities,
   custom_script_name: custom_script_name,
   domain_blacklist: domain_blacklist
 
@@ -197,7 +205,7 @@ config :plausible, :selfhost,
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [scheme: base_url.scheme, host: base_url.host, path: base_url.path, port: base_url.port],
-  http: [port: port, transport_options: [max_connections: :infinity]],
+  http: [port: port, ip: listen_ip, transport_options: [max_connections: :infinity]],
   secret_key_base: secret_key_base
 
 %{

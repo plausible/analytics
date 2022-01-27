@@ -729,5 +729,57 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                "visit_duration" => %{"value" => 1500}
              }
     end
+
+    test "wildcard page filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/en/page1"),
+        build(:pageview, pathname: "/en/page2"),
+        build(:pageview, pathname: "/pl/page1")
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors",
+          "filters" => "event:page==/en/**"
+        })
+
+      assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 2}}
+    end
+
+    test "negated wildcard page filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/en/page1"),
+        build(:pageview, pathname: "/en/page2"),
+        build(:pageview, pathname: "/pl/page1")
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors",
+          "filters" => "event:page!=/en/**"
+        })
+
+      assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 1}}
+    end
+
+    test "wildcard and member filter combined", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/en/page1"),
+        build(:pageview, pathname: "/en/page2"),
+        build(:pageview, pathname: "/pl/page1"),
+        build(:pageview, pathname: "/ee/page1")
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors",
+          "filters" => "event:page==/en/**|/pl/**"
+        })
+
+      assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 3}}
+    end
   end
 end

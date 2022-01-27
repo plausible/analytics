@@ -830,6 +830,33 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    test "can filter event:page with a wildcard", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, pathname: "/en/page1"),
+        build(:pageview, pathname: "/en/page2"),
+        build(:pageview, pathname: "/en/page2"),
+        build(:pageview, pathname: "/pl/page1")
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "event:page",
+          "filters" => "event:page==/en/**"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"page" => "/en/page2", "visitors" => 2},
+                 %{"page" => "/en/page1", "visitors" => 1}
+               ]
+             }
+    end
+
     test "breakdown by custom event property", %{conn: conn, site: site} do
       populate_stats([
         build(:event,

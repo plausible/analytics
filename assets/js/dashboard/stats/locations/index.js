@@ -15,7 +15,7 @@ function Countries({query, site, onClick}) {
   }
 
   function renderIcon(country) {
-    return site.cities && <span className="mr-1">{country.flag}</span>
+    return <span className="mr-1">{country.flag}</span>
   }
 
   return (
@@ -61,7 +61,7 @@ function Cities({query, site}) {
   }
 
   function renderIcon(city) {
-    return site.cities && <span className="mr-1">{city.country_flag}</span>
+    return <span className="mr-1">{city.country_flag}</span>
   }
 
   return (
@@ -180,8 +180,8 @@ export default class Locations extends React.Component {
             <ul className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
               { this.renderPill('Map', 'map') }
               { this.renderPill('Countries', 'countries') }
-              { this.props.site.cities && this.renderPill('Regions', 'regions') }
-              { this.props.site.cities && this.renderPill('Cities', 'cities') }
+              { this.renderPill('Regions', 'regions') }
+              { this.renderPill('Cities', 'cities') }
             </ul>
           </div>
           { this.renderContent() }

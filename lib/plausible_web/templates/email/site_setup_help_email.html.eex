@@ -6,7 +6,7 @@ Hey <%= user_salutation(@user) %>,
 <% end %>
 To finish your setup for <%= @site.domain %>, you need to install <%= link("this lightweight line of JavaScript code", to: "#{plausible_url()}/#{URI.encode_www_form(@site.domain)}/snippet") %> into your site to start collecting visitor statistics.
 <br /><br />
-This Plausible script is 14 times smaller than Google Analytics script so you’ll have a fast loading site while getting all the important traffic insights on one single page.
+This Plausible script is 45 times smaller than Google Analytics script so you’ll have a fast loading site while getting all the important traffic insights on one single page.
 <br /><br />
 Do reply back to this email if you have any questions or need some guidance.
 <br /><br />
