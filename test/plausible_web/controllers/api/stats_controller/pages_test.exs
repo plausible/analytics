@@ -25,6 +25,35 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "returns top pages by visitors with imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/"),
+        build(:imported_pages, page: "/"),
+        build(:pageview, pathname: "/register"),
+        build(:pageview, pathname: "/register"),
+        build(:imported_pages, page: "/register"),
+        build(:pageview, pathname: "/contact")
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/pages?period=day")
+
+      assert json_response(conn, 200) == [
+               %{"visitors" => 3, "name" => "/"},
+               %{"visitors" => 2, "name" => "/register"},
+               %{"visitors" => 1, "name" => "/contact"}
+             ]
+
+      conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&with_imported=true")
+
+      assert json_response(conn, 200) == [
+               %{"visitors" => 4, "name" => "/"},
+               %{"visitors" => 3, "name" => "/register"},
+               %{"visitors" => 1, "name" => "/contact"}
+             ]
+    end
+
     test "calculates bounce rate and time on page for pages", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -62,6 +91,67 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "time_on_page" => nil,
                  "visitors" => 1,
                  "pageviews" => 1,
+                 "name" => "/some-other-page"
+               }
+             ]
+    end
+
+    test "calculates bounce rate and time on page for pages with imported data", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/some-other-page",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:imported_pages,
+          page: "/",
+          timestamp: ~N[2021-01-01 00:15:00],
+          time_on_page: 700
+        ),
+        build(:imported_entry_pages,
+          entry_page: "/",
+          timestamp: ~N[2021-01-01 00:15:00],
+          entrances: 3,
+          bounces: 1
+        ),
+        build(:imported_pages,
+          page: "/some-other-page",
+          timestamp: ~N[2021-01-01 00:15:00],
+          time_on_page: 60
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&detailed=true&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "bounce_rate" => 40.0,
+                 "time_on_page" => 800.0,
+                 "visitors" => 3,
+                 "pageviews" => 3,
+                 "name" => "/"
+               },
+               %{
+                 "bounce_rate" => nil,
+                 "time_on_page" => 60,
+                 "visitors" => 2,
+                 "pageviews" => 2,
                  "name" => "/some-other-page"
                }
              ]
