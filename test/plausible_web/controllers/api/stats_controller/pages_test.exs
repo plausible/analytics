@@ -241,6 +241,85 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "returns top entry pages by visitors with imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/page1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page2",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page2",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        )
+      ])
+
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/page2",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 23:15:00]
+        )
+      ])
+
+      populate_stats(site, [
+        build(:imported_entry_pages,
+          entry_page: "/page2",
+          timestamp: ~N[2021-01-01 00:00:00],
+          entrances: 3,
+          visitors: 2,
+          visit_duration: 300
+        )
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/entry-pages?period=day&date=2021-01-01")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "unique_entrances" => 2,
+                 "total_entrances" => 2,
+                 "name" => "/page1",
+                 "visit_duration" => 0
+               },
+               %{
+                 "unique_entrances" => 1,
+                 "total_entrances" => 2,
+                 "name" => "/page2",
+                 "visit_duration" => 450
+               }
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/entry-pages?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "unique_entrances" => 3,
+                 "total_entrances" => 5,
+                 "name" => "/page2",
+                 "visit_duration" => 240.0
+               },
+               %{
+                 "unique_entrances" => 2,
+                 "total_entrances" => 2,
+                 "name" => "/page1",
+                 "visit_duration" => 0
+               }
+             ]
+    end
+
     test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
