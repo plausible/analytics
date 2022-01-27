@@ -416,6 +416,67 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "returns top exit pages by visitors with imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/page1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page1",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page2",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        )
+      ])
+
+      populate_stats(site, [
+        build(:imported_pages,
+          page: "/page2",
+          timestamp: ~N[2021-01-01 00:00:00],
+          pageviews: 4,
+          visitors: 2
+        ),
+        build(:imported_exit_pages,
+          exit_page: "/page2",
+          timestamp: ~N[2021-01-01 00:00:00],
+          exits: 3,
+          visitors: 2
+        )
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/exit-pages?period=day&date=2021-01-01")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "/page1", "unique_exits" => 2, "total_exits" => 2, "exit_rate" => 66},
+               %{"name" => "/page2", "unique_exits" => 1, "total_exits" => 1, "exit_rate" => 100}
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/exit-pages?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "/page2",
+                 "unique_exits" => 3,
+                 "total_exits" => 4,
+                 "exit_rate" => 80.0
+               },
+               %{"name" => "/page1", "unique_exits" => 2, "total_exits" => 2, "exit_rate" => 66}
+             ]
+    end
+
     test "calculates correct exit rate and conversion_rate when filtering for goal", %{
       conn: conn,
       site: site
