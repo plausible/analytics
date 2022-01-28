@@ -49,6 +49,7 @@ defmodule Plausible.Event.Store do
         event = Map.put(event, :sign, 1)
         buffer.insert([event])
         updated_event_memory = remember_event(event_memory, event.event_id, event)
+        maybe_end_previous_pageview(event_memory, event)
         {:reply, event.event_id, %{state | event_memory: updated_event_memory}}
 
       _other ->
@@ -82,6 +83,28 @@ defmodule Plausible.Event.Store do
         new_event_list = event_list ++ [event]
         Map.put(event_memory, event_id, new_event_list)
     end
+  end
+
+  def maybe_end_previous_pageview(event_memory, event) do
+    session_id = event.session_id
+    previous_pageview = Enum.reduce(event_memory, %{event_id: nil, timestamp: nil}, fn {event_id, event_list}, acc ->
+      e = List.first(event_list)
+
+      if session_id == event.session_id do
+        case acc.timestamp do
+          nil -> %{event_id: event_id, timestamp: e.timestamp}
+          %{event_id: eid, timestamp: latest_timestamp} ->
+            case Timex.compare(e.timestamp, latest_timestamp) do
+              1 -> %{event_id: eid, timestamp: e.timestamp}
+              _ -> acc
+            end
+        end
+      else
+        acc
+      end
+    end)
+    #IO.inspect("same session events")
+    #IO.inspect(same_session_events)
   end
 
   def handle_info(:garbage_collect, state) do

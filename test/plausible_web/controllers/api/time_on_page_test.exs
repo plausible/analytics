@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Api.VisitDurationTest do
   setup [:create_user, :log_in, :create_new_site]
 
   test "records the visit duration", %{conn: conn, site: site} do
-    event_id = send_pageview(site.domain, ~N[2022-01-01 00:00:00]) |> response(202)
+    event_id = send_pageview(site.domain, "http://some.url", ~N[2022-01-01 00:00:00]) |> response(202)
 
     send_pageview_end(event_id, ~N[2022-01-01 00:00:10])
     send_pageview_end(event_id, ~N[2022-01-01 00:00:15])
@@ -32,6 +32,27 @@ defmodule PlausibleWeb.Api.VisitDurationTest do
 
   test "pageview after pageview_end still ends previous pageview" do
     assert false
+  end
+
+  test "pageview can end previous pageview if no pageview_end is received", %{site: site} do
+    send_pageview(site.domain, "http://some.url/first", ~N[2022-01-01 00:00:00])
+    send_pageview(site.domain, "http://some.url/second", ~N[2022-01-01 00:00:10])
+    send_pageview(site.domain, "http://some.url/third", ~N[2022-01-01 00:00:20])
+
+    Process.sleep(10)
+    Plausible.Event.WriteBuffer.flush()
+
+    domain = site.domain
+    events = ClickhouseRepo.all(
+      from e in "events_v2",
+      where: e.domain == ^domain,
+      select: [e.pathname, e.duration]
+    ) |> IO.inspect()
+
+    # assert length(events) == 3
+    # assert Enum.member?(events, ["/first"])
+    # assert Enum.member?(events, "custom event 2")
+    # assert Enum.member?(events, "custom event 3")
   end
 
   test "custom events are not merged in events_v2 table", %{site: site} do
@@ -61,7 +82,7 @@ defmodule PlausibleWeb.Api.VisitDurationTest do
     domain1 = "test-multiple-pageviews-end-1.com"
     domain2 = "test-multiple-pageviews-end-2.com"
 
-    event_id = send_pageview(domain1 <> "," <> domain2, ~N[2022-01-01 00:00:00]) |> response(202)
+    event_id = send_pageview(domain1 <> "," <> domain2, "http://some.url", ~N[2022-01-01 00:00:00]) |> response(202)
     send_pageview_end(event_id, ~N[2022-01-01 00:00:46])
 
     Process.sleep(10)
@@ -90,13 +111,13 @@ defmodule PlausibleWeb.Api.VisitDurationTest do
     assert response(conn, 202) == "Ignoring pageview_end event"
   end
 
-  def send_pageview(domain, timestamp) do
+  def send_pageview(domain, url, timestamp) do
     build_conn()
       |> put_req_header("user-agent", @user_agent)
       |> post("/api/event", %{
           domain: domain,
           name: "pageview",
-          url: "http://some.url",
+          url: url,
           timestamp: timestamp
         })
   end
