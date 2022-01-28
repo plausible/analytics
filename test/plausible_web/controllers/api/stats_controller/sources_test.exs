@@ -289,6 +289,25 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
+      populate_stats(site, [
+        build(:imported_utm_mediums,
+          utm_medium: "social",
+          timestamp: ~N[2021-01-01 00:00:00],
+          visit_duration: 700,
+          bounces: 1,
+          visits: 1,
+          visitors: 1
+        ),
+        build(:imported_utm_mediums,
+          utm_medium: "email",
+          timestamp: ~N[2021-01-01 00:00:00],
+          bounces: 0,
+          visits: 1,
+          visitors: 1,
+          visit_duration: 100
+        )
+      ])
+
       conn =
         get(
           conn,
@@ -307,6 +326,27 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  "visitors" => 1,
                  "bounce_rate" => 100,
                  "visit_duration" => 0
+               }
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_mediums?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "social",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 800.0
+               },
+               %{
+                 "name" => "email",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 50
                }
              ]
     end
@@ -337,6 +377,25 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
+      populate_stats(site, [
+        build(:imported_utm_campaigns,
+          utm_campaign: "profile",
+          timestamp: ~N[2021-01-01 00:00:00],
+          visit_duration: 700,
+          bounces: 1,
+          visits: 1,
+          visitors: 1
+        ),
+        build(:imported_utm_campaigns,
+          utm_campaign: "august",
+          timestamp: ~N[2021-01-01 00:00:00],
+          bounces: 0,
+          visits: 1,
+          visitors: 1,
+          visit_duration: 900
+        )
+      ])
+
       conn =
         get(
           conn,
@@ -355,6 +414,27 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  "visitors" => 1,
                  "bounce_rate" => 0,
                  "visit_duration" => 900
+               }
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_campaigns?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "august",
+                 "visitors" => 3,
+                 "bounce_rate" => 67,
+                 "visit_duration" => 300
+               },
+               %{
+                 "name" => "profile",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 800.0
                }
              ]
     end
@@ -385,6 +465,25 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
+      populate_stats(site, [
+        build(:imported_utm_sources,
+          utm_source: "Twitter",
+          timestamp: ~N[2021-01-01 00:00:00],
+          visit_duration: 700,
+          bounces: 1,
+          visits: 1,
+          visitors: 1
+        ),
+        build(:imported_utm_sources,
+          utm_source: "newsletter",
+          timestamp: ~N[2021-01-01 00:00:00],
+          bounces: 0,
+          visits: 1,
+          visitors: 1,
+          visit_duration: 900
+        )
+      ])
+
       conn =
         get(
           conn,
@@ -403,6 +502,27 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  "visitors" => 1,
                  "bounce_rate" => 0,
                  "visit_duration" => 900
+               }
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_sources?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "newsletter",
+                 "visitors" => 3,
+                 "bounce_rate" => 67,
+                 "visit_duration" => 300
+               },
+               %{
+                 "name" => "Twitter",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 800.0
                }
              ]
     end
@@ -427,6 +547,11 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         build(:pageview,
           referrer_source: "Twitter"
         )
+      ])
+
+      # Imported data is ignored when filtering
+      populate_stats(site, [
+        build(:imported_sources, source: "Twitter")
       ])
 
       filters = Jason.encode!(%{goal: "Signup"})
