@@ -7,7 +7,7 @@ Here are five steps to get the most out of your Plausible experience:
 <br /><br />
 * <%= link("Enable email reports", to: "https://docs.plausible.io/email-reports/") %> and notifications for <%= link("traffic spikes", to: "https://plausible.io/docs/traffic-spikes") %><br />
 * <%= link("Integrate with Search Console", to: "https://plausible.io/docs/google-search-console-integration") %> to get keyword phrases people find your site with<br />
-* Set up some easy goals including <%= link("404 error pages", to: "https://plausible.io/docs/404-error-pages-tracking") %> and <%= link("outbound link clicks", to: "https://plausible.io/docs/outbound-link-click-tracking/") %><br />
+* Set up some easy goals including <%= link("404 error pages", to: "https://plausible.io/docs/error-pages-tracking-404") %> and <%= link("outbound link clicks", to: "https://plausible.io/docs/outbound-link-click-tracking/") %><br />
 * <%= link("Opt out from counting your own visits", to: "https://plausible.io/docs/excluding") %><br />
 * If you're concerned about adblockers, <%= link("set up a proxy to bypass them", to: "https://plausible.io/docs/proxy/introduction") %><br />
 <br /><br />
