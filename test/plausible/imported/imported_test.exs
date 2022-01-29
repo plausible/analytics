@@ -516,5 +516,41 @@ defmodule Plausible.ImportedTest do
                %{"name" => "Mobile", "visitors" => 1, "percentage" => 20}
              ]
     end
+
+    test "Browsers data imported from Google Analytics", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-01 00:15:00]),
+        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-01 00:15:00])
+      ])
+
+      assert {:ok, _} =
+               Plausible.Imported.from_google_analytics(
+                 [
+                   %{
+                     "dimensions" => ["2021010100", "User-Agent: Mozilla"],
+                     "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
+                   },
+                   %{
+                     "dimensions" => ["2021010100", "Android Browser"],
+                     "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
+                   }
+                 ],
+                 site.id,
+                 "browsers",
+                 @utc
+               )
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/browsers?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Firefox", "visitors" => 2, "percentage" => 50},
+               %{"name" => "Mobile App", "visitors" => 1, "percentage" => 25},
+               %{"name" => "Chrome", "visitors" => 1, "percentage" => 25}
+             ]
+    end
   end
 end
