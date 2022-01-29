@@ -420,5 +420,64 @@ defmodule Plausible.ImportedTest do
                %{"name" => "/page1", "unique_exits" => 2, "total_exits" => 2, "exit_rate" => 66}
              ]
     end
+
+    test "Location data imported from Google Analytics", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          country_code: "EE",
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          country_code: "EE",
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          country_code: "GB",
+          timestamp: ~N[2021-01-01 00:15:00]
+        )
+      ])
+
+      assert {:ok, _} =
+               Plausible.Imported.from_google_analytics(
+                 [
+                   %{
+                     "dimensions" => ["2021010100", "EE", "Tartumaa"],
+                     "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
+                   },
+                   %{
+                     "dimensions" => ["2021010100", "GB", "Midlothian"],
+                     "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
+                   }
+                 ],
+                 site.id,
+                 "locations",
+                 @utc
+               )
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/countries?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "code" => "EE",
+                 "alpha_3" => "EST",
+                 "name" => "Estonia",
+                 "flag" => "🇪🇪",
+                 "visitors" => 3,
+                 "percentage" => 60
+               },
+               %{
+                 "code" => "GB",
+                 "alpha_3" => "GBR",
+                 "name" => "United Kingdom",
+                 "flag" => "🇬🇧",
+                 "visitors" => 2,
+                 "percentage" => 40
+               }
+             ]
+    end
   end
 end
