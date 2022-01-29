@@ -251,11 +251,13 @@ defmodule Plausible.Google.Api do
       }
     ]
 
-    # batchGet can receive a maximum of 5 requests.
     responses =
-      request_data
-      |> Enum.chunk_every(5)
-      |> Enum.map(&fetch_analytic_reports(&1, request))
+      Enum.map(
+        request_data,
+        fn {dataset, dimensions, metrics} ->
+          fetch_analytic_reports(dataset, dimensions, metrics, request)
+        end
+      )
 
     case Keyword.get(responses, :error) do
       nil ->
@@ -295,50 +297,60 @@ defmodule Plausible.Google.Api do
     end
   end
 
-  defp fetch_analytic_reports(request_data, request) do
-    reports =
-      Enum.map(request_data, fn {_, dimensions, metrics} ->
+  defp fetch_analytic_reports(dataset, dimensions, metrics, request, page_token \\ "") do
+    report = %{
+      viewId: request.profile,
+      dateRanges: [
         %{
-          viewId: request.profile,
-          dateRanges: [
-            %{
-              # The earliest valid date
-              startDate: "2005-01-01",
-              endDate: request.end_date
-            }
-          ],
-          dimensions: Enum.map(dimensions, &%{name: &1, histogramBuckets: []}),
-          metrics: Enum.map(metrics, &%{expression: &1}),
-          hideTotals: true,
-          hideValueRanges: true,
-          orderBys: [
-            %{
-              fieldName: "ga:dateHour",
-              sortOrder: "DESCENDING"
-            }
-          ],
-          pageSize: 100_000
+          # The earliest valid date
+          startDate: "2005-01-01",
+          endDate: request.end_date
         }
-      end)
+      ],
+      dimensions: Enum.map(dimensions, &%{name: &1, histogramBuckets: []}),
+      metrics: Enum.map(metrics, &%{expression: &1}),
+      hideTotals: true,
+      hideValueRanges: true,
+      orderBys: [
+        %{
+          fieldName: "ga:dateHour",
+          sortOrder: "DESCENDING"
+        }
+      ],
+      pageSize: 100_00,
+      pageToken: page_token
+    }
 
     res =
       HTTPoison.post!(
         "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
-        Jason.encode!(%{reportRequests: reports}),
+        Jason.encode!(%{reportRequests: [report]}),
         Authorization: "Bearer #{request.auth.access_token}"
       )
 
     if res.status_code == 200 do
-      data =
-        Jason.decode!(res.body)["reports"]
-        |> Enum.with_index()
-        |> Enum.map(fn {report, index} ->
-          {dataset, _, _} = Enum.at(request_data, index)
-          {dataset, report["data"]["rows"]}
-        end)
-        |> Map.new()
+      report = List.first(Jason.decode!(res.body)["reports"])
+      data = report["data"]["rows"]
+      next_page_token = report["nextPageToken"]
 
-      {:ok, data}
+      if next_page_token do
+        # Recursively make more requests until we run out of next page tokens
+        case fetch_analytic_reports(
+               dataset,
+               dimensions,
+               metrics,
+               request,
+               next_page_token
+             ) do
+          {:ok, %{^dataset => remainder}} ->
+            {:ok, %{dataset => [data | remainder]}}
+
+          error ->
+            error
+        end
+      else
+        {:ok, %{dataset => data}}
+      end
     else
       {:error, Jason.decode!(res.body)["error"]["message"]}
     end
