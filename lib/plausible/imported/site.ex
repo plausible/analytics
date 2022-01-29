@@ -160,9 +160,9 @@ defmodule Plausible.Imported do
 
   defp new_from_google_analytics(site_id, timezone, "pages", %{
          "dimensions" => [timestamp, page],
-         "metrics" => [%{"values" => [value, pageviews, time_on_page]}]
+         "metrics" => [%{"values" => [visitors, pageviews, time_on_page]}]
        }) do
-    {visitors, ""} = Integer.parse(value)
+    {visitors, ""} = Integer.parse(visitors)
     {pageviews, ""} = Integer.parse(pageviews)
     {time_on_page, _} = Integer.parse(time_on_page)
 
@@ -198,9 +198,9 @@ defmodule Plausible.Imported do
 
   defp new_from_google_analytics(site_id, timezone, "exit_pages", %{
          "dimensions" => [timestamp, exit_page],
-         "metrics" => [%{"values" => [value, exits]}]
+         "metrics" => [%{"values" => [visitors, exits]}]
        }) do
-    {visitors, ""} = Integer.parse(value)
+    {visitors, ""} = Integer.parse(visitors)
     {exits, ""} = Integer.parse(exits)
 
     Imported.ExitPages.new(%{

@@ -355,5 +355,70 @@ defmodule Plausible.ImportedTest do
                }
              ]
     end
+
+    test "Exit page event data imported from Google Analytics", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/page1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page1",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page2",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        )
+      ])
+
+      assert {:ok, _} =
+               Plausible.Imported.from_google_analytics(
+                 [
+                   %{
+                     "dimensions" => ["2021010100", "/page2"],
+                     "metrics" => [%{"values" => ["2", "4", "10"]}]
+                   }
+                 ],
+                 site.id,
+                 "pages",
+                 @utc
+               )
+
+      assert {:ok, _} =
+               Plausible.Imported.from_google_analytics(
+                 [
+                   %{
+                     "dimensions" => ["2021010100", "/page2"],
+                     "metrics" => [%{"values" => ["2", "3"]}]
+                   }
+                 ],
+                 site.id,
+                 "exit_pages",
+                 @utc
+               )
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/exit-pages?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "/page2",
+                 "unique_exits" => 3,
+                 "total_exits" => 4,
+                 "exit_rate" => 80.0
+               },
+               %{"name" => "/page1", "unique_exits" => 2, "total_exits" => 2, "exit_rate" => 66}
+             ]
+    end
   end
 end
