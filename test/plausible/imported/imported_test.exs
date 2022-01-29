@@ -4,6 +4,7 @@ defmodule Plausible.ImportedTest do
   import Plausible.TestUtils
 
   @utc Timezone.get("UTC")
+  @user_id 123
 
   describe "Parse and import third party data fetched from Google Analytics" do
     setup [:create_user, :log_in, :create_new_site]
@@ -279,6 +280,78 @@ defmodule Plausible.ImportedTest do
                  "visitors" => 2,
                  "bounce_rate" => 100.0,
                  "visit_duration" => 50.0
+               }
+             ]
+    end
+
+    test "Page event data imported from Google Analytics", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/some-other-page",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:15:00]
+        )
+      ])
+
+      assert {:ok, _} =
+               Plausible.Imported.from_google_analytics(
+                 [
+                   %{
+                     "dimensions" => ["2021010100", "/"],
+                     "metrics" => [%{"values" => ["1", "1", "700"]}]
+                   },
+                   %{
+                     "dimensions" => ["2021010100", "/some-other-page"],
+                     "metrics" => [%{"values" => ["1", "1", "60"]}]
+                   }
+                 ],
+                 site.id,
+                 "pages",
+                 @utc
+               )
+
+      assert {:ok, _} =
+               Plausible.Imported.from_google_analytics(
+                 [
+                   %{
+                     "dimensions" => ["2021010100", "/"],
+                     "metrics" => [%{"values" => ["1", "3", "10", "1"]}]
+                   }
+                 ],
+                 site.id,
+                 "entry_pages",
+                 @utc
+               )
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&detailed=true&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "bounce_rate" => 40.0,
+                 "time_on_page" => 800.0,
+                 "visitors" => 3,
+                 "pageviews" => 3,
+                 "name" => "/"
+               },
+               %{
+                 "bounce_rate" => nil,
+                 "time_on_page" => 60,
+                 "visitors" => 2,
+                 "pageviews" => 2,
+                 "name" => "/some-other-page"
                }
              ]
     end
