@@ -552,5 +552,41 @@ defmodule Plausible.ImportedTest do
                %{"name" => "Chrome", "visitors" => 1, "percentage" => 25}
              ]
     end
+
+    test "OS data imported from Google Analytics", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, operating_system: "Mac", timestamp: ~N[2021-01-01 00:15:00]),
+        build(:pageview, operating_system: "Mac", timestamp: ~N[2021-01-01 00:15:00]),
+        build(:pageview, operating_system: "GNU/Linux", timestamp: ~N[2021-01-01 00:15:00])
+      ])
+
+      assert {:ok, _} =
+               Plausible.Imported.from_google_analytics(
+                 [
+                   %{
+                     "dimensions" => ["2021010100", "Macintosh"],
+                     "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
+                   },
+                   %{
+                     "dimensions" => ["2021010100", "Linux"],
+                     "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
+                   }
+                 ],
+                 site.id,
+                 "operating_systems",
+                 @utc
+               )
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/operating-systems?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Mac", "visitors" => 3, "percentage" => 60},
+               %{"name" => "GNU/Linux", "visitors" => 2, "percentage" => 40}
+             ]
+    end
   end
 end
