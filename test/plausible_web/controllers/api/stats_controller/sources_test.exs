@@ -889,4 +889,92 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
   end
+
+  describe "GET /api/stats/:domain/utm_contents" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    test "returns top utm_contents by unique user ids", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          utm_content: "ad",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_content: "ad",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          utm_content: "blog",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_content: "blog",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      populate_stats(site, [
+        build(:imported_utm_contents,
+          utm_content: "ad",
+          timestamp: ~N[2021-01-01 00:00:00],
+          visit_duration: 700,
+          bounces: 1,
+          visits: 1,
+          visitors: 1
+        ),
+        build(:imported_utm_contents,
+          utm_content: "blog",
+          timestamp: ~N[2021-01-01 00:00:00],
+          bounces: 0,
+          visits: 1,
+          visitors: 1,
+          visit_duration: 900
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "blog",
+                 "visitors" => 2,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0
+               },
+               %{
+                 "name" => "ad",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 900
+               }
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "blog",
+                 "visitors" => 3,
+                 "bounce_rate" => 67,
+                 "visit_duration" => 300
+               },
+               %{
+                 "name" => "ad",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 800.0
+               }
+             ]
+    end
+  end
 end
