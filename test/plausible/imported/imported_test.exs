@@ -44,5 +44,53 @@ defmodule Plausible.ImportedTest do
       assert List.last(plot) == 2
       assert Enum.sum(plot) == 4
     end
+
+    test "Sources data imported from Google Analytics", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      assert {:ok, _} =
+               Plausible.Imported.from_google_analytics(
+                 [
+                   %{
+                     "dimensions" => ["2021010100", "duckduckgo.com"],
+                     "metrics" => [%{"values" => ["1", "1", "0", "60"]}]
+                   },
+                   %{
+                     "dimensions" => ["2021013100", "google.com"],
+                     "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
+                   }
+                 ],
+                 site.id,
+                 "sources",
+                 @utc
+               )
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=month&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Google", "visitors" => 3},
+               %{"name" => "DuckDuckGo", "visitors" => 2}
+             ]
+    end
   end
 end
