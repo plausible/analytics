@@ -84,7 +84,7 @@ defmodule Plausible.Imported do
     Imported.UtmMediums.new(%{
       site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
-      medium: medium,
+      utm_medium: medium,
       visitors: visitors,
       visits: visits,
       bounces: bounces,
@@ -106,7 +106,7 @@ defmodule Plausible.Imported do
     Imported.UtmCampaigns.new(%{
       site_id: site_id,
       timestamp: format_timestamp(timestamp, timezone),
-      campaign: campaign,
+      utm_campaign: campaign,
       visitors: visitors,
       visits: visits,
       bounces: bounces,

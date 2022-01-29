@@ -92,5 +92,60 @@ defmodule Plausible.ImportedTest do
                %{"name" => "DuckDuckGo", "visitors" => 2}
              ]
     end
+
+    test "UTM mediums data imported from Google Analytics", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          utm_medium: "social",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_medium: "social",
+          timestamp: ~N[2021-01-01 12:00:00]
+        ),
+        build(:pageview,
+          utm_medium: "email",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      assert {:ok, _} =
+               Plausible.Imported.from_google_analytics(
+                 [
+                   %{
+                     "dimensions" => ["2021010100", "social"],
+                     "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
+                   },
+                   %{
+                     "dimensions" => ["2021010100", "email"],
+                     "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
+                   }
+                 ],
+                 site.id,
+                 "utm_mediums",
+                 @utc
+               )
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_mediums?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "bounce_rate" => 100.0,
+                 "name" => "social",
+                 "visit_duration" => 20,
+                 "visitors" => 3
+               },
+               %{
+                 "bounce_rate" => 50.0,
+                 "name" => "email",
+                 "visit_duration" => 50.0,
+                 "visitors" => 2
+               }
+             ]
+    end
   end
 end
