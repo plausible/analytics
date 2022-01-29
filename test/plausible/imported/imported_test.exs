@@ -147,5 +147,50 @@ defmodule Plausible.ImportedTest do
                }
              ]
     end
+
+    test "UTM campaigns data imported from Google Analytics", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, utm_campaign: "profile", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, utm_campaign: "august", timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      assert {:ok, _} =
+               Plausible.Imported.from_google_analytics(
+                 [
+                   %{
+                     "dimensions" => ["2021010100", "profile"],
+                     "metrics" => [%{"values" => ["1", "1", "1", "100"]}]
+                   },
+                   %{
+                     "dimensions" => ["2021010100", "august"],
+                     "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
+                   }
+                 ],
+                 site.id,
+                 "utm_campaigns",
+                 @utc
+               )
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_campaigns?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "august",
+                 "visitors" => 2,
+                 "bounce_rate" => 50.0,
+                 "visit_duration" => 50.0
+               },
+               %{
+                 "name" => "profile",
+                 "visitors" => 2,
+                 "bounce_rate" => 100.0,
+                 "visit_duration" => 50.0
+               }
+             ]
+    end
   end
 end
