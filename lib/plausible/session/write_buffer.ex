@@ -54,7 +54,7 @@ defmodule Plausible.Session.WriteBuffer do
 
         sessions =
           sessions
-          |> Enum.map(&(Map.from_struct(&1) |> Map.delete(:__meta__)))
+          |> Enum.map(&(Map.from_struct(&1) |> Map.drop([:__meta__, :last_event_id])))
           |> Enum.reverse()
 
         Plausible.ClickhouseRepo.insert_all(Plausible.ClickhouseSession, sessions)

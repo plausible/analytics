@@ -31,7 +31,7 @@ defmodule Plausible.TestUtils do
   def create_pageviews(pageviews) do
     pageviews =
       Enum.map(pageviews, fn pageview ->
-        Factory.build(:pageview, pageview) |> Map.from_struct() |> Map.delete(:__meta__)
+        Factory.build(:pageview, pageview) |> Map.from_struct() |> Map.drop([:__meta__, :domain_list])
       end)
 
     Plausible.ClickhouseRepo.insert_all("events_v2", pageviews)
@@ -40,7 +40,10 @@ defmodule Plausible.TestUtils do
   def create_events(events) do
     events =
       Enum.map(events, fn event ->
-        Factory.build(:event, event) |> Map.from_struct() |> Map.delete(:__meta__) |> Map.put(:sign, 1)
+        Factory.build(:event, event)
+          |> Map.from_struct()
+          |> Map.drop([:__meta__, :domain_list])
+          |> Map.put(:sign, 1)
       end)
 
     Plausible.ClickhouseRepo.insert_all("events_v2", events)
@@ -49,7 +52,9 @@ defmodule Plausible.TestUtils do
   def create_sessions(sessions) do
     sessions =
       Enum.map(sessions, fn session ->
-        Factory.build(:ch_session, session) |> Map.from_struct() |> Map.delete(:__meta__)
+        Factory.build(:ch_session, session)
+          |> Map.from_struct()
+          |> Map.drop([:__meta__, :last_event_id])
       end)
 
     Plausible.ClickhouseRepo.insert_all("sessions", sessions)
@@ -117,5 +122,6 @@ defmodule Plausible.TestUtils do
   defp schema_to_map(schema) do
     Map.from_struct(schema)
     |> Map.delete(:__meta__)
+    |> Map.drop([:domain_list, :last_event_id]) # virtual fields
   end
 end

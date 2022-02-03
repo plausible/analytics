@@ -8,6 +8,7 @@ defmodule Plausible.ClickhouseSession do
     field :domain, :string
     field :user_id, :integer
     field :session_id, :integer
+    field :last_event_id, :integer, virtual: true
 
     field :start, :naive_datetime
     field :duration, :integer

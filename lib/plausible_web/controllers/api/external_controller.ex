@@ -73,12 +73,12 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp create_event(conn, params) do
     case params["n"] || params["name"] do
-      "pageview_end" ->
+      "enrich" ->
         event_id = params["e"] || params["event_id"]
         if event_id do
           event_id = String.to_integer(event_id)
           timestamp = params["timestamp"] || default_timestamp()
-          Plausible.Event.Store.on_pageview_end(event_id, timestamp)
+          Plausible.Event.Store.on_enrich_event(event_id, timestamp)
         else
           @no_event_id_error
         end
@@ -112,6 +112,8 @@ defmodule PlausibleWeb.Api.ExternalController do
 
       event_attrs = %{
         event_id: generate_event_id(),
+        domain: params["domain"],
+        domain_list: get_domains(params, uri),
         timestamp: Map.get(params, "timestamp", default_timestamp()),
         name: params["name"],
         hostname: strip_www(host),
@@ -137,41 +139,31 @@ defmodule PlausibleWeb.Api.ExternalController do
         "meta.value": Map.values(params["meta"]) |> Enum.map(&Kernel.to_string/1)
       }
 
-      domains = get_domains(params, uri)
-      store_event_for_all_domains(conn, domains, event_attrs)
+      store_event(conn, event_attrs)
     end
   end
 
-  defp store_event_for_all_domains(conn, domains, event_attrs) do
-    Enum.reduce_while(domains, @no_domain_error, fn domain, _acc ->
-      case store_event(conn, domain, event_attrs) do
-        {:ok, event_id} -> {:cont, {:ok, event_id}}
-        {:error, errors} -> {:halt, {:error, errors}}
-      end
-    end)
-  end
-
-  defp store_event(conn, domain, event_attrs) do
+  defp store_event(conn, event_attrs) do
     salts = Plausible.Session.Salts.fetch()
-    user_id = generate_user_id(conn, domain, event_attrs[:hostname], salts[:current])
+    user_id = generate_user_id(conn, event_attrs[:hostname], salts[:current])
 
     previous_user_id =
       salts[:previous] &&
-        generate_user_id(conn, domain, event_attrs[:hostname], salts[:previous])
+        generate_user_id(conn, event_attrs[:hostname], salts[:previous])
 
     changeset =
       event_attrs
-      |> Map.merge(%{domain: domain, user_id: user_id})
+      |> Map.merge(%{user_id: user_id})
       |> Plausible.ClickhouseEvent.new()
 
     if changeset.valid? do
       event = Ecto.Changeset.apply_changes(changeset)
-      session_id = Plausible.Session.Store.on_event(event, previous_user_id)
+      {session_id, last_event_id} = Plausible.Session.Store.on_event(event, previous_user_id)
 
       response =
         event
         |> Map.put(:session_id, session_id)
-        |> Plausible.Event.Store.on_event()
+        |> Plausible.Event.Store.on_event(last_event_id)
 
       {:ok, response}
     else
@@ -496,13 +488,13 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp generate_user_id(conn, domain, hostname, salt) do
+  defp generate_user_id(conn, hostname, salt) do
     user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
     ip_address = PlausibleWeb.RemoteIp.get(conn)
     root_domain = get_root_domain(hostname)
 
-    if domain && root_domain do
-      SipHash.hash!(salt, user_agent <> ip_address <> domain <> root_domain)
+    if root_domain do
+      SipHash.hash!(salt, user_agent <> ip_address <> root_domain)
     end
   end
 

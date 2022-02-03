@@ -6,6 +6,7 @@ defmodule Plausible.ClickhouseEvent do
   schema "events_v2" do
     field :name, :string
     field :domain, :string
+    field :domain_list, :any, virtual: true
     field :hostname, :string
     field :pathname, :string
     field :user_id, :integer
@@ -46,6 +47,7 @@ defmodule Plausible.ClickhouseEvent do
         :event_id,
         :name,
         :domain,
+        :domain_list,
         :hostname,
         :pathname,
         :user_id,
