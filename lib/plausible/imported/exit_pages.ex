@@ -6,7 +6,7 @@ defmodule Plausible.Imported.ExitPages do
   @primary_key false
   schema "imported_exit_pages" do
     field :site_id, :integer
-    field :timestamp, :naive_datetime
+    field :timestamp, :date
     field :exit_page, :string
     field :visitors, :integer
     field :exits, :integer

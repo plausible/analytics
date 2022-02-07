@@ -6,7 +6,7 @@ defmodule Plausible.Imported.OperatingSystems do
   @primary_key false
   schema "imported_operating_systems" do
     field :site_id, :integer
-    field :timestamp, :naive_datetime
+    field :timestamp, :date
     field :operating_system, :string
     field :visitors, :integer
     field :visits, :integer

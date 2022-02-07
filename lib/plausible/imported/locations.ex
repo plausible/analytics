@@ -6,7 +6,7 @@ defmodule Plausible.Imported.Locations do
   @primary_key false
   schema "imported_locations" do
     field :site_id, :integer
-    field :timestamp, :naive_datetime
+    field :timestamp, :date
     field :country, :string, default: ""
     field :region, :string, default: ""
     field :city, :integer, default: 0

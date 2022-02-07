@@ -6,7 +6,7 @@ defmodule Plausible.Imported.UtmTerms do
   @primary_key false
   schema "imported_utm_terms" do
     field :site_id, :integer
-    field :timestamp, :naive_datetime
+    field :timestamp, :date
     field :utm_term, :string, default: ""
     field :visitors, :integer
     field :visits, :integer

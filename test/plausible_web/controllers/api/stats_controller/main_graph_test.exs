@@ -73,8 +73,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00]),
-        build(:imported_visitors, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:imported_visitors, timestamp: ~N[2021-01-31 00:00:00])
+        build(:imported_visitors, timestamp: ~D[2021-01-01]),
+        build(:imported_visitors, timestamp: ~D[2021-01-31])
       ])
 
       conn =
@@ -95,8 +95,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00], pathname: "/pageA"),
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00], pathname: "/pageA"),
-        build(:imported_visitors, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:imported_visitors, timestamp: ~N[2021-01-31 00:00:00])
+        build(:imported_visitors, timestamp: ~D[2021-01-01]),
+        build(:imported_visitors, timestamp: ~D[2021-01-31])
       ])
 
       filters = Jason.encode!(%{page: "/pageA"})

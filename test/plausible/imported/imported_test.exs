@@ -3,7 +3,6 @@ defmodule Plausible.ImportedTest do
   use Timex
   import Plausible.TestUtils
 
-  @utc Timezone.get("UTC")
   @user_id 123
 
   describe "Parse and import third party data fetched from Google Analytics" do
@@ -19,17 +18,16 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["2021010100"],
+                     "dimensions" => ["20210101"],
                      "metrics" => [%{"values" => ["1", "1", "0", "1", "60"]}]
                    },
                    %{
-                     "dimensions" => ["2021013100"],
+                     "dimensions" => ["20210131"],
                      "metrics" => [%{"values" => ["1", "1", "1", "1", "60"]}]
                    }
                  ],
                  site.id,
-                 "visitors",
-                 @utc
+                 "visitors"
                )
 
       conn =
@@ -69,17 +67,16 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["2021010100", "duckduckgo.com"],
+                     "dimensions" => ["20210101", "duckduckgo.com"],
                      "metrics" => [%{"values" => ["1", "1", "0", "60"]}]
                    },
                    %{
-                     "dimensions" => ["2021013100", "google.com"],
+                     "dimensions" => ["20210131", "google.com"],
                      "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
                    }
                  ],
                  site.id,
-                 "sources",
-                 @utc
+                 "sources"
                )
 
       conn =
@@ -114,17 +111,16 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["2021010100", "social"],
+                     "dimensions" => ["20210101", "social"],
                      "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
                    },
                    %{
-                     "dimensions" => ["2021010100", "email"],
+                     "dimensions" => ["20210101", "email"],
                      "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
                    }
                  ],
                  site.id,
-                 "utm_mediums",
-                 @utc
+                 "utm_mediums"
                )
 
       conn =
@@ -159,17 +155,16 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["2021010100", "profile"],
+                     "dimensions" => ["20210101", "profile"],
                      "metrics" => [%{"values" => ["1", "1", "1", "100"]}]
                    },
                    %{
-                     "dimensions" => ["2021010100", "august"],
+                     "dimensions" => ["20210101", "august"],
                      "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
                    }
                  ],
                  site.id,
-                 "utm_campaigns",
-                 @utc
+                 "utm_campaigns"
                )
 
       conn =
@@ -204,17 +199,16 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["2021010100", "oat milk"],
+                     "dimensions" => ["20210101", "oat milk"],
                      "metrics" => [%{"values" => ["1", "1", "1", "100"]}]
                    },
                    %{
-                     "dimensions" => ["2021010100", "Sweden"],
+                     "dimensions" => ["20210101", "Sweden"],
                      "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
                    }
                  ],
                  site.id,
-                 "utm_terms",
-                 @utc
+                 "utm_terms"
                )
 
       conn =
@@ -249,17 +243,16 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["2021010100", "ad"],
+                     "dimensions" => ["20210101", "ad"],
                      "metrics" => [%{"values" => ["1", "1", "1", "100"]}]
                    },
                    %{
-                     "dimensions" => ["2021010100", "blog"],
+                     "dimensions" => ["20210101", "blog"],
                      "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
                    }
                  ],
                  site.id,
-                 "utm_contents",
-                 @utc
+                 "utm_contents"
                )
 
       conn =
@@ -306,30 +299,28 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["2021010100", "/"],
+                     "dimensions" => ["20210101", "/"],
                      "metrics" => [%{"values" => ["1", "1", "700"]}]
                    },
                    %{
-                     "dimensions" => ["2021010100", "/some-other-page"],
+                     "dimensions" => ["20210101", "/some-other-page"],
                      "metrics" => [%{"values" => ["1", "1", "60"]}]
                    }
                  ],
                  site.id,
-                 "pages",
-                 @utc
+                 "pages"
                )
 
       assert {:ok, _} =
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["2021010100", "/"],
+                     "dimensions" => ["20210101", "/"],
                      "metrics" => [%{"values" => ["1", "3", "10", "1"]}]
                    }
                  ],
                  site.id,
-                 "entry_pages",
-                 @utc
+                 "entry_pages"
                )
 
       conn =
@@ -382,26 +373,24 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["2021010100", "/page2"],
+                     "dimensions" => ["20210101", "/page2"],
                      "metrics" => [%{"values" => ["2", "4", "10"]}]
                    }
                  ],
                  site.id,
-                 "pages",
-                 @utc
+                 "pages"
                )
 
       assert {:ok, _} =
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["2021010100", "/page2"],
+                     "dimensions" => ["20210101", "/page2"],
                      "metrics" => [%{"values" => ["2", "3"]}]
                    }
                  ],
                  site.id,
-                 "exit_pages",
-                 @utc
+                 "exit_pages"
                )
 
       conn =
@@ -441,17 +430,16 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["2021010100", "EE", "Tartumaa"],
+                     "dimensions" => ["20210101", "EE", "Tartumaa"],
                      "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
                    },
                    %{
-                     "dimensions" => ["2021010100", "GB", "Midlothian"],
+                     "dimensions" => ["20210101", "GB", "Midlothian"],
                      "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
                    }
                  ],
                  site.id,
-                 "locations",
-                 @utc
+                 "locations"
                )
 
       conn =
@@ -491,17 +479,16 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["2021010100", "mobile"],
+                     "dimensions" => ["20210101", "mobile"],
                      "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
                    },
                    %{
-                     "dimensions" => ["2021010100", "Laptop"],
+                     "dimensions" => ["20210101", "Laptop"],
                      "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
                    }
                  ],
                  site.id,
-                 "devices",
-                 @utc
+                 "devices"
                )
 
       conn =
@@ -527,17 +514,16 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["2021010100", "User-Agent: Mozilla"],
+                     "dimensions" => ["20210101", "User-Agent: Mozilla"],
                      "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
                    },
                    %{
-                     "dimensions" => ["2021010100", "Android Browser"],
+                     "dimensions" => ["20210101", "Android Browser"],
                      "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
                    }
                  ],
                  site.id,
-                 "browsers",
-                 @utc
+                 "browsers"
                )
 
       conn =
@@ -564,17 +550,16 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["2021010100", "Macintosh"],
+                     "dimensions" => ["20210101", "Macintosh"],
                      "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
                    },
                    %{
-                     "dimensions" => ["2021010100", "Linux"],
+                     "dimensions" => ["20210101", "Linux"],
                      "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
                    }
                  ],
                  site.id,
-                 "operating_systems",
-                 @utc
+                 "operating_systems"
                )
 
       conn =

@@ -6,7 +6,7 @@ defmodule Plausible.Imported.UtmMediums do
   @primary_key false
   schema "imported_utm_mediums" do
     field :site_id, :integer
-    field :timestamp, :naive_datetime
+    field :timestamp, :date
     field :utm_medium, :string, default: ""
     field :visitors, :integer
     field :visits, :integer

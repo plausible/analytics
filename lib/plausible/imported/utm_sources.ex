@@ -6,7 +6,7 @@ defmodule Plausible.Imported.UtmSources do
   @primary_key false
   schema "imported_utm_sources" do
     field :site_id, :integer
-    field :timestamp, :naive_datetime
+    field :timestamp, :date
     field :utm_source, :string, default: ""
     field :visitors, :integer
     field :visits, :integer

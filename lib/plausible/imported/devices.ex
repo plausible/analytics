@@ -6,7 +6,7 @@ defmodule Plausible.Imported.Devices do
   @primary_key false
   schema "imported_devices" do
     field :site_id, :integer
-    field :timestamp, :naive_datetime
+    field :timestamp, :date
     field :device, :string
     field :visitors, :integer
     field :visits, :integer

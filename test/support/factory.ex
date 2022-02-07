@@ -181,7 +181,7 @@ defmodule Plausible.Factory do
     }
   end
 
-  @today Timex.today() |> Timex.to_naive_datetime()
+  @today Timex.today() |> Timex.to_date()
 
   def imported_visitors_factory do
     %Plausible.Imported.Visitors{

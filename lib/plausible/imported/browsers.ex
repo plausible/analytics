@@ -6,7 +6,7 @@ defmodule Plausible.Imported.Browsers do
   @primary_key false
   schema "imported_browsers" do
     field :site_id, :integer
-    field :timestamp, :naive_datetime
+    field :timestamp, :date
     field :browser, :string
     field :visitors, :integer
     field :visits, :integer

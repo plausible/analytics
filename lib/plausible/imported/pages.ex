@@ -6,7 +6,7 @@ defmodule Plausible.Imported.Pages do
   @primary_key false
   schema "imported_pages" do
     field :site_id, :integer
-    field :timestamp, :naive_datetime
+    field :timestamp, :date
     field :page, :string
     field :visitors, :integer
     field :pageviews, :integer

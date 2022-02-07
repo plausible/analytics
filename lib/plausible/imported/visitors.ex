@@ -6,7 +6,7 @@ defmodule Plausible.Imported.Visitors do
   @primary_key false
   schema "imported_visitors" do
     field :site_id, :integer
-    field :timestamp, :naive_datetime
+    field :timestamp, :date
     field :visitors, :integer
     field :pageviews, :integer
     field :bounces, :integer

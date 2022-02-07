@@ -6,7 +6,7 @@ defmodule Plausible.Imported.UtmCampaigns do
   @primary_key false
   schema "imported_utm_campaigns" do
     field :site_id, :integer
-    field :timestamp, :naive_datetime
+    field :timestamp, :date
     field :utm_campaign, :string, default: ""
     field :visitors, :integer
     field :visits, :integer

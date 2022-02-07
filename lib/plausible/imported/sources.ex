@@ -6,7 +6,7 @@ defmodule Plausible.Imported.Sources do
   @primary_key false
   schema "imported_sources" do
     field :site_id, :integer
-    field :timestamp, :naive_datetime
+    field :timestamp, :date
     field :source, :string, default: ""
     field :visitors, :integer
     field :visits, :integer

@@ -4,7 +4,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedUtmCampaigns do
   def change do
     create_if_not_exists table(:imported_utm_campaigns, engine: "MergeTree() ORDER BY (timestamp) SETTINGS index_granularity = 1") do
       add :site_id, :UInt64
-      add :timestamp, :naive_datetime
+      add :timestamp, :date
       add :utm_campaign, :string
       add :visitors, :UInt64
       add :visits, :UInt64

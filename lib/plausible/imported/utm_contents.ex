@@ -6,7 +6,7 @@ defmodule Plausible.Imported.UtmContents do
   @primary_key false
   schema "imported_utm_contents" do
     field :site_id, :integer
-    field :timestamp, :naive_datetime
+    field :timestamp, :date
     field :utm_content, :string, default: ""
     field :visitors, :integer
     field :visits, :integer
