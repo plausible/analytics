@@ -1,27 +1,26 @@
 defmodule Plausible.Stats.Imported do
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.{Query, Timeseries}
-  import Plausible.Stats.Base
+  alias Plausible.Stats.Query
   import Ecto.Query
 
   @no_ref "Direct / None"
 
   def timeseries(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
-
     result =
       from(v in "imported_visitors",
         group_by: fragment("date"),
         where: v.site_id == ^site.id,
-        where: v.timestamp >= ^first_datetime and v.timestamp < ^last_datetime,
-        select: %{"visitors" => sum(v.visitors)}
+        where: v.timestamp >= ^query.date_range.first and v.timestamp <= ^query.date_range.last,
+        select: %{
+          visitors: sum(v.visitors),
+          date: fragment("? as date", v.timestamp)
+        }
       )
-      |> Timeseries.select_bucket(site, query)
       |> ClickhouseRepo.all()
-      |> Enum.map(fn row -> {row["date"], row["visitors"]} end)
+      |> Enum.map(fn row -> {row[:date], row[:visitors]} end)
       |> Map.new()
 
-    Timeseries.buckets(query)
+    Enum.into(query.date_range, [])
     |> Enum.map(fn step -> Map.get(result, step, 0) end)
   end
 
@@ -47,8 +46,6 @@ defmodule Plausible.Stats.Imported do
              "visit:os",
              "event:page"
            ] do
-    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
-
     {table, dim} =
       case property do
         "visit:country" ->
@@ -76,7 +73,7 @@ defmodule Plausible.Stats.Imported do
         i in table,
         group_by: field(i, ^dim),
         where: i.site_id == ^site.id,
-        where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
+        where: i.timestamp >= ^query.date_range.first and i.timestamp <= ^query.date_range.last,
         select: %{}
       )
       |> select_imported_metrics(metrics)
@@ -279,13 +276,11 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, site, query, :aggregate, metrics) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
-
     imported_q =
       from(
         i in "imported_visitors",
         where: i.site_id == ^site.id,
-        where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
+        where: i.timestamp >= ^query.date_range.first and i.timestamp <= ^query.date_range.last,
         select: %{}
       )
       |> select_imported_metrics(metrics)

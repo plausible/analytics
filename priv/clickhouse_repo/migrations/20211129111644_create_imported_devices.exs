@@ -2,7 +2,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedDevices do
   use Ecto.Migration
 
   def change do
-    create_if_not_exists table(:imported_devices, engine: "MergeTree() ORDER BY (timestamp) SETTINGS index_granularity = 1") do
+    create_if_not_exists table(:imported_devices, engine: "MergeTree() ORDER BY (site_id, timestamp) SETTINGS index_granularity = 1") do
       add :site_id, :UInt64
       add :timestamp, :date
       add :device, :string

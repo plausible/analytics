@@ -278,8 +278,6 @@ defmodule Plausible.Stats.Breakdown do
 
     if with_imported do
       # Imported page views have pre-calculated values
-      {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
-
       res =
         res.rows
         |> Enum.map(fn [page, time, visits] -> {page, {time, visits}} end)
@@ -289,7 +287,7 @@ defmodule Plausible.Stats.Breakdown do
         i in "imported_pages",
         group_by: i.page,
         where: i.site_id == ^site.id,
-        where: i.timestamp >= ^first_datetime and i.timestamp < ^last_datetime,
+        where: i.timestamp >= ^query.date_range.first and i.timestamp <= ^query.date_range.last,
         where: i.page in ^pages,
         select: %{
           page: i.page,
