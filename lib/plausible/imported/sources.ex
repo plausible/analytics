@@ -54,27 +54,8 @@ defmodule Plausible.Imported.Sources do
     if se do
       se
     else
-      ref = "https://" <> ref
-
-      case RefInspector.parse(ref).source do
-        :unknown ->
-          uri = URI.parse(String.trim(ref))
-
-          if right_uri?(uri) do
-            String.replace_leading(uri.host, "www.", "")
-          end
-
-        source ->
-          source
-      end
+      RefInspector.parse("https://" <> ref)
+      |> PlausibleWeb.RefInspector.parse()
     end
   end
-
-  defp right_uri?(%URI{host: nil}), do: false
-
-  defp right_uri?(%URI{host: host, scheme: scheme})
-       when scheme in ["http", "https"] and byte_size(host) > 0,
-       do: true
-
-  defp right_uri?(_), do: false
 end
