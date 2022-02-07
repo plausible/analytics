@@ -9,7 +9,7 @@
   "cachex": {:hex, :cachex, "3.4.0", "868b2959ea4aeb328c6b60ff66c8d5123c083466ad3c33d3d8b5f142e13101fb", [:mix], [{:eternal, "~> 1.2", [hex: :eternal, repo: "hexpm", optional: false]}, {:jumper, "~> 1.0", [hex: :jumper, repo: "hexpm", optional: false]}, {:sleeplocks, "~> 1.1", [hex: :sleeplocks, repo: "hexpm", optional: false]}, {:unsafe, "~> 1.0", [hex: :unsafe, repo: "hexpm", optional: false]}], "hexpm", "370123b1ab4fba4d2965fb18f87fd758325709787c8c5fce35b3fe80645ccbe5"},
   "certifi": {:hex, :certifi, "2.8.0", "d4fb0a6bb20b7c9c3643e22507e42f356ac090a1dcea9ab99e27e0376d695eba", [:rebar3], [], "hexpm", "6ac7efc1c6f8600b08d625292d4bbf584e14847ce1b6b5c44d983d273e1097ea"},
   "chatterbox": {:hex, :ts_chatterbox, "0.11.0", "b8f372c706023eb0de5bf2976764edb27c70fe67052c88c1f6a66b3a5626847f", [:rebar3], [{:hpack, "~>0.2.3", [hex: :hpack_erl, repo: "hexpm", optional: false]}], "hexpm", "722fe2bad52913ab7e87d849fc6370375f0c961ffb2f0b5e6d647c9170c382a6"},
-  "clickhouse_ecto": {:git, "https://github.com/plausible/clickhouse_ecto.git", "93d86c48230f85797555c348dbe9e8738d3b8cc2", []},
+  "clickhouse_ecto": {:git, "https://github.com/plausible/clickhouse_ecto.git", "7bc94cce111d3e9dbd8534fe96bd5195181826a2", []},
   "clickhousex": {:git, "https://github.com/plausible/clickhousex", "6405ac09b4fa103644bb4fe7fc0509fb48497927", []},
   "combination": {:hex, :combination, "0.0.3", "746aedca63d833293ec6e835aa1f34974868829b1486b1e1cb0685f0b2ae1f41", [:mix], [], "hexpm", "72b099f463df42ef7dc6371d250c7070b57b6c5902853f69deb894f79eda18ca"},
   "combine": {:hex, :combine, "0.10.0", "eff8224eeb56498a2af13011d142c5e7997a80c8f5b97c499f84c841032e429f", [:mix], [], "hexpm", "1b1dbc1790073076580d0d1d64e42eae2366583e7aecd455d1215b0d16f2451b"},
