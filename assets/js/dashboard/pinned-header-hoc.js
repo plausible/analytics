@@ -24,7 +24,7 @@ export const withPinnedHeader = (WrappedComponent, selector) => {
     }
 
     componentWillUnmount() {
-      this.observer.unobserve(this.el);
+      this.observer && this.observer.unobserve(this.el);
     }
 
     render() {

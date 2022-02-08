@@ -15,7 +15,7 @@ export default class extends React.Component {
   }
 
   componentWillUnmount() {
-    this.observer.unobserve(this.element);
+    this.observer && this.observer.unobserve(this.element);
   }
 
   render() {
