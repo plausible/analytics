@@ -10,6 +10,12 @@ export const withPinnedHeader = (WrappedComponent, selector) => {
     }
 
     componentDidMount() {
+      if ('IntersectionObserver' in window) {
+        this.attachObserver()
+      }
+    }
+
+    attachObserver() {
       this.observer = new IntersectionObserver((entries) => {
         if (entries[0].intersectionRatio === 0)
           this.setState({ stuck: true });
