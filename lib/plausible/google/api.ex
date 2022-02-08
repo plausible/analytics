@@ -269,11 +269,8 @@ defmodule Plausible.Google.Api do
           maybe_error =
             results
             |> Enum.map(fn {dataset, data} ->
-              Task.async(fn ->
-                Imported.from_google_analytics(data, site.id, dataset)
-              end)
+              Imported.from_google_analytics(data, site.id, dataset)
             end)
-            |> Enum.map(&Task.await(&1, 120_000))
             |> Keyword.get(:error)
 
           case maybe_error do
