@@ -19,7 +19,7 @@ defmodule Plausible.Stats.Breakdown do
     event_results =
       if Enum.any?(event_goals) do
         breakdown(site, event_query, "event:name", metrics, pagination)
-        |> transform_keys(%{"name" => "goal"})
+        |> transform_keys(%{name: :goal})
       else
         []
       end
@@ -44,13 +44,13 @@ defmodule Plausible.Stats.Breakdown do
             ),
           group_by: fragment("index"),
           select: %{
-            "index" => fragment("arrayJoin(indices) as index"),
-            "goal" => fragment("concat('Visit ', array(?)[index])", ^page_exprs)
+            index: fragment("arrayJoin(indices) as index"),
+            goal: fragment("concat('Visit ', array(?)[index])", ^page_exprs)
           }
         )
         |> select_event_metrics(metrics)
         |> ClickhouseRepo.all()
-        |> Enum.map(fn row -> Map.delete(row, "index") end)
+        |> Enum.map(fn row -> Map.delete(row, :index) end)
       else
         []
       end
@@ -74,11 +74,15 @@ defmodule Plausible.Stats.Breakdown do
         )
         |> select_event_metrics(metrics)
         |> ClickhouseRepo.all()
+        |> transform_keys(%{custom_prop => String.to_atom(custom_prop)})
       else
         []
       end
 
-    results = breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
+    results =
+      breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
+      |> transform_keys(%{custom_prop => String.to_atom(custom_prop)})
+
     zipped = zip_results(none_result, results, custom_prop, metrics)
 
     if Enum.find_index(zipped, fn value -> value[custom_prop] == "(none)" end) == limit do
@@ -171,6 +175,7 @@ defmodule Plausible.Stats.Breakdown do
         |> String.trim_leading("event:")
         |> String.trim_leading("visit:")
         |> String.trim_leading("props:")
+        |> String.to_atom()
       else
         property
       end
@@ -345,7 +350,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       e in q,
       group_by: e.name,
-      select_merge: %{"name" => e.name}
+      select_merge: %{name: e.name}
     )
   end
 
@@ -370,8 +375,8 @@ defmodule Plausible.Stats.Breakdown do
           e in q,
           group_by: fragment("index"),
           select_merge: %{
-            "index" => fragment("arrayJoin(indices) as index"),
-            "page_match" => fragment("array(?)[index]", ^match_exprs)
+            index: fragment("arrayJoin(indices) as index"),
+            page_match: fragment("array(?)[index]", ^match_exprs)
           }
         )
     end
@@ -432,7 +437,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.referrer,
       select_merge: %{
-        "referrer" => fragment("if(empty(?), ?, ?)", s.referrer, @no_ref, s.referrer)
+        referrer: fragment("if(empty(?), ?, ?)", s.referrer, @no_ref, s.referrer)
       }
     )
   end
@@ -507,7 +512,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.operating_system_version,
-      select_merge: %{"os_version" => s.operating_system_version}
+      select_merge: %{os_version: s.operating_system_version}
     )
   end
 
@@ -523,7 +528,7 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.browser_version,
-      select_merge: %{"browser_version" => s.browser_version}
+      select_merge: %{browser_version: s.browser_version}
     )
   end
 

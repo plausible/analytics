@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     timeseries_result = Task.await(timeseries)
     plot = Enum.map(timeseries_result, fn row -> row[:visitors] end)
-    labels = Enum.map(timeseries_result, fn row -> row["date"] end)
+    labels = Enum.map(timeseries_result, fn row -> row[:date] end)
     present_index = present_index_for(site, query, labels)
 
     {plot, with_imported, source} =
@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
         {plot, true, site.imported_source}
       else
-        if Map.get(params, "filters", "{}") != "{}" do
+        if Enum.any?(query.filters) do
           # Hiding imported data due to filtering.
           # Setting source to "" hides imported indicator from main graph.
           {plot, false, ""}
@@ -88,8 +88,8 @@ defmodule PlausibleWeb.Api.StatsController do
     query_30m = %Query{query | period: "30m"}
 
     %{
-      visitors: %{"value" => visitors},
-      pageviews: %{"value" => pageviews}
+      visitors: %{value: visitors},
+      pageviews: %{value: pageviews}
     } = Stats.aggregate(site, query_30m, [:visitors, :pageviews])
 
     stats = [
@@ -116,21 +116,21 @@ defmodule PlausibleWeb.Api.StatsController do
     prev_total_query = Query.shift_back(total_q, site)
 
     %{
-      visitors: %{"value" => unique_visitors}
+      visitors: %{value: unique_visitors}
     } = Stats.aggregate(site, total_q, [:visitors])
 
     %{
-      visitors: %{"value" => prev_unique_visitors}
+      visitors: %{value: prev_unique_visitors}
     } = Stats.aggregate(site, prev_total_query, [:visitors])
 
     %{
-      visitors: %{"value" => converted_visitors},
-      events: %{"value" => completions}
+      visitors: %{value: converted_visitors},
+      events: %{value: completions}
     } = Stats.aggregate(site, query, [:visitors, :events])
 
     %{
-      visitors: %{"value" => prev_converted_visitors},
-      events: %{"value" => prev_completions}
+      visitors: %{value: prev_converted_visitors},
+      events: %{value: prev_completions}
     } = Stats.aggregate(site, prev_query, [:visitors, :events])
 
     conversion_rate = calculate_cr(unique_visitors, converted_visitors)
@@ -185,15 +185,15 @@ defmodule PlausibleWeb.Api.StatsController do
       ]
       |> Enum.filter(& &1)
 
-    {stats, current_results[:sample_percent]["value"]}
+    {stats, current_results[:sample_percent][:value]}
   end
 
   defp top_stats_entry(current_results, prev_results, name, key) do
     if current_results[key] do
       %{
         name: name,
-        value: current_results[key]["value"],
-        change: calculate_change(key, prev_results[key]["value"], current_results[key]["value"])
+        value: current_results[key][:value],
+        change: calculate_change(key, prev_results[key][:value], current_results[key][:value])
       }
     end
   end
@@ -235,15 +235,15 @@ defmodule PlausibleWeb.Api.StatsController do
     res =
       Stats.breakdown(site, query, "visit:source", metrics, pagination)
       |> maybe_add_cr(site, query, pagination, :source, "visit:source")
-      |> transform_keys(%{source: "name"})
+      |> transform_keys(%{source: :name})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         res
-        |> transform_keys(%{visitors: "conversions"})
-        |> to_csv(["name", "conversions", :conversion_rate])
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
       else
-        res |> to_csv(["name", :visitors, :bounce_rate, :visit_duration])
+        res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
       json(conn, res)
@@ -264,16 +264,16 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_medium", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, "utm_medium", "visit:utm_medium")
-      |> transform_keys(%{utm_medium: "name"})
+      |> maybe_add_cr(site, query, pagination, :utm_medium, "visit:utm_medium")
+      |> transform_keys(%{utm_medium: :name})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         res
-        |> transform_keys(%{visitors: "conversions"})
-        |> to_csv(["name", "conversions", :conversion_rate])
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
       else
-        res |> to_csv(["name", :visitors, :bounce_rate, :visit_duration])
+        res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
       json(conn, res)
@@ -294,16 +294,16 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_campaign", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, "utm_campaign", "visit:utm_campaign")
-      |> transform_keys(%{utm_campaign: "name"})
+      |> maybe_add_cr(site, query, pagination, :utm_campaign, "visit:utm_campaign")
+      |> transform_keys(%{utm_campaign: :name})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         res
-        |> transform_keys(%{visitors: "conversions"})
-        |> to_csv(["name", "conversions", :conversion_rate])
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
       else
-        res |> to_csv(["name", :visitors, :bounce_rate, :visit_duration])
+        res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
       json(conn, res)
@@ -324,15 +324,15 @@ defmodule PlausibleWeb.Api.StatsController do
     res =
       Stats.breakdown(site, query, "visit:utm_content", metrics, pagination)
       |> maybe_add_cr(site, query, pagination, :utm_content, "visit:utm_content")
-      |> transform_keys(%{utm_content: "name"})
+      |> transform_keys(%{utm_content: :name})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         res
-        |> transform_keys(%{visitors: "conversions"})
-        |> to_csv(["name", "conversions", :conversion_rate])
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
       else
-        res |> to_csv(["name", :visitors, :bounce_rate, :visit_duration])
+        res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
       json(conn, res)
@@ -353,15 +353,15 @@ defmodule PlausibleWeb.Api.StatsController do
     res =
       Stats.breakdown(site, query, "visit:utm_term", metrics, pagination)
       |> maybe_add_cr(site, query, pagination, :utm_term, "visit:utm_term")
-      |> transform_keys(%{utm_term: "name"})
+      |> transform_keys(%{utm_term: :name})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         res
-        |> transform_keys(%{visitors: "conversions"})
-        |> to_csv(["name", "conversions", :conversion_rate])
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
       else
-        res |> to_csv(["name", :visitors, :bounce_rate, :visit_duration])
+        res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
       json(conn, res)
@@ -382,16 +382,16 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_source", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, "utm_source", "visit:utm_source")
-      |> transform_keys(%{utm_source: "name"})
+      |> maybe_add_cr(site, query, pagination, :utm_source, "visit:utm_source")
+      |> transform_keys(%{utm_source: :name})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         res
-        |> transform_keys(%{visitors: "conversions"})
-        |> to_csv(["name", "conversions", :conversion_rate])
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
       else
-        res |> to_csv(["name", :visitors, :bounce_rate, :visit_duration])
+        res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
       json(conn, res)
@@ -411,7 +411,7 @@ defmodule PlausibleWeb.Api.StatsController do
         google_api().fetch_stats(site, query, params["limit"] || 9)
       end
 
-    %{:visitors => %{"value" => total_visitors}} = Stats.aggregate(site, query, [:visitors])
+    %{:visitors => %{value: total_visitors}} = Stats.aggregate(site, query, [:visitors])
 
     case search_terms do
       nil ->
@@ -443,11 +443,11 @@ defmodule PlausibleWeb.Api.StatsController do
 
     referrers =
       Stats.breakdown(site, query, "visit:referrer", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, "referrer", "visit:referrer")
-      |> transform_keys(%{"referrer" => "name"})
+      |> maybe_add_cr(site, query, pagination, :referrer, "visit:referrer")
+      |> transform_keys(%{referrer: :name})
       |> Enum.map(&Map.drop(&1, [:visits]))
 
-    %{:visitors => %{"value" => total_visitors}} = Stats.aggregate(site, query, [:visitors])
+    %{:visitors => %{value: total_visitors}} = Stats.aggregate(site, query, [:visitors])
     json(conn, %{referrers: referrers, total_visitors: total_visitors})
   end
 
@@ -465,15 +465,15 @@ defmodule PlausibleWeb.Api.StatsController do
     pages =
       Stats.breakdown(site, query, "event:page", metrics, pagination)
       |> maybe_add_cr(site, query, pagination, :page, "event:page")
-      |> transform_keys(%{page: "name"})
+      |> transform_keys(%{page: :name})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         pages
-        |> transform_keys(%{visitors: "conversions"})
-        |> to_csv(["name", "conversions", :conversion_rate])
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
       else
-        pages |> to_csv(["name", :visitors, :bounce_rate, :time_on_page])
+        pages |> to_csv([:name, :visitors, :bounce_rate, :time_on_page])
       end
     else
       json(conn, pages)
@@ -490,18 +490,18 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:entry_page", metrics, pagination)
       |> maybe_add_cr(site, query, pagination, :entry_page, "visit:entry_page")
       |> transform_keys(%{
-        :entry_page => "name",
-        :visitors => "unique_entrances",
-        :visits => "total_entrances"
+        entry_page: :name,
+        visitors: :unique_entrances,
+        visits: :total_entrances
       })
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         entry_pages
-        |> transform_keys(%{"unique_entrances" => "conversions"})
-        |> to_csv(["name", "conversions", :conversion_rate])
+        |> transform_keys(%{unique_entrances: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
       else
-        entry_pages |> to_csv(["name", "unique_entrances", "total_entrances", :visit_duration])
+        entry_pages |> to_csv([:name, :unique_entrances, :total_entrances, :visit_duration])
       end
     else
       json(conn, entry_pages)
@@ -518,12 +518,12 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:exit_page", metrics, {limit, page})
       |> maybe_add_cr(site, query, {limit, page}, :exit_page, "visit:exit_page")
       |> transform_keys(%{
-        :exit_page => "name",
-        :visitors => "unique_exits",
-        :visits => "total_exits"
+        exit_page: :name,
+        visitors: :unique_exits,
+        visits: :total_exits
       })
 
-    pages = Enum.map(exit_pages, & &1["name"])
+    pages = Enum.map(exit_pages, & &1[:name])
 
     total_visits_query =
       Query.put_filter(query, "event:page", {:member, pages})
@@ -538,24 +538,24 @@ defmodule PlausibleWeb.Api.StatsController do
     exit_pages =
       Enum.map(exit_pages, fn exit_page ->
         exit_rate =
-          case Enum.find(total_pageviews, &(&1[:page] == exit_page["name"])) do
+          case Enum.find(total_pageviews, &(&1[:page] == exit_page[:name])) do
             %{pageviews: pageviews} ->
-              Float.floor(exit_page["total_exits"] / pageviews * 100)
+              Float.floor(exit_page[:total_exits] / pageviews * 100)
 
             nil ->
               nil
           end
 
-        Map.put(exit_page, "exit_rate", exit_rate)
+        Map.put(exit_page, :exit_rate, exit_rate)
       end)
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         exit_pages
-        |> transform_keys(%{"unique_exits" => "conversions"})
-        |> to_csv(["name", "conversions", :conversion_rate])
+        |> transform_keys(%{unique_exits: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
       else
-        exit_pages |> to_csv(["name", "unique_exits", "total_exits", "exit_rate"])
+        exit_pages |> to_csv([:name, :unique_exits, :total_exits, :exit_rate])
       end
     else
       json(conn, exit_pages)
@@ -575,42 +575,42 @@ defmodule PlausibleWeb.Api.StatsController do
     countries =
       Stats.breakdown(site, query, "visit:country", [:visitors], pagination)
       |> maybe_add_cr(site, query, {300, 1}, :country, "visit:country")
-      |> transform_keys(%{country: "code"})
+      |> transform_keys(%{country: :code})
       |> maybe_add_percentages(query)
 
     if params["csv"] do
       countries =
         countries
         |> Enum.map(fn country ->
-          country_info = get_country(country["code"])
-          Map.put(country, "name", country_info.name)
+          country_info = get_country(country[:code])
+          Map.put(country, :name, country_info.name)
         end)
 
       if Map.has_key?(query.filters, "event:goal") do
         countries
-        |> transform_keys(%{visitors: "conversions"})
-        |> to_csv(["name", "conversions", :conversion_rate])
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
       else
-        countries |> to_csv(["name", :visitors])
+        countries |> to_csv([:name, :visitors])
       end
     else
       countries =
         Enum.map(countries, fn row ->
-          country = get_country(row["code"])
+          country = get_country(row[:code])
 
           if country do
             Map.merge(row, %{
-              "name" => country.name,
-              "flag" => country.flag,
-              "alpha_3" => country.alpha_3,
-              "code" => country.alpha_2
+              name: country.name,
+              flag: country.flag,
+              alpha_3: country.alpha_3,
+              code: country.alpha_2
             })
           else
             Map.merge(row, %{
-              "name" => row["code"],
-              "flag" => "",
-              "alpha_3" => "",
-              "code" => ""
+              name: row[:code],
+              flag: "",
+              alpha_3: "",
+              code: ""
             })
           end
         end)
@@ -631,26 +631,26 @@ defmodule PlausibleWeb.Api.StatsController do
 
     regions =
       Stats.breakdown(site, query, "visit:region", [:visitors], pagination)
-      |> transform_keys(%{region: "code"})
+      |> transform_keys(%{region: :code})
       |> Enum.map(fn region ->
-        region_entry = Location.get_subdivision(region["code"])
+        region_entry = Location.get_subdivision(region[:code])
 
         if region_entry do
           country_entry = get_country(region_entry.country_code)
-          Map.merge(region, %{"name" => region_entry.name, "country_flag" => country_entry.flag})
+          Map.merge(region, %{name: region_entry.name, country_flag: country_entry.flag})
         else
-          Sentry.capture_message("Could not find region info", extra: %{code: region["code"]})
-          Map.merge(region, %{"name" => region["code"]})
+          Sentry.capture_message("Could not find region info", extra: %{code: region[:code]})
+          Map.merge(region, %{name: region[:code]})
         end
       end)
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         regions
-        |> transform_keys(%{visitors: "conversions"})
-        |> to_csv(["name", "conversions", :conversion_rate])
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
       else
-        regions |> to_csv(["name", :visitors])
+        regions |> to_csv([:name, :visitors])
       end
     else
       json(conn, regions)
@@ -669,31 +669,31 @@ defmodule PlausibleWeb.Api.StatsController do
 
     cities =
       Stats.breakdown(site, query, "visit:city", [:visitors], pagination)
-      |> transform_keys(%{city: "code"})
+      |> transform_keys(%{city: :code})
       |> Enum.map(fn city ->
-        city_info = Location.get_city(city["code"])
+        city_info = Location.get_city(city[:code])
 
         if city_info do
           country_info = get_country(city_info.country_code)
 
           Map.merge(city, %{
-            "name" => city_info.name,
-            "country_flag" => country_info.flag
+            name: city_info.name,
+            country_flag: country_info.flag
           })
         else
-          Sentry.capture_message("Could not find city info", extra: %{code: city["code"]})
+          Sentry.capture_message("Could not find city info", extra: %{code: city[:code]})
 
-          Map.merge(city, %{"name" => "N/A"})
+          Map.merge(city, %{name: "N/A"})
         end
       end)
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         cities
-        |> transform_keys(%{visitors: "conversions"})
-        |> to_csv(["name", "conversions", :conversion_rate])
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
       else
-        cities |> to_csv(["name", :visitors])
+        cities |> to_csv([:name, :visitors])
       end
     else
       json(conn, cities)
@@ -708,16 +708,16 @@ defmodule PlausibleWeb.Api.StatsController do
     browsers =
       Stats.breakdown(site, query, "visit:browser", [:visitors], pagination)
       |> maybe_add_cr(site, query, pagination, :browser, "visit:browser")
-      |> transform_keys(%{browser: "name"})
+      |> transform_keys(%{browser: :name})
       |> maybe_add_percentages(query)
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         browsers
-        |> transform_keys(%{visitors: "conversions"})
-        |> to_csv(["name", "conversions", :conversion_rate])
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
       else
-        browsers |> to_csv(["name", :visitors])
+        browsers |> to_csv([:name, :visitors])
       end
     else
       json(conn, browsers)
@@ -731,8 +731,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
     versions =
       Stats.breakdown(site, query, "visit:browser_version", [:visitors], pagination)
-      |> maybe_add_cr(site, query, pagination, "browser_version", "visit:browser_version")
-      |> transform_keys(%{"browser_version" => "name"})
+      |> maybe_add_cr(site, query, pagination, :browser_version, "visit:browser_version")
+      |> transform_keys(%{browser_version: :name})
       |> maybe_add_percentages(query)
 
     json(conn, versions)
@@ -746,16 +746,16 @@ defmodule PlausibleWeb.Api.StatsController do
     systems =
       Stats.breakdown(site, query, "visit:os", [:visitors], pagination)
       |> maybe_add_cr(site, query, pagination, :os, "visit:os")
-      |> transform_keys(%{os: "name"})
+      |> transform_keys(%{os: :name})
       |> maybe_add_percentages(query)
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         systems
-        |> transform_keys(%{visitors: "conversions"})
-        |> to_csv(["name", "conversions", :conversion_rate])
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
       else
-        systems |> to_csv(["name", :visitors])
+        systems |> to_csv([:name, :visitors])
       end
     else
       json(conn, systems)
@@ -769,8 +769,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
     versions =
       Stats.breakdown(site, query, "visit:os_version", [:visitors], pagination)
-      |> maybe_add_cr(site, query, pagination, "os_version", "visit:os_version")
-      |> transform_keys(%{"os_version" => "name"})
+      |> maybe_add_cr(site, query, pagination, :os_version, "visit:os_version")
+      |> transform_keys(%{os_version: :name})
       |> maybe_add_percentages(query)
 
     json(conn, versions)
@@ -784,16 +784,16 @@ defmodule PlausibleWeb.Api.StatsController do
     sizes =
       Stats.breakdown(site, query, "visit:device", [:visitors], pagination)
       |> maybe_add_cr(site, query, pagination, :device, "visit:device")
-      |> transform_keys(%{device: "name"})
+      |> transform_keys(%{device: :name})
       |> maybe_add_percentages(query)
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
         sizes
-        |> transform_keys(%{visitors: "conversions"})
-        |> to_csv(["name", "conversions", :conversion_rate])
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
       else
-        sizes |> to_csv(["name", :visitors])
+        sizes |> to_csv([:name, :visitors])
       end
     else
       json(conn, sizes)
@@ -821,7 +821,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     total_q = Query.remove_goal(query)
 
-    %{visitors: %{"value" => total_visitors}} = Stats.aggregate(site, total_q, [:visitors])
+    %{visitors: %{value: total_visitors}} = Stats.aggregate(site, total_q, [:visitors])
 
     prop_names =
       if query.filters["event:goal"] do
@@ -833,18 +833,18 @@ defmodule PlausibleWeb.Api.StatsController do
     conversions =
       Stats.breakdown(site, query, "event:goal", [:visitors, :events], {100, 1})
       |> transform_keys(%{
-        "goal" => "name",
-        :visitors => "unique_conversions",
-        :events => "total_conversions"
+        goal: :name,
+        visitors: :unique_conversions,
+        events: :total_conversions
       })
       |> Enum.map(fn goal ->
         goal
-        |> Map.put(:prop_names, prop_names[goal["name"]])
-        |> Map.put("conversion_rate", calculate_cr(total_visitors, goal["unique_conversions"]))
+        |> Map.put(:prop_names, prop_names[goal[:name]])
+        |> Map.put(:conversion_rate, calculate_cr(total_visitors, goal[:unique_conversions]))
       end)
 
     if params["csv"] do
-      conversions |> to_csv(["name", "unique_conversions", "total_conversions"])
+      conversions |> to_csv([:name, :unique_conversions, :total_conversions])
     else
       json(conn, conversions)
     end
@@ -857,22 +857,22 @@ defmodule PlausibleWeb.Api.StatsController do
 
     total_q = Query.remove_goal(query)
 
-    %{:visitors => %{"value" => unique_visitors}} = Stats.aggregate(site, total_q, [:visitors])
+    %{:visitors => %{value: unique_visitors}} = Stats.aggregate(site, total_q, [:visitors])
 
     prop_name = "event:props:" <> params["prop_name"]
 
     props =
       Stats.breakdown(site, query, prop_name, [:visitors, :events], pagination)
       |> transform_keys(%{
-        params["prop_name"] => "name",
-        :events => "total_conversions",
-        :visitors => "unique_conversions"
+        String.to_atom(params["prop_name"]) => :name,
+        :events => :total_conversions,
+        :visitors => :unique_conversions
       })
       |> Enum.map(fn prop ->
         Map.put(
           prop,
-          "conversion_rate",
-          calculate_cr(unique_visitors, prop["unique_conversions"])
+          :conversion_rate,
+          calculate_cr(unique_visitors, prop[:unique_conversions])
         )
       end)
 
@@ -886,8 +886,6 @@ defmodule PlausibleWeb.Api.StatsController do
   def all_props_breakdown(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site.timezone, params) |> Filters.add_prefix()
-
-    headers = ["prop", "name", "unique_conversions", "total_conversions"]
 
     prop_names =
       if query.filters["event:goal"] do
@@ -903,11 +901,11 @@ defmodule PlausibleWeb.Api.StatsController do
       prop_names
       |> Enum.map(fn prop ->
         prop_breakdown(conn, Map.put(params, "prop_name", prop))
-        |> Enum.map(&Map.put(&1, "prop", prop))
+        |> Enum.map(&Map.put(&1, :prop, prop))
       end)
       |> Enum.concat()
 
-    to_csv(values, headers)
+    to_csv(values, [:prop, :name, :unique_conversions, :total_conversions])
   end
 
   def current_visitors(conn, _) do
@@ -950,7 +948,7 @@ defmodule PlausibleWeb.Api.StatsController do
       total = Enum.reduce(stat_list, 0, fn %{visitors: count}, total -> total + count end)
 
       Enum.map(stat_list, fn stat ->
-        Map.put(stat, "percentage", round(stat[:visitors] / total * 100))
+        Map.put(stat, :percentage, round(stat[:visitors] / total * 100))
       end)
     end
   end

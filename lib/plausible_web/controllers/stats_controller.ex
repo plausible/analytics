@@ -52,7 +52,7 @@ defmodule PlausibleWeb.StatsController do
 
     metrics = [:visitors, :pageviews, :bounce_rate, :visit_duration]
     graph = Plausible.Stats.timeseries(site, query, metrics)
-    headers = ["date" | metrics]
+    headers = [:date | metrics]
 
     visitors =
       Enum.map(graph, fn row -> Enum.map(headers, &row[&1]) end)

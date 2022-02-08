@@ -65,11 +65,11 @@ defmodule Plausible.Workers.SendEmailReport do
 
     template =
       PlausibleWeb.Email.weekly_report(email, site,
-        unique_visitors: curr_period[:visitors]["value"],
+        unique_visitors: curr_period[:visitors][:value],
         change_visitors: change_visitors,
-        pageviews: curr_period[:pageviews]["value"],
+        pageviews: curr_period[:pageviews][:value],
         change_pageviews: change_pageviews,
-        bounce_rate: curr_period[:bounce_rate]["value"],
+        bounce_rate: curr_period[:bounce_rate][:value],
         change_bounce_rate: change_bounce_rate,
         sources: sources,
         unsubscribe_link: unsubscribe_link,

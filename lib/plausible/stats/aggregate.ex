@@ -23,7 +23,7 @@ defmodule Plausible.Stats.Aggregate do
     |> Map.merge(Task.await(event_task, 10_000))
     |> Map.merge(Task.await(time_on_page_task, 10_000))
     |> Enum.map(fn {metric, value} ->
-      {metric, %{"value" => round(value || 0)}}
+      {metric, %{value: round(value || 0)}}
     end)
     |> Enum.into(%{})
   end

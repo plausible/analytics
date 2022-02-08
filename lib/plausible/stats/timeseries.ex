@@ -23,8 +23,8 @@ defmodule Plausible.Stats.Timeseries do
 
     Enum.map(steps, fn step ->
       empty_row(step, metrics)
-      |> Map.merge(Enum.find(event_result, fn row -> row["date"] == step end) || %{})
-      |> Map.merge(Enum.find(session_result, fn row -> row["date"] == step end) || %{})
+      |> Map.merge(Enum.find(event_result, fn row -> row[:date] == step end) || %{})
+      |> Map.merge(Enum.find(session_result, fn row -> row[:date] == step end) || %{})
     end)
   end
 
@@ -82,8 +82,7 @@ defmodule Plausible.Stats.Timeseries do
     from(
       e in q,
       select_merge: %{
-        "date" =>
-          fragment("toStartOfMonth(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
+        date: fragment("toStartOfMonth(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
       }
     )
   end
@@ -92,7 +91,7 @@ defmodule Plausible.Stats.Timeseries do
     from(
       e in q,
       select_merge: %{
-        "date" => fragment("toDate(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
+        date: fragment("toDate(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
       }
     )
   end
@@ -101,7 +100,7 @@ defmodule Plausible.Stats.Timeseries do
     from(
       e in q,
       select_merge: %{
-        "date" => fragment("toStartOfHour(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
+        date: fragment("toStartOfHour(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
       }
     )
   end
@@ -110,13 +109,13 @@ defmodule Plausible.Stats.Timeseries do
     from(
       e in q,
       select_merge: %{
-        "date" => fragment("dateDiff('minute', now(), ?) as date", e.timestamp)
+        date: fragment("dateDiff('minute', now(), ?) as date", e.timestamp)
       }
     )
   end
 
   defp empty_row(date, metrics) do
-    Enum.reduce(metrics, %{"date" => date}, fn metric, row ->
+    Enum.reduce(metrics, %{date: date}, fn metric, row ->
       case metric do
         :pageviews -> Map.merge(row, %{pageviews: 0})
         :visitors -> Map.merge(row, %{visitors: 0})

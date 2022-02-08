@@ -31,13 +31,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
               10_000
             )
 
-          Enum.map(curr_result, fn {metric, %{"value" => current_val}} ->
-            %{"value" => prev_val} = prev_result[metric]
+          Enum.map(curr_result, fn {metric, %{value: current_val}} ->
+            %{value: prev_val} = prev_result[metric]
 
             {metric,
              %{
-               "value" => current_val,
-               "change" => percent_change(prev_val, current_val)
+               value: current_val,
+               change: percent_change(prev_val, current_val)
              }}
           end)
           |> Enum.into(%{})
@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
           Plausible.Stats.aggregate(site, query, metrics)
         end
 
-      json(conn, %{"results" => Map.take(results, metrics)})
+      json(conn, %{results: Map.take(results, metrics)})
     else
       {:error, msg} ->
         conn
@@ -72,13 +72,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
           prop_names = Props.props(site, query)
 
           Enum.map(results, fn row ->
-            Map.put(row, "props", prop_names[row["goal"]] || [])
+            Map.put(row, "props", prop_names[row[:goal]] || [])
           end)
         else
           results
         end
 
-      json(conn, %{"results" => results})
+      json(conn, %{results: results})
     else
       {:error, msg} ->
         conn
@@ -147,8 +147,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          query <- Query.from(site.timezone, params),
          {:ok, metrics} <- parse_metrics(params, nil, query) do
       graph = Plausible.Stats.timeseries(site, query, metrics)
-      metrics = metrics ++ ["date"]
-      json(conn, %{"results" => Enum.map(graph, &Map.take(&1, metrics))})
+      metrics = metrics ++ [:date]
+      json(conn, %{results: Enum.map(graph, &Map.take(&1, metrics))})
     else
       {:error, msg} ->
         conn
