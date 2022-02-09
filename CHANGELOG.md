@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - If a session was started without a screen_size it is updated if an event with screen_size occurs
 - Added `LISTEN_IP` configuration parameter plausible/analytics#1189
 - The breakdown endpoint with the property query `property=event:goal` returns custom goal properties (within `props`)
+- Added IPv6 Ecto support (via the environment-variable `ECTO_IPV6`)
 
 ### Fixed
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
