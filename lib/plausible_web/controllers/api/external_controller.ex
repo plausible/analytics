@@ -495,14 +495,14 @@ defmodule PlausibleWeb.Api.ExternalController do
        do: "Tablet"
 
   defp calculate_screen_size(width, _) do
-    calculate_from_screen_size(width)
+    calculate_from_screen_width(width)
   end
 
-  defp calculate_from_screen_size(nil), do: nil
-  defp calculate_from_screen_size(width) when width < 576, do: "Mobile"
-  defp calculate_from_screen_size(width) when width < 992, do: "Tablet"
-  defp calculate_from_screen_size(width) when width < 1440, do: "Laptop"
-  defp calculate_from_screen_size(width) when width >= 1440, do: "Desktop"
+  defp calculate_from_screen_width(nil), do: nil
+  defp calculate_from_screen_width(width) when width < 576, do: "Mobile"
+  defp calculate_from_screen_width(width) when width < 992, do: "Tablet"
+  defp calculate_from_screen_width(width) when width < 1440, do: "Laptop"
+  defp calculate_from_screen_width(width) when width >= 1440, do: "Desktop"
 
   defp clean_referrer(nil), do: nil
 
