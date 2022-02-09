@@ -6,9 +6,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     Plausible.Event.WriteBuffer.flush()
 
     ClickhouseRepo.one(
-      from e in Plausible.ClickhouseEvent,
+      from(e in Plausible.ClickhouseEvent,
         where: e.domain == ^domain,
         order_by: [desc: e.timestamp]
+      )
     )
   end
 
@@ -16,13 +17,17 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     Plausible.Event.WriteBuffer.flush()
 
     ClickhouseRepo.all(
-      from e in Plausible.ClickhouseEvent,
+      from(e in Plausible.ClickhouseEvent,
         where: e.domain == ^domain,
         order_by: [desc: e.timestamp]
+      )
     )
   end
 
   @user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
+  @user_agent_mobile "Mozilla/5.0 (Linux; Android 6.0; U007 Pro Build/MRA58K; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/44.0.2403.119 Mobile Safari/537.36"
+  @user_agent_tablet "Mozilla/5.0 (Linux; U; Android 4.2.2; it-it; Surfing TAB B 9.7 3G Build/JDQ39) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30"
+  @user_agent_unknown "Mozilla/5.0 (Linux; U; Android 4.0.4; en-us; NABI2-NV7A Build/IMM76L)Maxthon AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Safari/534.30"
 
   describe "POST /api/event" do
     test "records the event", %{conn: conn} do
@@ -430,6 +435,119 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert event.name == "custom event"
+    end
+
+    test "screen size is calculated from user_agent when is mobile", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://gigride.live/",
+        screen_width: nil,
+        domain: "external-controller-test-24.com"
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent_mobile)
+        |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-24.com")
+
+      assert response(conn, 202) == "ok"
+      assert pageview.screen_size == "Mobile"
+    end
+
+    test "screen size is calculated from user_agent when is tablet", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://gigride.live/",
+        screen_width: nil,
+        domain: "external-controller-test-25.com"
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent_tablet)
+        |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-25.com")
+
+      assert response(conn, 202) == "ok"
+      assert pageview.screen_size == "Tablet"
+    end
+
+    test "screen size is calculated from user_agent when is laptop", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://gigride.live/",
+        screen_width: 1300,
+        domain: "external-controller-test-26.com"
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-26.com")
+
+      assert response(conn, 202) == "ok"
+      assert pageview.screen_size == "Laptop"
+    end
+
+    test "screen size is calculated from user_agent when is desktop", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://gigride.live/",
+        screen_width: 1500,
+        domain: "external-controller-test-27.com"
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-27.com")
+
+      assert response(conn, 202) == "ok"
+      assert pageview.screen_size == "Desktop"
+    end
+
+    test "screen size is calculated from width when user agent is unknown", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://gigride.live/",
+        screen_width: 1500,
+        domain: "external-controller-test-28.com"
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent_unknown)
+        |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-28.com")
+
+      assert response(conn, 202) == "ok"
+      assert pageview.screen_size == "Desktop"
+    end
+
+    test "screen size is nil if screen_width is missing and user agent is unknown", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://gigride.live/",
+        domain: "external-controller-test-29.com"
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent_unknown)
+        |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-29.com")
+
+      assert response(conn, 202) == "ok"
+      assert pageview.screen_size == ""
     end
 
     test "casts custom props to string", %{conn: conn} do
