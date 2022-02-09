@@ -207,8 +207,12 @@ config :plausible, PlausibleWeb.Endpoint,
   http: [port: port, ip: listen_ip, transport_options: [max_connections: :infinity]],
   secret_key_base: secret_key_base
 
+maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
+
 if is_nil(db_socket_dir) do
-  config :plausible, Plausible.Repo, url: db_url
+  config :plausible, Plausible.Repo,
+    url: db_url,
+    socket_options: maybe_ipv6
 else
   config :plausible, Plausible.Repo,
     socket_dir: db_socket_dir,
