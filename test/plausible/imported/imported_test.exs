@@ -44,7 +44,7 @@ defmodule Plausible.ImportedTest do
       assert Enum.sum(plot) == 4
     end
 
-    test "Sources data imported from Google Analytics", %{conn: conn, site: site} do
+    test "Sources and UTM sources are separated", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           referrer_source: "Google",
@@ -73,6 +73,22 @@ defmodule Plausible.ImportedTest do
                    %{
                      "dimensions" => ["20210131", "google.com"],
                      "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
+                   },
+                   %{
+                     "dimensions" => ["20210101", "google"],
+                     "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
+                   },
+                   %{
+                     "dimensions" => ["20210101", "Twitter"],
+                     "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
+                   },
+                   %{
+                     "dimensions" => ["20210131", "A Nice Newsletter"],
+                     "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
+                   },
+                   %{
+                     "dimensions" => ["20210101", "(direct)"],
+                     "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
                    }
                  ],
                  site.id,
@@ -88,6 +104,33 @@ defmodule Plausible.ImportedTest do
       assert json_response(conn, 200) == [
                %{"name" => "Google", "visitors" => 3},
                %{"name" => "DuckDuckGo", "visitors" => 2}
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_sources?period=month&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "A Nice Newsletter",
+                 "visitors" => 1,
+                 "bounce_rate" => 100.0,
+                 "visit_duration" => 60.0
+               },
+               %{
+                 "name" => "Twitter",
+                 "visitors" => 1,
+                 "bounce_rate" => 100.0,
+                 "visit_duration" => 60.0
+               },
+               %{
+                 "bounce_rate" => 100.0,
+                 "name" => "adwords",
+                 "visit_duration" => 60.0,
+                 "visitors" => 1
+               }
              ]
     end
 

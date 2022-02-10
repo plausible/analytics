@@ -46,6 +46,9 @@ defmodule Plausible.Imported do
     })
   end
 
+  # Credit: https://github.com/kvesteri/validators
+  @domain ~r/^(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][-_.a-zA-Z0-9]{0,61}[a-zA-Z0-9]))\.([a-zA-Z]{2,13}|[a-zA-Z0-9-]{2,30}.[a-zA-Z]{2,3})$/
+
   defp new_from_google_analytics(site_id, "sources", %{
          "dimensions" => [timestamp, source],
          "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
@@ -57,18 +60,32 @@ defmodule Plausible.Imported do
 
     source = if source == "(direct)", do: nil, else: source
 
-    Imported.Sources.new(%{
-      site_id: site_id,
-      timestamp: format_timestamp(timestamp),
-      source: Imported.Sources.parse(source),
-      visitors: visitors,
-      visits: visits,
-      bounces: bounces,
-      visit_duration: visit_duration
-    })
-  end
+    cond do
+      is_nil(source) || String.match?(source, @domain) ->
+        Imported.Sources.new(%{
+          site_id: site_id,
+          timestamp: format_timestamp(timestamp),
+          source: Imported.Sources.parse(source),
+          visitors: visitors,
+          visits: visits,
+          bounces: bounces,
+          visit_duration: visit_duration
+        })
 
-  # TODO: utm_sources. Google reports sources and utm_sources unified.
+      true ->
+        utm_source = if source == "google", do: "adwords", else: source
+
+        Imported.UtmSources.new(%{
+          site_id: site_id,
+          timestamp: format_timestamp(timestamp),
+          utm_source: utm_source,
+          visitors: visitors,
+          visits: visits,
+          bounces: bounces,
+          visit_duration: visit_duration
+        })
+    end
+  end
 
   defp new_from_google_analytics(site_id, "utm_mediums", %{
          "dimensions" => [timestamp, medium],
