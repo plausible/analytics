@@ -55,7 +55,7 @@ defmodule Plausible.Stats.Breakdown do
         []
       end
 
-    zip_results(event_results, page_results, "event:goal", metrics)
+    zip_results(event_results, page_results, :goal, metrics)
   end
 
   def breakdown(site, query, "event:props:" <> custom_prop, metrics, pagination) do
@@ -74,14 +74,11 @@ defmodule Plausible.Stats.Breakdown do
         )
         |> select_event_metrics(metrics)
         |> ClickhouseRepo.all()
-        |> transform_keys(%{custom_prop => String.to_atom(custom_prop)})
       else
         []
       end
 
-    results =
-      breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
-      |> transform_keys(%{custom_prop => String.to_atom(custom_prop)})
+    results = breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
 
     zipped = zip_results(none_result, results, custom_prop, metrics)
 
@@ -175,7 +172,6 @@ defmodule Plausible.Stats.Breakdown do
         |> String.trim_leading("event:")
         |> String.trim_leading("visit:")
         |> String.trim_leading("props:")
-        |> String.to_atom()
       else
         property
       end
