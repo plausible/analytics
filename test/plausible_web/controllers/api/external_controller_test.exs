@@ -382,7 +382,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.referrer_source == ""
     end
 
-    test "screen size is calculated from screen_width", %{conn: conn} do
+    test "screen size is calculated from user agent", %{conn: conn} do
       params = %{
         name: "pageview",
         url: "http://gigride.live/",
@@ -392,7 +392,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       conn =
         conn
-        |> put_req_header("user-agent", @user_agent)
+        |> put_req_header("user-agent", @user_agent_mobile)
         |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-16.com")
@@ -401,7 +401,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.screen_size == "Mobile"
     end
 
-    test "screen size is nil if screen_width is missing", %{conn: conn} do
+    test "screen size is nil if user_agent is unknown", %{conn: conn} do
       params = %{
         name: "pageview",
         url: "http://gigride.live/",
@@ -410,7 +410,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       conn =
         conn
-        |> put_req_header("user-agent", @user_agent)
+        |> put_req_header("user-agent", @user_agent_unknown)
         |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-17.com")
@@ -437,25 +437,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert event.name == "custom event"
     end
 
-    test "screen size is calculated from user_agent when is mobile", %{conn: conn} do
-      params = %{
-        name: "pageview",
-        url: "http://gigride.live/",
-        screen_width: nil,
-        domain: "external-controller-test-24.com"
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent_mobile)
-        |> post("/api/event", params)
-
-      pageview = get_event("external-controller-test-24.com")
-
-      assert response(conn, 202) == "ok"
-      assert pageview.screen_size == "Mobile"
-    end
-
     test "screen size is calculated from user_agent when is tablet", %{conn: conn} do
       params = %{
         name: "pageview",
@@ -475,25 +456,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.screen_size == "Tablet"
     end
 
-    test "screen size is calculated from user_agent when is laptop", %{conn: conn} do
-      params = %{
-        name: "pageview",
-        url: "http://gigride.live/",
-        screen_width: 1300,
-        domain: "external-controller-test-26.com"
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      pageview = get_event("external-controller-test-26.com")
-
-      assert response(conn, 202) == "ok"
-      assert pageview.screen_size == "Laptop"
-    end
-
     test "screen size is calculated from user_agent when is desktop", %{conn: conn} do
       params = %{
         name: "pageview",
@@ -511,43 +473,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert pageview.screen_size == "Desktop"
-    end
-
-    test "screen size is calculated from width when user agent is unknown", %{conn: conn} do
-      params = %{
-        name: "pageview",
-        url: "http://gigride.live/",
-        screen_width: 1500,
-        domain: "external-controller-test-28.com"
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent_unknown)
-        |> post("/api/event", params)
-
-      pageview = get_event("external-controller-test-28.com")
-
-      assert response(conn, 202) == "ok"
-      assert pageview.screen_size == "Desktop"
-    end
-
-    test "screen size is nil if screen_width is missing and user agent is unknown", %{conn: conn} do
-      params = %{
-        name: "pageview",
-        url: "http://gigride.live/",
-        domain: "external-controller-test-29.com"
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent_unknown)
-        |> post("/api/event", params)
-
-      pageview = get_event("external-controller-test-29.com")
-
-      assert response(conn, 202) == "ok"
-      assert pageview.screen_size == ""
     end
 
     test "casts custom props to string", %{conn: conn} do
@@ -844,7 +769,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.pathname == "/opportunity"
       assert pageview.referrer_source == "Facebook"
       assert pageview.referrer == "facebook.com/page"
-      assert pageview.screen_size == "Mobile"
     end
 
     test "records hash when in hash mode", %{conn: conn} do

@@ -115,7 +115,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         operating_system_version: ua && os_version(ua),
         browser: ua && browser_name(ua),
         browser_version: ua && browser_version(ua),
-        screen_size: calculate_screen_size(params["screen_width"], ua),
+        screen_size: ua && calculate_screen_size(ua),
         "meta.key": Map.keys(params["meta"]),
         "meta.value": Map.values(params["meta"]) |> Enum.map(&Kernel.to_string/1)
       }
@@ -484,25 +484,22 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp calculate_screen_size(_, %UAInspector.Result{
+  defp calculate_screen_size(%UAInspector.Result{
          device: %UAInspector.Result.Device{type: "smartphone"}
        }),
        do: "Mobile"
 
-  defp calculate_screen_size(_, %UAInspector.Result{
+  defp calculate_screen_size(%UAInspector.Result{
          device: %UAInspector.Result.Device{type: "tablet"}
        }),
        do: "Tablet"
 
-  defp calculate_screen_size(width, _) do
-    calculate_from_screen_width(width)
-  end
+  defp calculate_screen_size(%UAInspector.Result{
+         device: %UAInspector.Result.Device{type: _}
+       }),
+       do: "Desktop"
 
-  defp calculate_from_screen_width(nil), do: nil
-  defp calculate_from_screen_width(width) when width < 576, do: "Mobile"
-  defp calculate_from_screen_width(width) when width < 992, do: "Tablet"
-  defp calculate_from_screen_width(width) when width < 1440, do: "Laptop"
-  defp calculate_from_screen_width(width) when width >= 1440, do: "Desktop"
+  defp calculate_screen_size(_), do: nil
 
   defp clean_referrer(nil), do: nil
 
