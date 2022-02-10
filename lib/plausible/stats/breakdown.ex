@@ -232,12 +232,12 @@ defmodule Plausible.Stats.Breakdown do
     time_query = "
       SELECT
         p,
-        toUInt32(avg(td)) as avgTime
+        round(sum(td)/count(case when p2 != p then 1 end)) as avgTime
       FROM
         (SELECT
           p,
           p2,
-          if(s=s2, sum(t2-t), 0) as td
+          sum(t2-t) as td
         FROM
           (SELECT
             *,
@@ -245,8 +245,8 @@ defmodule Plausible.Stats.Breakdown do
             neighbor(p, 1) as p2,
             neighbor(s, 1) as s2
           FROM (#{base_query_raw}))
-        WHERE p IN tuple(?)
-        GROUP BY p,p2,s,s2)
+        WHERE s=s2 AND p IN tuple(?)
+        GROUP BY p,p2,s)
       GROUP BY p"
 
     {:ok, res} = ClickhouseRepo.query(time_query, base_query_raw_params ++ [pages])
