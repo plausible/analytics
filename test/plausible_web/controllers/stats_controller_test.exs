@@ -112,6 +112,8 @@ defmodule PlausibleWeb.StatsControllerTest do
     populate_stats(site, [
       build(:pageview,
         country_code: "EE",
+        subdivision1_code: "EE-37",
+        city_geoname_id: 588_409,
         pathname: "/",
         timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -1),
         referrer_source: "Google",
@@ -119,6 +121,8 @@ defmodule PlausibleWeb.StatsControllerTest do
       ),
       build(:pageview,
         country_code: "EE",
+        subdivision1_code: "EE-37",
+        city_geoname_id: 588_409,
         pathname: "/some-other-page",
         timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -2),
         referrer_source: "Google",

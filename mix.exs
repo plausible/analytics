@@ -54,7 +54,7 @@ defmodule Plausible.MixProject do
       {:combination, "~> 0.0.3"},
       {:cors_plug, "~> 2.0"},
       {:ecto_sql, "~> 3.0"},
-      {:elixir_uuid, "~> 1.2"},
+      {:elixir_uuid, "~> 1.2", only: :test},
       {:jason, "~> 1.2"},
       {:phoenix, "~> 1.5.0"},
       {:phoenix_ecto, "~> 4.0"},

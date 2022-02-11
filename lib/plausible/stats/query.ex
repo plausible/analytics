@@ -233,9 +233,12 @@ defmodule Plausible.Stats.Query do
 
     is_negated = String.contains?(str, "!=")
     is_list = String.contains?(val, "|")
+    is_wildcard = String.contains?(val, "*")
 
     cond do
       key == "event:goal" -> {key, parse_goal_filter(val)}
+      is_wildcard && is_negated -> {key, {:does_not_match, val}}
+      is_wildcard -> {key, {:matches, val}}
       is_list -> {key, {:member, String.split(val, "|")}}
       is_negated -> {key, {:is_not, val}}
       true -> {key, {:is, val}}

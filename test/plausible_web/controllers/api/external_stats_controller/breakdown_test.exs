@@ -830,6 +830,33 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    test "can filter event:page with a wildcard", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, pathname: "/en/page1"),
+        build(:pageview, pathname: "/en/page2"),
+        build(:pageview, pathname: "/en/page2"),
+        build(:pageview, pathname: "/pl/page1")
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "event:page",
+          "filters" => "event:page==/en/**"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"page" => "/en/page2", "visitors" => 2},
+                 %{"page" => "/en/page1", "visitors" => 1}
+               ]
+             }
+    end
+
     test "breakdown by custom event property", %{conn: conn, site: site} do
       populate_stats([
         build(:event,
@@ -1046,6 +1073,88 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                  %{"cost" => "18", "visitors" => 1}
                ]
              }
+    end
+  end
+
+  describe "breakdown by event:goal" do
+    test "custom properties from custom events are returned", %{conn: conn, site: site} do
+      insert(:goal, %{domain: site.domain, event_name: "404"})
+      insert(:goal, %{domain: site.domain, event_name: "Purchase"})
+      insert(:goal, %{domain: site.domain, page_path: "/test"})
+
+      populate_stats([
+        build(:pageview,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00],
+          pathname: "/test"
+        ),
+        build(:pageview,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:01],
+          pathname: "/test",
+          "meta.key": ["method"],
+          "meta.value": ["HTTP"]
+        ),
+        build(:event,
+          name: "404",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:02],
+          "meta.key": ["method"],
+          "meta.value": ["HTTP"]
+        ),
+        build(:event,
+          name: "Purchase",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:02],
+          "meta.key": ["method"],
+          "meta.value": ["HTTPS"]
+        ),
+        build(:event,
+          name: "404",
+          timestamp: ~N[2021-01-01 00:00:03],
+          domain: site.domain,
+          "meta.key": ["OS", "method"],
+          "meta.value": ["Linux", "HTTP"]
+        ),
+        build(:event,
+          name: "404",
+          timestamp: ~N[2021-01-01 00:00:04],
+          domain: site.domain,
+          "meta.key": ["version"],
+          "meta.value": ["1"]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:goal"
+        })
+
+      res =
+        Enum.map(json_response(conn, 200)["results"], fn item ->
+          Map.update(item, "props", [], fn x -> Enum.sort(x) end)
+        end)
+
+      assert res == [
+               %{
+                 "goal" => "404",
+                 "props" => ["OS", "method", "version"],
+                 "visitors" => 3
+               },
+               %{
+                 "goal" => "Visit /test",
+                 "props" => [],
+                 "visitors" => 2
+               },
+               %{
+                 "goal" => "Purchase",
+                 "props" => ["method"],
+                 "visitors" => 1
+               }
+             ]
     end
   end
 
