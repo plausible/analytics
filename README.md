@@ -21,8 +21,6 @@
 
 We are dedicated to making web analytics more privacy-friendly. Our mission is to reduce corporate surveillance by providing an alternative web analytics tool which doesn’t come from the AdTech world. The full-time team consists of Uku Taht and Marko Saric. We are completely independent, self-funded and bootstrapped.
 
-[We're hiring!](https://plausible.io/jobs/infrastructure-engineer) 🆕
-
 ![](https://docs.plausible.io/img/plausible-analytics.png)
 
 ## Why Plausible?
