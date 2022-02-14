@@ -5,6 +5,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   @no_domain_error {:error, %{domain: ["can't be blank"]}}
   @no_event_id_error {:error, %{event_id: ["can't be blank"]}}
+  @ignoring_message "Ignoring enrich event"
 
   def event(conn, _params) do
     with {:ok, params} <- parse_body(conn),
@@ -78,7 +79,12 @@ defmodule PlausibleWeb.Api.ExternalController do
         if event_id do
           event_id = String.to_integer(event_id)
           timestamp = params["timestamp"] || default_timestamp()
-          Plausible.Event.Store.on_enrich_event(event_id, timestamp)
+          case Plausible.Event.Store.on_enrich_event(event_id, timestamp) do
+            {:ok, enriched_event} ->
+              Plausible.Session.Store.on_enrich_event(enriched_event, timestamp)
+              {:ok, "ok"}
+            :error -> {:ok, @ignoring_message}
+          end
         else
           @no_event_id_error
         end
@@ -109,7 +115,6 @@ defmodule PlausibleWeb.Api.ExternalController do
 
       ref = parse_referrer(uri, params["referrer"])
       location_details = visitor_location_details(conn)
-
       event_attrs = %{
         event_id: generate_event_id(),
         domain: params["domain"],
@@ -138,8 +143,11 @@ defmodule PlausibleWeb.Api.ExternalController do
         "meta.key": Map.keys(params["meta"]),
         "meta.value": Map.values(params["meta"]) |> Enum.map(&Kernel.to_string/1)
       }
-
-      store_event(conn, event_attrs)
+      if event_attrs[:domain_list] != [] do
+        store_event(conn, event_attrs)
+      else
+        @no_domain_error
+      end
     end
   end
 
@@ -493,9 +501,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     ip_address = PlausibleWeb.RemoteIp.get(conn)
     root_domain = get_root_domain(hostname)
 
-    if root_domain do
-      SipHash.hash!(salt, user_agent <> ip_address <> root_domain)
-    end
+    Plausible.Hash.hash(salt, user_agent <> ip_address <> root_domain)
   end
 
   defp get_root_domain(nil), do: "(none)"

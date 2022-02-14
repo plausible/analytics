@@ -1,6 +1,7 @@
 defmodule Plausible.Session.Store do
   use GenServer
   use Plausible.Repo
+  import Plausible.Hash
   require Logger
 
   @garbage_collect_interval_milliseconds 60 * 1000
@@ -20,13 +21,16 @@ defmodule Plausible.Session.Store do
     GenServer.call(pid, {:on_event, event, prev_user_id})
   end
 
+  def on_enrich_event(enriched_event, timestamp, pid \\ __MODULE__) do
+    GenServer.call(pid, {:on_enrich_event, enriched_event, timestamp})
+  end
+
   def handle_call(
         {:on_event, event, prev_user_id},
         _from,
         %{sessions: sessions, buffer: buffer} = state
       ) do
     session_key = {event.domain, event.user_id}
-
     found_session =
       sessions[session_key] || (prev_user_id && sessions[{event.domain, prev_user_id}])
 
@@ -34,9 +38,13 @@ defmodule Plausible.Session.Store do
 
     updated_sessions =
       if found_session && active do
-        new_session = update_session(found_session, event)
-        update_clickhouse_session(buffer, found_session, new_session, event.domain_list)
-        Map.put(sessions, session_key, new_session)
+        if is_correct_order?(found_session, event) do
+          new_session = update_session(found_session, event)
+          update_clickhouse_session(buffer, found_session, new_session, event.domain_list)
+          Map.put(sessions, session_key, new_session)
+        else
+          sessions
+        end
       else
         new_session = new_session_from_event(event)
         new_clickhouse_session(buffer, new_session, event.domain_list)
@@ -46,6 +54,31 @@ defmodule Plausible.Session.Store do
     last_event_id = if found_session && active, do: found_session.last_event_id, else: nil
     session_id = updated_sessions[session_key].session_id
     {:reply, {session_id, last_event_id}, %{state | sessions: updated_sessions}}
+  end
+
+  def handle_call(
+        {:on_enrich_event, enriched_event, timestamp},
+        _from,
+        %{sessions: sessions, buffer: buffer} = state
+      ) do
+    session_key = {enriched_event.domain, enriched_event.user_id}
+
+    found_session = sessions[session_key]
+
+
+    updated_sessions =
+      if found_session && is_active?(found_session, enriched_event) do
+        new_session = %{
+          found_session
+            | duration: Timex.diff(timestamp, found_session.start, :second) |> abs
+        }
+        update_clickhouse_session(buffer, found_session, new_session, enriched_event.domain_list)
+        Map.put(sessions, session_key, new_session)
+      else
+        sessions
+      end
+
+    {:reply, nil, %{state | sessions: updated_sessions}}
   end
 
   defp update_clickhouse_session(buffer, found_session, new_session, domain_list) do
@@ -69,6 +102,8 @@ defmodule Plausible.Session.Store do
     found_session = sessions[session_key]
     active = is_active?(found_session, event)
 
+    last_event_id = if found_session && active, do: found_session.last_event_id, else: nil
+
     updated_sessions =
       if found_session && active do
         new_session = update_session(found_session, event)
@@ -78,11 +113,15 @@ defmodule Plausible.Session.Store do
         Map.put(sessions, session_key, new_session)
       end
 
-    updated_sessions
+    {updated_sessions, last_event_id}
   end
 
   defp is_active?(session, event) do
     session && Timex.diff(event.timestamp, session.timestamp, :second) < session_length_seconds()
+  end
+
+  defp is_correct_order?(session, event) do
+    session && Timex.diff(event.timestamp, session.timestamp, :second) > 0
   end
 
   defp update_session(session, event) do
@@ -93,7 +132,7 @@ defmodule Plausible.Session.Store do
         timestamp: event.timestamp,
         exit_page: event.pathname,
         is_bounce: false,
-        duration: Timex.diff(event.timestamp, session.start, :second) |> abs,
+        duration: Timex.diff(event.timestamp, session.start, :second),
         pageviews:
           if(event.name == "pageview", do: session.pageviews + 1, else: session.pageviews),
         country_code:
@@ -201,8 +240,8 @@ defmodule Plausible.Session.Store do
   defp unique_session_for(session, domain) do
     %{
       session
-      | user_id: SipHash.hash!(to_string(session.user_id), domain),
-        session_id: SipHash.hash!(to_string(session.session_id), domain),
+      | user_id: hash(to_string(session.user_id) <> domain),
+        session_id: hash(to_string(session.session_id) <> domain),
         domain: domain
     }
   end

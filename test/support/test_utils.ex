@@ -92,19 +92,19 @@ defmodule Plausible.TestUtils do
   end
 
   def populate_stats(events) do
-    sessions =
-      Enum.reduce(events, %{}, fn event, sessions ->
-        Plausible.Session.Store.reconcile_event(sessions, event)
-      end)
+    {sessions, events} =
+      Enum.reduce(events, {%{}, %{}}, fn event, {sessions, events} ->
+        {sessions, last_event_id} = Plausible.Session.Store.reconcile_event(sessions, event)
 
-    events =
-      Enum.map(events, fn event ->
-        Map.put(event, :session_id, sessions[{event.domain, event.user_id}].session_id)
+        event = Map.put(event, :session_id, sessions[{event.domain, event.user_id}].session_id)
+        events = Plausible.Event.Store.reconcile_event(events, event, last_event_id)
+
+        {sessions, events}
       end)
 
     Plausible.ClickhouseRepo.insert_all(
       Plausible.ClickhouseEvent,
-      Enum.map(events, &schema_to_map/1)
+      Enum.map(Map.values(events), &schema_to_map/1)
     )
 
     Plausible.ClickhouseRepo.insert_all(

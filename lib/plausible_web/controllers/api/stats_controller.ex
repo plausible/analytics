@@ -503,19 +503,18 @@ defmodule PlausibleWeb.Api.StatsController do
     total_visits_query =
       Query.put_filter(query, "event:page", {:member, pages})
       |> Query.put_filter("event:goal", nil)
-      |> Query.put_filter("event:name", {:is, "pageview"})
       |> Query.put_filter("visit:goal", query.filters["event:goal"])
       |> Query.put_filter("visit:page", query.filters["event:page"])
 
-    total_pageviews =
-      Stats.breakdown(site, total_visits_query, "event:page", ["pageviews"], {limit, 1})
+    total_events =
+      Stats.breakdown(site, total_visits_query, "event:page", ["events"], {limit, 1})
 
     exit_pages =
       Enum.map(exit_pages, fn exit_page ->
         exit_rate =
-          case Enum.find(total_pageviews, &(&1["page"] == exit_page["name"])) do
-            %{"pageviews" => pageviews} ->
-              Float.floor(exit_page["total_exits"] / pageviews * 100)
+          case Enum.find(total_events, &(&1["page"] == exit_page["name"])) do
+            %{"events" => events} ->
+              Float.floor(exit_page["total_exits"] / events * 100)
 
             nil ->
               nil

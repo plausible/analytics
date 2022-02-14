@@ -223,10 +223,11 @@ defmodule Plausible.Stats.Base do
   end
 
   def select_event_metrics(q, ["time_on_page" | rest]) do
+
     from(e in q,
       select_merge: %{
         "time_on_page" =>
-          fragment("toUInt64(round(sumIf(duration * sign, ? = 'pageview') / sumIf(sign, ? = 'pageview') * any(_sample_factor)))", e.name, e.name)
+          fragment("toUInt64(ifNotFinite(round(sumIf(duration * sign, ? = 'pageview') / sumIf(sign, ? = 'pageview') * any(_sample_factor)), 0))", e.name, e.name)
       }
     )
     |> select_event_metrics(rest)

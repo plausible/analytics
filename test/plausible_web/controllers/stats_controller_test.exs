@@ -49,6 +49,28 @@ defmodule PlausibleWeb.StatsControllerTest do
 
     test "exports data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
+
+      Plausible.ClickhouseRepo.all(Plausible.ClickhouseEvent)
+        |> Enum.filter(fn e -> e.domain == site.domain end)
+        |> Enum.map(fn e ->
+          %{
+            name: e.name,
+            timestamp: e.timestamp,
+            session_id: e.session_id,
+            path: e.pathname
+          }
+        end)
+
+        Plausible.ClickhouseRepo.all(Plausible.ClickhouseSession)
+        |> Enum.filter(fn s -> s.domain == site.domain end)
+        |> Enum.map(fn s ->
+          %{
+            name: s.start,
+            exit_page: s.exit_page,
+            session_id: s.session_id
+          }
+        end)
+
       conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20")
       assert_zip(conn, "30d")
     end
@@ -111,22 +133,16 @@ defmodule PlausibleWeb.StatsControllerTest do
   defp populate_exported_stats(site) do
     populate_stats(site, [
       build(:pageview,
+        timestamp: Timex.shift(~N[2021-10-20 12:00:00], months: -5),
+        utm_campaign: "ads",
         country_code: "EE",
-        subdivision1_code: "EE-37",
-        city_geoname_id: 588_409,
-        pathname: "/",
-        timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -1),
         referrer_source: "Google",
-        user_id: 123
+        browser: "ABrowserName"
       ),
       build(:pageview,
+        timestamp: Timex.shift(~N[2021-10-20 12:00:00], months: -1),
         country_code: "EE",
-        subdivision1_code: "EE-37",
-        city_geoname_id: 588_409,
-        pathname: "/some-other-page",
-        timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -2),
-        referrer_source: "Google",
-        user_id: 123
+        browser: "ABrowserName"
       ),
       build(:pageview,
         pathname: "/",
@@ -138,23 +154,29 @@ defmodule PlausibleWeb.StatsControllerTest do
         timestamp: Timex.shift(~N[2021-10-20 12:00:00], days: -1),
         browser: "ABrowserName"
       ),
-      build(:pageview,
-        timestamp: Timex.shift(~N[2021-10-20 12:00:00], months: -1),
-        country_code: "EE",
-        browser: "ABrowserName"
-      ),
-      build(:pageview,
-        timestamp: Timex.shift(~N[2021-10-20 12:00:00], months: -5),
-        utm_campaign: "ads",
-        country_code: "EE",
-        referrer_source: "Google",
-        browser: "ABrowserName"
-      ),
       build(:event,
         timestamp: Timex.shift(~N[2021-10-20 12:00:00], days: -1),
         name: "Signup",
         "meta.key": ["variant"],
         "meta.value": ["A"]
+      ),
+      build(:pageview,
+        country_code: "EE",
+        subdivision1_code: "EE-37",
+        city_geoname_id: 588_409,
+        pathname: "/some-other-page",
+        timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -2),
+        referrer_source: "Google",
+        user_id: 123
+      ),
+      build(:pageview,
+        country_code: "EE",
+        subdivision1_code: "EE-37",
+        city_geoname_id: 588_409,
+        pathname: "/",
+        timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -1),
+        referrer_source: "Google",
+        user_id: 123
       )
     ])
 

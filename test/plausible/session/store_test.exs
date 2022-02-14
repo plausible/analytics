@@ -37,7 +37,7 @@ defmodule Plausible.Session.StoreTest do
     assert [session] = sessions
     assert session.hostname == event.hostname
     assert session.domain == event.domain
-    assert session.user_id == event.user_id
+    assert session.user_id == Plausible.Hash.hash(to_string(event.user_id) <> event.domain)
     assert session.entry_page == event.pathname
     assert session.exit_page == event.pathname
     assert session.is_bounce == true
@@ -98,24 +98,5 @@ defmodule Plausible.Session.StoreTest do
     assert session.browser == "Firefox"
     assert session.browser_version == "10"
     assert session.screen_size == "Desktop"
-  end
-
-  test "calculates duration correctly for out-of-order events", %{store: store} do
-    timestamp = Timex.now()
-    event1 = build(:event, name: "pageview", timestamp: timestamp |> Timex.shift(seconds: 10))
-
-    event2 =
-      build(:event,
-        domain: event1.domain,
-        user_id: event1.user_id,
-        name: "pageview",
-        timestamp: timestamp
-      )
-
-    Store.on_event(event1, nil, store)
-    Store.on_event(event2, nil, store)
-
-    assert_receive({WriteBuffer, :insert, [[session, _negative_record]]})
-    assert session.duration == 10
   end
 end
