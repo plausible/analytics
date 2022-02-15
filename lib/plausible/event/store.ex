@@ -36,10 +36,11 @@ defmodule Plausible.Event.Store do
 
         new_event_memory =
           event_memory
-            |> Map.put(event.event_id, event)
-            |> maybe_enrich_prev_session_event(buffer, last_event_id, event.timestamp)
+          |> Map.put(event.event_id, event)
+          |> maybe_enrich_prev_session_event(buffer, last_event_id, event.timestamp)
 
         {:reply, event.event_id, %{state | event_memory: new_event_memory}}
+
       _custom_event ->
         insert_clickhouse_event(buffer, event, event.domain_list)
         {:reply, "ok", state}
@@ -70,9 +71,9 @@ defmodule Plausible.Event.Store do
   defp insert_clickhouse_event(buffer, event, domain_list) do
     Enum.each(domain_list, fn domain ->
       unique_event_for(event, domain)
-        |> Map.put(:sign, 1)
-        |> List.wrap()
-        |> buffer.insert()
+      |> Map.put(:sign, 1)
+      |> List.wrap()
+      |> buffer.insert()
     end)
   end
 
@@ -100,14 +101,19 @@ defmodule Plausible.Event.Store do
         new_event = enrich_duration(event, timestamp)
         update_clickhouse_event(buffer, event, new_event)
         Map.delete(event_memory, last_event_id)
-      _ -> event_memory
+
+      _ ->
+        event_memory
     end
   end
 
   def reconcile_event(events, event, last_event_id) do
     events = Map.put(events, event.event_id, event)
+
     case events[last_event_id] do
-      nil -> events
+      nil ->
+        events
+
       found_event ->
         new_event = enrich_duration(found_event, event.timestamp)
         Map.put(events, last_event_id, new_event)
@@ -146,12 +152,16 @@ defmodule Plausible.Event.Store do
   defp is_active?(event, timestamp_now) do
     event && Timex.diff(timestamp_now, event.timestamp, :second) < forget_event_after()
   end
+
   defp is_correct_order?(event, timestamp_now) do
     event && Timex.diff(timestamp_now, event.timestamp, :second) > 0
   end
+
   defp enrich_duration(event, timestamp) do
     new_duration = Timex.diff(timestamp, event.timestamp, :second)
     if new_duration > 0, do: %{event | duration: new_duration}, else: event
   end
-  defp forget_event_after(), do: 60 * 30 # half an hour in seconds
+
+  # half an hour in seconds
+  defp forget_event_after(), do: 60 * 30
 end

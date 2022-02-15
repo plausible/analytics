@@ -76,18 +76,23 @@ defmodule PlausibleWeb.Api.ExternalController do
     case params["n"] || params["name"] do
       "enrich" ->
         event_id = params["e"] || params["event_id"]
+
         if event_id do
           event_id = String.to_integer(event_id)
           timestamp = params["timestamp"] || default_timestamp()
+
           case Plausible.Event.Store.on_enrich_event(event_id, timestamp) do
             {:ok, enriched_event} ->
               Plausible.Session.Store.on_enrich_event(enriched_event, timestamp)
               {:ok, "ok"}
-            :error -> {:ok, @ignoring_message}
+
+            :error ->
+              {:ok, @ignoring_message}
           end
         else
           @no_event_id_error
         end
+
       _other ->
         params = %{
           "name" => params["n"] || params["name"],
@@ -97,8 +102,9 @@ defmodule PlausibleWeb.Api.ExternalController do
           "screen_width" => params["w"] || params["screen_width"],
           "hash_mode" => params["h"] || params["hashMode"],
           "meta" => parse_meta(params),
-          "timestamp" => params["timestamp"]  || default_timestamp()
+          "timestamp" => params["timestamp"] || default_timestamp()
         }
+
         handle_event(conn, params)
     end
   end
@@ -115,6 +121,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
       ref = parse_referrer(uri, params["referrer"])
       location_details = visitor_location_details(conn)
+
       event_attrs = %{
         event_id: generate_event_id(),
         domain: params["domain"],
@@ -143,6 +150,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         "meta.key": Map.keys(params["meta"]),
         "meta.value": Map.values(params["meta"]) |> Enum.map(&Kernel.to_string/1)
       }
+
       if event_attrs[:domain_list] != [] do
         store_event(conn, event_attrs)
       else

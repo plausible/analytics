@@ -1,8 +1,8 @@
 (function(){
   'use strict';
 
-  var location = window.location
-  var document = window.document
+  var location = window.location;
+  var document = window.document;
 
   {{#if compat}}
   var scriptEl = document.getElementById('plausible');
@@ -27,12 +27,6 @@
     {{else}}
     return new URL(el.src).origin + '/api/event'
     {{/if}}
-  }
-
-  function pageview_end() {
-    if (lastEventId !== null) {
-      
-    }
   }
 
   function trigger(eventName, options) {
@@ -63,10 +57,6 @@
     {{/if}}
     payload.d = scriptEl.getAttribute('data-domain')
 
-    if (eventName == "pageview_end") {
-      return navigator.sendBeacon(endpoint, JSON.stringify(payload))
-    }
-
     payload.r = document.referrer || null
     payload.w = window.innerWidth
     if (options && options.meta) {
@@ -87,6 +77,11 @@
 
     request.onreadystatechange = function() {
       if (request.readyState == 4) {
+        {{#if beacon}}
+        var resp = request.responseText;
+        if (resp && !isNaN(resp)) { lastEventId = resp }
+        {{/if}}
+
         options && options.callback && options.callback()
       }
     }
@@ -117,14 +112,9 @@
       }
   }
 
-  function registerOutboundLinkEvents() {
-    document.addEventListener('click', handleOutbound)
-    document.addEventListener('auxclick', handleOutbound)
-  }
-  {{/if}}
+  document.addEventListener('click', handleOutbound)
+  document.addEventListener('auxclick', handleOutbound)
 
-  {{#if outbound_links}}
-  registerOutboundLinkEvents()
   {{/if}}
 
   var queue = (window.plausible && window.plausible.q) || []
@@ -164,11 +154,6 @@
       }
     }
 
-    function handlePageviewEnd() {
-      if (document.visibilityState === 'visible') return;
-      trigger("pageview_end");
-    }
-
     if (document.visibilityState === 'prerender') {
       document.addEventListener("visibilitychange", handleVisibilityChange);
     } else {
@@ -176,9 +161,18 @@
     }
 
     {{#if beacon}}
-    document.addEventListener("visibilitychange", handlePageviewEnd);
-    document.addEventListener("pagehide", handlePageviewEnd);
-    window.addEventListener("beforeunload", handlePageviewEnd);
+    var lastEventId;
+
+    function enrich() {
+      if (document.visibilityState === 'visible') return;
+      if (lastEventId) {
+        navigator.sendBeacon(endpoint, JSON.stringify({n: "enrich", e: lastEventId}))
+      }
+    }
+
+    document.addEventListener("visibilitychange", enrich);
+    document.addEventListener("pagehide", enrich);
+    window.addEventListener("beforeunload", enrich);
     {{/if}}
 
   {{/unless}}

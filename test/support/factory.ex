@@ -183,5 +183,4 @@ defmodule Plausible.Factory do
       key_prefix: binary_part(key, 0, 6)
     }
   end
-
 end

@@ -1,5 +1,4 @@
 defmodule Plausible.Hash do
-
   def hash(key, input), do: SipHash.hash!(key, input)
   def hash(input), do: SipHash.hash!(default_key(), input)
 

@@ -31,6 +31,7 @@ defmodule Plausible.Session.Store do
         %{sessions: sessions, buffer: buffer} = state
       ) do
     session_key = {event.domain, event.user_id}
+
     found_session =
       sessions[session_key] || (prev_user_id && sessions[{event.domain, prev_user_id}])
 
@@ -65,13 +66,14 @@ defmodule Plausible.Session.Store do
 
     found_session = sessions[session_key]
 
-
     updated_sessions =
       if found_session && is_active?(found_session, enriched_event) do
         new_session = %{
           found_session
-            | duration: Timex.diff(timestamp, found_session.start, :second) |> abs
+          | duration: Timex.diff(timestamp, found_session.start, :second) |> abs,
+            exit_page: enriched_event.pathname
         }
+
         update_clickhouse_session(buffer, found_session, new_session, enriched_event.domain_list)
         Map.put(sessions, session_key, new_session)
       else
@@ -92,8 +94,8 @@ defmodule Plausible.Session.Store do
   defp new_clickhouse_session(buffer, new_session, domain_list) do
     Enum.each(domain_list, fn domain ->
       %{unique_session_for(new_session, domain) | sign: 1}
-        |> List.wrap()
-        |> buffer.insert()
+      |> List.wrap()
+      |> buffer.insert()
     end)
   end
 
@@ -237,6 +239,7 @@ defmodule Plausible.Session.Store do
 
     {:noreply, %{state | sessions: new_sessions, timer: new_timer}}
   end
+
   defp unique_session_for(session, domain) do
     %{
       session
@@ -245,6 +248,7 @@ defmodule Plausible.Session.Store do
         domain: domain
     }
   end
+
   defp session_length_seconds(), do: Application.get_env(:plausible, :session_length_minutes) * 60
   defp forget_session_after(), do: session_length_seconds() * 2
 end

@@ -50,27 +50,6 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "exports data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
 
-      Plausible.ClickhouseRepo.all(Plausible.ClickhouseEvent)
-        |> Enum.filter(fn e -> e.domain == site.domain end)
-        |> Enum.map(fn e ->
-          %{
-            name: e.name,
-            timestamp: e.timestamp,
-            session_id: e.session_id,
-            path: e.pathname
-          }
-        end)
-
-        Plausible.ClickhouseRepo.all(Plausible.ClickhouseSession)
-        |> Enum.filter(fn s -> s.domain == site.domain end)
-        |> Enum.map(fn s ->
-          %{
-            name: s.start,
-            exit_page: s.exit_page,
-            session_id: s.session_id
-          }
-        end)
-
       conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20")
       assert_zip(conn, "30d")
     end

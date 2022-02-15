@@ -506,8 +506,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> Query.put_filter("visit:goal", query.filters["event:goal"])
       |> Query.put_filter("visit:page", query.filters["event:page"])
 
-    total_events =
-      Stats.breakdown(site, total_visits_query, "event:page", ["events"], {limit, 1})
+    total_events = Stats.breakdown(site, total_visits_query, "event:page", ["events"], {limit, 1})
 
     exit_pages =
       Enum.map(exit_pages, fn exit_page ->

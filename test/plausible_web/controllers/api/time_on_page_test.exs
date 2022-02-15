@@ -53,51 +53,75 @@ defmodule PlausibleWeb.Api.TimeOnPageTest do
     assert List.first(json_response(conn, 200))["time_on_page"] == 20 * 60
   end
 
-  test "pageview does not update the duration for a previous session event", %{conn: conn, site: site} do
+  test "pageview does not update the duration for a previous session event", %{
+    conn: conn,
+    site: site
+  } do
     params = %{@pv_params | domain: site.domain}
 
     send_pageview(params)
-    send_pageview(%{params | url: "http://some.url/anotherpage", timestamp: ~N[2022-01-01 00:40:00]})
+
+    send_pageview(%{
+      params
+      | url: "http://some.url/anotherpage",
+        timestamp: ~N[2022-01-01 00:40:00]
+    })
 
     Plausible.Event.WriteBuffer.flush()
 
     root_page_stats =
       get(conn, "/api/stats/#{site.domain}/pages?period=day&date=2022-01-01&detailed=true")
-        |> json_response(200)
-        |> Enum.find(fn page -> page["name"] == "/" end)
+      |> json_response(200)
+      |> Enum.find(fn page -> page["name"] == "/" end)
 
     assert root_page_stats["time_on_page"] == 0
   end
 
-  test "next pageview does not update the duration for already enriched event", %{conn: conn, site: site} do
+  test "next pageview does not update the duration for already enriched event", %{
+    conn: conn,
+    site: site
+  } do
     params = %{@pv_params | domain: site.domain}
 
     event_id = send_pageview(params) |> response(202)
     send_enrich(event_id, ~N[2022-01-01 00:00:15])
-    send_pageview(%{params | url: "http://some.url/anotherpage", timestamp: ~N[2022-01-01 00:00:50]})
+
+    send_pageview(%{
+      params
+      | url: "http://some.url/anotherpage",
+        timestamp: ~N[2022-01-01 00:00:50]
+    })
 
     Plausible.Event.WriteBuffer.flush()
 
     root_page_stats =
       get(conn, "/api/stats/#{site.domain}/pages?period=day&date=2022-01-01&detailed=true")
-        |> json_response(200)
-        |> Enum.find(fn page -> page["name"] == "/" end)
+      |> json_response(200)
+      |> Enum.find(fn page -> page["name"] == "/" end)
 
     assert root_page_stats["time_on_page"] == 15
   end
 
-  test "next pageview updates the duration of the first one if duration is 0", %{conn: conn, site: site} do
+  test "next pageview updates the duration of the first one if duration is 0", %{
+    conn: conn,
+    site: site
+  } do
     params = %{@pv_params | domain: site.domain}
 
     send_pageview(params)
-    send_pageview(%{params | url: "http://some.url/anotherpage", timestamp: ~N[2022-01-01 00:00:10]})
+
+    send_pageview(%{
+      params
+      | url: "http://some.url/anotherpage",
+        timestamp: ~N[2022-01-01 00:00:10]
+    })
 
     Plausible.Event.WriteBuffer.flush()
 
     root_page_stats =
       get(conn, "/api/stats/#{site.domain}/pages?period=day&date=2022-01-01&detailed=true")
-        |> json_response(200)
-        |> Enum.find(fn page -> page["name"] == "/" end)
+      |> json_response(200)
+      |> Enum.find(fn page -> page["name"] == "/" end)
 
     assert root_page_stats["time_on_page"] == 10
   end
@@ -111,11 +135,13 @@ defmodule PlausibleWeb.Api.TimeOnPageTest do
 
     Plausible.Event.WriteBuffer.flush()
 
-    events = ClickhouseRepo.all(
-      from e in "events_v2",
-      where: e.domain == ^domain1 or e.domain == ^domain2,
-      select: [e.domain, e.duration]
-    )
+    events =
+      ClickhouseRepo.all(
+        from e in "events_v2",
+          where: e.domain == ^domain1 or e.domain == ^domain2,
+          select: [e.domain, e.duration]
+      )
+
     assert Enum.member?(events, [domain1, 46])
     assert Enum.member?(events, [domain2, 46])
   end
@@ -131,11 +157,12 @@ defmodule PlausibleWeb.Api.TimeOnPageTest do
 
     Plausible.Event.WriteBuffer.flush()
 
-    events = ClickhouseRepo.all(
-      from e in "events_v2",
-      where: e.domain == ^domain1 or e.domain == ^domain2,
-      select: [e.domain, e.pathname, e.duration]
-    )
+    events =
+      ClickhouseRepo.all(
+        from e in "events_v2",
+          where: e.domain == ^domain1 or e.domain == ^domain2,
+          select: [e.domain, e.pathname, e.duration]
+      )
 
     assert Enum.member?(events, [domain1, "/first", 20])
     assert Enum.member?(events, [domain1, "/second", 30])
@@ -147,11 +174,12 @@ defmodule PlausibleWeb.Api.TimeOnPageTest do
 
   test "enrich without event_id is ignored" do
     conn = send_enrich(nil, ~N[2022-01-01 00:00:46])
+
     assert json_response(conn, 400) == %{
-      "errors" => %{
-        "event_id" => ["can't be blank"]
-      }
-    }
+             "errors" => %{
+               "event_id" => ["can't be blank"]
+             }
+           }
   end
 
   test "enrich with event_id not corresponding to any event is ignored" do
@@ -160,7 +188,6 @@ defmodule PlausibleWeb.Api.TimeOnPageTest do
   end
 
   test "custom events are not merged in events_v2 table", %{site: site} do
-
     send_custom_event(site.domain, ~N[2022-01-01 00:00:00], "custom event 1")
     send_custom_event(site.domain, ~N[2022-01-01 00:00:05], "custom event 2")
     send_custom_event(site.domain, ~N[2022-01-01 00:00:10], "custom event 3")
@@ -168,11 +195,13 @@ defmodule PlausibleWeb.Api.TimeOnPageTest do
     Plausible.Event.WriteBuffer.flush()
 
     domain = site.domain
-    events = ClickhouseRepo.all(
-      from e in "events_v2",
-      where: e.domain == ^domain,
-      select: e.name
-    )
+
+    events =
+      ClickhouseRepo.all(
+        from e in "events_v2",
+          where: e.domain == ^domain,
+          select: e.name
+      )
 
     assert length(events) == 3
     assert Enum.member?(events, "custom event 1")
@@ -182,33 +211,33 @@ defmodule PlausibleWeb.Api.TimeOnPageTest do
 
   def send_pageview(params) do
     build_conn()
-      |> put_req_header("user-agent", @user_agent)
-      |> post("/api/event", %{
-          name: "pageview",
-          domain: params[:domain],
-          url: params[:url],
-          timestamp: params[:timestamp]
-        })
+    |> put_req_header("user-agent", @user_agent)
+    |> post("/api/event", %{
+      name: "pageview",
+      domain: params[:domain],
+      url: params[:url],
+      timestamp: params[:timestamp]
+    })
   end
 
   def send_enrich(event_id, timestamp) do
     build_conn()
-      |> put_req_header("user-agent", @user_agent)
-      |> post("/api/event", %{
-          name: "enrich",
-          event_id: event_id,
-          timestamp: timestamp
-        })
+    |> put_req_header("user-agent", @user_agent)
+    |> post("/api/event", %{
+      name: "enrich",
+      event_id: event_id,
+      timestamp: timestamp
+    })
   end
 
   def send_custom_event(domain, timestamp, name) do
     build_conn()
-      |> put_req_header("user-agent", @user_agent)
-      |> post("/api/event", %{
-          domain: domain,
-          name: name,
-          url: "http://some.url",
-          timestamp: timestamp
-        })
+    |> put_req_header("user-agent", @user_agent)
+    |> post("/api/event", %{
+      domain: domain,
+      name: name,
+      url: "http://some.url",
+      timestamp: timestamp
+    })
   end
 end
