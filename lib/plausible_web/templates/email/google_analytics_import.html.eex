@@ -1,7 +1,7 @@
 Hey <%= user_salutation(@user) %>,
 <br /><br />
 <%= if @success do %>
-  Your Google Analytics import has complete.
+  Your Google Analytics import has completed.
   <br /><br />
   View dashboard: @link
 <% else %>
