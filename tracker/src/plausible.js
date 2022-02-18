@@ -164,8 +164,7 @@
     var lastEventId;
 
     function enrich() {
-      if (document.visibilityState === 'visible') return;
-      if (lastEventId) {
+      if (/hidden|unloaded/.test(document.visibilityState) && lastEventId) {
         navigator.sendBeacon(endpoint, JSON.stringify({n: "enrich", e: lastEventId}))
       }
     }

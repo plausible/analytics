@@ -196,51 +196,6 @@ defmodule Plausible.Stats.Breakdown do
     |> ClickhouseRepo.all()
   end
 
-  defp breakdown_time_on_page(_site, _query, []) do
-    []
-  end
-
-  defp breakdown_time_on_page(site, query, pages) do
-    q =
-      from(
-        e in base_event_query(site, %Query{
-          query
-          | filters: Map.delete(query.filters, "event:page")
-        }),
-        select: {
-          fragment("? as p", e.pathname),
-          fragment("? as t", e.timestamp),
-          fragment("? as s", e.session_id)
-        },
-        order_by: [e.session_id, e.timestamp]
-      )
-
-    {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
-
-    time_query = "
-      SELECT
-        p,
-        round(sum(td)/count(case when p2 != p then 1 end)) as avgTime
-      FROM
-        (SELECT
-          p,
-          p2,
-          sum(t2-t) as td
-        FROM
-          (SELECT
-            *,
-            neighbor(t, 1) as t2,
-            neighbor(p, 1) as p2,
-            neighbor(s, 1) as s2
-          FROM (#{base_query_raw}))
-        WHERE s=s2 AND p IN tuple(?)
-        GROUP BY p,p2,s)
-      GROUP BY p"
-
-    {:ok, res} = ClickhouseRepo.query(time_query, base_query_raw_params ++ [pages])
-    res.rows |> Enum.map(fn [page, time] -> {page, time} end) |> Enum.into(%{})
-  end
-
   defp do_group_by(
          %Ecto.Query{
            from: %Ecto.Query.FromExpr{source: {"events_v2", _}},
