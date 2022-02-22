@@ -101,7 +101,7 @@ defmodule PlausibleWeb.StatsController do
     |> send_resp(200, zip_content)
   end
 
-  def shared_link(conn, %{"slug" => domain, "auth" => auth}) do
+  def shared_link(conn, %{"domain" => domain, "auth" => auth}) do
     shared_link =
       Repo.get_by(Plausible.Site.SharedLink, slug: auth)
       |> Repo.preload(:site)
@@ -109,8 +109,9 @@ defmodule PlausibleWeb.StatsController do
     if shared_link && shared_link.site.domain == domain do
       if shared_link.password_hash do
         with conn <- Plug.Conn.fetch_cookies(conn),
-             {:ok, token} <- Map.fetch(conn.req_cookies, "shared-link-token"),
-             {:ok, _} <- Plausible.Auth.Token.verify_shared_link(token) do
+             {:ok, token} <- Map.fetch(conn.req_cookies, shared_link_cookie_name(auth)),
+             {:ok, %{slug: token_slug}} <- Plausible.Auth.Token.verify_shared_link(token),
+             true <- token_slug == shared_link.slug do
           render_shared_link(conn, shared_link)
         else
           _e ->
@@ -149,7 +150,7 @@ defmodule PlausibleWeb.StatsController do
         token = Plausible.Auth.Token.sign_shared_link(slug)
 
         conn
-        |> put_resp_cookie("shared-link-token", token)
+        |> put_resp_cookie(shared_link_cookie_name(slug), token)
         |> redirect(to: "/share/#{URI.encode_www_form(shared_link.site.domain)}?auth=#{slug}")
       else
         conn
@@ -201,4 +202,6 @@ defmodule PlausibleWeb.StatsController do
       conn
     end
   end
+
+  defp shared_link_cookie_name(slug), do: "shared-link-" <> slug
 end

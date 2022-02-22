@@ -128,7 +128,7 @@ defmodule PlausibleWeb.Router do
   scope "/", PlausibleWeb do
     pipe_through [:shared_link]
 
-    get "/share/:slug", StatsController, :shared_link
+    get "/share/:domain", StatsController, :shared_link
     post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
   end
 

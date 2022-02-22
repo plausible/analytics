@@ -237,5 +237,22 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = post(conn, "/share/#{link.slug}/authenticate", %{password: "WRONG!"})
       assert html_response(conn, 200) =~ "Enter password"
     end
+
+    test "only gives access to the correct dashboard", %{conn: conn} do
+      site = insert(:site, domain: "test-site.com")
+      site2 = insert(:site, domain: "test-site2.com")
+
+      link =
+        insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
+
+      link2 =
+        insert(:shared_link, site: site2, password_hash: Plausible.Auth.Password.hash("password1"))
+
+      conn = post(conn, "/share/#{link.slug}/authenticate", %{password: "password"})
+      assert redirected_to(conn, 302) == "/share/#{site.domain}?auth=#{link.slug}"
+
+      conn = get(conn, "/share/#{site2.domain}?auth=#{link2.slug}")
+      assert html_response(conn, 200) =~ "Enter password"
+    end
   end
 end
