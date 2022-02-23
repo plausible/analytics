@@ -39,9 +39,60 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "can not view stats of someone else's website", %{conn: conn} do
-      conn = get(conn, "/some-other-site.com")
+      site = insert(:site)
+      conn = get(conn, site.domain)
       assert html_response(conn, 404) =~ "There&#39;s nothing here"
     end
+  end
+
+  describe "GET /:website - as a super admin" do
+    setup [:create_user, :make_user_super_admin, :log_in]
+
+    test "can view a private dashboard with stats", %{conn: conn} do
+      site = insert(:site)
+      populate_stats(site, [build(:pageview)])
+
+      conn = get(conn, "/" <> site.domain)
+      assert html_response(conn, 200) =~ "stats-react-container"
+    end
+
+    test "can view a private dashboard without stats", %{conn: conn} do
+      site = insert(:site)
+
+      conn = get(conn, "/" <> site.domain)
+      assert html_response(conn, 200) =~ "Need to see the snippet again?"
+    end
+
+    test "can view a private locked dashboard with stats", %{conn: conn} do
+      user = insert(:user)
+      site = insert(:site, locked: true, members: [user])
+      populate_stats(site, [build(:pageview)])
+
+      conn = get(conn, "/" <> site.domain)
+      assert html_response(conn, 200) =~ "stats-react-container"
+      assert html_response(conn, 200) =~ "This dashboard is actually locked"
+    end
+
+    test "can view a private locked dashboard without stats", %{conn: conn} do
+      user = insert(:user)
+      site = insert(:site, locked: true, members: [user])
+
+      conn = get(conn, "/" <> site.domain)
+      assert html_response(conn, 200) =~ "Need to see the snippet again?"
+      assert html_response(conn, 200) =~ "This dashboard is actually locked"
+    end
+
+    test "can view a locked public dashboard", %{conn: conn} do
+      site = insert(:site, locked: true, public: true)
+      populate_stats(site, [build(:pageview)])
+
+      conn = get(conn, "/" <> site.domain)
+      assert html_response(conn, 200) =~ "stats-react-container"
+    end
+  end
+
+  defp make_user_super_admin(%{user: user}) do
+    Application.put_env(:plausible, :super_admin_user_ids, [user.id])
   end
 
   describe "GET /:website/export" do

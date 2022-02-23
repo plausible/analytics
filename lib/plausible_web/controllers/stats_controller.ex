@@ -8,9 +8,10 @@ defmodule PlausibleWeb.StatsController do
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
     has_stats = Plausible.Sites.has_stats?(site)
+    can_see_stats = !site.locked || conn.assigns[:current_user_role] == :super_admin
 
     cond do
-      !site.locked && has_stats ->
+      has_stats && can_see_stats ->
         demo = site.domain == PlausibleWeb.Endpoint.host()
         offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
 
@@ -26,7 +27,7 @@ defmodule PlausibleWeb.StatsController do
           demo: demo
         )
 
-      !site.locked && !has_stats ->
+      !has_stats && can_see_stats ->
         conn
         |> assign(:skip_plausible_tracking, true)
         |> render("waiting_first_pageview.html", site: site)
