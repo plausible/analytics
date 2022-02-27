@@ -18,7 +18,8 @@ defmodule Plausible.Auth.UserAdmin do
     [
       name: nil,
       email: nil,
-      trial_expiry_date: nil,
+      inserted_at: %{name: "Created at", value: &format_date(&1.inserted_at)},
+      trial_expiry_date: %{name: "Trial expiry", value: &format_date(&1.trial_expiry_date)},
       subscription_tier: %{value: &subscription_tier/1},
       subscription_status: %{value: &subscription_status/1},
       grace_period: %{value: &grace_period_status/1}
@@ -74,5 +75,9 @@ defmodule Plausible.Auth.UserAdmin do
       true ->
         "Trial expired"
     end
+  end
+
+  defp format_date(date) do
+    Timex.format!(date, "{Mshort} {D}, {YYYY}")
   end
 end
