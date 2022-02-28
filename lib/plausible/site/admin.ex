@@ -23,6 +23,7 @@ defmodule Plausible.SiteAdmin do
   def index(_) do
     [
       domain: nil,
+      inserted_at: %{name: "Created at", value: &format_date(&1.inserted_at)},
       timezone: nil,
       public: nil,
       owner: %{value: &get_owner_email/1},
@@ -37,5 +38,9 @@ defmodule Plausible.SiteAdmin do
   defp get_other_members_emails(site) do
     memberships = Enum.reject(site.memberships, fn m -> m.role == :owner end)
     Enum.map(memberships, fn m -> m.user.email end) |> Enum.join(", ")
+  end
+
+  defp format_date(date) do
+    Timex.format!(date, "{Mshort} {D}, {YYYY}")
   end
 end
