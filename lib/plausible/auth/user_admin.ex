@@ -77,6 +77,8 @@ defmodule Plausible.Auth.UserAdmin do
     end
   end
 
+  defp format_date(nil), do: "--"
+
   defp format_date(date) do
     Timex.format!(date, "{Mshort} {D}, {YYYY}")
   end
