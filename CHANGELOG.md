@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - Cache the tracking script for 24 hours
+- Replace `XMLHttpRequest` for `navigator.sendBeacon`
 
 ## v1.4.1
 
