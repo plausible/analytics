@@ -69,17 +69,7 @@
     payload.h = 1
     {{/if}}
 
-    var request = new XMLHttpRequest();
-    request.open('POST', endpoint, true);
-    request.setRequestHeader('Content-Type', 'text/plain');
-
-    request.send(JSON.stringify(payload));
-
-    request.onreadystatechange = function() {
-      if (request.readyState == 4) {
-        options && options.callback && options.callback()
-      }
-    }
+    navigator.sendBeacon(endpoint, payload)
   }
 
   {{#if outbound_links}}
