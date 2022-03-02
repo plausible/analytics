@@ -169,6 +169,13 @@ defmodule Plausible.Google.Api do
       Plausible.Stats.Clickhouse.pageviews_begin(site)
       |> NaiveDateTime.to_date()
 
+    end_date =
+      if end_date == ~D[1970-01-01] do
+        Timex.today()
+      else
+        end_date
+      end
+
     request = %{
       auth: auth,
       profile: profile,
@@ -339,7 +346,7 @@ defmodule Plausible.Google.Api do
                next_page_token
              ) do
           {:ok, %{^dataset => remainder}} ->
-            {:ok, %{dataset => [data | remainder]}}
+            {:ok, %{dataset => data ++ remainder}}
 
           error ->
             error
