@@ -184,7 +184,8 @@ defmodule Plausible.Factory do
   @today Timex.today() |> Timex.to_date()
 
   def imported_visitors_factory do
-    %Plausible.Imported.Visitors{
+    %{
+      table: "imported_visitors",
       timestamp: @today,
       visitors: 1,
       pageviews: 1,
@@ -195,7 +196,8 @@ defmodule Plausible.Factory do
   end
 
   def imported_sources_factory do
-    %Plausible.Imported.Sources{
+    %{
+      table: "imported_sources",
       timestamp: @today,
       source: "",
       visitors: 1,
@@ -206,7 +208,8 @@ defmodule Plausible.Factory do
   end
 
   def imported_utm_mediums_factory do
-    %Plausible.Imported.UtmMediums{
+    %{
+      table: "imported_utm_mediums",
       timestamp: @today,
       utm_medium: "",
       visitors: 1,
@@ -217,7 +220,8 @@ defmodule Plausible.Factory do
   end
 
   def imported_utm_sources_factory do
-    %Plausible.Imported.UtmSources{
+    %{
+      table: "imported_utm_sources",
       timestamp: @today,
       utm_source: "",
       visitors: 1,
@@ -228,7 +232,8 @@ defmodule Plausible.Factory do
   end
 
   def imported_utm_campaigns_factory do
-    %Plausible.Imported.UtmCampaigns{
+    %{
+      table: "imported_utm_campaigns",
       timestamp: @today,
       utm_campaign: "",
       visitors: 1,
@@ -239,7 +244,8 @@ defmodule Plausible.Factory do
   end
 
   def imported_utm_terms_factory do
-    %Plausible.Imported.UtmTerms{
+    %{
+      table: "imported_utm_terms",
       timestamp: @today,
       utm_term: "",
       visitors: 1,
@@ -250,7 +256,8 @@ defmodule Plausible.Factory do
   end
 
   def imported_utm_contents_factory do
-    %Plausible.Imported.UtmContents{
+    %{
+      table: "imported_utm_contents",
       timestamp: @today,
       utm_content: "",
       visitors: 1,
@@ -261,7 +268,8 @@ defmodule Plausible.Factory do
   end
 
   def imported_pages_factory do
-    %Plausible.Imported.Pages{
+    %{
+      table: "imported_pages",
       timestamp: @today,
       page: "",
       visitors: 1,
@@ -271,7 +279,8 @@ defmodule Plausible.Factory do
   end
 
   def imported_entry_pages_factory do
-    %Plausible.Imported.EntryPages{
+    %{
+      table: "imported_entry_pages",
       timestamp: @today,
       entry_page: "",
       visitors: 1,
@@ -282,7 +291,8 @@ defmodule Plausible.Factory do
   end
 
   def imported_exit_pages_factory do
-    %Plausible.Imported.ExitPages{
+    %{
+      table: "imported_exit_pages",
       timestamp: @today,
       exit_page: "",
       visitors: 1,
@@ -291,7 +301,8 @@ defmodule Plausible.Factory do
   end
 
   def imported_locations_factory do
-    %Plausible.Imported.Locations{
+    %{
+      table: "imported_locations",
       timestamp: @today,
       country: "",
       region: "",
@@ -304,7 +315,8 @@ defmodule Plausible.Factory do
   end
 
   def imported_devices_factory do
-    %Plausible.Imported.Devices{
+    %{
+      table: "imported_devices",
       timestamp: @today,
       device: "",
       visitors: 1,
@@ -315,7 +327,8 @@ defmodule Plausible.Factory do
   end
 
   def imported_browsers_factory do
-    %Plausible.Imported.Browsers{
+    %{
+      table: "imported_browsers",
       timestamp: @today,
       browser: "",
       visitors: 1,
@@ -326,7 +339,8 @@ defmodule Plausible.Factory do
   end
 
   def imported_operating_systems_factory do
-    %Plausible.Imported.OperatingSystems{
+    %{
+      table: "imported_operating_systems",
       timestamp: @today,
       operating_system: "",
       visitors: 1,

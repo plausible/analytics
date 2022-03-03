@@ -14,7 +14,7 @@ defmodule Plausible.ImportedTest do
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
       ])
 
-      assert {:ok, _} =
+      assert :ok =
                Plausible.Imported.from_google_analytics(
                  [
                    %{
@@ -27,7 +27,7 @@ defmodule Plausible.ImportedTest do
                    }
                  ],
                  site.id,
-                 "visitors"
+                 "imported_visitors"
                )
 
       conn =
@@ -63,7 +63,7 @@ defmodule Plausible.ImportedTest do
         )
       ])
 
-      assert {:ok, _} =
+      assert :ok =
                Plausible.Imported.from_google_analytics(
                  [
                    %{
@@ -92,7 +92,7 @@ defmodule Plausible.ImportedTest do
                    }
                  ],
                  site.id,
-                 "sources"
+                 "imported_sources"
                )
 
       conn =
@@ -150,7 +150,7 @@ defmodule Plausible.ImportedTest do
         )
       ])
 
-      assert {:ok, _} =
+      assert :ok =
                Plausible.Imported.from_google_analytics(
                  [
                    %{
@@ -163,7 +163,7 @@ defmodule Plausible.ImportedTest do
                    }
                  ],
                  site.id,
-                 "utm_mediums"
+                 "imported_utm_mediums"
                )
 
       conn =
@@ -194,7 +194,7 @@ defmodule Plausible.ImportedTest do
         build(:pageview, utm_campaign: "august", timestamp: ~N[2021-01-01 00:00:00])
       ])
 
-      assert {:ok, _} =
+      assert :ok =
                Plausible.Imported.from_google_analytics(
                  [
                    %{
@@ -207,7 +207,7 @@ defmodule Plausible.ImportedTest do
                    }
                  ],
                  site.id,
-                 "utm_campaigns"
+                 "imported_utm_campaigns"
                )
 
       conn =
@@ -238,7 +238,7 @@ defmodule Plausible.ImportedTest do
         build(:pageview, utm_term: "Sweden", timestamp: ~N[2021-01-01 00:00:00])
       ])
 
-      assert {:ok, _} =
+      assert :ok =
                Plausible.Imported.from_google_analytics(
                  [
                    %{
@@ -251,7 +251,7 @@ defmodule Plausible.ImportedTest do
                    }
                  ],
                  site.id,
-                 "utm_terms"
+                 "imported_utm_terms"
                )
 
       conn =
@@ -282,7 +282,7 @@ defmodule Plausible.ImportedTest do
         build(:pageview, utm_content: "blog", timestamp: ~N[2021-01-01 00:00:00])
       ])
 
-      assert {:ok, _} =
+      assert :ok =
                Plausible.Imported.from_google_analytics(
                  [
                    %{
@@ -295,7 +295,7 @@ defmodule Plausible.ImportedTest do
                    }
                  ],
                  site.id,
-                 "utm_contents"
+                 "imported_utm_contents"
                )
 
       conn =
@@ -338,7 +338,7 @@ defmodule Plausible.ImportedTest do
         )
       ])
 
-      assert {:ok, _} =
+      assert :ok =
                Plausible.Imported.from_google_analytics(
                  [
                    %{
@@ -351,10 +351,10 @@ defmodule Plausible.ImportedTest do
                    }
                  ],
                  site.id,
-                 "pages"
+                 "imported_pages"
                )
 
-      assert {:ok, _} =
+      assert :ok =
                Plausible.Imported.from_google_analytics(
                  [
                    %{
@@ -363,7 +363,7 @@ defmodule Plausible.ImportedTest do
                    }
                  ],
                  site.id,
-                 "entry_pages"
+                 "imported_entry_pages"
                )
 
       conn =
@@ -412,7 +412,7 @@ defmodule Plausible.ImportedTest do
         )
       ])
 
-      assert {:ok, _} =
+      assert :ok =
                Plausible.Imported.from_google_analytics(
                  [
                    %{
@@ -421,10 +421,10 @@ defmodule Plausible.ImportedTest do
                    }
                  ],
                  site.id,
-                 "pages"
+                 "imported_pages"
                )
 
-      assert {:ok, _} =
+      assert :ok =
                Plausible.Imported.from_google_analytics(
                  [
                    %{
@@ -433,7 +433,7 @@ defmodule Plausible.ImportedTest do
                    }
                  ],
                  site.id,
-                 "exit_pages"
+                 "imported_exit_pages"
                )
 
       conn =
@@ -469,7 +469,7 @@ defmodule Plausible.ImportedTest do
         )
       ])
 
-      assert {:ok, _} =
+      assert :ok =
                Plausible.Imported.from_google_analytics(
                  [
                    %{
@@ -482,7 +482,7 @@ defmodule Plausible.ImportedTest do
                    }
                  ],
                  site.id,
-                 "locations"
+                 "imported_locations"
                )
 
       conn =
@@ -518,7 +518,7 @@ defmodule Plausible.ImportedTest do
         build(:pageview, screen_size: "Laptop", timestamp: ~N[2021-01-01 00:15:00])
       ])
 
-      assert {:ok, _} =
+      assert :ok =
                Plausible.Imported.from_google_analytics(
                  [
                    %{
@@ -531,7 +531,7 @@ defmodule Plausible.ImportedTest do
                    }
                  ],
                  site.id,
-                 "devices"
+                 "imported_devices"
                )
 
       conn =
@@ -553,7 +553,7 @@ defmodule Plausible.ImportedTest do
         build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-01 00:15:00])
       ])
 
-      assert {:ok, _} =
+      assert :ok =
                Plausible.Imported.from_google_analytics(
                  [
                    %{
@@ -566,7 +566,7 @@ defmodule Plausible.ImportedTest do
                    }
                  ],
                  site.id,
-                 "browsers"
+                 "imported_browsers"
                )
 
       conn =
@@ -589,7 +589,7 @@ defmodule Plausible.ImportedTest do
         build(:pageview, operating_system: "GNU/Linux", timestamp: ~N[2021-01-01 00:15:00])
       ])
 
-      assert {:ok, _} =
+      assert :ok =
                Plausible.Imported.from_google_analytics(
                  [
                    %{
@@ -602,7 +602,7 @@ defmodule Plausible.ImportedTest do
                    }
                  ],
                  site.id,
-                 "operating_systems"
+                 "imported_operating_systems"
                )
 
       conn =

@@ -185,7 +185,7 @@ defmodule Plausible.Google.Api do
     # Each element is: {dataset, dimensions, metrics}
     request_data = [
       {
-        "visitors",
+        "imported_visitors",
         ["ga:date"],
         [
           "ga:users",
@@ -196,62 +196,62 @@ defmodule Plausible.Google.Api do
         ]
       },
       {
-        "sources",
+        "imported_sources",
         ["ga:date", "ga:fullReferrer"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       {
-        "utm_mediums",
+        "imported_utm_mediums",
         ["ga:date", "ga:medium"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       {
-        "utm_campaigns",
+        "imported_utm_campaigns",
         ["ga:date", "ga:campaign"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       {
-        "utm_terms",
+        "imported_utm_terms",
         ["ga:date", "ga:keyword"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       {
-        "utm_contents",
+        "imported_utm_contents",
         ["ga:date", "ga:adContent"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       {
-        "pages",
+        "imported_pages",
         ["ga:date", "ga:pagePath"],
         ["ga:users", "ga:pageviews", "ga:timeOnPage"]
       },
       {
-        "entry_pages",
+        "imported_entry_pages",
         ["ga:date", "ga:landingPagePath"],
         ["ga:users", "ga:entrances", "ga:sessionDuration", "ga:bounces"]
       },
       {
-        "exit_pages",
+        "imported_exit_pages",
         ["ga:date", "ga:exitPagePath"],
         ["ga:users", "ga:exits"]
       },
       {
-        "locations",
+        "imported_locations",
         ["ga:date", "ga:countryIsoCode", "ga:regionIsoCode"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       {
-        "devices",
+        "imported_devices",
         ["ga:date", "ga:deviceCategory"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       {
-        "browsers",
+        "imported_browsers",
         ["ga:date", "ga:browser"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       {
-        "operating_systems",
+        "imported_operating_systems",
         ["ga:date", "ga:operatingSystem"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       }
