@@ -356,9 +356,7 @@ class LineGraph extends React.Component {
     if (source) {
       const withImported = this.props.graphData.with_imported;
       const strike = withImported ? "" : " line-through"
-      const target = withImported || false ?
-        url.setQuery('with_imported', false) :
-        window.location.pathname;
+      const target =  url.setQuery('with_imported', !withImported)
       const tip = withImported ? "" : "do not ";
 
       return (
