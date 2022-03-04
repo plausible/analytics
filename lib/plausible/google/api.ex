@@ -202,7 +202,7 @@ defmodule Plausible.Google.Api do
       },
       {
         "imported_pages",
-        ["ga:date", "ga:pagePath"],
+        ["ga:date", "ga:hostname", "ga:pagePath"],
         ["ga:users", "ga:pageviews", "ga:timeOnPage"]
       },
       {
@@ -286,7 +286,7 @@ defmodule Plausible.Google.Api do
       dateRanges: [
         %{
           # The earliest valid date
-          startDate: "2005-01-01",
+          startDate: "2017-01-01",
           endDate: request.end_date
         }
       ],

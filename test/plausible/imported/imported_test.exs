@@ -308,16 +308,14 @@ defmodule Plausible.ImportedTest do
       populate_stats(site, [
         build(:pageview,
           pathname: "/",
+          hostname: "host-a.com",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
           pathname: "/some-other-page",
+          hostname: "host-a.com",
           user_id: @user_id,
-          timestamp: ~N[2021-01-01 00:15:00]
-        ),
-        build(:pageview,
-          pathname: "/",
           timestamp: ~N[2021-01-01 00:15:00]
         )
       ])
@@ -326,11 +324,15 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["20210101", "/"],
+                     "dimensions" => ["20210101", "host-a.com", "/"],
                      "metrics" => [%{"values" => ["1", "1", "700"]}]
                    },
                    %{
-                     "dimensions" => ["20210101", "/some-other-page"],
+                     "dimensions" => ["20210101", "host-b.com", "/some-other-page"],
+                     "metrics" => [%{"values" => ["1", "1", "60"]}]
+                   },
+                   %{
+                     "dimensions" => ["20210101", "host-b.com", "/some-other-page?wat=wot"],
                      "metrics" => [%{"values" => ["1", "1", "60"]}]
                    }
                  ],
@@ -358,18 +360,18 @@ defmodule Plausible.ImportedTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "bounce_rate" => 40.0,
-                 "time_on_page" => 800.0,
-                 "visitors" => 3,
-                 "pageviews" => 3,
-                 "name" => "/"
-               },
-               %{
                  "bounce_rate" => nil,
                  "time_on_page" => 60,
                  "visitors" => 3,
-                 "pageviews" => 4,
+                 "pageviews" => 3,
                  "name" => "/some-other-page"
+               },
+               %{
+                 "bounce_rate" => 25.0,
+                 "time_on_page" => 800.0,
+                 "visitors" => 2,
+                 "pageviews" => 2,
+                 "name" => "/"
                }
              ]
     end
@@ -400,7 +402,7 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["20210101", "/page2"],
+                     "dimensions" => ["20210101", "host-a.com", "/page2"],
                      "metrics" => [%{"values" => ["2", "4", "10"]}]
                    }
                  ],

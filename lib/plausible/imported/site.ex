@@ -55,107 +55,14 @@ defmodule Plausible.Imported do
     source = if source == "(direct)", do: nil, else: source
     source = if source && String.match?(source, @domain), do: parse_referrer(source), else: source
 
-    medium = if medium == "(none)", do: nil, else: medium
-    campaign = if campaign == "(not set)", do: nil, else: campaign
-    term = if term in ["(not set)", "(not provided)"], do: nil, else: term
-    content = if content == "(not set)", do: nil, else: content
-
     %{
       site_id: site_id,
       date: format_date(date),
       source: parse_referrer(source),
-      utm_medium: medium,
-      utm_campaign: campaign,
-      utm_content: content,
-      utm_term: term,
-      visitors: visitors,
-      visits: visits,
-      bounces: bounces,
-      visit_duration: visit_duration
-    }
-  end
-
-  defp new_from_google_analytics(site_id, "imported_utm_mediums", %{
-         "dimensions" => [date, medium],
-         "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
-       }) do
-    {visitors, ""} = Integer.parse(visitors)
-    {visits, ""} = Integer.parse(visits)
-    {bounces, ""} = Integer.parse(bounces)
-    {visit_duration, _} = Integer.parse(visit_duration)
-
-    medium = if medium == "(none)", do: "", else: medium
-
-    %{
-      site_id: site_id,
-      date: format_date(date),
-      utm_medium: medium,
-      visitors: visitors,
-      visits: visits,
-      bounces: bounces,
-      visit_duration: visit_duration
-    }
-  end
-
-  defp new_from_google_analytics(site_id, "imported_utm_campaigns", %{
-         "dimensions" => [date, campaign],
-         "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
-       }) do
-    {visitors, ""} = Integer.parse(visitors)
-    {visits, ""} = Integer.parse(visits)
-    {bounces, ""} = Integer.parse(bounces)
-    {visit_duration, _} = Integer.parse(visit_duration)
-
-    campaign = if campaign == "(not set)", do: "", else: campaign
-
-    %{
-      site_id: site_id,
-      date: format_date(date),
-      utm_campaign: campaign,
-      visitors: visitors,
-      visits: visits,
-      bounces: bounces,
-      visit_duration: visit_duration
-    }
-  end
-
-  defp new_from_google_analytics(site_id, "imported_utm_terms", %{
-         "dimensions" => [date, term],
-         "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
-       }) do
-    {visitors, ""} = Integer.parse(visitors)
-    {visits, ""} = Integer.parse(visits)
-    {bounces, ""} = Integer.parse(bounces)
-    {visit_duration, _} = Integer.parse(visit_duration)
-
-    term = if term == "(not set)" or term == "(not provided)", do: "", else: term
-
-    %{
-      site_id: site_id,
-      date: format_date(date),
-      utm_term: term,
-      visitors: visitors,
-      visits: visits,
-      bounces: bounces,
-      visit_duration: visit_duration
-    }
-  end
-
-  defp new_from_google_analytics(site_id, "imported_utm_contents", %{
-         "dimensions" => [date, content],
-         "metrics" => [%{"values" => [visitors, visits, bounces, visit_duration]}]
-       }) do
-    {visitors, ""} = Integer.parse(visitors)
-    {visits, ""} = Integer.parse(visits)
-    {bounces, ""} = Integer.parse(bounces)
-    {visit_duration, _} = Integer.parse(visit_duration)
-
-    content = if content == "(not set)", do: "", else: content
-
-    %{
-      site_id: site_id,
-      date: format_date(date),
-      utm_content: content,
+      utm_medium: nil_if_missing(medium),
+      utm_campaign: nil_if_missing(campaign),
+      utm_content: nil_if_missing(content),
+      utm_term: nil_if_missing(term),
       visitors: visitors,
       visits: visits,
       bounces: bounces,
@@ -164,9 +71,10 @@ defmodule Plausible.Imported do
   end
 
   defp new_from_google_analytics(site_id, "imported_pages", %{
-         "dimensions" => [date, page],
+         "dimensions" => [date, hostname, page],
          "metrics" => [%{"values" => [visitors, pageviews, time_on_page]}]
        }) do
+    page = URI.parse(page).path
     {visitors, ""} = Integer.parse(visitors)
     {pageviews, ""} = Integer.parse(pageviews)
     {time_on_page, _} = Integer.parse(time_on_page)
@@ -174,6 +82,7 @@ defmodule Plausible.Imported do
     %{
       site_id: site_id,
       date: format_date(date),
+      hostname: hostname,
       page: page,
       visitors: visitors,
       pageviews: pageviews,
@@ -321,6 +230,10 @@ defmodule Plausible.Imported do
     Timex.parse!("#{date}", "%Y%m%d", :strftime)
     |> NaiveDateTime.to_date()
   end
+
+  @missing_values ["(none)", "(not set)", "(not provided)"]
+  def nil_if_missing(value) when value in @missing_values, do: nil
+  def nil_if_missing(value), do: value
 
   def parse_referrer(nil), do: nil
   def parse_referrer("google"), do: "Google"

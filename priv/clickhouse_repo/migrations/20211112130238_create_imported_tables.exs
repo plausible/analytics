@@ -3,8 +3,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
 
   def change do
     create_if_not_exists table(:imported_visitors,
-                           engine:
-                             "MergeTree() ORDER BY (site_id, date) SETTINGS index_granularity = 1"
+                           engine: "MergeTree() ORDER BY (site_id, date)"
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
@@ -16,8 +15,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     end
 
     create_if_not_exists table(:imported_sources,
-                           engine:
-                             "MergeTree() ORDER BY (site_id, date) SETTINGS index_granularity = 1"
+                           engine: "MergeTree() ORDER BY (site_id, date, source)"
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
@@ -33,11 +31,11 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     end
 
     create_if_not_exists table(:imported_pages,
-                           engine:
-                             "MergeTree() ORDER BY (site_id, date) SETTINGS index_granularity = 1"
+                           engine: "MergeTree() ORDER BY (site_id, date, hostname, page)"
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
+      add(:hostname, :string)
       add(:page, :string)
       add(:visitors, :UInt64)
       add(:pageviews, :UInt64)
@@ -45,8 +43,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     end
 
     create_if_not_exists table(:imported_entry_pages,
-                           engine:
-                             "MergeTree() ORDER BY (site_id, date) SETTINGS index_granularity = 1"
+                           engine: "MergeTree() ORDER BY (site_id, date, entry_page)"
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
@@ -58,8 +55,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     end
 
     create_if_not_exists table(:imported_exit_pages,
-                           engine:
-                             "MergeTree() ORDER BY (site_id, date) SETTINGS index_granularity = 1"
+                           engine: "MergeTree() ORDER BY (site_id, date, exit_page)"
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
@@ -69,8 +65,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     end
 
     create_if_not_exists table(:imported_locations,
-                           engine:
-                             "MergeTree() ORDER BY (site_id, date) SETTINGS index_granularity = 1"
+                           engine: "MergeTree() ORDER BY (site_id, date, country, region, city)"
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
@@ -84,8 +79,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     end
 
     create_if_not_exists table(:imported_devices,
-                           engine:
-                             "MergeTree() ORDER BY (site_id, date) SETTINGS index_granularity = 1"
+                           engine: "MergeTree() ORDER BY (site_id, date, device)"
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
@@ -97,8 +91,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     end
 
     create_if_not_exists table(:imported_browsers,
-                           engine:
-                             "MergeTree() ORDER BY (site_id, date) SETTINGS index_granularity = 1"
+                           engine: "MergeTree() ORDER BY (site_id, date, browser)"
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
@@ -110,8 +103,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     end
 
     create_if_not_exists table(:imported_operating_systems,
-                           engine:
-                             "MergeTree() ORDER BY (site_id, date) SETTINGS index_granularity = 1"
+                           engine: "MergeTree() ORDER BY (site_id, date, operating_system)"
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
