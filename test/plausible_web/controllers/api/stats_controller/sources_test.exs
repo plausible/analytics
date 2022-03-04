@@ -133,7 +133,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       populate_stats(site, [
         build(:imported_sources,
           source: "Google",
-          timestamp: ~D[2021-01-01],
+          date: ~D[2021-01-01],
           visitors: 2,
           visits: 3,
           bounces: 1,
@@ -141,7 +141,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         ),
         build(:imported_sources,
           source: "DuckDuckGo",
-          timestamp: ~D[2021-01-01],
+          date: ~D[2021-01-01],
           visitors: 1,
           visits: 1,
           visit_duration: 100,
@@ -290,17 +290,17 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       populate_stats(site, [
-        build(:imported_utm_mediums,
+        build(:imported_sources,
           utm_medium: "social",
-          timestamp: ~D[2021-01-01],
+          date: ~D[2021-01-01],
           visit_duration: 700,
           bounces: 1,
           visits: 1,
           visitors: 1
         ),
-        build(:imported_utm_mediums,
+        build(:imported_sources,
           utm_medium: "email",
-          timestamp: ~D[2021-01-01],
+          date: ~D[2021-01-01],
           bounces: 0,
           visits: 1,
           visitors: 1,
@@ -378,17 +378,17 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       populate_stats(site, [
-        build(:imported_utm_campaigns,
+        build(:imported_sources,
           utm_campaign: "profile",
-          timestamp: ~D[2021-01-01],
+          date: ~D[2021-01-01],
           visit_duration: 700,
           bounces: 1,
           visits: 1,
           visitors: 1
         ),
-        build(:imported_utm_campaigns,
+        build(:imported_sources,
           utm_campaign: "august",
-          timestamp: ~D[2021-01-01],
+          date: ~D[2021-01-01],
           bounces: 0,
           visits: 1,
           visitors: 1,
@@ -465,25 +465,6 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      populate_stats(site, [
-        build(:imported_utm_sources,
-          utm_source: "Twitter",
-          timestamp: ~D[2021-01-01],
-          visit_duration: 700,
-          bounces: 1,
-          visits: 1,
-          visitors: 1
-        ),
-        build(:imported_utm_sources,
-          utm_source: "newsletter",
-          timestamp: ~D[2021-01-01],
-          bounces: 0,
-          visits: 1,
-          visitors: 1,
-          visit_duration: 900
-        )
-      ])
-
       conn =
         get(
           conn,
@@ -502,27 +483,6 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  "visitors" => 1,
                  "bounce_rate" => 0,
                  "visit_duration" => 900
-               }
-             ]
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_sources?period=day&date=2021-01-01&with_imported=true"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "name" => "newsletter",
-                 "visitors" => 3,
-                 "bounce_rate" => 67,
-                 "visit_duration" => 300
-               },
-               %{
-                 "name" => "Twitter",
-                 "visitors" => 2,
-                 "bounce_rate" => 50,
-                 "visit_duration" => 800.0
                }
              ]
     end
@@ -828,17 +788,17 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       populate_stats(site, [
-        build(:imported_utm_terms,
+        build(:imported_sources,
           utm_term: "oat milk",
-          timestamp: ~D[2021-01-01],
+          date: ~D[2021-01-01],
           visit_duration: 700,
           bounces: 1,
           visits: 1,
           visitors: 1
         ),
-        build(:imported_utm_terms,
+        build(:imported_sources,
           utm_term: "Sweden",
-          timestamp: ~D[2021-01-01],
+          date: ~D[2021-01-01],
           bounces: 0,
           visits: 1,
           visitors: 1,
@@ -916,17 +876,17 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       populate_stats(site, [
-        build(:imported_utm_contents,
+        build(:imported_sources,
           utm_content: "ad",
-          timestamp: ~D[2021-01-01],
+          date: ~D[2021-01-01],
           visit_duration: 700,
           bounces: 1,
           visits: 1,
           visitors: 1
         ),
-        build(:imported_utm_contents,
+        build(:imported_sources,
           utm_content: "blog",
-          timestamp: ~D[2021-01-01],
+          date: ~D[2021-01-01],
           bounces: 0,
           visits: 1,
           visitors: 1,

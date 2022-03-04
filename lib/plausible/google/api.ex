@@ -197,27 +197,7 @@ defmodule Plausible.Google.Api do
       },
       {
         "imported_sources",
-        ["ga:date", "ga:fullReferrer"],
-        ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-      },
-      {
-        "imported_utm_mediums",
-        ["ga:date", "ga:medium"],
-        ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-      },
-      {
-        "imported_utm_campaigns",
-        ["ga:date", "ga:campaign"],
-        ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-      },
-      {
-        "imported_utm_terms",
-        ["ga:date", "ga:keyword"],
-        ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-      },
-      {
-        "imported_utm_contents",
-        ["ga:date", "ga:adContent"],
+        ["ga:date", "ga:source", "ga:medium", "ga:campaign", "ga:adContent", "ga:keyword"],
         ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       {

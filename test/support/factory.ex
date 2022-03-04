@@ -186,7 +186,7 @@ defmodule Plausible.Factory do
   def imported_visitors_factory do
     %{
       table: "imported_visitors",
-      timestamp: @today,
+      date: @today,
       visitors: 1,
       pageviews: 1,
       bounces: 0,
@@ -198,68 +198,8 @@ defmodule Plausible.Factory do
   def imported_sources_factory do
     %{
       table: "imported_sources",
-      timestamp: @today,
+      date: @today,
       source: "",
-      visitors: 1,
-      visits: 1,
-      bounces: 0,
-      visit_duration: 10
-    }
-  end
-
-  def imported_utm_mediums_factory do
-    %{
-      table: "imported_utm_mediums",
-      timestamp: @today,
-      utm_medium: "",
-      visitors: 1,
-      visits: 1,
-      bounces: 0,
-      visit_duration: 10
-    }
-  end
-
-  def imported_utm_sources_factory do
-    %{
-      table: "imported_utm_sources",
-      timestamp: @today,
-      utm_source: "",
-      visitors: 1,
-      visits: 1,
-      bounces: 0,
-      visit_duration: 10
-    }
-  end
-
-  def imported_utm_campaigns_factory do
-    %{
-      table: "imported_utm_campaigns",
-      timestamp: @today,
-      utm_campaign: "",
-      visitors: 1,
-      visits: 1,
-      bounces: 0,
-      visit_duration: 10
-    }
-  end
-
-  def imported_utm_terms_factory do
-    %{
-      table: "imported_utm_terms",
-      timestamp: @today,
-      utm_term: "",
-      visitors: 1,
-      visits: 1,
-      bounces: 0,
-      visit_duration: 10
-    }
-  end
-
-  def imported_utm_contents_factory do
-    %{
-      table: "imported_utm_contents",
-      timestamp: @today,
-      utm_content: "",
       visitors: 1,
       visits: 1,
       bounces: 0,
@@ -270,7 +210,7 @@ defmodule Plausible.Factory do
   def imported_pages_factory do
     %{
       table: "imported_pages",
-      timestamp: @today,
+      date: @today,
       page: "",
       visitors: 1,
       pageviews: 1,
@@ -281,7 +221,7 @@ defmodule Plausible.Factory do
   def imported_entry_pages_factory do
     %{
       table: "imported_entry_pages",
-      timestamp: @today,
+      date: @today,
       entry_page: "",
       visitors: 1,
       entrances: 1,
@@ -293,7 +233,7 @@ defmodule Plausible.Factory do
   def imported_exit_pages_factory do
     %{
       table: "imported_exit_pages",
-      timestamp: @today,
+      date: @today,
       exit_page: "",
       visitors: 1,
       exits: 1
@@ -303,7 +243,7 @@ defmodule Plausible.Factory do
   def imported_locations_factory do
     %{
       table: "imported_locations",
-      timestamp: @today,
+      date: @today,
       country: "",
       region: "",
       city: 0,
@@ -317,7 +257,7 @@ defmodule Plausible.Factory do
   def imported_devices_factory do
     %{
       table: "imported_devices",
-      timestamp: @today,
+      date: @today,
       device: "",
       visitors: 1,
       visits: 1,
@@ -329,7 +269,7 @@ defmodule Plausible.Factory do
   def imported_browsers_factory do
     %{
       table: "imported_browsers",
-      timestamp: @today,
+      date: @today,
       browser: "",
       visitors: 1,
       visits: 1,
@@ -341,7 +281,7 @@ defmodule Plausible.Factory do
   def imported_operating_systems_factory do
     %{
       table: "imported_operating_systems",
-      timestamp: @today,
+      date: @today,
       operating_system: "",
       visitors: 1,
       visits: 1,

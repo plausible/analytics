@@ -44,7 +44,7 @@ defmodule Plausible.ImportedTest do
       assert Enum.sum(plot) == 4
     end
 
-    test "Sources and UTM sources are separated", %{conn: conn, site: site} do
+    test "Sources are imported", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           referrer_source: "Google",
@@ -67,27 +67,34 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["20210101", "duckduckgo.com"],
+                     "dimensions" => ["20210101", "duckduckgo.com", "organic", "", "", ""],
                      "metrics" => [%{"values" => ["1", "1", "0", "60"]}]
                    },
                    %{
-                     "dimensions" => ["20210131", "google.com"],
+                     "dimensions" => ["20210131", "google.com", "organic", "", "", ""],
                      "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
                    },
                    %{
-                     "dimensions" => ["20210101", "google"],
+                     "dimensions" => ["20210101", "google.com", "paid", "", "", ""],
                      "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
                    },
                    %{
-                     "dimensions" => ["20210101", "Twitter"],
+                     "dimensions" => ["20210101", "Twitter", "social", "", "", ""],
                      "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
                    },
                    %{
-                     "dimensions" => ["20210131", "A Nice Newsletter"],
+                     "dimensions" => [
+                       "20210131",
+                       "A Nice Newsletter",
+                       "email",
+                       "newsletter",
+                       "",
+                       ""
+                     ],
                      "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
                    },
                    %{
-                     "dimensions" => ["20210101", "(direct)"],
+                     "dimensions" => ["20210101", "(direct)", "(none)", "", "", ""],
                      "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
                    }
                  ],
@@ -102,35 +109,10 @@ defmodule Plausible.ImportedTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "Google", "visitors" => 3},
-               %{"name" => "DuckDuckGo", "visitors" => 2}
-             ]
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_sources?period=month&date=2021-01-01&with_imported=true"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "name" => "A Nice Newsletter",
-                 "visitors" => 1,
-                 "bounce_rate" => 100.0,
-                 "visit_duration" => 60.0
-               },
-               %{
-                 "name" => "Twitter",
-                 "visitors" => 1,
-                 "bounce_rate" => 100.0,
-                 "visit_duration" => 60.0
-               },
-               %{
-                 "bounce_rate" => 100.0,
-                 "name" => "adwords",
-                 "visit_duration" => 60.0,
-                 "visitors" => 1
-               }
+               %{"name" => "Google", "visitors" => 4},
+               %{"name" => "DuckDuckGo", "visitors" => 2},
+               %{"name" => "A Nice Newsletter", "visitors" => 1},
+               %{"name" => "Twitter", "visitors" => 1}
              ]
     end
 
@@ -143,10 +125,6 @@ defmodule Plausible.ImportedTest do
         build(:pageview,
           utm_medium: "social",
           timestamp: ~N[2021-01-01 12:00:00]
-        ),
-        build(:pageview,
-          utm_medium: "email",
-          timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
 
@@ -154,16 +132,16 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["20210101", "social"],
+                     "dimensions" => ["20210101", "Twitter", "social", "", "", ""],
                      "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
                    },
                    %{
-                     "dimensions" => ["20210101", "email"],
-                     "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
+                     "dimensions" => ["20210101", "(direct)", "(none)", "", "", ""],
+                     "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
                    }
                  ],
                  site.id,
-                 "imported_utm_mediums"
+                 "imported_sources"
                )
 
       conn =
@@ -178,12 +156,6 @@ defmodule Plausible.ImportedTest do
                  "name" => "social",
                  "visit_duration" => 20,
                  "visitors" => 3
-               },
-               %{
-                 "bounce_rate" => 50.0,
-                 "name" => "email",
-                 "visit_duration" => 50.0,
-                 "visitors" => 2
                }
              ]
     end
@@ -198,16 +170,20 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["20210101", "profile"],
+                     "dimensions" => ["20210101", "Twitter", "social", "profile", "", ""],
                      "metrics" => [%{"values" => ["1", "1", "1", "100"]}]
                    },
                    %{
-                     "dimensions" => ["20210101", "august"],
+                     "dimensions" => ["20210101", "Gmail", "email", "august", "", ""],
+                     "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
+                   },
+                   %{
+                     "dimensions" => ["20210101", "Gmail", "email", "(not set)", "", ""],
                      "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
                    }
                  ],
                  site.id,
-                 "imported_utm_campaigns"
+                 "imported_sources"
                )
 
       conn =
@@ -242,16 +218,20 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["20210101", "oat milk"],
+                     "dimensions" => ["20210101", "Google", "paid", "", "", "oat milk"],
                      "metrics" => [%{"values" => ["1", "1", "1", "100"]}]
                    },
                    %{
-                     "dimensions" => ["20210101", "Sweden"],
+                     "dimensions" => ["20210101", "Google", "paid", "", "", "Sweden"],
+                     "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
+                   },
+                   %{
+                     "dimensions" => ["20210101", "Google", "paid", "", "", "(not set)"],
                      "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
                    }
                  ],
                  site.id,
-                 "imported_utm_terms"
+                 "imported_sources"
                )
 
       conn =
@@ -286,16 +266,20 @@ defmodule Plausible.ImportedTest do
                Plausible.Imported.from_google_analytics(
                  [
                    %{
-                     "dimensions" => ["20210101", "ad"],
+                     "dimensions" => ["20210101", "Google", "paid", "", "ad", ""],
                      "metrics" => [%{"values" => ["1", "1", "1", "100"]}]
                    },
                    %{
-                     "dimensions" => ["20210101", "blog"],
+                     "dimensions" => ["20210101", "Google", "paid", "", "blog", ""],
+                     "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
+                   },
+                   %{
+                     "dimensions" => ["20210101", "Google", "paid", "", "(not set)", ""],
                      "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
                    }
                  ],
                  site.id,
-                 "imported_utm_contents"
+                 "imported_sources"
                )
 
       conn =
@@ -383,8 +367,8 @@ defmodule Plausible.ImportedTest do
                %{
                  "bounce_rate" => nil,
                  "time_on_page" => 60,
-                 "visitors" => 2,
-                 "pageviews" => 2,
+                 "visitors" => 3,
+                 "pageviews" => 4,
                  "name" => "/some-other-page"
                }
              ]

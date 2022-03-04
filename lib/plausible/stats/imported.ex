@@ -10,10 +10,10 @@ defmodule Plausible.Stats.Imported do
       from(v in "imported_visitors",
         group_by: fragment("date"),
         where: v.site_id == ^site.id,
-        where: v.timestamp >= ^query.date_range.first and v.timestamp <= ^query.date_range.last,
+        where: v.date >= ^query.date_range.first and v.date <= ^query.date_range.last,
         select: %{
           visitors: sum(v.visitors),
-          date: fragment("? as date", v.timestamp)
+          date: fragment("? as date", v.date)
         }
       )
       |> ClickhouseRepo.all()
@@ -27,12 +27,13 @@ defmodule Plausible.Stats.Imported do
   def merge_imported(q, %Plausible.Site{imported_source: nil}, _, _, _), do: q
   def merge_imported(q, _, %Query{with_imported: false}, _, _), do: q
   def merge_imported(q, _, _, _, [:events | _]), do: q
+  # GA only has 'source'
+  def merge_imported(q, _, _, "utm_source", _), do: q
 
   def merge_imported(q, site, query, property, metrics)
       when property in [
              "visit:source",
              "visit:utm_medium",
-             "visit:utm_source",
              "visit:utm_campaign",
              "visit:utm_term",
              "visit:utm_content",
@@ -57,6 +58,18 @@ defmodule Plausible.Stats.Imported do
         "visit:city" ->
           {"imported_locations", :city}
 
+        "visit:utm_medium" ->
+          {"imported_sources", :utm_medium}
+
+        "visit:utm_campaign" ->
+          {"imported_sources", :utm_campaign}
+
+        "visit:utm_term" ->
+          {"imported_sources", :utm_term}
+
+        "visit:utm_content" ->
+          {"imported_sources", :utm_content}
+
         "visit:os" ->
           {"imported_operating_systems", :operating_system}
 
@@ -73,7 +86,7 @@ defmodule Plausible.Stats.Imported do
         i in table,
         group_by: field(i, ^dim),
         where: i.site_id == ^site.id,
-        where: i.timestamp >= ^query.date_range.first and i.timestamp <= ^query.date_range.last,
+        where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
         select: %{}
       )
       |> select_imported_metrics(metrics)
@@ -280,7 +293,7 @@ defmodule Plausible.Stats.Imported do
       from(
         i in "imported_visitors",
         where: i.site_id == ^site.id,
-        where: i.timestamp >= ^query.date_range.first and i.timestamp <= ^query.date_range.last,
+        where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
         select: %{}
       )
       |> select_imported_metrics(metrics)

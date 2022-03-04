@@ -117,18 +117,18 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         ),
         build(:imported_pages,
           page: "/",
-          timestamp: ~D[2021-01-01],
+          date: ~D[2021-01-01],
           time_on_page: 700
         ),
         build(:imported_entry_pages,
           entry_page: "/",
-          timestamp: ~D[2021-01-01],
+          date: ~D[2021-01-01],
           entrances: 3,
           bounces: 1
         ),
         build(:imported_pages,
           page: "/some-other-page",
-          timestamp: ~D[2021-01-01],
+          date: ~D[2021-01-01],
           time_on_page: 60
         )
       ])
@@ -274,7 +274,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       populate_stats(site, [
         build(:imported_entry_pages,
           entry_page: "/page2",
-          timestamp: ~D[2021-01-01],
+          date: ~D[2021-01-01],
           entrances: 3,
           visitors: 2,
           visit_duration: 300
@@ -441,13 +441,13 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       populate_stats(site, [
         build(:imported_pages,
           page: "/page2",
-          timestamp: ~D[2021-01-01],
+          date: ~D[2021-01-01],
           pageviews: 4,
           visitors: 2
         ),
         build(:imported_exit_pages,
           exit_page: "/page2",
-          timestamp: ~D[2021-01-01],
+          date: ~D[2021-01-01],
           exits: 3,
           visitors: 2
         )
