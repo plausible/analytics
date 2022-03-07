@@ -17,8 +17,7 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
 
     case google_api.import_analytics(site, profile) do
       {:ok, _} ->
-        site
-        |> Plausible.Site.set_imported_source("Google Analytics")
+        Plausible.Site.import_success(site)
         |> Repo.update!()
 
         Enum.each(site.memberships, fn membership ->
@@ -31,6 +30,9 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
         :ok
 
       {:error, error} ->
+        Plausible.Site.import_failure(site)
+        |> Repo.update!()
+
         Enum.each(site.memberships, fn membership ->
           if membership.role in [:owner, :admin] do
             PlausibleWeb.Email.import_failure(membership.user, site)

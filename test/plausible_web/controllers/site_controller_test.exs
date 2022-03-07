@@ -723,6 +723,17 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "POST /:website/settings/google-import" do
     setup [:create_user, :log_in, :create_new_site]
 
+    test "adds in-progress imported tag to site", %{conn: conn, site: site} do
+      post(conn, "/#{site.domain}/settings/google-import", %{"profile" => "123"})
+
+      imported_data = Repo.reload(site).imported_data
+
+      assert imported_data
+      assert imported_data.source == "Google Analytics"
+      assert imported_data.end_date == Timex.today()
+      assert imported_data.status == "importing"
+    end
+
     test "schedules an import job in Oban", %{conn: conn, site: site} do
       post(conn, "/#{site.domain}/settings/google-import", %{"profile" => "123"})
 

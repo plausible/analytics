@@ -167,13 +167,19 @@ defmodule PlausibleWeb.SiteController do
     redirect(conn, to: Routes.site_path(conn, :settings_general, website))
   end
 
+  defp can_trigger_import(site) do
+    no_import = is_nil(site.imported_data) || site.imported_data.status == "error"
+
+    no_import && site.google_auth
+  end
+
   def settings_general(conn, _params) do
     site =
       conn.assigns[:site]
       |> Repo.preload([:custom_domain, :google_auth])
 
     google_profiles =
-      if is_nil(site.imported_data) and site.google_auth do
+      if can_trigger_import(site) do
         Plausible.Google.Api.get_analytics_view_ids(site)
       end
 
@@ -182,7 +188,7 @@ defmodule PlausibleWeb.SiteController do
     |> render("settings_general.html",
       site: site,
       google_profiles: google_profiles,
-      imported_from: site.imported_data && site.imported_data.source,
+      imported_data: site.imported_data,
       changeset: Plausible.Site.changeset(site, %{}),
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
@@ -654,9 +660,16 @@ defmodule PlausibleWeb.SiteController do
         |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
 
       true ->
-        %{"site_id" => site.id, "profile" => profile}
-        |> Plausible.Workers.ImportGoogleAnalytics.new()
-        |> Oban.insert()
+        job =
+          Plausible.Workers.ImportGoogleAnalytics.new(%{
+            "site_id" => site.id,
+            "profile" => profile
+          })
+
+        Ecto.Multi.new()
+        |> Ecto.Multi.update(:update_site, Plausible.Site.start_import(site, "Google Analytics"))
+        |> Oban.insert(:oban_job, job)
+        |> Repo.transaction()
 
         conn
         |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")

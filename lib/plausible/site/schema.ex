@@ -4,6 +4,7 @@ defmodule Plausible.Site.ImportedData do
   embedded_schema do
     field :end_date, :date
     field :source, :string
+    field :status, :string
   end
 end
 
@@ -56,6 +57,24 @@ defmodule Plausible.Site do
 
   def set_has_stats(site, has_stats_val) do
     change(site, has_stats: has_stats_val)
+  end
+
+  def start_import(site, imported_source) do
+    change(site,
+      imported_data: %Plausible.Site.ImportedData{
+        end_date: Timex.today(),
+        source: imported_source,
+        status: "importing"
+      }
+    )
+  end
+
+  def import_success(site) do
+    change(site, imported_data: %{status: "ok"})
+  end
+
+  def import_failure(site) do
+    change(site, imported_data: %{status: "error"})
   end
 
   def set_imported_source(site, imported_source) do
