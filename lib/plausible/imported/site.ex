@@ -82,7 +82,7 @@ defmodule Plausible.Imported do
     %{
       site_id: site_id,
       date: format_date(date),
-      hostname: hostname,
+      hostname: String.replace_prefix(hostname, "www.", ""),
       page: page,
       visitors: visitors,
       pageviews: pageviews,

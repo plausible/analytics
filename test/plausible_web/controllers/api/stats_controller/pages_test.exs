@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
   @user_id 123
 
   describe "GET /api/stats/:domain/pages" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "returns top pages by visitors", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -191,7 +191,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
   end
 
   describe "GET /api/stats/:domain/entry-pages" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "returns top entry pages by visitors", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -384,7 +384,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
   end
 
   describe "GET /api/stats/:domain/exit-pages" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "returns top exit pages by visitors", %{conn: conn, site: site} do
       populate_stats(site, [

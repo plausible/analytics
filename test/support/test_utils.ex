@@ -11,6 +11,15 @@ defmodule Plausible.TestUtils do
     {:ok, site: site}
   end
 
+  def add_imported_data(%{site: site}) do
+    site =
+      site
+      |> Plausible.Site.set_imported_source("Google Analytics")
+      |> Repo.update!()
+
+    {:ok, site: site}
+  end
+
   def create_new_site(%{user: user}) do
     site = Factory.insert(:site, members: [user])
     {:ok, site: site}

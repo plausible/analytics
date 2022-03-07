@@ -3,7 +3,7 @@ defmodule Plausible.Repo.Migrations.GoogleAuthImportedSource do
 
   def change do
     alter table(:sites) do
-      add :imported_source, :string, null: true, default: nil
+      add :imported_data, :map
     end
   end
 end

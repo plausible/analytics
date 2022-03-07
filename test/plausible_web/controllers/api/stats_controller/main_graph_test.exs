@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   @user_id 123
 
   describe "GET /api/stats/main-graph - plot" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "displays pageviews for the last 30 minutes in realtime graph", %{conn: conn, site: site} do
       populate_stats(site, [

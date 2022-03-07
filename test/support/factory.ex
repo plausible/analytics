@@ -26,8 +26,7 @@ defmodule Plausible.Factory do
 
     %Plausible.Site{
       domain: domain,
-      timezone: "UTC",
-      imported_source: "Google Analytics"
+      timezone: "UTC"
     }
   end
 

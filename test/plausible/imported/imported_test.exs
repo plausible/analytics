@@ -6,7 +6,7 @@ defmodule Plausible.ImportedTest do
   @user_id 123
 
   describe "Parse and import third party data fetched from Google Analytics" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "Visitors data imported from Google Analytics", %{conn: conn, site: site} do
       populate_stats(site, [

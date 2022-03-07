@@ -286,7 +286,7 @@ defmodule Plausible.Google.Api do
       dateRanges: [
         %{
           # The earliest valid date
-          startDate: "2017-01-01",
+          startDate: "2005-01-01",
           endDate: request.end_date
         }
       ],

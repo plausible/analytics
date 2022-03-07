@@ -246,7 +246,7 @@ defmodule Plausible.Stats.Breakdown do
 
     {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
 
-    with_imported = query.with_imported && site.imported_source
+    with_imported = query.with_imported && site.imported_data
 
     select =
       if with_imported do

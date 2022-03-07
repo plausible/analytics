@@ -280,24 +280,26 @@ defmodule PlausibleWeb.Email do
     )
   end
 
-  def import_success(email, site) do
+  def import_success(user, site) do
     base_email()
-    |> to(email)
+    |> to(user)
     |> tag("import-success-email")
     |> subject("Google Analytics data imported for #{site.domain}")
     |> render("google_analytics_import.html", %{
       site: site,
       link: PlausibleWeb.Endpoint.url() <> "/" <> URI.encode_www_form(site.domain),
+      user: user,
       success: true
     })
   end
 
-  def import_failure(email, site) do
+  def import_failure(user, site) do
     base_email()
-    |> to(email)
+    |> to(user)
     |> tag("import-failure-email")
     |> subject("Google Analytics import failed for #{site.domain}")
     |> render("google_analytics_import.html", %{
+      user: user,
       site: site,
       success: false
     })

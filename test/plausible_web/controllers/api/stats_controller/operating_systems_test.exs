@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
   import Plausible.TestUtils
 
   describe "GET /api/stats/:domain/operating_systems" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "returns operating systems by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [

@@ -7,20 +7,23 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
     unique: [fields: [:args], period: 60]
 
   @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"site_id" => site_id, "profile" => profile}}) do
+  def perform(
+        %Oban.Job{args: %{"site_id" => site_id, "profile" => profile}},
+        google_api \\ Plausible.Google.Api
+      ) do
     site =
       Repo.get(Plausible.Site, site_id)
-      |> Repo.preload([:google_auth, :members])
+      |> Repo.preload([:google_auth, [memberships: :user]])
 
-    case Plausible.Google.Api.import_analytics(site, profile) do
+    case google_api.import_analytics(site, profile) do
       {:ok, _} ->
         site
         |> Plausible.Site.set_imported_source("Google Analytics")
         |> Repo.update!()
 
-        Enum.each(site.members, fn member ->
-          if Enum.member?(member.role, [:owner, :admin]) do
-            PlausibleWeb.Email.import_success(member.user.email, site)
+        Enum.each(site.memberships, fn membership ->
+          if membership.role in [:owner, :admin] do
+            PlausibleWeb.Email.import_success(membership.user, site)
             |> Plausible.Mailer.send_email_safe()
           end
         end)
@@ -28,9 +31,9 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
         :ok
 
       {:error, error} ->
-        Enum.each(site.members, fn member ->
-          if Enum.member?(member.role, [:owner, :admin]) do
-            PlausibleWeb.Email.import_failure(member.user.email, site)
+        Enum.each(site.memberships, fn membership ->
+          if membership.role in [:owner, :admin] do
+            PlausibleWeb.Email.import_failure(membership.user, site)
             |> Plausible.Mailer.send_email_safe()
           end
         end)
