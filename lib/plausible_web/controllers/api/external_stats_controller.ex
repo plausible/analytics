@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   def realtime_visitors(conn, _params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, %{"period" => "realtime"})
+    query = Query.from(site, %{"period" => "realtime"})
     json(conn, Plausible.Stats.Clickhouse.current_visitors(site, query))
   end
 
@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
-         query <- Query.from(site.timezone, params),
+         query <- Query.from(site, params),
          {:ok, metrics} <- parse_metrics(params, nil, query) do
       results =
         if params["compare"] == "previous_period" do
@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          {:ok, property} <- validate_property(params),
-         query <- Query.from(site.timezone, params),
+         query <- Query.from(site, params),
          {:ok, metrics} <- parse_metrics(params, property, query) do
       limit = String.to_integer(Map.get(params, "limit", "100"))
       page = String.to_integer(Map.get(params, "page", "1"))
@@ -144,7 +144,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          :ok <- validate_interval(params),
-         query <- Query.from(site.timezone, params),
+         query <- Query.from(site, params),
          {:ok, metrics} <- parse_metrics(params, nil, query) do
       graph = Plausible.Stats.timeseries(site, query, metrics)
       metrics = metrics ++ [:date]

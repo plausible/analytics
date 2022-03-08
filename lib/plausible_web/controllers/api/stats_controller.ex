@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def main_graph(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
 
     timeseries_query =
       if query.period == "realtime" do
@@ -23,7 +23,6 @@ defmodule PlausibleWeb.Api.StatsController do
     plot = Enum.map(timeseries_result, fn row -> row[:visitors] end)
     labels = Enum.map(timeseries_result, fn row -> row[:date] end)
     present_index = present_index_for(site, query, labels)
-    with_imported = query.with_imported && site.imported_data && Enum.empty?(query.filters)
 
     json(conn, %{
       plot: plot,
@@ -32,7 +31,7 @@ defmodule PlausibleWeb.Api.StatsController do
       top_stats: top_stats,
       interval: query.interval,
       sample_percent: sample_percent,
-      with_imported: with_imported,
+      with_imported: query.include_imported,
       imported_source: site.imported_data && site.imported_data.source
     })
   end
@@ -205,7 +204,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
 
     query =
-      Query.from(site.timezone, params)
+      Query.from(site, params)
       |> Filters.add_prefix()
       |> maybe_hide_noref("visit:source", params)
 
@@ -236,7 +235,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
 
     query =
-      Query.from(site.timezone, params)
+      Query.from(site, params)
       |> Filters.add_prefix()
       |> maybe_hide_noref("visit:utm_medium", params)
 
@@ -266,7 +265,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
 
     query =
-      Query.from(site.timezone, params)
+      Query.from(site, params)
       |> Filters.add_prefix()
       |> maybe_hide_noref("visit:utm_campaign", params)
 
@@ -296,7 +295,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
 
     query =
-      Query.from(site.timezone, params)
+      Query.from(site, params)
       |> Filters.add_prefix()
       |> maybe_hide_noref("visit:utm_content", params)
 
@@ -325,7 +324,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
 
     query =
-      Query.from(site.timezone, params)
+      Query.from(site, params)
       |> Filters.add_prefix()
       |> maybe_hide_noref("visit:utm_term", params)
 
@@ -354,7 +353,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
 
     query =
-      Query.from(site.timezone, params)
+      Query.from(site, params)
       |> Filters.add_prefix()
       |> maybe_hide_noref("visit:utm_source", params)
 
@@ -384,7 +383,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
 
     query =
-      Query.from(site.timezone, params)
+      Query.from(site, params)
       |> Query.put_filter("source", "Google")
       |> Filters.add_prefix()
 
@@ -414,7 +413,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
 
     query =
-      Query.from(site.timezone, params)
+      Query.from(site, params)
       |> Query.put_filter("source", referrer)
       |> Filters.add_prefix()
 
@@ -435,7 +434,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def pages(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
 
     metrics =
       if params["detailed"],
@@ -464,7 +463,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def entry_pages(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
     pagination = parse_pagination(params)
     metrics = [:visitors, :visits, :visit_duration]
 
@@ -492,7 +491,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def exit_pages(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
     {limit, page} = parse_pagination(params)
     metrics = [:visitors, :visits]
 
@@ -548,7 +547,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
 
     query =
-      Query.from(site.timezone, params)
+      Query.from(site, params)
       |> Filters.add_prefix()
       |> Query.put_filter("visit:country", {:is_not, "\0\0"})
 
@@ -605,7 +604,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
 
     query =
-      Query.from(site.timezone, params)
+      Query.from(site, params)
       |> Filters.add_prefix()
       |> Query.put_filter("visit:region", {:is_not, ""})
 
@@ -643,7 +642,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
 
     query =
-      Query.from(site.timezone, params)
+      Query.from(site, params)
       |> Filters.add_prefix()
       |> Query.put_filter("visit:city", {:is_not, 0})
 
@@ -684,7 +683,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def browsers(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
     pagination = parse_pagination(params)
 
     browsers =
@@ -708,7 +707,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def browser_versions(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
     pagination = parse_pagination(params)
 
     versions =
@@ -722,7 +721,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def operating_systems(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
     pagination = parse_pagination(params)
 
     systems =
@@ -746,7 +745,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def operating_system_versions(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
     pagination = parse_pagination(params)
 
     versions =
@@ -760,7 +759,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def screen_sizes(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
     pagination = parse_pagination(params)
 
     sizes =
@@ -792,7 +791,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def conversions(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
 
     query =
       if query.period == "realtime" do
@@ -834,7 +833,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def prop_breakdown(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
     pagination = parse_pagination(params)
 
     total_q = Query.remove_goal(query)
@@ -867,7 +866,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def all_props_breakdown(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
 
     prop_names =
       if query.filters["event:goal"] do
@@ -903,7 +902,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def filter_suggestions(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
 
     json(conn, Stats.filter_suggestions(site, query, params["filter_name"], params["q"]))
   end

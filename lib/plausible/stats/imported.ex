@@ -5,22 +5,18 @@ defmodule Plausible.Stats.Imported do
 
   @no_ref "Direct / None"
 
-  def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{with_imported: false}, _),
+  def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{include_imported: false}, _),
     do: native_q
-
-  def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{filters: filters}, _)
-      when length(filters) > 0,
-      do: native_q
 
   def merge_imported_timeseries(
         native_q,
-        %Plausible.Site{id: site_id, imported_data: %{status: "ok"}},
+        site,
         query,
         metrics
       ) do
     imported_q =
       from(v in "imported_visitors",
-        where: v.site_id == ^site_id,
+        where: v.site_id == ^site.id,
         where: v.date >= ^query.date_range.first and v.date <= ^query.date_range.last,
         select: %{visitors: sum(v.visitors)}
       )
@@ -32,8 +28,6 @@ defmodule Plausible.Stats.Imported do
     )
     |> select_joined_metrics(metrics)
   end
-
-  def merge_imported_timeseries(native_q, _site, _query, _metrics), do: native_q
 
   defp apply_interval(imported_q, %Plausible.Stats.Query{interval: "month"}) do
     imported_q
@@ -47,8 +41,7 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([i], %{date: i.date})
   end
 
-  def merge_imported(q, %Plausible.Site{imported_data: nil}, _, _, _), do: q
-  def merge_imported(q, _, %Query{with_imported: false}, _, _), do: q
+  def merge_imported(q, _, %Query{include_imported: false}, _, _), do: q
   def merge_imported(q, _, _, _, [:events | _]), do: q
   # GA only has 'source'
   def merge_imported(q, _, _, "utm_source", _), do: q

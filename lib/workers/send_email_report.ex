@@ -9,7 +9,7 @@ defmodule Plausible.Workers.SendEmailReport do
     site = Repo.get(Plausible.Site, site_id) |> Repo.preload(:weekly_report)
     today = Timex.now(site.timezone) |> DateTime.to_date()
     date = Timex.shift(today, weeks: -1) |> Timex.end_of_week() |> Date.to_iso8601()
-    query = Query.from(site.timezone, %{"period" => "7d", "date" => date})
+    query = Query.from(site, %{"period" => "7d", "date" => date})
 
     for email <- site.weekly_report.recipients do
       unsubscribe_link =
@@ -32,7 +32,7 @@ defmodule Plausible.Workers.SendEmailReport do
       |> Timex.beginning_of_month()
 
     query =
-      Query.from(site.timezone, %{
+      Query.from(site, %{
         "period" => "month",
         "date" => Timex.format!(last_month, "{ISOdate}")
       })

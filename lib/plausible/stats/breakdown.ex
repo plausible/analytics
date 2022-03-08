@@ -244,10 +244,8 @@ defmodule Plausible.Stats.Breakdown do
 
     {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
 
-    with_imported = query.with_imported && site.imported_data
-
     select =
-      if with_imported do
+      if query.include_imported do
         "sum(td), count(case when p2 != p then 1 end)"
       else
         "round(sum(td)/count(case when p2 != p then 1 end))"
@@ -275,7 +273,7 @@ defmodule Plausible.Stats.Breakdown do
 
     {:ok, res} = ClickhouseRepo.query(time_query, base_query_raw_params ++ [pages])
 
-    if with_imported do
+    if query.include_imported do
       # Imported page views have pre-calculated values
       res =
         res.rows
