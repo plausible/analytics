@@ -28,27 +28,25 @@ defmodule Plausible.Stats.Timeseries do
     end)
   end
 
+  defp events_timeseries(_, _, []), do: []
+
   defp events_timeseries(site, query, metrics) do
-    from(e in base_event_query(site, query),
-      group_by: fragment("date"),
-      order_by: fragment("date"),
-      select: %{}
-    )
+    from(e in base_event_query(site, query), select: %{})
     |> select_bucket(site, query)
     |> select_event_metrics(metrics)
+    |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
   end
+
+  defp sessions_timeseries(_, _, []), do: []
 
   defp sessions_timeseries(site, query, metrics) do
     query = Query.treat_page_filter_as_entry_page(query)
 
-    from(e in query_sessions(site, query),
-      group_by: fragment("date"),
-      order_by: fragment("date"),
-      select: %{}
-    )
+    from(e in query_sessions(site, query), select: %{})
     |> select_bucket(site, query)
     |> select_session_metrics(metrics)
+    |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
   end
 
@@ -81,8 +79,10 @@ defmodule Plausible.Stats.Timeseries do
   def select_bucket(q, site, %Query{interval: "month"}) do
     from(
       e in q,
+      group_by: fragment("toStartOfMonth(toTimeZone(?, ?))", e.timestamp, ^site.timezone),
+      order_by: fragment("toStartOfMonth(toTimeZone(?, ?))", e.timestamp, ^site.timezone),
       select_merge: %{
-        date: fragment("toStartOfMonth(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
+        date: fragment("toStartOfMonth(toTimeZone(?, ?))", e.timestamp, ^site.timezone)
       }
     )
   end
@@ -90,8 +90,10 @@ defmodule Plausible.Stats.Timeseries do
   def select_bucket(q, site, %Query{interval: "date"}) do
     from(
       e in q,
+      group_by: fragment("toDate(toTimeZone(?, ?))", e.timestamp, ^site.timezone),
+      order_by: fragment("toDate(toTimeZone(?, ?))", e.timestamp, ^site.timezone),
       select_merge: %{
-        date: fragment("toDate(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
+        date: fragment("toDate(toTimeZone(?, ?))", e.timestamp, ^site.timezone)
       }
     )
   end
@@ -99,8 +101,10 @@ defmodule Plausible.Stats.Timeseries do
   def select_bucket(q, site, %Query{interval: "hour"}) do
     from(
       e in q,
+      group_by: fragment("toStartOfHour(toTimeZone(?, ?))", e.timestamp, ^site.timezone),
+      order_by: fragment("toStartOfHour(toTimeZone(?, ?))", e.timestamp, ^site.timezone),
       select_merge: %{
-        date: fragment("toStartOfHour(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
+        date: fragment("toStartOfHour(toTimeZone(?, ?))", e.timestamp, ^site.timezone)
       }
     )
   end
@@ -108,8 +112,10 @@ defmodule Plausible.Stats.Timeseries do
   def select_bucket(q, _site, %Query{interval: "minute"}) do
     from(
       e in q,
+      group_by: fragment("dateDiff('minute', now(), ?)", e.timestamp),
+      order_by: fragment("dateDiff('minute', now(), ?)", e.timestamp),
       select_merge: %{
-        date: fragment("dateDiff('minute', now(), ?) as date", e.timestamp)
+        date: fragment("dateDiff('minute', now(), ?)", e.timestamp)
       }
     )
   end

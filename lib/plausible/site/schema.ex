@@ -59,12 +59,12 @@ defmodule Plausible.Site do
     change(site, has_stats: has_stats_val)
   end
 
-  def start_import(site, imported_source) do
+  def start_import(site, imported_source, status \\ "importing") do
     change(site,
       imported_data: %Plausible.Site.ImportedData{
         end_date: Timex.today(),
         source: imported_source,
-        status: "importing"
+        status: status
       }
     )
   end

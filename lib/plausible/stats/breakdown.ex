@@ -205,7 +205,6 @@ defmodule Plausible.Stats.Breakdown do
     |> merge_imported(site, query, property, metrics)
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
-    # TODO: migrate schema field to 'os'
     |> transform_keys(%{operating_system: :os})
   end
 
@@ -221,7 +220,6 @@ defmodule Plausible.Stats.Breakdown do
     |> merge_imported(site, query, property, metrics)
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
-    # TODO: migrate schema field to 'os'
     |> transform_keys(%{operating_system: :os})
   end
 

@@ -180,12 +180,10 @@ defmodule Plausible.Factory do
     }
   end
 
-  @today Timex.today() |> Timex.to_date()
-
   def imported_visitors_factory do
     %{
       table: "imported_visitors",
-      date: @today,
+      date: Timex.today(),
       visitors: 1,
       pageviews: 1,
       bounces: 0,
@@ -197,7 +195,7 @@ defmodule Plausible.Factory do
   def imported_sources_factory do
     %{
       table: "imported_sources",
-      date: @today,
+      date: Timex.today(),
       source: "",
       visitors: 1,
       visits: 1,
@@ -209,7 +207,7 @@ defmodule Plausible.Factory do
   def imported_pages_factory do
     %{
       table: "imported_pages",
-      date: @today,
+      date: Timex.today(),
       page: "",
       visitors: 1,
       pageviews: 1,
@@ -220,7 +218,7 @@ defmodule Plausible.Factory do
   def imported_entry_pages_factory do
     %{
       table: "imported_entry_pages",
-      date: @today,
+      date: Timex.today(),
       entry_page: "",
       visitors: 1,
       entrances: 1,
@@ -232,7 +230,7 @@ defmodule Plausible.Factory do
   def imported_exit_pages_factory do
     %{
       table: "imported_exit_pages",
-      date: @today,
+      date: Timex.today(),
       exit_page: "",
       visitors: 1,
       exits: 1
@@ -242,7 +240,7 @@ defmodule Plausible.Factory do
   def imported_locations_factory do
     %{
       table: "imported_locations",
-      date: @today,
+      date: Timex.today(),
       country: "",
       region: "",
       city: 0,
@@ -256,7 +254,7 @@ defmodule Plausible.Factory do
   def imported_devices_factory do
     %{
       table: "imported_devices",
-      date: @today,
+      date: Timex.today(),
       device: "",
       visitors: 1,
       visits: 1,
@@ -268,7 +266,7 @@ defmodule Plausible.Factory do
   def imported_browsers_factory do
     %{
       table: "imported_browsers",
-      date: @today,
+      date: Timex.today(),
       browser: "",
       visitors: 1,
       visits: 1,
@@ -280,7 +278,7 @@ defmodule Plausible.Factory do
   def imported_operating_systems_factory do
     %{
       table: "imported_operating_systems",
-      date: @today,
+      date: Timex.today(),
       operating_system: "",
       visitors: 1,
       visits: 1,

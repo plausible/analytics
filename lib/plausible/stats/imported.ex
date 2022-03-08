@@ -5,23 +5,46 @@ defmodule Plausible.Stats.Imported do
 
   @no_ref "Direct / None"
 
-  def timeseries(site, query) do
-    result =
-      from(v in "imported_visitors",
-        group_by: fragment("date"),
-        where: v.site_id == ^site.id,
-        where: v.date >= ^query.date_range.first and v.date <= ^query.date_range.last,
-        select: %{
-          visitors: sum(v.visitors),
-          date: fragment("? as date", v.date)
-        }
-      )
-      |> ClickhouseRepo.all()
-      |> Enum.map(fn row -> {row[:date], row[:visitors]} end)
-      |> Map.new()
+  def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{with_imported: false}, _),
+    do: native_q
 
-    Enum.into(query.date_range, [])
-    |> Enum.map(fn step -> Map.get(result, step, 0) end)
+  def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{filters: filters}, _)
+      when length(filters) > 0,
+      do: native_q
+
+  def merge_imported_timeseries(
+        native_q,
+        %Plausible.Site{id: site_id, imported_data: %{status: "ok"}},
+        query,
+        metrics
+      ) do
+    imported_q =
+      from(v in "imported_visitors",
+        where: v.site_id == ^site_id,
+        where: v.date >= ^query.date_range.first and v.date <= ^query.date_range.last,
+        select: %{visitors: sum(v.visitors)}
+      )
+      |> apply_interval(query)
+
+    from(s in Ecto.Query.subquery(native_q),
+      full_join: i in subquery(imported_q),
+      on: field(s, :date) == field(i, :date)
+    )
+    |> select_joined_metrics(metrics)
+  end
+
+  def merge_imported_timeseries(native_q, _site, _query, _metrics), do: native_q
+
+  defp apply_interval(imported_q, %Plausible.Stats.Query{interval: "month"}) do
+    imported_q
+    |> group_by([i], fragment("toStartOfMonth(?)", i.date))
+    |> select_merge([i], %{date: fragment("toStartOfMonth(?)", i.date)})
+  end
+
+  defp apply_interval(imported_q, _query) do
+    imported_q
+    |> group_by([i], i.date)
+    |> select_merge([i], %{date: i.date})
   end
 
   def merge_imported(q, %Plausible.Site{imported_data: nil}, _, _, _), do: q
@@ -185,6 +208,7 @@ defmodule Plausible.Stats.Imported do
         on: field(s, ^dim) == field(i, ^dim)
       )
       |> select_joined_metrics(metrics)
+      |> apply_order_by(metrics)
 
     case dim do
       :source ->
@@ -354,9 +378,6 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([s, i], %{
       :visitors => fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors)
     })
-    |> order_by([s, i],
-      desc: fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors)
-    )
     |> select_joined_metrics(rest)
   end
 
@@ -410,4 +431,11 @@ defmodule Plausible.Stats.Imported do
     q
     |> select_joined_metrics(rest)
   end
+
+  defp apply_order_by(q, [:visitors | rest]) do
+    order_by(q, [s, i], desc: fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors))
+    |> apply_order_by(rest)
+  end
+
+  defp apply_order_by(q, _), do: q
 end

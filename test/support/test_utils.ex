@@ -14,7 +14,7 @@ defmodule Plausible.TestUtils do
   def add_imported_data(%{site: site}) do
     site =
       site
-      |> Plausible.Site.set_imported_source("Google Analytics")
+      |> Plausible.Site.start_import("Google Analytics", "ok")
       |> Repo.update!()
 
     {:ok, site: site}
