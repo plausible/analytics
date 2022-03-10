@@ -72,11 +72,12 @@ defmodule Plausible.Imported do
 
   defp new_from_google_analytics(site_id, "imported_pages", %{
          "dimensions" => [date, hostname, page],
-         "metrics" => [%{"values" => [visitors, pageviews, time_on_page]}]
+         "metrics" => [%{"values" => [visitors, pageviews, exits, time_on_page]}]
        }) do
     page = URI.parse(page).path
     {visitors, ""} = Integer.parse(visitors)
     {pageviews, ""} = Integer.parse(pageviews)
+    {exits, ""} = Integer.parse(exits)
     {time_on_page, _} = Integer.parse(time_on_page)
 
     %{
@@ -86,6 +87,7 @@ defmodule Plausible.Imported do
       page: page,
       visitors: visitors,
       pageviews: pageviews,
+      exits: exits,
       time_on_page: time_on_page
     }
   end

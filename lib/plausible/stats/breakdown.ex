@@ -288,7 +288,7 @@ defmodule Plausible.Stats.Breakdown do
         where: i.page in ^pages,
         select: %{
           page: i.page,
-          pageviews: sum(i.pageviews),
+          pageviews: fragment("sum(?) - sum(?)", i.pageviews, i.exits),
           time_on_page: sum(i.time_on_page)
         }
       )
@@ -297,8 +297,9 @@ defmodule Plausible.Stats.Breakdown do
         {restime, resviews} = Map.get(res, page, {0, 0})
         Map.put(res, page, {restime + time, resviews + pageviews})
       end)
-      |> Enum.map(fn {page, {time, pageviews}} ->
-        {page, time / pageviews}
+      |> Enum.map(fn
+        {page, {_, 0}} -> {page, nil}
+        {page, {time, pageviews}} -> {page, time / pageviews}
       end)
       |> Enum.into(%{})
     else

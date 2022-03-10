@@ -203,7 +203,7 @@ defmodule Plausible.Google.Api do
       {
         "imported_pages",
         ["ga:date", "ga:hostname", "ga:pagePath"],
-        ["ga:users", "ga:pageviews", "ga:timeOnPage"]
+        ["ga:users", "ga:pageviews", "ga:exits", "ga:timeOnPage"]
       },
       {
         "imported_entry_pages",

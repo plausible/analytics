@@ -325,15 +325,15 @@ defmodule Plausible.ImportedTest do
                  [
                    %{
                      "dimensions" => ["20210101", "host-a.com", "/"],
-                     "metrics" => [%{"values" => ["1", "1", "700"]}]
+                     "metrics" => [%{"values" => ["1", "1", "0", "700"]}]
                    },
                    %{
                      "dimensions" => ["20210101", "host-b.com", "/some-other-page"],
-                     "metrics" => [%{"values" => ["1", "1", "60"]}]
+                     "metrics" => [%{"values" => ["1", "2", "1", "60"]}]
                    },
                    %{
                      "dimensions" => ["20210101", "host-b.com", "/some-other-page?wat=wot"],
-                     "metrics" => [%{"values" => ["1", "1", "60"]}]
+                     "metrics" => [%{"values" => ["1", "1", "0", "60"]}]
                    }
                  ],
                  site.id,
@@ -363,7 +363,7 @@ defmodule Plausible.ImportedTest do
                  "bounce_rate" => nil,
                  "time_on_page" => 60,
                  "visitors" => 3,
-                 "pageviews" => 3,
+                 "pageviews" => 4,
                  "name" => "/some-other-page"
                },
                %{
@@ -403,7 +403,7 @@ defmodule Plausible.ImportedTest do
                  [
                    %{
                      "dimensions" => ["20210101", "host-a.com", "/page2"],
-                     "metrics" => [%{"values" => ["2", "4", "10"]}]
+                     "metrics" => [%{"values" => ["2", "4", "0", "10"]}]
                    }
                  ],
                  site.id,

@@ -39,6 +39,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
       add(:page, :string)
       add(:visitors, :UInt64)
       add(:pageviews, :UInt64)
+      add(:exits, :UInt64)
       add(:time_on_page, :UInt64)
     end
 
