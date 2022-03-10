@@ -83,7 +83,10 @@ defmodule PlausibleWeb.Api.ExternalController do
 
     ua = parse_user_agent(conn)
 
-    if is_bot?(ua) || params["domain"] in Application.get_env(:plausible, :domain_blacklist) do
+    blacklist_domain = params["domain"] in Application.get_env(:plausible, :domain_blacklist)
+    referrer_spam = is_spammer?(params["referrer"])
+
+    if is_bot?(ua) || blacklist_domain || referrer_spam do
       :ok
     else
       uri = params["url"] && URI.parse(params["url"])
@@ -162,6 +165,13 @@ defmodule PlausibleWeb.Api.ExternalController do
     do: true
 
   defp is_bot?(_), do: false
+
+  defp is_spammer?(nil), do: false
+
+  defp is_spammer?(referrer_str) do
+    uri = URI.parse(referrer_str)
+    ReferrerBlocklist.is_spammer?(strip_www(uri.host))
+  end
 
   defp parse_meta(params) do
     raw_meta = params["m"] || params["meta"] || params["p"] || params["props"]
