@@ -43,7 +43,10 @@ defmodule Plausible.Site do
     |> validate_format(:domain, ~r/^[a-zA-Z0-9\-\.\/\:]*$/,
       message: "only letters, numbers, slashes and period allowed"
     )
-    |> unique_constraint(:domain)
+    |> unique_constraint(:domain,
+      message:
+        "This domain has already been taken. Perhaps one of your team members registered it? If that's not the case, please contact support@plausible.io"
+    )
     |> clean_domain
   end
 

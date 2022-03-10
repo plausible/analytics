@@ -259,7 +259,8 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert html_response(conn, 200) =~ "has already been taken"
+      assert html_response(conn, 200) =~
+               "This domain has already been taken. Perhaps one of your team members registered it? If that&#39;s not the case, please contact support@plausible.io"
     end
   end
 
