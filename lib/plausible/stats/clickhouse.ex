@@ -98,7 +98,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   defp filter_converted_sessions(db_query, site, query) do
     goal = query.filters["goal"]
-    page = query.filters["page"]
+    page = query.filters[:page]
 
     if is_binary(goal) || is_binary(page) do
       converted_sessions =
@@ -116,7 +116,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp apply_page_as_entry_page(db_query, _site, query) do
-    include_path_filter_entry(db_query, query.filters["page"])
+    include_path_filter_entry(db_query, query.filters[:page])
   end
 
   def current_visitors(site, query) do
@@ -382,7 +382,7 @@ defmodule Plausible.Stats.Clickhouse do
         q
       end
 
-    q = include_path_filter(q, query.filters["page"])
+    q = include_path_filter(q, query.filters[:page])
 
     if query.filters["props"] do
       [{key, val}] = query.filters["props"] |> Enum.into([])
@@ -559,5 +559,13 @@ defmodule Plausible.Stats.Clickhouse do
     else
       db_query
     end
+  end
+
+  def pageviews_begin(site) do
+    ClickhouseRepo.one(
+      from e in "events",
+        where: e.domain == ^site.domain and e.name == "pageview",
+        select: min(e.timestamp)
+    )
   end
 end

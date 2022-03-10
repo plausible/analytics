@@ -2,6 +2,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   use PlausibleWeb.ConnCase
   use Plausible.Repo
   use Bamboo.Test
+  use Oban.Testing, repo: Plausible.Repo
   import Plausible.TestUtils
 
   describe "GET /sites/new" do
@@ -374,7 +375,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     test "deletes associated google auth", %{conn: conn, user: user, site: site} do
       insert(:google_auth, user: user, site: site)
-      conn = delete(conn, "/#{site.domain}/settings/google")
+      conn = delete(conn, "/#{site.domain}/settings/google-search")
 
       refute Repo.exists?(Plausible.Site.GoogleAuth)
       assert redirected_to(conn, 302) == "/#{site.domain}/settings/search-console"
@@ -716,6 +717,40 @@ defmodule PlausibleWeb.SiteControllerTest do
       delete(conn, "/sites/#{site.domain}/custom-domains/#{domain.id}")
 
       assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 0
+    end
+  end
+
+  describe "POST /:website/settings/google-import" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    test "adds in-progress imported tag to site", %{conn: conn, site: site} do
+      post(conn, "/#{site.domain}/settings/google-import", %{"profile" => "123"})
+
+      imported_data = Repo.reload(site).imported_data
+
+      assert imported_data
+      assert imported_data.source == "Google Analytics"
+      assert imported_data.end_date == Timex.today()
+      assert imported_data.status == "importing"
+    end
+
+    test "schedules an import job in Oban", %{conn: conn, site: site} do
+      post(conn, "/#{site.domain}/settings/google-import", %{"profile" => "123"})
+
+      assert_enqueued(
+        worker: Plausible.Workers.ImportGoogleAnalytics,
+        args: %{"site_id" => site.id, "profile" => "123"}
+      )
+    end
+  end
+
+  describe "DELETE /:website/settings/:forget_imported" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    test "removes imported_data field from site", %{conn: conn, site: site} do
+      delete(conn, "/#{site.domain}/settings/forget-imported")
+
+      assert Repo.reload(site).imported_data == nil
     end
   end
 end

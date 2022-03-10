@@ -505,7 +505,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp clean_referrer(ref) do
     uri = URI.parse(ref.referer)
 
-    if right_uri?(uri) do
+    if PlausibleWeb.RefInspector.right_uri?(uri) do
       host = String.replace_prefix(uri.host, "www.", "")
       path = uri.path || ""
       host <> String.trim_trailing(path, "/")
@@ -584,36 +584,8 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp get_referrer_source(query, ref) do
     source = query["utm_source"] || query["source"] || query["ref"]
-    source || get_source_from_referrer(ref)
+    source || PlausibleWeb.RefInspector.parse(ref)
   end
-
-  defp get_source_from_referrer(nil), do: nil
-
-  defp get_source_from_referrer(ref) do
-    case ref.source do
-      :unknown ->
-        clean_uri(ref.referer)
-
-      source ->
-        source
-    end
-  end
-
-  defp clean_uri(uri) do
-    uri = URI.parse(String.trim(uri))
-
-    if right_uri?(uri) do
-      String.replace_leading(uri.host, "www.", "")
-    end
-  end
-
-  defp right_uri?(%URI{host: nil}), do: false
-
-  defp right_uri?(%URI{host: host, scheme: scheme})
-       when scheme in ["http", "https"] and byte_size(host) > 0,
-       do: true
-
-  defp right_uri?(_), do: false
 
   defp decode_query_params(nil), do: nil
   defp decode_query_params(%URI{query: nil}), do: nil

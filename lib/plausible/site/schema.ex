@@ -1,3 +1,13 @@
+defmodule Plausible.Site.ImportedData do
+  use Ecto.Schema
+
+  embedded_schema do
+    field :end_date, :date
+    field :source, :string
+    field :status, :string
+  end
+end
+
 defmodule Plausible.Site do
   use Ecto.Schema
   import Ecto.Changeset
@@ -11,6 +21,8 @@ defmodule Plausible.Site do
     field :public, :boolean
     field :locked, :boolean
     field :has_stats, :boolean
+
+    embeds_one :imported_data, Plausible.Site.ImportedData, on_replace: :update
 
     many_to_many :members, User, join_through: Plausible.Site.Membership
     has_many :memberships, Plausible.Site.Membership
@@ -45,6 +57,37 @@ defmodule Plausible.Site do
 
   def set_has_stats(site, has_stats_val) do
     change(site, has_stats: has_stats_val)
+  end
+
+  def start_import(site, imported_source, status \\ "importing") do
+    change(site,
+      imported_data: %Plausible.Site.ImportedData{
+        end_date: Timex.today(),
+        source: imported_source,
+        status: status
+      }
+    )
+  end
+
+  def import_success(site) do
+    change(site, imported_data: %{status: "ok"})
+  end
+
+  def import_failure(site) do
+    change(site, imported_data: %{status: "error"})
+  end
+
+  def set_imported_source(site, imported_source) do
+    change(site,
+      imported_data: %Plausible.Site.ImportedData{
+        end_date: Timex.today(),
+        source: imported_source
+      }
+    )
+  end
+
+  def remove_imported_data(site) do
+    change(site, imported_data: nil)
   end
 
   defp clean_domain(changeset) do

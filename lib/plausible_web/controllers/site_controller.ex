@@ -167,15 +167,28 @@ defmodule PlausibleWeb.SiteController do
     redirect(conn, to: Routes.site_path(conn, :settings_general, website))
   end
 
+  defp can_trigger_import(site) do
+    no_import = is_nil(site.imported_data) || site.imported_data.status == "error"
+
+    no_import && site.google_auth
+  end
+
   def settings_general(conn, _params) do
     site =
       conn.assigns[:site]
-      |> Repo.preload(:custom_domain)
+      |> Repo.preload([:custom_domain, :google_auth])
+
+    google_profiles =
+      if can_trigger_import(site) do
+        Plausible.Google.Api.get_analytics_view_ids(site)
+      end
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_general.html",
       site: site,
+      google_profiles: google_profiles,
+      imported_data: site.imported_data,
       changeset: Plausible.Site.changeset(site, %{}),
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
@@ -295,9 +308,21 @@ defmodule PlausibleWeb.SiteController do
 
     Repo.delete!(site.google_auth)
 
-    conn
-    |> put_flash(:success, "Google account unlinked from Plausible")
-    |> redirect(to: Routes.site_path(conn, :settings_search_console, site.domain))
+    conn = put_flash(conn, :success, "Google account unlinked from Plausible")
+
+    panel =
+      conn.path_info
+      |> List.last()
+      |> String.split("-")
+      |> List.last()
+
+    case panel do
+      "search" ->
+        redirect(conn, to: Routes.site_path(conn, :settings_search_console, site.domain))
+
+      "import" ->
+        redirect(conn, to: Routes.site_path(conn, :settings_general, site.domain))
+    end
   end
 
   def update_settings(conn, %{"site" => site_params}) do
@@ -616,5 +641,61 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> put_flash(:success, "Custom domain deleted successfully")
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
+  end
+
+  def import_from_google(conn, %{"profile" => profile}) do
+    site =
+      conn.assigns[:site]
+      |> Repo.preload(:google_auth)
+
+    cond do
+      site.imported_data ->
+        conn
+        |> put_flash(:error, "Data already imported from: #{site.imported_data.source}")
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+
+      profile == "" ->
+        conn
+        |> put_flash(:error, "A Google Analytics profile must be selected")
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+
+      true ->
+        job =
+          Plausible.Workers.ImportGoogleAnalytics.new(%{
+            "site_id" => site.id,
+            "profile" => profile
+          })
+
+        Ecto.Multi.new()
+        |> Ecto.Multi.update(:update_site, Plausible.Site.start_import(site, "Google Analytics"))
+        |> Oban.insert(:oban_job, job)
+        |> Repo.transaction()
+
+        conn
+        |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+    end
+  end
+
+  def forget_imported(conn, _params) do
+    site = conn.assigns[:site]
+
+    cond do
+      site.imported_data ->
+        Plausible.Imported.forget(site)
+
+        site
+        |> Plausible.Site.remove_imported_data()
+        |> Repo.update!()
+
+        conn
+        |> put_flash(:success, "Imported data has been forgotten")
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+
+      true ->
+        conn
+        |> put_flash(:error, "No data has been imported")
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+    end
   end
 end

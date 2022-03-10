@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   @user_id 123
 
   describe "GET /api/stats/main-graph - plot" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "displays pageviews for the last 30 minutes in realtime graph", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -66,6 +66,75 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.count(plot) == 31
       assert List.first(plot) == 1
       assert List.last(plot) == 1
+      assert Enum.sum(plot) == 2
+    end
+
+    test "displays visitors for a month with imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-31 00:00:00]),
+        build(:imported_visitors, date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-01-31])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
+        )
+
+      assert %{"plot" => plot, "imported_source" => "Google Analytics"} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 31
+      assert List.first(plot) == 2
+      assert List.last(plot) == 2
+      assert Enum.sum(plot) == 4
+    end
+
+    test "displays visitors for a month with imported data and filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00], pathname: "/pageA"),
+        build(:pageview, timestamp: ~N[2021-01-31 00:00:00], pathname: "/pageA"),
+        build(:imported_visitors, date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-01-31])
+      ])
+
+      filters = Jason.encode!(%{page: "/pageA"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true&filters=#{filters}"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 31
+      assert List.first(plot) == 1
+      assert List.last(plot) == 1
+      assert Enum.sum(plot) == 2
+    end
+
+    test "displays visitors for 6 months with imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-06-30 00:00:00]),
+        build(:imported_visitors, date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-06-30])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=6mo&date=2021-06-30&with_imported=true"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 6
+      assert List.first(plot) == 2
+      assert List.last(plot) == 2
+      assert Enum.sum(plot) == 4
     end
 
     # TODO: missing 6, 12 months, 30 days

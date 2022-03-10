@@ -536,11 +536,13 @@ defmodule PlausibleWeb.AuthController do
     |> redirect(to: redirect_to)
   end
 
-  def google_auth_callback(conn, %{"code" => code, "state" => site_id}) do
+  def google_auth_callback(conn, %{"code" => code, "state" => state}) do
     res = Plausible.Google.Api.fetch_access_token(code)
     id_token = res["id_token"]
     [_, body, _] = String.split(id_token, ".")
     id = body |> Base.decode64!(padding: false) |> Jason.decode!()
+
+    [site_id, redirect_to] = Jason.decode!(state)
 
     Plausible.Site.GoogleAuth.changeset(%Plausible.Site.GoogleAuth{}, %{
       email: id["email"],
@@ -554,6 +556,6 @@ defmodule PlausibleWeb.AuthController do
 
     site = Repo.get(Plausible.Site, site_id)
 
-    redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/search-console")
+    redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/#{redirect_to}")
   end
 end

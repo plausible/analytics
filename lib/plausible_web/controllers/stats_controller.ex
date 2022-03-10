@@ -48,11 +48,11 @@ defmodule PlausibleWeb.StatsController do
   """
   def csv_export(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
 
-    metrics = ["visitors", "pageviews", "bounce_rate", "visit_duration"]
+    metrics = [:visitors, :pageviews, :bounce_rate, :visit_duration]
     graph = Plausible.Stats.timeseries(site, query, metrics)
-    headers = ["date" | metrics]
+    headers = [:date | metrics]
 
     visitors =
       Enum.map(graph, fn row -> Enum.map(headers, &row[&1]) end)

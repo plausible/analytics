@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
   import Plausible.TestUtils
 
   describe "GET /api/stats/:domain/countries" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "returns top countries by new visitors", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -15,6 +15,12 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
         ),
         build(:pageview,
           country_code: "GB"
+        ),
+        build(:imported_locations,
+          country: "EE"
+        ),
+        build(:imported_locations,
+          country: "GB"
         )
       ])
 
@@ -36,6 +42,27 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                  "flag" => "🇬🇧",
                  "visitors" => 1,
                  "percentage" => 33
+               }
+             ]
+
+      conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&with_imported=true")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "code" => "EE",
+                 "alpha_3" => "EST",
+                 "name" => "Estonia",
+                 "flag" => "🇪🇪",
+                 "visitors" => 3,
+                 "percentage" => 60
+               },
+               %{
+                 "code" => "GB",
+                 "alpha_3" => "GBR",
+                 "name" => "United Kingdom",
+                 "flag" => "🇬🇧",
+                 "visitors" => 2,
+                 "percentage" => 40
                }
              ]
     end
