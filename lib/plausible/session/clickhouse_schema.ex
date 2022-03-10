@@ -37,6 +37,8 @@ defmodule Plausible.ClickhouseSession do
     field :browser, :string
     field :browser_version, :string
     field :timestamp, :naive_datetime
+
+    field :transferred_from, :string, default: ""
   end
 
   def random_uint64() do

@@ -3,11 +3,11 @@ defmodule Plausible.ClickhouseRepo.Migrations.AddTransferredFrom do
 
   def change do
     alter table(:events) do
-      add(:tranferred_from, :string)
+      add(:transferred_from, :string)
     end
 
     alter table(:sessions) do
-      add(:tranferred_from, :string)
+      add(:transferred_from, :string)
     end
   end
 end

@@ -37,37 +37,15 @@ defmodule Plausible.SiteAdmin do
       transfer_data: %{
         name: "Transfer data",
         inputs: [
-          %{name: "domain", title: "domain", default: nil},
-          %{name: "from", title: "From date YYYY-MM-DD", default: nil},
-          %{name: "to", title: "To date YYYY-MM-DD", default: nil}
+          %{name: "domain", title: "domain", default: nil}
         ],
         action: fn _conn, sites, params -> transfer_data(sites, params) end
       }
     ]
   end
 
-  defp transfer_data([site], params) do
-    from_domain = site.domain
-    to_domain = params["domain"]
-    if domain_exists?(to_domain) do
-      #transfer_sessions(from_domain, to_domain)
-      transfer_events(from_domain, to_domain)
-    else
-      {:error, "Cannot transfer to non-existing domain"}
-    end
-  end
-
-  defp transfer_data(_, _), do: {:error, "Please select exactly one site for this action"}
-
-  defp transfer_sessions(from_domain, to_domain) do
-    sql = "INSERT INTO sessions (session_id, sign, domain, user_id, hostname, timestamp, start, is_bounce, entry_page, exit_page, pageviews, events, duration, referrer, referrer_source, country_code, subdivision1_code, subdivision2_code, city_geoname_id, screen_size, operating_system, browser, utm_medium, utm_source, utm_campaign, utm_content, utm_term) SELECT session_id, sign, '#{to_domain}' as domain, user_id, hostname, timestamp, start, is_bounce, entry_page, exit_page, pageviews, events, duration, referrer, referrer_source, country_code, subdivision1_code, subdivision2_code, city_geoname_id, screen_size, operating_system, browser, utm_medium, utm_source, utm_campaign, utm_content, utm_term FROM (SELECT * FROM sessions WHERE domain='#{from_domain}')"
-    Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, sql)
-  end
-
-  defp transfer_events(from_domain, to_domain) do
-    sql = "INSERT INTO events (timestamp, name, domain, user_id, session_id, hostname, pathname, referrer, referrer_source, country_code, subdivision1_code, subdivision2_code, city_geoname_id, screen_size, operating_system, browser, meta.key, meta.value, utm_medium, utm_source, utm_campaign, utm_content, utm_term) SELECT timestamp, name, '#{to_domain}' as domain, user_id, session_id, hostname, pathname, referrer, referrer_source, country_code, subdivision1_code, subdivision2_code, city_geoname_id, screen_size, operating_system, browser, meta.key, meta.value, utm_medium, utm_source, utm_campaign, utm_content, utm_term FROM (SELECT * FROM events WHERE domain='#{from_domain}')"
-    IO.inspect(sql)
-    Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, sql)
+  defp format_date(date) do
+    Timex.format!(date, "{Mshort} {D}, {YYYY}")
   end
 
   defp get_owner_email(site) do
@@ -79,11 +57,65 @@ defmodule Plausible.SiteAdmin do
     Enum.map(memberships, fn m -> m.user.email end) |> Enum.join(", ")
   end
 
+  def transfer_data([site], params) do
+    from_domain = site.domain
+    to_domain = params["domain"]
+
+    if to_domain && domain_exists?(to_domain) do
+      event_q = event_transfer_query(from_domain, to_domain)
+      Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, event_q)
+
+      session_q = session_transfer_query(from_domain, to_domain)
+      Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, session_q)
+    else
+      {:error, "Cannot transfer to non-existing domain"}
+    end
+  end
+
+  def transfer_data(_, _), do: {:error, "Please select exactly one site for this action"}
+
   defp domain_exists?(domain) do
     Repo.exists?(from s in Plausible.Site, where: s.domain == ^domain)
   end
 
-  defp format_date(date) do
-    Timex.format!(date, "{Mshort} {D}, {YYYY}")
+  def session_transfer_query(from_domain, to_domain) do
+    fields = get_struct_fields(Plausible.ClickhouseSession)
+
+    "INSERT INTO sessions (" <>
+      stringify_fields(fields) <>
+      ") SELECT " <>
+      stringify_fields(fields, to_domain, from_domain) <>
+      " FROM (SELECT * FROM sessions WHERE domain='#{from_domain}')"
+  end
+
+  def event_transfer_query(from_domain, to_domain) do
+    fields = get_struct_fields(Plausible.ClickhouseEvent)
+
+    "INSERT INTO events (" <>
+      stringify_fields(fields) <>
+      ") SELECT " <>
+      stringify_fields(fields, to_domain, from_domain) <>
+      " FROM (SELECT * FROM events WHERE domain='#{from_domain}')"
+  end
+
+  def get_struct_fields(module) do
+    module.__struct__()
+    |> Map.drop([:__meta__, :__struct__])
+    |> Map.keys()
+    |> Enum.map(&Atom.to_string/1)
+    |> Enum.sort()
+  end
+
+  defp stringify_fields(fields), do: Enum.join(fields, ", ")
+
+  defp stringify_fields(fields, domain_value, transferred_from_value) do
+    Enum.map(fields, fn field ->
+      case field do
+        "domain" -> "'#{domain_value}' as domain"
+        "transferred_from" -> "'#{transferred_from_value}' as transferred_from"
+        _ -> field
+      end
+    end)
+    |> stringify_fields()
   end
 end
