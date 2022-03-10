@@ -15,6 +15,7 @@ defmodule Plausible.Application do
       Plausible.Session.WriteBuffer,
       Plausible.Session.Store,
       Plausible.Session.Salts,
+      ReferrerBlocklist,
       {Oban, Application.get_env(:plausible, Oban)},
       {Cachex,
        Keyword.merge(Application.get_env(:plausible, :user_agent_cache), name: :user_agents)}
