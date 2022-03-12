@@ -1591,6 +1591,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           referrer_source: "Google",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:event,
+          name: "signup",
+          user_id: 1,
+          referrer_source: "Google",
+          timestamp: ~N[2021-01-01 00:05:00]
+        ),
         build(:pageview,
           user_id: 1,
           referrer_source: "Google",
@@ -1612,7 +1618,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "period" => "day",
           "date" => "2021-01-01",
           "property" => "visit:source",
-          "metrics" => "visitors,visits,pageviews,bounce_rate,visit_duration"
+          "metrics" => "visitors,visits,pageviews,events,bounce_rate,visit_duration"
         })
 
       assert json_response(conn, 200) == %{
@@ -1623,7 +1629,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                    "visits" => 2,
                    "bounce_rate" => 50,
                    "visit_duration" => 300,
-                   "pageviews" => 3
+                   "pageviews" => 3,
+                   "events" => 4
                  },
                  %{
                    "source" => "Twitter",
@@ -1631,7 +1638,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                    "visits" => 1,
                    "bounce_rate" => 100,
                    "visit_duration" => 0,
-                   "pageviews" => 1
+                   "pageviews" => 1,
+                   "events" => 1
                  }
                ]
              }
