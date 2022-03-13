@@ -9,8 +9,18 @@
   name: 'Outlook Express'
   version: '$1'
 
-- regex: 'Microsoft Outlook(?:[/ ](\d+[\.\d]+))?'
+# Outlook https://apps.apple.com/ru/app/microsoft-outlook/id951937596
+- regex: '^Outlook-iOS/(?:.+\((\d+[\.\d]+)\)$)?'
   name: 'Microsoft Outlook'
+  version: '$1'
+
+- regex: '(?:(?:Microsoft )?Outlook|MacOutlook)(?:[/ ](\d+[\.\d]+))?'
+  name: 'Microsoft Outlook'
+  version: '$1'
+
+# Default Mail Client for Windows
+- regex: 'WindowsMail(?:/(\d+[\.\d]+))'
+  name: 'Windows Mail'
   version: '$1'
 
 - regex: '(?:Thunderbird|Icedove|Shredder)(?:/(\d+[\.\d]+))?'
@@ -48,4 +58,67 @@
 # SeaMonkey
 - regex: '(?:SeaMonkey|Iceape)(?:/(\d+[\.\d]+))?'
   name: 'SeaMonkey'
+  version: '$1'
+
+# Live5ch
+- regex: 'Live5ch/(\d+[\.\d]+)'
+  name: 'Live5ch'
+  version: '$1'
+
+- regex: 'JaneView/'
+  name: 'JaneView'
+  version: ''
+
+- regex: 'BathyScaphe/'
+  name: 'BathyScaphe'
+  version: ''
+
+# Raindrop.io (https://raindrop.io/)
+- regex: 'Raindrop.io/(\d+[\.\d]+)'
+  name: 'Raindrop.io'
+  version: '$1'
+
+# Franz (https://meetfranz.com/)
+- regex: 'Franz/(\d+[\.\d]+)'
+  name: 'Franz'
+  version: '$1'
+
+# Mailspring (https://www.electronjs.org/apps/mailspring)
+- regex: 'Mailspring/(\d+[\.\d]+)'
+  name: 'Mailspring'
+  version: '$1'
+
+# Notion (https://www.notion.so/)
+- regex: 'Notion/(\d+[\.\d]+)'
+  name: 'Notion'
+  version: '$1'
+
+# Basecamp (https://basecamp.com/)
+- regex: 'Basecamp[0-9]/?(\d+[\.\d]+)'
+  name: 'Basecamp'
+  version: '$1'
+
+# Evernote (https://evernote.com/)
+- regex: 'Evernote/?(\d+[\.\d]+)'
+  name: 'Evernote'
+  version: '$1'
+
+# Rambox Pro (https://rambox.app/)
+- regex: 'ramboxpro/(\d+\.[\.\d]+)?'
+  name: 'Rambox Pro'
+  version: '$1'
+
+# Mailbird (https://www.getmailbird.com/)
+- regex: 'Mailbird/(\d+\.[\.\d]+)/'
+  name: 'Mailbird'
+  version: '$1'
+
+# Yahoo Mail (https://apps.apple.com/us/app/yahoo-mail-organised-email/id577586159)
+- regex: 'Yahoo%20Mail'
+  name: 'Yahoo Mail'
+  version: ''
+
+# eM Client (https://emclient.com/)
+- regex: 'eM Client/(\d+\.[\.\d]+)'
+  name: 'eM Client'
   version: '$1'

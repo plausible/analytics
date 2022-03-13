@@ -5,11 +5,21 @@
 # @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
 ###############
 
+# AnyEvent HTTP (http://software.schmorp.de/pkg/AnyEvent)
+- regex: 'AnyEvent-HTTP(?:/(\d+[\.\d]+))?'
+  name: 'AnyEvent HTTP'
+  version: '$1'
+
+# SlimerJS (https://www.slimerjs.org/)
+- regex: 'SlimerJS/(\d+[\.\d]+)'
+  name: 'SlimerJS'
+  version: '$1'
+
 - regex: 'Wget(?:/(\d+[\.\d]+))?'
   name: 'Wget'
   version: '$1'
 
-- regex: 'Guzzle(?:/(\d+[\.\d]+))?'
+- regex: 'Guzzle(?:Http)?(?:/(\d+[\.\d]+))?'
   name: 'Guzzle (PHP HTTP Client)'
   version: '$1'
 
@@ -23,6 +33,14 @@
 
 - regex: 'Python-urllib(?:/?(\d+[\.\d]+))?'
   name: 'Python urllib'
+  version: '$1'
+
+- regex: 'Apache-HttpClient(?:/?(\d+[\.\d]+))?'
+  name: 'Apache HTTP Client'
+  version: '$1'
+
+- regex: 'Java-http-client(?:/?(\d+[\.\d]+))?'
+  name: 'Java HTTP Client'
   version: '$1'
 
 - regex: 'Java(?:/?(\d+[\.\d]+))?'
@@ -55,7 +73,7 @@
   name: 'aiohttp'
   version: '$1'
 
-- regex: 'Google-HTTP-Java-Client(?:/(\d+[\.\d\w-]+))?'
+- regex: 'Google-HTTP-Java-Client(?:/(\d+[\.\w-]+))?'
   name: 'Google HTTP Java Client'
   version: '$1'
 
@@ -104,10 +122,83 @@
 
 - regex: 'node-fetch/(\d+[\.\d]+)'
   name: 'Node Fetch'
-  version: $1
+  version: '$1'
   url: 'https://github.com/node-fetch/node-fetch'
 
 - regex: 'ReactorNetty/(\d+[\.\d]+)'
   name: 'ReactorNetty'
-  version: $1
+  version: '$1'
   url: 'https://github.com/reactor/reactor-netty'
+
+- regex: 'PostmanRuntime(?:/(\d+[\.\d]+))?'
+  name: 'Postman Desktop'
+  version: '$1'
+  url: 'https://github.com/postmanlabs/postman-runtime'
+
+- regex: 'Jakarta Commons-HttpClient/([\.\d]+)'
+  name: 'Jakarta Commons HttpClient'
+  version: '$1'
+  url: 'https://hc.apache.org/httpclient-3.x'
+
+- regex: 'WinHttp.WinHttpRequest.+([\.\d]+)'
+  name: 'WinHttp WinHttpRequest'
+  version: '$1'
+
+- regex: 'WinHTTP'
+  name: 'Windows HTTP'
+  version: ''
+
+# THTTPClient in delphi 10+ default useragent
+- regex: 'Embarcadero URI Client/([\.\d]+)'
+  name: 'Embarcadero URI Client'
+  version: '$1'
+
+- regex: 'Mikrotik/([\.\d]+)'
+  name: 'Mikrotik Fetch'
+  version: '$1'
+
+- regex: 'GRequests(?:/(\d+[\.\d]+))?'
+  name: 'GRequests'
+  version: '$1'
+
+# https://doc.akka.io/
+- regex: 'akka-http/([\.\d]+)'
+  name: 'Akka HTTP'
+  version: '$1'
+
+# this added need added tests
+- regex: 'aria2(?:/(\d+[\.\d]+))?'
+  name: 'Aria2'
+  version: '$1'
+
+- regex: 'BTWebClient/'
+  name: 'uTorrent'
+  version: ''
+
+- regex: 'gvfs/(?:(\d+[\.\d]+))?'
+  name: 'gvfs'
+  version: '$1'
+
+# https://openwrt.org/packages/pkgdata/uclient-fetch
+- regex: 'uclient-fetch'
+  name: 'uclient-fetch'
+  version: ''
+
+# https://github.com/microsoft/cpprestsdk
+- regex: 'cpprestsdk/([\.\d]+)'
+  name: 'C++ REST SDK'
+  version: '$1'
+
+- regex: 'lua-resty-http/([\.\d]+).+ngx_'
+  name: 'LUA OpenResty NGINX'
+  version: '$1'
+
+# https://github.com/Kong/unirest-java
+- regex: 'unirest-java/([\.\d]+)'
+  name: 'Unirest for Java'
+  version: '$1'
+
+# jsdom (https://github.com/jsdom/jsdom)
+- regex: 'jsdom/([\.\d]+)'
+  name: 'jsdom'
+  version: '$1'
