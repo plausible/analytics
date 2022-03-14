@@ -1645,6 +1645,49 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    test "metrics=bounce_rate does not add visits to the response", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          pathname: "/entry-page-1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: 1,
+          pathname: "/some-page",
+          timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:pageview,
+          user_id: 2,
+          pathname: "/entry-page-2",
+          referrer_source: "Google",
+          timestamp: ~N[2021-01-01 00:05:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:entry_page",
+          "metrics" => "bounce_rate"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "entry_page" => "/entry-page-1",
+                   "bounce_rate" => 0
+                 },
+                 %{
+                   "entry_page" => "/entry-page-2",
+                   "bounce_rate" => 100
+                 }
+               ]
+             }
+    end
+
     test "filter by custom event property", %{conn: conn, site: site} do
       populate_stats([
         build(:event,

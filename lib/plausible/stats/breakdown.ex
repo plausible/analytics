@@ -148,15 +148,7 @@ defmodule Plausible.Stats.Breakdown do
            ] do
     query = Query.treat_page_filter_as_entry_page(query)
 
-    # "visits" is fetched when querying bounce rate and visit duration, as it
-    # is needed to calculate these from imported data. Let's remove it from the
-    # result if it wasn't requested.
-    if (:bounce_rate in metrics or :visit_duration in metrics) and :visits not in metrics do
-      breakdown_sessions(site, query, property, metrics, pagination)
-      |> Enum.map(&Map.delete(&1, :visits))
-    else
-      breakdown_sessions(site, query, property, metrics, pagination)
-    end
+    breakdown_sessions(site, query, property, metrics, pagination)
   end
 
   def breakdown(site, query, property, metrics, pagination) do
@@ -206,6 +198,7 @@ defmodule Plausible.Stats.Breakdown do
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
     |> transform_keys(%{operating_system: :os})
+    |> maybe_remove_visits_metric(metrics)
   end
 
   defp breakdown_events(_, _, _, [], _), do: []
@@ -532,6 +525,18 @@ defmodule Plausible.Stats.Breakdown do
       end)
       |> Enum.into(%{})
     end)
+  end
+
+  defp maybe_remove_visits_metric(results, metrics) do
+    # "visits" is fetched when querying bounce rate and visit duration, as it
+    # is needed to calculate these from imported data. Let's remove it from the
+    # result if it wasn't requested.
+    if (:bounce_rate in metrics or :visit_duration in metrics) and :visits not in metrics do
+      results
+      |> Enum.map(&Map.delete(&1, :visits))
+    else
+      results
+    end
   end
 
   defp apply_pagination(q, {limit, page}) do
