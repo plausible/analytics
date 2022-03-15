@@ -78,7 +78,8 @@ defmodule PlausibleWeb.Api.ExternalController do
       "domain" => params["d"] || params["domain"],
       "screen_width" => params["w"] || params["screen_width"],
       "hash_mode" => params["h"] || params["hashMode"],
-      "meta" => parse_meta(params)
+      "meta" => parse_meta(params),
+      "company_id" => parse_company_id(params)
     }
 
     ua = parse_user_agent(conn)
@@ -109,6 +110,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         utm_campaign: query["utm_campaign"],
         utm_content: query["utm_content"],
         utm_term: query["utm_term"],
+        company_id: params["company_id"],
         country_code: location_details[:country_code],
         country_geoname_id: location_details[:country_geoname_id],
         subdivision1_code: location_details[:subdivision1_code],
@@ -182,6 +184,11 @@ defmodule PlausibleWeb.Api.ExternalController do
     else
       _ -> %{}
     end
+  end
+
+  defp parse_company_id(params) do
+    meta = parse_meta(params)
+    Map.get(meta, "company_id")
   end
 
   defp validate_custom_props(props) do

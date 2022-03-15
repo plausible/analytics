@@ -85,6 +85,7 @@ defmodule Plausible.Session.Store do
     %{
       session
       | user_id: event.user_id,
+        company_id: event.company_id,
         timestamp: event.timestamp,
         exit_page: event.pathname,
         is_bounce: false,
@@ -133,6 +134,7 @@ defmodule Plausible.Session.Store do
   defp new_session_from_event(event) do
     %Plausible.ClickhouseSession{
       sign: 1,
+      company_id: event.company_id,
       session_id: Plausible.ClickhouseSession.random_uint64(),
       hostname: event.hostname,
       domain: event.domain,
