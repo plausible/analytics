@@ -1,6 +1,7 @@
 defmodule Plausible.Google.Api do
   alias Plausible.Imported
   use Timex
+  require Logger
 
   @scope URI.encode_www_form(
            "https://www.googleapis.com/auth/webmasters.readonly email https://www.googleapis.com/auth/analytics.readonly"
@@ -245,6 +246,8 @@ defmodule Plausible.Google.Api do
         end
       )
 
+    Logger.debug(responses)
+
     case Keyword.get(responses, :error) do
       nil ->
         results =
@@ -304,12 +307,16 @@ defmodule Plausible.Google.Api do
       pageToken: page_token
     }
 
+    Logger.debug(report)
+
     res =
       HTTPoison.post!(
         "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
         Jason.encode!(%{reportRequests: [report]}),
         Authorization: "Bearer #{request.auth.access_token}"
       )
+
+    Logger.debug(res.body)
 
     if res.status_code == 200 do
       report = List.first(Jason.decode!(res.body)["reports"])
