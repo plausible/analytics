@@ -117,6 +117,48 @@
   registerOutboundLinkEvents()
   {{/if}}
 
+  {{#if file_downloads}}
+  var defaultFileTypes = ['.pdf', '.xlsx', '.docx', '.txt', '.rtf', '.csv', '.exe', '.key', '.pps', '.ppt', '.pptx', '.7z', '.pkg', '.rar', '.gz', '.zip', '.avi', '.mov', '.mp4', '.mpeg', '.wmv', '.midi', '.mp3', '.wav', '.wma']
+  var fileTypesToTrack = scriptEl.getAttribute('file-types') || defaultFileTypes;
+
+  function handleDownload(event) {
+    
+    var link = event.target;
+    var middle = event.type == "auxclick" && event.which == 2;
+    var click = event.type == "click";
+
+    while(link && (typeof link.tagName == 'undefined' || link.tagName.toLowerCase() != 'a' || !link.href)) {
+      link = link.parentNode
+    }
+
+    if (link && link.href && isDownloadToTrack(link.href)) {
+
+      if (middle || click)
+      plausible('File Download', {props: {url: link.href}})
+
+      // Delay navigation so that Plausible is notified of the click
+      if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
+        if (!(event.ctrlKey || event.metaKey || event.shiftKey) && click) {
+          setTimeout(function() {
+            location.href = link.href;
+          }, 150);
+          event.preventDefault();
+        }
+      }
+    }
+  }
+
+  function isDownloadToTrack(url) {
+    var pathArray = url.split('/');
+    var fileName = pathArray[pathArray.length - 1];
+    var fileType = fileName.match(/\.[0-9a-z]+$/i)[0];
+    return fileTypesToTrack.includes(fileType);
+  }
+
+  document.addEventListener('click', handleDownload);
+  document.addEventListener('auxclick', handleDownload);
+  {{/if}}
+
   var queue = (window.plausible && window.plausible.q) || []
   window.plausible = trigger
   for (var i = 0; i < queue.length; i++) {
