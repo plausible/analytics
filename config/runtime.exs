@@ -414,20 +414,20 @@ config :logger, Sentry.LoggerBackend,
   level: :error,
   excluded_domains: []
 
-if honeycomb_api_key && honeycomb_dataset do
-  config :opentelemetry, :processors,
-    otel_batch_processor: %{
-      exporter:
-        {:opentelemetry_exporter,
-         %{
-           endpoints: ['https://api.honeycomb.io:443'],
-           headers: [
-             {"x-honeycomb-team", honeycomb_api_key},
-             {"x-honeycomb-dataset", honeycomb_dataset}
-           ]
-         }}
-    }
-end
+# if honeycomb_api_key && honeycomb_dataset do
+#   config :opentelemetry, :processors,
+#     otel_batch_processor: %{
+#       exporter:
+#         {:opentelemetry_exporter,
+#          %{
+#            endpoints: ['https://api.honeycomb.io:443'],
+#            headers: [
+#              {"x-honeycomb-team", honeycomb_api_key},
+#              {"x-honeycomb-dataset", honeycomb_dataset}
+#            ]
+#          }}
+#     }
+# end
 
 config :tzdata,
        :data_dir,

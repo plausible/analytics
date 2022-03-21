@@ -17,7 +17,7 @@ defmodule Plausible.MixProject do
       releases: [
         plausible: [
           include_executables_for: [:unix],
-          applications: [plausible: :permanent, opentelemetry: :temporary],
+          applications: [plausible: :permanent],
           steps: [:assemble, :tar]
         ]
       ],
