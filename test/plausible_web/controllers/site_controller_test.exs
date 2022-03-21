@@ -725,7 +725,10 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_new_site]
 
     test "adds in-progress imported tag to site", %{conn: conn, site: site} do
-      post(conn, "/#{site.domain}/settings/google-import", %{"profile" => "123"})
+      post(conn, "/#{site.domain}/settings/google-import", %{
+        "profile" => "123",
+        "end_date" => "2022-03-01"
+      })
 
       imported_data = Repo.reload(site).imported_data
 
@@ -736,11 +739,14 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "schedules an import job in Oban", %{conn: conn, site: site} do
-      post(conn, "/#{site.domain}/settings/google-import", %{"profile" => "123"})
+      post(conn, "/#{site.domain}/settings/google-import", %{
+        "view_id" => "123",
+        "end_date" => "2022-03-01"
+      })
 
       assert_enqueued(
         worker: Plausible.Workers.ImportGoogleAnalytics,
-        args: %{"site_id" => site.id, "profile" => "123"}
+        args: %{"site_id" => site.id, "view_id" => "123", "end_date" => "2022-03-01"}
       )
     end
   end

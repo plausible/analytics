@@ -560,12 +560,4 @@ defmodule Plausible.Stats.Clickhouse do
       db_query
     end
   end
-
-  def pageviews_begin(site) do
-    ClickhouseRepo.one(
-      from e in "events",
-        where: e.domain == ^site.domain and e.name == "pageview",
-        select: min(e.timestamp)
-    )
-  end
 end

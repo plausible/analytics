@@ -238,10 +238,11 @@ defmodule PlausibleWeb.Router do
     delete "/:website", SiteController, :delete_site
     delete "/:website/stats", SiteController, :reset_stats
 
-    get "/:domain/export", StatsController, :csv_export
-    get "/:domain/*path", StatsController, :stats
-
+    get "/:website/import/google-analytics", SiteController, :import_from_google_form
     post "/:website/settings/google-import", SiteController, :import_from_google
     delete "/:website/settings/forget-imported", SiteController, :forget_imported
+
+    get "/:domain/export", StatsController, :csv_export
+    get "/:domain/*path", StatsController, :stats
   end
 end

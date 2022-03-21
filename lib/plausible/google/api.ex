@@ -153,9 +153,9 @@ defmodule Plausible.Google.Api do
     end
   end
 
-  def import_analytics(site, profile) do
+  def import_analytics(site, view_id, end_date) do
     with {:ok, auth} <- refresh_if_needed(site.google_auth) do
-      do_import_analytics(site, auth, profile)
+      do_import_analytics(site, auth, view_id, end_date)
     end
   end
 
@@ -165,22 +165,11 @@ defmodule Plausible.Google.Api do
 
   Dimensions reference: https://ga-dev-tools.web.app/dimensions-metrics-explorer
   """
-  def do_import_analytics(site, auth, profile) do
-    end_date =
-      Plausible.Stats.Clickhouse.pageviews_begin(site)
-      |> NaiveDateTime.to_date()
-
-    end_date =
-      if end_date == ~D[1970-01-01] do
-        Timex.today()
-      else
-        end_date
-      end
-
+  def do_import_analytics(site, auth, view_id, end_date) do
     request = %{
       auth: auth,
-      profile: profile,
-      end_date: Date.to_iso8601(end_date)
+      profile: view_id,
+      end_date: end_date
     }
 
     # Each element is: {dataset, dimensions, metrics}

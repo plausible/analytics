@@ -643,7 +643,21 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
   end
 
-  def import_from_google(conn, %{"profile" => profile}) do
+  def import_from_google_form(conn, _params) do
+    site = conn.assigns[:site] |> Repo.preload(:google_auth)
+
+    view_ids = Plausible.Google.Api.get_analytics_view_ids(site)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("import_from_google.html",
+      site: site,
+      view_ids: view_ids,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
+  end
+
+  def import_from_google(conn, %{"view_id" => view_id, "end_date" => end_date}) do
     site =
       conn.assigns[:site]
       |> Repo.preload(:google_auth)
@@ -654,16 +668,12 @@ defmodule PlausibleWeb.SiteController do
         |> put_flash(:error, "Data already imported from: #{site.imported_data.source}")
         |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
 
-      profile == "" ->
-        conn
-        |> put_flash(:error, "A Google Analytics profile must be selected")
-        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
-
       true ->
         job =
           Plausible.Workers.ImportGoogleAnalytics.new(%{
             "site_id" => site.id,
-            "profile" => profile
+            "view_id" => view_id,
+            "end_date" => end_date
           })
 
         Ecto.Multi.new()

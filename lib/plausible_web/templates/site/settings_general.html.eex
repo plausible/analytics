@@ -86,15 +86,22 @@
         <%= case @google_profiles do %>
           <% {:ok, profiles} -> %>
             <p class="text-gray-700 dark:text-gray-300 mt-6">
-            Select the Google Analytics profile you would like to import data from.
+            Select the Google Analytics view id you would like to import data from.
             </p>
 
             <%= form_for @conn, "/#{URI.encode_www_form(@site.domain)}/settings/google-import", [class: "max-w-xs"], fn f -> %>
               <div class="my-6">
-                <div class="inline-block relative w-full">
-                  <%= select f, :profile, profiles, prompt: "(Choose profile)", class: "dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100" %>
+                <%= label f, :view_id, "Google Analytics view id", class: "block text-sm font-medium text-gray-700"  %>
+                <%= select f, :view_id, profiles, prompt: "(Choose view id)", required: "true", class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
+              </div>
+
+              <div class="my-6">
+                <%= label f, :end_date, "Import end date", class: "block text-sm font-medium text-gray-700" %>
+                <div class="mt-1">
+                  <%= date_input f, :end_date, value: Timex.today() |> Date.to_iso8601(), required: "true", class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" %>
                 </div>
               </div>
+
               <%= submit "Import", class: "button" %>
             <% end %>
 
