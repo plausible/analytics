@@ -726,7 +726,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     test "adds in-progress imported tag to site", %{conn: conn, site: site} do
       post(conn, "/#{site.domain}/settings/google-import", %{
-        "profile" => "123",
+        "view_id" => "123",
         "end_date" => "2022-03-01"
       })
 

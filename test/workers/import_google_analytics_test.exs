@@ -15,12 +15,14 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
     site = insert(:site, members: [user], imported_data: @imported_data)
 
     api_stub =
-      stub(Plausible.Google.Api, :import_analytics, fn _site, _profile ->
+      stub(Plausible.Google.Api, :import_analytics, fn _site, _view_id, _end_date ->
         {:ok, nil}
       end)
 
     ImportGoogleAnalytics.perform(
-      %Oban.Job{args: %{"site_id" => site.id, "profile" => "profile"}},
+      %Oban.Job{
+        args: %{"site_id" => site.id, "view_id" => "view_id", "end_date" => "2022-01-01"}
+      },
       api_stub
     )
 
@@ -32,12 +34,14 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
     site = insert(:site, members: [user], imported_data: @imported_data)
 
     api_stub =
-      stub(Plausible.Google.Api, :import_analytics, fn _site, _profile ->
+      stub(Plausible.Google.Api, :import_analytics, fn _site, _view_id, _end_date ->
         {:ok, nil}
       end)
 
     ImportGoogleAnalytics.perform(
-      %Oban.Job{args: %{"site_id" => site.id, "profile" => "profile"}},
+      %Oban.Job{
+        args: %{"site_id" => site.id, "view_id" => "view_id", "end_date" => "2022-01-01"}
+      },
       api_stub
     )
 
@@ -52,12 +56,14 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
     site = insert(:site, members: [user], imported_data: @imported_data)
 
     api_stub =
-      stub(Plausible.Google.Api, :import_analytics, fn _site, _profile ->
+      stub(Plausible.Google.Api, :import_analytics, fn _site, _view_id, _end_date ->
         {:error, "Something went wrong"}
       end)
 
     ImportGoogleAnalytics.perform(
-      %Oban.Job{args: %{"site_id" => site.id, "profile" => "profile"}},
+      %Oban.Job{
+        args: %{"site_id" => site.id, "view_id" => "view_id", "end_date" => "2022-01-01"}
+      },
       api_stub
     )
 
@@ -69,12 +75,14 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
     site = insert(:site, members: [user], imported_data: @imported_data)
 
     api_stub =
-      stub(Plausible.Google.Api, :import_analytics, fn _site, _profile ->
+      stub(Plausible.Google.Api, :import_analytics, fn _site, _view_id, _end_date ->
         {:error, "Something went wrong"}
       end)
 
     ImportGoogleAnalytics.perform(
-      %Oban.Job{args: %{"site_id" => site.id, "profile" => "profile"}},
+      %Oban.Job{
+        args: %{"site_id" => site.id, "view_id" => "view_id", "end_date" => "2022-01-01"}
+      },
       api_stub
     )
 
