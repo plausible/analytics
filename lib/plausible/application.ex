@@ -22,7 +22,6 @@ defmodule Plausible.Application do
     ]
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
-    setup_opentelemetry()
     setup_sentry()
     setup_cache_stats()
     Location.load_all()
@@ -52,13 +51,6 @@ defmodule Plausible.Application do
       &ErrorReporter.handle_event/4,
       %{}
     )
-  end
-
-  def setup_opentelemetry() do
-    OpentelemetryPhoenix.setup()
-    OpentelemetryEcto.setup([:plausible, :repo])
-    OpentelemetryEcto.setup([:plausible, :clickhouse_repo])
-    OpentelemetryOban.setup()
   end
 
   def report_cache_stats() do
