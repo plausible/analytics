@@ -83,9 +83,15 @@
         <div class="py-2"></div>
         <span class="text-gray-700 dark:text-gray-300">Linked Google account: <b><%= @site.google_auth.email %></b></span>
 
+        <%= if @imported_data && @imported_data.status == "error" do %>
+          <div class="mt-1 text-red-600">
+            Your last GA import resulted in an error. You can try again below.
+          </div>
+        <% end %>
+
         <%= case @google_profiles do %>
           <% {:ok, profiles} -> %>
-            <p class="text-gray-700 dark:text-gray-300 mt-6">
+            <p class="text-gray-700 dark:text-gray-300 mt-1">
             Select the Google Analytics view id you would like to import data from.
             </p>
 

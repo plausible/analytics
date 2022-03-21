@@ -296,16 +296,12 @@ defmodule Plausible.Google.Api do
       pageToken: page_token
     }
 
-    Logger.debug(report)
-
     res =
       HTTPoison.post!(
         "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
         Jason.encode!(%{reportRequests: [report]}),
         Authorization: "Bearer #{request.auth.access_token}"
       )
-
-    Logger.debug(res.body)
 
     if res.status_code == 200 do
       report = List.first(Jason.decode!(res.body)["reports"])
