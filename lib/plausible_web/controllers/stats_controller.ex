@@ -15,21 +15,14 @@ defmodule PlausibleWeb.StatsController do
         demo = site.domain == PlausibleWeb.Endpoint.host()
         offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
 
-        stats_begin =
-          if site.imported_data do
-            site.imported_data.start_date
-          else
-            site.inserted_at
-          end
-
         conn
         |> assign(:skip_plausible_tracking, !demo)
         |> remove_email_report_banner(site)
         |> put_resp_header("x-robots-tag", "noindex")
         |> render("stats.html",
           site: site,
-          stats_begin: stats_begin,
           has_goals: Plausible.Sites.has_goals?(site),
+          stats_begin: Plausible.Sites.stats_begin(site),
           title: "Plausible · " <> site.domain,
           offer_email_report: offer_email_report,
           demo: demo
@@ -185,6 +178,7 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: shared_link.site,
           has_goals: Plausible.Sites.has_goals?(shared_link.site),
+          stats_begin: Plausible.Sites.stats_begin(shared_link.site),
           title: "Plausible · " <> shared_link.site.domain,
           offer_email_report: false,
           demo: false,

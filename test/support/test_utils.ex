@@ -14,7 +14,7 @@ defmodule Plausible.TestUtils do
   def add_imported_data(%{site: site}) do
     site =
       site
-      |> Plausible.Site.start_import("Google Analytics", "ok")
+      |> Plausible.Site.start_import(~D[2005-01-01], Timex.today(), "Google Analytics", "ok")
       |> Repo.update!()
 
     {:ok, site: site}
