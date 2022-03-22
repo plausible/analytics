@@ -538,24 +538,36 @@ defmodule PlausibleWeb.AuthController do
 
   def google_auth_callback(conn, %{"code" => code, "state" => state}) do
     res = Plausible.Google.Api.fetch_access_token(code)
-    id_token = res["id_token"]
-    [_, body, _] = String.split(id_token, ".")
-    id = body |> Base.decode64!(padding: false) |> Jason.decode!()
-
     [site_id, redirect_to] = Jason.decode!(state)
-
-    Plausible.Site.GoogleAuth.changeset(%Plausible.Site.GoogleAuth{}, %{
-      email: id["email"],
-      refresh_token: res["refresh_token"],
-      access_token: res["access_token"],
-      expires: NaiveDateTime.utc_now() |> NaiveDateTime.add(res["expires_in"]),
-      user_id: conn.assigns[:current_user].id,
-      site_id: site_id
-    })
-    |> Repo.insert!()
-
     site = Repo.get(Plausible.Site, site_id)
 
-    redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/#{redirect_to}")
+    case redirect_to do
+      "import" ->
+        redirect(conn,
+          to:
+            Routes.site_path(conn, :import_from_google_form, site.domain,
+              access_token: res["access_token"]
+            )
+        )
+
+      _ ->
+        id_token = res["id_token"]
+        [_, body, _] = String.split(id_token, ".")
+        id = body |> Base.decode64!(padding: false) |> Jason.decode!()
+
+        Plausible.Site.GoogleAuth.changeset(%Plausible.Site.GoogleAuth{}, %{
+          email: id["email"],
+          refresh_token: res["refresh_token"],
+          access_token: res["access_token"],
+          expires: NaiveDateTime.utc_now() |> NaiveDateTime.add(res["expires_in"]),
+          user_id: conn.assigns[:current_user].id,
+          site_id: site_id
+        })
+        |> Repo.insert!()
+
+        site = Repo.get(Plausible.Site, site_id)
+
+        redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/#{redirect_to}")
+    end
   end
 end
