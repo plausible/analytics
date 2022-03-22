@@ -235,8 +235,6 @@ defmodule Plausible.Google.Api do
         end
       )
 
-    Logger.debug(responses)
-
     case Keyword.get(responses, :error) do
       nil ->
         results =
@@ -292,7 +290,7 @@ defmodule Plausible.Google.Api do
           sortOrder: "DESCENDING"
         }
       ],
-      pageSize: 100_00,
+      pageSize: 10_000,
       pageToken: page_token
     }
 
@@ -300,7 +298,9 @@ defmodule Plausible.Google.Api do
       HTTPoison.post!(
         "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
         Jason.encode!(%{reportRequests: [report]}),
-        Authorization: "Bearer #{request.auth.access_token}"
+        [Authorization: "Bearer #{request.auth.access_token}"],
+        timeout: 30_000,
+        recv_timeout: 30_000
       )
 
     if res.status_code == 200 do
