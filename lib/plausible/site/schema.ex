@@ -2,6 +2,7 @@ defmodule Plausible.Site.ImportedData do
   use Ecto.Schema
 
   embedded_schema do
+    field :start_date, :date
     field :end_date, :date
     field :source, :string
     field :status, :string
@@ -62,10 +63,11 @@ defmodule Plausible.Site do
     change(site, has_stats: has_stats_val)
   end
 
-  def start_import(site, imported_source, status \\ "importing") do
+  def start_import(site, start_date, end_date, imported_source, status \\ "importing") do
     change(site,
-      imported_data: %Plausible.Site.ImportedData{
-        end_date: Timex.today(),
+      imported_data: %{
+        start_date: start_date,
+        end_date: end_date,
         source: imported_source,
         status: status
       }

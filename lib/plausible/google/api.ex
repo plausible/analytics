@@ -6,6 +6,7 @@ defmodule Plausible.Google.Api do
   @scope URI.encode_www_form(
            "https://www.googleapis.com/auth/webmasters.readonly email https://www.googleapis.com/auth/analytics.readonly"
          )
+  @import_scope URI.encode_www_form("email https://www.googleapis.com/auth/analytics.readonly")
   @verified_permission_levels ["siteOwner", "siteFullUser", "siteRestrictedUser"]
 
   def authorize_url(site_id, redirect_to) do
@@ -13,6 +14,15 @@ defmodule Plausible.Google.Api do
       ""
     else
       "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@scope}&state=" <>
+        Jason.encode!([site_id, redirect_to])
+    end
+  end
+
+  def import_authorize_url(site_id, redirect_to) do
+    if Application.get_env(:plausible, :environment) == "test" do
+      ""
+    else
+      "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@import_scope}&state=" <>
         Jason.encode!([site_id, redirect_to])
     end
   end
@@ -120,17 +130,11 @@ defmodule Plausible.Google.Api do
     end
   end
 
-  def get_analytics_view_ids(site) do
-    with {:ok, auth} <- refresh_if_needed(site.google_auth) do
-      do_get_analytics_view_ids(auth)
-    end
-  end
-
-  def do_get_analytics_view_ids(auth) do
+  def get_analytics_view_ids(token) do
     res =
       HTTPoison.get!(
         "https://www.googleapis.com/analytics/v3/management/accounts/~all/webproperties/~all/profiles",
-        Authorization: "Bearer #{auth.access_token}"
+        Authorization: "Bearer #{token}"
       )
 
     case res.status_code do
@@ -153,11 +157,60 @@ defmodule Plausible.Google.Api do
     end
   end
 
-  def import_analytics(site, view_id, end_date) do
-    with {:ok, auth} <- refresh_if_needed(site.google_auth) do
-      do_import_analytics(site, auth, view_id, end_date)
-    end
-  end
+  # Each element is: {dataset, dimensions, metrics}
+  @request_data [
+    {
+      "imported_visitors",
+      ["ga:date"],
+      [
+        "ga:users",
+        "ga:pageviews",
+        "ga:bounces",
+        "ga:sessions",
+        "ga:sessionDuration"
+      ]
+    },
+    {
+      "imported_sources",
+      ["ga:date", "ga:source", "ga:medium", "ga:campaign", "ga:adContent", "ga:keyword"],
+      ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
+    },
+    {
+      "imported_pages",
+      ["ga:date", "ga:hostname", "ga:pagePath"],
+      ["ga:users", "ga:pageviews", "ga:exits", "ga:timeOnPage"]
+    },
+    {
+      "imported_entry_pages",
+      ["ga:date", "ga:landingPagePath"],
+      ["ga:users", "ga:entrances", "ga:sessionDuration", "ga:bounces"]
+    },
+    {
+      "imported_exit_pages",
+      ["ga:date", "ga:exitPagePath"],
+      ["ga:users", "ga:exits"]
+    },
+    {
+      "imported_locations",
+      ["ga:date", "ga:countryIsoCode", "ga:regionIsoCode"],
+      ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
+    },
+    {
+      "imported_devices",
+      ["ga:date", "ga:deviceCategory"],
+      ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
+    },
+    {
+      "imported_browsers",
+      ["ga:date", "ga:browser"],
+      ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
+    },
+    {
+      "imported_operating_systems",
+      ["ga:date", "ga:operatingSystem"],
+      ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
+    }
+  ]
 
   @doc """
   API reference:
@@ -165,71 +218,17 @@ defmodule Plausible.Google.Api do
 
   Dimensions reference: https://ga-dev-tools.web.app/dimensions-metrics-explorer
   """
-  def do_import_analytics(site, auth, view_id, end_date) do
+  def import_analytics(site, view_id, start_date, end_date, access_token) do
     request = %{
-      auth: auth,
-      profile: view_id,
+      access_token: access_token,
+      view_id: view_id,
+      start_date: start_date,
       end_date: end_date
     }
 
-    # Each element is: {dataset, dimensions, metrics}
-    request_data = [
-      {
-        "imported_visitors",
-        ["ga:date"],
-        [
-          "ga:users",
-          "ga:pageviews",
-          "ga:bounces",
-          "ga:sessions",
-          "ga:sessionDuration"
-        ]
-      },
-      {
-        "imported_sources",
-        ["ga:date", "ga:source", "ga:medium", "ga:campaign", "ga:adContent", "ga:keyword"],
-        ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-      },
-      {
-        "imported_pages",
-        ["ga:date", "ga:hostname", "ga:pagePath"],
-        ["ga:users", "ga:pageviews", "ga:exits", "ga:timeOnPage"]
-      },
-      {
-        "imported_entry_pages",
-        ["ga:date", "ga:landingPagePath"],
-        ["ga:users", "ga:entrances", "ga:sessionDuration", "ga:bounces"]
-      },
-      {
-        "imported_exit_pages",
-        ["ga:date", "ga:exitPagePath"],
-        ["ga:users", "ga:exits"]
-      },
-      {
-        "imported_locations",
-        ["ga:date", "ga:countryIsoCode", "ga:regionIsoCode"],
-        ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-      },
-      {
-        "imported_devices",
-        ["ga:date", "ga:deviceCategory"],
-        ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-      },
-      {
-        "imported_browsers",
-        ["ga:date", "ga:browser"],
-        ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-      },
-      {
-        "imported_operating_systems",
-        ["ga:date", "ga:operatingSystem"],
-        ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-      }
-    ]
-
     responses =
       Enum.map(
-        request_data,
+        @request_data,
         fn {dataset, dimensions, metrics} ->
           fetch_analytic_reports(dataset, dimensions, metrics, request)
         end
@@ -272,11 +271,11 @@ defmodule Plausible.Google.Api do
 
   defp fetch_analytic_reports(dataset, dimensions, metrics, request, page_token \\ "") do
     report = %{
-      viewId: request.profile,
+      viewId: request.view_id,
       dateRanges: [
         %{
           # The earliest valid date
-          startDate: "2005-01-01",
+          startDate: request.start_date,
           endDate: request.end_date
         }
       ],
@@ -298,7 +297,7 @@ defmodule Plausible.Google.Api do
       HTTPoison.post!(
         "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
         Jason.encode!(%{reportRequests: [report]}),
-        [Authorization: "Bearer #{request.auth.access_token}"],
+        [Authorization: "Bearer #{request.access_token}"],
         timeout: 30_000,
         recv_timeout: 30_000
       )

@@ -58,73 +58,42 @@
 
   <%= if Keyword.get(Application.get_env(:plausible, :google), :client_id) do %>
     <%= cond do %>
-      <% @imported_data && @imported_data.status == "importing" -> %>
+      <% @site.imported_data && @site.imported_data.status == "importing" -> %>
         <div class="py-2"></div>
-        <div class="text-sm">We are importing data from <%= @imported_data.source %> in the background... You will receive an email when it's completed</div>
+        <div class="text-sm">We are importing data from <%= @site.imported_data.source %> in the background... You will receive an email when it's completed</div>
 
-      <% @imported_data && @imported_data.status == "ok" -> %>
+      <% @site.imported_data && @site.imported_data.status == "ok" -> %>
         <li class="py-4 flex items-center justify-between space-x-4">
           <div class="flex flex-col">
             <p class="text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">
             Forget Imported Data
             </p>
             <p class="text-sm leading-5 text-gray-500 dark:text-gray-200">
-            Removes all data imported from <%= @imported_data.source %>
+            Removes all data imported from <%= @site.imported_data.source %>
             </p>
           </div>
           <%= link("Forget imported stats", to: "/#{URI.encode_www_form(@site.domain)}/settings/forget-imported", method: :delete, class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150") %>
         </li>
 
-        <%= if @site.google_auth do %>
-          <%= link("Unlink Google account", to: "/#{URI.encode_www_form(@site.domain)}/settings/google-import", class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
-        <% end %>
-
-      <% @site.google_auth -> %>
+      <% @site.imported_data && @site.imported_data.status == "error" -> %>
         <div class="py-2"></div>
-        <span class="text-gray-700 dark:text-gray-300">Linked Google account: <b><%= @site.google_auth.email %></b></span>
+        <div class="text-sm">Your latest import has failed. You can try importing again by clicking the button below. If you try multiple times and the import keeps failing, please contact support.</div>
 
-        <%= if @imported_data && @imported_data.status == "error" do %>
-          <div class="mt-1 text-red-600">
-            Your last GA import resulted in an error. You can try again below.
-          </div>
-        <% end %>
-
-        <%= case @google_profiles do %>
-          <% {:ok, profiles} -> %>
-            <p class="text-gray-700 dark:text-gray-300 mt-1">
-            Select the Google Analytics view id you would like to import data from.
-            </p>
-
-            <%= form_for @conn, "/#{URI.encode_www_form(@site.domain)}/settings/google-import", [class: "max-w-xs"], fn f -> %>
-              <div class="my-6">
-                <%= label f, :view_id, "Google Analytics view id", class: "block text-sm font-medium text-gray-700"  %>
-                <%= select f, :view_id, profiles, prompt: "(Choose view id)", required: "true", class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
-              </div>
-
-              <div class="my-6">
-                <%= label f, :end_date, "Import end date", class: "block text-sm font-medium text-gray-700" %>
-                <div class="mt-1">
-                  <%= date_input f, :end_date, value: Timex.today() |> Date.to_iso8601(), required: "true", class: "shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" %>
-                </div>
-              </div>
-
-              <%= submit "Import", class: "button" %>
-            <% end %>
-
-          <% {:error, error} -> %>
-            <p class="text-gray-700 dark:text-gray-300 mt-6">The following error occurred when fetching your Google Analytics profiles.</p>
-            <p class="text-red-700 font-medium mt-3"><%= error %></p>
-        <% end %>
-
-        <%= link("Unlink Google account", to: "/#{URI.encode_www_form(@site.domain)}/settings/google-import", class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
-
-      <% true -> %>
         <div class="flex">
-          <%= button(to: Plausible.Google.Api.authorize_url(@site.id, "general"), class: "inline-flex pr-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50") do %>
+          <%= button(to: Plausible.Google.Api.authorize_url(@site.id, "import"), class: "inline-flex pr-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50") do %>
             <%= google_logo() %>
             <span style="font-family: Roboto, system-ui" class="text-sm font-medium text-gray-600">Continue with Google<span>
           <% end %>
         </div>
+
+      <% true -> %>
+        <div class="flex">
+          <%= button(to: Plausible.Google.Api.authorize_url(@site.id, "import"), class: "inline-flex pr-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50") do %>
+            <%= google_logo() %>
+            <span style="font-family: Roboto, system-ui" class="text-sm font-medium text-gray-600">Continue with Google<span>
+          <% end %>
+        </div>
+
     <% end %>
   <% else %>
     <div class="my-8 text-center text-lg">

@@ -727,26 +727,36 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "adds in-progress imported tag to site", %{conn: conn, site: site} do
       post(conn, "/#{site.domain}/settings/google-import", %{
         "view_id" => "123",
-        "end_date" => "2022-03-01"
+        "start_date" => "2018-03-01",
+        "end_date" => "2022-03-01",
+        "access_token" => "token"
       })
 
       imported_data = Repo.reload(site).imported_data
 
       assert imported_data
       assert imported_data.source == "Google Analytics"
-      assert imported_data.end_date == Timex.today()
+      assert imported_data.end_date == ~D[2022-03-01]
       assert imported_data.status == "importing"
     end
 
     test "schedules an import job in Oban", %{conn: conn, site: site} do
       post(conn, "/#{site.domain}/settings/google-import", %{
         "view_id" => "123",
-        "end_date" => "2022-03-01"
+        "start_date" => "2018-03-01",
+        "end_date" => "2022-03-01",
+        "access_token" => "token"
       })
 
       assert_enqueued(
         worker: Plausible.Workers.ImportGoogleAnalytics,
-        args: %{"site_id" => site.id, "view_id" => "123", "end_date" => "2022-03-01"}
+        args: %{
+          "site_id" => site.id,
+          "view_id" => "123",
+          "start_date" => "2018-03-01",
+          "end_date" => "2022-03-01",
+          "access_token" => "token"
+        }
       )
     end
   end

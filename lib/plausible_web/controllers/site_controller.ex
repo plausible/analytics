@@ -167,28 +167,15 @@ defmodule PlausibleWeb.SiteController do
     redirect(conn, to: Routes.site_path(conn, :settings_general, website))
   end
 
-  defp can_trigger_import(site) do
-    no_import = is_nil(site.imported_data) || site.imported_data.status == "error"
-
-    no_import && site.google_auth
-  end
-
   def settings_general(conn, _params) do
     site =
       conn.assigns[:site]
       |> Repo.preload([:custom_domain, :google_auth])
 
-    google_profiles =
-      if can_trigger_import(site) do
-        Plausible.Google.Api.get_analytics_view_ids(site)
-      end
-
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_general.html",
       site: site,
-      google_profiles: google_profiles,
-      imported_data: site.imported_data,
       changeset: Plausible.Site.changeset(site, %{}),
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
@@ -643,48 +630,81 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
   end
 
-  def import_from_google_form(conn, _params) do
-    site = conn.assigns[:site] |> Repo.preload(:google_auth)
+  def import_from_google_form(conn, %{"access_token" => access_token}) do
+    site = conn.assigns[:site]
 
-    view_ids = Plausible.Google.Api.get_analytics_view_ids(site)
+    view_ids = Plausible.Google.Api.get_analytics_view_ids(access_token)
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("import_from_google.html",
+      access_token: access_token,
       site: site,
       view_ids: view_ids,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
 
-  def import_from_google(conn, %{"view_id" => view_id, "end_date" => end_date}) do
-    site =
-      conn.assigns[:site]
-      |> Repo.preload(:google_auth)
+  def import_from_google_view_id(conn, %{"view_id" => view_id, "access_token" => access_token}) do
+    site = conn.assigns[:site]
 
-    cond do
-      site.imported_data ->
-        conn
-        |> put_flash(:error, "Data already imported from: #{site.imported_data.source}")
-        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+    redirect(conn,
+      to:
+        Routes.site_path(conn, :import_from_google_confirm, site.domain,
+          view_id: view_id,
+          access_token: access_token
+        )
+    )
+  end
 
-      true ->
-        job =
-          Plausible.Workers.ImportGoogleAnalytics.new(%{
-            "site_id" => site.id,
-            "view_id" => view_id,
-            "end_date" => end_date
-          })
+  def import_from_google_confirm(conn, %{"access_token" => access_token, "view_id" => view_id}) do
+    site = conn.assigns[:site]
 
-        Ecto.Multi.new()
-        |> Ecto.Multi.update(:update_site, Plausible.Site.start_import(site, "Google Analytics"))
-        |> Oban.insert(:oban_job, job)
-        |> Repo.transaction()
+    # TODO: Plausible.Google.Api.get_analytics_start_date(access_token)
+    start_date = {:ok, ~D[2019-01-02]}
+    end_date = Plausible.Stats.Clickhouse.pageview_start_date_local(site)
 
-        conn
-        |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")
-        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
-    end
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("import_from_google_confirm.html",
+      access_token: access_token,
+      site: site,
+      # TODO: Also send the name here
+      view_id: view_id,
+      start_date: start_date,
+      end_date: end_date,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
+  end
+
+  def import_from_google(conn, %{
+        "view_id" => view_id,
+        "start_date" => start_date,
+        "end_date" => end_date,
+        "access_token" => access_token
+      }) do
+    site = conn.assigns[:site]
+
+    job =
+      Plausible.Workers.ImportGoogleAnalytics.new(%{
+        "site_id" => site.id,
+        "view_id" => view_id,
+        "start_date" => start_date,
+        "end_date" => end_date,
+        "access_token" => access_token
+      })
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.update(
+      :update_site,
+      Plausible.Site.start_import(site, start_date, end_date, "Google Analytics")
+    )
+    |> Oban.insert(:oban_job, job)
+    |> Repo.transaction()
+
+    conn
+    |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")
+    |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
   end
 
   def forget_imported(conn, _params) do

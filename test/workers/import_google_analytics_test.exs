@@ -15,13 +15,23 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
     site = insert(:site, members: [user], imported_data: @imported_data)
 
     api_stub =
-      stub(Plausible.Google.Api, :import_analytics, fn _site, _view_id, _end_date ->
+      stub(Plausible.Google.Api, :import_analytics, fn _site,
+                                                       _view_id,
+                                                       _start_date,
+                                                       _end_date,
+                                                       _access_token ->
         {:ok, nil}
       end)
 
     ImportGoogleAnalytics.perform(
       %Oban.Job{
-        args: %{"site_id" => site.id, "view_id" => "view_id", "end_date" => "2022-01-01"}
+        args: %{
+          "site_id" => site.id,
+          "view_id" => "view_id",
+          "start_date" => "2020-01-01",
+          "end_date" => "2022-01-01",
+          "access_token" => "token"
+        }
       },
       api_stub
     )
@@ -34,13 +44,23 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
     site = insert(:site, members: [user], imported_data: @imported_data)
 
     api_stub =
-      stub(Plausible.Google.Api, :import_analytics, fn _site, _view_id, _end_date ->
+      stub(Plausible.Google.Api, :import_analytics, fn _site,
+                                                       _view_id,
+                                                       _start_date,
+                                                       _end_date,
+                                                       _access_token ->
         {:ok, nil}
       end)
 
     ImportGoogleAnalytics.perform(
       %Oban.Job{
-        args: %{"site_id" => site.id, "view_id" => "view_id", "end_date" => "2022-01-01"}
+        args: %{
+          "site_id" => site.id,
+          "view_id" => "view_id",
+          "start_date" => "2020-01-01",
+          "end_date" => "2022-01-01",
+          "access_token" => "token"
+        }
       },
       api_stub
     )
@@ -56,13 +76,23 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
     site = insert(:site, members: [user], imported_data: @imported_data)
 
     api_stub =
-      stub(Plausible.Google.Api, :import_analytics, fn _site, _view_id, _end_date ->
+      stub(Plausible.Google.Api, :import_analytics, fn _site,
+                                                       _view_id,
+                                                       _start_date,
+                                                       _end_date,
+                                                       _access_token ->
         {:error, "Something went wrong"}
       end)
 
     ImportGoogleAnalytics.perform(
       %Oban.Job{
-        args: %{"site_id" => site.id, "view_id" => "view_id", "end_date" => "2022-01-01"}
+        args: %{
+          "site_id" => site.id,
+          "view_id" => "view_id",
+          "start_date" => "2020-01-01",
+          "end_date" => "2022-01-01",
+          "access_token" => "token"
+        }
       },
       api_stub
     )
@@ -75,13 +105,23 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
     site = insert(:site, members: [user], imported_data: @imported_data)
 
     api_stub =
-      stub(Plausible.Google.Api, :import_analytics, fn _site, _view_id, _end_date ->
+      stub(Plausible.Google.Api, :import_analytics, fn _site,
+                                                       _view_id,
+                                                       _start_date,
+                                                       _end_date,
+                                                       _access_token ->
         {:error, "Something went wrong"}
       end)
 
     ImportGoogleAnalytics.perform(
       %Oban.Job{
-        args: %{"site_id" => site.id, "view_id" => "view_id", "end_date" => "2022-01-01"}
+        args: %{
+          "site_id" => site.id,
+          "view_id" => "view_id",
+          "start_date" => "2020-01-01",
+          "end_date" => "2022-01-01",
+          "access_token" => "token"
+        }
       },
       api_stub
     )
