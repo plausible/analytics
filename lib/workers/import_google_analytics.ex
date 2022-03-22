@@ -30,17 +30,22 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
         :ok
 
       {:error, error} ->
-        Plausible.Site.import_failure(site)
-        |> Repo.update!()
-
-        Enum.each(site.memberships, fn membership ->
-          if membership.role in [:owner, :admin] do
-            PlausibleWeb.Email.import_failure(membership.user, site)
-            |> Plausible.Mailer.send_email_safe()
-          end
-        end)
+        import_failed(site)
 
         {:error, error}
     end
+  end
+
+  def import_failed(site) do
+    site = Repo.preload(site, memberships: :user)
+
+    Plausible.Site.import_failure(site) |> Repo.update!()
+
+    Enum.each(site.memberships, fn membership ->
+      if membership.role in [:owner, :admin] do
+        PlausibleWeb.Email.import_failure(membership.user, site)
+        |> Plausible.Mailer.send_email_safe()
+      end
+    end)
   end
 end

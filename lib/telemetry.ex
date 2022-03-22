@@ -14,11 +14,14 @@ defmodule ErrorReporter do
     Sentry.capture_exception(meta.error, stacktrace: meta.stacktrace, extra: meta)
   end
 
-  defp maybe_log_import_error(job) do
-    site = Plausible.Repo.get(Plausible.Site, job.args["site_id"])
+  defp maybe_log_import_error(%Oban.Job{
+         queue: "google_analytics_imports",
+         args: %{"site_id" => site_id}
+       }) do
+    site = Plausible.Repo.get(Plausible.Site, site_id)
 
     if site do
-      Plausible.Site.import_failure(site) |> Plausible.Repo.update!()
+      Plausible.Workers.ImportGoogleAnalytics.import_failed(site)
     end
   end
 end
