@@ -8,14 +8,20 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
 
   @impl Oban.Worker
   def perform(
-        %Oban.Job{args: %{"site_id" => site_id, "view_id" => view_id, "end_date" => end_date}},
+        %Oban.Job{
+          args: %{
+            "site_id" => site_id,
+            "view_id" => view_id,
+            "start_date" => start_date,
+            "end_date" => end_date,
+            "access_token" => access_token
+          }
+        },
         google_api \\ Plausible.Google.Api
       ) do
-    site =
-      Repo.get(Plausible.Site, site_id)
-      |> Repo.preload([:google_auth, [memberships: :user]])
+    site = Repo.get(Plausible.Site, site_id) |> Repo.preload([[memberships: :user]])
 
-    case google_api.import_analytics(site, view_id, end_date) do
+    case google_api.import_analytics(site, view_id, start_date, end_date, access_token) do
       {:ok, _} ->
         Plausible.Site.import_success(site)
         |> Repo.update!()

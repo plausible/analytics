@@ -60,7 +60,7 @@
     <%= cond do %>
       <% @site.imported_data && @site.imported_data.status == "importing" -> %>
         <div class="py-2"></div>
-        <div class="text-sm">We are importing data from <%= @imported_data.source %> in the background... You will receive an email when it's completed</div>
+        <div class="text-sm">We are importing data from <%= @site.imported_data.source %> in the background... You will receive an email when it's completed</div>
 
       <% @site.imported_data && @site.imported_data.status == "ok" -> %>
         <li class="py-4 flex items-center justify-between space-x-4">
@@ -69,7 +69,7 @@
             Forget Imported Data
             </p>
             <p class="text-sm leading-5 text-gray-500 dark:text-gray-200">
-            Removes all data imported from <%= @imported_data.source %>
+            Removes all data imported from <%= @site.imported_data.source %>
             </p>
           </div>
           <%= link("Forget imported stats", to: "/#{URI.encode_www_form(@site.domain)}/settings/forget-imported", method: :delete, class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150") %>
@@ -79,6 +79,14 @@
         <div class="py-2"></div>
         <div class="text-sm">Your latest import has failed. You can try importing again by clicking the button below. If you try multiple times and the import keeps failing, please contact support.</div>
 
+        <div class="flex">
+          <%= button(to: Plausible.Google.Api.authorize_url(@site.id, "import"), class: "inline-flex pr-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50") do %>
+            <%= google_logo() %>
+            <span style="font-family: Roboto, system-ui" class="text-sm font-medium text-gray-600">Continue with Google<span>
+          <% end %>
+        </div>
+
+      <% true -> %>
         <div class="flex">
           <%= button(to: Plausible.Google.Api.authorize_url(@site.id, "import"), class: "inline-flex pr-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50") do %>
             <%= google_logo() %>

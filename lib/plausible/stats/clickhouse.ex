@@ -5,6 +5,24 @@ defmodule Plausible.Stats.Clickhouse do
   use Plausible.Stats.Fragments
   @no_ref "Direct / None"
 
+  def pageview_start_date_local(site) do
+    date =
+      ClickhouseRepo.one(
+        from e in "events",
+          select: fragment("toDate(min(?))", e.timestamp),
+          where: e.domain == ^site.domain
+      )
+
+    case date do
+      # no stats for this domain yet
+      ~D[1970-01-01] ->
+        Timex.today(site.timezone)
+
+      date ->
+        Timex.Timezone.convert(date, site.timezone)
+    end
+  end
+
   def usage_breakdown(domains) do
     range =
       Date.range(
