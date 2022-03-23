@@ -307,8 +307,6 @@ defmodule Plausible.Google.Api do
               {:ok, nil}
 
             {:error, error} ->
-              Plausible.ClickhouseRepo.clear_imported_stats_for(site.domain)
-
               Sentry.capture_message("Error saving Google analytics data", extra: error)
               {:error, error["error"]["message"]}
           end

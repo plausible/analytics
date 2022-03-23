@@ -769,5 +769,41 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert Repo.reload(site).imported_data == nil
     end
+
+    test "removes actual imported data from Clickhouse", %{conn: conn, site: site} do
+      Plausible.Site.start_import(site, ~D[2022-01-01], Timex.today(), "Google Analytics")
+      |> Repo.update!()
+
+      populate_stats(site, [
+        build(:imported_visitors, pageviews: 10)
+      ])
+
+      delete(conn, "/#{site.domain}/settings/forget-imported")
+
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 0
+    end
+
+    test "cancels Oban job if it exists", %{conn: conn, site: site} do
+      {:ok, job} =
+        Plausible.Workers.ImportGoogleAnalytics.new(%{
+          "site_id" => site.id,
+          "view_id" => "123",
+          "start_date" => "2022-01-01",
+          "end_date" => "2023-01-01",
+          "access_token" => "token"
+        })
+        |> Oban.insert()
+
+      Plausible.Site.start_import(site, ~D[2022-01-01], Timex.today(), "Google Analytics")
+      |> Repo.update!()
+
+      populate_stats(site, [
+        build(:imported_visitors, pageviews: 10)
+      ])
+
+      delete(conn, "/#{site.domain}/settings/forget-imported")
+
+      assert Repo.reload(job).state == "cancelled"
+    end
   end
 end

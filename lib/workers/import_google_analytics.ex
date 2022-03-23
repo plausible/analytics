@@ -46,6 +46,7 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
     site = Repo.preload(site, memberships: :user)
 
     Plausible.Site.import_failure(site) |> Repo.update!()
+    Plausible.ClickhouseRepo.clear_imported_stats_for(site.id)
 
     Enum.each(site.memberships, fn membership ->
       if membership.role in [:owner, :admin] do

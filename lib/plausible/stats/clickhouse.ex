@@ -23,6 +23,14 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
+  def imported_pageview_count(site) do
+    Plausible.ClickhouseRepo.one(
+      from i in "imported_visitors",
+        where: i.site_id == ^site.id,
+        select: sum(i.pageviews)
+    )
+  end
+
   def usage_breakdown(domains) do
     range =
       Date.range(

@@ -170,12 +170,20 @@ defmodule PlausibleWeb.SiteController do
   def settings_general(conn, _params) do
     site =
       conn.assigns[:site]
-      |> Repo.preload([:custom_domain, :google_auth])
+      |> Repo.preload([:custom_domain])
+
+    imported_pageviews =
+      if site.imported_data do
+        Plausible.Stats.Clickhouse.imported_pageview_count(site)
+      else
+        0
+      end
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_general.html",
       site: site,
+      imported_pageviews: imported_pageviews,
       changeset: Plausible.Site.changeset(site, %{}),
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
@@ -712,6 +720,14 @@ defmodule PlausibleWeb.SiteController do
 
     cond do
       site.imported_data ->
+        Oban.cancel_all_jobs(
+          from(j in Oban.Job,
+            where:
+              j.queue == "google_analytics_imports" and
+                fragment("(? ->> 'site_id')::int", j.args) == ^site.id
+          )
+        )
+
         Plausible.Imported.forget(site)
 
         site
@@ -719,7 +735,7 @@ defmodule PlausibleWeb.SiteController do
         |> Repo.update!()
 
         conn
-        |> put_flash(:success, "Imported data has been forgotten")
+        |> put_flash(:success, "Imported data has been cleared")
         |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
 
       true ->
