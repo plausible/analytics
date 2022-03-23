@@ -12,7 +12,8 @@
 
       <div class="mt-3">
         <%= label f, :view_id, "Google Analytics view", class: "block text-sm font-medium text-gray-700"  %>
-        <%= select f, :view_id, @view_ids, readonly: "true", selected: @selected_view_id, class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
+        <%= select f, :view_display, @view_ids, disabled: "true", selected: @selected_view_id, class: "bg-gray-50 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
+        <%= hidden_input f, :view_id, readonly: "true", value: @selected_view_id %>
       </div>
       <div class="mt-6 text-sm text-gray-500">
         Import historical data from your first Google Analytics visitor to your first Plausible visitor
@@ -20,12 +21,12 @@
       <div class="flex justify-between mt-3">
         <div class="w-36">
           <%= label f, :start_date, "From", class: "block text-sm font-medium text-gray-700"  %>
-          <%= date_input f, :start_date, value: start_date, readonly: "true", class: "mt-1 block w-full px-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
+          <%= date_input f, :start_date, value: start_date, readonly: "true", class: "bg-gray-50 mt-1 block w-full px-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
         </div>
         <div class="align-middle pt-8">&rarr;</div>
         <div class="w-36">
           <%= label f, :end_date, "To", class: "block text-sm font-medium text-gray-700"  %>
-          <%= date_input f, :end_date, value: @end_date, readonly: "true", class: "mt-1 block w-full px-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
+          <%= date_input f, :end_date, value: @end_date, readonly: "true", class: "bg-gray-50 mt-1 block w-full px-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
         </div>
       </div>
     <% {:error, error} -> %>

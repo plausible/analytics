@@ -157,6 +157,59 @@ defmodule Plausible.Google.Api do
     end
   end
 
+  def get_analytics_start_date(view_id, token) do
+    report = %{
+      viewId: view_id,
+      dateRanges: [
+        %{
+          # The earliest valid date
+          startDate: "2005-01-01",
+          endDate: Timex.today() |> Date.to_iso8601()
+        }
+      ],
+      dimensions: [%{name: "ga:date", histogramBuckets: []}],
+      metrics: [%{expression: "ga:pageviews"}],
+      hideTotals: true,
+      hideValueRanges: true,
+      orderBys: [
+        %{
+          fieldName: "ga:date",
+          sortOrder: "ASCENDING"
+        }
+      ],
+      pageSize: 1
+    }
+
+    res =
+      HTTPoison.post!(
+        "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
+        Jason.encode!(%{reportRequests: [report]}),
+        [Authorization: "Bearer #{token}"],
+        timeout: 30_000,
+        recv_timeout: 30_000
+      )
+
+    case res.status_code do
+      200 ->
+        report = List.first(Jason.decode!(res.body)["reports"])
+
+        date =
+          case report["data"]["rows"] do
+            [%{"dimensions" => [date_str]}] ->
+              Timex.parse!(date_str, "%Y%m%d", :strftime) |> NaiveDateTime.to_date()
+
+            _ ->
+              nil
+          end
+
+        {:ok, date}
+
+      _ ->
+        Sentry.capture_message("Error fetching Google view ID", extra: Jason.decode!(res.body))
+        {:error, res.body}
+    end
+  end
+
   # Each element is: {dataset, dimensions, metrics}
   @request_data [
     {

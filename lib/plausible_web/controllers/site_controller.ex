@@ -660,8 +660,7 @@ defmodule PlausibleWeb.SiteController do
   def import_from_google_confirm(conn, %{"access_token" => access_token, "view_id" => view_id}) do
     site = conn.assigns[:site]
 
-    # TODO: Plausible.Google.Api.get_analytics_start_date(access_token)
-    start_date = {:ok, ~D[2019-01-02]}
+    start_date = Plausible.Google.Api.get_analytics_start_date(view_id, access_token)
     end_date = Plausible.Stats.Clickhouse.pageview_start_date_local(site)
     {:ok, view_ids} = Plausible.Google.Api.get_analytics_view_ids(access_token)
 
