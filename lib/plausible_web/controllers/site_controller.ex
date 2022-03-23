@@ -663,14 +663,15 @@ defmodule PlausibleWeb.SiteController do
     # TODO: Plausible.Google.Api.get_analytics_start_date(access_token)
     start_date = {:ok, ~D[2019-01-02]}
     end_date = Plausible.Stats.Clickhouse.pageview_start_date_local(site)
+    {:ok, view_ids} = Plausible.Google.Api.get_analytics_view_ids(access_token)
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("import_from_google_confirm.html",
       access_token: access_token,
       site: site,
-      # TODO: Also send the name here
-      view_id: view_id,
+      view_ids: view_ids,
+      selected_view_id: view_id,
       start_date: start_date,
       end_date: end_date,
       layout: {PlausibleWeb.LayoutView, "focus.html"}

@@ -7,16 +7,15 @@
     <% {:ok, start_date} -> %>
 
       <div class="mt-6 text-sm text-gray-500">
-        Choose the view in your Google Analytics account that will be imported to the <%= @site.domain %> dashboard.
+        Choose the view in your Google Analytics account that will be imported to the <%= @site.domain %> dashboard
       </div>
 
       <div class="mt-3">
         <%= label f, :view_id, "Google Analytics view", class: "block text-sm font-medium text-gray-700"  %>
-        <%= text_input f, :view_id, value: @view_id, readonly: "true", class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
+        <%= select f, :view_id, @view_ids, readonly: "true", selected: @selected_view_id, class: "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" %>
       </div>
       <div class="mt-6 text-sm text-gray-500">
-        We will import historical data from your first Google Analytics visitor to your first Plausible visitor. If you'd
-        like to import data for a different time period, please contact support.
+        Import historical data from your first Google Analytics visitor to your first Plausible visitor
       </div>
       <div class="flex justify-between mt-3">
         <div class="w-36">
