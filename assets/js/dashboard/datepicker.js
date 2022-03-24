@@ -22,7 +22,7 @@ import {
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
 
 function renderArrow(query, site, period, prevDate, nextDate) {
-  const insertionDate = parseUTCDate(site.insertedAt);
+  const insertionDate = parseUTCDate(site.statsBegin);
   const disabledLeft = isBefore(
     parseUTCDate(prevDate),
     insertionDate,
@@ -136,7 +136,7 @@ class DatePicker extends React.Component {
       date: false,
     };
 
-    const insertionDate = parseUTCDate(this.props.site.insertedAt);
+    const insertionDate = parseUTCDate(this.props.site.statsBegin);
 
     if (e.key === "ArrowLeft") {
       const prevDate = formatISO(shiftDays(query.date, -1));
@@ -358,7 +358,7 @@ class DatePicker extends React.Component {
         </div>
       );
     } if (this.state.mode === "calendar") {
-      const insertionDate = new Date(this.props.site.insertedAt);
+      const insertionDate = new Date(this.props.site.statsBegin);
       const dayBeforeCreation = insertionDate - 86400000;
       return (
         <div className="h-0">

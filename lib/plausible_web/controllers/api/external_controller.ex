@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalController do
   use PlausibleWeb, :controller
-  use OpenTelemetryDecorator
   require Logger
 
   def event(conn, _params) do
@@ -50,7 +49,6 @@ defmodule PlausibleWeb.Api.ExternalController do
     })
   end
 
-  @decorate trace("ingest.parse_user_agent")
   defp parse_user_agent(conn) do
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
 
@@ -83,7 +81,10 @@ defmodule PlausibleWeb.Api.ExternalController do
 
     ua = parse_user_agent(conn)
 
-    if is_bot?(ua) || params["domain"] in Application.get_env(:plausible, :domain_blacklist) do
+    blacklist_domain = params["domain"] in Application.get_env(:plausible, :domain_blacklist)
+    referrer_spam = is_spammer?(params["referrer"])
+
+    if is_bot?(ua) || blacklist_domain || referrer_spam do
       :ok
     else
       uri = params["url"] && URI.parse(params["url"])
@@ -162,6 +163,13 @@ defmodule PlausibleWeb.Api.ExternalController do
     do: true
 
   defp is_bot?(_), do: false
+
+  defp is_spammer?(nil), do: false
+
+  defp is_spammer?(referrer_str) do
+    uri = URI.parse(referrer_str)
+    ReferrerBlocklist.is_spammer?(strip_www(uri.host))
+  end
 
   defp parse_meta(params) do
     raw_meta = params["m"] || params["meta"] || params["p"] || params["props"]
@@ -413,7 +421,6 @@ defmodule PlausibleWeb.Api.ExternalController do
     2_647_694 => 2_643_743
   }
 
-  @decorate trace("ingest.geolocation")
   defp visitor_location_details(conn) do
     result =
       PlausibleWeb.RemoteIp.get(conn)
@@ -454,7 +461,6 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp ignore_unknown_country("ZZ"), do: nil
   defp ignore_unknown_country(country), do: country
 
-  @decorate trace("ingest.parse_referrer")
   defp parse_referrer(_, nil), do: nil
 
   defp parse_referrer(uri, referrer_str) do
@@ -495,7 +501,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp clean_referrer(ref) do
     uri = URI.parse(ref.referer)
 
-    if right_uri?(uri) do
+    if PlausibleWeb.RefInspector.right_uri?(uri) do
       host = String.replace_prefix(uri.host, "www.", "")
       path = uri.path || ""
       host <> String.trim_trailing(path, "/")
@@ -574,36 +580,8 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp get_referrer_source(query, ref) do
     source = query["utm_source"] || query["source"] || query["ref"]
-    source || get_source_from_referrer(ref)
+    source || PlausibleWeb.RefInspector.parse(ref)
   end
-
-  defp get_source_from_referrer(nil), do: nil
-
-  defp get_source_from_referrer(ref) do
-    case ref.source do
-      :unknown ->
-        clean_uri(ref.referer)
-
-      source ->
-        source
-    end
-  end
-
-  defp clean_uri(uri) do
-    uri = URI.parse(String.trim(uri))
-
-    if right_uri?(uri) do
-      String.replace_leading(uri.host, "www.", "")
-    end
-  end
-
-  defp right_uri?(%URI{host: nil}), do: false
-
-  defp right_uri?(%URI{host: host, scheme: scheme})
-       when scheme in ["http", "https"] and byte_size(host) > 0,
-       do: true
-
-  defp right_uri?(_), do: false
 
   defp decode_query_params(nil), do: nil
   defp decode_query_params(%URI{query: nil}), do: nil

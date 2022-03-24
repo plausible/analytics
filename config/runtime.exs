@@ -320,7 +320,8 @@ if config_env() == :prod && !disable_cron do
     check_stats_emails: 1,
     site_setup_emails: 1,
     clean_email_verification_codes: 1,
-    clean_invitations: 1
+    clean_invitations: 1,
+    google_analytics_imports: 1
   ]
 
   extra_queues = [
@@ -340,7 +341,7 @@ if config_env() == :prod && !disable_cron do
 else
   config :plausible, Oban,
     repo: Plausible.Repo,
-    queues: false,
+    queues: [google_analytics_imports: 1],
     plugins: false
 end
 
@@ -413,20 +414,20 @@ config :logger, Sentry.LoggerBackend,
   level: :error,
   excluded_domains: []
 
-if honeycomb_api_key && honeycomb_dataset do
-  config :opentelemetry, :processors,
-    otel_batch_processor: %{
-      exporter:
-        {:opentelemetry_exporter,
-         %{
-           endpoints: ['https://api.honeycomb.io:443'],
-           headers: [
-             {"x-honeycomb-team", honeycomb_api_key},
-             {"x-honeycomb-dataset", honeycomb_dataset}
-           ]
-         }}
-    }
-end
+# if honeycomb_api_key && honeycomb_dataset do
+#   config :opentelemetry, :processors,
+#     otel_batch_processor: %{
+#       exporter:
+#         {:opentelemetry_exporter,
+#          %{
+#            endpoints: ['https://api.honeycomb.io:443'],
+#            headers: [
+#              {"x-honeycomb-team", honeycomb_api_key},
+#              {"x-honeycomb-dataset", honeycomb_dataset}
+#            ]
+#          }}
+#     }
+# end
 
 config :tzdata,
        :data_dir,

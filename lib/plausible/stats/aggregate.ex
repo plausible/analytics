@@ -1,10 +1,10 @@
 defmodule Plausible.Stats.Aggregate do
   alias Plausible.Stats.Query
   use Plausible.ClickhouseRepo
-  import Plausible.Stats.Base
+  import Plausible.Stats.{Base, Imported}
 
-  @event_metrics ["visitors", "pageviews", "events", "sample_percent"]
-  @session_metrics ["visits", "bounce_rate", "visit_duration", "sample_percent"]
+  @event_metrics [:visitors, :pageviews, :events, :sample_percent]
+  @session_metrics [:visits, :bounce_rate, :visit_duration, :sample_percent]
 
   def aggregate(site, query, metrics) do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
@@ -13,7 +13,7 @@ defmodule Plausible.Stats.Aggregate do
     session_task = Task.async(fn -> aggregate_sessions(site, query, session_metrics) end)
 
     time_on_page_task =
-      if "time_on_page" in metrics do
+      if :time_on_page in metrics do
         Task.async(fn -> aggregate_time_on_page(site, query) end)
       else
         Task.async(fn -> %{} end)
@@ -23,7 +23,7 @@ defmodule Plausible.Stats.Aggregate do
     |> Map.merge(Task.await(event_task, 10_000))
     |> Map.merge(Task.await(time_on_page_task, 10_000))
     |> Enum.map(fn {metric, value} ->
-      {metric, %{"value" => round(value || 0)}}
+      {metric, %{value: round(value || 0)}}
     end)
     |> Enum.into(%{})
   end
@@ -33,6 +33,7 @@ defmodule Plausible.Stats.Aggregate do
   defp aggregate_events(site, query, metrics) do
     from(e in base_event_query(site, query), select: %{})
     |> select_event_metrics(metrics)
+    |> merge_imported(site, query, :aggregate, metrics)
     |> ClickhouseRepo.one()
   end
 
@@ -44,6 +45,7 @@ defmodule Plausible.Stats.Aggregate do
     from(e in query_sessions(site, query), select: %{})
     |> filter_converted_sessions(site, query)
     |> select_session_metrics(metrics)
+    |> merge_imported(site, query, :aggregate, metrics)
     |> ClickhouseRepo.one()
   end
 
@@ -106,6 +108,6 @@ defmodule Plausible.Stats.Aggregate do
 
     {:ok, res} = ClickhouseRepo.query(time_query, base_query_raw_params ++ [where_arg])
     [[time_on_page]] = res.rows
-    %{"time_on_page" => time_on_page}
+    %{time_on_page: time_on_page}
   end
 end

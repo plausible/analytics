@@ -1,0 +1,13 @@
+Hey <%= user_salutation(@user) %>,
+<br /><br />
+<%= if @success do %>
+  Your Google Analytics import has completed.
+  <br /><br />
+  View dashboard: @link
+<% else %>
+  Unfortunately, your Google Analytics import failed.
+<% end %>
+<br /><br />
+--
+<br /><br />
+<%= plausible_url() %><br />

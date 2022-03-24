@@ -5,6 +5,34 @@ defmodule Plausible.Stats.Clickhouse do
   use Plausible.Stats.Fragments
   @no_ref "Direct / None"
 
+  def pageview_start_date_local(site) do
+    datetime =
+      ClickhouseRepo.one(
+        from e in "events",
+          select: fragment("min(?)", e.timestamp),
+          where: e.domain == ^site.domain
+      )
+
+    case datetime do
+      # no stats for this domain yet
+      ~N[1970-01-01 00:00:00] ->
+        Timex.today(site.timezone)
+
+      _ ->
+        Timex.Timezone.convert(datetime, "UTC")
+        |> Timex.Timezone.convert(site.timezone)
+        |> DateTime.to_date()
+    end
+  end
+
+  def imported_pageview_count(site) do
+    Plausible.ClickhouseRepo.one(
+      from i in "imported_visitors",
+        where: i.site_id == ^site.id,
+        select: sum(i.pageviews)
+    )
+  end
+
   def usage_breakdown(domains) do
     range =
       Date.range(
@@ -98,7 +126,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   defp filter_converted_sessions(db_query, site, query) do
     goal = query.filters["goal"]
-    page = query.filters["page"]
+    page = query.filters[:page]
 
     if is_binary(goal) || is_binary(page) do
       converted_sessions =
@@ -116,7 +144,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp apply_page_as_entry_page(db_query, _site, query) do
-    include_path_filter_entry(db_query, query.filters["page"])
+    include_path_filter_entry(db_query, query.filters[:page])
   end
 
   def current_visitors(site, query) do
@@ -382,7 +410,7 @@ defmodule Plausible.Stats.Clickhouse do
         q
       end
 
-    q = include_path_filter(q, query.filters["page"])
+    q = include_path_filter(q, query.filters[:page])
 
     if query.filters["props"] do
       [{key, val}] = query.filters["props"] |> Enum.into([])

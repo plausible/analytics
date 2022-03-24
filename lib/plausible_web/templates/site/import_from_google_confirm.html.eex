@@ -1,0 +1,38 @@
+<%= form_for @conn, Routes.site_path(@conn, :import_from_google, @site.domain), [class: "max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
+  <h2 class="text-xl font-black dark:text-gray-100">Import from Google Analytics</h2>
+
+  <%= hidden_input(f, :access_token, value: @access_token) %>
+
+  <%= case @start_date do %>
+    <% {:ok, start_date} -> %>
+
+      <div class="mt-6 text-sm text-gray-500 dark:text-gray-200">
+        Choose the view in your Google Analytics account that will be imported to the <%= @site.domain %> dashboard
+      </div>
+
+      <div class="mt-3">
+        <%= styled_label(f, :view_id, "Google Analytics view") %>
+        <%= styled_select f, :view_display, @view_ids, disabled: "true", selected: @selected_view_id %>
+        <%= hidden_input f, :view_id, readonly: "true", value: @selected_view_id %>
+      </div>
+      <div class="mt-6 text-sm text-gray-500 dark:text-gray-200">
+        Import historical data from your first Google Analytics visitor to your first Plausible visitor
+      </div>
+      <div class="flex justify-between mt-3">
+        <div class="w-36">
+          <%= styled_label f, :start_date, "From"  %>
+          <%= styled_date_input f, :start_date, value: start_date, readonly: "true" %>
+        </div>
+        <div class="align-middle pt-8">&rarr;</div>
+        <div class="w-36">
+          <%= styled_label f, :end_date, "To"  %>
+          <%= styled_date_input f, :end_date, value: @end_date, readonly: "true" %>
+        </div>
+      </div>
+    <% {:error, error} -> %>
+      <p class="text-gray-700 dark:text-gray-300 mt-6">The following error occurred when fetching your Google Analytics data.</p>
+      <p class="text-red-700 font-medium mt-3"><%= error %></p>
+    <% end %>
+
+  <%= submit "Confirm import", class: "button mt-6" %>
+<% end %>

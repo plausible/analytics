@@ -22,6 +22,7 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: site,
           has_goals: Plausible.Sites.has_goals?(site),
+          stats_begin: Plausible.Sites.stats_begin(site),
           title: "Plausible · " <> site.domain,
           offer_email_report: offer_email_report,
           demo: demo
@@ -48,11 +49,11 @@ defmodule PlausibleWeb.StatsController do
   """
   def csv_export(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
 
-    metrics = ["visitors", "pageviews", "bounce_rate", "visit_duration"]
+    metrics = [:visitors, :pageviews, :bounce_rate, :visit_duration]
     graph = Plausible.Stats.timeseries(site, query, metrics)
-    headers = ["date" | metrics]
+    headers = [:date | metrics]
 
     visitors =
       Enum.map(graph, fn row -> Enum.map(headers, &row[&1]) end)
@@ -177,6 +178,7 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: shared_link.site,
           has_goals: Plausible.Sites.has_goals?(shared_link.site),
+          stats_begin: Plausible.Sites.stats_begin(shared_link.site),
           title: "Plausible · " <> shared_link.site.domain,
           offer_email_report: false,
           demo: false,
