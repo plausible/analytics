@@ -1,9 +1,9 @@
 defmodule Plausible.SiteAdminTest do
   use Plausible.DataCase
   import Plausible.TestUtils
-  alias Plausible.SiteAdmin
+  alias Plausible.{SiteAdmin, ClickhouseRepo, ClickhouseEvent, ClickhouseSession}
 
-  test "transfers events and sessions" do
+  test "event and session structs remain the same after transfer" do
     from_site = insert(:site)
     to_site = insert(:site)
 
@@ -17,10 +17,35 @@ defmodule Plausible.SiteAdminTest do
     event_after = get_event_by_domain(to_site.domain)
     session_after = get_session_by_domain(to_site.domain)
 
-    assert event_before == event_after
-    assert session_before == session_after
+    assert event_before == %ClickhouseEvent{event_after | transferred_from: ""}
+    assert session_before == %ClickhouseSession{session_after | transferred_from: ""}
     assert event_after.transferred_from == from_site.domain
     assert session_after.transferred_from == from_site.domain
+  end
+
+  test "transfers all events and sessions" do
+    from_site = insert(:site)
+    to_site = insert(:site)
+
+    populate_stats(from_site, [
+      build(:pageview, user_id: 123),
+      build(:event, name: "Signup", user_id: 123),
+      build(:pageview, user_id: 456),
+      build(:event, name: "Signup", user_id: 789)
+    ])
+
+    SiteAdmin.transfer_data([from_site], %{"domain" => to_site.domain})
+
+    transferred_events =
+      ClickhouseRepo.all(from e in Plausible.ClickhouseEvent, where: e.domain == ^to_site.domain)
+
+    transferred_sessions =
+      ClickhouseRepo.all(
+        from e in Plausible.ClickhouseSession, where: e.domain == ^to_site.domain
+      )
+
+    assert length(transferred_events) == 4
+    assert length(transferred_sessions) == 3
   end
 
   test "session_transfer_query" do
@@ -45,13 +70,13 @@ defmodule Plausible.SiteAdminTest do
     q = from e in Plausible.ClickhouseEvent, where: e.domain == ^domain
 
     Plausible.ClickhouseRepo.one!(q)
-    |> Map.drop([:__meta__, :domain, :transferred_from])
+    |> Map.drop([:__meta__, :domain])
   end
 
   defp get_session_by_domain(domain) do
     q = from s in Plausible.ClickhouseSession, where: s.domain == ^domain
 
     Plausible.ClickhouseRepo.one!(q)
-    |> Map.drop([:__meta__, :domain, :transferred_from])
+    |> Map.drop([:__meta__, :domain])
   end
 end

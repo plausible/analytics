@@ -37,7 +37,7 @@ defmodule Plausible.SiteAdmin do
       transfer_data: %{
         name: "Transfer data",
         inputs: [
-          %{name: "domain", title: "domain", default: nil}
+          %{name: "to domain", title: "to domain", default: nil}
         ],
         action: fn _conn, sites, params -> transfer_data(sites, params) end
       }
@@ -59,14 +59,16 @@ defmodule Plausible.SiteAdmin do
 
   def transfer_data([site], params) do
     from_domain = site.domain
-    to_domain = params["domain"]
+    to_domain = params["to domain"]
 
     if to_domain && domain_exists?(to_domain) do
       event_q = event_transfer_query(from_domain, to_domain)
-      Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, event_q)
+      {:ok, _} = Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, event_q)
 
       session_q = session_transfer_query(from_domain, to_domain)
-      Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, session_q)
+      {:ok, _} = Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, session_q)
+
+      :ok
     else
       {:error, "Cannot transfer to non-existing domain"}
     end
