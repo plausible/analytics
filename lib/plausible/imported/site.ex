@@ -7,7 +7,7 @@ defmodule Plausible.Imported do
     Plausible.ClickhouseRepo.clear_imported_stats_for(site.id)
   end
 
-  def from_google_analytics(nil, _site_id, _metric, _timezone), do: {:ok, nil}
+  def from_google_analytics(nil, _site_id, _metric), do: {:ok, nil}
 
   def from_google_analytics(data, site_id, table) do
     Logger.debug("Processing imported data (table=#{table}): #{inspect(data)}")
