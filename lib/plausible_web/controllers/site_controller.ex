@@ -638,14 +638,30 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
   end
 
-  def import_from_google_form(conn, %{"access_token" => access_token}) do
+  def import_from_google_user_metric_notice(conn, %{
+        "view_id" => view_id,
+        "access_token" => access_token
+      }) do
+    site = conn.assigns[:site]
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("import_from_google_user_metric_form.html",
+      site: site,
+      view_id: view_id,
+      access_token: access_token,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
+  end
+
+  def import_from_google_view_id_form(conn, %{"access_token" => access_token}) do
     site = conn.assigns[:site]
 
     view_ids = Plausible.Google.Api.get_analytics_view_ids(access_token)
 
     conn
     |> assign(:skip_plausible_tracking, true)
-    |> render("import_from_google.html",
+    |> render("import_from_google_view_id_form.html",
       access_token: access_token,
       site: site,
       view_ids: view_ids,
@@ -653,16 +669,32 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
+  # see https://stackoverflow.com/a/57416769
+  @google_analytics_new_user_metric_date ~D[2016-08-24]
   def import_from_google_view_id(conn, %{"view_id" => view_id, "access_token" => access_token}) do
     site = conn.assigns[:site]
+    start_date = Plausible.Google.Api.get_analytics_start_date(view_id, access_token)
 
-    redirect(conn,
-      to:
-        Routes.site_path(conn, :import_from_google_confirm, site.domain,
-          view_id: view_id,
-          access_token: access_token
-        )
-    )
+    case start_date do
+      {:ok, date} ->
+        if Timex.before?(date, @google_analytics_new_user_metric_date) do
+          redirect(conn,
+            to:
+              Routes.site_path(conn, :import_from_google_user_metric_notice, site.domain,
+                view_id: view_id,
+                access_token: access_token
+              )
+          )
+        else
+          redirect(conn,
+            to:
+              Routes.site_path(conn, :import_from_google_confirm, site.domain,
+                view_id: view_id,
+                access_token: access_token
+              )
+          )
+        end
+    end
   end
 
   def import_from_google_confirm(conn, %{"access_token" => access_token, "view_id" => view_id}) do

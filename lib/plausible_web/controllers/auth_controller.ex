@@ -545,7 +545,7 @@ defmodule PlausibleWeb.AuthController do
       "import" ->
         redirect(conn,
           to:
-            Routes.site_path(conn, :import_from_google_form, site.domain,
+            Routes.site_path(conn, :import_from_google_view_id_form, site.domain,
               access_token: res["access_token"]
             )
         )
