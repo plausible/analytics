@@ -267,6 +267,15 @@ defmodule Plausible.Stats.Base do
     |> select_session_metrics(rest)
   end
 
+  def select_session_metrics(q, [:events | rest]) do
+    from(s in q,
+      select_merge: %{
+        events: fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
+      }
+    )
+    |> select_session_metrics(rest)
+  end
+
   def select_session_metrics(q, [:visitors | rest]) do
     from(s in q,
       select_merge: %{
