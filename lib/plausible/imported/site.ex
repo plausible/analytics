@@ -1,6 +1,7 @@
 defmodule Plausible.Imported do
   use Plausible.ClickhouseRepo
   use Timex
+  require Logger
 
   def forget(site) do
     Plausible.ClickhouseRepo.clear_imported_stats_for(site.id)
@@ -9,6 +10,8 @@ defmodule Plausible.Imported do
   def from_google_analytics(nil, _site_id, _metric, _timezone), do: {:ok, nil}
 
   def from_google_analytics(data, site_id, table) do
+    Logger.debug("Processing imported data (table=#{table}): #{inspect(data)}")
+
     data =
       Enum.map(data, fn row ->
         new_from_google_analytics(site_id, table, row)
