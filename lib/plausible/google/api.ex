@@ -344,6 +344,8 @@ defmodule Plausible.Google.Api do
       pageToken: page_token
     }
 
+    Logger.debug(Jason.encode!(%{reportRequests: [report]}))
+
     res =
       HTTPoison.post!(
         "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
