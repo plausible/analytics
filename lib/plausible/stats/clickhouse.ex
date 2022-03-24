@@ -6,20 +6,22 @@ defmodule Plausible.Stats.Clickhouse do
   @no_ref "Direct / None"
 
   def pageview_start_date_local(site) do
-    date =
+    datetime =
       ClickhouseRepo.one(
         from e in "events",
-          select: fragment("toDate(min(?))", e.timestamp),
+          select: fragment("min(?)", e.timestamp),
           where: e.domain == ^site.domain
       )
 
-    case date do
+    case datetime do
       # no stats for this domain yet
-      ~D[1970-01-01] ->
+      ~N[1970-01-01 00:00:00] ->
         Timex.today(site.timezone)
 
-      date ->
-        Timex.Timezone.convert(date, site.timezone)
+      _ ->
+        Timex.Timezone.convert(datetime, "UTC")
+        |> Timex.Timezone.convert(site.timezone)
+        |> DateTime.to_date()
     end
   end
 
