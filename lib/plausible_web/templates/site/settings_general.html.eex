@@ -98,15 +98,18 @@
         <div class="flex">
           <%= button(to: Plausible.Google.Api.authorize_url(@site.id, "import"), class: "inline-flex pr-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50") do %>
             <%= google_logo() %>
-            <span style="font-family: Roboto, system-ui" class="text-sm font-medium text-gray-600">Continue with Google<span>
+            <span style="font-family: Roboto, system-ui" class="text-sm font-medium text-gray-600 dark:text-gray-50">Continue with Google<span>
           <% end %>
         </div>
 
       <% true -> %>
-        <div class="flex">
-          <%= button(to: Plausible.Google.Api.authorize_url(@site.id, "import"), class: "inline-flex pr-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50") do %>
+        <%= if @site.imported_data && @site.imported_data.status == "error" do %>
+          <div class="text-sm mt-2">Your latest import has failed. You can try importing again by clicking the button below. If you try multiple times and the import keeps failing, please contact support.</div>
+        <% end %>
+        <div class="flex mt-2">
+          <%= button(to: Plausible.Google.Api.authorize_url(@site.id, "import"), class: "inline-flex pr-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50 dark:hover:bg-gray-700") do %>
             <%= google_logo() %>
-            <span style="font-family: Roboto, system-ui" class="text-sm font-medium text-gray-600">Continue with Google<span>
+            <span style="font-family: Roboto, system-ui" class="text-sm font-medium text-gray-600 dark:text-gray-50">Continue with Google<span>
           <% end %>
         </div>
 
