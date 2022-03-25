@@ -70,7 +70,7 @@ defmodule Plausible.Stats.Filters do
     end
   end
 
-  defp filter_value(key, "~" <> val) do
+  defp filter_value(_, "~" <> val) do
     {:matches, "**" <> val <> "**"}
   end
 
