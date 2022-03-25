@@ -23,9 +23,12 @@ defmodule PlausibleWeb.Api.StatsController do
         query
       end
 
-    timeseries_result = Stats.timeseries(site, timeseries_query, [String.to_existing_atom(selected_metric)])
+    timeseries_result =
+      Stats.timeseries(site, timeseries_query, [String.to_existing_atom(selected_metric)])
 
-    plot = Enum.map(timeseries_result, fn row -> row[selected_metric] || 0 end)
+    plot =
+      Enum.map(timeseries_result, fn row -> row[String.to_existing_atom(selected_metric)] || 0 end)
+
     labels = Enum.map(timeseries_result, fn row -> row[:date] end)
     present_index = present_index_for(site, query, labels)
 

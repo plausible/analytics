@@ -160,6 +160,14 @@ class LineGraph extends React.Component {
       this.chart.destroy();
     }
 
+    if (metric && !graphData && this.chart) {
+      this.chart.destroy();
+
+      if (tooltip) {
+        tooltip.style.opacity = 0;
+      }
+    }
+
   }
 
   componentWillUnmount() {
@@ -289,7 +297,7 @@ class LineGraph extends React.Component {
           <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData}/>
         </div>
         <div className="relative px-2">
-          <div className="absolute right-4 -top-5 flex">
+          <div className={`absolute right-4 ${metric ? '-top-5' : '-top-10'} flex`}>
             {this.downloadLink()}
             {this.samplingNotice()}
             { this.importedNotice() }
