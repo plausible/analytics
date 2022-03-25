@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   @user_id 123
 
   describe "GET /api/stats/:domain/sources" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "returns top sources by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -27,6 +27,39 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       assert json_response(conn, 200) == [
                %{"name" => "Google", "visitors" => 2},
                %{"name" => "DuckDuckGo", "visitors" => 1}
+             ]
+    end
+
+    test "returns top sources with imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, referrer_source: "Google", referrer: "google.com"),
+        build(:pageview, referrer_source: "Google", referrer: "google.com"),
+        build(:pageview, referrer_source: "DuckDuckGo", referrer: "duckduckgo.com")
+      ])
+
+      populate_stats(site, [
+        build(:imported_sources,
+          source: "Google",
+          visitors: 2
+        ),
+        build(:imported_sources,
+          source: "DuckDuckGo",
+          visitors: 1
+        )
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/sources")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Google", "visitors" => 2},
+               %{"name" => "DuckDuckGo", "visitors" => 1}
+             ]
+
+      conn = get(conn, "/api/stats/#{site.domain}/sources?with_imported=true")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Google", "visitors" => 4},
+               %{"name" => "DuckDuckGo", "visitors" => 2}
              ]
     end
 
@@ -73,6 +106,92 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
+    test "calculates bounce rate and visit duration for sources with imported data", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      populate_stats(site, [
+        build(:imported_sources,
+          source: "Google",
+          date: ~D[2021-01-01],
+          visitors: 2,
+          visits: 3,
+          bounces: 1,
+          visit_duration: 900
+        ),
+        build(:imported_sources,
+          source: "DuckDuckGo",
+          date: ~D[2021-01-01],
+          visitors: 1,
+          visits: 1,
+          visit_duration: 100,
+          bounces: 0
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&detailed=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Google",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 900
+               },
+               %{
+                 "name" => "DuckDuckGo",
+                 "visitors" => 1,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0
+               }
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&detailed=true&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Google",
+                 "visitors" => 3,
+                 "bounce_rate" => 25,
+                 "visit_duration" => 450.0
+               },
+               %{
+                 "name" => "DuckDuckGo",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 50
+               }
+             ]
+    end
+
     test "returns top sources in realtime report", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -113,6 +232,9 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         build(:pageview,
           referrer_source: "DuckDuckGo",
           referrer: "duckduckgo.com"
+        ),
+        build(:imported_sources,
+          source: "DuckDuckGo"
         )
       ])
 
@@ -120,6 +242,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       assert json_response(conn, 200) == [
                %{"name" => "DuckDuckGo", "visitors" => 1}
+             ]
+
+      conn = get(conn, "/api/stats/#{site.domain}/sources?limit=1&page=2&with_imported=true")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "DuckDuckGo", "visitors" => 2}
              ]
     end
 
@@ -141,7 +269,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/utm_mediums" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "returns top utm_mediums by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -158,6 +286,25 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         build(:pageview,
           utm_medium: "email",
           timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      populate_stats(site, [
+        build(:imported_sources,
+          utm_medium: "social",
+          date: ~D[2021-01-01],
+          visit_duration: 700,
+          bounces: 1,
+          visits: 1,
+          visitors: 1
+        ),
+        build(:imported_sources,
+          utm_medium: "email",
+          date: ~D[2021-01-01],
+          bounces: 0,
+          visits: 1,
+          visitors: 1,
+          visit_duration: 100
         )
       ])
 
@@ -181,11 +328,32 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  "visit_duration" => 0
                }
              ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_mediums?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "social",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 800.0
+               },
+               %{
+                 "name" => "email",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 50
+               }
+             ]
     end
   end
 
   describe "GET /api/stats/:domain/utm_campaigns" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "returns top utm_campaigns by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -209,6 +377,25 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
+      populate_stats(site, [
+        build(:imported_sources,
+          utm_campaign: "profile",
+          date: ~D[2021-01-01],
+          visit_duration: 700,
+          bounces: 1,
+          visits: 1,
+          visitors: 1
+        ),
+        build(:imported_sources,
+          utm_campaign: "august",
+          date: ~D[2021-01-01],
+          bounces: 0,
+          visits: 1,
+          visitors: 1,
+          visit_duration: 900
+        )
+      ])
+
       conn =
         get(
           conn,
@@ -227,6 +414,27 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  "visitors" => 1,
                  "bounce_rate" => 0,
                  "visit_duration" => 900
+               }
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_campaigns?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "august",
+                 "visitors" => 3,
+                 "bounce_rate" => 67,
+                 "visit_duration" => 300
+               },
+               %{
+                 "name" => "profile",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 800.0
                }
              ]
     end
@@ -299,6 +507,11 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         build(:pageview,
           referrer_source: "Twitter"
         )
+      ])
+
+      # Imported data is ignored when filtering
+      populate_stats(site, [
+        build(:imported_sources, source: "Twitter")
       ])
 
       filters = Jason.encode!(%{goal: "Signup"})
@@ -546,6 +759,182 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  }
                ]
              }
+    end
+  end
+
+  describe "GET /api/stats/:domain/utm_terms" do
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+
+    test "returns top utm_terms by unique user ids", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          utm_term: "oat milk",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_term: "oat milk",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          utm_term: "Sweden",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_term: "Sweden",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      populate_stats(site, [
+        build(:imported_sources,
+          utm_term: "oat milk",
+          date: ~D[2021-01-01],
+          visit_duration: 700,
+          bounces: 1,
+          visits: 1,
+          visitors: 1
+        ),
+        build(:imported_sources,
+          utm_term: "Sweden",
+          date: ~D[2021-01-01],
+          bounces: 0,
+          visits: 1,
+          visitors: 1,
+          visit_duration: 900
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_terms?period=day&date=2021-01-01"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Sweden",
+                 "visitors" => 2,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0
+               },
+               %{
+                 "name" => "oat milk",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 900
+               }
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_terms?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Sweden",
+                 "visitors" => 3,
+                 "bounce_rate" => 67,
+                 "visit_duration" => 300
+               },
+               %{
+                 "name" => "oat milk",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 800.0
+               }
+             ]
+    end
+  end
+
+  describe "GET /api/stats/:domain/utm_contents" do
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+
+    test "returns top utm_contents by unique user ids", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          utm_content: "ad",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_content: "ad",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          utm_content: "blog",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_content: "blog",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      populate_stats(site, [
+        build(:imported_sources,
+          utm_content: "ad",
+          date: ~D[2021-01-01],
+          visit_duration: 700,
+          bounces: 1,
+          visits: 1,
+          visitors: 1
+        ),
+        build(:imported_sources,
+          utm_content: "blog",
+          date: ~D[2021-01-01],
+          bounces: 0,
+          visits: 1,
+          visitors: 1,
+          visit_duration: 900
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "blog",
+                 "visitors" => 2,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0
+               },
+               %{
+                 "name" => "ad",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 900
+               }
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "blog",
+                 "visitors" => 3,
+                 "bounce_rate" => 67,
+                 "visit_duration" => 300
+               },
+               %{
+                 "name" => "ad",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 800.0
+               }
+             ]
     end
   end
 end

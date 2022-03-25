@@ -1,7 +1,6 @@
 defmodule Plausible.Session.WriteBuffer do
   use GenServer
   require Logger
-  use OpenTelemetryDecorator
 
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
@@ -43,7 +42,6 @@ defmodule Plausible.Session.WriteBuffer do
     flush(buffer)
   end
 
-  @decorate trace("ingest.flush_sessions")
   defp flush(buffer) do
     case buffer do
       [] ->

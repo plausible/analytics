@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
   import Plausible.TestUtils
 
   describe "GET /api/stats/:domain/browsers" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "returns top browsers by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -38,6 +38,27 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                  "visitors" => 1,
                  "conversion_rate" => 50.0
                }
+             ]
+    end
+
+    test "returns top browsers including imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, browser: "Chrome"),
+        build(:imported_browsers, browser: "Chrome"),
+        build(:imported_browsers, browser: "Firefox")
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Chrome", "visitors" => 1, "percentage" => 100}
+             ]
+
+      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&with_imported=true")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Chrome", "visitors" => 2, "percentage" => 67},
+               %{"name" => "Firefox", "visitors" => 1, "percentage" => 33}
              ]
     end
   end

@@ -2,10 +2,10 @@ defmodule Plausible.Stats.QueryTest do
   use ExUnit.Case, async: true
   alias Plausible.Stats.Query
 
-  @tz "UTC"
+  @site %Plausible.Site{timezone: "UTC"}
 
   test "parses day format" do
-    q = Query.from(@tz, %{"period" => "day", "date" => "2019-01-01"})
+    q = Query.from(@site, %{"period" => "day", "date" => "2019-01-01"})
 
     assert q.date_range.first == ~D[2019-01-01]
     assert q.date_range.last == ~D[2019-01-01]
@@ -13,7 +13,7 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "day fromat defaults to today" do
-    q = Query.from(@tz, %{"period" => "day"})
+    q = Query.from(@site, %{"period" => "day"})
 
     assert q.date_range.first == Timex.today()
     assert q.date_range.last == Timex.today()
@@ -21,7 +21,7 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "parses realtime format" do
-    q = Query.from(@tz, %{"period" => "realtime"})
+    q = Query.from(@site, %{"period" => "realtime"})
 
     assert q.date_range.first == Timex.today()
     assert q.date_range.last == Timex.today()
@@ -29,7 +29,7 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "parses month format" do
-    q = Query.from(@tz, %{"period" => "month", "date" => "2019-01-01"})
+    q = Query.from(@site, %{"period" => "month", "date" => "2019-01-01"})
 
     assert q.date_range.first == ~D[2019-01-01]
     assert q.date_range.last == ~D[2019-01-31]
@@ -37,7 +37,7 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "parses 6 month format" do
-    q = Query.from(@tz, %{"period" => "6mo"})
+    q = Query.from(@site, %{"period" => "6mo"})
 
     assert q.date_range.first ==
              Timex.shift(Timex.today(), months: -5) |> Timex.beginning_of_month()
@@ -47,7 +47,7 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "parses 12 month format" do
-    q = Query.from(@tz, %{"period" => "12mo"})
+    q = Query.from(@site, %{"period" => "12mo"})
 
     assert q.date_range.first ==
              Timex.shift(Timex.today(), months: -11) |> Timex.beginning_of_month()
@@ -57,11 +57,11 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "defaults to 30 days format" do
-    assert Query.from(@tz, %{}) == Query.from(@tz, %{"period" => "30d"})
+    assert Query.from(@site, %{}) == Query.from(@site, %{"period" => "30d"})
   end
 
   test "parses custom format" do
-    q = Query.from(@tz, %{"period" => "custom", "from" => "2019-01-01", "to" => "2019-01-15"})
+    q = Query.from(@site, %{"period" => "custom", "from" => "2019-01-01", "to" => "2019-01-15"})
 
     assert q.date_range.first == ~D[2019-01-01]
     assert q.date_range.last == ~D[2019-01-15]
@@ -71,14 +71,14 @@ defmodule Plausible.Stats.QueryTest do
   describe "filters" do
     test "parses goal filter" do
       filters = Jason.encode!(%{"goal" => "Signup"})
-      q = Query.from(@tz, %{"period" => "6mo", "filters" => filters})
+      q = Query.from(@site, %{"period" => "6mo", "filters" => filters})
 
       assert q.filters["goal"] == "Signup"
     end
 
     test "parses source filter" do
       filters = Jason.encode!(%{"source" => "Twitter"})
-      q = Query.from(@tz, %{"period" => "6mo", "filters" => filters})
+      q = Query.from(@site, %{"period" => "6mo", "filters" => filters})
 
       assert q.filters["source"] == "Twitter"
     end

@@ -1,0 +1,26 @@
+<div class="max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8">
+  <h2 class="text-xl font-black dark:text-gray-100">Import from Google Analytics</h2>
+
+  <div class="mt-6 text-sm text-gray-500 dark:text-gray-200">
+    <p>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+
+    Important: Since your GA property includes data from before 23rd August 2016, you have to take an extra step to make sure we can import data smoothly.
+    </p>
+
+    <ol class="mt-4">
+      <li>1. Navigate to the GA property you want to import from</li>
+      <li>2. Go to Admin &gt; Property Settings &gt; User Analysis</li>
+      <li>3. Make sure <i>Enable Users Metric in Reporting</i> is <b>OFF</b></li>
+    </ol>
+
+    <p class="mt-4">
+    The setting may take a few minutes to take effect. If your imported data is showing 0 visitors in unexpected places, it's probably caused by this and you
+    can try importing again later.
+    </p>
+  </div>
+
+  <%= link("Continue ->", to: Routes.site_path(@conn, :import_from_google_confirm, @site.domain, view_id: @view_id, access_token: @access_token), class: "button mt-6") %>
+</div>

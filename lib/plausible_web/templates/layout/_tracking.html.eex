@@ -1,6 +1,6 @@
 <%= if !Application.get_env(:plausible, :is_selfhost) && !@conn.assigns[:skip_plausible_tracking] do %>
   <%= if Application.get_env(:plausible, :environment) == "prod" do %>
-    <script defer src="https://plausible.io/test/js/script.js" data-api="https://plausible.io/test/api/event"></script>
+    <script defer src="https://plausible.io/test/js/script.beacon.js" data-api="https://plausible.io/test/api/event"></script>
     <script defer src="<%="#{plausible_url()}/js/script.js"%>"></script>
     <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
   <% end %>

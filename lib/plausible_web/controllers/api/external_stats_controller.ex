@@ -2,11 +2,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use Plug.ErrorHandler
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Query, Props}
 
   def realtime_visitors(conn, _params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, %{"period" => "realtime"})
+    query = Query.from(site, %{"period" => "realtime"})
     json(conn, Plausible.Stats.Clickhouse.current_visitors(site, query))
   end
 
@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
-         query <- Query.from(site.timezone, params),
+         query <- Query.from(site, params),
          {:ok, metrics} <- parse_metrics(params, nil, query) do
       results =
         if params["compare"] == "previous_period" do
@@ -31,13 +31,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
               10_000
             )
 
-          Enum.map(curr_result, fn {metric, %{"value" => current_val}} ->
-            %{"value" => prev_val} = prev_result[metric]
+          Enum.map(curr_result, fn {metric, %{value: current_val}} ->
+            %{value: prev_val} = prev_result[metric]
 
             {metric,
              %{
-               "value" => current_val,
-               "change" => percent_change(prev_val, current_val)
+               value: current_val,
+               change: percent_change(prev_val, current_val)
              }}
           end)
           |> Enum.into(%{})
@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
           Plausible.Stats.aggregate(site, query, metrics)
         end
 
-      json(conn, %{"results" => results})
+      json(conn, %{results: Map.take(results, metrics)})
     else
       {:error, msg} ->
         conn
@@ -61,12 +61,24 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          {:ok, property} <- validate_property(params),
-         query <- Query.from(site.timezone, params),
+         query <- Query.from(site, params),
          {:ok, metrics} <- parse_metrics(params, property, query) do
       limit = String.to_integer(Map.get(params, "limit", "100"))
       page = String.to_integer(Map.get(params, "page", "1"))
       results = Plausible.Stats.breakdown(site, query, property, metrics, {limit, page})
-      json(conn, %{"results" => results})
+
+      results =
+        if property == "event:goal" do
+          prop_names = Props.props(site, query)
+
+          Enum.map(results, fn row ->
+            Map.put(row, "props", prop_names[row[:goal]] || [])
+          end)
+        else
+          results
+        end
+
+      json(conn, %{results: results})
     else
       {:error, msg} ->
         conn
@@ -121,7 +133,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
            "The metric `#{invalid_metric}` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#get-apiv1statsbreakdown"}
       end
     else
-      {:ok, metrics}
+      {:ok, Enum.map(metrics, &String.to_atom/1)}
     end
   end
 
@@ -132,10 +144,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          :ok <- validate_interval(params),
-         query <- Query.from(site.timezone, params),
+         query <- Query.from(site, params),
          {:ok, metrics} <- parse_metrics(params, nil, query) do
       graph = Plausible.Stats.timeseries(site, query, metrics)
-      json(conn, %{"results" => graph})
+      metrics = metrics ++ [:date]
+      json(conn, %{results: Enum.map(graph, &Map.take(&1, metrics))})
     else
       {:error, msg} ->
         conn

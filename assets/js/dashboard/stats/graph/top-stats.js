@@ -40,8 +40,6 @@ export default class TopStats extends React.Component {
   render() {
     const { updateMetric, metric, topStatData, query } = this.props
 
-		console.log(topStatData.top_stats, METRIC_MAPPING)
-
     const stats = topStatData && topStatData.top_stats.map((stat, index) => {
       let border = index > 0 ? 'lg:border-l border-gray-300' : ''
       border = index % 2 === 0 ? border + ' border-r lg:border-r-0' : border
@@ -77,15 +75,6 @@ export default class TopStats extends React.Component {
 
     if (query && query.period === 'realtime') {
       stats.push(<div key="dot" className="block pulsating-circle" style={{ left: '125px', top: '52px' }}></div>)
-    }
-
-    if (topStatData && topStatData.sample_percent < 100) {
-      stats.push(
-        <div tooltip={`Stats based on a ${topStatData.sample_percent}% sample of all visitors`} className="cursor-pointer mr-8 ml-auto my-auto">
-          <svg className="w-4 h-4 text-gray-300 dark:text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>)
     }
 
     return stats

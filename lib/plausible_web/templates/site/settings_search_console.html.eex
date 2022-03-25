@@ -12,7 +12,7 @@
       <div class="py-2"></div>
       <span class="text-gray-700 dark:text-gray-300">Linked Google account: <b><%= @site.google_auth.email %></b></span>
 
-      <%= link("Unlink Google account", to: "/#{URI.encode_www_form(@site.domain)}/settings/google", class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
+      <%= link("Unlink Google account", to: "/#{URI.encode_www_form(@site.domain)}/settings/google-search", class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150", method: "delete") %>
 
       <%= case @search_console_domains do %>
         <% {:ok, domains} -> %>
@@ -40,7 +40,7 @@
           <p class="text-red-700 font-medium mt-3"><%= error %></p>
       <% end %>
     <% else %>
-      <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(@site.id), class: "button mt-8") %>
+      <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(@site.id, "search-console"), class: "button mt-8") %>
 
       <div class="text-gray-700 dark:text-gray-300 mt-8">
         NB: You also need to set up your site on <%= link("Google Search Console", to: "https://search.google.com/search-console/about") %> for the integration to work. <%= link("Read the docs", to: "https://plausible.io/docs/google-search-console-integration", class: "text-indigo-500", rel: "noreferrer") %>

@@ -8,9 +8,10 @@ defmodule PlausibleWeb.StatsController do
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
     has_stats = Plausible.Sites.has_stats?(site)
+    can_see_stats = !site.locked || conn.assigns[:current_user_role] == :super_admin
 
     cond do
-      !site.locked && has_stats ->
+      has_stats && can_see_stats ->
         demo = site.domain == PlausibleWeb.Endpoint.host()
         offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
 
@@ -21,12 +22,13 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: site,
           has_goals: Plausible.Sites.has_goals?(site),
+          stats_begin: Plausible.Sites.stats_begin(site),
           title: "Plausible · " <> site.domain,
           offer_email_report: offer_email_report,
           demo: demo
         )
 
-      !site.locked && !has_stats ->
+      !has_stats && can_see_stats ->
         conn
         |> assign(:skip_plausible_tracking, true)
         |> render("waiting_first_pageview.html", site: site)
@@ -47,11 +49,11 @@ defmodule PlausibleWeb.StatsController do
   """
   def csv_export(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site.timezone, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
 
-    metrics = ["visitors", "pageviews", "bounce_rate", "visit_duration"]
+    metrics = [:visitors, :pageviews, :bounce_rate, :visit_duration]
     graph = Plausible.Stats.timeseries(site, query, metrics)
-    headers = ["date" | metrics]
+    headers = [:date | metrics]
 
     visitors =
       Enum.map(graph, fn row -> Enum.map(headers, &row[&1]) end)
@@ -101,7 +103,7 @@ defmodule PlausibleWeb.StatsController do
     |> send_resp(200, zip_content)
   end
 
-  def shared_link(conn, %{"slug" => domain, "auth" => auth}) do
+  def shared_link(conn, %{"domain" => domain, "auth" => auth}) do
     shared_link =
       Repo.get_by(Plausible.Site.SharedLink, slug: auth)
       |> Repo.preload(:site)
@@ -109,8 +111,9 @@ defmodule PlausibleWeb.StatsController do
     if shared_link && shared_link.site.domain == domain do
       if shared_link.password_hash do
         with conn <- Plug.Conn.fetch_cookies(conn),
-             {:ok, token} <- Map.fetch(conn.req_cookies, "shared-link-token"),
-             {:ok, _} <- Plausible.Auth.Token.verify_shared_link(token) do
+             {:ok, token} <- Map.fetch(conn.req_cookies, shared_link_cookie_name(auth)),
+             {:ok, %{slug: token_slug}} <- Plausible.Auth.Token.verify_shared_link(token),
+             true <- token_slug == shared_link.slug do
           render_shared_link(conn, shared_link)
         else
           _e ->
@@ -149,7 +152,7 @@ defmodule PlausibleWeb.StatsController do
         token = Plausible.Auth.Token.sign_shared_link(slug)
 
         conn
-        |> put_resp_cookie("shared-link-token", token)
+        |> put_resp_cookie(shared_link_cookie_name(slug), token)
         |> redirect(to: "/share/#{URI.encode_www_form(shared_link.site.domain)}?auth=#{slug}")
       else
         conn
@@ -175,6 +178,7 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: shared_link.site,
           has_goals: Plausible.Sites.has_goals?(shared_link.site),
+          stats_begin: Plausible.Sites.stats_begin(shared_link.site),
           title: "Plausible · " <> shared_link.site.domain,
           offer_email_report: false,
           demo: false,
@@ -201,4 +205,6 @@ defmodule PlausibleWeb.StatsController do
       conn
     end
   end
+
+  defp shared_link_cookie_name(slug), do: "shared-link-" <> slug
 end

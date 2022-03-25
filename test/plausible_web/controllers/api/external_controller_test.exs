@@ -232,6 +232,24 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.referrer_source == "Facebook"
     end
 
+    test "ignores event when referrer is a spammer", %{conn: conn} do
+      params = %{
+        domain: "ignore-spammers-test.com",
+        name: "pageview",
+        url: "http://gigride.live/",
+        referrer: "https://www.1-best-seo.com",
+        screen_width: 1440
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      assert response(conn, 202) == "ok"
+      assert !get_event("ignore-spammers-test.com")
+    end
+
     test "ignores when referrer is internal", %{conn: conn} do
       params = %{
         name: "pageview",

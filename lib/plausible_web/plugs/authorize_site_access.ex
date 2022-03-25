@@ -2,7 +2,7 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
   import Plug.Conn
   use Plausible.Repo
 
-  def init([]), do: [:public, :viewer, :admin, :owner]
+  def init([]), do: [:public, :viewer, :admin, :super_admin, :owner]
   def init(allowed_roles), do: allowed_roles
 
   def call(conn, allowed_roles) do
@@ -23,14 +23,14 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
           user_id && membership_role ->
             membership_role
 
+          Plausible.Auth.is_super_admin?(user_id) ->
+            :super_admin
+
           site.public ->
             :public
 
           shared_link_record && shared_link_record.site_id == site.id ->
             :public
-
-          user_id in admin_user_ids() ->
-            :admin
 
           true ->
             nil
@@ -42,9 +42,5 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
         PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt
       end
     end
-  end
-
-  defp admin_user_ids() do
-    Application.get_env(:plausible, :admin_user_ids)
   end
 end

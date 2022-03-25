@@ -4,8 +4,8 @@ defmodule Plausible.Stats.Timeseries do
   import Plausible.Stats.Base
   use Plausible.Stats.Fragments
 
-  @event_metrics ["visitors", "pageviews"]
-  @session_metrics ["visits", "bounce_rate", "visit_duration"]
+  @event_metrics [:visitors, :pageviews]
+  @session_metrics [:visits, :bounce_rate, :visit_duration]
   def timeseries(site, query, metrics) do
     steps = buckets(query)
 
@@ -23,32 +23,32 @@ defmodule Plausible.Stats.Timeseries do
 
     Enum.map(steps, fn step ->
       empty_row(step, metrics)
-      |> Map.merge(Enum.find(event_result, fn row -> row["date"] == step end) || %{})
-      |> Map.merge(Enum.find(session_result, fn row -> row["date"] == step end) || %{})
+      |> Map.merge(Enum.find(event_result, fn row -> row[:date] == step end) || %{})
+      |> Map.merge(Enum.find(session_result, fn row -> row[:date] == step end) || %{})
     end)
   end
 
+  defp events_timeseries(_, _, []), do: []
+
   defp events_timeseries(site, query, metrics) do
-    from(e in base_event_query(site, query),
-      group_by: fragment("date"),
-      order_by: fragment("date"),
-      select: %{}
-    )
+    from(e in base_event_query(site, query), select: %{}, group_by: fragment("date"),
+    order_by: fragment("date"))
     |> select_bucket(site, query)
     |> select_event_metrics(metrics)
+    |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
   end
+
+  defp sessions_timeseries(_, _, []), do: []
 
   defp sessions_timeseries(site, query, metrics) do
     query = Query.treat_page_filter_as_entry_page(query)
 
-    from(e in query_sessions(site, query),
-      group_by: fragment("date"),
-      order_by: fragment("date"),
-      select: %{}
-    )
+    from(e in query_sessions(site, query), select: %{}, group_by: fragment("date"),
+    order_by: fragment("date"))
     |> select_bucket(site, query)
     |> select_session_metrics(metrics)
+    |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
   end
 
@@ -123,8 +123,7 @@ defmodule Plausible.Stats.Timeseries do
     from(
       e in q,
       select_merge: %{
-        "date" =>
-          fragment("toStartOfMonth(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
+        date: fragment("toStartOfMonth(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
       }
     )
   end
@@ -135,8 +134,7 @@ defmodule Plausible.Stats.Timeseries do
     from(
       e in q,
       select_merge: %{
-        "date" =>
-          fragment(
+        date: fragment(
             "
             if(toMonday(toTimeZone(?, ?)) < toDate(?),
               toDate(?),
@@ -157,7 +155,7 @@ defmodule Plausible.Stats.Timeseries do
     from(
       e in q,
       select_merge: %{
-        "date" => fragment("toDate(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
+        date: fragment("toDate(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
       }
     )
   end
@@ -166,7 +164,7 @@ defmodule Plausible.Stats.Timeseries do
     from(
       e in q,
       select_merge: %{
-        "date" => fragment("toStartOfHour(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
+        date: fragment("toStartOfHour(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
       }
     )
   end
@@ -175,7 +173,7 @@ defmodule Plausible.Stats.Timeseries do
     from(
       e in q,
       select_merge: %{
-        "date" => fragment("dateDiff('minute', now(), ?) as date", e.timestamp)
+        date: fragment("dateDiff('minute', now(), ?) as date", e.timestamp)
       }
     )
   end
@@ -184,8 +182,7 @@ defmodule Plausible.Stats.Timeseries do
     from(
       e in q,
       select_merge: %{
-        "date" =>
-          fragment("toStartOfMinute(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
+        date: fragment("toStartOfMinute(toTimeZone(?, ?)) as date", e.timestamp, ^site.timezone)
       }
     )
   end
@@ -201,13 +198,13 @@ defmodule Plausible.Stats.Timeseries do
   end
 
   defp empty_row(date, metrics) do
-    Enum.reduce(metrics, %{"date" => date}, fn metric, row ->
+    Enum.reduce(metrics, %{date: date}, fn metric, row ->
       case metric do
-        "pageviews" -> Map.merge(row, %{"pageviews" => 0})
-        "visitors" -> Map.merge(row, %{"visitors" => 0})
-        "visits" -> Map.merge(row, %{"visits" => 0})
-        "bounce_rate" -> Map.merge(row, %{"bounce_rate" => nil})
-        "visit_duration" -> Map.merge(row, %{"visit_duration" => nil})
+        :pageviews -> Map.merge(row, %{pageviews: 0})
+        :visitors -> Map.merge(row, %{visitors: 0})
+        :visits -> Map.merge(row, %{visits: 0})
+        :bounce_rate -> Map.merge(row, %{bounce_rate: nil})
+        :visit_duration -> Map.merge(row, %{:visit_duration => nil})
       end
     end)
   end

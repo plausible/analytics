@@ -7,6 +7,20 @@ end
 
 config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
 
+# Listen IP supports IPv4 and IPv6 addresses.
+listen_ip =
+  (
+    str = get_var_from_path_or_env(config_dir, "LISTEN_IP") || "127.0.0.1"
+
+    case :inet.parse_address(String.to_charlist(str)) do
+      {:ok, ip_addr} ->
+        ip_addr
+
+      {:error, reason} ->
+        raise "Invalid LISTEN_IP '#{str}' error: #{inspect(reason)}"
+    end
+  )
+
 # System.get_env does not accept a non string default
 port = get_var_from_path_or_env(config_dir, "PORT") || 8000
 
@@ -47,7 +61,7 @@ db_socket_dir = get_var_from_path_or_env(config_dir, "DATABASE_SOCKET_DIR")
 admin_user = get_var_from_path_or_env(config_dir, "ADMIN_USER_NAME")
 admin_email = get_var_from_path_or_env(config_dir, "ADMIN_USER_EMAIL")
 
-admin_user_ids =
+super_admin_user_ids =
   get_var_from_path_or_env(config_dir, "ADMIN_USER_IDS", "")
   |> String.split(",")
   |> Enum.map(fn id -> Integer.parse(id) end)
@@ -176,7 +190,7 @@ config :plausible,
   admin_pwd: admin_pwd,
   environment: env,
   mailer_email: mailer_email,
-  admin_user_ids: admin_user_ids,
+  super_admin_user_ids: super_admin_user_ids,
   site_limit: site_limit,
   site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost,
@@ -190,11 +204,15 @@ config :plausible, :selfhost,
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [scheme: base_url.scheme, host: base_url.host, path: base_url.path, port: base_url.port],
-  http: [port: port, transport_options: [max_connections: :infinity]],
+  http: [port: port, ip: listen_ip, transport_options: [max_connections: :infinity]],
   secret_key_base: secret_key_base
 
+maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
+
 if is_nil(db_socket_dir) do
-  config :plausible, Plausible.Repo, url: db_url
+  config :plausible, Plausible.Repo,
+    url: db_url,
+    socket_options: maybe_ipv6
 else
   config :plausible, Plausible.Repo,
     socket_dir: db_socket_dir,
@@ -302,7 +320,8 @@ if config_env() == :prod && !disable_cron do
     check_stats_emails: 1,
     site_setup_emails: 1,
     clean_email_verification_codes: 1,
-    clean_invitations: 1
+    clean_invitations: 1,
+    google_analytics_imports: 1
   ]
 
   extra_queues = [
@@ -322,7 +341,7 @@ if config_env() == :prod && !disable_cron do
 else
   config :plausible, Oban,
     repo: Plausible.Repo,
-    queues: false,
+    queues: [google_analytics_imports: 1],
     plugins: false
 end
 
@@ -395,20 +414,20 @@ config :logger, Sentry.LoggerBackend,
   level: :error,
   excluded_domains: []
 
-if honeycomb_api_key && honeycomb_dataset do
-  config :opentelemetry, :processors,
-    otel_batch_processor: %{
-      exporter:
-        {:opentelemetry_exporter,
-         %{
-           endpoints: ['https://api.honeycomb.io:443'],
-           headers: [
-             {"x-honeycomb-team", honeycomb_api_key},
-             {"x-honeycomb-dataset", honeycomb_dataset}
-           ]
-         }}
-    }
-end
+# if honeycomb_api_key && honeycomb_dataset do
+#   config :opentelemetry, :processors,
+#     otel_batch_processor: %{
+#       exporter:
+#         {:opentelemetry_exporter,
+#          %{
+#            endpoints: ['https://api.honeycomb.io:443'],
+#            headers: [
+#              {"x-honeycomb-team", honeycomb_api_key},
+#              {"x-honeycomb-dataset", honeycomb_dataset}
+#            ]
+#          }}
+#     }
+# end
 
 config :tzdata,
        :data_dir,
