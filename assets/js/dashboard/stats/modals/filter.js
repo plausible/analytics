@@ -25,10 +25,11 @@ export const FILTER_GROUPS = {
 
 function getFormState(filterGroup, query) {
   return FILTER_GROUPS[filterGroup].reduce((result, filter) => {
-    const filterValue = query.filters[filter] || ''
-    let filterName = filterValue
+    const rawFilterValue = query.filters[filter] || ''
+    const type = toFilterType(rawFilterValue)
+    const filterValue = valueWithoutPrefix(rawFilterValue)
 
-    const type = toFilterType(filterValue)
+    let filterName = filterValue
 
     if (filter === 'country' && filterValue !== '') {
       filterName = (new URLSearchParams(window.location.search)).get('country_name')
@@ -49,25 +50,37 @@ const filterTypes = {
   is: 'is'
 }
 
-function toFilterType(filter) {
-  switch (filter[0]) {
-    case '!': return filterTypes.isNot
-    case '~': return filterTypes.contains
+const filterPrefixes = {
+  isNot: '!',
+  contains: '~',
+  is: ''
+}
+
+export function toFilterType(value) {
+  switch (value[0]) {
+    case filterPrefixes.isNot: return filterTypes.isNot
+    case filterPrefixes.contains: return filterTypes.contains
     default: return filterTypes.is
   }
+}
+
+export function valueWithoutPrefix(value) {
+  return [filterTypes.isNot, filterTypes.contains].includes(toFilterType(value))
+      ? value.substring(1)
+      : value
 }
 
 function toFilterQuery(value, type) {
   let prefix;
   switch (type) {
     case filterTypes.isNot:
-      prefix = "!";
+      prefix = filterPrefixes.isNot;
       break;
     case filterTypes.contains:
-      prefix = "~";
+      prefix = filterPrefixes.contains;
       break;
     default:
-      prefix = "";
+      prefix = filterPrefixes.is;
       break;
   }
   return prefix + value.trim();
