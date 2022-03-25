@@ -32,14 +32,15 @@ body:
         - label: >-
             This is a bug report and not a feature request, nor asking for self-hosted support
           required: true
-  - type: checkboxes
+  - type: dropdown
     id: version
     attributes:
       label: Using official cloud hosting or self-hosting?
       options:
         - label: I'm using Plausible Cloud from Plausible.io
         - label: I'm self-hosting
-          required: true
+      validations:
+        required: true
   - type: textarea
     id: bug-description
     attributes:
