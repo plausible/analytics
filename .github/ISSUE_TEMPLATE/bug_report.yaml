@@ -39,8 +39,8 @@ body:
       options:
         - label: I'm using Plausible Cloud from Plausible.io
         - label: I'm self-hosting
-      validations:
-        required: true
+    validations:
+      required: true
   - type: textarea
     id: bug-description
     attributes:
