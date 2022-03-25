@@ -7,11 +7,14 @@
   - "MLD"
   - "MCD"
   - "YNS"
+  - "GRI"
+  - "HAR"
+  - "ADR"
+  - "CLR"
+  - ""
 - "AmigaOS":
   - "AMG"
   - "MOR"
-- "Apple TV":
-  - "ATV"
 - "BlackBerry":
   - "BLB"
   - "QNX"
@@ -22,6 +25,8 @@
   - "HAI"
 - "Chrome OS":
   - "COS"
+  - "FYD"
+  - "SEE"
 - "Firefox OS":
   - "FOS"
   - "KOS"
@@ -34,6 +39,9 @@
   - "OS2"
 - "iOS":
   - "IOS"
+  - "ATV"
+  - "WAS"
+  - "IPA"
 - "RISC OS":
   - "ROS"
 - "GNU/Linux":
@@ -59,6 +67,32 @@
   - "SAF"
   - "ORD"
   - "TOS"
+  - "RSO"
+  - "DEE"
+  - "FRE"
+  - "MAG"
+  - "FEN"
+  - "CAI"
+  - "PCL"
+  - "HAS"
+  - "LOS"
+  - "DVK"
+  - "ROK"
+  - "OWR"
+  - "OTV"
+  - "KTV"
+  - "PUR"
+  - "PLA"
+  - "FUC"
+  - "PAR"
+  - "FOR"
+  - "MON"
+  - "KAN"
+  - "ZEN"
+  - "LND"
+  - "LNS"
+  - "CHN"
+  - ""
 - "Mac":
   - "MAC"
 - "Mobile Gaming Console":
@@ -68,6 +102,9 @@
 - "Real-time OS":
   - "MTK"
   - "TDX"
+  - "MRE"
+  - "JME"
+  - "REX"
 - "Other Mobile":
   - "WOS"
   - "POS"
@@ -103,3 +140,5 @@
   - "WCE"
   - "WRT"
   - "WIO"
+- "Other Smart TV":
+  - "WHS"

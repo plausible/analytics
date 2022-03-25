@@ -65,7 +65,7 @@ defmodule Plausible.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:ref_inspector, "~> 1.3"},
       {:timex, "~> 3.6"},
-      {:ua_inspector, "~> 2.2"},
+      {:ua_inspector, "~> 3.0"},
       {:bamboo, "~> 2.2"},
       {:hackney, "~> 1.8"},
       {:bamboo_phoenix, "~> 1.0.0"},
