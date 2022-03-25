@@ -427,7 +427,6 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{"name" => "Unique visitors", "value" => 2, "change" => 100} in res["top_stats"]
     end
 
-
     test "returns only visitors with specific screen size", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, screen_size: "Desktop"),
