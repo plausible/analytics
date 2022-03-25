@@ -46,26 +46,29 @@ const filterTypes = {
   isNot: 'is not',
   contains: 'contains',
   is: 'is'
-}
+};
 
 const filterPrefixes = {
   isNot: '!',
   contains: '~',
   is: ''
-}
+};
 
 export function toFilterType(value) {
   switch (value[0]) {
-    case filterPrefixes.isNot: return filterTypes.isNot
-    case filterPrefixes.contains: return filterTypes.contains
-    default: return filterTypes.is
+    case filterPrefixes.isNot:
+      return filterTypes.isNot;
+    case filterPrefixes.contains:
+      return filterTypes.contains;
+    default:
+      return filterTypes.is;
   }
 }
 
 export function valueWithoutPrefix(value) {
   return [filterTypes.isNot, filterTypes.contains].includes(toFilterType(value))
-      ? value.substring(1)
-      : value
+    ? value.substring(1)
+    : value;
 }
 
 function toFilterQuery(value, type) {
