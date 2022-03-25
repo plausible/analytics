@@ -13,7 +13,7 @@ body:
        Have a feature request? Please search the ideas [on our forum](https://github.com/plausible/analytics/discussions/categories/feature-requests) to make sure that the feature has not yet been requested. If you cannot find what you had in mind, please [submit your feature request here](https://github.com/plausible/analytics/discussions/new).
 
        Have an issue with your self-hosted install? Self-hosted is community supported and you can ask in [our self-hosted forum](https://github.com/plausible/analytics/discussions/categories/self-hosted-support).
-       
+
        Note also that self-hosted is a long term release published twice per year so latest features won’t be immediately available as they’re battled-tested in the cloud first. Take a look [at this list for features available in the self-hosted](https://github.com/plausible/analytics/releases).
 
        **Thanks!**
@@ -33,13 +33,13 @@ body:
             This is a bug report and not a feature request, nor asking for self-hosted support
           required: true
   - type: checkboxes
-  id: version
-  attributes:
-    label: Using Plausible managed hosting or self-hosting?
-    options:
-      - label: Plausible Analytics from Plausible.io
-        required: true
-      - label: I'm self-hosting
+    id: version
+    attributes:
+      label: Using official cloud hosting or self-hosting?
+      options:
+        - label: I'm using Plausible Cloud from Plausible.io
+        - label: I'm self-hosting
+          required: true
   - type: textarea
     id: bug-description
     attributes:
