@@ -11,15 +11,13 @@ import * as api from '../../api'
 import {apiPath, siteBasePath} from '../../util/url'
 
 export const FILTER_GROUPS = {
-  'page': ['page'],
+  'page': ['page', 'entry_page', 'exit_page'],
   'source': ['source', 'referrer'],
   'location': ['country', 'region', 'city'],
   'screen': ['screen'],
   'browser': ['browser', 'browser_version'],
   'os': ['os', 'os_version'],
   'utm': ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
-  'entry_page': ['entry_page'],
-  'exit_page': ['exit_page'],
   'goal': ['goal']
 }
 
