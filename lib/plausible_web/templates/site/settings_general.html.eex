@@ -47,9 +47,14 @@
   </div>
 <% end %>
 
-<%= if Application.get_env(:plausible, :environment) == "prod" && @conn.assigns[:current_user].id in Application.get_env(:plausible, :import_testers) do %>
 <div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
-  <header class="relative">
+
+    <div class="w-full px-4 py-4 text-sm text-yellow-800 bg-yellow-100 rounded transition" role="alert">
+      <b>Feature preview:</b> Import from Google Analytics is ready to be tested, but it's not completely finalized yet. Please leave your
+      feedback on the relevant <%= link("Github Discussion", to: "https://github.com/plausible/analytics/discussions/1794", target: "_blank", class: "underline") %> so we can improve the feature.
+    </div>
+
+  <header class="relative mt-4">
     <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Data Import from Google Analytics</h2>
     <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">Import existing data from your Google Analytics account.</p>
     <%= link(to: "https://docs.plausible.io/import-data/", target: "_blank", rel: "noreferrer") do %>
@@ -112,4 +117,3 @@
     </div>
   <% end %>
 </div>
-<% end %>
