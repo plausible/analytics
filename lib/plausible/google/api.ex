@@ -143,9 +143,15 @@ defmodule Plausible.Google.Api do
           Jason.decode!(res.body)
           |> Map.get("items")
           |> Enum.map(fn item ->
-            uri = URI.parse(Map.get(item, "websiteUrl"))
+            uri = URI.parse(Map.get(item, "websiteUrl", ""))
+
+            if !uri.host do
+              Sentry.capture_message("No URI for view ID", extra: Jason.decode!(res.body))
+            end
+
+            host = uri.host || Map.get(item, "id", "")
             name = Map.get(item, "name")
-            {"#{uri.host} - #{name}", Map.get(item, "id")}
+            {"#{host} - #{name}", Map.get(item, "id")}
           end)
           |> Map.new()
 
