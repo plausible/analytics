@@ -28,7 +28,7 @@ function getFormState(filterGroup, query) {
     const filterValue = query.filters[filter] || ''
     let filterName = filterValue
 
-    const type = filterValue[0] === '!' ? 'is_not' : 'is'
+    const type = toFilterType(filterValue)
 
     if (filter === 'country' && filterValue !== '') {
       filterName = (new URLSearchParams(window.location.search)).get('country_name')
@@ -41,6 +41,40 @@ function getFormState(filterGroup, query) {
     }
     return Object.assign(result, {[filter]: {name: filterName, value: filterValue, type}})
   }, {})
+}
+
+const filterTypes = {
+  isNot: 'is not',
+  contains: 'contains',
+  is: 'is'
+}
+
+function toFilterType(filter) {
+  switch (filter[0]) {
+    case '!': return filterTypes.isNot
+    case '~': return filterTypes.contains
+    default: return filterTypes.is
+  }
+}
+
+function toFilterQuery(value, type) {
+  let prefix;
+  switch (type) {
+    case filterTypes.isNot:
+      prefix = "!";
+      break;
+    case filterTypes.contains:
+      prefix = "~";
+      break;
+    default:
+      prefix = "";
+      break;
+  }
+  return prefix + value.trim();
+}
+
+function supportsContains(filterName) {
+  return ['page', 'entry_page', 'exit_page'].includes(filterName)
 }
 
 function withIndefiniteArticle(word) {
@@ -113,10 +147,7 @@ class FilterModal extends React.Component {
       if (filterKey === 'region') { res.push({filter: 'region_name', value: name}) }
       if (filterKey === 'city') { res.push({filter: 'city_name', value: name}) }
 
-      let finalFilterValue = value
-      finalFilterValue = (type === 'is_not' ? '!' : '') + finalFilterValue.trim()
-
-      res.push({filter: filterKey, value: finalFilterValue})
+      res.push({filter: filterKey, value: toFilterQuery(value, type)})
       return res
     }, [])
 
@@ -239,34 +270,9 @@ class FilterModal extends React.Component {
                 className="z-10 origin-top-left absolute left-0 mt-2 w-24 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none"
               >
                 <div className="py-1">
-                  <Menu.Item>
-                    {({ active }) => (
-                      <span
-                        onClick={() => this.setFilterType(filterName, 'is')}
-                        className={classNames(
-                          active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-200',
-                          'cursor-pointer block px-4 py-2 text-sm'
-                        )}
-                      >
-                        is
-                      </span>
-                    )}
-                  </Menu.Item>
-                  { filterName !== 'goal' && (
-                    <Menu.Item>
-                      {({ active }) => (
-                        <span
-                          onClick={() => this.setFilterType(filterName, 'is_not')}
-                          className={classNames(
-                            active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-200',
-                            'cursor-pointer block px-4 py-2 text-sm'
-                          )}
-                        >
-                          is not
-                        </span>
-                      )}
-                    </Menu.Item>
-                  )}
+                  { this.renderTypeItem(filterName, filterTypes.is, true) }
+                  { this.renderTypeItem(filterName, filterTypes.isNot, filterName !== 'goal') }
+                  { this.renderTypeItem(filterName, filterTypes.contains, supportsContains(filterName)) }
                 </div>
               </Menu.Items>
             </Transition>
@@ -276,9 +282,29 @@ class FilterModal extends React.Component {
     )
   }
 
-  renderBody() {
-    const { selectedFilterGroup, query } = this.state;
-    const showClear = FILTER_GROUPS[selectedFilterGroup].some((filterName) => query.filters[filterName])
+  renderTypeItem(filterName, type, shouldDisplay) {
+    return (
+      shouldDisplay && (
+        <Menu.Item>
+          {({ active }) => (
+            <span
+              onClick={() => this.setFilterType(filterName, type)}
+              className={classNames(
+                active ? "bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100" : "text-gray-700 dark:text-gray-200",
+                "cursor-pointer block px-4 py-2 text-sm"
+              )}
+            >
+              { type }
+            </span>
+          )}
+        </Menu.Item>
+      )
+    );
+  }
+
+    renderBody() {
+      const { selectedFilterGroup, query } = this.state;
+      const showClear = FILTER_GROUPS[selectedFilterGroup].some((filterName) => query.filters[filterName])
 
     return (
       <>
