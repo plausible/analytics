@@ -169,6 +169,14 @@ site_limit_exempt =
   |> String.split(",")
   |> Enum.map(&String.trim/1)
 
+import_testers =
+  config_dir
+  |> get_var_from_path_or_env("IMPORT_TESTERS", "")
+  |> String.split(",")
+  |> Enum.map(&String.trim/1)
+  |> Enum.filter(&(&1 !== ""))
+  |> Enum.map(&String.to_integer/1)
+
 disable_cron =
   config_dir
   |> get_var_from_path_or_env("DISABLE_CRON", "false")
@@ -193,6 +201,7 @@ config :plausible,
   super_admin_user_ids: super_admin_user_ids,
   site_limit: site_limit,
   site_limit_exempt: site_limit_exempt,
+  import_testers: import_testers,
   is_selfhost: is_selfhost,
   custom_script_name: custom_script_name,
   domain_blacklist: domain_blacklist
