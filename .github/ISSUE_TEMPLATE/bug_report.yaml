@@ -35,10 +35,10 @@ body:
   - type: dropdown
     id: version
     attributes:
-      label: Using official cloud hosting or self-hosting?
+      label: Using official Plausible Cloud hosting or self-hosting?
       options:
-        - label: I'm using Plausible Cloud from Plausible.io
-        - label: I'm self-hosting
+        - Plausible Cloud from plausible.io
+        - Self-hosting
     validations:
       required: true
   - type: textarea
