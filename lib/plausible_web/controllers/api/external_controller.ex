@@ -77,10 +77,11 @@ defmodule PlausibleWeb.Api.ExternalController do
       "referrer" => params["r"] || params["referrer"],
       "domain" => params["d"] || params["domain"],
       "screen_width" => params["w"] || params["screen_width"],
-      "hash_mode" => params["h"] || params["hashMode"],
-      "meta" => parse_meta(params),
-      "company_id" => parse_company_id(params)
+      "hash_mode" => params["h"] || params["hashMode"]
     }
+
+    additional_params = parse_additional_params(params)
+    params = Map.merge(params, additional_params)
 
     ua = parse_user_agent(conn)
 
@@ -111,6 +112,9 @@ defmodule PlausibleWeb.Api.ExternalController do
         utm_content: query["utm_content"],
         utm_term: query["utm_term"],
         company_id: params["company_id"],
+        job_id: params["job_id"],
+        page_id: params["page_id"],
+        site_id: params["site_id"],
         country_code: location_details[:country_code],
         country_geoname_id: location_details[:country_geoname_id],
         subdivision1_code: location_details[:subdivision1_code],
@@ -186,9 +190,14 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp parse_company_id(params) do
+  defp parse_additional_params(params) do
+    additional_param_names = ["company_id", "job_id", "page_id", "site_id"]
+
     meta = parse_meta(params)
-    Map.get(meta, "company_id")
+
+    meta
+    |> Map.take(additional_param_names)
+    |> Map.merge(%{"meta" => Map.drop(meta, additional_param_names)})
   end
 
   defp validate_custom_props(props) do

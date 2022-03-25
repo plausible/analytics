@@ -9,6 +9,7 @@ defmodule Plausible.ClickhouseSession do
     field :user_id, :integer
     field :session_id, :integer
     field :company_id, :integer
+    field :site_id, :integer
 
     field :start, :naive_datetime
     field :duration, :integer
@@ -68,6 +69,7 @@ defmodule Plausible.ClickhouseSession do
       :country_code,
       :country_geoname_id,
       :company_id,
+      :site_id,
       :subdivision1_code,
       :subdivision2_code,
       :city_geoname_id,
