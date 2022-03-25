@@ -54,7 +54,7 @@ defmodule Plausible.Billing do
       case Repo.update(changeset) do
         {:ok, updated} ->
           PlausibleWeb.Email.cancellation_email(subscription.user)
-          |> Plausible.Mailer.send_email()
+          |> Plausible.Mailer.send_email_safe()
 
           {:ok, updated}
 

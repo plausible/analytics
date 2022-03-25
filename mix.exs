@@ -17,7 +17,7 @@ defmodule Plausible.MixProject do
       releases: [
         plausible: [
           include_executables_for: [:unix],
-          applications: [plausible: :permanent, opentelemetry: :temporary],
+          applications: [plausible: :permanent],
           steps: [:assemble, :tar]
         ]
       ],
@@ -54,7 +54,7 @@ defmodule Plausible.MixProject do
       {:combination, "~> 0.0.3"},
       {:cors_plug, "~> 2.0"},
       {:ecto_sql, "~> 3.0"},
-      {:elixir_uuid, "~> 1.2"},
+      {:elixir_uuid, "~> 1.2", only: :test},
       {:jason, "~> 1.2"},
       {:phoenix, "~> 1.5.0"},
       {:phoenix_ecto, "~> 4.0"},
@@ -82,7 +82,6 @@ defmodule Plausible.MixProject do
       {:nanoid, "~> 2.0.2"},
       {:siphash, "~> 3.2"},
       {:oban, "~> 2.0"},
-      {:sshex, "2.2.1"},
       {:geolix, "~> 1.0"},
       {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
       {:location, git: "https://github.com/plausible/location.git"},
@@ -95,14 +94,8 @@ defmodule Plausible.MixProject do
       {:phoenix_pagination, "~> 0.7.0"},
       {:hammer, "~> 6.0"},
       {:public_suffix, git: "https://github.com/axelson/publicsuffix-elixir"},
-      {:telemetry, "~> 1.0", override: true},
-      {:opentelemetry, "1.0.0-rc.3"},
-      {:open_telemetry_decorator, "~> 1.0.0-rc.3"},
-      {:opentelemetry_exporter, "1.0.0-rc.3"},
-      {:opentelemetry_phoenix, "1.0.0-rc.5"},
-      {:opentelemetry_ecto, "1.0.0-rc.3"},
-      {:opentelemetry_oban, "~> 0.2.0-rc.2"},
-      {:floki, "~> 0.32.0", only: :test}
+      {:floki, "~> 0.32.0", only: :test},
+      {:referrer_blocklist, git: "https://github.com/plausible/referrer-blocklist.git"}
     ]
   end
 

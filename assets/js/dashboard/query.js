@@ -23,6 +23,7 @@ export function parseQuery(querystring, site) {
     date: q.get('date') ? parseUTCDate(q.get('date')) : nowForSite(site),
     from: q.get('from') ? parseUTCDate(q.get('from')) : undefined,
     to: q.get('to') ? parseUTCDate(q.get('to')) : undefined,
+    with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
     filters: {
       'goal': q.get('goal'),
       'props': JSON.parse(q.get('props')),

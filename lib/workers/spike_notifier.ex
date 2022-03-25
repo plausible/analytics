@@ -19,7 +19,7 @@ defmodule Plausible.Workers.SpikeNotifier do
       )
 
     for notification <- notifications do
-      query = Query.from(notification.site.timezone, %{"period" => "realtime"})
+      query = Query.from(notification.site, %{"period" => "realtime"})
       current_visitors = clickhouse.current_visitors(notification.site, query)
 
       if current_visitors >= notification.threshold do

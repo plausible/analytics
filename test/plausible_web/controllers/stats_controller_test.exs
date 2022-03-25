@@ -39,9 +39,60 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "can not view stats of someone else's website", %{conn: conn} do
-      conn = get(conn, "/some-other-site.com")
+      site = insert(:site)
+      conn = get(conn, site.domain)
       assert html_response(conn, 404) =~ "There&#39;s nothing here"
     end
+  end
+
+  describe "GET /:website - as a super admin" do
+    setup [:create_user, :make_user_super_admin, :log_in]
+
+    test "can view a private dashboard with stats", %{conn: conn} do
+      site = insert(:site)
+      populate_stats(site, [build(:pageview)])
+
+      conn = get(conn, "/" <> site.domain)
+      assert html_response(conn, 200) =~ "stats-react-container"
+    end
+
+    test "can view a private dashboard without stats", %{conn: conn} do
+      site = insert(:site)
+
+      conn = get(conn, "/" <> site.domain)
+      assert html_response(conn, 200) =~ "Need to see the snippet again?"
+    end
+
+    test "can view a private locked dashboard with stats", %{conn: conn} do
+      user = insert(:user)
+      site = insert(:site, locked: true, members: [user])
+      populate_stats(site, [build(:pageview)])
+
+      conn = get(conn, "/" <> site.domain)
+      assert html_response(conn, 200) =~ "stats-react-container"
+      assert html_response(conn, 200) =~ "This dashboard is actually locked"
+    end
+
+    test "can view a private locked dashboard without stats", %{conn: conn} do
+      user = insert(:user)
+      site = insert(:site, locked: true, members: [user])
+
+      conn = get(conn, "/" <> site.domain)
+      assert html_response(conn, 200) =~ "Need to see the snippet again?"
+      assert html_response(conn, 200) =~ "This dashboard is actually locked"
+    end
+
+    test "can view a locked public dashboard", %{conn: conn} do
+      site = insert(:site, locked: true, public: true)
+      populate_stats(site, [build(:pageview)])
+
+      conn = get(conn, "/" <> site.domain)
+      assert html_response(conn, 200) =~ "stats-react-container"
+    end
+  end
+
+  defp make_user_super_admin(%{user: user}) do
+    Application.put_env(:plausible, :super_admin_user_ids, [user.id])
   end
 
   describe "GET /:website/export" do
@@ -112,6 +163,8 @@ defmodule PlausibleWeb.StatsControllerTest do
     populate_stats(site, [
       build(:pageview,
         country_code: "EE",
+        subdivision1_code: "EE-37",
+        city_geoname_id: 588_409,
         pathname: "/",
         timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -1),
         referrer_source: "Google",
@@ -119,6 +172,8 @@ defmodule PlausibleWeb.StatsControllerTest do
       ),
       build(:pageview,
         country_code: "EE",
+        subdivision1_code: "EE-37",
+        city_geoname_id: 588_409,
         pathname: "/some-other-page",
         timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -2),
         referrer_source: "Google",
@@ -231,6 +286,23 @@ defmodule PlausibleWeb.StatsControllerTest do
         insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
 
       conn = post(conn, "/share/#{link.slug}/authenticate", %{password: "WRONG!"})
+      assert html_response(conn, 200) =~ "Enter password"
+    end
+
+    test "only gives access to the correct dashboard", %{conn: conn} do
+      site = insert(:site, domain: "test-site.com")
+      site2 = insert(:site, domain: "test-site2.com")
+
+      link =
+        insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
+
+      link2 =
+        insert(:shared_link, site: site2, password_hash: Plausible.Auth.Password.hash("password1"))
+
+      conn = post(conn, "/share/#{link.slug}/authenticate", %{password: "password"})
+      assert redirected_to(conn, 302) == "/share/#{site.domain}?auth=#{link.slug}"
+
+      conn = get(conn, "/share/#{site2.domain}?auth=#{link2.slug}")
       assert html_response(conn, 200) =~ "Enter password"
     end
   end

@@ -13,11 +13,11 @@ import {apiPath, siteBasePath} from '../../util/url'
 export const FILTER_GROUPS = {
   'page': ['page'],
   'source': ['source', 'referrer'],
-  'country': ['country', 'region', 'city'],
+  'location': ['country', 'region', 'city'],
   'screen': ['screen'],
   'browser': ['browser', 'browser_version'],
   'os': ['os', 'os_version'],
-  'utm': ['utm_medium', 'utm_source', 'utm_campaign'],
+  'utm': ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
   'entry_page': ['entry_page'],
   'exit_page': ['exit_page'],
   'goal': ['goal']
@@ -56,9 +56,11 @@ function withIndefiniteArticle(word) {
 export function formatFilterGroup(filterGroup) {
   if (filterGroup === 'utm') {
     return 'UTM tags'
-  }
+  } else if (filterGroup === 'location') {
+    return 'Location'
+  } else {
     return formattedFilters[filterGroup]
-
+  }
 }
 
 export function filterGroupForFilter(filter) {
@@ -122,7 +124,7 @@ class FilterModal extends React.Component {
   }
 
   onSelect(filterName) {
-    if (this.state.selectedFilterGroup !== 'country') {
+    if (this.state.selectedFilterGroup !== 'location') {
       return () => {}
     }
 
@@ -134,7 +136,7 @@ class FilterModal extends React.Component {
   }
 
   onInput(filterName) {
-    if (this.state.selectedFilterGroup === 'country') {
+    if (this.state.selectedFilterGroup === 'location') {
       return () => {}
     }
 
@@ -187,12 +189,7 @@ class FilterModal extends React.Component {
   }
 
   renderFilterInputs() {
-    const groups = FILTER_GROUPS[this.state.selectedFilterGroup].filter((filterName) => {
-      if (['city', 'region'].includes(filterName)) {
-        return this.props.site.cities
-      }
-      return true
-    })
+    const groups = FILTER_GROUPS[this.state.selectedFilterGroup]
 
     return groups.map((filter) => {
       return (
@@ -325,7 +322,7 @@ class FilterModal extends React.Component {
   renderHints() {
     if (['page', 'entry_page', 'exit_page'].includes(this.state.selectedFilterGroup)) {
       return (
-        <p className="mt-6 text-xs text-gray-500">Hint: You can use double asterisks to match any character e.g. /blog**</p>
+        <p className="mt-6 text-xs text-gray-500">Hint: You can use double asterisks to match any character e.g. /blog** to group all of your blog posts. Or use double asterisks in front and back (e.g. **keyword**) to group all URLs containing a specific keyword.</p>
       )
     }
 

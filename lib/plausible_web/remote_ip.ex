@@ -1,19 +1,19 @@
 defmodule PlausibleWeb.RemoteIp do
   def get(conn) do
     cf_connecting_ip = List.first(Plug.Conn.get_req_header(conn, "cf-connecting-ip"))
-    forwarded_for = List.first(Plug.Conn.get_req_header(conn, "x-forwarded-for"))
+    x_forwarded_for = List.first(Plug.Conn.get_req_header(conn, "x-forwarded-for"))
+    b_forwarded_for = List.first(Plug.Conn.get_req_header(conn, "b-forwarded-for"))
     forwarded = List.first(Plug.Conn.get_req_header(conn, "forwarded"))
 
     cond do
       cf_connecting_ip ->
-        cf_connecting_ip
-        |> clean_ip
+        clean_ip(cf_connecting_ip)
 
-      forwarded_for ->
-        String.split(forwarded_for, ",")
-        |> Enum.map(&String.trim/1)
-        |> List.first()
-        |> clean_ip
+      b_forwarded_for ->
+        parse_forwarded_for(b_forwarded_for)
+
+      x_forwarded_for ->
+        parse_forwarded_for(x_forwarded_for)
 
       forwarded ->
         Regex.named_captures(~r/for=(?<for>[^;,]+).*$/, forwarded)
@@ -40,5 +40,12 @@ defmodule PlausibleWeb.RemoteIp do
     ip
     |> String.trim_leading("[")
     |> String.trim_trailing("]")
+  end
+
+  defp parse_forwarded_for(header) do
+    String.split(header, ",")
+    |> Enum.map(&String.trim/1)
+    |> List.first()
+    |> clean_ip
   end
 end

@@ -129,7 +129,7 @@ defmodule PlausibleWeb.Router do
   scope "/", PlausibleWeb do
     pipe_through [:shared_link]
 
-    get "/share/:slug", StatsController, :shared_link
+    get "/share/:domain", StatsController, :shared_link
     post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
   end
 
@@ -201,10 +201,6 @@ defmodule PlausibleWeb.Router do
     put "/sites/:website/shared-links/:slug", SiteController, :update_shared_link
     delete "/sites/:website/shared-links/:slug", SiteController, :delete_shared_link
 
-    get "/sites/:website/custom-domains/new", SiteController, :new_custom_domain
-    get "/sites/:website/custom-domains/dns-setup", SiteController, :custom_domain_dns_setup
-    get "/sites/:website/custom-domains/snippet", SiteController, :custom_domain_snippet
-    post "/sites/:website/custom-domains", SiteController, :add_custom_domain
     delete "/sites/:website/custom-domains/:id", SiteController, :delete_custom_domain
 
     get "/sites/:website/memberships/invite", Site.MembershipController, :invite_member_form
@@ -238,9 +234,24 @@ defmodule PlausibleWeb.Router do
     delete "/:website/goals/:id", SiteController, :delete_goal
     put "/:website/settings", SiteController, :update_settings
     put "/:website/settings/google", SiteController, :update_google_auth
-    delete "/:website/settings/google", SiteController, :delete_google_auth
+    delete "/:website/settings/google-search", SiteController, :delete_google_auth
+    delete "/:website/settings/google-import", SiteController, :delete_google_auth
     delete "/:website", SiteController, :delete_site
     delete "/:website/stats", SiteController, :reset_stats
+
+    get "/:website/import/google-analytics/view-id",
+        SiteController,
+        :import_from_google_view_id_form
+
+    post "/:website/import/google-analytics/view-id", SiteController, :import_from_google_view_id
+
+    get "/:website/import/google-analytics/user-metric",
+        SiteController,
+        :import_from_google_user_metric_notice
+
+    get "/:website/import/google-analytics/confirm", SiteController, :import_from_google_confirm
+    post "/:website/settings/google-import", SiteController, :import_from_google
+    delete "/:website/settings/forget-imported", SiteController, :forget_imported
 
     get "/:domain/export", StatsController, :csv_export
     get "/:domain/*path", StatsController, :stats

@@ -317,7 +317,7 @@ export default class SourceList extends React.Component {
             leaveFrom="transform opacity-100 scale-100"
             leaveTo="transform opacity-0 scale-95"
           >
-            <Menu.Items className="text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+            <Menu.Items className="text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
               <div className="py-1">
                 { dropdownOptions.map((option) => {
                   return (
@@ -326,7 +326,7 @@ export default class SourceList extends React.Component {
                         <span
                           onClick={this.setTab(option)}
                           className={classNames(
-                            active ? 'bg-gray-100 text-gray-900 cursor-pointer' : 'text-gray-700',
+                            active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer' : 'text-gray-700 dark:text-gray-200',
                             'block px-4 py-2 text-sm',
                             this.state.tab === option ? 'font-bold' : ''
                           )}

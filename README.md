@@ -28,7 +28,7 @@ We are dedicated to making web analytics more privacy-friendly. Our mission is t
 Here's what makes Plausible a great Google Analytics alternative and why we're trusted by thousands of paying subscribers to deliver their website and business insights:
 
 - **Clutter Free**: Plausible Analytics provides [simple web analytics](https://plausible.io/simple-web-analytics) and it cuts through the noise. No layers of menus, no need for custom reports. Get all the important insights on one single page. No training necessary.
-- **GDPR/CCPA/PECR compliant**: Measure traffic, not individuals. No personal data or IP addresses are ever stored in our database. We don't use cookies or any other persistent idenfitiers. [Read more about our data policy](https://plausible.io/data-policy)
+- **GDPR/CCPA/PECR compliant**: Measure traffic, not individuals. No personal data or IP addresses are ever stored in our database. We don't use cookies or any other persistent identifiers. [Read more about our data policy](https://plausible.io/data-policy)
 - **Lightweight**: Plausible Analytics works by loading a script on your website, like Google Analytics. Our script is [45x smaller](https://plausible.io/lightweight-web-analytics), making your website quicker to load.
 - **Email or Slack reports**: Keep an eye on your traffic with weekly and/or monthly email or Slack reports. You can also get traffic spike notifications.
 - **Open website stats**: You have the option to be transparent and open your web analytics to everyone. Your website stats are private by default but you can choose to make them public so anyone with your custom link can view them.
@@ -52,6 +52,8 @@ We choose the subscription business model rather than the business model of surv
 
 The easiest way to get started with Plausible is with [our official managed service in the Cloud](https://plausible.io/#pricing). It takes 2 minutes to start counting your stats with a worldwide CDN, high availability, backups, security and maintenance all done for you by us.
 
+In order to be compliant with the GDPR and the Schrems II ruling, all visitor data for our managed service in the Cloud is exclusively processed on servers and cloud infrastructure owned and operated by European providers. Your website data never leaves the EU.
+
 Our managed hosting can save a substantial amount of developer time and resources. For most sites this ends up being the best value option and the revenue goes to funding the maintenance and further development of Plausible. So you’ll be supporting open source software and getting a great service!
 
 ### Can Plausible Analytics be self-hosted?
@@ -68,7 +70,8 @@ The main difference between the two is that the self-hosted version you have to 
 | Storage | We keep your site data on a secure, encrypted and green energy powered server in Germany. A server that ensures that your site data is protected by the strict European Union data privacy laws.  | You have full control and can host your Plausible Analytics on any server in any country that you wish. Host it on a server in your basement or host it with any cloud provider wherever you want.  |
 | Raw data | You see all your site stats and metrics on our modern-looking, simple to use and fast loading dashboard. You can only see the stats aggregated in the dashboard.  | Are you an analyst and want access to the raw data? Hosting Plausible yourself gives you that option. Take the data directly from the ClickHouse database and import it to a data analysis tool of your choice.  |
 | Costs | There’s a cost associated with providing an analytics service so we charge a subscription fee. We choose the subscription business model rather than the business model of surveillance capitalism.  | You only need to pay for your server and whatever cost there is associated with running a server. You never have to pay any fees to us, only to your cloud provider.  |
-| Releases | Continuously developed and improved with new features and frequent updates.  | [It’s a long term release](https://plausible.io/blog/building-open-source) so latest features won’t be immediately available as they’re battled-tested in the cloud before released to self-hosted.  |
+| Support | Premium support is available via email. | Community support only.|
+| Releases | Continuously developed and improved with new features and updates multiple times per week. | [It's a long term release](https://plausible.io/blog/building-open-source) published twice per year so latest features won't be immediately available as they're battled-tested in the cloud first.|
 
 Interested in self-hosting Plausible on your server? Take a look at our [self-hosting installation instructions](https://plausible.io/docs/self-hosting).
 
@@ -84,6 +87,8 @@ database for stats. On the frontend we use [TailwindCSS](https://tailwindcss.com
 ## Contributors
 
 For anyone wishing to contribute to Plausible, we recommend taking a look at [our contributor guide](https://github.com/plausible/analytics/blob/master/CONTRIBUTING.md).
+
+<a href="https://github.com/plausible/analytics/graphs/contributors"><img src="https://opencollective.com/plausible/contributors.svg?width=800&button=false" /></a>
 
 ## Feedback & Roadmap
 

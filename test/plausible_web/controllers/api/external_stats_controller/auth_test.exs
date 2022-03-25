@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
   end
 
   test "can access as an admin", %{conn: conn, user: user, api_key: api_key} do
-    Application.put_env(:plausible, :admin_user_ids, [user.id])
+    Application.put_env(:plausible, :super_admin_user_ids, [user.id])
     site = insert(:site)
 
     conn =

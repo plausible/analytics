@@ -1,6 +1,6 @@
 defmodule Plausible.Sites do
   use Plausible.Repo
-  alias Plausible.Site.{CustomDomain, SharedLink}
+  alias Plausible.Site.SharedLink
 
   def create(user, params) do
     count = Enum.count(owned_by(user))
@@ -52,6 +52,14 @@ defmodule Plausible.Sites do
       else
         false
       end
+    end
+  end
+
+  def stats_begin(site) do
+    if site.imported_data do
+      site.imported_data.start_date
+    else
+      site.inserted_at
     end
   end
 
@@ -148,13 +156,5 @@ defmodule Plausible.Sites do
   def delete!(site) do
     Repo.delete!(site)
     Plausible.ClickhouseRepo.clear_stats_for(site.domain)
-  end
-
-  def add_custom_domain(site, custom_domain) do
-    CustomDomain.changeset(%CustomDomain{}, %{
-      site_id: site.id,
-      domain: custom_domain
-    })
-    |> Repo.insert()
   end
 end

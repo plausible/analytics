@@ -30,11 +30,11 @@ export default function ListReport(props) {
   const [state, setState] = useState({loading: true, list: null})
   const valueKey = props.valueKey || 'visitors'
   const showConversionRate = !!props.query.filters.goal
-  const prevProps = useRef();
+  const prevQuery = useRef();
 
   function fetchData() {
-    if (typeof(prevProps.current) === 'undefined' || prevProps.current !== props) {
-      prevProps.current = props;
+    if (typeof(prevQuery.current) === 'undefined' || prevQuery.current !== props.query) {
+      prevQuery.current = props.query;
       setState({loading: true, list: null})
       props.fetchData()
         .then((res) => setState({loading: false, list: res}))

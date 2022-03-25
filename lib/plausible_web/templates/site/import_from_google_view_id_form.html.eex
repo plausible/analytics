@@ -1,0 +1,22 @@
+<%= form_for @conn, Routes.site_path(@conn, :import_from_google_view_id, @site.domain), [class: "max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
+  <h2 class="text-xl font-black dark:text-gray-100">Import from Google Analytics</h2>
+
+  <%= hidden_input(f, :access_token, value: @access_token) %>
+
+  <%= case @view_ids do %>
+    <% {:ok, view_ids} -> %>
+
+      <div class="mt-6 text-sm text-gray-500 dark:text-gray-200">
+        Choose the view in your Google Analytics account that will be imported to the <%= @site.domain %> dashboard.
+      </div>
+
+      <div class="mt-3">
+        <%= styled_label(f, :view_id, "Google Analytics view") %>
+        <%= styled_select f, :view_id, view_ids, prompt: "(Choose view)", required: "true" %>
+      </div>
+    <% {:error, error} -> %>
+      <p class="text-gray-700 dark:text-gray-300 mt-6">The following error occurred when fetching your Google Analytics view ids.</p>
+      <p class="text-red-700 font-medium mt-3"><%= error %></p>
+    <% end %>
+    <%= submit "Continue ->", class: "button mt-6" %>
+<% end %>

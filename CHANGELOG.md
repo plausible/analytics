@@ -5,11 +5,10 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Integration with [Matomo's referrer spam list](https://github.com/matomo-org/referrer-spam-list/blob/master/spammers.txt) to block known spammers
 - API route `PUT /api/v1/sites/goals` with form params `site_id`, `event_name` and/or `page_path`, and `goal_type` with supported types `event` and `page`
 - API route `DELETE /api/v1/sites/goals/:goal_id` with form params `site_id`
 - The public breakdown endpoint can be queried with the "events" metric
-
-### Added
 - Data exported via the download button will contain CSV data for all visible graps in a zip file.
 - Region and city-level geolocation plausible/analytics#1449
 - The `u` option can now be used in the `manual` extension to specify a URL when triggering events.
@@ -17,10 +16,19 @@ All notable changes to this project will be documented in this file.
 - Subscribed users can see their Paddle invoices from the last 12 months under the user settings
 - Allow custom styles to be passed to embedded iframe plausible/analytics#1522
 - New UTM Tags `utm_content` and `utm_term` plausible/analytics#515
+- If a session was started without a screen_size it is updated if an event with screen_size occurs
+- Added `LISTEN_IP` configuration parameter plausible/analytics#1189
+- The breakdown endpoint with the property query `property=event:goal` returns custom goal properties (within `props`)
+- Added IPv6 Ecto support (via the environment-variable `ECTO_IPV6`)
 
 ### Fixed
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
 - UI fix to align footer columns
+- Guests can now use the favicon to toggle additional info about the site bing viewed (such as in public embeds).
+- Fix SecurityError in tracking script when user has blocked all local storage
+
+### Changed
+- Cache the tracking script for 24 hours
 
 ## v1.4.1
 
