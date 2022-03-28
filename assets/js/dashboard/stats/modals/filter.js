@@ -18,7 +18,8 @@ export const FILTER_GROUPS = {
   'browser': ['browser', 'browser_version'],
   'os': ['os', 'os_version'],
   'utm': ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
-  'goal': ['goal']
+  'goal': ['goal'],
+  'property': ['property', 'prop_value']
 }
 
 function getFormState(filterGroup, query) {
@@ -143,6 +144,12 @@ class FilterModal extends React.Component {
       if (filterKey === 'country') { res.push({filter: 'country_name', value: name}) }
       if (filterKey === 'region') { res.push({filter: 'region_name', value: name}) }
       if (filterKey === 'city') { res.push({filter: 'city_name', value: name}) }
+      if (filterKey === 'prop_value') {return res}
+      if (filterKey === 'property') {
+        let propValue = formState['prop_value'].value
+        res.push({filter: 'props', value: JSON.stringify({ [value]: propValue })})
+        return res
+      }
 
       res.push({filter: filterKey, value: toFilterQuery(value, type)})
       return res

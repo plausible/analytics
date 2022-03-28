@@ -175,5 +175,7 @@ export const formattedFilters = {
   'city': 'City',
   'page': 'Page',
   'entry_page': 'Entry Page',
-  'exit_page': 'Exit Page'
+  'exit_page': 'Exit Page',
+  'property': 'Property',
+  'prop_value': 'Property value'
 }
