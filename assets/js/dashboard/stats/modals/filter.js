@@ -42,48 +42,31 @@ function getFormState(filterGroup, query) {
   }, {})
 }
 
-const filterTypes = {
+const FILTER_TYPES = {
   isNot: 'is not',
   contains: 'contains',
   is: 'is'
 };
 
-const filterPrefixes = {
-  isNot: '!',
-  contains: '~',
-  is: ''
+const FILTER_PREFIXES = {
+  [FILTER_TYPES.isNot]: '!',
+  [FILTER_TYPES.contains]: '~',
+  [FILTER_TYPES.is]: ''
 };
 
 export function toFilterType(value) {
-  switch (value[0]) {
-    case filterPrefixes.isNot:
-      return filterTypes.isNot;
-    case filterPrefixes.contains:
-      return filterTypes.contains;
-    default:
-      return filterTypes.is;
-  }
+  return Object.keys(FILTER_PREFIXES)
+    .find(type => FILTER_PREFIXES[type] === value[0]) || FILTER_TYPES.is;
 }
 
 export function valueWithoutPrefix(value) {
-  return [filterTypes.isNot, filterTypes.contains].includes(toFilterType(value))
+  return [FILTER_TYPES.isNot, FILTER_TYPES.contains].includes(toFilterType(value))
     ? value.substring(1)
     : value;
 }
 
 function toFilterQuery(value, type) {
-  let prefix;
-  switch (type) {
-    case filterTypes.isNot:
-      prefix = filterPrefixes.isNot;
-      break;
-    case filterTypes.contains:
-      prefix = filterPrefixes.contains;
-      break;
-    default:
-      prefix = filterPrefixes.is;
-      break;
-  }
+  const prefix = FILTER_PREFIXES[type];
   return prefix + value.trim();
 }
 
@@ -284,9 +267,9 @@ class FilterModal extends React.Component {
                 className="z-10 origin-top-left absolute left-0 mt-2 w-24 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none"
               >
                 <div className="py-1">
-                  { this.renderTypeItem(filterName, filterTypes.is, true) }
-                  { this.renderTypeItem(filterName, filterTypes.isNot, filterName !== 'goal') }
-                  { this.renderTypeItem(filterName, filterTypes.contains, supportsContains(filterName)) }
+                  { this.renderTypeItem(filterName, FILTER_TYPES.is, true) }
+                  { this.renderTypeItem(filterName, FILTER_TYPES.isNot, filterName !== 'goal') }
+                  { this.renderTypeItem(filterName, FILTER_TYPES.contains, supportsContains(filterName)) }
                 </div>
               </Menu.Items>
             </Transition>
