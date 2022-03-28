@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 - UI fix to align footer columns
 - Guests can now use the favicon to toggle additional info about the site bing viewed (such as in public embeds).
 - Fix SecurityError in tracking script when user has blocked all local storage
+- Prevent dashboard graph from being selected when long pressing on the graph in a mobile browser
 
 ### Changed
 - Cache the tracking script for 24 hours

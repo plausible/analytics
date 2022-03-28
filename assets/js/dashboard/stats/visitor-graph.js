@@ -385,7 +385,7 @@ class LineGraph extends React.Component {
             { this.samplingNotice() }
             { this.importedNotice() }
           </div>
-          <canvas id="main-graph-canvas" className={'mt-4 ' + extraClass} width="1054" height="342"></canvas>
+          <canvas id="main-graph-canvas" className={'mt-4 select-none ' + extraClass} width="1054" height="342"></canvas>
         </div>
       </div>
     )
