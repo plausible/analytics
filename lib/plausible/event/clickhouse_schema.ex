@@ -4,6 +4,7 @@ defmodule Plausible.ClickhouseEvent do
 
   @primary_key false
   schema "events" do
+    field :event_id, :integer
     field :name, :string
     field :domain, :string
     field :hostname, :string
@@ -39,6 +40,10 @@ defmodule Plausible.ClickhouseEvent do
     field :"meta.value", {:array, :string}, default: []
   end
 
+  def random_event_id() do
+    :crypto.strong_rand_bytes(8) |> :binary.decode_unsigned()
+  end
+
   def new(attrs) do
     %__MODULE__{}
     |> cast(
@@ -49,6 +54,7 @@ defmodule Plausible.ClickhouseEvent do
         :hostname,
         :pathname,
         :user_id,
+        :event_id,
         :company_id,
         :site_id,
         :page_id,
@@ -75,6 +81,6 @@ defmodule Plausible.ClickhouseEvent do
       ],
       empty_values: [nil, ""]
     )
-    |> validate_required([:name, :domain, :hostname, :pathname, :user_id, :timestamp])
+    |> validate_required([:name, :domain, :hostname, :pathname, :event_id, :user_id, :timestamp])
   end
 end

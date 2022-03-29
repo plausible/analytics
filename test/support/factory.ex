@@ -83,6 +83,7 @@ defmodule Plausible.Factory do
       domain: hostname,
       pathname: "/",
       timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
+      event_id: Plausible.ClickhouseEvent.random_event_id(),
       user_id: SipHash.hash!(hash_key(), UUID.uuid4()),
       session_id: SipHash.hash!(hash_key(), UUID.uuid4()),
       referrer: "",

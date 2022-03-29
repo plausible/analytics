@@ -496,6 +496,21 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert Map.get(event, :"meta.value") == []
     end
 
+    test "generates event id", %{conn: conn} do
+      params = %{
+        name: "Signup",
+        url: "http://gigride.live/",
+        domain: "event-id-test.com"
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      event = get_event("event-id-test.com")
+
+      assert Map.get(event, :event_id)
+    end
+
     test "ignores malformed custom props", %{conn: conn} do
       params = %{
         name: "Signup",

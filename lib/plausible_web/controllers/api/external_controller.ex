@@ -100,6 +100,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       salts = Plausible.Session.Salts.fetch()
 
       event_attrs = %{
+        event_id: Plausible.ClickhouseEvent.random_event_id(),
         timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
         name: params["name"],
         hostname: strip_www(host),
