@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - Added `LISTEN_IP` configuration parameter plausible/analytics#1189
 - The breakdown endpoint with the property query `property=event:goal` returns custom goal properties (within `props`)
 - Added IPv6 Ecto support (via the environment-variable `ECTO_IPV6`)
+- New filter type: `contains`, available for `page`, `entry_page`, `exit_page`
 
 ### Fixed
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
@@ -30,6 +31,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - Cache the tracking script for 24 hours
+- Move `entry_page` and `exit_page` to be part of the `Page` filter group
 
 ## v1.4.1
 

@@ -408,6 +408,25 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{"name" => "Unique visitors", "value" => 2, "change" => 100} in res["top_stats"]
     end
 
+    test "contains (~) filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/some-blog-post"),
+        build(:pageview, pathname: "/blog/post1"),
+        build(:pageview, pathname: "/another/post")
+      ])
+
+      filters = Jason.encode!(%{page: "~blog"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+      assert %{"name" => "Unique visitors", "value" => 2, "change" => 100} in res["top_stats"]
+    end
+
     test "returns only visitors with specific screen size", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, screen_size: "Desktop"),
