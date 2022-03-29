@@ -80,20 +80,11 @@ defmodule PlausibleWeb.BillingController do
   def change_enterprise_plan(conn, %{"plan_id" => plan_id}) do
     user = conn.assigns[:current_user]
 
-    current_plan =
-      Repo.get_by(Plausible.Billing.EnterprisePlan,
-        user_id: user.id,
-        paddle_plan_id: user.subscription.paddle_plan_id
-      )
-
     new_plan = Repo.get_by(Plausible.Billing.EnterprisePlan, user_id: user.id, id: plan_id)
 
     cond do
       is_nil(user.subscription) ->
         redirect(conn, to: "/billing/upgrade")
-
-      is_nil(current_plan) ->
-        render_error(conn, 404)
 
       is_nil(new_plan) || new_plan.paddle_plan_id == user.subscription.paddle_plan_id ->
         render_error(conn, 404)
@@ -109,7 +100,6 @@ defmodule PlausibleWeb.BillingController do
 
   def change_plan_preview(conn, %{"plan_id" => new_plan_id}) do
     subscription = Billing.active_subscription_for(conn.assigns[:current_user].id)
-    IO.inspect(subscription)
 
     if subscription do
       {:ok, preview_info} = Billing.change_plan_preview(subscription, new_plan_id)
