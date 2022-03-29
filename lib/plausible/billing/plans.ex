@@ -74,8 +74,7 @@ defmodule Plausible.Billing.Plans do
   def subscription_interval(subscription) do
     case for_product_id(subscription.paddle_plan_id) do
       nil ->
-        enterprise_plan =
-          Repo.get_by(Plausible.Billing.EnterprisePlan, user_id: subscription.user_id)
+        enterprise_plan = get_enterprise_plan(subscription)
 
         enterprise_plan && enterprise_plan.billing_interval
 
@@ -96,11 +95,7 @@ defmodule Plausible.Billing.Plans do
     if found do
       Map.fetch!(found, :limit)
     else
-      enterprise_plan =
-        Repo.get_by(Plausible.Billing.EnterprisePlan,
-          user_id: subscription.user_id,
-          paddle_plan_id: subscription.paddle_plan_id
-        )
+      enterprise_plan = get_enterprise_plan(subscription)
 
       if enterprise_plan do
         enterprise_plan.monthly_pageview_limit
@@ -114,15 +109,11 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  def get_enterprise_plan(user) do
-    if user.subscription do
-      Repo.get_by(Plausible.Billing.EnterprisePlan,
-        user_id: user.id,
-        paddle_plan_id: user.subscription.paddle_plan_id
-      )
-    else
-      Repo.get_by(Plausible.Billing.EnterprisePlan, user_id: user.id)
-    end
+  def get_enterprise_plan(subscription) do
+    Repo.get_by(Plausible.Billing.EnterprisePlan,
+      user_id: subscription.user_id,
+      paddle_plan_id: subscription.paddle_plan_id
+    )
   end
 
   def suggested_plan(user, usage) do
