@@ -71,7 +71,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   @no_domain_error {:error, %{domain: ["can't be blank"]}}
 
   defp create_event(conn, params) do
-    params = %{
+    core_params = %{
       "name" => params["n"] || params["name"],
       "url" => params["u"] || params["url"],
       "referrer" => params["r"] || params["referrer"],
@@ -81,7 +81,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     }
 
     additional_params = parse_additional_params(params)
-    params = Map.merge(params, additional_params)
+    params = Map.merge(core_params, additional_params)
 
     ua = parse_user_agent(conn)
 
@@ -192,7 +192,6 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp parse_additional_params(params) do
     additional_param_names = ["company_id", "job_id", "page_id", "site_id"]
-
     meta = parse_meta(params)
 
     meta
