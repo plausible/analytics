@@ -97,7 +97,10 @@ defmodule Plausible.Billing.Plans do
       Map.fetch!(found, :limit)
     else
       enterprise_plan =
-        Repo.get_by(Plausible.Billing.EnterprisePlan, user_id: subscription.user_id)
+        Repo.get_by(Plausible.Billing.EnterprisePlan,
+          user_id: subscription.user_id,
+          paddle_plan_id: subscription.paddle_plan_id
+        )
 
       if enterprise_plan do
         enterprise_plan.monthly_pageview_limit
@@ -108,6 +111,17 @@ defmodule Plausible.Billing.Plans do
           }
         )
       end
+    end
+  end
+
+  def get_enterprise_plan(user) do
+    if user.subscription do
+      Repo.get_by(Plausible.Billing.EnterprisePlan,
+        user_id: user.id,
+        paddle_plan_id: user.subscription.paddle_plan_id
+      )
+    else
+      Repo.get_by(Plausible.Billing.EnterprisePlan, user_id: user.id)
     end
   end
 

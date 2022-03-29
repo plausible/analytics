@@ -30,35 +30,16 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def upgrade_enterprise_plan(conn, %{"plan_id" => plan_id}) do
-    user =
-      conn.assigns[:current_user]
-      |> Repo.preload(:enterprise_plan)
+    user = conn.assigns[:current_user]
+    plan = Repo.get_by(Plausible.Billing.EnterprisePlan, user_id: user.id, id: plan_id)
 
-    if user.enterprise_plan && user.enterprise_plan.id == String.to_integer(plan_id) do
+    if plan do
       usage = Plausible.Billing.usage(conn.assigns[:current_user])
 
       render(conn, "upgrade_to_plan.html",
         usage: usage,
         user: user,
-        layout: {PlausibleWeb.LayoutView, "focus.html"}
-      )
-    else
-      render_error(conn, 404)
-    end
-  end
-
-  def upgrade_to_plan(conn, %{"plan_id" => plan_id}) do
-    plan = Plausible.Billing.Plans.for_product_id(plan_id)
-
-    if plan do
-      cycle = if plan[:monthly_product_id] == plan_id, do: "monthly", else: "yearly"
-      plan = Map.merge(plan, %{cycle: cycle, product_id: plan_id})
-      usage = Plausible.Billing.usage(conn.assigns[:current_user])
-
-      render(conn, "upgrade_to_plan.html",
-        usage: usage,
         plan: plan,
-        user: conn.assigns[:current_user],
         layout: {PlausibleWeb.LayoutView, "focus.html"}
       )
     else
@@ -79,8 +60,10 @@ defmodule PlausibleWeb.BillingController do
 
     cond do
       subscription && user.enterprise_plan ->
-        redirect(conn,
-          to: Routes.billing_path(conn, :change_enterprise_plan, user.enterprise_plan.id)
+        render(conn, "change_enterprise_plan_contact_us.html",
+          user: user,
+          plan: user.enterprise_plan,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
       subscription ->
@@ -95,31 +78,30 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def change_enterprise_plan(conn, %{"plan_id" => plan_id}) do
-    user =
-      conn.assigns[:current_user]
-      |> Repo.preload(:enterprise_plan)
+    user = conn.assigns[:current_user]
+
+    current_plan =
+      Repo.get_by(Plausible.Billing.EnterprisePlan,
+        user_id: user.id,
+        paddle_plan_id: user.subscription.paddle_plan_id
+      )
+
+    new_plan = Repo.get_by(Plausible.Billing.EnterprisePlan, user_id: user.id, id: plan_id)
 
     cond do
       is_nil(user.subscription) ->
         redirect(conn, to: "/billing/upgrade")
 
-      is_nil(user.enterprise_plan) ->
+      is_nil(current_plan) ->
         render_error(conn, 404)
 
-      user.enterprise_plan.id !== String.to_integer(plan_id) ->
+      is_nil(new_plan) || new_plan.paddle_plan_id == user.subscription.paddle_plan_id ->
         render_error(conn, 404)
-
-      user.enterprise_plan.paddle_plan_id == user.subscription.paddle_plan_id ->
-        render(conn, "change_enterprise_plan_contact_us.html",
-          user: user,
-          plan: user.enterprise_plan,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
 
       true ->
         render(conn, "change_enterprise_plan.html",
           user: user,
-          plan: user.enterprise_plan,
+          plan: new_plan,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
     end
@@ -127,6 +109,7 @@ defmodule PlausibleWeb.BillingController do
 
   def change_plan_preview(conn, %{"plan_id" => new_plan_id}) do
     subscription = Billing.active_subscription_for(conn.assigns[:current_user].id)
+    IO.inspect(subscription)
 
     if subscription do
       {:ok, preview_info} = Billing.change_plan_preview(subscription, new_plan_id)
