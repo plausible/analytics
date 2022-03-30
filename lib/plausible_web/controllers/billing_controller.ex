@@ -31,19 +31,22 @@ defmodule PlausibleWeb.BillingController do
 
   def upgrade_enterprise_plan(conn, %{"plan_id" => plan_id}) do
     user = conn.assigns[:current_user]
+    subscription = user.subscription
     plan = Repo.get_by(Plausible.Billing.EnterprisePlan, user_id: user.id, id: plan_id)
 
-    if plan do
-      usage = Plausible.Billing.usage(conn.assigns[:current_user])
+    cond do
+      plan && subscription && plan.paddle_plan_id == subscription.paddle_plan_id ->
+        redirect(conn, to: Routes.billing_path(conn, :change_plan_form))
 
-      render(conn, "upgrade_to_plan.html",
-        usage: usage,
-        user: user,
-        plan: plan,
-        layout: {PlausibleWeb.LayoutView, "focus.html"}
-      )
-    else
-      render_error(conn, 404)
+      plan ->
+        render(conn, "upgrade_to_plan.html",
+          user: user,
+          plan: plan,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
+      true ->
+        render_error(conn, 404)
     end
   end
 
