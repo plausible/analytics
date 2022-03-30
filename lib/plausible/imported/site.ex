@@ -23,14 +23,22 @@ defmodule Plausible.Imported do
     end
   end
 
+  defp parse_number(nr) do
+    # Scientific notation
+    if String.contains?(nr, "E") do
+      {float, ""} = Float.parse(nr)
+      float
+    else
+      {int, ""} = Integer.parse(nr)
+      int
+    end
+  end
+
   defp new_from_google_analytics(site_id, "imported_visitors", %{
          "dimensions" => [date],
          "metrics" => [%{"values" => values}]
        }) do
-    [visitors, pageviews, bounces, visits, visit_duration] =
-      values
-      |> Enum.map(&Integer.parse/1)
-      |> Enum.map(&elem(&1, 0))
+    [visitors, pageviews, bounces, visits, visit_duration] = values |> Enum.map(&parse_number/1)
 
     %{
       site_id: site_id,

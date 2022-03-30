@@ -602,5 +602,40 @@ defmodule Plausible.ImportedTest do
                %{"name" => "GNU/Linux", "visitors" => 2, "percentage" => 40}
              ]
     end
+
+    test "Can import visit duration with scientific notation", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
+      ])
+
+      assert :ok =
+               Plausible.Imported.from_google_analytics(
+                 [
+                   %{
+                     "dimensions" => ["20210101"],
+                     "metrics" => [%{"values" => ["1", "1", "0", "1", "1.391607E7"]}]
+                   },
+                   %{
+                     "dimensions" => ["20210131"],
+                     "metrics" => [%{"values" => ["1", "1", "1", "1", "60"]}]
+                   }
+                 ],
+                 site.id,
+                 "imported_visitors"
+               )
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
+        )
+
+      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+
+      visit_duration = Enum.find(top_stats, fn stat -> stat["name"] == "Visit duration" end)
+
+      assert visit_duration["value"] == 3_479_033
+    end
   end
 end
