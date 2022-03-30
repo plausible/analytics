@@ -24,14 +24,8 @@ defmodule Plausible.Imported do
   end
 
   defp parse_number(nr) do
-    # Scientific notation
-    if String.contains?(nr, "E") do
-      {float, ""} = Float.parse(nr)
-      float
-    else
-      {int, ""} = Integer.parse(nr)
-      int
-    end
+    {float, ""} = Float.parse(nr)
+    float
   end
 
   defp new_from_google_analytics(site_id, "imported_visitors", %{
