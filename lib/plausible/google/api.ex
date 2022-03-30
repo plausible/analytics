@@ -2,6 +2,7 @@ defmodule Plausible.Google.Api do
   alias Plausible.Imported
   use Timex
   require Logger
+  require HTTPoison.Retry
 
   @scope URI.encode_www_form(
            "https://www.googleapis.com/auth/webmasters.readonly email https://www.googleapis.com/auth/analytics.readonly"
@@ -191,8 +192,8 @@ defmodule Plausible.Google.Api do
         "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
         Jason.encode!(%{reportRequests: [report]}),
         [Authorization: "Bearer #{token}"],
-        timeout: 30_000,
-        recv_timeout: 30_000
+        timeout: 15_000,
+        recv_timeout: 15_000
       )
 
     case res.status_code do
@@ -346,7 +347,7 @@ defmodule Plausible.Google.Api do
           sortOrder: "DESCENDING"
         }
       ],
-      pageSize: 10_000,
+      pageSize: 5_000,
       pageToken: page_token
     }
 
@@ -360,6 +361,7 @@ defmodule Plausible.Google.Api do
         timeout: 30_000,
         recv_timeout: 30_000
       )
+      |> HTTPoison.Retry.autoretry(max_attempts: 3, wait: 5_000)
 
     if res.status_code == 200 do
       report = List.first(Jason.decode!(res.body)["reports"])

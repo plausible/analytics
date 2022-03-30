@@ -73,6 +73,7 @@ defmodule Plausible.MixProject do
       {:bamboo_smtp, "~> 4.1"},
       {:sentry, "~> 8.0"},
       {:httpoison, "~> 1.4"},
+      {:httpoison_retry, "~> 1.0.0"},
       {:ex_machina, "~> 2.3", only: :test},
       {:excoveralls, "~> 0.10", only: :test},
       {:double, "~> 0.8.0", only: :test},
