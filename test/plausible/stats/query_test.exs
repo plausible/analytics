@@ -60,6 +60,18 @@ defmodule Plausible.Stats.QueryTest do
     assert q.interval == "month"
   end
 
+  test "parses year to date format" do
+    q = Query.from(@site, %{"period" => "year"})
+
+    assert q.date_range.first ==
+             Timex.now(@site.timezone) |> Timex.to_date() |> Timex.beginning_of_year()
+
+    assert q.date_range.last ==
+             Timex.now(@site.timezone) |> Timex.to_date() |> Timex.end_of_year()
+
+    assert q.interval == "month"
+  end
+
   test "parses all time" do
     q = Query.from(@site, %{"period" => "all"})
 

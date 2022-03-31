@@ -159,6 +159,28 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.sum(plot) == 4
     end
 
+    test "displays visitors for calendar year with imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-12-31 00:00:00]),
+        build(:imported_visitors, date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-12-31])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=year&date=2021-12-31&with_imported=true"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 12
+      assert List.first(plot) == 2
+      assert List.last(plot) == 2
+      assert Enum.sum(plot) == 4
+    end
+
     test "displays visitors for all time with just native data", %{conn: conn, site: site} do
       use Plausible.Repo
 

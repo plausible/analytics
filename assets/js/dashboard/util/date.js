@@ -36,6 +36,10 @@ export function formatMonthYYYY(date) {
   return `${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
 }
 
+export function formatYear(date) {
+  return `Year of ${date.getFullYear()}`;
+}
+
 export function formatDay(date) {
   var weekday = DAYS_ABBREV[date.getUTCDay()];
   if (date.getFullYear() !== (new Date()).getFullYear()) {
@@ -74,6 +78,10 @@ export function isToday(site, date) {
 
 export function isThisMonth(site, date) {
   return formatMonthYYYY(date) === formatMonthYYYY(nowForSite(site))
+}
+
+export function isThisYear(site, date) {
+  return date.getFullYear() === nowForSite(site).getFullYear()
 }
 
 export function isBefore(date1, date2, period) {

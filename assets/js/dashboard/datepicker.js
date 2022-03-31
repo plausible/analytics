@@ -9,12 +9,14 @@ import {
   formatDay,
   formatDayShort,
   formatMonthYYYY,
+  formatYear,
   formatISO,
   isToday,
   lastMonth,
   nowForSite,
   isSameMonth,
   isThisMonth,
+  isThisYear,
   parseUTCDate,
   isBefore,
   isAfter,
@@ -86,12 +88,17 @@ function renderArrow(query, site, period, prevDate, nextDate) {
 }
 
 function DatePickerArrows({site, query}) {
-  if (query.period === "month") {
+  if (query.period === "year") {
+    const prevDate = formatISO(shiftMonths(query.date, -12));
+    const nextDate = formatISO(shiftMonths(query.date, 12));
+
+    return renderArrow(query, site, "year", prevDate, nextDate);
+  } else if (query.period === "month") {
     const prevDate = formatISO(shiftMonths(query.date, -1));
     const nextDate = formatISO(shiftMonths(query.date, 1));
 
     return renderArrow(query, site, "month", prevDate, nextDate);
-  } if (query.period === "day") {
+  } else if (query.period === "day") {
     const prevDate = formatISO(shiftDays(query.date, -1));
     const nextDate = formatISO(shiftDays(query.date, 1));
 
@@ -141,53 +148,44 @@ class DatePicker extends React.Component {
     if (e.key === "ArrowLeft") {
       const prevDate = formatISO(shiftDays(query.date, -1));
       const prevMonth = formatISO(shiftMonths(query.date, -1));
+      const prevYear = formatISO(shiftMonths(query.date, -12));
 
-      if (
-        query.period === "day" &&
-        !isBefore(parseUTCDate(prevDate), insertionDate, query.period)
-      ) {
+      if (query.period === "day" && !isBefore(parseUTCDate(prevDate), insertionDate, query.period)) {
         newSearch.period = "day";
         newSearch.date = prevDate;
-      } else if (
-        query.period === "month" &&
-        !isBefore(parseUTCDate(prevMonth), insertionDate, query.period)
-      ) {
+      } else if (query.period === "month" && !isBefore(parseUTCDate(prevMonth), insertionDate, query.period)) {
         newSearch.period = "month";
         newSearch.date = prevMonth;
+      } else if (query.period === "year" && !isBefore(parseUTCDate(prevYear), insertionDate, query.period)) {
+        newSearch.period = "year";
+        newSearch.date = prevYear;
       }
     } else if (e.key === "ArrowRight") {
+      const now = nowForSite(this.props.site)
       const nextDate = formatISO(shiftDays(query.date, 1));
       const nextMonth = formatISO(shiftMonths(query.date, 1));
+      const nextYear = formatISO(shiftMonths(query.date, 12));
 
-      if (
-        query.period === "day" &&
-        !isAfter(
-          parseUTCDate(nextDate),
-          nowForSite(this.props.site),
-          query.period
-        )
-      ) {
+      if (query.period === "day" && !isAfter(parseUTCDate(nextDate), now, query.period)) {
         newSearch.period = "day";
         newSearch.date = nextDate;
-      } else if (
-        query.period === "month" &&
-        !isAfter(
-          parseUTCDate(nextMonth),
-          nowForSite(this.props.site),
-          query.period
-        )
-      ) {
+      } else if (query.period === "month" && !isAfter(parseUTCDate(nextMonth), now, query.period)) {
         newSearch.period = "month";
         newSearch.date = nextMonth;
+      } else if (query.period === "year" && !isAfter(parseUTCDate(nextYear), now, query.period)) {
+        newSearch.period = "year";
+        newSearch.date = nextYear;
       }
     }
 
     this.setState({open: false});
 
-    const keys = ['d', 'r', 'w', 'm', 'y', 't', 's'];
-    const redirects = [{date: false, period: 'day'}, {period: 'realtime'}, {date: false, period: '7d'}, {date: false, period: 'month'}, {date: false, period: '12mo'}, {date: false, period: '30d'}, {date: false, period: '6mo'}];
+    const keys = ['d', 'r', 'w', 'm', 'y', 't', 's', 'a'];
+    const redirects = [{date: false, period: 'day'}, {period: 'realtime'}, {date: false, period: '7d'}, {date: false, period: 'month'}, {date: false, period: 'year'}, {date: false, period: '30d'}, {date: false, period: '6mo'}, {date: false, period: 'all'}];
 
     if (keys.includes(e.key.toLowerCase())) {
+      console.log(e.key.toLowerCase())
+      console.log(redirects[keys.indexOf(e.key.toLowerCase())])
       navigateToQuery(history, query, {...newSearch, ...(redirects[keys.indexOf(e.key.toLowerCase())])});
     } else if (e.key.toLowerCase() === 'c') {
       this.setState({mode: 'calendar', open: true}, this.openCalendar);
@@ -253,6 +251,11 @@ class DatePicker extends React.Component {
       return 'Last 6 months'
     } if (query.period === '12mo') {
       return 'Last 12 months'
+    } if (query.period === 'year') {
+      if (isThisYear(site, query.date)) {
+        return 'Year to Date'
+      }
+      return formatYear(query.date)
     } if (query.period === 'all') {
       return 'All time'
     } if (query.period === 'custom') {
@@ -293,9 +296,10 @@ class DatePicker extends React.Component {
       'Realtime': 'R',
       'Last 7 days': 'W',
       'Month to Date': 'M',
-      'Last 12 months': 'Y',
+      'Year to Date': 'Y',
       'Last 6 months': 'S',
       'Last 30 days': 'T',
+      'All time': 'A',
     };
 
     return (
@@ -336,8 +340,8 @@ class DatePicker extends React.Component {
               { this.renderLink('month', 'Last month', {date: lastMonth(this.props.site)}) }
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              {this.renderLink("6mo", "Last 6 months")}
               {this.renderLink("12mo", "Last 12 months")}
+              {this.renderLink("year", "Year to Date")}
             </div>
             <div className="py-1 date-option-group">
               {this.renderLink("all", "All time")}
