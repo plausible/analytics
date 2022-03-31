@@ -3,7 +3,7 @@ import { Link, withRouter } from 'react-router-dom'
 import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './util/date'
 import * as storage from './util/storage'
 
-const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'custom']
+const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'all', 'custom']
 
 export function parseQuery(querystring, site) {
   const q = new URLSearchParams(querystring)

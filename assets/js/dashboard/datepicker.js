@@ -253,6 +253,8 @@ class DatePicker extends React.Component {
       return 'Last 6 months'
     } if (query.period === '12mo') {
       return 'Last 12 months'
+    } if (query.period === 'all') {
+      return 'All time'
     } if (query.period === 'custom') {
       return `${formatDayShort(query.from)} - ${formatDayShort(query.to)}`
     }
@@ -338,6 +340,7 @@ class DatePicker extends React.Component {
               {this.renderLink("12mo", "Last 12 months")}
             </div>
             <div className="py-1 date-option-group">
+              {this.renderLink("all", "All time")}
               <span
                 onClick={() => this.setState({mode: 'calendar'}, this.openCalendar)}
                 onKeyPress={() => this.setState({mode: 'calendar'}, this.openCalendar)}

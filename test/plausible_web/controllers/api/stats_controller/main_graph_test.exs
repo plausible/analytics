@@ -137,7 +137,52 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.sum(plot) == 4
     end
 
-    # TODO: missing 6, 12 months, 30 days
+    test "displays visitors for 12 months with imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-12-31 00:00:00]),
+        build(:imported_visitors, date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-12-31])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=12mo&date=2021-12-31&with_imported=true"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 12
+      assert List.first(plot) == 2
+      assert List.last(plot) == 2
+      assert Enum.sum(plot) == 4
+    end
+
+    test "displays visitors for all time with just native data", %{conn: conn, site: site} do
+      use Plausible.Repo
+
+      Repo.update_all(from(s in "sites", where: s.id == ^site.id),
+        set: [inserted_at: ~N[2020-01-01 00:00:00]]
+      )
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2020-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-12-31 00:00:00])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=all&with_imported=true"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert List.first(plot) == 1
+      assert Enum.sum(plot) == 3
+    end
   end
 
   describe "GET /api/stats/main-graph - labels" do

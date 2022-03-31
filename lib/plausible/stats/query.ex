@@ -146,6 +146,27 @@ defmodule Plausible.Stats.Query do
     |> maybe_include_imported(site, params)
   end
 
+  def from(site, %{"period" => "all"} = params) do
+    end_date =
+      today(site.timezone)
+      |> Timex.end_of_month()
+
+    start_date =
+      site.inserted_at
+      |> Timex.Timezone.convert("UTC")
+      |> Timex.Timezone.convert(site.timezone)
+      |> Timex.beginning_of_month()
+
+    %__MODULE__{
+      period: "all",
+      date_range: Date.range(start_date, end_date),
+      interval: Map.get(params, "interval", "month"),
+      filters: parse_filters(params),
+      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
+    }
+    |> maybe_include_imported(site, params)
+  end
+
   def from(site, %{"period" => "custom", "from" => from, "to" => to} = params) do
     new_params =
       params

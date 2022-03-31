@@ -2,7 +2,11 @@ defmodule Plausible.Stats.QueryTest do
   use ExUnit.Case, async: true
   alias Plausible.Stats.Query
 
-  @site %Plausible.Site{timezone: "UTC"}
+  @site_inserted_at ~D[2020-01-01]
+  @site %Plausible.Site{
+    timezone: "UTC",
+    inserted_at: @site_inserted_at
+  }
 
   test "parses day format" do
     q = Query.from(@site, %{"period" => "day", "date" => "2019-01-01"})
@@ -54,6 +58,23 @@ defmodule Plausible.Stats.QueryTest do
 
     assert q.date_range.last == Timex.today() |> Timex.end_of_month()
     assert q.interval == "month"
+  end
+
+  test "parses all time" do
+    q = Query.from(@site, %{"period" => "all"})
+
+    assert q.date_range.first == @site_inserted_at
+    assert q.date_range.last == Timex.today() |> Timex.end_of_month()
+    assert q.period == "all"
+    assert q.interval == "month"
+  end
+
+  test "parses all time in correct timezone" do
+    site = Map.put(@site, :timezone, "America/Cancun")
+    q = Query.from(site, %{"period" => "all"})
+
+    assert q.date_range.first == ~D[2019-12-01]
+    assert q.date_range.last == Timex.today("America/Cancun") |> Timex.end_of_month()
   end
 
   test "defaults to 30 days format" do
