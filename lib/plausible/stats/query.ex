@@ -187,24 +187,43 @@ defmodule Plausible.Stats.Query do
   end
 
   def from(site, %{"period" => "all"} = params) do
-    end_date =
-      today(site.timezone)
-      |> Timex.end_of_month()
-
     start_date =
       site.inserted_at
       |> Timex.Timezone.convert("UTC")
       |> Timex.Timezone.convert(site.timezone)
-      |> Timex.beginning_of_month()
+      |> Timex.to_date()
 
-    %__MODULE__{
-      period: "all",
-      date_range: Date.range(start_date, end_date),
-      interval: Map.get(params, "interval", "month"),
-      filters: parse_filters(params),
-      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
-    }
-    |> maybe_include_imported(site, params)
+    now = today(site.timezone)
+
+    cond do
+      Timex.diff(now, start_date, :months) > 0 ->
+        from(
+          site,
+          Map.merge(params, %{
+            "period" => "custom",
+            "from" => Date.to_iso8601(start_date),
+            "to" => Date.to_iso8601(now),
+            "interval" => "month"
+          })
+        )
+        |> Map.put(:period, "all")
+
+      Timex.diff(now, start_date, :days) > 0 ->
+        from(
+          site,
+          Map.merge(params, %{
+            "period" => "custom",
+            "from" => Date.to_iso8601(start_date),
+            "to" => Date.to_iso8601(now),
+            "interval" => "date"
+          })
+        )
+        |> Map.put(:period, "all")
+
+      true ->
+        from(site, Map.merge(params, %{"period" => "day", "date" => "today"}))
+        |> Map.put(:period, "all")
+    end
   end
 
   def from(site, %{"period" => "custom", "from" => from, "to" => to} = params) do

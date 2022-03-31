@@ -85,8 +85,38 @@ defmodule Plausible.Stats.QueryTest do
     site = Map.put(@site, :timezone, "America/Cancun")
     q = Query.from(site, %{"period" => "all"})
 
-    assert q.date_range.first == ~D[2019-12-01]
-    assert q.date_range.last == Timex.today("America/Cancun") |> Timex.end_of_month()
+    assert q.date_range.first == ~D[2019-12-31]
+    assert q.date_range.last == Timex.today("America/Cancun")
+  end
+
+  test "all time shows hourly if site is completely new" do
+    site = Map.put(@site, :inserted_at, Timex.now())
+    q = Query.from(site, %{"period" => "all"})
+
+    assert q.date_range.first == Timex.today()
+    assert q.date_range.last == Timex.today()
+    assert q.period == "all"
+    assert q.interval == "hour"
+  end
+
+  test "all time shows daily if site is more than a day old" do
+    site = Map.put(@site, :inserted_at, Timex.now() |> Timex.shift(days: -1))
+    q = Query.from(site, %{"period" => "all"})
+
+    assert q.date_range.first == Timex.today() |> Timex.shift(days: -1)
+    assert q.date_range.last == Timex.today()
+    assert q.period == "all"
+    assert q.interval == "date"
+  end
+
+  test "all time shows monthly if site is more than a month old" do
+    site = Map.put(@site, :inserted_at, Timex.now() |> Timex.shift(months: -1))
+    q = Query.from(site, %{"period" => "all"})
+
+    assert q.date_range.first == Timex.today() |> Timex.shift(months: -1)
+    assert q.date_range.last == Timex.today()
+    assert q.period == "all"
+    assert q.interval == "month"
   end
 
   test "defaults to 30 days format" do

@@ -340,8 +340,8 @@ class DatePicker extends React.Component {
               { this.renderLink('month', 'Last month', {date: lastMonth(this.props.site)}) }
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              {this.renderLink("12mo", "Last 12 months")}
               {this.renderLink("year", "Year to Date")}
+              {this.renderLink("12mo", "Last 12 months")}
             </div>
             <div className="py-1 date-option-group">
               {this.renderLink("all", "All time")}

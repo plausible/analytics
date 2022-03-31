@@ -41,7 +41,7 @@ export function formatYear(date) {
 }
 
 export function formatDay(date) {
-  var weekday = DAYS_ABBREV[date.getUTCDay()];
+  var weekday = DAYS_ABBREV[date.getDay()];
   if (date.getFullYear() !== (new Date()).getFullYear()) {
     return `${weekday}, ${date.getDate()} ${formatMonthShort(date)} ${date.getFullYear()}`;
   } else {
