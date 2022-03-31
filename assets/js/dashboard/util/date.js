@@ -89,6 +89,9 @@ export function isBefore(date1, date2, period) {
   if (date1.getFullYear() !== date2.getFullYear()) {
     return date1.getFullYear() < date2.getFullYear();
   }
+  if (period === "year") {
+    return false;
+  }
   if (date1.getMonth() !== date2.getMonth()) {
     return date1.getMonth() < date2.getMonth();
   }
@@ -102,6 +105,9 @@ export function isAfter(date1, date2, period) {
   /* assumes 'day' and 'month' are the only valid periods */
   if (date1.getFullYear() !== date2.getFullYear()) {
     return date1.getFullYear() > date2.getFullYear();
+  }
+  if (period === "year") {
+    return false;
   }
   if (date1.getMonth() !== date2.getMonth()) {
     return date1.getMonth() > date2.getMonth();
