@@ -285,6 +285,24 @@ defmodule Plausible.Stats.Query do
     %__MODULE__{query | filters: new_filters}
   end
 
+  def remove_page(query) do
+    filters = Enum.filter(query.filters, fn
+      {"event:page", _} -> false
+      {"event:props:" <> _, _} -> false
+      _ -> true
+    end)
+    |> Enum.into(%{})
+
+    %__MODULE__{query | filters: filters}
+  end
+
+  def has_event_filters?(query) do
+    Enum.any?(query.filters, fn
+      {"event:" <> _, _} -> true
+      _ -> false
+    end)
+  end
+
   defp today(tz) do
     Timex.now(tz) |> Timex.to_date()
   end

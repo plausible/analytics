@@ -307,7 +307,7 @@ defmodule Plausible.Stats.Base do
   end
 
   def filter_converted_sessions(db_query, site, query) do
-    if query.filters["event:name"] || query.filters["event:page"] || query.filters["event:goal"] do
+    if Query.has_event_filters?(query) do
       converted_sessions =
         from(e in query_events(site, query),
           select: %{session_id: fragment("DISTINCT ?", e.session_id)}

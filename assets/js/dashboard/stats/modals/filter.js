@@ -195,9 +195,7 @@ class FilterModal extends React.Component {
         Object.entries(formState).map(([k, v]) => [k, v.code || v.value])
       )
       const updatedQuery = {...query, filters: { ...query.filters, ...formFilters, [filter]: null }}
-
       return api.get(apiPath(this.props.site, `/suggestions/${filter}`), updatedQuery, { q: input.trim() })
-
     }
   }
 
@@ -232,7 +230,7 @@ class FilterModal extends React.Component {
           <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{ formattedFilters[filter] }</div>
           <div className="flex items-start mt-1">
             { this.renderFilterTypeSelector(filter) }
-
+            {console.log(filter)}
             <SearchSelect
               key={filter}
               fetchOptions={this.fetchOptions(filter)}

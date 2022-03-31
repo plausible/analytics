@@ -25,64 +25,142 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    test "returns top pages when filtering on custom dimensions", %{conn: conn, site: site} do
+    test "returns top pages filtered by custom pageview props", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, pathname: "/entry", "meta.key": ["logged_in"], "meta.value": ["false"]),
-        build(:pageview, pathname: "/login", "meta.key": ["logged_in"], "meta.value": ["false"]),
-        build(:pageview, pathname: "/exit", "meta.key": ["logged_in"], "meta.value": ["true"]),
-        build(:pageview, user_id: 123, pathname: "/entry"),
-        build(:pageview, user_id: 123, pathname: "/exit")
+        build(:pageview,
+          pathname: "/blog/john-1",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"]
+        ),
+        build(:pageview,
+          pathname: "/blog/john-2",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"]
+        ),
+        build(:pageview,
+          pathname: "/blog/other-post",
+          "meta.key": ["author"],
+          "meta.value": ["other"]
+        ),
+        build(:pageview, user_id: 123, pathname: "/blog/john-1"),
+        build(:pageview, user_id: 123, pathname: "/blog/john-2")
       ])
 
-      filters = Jason.encode!(%{props: %{"logged_in" => "false"}})
+      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200) == [
-               %{"visitors" => 1, "name" => "/login"},
-               %{"visitors" => 1, "name" => "/entry"}
+               %{"visitors" => 1, "name" => "/blog/john-2"},
+               %{"visitors" => 1, "name" => "/blog/john-1"}
              ]
     end
 
-    test "calculates bounce_rate and time_on_page for pages when filtered by custom dimensions",
+    test "calculates bounce_rate and time_on_page for pages filtered by custom pageview props",
          %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          pathname: "/",
-          "meta.key": ["logged_in"],
-          "meta.value": ["false"],
+          pathname: "/blog/john-1",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          pathname: "/login",
-          "meta.key": ["logged_in"],
-          "meta.value": ["false"],
+          pathname: "/blog",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          pathname: "/blog/john-2",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:02:00]
+        ),
+        build(:pageview,
+          pathname: "/blog/john-2",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          user_id: 456,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/blog",
+          user_id: 456,
+          timestamp: ~N[2021-01-01 00:10:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&filters=#{filters}&detailed=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "/blog/john-2",
+                 "visitors" => 2,
+                 "pageviews" => 2,
+                 "bounce_rate" => 0,
+                 "time_on_page" => 600
+               },
+               %{
+                 "name" => "/blog/john-1",
+                 "visitors" => 1,
+                 "pageviews" => 1,
+                 "bounce_rate" => 0,
+                 "time_on_page" => 60
+               }
+             ]
+    end
+
+    test "calculates bounce_rate and time_on_page for pages filtered by page path",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/about",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:01:00]
         ),
         build(:pageview,
           pathname: "/",
-          "meta.key": ["logged_in"],
-          "meta.value": ["true"],
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:02:00]
         ),
         build(:pageview,
           pathname: "/",
-          "meta.key": ["logged_in"],
-          "meta.value": ["true"],
           timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/about",
+          timestamp: ~N[2021-01-01 00:10:00]
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"logged_in" => "false"}})
+      filters = Jason.encode!(%{page: "/"})
 
       conn =
-        get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}&detailed=true")
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&filters=#{filters}&detailed=true"
+        )
 
       assert json_response(conn, 200) == [
-               %{"name" => "/", "visitors" => 1, "pageviews" => 1, "bounce_rate" => 50, "time_on_page" => 60},
-               %{"name" => "/login", "visitors" => 1, "pageviews" => 1, "bounce_rate" => nil, "time_on_page" => 60}
+               %{
+                 "name" => "/",
+                 "visitors" => 2,
+                 "pageviews" => 3,
+                 "bounce_rate" => 50,
+                 "time_on_page" => 60
+               }
              ]
     end
 
@@ -302,6 +380,62 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "returns top entry pages filtered by custom pageview props", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/blog",
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/blog/john-1",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          pathname: "/blog/john-2",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/blog/other-post",
+          "meta.key": ["author"],
+          "meta.value": ["other"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/entry-pages?period=day&date=2021-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "unique_entrances" => 1,
+                 "total_entrances" => 1,
+                 "name" => "/blog",
+                 "visit_duration" => 60
+               },
+               %{
+                 "unique_entrances" => 1,
+                 "total_entrances" => 1,
+                 "name" => "/blog/john-2",
+                 "visit_duration" => 0
+               }
+             ]
+    end
+
     test "returns top entry pages by visitors with imported data", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -474,6 +608,45 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       assert json_response(conn, 200) == [
                %{"name" => "/page1", "unique_exits" => 2, "total_exits" => 2, "exit_rate" => 66},
                %{"name" => "/page2", "unique_exits" => 1, "total_exits" => 1, "exit_rate" => 100}
+             ]
+    end
+
+    test "returns top exit pages filtered by custom pageview props", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/blog/john-1",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          pathname: "/blog/other-post",
+          "meta.key": ["author"],
+          "meta.value": ["other"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{page: "**john**"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/exit-pages?period=day&date=2021-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"name" => "/", "unique_exits" => 1, "total_exits" => 1, "exit_rate" => nil}
              ]
     end
 
