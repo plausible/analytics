@@ -51,32 +51,16 @@ function buildDataSet(plot, present_index, ctx, label) {
   }
 }
 
-const MONTHS = [
-  "January", "February", "March",
-  "April", "May", "June", "July",
-  "August", "September", "October",
-  "November", "December"
-]
-
-const MONTHS_ABBREV = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-]
-
-const DAYS_ABBREV = [
-  "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
-]
+import {formatMonthYYYY, formatDay} from '../util/date'
 
 function dateFormatter(interval, longForm) {
   return function(isoDate, _index, _ticks) {
     let date = new Date(isoDate)
 
     if (interval === 'month') {
-      return MONTHS[date.getUTCMonth()];
+      return formatMonthYYYY(date)
     } else if (interval === 'date') {
-      var day = DAYS_ABBREV[date.getUTCDay()];
-      var date_ = date.getUTCDate();
-      var month = MONTHS_ABBREV[date.getUTCMonth()];
-      return day + ', ' + date_ + ' ' + month;
+      return formatDay(date)
     } else if (interval === 'hour') {
       const parts = isoDate.split(/[^0-9]/);
       date = new Date(parts[0],parts[1]-1,parts[2],parts[3],parts[4],parts[5])

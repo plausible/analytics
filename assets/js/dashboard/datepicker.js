@@ -383,7 +383,7 @@ class DatePicker extends React.Component {
   renderPicker() {
     return (
       <div
-        className="w-20 sm:w-36 md:w-44 md:relative"
+        className="w-20 sm:w-36 md:w-48 md:relative"
         ref={(node) => (this.dropDownNode = node)}
       >
         <div
