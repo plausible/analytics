@@ -43,10 +43,12 @@
 
     }
     {{#if exclusions}}
-    if (excludedPaths)
-      for (var i = 0; i < excludedPaths.length; i++)
+    if (excludedPaths) {
+      for (var i = 0; i < excludedPaths.length; i++) {
         if (eventName == "pageview" && location.pathname.match(new RegExp('^' + excludedPaths[i].trim().replace(/\*\*/g, '.*').replace(/([^\.])\*/g, '$1[^\\s\/]*') + '\/?$')))
           return warn('exclusion rule');
+      }
+    }
     {{/if}}
 
     var payload = {}
@@ -92,8 +94,9 @@
       }
 
       if (link && link.href && link.host && link.host !== location.host) {
-        if (middle || click)
-        plausible('Outbound Link: Click', {props: {url: link.href}})
+        if (middle || click) {
+          plausible('Outbound Link: Click', {props: {url: link.href}})
+        }
 
         // Delay navigation so that Plausible is notified of the click
         if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
@@ -118,8 +121,9 @@
   {{/if}}
 
   {{#if file_downloads}}
-  var defaultFileTypes = ['.pdf', '.xlsx', '.docx', '.txt', '.rtf', '.csv', '.exe', '.key', '.pps', '.ppt', '.pptx', '.7z', '.pkg', '.rar', '.gz', '.zip', '.avi', '.mov', '.mp4', '.mpeg', '.wmv', '.midi', '.mp3', '.wav', '.wma']
-  var fileTypesToTrack = scriptEl.getAttribute('file-types') || defaultFileTypes;
+  var defaultFileTypes = ['pdf', 'xlsx', 'docx', 'txt', 'rtf', 'csv', 'exe', 'key', 'pps', 'ppt', 'pptx', '7z', 'pkg', 'rar', 'gz', 'zip', 'avi', 'mov', 'mp4', 'mpeg', 'wmv', 'midi', 'mp3', 'wav', 'wma']
+  var fileTypesAttr = scriptEl.getAttribute('file-types')
+  var fileTypesToTrack = (fileTypesAttr && fileTypesAttr.split(",")) || defaultFileTypes;
 
   function handleDownload(event) {
     
@@ -133,8 +137,9 @@
 
     if (link && link.href && isDownloadToTrack(link.href)) {
 
-      if (middle || click)
-      plausible('File Download', {props: {url: link.href}})
+      if (middle || click) {
+        plausible('File Download', {props: {url: link.href}})
+      }
 
       // Delay navigation so that Plausible is notified of the click
       if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
@@ -149,10 +154,10 @@
   }
 
   function isDownloadToTrack(url) {
-    var pathArray = url.split('/');
-    var fileName = pathArray[pathArray.length - 1];
-    var fileType = fileName.match(/\.[0-9a-z]+$/i)[0];
-    return fileTypesToTrack.includes(fileType);
+    var fileType = url.split(".").pop();
+    return fileTypesToTrack.some(function(fileTypeToTrack) {
+      return fileTypeToTrack == fileType
+    })
   }
 
   document.addEventListener('click', handleDownload);
