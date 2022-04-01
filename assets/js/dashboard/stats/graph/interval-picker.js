@@ -38,6 +38,8 @@ export default class IntervalPicker extends Component {
 			'30d': ['date', 'week'],
 			'6mo': ['date', 'week', 'month'],
 			'12mo': ['date', 'week', 'month'],
+			'year': ['date', 'week', 'month'],
+			'all': ['date', 'week', 'month'],
 			'custom': ['hour', 'date', 'week', 'month']
 		}
 
