@@ -78,7 +78,7 @@ class LineGraph extends React.Component {
             mode: 'index',
             intersect: false,
             position: 'average',
-            external: GraphTooltip(graphData, metric, graphEl.getBoundingClientRect())
+            external: GraphTooltip(graphData, metric)
           },
         },
         responsive: true,

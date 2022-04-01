@@ -28,9 +28,10 @@ export const dateFormatter = (interval, longForm) => {
   }
 }
 
-export const GraphTooltip = (graphData, metric, offset) => {
+export const GraphTooltip = (graphData, metric) => {
 	return (context) => {
 		const tooltipModel = context.tooltip;
+    const offset = document.getElementById("main-graph-canvas").getBoundingClientRect()
 
 		// Tooltip Element
 		let tooltipEl = document.getElementById('chartjs-tooltip');
@@ -44,8 +45,8 @@ export const GraphTooltip = (graphData, metric, offset) => {
 		}
 
 		if (tooltipEl && offset && window.innerWidth < 768) {
-			tooltipEl.style.top = offset.y + offset.height + window.pageYOffset + 'px'
-			tooltipEl.style.left = offset.x + window.pageXOffset + 'px'
+			tooltipEl.style.top = offset.y + offset.height + window.scrollY + 15 + 'px'
+			tooltipEl.style.left = offset.x + 'px'
 			tooltipEl.style.right = 'unset'
 			tooltipEl.style.display = 'unset'
 		}

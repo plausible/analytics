@@ -32,6 +32,7 @@
 
 html {
   @apply text-gray-800;
+  overflow-x: hidden;
 }
 
 body {
@@ -344,6 +345,7 @@ iframe[hidden] {
   padding: 10px 12px;
   pointer-events: none;
   border-radius: 5px;
+  z-index: 100;
 }
 
 .active-prop-heading {
