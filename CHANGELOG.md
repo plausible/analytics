@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- A `file-downloads` script extension for automatically tracking file downloads as custom events
 - Integration with [Matomo's referrer spam list](https://github.com/matomo-org/referrer-spam-list/blob/master/spammers.txt) to block known spammers
 - API route `PUT /api/v1/sites/goals` with form params `site_id`, `event_name` and/or `page_path`, and `goal_type` with supported types `event` and `page`
 - API route `DELETE /api/v1/sites/goals/:goal_id` with form params `site_id`
@@ -20,12 +21,18 @@ All notable changes to this project will be documented in this file.
 - Added `LISTEN_IP` configuration parameter plausible/analytics#1189
 - The breakdown endpoint with the property query `property=event:goal` returns custom goal properties (within `props`)
 - Added IPv6 Ecto support (via the environment-variable `ECTO_IPV6`)
+- New filter type: `contains`, available for `page`, `entry_page`, `exit_page`
 
 ### Fixed
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
 - UI fix to align footer columns
 - Guests can now use the favicon to toggle additional info about the site bing viewed (such as in public embeds).
 - Fix SecurityError in tracking script when user has blocked all local storage
+- Prevent dashboard graph from being selected when long pressing on the graph in a mobile browser
+
+### Changed
+- Cache the tracking script for 24 hours
+- Move `entry_page` and `exit_page` to be part of the `Page` filter group
 
 ### Changed
 - Cache the tracking script for 24 hours

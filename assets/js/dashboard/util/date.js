@@ -28,20 +28,29 @@ const MONTHS = [
   "November", "December"
 ]
 
+const DAYS_ABBREV = [
+  "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+]
+
 export function formatMonthYYYY(date) {
   return `${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
 }
 
-export function formatMonth(date) {
-  return `${MONTHS[date.getMonth()]}`;
+export function formatYear(date) {
+  return `Year of ${date.getFullYear()}`;
 }
 
 export function formatDay(date) {
-  return `${date.getDate()} ${formatMonth(date)}`;
+  var weekday = DAYS_ABBREV[date.getDay()];
+  if (date.getFullYear() !== (new Date()).getFullYear()) {
+    return `${weekday}, ${date.getDate()} ${formatMonthShort(date)} ${date.getFullYear()}`;
+  } else {
+    return `${weekday}, ${date.getDate()} ${formatMonthShort(date)}`;
+  }
 }
 
 export function formatDayShort(date) {
-  return `${date.getDate()} ${formatMonth(date).substring(0, 3)}`;
+  return `${date.getDate()} ${formatMonthShort(date)}`;
 }
 
 export function parseUTCDate(dateString) {
@@ -71,10 +80,17 @@ export function isThisMonth(site, date) {
   return formatMonthYYYY(date) === formatMonthYYYY(nowForSite(site))
 }
 
+export function isThisYear(site, date) {
+  return date.getFullYear() === nowForSite(site).getFullYear()
+}
+
 export function isBefore(date1, date2, period) {
   /* assumes 'day' and 'month' are the only valid periods */
   if (date1.getFullYear() !== date2.getFullYear()) {
     return date1.getFullYear() < date2.getFullYear();
+  }
+  if (period === "year") {
+    return false;
   }
   if (date1.getMonth() !== date2.getMonth()) {
     return date1.getMonth() < date2.getMonth();
@@ -90,6 +106,9 @@ export function isAfter(date1, date2, period) {
   if (date1.getFullYear() !== date2.getFullYear()) {
     return date1.getFullYear() > date2.getFullYear();
   }
+  if (period === "year") {
+    return false;
+  }
   if (date1.getMonth() !== date2.getMonth()) {
     return date1.getMonth() > date2.getMonth();
   }
@@ -97,4 +116,8 @@ export function isAfter(date1, date2, period) {
     return false;
   }
   return date1.getDate() > date2.getDate()
+}
+
+function formatMonthShort(date) {
+  return `${MONTHS[date.getMonth()].substring(0, 3)}`;
 }

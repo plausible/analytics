@@ -1,19 +1,5 @@
 import { METRIC_LABELS, METRIC_FORMATTER } from './visitor-graph'
-
-const MONTHS = [
-  "January", "February", "March",
-  "April", "May", "June", "July",
-  "August", "September", "October",
-  "November", "December"
-]
-
-const MONTHS_ABBREV = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-]
-
-const DAYS_ABBREV = [
-  "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
-]
+import {formatMonthYYYY, formatDay, formatDayShort} from '../../util/date'
 
 export const ORDERED_PERIODS = ['realtime', 'day', '7d', 'month', '30d', '6mo', '12mo']
 export const INTERVALS = ["month", "week", "date", "hour", "minute"]
@@ -26,25 +12,21 @@ export const dateFormatter = (interval, longForm, period, full) => {
 
     if (interval === 'month') {
       if (longForm) {
-        return (full ? '' : 'Partial ') + MONTHS[date.getUTCMonth()];
+        return (full ? '' : 'Partial ') + formatMonthYYYY(date);
       } else {
-        return MONTHS[date.getUTCMonth()];
+        return formatMonthYYYY(date);
       }
     } else if (interval === 'week') {
-      day = DAYS_ABBREV[date.getUTCDay()];
-      month = MONTHS_ABBREV[date.getUTCMonth()];
       if (longForm) {
-        return `${full ? 'W' : 'Partial w'}eek of ` + date_ + ' ' + month;
+        return `${full ? 'W' : 'Partial w'}eek of ` + formatDayShort(date);
       } else {
-        return date_ + ' ' + month;
+        return formatDayShort(date);
       }
     } else if (interval === 'date') {
-      day = DAYS_ABBREV[date.getUTCDay()];
-      month = MONTHS_ABBREV[date.getUTCMonth()];
       if (longForm) {
-        return day + ', ' + date_ + ' ' + month;
+        return formatDay(date);
       } else {
-        return date_ + ' ' + month;
+        return formatDayShort(date);
       }
     } else if (interval === 'hour') {
       const parts = isoDate.split(/[^0-9]/);
@@ -74,9 +56,10 @@ export const dateFormatter = (interval, longForm, period, full) => {
   }
 }
 
-export const GraphTooltip = (graphData, metric, offset, query) => {
+export const GraphTooltip = (graphData, metric, query) => {
 	return (context) => {
 		const tooltipModel = context.tooltip;
+    const offset = document.getElementById("main-graph-canvas").getBoundingClientRect()
 
 		// Tooltip Element
 		let tooltipEl = document.getElementById('chartjs-tooltip');
@@ -90,8 +73,8 @@ export const GraphTooltip = (graphData, metric, offset, query) => {
 		}
 
 		if (tooltipEl && offset && window.innerWidth < 768) {
-			tooltipEl.style.top = offset.y + offset.height + window.pageYOffset + 'px'
-			tooltipEl.style.left = offset.x + window.pageXOffset + 'px'
+			tooltipEl.style.top = offset.y + offset.height + window.scrollY + 15 + 'px'
+			tooltipEl.style.left = offset.x + 'px'
 			tooltipEl.style.right = 'unset'
 			tooltipEl.style.display = 'unset'
 		}
@@ -111,7 +94,7 @@ export const GraphTooltip = (graphData, metric, offset, query) => {
 			const prev_formattedLabel = prev_label && dateFormatter(graphData.interval, true, query.period, ['week', 'month'].includes(graphData.interval) && graphData.full_intervals[prev_label])(prev_label)
 
 			if (graphData.interval === 'month') {
-				return !prev_label ? `${formattedLabel} ${(new Date(label)).getUTCFullYear()}` : `${prev_formattedLabel} ${(new Date(prev_label)).getUTCFullYear()}`
+				return !prev_label ? formattedLabel : prev_formattedLabel
 			}
 
 			if (graphData.interval === 'date') {

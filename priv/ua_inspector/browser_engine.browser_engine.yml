@@ -14,7 +14,7 @@
 - regex: 'Trident'
   name: 'Trident'
 
-- regex: 'Blink'
+- regex: '(?<!SmartHu)Blink'
   name: 'Blink'
 
 - regex: '(?:Apple)?WebKit'
@@ -22,6 +22,9 @@
 
 - regex: 'Presto'
   name: 'Presto'
+
+- regex: 'Goanna'
+  name: 'Goanna'
 
 - regex: '(?<!like )Gecko'
   name: 'Gecko'
@@ -37,3 +40,6 @@
 
 - regex: 'Goanna'
   name: 'Goanna'
+
+- regex: 'Ekioh(?:Flow)?'
+  name: 'EkiohFlow'

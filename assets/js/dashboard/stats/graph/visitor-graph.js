@@ -80,7 +80,7 @@ class LineGraph extends React.Component {
             mode: 'index',
             intersect: false,
             position: 'average',
-            external: GraphTooltip(graphData, metric, graphEl.getBoundingClientRect(), query)
+            external: GraphTooltip(graphData, metric, query)
           },
         },
         responsive: true,
@@ -319,7 +319,7 @@ class LineGraph extends React.Component {
             { this.importedNotice() }
           </div>
           <FadeIn show={graphData}>
-            <canvas id="main-graph-canvas" className={'mt-4 ' + extraClass} width="1054" height="342"></canvas>
+            <canvas id="main-graph-canvas" className={'mt-4 select-none ' + extraClass} width="1054" height="342"></canvas>
           </FadeIn>
         </div>
       </div>

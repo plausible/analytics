@@ -1,5 +1,4 @@
 defmodule Plausible.Billing.PaddleApi do
-  @update_preview_endpoint "https://vendors.paddle.com/api/2.0/subscription/preview_update"
   @update_endpoint "https://vendors.paddle.com/api/2.0/subscription/users/update"
   @get_endpoint "https://vendors.paddle.com/api/2.0/subscription/users"
   @headers [
@@ -21,7 +20,13 @@ defmodule Plausible.Billing.PaddleApi do
       quantity: 1
     }
 
-    {:ok, response} = HTTPoison.post(@update_preview_endpoint, Jason.encode!(params), @headers)
+    {:ok, response} =
+      HTTPoison.post(
+        vendors_domain() <> "/api/2.0/subscription/preview_update",
+        Jason.encode!(params),
+        @headers
+      )
+
     body = Jason.decode!(response.body)
 
     if body["success"] do
@@ -122,6 +127,13 @@ defmodule Plausible.Billing.PaddleApi do
     case Application.get_env(:plausible, :environment) do
       "dev" -> "https://sandbox-checkout.paddle.com"
       _ -> "https://checkout.paddle.com"
+    end
+  end
+
+  def vendors_domain() do
+    case Application.get_env(:plausible, :environment) do
+      "dev" -> "https://sandbox-vendors.paddle.com"
+      _ -> "https://vendors.paddle.com"
     end
   end
 

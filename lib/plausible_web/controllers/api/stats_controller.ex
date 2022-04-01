@@ -58,6 +58,8 @@ defmodule PlausibleWeb.Api.StatsController do
       labels: labels,
       present_index: present_index,
       interval: query.interval,
+      with_imported: query.include_imported,
+      imported_source: site.imported_data && site.imported_data.source,
       full_intervals: full_intervals
     })
   end

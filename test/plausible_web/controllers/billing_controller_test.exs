@@ -40,6 +40,16 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert html_response(conn, 200) =~ "Upgrade your free trial"
       assert html_response(conn, 200) =~ "enterprise plan"
     end
+
+    test "redirects to change-plan page if user is already subscribed to the given enterprise plan",
+         %{conn: conn, user: user} do
+      plan = insert(:enterprise_plan, user: user)
+      insert(:subscription, paddle_plan_id: plan.paddle_plan_id, user: user)
+
+      conn = get(conn, "/billing/upgrade/enterprise/#{plan.id}")
+
+      assert redirected_to(conn) == "/billing/change-plan"
+    end
   end
 
   describe "GET /change-plan" do
@@ -58,13 +68,13 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert redirected_to(conn) == "/billing/upgrade"
     end
 
-    test "redirects to enterprise change plan page if user has enterprise plan and existing subscription",
+    test "prompts to contact us if user has enterprise plan and existing subscription",
          %{conn: conn, user: user} do
       insert(:subscription, user: user)
-      plan = insert(:enterprise_plan, user: user)
+      insert(:enterprise_plan, user: user)
       conn = get(conn, "/billing/change-plan")
 
-      assert redirected_to(conn) == "/billing/change-plan/enterprise/#{plan.id}"
+      assert html_response(conn, 200) =~ "please contact us"
     end
   end
 

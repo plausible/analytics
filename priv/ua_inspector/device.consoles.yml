@@ -14,8 +14,14 @@ Microsoft:
   regex: 'Xbox'
   device: 'console'
   models:
+    - regex: 'Xbox Series X'
+      model: 'Xbox Series X'
+    - regex: 'Xbox One X'
+      model: 'Xbox One X'
     - regex: 'Xbox One'
       model: 'Xbox One'
+    - regex: 'XBOX_ONE_ED'
+      model: 'Xbox One S'
     - regex: 'Xbox'
       model: 'Xbox 360'
 
@@ -35,6 +41,12 @@ Sega:
   model: 'Dreamcast'
 
 Sony:
-  regex: 'PlayStation (3|4 Pro|4|Portable|Vita)'
+  regex: 'PlayStation ?(2|3|4 Pro|4|5|Portable|Vita)'
   device: 'console'
   model: 'PlayStation $1'
+
+# Retroid Pocket (www.goretroid.com)
+Retroid Pocket:
+  regex: 'Retroid Pocket 2Plus'
+  device: 'console'
+  model: '2 Plus'

@@ -2,7 +2,11 @@ defmodule Plausible.Stats.QueryTest do
   use ExUnit.Case, async: true
   alias Plausible.Stats.Query
 
-  @site %Plausible.Site{timezone: "UTC"}
+  @site_inserted_at ~D[2020-01-01]
+  @site %Plausible.Site{
+    timezone: "UTC",
+    inserted_at: @site_inserted_at
+  }
 
   test "parses day format" do
     q = Query.from(@site, %{"period" => "day", "date" => "2019-01-01"})
@@ -53,6 +57,65 @@ defmodule Plausible.Stats.QueryTest do
              Timex.shift(Timex.today(), months: -11) |> Timex.beginning_of_month()
 
     assert q.date_range.last == Timex.today() |> Timex.end_of_month()
+    assert q.interval == "month"
+  end
+
+  test "parses year to date format" do
+    q = Query.from(@site, %{"period" => "year"})
+
+    assert q.date_range.first ==
+             Timex.now(@site.timezone) |> Timex.to_date() |> Timex.beginning_of_year()
+
+    assert q.date_range.last ==
+             Timex.now(@site.timezone) |> Timex.to_date() |> Timex.end_of_year()
+
+    assert q.interval == "month"
+  end
+
+  test "parses all time" do
+    q = Query.from(@site, %{"period" => "all"})
+
+    assert q.date_range.first == @site_inserted_at
+    assert q.date_range.last == Timex.today() |> Timex.end_of_month()
+    assert q.period == "all"
+    assert q.interval == "month"
+  end
+
+  test "parses all time in correct timezone" do
+    site = Map.put(@site, :timezone, "America/Cancun")
+    q = Query.from(site, %{"period" => "all"})
+
+    assert q.date_range.first == ~D[2019-12-31]
+    assert q.date_range.last == Timex.today("America/Cancun")
+  end
+
+  test "all time shows hourly if site is completely new" do
+    site = Map.put(@site, :inserted_at, Timex.now())
+    q = Query.from(site, %{"period" => "all"})
+
+    assert q.date_range.first == Timex.today()
+    assert q.date_range.last == Timex.today()
+    assert q.period == "all"
+    assert q.interval == "hour"
+  end
+
+  test "all time shows daily if site is more than a day old" do
+    site = Map.put(@site, :inserted_at, Timex.now() |> Timex.shift(days: -1))
+    q = Query.from(site, %{"period" => "all"})
+
+    assert q.date_range.first == Timex.today() |> Timex.shift(days: -1)
+    assert q.date_range.last == Timex.today()
+    assert q.period == "all"
+    assert q.interval == "date"
+  end
+
+  test "all time shows monthly if site is more than a month old" do
+    site = Map.put(@site, :inserted_at, Timex.now() |> Timex.shift(months: -1))
+    q = Query.from(site, %{"period" => "all"})
+
+    assert q.date_range.first == Timex.today() |> Timex.shift(months: -1)
+    assert q.date_range.last == Timex.today()
+    assert q.period == "all"
     assert q.interval == "month"
   end
 

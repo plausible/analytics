@@ -70,6 +70,10 @@ defmodule Plausible.Stats.Filters do
     end
   end
 
+  defp filter_value(_, "~" <> val) do
+    {:matches, "**" <> val <> "**"}
+  end
+
   defp filter_value(key, val) do
     if String.contains?(key, ["page", "goal"]) && String.match?(val, ~r/\*/) do
       {:matches, val}
