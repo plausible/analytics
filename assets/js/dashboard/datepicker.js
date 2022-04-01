@@ -131,7 +131,7 @@ class DatePicker extends React.Component {
   }
 
   handleKeydown(e) {
-    const { site, query, history } = this.props;
+    const { query, history } = this.props;
 
     if (e.target.tagName === 'INPUT') return true;
     if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.keyCode === 229) return true;
