@@ -66,7 +66,7 @@ export const GraphTooltip = (graphData, metric) => {
 			const prev_formattedLabel = prev_label && dateFormatter(graphData.interval, true)(prev_label)
 
 			if (graphData.interval === 'month') {
-				return !prev_label ? `${formattedLabel} ${(new Date(label)).getUTCFullYear()}` : `${prev_formattedLabel} ${(new Date(prev_label)).getUTCFullYear()}`
+				return !prev_label ? formattedLabel : prev_formattedLabel
 			}
 
 			if (graphData.interval === 'date') {
