@@ -7,8 +7,7 @@ export const INTERVALS = ["month", "week", "date", "hour", "minute"]
 export const dateFormatter = (interval, longForm, period, full) => {
   return function(isoDate, _index, _ticks) {
     let date = new Date(isoDate);
-    let date_ = date.getUTCDate();
-    let day, month, hours, ampm, minutes;
+    let hours, ampm, minutes;
 
     if (interval === 'month') {
       if (longForm) {

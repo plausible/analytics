@@ -134,7 +134,8 @@ defmodule Plausible.Stats.Timeseries do
     from(
       e in q,
       select_merge: %{
-        date: fragment(
+        date:
+          fragment(
             "
             if(toMonday(toTimeZone(?, ?)) < toDate(?),
               toDate(?),
