@@ -43,10 +43,12 @@
 
     }
     {{#if exclusions}}
-    if (excludedPaths)
-      for (var i = 0; i < excludedPaths.length; i++)
+    if (excludedPaths) {
+      for (var i = 0; i < excludedPaths.length; i++) {
         if (eventName == "pageview" && location.pathname.match(new RegExp('^' + excludedPaths[i].trim().replace(/\*\*/g, '.*').replace(/([^\.])\*/g, '$1[^\\s\/]*') + '\/?$')))
           return warn('exclusion rule');
+      }
+    }
     {{/if}}
 
     var payload = {}
@@ -92,8 +94,9 @@
       }
 
       if (link && link.href && link.host && link.host !== location.host) {
-        if (middle || click)
-        plausible('Outbound Link: Click', {props: {url: link.href}})
+        if (middle || click) {
+          plausible('Outbound Link: Click', {props: {url: link.href}})
+        }
 
         // Delay navigation so that Plausible is notified of the click
         if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
@@ -115,6 +118,50 @@
 
   {{#if outbound_links}}
   registerOutboundLinkEvents()
+  {{/if}}
+
+  {{#if file_downloads}}
+  var defaultFileTypes = ['pdf', 'xlsx', 'docx', 'txt', 'rtf', 'csv', 'exe', 'key', 'pps', 'ppt', 'pptx', '7z', 'pkg', 'rar', 'gz', 'zip', 'avi', 'mov', 'mp4', 'mpeg', 'wmv', 'midi', 'mp3', 'wav', 'wma']
+  var fileTypesAttr = scriptEl.getAttribute('file-types')
+  var fileTypesToTrack = (fileTypesAttr && fileTypesAttr.split(",")) || defaultFileTypes;
+
+  function handleDownload(event) {
+    
+    var link = event.target;
+    var middle = event.type == "auxclick" && event.which == 2;
+    var click = event.type == "click";
+
+    while(link && (typeof link.tagName == 'undefined' || link.tagName.toLowerCase() != 'a' || !link.href)) {
+      link = link.parentNode
+    }
+
+    if (link && link.href && isDownloadToTrack(link.href)) {
+
+      if (middle || click) {
+        plausible('File Download', {props: {url: link.href}})
+      }
+
+      // Delay navigation so that Plausible is notified of the click
+      if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
+        if (!(event.ctrlKey || event.metaKey || event.shiftKey) && click) {
+          setTimeout(function() {
+            location.href = link.href;
+          }, 150);
+          event.preventDefault();
+        }
+      }
+    }
+  }
+
+  function isDownloadToTrack(url) {
+    var fileType = url.split(".").pop();
+    return fileTypesToTrack.some(function(fileTypeToTrack) {
+      return fileTypeToTrack == fileType
+    })
+  }
+
+  document.addEventListener('click', handleDownload);
+  document.addEventListener('auxclick', handleDownload);
   {{/if}}
 
   var queue = (window.plausible && window.plausible.q) || []

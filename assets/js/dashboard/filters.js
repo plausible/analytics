@@ -5,7 +5,13 @@ import classNames from 'classnames'
 import { Menu, Transition } from '@headlessui/react'
 
 import { appliedFilters, navigateToQuery, formattedFilters } from './query'
-import { FILTER_GROUPS, formatFilterGroup, filterGroupForFilter } from './stats/modals/filter'
+import {
+  FILTER_GROUPS,
+  formatFilterGroup,
+  filterGroupForFilter,
+  toFilterType,
+  valueWithoutPrefix
+} from "./stats/modals/filter";
 
 function removeFilter(key, history, query) {
   const newOpts = {
@@ -32,16 +38,9 @@ function clearAllFilters(history, query) {
   );
 }
 
-function filterType(val) {
-  if (typeof(val) === 'string' && val.startsWith('!')) {
-    return ['is not', val.substr(1)]
-  }
-
-  return ['is', val]
-}
-
 function filterText(key, rawValue, query) {
-  const [type, value] = filterType(rawValue)
+  const type = toFilterType(rawValue)
+  const value = valueWithoutPrefix(rawValue)
 
   if (key === "goal") {
     return <>Completed goal <b>{value}</b></>

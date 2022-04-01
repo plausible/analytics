@@ -17,7 +17,7 @@
         return currency + this.localizedPlan.price.net
       },
       fetchPlan() {
-        fetchJsonp('https://checkout.paddle.com/api/2.0/prices?product_ids=<%= @plan.paddle_plan_id %>')
+        fetchJsonp('<%= Plausible.Billing.PaddleApi.checkout_domain() %>/api/2.0/prices?product_ids=<%= @plan.paddle_plan_id %>')
           .then(res => res.json())
           .then((data) => {
             this.localizedPlan = data.response.products[0]
