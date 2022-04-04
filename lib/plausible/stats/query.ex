@@ -286,12 +286,13 @@ defmodule Plausible.Stats.Query do
   end
 
   def remove_page(query) do
-    filters = Enum.filter(query.filters, fn
-      {"event:page", _} -> false
-      {"event:props:" <> _, _} -> false
-      _ -> true
-    end)
-    |> Enum.into(%{})
+    filters =
+      Enum.filter(query.filters, fn
+        {"event:page", _} -> false
+        {"event:props:" <> _, _} -> false
+        _ -> true
+      end)
+      |> Enum.into(%{})
 
     %__MODULE__{query | filters: filters}
   end

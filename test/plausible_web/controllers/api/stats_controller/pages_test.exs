@@ -637,7 +637,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{page: "**john**"})
+      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
 
       conn =
         get(
@@ -646,7 +646,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "/", "unique_exits" => 1, "total_exits" => 1, "exit_rate" => nil}
+               %{"name" => "/", "unique_exits" => 1, "total_exits" => 1}
              ]
     end
 
@@ -757,7 +757,6 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "unique_exits" => 1,
                  "total_visitors" => 1,
                  "total_exits" => 1,
-                 "exit_rate" => 50,
                  "conversion_rate" => 100.0
                },
                %{
@@ -765,7 +764,6 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "unique_exits" => 1,
                  "total_visitors" => 1,
                  "total_exits" => 1,
-                 "exit_rate" => 100,
                  "conversion_rate" => 100.0
                }
              ]
@@ -809,8 +807,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "/exit1", "unique_exits" => 1, "total_exits" => 1, "exit_rate" => 50},
-               %{"name" => "/exit2", "unique_exits" => 1, "total_exits" => 1, "exit_rate" => 100}
+               %{"name" => "/exit1", "unique_exits" => 1, "total_exits" => 1},
+               %{"name" => "/exit2", "unique_exits" => 1, "total_exits" => 1}
              ]
     end
   end

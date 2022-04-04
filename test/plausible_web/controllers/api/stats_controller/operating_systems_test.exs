@@ -42,6 +42,41 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
              ]
     end
 
+    test "returns operating systems when filtering by custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          operating_system: "Mac"
+        ),
+        build(:pageview,
+          user_id: 123,
+          operating_system: "Mac",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"]
+        ),
+        build(:pageview,
+          operating_system: "Windows",
+          "meta.key": ["author"],
+          "meta.value": ["other"]
+        ),
+        build(:pageview,
+          operating_system: "Android"
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Mac", "visitors" => 1, "percentage" => 100}
+             ]
+    end
+
     test "returns operating systems by unique visitors with imported data", %{
       conn: conn,
       site: site

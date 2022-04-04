@@ -49,6 +49,48 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                }
              ]
     end
+
+    test "returns conversions when directly filtered by event prop", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event,
+          user_id: @user_id,
+          name: "Payment",
+          "meta.key": ["amount", "logged_in"],
+          "meta.value": ["100", "true"]
+        ),
+        build(:event,
+          user_id: @user_id,
+          name: "Payment",
+          "meta.key": ["amount", "logged_in"],
+          "meta.value": ["500", "true"]
+        ),
+        build(:event,
+          name: "Payment",
+          "meta.key": ["amount", "logged_in"],
+          "meta.value": ["100", "false"]
+        ),
+        build(:event,
+          name: "Payment",
+          "meta.key": ["amount"],
+          "meta.value": ["200"]
+        )
+      ])
+
+      insert(:goal, %{domain: site.domain, event_name: "Payment"})
+
+      filters = Jason.encode!(%{props: %{"logged_in" => "true"}})
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Payment",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 2,
+                 "prop_names" => nil,
+                 "conversion_rate" => 33.3
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/conversions - with goal filter" do

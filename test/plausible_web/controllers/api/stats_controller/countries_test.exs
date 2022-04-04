@@ -110,5 +110,45 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                }
              ]
     end
+
+    test "returns top countries when filtering by custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          country_code: "EE"
+        ),
+        build(:pageview,
+          user_id: 123,
+          country_code: "EE",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"]
+        ),
+        build(:pageview,
+          country_code: "GB",
+          "meta.key": ["author"],
+          "meta.value": ["other"]
+        ),
+        build(:pageview,
+          country_code: "US"
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+      conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "code" => "EE",
+                 "alpha_3" => "EST",
+                 "name" => "Estonia",
+                 "flag" => "🇪🇪",
+                 "visitors" => 1,
+                 "percentage" => 100
+               }
+             ]
+    end
   end
 end
