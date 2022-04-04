@@ -76,7 +76,7 @@ defmodule Plausible.Stats.QueryTest do
     q = Query.from(@site, %{"period" => "all"})
 
     assert q.date_range.first == @site_inserted_at
-    assert q.date_range.last == Timex.today() |> Timex.end_of_month()
+    assert q.date_range.last == Timex.today()
     assert q.period == "all"
     assert q.interval == "month"
   end
