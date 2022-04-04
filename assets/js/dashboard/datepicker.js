@@ -180,8 +180,8 @@ class DatePicker extends React.Component {
 
     this.setState({open: false});
 
-    const keys = ['d', 'r', 'w', 'm', 'y', 't', 's', 'a'];
-    const redirects = [{date: false, period: 'day'}, {period: 'realtime'}, {date: false, period: '7d'}, {date: false, period: 'month'}, {date: false, period: 'year'}, {date: false, period: '30d'}, {date: false, period: '6mo'}, {date: false, period: 'all'}];
+    const keys = ['d', 'e', 'r', 'w', 'm', 'y', 't', 's', 'l', 'a'];
+    const redirects = [{date: false, period: 'day'}, {date: shiftDays(nowForSite(this.props.site), -1), period: 'day'}, {period: 'realtime'}, {date: false, period: '7d'}, {date: false, period: 'month'}, {date: false, period: 'year'}, {date: false, period: '30d'}, {date: false, period: '6mo'}, {date: false, period: '12mo'}, {date: false, period: 'all'}];
 
     if (keys.includes(e.key.toLowerCase())) {
       console.log(e.key.toLowerCase())
@@ -297,7 +297,7 @@ class DatePicker extends React.Component {
       'Last 7 days': 'W',
       'Month to Date': 'M',
       'Year to Date': 'Y',
-      'Last 6 months': 'S',
+      'Last 12 months': 'L',
       'Last 30 days': 'T',
       'All time': 'A',
     };
