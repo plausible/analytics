@@ -51,11 +51,11 @@ function buildDataSet(plot, present_index, ctx, label) {
   }
 }
 
-import {formatMonthYYYY, formatDay} from '../util/date'
+import {parseUTCDate, formatMonthYYYY, formatDay} from '../util/date'
 
 function dateFormatter(interval, longForm) {
   return function(isoDate, _index, _ticks) {
-    let date = new Date(isoDate)
+    let date = parseUTCDate(isoDate)
 
     if (interval === 'month') {
       return formatMonthYYYY(date)
