@@ -7,11 +7,11 @@ defmodule PlausibleWeb.StatsController do
   plug PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export]
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
-    has_stats = Plausible.Sites.has_stats?(site)
+    stats_start_date = Plausible.Sites.stats_start_date(site)
     can_see_stats = !site.locked || conn.assigns[:current_user_role] == :super_admin
 
     cond do
-      has_stats && can_see_stats ->
+      stats_start_date && can_see_stats ->
         demo = site.domain == PlausibleWeb.Endpoint.host()
         offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
 
@@ -22,12 +22,13 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: site,
           has_goals: Plausible.Sites.has_goals?(site),
+          stats_start_date: stats_start_date,
           title: "Plausible · " <> site.domain,
           offer_email_report: offer_email_report,
           demo: demo
         )
 
-      !has_stats && can_see_stats ->
+      !stats_start_date && can_see_stats ->
         conn
         |> assign(:skip_plausible_tracking, true)
         |> render("waiting_first_pageview.html", site: site)
@@ -177,6 +178,7 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: shared_link.site,
           has_goals: Plausible.Sites.has_goals?(shared_link.site),
+          stats_start_date: shared_link.site.stats_start_date,
           title: "Plausible · " <> shared_link.site.domain,
           offer_email_report: false,
           demo: false,

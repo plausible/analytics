@@ -66,18 +66,5 @@ defmodule Plausible.SitesTest do
 
       assert Sites.has_stats?(site)
     end
-
-    test "memoizes has_stats value" do
-      site = insert(:site)
-
-      populate_stats(site, [
-        build(:pageview)
-      ])
-
-      refute site.has_stats
-
-      assert Sites.has_stats?(site)
-      assert Repo.reload!(site).has_stats
-    end
   end
 end
