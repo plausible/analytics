@@ -146,7 +146,10 @@ defmodule Plausible.Stats.Breakdown do
              "visit:utm_content",
              "visit:utm_term"
            ] do
-    query = Query.treat_page_filter_as_entry_page(query)
+    query =
+      query
+      |> Query.treat_page_filter_as_entry_page()
+      |> Query.treat_prop_filter_as_entry_prop()
 
     breakdown_sessions(site, query, property, metrics, pagination)
   end

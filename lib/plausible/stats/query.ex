@@ -272,6 +272,20 @@ defmodule Plausible.Stats.Query do
 
   def treat_page_filter_as_entry_page(q), do: q
 
+  def treat_prop_filter_as_entry_prop(%__MODULE__{filters: filters} = q) do
+    prop_filter = get_filter_by_prefix(q, "event:props:")
+
+    case {filters["event:goal"], prop_filter} do
+      {nil, {"event:props:" <> prop, filter_value}} ->
+        q
+        |> drop_filter("event:props:" <> prop)
+        |> put_filter("visit:entry_props:" <> prop, filter_value)
+
+      _ ->
+        q
+    end
+  end
+
   def remove_goal(query) do
     props =
       Enum.map(query.filters, fn {key, _val} -> key end)
@@ -297,10 +311,24 @@ defmodule Plausible.Stats.Query do
     %__MODULE__{query | filters: filters}
   end
 
+  def drop_filter(query, filter_key) do
+    filters =
+      Enum.filter(query.filters, fn {key, _value} -> key != filter_key end)
+      |> Enum.into(%{})
+
+    %__MODULE__{query | filters: filters}
+  end
+
   def has_event_filters?(query) do
     Enum.any?(query.filters, fn
       {"event:" <> _, _} -> true
       _ -> false
+    end)
+  end
+
+  def get_filter_by_prefix(query, prefix) do
+    Enum.find(query.filters, fn {prop, _value} ->
+      String.starts_with?(prop, prefix)
     end)
   end
 

@@ -18,6 +18,9 @@ defmodule Plausible.ClickhouseSession do
     field :events, :integer
     field :sign, :integer
 
+    field :"entry.meta.key", {:array, :string}, default: []
+    field :"entry.meta.value", {:array, :string}, default: []
+
     field :utm_medium, :string
     field :utm_source, :string
     field :utm_campaign, :string

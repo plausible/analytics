@@ -87,29 +87,28 @@ defmodule Plausible.Stats.Base do
           q
       end
 
-    Enum.reduce(query.filters, q, fn {filter_key, filter_value}, query ->
-      case filter_key do
-        "event:props:" <> prop_name ->
-          filter_value = elem(filter_value, 1)
-
-          if filter_value == "(none)" do
+    q =
+      case Query.get_filter_by_prefix(query, "event:props") do
+        {"event:props:" <> prop_name, {:is, value}} ->
+          if value == "(none)" do
             from(
-              e in query,
+              e in q,
               where: fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name)
             )
           else
             from(
-              e in query,
+              e in q,
               inner_lateral_join: meta in "meta",
               as: :meta,
-              where: meta.key == ^prop_name and meta.value == ^filter_value
+              where: meta.key == ^prop_name and meta.value == ^value
             )
           end
 
         _ ->
-          query
+          q
       end
-    end)
+
+    q
   end
 
   @api_prop_name_to_db %{
@@ -156,6 +155,26 @@ defmodule Plausible.Stats.Base do
             join: sq in subquery(events_q),
             on: s.session_id == sq.session_id
           )
+      end
+
+    sessions_q =
+      case Query.get_filter_by_prefix(query, "visit:entry_props:") do
+        nil ->
+          sessions_q
+
+        {"visit:entry_props:" <> prop_name, filter_value} ->
+          case filter_value do
+            {:is, value} ->
+              from(
+                s in sessions_q,
+                inner_lateral_join: meta in "entry.meta",
+                as: :meta,
+                where: meta.key == ^prop_name and meta.value == ^value
+              )
+
+            _ ->
+              sessions_q
+          end
       end
 
     Enum.reduce(Filters.visit_props(), sessions_q, fn prop_name, sessions_q ->

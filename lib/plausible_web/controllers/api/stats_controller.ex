@@ -538,13 +538,13 @@ defmodule PlausibleWeb.Api.StatsController do
 
         Enum.map(exit_pages, fn exit_page ->
           exit_rate =
-              case Enum.find(total_pageviews, &(&1[:page] == exit_page[:name])) do
-                %{pageviews: pageviews} ->
-                  Float.floor(exit_page[:total_exits] / pageviews * 100)
+            case Enum.find(total_pageviews, &(&1[:page] == exit_page[:name])) do
+              %{pageviews: pageviews} ->
+                Float.floor(exit_page[:total_exits] / pageviews * 100)
 
-                nil ->
-                  nil
-              end
+              nil ->
+                nil
+            end
 
           Map.put(exit_page, :exit_rate, exit_rate)
         end)
