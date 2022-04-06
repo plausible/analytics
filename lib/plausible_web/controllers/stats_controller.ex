@@ -22,7 +22,6 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: site,
           has_goals: Plausible.Sites.has_goals?(site),
-          stats_begin: Plausible.Sites.stats_begin(site),
           title: "Plausible · " <> site.domain,
           offer_email_report: offer_email_report,
           demo: demo
@@ -178,7 +177,6 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: shared_link.site,
           has_goals: Plausible.Sites.has_goals?(shared_link.site),
-          stats_begin: Plausible.Sites.stats_begin(shared_link.site),
           title: "Plausible · " <> shared_link.site.domain,
           offer_email_report: false,
           demo: false,

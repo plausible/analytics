@@ -70,14 +70,6 @@ defmodule Plausible.Sites do
     end
   end
 
-  def stats_begin(site) do
-    if site.imported_data do
-      site.imported_data.start_date
-    else
-      site.inserted_at
-    end
-  end
-
   def create_shared_link(site, name, password \\ nil) do
     changes =
       SharedLink.changeset(
