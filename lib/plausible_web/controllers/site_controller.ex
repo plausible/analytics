@@ -701,7 +701,10 @@ defmodule PlausibleWeb.SiteController do
     site = conn.assigns[:site]
 
     start_date = Plausible.Google.Api.get_analytics_start_date(view_id, access_token)
-    end_date = Plausible.Stats.Clickhouse.pageview_start_date_local(site)
+
+    end_date =
+      Plausible.Stats.Clickhouse.pageview_start_date_local(site) || Timex.today(site.timezone)
+
     {:ok, view_ids} = Plausible.Google.Api.get_analytics_view_ids(access_token)
 
     conn

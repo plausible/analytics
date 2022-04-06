@@ -19,6 +19,37 @@ defmodule Plausible.SitesTest do
     end
   end
 
+  describe "stats_start_date" do
+    test "is nil if site has no stats" do
+      site = insert(:site)
+
+      assert Sites.stats_start_date(site) == nil
+    end
+
+    test "is date if first pageview if site does have stats" do
+      site = insert(:site)
+
+      populate_stats(site, [
+        build(:pageview)
+      ])
+
+      assert Sites.stats_start_date(site) == Timex.today(site.timezone)
+    end
+
+    test "memoizes value of start date" do
+      site = insert(:site)
+
+      assert site.stats_start_date == nil
+
+      populate_stats(site, [
+        build(:pageview)
+      ])
+
+      assert Sites.stats_start_date(site) == Timex.today(site.timezone)
+      assert Repo.reload!(site).stats_start_date == Timex.today(site.timezone)
+    end
+  end
+
   describe "has_stats?" do
     test "is false if site has no stats" do
       site = insert(:site)
