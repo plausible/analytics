@@ -81,10 +81,6 @@ defmodule Plausible.SiteAdmin do
 
   def transfer_data(_, _), do: {:error, "Please select exactly one site for this action"}
 
-  defp domain_exists?(domain) do
-    Repo.exists?(from s in Plausible.Site, where: s.domain == ^domain)
-  end
-
   def session_transfer_query(from_domain, to_domain) do
     fields = get_struct_fields(Plausible.ClickhouseSession)
 
