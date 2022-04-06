@@ -185,7 +185,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       use Plausible.Repo
 
       Repo.update_all(from(s in "sites", where: s.id == ^site.id),
-        set: [inserted_at: ~N[2020-01-01 00:00:00]]
+        set: [stats_start_date: ~D[2020-01-01]]
       )
 
       populate_stats(site, [
