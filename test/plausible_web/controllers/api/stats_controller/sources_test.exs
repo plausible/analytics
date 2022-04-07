@@ -71,7 +71,10 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
-    test "returns top sources with :is_not filter on custom pageview props", %{conn: conn, site: site} do
+    test "returns top sources with :is_not filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview,
           referrer_source: "DuckDuckGo",

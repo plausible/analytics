@@ -20,7 +20,10 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
              ]
     end
 
-    test "returns top browsers with :is filter on custom pageview props", %{conn: conn, site: site} do
+    test "returns top browsers with :is filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview,
           user_id: 123,
@@ -50,7 +53,10 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
              ]
     end
 
-    test "returns top browsers with :is_not filter on custom pageview props", %{conn: conn, site: site} do
+    test "returns top browsers with :is_not filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview,
           user_id: 123,

@@ -92,7 +92,10 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
-    test "returns conversions when a direct :is_not filter on event prop", %{conn: conn, site: site} do
+    test "returns conversions when a direct :is_not filter on event prop", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:event,
           user_id: @user_id,

@@ -37,7 +37,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           "meta.key": ["author"],
           "meta.value": ["other"]
         ),
-        build(:pageview, user_id: 123, pathname: "/"),
+        build(:pageview, user_id: 123, pathname: "/")
       ])
 
       filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
@@ -48,7 +48,10 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    test "returns top pages with :is_not filter on custom pageview props", %{conn: conn, site: site} do
+    test "returns top pages with :is_not filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview,
           pathname: "/blog/john-1",
@@ -60,7 +63,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           "meta.key": ["author"],
           "meta.value": ["other"]
         ),
-        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/")
       ])
 
       filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})

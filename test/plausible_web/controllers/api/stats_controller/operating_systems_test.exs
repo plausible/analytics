@@ -77,7 +77,10 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
              ]
     end
 
-    test "returns screen sizes with :is_not filter on custom pageview props", %{conn: conn, site: site} do
+    test "returns screen sizes with :is_not filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview,
           user_id: 123,
@@ -102,7 +105,9 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       ])
 
       filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
-      conn = get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&filters=#{filters}")
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&filters=#{filters}")
 
       assert json_response(conn, 200) == [
                %{"name" => "Android", "visitors" => 1, "percentage" => 50},
