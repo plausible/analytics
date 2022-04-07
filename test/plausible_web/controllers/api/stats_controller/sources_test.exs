@@ -30,7 +30,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
-    test "returns top sources filtered by custom pageview props", %{conn: conn, site: site} do
+    test "returns top sources with :is filter on custom pageview props", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           referrer_source: "DuckDuckGo",
@@ -67,6 +67,50 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
 
       assert json_response(conn, 200) == [
+               %{"name" => "Google", "visitors" => 1}
+             ]
+    end
+
+    test "returns top sources with :is_not filter on custom pageview props", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["other"],
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["author"],
+          "meta.value": ["other"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Facebook",
+          referrer: "facebook.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Facebook", "visitors" => 1},
                %{"name" => "Google", "visitors" => 1}
              ]
     end
@@ -573,7 +617,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
-    test "returns top referrers with goal and prop filters combined", %{conn: conn, site: site} do
+    test "returns top referrers with goal filter + :is prop filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           referrer_source: "DuckDuckGo",
@@ -619,6 +663,63 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  "visitors" => 1,
                  "conversion_rate" => 50.0,
                  "total_visitors" => 2
+               }
+             ]
+    end
+
+    test "returns top referrers with goal filter + prop :is_not filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com",
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Download",
+          "meta.key": ["method"],
+          "meta.value": ["HTTP"],
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:event,
+          name: "Download",
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["method", "logged_in"],
+          "meta.value": ["HTTP", "true"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Download",
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["method", "logged_in"],
+          "meta.value": ["HTTP", "false"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "Download", props: %{"logged_in" => "!true"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Google",
+                 "visitors" => 1,
+                 "conversion_rate" => 50.0,
+                 "total_visitors" => 2
+               },
+               %{
+                 "name" => "DuckDuckGo",
+                 "visitors" => 1,
+                 "conversion_rate" => 100.0,
+                 "total_visitors" => 1
                }
              ]
     end

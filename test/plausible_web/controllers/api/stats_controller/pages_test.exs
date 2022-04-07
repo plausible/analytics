@@ -25,15 +25,10 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    test "returns top pages filtered by custom pageview props", %{conn: conn, site: site} do
+    test "returns top pages with :is filter on custom pageview props", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           pathname: "/blog/john-1",
-          "meta.key": ["author"],
-          "meta.value": ["John Doe"]
-        ),
-        build(:pageview,
-          pathname: "/blog/john-2",
           "meta.key": ["author"],
           "meta.value": ["John Doe"]
         ),
@@ -42,20 +37,42 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           "meta.key": ["author"],
           "meta.value": ["other"]
         ),
-        build(:pageview, user_id: 123, pathname: "/blog/john-1"),
-        build(:pageview, user_id: 123, pathname: "/blog/john-2")
+        build(:pageview, user_id: 123, pathname: "/"),
       ])
 
       filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200) == [
-               %{"visitors" => 1, "name" => "/blog/john-2"},
                %{"visitors" => 1, "name" => "/blog/john-1"}
              ]
     end
 
-    test "calculates bounce_rate and time_on_page for pages filtered by custom pageview props",
+    test "returns top pages with :is_not filter on custom pageview props", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/blog/john-1",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"]
+        ),
+        build(:pageview,
+          pathname: "/blog/other-post",
+          "meta.key": ["author"],
+          "meta.value": ["other"]
+        ),
+        build(:pageview, pathname: "/"),
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
+      conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"visitors" => 1, "name" => "/"},
+               %{"visitors" => 1, "name" => "/blog/other-post"}
+             ]
+    end
+
+    test "calculates bounce_rate and time_on_page with :is filter on custom pageview props",
          %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -113,6 +130,68 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "bounce_rate" => 0,
                  "time_on_page" => 60
+               }
+             ]
+    end
+
+    test "calculates bounce_rate and time_on_page with :is_not filter on custom pageview props",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/blog",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/blog/john-1",
+          user_id: @user_id,
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          pathname: "/blog/other-post",
+          user_id: @user_id,
+          "meta.key": ["author"],
+          "meta.value": ["other"],
+          timestamp: ~N[2021-01-01 00:02:00]
+        ),
+        build(:pageview,
+          pathname: "/blog",
+          user_id: 456,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/blog/john-1",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          user_id: 456,
+          timestamp: ~N[2021-01-01 00:03:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&filters=#{filters}&detailed=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "/blog",
+                 "visitors" => 2,
+                 "pageviews" => 2,
+                 "bounce_rate" => 0,
+                 "time_on_page" => 120.0
+               },
+               %{
+                 "name" => "/blog/other-post",
+                 "visitors" => 1,
+                 "pageviews" => 1,
+                 "bounce_rate" => nil,
+                 "time_on_page" => nil
                }
              ]
     end

@@ -104,6 +104,14 @@ defmodule Plausible.Stats.Base do
             )
           end
 
+        {"event:props:" <> prop_name, {:is_not, value}} ->
+          from(
+              e in q,
+              left_lateral_join: meta in "meta",
+              as: :meta,
+              where: (meta.key == ^prop_name and meta.value != ^value) or fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name)
+          )
+
         _ ->
           q
       end
@@ -170,6 +178,14 @@ defmodule Plausible.Stats.Base do
                 inner_lateral_join: meta in "entry.meta",
                 as: :meta,
                 where: meta.key == ^prop_name and meta.value == ^value
+              )
+
+            {:is_not, value} ->
+              from(
+                s in sessions_q,
+                left_lateral_join: meta in "entry.meta",
+                as: :meta,
+                where: meta.key == ^prop_name and meta.value != ^value or fragment("not has(?, ?)", field(s, :"entry.meta.key"), ^prop_name)
               )
 
             _ ->
