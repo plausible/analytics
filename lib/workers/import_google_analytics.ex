@@ -3,7 +3,7 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
 
   use Oban.Worker,
     queue: :google_analytics_imports,
-    max_attempts: 1,
+    max_attempts: 3,
     unique: [fields: [:args], period: 60]
 
   @impl Oban.Worker
@@ -43,6 +43,12 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
 
         {:error, error}
     end
+  end
+
+  @impl Oban.Worker
+  def backoff(_job) do
+    # 5 minutes
+    300
   end
 
   def import_failed(site) do
