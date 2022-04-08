@@ -18,11 +18,10 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
 
     api_stub =
       stub(Plausible.Google.Api, :import_analytics, fn _site,
+                                                       _date_range,
                                                        _view_id,
-                                                       _start_date,
-                                                       _end_date,
                                                        _access_token ->
-        {:ok, nil}
+        :ok
       end)
 
     ImportGoogleAnalytics.perform(
@@ -47,11 +46,10 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
 
     api_stub =
       stub(Plausible.Google.Api, :import_analytics, fn _site,
+                                                       _date_range,
                                                        _view_id,
-                                                       _start_date,
-                                                       _end_date,
                                                        _access_token ->
-        {:ok, nil}
+        :ok
       end)
 
     ImportGoogleAnalytics.perform(
@@ -76,11 +74,10 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
 
     api_stub =
       stub(Plausible.Google.Api, :import_analytics, fn _site,
+                                                       _date_range,
                                                        _view_id,
-                                                       _start_date,
-                                                       _end_date,
                                                        _access_token ->
-        {:ok, nil}
+        :ok
       end)
 
     ImportGoogleAnalytics.perform(
@@ -108,9 +105,8 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
 
     api_stub =
       stub(Plausible.Google.Api, :import_analytics, fn _site,
+                                                       _date_range,
                                                        _view_id,
-                                                       _start_date,
-                                                       _end_date,
                                                        _access_token ->
         {:error, "Something went wrong"}
       end)
@@ -141,9 +137,8 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
 
     api_stub =
       stub(Plausible.Google.Api, :import_analytics, fn _site,
+                                                       _date_range,
                                                        _view_id,
-                                                       _start_date,
-                                                       _end_date,
                                                        _access_token ->
         {:error, "Something went wrong"}
       end)
@@ -170,9 +165,8 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
 
     api_stub =
       stub(Plausible.Google.Api, :import_analytics, fn _site,
+                                                       _date_range,
                                                        _view_id,
-                                                       _start_date,
-                                                       _end_date,
                                                        _access_token ->
         {:error, "Something went wrong"}
       end)

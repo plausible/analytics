@@ -278,67 +278,92 @@ defmodule Plausible.Google.Api do
 
   Dimensions reference: https://ga-dev-tools.web.app/dimensions-metrics-explorer
   """
-  def import_analytics(site, view_id, start_date, end_date, access_token) do
-    request = %{
-      access_token: access_token,
-      view_id: view_id,
-      start_date: start_date,
-      end_date: end_date
-    }
-
-    responses =
-      Enum.map(
-        @request_data,
-        fn {dataset, dimensions, metrics} ->
-          fetch_analytic_reports(dataset, dimensions, metrics, request)
-        end
-      )
-
-    case Keyword.get(responses, :error) do
-      nil ->
-        results =
-          responses
-          |> Enum.map(fn {:ok, resp} -> resp end)
-          |> Enum.concat()
-
-        if Enum.any?(results, fn {_, val} -> val end) do
-          maybe_error =
-            results
-            |> Enum.map(fn {dataset, data} ->
-              Imported.from_google_analytics(data, site.id, dataset)
-            end)
-            |> Keyword.get(:error)
-
-          case maybe_error do
-            nil ->
-              {:ok, nil}
-
-            {:error, error} ->
-              Sentry.capture_message("Error saving Google analytics data", extra: error)
-              {:error, error["error"]["message"]}
-          end
-        else
-          {:error, "No Google Analytics data found."}
+  def import_analytics(site, date_range, view_id, access_token) do
+    for month_batch <- prepare_batches(date_range, view_id, access_token) do
+      tasks =
+        for batch_request <- month_batch do
+          Task.async(fn -> fetch_and_persist(site, batch_request) end)
         end
 
-      error ->
-        Sentry.capture_message("Error fetching Google analytics data", extra: error)
-        {:error, error}
+      # 1 hour max to get 1 month's worth of data
+      Task.await_many(tasks, 3_600_000)
+    end
+
+    :ok
+  end
+
+  defp prepare_batches(import_date_range, view_id, access_token) do
+    total_months = Timex.diff(import_date_range.last, import_date_range.first, :months)
+
+    monthly_batches =
+      for month <- 0..total_months do
+        batch_start_date = Timex.shift(import_date_range.first, months: month)
+        batch_end_date = Timex.shift(batch_start_date, months: 1, days: -1)
+
+        batch_end_date =
+          if Timex.before?(import_date_range.last, batch_end_date),
+            do: import_date_range.last,
+            else: batch_end_date
+
+        Date.range(batch_start_date, batch_end_date)
+      end
+
+    for date_range <- monthly_batches do
+      for {dataset, dimensions, metrics} <- @request_data do
+        %{
+          dataset: dataset,
+          dimensions: dimensions,
+          metrics: metrics,
+          date_range: date_range,
+          view_id: view_id,
+          access_token: access_token,
+          page_token: nil
+        }
+      end
     end
   end
 
-  defp fetch_analytic_reports(dataset, dimensions, metrics, request, page_token \\ "") do
-    report = %{
+  defp fetch_and_persist(site, request) do
+    report_request = build_import_report_request(request)
+
+    {:ok, res} =
+      HTTPoison.post(
+        "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
+        Jason.encode!(%{reportRequests: [report_request]}),
+        [Authorization: "Bearer #{request.access_token}"],
+        timeout: 30_000,
+        recv_timeout: 30_000
+      )
+      |> HTTPoison.Retry.autoretry(max_attempts: 5, wait: 5_000)
+
+    if res.status_code == 200 do
+      report = List.first(Jason.decode!(res.body)["reports"])
+      data = get_in(report, ["data", "rows"])
+      Imported.from_google_analytics(data, site.id, request.dataset)
+
+      case report["nextPageToken"] do
+        nil ->
+          :ok
+
+        token ->
+          fetch_and_persist(site, %{request | page_token: token})
+      end
+    else
+      {:error, Jason.decode!(res.body)["error"]["message"]}
+    end
+  end
+
+  defp build_import_report_request(request) do
+    %{
       viewId: request.view_id,
       dateRanges: [
         %{
-          # The earliest valid date
-          startDate: request.start_date,
-          endDate: request.end_date
+          startDate: request.date_range.first,
+          endDate: request.date_range.last
         }
       ],
-      dimensions: Enum.map(dimensions, &%{name: &1, histogramBuckets: []}),
-      metrics: Enum.map(metrics, &%{expression: &1}),
+      dimensions: Enum.map(request.dimensions, &%{name: &1, histogramBuckets: []}),
+      metrics: Enum.map(request.metrics, &%{expression: &1}),
       hideTotals: true,
       hideValueRanges: true,
       orderBys: [
@@ -347,48 +372,9 @@ defmodule Plausible.Google.Api do
           sortOrder: "DESCENDING"
         }
       ],
-      pageSize: 5_000,
-      pageToken: page_token
+      pageSize: 10_000,
+      pageToken: request.page_token
     }
-
-    Logger.debug(Jason.encode!(%{reportRequests: [report]}))
-
-    res =
-      HTTPoison.post!(
-        "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
-        Jason.encode!(%{reportRequests: [report]}),
-        [Authorization: "Bearer #{request.access_token}"],
-        timeout: 30_000,
-        recv_timeout: 30_000
-      )
-      |> HTTPoison.Retry.autoretry(max_attempts: 3, wait: 5_000)
-
-    if res.status_code == 200 do
-      report = List.first(Jason.decode!(res.body)["reports"])
-      data = report["data"]["rows"]
-      next_page_token = report["nextPageToken"]
-
-      if next_page_token do
-        # Recursively make more requests until we run out of next page tokens
-        case fetch_analytic_reports(
-               dataset,
-               dimensions,
-               metrics,
-               request,
-               next_page_token
-             ) do
-          {:ok, %{^dataset => remainder}} ->
-            {:ok, %{dataset => data ++ remainder}}
-
-          error ->
-            error
-        end
-      else
-        {:ok, %{dataset => data}}
-      end
-    else
-      {:error, Jason.decode!(res.body)["error"]["message"]}
-    end
   end
 
   defp refresh_if_needed(auth) do

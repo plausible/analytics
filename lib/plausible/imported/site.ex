@@ -10,8 +10,6 @@ defmodule Plausible.Imported do
   def from_google_analytics(nil, _site_id, _metric), do: {:ok, nil}
 
   def from_google_analytics(data, site_id, table) do
-    Logger.debug("Processing imported data (table=#{table}): #{inspect(data)}")
-
     data =
       Enum.map(data, fn row ->
         new_from_google_analytics(site_id, table, row)
@@ -234,8 +232,14 @@ defmodule Plausible.Imported do
   end
 
   defp format_date(date) do
-    Timex.parse!("#{date}", "%Y%m%d", :strftime)
-    |> NaiveDateTime.to_date()
+    case Timex.parse("#{date}", "%Y%m%d", :strftime) do
+      {:ok, datetime} ->
+        NaiveDateTime.to_date(datetime)
+
+      {:error, e} ->
+        Logger.error(e)
+        raise e
+    end
   end
 
   @missing_values ["(none)", "(not set)", "(not provided)"]

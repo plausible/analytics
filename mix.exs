@@ -56,7 +56,7 @@ defmodule Plausible.MixProject do
       {:ecto_sql, "~> 3.0"},
       {:elixir_uuid, "~> 1.2", only: :test},
       {:jason, "~> 1.2"},
-      {:phoenix, "~> 1.5.0"},
+      {:phoenix, "~> 1.6.0"},
       {:phoenix_ecto, "~> 4.0"},
       {:phoenix_html, "~> 2.12"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},

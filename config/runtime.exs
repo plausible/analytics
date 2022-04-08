@@ -325,7 +325,6 @@ if config_env() == :prod && !disable_cron do
   ]
 
   extra_queues = [
-    provision_ssl_certificates: 1,
     trial_notification_emails: 1,
     check_usage: 1,
     notify_annual_renewal: 1,
