@@ -20,6 +20,7 @@ defmodule PlausibleWeb.Api.InternalController do
       sites =
         sitesFor(current_user, params)
         |> buildResponse(conn)
+
       json(conn, sites)
     else
       unauthorized(conn, "You need to be logged in to request a list of sites")
@@ -45,5 +46,4 @@ defmodule PlausibleWeb.Api.InternalController do
       pagination: paginate(conn, pagination)
     }
   end
-
 end
