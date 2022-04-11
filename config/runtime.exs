@@ -300,7 +300,7 @@ base_cron = [
   {"0 1 * * *", Plausible.Workers.CleanInvitations}
 ]
 
-extra_cron = [
+cloud_cron = [
   # Daily at midday
   {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
   # Daily at 14
@@ -311,7 +311,9 @@ extra_cron = [
   {"0 0 * * *", Plausible.Workers.LockSites}
 ]
 
-queues = [
+crontab = if(is_selfhost, do: base_cron, else: base_cron ++ cloud_cron)
+
+base_queues = [
   rotate_salts: 1,
   schedule_email_reports: 1,
   send_email_reports: 1,
@@ -320,44 +322,38 @@ queues = [
   site_setup_emails: 1,
   clean_email_verification_codes: 1,
   clean_invitations: 1,
-  google_analytics_imports: 1,
-  test_job_retry: 1,
+  google_analytics_imports: 1
+]
+
+cloud_queues = [
   trial_notification_emails: 1,
   check_usage: 1,
   notify_annual_renewal: 1,
   lock_sites: 1
 ]
 
+queues = if(is_selfhost, do: base_queues, else: base_queues ++ cloud_queues)
+cron_enabled = !!disable_cron
+
 cond do
-  config_env() == :prod && !disable_cron ->
+  config_env() == :prod ->
     config :plausible, Oban,
       repo: Plausible.Repo,
       plugins: [
         # Keep 30 days history
         {Oban.Plugins.Pruner, max_age: :timer.hours(24 * 30)},
-        {Oban.Plugins.Cron,
-         crontab: if(is_selfhost, do: base_cron, else: base_cron ++ extra_cron)},
+        {Oban.Plugins.Cron, crontab: if(cron_enabled, do: crontab, else: [])},
         # Rescue orphaned jobs after 2 hours
         {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)},
         {Oban.Plugins.Stager, interval: :timer.seconds(5)}
       ],
-      queues: queues
-
-  config_env() == :test ->
-    config :plausible, Oban,
-      repo: Plausible.Repo,
-      queues: queues,
-      plugins: false
+      queues: if(cron_enabled, do: queues, else: [])
 
   true ->
     config :plausible, Oban,
       repo: Plausible.Repo,
       queues: queues,
-      plugins: [
-        # Keep 1 day history
-        {Oban.Plugins.Pruner, max_age: :timer.hours(24)},
-        {Oban.Plugins.Stager, interval: :timer.seconds(5)}
-      ]
+      plugins: false
 end
 
 config :plausible, :hcaptcha,
