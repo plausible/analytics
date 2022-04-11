@@ -706,7 +706,7 @@ defmodule PlausibleWeb.SiteController do
       Plausible.Stats.Clickhouse.pageview_start_date_local(site) || Timex.today(site.timezone)
 
     {:ok, view_ids} = Plausible.Google.Api.get_analytics_view_ids(access_token)
-    {view_id_name, _} = Enum.find(view_ids, fn {k, v} -> v == view_id end)
+    {view_id_name, _} = Enum.find(view_ids, fn {_, v} -> v == view_id end)
 
     conn
     |> assign(:skip_plausible_tracking, true)
