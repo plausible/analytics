@@ -146,8 +146,9 @@ class FilterModal extends React.Component {
       if (filterKey === 'city') { res.push({filter: 'city_name', value: name}) }
       if (filterKey === 'prop_value') {return res}
       if (filterKey === 'property') {
-        let propValue = formState['prop_value'].value
-        res.push({filter: 'props', value: JSON.stringify({ [value]: propValue })})
+        let propValue = formState['prop_value']
+        let filterValue = JSON.stringify({ [value]: toFilterQuery(propValue.value, propValue.type) })
+        res.push({filter: 'props', value: filterValue})
         return res
       }
 
@@ -230,7 +231,6 @@ class FilterModal extends React.Component {
           <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{ formattedFilters[filter] }</div>
           <div className="flex items-start mt-1">
             { this.renderFilterTypeSelector(filter) }
-            {console.log(filter)}
             <SearchSelect
               key={filter}
               fetchOptions={this.fetchOptions(filter)}

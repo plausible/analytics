@@ -199,6 +199,114 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "calculates bounce_rate and time_on_page with :is (none) filter on custom pageview props",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/blog",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/blog/john-1",
+          user_id: @user_id,
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          pathname: "/blog/other-post",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:02:00]
+        ),
+        build(:pageview,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "(none)"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&filters=#{filters}&detailed=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "/blog",
+                 "visitors" => 2,
+                 "pageviews" => 2,
+                 "bounce_rate" => 50,
+                 "time_on_page" => 60
+               },
+               %{
+                 "name" => "/blog/other-post",
+                 "visitors" => 1,
+                 "pageviews" => 1,
+                 "bounce_rate" => nil,
+                 "time_on_page" => nil
+               }
+             ]
+    end
+
+    test "calculates bounce_rate and time_on_page with :is_not (none) filter on custom pageview props",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/blog/john-1",
+          user_id: @user_id,
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/blog",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          pathname: "/blog/other-post",
+          "meta.key": ["author"],
+          "meta.value": ["other"],
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:02:00]
+        ),
+        build(:pageview,
+          pathname: "/blog/other-post",
+          "meta.key": ["author"],
+          "meta.value": [""],
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "!(none)"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&filters=#{filters}&detailed=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "/blog/other-post",
+                 "visitors" => 2,
+                 "pageviews" => 2,
+                 "bounce_rate" => 100,
+                 "time_on_page" => nil
+               },
+               %{
+                 "name" => "/blog/john-1",
+                 "visitors" => 1,
+                 "pageviews" => 1,
+                 "bounce_rate" => 0,
+                 "time_on_page" => 60
+               }
+             ]
+    end
+
     test "calculates bounce_rate and time_on_page for pages filtered by page path",
          %{conn: conn, site: site} do
       populate_stats(site, [

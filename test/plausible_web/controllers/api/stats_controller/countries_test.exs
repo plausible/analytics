@@ -192,5 +192,80 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                }
              ]
     end
+
+    test "returns top countries with :is (none) filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          country_code: "EE",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"]
+        ),
+        build(:pageview,
+          country_code: "GB",
+          "meta.key": ["logged_in"],
+          "meta.value": ["true"]
+        ),
+        build(:pageview,
+          country_code: "GB"
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "(none)"}})
+      conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "code" => "GB",
+                 "alpha_3" => "GBR",
+                 "name" => "United Kingdom",
+                 "flag" => "🇬🇧",
+                 "visitors" => 2,
+                 "percentage" => 100
+               }
+             ]
+    end
+
+    test "returns top countries with :is_not (none) filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          country_code: "EE",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"]
+        ),
+        build(:pageview,
+          country_code: "EE",
+          "meta.key": ["author"],
+          "meta.value": [""]
+        ),
+        build(:pageview,
+          country_code: "GB",
+          "meta.key": ["logged_in"],
+          "meta.value": ["true"]
+        ),
+        build(:pageview,
+          country_code: "GB"
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "!(none)"}})
+      conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "code" => "EE",
+                 "alpha_3" => "EST",
+                 "name" => "Estonia",
+                 "flag" => "🇪🇪",
+                 "visitors" => 2,
+                 "percentage" => 100
+               }
+             ]
+    end
   end
 end
