@@ -48,12 +48,6 @@
 <% end %>
 
 <div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
-
-    <div class="w-full px-4 py-4 text-sm text-yellow-800 bg-yellow-100 rounded transition" role="alert">
-      <b>Feature preview:</b> Import from Google Analytics is ready to be tested, but it's not completely finalized yet. Please leave your
-      feedback on the relevant <%= link("Github Discussion", to: "https://github.com/plausible/analytics/discussions/1794", target: "_blank", class: "underline") %> so we can improve the feature.
-    </div>
-
   <header class="relative mt-4">
     <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Data Import from Google Analytics</h2>
     <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">Import existing data from your Google Analytics account.</p>
@@ -81,39 +75,39 @@
           <%= link("Cancel import", to: "/#{URI.encode_www_form(@site.domain)}/settings/forget-imported", method: :delete, class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150") %>
         </li>
 
-      <% @site.imported_data && @site.imported_data.status == "ok" -> %>
-        <li class="py-4 flex items-center justify-between space-x-4">
-          <div class="flex flex-col">
-            <p class="text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">
-            Import from <%= @site.imported_data.source %>
-            <svg class="h-4 w-4 inline ml-1 -mt-1 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-            </p>
-            <p class="text-sm leading-5 text-gray-500 dark:text-gray-200">
-            From <%= PlausibleWeb.EmailView.date_format(@site.imported_data.start_date) %> to <%= PlausibleWeb.EmailView.date_format(@site.imported_data.end_date) %>
-            </p>
-          </div>
-          <%= link("Clear " <> PlausibleWeb.StatsView.large_number_format(@imported_pageviews) <> " imported pageviews", to: "/#{URI.encode_www_form(@site.domain)}/settings/forget-imported", method: :delete, class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150") %>
-        </li>
+        <% @site.imported_data && @site.imported_data.status == "ok" -> %>
+          <li class="py-4 flex items-center justify-between space-x-4">
+            <div class="flex flex-col">
+              <p class="text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">
+              Import from <%= @site.imported_data.source %>
+              <svg class="h-4 w-4 inline ml-1 -mt-1 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              </p>
+              <p class="text-sm leading-5 text-gray-500 dark:text-gray-200">
+              From <%= PlausibleWeb.EmailView.date_format(@site.imported_data.start_date) %> to <%= PlausibleWeb.EmailView.date_format(@site.imported_data.end_date) %>
+              </p>
+            </div>
+            <%= link("Clear " <> PlausibleWeb.StatsView.large_number_format(@imported_pageviews) <> " imported pageviews", to: "/#{URI.encode_www_form(@site.domain)}/settings/forget-imported", method: :delete, class: "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150") %>
+          </li>
 
-      <% true -> %>
-        <%= if @site.imported_data && @site.imported_data.status == "error" do %>
-          <div class="text-sm mt-2 text-gray-900 dark:text-gray-100">Your latest import has failed. You can try importing again by clicking the button below. If you try multiple times and the import keeps failing, please contact support.</div>
-        <% end %>
-        <div class="flex mt-2">
-          <%= button(to: Plausible.Google.Api.authorize_url(@site.id, "import"), class: "inline-flex pr-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50 dark:hover:bg-gray-700") do %>
-            <%= google_logo() %>
-            <span style="font-family: Roboto, system-ui" class="text-sm font-medium text-gray-600 dark:text-gray-50">Continue with Google<span>
+          <% true -> %>
+            <%= if @site.imported_data && @site.imported_data.status == "error" do %>
+              <div class="text-sm mt-2 text-gray-900 dark:text-gray-100">Your latest import has failed. You can try importing again by clicking the button below. If you try multiple times and the import keeps failing, please contact support.</div>
+            <% end %>
+            <div class="flex mt-2">
+              <%= button(to: Plausible.Google.Api.authorize_url(@site.id, "import"), class: "inline-flex pr-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50 dark:hover:bg-gray-700") do %>
+                <%= google_logo() %>
+                <span style="font-family: Roboto, system-ui" class="text-sm font-medium text-gray-600 dark:text-gray-50">Continue with Google<span>
+                  <% end %>
+            </div>
+
           <% end %>
-        </div>
-
-    <% end %>
-  <% else %>
-    <div class="my-8 text-center text-lg">
-      <svg class="block mx-auto mb-4 w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-      <p class="text-gray-900 dark:text-gray-200">An extra step is needed to set up your Plausible Analytics Self Hosted for the Google Search Console integration.
-      Find instructions <%= link("here", to: "https://plausible.io/docs/self-hosting-configuration#google-search-integration", class: "text-indigo-500") %></p>
-    </div>
-  <% end %>
+        <% else %>
+          <div class="my-8 text-center text-lg">
+            <svg class="block mx-auto mb-4 w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <p class="text-gray-900 dark:text-gray-200">An extra step is needed to set up your Plausible Analytics Self Hosted for the Google Search Console integration.
+            Find instructions <%= link("here", to: "https://plausible.io/docs/self-hosting-configuration#google-search-integration", class: "text-indigo-500") %></p>
+          </div>
+        <% end %>
 </div>
