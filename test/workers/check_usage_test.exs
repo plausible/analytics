@@ -119,7 +119,7 @@ defmodule Plausible.Workers.CheckUsageTest do
     assert Repo.reload(user).grace_period.allowance_required == 12_000
   end
 
-  test "reccommends a plan to upgrade to", %{
+  test "recommends a plan to upgrade to", %{
     user: user
   } do
     billing_stub =

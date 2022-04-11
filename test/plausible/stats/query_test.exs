@@ -17,7 +17,7 @@ defmodule Plausible.Stats.QueryTest do
     assert q.interval == "hour"
   end
 
-  test "day fromat defaults to today" do
+  test "day format defaults to today" do
     q = Query.from(@site, %{"period" => "day"})
 
     assert q.date_range.first == Timex.today()

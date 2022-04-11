@@ -54,7 +54,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   describe "GET /api/stats/:domain/conversions - with goal filter" do
     setup [:create_user, :log_in, :create_new_site]
 
-    test "returns only the conversion tha is filtered for", %{conn: conn, site: site} do
+    test "returns only the conversion that is filtered for", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/"),
         build(:pageview, pathname: "/"),

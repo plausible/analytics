@@ -12,7 +12,7 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
     status: "importing"
   }
 
-  test "updates the imported_data field for the site after succesful import" do
+  test "updates the imported_data field for the site after successful import" do
     user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
     site = insert(:site, members: [user], imported_data: @imported_data)
 
@@ -40,7 +40,7 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
     assert Repo.reload!(site).imported_data.status == "ok"
   end
 
-  test "updates the stats_start_date field for the site after succesful import" do
+  test "updates the stats_start_date field for the site after successful import" do
     user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
     site = insert(:site, members: [user], imported_data: @imported_data)
 
@@ -68,7 +68,7 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
     assert Repo.reload!(site).stats_start_date == @imported_data.start_date
   end
 
-  test "sends email to owner after succesful import" do
+  test "sends email to owner after successful import" do
     user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
     site = insert(:site, members: [user], imported_data: @imported_data)
 
@@ -127,7 +127,7 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
     assert Repo.reload!(site).imported_data.status == "error"
   end
 
-  test "clears any orphaned data during impot" do
+  test "clears any orphaned data during import" do
     user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
     site = insert(:site, members: [user], imported_data: @imported_data)
 
