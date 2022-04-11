@@ -706,14 +706,15 @@ defmodule PlausibleWeb.SiteController do
       Plausible.Stats.Clickhouse.pageview_start_date_local(site) || Timex.today(site.timezone)
 
     {:ok, view_ids} = Plausible.Google.Api.get_analytics_view_ids(access_token)
+    {view_id_name, _} = Enum.find(view_ids, fn {k, v} -> v == view_id end)
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("import_from_google_confirm.html",
       access_token: access_token,
       site: site,
-      view_ids: view_ids,
       selected_view_id: view_id,
+      selected_view_id_name: view_id_name,
       start_date: start_date,
       end_date: end_date,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
