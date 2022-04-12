@@ -313,7 +313,7 @@ class LineGraph extends React.Component {
         </div>
         <div className="relative px-2">
           <div className={`absolute right-4 ${metric ? '-top-5' : '-top-10'} flex`}>
-            {this.props.metric && this.props.graphData && <IntervalPicker site={site} query={query} graphData={graphData} positionClasses="right-8 top-5 md:top-6" updateInterval={this.props.updateInterval}/>}
+            {this.props.metric && this.props.graphData && <IntervalPicker site={site} query={query} graphData={graphData} updateInterval={this.props.updateInterval}/>}
             { this.downloadLink() }
             { this.samplingNotice() }
             { this.importedNotice() }

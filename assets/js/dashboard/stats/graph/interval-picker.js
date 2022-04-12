@@ -53,7 +53,7 @@ export default class IntervalPicker extends Component {
 		return (
 			<div
 				id="intervalmenu"
-				className={`absolute w-3/5 sm:w-2/5 md:w-56 md:absolute ${this.props.positionClasses} mt-2 z-10`}
+				className="absolute w-56 sm:w-42 md:w-56 md:absolute right-0 top-5 md:top-6 mt-2 z-10"
 			>
 				<div
 					className="rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5
@@ -93,11 +93,11 @@ export default class IntervalPicker extends Component {
 		return (
 			<div ref={node => this.dropDownNode = node}>
 				<svg
-					className="h-5 text-gray-700 dark:text-gray-300 cursor-pointer mr-4 hover:text-indigo-600 dark:hover:text-indigo-600"
+					className="h-4 text-gray-700 dark:text-gray-300 cursor-pointer mx-2 hover:text-indigo-600 dark:hover:text-indigo-600"
 					onClick={() => this.setState((state) => ({ open: !state.open }))}
           onKeyPress={() => this.setState((state) => ({ open: !state.open }))}
 					fill="currentColor"
-					viewBox="0 0 20 20"
+					viewBox="2 2 16 16"
 					xmlns="http://www.w3.org/2000/svg"
 					tabIndex="0"
           role="button"
