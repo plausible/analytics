@@ -123,7 +123,8 @@
   {{#if file_downloads}}
   var defaultFileTypes = ['pdf', 'xlsx', 'docx', 'txt', 'rtf', 'csv', 'exe', 'key', 'pps', 'ppt', 'pptx', '7z', 'pkg', 'rar', 'gz', 'zip', 'avi', 'mov', 'mp4', 'mpeg', 'wmv', 'midi', 'mp3', 'wav', 'wma']
   var fileTypesAttr = scriptEl.getAttribute('file-types')
-  var fileTypesToTrack = (fileTypesAttr && fileTypesAttr.split(",")) || defaultFileTypes;
+  var addFileTypesAttr = scriptEl.getAttribute('add-file-types')
+  var fileTypesToTrack = (fileTypesAttr && fileTypesAttr.split(",")) || (addFileTypesAttr && addFileTypesAttr.split(",").concat(defaultFileTypes)) || defaultFileTypes;
 
   function handleDownload(event) {
     
@@ -138,7 +139,7 @@
     if (link && link.href && isDownloadToTrack(link.href)) {
 
       if (middle || click) {
-        plausible('File Download', {props: {url: link.href}})
+        plausible('File Download', {props: {url: link.href.split("?")[0]}})
       }
 
       // Delay navigation so that Plausible is notified of the click
@@ -154,7 +155,7 @@
   }
 
   function isDownloadToTrack(url) {
-    var fileType = url.split(".").pop();
+    var fileType = url.split("?")[0].split(".").pop();
     return fileTypesToTrack.some(function(fileTypeToTrack) {
       return fileTypeToTrack == fileType
     })
