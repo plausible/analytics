@@ -37,39 +37,55 @@ export default class TopStats extends React.Component {
     }
   }
 
+  titleFor(stat) {
+    if(this.props.metric === METRIC_MAPPING[stat.name]) {
+      return `Hide ${METRIC_LABELS[METRIC_MAPPING[stat.name]].toLowerCase()} from graph`
+    } else {
+      return `Show ${METRIC_LABELS[METRIC_MAPPING[stat.name]].toLowerCase()} on graph`
+    }
+  }
+
+  renderStat(stat) {
+    return (
+      <div className="flex items-center justify-between my-1 whitespace-nowrap">
+        <b className="mr-4 text-xl md:text-2xl dark:text-gray-100" tooltip={this.topStatTooltip(stat)}>{this.topStatNumberShort(stat)}</b>
+        {this.renderComparison(stat.name, stat.change)}
+      </div>
+    )
+  }
+
   render() {
     const { updateMetric, metric, topStatData, query } = this.props
 
     const stats = topStatData && topStatData.top_stats.map((stat, index) => {
       let border = index > 0 ? 'lg:border-l border-gray-300' : ''
       border = index % 2 === 0 ? border + ' border-r lg:border-r-0' : border
+      const isClickable = Object.keys(METRIC_MAPPING).includes(stat.name) && !(query.filters.goal && stat.name === 'Unique visitors')
+      const isSelected = metric === METRIC_MAPPING[stat.name]
+      const [statDisplayName, statExtraName] = stat.name.split(/(\(.+\))/g)
 
       return (
-        <div className={`px-4 md:px-6 w-1/2 my-4 lg:w-auto ${border}`} key={stat.name}>
-          {Object.keys(METRIC_MAPPING).includes(stat.name) && !(query.filters.goal && stat.name === 'Unique visitors') ?
+        <React.Fragment key={stat.name}>
+          { isClickable ?
             (
-              <div
-                className={`text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap cursor-pointer flex w-content border-b-2 ${metric === METRIC_MAPPING[stat.name] ? 'text-indigo-700 dark:text-indigo-500 border-indigo-700 dark:border-indigo-500' : 'hover:text-indigo-600 dark:hover:text-indigo-600 cursor-pointer border-transparent'}`}
-                title={metric === METRIC_MAPPING[stat.name] ?
-                  `Hide ${METRIC_LABELS[METRIC_MAPPING[stat.name]].toLowerCase()} from graph` :
-                  `Show ${METRIC_LABELS[METRIC_MAPPING[stat.name]].toLowerCase()} on graph`
-                }
-                onClick={() => { updateMetric(METRIC_MAPPING[stat.name]) }}
-                tabIndex={0}
-              >
-                {stat.name.split('(')[0]}
-                {stat.name.split('(').length > 1 ? (<span className="hidden sm:inline-block ml-1"> {"(" + stat.name.split('(')[1]}</span>) : null}
+              <div className={`px-4 md:px-6 w-1/2 my-4 lg:w-auto group cursor-pointer ${border}`} onClick={() => { updateMetric(METRIC_MAPPING[stat.name]) }} tabIndex={0}>
+                <div
+                  className={`text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-content ${isSelected ? 'text-indigo-700 dark:text-indigo-500 border-indigo-700 dark:border-indigo-500' : 'group-hover:text-indigo-700 dark:group-hover:text-indigo-500'}`}
+                  title={this.titleFor(stat)}>
+                  {statDisplayName}
+                  <span className="hidden sm:inline-block ml-1">{statExtraName}</span>
+                </div>
+                { this.renderStat(stat) }
               </div>
             ) : (
-              <div className='text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex'>
-                {stat.name}
+              <div className={`px-4 md:px-6 w-1/2 my-4 lg:w-auto ${border}`}>
+                <div className='text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex'>
+                  {stat.name}
+                </div>
+                { this.renderStat(stat) }
               </div>
             )}
-          <div className="flex items-center justify-between my-1 whitespace-nowrap">
-            <b className="mr-4 text-xl md:text-2xl dark:text-gray-100" tooltip={this.topStatTooltip(stat)}>{this.topStatNumberShort(stat)}</b>
-            {this.renderComparison(stat.name, stat.change)}
-          </div>
-        </div>
+        </React.Fragment>
       )
     })
 
