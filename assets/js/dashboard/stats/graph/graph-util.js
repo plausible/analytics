@@ -41,19 +41,20 @@ export const GraphTooltip = (graphData, metric) => {
 			tooltipEl = document.createElement('div');
 			tooltipEl.id = 'chartjs-tooltip';
 			tooltipEl.style.display = 'none';
+			tooltipEl.style.opacity = 0;
 			document.body.appendChild(tooltipEl);
 		}
 
 		if (tooltipEl && offset && window.innerWidth < 768) {
 			tooltipEl.style.top = offset.y + offset.height + window.scrollY + 15 + 'px'
 			tooltipEl.style.left = offset.x + 'px'
-			tooltipEl.style.right = 'unset'
-			tooltipEl.style.display = 'unset'
+			tooltipEl.style.right = null;
+      tooltipEl.style.opacity = 1;
 		}
 
 		// Stop if no tooltip showing
 		if (tooltipModel.opacity === 0) {
-			tooltipEl.style.opacity = 0;
+			tooltipEl.style.display = 'none';
 			return;
 		}
 
@@ -132,7 +133,7 @@ export const GraphTooltip = (graphData, metric) => {
 
 			tooltipEl.innerHTML = innerHtml;
 		}
-		tooltipEl.style.opacity = 1;
+		tooltipEl.style.display = null;
 	}
 }
 
