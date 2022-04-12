@@ -57,16 +57,21 @@ defmodule Plausible.SiteAdmin do
     Enum.map(memberships, fn m -> m.user.email end) |> Enum.join(", ")
   end
 
-  def transfer_data([site], params) do
-    from_domain = site.domain
-    to_domain = params["domain"]
+  def transfer_data([from_site], params) do
+    to_site = Repo.get_by(Plausible.Site, domain: params["domain"])
 
-    if to_domain && domain_exists?(to_domain) do
-      event_q = event_transfer_query(from_domain, to_domain)
+    if to_site do
+      event_q = event_transfer_query(from_site.domain, to_site.domain)
       {:ok, _} = Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, event_q)
 
-      session_q = session_transfer_query(from_domain, to_domain)
+      session_q = session_transfer_query(from_site.domain, to_site.domain)
       {:ok, _} = Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, session_q)
+
+      start_date = Plausible.Stats.Clickhouse.pageview_start_date_local(from_site)
+
+      {:ok, _} =
+        Plausible.Site.set_stats_start_date(to_site, start_date)
+        |> Repo.update()
 
       :ok
     else
@@ -75,10 +80,6 @@ defmodule Plausible.SiteAdmin do
   end
 
   def transfer_data(_, _), do: {:error, "Please select exactly one site for this action"}
-
-  defp domain_exists?(domain) do
-    Repo.exists?(from s in Plausible.Site, where: s.domain == ^domain)
-  end
 
   def session_transfer_query(from_domain, to_domain) do
     fields = get_struct_fields(Plausible.ClickhouseSession)

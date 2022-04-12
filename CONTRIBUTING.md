@@ -9,7 +9,7 @@ Make sure Docker, Elixir, Erlang and Node.js are all installed on your developme
 ### Start the environment:
 
 1. Run both `make postgres` and `make clickhouse`.
-2. You can set up everything with `make install`, alternatively run each command seperately:
+2. You can set up everything with `make install`, alternatively run each command separately:
     1. Run `mix deps.get`. This will download the required Elixir dependencies.
     2. Run `mix ecto.create`. This will create the required databases in both Postgres and Clickhouse.
     3. Run `mix ecto.migrate` to build the database schema.

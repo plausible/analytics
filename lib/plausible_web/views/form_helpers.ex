@@ -10,7 +10,7 @@ defmodule PlausibleWeb.FormHelpers do
       "mt-1 block w-full px-3 py-2 text-base dark:text-gray-100 dark:border-gray-500 border-gray-300 focus:outline-none sm:text-sm rounded-md"
   ]
   @active_text_input_class "dark:bg-gray-900 focus:ring-indigo-500 focus:border-indigo-500"
-  @disabled_text_input_class "bg-gray-100 dark:bg-gray-800 select-none"
+  @disabled_text_input_class "bg-gray-100 dark:bg-gray-800 select-none cursor-default"
   def styled_text_input(form, field, opts \\ []) do
     opts = merge_opts(@text_input_opts, opts)
 

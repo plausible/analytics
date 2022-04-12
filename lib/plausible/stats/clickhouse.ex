@@ -16,7 +16,7 @@ defmodule Plausible.Stats.Clickhouse do
     case datetime do
       # no stats for this domain yet
       ~N[1970-01-01 00:00:00] ->
-        Timex.today(site.timezone)
+        nil
 
       _ ->
         Timex.Timezone.convert(datetime, "UTC")

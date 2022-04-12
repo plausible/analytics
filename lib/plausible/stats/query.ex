@@ -188,7 +188,7 @@ defmodule Plausible.Stats.Query do
 
   def from(site, %{"period" => "all"} = params) do
     start_date =
-      site.inserted_at
+      site.stats_start_date
       |> Timex.Timezone.convert("UTC")
       |> Timex.Timezone.convert(site.timezone)
       |> Timex.to_date()

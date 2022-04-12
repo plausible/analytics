@@ -1,12 +1,12 @@
 import { METRIC_LABELS, METRIC_FORMATTER } from './visitor-graph'
-import {formatMonthYYYY, formatDay, formatDayShort} from '../../util/date'
+import {parseUTCDate, formatMonthYYYY, formatDay, formatDayShort} from '../../util/date'
 
 export const ORDERED_PERIODS = ['realtime', 'day', '7d', 'month', '30d', '6mo', '12mo']
 export const INTERVALS = ["month", "week", "date", "hour", "minute"]
 
 export const dateFormatter = (interval, longForm, period, full) => {
   return function(isoDate, _index, _ticks) {
-    let date = new Date(isoDate);
+    let date = parseUTCDate(isoDate)
     let hours, ampm, minutes;
 
     if (interval === 'month') {
@@ -68,19 +68,20 @@ export const GraphTooltip = (graphData, metric, query) => {
 			tooltipEl = document.createElement('div');
 			tooltipEl.id = 'chartjs-tooltip';
 			tooltipEl.style.display = 'none';
+			tooltipEl.style.opacity = 0;
 			document.body.appendChild(tooltipEl);
 		}
 
 		if (tooltipEl && offset && window.innerWidth < 768) {
 			tooltipEl.style.top = offset.y + offset.height + window.scrollY + 15 + 'px'
 			tooltipEl.style.left = offset.x + 'px'
-			tooltipEl.style.right = 'unset'
-			tooltipEl.style.display = 'unset'
+			tooltipEl.style.right = null;
+      tooltipEl.style.opacity = 1;
 		}
 
 		// Stop if no tooltip showing
 		if (tooltipModel.opacity === 0) {
-			tooltipEl.style.opacity = 0;
+			tooltipEl.style.display = 'none';
 			return;
 		}
 
@@ -166,7 +167,7 @@ export const GraphTooltip = (graphData, metric, query) => {
 
 			tooltipEl.innerHTML = innerHtml;
 		}
-		tooltipEl.style.opacity = 1;
+		tooltipEl.style.display = null;
 	}
 }
 

@@ -132,13 +132,13 @@ class LineGraph extends React.Component {
     if (tooltipEl && window.innerWidth >= 768) {
       if (e.clientX > 0.66 * window.innerWidth) {
         tooltipEl.style.right = (window.innerWidth - e.clientX) + window.pageXOffset + 'px'
-        tooltipEl.style.left = 'unset'
+        tooltipEl.style.left = null;
       } else {
-        tooltipEl.style.right = 'unset'
+        tooltipEl.style.right = null;
         tooltipEl.style.left = e.clientX + window.pageXOffset + 'px'
       }
       tooltipEl.style.top = e.clientY + window.pageYOffset + 'px'
-      tooltipEl.style.display = 'unset';
+      tooltipEl.style.opacity = 1;
     }
   }
 
@@ -171,18 +171,13 @@ class LineGraph extends React.Component {
       }
     }
 
-    if (!metric && this.chart) {
-      this.chart.destroy();
-    }
-
-    if (metric && !graphData && this.chart) {
+    if (this.chart && ((metric && !graphData) || !metric)) {
       this.chart.destroy();
 
       if (tooltip) {
         tooltip.style.opacity = 0;
       }
     }
-
   }
 
   componentWillUnmount() {

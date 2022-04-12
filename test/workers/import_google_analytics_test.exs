@@ -6,22 +6,22 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
   alias Plausible.Workers.ImportGoogleAnalytics
 
   @imported_data %Plausible.Site.ImportedData{
+    start_date: Timex.today() |> Timex.shift(days: -7),
     end_date: Timex.today(),
     source: "Google Analytics",
     status: "importing"
   }
 
-  test "updates the imported_data field for the site after succesful import" do
+  test "updates the imported_data field for the site after successful import" do
     user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
     site = insert(:site, members: [user], imported_data: @imported_data)
 
     api_stub =
       stub(Plausible.Google.Api, :import_analytics, fn _site,
+                                                       _date_range,
                                                        _view_id,
-                                                       _start_date,
-                                                       _end_date,
                                                        _access_token ->
-        {:ok, nil}
+        :ok
       end)
 
     ImportGoogleAnalytics.perform(
@@ -40,17 +40,44 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
     assert Repo.reload!(site).imported_data.status == "ok"
   end
 
-  test "sends email to owner after succesful import" do
+  test "updates the stats_start_date field for the site after successful import" do
     user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
     site = insert(:site, members: [user], imported_data: @imported_data)
 
     api_stub =
       stub(Plausible.Google.Api, :import_analytics, fn _site,
+                                                       _date_range,
                                                        _view_id,
-                                                       _start_date,
-                                                       _end_date,
                                                        _access_token ->
-        {:ok, nil}
+        :ok
+      end)
+
+    ImportGoogleAnalytics.perform(
+      %Oban.Job{
+        args: %{
+          "site_id" => site.id,
+          "view_id" => "view_id",
+          "start_date" => "2020-01-01",
+          "end_date" => "2022-01-01",
+          "access_token" => "token"
+        }
+      },
+      api_stub
+    )
+
+    assert Repo.reload!(site).stats_start_date == @imported_data.start_date
+  end
+
+  test "sends email to owner after successful import" do
+    user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
+    site = insert(:site, members: [user], imported_data: @imported_data)
+
+    api_stub =
+      stub(Plausible.Google.Api, :import_analytics, fn _site,
+                                                       _date_range,
+                                                       _view_id,
+                                                       _access_token ->
+        :ok
       end)
 
     ImportGoogleAnalytics.perform(
@@ -78,9 +105,8 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
 
     api_stub =
       stub(Plausible.Google.Api, :import_analytics, fn _site,
+                                                       _date_range,
                                                        _view_id,
-                                                       _start_date,
-                                                       _end_date,
                                                        _access_token ->
         {:error, "Something went wrong"}
       end)
@@ -101,7 +127,7 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
     assert Repo.reload!(site).imported_data.status == "error"
   end
 
-  test "clears any orphaned data during impot" do
+  test "clears any orphaned data during import" do
     user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
     site = insert(:site, members: [user], imported_data: @imported_data)
 
@@ -111,9 +137,8 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
 
     api_stub =
       stub(Plausible.Google.Api, :import_analytics, fn _site,
+                                                       _date_range,
                                                        _view_id,
-                                                       _start_date,
-                                                       _end_date,
                                                        _access_token ->
         {:error, "Something went wrong"}
       end)
@@ -140,9 +165,8 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
 
     api_stub =
       stub(Plausible.Google.Api, :import_analytics, fn _site,
+                                                       _date_range,
                                                        _view_id,
-                                                       _start_date,
-                                                       _end_date,
                                                        _access_token ->
         {:error, "Something went wrong"}
       end)

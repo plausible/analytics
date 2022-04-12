@@ -5,7 +5,8 @@ defmodule Plausible.Stats.QueryTest do
   @site_inserted_at ~D[2020-01-01]
   @site %Plausible.Site{
     timezone: "UTC",
-    inserted_at: @site_inserted_at
+    inserted_at: @site_inserted_at,
+    stats_start_date: @site_inserted_at
   }
 
   test "parses day format" do
@@ -16,7 +17,7 @@ defmodule Plausible.Stats.QueryTest do
     assert q.interval == "hour"
   end
 
-  test "day fromat defaults to today" do
+  test "day format defaults to today" do
     q = Query.from(@site, %{"period" => "day"})
 
     assert q.date_range.first == Timex.today()
@@ -76,7 +77,7 @@ defmodule Plausible.Stats.QueryTest do
     q = Query.from(@site, %{"period" => "all"})
 
     assert q.date_range.first == @site_inserted_at
-    assert q.date_range.last == Timex.today() |> Timex.end_of_month()
+    assert q.date_range.last == Timex.today()
     assert q.period == "all"
     assert q.interval == "month"
   end
@@ -90,7 +91,7 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "all time shows hourly if site is completely new" do
-    site = Map.put(@site, :inserted_at, Timex.now())
+    site = Map.put(@site, :stats_start_date, Timex.now())
     q = Query.from(site, %{"period" => "all"})
 
     assert q.date_range.first == Timex.today()
@@ -100,7 +101,7 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "all time shows daily if site is more than a day old" do
-    site = Map.put(@site, :inserted_at, Timex.now() |> Timex.shift(days: -1))
+    site = Map.put(@site, :stats_start_date, Timex.now() |> Timex.shift(days: -1))
     q = Query.from(site, %{"period" => "all"})
 
     assert q.date_range.first == Timex.today() |> Timex.shift(days: -1)
@@ -110,7 +111,7 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "all time shows monthly if site is more than a month old" do
-    site = Map.put(@site, :inserted_at, Timex.now() |> Timex.shift(months: -1))
+    site = Map.put(@site, :stats_start_date, Timex.now() |> Timex.shift(months: -1))
     q = Query.from(site, %{"period" => "all"})
 
     assert q.date_range.first == Timex.today() |> Timex.shift(months: -1)

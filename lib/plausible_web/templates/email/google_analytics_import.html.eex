@@ -1,11 +1,11 @@
 Hey <%= user_salutation(@user) %>,
 <br /><br />
 <%= if @success do %>
-  Your Google Analytics import has completed.
-  <br /><br />
-  View dashboard: @link
+  Your Google Analytics import has completed successfully. The Plausible dashboard for <%= @site.domain %> now contains historical imported data from <%= date_format(@site.imported_data.start_date) %> to <%= date_format(@site.imported_data.end_date) %>
+<br /><br />
+<%= link("Click here", to: @link) %> to view your dashboard.
 <% else %>
-  Unfortunately, your Google Analytics import failed.
+  Unfortunately, your Google Analytics import for <%= @site.domain %> did not complete successfully. Please try again <%= if !Application.get_env(:plausible, :is_selfhost) do %>or <%= link("contact support", to: "https://plausible.io/contact") %><% end %>.
 <% end %>
 <br /><br />
 --
