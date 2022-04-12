@@ -3,7 +3,7 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
 
   use Oban.Worker,
     queue: :google_analytics_imports,
-    max_attempts: 1,
+    max_attempts: 3,
     unique: [fields: [:args], period: 60]
 
   @impl Oban.Worker
@@ -20,9 +20,12 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
         google_api \\ Plausible.Google.Api
       ) do
     site = Repo.get(Plausible.Site, site_id) |> Repo.preload([[memberships: :user]])
+    start_date = Date.from_iso8601!(start_date)
+    end_date = Date.from_iso8601!(end_date)
+    date_range = Date.range(start_date, end_date)
 
-    case google_api.import_analytics(site, view_id, start_date, end_date, access_token) do
-      {:ok, _} ->
+    case google_api.import_analytics(site, date_range, view_id, access_token) do
+      :ok ->
         Plausible.Site.import_success(site)
         |> Repo.update!()
 
@@ -40,6 +43,12 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
 
         {:error, error}
     end
+  end
+
+  @impl Oban.Worker
+  def backoff(_job) do
+    # 5 minutes
+    300
   end
 
   def import_failed(site) do

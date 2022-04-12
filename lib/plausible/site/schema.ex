@@ -21,7 +21,7 @@ defmodule Plausible.Site do
     field :timezone, :string, default: "Etc/UTC"
     field :public, :boolean
     field :locked, :boolean
-    field :has_stats, :boolean
+    field :stats_start_date, :date
 
     embeds_one :imported_data, Plausible.Site.ImportedData, on_replace: :update
 
@@ -59,8 +59,8 @@ defmodule Plausible.Site do
     change(site, public: false)
   end
 
-  def set_has_stats(site, has_stats_val) do
-    change(site, has_stats: has_stats_val)
+  def set_stats_start_date(site, val) do
+    change(site, stats_start_date: val)
   end
 
   def start_import(site, start_date, end_date, imported_source, status \\ "importing") do
@@ -75,7 +75,10 @@ defmodule Plausible.Site do
   end
 
   def import_success(site) do
-    change(site, imported_data: %{status: "ok"})
+    change(site,
+      stats_start_date: site.imported_data.start_date,
+      imported_data: %{status: "ok"}
+    )
   end
 
   def import_failure(site) do

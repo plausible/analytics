@@ -1,9 +1,9 @@
 import { METRIC_LABELS, METRIC_FORMATTER } from './visitor-graph'
-import {formatMonthYYYY, formatDay} from '../../util/date'
+import {parseUTCDate, formatMonthYYYY, formatDay} from '../../util/date'
 
 export const dateFormatter = (interval, longForm) => {
   return function(isoDate, _index, _ticks) {
-    let date = new Date(isoDate)
+    let date = parseUTCDate(isoDate)
 
     if (interval === 'month') {
       return formatMonthYYYY(date);
