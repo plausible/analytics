@@ -68,10 +68,9 @@ export default class TopStats extends React.Component {
         <React.Fragment key={stat.name}>
           { isClickable ?
             (
-              <div className={`px-4 md:px-6 w-1/2 my-4 lg:w-auto group cursor-pointer ${border}`} onClick={() => { updateMetric(METRIC_MAPPING[stat.name]) }} tabIndex={0}>
+              <div className={`px-4 md:px-6 w-1/2 my-4 lg:w-auto group cursor-pointer select-none ${border}`} onClick={() => { updateMetric(METRIC_MAPPING[stat.name]) }} tabIndex={0} title={this.titleFor(stat)}>
                 <div
-                  className={`text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-content ${isSelected ? 'text-indigo-700 dark:text-indigo-500 border-indigo-700 dark:border-indigo-500' : 'group-hover:text-indigo-700 dark:group-hover:text-indigo-500'}`}
-                  title={this.titleFor(stat)}>
+                  className={`text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-content ${isSelected ? 'text-indigo-700 dark:text-indigo-500 border-indigo-700 dark:border-indigo-500' : 'group-hover:text-indigo-700 dark:group-hover:text-indigo-500'}`}>
                   {statDisplayName}
                   <span className="hidden sm:inline-block ml-1">{statExtraName}</span>
                 </div>

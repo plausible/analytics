@@ -34,6 +34,9 @@ module.exports = {
       maxWidth: {
         '2xs': '15rem',
         '3xs': '12rem',
+      },
+      transitionProperty: {
+        'padding': 'padding',
       }
     },
   },
