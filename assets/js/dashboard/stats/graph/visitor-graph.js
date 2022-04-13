@@ -307,10 +307,10 @@ class LineGraph extends React.Component {
           {topStatData && <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData}/>}
         </div>
         <div className="relative px-2">
-          <div className={`absolute right-4 ${metric ? '-top-5' : '-top-10'} flex`}>
+          <div className="absolute right-4 -top-10 flex">
             {this.props.metric && this.props.graphData && <IntervalPicker site={site} query={query} graphData={graphData} updateInterval={this.props.updateInterval}/>}
-            { this.downloadLink() }
-            { this.samplingNotice() }
+            {this.downloadLink()}
+            {this.samplingNotice()}
             { this.importedNotice() }
           </div>
           <FadeIn show={graphData}>
@@ -468,7 +468,7 @@ export default class VisitorGraph extends React.Component {
 
     return (
       <LazyLoader onVisible={this.onVisible}>
-        <div className={`relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825 ${metric ? 'main-graph' : 'top-stats-only'}`}>
+        <div className={`relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825 transition-padding ease-in-out duration-150 ${metric ? 'main-graph' : 'top-stats-only'}`}>
           {this.state.loading > 0 && <div className="graph-inner"><div className={`${topStatData && !graphData ? 'pt-52 sm:pt-56 md:pt-60' : metric ? 'pt-32 sm:pt-36 md:pt-48' : 'pt-16 sm:pt-14 md:pt-18 lg:pt-5'} mx-auto loading`}><div></div></div></div>}
           {this.renderInner()}
         </div>
