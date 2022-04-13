@@ -152,15 +152,17 @@ class LineGraph extends React.Component {
       this.chart.update();
 
       if (tooltip) {
-        tooltip.style.opacity = 0;
+        tooltip.style.display = 'none';
       }
     }
 
-    if (this.chart && ((metric && !graphData) || !metric)) {
-      this.chart.destroy();
+    if (!graphData || !metric) {
+      if (this.chart) {
+        this.chart.destroy();
+      }
 
       if (tooltip) {
-        tooltip.style.opacity = 0;
+        tooltip.style.display = 'none';
       }
     }
   }
@@ -170,6 +172,7 @@ class LineGraph extends React.Component {
     const tooltip = document.getElementById('chartjs-tooltip');
     if (tooltip) {
       tooltip.style.opacity = 0;
+      tooltip.style.display = 'none';
     }
     window.removeEventListener('mousemove', this.repositionTooltip)
   }
