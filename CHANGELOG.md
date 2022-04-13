@@ -55,8 +55,9 @@ All notable changes to this project will be documented in this file.
 - Ability to invite users to sites with different roles plausible/analytics#1122
 - Option to configure a custom name for the script file
 - Add Conversion Rate to Top Sources, Top Pages Devices, Countries when filtered by a goal plausible/analytics#1299
+- Choice of metric for main-graph both in UI and API (visitors, pageviews, bounce_rate, visit_duration) plausible/analytics#1364
 - Add list view for countries report in dashboard plausible/analytics#1381
-- Add ability to view more than 100 custom goal properties plausible/analytics#1353
+- Add ability to view more than 100 custom goal properties plausible/analytics#1382
 
 ### Fixed
 - Fix weekly report time range plausible/analytics#951

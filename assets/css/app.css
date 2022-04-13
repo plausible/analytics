@@ -32,6 +32,7 @@
 
 html {
   @apply text-gray-800;
+  overflow-x: hidden;
 }
 
 body {
@@ -70,9 +71,8 @@ blockquote {
 .main-graph {
   position: relative;
   height: 0;
-
-  /* Formula is: (top row height + (graph height / graph width * 100%)) */
-  padding-top: calc(168px + (451 / 1088 * 100%));
+  /* Formula is: (top row height + (graph height / graph width * 100%) - adjustment for stat selectors) */
+  padding-top: calc(168px + (451 / 1088 * 100%) - 20px);
 }
 
 @screen sm {
@@ -89,7 +89,31 @@ blockquote {
 
 @screen lg {
   .main-graph {
-    padding-top: calc(28px + (451 / 1088 * 100%));
+    padding-top: calc(28px + (451 / 1088 * 100%) - 10px);
+  }
+}
+
+.top-stats-only {
+  position: relative;
+  height: 0;
+  padding-top: calc(158px + 15px);
+}
+
+@screen sm {
+  .top-stats-only {
+    padding-top: calc(155px + 15px);
+  }
+}
+
+@screen md {
+  .top-stats-only {
+    padding-top: calc(168px + 15px);
+  }
+}
+
+@screen lg {
+  .top-stats-only {
+    padding-top: calc(75px + 15px);
   }
 }
 
@@ -311,6 +335,17 @@ iframe[hidden] {
     right: 0 !important;
     left: 0 !important;
   }
+}
+
+#chartjs-tooltip {
+  background-color: rgba(25, 30, 56);
+  position: absolute;
+  font-size: 14px;
+  font-style: normal;
+  padding: 10px 12px;
+  pointer-events: none;
+  border-radius: 5px;
+  z-index: 100;
 }
 
 .active-prop-heading {

@@ -628,7 +628,7 @@ defmodule Plausible.ImportedTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
+          "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&with_imported=true"
         )
 
       assert %{"top_stats" => top_stats} = json_response(conn, 200)
