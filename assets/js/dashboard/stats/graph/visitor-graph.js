@@ -308,9 +308,9 @@ class LineGraph extends React.Component {
         </div>
         <div className="relative px-2">
           <div className="absolute right-4 -top-10 flex">
-            {this.props.metric && this.props.graphData && <IntervalPicker site={site} query={query} graphData={graphData} updateInterval={this.props.updateInterval}/>}
-            {this.downloadLink()}
-            {this.samplingNotice()}
+            <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={this.props.updateInterval}/>
+            { this.downloadLink() }
+            { this.samplingNotice() }
             { this.importedNotice() }
           </div>
           <FadeIn show={graphData}>

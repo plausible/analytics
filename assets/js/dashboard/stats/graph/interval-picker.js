@@ -86,41 +86,52 @@ export default class IntervalPicker extends Component {
 	}
 
 	render() {
-		const { query } = this.props;
+		const { query, metric, graphData } = this.props;
 
 		if (query.period === 'realtime') return null;
 
 		return (
-			<div ref={node => this.dropDownNode = node}>
-				<svg
-					className="h-4 text-gray-700 dark:text-gray-300 cursor-pointer mx-2 hover:text-indigo-600 dark:hover:text-indigo-600"
-					onClick={() => this.setState((state) => ({ open: !state.open }))}
-          onKeyPress={() => this.setState((state) => ({ open: !state.open }))}
-					fill="currentColor"
-					viewBox="2 2 16 16"
-					xmlns="http://www.w3.org/2000/svg"
-					tabIndex="0"
-          role="button"
-          aria-haspopup="true"
-          aria-expanded="false"
-          aria-controls="intervalmenu"
-					title="Choose the interval to display on each step of the graph"
-				>
-						<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-				</svg>
-				<Transition
-          show={this.state.open}
-          as={Fragment}
-          enter="transition ease-out duration-100"
-          enterFrom="transform opacity-0 scale-95"
-          enterTo="transform opacity-100 scale-100"
-          leave="transition ease-in duration-75"
-          leaveFrom="transform opacity-100 scale-100"
-          leaveTo="transform opacity-0 scale-95"
-        >
-          {this.renderDropDownContent()}
-        </Transition>
-			</div>
+			<Transition
+				show={!!(metric && graphData)}
+				as={Fragment}
+				enter="transition ease-out duration-75"
+				enterFrom="transform opacity-0 scale-95"
+				enterTo="transform opacity-100 scale-100"
+				leave="transition ease-in duration-75"
+				leaveFrom="transform opacity-100 scale-100"
+				leaveTo="transform opacity-0 scale-95"
+			>
+				<div ref={node => this.dropDownNode = node}>
+					<svg
+						className="h-4 text-gray-700 dark:text-gray-300 cursor-pointer mx-2 hover:text-indigo-600 dark:hover:text-indigo-600"
+						onClick={() => this.setState((state) => ({ open: !state.open }))}
+						onKeyPress={() => this.setState((state) => ({ open: !state.open }))}
+						fill="currentColor"
+						viewBox="2 2 16 16"
+						xmlns="http://www.w3.org/2000/svg"
+						tabIndex="0"
+						role="button"
+						aria-haspopup="true"
+						aria-expanded="false"
+						aria-controls="intervalmenu"
+						title="Choose the interval to display on each step of the graph"
+					>
+							<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+					</svg>
+					<Transition
+						show={this.state.open}
+						as={Fragment}
+						enter="transition ease-out duration-100"
+						enterFrom="transform opacity-0 scale-95"
+						enterTo="transform opacity-100 scale-100"
+						leave="transition ease-in duration-75"
+						leaveFrom="transform opacity-100 scale-100"
+						leaveTo="transform opacity-0 scale-95"
+					>
+						{this.renderDropDownContent()}
+					</Transition>
+				</div>
+			</Transition>
     )
 	}
 }
