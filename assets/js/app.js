@@ -127,7 +127,7 @@ if (embedButton) {
   'use strict';
   window.sortWebList = function(){
 
-      var sortedList = $('.relative.group').toArray().sort(function(lhs, rhs){
+      var sortedList = $('.relative.groups').toArray().sort(function(lhs, rhs){
           return parseInt($(rhs).find("span.visitorNumber").text(),10) - parseInt($(lhs).find("span.visitorNumber").text(),10);
       });
 
@@ -138,7 +138,7 @@ if (embedButton) {
       var originalContent = $('.my-6.grid.grid-cols-1.gap-6');
       var moddedContent = '';
       var finalContent = '';
-      $('.relative.group').each(function(i,e){
+      $('.relative.groups').each(function(i,e){
           var currentGroupContent =  $(e);
           var visitorsRaw = $(e).find('span.text-gray-800');
           var vrt = visitorsRaw.find('b');
@@ -166,7 +166,7 @@ if (embedButton) {
 
 
 
-          moddedContent += '<div class="relative group">'+finalContent+'</div>';
+          moddedContent += '<div class="relative groups">'+finalContent+'</div>';
 
 
           return;

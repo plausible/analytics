@@ -60,7 +60,7 @@
     <% end %>
 
     <%= for site <- @sites do %>
-      <div class="relative">
+      <div class="relative groups">
         <%= link(to: "/" <> URI.encode_www_form(site.domain)) do %>
           <li class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
             <div class="w-full flex items-center justify-between space-x-4">
