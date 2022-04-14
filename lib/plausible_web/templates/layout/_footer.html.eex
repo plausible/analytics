@@ -4,7 +4,7 @@
       <div class="my-8 xl:my-0">
         <h4 class="font-semibold tracking-wider text-gray-300 leading-5">
           <img src="/images/icon/plausible_logo_sm.png" class="inline-block w-6 mr-1" />
-          Plausible Analytics
+          CDN Analytics
         </h4>
         <p class="mt-4 text-base text-gray-400 leading-6">
         <%= if !Application.get_env(:plausible, :is_selfhost) do %>

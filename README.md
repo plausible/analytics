@@ -1,8 +1,8 @@
-# Plausible Analytics
+# CDN Analytics
 
 <p align="center">
   <a href="https://plausible.io/">
-    <img src="https://raw.githubusercontent.com/plausible/docs/master/static/img/plausible-analytics-icon-top.png" width="140px" alt="Plausible Analytics" />
+    <img src="https://raw.githubusercontent.com/plausible/docs/master/static/img/plausible-analytics-icon-top.png" width="140px" alt="CDN Analytics" />
   </a>
 </p>
 <p align="center">
@@ -17,7 +17,7 @@
     <br /><br />
 </p>
 
-[Plausible Analytics](https://plausible.io/) is a simple, lightweight (< 1 KB), open-source and privacy-friendly alternative to Google Analytics. It doesn’t use cookies and is fully compliant with GDPR, CCPA and PECR. You can self-host Plausible or have us run it for you in the Cloud. Here's [the live demo of our own website stats](https://plausible.io/plausible.io). Made and hosted in the EU 🇪🇺
+[CDN Analytics](https://plausible.io/) is a simple, lightweight (< 1 KB), open-source and privacy-friendly alternative to Google Analytics. It doesn’t use cookies and is fully compliant with GDPR, CCPA and PECR. You can self-host Plausible or have us run it for you in the Cloud. Here's [the live demo of our own website stats](https://plausible.io/plausible.io). Made and hosted in the EU 🇪🇺
 
 We are dedicated to making web analytics more privacy-friendly. Our mission is to reduce corporate surveillance by providing an alternative web analytics tool which doesn’t come from the AdTech world. The full-time team consists of Uku Taht and Marko Saric. We are completely independent, self-funded and bootstrapped.
 
@@ -27,9 +27,9 @@ We are dedicated to making web analytics more privacy-friendly. Our mission is t
 
 Here's what makes Plausible a great Google Analytics alternative and why we're trusted by thousands of paying subscribers to deliver their website and business insights:
 
-- **Clutter Free**: Plausible Analytics provides [simple web analytics](https://plausible.io/simple-web-analytics) and it cuts through the noise. No layers of menus, no need for custom reports. Get all the important insights on one single page. No training necessary.
+- **Clutter Free**: CDN Analytics provides [simple web analytics](https://plausible.io/simple-web-analytics) and it cuts through the noise. No layers of menus, no need for custom reports. Get all the important insights on one single page. No training necessary.
 - **GDPR/CCPA/PECR compliant**: Measure traffic, not individuals. No personal data or IP addresses are ever stored in our database. We don't use cookies or any other persistent identifiers. [Read more about our data policy](https://plausible.io/data-policy)
-- **Lightweight**: Plausible Analytics works by loading a script on your website, like Google Analytics. Our script is [45x smaller](https://plausible.io/lightweight-web-analytics), making your website quicker to load.
+- **Lightweight**: CDN Analytics works by loading a script on your website, like Google Analytics. Our script is [45x smaller](https://plausible.io/lightweight-web-analytics), making your website quicker to load.
 - **Email or Slack reports**: Keep an eye on your traffic with weekly and/or monthly email or Slack reports. You can also get traffic spike notifications.
 - **Open website stats**: You have the option to be transparent and open your web analytics to everyone. Your website stats are private by default but you can choose to make them public so anyone with your custom link can view them.
 - **Define key goals and track conversions**: Set custom events or page URLs as your goals and see how they convert over time to understand and identify the trends that matter. Includes easy ways to track outbound link clicks and 404 error pages.
@@ -38,9 +38,9 @@ Here's what makes Plausible a great Google Analytics alternative and why we're t
 
 Interested to learn more? [Read more on our website](https://plausible.io), learn more about the team and the goals of the project on [our about page](https://plausible.io/about) or explore [the documentation](https://plausible.io/docs).
 
-## Why is Plausible Analytics Cloud not free like Google Analytics?
+## Why is CDN Analytics Cloud not free like Google Analytics?
 
-Plausible Analytics is an independently owned and actively developed project. To keep the project development going, to stay in business, to continue putting effort into building a better product and to cover our costs, we need to charge a fee.
+CDN Analytics is an independently owned and actively developed project. To keep the project development going, to stay in business, to continue putting effort into building a better product and to cover our costs, we need to charge a fee.
 
 Google Analytics is free because Google has built their company and their wealth by collecting and analyzing huge amounts of personal information from web users and using these personal and behavioral insights to sell advertisements.
 
@@ -56,9 +56,9 @@ In order to be compliant with the GDPR and the Schrems II ruling, all visitor da
 
 Our managed hosting can save a substantial amount of developer time and resources. For most sites this ends up being the best value option and the revenue goes to funding the maintenance and further development of Plausible. So you’ll be supporting open source software and getting a great service!
 
-### Can Plausible Analytics be self-hosted?
+### Can CDN Analytics be self-hosted?
 
-Plausible is fully [open source web analytics](https://plausible.io/open-source-website-analytics) and we have a free as in beer [Plausible Analytics Self-Hosted](https://plausible.io/self-hosted-web-analytics) solution. It’s exactly the same product as our Cloud solution with a less frequent release schedule (think of it as a long term support release).
+Plausible is fully [open source web analytics](https://plausible.io/open-source-website-analytics) and we have a free as in beer [CDN Analytics Self-Hosted](https://plausible.io/self-hosted-web-analytics) solution. It’s exactly the same product as our Cloud solution with a less frequent release schedule (think of it as a long term support release).
 
 Bug fixes and new features are released to the cloud version several times per week. Features are battle-tested in the cloud which allows us to fix any bugs before the general self-hosted release. Every six months we combine all the changes into a new self-hosted release.
 
@@ -67,7 +67,7 @@ The main difference between the two is that the self-hosted version you have to 
 |  | Cloud  | Self-hosted |
 | ------------- | ------------- | ------------- |
 | Hosting | Easy and convenient. We manage everything for you so you don’t have to worry about anything. We take care of the installation, upgrades, server, security, maintenance, uptime, stability, consistency, loading time and so on.  | You do it all yourself. You need to get a server and you need to install, maintain and manage Plausible on that server. You are responsible for installation, maintenance, upgrades, server capacity, uptime, backup and so on.  |
-| Storage | We keep your site data on a secure, encrypted and green energy powered server in Germany. A server that ensures that your site data is protected by the strict European Union data privacy laws.  | You have full control and can host your Plausible Analytics on any server in any country that you wish. Host it on a server in your basement or host it with any cloud provider wherever you want.  |
+| Storage | We keep your site data on a secure, encrypted and green energy powered server in Germany. A server that ensures that your site data is protected by the strict European Union data privacy laws.  | You have full control and can host your CDN Analytics on any server in any country that you wish. Host it on a server in your basement or host it with any cloud provider wherever you want.  |
 | Raw data | You see all your site stats and metrics on our modern-looking, simple to use and fast loading dashboard. You can only see the stats aggregated in the dashboard.  | Are you an analyst and want access to the raw data? Hosting Plausible yourself gives you that option. Take the data directly from the ClickHouse database and import it to a data analysis tool of your choice.  |
 | Costs | There’s a cost associated with providing an analytics service so we charge a subscription fee. We choose the subscription business model rather than the business model of surveillance capitalism.  | You only need to pay for your server and whatever cost there is associated with running a server. You never have to pay any fees to us, only to your cloud provider.  |
 | Support | Premium support is available via email. | Community support only.|
@@ -81,7 +81,7 @@ Our only source of funding is our premium, managed service for running Plausible
  
 ## Technology
 
-Plausible Analytics is a standard Elixir/Phoenix application backed by a PostgreSQL database for general data and a Clickhouse
+CDN Analytics is a standard Elixir/Phoenix application backed by a PostgreSQL database for general data and a Clickhouse
 database for stats. On the frontend we use [TailwindCSS](https://tailwindcss.com/) for styling and React to make the dashboard interactive.
 
 ## Contributors

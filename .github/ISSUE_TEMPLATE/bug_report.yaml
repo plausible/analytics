@@ -1,5 +1,5 @@
 name: "🐛 Bug Report"
-description: Create a report to help us improve Plausible Analytics
+description: Create a report to help us improve CDN Analytics
 body:
   - type: markdown
     attributes:

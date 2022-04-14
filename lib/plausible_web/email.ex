@@ -187,7 +187,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user.email)
     |> tag("cancelled-email")
-    |> subject("Your Plausible Analytics subscription has been canceled")
+    |> subject("Your CDN Analytics subscription has been canceled")
     |> render("cancellation_email.html", name: user.name)
   end
 
@@ -195,7 +195,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(invitation.email)
     |> tag("new-user-invitation")
-    |> subject("[Plausible Analytics] You've been invited to #{invitation.site.domain}")
+    |> subject("[CDN Analytics] You've been invited to #{invitation.site.domain}")
     |> render("new_user_invitation.html",
       invitation: invitation
     )
@@ -205,7 +205,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(invitation.email)
     |> tag("existing-user-invitation")
-    |> subject("[Plausible Analytics] You've been invited to #{invitation.site.domain}")
+    |> subject("[CDN Analytics] You've been invited to #{invitation.site.domain}")
     |> render("existing_user_invitation.html",
       invitation: invitation
     )
@@ -215,7 +215,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(invitation.email)
     |> tag("ownership-transfer-request")
-    |> subject("[Plausible Analytics] Request to transfer ownership of #{invitation.site.domain}")
+    |> subject("[CDN Analytics] Request to transfer ownership of #{invitation.site.domain}")
     |> render("ownership_transfer_request.html",
       invitation: invitation,
       new_owner_account: new_owner_account
@@ -227,7 +227,7 @@ defmodule PlausibleWeb.Email do
     |> to(invitation.inviter.email)
     |> tag("invitation-accepted")
     |> subject(
-      "[Plausible Analytics] #{invitation.email} accepted your invitation to #{invitation.site.domain}"
+      "[CDN Analytics] #{invitation.email} accepted your invitation to #{invitation.site.domain}"
     )
     |> render("invitation_accepted.html",
       invitation: invitation
@@ -239,7 +239,7 @@ defmodule PlausibleWeb.Email do
     |> to(invitation.inviter.email)
     |> tag("invitation-rejected")
     |> subject(
-      "[Plausible Analytics] #{invitation.email} rejected your invitation to #{invitation.site.domain}"
+      "[CDN Analytics] #{invitation.email} rejected your invitation to #{invitation.site.domain}"
     )
     |> render("invitation_rejected.html",
       invitation: invitation
@@ -251,7 +251,7 @@ defmodule PlausibleWeb.Email do
     |> to(invitation.inviter.email)
     |> tag("ownership-transfer-accepted")
     |> subject(
-      "[Plausible Analytics] #{invitation.email} accepted the ownership transfer of #{invitation.site.domain}"
+      "[CDN Analytics] #{invitation.email} accepted the ownership transfer of #{invitation.site.domain}"
     )
     |> render("ownership_transfer_accepted.html",
       invitation: invitation
@@ -263,7 +263,7 @@ defmodule PlausibleWeb.Email do
     |> to(invitation.inviter.email)
     |> tag("ownership-transfer-rejected")
     |> subject(
-      "[Plausible Analytics] #{invitation.email} rejected the ownership transfer of #{invitation.site.domain}"
+      "[CDN Analytics] #{invitation.email} rejected the ownership transfer of #{invitation.site.domain}"
     )
     |> render("ownership_transfer_rejected.html",
       invitation: invitation
@@ -274,7 +274,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(membership.user.email)
     |> tag("site-member-removed")
-    |> subject("[Plausible Analytics] Your access to #{membership.site.domain} has been revoked")
+    |> subject("[CDN Analytics] Your access to #{membership.site.domain} has been revoked")
     |> render("site_member_removed.html",
       membership: membership
     )
