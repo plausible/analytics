@@ -7,7 +7,7 @@
     <meta name="robots" content="noindex">
 
     <link rel="icon" type="image/png" sizes="32x32" href="<%= PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_favicon.png") %>">
-    <title><%= assigns[:title] || "Plausible · Web analytics" %></title>
+    <title><%= assigns[:title] || "XXX Analytics · WebStats" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
     <%= render("_tracking.html", assigns) %>
     <script type="text/javascript" data-pref="<%= @conn.assigns[:current_user] && @conn.assigns[:current_user].theme %>" src="<%= Routes.static_path(@conn, "/js/applyTheme.js") %>"></script>
