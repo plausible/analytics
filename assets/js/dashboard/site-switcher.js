@@ -14,7 +14,6 @@ export default class SiteSwitcher extends React.Component {
       sites: null,
       error: null,
       loading: true,
-      hasMoreSites: false
     }
   }
 
@@ -42,8 +41,7 @@ export default class SiteSwitcher extends React.Component {
       .then((sites) => this.setState(
         {
           loading: false,
-          sites: sites.data.map(s => s.domain),
-          hasMoreSites: sites.pagination.length > 1
+          sites: sites.data.map(s => s.domain)
         }))
       .catch((e) => this.setState({loading: false, error: e}))
   }
@@ -148,28 +146,13 @@ export default class SiteSwitcher extends React.Component {
           <div className="py-1">
             { this.state.sites.map(this.renderSiteLink.bind(this)) }
           </div>
-          { this.state.hasMoreSites &&
-            <React.Fragment>
-              {this.renderLine()}
-              <a href='/sites' className="flex px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100" role="menuitem">
-                View all
-              </a>
-            </React.Fragment>
-          }
-          {this.renderLine()}
-          <div className="py-1">
-            <a href='/sites/new' className="group flex items-center px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100" role="menuitem">
-            <svg className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-200 group-hover:text-gray-600 dark:group-hover:text-gray-400 group-focus:text-gray-500 dark:group-focus:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-              Add Site
-            </a>
-          </div>
+          <div className="border-t border-gray-200 dark:border-gray-500"></div>
+          <a href='/sites' className="flex px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100" role="menuitem">
+            View all
+          </a>
         </React.Fragment>
       )
     }
-  }
-
-  renderLine() {
-    return (<div className="border-t border-gray-200 dark:border-gray-500"></div>)
   }
 
   renderArrow() {
