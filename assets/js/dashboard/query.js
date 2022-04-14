@@ -157,7 +157,9 @@ export function eventName(query) {
 
 export const formattedFilters = {
   'goal': 'Goal',
-  'props': 'Goal properties',
+  'props': 'Property',
+  'prop_key': 'Property',
+  'prop_value': 'Value',
   'source': 'Source',
   'utm_medium': 'UTM Medium',
   'utm_source': 'UTM Source',
@@ -175,7 +177,5 @@ export const formattedFilters = {
   'city': 'City',
   'page': 'Page',
   'entry_page': 'Entry Page',
-  'exit_page': 'Exit Page',
-  'property': 'Property',
-  'prop_value': 'Property value'
+  'exit_page': 'Exit Page'
 }

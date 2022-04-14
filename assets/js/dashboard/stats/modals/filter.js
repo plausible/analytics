@@ -19,10 +19,25 @@ export const FILTER_GROUPS = {
   'os': ['os', 'os_version'],
   'utm': ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
   'goal': ['goal'],
-  'property': ['property', 'prop_value']
+  'props': ['prop_key', 'prop_value']
 }
 
 function getFormState(filterGroup, query) {
+  if (filterGroup === 'props') {
+    const propsObject = query.filters['props']
+    const entries = propsObject && Object.entries(propsObject)
+
+    if (entries && entries.length == 1) {
+      const propKey = entries[0][0]
+      const propValue = valueWithoutPrefix(entries[0][1])
+
+      return {
+        'prop_key': {name: propKey, value: propKey, type: FILTER_TYPES.is},
+        'prop_value': {name: propValue, value: propValue, type: toFilterType(entries[0][1])}
+      }
+    }
+  }
+
   return FILTER_GROUPS[filterGroup].reduce((result, filter) => {
     const rawFilterValue = query.filters[filter] || ''
     const type = toFilterType(rawFilterValue)
@@ -75,6 +90,10 @@ function supportsContains(filterName) {
   return ['page', 'entry_page', 'exit_page'].includes(filterName)
 }
 
+function supportsIsNot(filterName) {
+  return !['goal', 'prop_key'].includes(filterName)
+}
+
 function withIndefiniteArticle(word) {
   if (word.startsWith('UTM')) {
     return `a ${  word}`
@@ -90,6 +109,8 @@ export function formatFilterGroup(filterGroup) {
     return 'UTM tags'
   } else if (filterGroup === 'location') {
     return 'Location'
+  } else if (filterGroup === 'props') {
+    return 'Property'
   } else {
     return formattedFilters[filterGroup]
   }
@@ -145,7 +166,7 @@ class FilterModal extends React.Component {
       if (filterKey === 'region') { res.push({filter: 'region_name', value: name}) }
       if (filterKey === 'city') { res.push({filter: 'city_name', value: name}) }
       if (filterKey === 'prop_value') {return res}
-      if (filterKey === 'property') {
+      if (filterKey === 'prop_key') {
         let propValue = formState['prop_value']
         let filterValue = JSON.stringify({ [value]: toFilterQuery(propValue.value, propValue.type) })
         res.push({filter: 'props', value: filterValue})
@@ -273,7 +294,7 @@ class FilterModal extends React.Component {
               >
                 <div className="py-1">
                   { this.renderTypeItem(filterName, FILTER_TYPES.is, true) }
-                  { this.renderTypeItem(filterName, FILTER_TYPES.isNot, filterName !== 'goal') }
+                  { this.renderTypeItem(filterName, FILTER_TYPES.isNot, supportsIsNot(filterName)) }
                   { this.renderTypeItem(filterName, FILTER_TYPES.contains, supportsContains(filterName)) }
                 </div>
               </Menu.Items>
@@ -304,9 +325,9 @@ class FilterModal extends React.Component {
     );
   }
 
-    renderBody() {
-      const { selectedFilterGroup, query } = this.state;
-      const showClear = FILTER_GROUPS[selectedFilterGroup].some((filterName) => query.filters[filterName])
+  renderBody() {
+    const { selectedFilterGroup, query } = this.state;
+    const showClear = FILTER_GROUPS[selectedFilterGroup].some((filterName) => query.filters[filterName])
 
     return (
       <>
