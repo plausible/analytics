@@ -28,7 +28,7 @@ defmodule PlausibleWeb.SiteController do
           where: sm.user_id == ^user.id,
           where: s.id not in ^invitation_site_ids,
           order_by: [
-            {:desc, sm.site_id}
+            {:asc, sm.site_id}
           ],
           preload: [memberships: sm]
         ),
