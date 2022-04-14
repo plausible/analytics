@@ -7,27 +7,24 @@
     <% {:ok, start_date} -> %>
 
       <div class="mt-6 text-sm text-gray-500 dark:text-gray-200">
-        Confirm the view and dates in your Google Analytics account to be imported to the Plausible dashboard
+        Stats from this property and time period will be imported from your Google Analytics account to your Plausible dashboard
       </div>
 
-      <div class="mt-3">
+      <div class="mt-6">
         <%= styled_label(f, :view_id, "Google Analytics view") %>
-        <%= styled_select f, :view_display, @view_ids, disabled: "true", selected: @selected_view_id %>
+        <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800"><%= @selected_view_id_name %></span>
         <%= hidden_input f, :view_id, readonly: "true", value: @selected_view_id %>
-      </div>
-      <div class="mt-6 text-sm text-gray-500 dark:text-gray-200">
-        Historical data will be imported from your first Google Analytics visitor to your first Plausible visitor
       </div>
       <div class="flex justify-between mt-3">
         <div class="w-36">
           <%= styled_label f, :start_date, "From"  %>
-          <%= styled_text_input f, :start_date, value: PlausibleWeb.EmailView.date_format(start_date), readonly: "true" %>
+          <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800"><%= PlausibleWeb.EmailView.date_format(start_date) %></span>
           <%= hidden_input f, :start_date, value: start_date, readonly: "true" %>
         </div>
-        <div class="align-middle pt-8">&rarr;</div>
+        <div class="align-middle pt-4 dark:text-gray-100">&rarr;</div>
         <div class="w-36">
           <%= styled_label f, :end_date, "To"  %>
-          <%= styled_text_input f, :end_date, value: PlausibleWeb.EmailView.date_format(@end_date), readonly: "true" %>
+          <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800"><%= PlausibleWeb.EmailView.date_format(@end_date) %></span>
           <%= hidden_input f, :end_date, value: @end_date, readonly: "true" %>
         </div>
       </div>

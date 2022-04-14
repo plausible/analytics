@@ -9,6 +9,13 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Query.from(site, params) |> Filters.add_prefix()
 
+    selected_metric =
+      if !params["metric"] || params["metric"] == "conversions" do
+        "visitors"
+      else
+        params["metric"]
+      end
+
     timeseries_query =
       if query.period == "realtime" do
         %Query{query | period: "30m"}
@@ -16,11 +23,12 @@ defmodule PlausibleWeb.Api.StatsController do
         query
       end
 
-    timeseries = Task.async(fn -> Stats.timeseries(site, timeseries_query, [:visitors]) end)
-    {top_stats, sample_percent} = fetch_top_stats(site, query)
+    timeseries_result =
+      Stats.timeseries(site, timeseries_query, [String.to_existing_atom(selected_metric)])
 
-    timeseries_result = Task.await(timeseries)
-    plot = Enum.map(timeseries_result, fn row -> row[:visitors] end)
+    plot =
+      Enum.map(timeseries_result, fn row -> row[String.to_existing_atom(selected_metric)] || 0 end)
+
     labels = Enum.map(timeseries_result, fn row -> row[:date] end)
     present_index = present_index_for(site, query, labels)
 
@@ -28,6 +36,19 @@ defmodule PlausibleWeb.Api.StatsController do
       plot: plot,
       labels: labels,
       present_index: present_index,
+      interval: query.interval,
+      with_imported: query.include_imported,
+      imported_source: site.imported_data && site.imported_data.source
+    })
+  end
+
+  def top_stats(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site, params) |> Filters.add_prefix()
+
+    {top_stats, sample_percent} = fetch_top_stats(site, query)
+
+    json(conn, %{
       top_stats: top_stats,
       interval: query.interval,
       sample_percent: sample_percent,

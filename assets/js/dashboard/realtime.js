@@ -3,7 +3,7 @@ import React from 'react';
 import Datepicker from './datepicker'
 import SiteSwitcher from './site-switcher'
 import Filters from './filters'
-import VisitorGraph from './stats/visitor-graph'
+import VisitorGraph from './stats/graph/visitor-graph'
 import Sources from './stats/sources'
 import Pages from './stats/pages'
 import Locations from './stats/locations'

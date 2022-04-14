@@ -315,6 +315,8 @@ class DatePicker extends React.Component {
   }
 
   renderDropDownContent() {
+    const { site } = this.props
+
     if (this.state.mode === "menu") {
       return (
         <div
@@ -335,7 +337,7 @@ class DatePicker extends React.Component {
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
               { this.renderLink('month', 'Month to Date') }
-              { this.renderLink('month', 'Last month', {date: lastMonth(this.props.site)}) }
+              { this.renderLink('month', 'Last month', {date: lastMonth(site)}) }
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
               {this.renderLink("year", "Year to Date")}
