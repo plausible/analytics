@@ -13,7 +13,7 @@ export default class SiteSwitcher extends React.Component {
       open: false,
       sites: null,
       error: null,
-      loading: true,
+      loading: true
     }
   }
 
