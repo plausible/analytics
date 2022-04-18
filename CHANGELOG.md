@@ -33,6 +33,8 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Cache the tracking script for 24 hours
 - Move `entry_page` and `exit_page` to be part of the `Page` filter group
+- Paginate /api/sites results and add a `View all` link to the site-switcher dropdown in the dashboard.
+- Remove the `+ Add Site` link to the site-switcher dropdown in the dashboard.
 
 ## v1.4.1
 

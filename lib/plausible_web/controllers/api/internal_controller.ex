@@ -11,14 +11,40 @@ defmodule PlausibleWeb.Api.InternalController do
     end
   end
 
-  def sites(conn, _) do
-    if conn.assigns[:current_user] do
-      user = Repo.preload(conn.assigns[:current_user], :sites)
-      json(conn, Enum.map(user.sites, & &1.domain))
+  def sites(conn, params) do
+    current_user = conn.assigns[:current_user]
+
+    if current_user do
+      sites =
+        sites_for(current_user, params)
+        |> buildResponse(conn)
+
+      json(conn, sites)
     else
-      conn
-      |> put_status(401)
-      |> json(%{error: "You need to be logged in to request a list of sites"})
+      PlausibleWeb.Api.Helpers.unauthorized(
+        conn,
+        "You need to be logged in to request a list of sites"
+      )
     end
+  end
+
+  defp sites_for(user, params) do
+    Repo.paginate(
+      from(
+        s in Plausible.Site,
+        join: sm in Plausible.Site.Membership,
+        on: sm.site_id == s.id,
+        where: sm.user_id == ^user.id,
+        order_by: s.domain
+      ),
+      params
+    )
+  end
+
+  defp buildResponse({sites, pagination}, conn) do
+    %{
+      data: Enum.map(sites, &%{domain: &1.domain}),
+      pagination: Phoenix.Pagination.JSON.paginate(conn, pagination)
+    }
   end
 end

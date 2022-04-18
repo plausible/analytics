@@ -23,7 +23,7 @@ export default class SiteSwitcher extends React.Component {
     document.addEventListener("keydown", this.handleKeydown);
     document.addEventListener('click', this.handleClick, false);
   }
-  
+
   componentWillUnmount() {
     this.siteSwitcherButton.current.removeEventListener("click", this.toggle);
     document.removeEventListener("keydown", this.handleKeydown);
@@ -38,7 +38,11 @@ export default class SiteSwitcher extends React.Component {
         if (!response.ok) { throw response }
         return response.json()
       })
-      .then((sites) => this.setState({loading: false, sites: sites}))
+      .then((sites) => this.setState(
+        {
+          loading: false,
+          sites: sites.data.map(s => s.domain)
+        }))
       .catch((e) => this.setState({loading: false, error: e}))
   }
 
@@ -55,7 +59,7 @@ export default class SiteSwitcher extends React.Component {
 
   handleKeydown(e) {
     if (!this.props.loggedIn) return;
-    
+
     const { site } = this.props;
     const { sites } = this.state;
 
@@ -73,7 +77,7 @@ export default class SiteSwitcher extends React.Component {
   toggle(e) {
     /**
      * React doesn't seem to prioritise its own events when events are bubbling, and is unable to stop its events from propagating to the document's (root) event listeners which are attached on the DOM.
-     * 
+     *
      * A simple trick is to hook up our own click event listener via a ref node, which allows React to manage events in this situation better between the two.
      */
     e.stopPropagation();
@@ -143,12 +147,9 @@ export default class SiteSwitcher extends React.Component {
             { this.state.sites.map(this.renderSiteLink.bind(this)) }
           </div>
           <div className="border-t border-gray-200 dark:border-gray-500"></div>
-          <div className="py-1">
-            <a href='/sites/new' className="group flex items-center px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100" role="menuitem">
-            <svg className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-200 group-hover:text-gray-600 dark:group-hover:text-gray-400 group-focus:text-gray-500 dark:group-focus:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-              Add Site
-            </a>
-          </div>
+          <a href='/sites' className="flex px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100" role="menuitem">
+            View all
+          </a>
         </React.Fragment>
       )
     }
