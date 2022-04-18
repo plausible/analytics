@@ -36,7 +36,7 @@
     {{/unless}}
     if (window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) return;
     try {
-      if (window.localStorage.plausible_ignore=="true") {
+      if (window.localStorage.plausible_ignore === 'true') {
         return warn('localStorage flag')
       }
     } catch (e) {
@@ -45,7 +45,7 @@
     {{#if exclusions}}
     if (excludedPaths) {
       for (var i = 0; i < excludedPaths.length; i++) {
-        if (eventName == "pageview" && location.pathname.match(new RegExp('^' + excludedPaths[i].trim().replace(/\*\*/g, '.*').replace(/([^\.])\*/g, '$1[^\\s\/]*') + '\/?$')))
+        if (eventName === 'pageview' && location.pathname.match(new RegExp('^' + excludedPaths[i].trim().replace(/\*\*/g, '.*').replace(/([^\.])\*/g, '$1[^\\s\/]*') + '\/?$')))
           return warn('exclusion rule');
       }
     }
@@ -78,7 +78,7 @@
     request.send(JSON.stringify(payload));
 
     request.onreadystatechange = function() {
-      if (request.readyState == 4) {
+      if (request.readyState === 4) {
         options && options.callback && options.callback()
       }
     }
@@ -87,9 +87,9 @@
   {{#if outbound_links}}
   function handleOutbound(event) {
     var link = event.target;
-    var middle = event.type == "auxclick" && event.which == 2;
-    var click = event.type == "click";
-      while(link && (typeof link.tagName == 'undefined' || link.tagName.toLowerCase() != 'a' || !link.href)) {
+    var middle = event.type === 'auxclick' && event.which === 2;
+    var click = event.type === 'click';
+      while(link && (typeof link.tagName === 'undefined' || link.tagName.toLowerCase() !== 'a' || !link.href)) {
         link = link.parentNode
       }
 
@@ -123,22 +123,24 @@
   {{#if file_downloads}}
   var defaultFileTypes = ['pdf', 'xlsx', 'docx', 'txt', 'rtf', 'csv', 'exe', 'key', 'pps', 'ppt', 'pptx', '7z', 'pkg', 'rar', 'gz', 'zip', 'avi', 'mov', 'mp4', 'mpeg', 'wmv', 'midi', 'mp3', 'wav', 'wma']
   var fileTypesAttr = scriptEl.getAttribute('file-types')
-  var fileTypesToTrack = (fileTypesAttr && fileTypesAttr.split(",")) || defaultFileTypes;
+  var addFileTypesAttr = scriptEl.getAttribute('add-file-types')
+  var fileTypesToTrack = (fileTypesAttr && fileTypesAttr.split(",")) || (addFileTypesAttr && addFileTypesAttr.split(",").concat(defaultFileTypes)) || defaultFileTypes;
 
   function handleDownload(event) {
     
     var link = event.target;
-    var middle = event.type == "auxclick" && event.which == 2;
-    var click = event.type == "click";
+    var middle = event.type === 'auxclick' && event.which === 2;
+    var click = event.type === 'click';
 
-    while(link && (typeof link.tagName == 'undefined' || link.tagName.toLowerCase() != 'a' || !link.href)) {
+    while(link && (typeof link.tagName === 'undefined' || link.tagName.toLowerCase() !== 'a' || !link.href)) {
       link = link.parentNode
     }
 
-    if (link && link.href && isDownloadToTrack(link.href)) {
+    var linkTarget = link && link.href && link.href.split('?')[0]
+    if (linkTarget && isDownloadToTrack(linkTarget)) {
 
       if (middle || click) {
-        plausible('File Download', {props: {url: link.href}})
+        plausible('File Download', {props: {url: linkTarget}})
       }
 
       // Delay navigation so that Plausible is notified of the click
@@ -154,9 +156,9 @@
   }
 
   function isDownloadToTrack(url) {
-    var fileType = url.split(".").pop();
+    var fileType = url.split('.').pop();
     return fileTypesToTrack.some(function(fileTypeToTrack) {
-      return fileTypeToTrack == fileType
+      return fileTypeToTrack === fileType
     })
   }
 
@@ -203,7 +205,7 @@
 
 
     if (document.visibilityState === 'prerender') {
-      document.addEventListener("visibilitychange", handleVisibilityChange);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
     } else {
       page()
     }
