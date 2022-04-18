@@ -18,13 +18,15 @@ defmodule Plausible.Stats.Imported do
       from(v in "imported_visitors",
         where: v.site_id == ^site.id,
         where: v.date >= ^query.date_range.first and v.date <= ^query.date_range.last,
-        select: %{visitors: sum(v.visitors)}
+        select: %{}
       )
+      |> select_imported_metrics(metrics)
       |> apply_interval(query)
 
     from(s in Ecto.Query.subquery(native_q),
       full_join: i in subquery(imported_q),
-      on: field(s, :date) == field(i, :date)
+      on: field(s, :date) == field(i, :date),
+      select: %{date: field(s, :date)}
     )
     |> select_joined_metrics(metrics)
   end
@@ -350,7 +352,10 @@ defmodule Plausible.Stats.Imported do
 
   defp select_imported_metrics(q, [:visit_duration | rest]) do
     q
-    |> select_merge([i], %{visit_duration: sum(i.visit_duration)})
+    |> select_merge([i], %{
+      visit_duration: sum(i.visit_duration),
+      visits: sum(i.visits)
+    })
     |> select_imported_metrics(rest)
   end
 

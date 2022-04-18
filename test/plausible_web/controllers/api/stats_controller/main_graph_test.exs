@@ -244,7 +244,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "GET /api/stats/main-graph - pageviews plot" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "displays pageviews for a month", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -265,10 +265,32 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert List.first(plot) == 2
       assert List.last(plot) == 1
     end
+
+    test "displays pageviews for a month with imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-31 00:00:00]),
+        build(:imported_visitors, date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-01-31])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=pageviews&with_imported=true"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 31
+      assert List.first(plot) == 2
+      assert List.last(plot) == 2
+      assert Enum.sum(plot) == 4
+    end
   end
 
   describe "GET /api/stats/main-graph - bounce_rate plot" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "displays bounce_rate for a month", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -289,10 +311,31 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert List.first(plot) == 0
       assert List.last(plot) == 100
     end
+
+    test "displays bounce rate for a month with imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-31 00:00:00]),
+        build(:imported_visitors, visits: 1, bounces: 0, date: ~D[2021-01-01]),
+        build(:imported_visitors, visits: 1, bounces: 1, date: ~D[2021-01-31])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=bounce_rate&with_imported=true"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 31
+      assert List.first(plot) == 50
+      assert List.last(plot) == 100
+    end
   end
 
   describe "GET /api/stats/main-graph - visit_duration plot" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "displays visit_duration for a month", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -319,6 +362,25 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.count(plot) == 31
       assert List.first(plot) == 0
       assert List.last(plot) == 300
+    end
+
+    test "displays visit_duration for a month with imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:10:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:15:00]),
+        build(:imported_visitors, visits: 1, visit_duration: 100, date: ~D[2021-01-01])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=visit_duration&with_imported=true"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 31
+      assert List.first(plot) == 200
     end
   end
 end
