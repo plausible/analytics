@@ -14,6 +14,7 @@ defmodule Plausible.Workers.SendTrialNotifications do
         from u in Plausible.Auth.User,
           left_join: s in Plausible.Billing.Subscription,
           on: s.user_id == u.id,
+          where: not is_nil(u.trial_expiry_date),
           where: is_nil(s.id),
           order_by: u.inserted_at
       )
