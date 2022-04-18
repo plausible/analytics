@@ -62,7 +62,14 @@ defmodule PlausibleWeb.BillingController do
     subscription = Billing.active_subscription_for(user.id)
 
     cond do
-      subscription && user.enterprise_plan ->
+      subscription && user.enterprise_plan &&
+          subscription.paddle_plan_id !== user.enterprise_plan.paddle_plan_id ->
+        redirect(conn,
+          to: Routes.billing_path(conn, :change_enterprise_plan, user.enterprise_plan.id)
+        )
+
+      subscription && user.enterprise_plan &&
+          subscription.paddle_plan_id == user.enterprise_plan.paddle_plan_id ->
         render(conn, "change_enterprise_plan_contact_us.html",
           user: user,
           plan: user.enterprise_plan,
