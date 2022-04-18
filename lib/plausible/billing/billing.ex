@@ -208,12 +208,36 @@ defmodule Plausible.Billing do
     user = Plausible.Repo.preload(user, :enterprise_plan)
 
     cond do
-      Timex.before?(user.inserted_at, @limit_accounts_since) -> nil
-      Application.get_env(:plausible, :is_selfhost) -> nil
-      user.email in Application.get_env(:plausible, :site_limit_exempt) -> nil
-      user.enterprise_plan -> nil
-      true -> Application.get_env(:plausible, :site_limit)
+      Timex.before?(user.inserted_at, @limit_accounts_since) ->
+        nil
+
+      Application.get_env(:plausible, :is_selfhost) ->
+        nil
+
+      user.email in Application.get_env(:plausible, :site_limit_exempt) ->
+        nil
+
+      user.enterprise_plan ->
+        if has_active_enterprise_subscription(user) do
+          nil
+        else
+          Application.get_env(:plausible, :site_limit)
+        end
+
+      true ->
+        Application.get_env(:plausible, :site_limit)
     end
+  end
+
+  defp has_active_enterprise_subscription(user) do
+    Plausible.Repo.exists?(
+      from s in Plausible.Billing.Subscription,
+        join: e in Plausible.Billing.EnterprisePlan,
+        on: s.user_id == e.user_id and s.paddle_plan_id == e.paddle_plan_id,
+        where: s.user_id == ^user.id,
+        where: s.paddle_plan_id == ^user.enterprise_plan.paddle_plan_id,
+        where: s.status == "active"
+    )
   end
 
   defp format_subscription(params) do
