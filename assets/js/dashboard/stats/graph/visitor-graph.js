@@ -270,9 +270,11 @@ class LineGraph extends React.Component {
 
     return (
       <div className="graph-inner">
-        <div className="flex flex-wrap">
-          {topStatData && <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData}/>}
-        </div>
+        <FadeIn show={topStatData}>
+          <div className="flex flex-wrap">
+            {topStatData && <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData}/>}
+          </div>
+        </FadeIn>
         <div className="relative px-2">
           <div className="absolute right-4 -top-10 flex">
             <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={this.props.updateInterval}/>
@@ -295,9 +297,10 @@ export default class VisitorGraph extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      loading: 3,
+      loadingTopStats: true,
+      loadingMainGraph: true,
       metric: storage.getItem(`metric__${this.props.site.domain}`) || 'visitors',
-      interval: storage.getItem(`interval__${this.props.site.domain}`)
+      interval: storage.getItem(`interval__${this.props.query.period}__${this.props.site.domain}`)
     }
     this.onVisible = this.onVisible.bind(this)
     this.updateMetric = this.updateMetric.bind(this)
@@ -308,40 +311,31 @@ export default class VisitorGraph extends React.Component {
   }
 
   validateInterval() {
-    const interval = this.state.interval || storage.getItem(`interval__${this.props.site.domain}`)
     const period = this.props.query && this.props.query.period
-
-    const outOfRangeInterval = period !== 'custom' && (
-      // ensure intervals are longer than period
-      (INTERVALS.indexOf(interval) == 0 && ORDERED_PERIODS.indexOf(period) < 5) ||
-      (INTERVALS.indexOf(interval) == 1 && ORDERED_PERIODS.indexOf(period) < 3) ||
-      (INTERVALS.indexOf(interval) == 2 && ORDERED_PERIODS.indexOf(period) < 2) ||
-      (INTERVALS.indexOf(interval) == 3 && ORDERED_PERIODS.indexOf(period) < 1) ||
-      // ensure minute interval is not used with period longer than realtime
-      (INTERVALS.indexOf(interval) == 4 && ORDERED_PERIODS.indexOf(period) > 0) ||
-      // ensure hour interval is not used with period longer than one month
-      (INTERVALS.indexOf(interval) == 3 && ORDERED_PERIODS.indexOf(period) > 4))
+    const interval = storage.getItem(`interval__${period}__${this.props.site.domain}`)
+    const outOfRangeInterval = period !== 'custom' && !INTERVAL_MAPPING[period].includes(interval);
 
     if (!interval || !INTERVALS.includes(interval) || outOfRangeInterval) {
       this.setState({interval: undefined}, () => {
-        this.setState({loading: 1, graphData: null})
+        this.setState({graphData: null})
         this.fetchGraphData()
       })
     } else {
-      this.setState({loading: 1, graphData: null})
-      this.fetchGraphData()
+      this.setState({graphData: null, interval}, () => {
+        this.fetchGraphData()
+      })
     }
   }
 
   updateInterval(interval) {
     if (INTERVALS.includes(interval)) {
-      this.setState({interval}, this.validateInterval)
-      storage.setItem(`interval__${this.props.site.domain}`, interval)
+      this.setState({interval, loadingMainGraph: 2}, this.validateInterval)
+      storage.setItem(`interval__${this.props.query.period}__${this.props.site.domain}`, interval)
     }
   }
 
   onVisible() {
-    this.validateInterval()
+    this.setState({loadingMainGraph: true}, this.validateInterval)
     this.fetchTopStatData()
     if (this.props.timer) {
       this.props.timer.onTick(this.validateInterval)
@@ -353,18 +347,20 @@ export default class VisitorGraph extends React.Component {
     const { metric, topStatData, interval } = this.state;
 
     if (this.props.query !== prevProps.query) {
-      this.setState({ loading: 3, graphData: null, topStatData: null })
-      this.validateInterval()
+      if (metric) {
+        this.setState({ loadingMainGraph: true, loadingTopStats: true, graphData: null, topStatData: null }, this.validateInterval)
+      } else {
+        this.setState({ loadingTopStats: true, topStatData: null })
+      }
       this.fetchTopStatData()
     }
 
     if (metric !== prevState.metric) {
-      this.setState({loading: 1, graphData: null})
-      this.validateInterval()
+      this.setState({loadingMainGraph: 2}, this.validateInterval)
     }
 
     if (interval !== prevState.interval && interval) {
-      this.validateInterval()
+      this.setState({loadingMainGraph: 2}, this.validateInterval)
     }
 
     const savedMetric = storage.getItem(`metric__${this.props.site.domain}`)
@@ -397,46 +393,46 @@ export default class VisitorGraph extends React.Component {
     if (this.state.metric) {
       api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/main-graph`, this.props.query, {metric: this.state.metric || 'none', interval: this.state.interval})
       .then((res) => {
-        this.setState((state) => ({ loading: state.loading-2, graphData: res }))
+        this.setState({ loadingMainGraph: false, graphData: res })
         return res
       })
       .catch((err) => {
         console.log(err)
-        this.setState((state) => ({ loading: state.loading-2, graphData: false }))
+        this.setState({ loadingMainGraph: false, graphData: false })
       })
     } else {
-      this.setState((state) => ({ loading: state.loading-2, graphData: null }))
+      this.setState({ loadingMainGraph: false, graphData: null })
     }
   }
 
   fetchTopStatData() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/top-stats`, this.props.query)
       .then((res) => {
-        this.setState((state) => ({ loading: state.loading-1, topStatData: res }))
+        this.setState({ loadingTopStats: false, topStatData: res })
         return res
       })
     }
 
   renderInner() {
     const { query, site } = this.props;
-    const { graphData, metric, topStatData, loading } = this.state;
+    const { graphData, metric, topStatData, loadingTopStats, loadingMainGraph } = this.state;
 
     const theme = document.querySelector('html').classList.contains('dark') || false
 
     return (
-      <FadeIn show={(loading <= 1 && topStatData) || (topStatData && graphData)}>
+      <FadeIn show={(!loadingTopStats && (!loadingMainGraph || loadingMainGraph === 2) && (topStatData && (!metric || loadingMainGraph === 2) || !!(topStatData && graphData)))}>
         <LineGraphWithRouter graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} updateInterval={this.updateInterval}/>
       </FadeIn>
     )
   }
 
   render() {
-    const {metric, topStatData, graphData} = this.state
+    const {metric, loadingMainGraph, loadingTopStats} = this.state
 
     return (
       <LazyLoader onVisible={this.onVisible}>
         <div className={`relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825 transition-padding ease-in-out duration-150 ${metric ? 'main-graph' : 'top-stats-only'}`}>
-          {this.state.loading > 0 && <div className="graph-inner"><div className={`${topStatData && !graphData ? 'pt-52 sm:pt-56 md:pt-60' : metric ? 'pt-32 sm:pt-36 md:pt-48' : 'pt-16 sm:pt-14 md:pt-18 lg:pt-5'} mx-auto loading`}><div></div></div></div>}
+          {(loadingMainGraph || loadingTopStats) && <div className="graph-inner"><div className={`${loadingMainGraph === 2 ? 'pt-52 sm:pt-56 md:pt-60' : (!metric) ? 'pt-16 sm:pt-14 md:pt-18 lg:pt-5' : 'pt-32 sm:pt-36 md:pt-48'} mx-auto loading`}><div></div></div></div>}
           {this.renderInner()}
         </div>
       </LazyLoader>
