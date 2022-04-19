@@ -42,28 +42,34 @@ defmodule Plausible.Stats.Imported do
     {first_datetime, _} = utc_boundaries(query, site.timezone)
 
     imported_q
-    |> group_by([i], fragment(
-      "
+    |> group_by(
+      [i],
+      fragment(
+        "
       if(toMonday(?) < toDate(?),
         toDate(?),
         toMonday(?)
       )",
-      i.date,
-      ^first_datetime,
-      ^first_datetime,
-      i.date
-    ))
-    |> select_merge([i], %{date: fragment(
-      "
+        i.date,
+        ^first_datetime,
+        ^first_datetime,
+        i.date
+      )
+    )
+    |> select_merge([i], %{
+      date:
+        fragment(
+          "
       if(toMonday(?) < toDate(?),
         toDate(?),
         toMonday(?)
       )",
-      i.date,
-      ^first_datetime,
-      ^first_datetime,
-      i.date
-    )})
+          i.date,
+          ^first_datetime,
+          ^first_datetime,
+          i.date
+        )
+    })
   end
 
   defp apply_interval(imported_q, _query, _site) do

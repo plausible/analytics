@@ -148,30 +148,32 @@ defmodule Plausible.Stats.Timeseries do
             ^site.timezone
           )
       },
-      group_by: fragment(
-        "if(toMonday(toTimeZone(?, ?)) < toDate(?),
+      group_by:
+        fragment(
+          "if(toMonday(toTimeZone(?, ?)) < toDate(?),
           toDate(?),
           toMonday(toTimeZone(?, ?))
         )",
-        e.timestamp,
-        ^site.timezone,
-        ^first_datetime,
-        ^first_datetime,
-        e.timestamp,
-        ^site.timezone
-      ),
-      order_by: fragment(
-        "if(toMonday(toTimeZone(?, ?)) < toDate(?),
+          e.timestamp,
+          ^site.timezone,
+          ^first_datetime,
+          ^first_datetime,
+          e.timestamp,
+          ^site.timezone
+        ),
+      order_by:
+        fragment(
+          "if(toMonday(toTimeZone(?, ?)) < toDate(?),
           toDate(?),
           toMonday(toTimeZone(?, ?))
         )",
-        e.timestamp,
-        ^site.timezone,
-        ^first_datetime,
-        ^first_datetime,
-        e.timestamp,
-        ^site.timezone
-      )
+          e.timestamp,
+          ^site.timezone,
+          ^first_datetime,
+          ^first_datetime,
+          e.timestamp,
+          ^site.timezone
+        )
     )
   end
 
