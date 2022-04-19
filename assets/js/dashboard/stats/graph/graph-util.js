@@ -6,8 +6,10 @@ export const INTERVALS = ["month", "week", "date", "hour", "minute"]
 
 export const dateFormatter = (interval, longForm, period, full) => {
   return function(isoDate, _index, _ticks) {
-    let date = parseUTCDate(isoDate)
-    let hours, ampm, minutes;
+    const date = parseUTCDate(isoDate)
+    const minutes = date.getMinutes();
+    const ampm = date.getHours() >= 12 ? 'pm' : 'am';
+    const hours = date.getHours() % 12 ? date.getHours() % 12 : 12;
 
     if (interval === 'month') {
       if (longForm) {
@@ -28,12 +30,6 @@ export const dateFormatter = (interval, longForm, period, full) => {
         return formatDayShort(date);
       }
     } else if (interval === 'hour') {
-      const parts = isoDate.split(/[^0-9]/);
-      date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5])
-      hours = date.getHours(); // Not sure why getUTCHours doesn't work here
-      ampm = hours >= 12 ? 'pm' : 'am';
-      hours = hours % 12;
-      hours = hours ? hours : 12; // the hour '0' should be '12'
       return hours + ampm;
     } else if (interval === 'minute' && period === 'realtime') {
       if (longForm) {
@@ -43,13 +39,6 @@ export const dateFormatter = (interval, longForm, period, full) => {
         return isoDate + 'm'
       }
     } else if (interval === 'minute') {
-      const parts = isoDate.split(/[^0-9]/);
-      date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5])
-      hours = date.getHours();
-      minutes = date.getMinutes();
-      ampm = hours >= 12 ? 'pm' : 'am';
-      hours = hours % 12;
-      hours = hours ? hours : 12;
       return hours + ':' + (minutes < 10 ? `0${minutes}` : minutes) + ampm;
     }
   }
