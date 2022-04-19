@@ -39,7 +39,7 @@ defmodule PlausibleWeb.AdminAuthControllerTest do
   def set_config(config) do
     updated_config =
       Keyword.merge(
-        [disable_authentication: false, disable_registration: :false],
+        [disable_authentication: false, disable_registration: false],
         config
       )
 
