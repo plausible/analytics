@@ -25,8 +25,7 @@ defmodule PlausibleWeb.AuthController do
             ]
 
   def register_form(conn, _params) do
-    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) !=
-         "false" do
+    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) != :false do
       redirect(conn, to: Routes.auth_path(conn, :login_form))
     else
       changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
@@ -39,8 +38,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def register(conn, params) do
-    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) !=
-         "false" do
+    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) != :false do
       redirect(conn, to: Routes.auth_path(conn, :login_form))
     else
       user = Plausible.Auth.User.new(params["user"])
@@ -76,7 +74,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def register_from_invitation_form(conn, %{"invitation_id" => invitation_id}) do
-    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) == "true" do
+    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) == :true do
       redirect(conn, to: Routes.auth_path(conn, :login_form))
     else
       invitation = Repo.get_by(Plausible.Auth.Invitation, invitation_id: invitation_id)
@@ -99,7 +97,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def register_from_invitation(conn, %{"invitation_id" => invitation_id} = params) do
-    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) == "true" do
+    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) == :true do
       redirect(conn, to: Routes.auth_path(conn, :login_form))
     else
       invitation = Repo.get_by(Plausible.Auth.Invitation, invitation_id: invitation_id)
