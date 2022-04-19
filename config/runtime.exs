@@ -333,7 +333,7 @@ cloud_queues = [
 ]
 
 queues = if(is_selfhost, do: base_queues, else: base_queues ++ cloud_queues)
-cron_enabled = !!disable_cron
+cron_enabled = !disable_cron
 
 cond do
   config_env() == :prod ->

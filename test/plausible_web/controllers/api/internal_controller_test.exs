@@ -31,7 +31,9 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
       site2 = insert(:site, members: [user])
       conn = get(conn, "/api/sites")
 
-      assert json_response(conn, 200) == [site.domain, site2.domain]
+      %{"data" => sites} = json_response(conn, 200)
+
+      assert Enum.map(sites, & &1["domain"]) == [site.domain, site2.domain]
     end
   end
 

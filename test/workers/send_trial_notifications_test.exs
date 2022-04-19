@@ -16,6 +16,15 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     assert_no_emails_delivered()
   end
 
+  test "does not send a notification if user does not have a trial" do
+    user = insert(:user, trial_expiry_date: nil)
+    insert(:site, members: [user])
+
+    perform_job(SendTrialNotifications, %{})
+
+    assert_no_emails_delivered()
+  end
+
   test "does not send a notification if user created a site but there are no pageviews" do
     user = insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 7))
     insert(:site, members: [user])

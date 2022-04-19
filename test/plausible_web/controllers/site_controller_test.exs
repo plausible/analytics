@@ -194,7 +194,8 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:enterprise_plan, user: user)
+      ep = insert(:enterprise_plan, user: user)
+      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
 
       insert(:site, members: [user])
       insert(:site, members: [user])
