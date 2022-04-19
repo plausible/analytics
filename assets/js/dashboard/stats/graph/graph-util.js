@@ -1,8 +1,33 @@
-import { METRIC_LABELS, METRIC_FORMATTER } from './visitor-graph'
+import numberFormatter, {durationFormatter} from '../../util/number-formatter'
 import {parseUTCDate, formatMonthYYYY, formatDay, formatDayShort} from '../../util/date'
 
-export const ORDERED_PERIODS = ['realtime', 'day', '7d', 'month', '30d', '6mo', '12mo']
 export const INTERVALS = ["month", "week", "date", "hour", "minute"]
+
+export const METRIC_MAPPING = {
+  'Unique visitors (last 30 min)': 'visitors',
+  'Pageviews (last 30 min)': 'pageviews',
+  'Unique visitors': 'visitors',
+  'Visit duration': 'visit_duration',
+  'Total pageviews': 'pageviews',
+  'Bounce rate': 'bounce_rate',
+  'Unique conversions': 'conversions',
+}
+
+export const METRIC_LABELS = {
+  'visitors': 'Visitors',
+  'pageviews': 'Pageviews',
+  'bounce_rate': 'Bounce Rate',
+  'visit_duration': 'Visit Duration',
+  'conversions': 'Converted Visitors',
+}
+
+export const METRIC_FORMATTER = {
+  'visitors': numberFormatter,
+  'pageviews': numberFormatter,
+  'bounce_rate': (number) => (`${number}%`),
+  'visit_duration': durationFormatter,
+  'conversions': numberFormatter,
+}
 
 export const dateFormatter = (interval, longForm, period, full) => {
   return function(isoDate, _index, _ticks) {

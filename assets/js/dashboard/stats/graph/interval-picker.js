@@ -1,6 +1,27 @@
 import { Transition } from '@headlessui/react';
 import React, { Component, Fragment } from 'react';
 
+export const INTERVAL_MAPPING = {
+	'realtime': ['minute'],
+	'day': ['minute', 'hour'],
+	'7d': ['hour', 'date'],
+	'month': ['date', 'week'],
+	'30d': ['date', 'week'],
+	'6mo': ['date', 'week', 'month'],
+	'12mo': ['date', 'week', 'month'],
+	'year': ['date', 'week', 'month'],
+	'all': ['date', 'week', 'month'],
+	'custom': ['date', 'week', 'month']
+}
+
+export const INTERVAL_LABELS = {
+	'minute': 'Minutes',
+	'hour': 'Hours',
+	'date': 'Days',
+	'week': 'Weeks',
+	'month': 'Months'
+}
+
 export default class IntervalPicker extends Component {
 	constructor(props) {
 		super(props);
@@ -31,25 +52,6 @@ export default class IntervalPicker extends Component {
 
 		const currentInterval = (graphData && graphData.interval) || query.interval;
 
-		const INTERVAL_MAPPING = {
-			'day': ['hour'],
-			'7d': ['hour', 'date'],
-			'month': ['date', 'week'],
-			'30d': ['date', 'week'],
-			'6mo': ['date', 'week', 'month'],
-			'12mo': ['date', 'week', 'month'],
-			'year': ['date', 'week', 'month'],
-			'all': ['date', 'week', 'month'],
-			'custom': ['hour', 'date', 'week', 'month']
-		}
-
-		const INTERVAL_LABELS = {
-			'hour': 'Hours',
-			'date': 'Days',
-			'week': 'Weeks',
-			'month': 'Months'
-		}
-
 		return (
 			<div
 				id="intervalmenu"
@@ -62,7 +64,7 @@ export default class IntervalPicker extends Component {
 					<div className="px-4 py-2 text-sm leading-tight flex items-center justify-between">Graph Detail</div>
 					<div className="border-t border-gray-200 dark:border-gray-500"></div>
 					<div className="py-1">
-						{INTERVAL_MAPPING[query.period].map(interval => (
+						{INTERVAL_MAPPING[query.period].length > 1 && INTERVAL_MAPPING[query.period].map(interval => (
 							currentInterval === interval ?
 							(
 								<div key={interval} className="font-bold px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-900 dark:hover:text-gray-100 flex items-center justify-between">

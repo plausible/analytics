@@ -1,6 +1,6 @@
 import React from "react";
 import numberFormatter, {durationFormatter} from '../../util/number-formatter'
-import { METRIC_MAPPING, METRIC_LABELS } from './visitor-graph'
+import { METRIC_MAPPING, METRIC_LABELS } from './graph-util'
 
 export default class TopStats extends React.Component {
 	renderComparison(name, comparison) {
