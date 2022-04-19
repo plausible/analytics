@@ -203,7 +203,7 @@ defmodule Plausible.Stats.Query do
             "period" => "custom",
             "from" => Date.to_iso8601(start_date),
             "to" => Date.to_iso8601(now),
-            "interval" => "month"
+            "interval" => Map.get(params, "interval", "month")
           })
         )
         |> Map.put(:period, "all")
@@ -215,7 +215,7 @@ defmodule Plausible.Stats.Query do
             "period" => "custom",
             "from" => Date.to_iso8601(start_date),
             "to" => Date.to_iso8601(now),
-            "interval" => "date"
+            "interval" => Map.get(params, "interval", "date")
           })
         )
         |> Map.put(:period, "all")

@@ -136,11 +136,10 @@ defmodule Plausible.Stats.Timeseries do
       select_merge: %{
         date:
           fragment(
-            "
-            if(toMonday(toTimeZone(?, ?)) < toDate(?),
+            "if(toMonday(toTimeZone(?, ?)) < toDate(?),
               toDate(?),
               toMonday(toTimeZone(?, ?))
-            )  as date",
+            )",
             e.timestamp,
             ^site.timezone,
             ^first_datetime,
@@ -149,8 +148,30 @@ defmodule Plausible.Stats.Timeseries do
             ^site.timezone
           )
       },
-      group_by: fragment("date"),
-      order_by: fragment("date")
+      group_by: fragment(
+        "if(toMonday(toTimeZone(?, ?)) < toDate(?),
+          toDate(?),
+          toMonday(toTimeZone(?, ?))
+        )",
+        e.timestamp,
+        ^site.timezone,
+        ^first_datetime,
+        ^first_datetime,
+        e.timestamp,
+        ^site.timezone
+      ),
+      order_by: fragment(
+        "if(toMonday(toTimeZone(?, ?)) < toDate(?),
+          toDate(?),
+          toMonday(toTimeZone(?, ?))
+        )",
+        e.timestamp,
+        ^site.timezone,
+        ^first_datetime,
+        ^first_datetime,
+        e.timestamp,
+        ^site.timezone
+      )
     )
   end
 
