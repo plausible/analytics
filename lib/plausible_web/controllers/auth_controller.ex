@@ -25,7 +25,8 @@ defmodule PlausibleWeb.AuthController do
             ]
 
   def register_form(conn, _params) do
-    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) != "false" do
+    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) !=
+         "false" do
       redirect(conn, to: Routes.auth_path(conn, :login_form))
     else
       changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
@@ -38,7 +39,8 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def register(conn, params) do
-    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) != "false" do
+    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) !=
+         "false" do
       redirect(conn, to: Routes.auth_path(conn, :login_form))
     else
       user = Plausible.Auth.User.new(params["user"])
