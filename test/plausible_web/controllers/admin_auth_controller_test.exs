@@ -30,7 +30,7 @@ defmodule PlausibleWeb.AdminAuthControllerTest do
     end
 
     test "disable registration", %{conn: conn} do
-      set_config(disable_registration: true)
+      set_config(disable_registration: "true")
       conn = get(conn, "/register")
       assert redirected_to(conn) == "/login"
     end
@@ -39,7 +39,7 @@ defmodule PlausibleWeb.AdminAuthControllerTest do
   def set_config(config) do
     updated_config =
       Keyword.merge(
-        [disable_authentication: false, disable_registration: false],
+        [disable_authentication: false, disable_registration: "false"],
         config
       )
 

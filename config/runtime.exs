@@ -134,7 +134,6 @@ enable_email_verification =
 disable_registration =
   config_dir
   |> get_var_from_path_or_env("DISABLE_REGISTRATION", "false")
-  |> String.to_existing_atom()
 
 hcaptcha_sitekey = get_var_from_path_or_env(config_dir, "HCAPTCHA_SITEKEY")
 hcaptcha_secret = get_var_from_path_or_env(config_dir, "HCAPTCHA_SECRET")
@@ -200,7 +199,7 @@ config :plausible,
 config :plausible, :selfhost,
   disable_authentication: disable_auth,
   enable_email_verification: enable_email_verification,
-  disable_registration: if(!disable_auth, do: disable_registration, else: false)
+  disable_registration: if(!disable_auth, do: disable_registration, else: "false")
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [scheme: base_url.scheme, host: base_url.host, path: base_url.path, port: base_url.port],
