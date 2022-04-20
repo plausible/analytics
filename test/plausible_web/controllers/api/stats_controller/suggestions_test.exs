@@ -214,7 +214,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
           "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) |> Enum.sort() == ["author", "dark_mode", "logged_in"]
+      assert json_response(conn, 200) |> Enum.sort() == ["dark_mode", "logged_in"]
     end
 
     test "returns suggestions for prop value with no filter", %{conn: conn, site: site} do

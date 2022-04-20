@@ -142,8 +142,6 @@ defmodule Plausible.Stats.FilterSuggestions do
         limit: 25
       )
 
-    IO.inspect(Query.get_filter_by_prefix(query, "event:props"))
-
     q =
       case Query.get_filter_by_prefix(query, "event:props") do
         {"event:props:", {:is, val}} -> from([e, m] in q, where: m.value == ^val)
