@@ -129,12 +129,10 @@ defmodule Plausible.Stats.FilterSuggestions do
   end
 
   def filter_suggestions(site, query, "prop_key", filter_search) do
-    query = Query.remove_event_filters(query, [:props])
-
     filter_query = if filter_search == nil, do: "%", else: "%#{filter_search}%"
 
     q =
-      from(e in base_event_query(site, query),
+      from(e in base_event_query(site, Query.remove_event_filters(query, [:props])),
         inner_lateral_join: meta in "meta",
         as: :meta,
         select: meta.key,
@@ -144,10 +142,12 @@ defmodule Plausible.Stats.FilterSuggestions do
         limit: 25
       )
 
+    IO.inspect(Query.get_filter_by_prefix(query, "event:props"))
+
     q =
-      case query.filters["event:prop_value"] do
-        nil -> q
-        {_, prop_value} -> from([e, m] in q, where: m.value == ^prop_value)
+      case Query.get_filter_by_prefix(query, "event:props") do
+        {"event:props:", {:is, val}} -> from([e, m] in q, where: m.value == ^val)
+        _ -> q
       end
 
     ClickhouseRepo.all(q)
@@ -155,8 +155,6 @@ defmodule Plausible.Stats.FilterSuggestions do
   end
 
   def filter_suggestions(site, query, "prop_value", filter_search) do
-    query = Query.remove_event_filters(query, [:props])
-
     filter_query = if filter_search == nil, do: "%", else: "%#{filter_search}%"
 
     q =
@@ -171,9 +169,9 @@ defmodule Plausible.Stats.FilterSuggestions do
       )
 
     q =
-      case query.filters["event:prop_key"] do
-        nil -> q
-        {_, prop_key} -> from([e, m] in q, where: m.key == ^prop_key)
+      case Query.get_filter_by_prefix(query, "event:props") do
+        {"event:props:" <> key, _filter} -> from([e, m] in q, where: m.key == ^key)
+        _ -> q
       end
 
     ClickhouseRepo.all(q)

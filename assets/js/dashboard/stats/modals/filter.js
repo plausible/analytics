@@ -216,9 +216,20 @@ class FilterModal extends React.Component {
       const formFilters = Object.fromEntries(
         Object.entries(formState).map(([k, v]) => [k, v.code || v.value])
       )
-      const updatedQuery = {...query, filters: { ...query.filters, ...formFilters, [filter]: null }}
-      console.log(updatedQuery)
+      const updatedQuery = this.queryForSuggestions(query, formFilters, filter)
       return api.get(apiPath(this.props.site, `/suggestions/${filter}`), updatedQuery, { q: input.trim() })
+    }
+  }
+
+  queryForSuggestions(query, formFilters, filter) {
+    if (filter === 'prop_key') {
+      const propsFilter = formFilters.prop_value ? {'': formFilters.prop_value} : null
+      return {...query, filters: { ...query.filters, props: propsFilter}}
+    } else if (filter === 'prop_value') {
+      const propsFilter = formFilters.prop_key ? {[formFilters.prop_key]: '!(none)'} : null
+      return {...query, filters: { ...query.filters, props: propsFilter}}
+    } else {
+      return {...query, filters: { ...query.filters, ...formFilters, [filter]: null }}
     }
   }
 

@@ -22,9 +22,7 @@ defmodule Plausible.Stats.Filters do
 
   @event_props [
     "name",
-    "page",
-    "prop_key",
-    "prop_value"
+    "page"
   ]
 
   def visit_props() do
