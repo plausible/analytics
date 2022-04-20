@@ -38,17 +38,13 @@ function serializeFilters(filters) {
 export function serializeQuery(query, extraQuery=[]) {
   const queryObj = {}
   if (query.period)  { queryObj.period = query.period  }
-  if (query.interval)  { queryObj.interval = query.interval  }
   if (query.date)    { queryObj.date = formatISO(query.date)  }
   if (query.from)    { queryObj.from = formatISO(query.from)  }
   if (query.to)      { queryObj.to = formatISO(query.to)  }
   if (query.filters) { queryObj.filters = serializeFilters(query.filters)  }
   if (query.with_imported) { queryObj.with_imported = query.with_imported  }
   if (SHARED_LINK_AUTH) { queryObj.auth = SHARED_LINK_AUTH }
-  Object.assign(queryObj, ...extraQuery.map(e => {
-    Object.keys(e).forEach(key => e[key] === undefined && delete e[key])
-    return e
-  }))
+  Object.assign(queryObj, ...extraQuery)
 
   return '?' + serialize(queryObj)
 }

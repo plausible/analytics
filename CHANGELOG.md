@@ -36,9 +36,6 @@ All notable changes to this project will be documented in this file.
 - Paginate /api/sites results and add a `View all` link to the site-switcher dropdown in the dashboard.
 - Remove the `+ Add Site` link to the site-switcher dropdown in the dashboard.
 
-### Changed
-- Cache the tracking script for 24 hours
-
 ## v1.4.1
 
 ### Fixed
