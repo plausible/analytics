@@ -98,7 +98,13 @@ defmodule Plausible.MixProject do
       {:floki, "~> 0.32.0", only: :test},
       {:referrer_blocklist, git: "https://github.com/plausible/referrer-blocklist.git"},
       {:fun_with_flags, "~> 1.8.1"},
-      {:fun_with_flags_ui, "~> 0.8"}
+      {:fun_with_flags_ui, "~> 0.8"},
+      {:opentelemetry_api, "~> 1.0"},
+      {:opentelemetry, "~> 1.0"},
+      {:opentelemetry_exporter, "~> 1.0"},
+      {:opentelemetry_phoenix, "~> 1.0"},
+      {:telemetry, "~> 1.0", override: true},
+      {:opentelemetry_ecto, "~> 1.0.0-rc.5"}
     ]
   end
 

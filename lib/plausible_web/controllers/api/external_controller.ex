@@ -1,3 +1,9 @@
+defimpl FunWithFlags.Actor, for: BitString do
+  def id(str) do
+    str
+  end
+end
+
 defmodule PlausibleWeb.Api.ExternalController do
   use PlausibleWeb, :controller
   require Logger
@@ -68,6 +74,8 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   @no_domain_error {:error, %{domain: ["can't be blank"]}}
 
+  require OpenTelemetry.Tracer, as: Tracer
+
   defp create_event(conn, params) do
     params = %{
       "name" => params["n"] || params["name"],
@@ -79,7 +87,10 @@ defmodule PlausibleWeb.Api.ExternalController do
       "meta" => parse_meta(params)
     }
 
-    ua = parse_user_agent(conn)
+    ua =
+      Tracer.with_span "parse_user_agent" do
+        parse_user_agent(conn)
+      end
 
     blacklist_domain = params["domain"] in Application.get_env(:plausible, :domain_blacklist)
     referrer_spam = is_spammer?(params["referrer"])
@@ -92,7 +103,12 @@ defmodule PlausibleWeb.Api.ExternalController do
       query = decode_query_params(uri)
 
       ref = parse_referrer(uri, params["referrer"])
-      location_details = visitor_location_details(conn)
+
+      location_details =
+        Tracer.with_span "parse_visitor_location" do
+          visitor_location_details(conn)
+        end
+
       salts = Plausible.Session.Salts.fetch()
 
       event_attrs = %{
@@ -135,7 +151,17 @@ defmodule PlausibleWeb.Api.ExternalController do
 
         if changeset.valid? do
           event = Ecto.Changeset.apply_changes(changeset)
-          session_id = Plausible.Session.Store.on_event(event, previous_user_id)
+
+          session_id =
+            if FunWithFlags.enabled?(:cache_store, for: "domain:" <> domain) do
+              Tracer.with_span "cache_store_event" do
+                Plausible.Session.CacheStore.on_event(event, previous_user_id)
+              end
+            else
+              Tracer.with_span "store_event" do
+                Plausible.Session.Store.on_event(event, previous_user_id)
+              end
+            end
 
           event
           |> Map.put(:session_id, session_id)
