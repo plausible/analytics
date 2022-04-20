@@ -113,7 +113,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _goal}} = query) do
-    total_q = Query.remove_goal(query)
+    total_q = Query.remove_event_filters(query, [:goal, :props])
     prev_query = Query.shift_back(query, site)
     prev_total_query = Query.shift_back(total_q, site)
 
@@ -822,7 +822,7 @@ defmodule PlausibleWeb.Api.StatsController do
         query
       end
 
-    total_q = Query.remove_goal(query)
+    total_q = Query.remove_event_filters(query, [:goal, :props])
 
     %{visitors: %{value: total_visitors}} = Stats.aggregate(site, total_q, [:visitors])
 
@@ -858,7 +858,7 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site, params) |> Filters.add_prefix()
     pagination = parse_pagination(params)
 
-    total_q = Query.remove_goal(query)
+    total_q = Query.remove_event_filters(query, [:goal, :props])
 
     %{:visitors => %{value: unique_visitors}} = Stats.aggregate(site, total_q, [:visitors])
 
@@ -986,7 +986,7 @@ defmodule PlausibleWeb.Api.StatsController do
       query_without_goal =
         query
         |> Query.put_filter(filter_name, {:member, items})
-        |> Query.remove_goal()
+        |> Query.remove_event_filters([:goal, :props])
 
       res_without_goal =
         Stats.breakdown(site, query_without_goal, filter_name, [:visitors], pagination)

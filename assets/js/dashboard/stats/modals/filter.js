@@ -217,6 +217,7 @@ class FilterModal extends React.Component {
         Object.entries(formState).map(([k, v]) => [k, v.code || v.value])
       )
       const updatedQuery = {...query, filters: { ...query.filters, ...formFilters, [filter]: null }}
+      console.log(updatedQuery)
       return api.get(apiPath(this.props.site, `/suggestions/${filter}`), updatedQuery, { q: input.trim() })
     }
   }

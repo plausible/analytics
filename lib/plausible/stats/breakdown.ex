@@ -226,7 +226,7 @@ defmodule Plausible.Stats.Breakdown do
   defp breakdown_time_on_page(site, query, pages) do
     q =
       from(
-        e in base_event_query(site, Query.remove_page(query)),
+        e in base_event_query(site, Query.remove_event_filters(query, [:page, :props])),
         select: {
           fragment("? as p", e.pathname),
           fragment("? as t", e.timestamp),

@@ -278,7 +278,7 @@ defmodule Plausible.Stats.Query do
     case {filters["event:goal"], prop_filter} do
       {nil, {"event:props:" <> prop, filter_value}} ->
         q
-        |> drop_filter("event:props:" <> prop)
+        |> remove_event_filters([:props])
         |> put_filter("visit:entry_props:" <> prop, filter_value)
 
       _ ->
@@ -286,37 +286,19 @@ defmodule Plausible.Stats.Query do
     end
   end
 
-  def remove_goal(query) do
-    props =
-      Enum.map(query.filters, fn {key, _val} -> key end)
-      |> Enum.filter(fn filter_key -> String.starts_with?(filter_key, "event:props:") end)
-
+  def remove_event_filters(query, opts) do
     new_filters =
-      query.filters
-      |> Map.drop(props)
-      |> Map.delete("event:goal")
-
-    %__MODULE__{query | filters: new_filters}
-  end
-
-  def remove_page(query) do
-    filters =
-      Enum.filter(query.filters, fn
-        {"event:page", _} -> false
-        {"event:props:" <> _, _} -> false
-        _ -> true
+      Enum.filter(query.filters, fn {filter_key, _} ->
+        cond do
+          :page in opts && filter_key == "event:page" -> false
+          :goal in opts && filter_key == "event:goal" -> false
+          :props in opts && filter_key && String.starts_with?(filter_key, "event:props:") -> false
+          true -> true
+        end
       end)
       |> Enum.into(%{})
 
-    %__MODULE__{query | filters: filters}
-  end
-
-  def drop_filter(query, filter_key) do
-    filters =
-      Enum.filter(query.filters, fn {key, _value} -> key != filter_key end)
-      |> Enum.into(%{})
-
-    %__MODULE__{query | filters: filters}
+    %__MODULE__{query | filters: new_filters}
   end
 
   def has_event_filters?(query) do
