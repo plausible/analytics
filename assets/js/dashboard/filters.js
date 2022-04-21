@@ -38,7 +38,7 @@ function clearAllFilters(history, query) {
 }
 
 function filterText(key, rawValue, query) {
-  const type = toFilterType(rawValue)
+  let type = toFilterType(rawValue)
   const value = valueWithoutPrefix(rawValue)
 
   if (key === "goal") {
@@ -47,7 +47,7 @@ function filterText(key, rawValue, query) {
   if (key === "props") {
     const [metaKey, metaValue] = Object.entries(value)[0]
     const eventName = query.filters.goal ? query.filters.goal : 'event'
-    return <>{eventName}.{metaKey} is <b>{metaValue}</b></>
+    return <>{eventName}.{metaKey} {toFilterType(metaValue)} <b>{valueWithoutPrefix(metaValue)}</b></>
   }
   if (key === "browser_version") {
     const browserName = query.filters.browser ? query.filters.browser : 'Browser'
