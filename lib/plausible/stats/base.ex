@@ -87,29 +87,45 @@ defmodule Plausible.Stats.Base do
           q
       end
 
-    Enum.reduce(query.filters, q, fn {filter_key, filter_value}, query ->
-      case filter_key do
-        "event:props:" <> prop_name ->
-          filter_value = elem(filter_value, 1)
-
-          if filter_value == "(none)" do
+    q =
+      case Query.get_filter_by_prefix(query, "event:props") do
+        {"event:props:" <> prop_name, {:is, value}} ->
+          if value == "(none)" do
             from(
-              e in query,
+              e in q,
               where: fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name)
             )
           else
             from(
-              e in query,
+              e in q,
               inner_lateral_join: meta in "meta",
               as: :meta,
-              where: meta.key == ^prop_name and meta.value == ^filter_value
+              where: meta.key == ^prop_name and meta.value == ^value
+            )
+          end
+
+        {"event:props:" <> prop_name, {:is_not, value}} ->
+          if value == "(none)" do
+            from(
+              e in q,
+              where: fragment("has(?, ?)", field(e, :"meta.key"), ^prop_name)
+            )
+          else
+            from(
+              e in q,
+              left_lateral_join: meta in "meta",
+              as: :meta,
+              where:
+                (meta.key == ^prop_name and meta.value != ^value) or
+                  fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name)
             )
           end
 
         _ ->
-          query
+          q
       end
-    end)
+
+    q
   end
 
   @api_prop_name_to_db %{
@@ -156,6 +172,48 @@ defmodule Plausible.Stats.Base do
             join: sq in subquery(events_q),
             on: s.session_id == sq.session_id
           )
+      end
+
+    sessions_q =
+      case Query.get_filter_by_prefix(query, "visit:entry_props:") do
+        nil ->
+          sessions_q
+
+        {"visit:entry_props:" <> prop_name, filter_value} ->
+          case filter_value do
+            {:is, "(none)"} ->
+              from(
+                s in sessions_q,
+                where: fragment("not has(?, ?)", field(s, :"entry.meta.key"), ^prop_name)
+              )
+
+            {:is, value} ->
+              from(
+                s in sessions_q,
+                inner_lateral_join: meta in "entry.meta",
+                as: :meta,
+                where: meta.key == ^prop_name and meta.value == ^value
+              )
+
+            {:is_not, "(none)"} ->
+              from(
+                s in sessions_q,
+                where: fragment("has(?, ?)", field(s, :"entry.meta.key"), ^prop_name)
+              )
+
+            {:is_not, value} ->
+              from(
+                s in sessions_q,
+                left_lateral_join: meta in "entry.meta",
+                as: :meta,
+                where:
+                  (meta.key == ^prop_name and meta.value != ^value) or
+                    fragment("not has(?, ?)", field(s, :"entry.meta.key"), ^prop_name)
+              )
+
+            _ ->
+              sessions_q
+          end
       end
 
     Enum.reduce(Filters.visit_props(), sessions_q, fn prop_name, sessions_q ->
@@ -307,7 +365,7 @@ defmodule Plausible.Stats.Base do
   end
 
   def filter_converted_sessions(db_query, site, query) do
-    if query.filters["event:name"] || query.filters["event:page"] || query.filters["event:goal"] do
+    if Query.has_event_filters?(query) do
       converted_sessions =
         from(e in query_events(site, query),
           select: %{session_id: fragment("DISTINCT ?", e.session_id)}

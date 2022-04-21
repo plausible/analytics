@@ -20,6 +20,75 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
              ]
     end
 
+    test "returns screen sizes with :is filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          screen_size: "Desktop"
+        ),
+        build(:pageview,
+          user_id: 123,
+          screen_size: "Desktop",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"]
+        ),
+        build(:pageview,
+          screen_size: "Mobile",
+          "meta.key": ["author"],
+          "meta.value": ["other"]
+        ),
+        build(:pageview,
+          screen_size: "Tablet"
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Desktop", "visitors" => 1, "percentage" => 100}
+             ]
+    end
+
+    test "returns screen sizes with :is_not filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          screen_size: "Desktop",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"]
+        ),
+        build(:pageview,
+          user_id: 123,
+          screen_size: "Desktop",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"]
+        ),
+        build(:pageview,
+          screen_size: "Mobile",
+          "meta.key": ["author"],
+          "meta.value": ["other"]
+        ),
+        build(:pageview,
+          screen_size: "Tablet"
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
+      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Mobile", "visitors" => 1, "percentage" => 50},
+               %{"name" => "Tablet", "visitors" => 1, "percentage" => 50}
+             ]
+    end
+
     test "returns screen sizes by new visitors with imported data", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, screen_size: "Desktop"),

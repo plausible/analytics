@@ -28,7 +28,9 @@ defmodule Plausible.Session.StoreTest do
         country_code: "EE",
         screen_size: "Desktop",
         operating_system: "Mac",
-        operating_system_version: "11"
+        operating_system_version: "11",
+        "meta.key": ["logged_in", "darkmode"],
+        "meta.value": ["true", "false"]
       )
 
     Store.on_event(event, nil, store)
@@ -59,6 +61,8 @@ defmodule Plausible.Session.StoreTest do
     assert session.browser_version == event.browser_version
     assert session.timestamp == event.timestamp
     assert session.start === event.timestamp
+    assert Map.get(session, :"entry.meta.key") == ["logged_in", "darkmode"]
+    assert Map.get(session, :"entry.meta.value") == ["true", "false"]
   end
 
   test "updates a session", %{store: store} do

@@ -17,7 +17,6 @@ function removeFilter(key, history, query) {
   const newOpts = {
     [key]: false
   }
-  if (key === 'goal')    { newOpts.props = false }
   if (key === 'country') { newOpts.country_name = false }
   if (key === 'region')  { newOpts.region_name = false }
   if (key === 'city')    { newOpts.city_name = false }
@@ -86,19 +85,6 @@ function filterText(key, rawValue, query) {
 }
 
 function renderDropdownFilter(site, history, [key, value], query) {
-  if (key === 'props') {
-    return (
-      <Menu.Item key={key}>
-        <div className="px-4 sm:py-2 py-3 text-sm leading-tight flex items-center justify-between" key={key + value}>
-          <span className="inline-block w-full truncate">{filterText(key, value, query)}</span>
-          <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>
-            <XIcon className="w-4 h-4" />
-          </b>
-        </div>
-      </Menu.Item>
-    )
-  }
-
   return (
     <Menu.Item key={key}>
       <div className="px-3 md:px-4 sm:py-2 py-3 text-sm leading-tight flex items-center justify-between" key={key + value}>
@@ -249,17 +235,9 @@ class Filters extends React.Component {
   renderListFilter(history, [key, value], query) {
     return (
       <span key={key} title={value} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
-        {key === 'props' ? (
-          <span className="flex w-full h-full items-center py-2 pl-3">
-            <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(key, value, query)}</span>
-          </span>
-        ) : (
-          <>
-            <Link title={`Edit filter: ${formattedFilters[key]}`} className="flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}>
-              <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(key, value, query)}</span>
-            </Link>
-          </>
-        )}
+        <Link title={`Edit filter: ${formattedFilters[key]}`} className="flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}>
+          <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(key, value, query)}</span>
+        </Link>
         <span title={`Remove filter: ${formattedFilters[key]}`} className="flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center" onClick={() => removeFilter(key, history, query)}>
           <XIcon className="w-4 h-4" />
         </span>

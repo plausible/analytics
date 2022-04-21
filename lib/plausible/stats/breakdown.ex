@@ -146,7 +146,10 @@ defmodule Plausible.Stats.Breakdown do
              "visit:utm_content",
              "visit:utm_term"
            ] do
-    query = Query.treat_page_filter_as_entry_page(query)
+    query =
+      query
+      |> Query.treat_page_filter_as_entry_page()
+      |> Query.treat_prop_filter_as_entry_prop()
 
     breakdown_sessions(site, query, property, metrics, pagination)
   end
@@ -223,10 +226,7 @@ defmodule Plausible.Stats.Breakdown do
   defp breakdown_time_on_page(site, query, pages) do
     q =
       from(
-        e in base_event_query(site, %Query{
-          query
-          | filters: Map.delete(query.filters, "event:page")
-        }),
+        e in base_event_query(site, Query.remove_event_filters(query, [:page, :props])),
         select: {
           fragment("? as p", e.pathname),
           fragment("? as t", e.timestamp),
