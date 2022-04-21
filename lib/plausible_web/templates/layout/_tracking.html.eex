@@ -8,7 +8,7 @@
   <% end %>
 
   <%= if Application.get_env(:plausible, :environment) == "dev" do %>
-    <script defer src="<%="#{plausible_url()}/js/plausible.local.manual.js"%>"></script>
+    <script defer event-author="John Doe" event-logged_in="false" src="<%="#{plausible_url()}/js/plausible.local.manual.js"%>"></script>
     <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
     <script>
       plausible('pageview', {props: {logged_in: <%= !!@conn.assigns[:current_user] %>}})

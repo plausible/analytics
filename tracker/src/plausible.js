@@ -67,6 +67,25 @@
     if (options && options.props) {
       payload.p = JSON.stringify(options.props)
     }
+
+    {{#if dimensions}}
+    
+    var dimensionTags = scriptEl.getAttributeNames().filter(function (name) {
+      return name.substring(0, 5) === 'event'
+    })
+
+    var props = (payload.p && JSON.parse(payload.p)) || {}
+
+    dimensionTags.forEach(function(tag) {
+      var propKey = tag.replace('event-', '')
+      var propValue = scriptEl.getAttribute(tag)
+      props[propKey] = propValue
+    })
+
+    payload.p = props
+
+    {{/if}}
+
     {{#if hash}}
     payload.h = 1
     {{/if}}
