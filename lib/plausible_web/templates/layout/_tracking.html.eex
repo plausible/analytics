@@ -1,17 +1,17 @@
 <%= if !Application.get_env(:plausible, :is_selfhost) && !@conn.assigns[:skip_plausible_tracking] do %>
-  <%= if Application.get_env(:plausible, :environment) == "prod" do %>
-    <script defer src="https://plausible.io/test/js/script.beacon.js" data-api="https://plausible.io/test/api/event"></script>
-    <script defer src="<%="#{plausible_url()}/js/script.js"%>"></script>
+  <%= if Application.get_env(:plausible, :environment) in ["prod", "staging"] do %>
+    <script defer src="<%="#{plausible_url()}/js/script.manual.js"%>"></script>
     <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
-  <% end %>
-
-  <%= if Application.get_env(:plausible, :environment) == "staging" do %>
-    <script defer src="<%="#{plausible_url()}/js/plausible.js"%>"></script>
-    <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+    <script>
+      plausible('pageview', {props: {logged_in: <%= !!@conn.assigns[:current_user] %>}})
+    </script>
   <% end %>
 
   <%= if Application.get_env(:plausible, :environment) == "dev" do %>
-    <script defer src="<%="#{plausible_url()}/js/plausible.local.js"%>"></script>
+    <script defer src="<%="#{plausible_url()}/js/plausible.local.manual.js"%>"></script>
     <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+    <script>
+      plausible('pageview', {props: {logged_in: <%= !!@conn.assigns[:current_user] %>}})
+    </script>
   <% end %>
 <% end %>
