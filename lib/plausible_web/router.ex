@@ -41,9 +41,11 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.Firewall
   end
 
-  pipeline :mounted_apps do
+  pipeline :flags do
     plug :accepts, ["html"]
     plug :put_secure_browser_headers
+    plug :fetch_session
+    plug PlausibleWeb.CRMAuthPlug
   end
 
   if Mix.env() == :dev do
@@ -52,9 +54,9 @@ defmodule PlausibleWeb.Router do
 
   use Kaffy.Routes, scope: "/crm", pipe_through: [PlausibleWeb.CRMAuthPlug]
 
-  scope path: "/feature-flags" do
-    pipe_through :mounted_apps
-    forward "/", FunWithFlags.UI.Router, namespace: "feature-flags"
+  scope path: "/flags" do
+    pipe_through :flags
+    forward "/", FunWithFlags.UI.Router, namespace: "flags"
   end
 
   scope "/api/stats", PlausibleWeb.Api do

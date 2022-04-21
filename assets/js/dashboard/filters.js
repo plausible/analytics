@@ -127,7 +127,9 @@ function DropdownContent({history, site, query, wrapped}) {
   const [addingFilter, setAddingFilter] = useState(false);
 
   if (wrapped === 0 || addingFilter) {
-    return Object.keys(FILTER_GROUPS).map((option) => filterDropdownOption(site, option))
+    return Object.keys(FILTER_GROUPS)
+      .filter((option) => option === 'props' ? site.flags.custom_dimension_filter : true)
+      .map((option) => filterDropdownOption(site, option))
   }
 
   return (

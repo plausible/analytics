@@ -16,7 +16,8 @@ if (container) {
     statsBegin: container.dataset.statsBegin,
     embedded: container.dataset.embedded,
     background: container.dataset.background,
-    selfhosted: container.dataset.selfhosted === 'true'
+    selfhosted: container.dataset.selfhosted === 'true',
+    flags: JSON.parse(container.dataset.flags)
   }
 
   const loggedIn = container.dataset.loggedIn === 'true'
