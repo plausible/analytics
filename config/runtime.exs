@@ -219,6 +219,12 @@ else
     database: get_var_from_path_or_env(config_dir, "DATABASE_NAME", "plausible")
 end
 
+config :fun_with_flags, :cache_bust_notifications, enabled: false
+
+config :fun_with_flags, :persistence,
+  adapter: FunWithFlags.Store.Persistent.Ecto,
+  repo: Plausible.Repo
+
 config :sentry,
   dsn: sentry_dsn,
   environment_name: env,

@@ -25,7 +25,8 @@ defmodule PlausibleWeb.StatsController do
           stats_start_date: stats_start_date,
           title: "Plausible · " <> site.domain,
           offer_email_report: offer_email_report,
-          demo: demo
+          demo: demo,
+          flags: get_flags(conn.assigns[:current_user])
         )
 
       !stats_start_date && can_see_stats ->
@@ -186,7 +187,8 @@ defmodule PlausibleWeb.StatsController do
           shared_link_auth: shared_link.slug,
           embedded: conn.params["embed"] == "true",
           background: conn.params["background"],
-          theme: conn.params["theme"]
+          theme: conn.params["theme"],
+          flags: get_flags(conn.assigns[:current_user])
         )
 
       shared_link.site.locked ->
@@ -207,4 +209,10 @@ defmodule PlausibleWeb.StatsController do
   end
 
   defp shared_link_cookie_name(slug), do: "shared-link-" <> slug
+
+  defp get_flags(user) do
+    %{
+      custom_dimension_filter: FunWithFlags.enabled?(:custom_dimension_filter, for: user)
+    }
+  end
 end

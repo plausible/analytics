@@ -4,6 +4,12 @@ defimpl Bamboo.Formatter, for: Plausible.Auth.User do
   end
 end
 
+defimpl FunWithFlags.Actor, for: Plausible.Auth.User do
+  def id(%{id: id}) do
+    "user:#{id}"
+  end
+end
+
 defmodule Plausible.Auth.GracePeriod do
   use Ecto.Schema
 

@@ -97,7 +97,9 @@ defmodule Plausible.MixProject do
       {:hammer, "~> 6.0"},
       {:public_suffix, git: "https://github.com/axelson/publicsuffix-elixir"},
       {:floki, "~> 0.32.0", only: :test},
-      {:referrer_blocklist, git: "https://github.com/plausible/referrer-blocklist.git"}
+      {:referrer_blocklist, git: "https://github.com/plausible/referrer-blocklist.git"},
+      {:fun_with_flags, "~> 1.8.1"},
+      {:fun_with_flags_ui, "~> 0.8"}
     ]
   end
 

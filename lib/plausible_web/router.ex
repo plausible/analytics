@@ -41,11 +41,21 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.Firewall
   end
 
+  pipeline :mounted_apps do
+    plug :accepts, ["html"]
+    plug :put_secure_browser_headers
+  end
+
   if Mix.env() == :dev do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
   end
 
   use Kaffy.Routes, scope: "/crm", pipe_through: [PlausibleWeb.CRMAuthPlug]
+
+  scope path: "/feature-flags" do
+    pipe_through :mounted_apps
+    forward "/", FunWithFlags.UI.Router, namespace: "feature-flags"
+  end
 
   scope "/api/stats", PlausibleWeb.Api do
     pipe_through :internal_stats_api
