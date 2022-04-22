@@ -116,7 +116,7 @@ export const GraphTooltip = (graphData, metric) => {
 			let innerHtml = `
 			<div class='text-gray-100 flex flex-col'>
 				<div class='flex justify-between items-center'>
-						<span class='font-bold mr-4 text-lg'>${METRIC_LABELS[metric]}</span>
+						<span class='font-semibold mr-4 text-lg'>${METRIC_LABELS[metric]}</span>
 				</div>
 				<div class='flex flex-col'>
 					<div class='flex flex-row justify-between items-center'>
@@ -124,10 +124,10 @@ export const GraphTooltip = (graphData, metric) => {
 							<div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(101,116,205)'></div>
 							<span>${renderLabel(label)}</span>
 						</span>
-						<span>${METRIC_FORMATTER[metric](point)}</span>
+						<span class='text-base font-bold'>${METRIC_FORMATTER[metric](point)}</span>
 					</div>
 				</div>
-				<span class='font-bold text-'>${graphData.interval === 'month' ? 'Click to view month' : graphData.interval === 'date' ? 'Click to view day' : ''}</span>
+				<span class='font-semibold italic'>${graphData.interval === 'month' ? 'Click to view month' : graphData.interval === 'date' ? 'Click to view day' : ''}</span>
 			</div>
 			`;
 
