@@ -30,183 +30,183 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
-    # test "returns top sources with :is filter on custom pageview props", %{conn: conn, site: site} do
-    #   populate_stats(site, [
-    #     build(:pageview,
-    #       referrer_source: "DuckDuckGo",
-    #       referrer: "duckduckgo.com",
-    #       user_id: 123,
-    #       timestamp: ~N[2021-01-01 00:00:00]
-    #     ),
-    #     build(:pageview,
-    #       "meta.key": ["author"],
-    #       "meta.value": ["John Doe"],
-    #       user_id: 123,
-    #       timestamp: ~N[2021-01-01 00:01:00]
-    #     ),
-    #     build(:pageview,
-    #       referrer_source: "Google",
-    #       referrer: "google.com",
-    #       "meta.key": ["author"],
-    #       "meta.value": ["John Doe"],
-    #       timestamp: ~N[2021-01-01 00:00:00]
-    #     ),
-    #     build(:pageview,
-    #       referrer_source: "Facebook",
-    #       referrer: "facebook.com",
-    #       timestamp: ~N[2021-01-01 00:00:00]
-    #     )
-    #   ])
+    test "returns top sources with :is filter on custom pageview props", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com",
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Facebook",
+          referrer: "facebook.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
 
-    #   filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
 
-    #   conn =
-    #     get(
-    #       conn,
-    #       "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&filters=#{filters}"
-    #     )
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&filters=#{filters}"
+        )
 
-    #   assert json_response(conn, 200) == [
-    #            %{"name" => "Google", "visitors" => 1}
-    #          ]
-    # end
+      assert json_response(conn, 200) == [
+               %{"name" => "Google", "visitors" => 1}
+             ]
+    end
 
-    # test "returns top sources with :is_not filter on custom pageview props", %{
-    #   conn: conn,
-    #   site: site
-    # } do
-    #   populate_stats(site, [
-    #     build(:pageview,
-    #       referrer_source: "DuckDuckGo",
-    #       referrer: "duckduckgo.com",
-    #       "meta.key": ["author"],
-    #       "meta.value": ["John Doe"],
-    #       user_id: 123,
-    #       timestamp: ~N[2021-01-01 00:00:00]
-    #     ),
-    #     build(:pageview,
-    #       "meta.key": ["author"],
-    #       "meta.value": ["other"],
-    #       user_id: 123,
-    #       timestamp: ~N[2021-01-01 00:01:00]
-    #     ),
-    #     build(:pageview,
-    #       referrer_source: "Google",
-    #       referrer: "google.com",
-    #       "meta.key": ["author"],
-    #       "meta.value": ["other"],
-    #       timestamp: ~N[2021-01-01 00:00:00]
-    #     ),
-    #     build(:pageview,
-    #       referrer_source: "Facebook",
-    #       referrer: "facebook.com",
-    #       timestamp: ~N[2021-01-01 00:00:00]
-    #     )
-    #   ])
+    test "returns top sources with :is_not filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["other"],
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["author"],
+          "meta.value": ["other"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Facebook",
+          referrer: "facebook.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
 
-    #   filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
+      filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
 
-    #   conn =
-    #     get(
-    #       conn,
-    #       "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&filters=#{filters}"
-    #     )
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&filters=#{filters}"
+        )
 
-    #   assert json_response(conn, 200) == [
-    #            %{"name" => "Facebook", "visitors" => 1},
-    #            %{"name" => "Google", "visitors" => 1}
-    #          ]
-    # end
+      assert json_response(conn, 200) == [
+               %{"name" => "Facebook", "visitors" => 1},
+               %{"name" => "Google", "visitors" => 1}
+             ]
+    end
 
-    # test "returns top sources with :is (none) filter on custom pageview props", %{
-    #   conn: conn,
-    #   site: site
-    # } do
-    #   populate_stats(site, [
-    #     build(:pageview,
-    #       referrer_source: "DuckDuckGo",
-    #       referrer: "duckduckgo.com",
-    #       "meta.key": ["author"],
-    #       "meta.value": ["John Doe"],
-    #       user_id: 123,
-    #       timestamp: ~N[2021-01-01 00:00:00]
-    #     ),
-    #     build(:pageview,
-    #       user_id: 123,
-    #       timestamp: ~N[2021-01-01 00:01:00]
-    #     ),
-    #     build(:pageview,
-    #       referrer_source: "Google",
-    #       referrer: "google.com",
-    #       "meta.key": ["author"],
-    #       "meta.value": ["other"],
-    #       timestamp: ~N[2021-01-01 00:00:00]
-    #     ),
-    #     build(:pageview,
-    #       referrer_source: "Facebook",
-    #       referrer: "facebook.com",
-    #       timestamp: ~N[2021-01-01 00:00:00]
-    #     )
-    #   ])
+    test "returns top sources with :is (none) filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["author"],
+          "meta.value": ["other"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Facebook",
+          referrer: "facebook.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
 
-    #   filters = Jason.encode!(%{props: %{"author" => "(none)"}})
+      filters = Jason.encode!(%{props: %{"author" => "(none)"}})
 
-    #   conn =
-    #     get(
-    #       conn,
-    #       "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&filters=#{filters}"
-    #     )
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&filters=#{filters}"
+        )
 
-    #   assert json_response(conn, 200) == [
-    #            %{"name" => "Facebook", "visitors" => 1}
-    #          ]
-    # end
+      assert json_response(conn, 200) == [
+               %{"name" => "Facebook", "visitors" => 1}
+             ]
+    end
 
-    # test "returns top sources with :is_not (none) filter on custom pageview props", %{
-    #   conn: conn,
-    #   site: site
-    # } do
-    #   populate_stats(site, [
-    #     build(:pageview,
-    #       referrer_source: "DuckDuckGo",
-    #       referrer: "duckduckgo.com",
-    #       "meta.key": ["logged_in"],
-    #       "meta.value": ["true"],
-    #       user_id: 123,
-    #       timestamp: ~N[2021-01-01 00:00:00]
-    #     ),
-    #     build(:pageview,
-    #       "meta.key": ["author"],
-    #       "meta.value": ["other"],
-    #       user_id: 123,
-    #       timestamp: ~N[2021-01-01 00:01:00]
-    #     ),
-    #     build(:pageview,
-    #       referrer_source: "Google",
-    #       referrer: "google.com",
-    #       "meta.key": ["author"],
-    #       "meta.value": ["other"],
-    #       timestamp: ~N[2021-01-01 00:00:00]
-    #     ),
-    #     build(:pageview,
-    #       referrer_source: "Facebook",
-    #       referrer: "facebook.com",
-    #       timestamp: ~N[2021-01-01 00:00:00]
-    #     )
-    #   ])
+    test "returns top sources with :is_not (none) filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com",
+          "meta.key": ["logged_in"],
+          "meta.value": ["true"],
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["other"],
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["author"],
+          "meta.value": ["other"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Facebook",
+          referrer: "facebook.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
 
-    #   filters = Jason.encode!(%{props: %{"author" => "!(none)"}})
+      filters = Jason.encode!(%{props: %{"author" => "!(none)"}})
 
-    #   conn =
-    #     get(
-    #       conn,
-    #       "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&filters=#{filters}"
-    #     )
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&filters=#{filters}"
+        )
 
-    #   assert json_response(conn, 200) == [
-    #            %{"name" => "Google", "visitors" => 1}
-    #          ]
-    # end
+      assert json_response(conn, 200) == [
+               %{"name" => "Google", "visitors" => 1}
+             ]
+    end
 
     test "returns top sources with imported data", %{conn: conn, site: site} do
       populate_stats(site, [

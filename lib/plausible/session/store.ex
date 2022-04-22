@@ -160,9 +160,9 @@ defmodule Plausible.Session.Store do
       browser: event.browser,
       browser_version: event.browser_version,
       timestamp: event.timestamp,
-      start: event.timestamp
-      # "entry.meta.key": Map.get(event, :"meta.key"),
-      # "entry.meta.value": Map.get(event, :"meta.value")
+      start: event.timestamp,
+      "entry_meta.key": Map.get(event, :"meta.key"),
+      "entry_meta.value": Map.get(event, :"meta.value")
     }
   end
 

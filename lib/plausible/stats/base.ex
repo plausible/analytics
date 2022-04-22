@@ -184,13 +184,13 @@ defmodule Plausible.Stats.Base do
             {:is, "(none)"} ->
               from(
                 s in sessions_q,
-                where: fragment("not has(?, ?)", field(s, :"entry.meta.key"), ^prop_name)
+                where: fragment("not has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
               )
 
             {:is, value} ->
               from(
                 s in sessions_q,
-                inner_lateral_join: meta in "entry.meta",
+                inner_lateral_join: meta in "entry_meta",
                 as: :meta,
                 where: meta.key == ^prop_name and meta.value == ^value
               )
@@ -198,17 +198,17 @@ defmodule Plausible.Stats.Base do
             {:is_not, "(none)"} ->
               from(
                 s in sessions_q,
-                where: fragment("has(?, ?)", field(s, :"entry.meta.key"), ^prop_name)
+                where: fragment("has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
               )
 
             {:is_not, value} ->
               from(
                 s in sessions_q,
-                left_lateral_join: meta in "entry.meta",
+                left_lateral_join: meta in "entry_meta",
                 as: :meta,
                 where:
                   (meta.key == ^prop_name and meta.value != ^value) or
-                    fragment("not has(?, ?)", field(s, :"entry.meta.key"), ^prop_name)
+                    fragment("not has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
               )
 
             _ ->
