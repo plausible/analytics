@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - Added IPv6 Ecto support (via the environment-variable `ECTO_IPV6`)
 - New filter type: `contains`, available for `page`, `entry_page`, `exit_page`
 - Add filter for custom property
+- Add ability to import historical data from GA: plausible/analytics#1753
 
 ### Fixed
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
