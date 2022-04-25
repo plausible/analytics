@@ -67,7 +67,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "Google", "visitors" => 1}
+               %{"name" => "Google", "visitors" => 1},
+               %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
     end
 
@@ -101,6 +102,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           referrer_source: "Facebook",
           referrer: "facebook.com",
           timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Twitter",
+          referrer: "twitter.com",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
 
@@ -114,7 +122,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       assert json_response(conn, 200) == [
                %{"name" => "Facebook", "visitors" => 1},
-               %{"name" => "Google", "visitors" => 1}
+               %{"name" => "Google", "visitors" => 1},
+               %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
     end
 
@@ -158,7 +167,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "Facebook", "visitors" => 1}
+               %{"name" => "Facebook", "visitors" => 1},
+               %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
     end
 
@@ -204,7 +214,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "Google", "visitors" => 1}
+               %{"name" => "Google", "visitors" => 1},
+               %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
     end
 
@@ -441,7 +452,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn = get(conn, "/api/stats/#{site.domain}/sources?filters=#{filters}")
 
       assert json_response(conn, 200) == [
-               %{"name" => "Google", "visitors" => 1}
+               %{"name" => "Google", "visitors" => 1},
+               %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
     end
   end
