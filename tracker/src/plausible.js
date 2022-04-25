@@ -65,8 +65,25 @@
       payload.m = JSON.stringify(options.meta)
     }
     if (options && options.props) {
-      payload.p = JSON.stringify(options.props)
+      payload.p = options.props
     }
+
+    {{#if dimensions}}
+    var dimensionAttributes = scriptEl.getAttributeNames().filter(function (name) {
+      return name.substring(0, 6) === 'event-'
+    })
+
+    var props = payload.p || {}
+
+    dimensionAttributes.forEach(function(attribute) {
+      var propKey = attribute.replace('event-', '')
+      var propValue = scriptEl.getAttribute(attribute)
+      props[propKey] = props[propKey] || propValue
+    })
+
+    payload.p = props
+    {{/if}}
+
     {{#if hash}}
     payload.h = 1
     {{/if}}

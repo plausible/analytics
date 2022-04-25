@@ -9,7 +9,8 @@ defmodule PlausibleWeb.Tracker do
     "compat",
     "local",
     "manual",
-    "file-downloads"
+    "file-downloads",
+    "dimensions"
   ]
 
   base_filenames = ["plausible", "script"]
