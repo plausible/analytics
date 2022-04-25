@@ -1,7 +1,7 @@
 {
   "repository": {},
   "version": "1.4.0",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "scripts": {
     "deploy": "$(npm bin)/webpack --mode production",
     "watch": "$(npm bin)/webpack --mode development --watch",
