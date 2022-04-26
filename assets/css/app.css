@@ -32,7 +32,6 @@
 
 html {
   @apply text-gray-800;
-  overflow-x: hidden;
 }
 
 body {
@@ -71,6 +70,7 @@ blockquote {
 .main-graph {
   position: relative;
   height: 0;
+
   /* Formula is: (top row height + (graph height / graph width * 100%) - adjustment for stat selectors) */
   padding-top: calc(168px + (451 / 1088 * 100%) - 20px);
 }
