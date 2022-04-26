@@ -2,7 +2,6 @@ defmodule Plausible.Google.Api do
   alias Plausible.Imported
   use Timex
   require Logger
-  require HTTPoison.Retry
 
   @scope URI.encode_www_form(
            "https://www.googleapis.com/auth/webmasters.readonly email https://www.googleapis.com/auth/analytics.readonly"
@@ -323,33 +322,51 @@ defmodule Plausible.Google.Api do
     end
   end
 
-  defp fetch_and_persist(site, request) do
+  @max_attempts 5
+  def fetch_and_persist(site, request, opts \\ []) do
     report_request = build_import_report_request(request)
+    http_client = Keyword.get(opts, :http_client, HTTPoison)
+    attempt = Keyword.get(opts, :attempt, 1)
+    sleep_time = Keyword.get(opts, :sleep_time, 1000)
 
-    {:ok, res} =
-      HTTPoison.post(
+    res =
+      http_client.post(
         "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
         Jason.encode!(%{reportRequests: [report_request]}),
         [Authorization: "Bearer #{request.access_token}"],
         timeout: 30_000,
         recv_timeout: 30_000
       )
-      |> HTTPoison.Retry.autoretry(max_attempts: 5, wait: 5_000)
 
-    if res.status_code == 200 do
-      report = List.first(Jason.decode!(res.body)["reports"])
-      data = get_in(report, ["data", "rows"])
+    with {:ok, %HTTPoison.Response{status_code: 200, body: raw_body}} <- res,
+         {:ok, body} <- Jason.decode(raw_body),
+         report <- List.first(body["reports"]),
+         {:ok, data} <- get_non_empty_rows(report) do
       Imported.from_google_analytics(data, site.id, request.dataset)
 
-      case report["nextPageToken"] do
-        nil ->
-          :ok
-
-        token ->
-          fetch_and_persist(site, %{request | page_token: token})
+      if report["nextPageToken"] do
+        fetch_and_persist(site, %{request | page_token: report["nextPageToken"]})
+      else
+        :ok
       end
     else
-      {:error, Jason.decode!(res.body)["error"]["message"]}
+      error ->
+        context_key = "request:#{attempt}"
+        Sentry.Context.set_extra_context(%{context_key => error})
+
+        if attempt >= @max_attempts do
+          raise "Google API request failed too many times"
+        else
+          Process.sleep(sleep_time)
+          fetch_and_persist(site, request, Keyword.merge(opts, attempt: attempt + 1))
+        end
+    end
+  end
+
+  defp get_non_empty_rows(report) do
+    case get_in(report, ["data", "rows"]) do
+      [] -> {:error, :empty_response_rows}
+      rows -> {:ok, rows}
     end
   end
 
