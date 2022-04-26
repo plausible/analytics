@@ -2,7 +2,6 @@ defmodule Plausible.Google.Api do
   alias Plausible.Imported
   use Timex
   require Logger
-  require HTTPoison.Retry
 
   @scope URI.encode_www_form(
            "https://www.googleapis.com/auth/webmasters.readonly email https://www.googleapis.com/auth/analytics.readonly"
