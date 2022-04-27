@@ -3,7 +3,7 @@ import { Link, withRouter } from 'react-router-dom'
 import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './util/date'
 import * as storage from './util/storage'
 
-const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'custom']
+const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'year', 'all', 'custom']
 
 export function parseQuery(querystring, site) {
   const q = new URLSearchParams(querystring)
@@ -23,6 +23,7 @@ export function parseQuery(querystring, site) {
     date: q.get('date') ? parseUTCDate(q.get('date')) : nowForSite(site),
     from: q.get('from') ? parseUTCDate(q.get('from')) : undefined,
     to: q.get('to') ? parseUTCDate(q.get('to')) : undefined,
+    with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
     filters: {
       'goal': q.get('goal'),
       'props': JSON.parse(q.get('props')),
@@ -156,7 +157,9 @@ export function eventName(query) {
 
 export const formattedFilters = {
   'goal': 'Goal',
-  'props': 'Goal properties',
+  'props': 'Property',
+  'prop_key': 'Property',
+  'prop_value': 'Value',
   'source': 'Source',
   'utm_medium': 'UTM Medium',
   'utm_source': 'UTM Source',

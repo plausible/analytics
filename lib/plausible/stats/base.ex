@@ -1,6 +1,7 @@
 defmodule Plausible.Stats.Base do
   use Plausible.ClickhouseRepo
   alias Plausible.Stats.{Query, Filters}
+  import Ecto.Query
 
   @no_ref "Direct / None"
 
@@ -86,29 +87,45 @@ defmodule Plausible.Stats.Base do
           q
       end
 
-    Enum.reduce(query.filters, q, fn {filter_key, filter_value}, query ->
-      case filter_key do
-        "event:props:" <> prop_name ->
-          filter_value = elem(filter_value, 1)
-
-          if filter_value == "(none)" do
+    q =
+      case Query.get_filter_by_prefix(query, "event:props") do
+        {"event:props:" <> prop_name, {:is, value}} ->
+          if value == "(none)" do
             from(
-              e in query,
+              e in q,
               where: fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name)
             )
           else
             from(
-              e in query,
+              e in q,
               inner_lateral_join: meta in "meta",
               as: :meta,
-              where: meta.key == ^prop_name and meta.value == ^filter_value
+              where: meta.key == ^prop_name and meta.value == ^value
+            )
+          end
+
+        {"event:props:" <> prop_name, {:is_not, value}} ->
+          if value == "(none)" do
+            from(
+              e in q,
+              where: fragment("has(?, ?)", field(e, :"meta.key"), ^prop_name)
+            )
+          else
+            from(
+              e in q,
+              left_lateral_join: meta in "meta",
+              as: :meta,
+              where:
+                (meta.key == ^prop_name and meta.value != ^value) or
+                  fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name)
             )
           end
 
         _ ->
-          query
+          q
       end
-    end)
+
+    q
   end
 
   @api_prop_name_to_db %{
@@ -157,6 +174,48 @@ defmodule Plausible.Stats.Base do
           )
       end
 
+    sessions_q =
+      case Query.get_filter_by_prefix(query, "visit:entry_props:") do
+        nil ->
+          sessions_q
+
+        {"visit:entry_props:" <> prop_name, filter_value} ->
+          case filter_value do
+            {:is, "(none)"} ->
+              from(
+                s in sessions_q,
+                where: fragment("not has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
+              )
+
+            {:is, value} ->
+              from(
+                s in sessions_q,
+                inner_lateral_join: meta in "entry_meta",
+                as: :meta,
+                where: meta.key == ^prop_name and meta.value == ^value
+              )
+
+            {:is_not, "(none)"} ->
+              from(
+                s in sessions_q,
+                where: fragment("has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
+              )
+
+            {:is_not, value} ->
+              from(
+                s in sessions_q,
+                left_lateral_join: meta in "entry_meta",
+                as: :meta,
+                where:
+                  (meta.key == ^prop_name and meta.value != ^value) or
+                    fragment("not has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
+              )
+
+            _ ->
+              sessions_q
+          end
+      end
+
     Enum.reduce(Filters.visit_props(), sessions_q, fn prop_name, sessions_q ->
       filter = query.filters["visit:" <> prop_name]
 
@@ -196,36 +255,36 @@ defmodule Plausible.Stats.Base do
 
   def select_event_metrics(q, []), do: q
 
-  def select_event_metrics(q, ["pageviews" | rest]) do
+  def select_event_metrics(q, [:pageviews | rest]) do
     from(e in q,
       select_merge: %{
-        "pageviews" =>
+        pageviews:
           fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name)
       }
     )
     |> select_event_metrics(rest)
   end
 
-  def select_event_metrics(q, ["events" | rest]) do
+  def select_event_metrics(q, [:events | rest]) do
     from(e in q,
-      select_merge: %{"events" => fragment("toUInt64(round(count(*) * any(_sample_factor)))")}
+      select_merge: %{events: fragment("toUInt64(round(count(*) * any(_sample_factor)))")}
     )
     |> select_event_metrics(rest)
   end
 
-  def select_event_metrics(q, ["visitors" | rest]) do
+  def select_event_metrics(q, [:visitors | rest]) do
     from(e in q,
       select_merge: %{
-        "visitors" => fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
+        visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
       }
     )
     |> select_event_metrics(rest)
   end
 
-  def select_event_metrics(q, ["sample_percent" | rest]) do
+  def select_event_metrics(q, [:sample_percent | rest]) do
     from(e in q,
       select_merge: %{
-        "sample_percent" =>
+        sample_percent:
           fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
       }
     )
@@ -236,58 +295,69 @@ defmodule Plausible.Stats.Base do
 
   def select_session_metrics(q, []), do: q
 
-  def select_session_metrics(q, ["bounce_rate" | rest]) do
+  def select_session_metrics(q, [:bounce_rate | rest]) do
     from(s in q,
       select_merge: %{
-        "bounce_rate" =>
-          fragment("toUInt32(ifNotFinite(round(sum(is_bounce * sign) / sum(sign) * 100), 0))")
+        bounce_rate:
+          fragment("toUInt32(ifNotFinite(round(sum(is_bounce * sign) / sum(sign) * 100), 0))"),
+        visits: fragment("toUInt32(sum(sign))")
       }
     )
     |> select_session_metrics(rest)
   end
 
-  def select_session_metrics(q, ["visits" | rest]) do
+  def select_session_metrics(q, [:visits | rest]) do
     from(s in q,
       select_merge: %{
-        "visits" => fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.session_id)
+        visits: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.session_id)
       }
     )
     |> select_session_metrics(rest)
   end
 
-  def select_session_metrics(q, ["pageviews" | rest]) do
+  def select_session_metrics(q, [:pageviews | rest]) do
     from(s in q,
       select_merge: %{
-        "pageviews" =>
+        pageviews:
           fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
       }
     )
     |> select_session_metrics(rest)
   end
 
-  def select_session_metrics(q, ["visitors" | rest]) do
+  def select_session_metrics(q, [:events | rest]) do
     from(s in q,
       select_merge: %{
-        "visitors" => fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id)
+        events: fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
       }
     )
     |> select_session_metrics(rest)
   end
 
-  def select_session_metrics(q, ["visit_duration" | rest]) do
+  def select_session_metrics(q, [:visitors | rest]) do
     from(s in q,
       select_merge: %{
-        "visit_duration" =>
-          fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))")
+        visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id)
       }
     )
     |> select_session_metrics(rest)
   end
 
-  def select_session_metrics(q, ["sample_percent" | rest]) do
+  def select_session_metrics(q, [:visit_duration | rest]) do
+    from(s in q,
+      select_merge: %{
+        :visit_duration =>
+          fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))"),
+        visits: fragment("toUInt32(sum(sign))")
+      }
+    )
+    |> select_session_metrics(rest)
+  end
+
+  def select_session_metrics(q, [:sample_percent | rest]) do
     from(e in q,
       select_merge: %{
-        "sample_percent" =>
+        sample_percent:
           fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
       }
     )
@@ -295,7 +365,7 @@ defmodule Plausible.Stats.Base do
   end
 
   def filter_converted_sessions(db_query, site, query) do
-    if query.filters["event:name"] || query.filters["event:page"] || query.filters["event:goal"] do
+    if Query.has_event_filters?(query) do
       converted_sessions =
         from(e in query_events(site, query),
           select: %{session_id: fragment("DISTINCT ?", e.session_id)}
@@ -319,21 +389,21 @@ defmodule Plausible.Stats.Base do
   defp db_prop_val(:utm_term, @no_ref), do: ""
   defp db_prop_val(_, val), do: val
 
-  defp utc_boundaries(%Query{period: "realtime"}, _timezone) do
+  def utc_boundaries(%Query{period: "realtime"}, _timezone) do
     last_datetime = NaiveDateTime.utc_now() |> Timex.shift(seconds: 5)
     first_datetime = NaiveDateTime.utc_now() |> Timex.shift(minutes: -5)
 
     {first_datetime, last_datetime}
   end
 
-  defp utc_boundaries(%Query{period: "30m"}, _timezone) do
+  def utc_boundaries(%Query{period: "30m"}, _timezone) do
     last_datetime = NaiveDateTime.utc_now() |> Timex.shift(seconds: 5)
     first_datetime = NaiveDateTime.utc_now() |> Timex.shift(minutes: -30)
 
     {first_datetime, last_datetime}
   end
 
-  defp utc_boundaries(%Query{date_range: date_range}, timezone) do
+  def utc_boundaries(%Query{date_range: date_range}, timezone) do
     {:ok, first} = NaiveDateTime.new(date_range.first, ~T[00:00:00])
 
     first_datetime =

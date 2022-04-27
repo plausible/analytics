@@ -61,7 +61,7 @@ db_socket_dir = get_var_from_path_or_env(config_dir, "DATABASE_SOCKET_DIR")
 admin_user = get_var_from_path_or_env(config_dir, "ADMIN_USER_NAME")
 admin_email = get_var_from_path_or_env(config_dir, "ADMIN_USER_EMAIL")
 
-admin_user_ids =
+super_admin_user_ids =
   get_var_from_path_or_env(config_dir, "ADMIN_USER_IDS", "")
   |> String.split(",")
   |> Enum.map(fn id -> Integer.parse(id) end)
@@ -190,7 +190,7 @@ config :plausible,
   admin_pwd: admin_pwd,
   environment: env,
   mailer_email: mailer_email,
-  admin_user_ids: admin_user_ids,
+  super_admin_user_ids: super_admin_user_ids,
   site_limit: site_limit,
   site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost,
@@ -207,13 +207,23 @@ config :plausible, PlausibleWeb.Endpoint,
   http: [port: port, ip: listen_ip, transport_options: [max_connections: :infinity]],
   secret_key_base: secret_key_base
 
+maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
+
 if is_nil(db_socket_dir) do
-  config :plausible, Plausible.Repo, url: db_url
+  config :plausible, Plausible.Repo,
+    url: db_url,
+    socket_options: maybe_ipv6
 else
   config :plausible, Plausible.Repo,
     socket_dir: db_socket_dir,
     database: get_var_from_path_or_env(config_dir, "DATABASE_NAME", "plausible")
 end
+
+config :fun_with_flags, :cache_bust_notifications, enabled: false
+
+config :fun_with_flags, :persistence,
+  adapter: FunWithFlags.Store.Persistent.Ecto,
+  repo: Plausible.Repo
 
 config :sentry,
   dsn: sentry_dsn,
@@ -279,65 +289,77 @@ config :plausible, PlausibleWeb.Firewall,
     |> String.split(",")
     |> Enum.map(&String.trim/1)
 
-if config_env() == :prod && !disable_cron do
-  base_cron = [
-    # Daily at midnight
-    {"0 0 * * *", Plausible.Workers.RotateSalts},
-    #  hourly
-    {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
-    # hourly
-    {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
-    # Daily at midday
-    {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
-    # Every 15 minutes
-    {"*/15 * * * *", Plausible.Workers.SpikeNotifier},
-    # Every day at midnight
-    {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes},
-    # Every day at 1am
-    {"0 1 * * *", Plausible.Workers.CleanInvitations}
-  ]
+base_cron = [
+  # Daily at midnight
+  {"0 0 * * *", Plausible.Workers.RotateSalts},
+  #  hourly
+  {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
+  # hourly
+  {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
+  # Daily at midday
+  {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
+  # Every 15 minutes
+  {"*/15 * * * *", Plausible.Workers.SpikeNotifier},
+  # Every day at midnight
+  {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes},
+  # Every day at 1am
+  {"0 1 * * *", Plausible.Workers.CleanInvitations}
+]
 
-  extra_cron = [
-    # Daily at midday
-    {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
-    # Daily at 14
-    {"0 14 * * *", Plausible.Workers.CheckUsage},
-    # Daily at 15
-    {"0 15 * * *", Plausible.Workers.NotifyAnnualRenewal},
-    # Every midnight
-    {"0 0 * * *", Plausible.Workers.LockSites}
-  ]
+cloud_cron = [
+  # Daily at midday
+  {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
+  # Daily at 14
+  {"0 14 * * *", Plausible.Workers.CheckUsage},
+  # Daily at 15
+  {"0 15 * * *", Plausible.Workers.NotifyAnnualRenewal},
+  # Every midnight
+  {"0 0 * * *", Plausible.Workers.LockSites}
+]
 
-  base_queues = [
-    rotate_salts: 1,
-    schedule_email_reports: 1,
-    send_email_reports: 1,
-    spike_notifications: 1,
-    check_stats_emails: 1,
-    site_setup_emails: 1,
-    clean_email_verification_codes: 1,
-    clean_invitations: 1
-  ]
+crontab = if(is_selfhost, do: base_cron, else: base_cron ++ cloud_cron)
 
-  extra_queues = [
-    provision_ssl_certificates: 1,
-    trial_notification_emails: 1,
-    check_usage: 1,
-    notify_annual_renewal: 1,
-    lock_sites: 1
-  ]
+base_queues = [
+  rotate_salts: 1,
+  schedule_email_reports: 1,
+  send_email_reports: 1,
+  spike_notifications: 1,
+  check_stats_emails: 1,
+  site_setup_emails: 1,
+  clean_email_verification_codes: 1,
+  clean_invitations: 1,
+  google_analytics_imports: 1
+]
 
-  # Keep 30 days history
-  config :plausible, Oban,
-    repo: Plausible.Repo,
-    plugins: [{Oban.Plugins.Pruner, max_age: 2_592_000}],
-    queues: if(is_selfhost, do: base_queues, else: base_queues ++ extra_queues),
-    crontab: if(is_selfhost, do: base_cron, else: base_cron ++ extra_cron)
-else
-  config :plausible, Oban,
-    repo: Plausible.Repo,
-    queues: false,
-    plugins: false
+cloud_queues = [
+  trial_notification_emails: 1,
+  check_usage: 1,
+  notify_annual_renewal: 1,
+  lock_sites: 1
+]
+
+queues = if(is_selfhost, do: base_queues, else: base_queues ++ cloud_queues)
+cron_enabled = !disable_cron
+
+cond do
+  config_env() == :prod ->
+    config :plausible, Oban,
+      repo: Plausible.Repo,
+      plugins: [
+        # Keep 30 days history
+        {Oban.Plugins.Pruner, max_age: :timer.hours(24 * 30)},
+        {Oban.Plugins.Cron, crontab: if(cron_enabled, do: crontab, else: [])},
+        # Rescue orphaned jobs after 2 hours
+        {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)},
+        {Oban.Plugins.Stager, interval: :timer.seconds(5)}
+      ],
+      queues: if(cron_enabled, do: queues, else: [])
+
+  true ->
+    config :plausible, Oban,
+      repo: Plausible.Repo,
+      queues: queues,
+      plugins: false
 end
 
 config :plausible, :hcaptcha,
@@ -409,20 +431,20 @@ config :logger, Sentry.LoggerBackend,
   level: :error,
   excluded_domains: []
 
-if honeycomb_api_key && honeycomb_dataset do
-  config :opentelemetry, :processors,
-    otel_batch_processor: %{
-      exporter:
-        {:opentelemetry_exporter,
-         %{
-           endpoints: ['https://api.honeycomb.io:443'],
-           headers: [
-             {"x-honeycomb-team", honeycomb_api_key},
-             {"x-honeycomb-dataset", honeycomb_dataset}
-           ]
-         }}
-    }
-end
+# if honeycomb_api_key && honeycomb_dataset do
+#   config :opentelemetry, :processors,
+#     otel_batch_processor: %{
+#       exporter:
+#         {:opentelemetry_exporter,
+#          %{
+#            endpoints: ['https://api.honeycomb.io:443'],
+#            headers: [
+#              {"x-honeycomb-team", honeycomb_api_key},
+#              {"x-honeycomb-dataset", honeycomb_dataset}
+#            ]
+#          }}
+#     }
+# end
 
 config :tzdata,
        :data_dir,

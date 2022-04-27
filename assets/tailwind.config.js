@@ -23,6 +23,7 @@ module.exports = {
       },
       width: {
         '31percent': '31%',
+        'content': 'fit-content'
       },
       opacity: {
         '15': '0.15',
@@ -33,6 +34,9 @@ module.exports = {
       maxWidth: {
         '2xs': '15rem',
         '3xs': '12rem',
+      },
+      transitionProperty: {
+        'padding': 'padding',
       }
     },
   },

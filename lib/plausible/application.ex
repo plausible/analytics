@@ -15,13 +15,13 @@ defmodule Plausible.Application do
       Plausible.Session.WriteBuffer,
       Plausible.Session.Store,
       Plausible.Session.Salts,
+      ReferrerBlocklist,
       {Oban, Application.get_env(:plausible, Oban)},
       {Cachex,
        Keyword.merge(Application.get_env(:plausible, :user_agent_cache), name: :user_agents)}
     ]
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
-    setup_opentelemetry()
     setup_sentry()
     setup_cache_stats()
     Location.load_all()
@@ -51,13 +51,6 @@ defmodule Plausible.Application do
       &ErrorReporter.handle_event/4,
       %{}
     )
-  end
-
-  def setup_opentelemetry() do
-    OpentelemetryPhoenix.setup()
-    OpentelemetryEcto.setup([:plausible, :repo])
-    OpentelemetryEcto.setup([:plausible, :clickhouse_repo])
-    OpentelemetryOban.setup()
   end
 
   def report_cache_stats() do

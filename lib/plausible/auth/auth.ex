@@ -92,4 +92,10 @@ defmodule Plausible.Auth do
       )
     )
   end
+
+  def is_super_admin?(nil), do: false
+
+  def is_super_admin?(user_id) do
+    user_id in Application.get_env(:plausible, :super_admin_user_ids)
+  end
 end

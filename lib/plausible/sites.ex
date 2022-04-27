@@ -38,21 +38,23 @@ defmodule Plausible.Sites do
     end
   end
 
-  def has_stats?(site) do
-    if site.has_stats do
-      true
+  def stats_start_date(site) do
+    if site.stats_start_date do
+      site.stats_start_date
     else
-      has_stats = Plausible.Stats.Clickhouse.has_pageviews?(site)
+      start_date = Plausible.Stats.Clickhouse.pageview_start_date_local(site)
 
-      if has_stats do
-        Plausible.Site.set_has_stats(site, true)
+      if start_date do
+        Plausible.Site.set_stats_start_date(site, start_date)
         |> Repo.update()
 
-        true
-      else
-        false
+        start_date
       end
     end
+  end
+
+  def has_stats?(site) do
+    !!stats_start_date(site)
   end
 
   def create_shared_link(site, name, password \\ nil) do

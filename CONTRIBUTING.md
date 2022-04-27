@@ -9,7 +9,7 @@ Make sure Docker, Elixir, Erlang and Node.js are all installed on your developme
 ### Start the environment:
 
 1. Run both `make postgres` and `make clickhouse`.
-2. You can set up everything with `make install`, alternatively run each command seperately:
+2. You can set up everything with `make install`, alternatively run each command separately:
     1. Run `mix deps.get`. This will download the required Elixir dependencies.
     2. Run `mix ecto.create`. This will create the required databases in both Postgres and Clickhouse.
     3. Run `mix ecto.migrate` to build the database schema.
@@ -20,11 +20,10 @@ Make sure Docker, Elixir, Erlang and Node.js are all installed on your developme
 ### Creating an account
 
 1. Navigate to `http://localhost:8000/register` and fill in the form.
-2. An e-mail won't actually be sent, but you can find the activation in the Phoenix logs in your terminal. Search for `[info] VERIFICATION CODE:`  and enter the verification code.
-3. Fill in the rest of the forms and for the domain use `dummy.site`
-4. Skip the JS snippet and click start collecting data.
-5. Run `make dummy_event` from the terminal to generate a fake pageview event for the dummy site.
-6. You should now be all set!
+2. Fill in the rest of the forms and for the domain use `dummy.site`
+3. Skip the JS snippet and click start collecting data.
+4. Run `make dummy_event` from the terminal to generate a fake pageview event for the dummy site.
+5. You should now be all set!
 
 ### Stopping Docker containers
 

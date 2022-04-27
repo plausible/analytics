@@ -33,6 +33,7 @@ defmodule Plausible.ClickhouseEvent do
 
     field :"meta.key", {:array, :string}, default: []
     field :"meta.value", {:array, :string}, default: []
+    field :transferred_from, :string, default: ""
   end
 
   def new(attrs) do

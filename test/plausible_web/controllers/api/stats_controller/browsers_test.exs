@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
   import Plausible.TestUtils
 
   describe "GET /api/stats/:domain/browsers" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "returns top browsers by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -17,6 +17,75 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       assert json_response(conn, 200) == [
                %{"name" => "Chrome", "visitors" => 2, "percentage" => 67},
                %{"name" => "Firefox", "visitors" => 1, "percentage" => 33}
+             ]
+    end
+
+    test "returns top browsers with :is filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          browser: "Chrome"
+        ),
+        build(:pageview,
+          user_id: 123,
+          browser: "Chrome",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"]
+        ),
+        build(:pageview,
+          browser: "Firefox",
+          "meta.key": ["author"],
+          "meta.value": ["other"]
+        ),
+        build(:pageview,
+          browser: "Safari"
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Chrome", "visitors" => 1, "percentage" => 100}
+             ]
+    end
+
+    test "returns top browsers with :is_not filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          browser: "Chrome",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"]
+        ),
+        build(:pageview,
+          user_id: 123,
+          browser: "Chrome",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"]
+        ),
+        build(:pageview,
+          browser: "Firefox",
+          "meta.key": ["author"],
+          "meta.value": ["other"]
+        ),
+        build(:pageview,
+          browser: "Safari"
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
+      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Firefox", "visitors" => 1, "percentage" => 50},
+               %{"name" => "Safari", "visitors" => 1, "percentage" => 50}
              ]
     end
 
@@ -38,6 +107,27 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                  "visitors" => 1,
                  "conversion_rate" => 50.0
                }
+             ]
+    end
+
+    test "returns top browsers including imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, browser: "Chrome"),
+        build(:imported_browsers, browser: "Chrome"),
+        build(:imported_browsers, browser: "Firefox")
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Chrome", "visitors" => 1, "percentage" => 100}
+             ]
+
+      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&with_imported=true")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Chrome", "visitors" => 2, "percentage" => 67},
+               %{"name" => "Firefox", "visitors" => 1, "percentage" => 33}
              ]
     end
   end

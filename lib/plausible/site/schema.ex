@@ -1,3 +1,14 @@
+defmodule Plausible.Site.ImportedData do
+  use Ecto.Schema
+
+  embedded_schema do
+    field :start_date, :date
+    field :end_date, :date
+    field :source, :string
+    field :status, :string
+  end
+end
+
 defmodule Plausible.Site do
   use Ecto.Schema
   import Ecto.Changeset
@@ -10,7 +21,9 @@ defmodule Plausible.Site do
     field :timezone, :string, default: "Etc/UTC"
     field :public, :boolean
     field :locked, :boolean
-    field :has_stats, :boolean
+    field :stats_start_date, :date
+
+    embeds_one :imported_data, Plausible.Site.ImportedData, on_replace: :update
 
     many_to_many :members, User, join_through: Plausible.Site.Membership
     has_many :memberships, Plausible.Site.Membership
@@ -28,10 +41,13 @@ defmodule Plausible.Site do
     site
     |> cast(attrs, [:domain, :timezone])
     |> validate_required([:domain, :timezone])
-    |> validate_format(:domain, ~r/^[a-zA-z0-9\-\.\/\:]*$/,
+    |> validate_format(:domain, ~r/^[a-zA-Z0-9\-\.\/\:]*$/,
       message: "only letters, numbers, slashes and period allowed"
     )
-    |> unique_constraint(:domain)
+    |> unique_constraint(:domain,
+      message:
+        "This domain has already been taken. Perhaps one of your team members registered it? If that's not the case, please contact support@plausible.io"
+    )
     |> clean_domain
   end
 
@@ -43,8 +59,43 @@ defmodule Plausible.Site do
     change(site, public: false)
   end
 
-  def set_has_stats(site, has_stats_val) do
-    change(site, has_stats: has_stats_val)
+  def set_stats_start_date(site, val) do
+    change(site, stats_start_date: val)
+  end
+
+  def start_import(site, start_date, end_date, imported_source, status \\ "importing") do
+    change(site,
+      imported_data: %{
+        start_date: start_date,
+        end_date: end_date,
+        source: imported_source,
+        status: status
+      }
+    )
+  end
+
+  def import_success(site) do
+    change(site,
+      stats_start_date: site.imported_data.start_date,
+      imported_data: %{status: "ok"}
+    )
+  end
+
+  def import_failure(site) do
+    change(site, imported_data: %{status: "error"})
+  end
+
+  def set_imported_source(site, imported_source) do
+    change(site,
+      imported_data: %Plausible.Site.ImportedData{
+        end_date: Timex.today(),
+        source: imported_source
+      }
+    )
+  end
+
+  def remove_imported_data(site) do
+    change(site, imported_data: nil)
   end
 
   defp clean_domain(changeset) do

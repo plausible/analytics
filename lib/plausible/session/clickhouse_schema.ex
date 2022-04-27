@@ -18,6 +18,9 @@ defmodule Plausible.ClickhouseSession do
     field :events, :integer
     field :sign, :integer
 
+    field :"entry_meta.key", {:array, :string}, default: []
+    field :"entry_meta.value", {:array, :string}, default: []
+
     field :utm_medium, :string
     field :utm_source, :string
     field :utm_campaign, :string
@@ -37,6 +40,8 @@ defmodule Plausible.ClickhouseSession do
     field :browser, :string
     field :browser_version, :string
     field :timestamp, :naive_datetime
+
+    field :transferred_from, :string, default: ""
   end
 
   def random_uint64() do

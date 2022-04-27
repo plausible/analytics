@@ -489,6 +489,46 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "N/A billing"
     end
 
+    test "shows enterprise plan subscription", %{conn: conn, user: user} do
+      insert(:subscription, paddle_plan_id: "123", user: user)
+
+      insert(:enterprise_plan,
+        paddle_plan_id: "123",
+        user: user,
+        monthly_pageview_limit: 10_000_000,
+        billing_interval: :yearly
+      )
+
+      conn = get(conn, "/settings")
+      assert html_response(conn, 200) =~ "10M pageviews"
+      assert html_response(conn, 200) =~ "yearly billing"
+    end
+
+    test "shows current enterprise plan subscription when user has a new one to upgrade to", %{
+      conn: conn,
+      user: user
+    } do
+      insert(:subscription, paddle_plan_id: "123", user: user)
+
+      insert(:enterprise_plan,
+        paddle_plan_id: "123",
+        user: user,
+        monthly_pageview_limit: 10_000_000,
+        billing_interval: :yearly
+      )
+
+      insert(:enterprise_plan,
+        paddle_plan_id: "1234",
+        user: user,
+        monthly_pageview_limit: 20_000_000,
+        billing_interval: :yearly
+      )
+
+      conn = get(conn, "/settings")
+      assert html_response(conn, 200) =~ "10M pageviews"
+      assert html_response(conn, 200) =~ "yearly billing"
+    end
+
     test "shows invoices for subscribed user", %{conn: conn, user: user} do
       insert(:subscription,
         paddle_plan_id: "558018",
