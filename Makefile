@@ -10,6 +10,9 @@ server:
 clickhouse:
 	docker run --detach -p 8123:8123 --ulimit nofile=262144:262144 --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse --name plausible_clickhouse yandex/clickhouse-server:21.3.2.5
 
+clickhouse-arm:
+	docker run --detach -p 8123:8123 --ulimit nofile=262144:262144 --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse --name plausible_clickhouse altinity/clickhouse-server:21.12.3.32.altinitydev.arm
+
 clickhouse-stop:
 	docker stop plausible_clickhouse && docker rm plausible_clickhouse
 
