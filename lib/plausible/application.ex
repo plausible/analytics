@@ -47,7 +47,7 @@ defmodule Plausible.Application do
 
     :telemetry.attach_many(
       "oban-errors",
-      [[:oban, :job, :exception], [:oban, :circuit, :trip]],
+      [[:oban, :job, :exception], [:oban, :notifier, :exception], [:oban, :plugin, :exception]],
       &ErrorReporter.handle_event/4,
       %{}
     )
