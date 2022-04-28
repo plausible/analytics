@@ -1,5 +1,4 @@
 defmodule Plausible.Session.CacheStore do
-  use Plausible.Repo
   require Logger
   alias Plausible.Session.WriteBuffer
 
