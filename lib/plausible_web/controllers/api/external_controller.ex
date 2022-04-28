@@ -5,17 +5,13 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   def event(conn, _params) do
     with {:ok, params} <- parse_body(conn),
-         _ <- Sentry.Context.set_extra_context(%{request: params}),
          :ok <- create_event(conn, params) do
       conn |> put_status(202) |> text("ok")
     else
-      {:error, :invalid_json} ->
+      _ ->
         conn
         |> put_status(400)
-        |> json(%{errors: %{request: "Unable to parse request body as json"}})
-
-      {:error, errors} ->
-        conn |> put_status(400) |> json(%{errors: errors})
+        |> json(%{errors: %{request: "Unable to process request"}})
     end
   end
 
