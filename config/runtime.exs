@@ -343,7 +343,8 @@ cond do
         {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)},
         {Oban.Plugins.Stager, interval: :timer.seconds(5)}
       ],
-      queues: if(cron_enabled, do: queues, else: [])
+      queues: if(cron_enabled, do: queues, else: []),
+      peer: if(cron_enabled, do: Oban.Peers.Postgres, else: false)
 
   true ->
     config :plausible, Oban,
