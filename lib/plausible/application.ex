@@ -10,15 +10,15 @@ defmodule Plausible.Application do
       Plausible.Repo,
       Plausible.ClickhouseRepo,
       {Phoenix.PubSub, name: Plausible.PubSub},
-      PlausibleWeb.Endpoint,
+      Plausible.Session.Salts,
       Plausible.Event.WriteBuffer,
       Plausible.Session.WriteBuffer,
       Plausible.Session.Store,
-      Plausible.Session.Salts,
       ReferrerBlocklist,
-      {Oban, Application.get_env(:plausible, Oban)},
       Supervisor.child_spec({Cachex, name: :user_agents, limit: 1000}, id: :cachex_user_agents),
-      Supervisor.child_spec({Cachex, name: :sessions, limit: nil}, id: :cachex_sessions)
+      Supervisor.child_spec({Cachex, name: :sessions, limit: nil}, id: :cachex_sessions),
+      PlausibleWeb.Endpoint,
+      {Oban, Application.get_env(:plausible, Oban)}
     ]
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
@@ -28,7 +28,6 @@ defmodule Plausible.Application do
     OpentelemetryEcto.setup([:plausible, :repo])
     OpentelemetryEcto.setup([:plausible, :clickhouse_repo])
     Location.load_all()
-    Application.put_env(:plausible, :server_start, Timex.now())
     Supervisor.start_link(children, opts)
   end
 
