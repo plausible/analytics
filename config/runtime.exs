@@ -174,16 +174,6 @@ disable_cron =
   |> get_var_from_path_or_env("DISABLE_CRON", "false")
   |> String.to_existing_atom()
 
-{user_agent_cache_limit, ""} =
-  config_dir
-  |> get_var_from_path_or_env("USER_AGENT_CACHE_LIMIT", "1000")
-  |> Integer.parse()
-
-user_agent_cache_stats =
-  config_dir
-  |> get_var_from_path_or_env("USER_AGENT_CACHE_STATS", "false")
-  |> String.to_existing_atom()
-
 config :plausible,
   admin_user: admin_user,
   admin_email: admin_email,
@@ -372,10 +362,6 @@ config :ref_inspector,
 config :ua_inspector,
   init: {Plausible.Release, :configure_ua_inspector}
 
-config :plausible, :user_agent_cache,
-  limit: user_agent_cache_limit,
-  stats: user_agent_cache_stats
-
 config :hammer,
   backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 4, cleanup_interval_ms: 60_000 * 10]}
 
@@ -431,20 +417,25 @@ config :logger, Sentry.LoggerBackend,
   level: :error,
   excluded_domains: []
 
-# if honeycomb_api_key && honeycomb_dataset do
-#   config :opentelemetry, :processors,
-#     otel_batch_processor: %{
-#       exporter:
-#         {:opentelemetry_exporter,
-#          %{
-#            endpoints: ['https://api.honeycomb.io:443'],
-#            headers: [
-#              {"x-honeycomb-team", honeycomb_api_key},
-#              {"x-honeycomb-dataset", honeycomb_dataset}
-#            ]
-#          }}
-#     }
-# end
+if honeycomb_api_key && honeycomb_dataset do
+  sample_rate = if env == "prod", do: 0.01, else: 1.0
+
+  config :opentelemetry,
+    sampler: {:parent_based, %{root: {:trace_id_ratio_based, sample_rate}}},
+    resource: [service: %{name: "plausible"}],
+    span_processor: :batch,
+    exporter: :otlp
+
+  config :opentelemetry_exporter,
+    otlp_protocol: :grpc,
+    otlp_endpoint: 'https://api.honeycomb.io:443',
+    otlp_headers: [
+      {"x-honeycomb-team", honeycomb_api_key},
+      {"x-honeycomb-dataset", honeycomb_dataset}
+    ]
+else
+  config :opentelemetry, sampler: {:parent_based, %{root: {:trace_id_ratio_based, 0.0}}}
+end
 
 config :tzdata,
        :data_dir,
