@@ -204,6 +204,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       {:ok, parsed_json} ->
         Enum.filter(parsed_json, fn
           {_, ""} -> false
+          {_, nil} -> false
           {_, val} when is_list(val) -> false
           {_, val} when is_map(val) -> false
           _ -> true
