@@ -284,6 +284,13 @@ defmodule Plausible.Stats.Query do
     end)
   end
 
+  def has_visit_filters?(query) do
+    Enum.any?(query.filters, fn
+      {"visit:" <> _, _} -> true
+      _ -> false
+    end)
+  end
+
   def get_filter_by_prefix(query, prefix) do
     Enum.find(query.filters, fn {prop, _value} ->
       String.starts_with?(prop, prefix)

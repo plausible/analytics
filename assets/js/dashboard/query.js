@@ -27,6 +27,7 @@ export function parseQuery(querystring, site) {
     filters: {
       'goal': q.get('goal'),
       'props': JSON.parse(q.get('props')),
+      'entry_props': JSON.parse(q.get('entry_props')),
       'source': q.get('source'),
       'utm_medium': q.get('utm_medium'),
       'utm_source': q.get('utm_source'),
@@ -160,6 +161,9 @@ export const formattedFilters = {
   'props': 'Property',
   'prop_key': 'Property',
   'prop_value': 'Value',
+  'entry_props': 'Property',
+  'entry_prop_key': 'Entry Property',
+  'entry_prop_value': 'Entry Property Value',
   'source': 'Source',
   'utm_medium': 'UTM Medium',
   'utm_source': 'UTM Source',

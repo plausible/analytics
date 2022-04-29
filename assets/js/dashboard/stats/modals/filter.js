@@ -19,22 +19,16 @@ export const FILTER_GROUPS = {
   'os': ['os', 'os_version'],
   'utm': ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
   'goal': ['goal'],
-  'props': ['prop_key', 'prop_value']
+  'props': ['prop_key', 'prop_value', 'entry_prop_key', 'entry_prop_value']
 }
 
 function getFormState(filterGroup, query) {
-  if (filterGroup === 'props') {
-    const propsObject = query.filters['props']
-    const entries = propsObject && Object.entries(propsObject)
-
-    if (entries && entries.length == 1) {
-      const propKey = entries[0][0]
-      const propValue = valueWithoutPrefix(entries[0][1])
-
-      return {
-        'prop_key': {name: propKey, value: propKey, type: FILTER_TYPES.is},
-        'prop_value': {name: propValue, value: propValue, type: toFilterType(entries[0][1])}
-      }
+  if (['props', 'entry_props'].includes(filterGroup)) {
+    return {
+      'prop_key': getPropKeyFilter(query.filters['props']),
+      'prop_value': getPropValueFilter(query.filters['props']),
+      'entry_prop_key': getPropKeyFilter(query.filters['entry_props']),
+      'entry_prop_value': getPropValueFilter(query.filters['entry_props'])
     }
   }
 
@@ -56,6 +50,23 @@ function getFormState(filterGroup, query) {
     }
     return Object.assign(result, {[filter]: {name: filterName, value: filterValue, type}})
   }, {})
+}
+
+function getPropKeyFilter(propsObject) {
+  const entries = propsObject && Object.entries(propsObject)
+  const propKey = (entries && entries.length === 1 && entries[0][0]) || ''
+
+  return { name: propKey, value: propKey, type: FILTER_TYPES.is }
+}
+
+function getPropValueFilter(propsObject) {
+  const entries = propsObject && Object.entries(propsObject)
+  const rawPropValue = entries && entries.length === 1 && entries[0][1]
+  const propValue = (rawPropValue && valueWithoutPrefix(rawPropValue)) || '' 
+  const filterType = rawPropValue ? toFilterType(rawPropValue) : FILTER_TYPES.is
+
+  return { name: propValue, value: propValue, type: filterType }
+
 }
 
 const FILTER_TYPES = {
@@ -91,7 +102,7 @@ function supportsContains(filterName) {
 }
 
 function supportsIsNot(filterName) {
-  return !['goal', 'prop_key'].includes(filterName)
+  return !['goal', 'prop_key', 'entry_prop_key'].includes(filterName)
 }
 
 function withIndefiniteArticle(word) {
@@ -117,17 +128,11 @@ export function formatFilterGroup(filterGroup) {
 }
 
 export function filterGroupForFilter(filter) {
-  const map = Object.entries(FILTER_GROUPS).reduce((filterToGroupMap, [group, filtersInGroup]) => {
-    const filtersToAdd = {}
-    filtersInGroup.forEach((filterInGroup) => {
-      filtersToAdd[filterInGroup] = group
-    })
+  if (['entry_props', 'props'].includes(filter)) {
+    return 'props'
+  }
 
-    return { ...filterToGroupMap, ...filtersToAdd}
-  }, {})
-
-
-  return map[filter] || filter
+  return Object.entries(FILTER_GROUPS).find(entry => entry[1].includes(filter))[0]
 }
 
 class FilterModal extends React.Component {
@@ -165,14 +170,27 @@ class FilterModal extends React.Component {
       if (filterKey === 'country') { res.push({filter: 'country_name', value: name}) }
       if (filterKey === 'region') { res.push({filter: 'region_name', value: name}) }
       if (filterKey === 'city') { res.push({filter: 'city_name', value: name}) }
-      if (filterKey === 'prop_value') {return res}
+      if (['entry_prop_value', 'prop_value'].includes(filterKey)) {return res}
       if (filterKey === 'prop_key') {
         let propValue = formState['prop_value']
-        let filterValue = JSON.stringify({ [value]: toFilterQuery(propValue.value, propValue.type) })
-        res.push({filter: 'props', value: filterValue})
+        if (value !== '' && propValue.value !== '') {
+          let filterValue = JSON.stringify({[value]: toFilterQuery(propValue.value, propValue.type)})
+          res.push({filter: 'props', value: filterValue})
+        } else {
+          res.push({filter: 'props', value: ''})
+        }
         return res
       }
-
+      if (filterKey === 'entry_prop_key') {
+        let propValue = formState['entry_prop_value']
+        if (value !== '' && propValue.value !== '') {
+          let filterValue = JSON.stringify({[value]: toFilterQuery(propValue.value, propValue.type)})
+          res.push({filter: 'entry_props', value: filterValue})
+        } else {
+          res.push({filter: 'entry_props', value: ''})
+        }
+        return res
+      }
       res.push({filter: filterKey, value: toFilterQuery(value, type)})
       return res
     }, [])
@@ -225,11 +243,21 @@ class FilterModal extends React.Component {
     if (filter === 'prop_key') {
       const propsFilter = formFilters.prop_value ? {'': formFilters.prop_value} : null
       return {...query, filters: { ...query.filters, props: propsFilter}}
-    } else if (filter === 'prop_value') {
+    }
+    else if (filter === 'prop_value') {
       const propsFilter = formFilters.prop_key ? {[formFilters.prop_key]: '!(none)'} : null
       return {...query, filters: { ...query.filters, props: propsFilter}}
-    } else {
-      return {...query, filters: { ...query.filters, ...formFilters, [filter]: null }}
+    }
+    if (filter === 'entry_prop_key') {
+      const entryPropsFilter = formFilters.entry_prop_value ? {'': formFilters.entry_prop_value} : null
+      return {...query, filters: {...query.filters, entry_props: entryPropsFilter}}
+    }
+    else if (filter === 'entry_prop_value') {
+      const entryPropsFilter = formFilters.entry_prop_key ? {[formFilters.entry_prop_key]: '!(none)'} : null
+      return {...query, filters: {...query.filters, entry_props: entryPropsFilter}}
+    }
+    else {
+      return {...query, filters: {...query.filters, ...formFilters, [filter]: null}}
     }
   }
 
@@ -238,7 +266,42 @@ class FilterModal extends React.Component {
   }
 
   isDisabled() {
+    if (this.state.selectedFilterGroup === 'props') {
+      const fs = this.state.formState
+      const propKey = !!fs.prop_key.value
+      const propValue = !!fs.prop_value.value
+      const entryPropKey = !!fs.entry_prop_key.value
+      const entryPropValue = !!fs.entry_prop_value.value
+
+      const canSaveFilter = (
+        (propKey && propValue && entryPropKey && entryPropValue) ||
+        (propKey && propValue && !entryPropKey && !entryPropValue) ||
+        (!propKey && !propValue && entryPropKey && entryPropValue)
+      )
+
+      return !canSaveFilter
+    }
     return Object.entries(this.state.formState).every(([_key, {value: val}]) => !val)
+  }
+
+  shouldDisplayClearButton(selectedFilterGroup, query) {
+    if (selectedFilterGroup === 'props') {
+      return !!(query.filters['props'] || query.filters['entry_props'])
+    }
+    return FILTER_GROUPS[selectedFilterGroup].some((filterName) => query.filters[filterName])
+  }
+
+  clearFilters(selectedFilterGroup) {
+    if (selectedFilterGroup === 'props') {
+      const updatedFilters = [
+        { filter: 'props', value: null },
+        { filter: 'entry_props', value: null }
+      ]
+      this.selectFiltersAndCloseModal(updatedFilters)
+    } else {
+      const updatedFilters = FILTER_GROUPS[selectedFilterGroup].map((filterName) => ({ filter: filterName, value: null }))
+      this.selectFiltersAndCloseModal(updatedFilters)
+    }
   }
 
   selectFiltersAndCloseModal(filters) {
@@ -339,8 +402,7 @@ class FilterModal extends React.Component {
 
   renderBody() {
     const { selectedFilterGroup, query } = this.state;
-    const showClear = FILTER_GROUPS[selectedFilterGroup].some((filterName) => query.filters[filterName])
-
+    const showClear = this.shouldDisplayClearButton(selectedFilterGroup, query)
     return (
       <>
         <h1 className="text-xl font-bold dark:text-gray-100">Filter by {formatFilterGroup(selectedFilterGroup)}</h1>
@@ -363,10 +425,7 @@ class FilterModal extends React.Component {
                 <button
                   type="button"
                   className="ml-2 button px-4 flex bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-700 items-center"
-                  onClick={() => {
-                    const updatedFilters = FILTER_GROUPS[selectedFilterGroup].map((filterName) => ({filter: filterName, value: null}))
-                    this.selectFiltersAndCloseModal(updatedFilters)
-                  }}
+                  onClick={() => {this.clearFilters(selectedFilterGroup)}}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                   Remove filter{FILTER_GROUPS[selectedFilterGroup].length > 1 ? 's' : ''}

@@ -271,5 +271,157 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
       assert json_response(conn, 200) |> Enum.sort() == ["Uku Taht"]
     end
+
+    test "returns suggestions for prop_key with visit:source and prop_value filters", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["logged_in"],
+          "meta.value": ["false"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["darkmode"],
+          "meta.value": ["false"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Twitter",
+          referrer: "twitter.com",
+          "meta.key": ["something else"],
+          "meta.value": ["false"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{source: "Google", props: %{"": "false"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) |> Enum.sort() == ["darkmode", "logged_in"]
+    end
+
+    test "returns suggestions for prop_value with visit:source and prop_key filters", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Twitter",
+          referrer: "twitter.com",
+          "meta.key": ["author"],
+          "meta.value": ["other"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["darkmode"],
+          "meta.value": ["true"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{source: "Google", props: %{author: "!(none)"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/prop_value?period=day&date=2022-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == ["Uku Taht"]
+    end
+
+    test "returns suggestions for entry_prop_key with visit:source and entry_prop_value filters",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["logged_in"],
+          "meta.value": ["false"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["darkmode"],
+          "meta.value": ["false"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Twitter",
+          referrer: "twitter.com",
+          "meta.key": ["something else"],
+          "meta.value": ["false"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{source: "Google", props: %{"": "false"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/entry_prop_key?period=day&date=2022-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) |> Enum.sort() == ["darkmode", "logged_in"]
+    end
+
+    test "returns suggestions for entry_prop_value with visit:source and entry_prop_key filters",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Twitter",
+          referrer: "twitter.com",
+          "meta.key": ["author"],
+          "meta.value": ["other"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{source: "Google", props: %{author: "!(none)"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/entry_prop_value?period=day&date=2022-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) |> Enum.sort() == ["John Doe", "Uku Taht"]
+    end
   end
 end

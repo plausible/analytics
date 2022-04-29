@@ -682,54 +682,54 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
              }
     end
 
-    # test "filtering by page - session metrics consider it like entry_page", %{
-    #   conn: conn,
-    #   site: site
-    # } do
-    #   populate_stats([
-    #     build(:pageview,
-    #       pathname: "/hello",
-    #       user_id: @user_id,
-    #       domain: site.domain,
-    #       timestamp: ~N[2021-01-01 00:00:00]
-    #     ),
-    #     build(:pageview,
-    #       pathname: "/hello",
-    #       user_id: @user_id,
-    #       domain: site.domain,
-    #       timestamp: ~N[2021-01-01 00:05:00]
-    #     ),
-    #     build(:pageview,
-    #       pathname: "/hello",
-    #       domain: site.domain,
-    #       timestamp: ~N[2021-01-01 05:00:00]
-    #     ),
-    #     build(:pageview,
-    #       pathname: "/goobye",
-    #       domain: site.domain,
-    #       timestamp: ~N[2021-01-01 00:00:00]
-    #     )
-    #   ])
+    test "can filter by entry page", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats([
+        build(:pageview,
+          pathname: "/hello",
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/hello",
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:05:00]
+        ),
+        build(:pageview,
+          pathname: "/hello",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 05:00:00]
+        ),
+        build(:pageview,
+          pathname: "/goobye",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
 
-    #   conn =
-    #     get(conn, "/api/v1/stats/timeseries", %{
-    #       "site_id" => site.domain,
-    #       "period" => "month",
-    #       "date" => "2021-01-01",
-    #       "filters" => "event:page==/hello",
-    #       "metrics" => "visitors,pageviews,bounce_rate,visit_duration"
-    #     })
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters" => "visit:entry_page==/hello",
+          "metrics" => "visitors,pageviews,bounce_rate,visit_duration"
+        })
 
-    #   res = json_response(conn, 200)["results"]
+      res = json_response(conn, 200)["results"]
 
-    #   assert List.first(res) == %{
-    #            "date" => "2021-01-01",
-    #            "visitors" => 2,
-    #            "pageviews" => 3,
-    #            "bounce_rate" => 50,
-    #            "visit_duration" => 150
-    #          }
-    # end
+      assert List.first(res) == %{
+               "date" => "2021-01-01",
+               "visitors" => 2,
+               "pageviews" => 3,
+               "bounce_rate" => 50,
+               "visit_duration" => 150
+             }
+    end
 
     test "can filter by event:name", %{conn: conn, site: site} do
       populate_stats([

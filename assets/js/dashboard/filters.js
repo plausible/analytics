@@ -49,6 +49,10 @@ function filterText(key, rawValue, query) {
     const eventName = query.filters.goal ? query.filters.goal : 'event'
     return <>{eventName}.{metaKey} {toFilterType(metaValue)} <b>{valueWithoutPrefix(metaValue)}</b></>
   }
+  if (key === "entry_props") {
+    const [metaKey, metaValue] = Object.entries(value)[0]
+    return <>entry.{metaKey} {toFilterType(metaValue)} <b>{valueWithoutPrefix(metaValue)}</b></>
+  }
   if (key === "browser_version") {
     const browserName = query.filters.browser ? query.filters.browser : 'Browser'
     return <>{browserName}.Version {type} <b>{value}</b></>

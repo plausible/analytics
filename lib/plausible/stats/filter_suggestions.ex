@@ -144,8 +144,15 @@ defmodule Plausible.Stats.FilterSuggestions do
 
     q =
       case Query.get_filter_by_prefix(query, "event:props") do
-        {"event:props:", {:is, val}} -> from([e, m] in q, where: m.value == ^val)
-        _ -> q
+        {"event:props:", {:is, val}} ->
+          if Query.has_visit_filters?(query) do
+            from([e, s, m] in q, where: m.value == ^val)
+          else
+            from([e, m] in q, where: m.value == ^val)
+          end
+
+        _ ->
+          q
       end
 
     ClickhouseRepo.all(q)
@@ -168,7 +175,64 @@ defmodule Plausible.Stats.FilterSuggestions do
 
     q =
       case Query.get_filter_by_prefix(query, "event:props") do
-        {"event:props:" <> key, _filter} -> from([e, m] in q, where: m.key == ^key)
+        {"event:props:" <> key, _filter} ->
+          if Query.has_visit_filters?(query) do
+            from([e, s, m] in q, where: m.key == ^key)
+          else
+            from([e, m] in q, where: m.key == ^key)
+          end
+
+        _ ->
+          q
+      end
+
+    ClickhouseRepo.all(q)
+    |> Enum.filter(fn suggestion -> suggestion != "" end)
+  end
+
+  def filter_suggestions(site, query, "entry_prop_key", filter_search) do
+    filter_query = if filter_search == nil, do: "%", else: "%#{filter_search}%"
+
+    q =
+      from(
+        s in query_sessions(site, query),
+        inner_lateral_join: meta in "entry_meta",
+        as: :meta,
+        select: meta.key,
+        where: fragment("? ilike ?", meta.key, ^filter_query),
+        group_by: meta.key,
+        order_by: [desc: fragment("count(*)")],
+        limit: 25
+      )
+
+    q =
+      case Query.get_filter_by_prefix(query, "visit:entry_props") do
+        {"visit:entry_props:", {:is, val}} -> from([s, m] in q, where: m.value == ^val)
+        _ -> q
+      end
+
+    ClickhouseRepo.all(q)
+    |> Enum.filter(fn suggestion -> suggestion != "" end)
+  end
+
+  def filter_suggestions(site, query, "entry_prop_value", filter_search) do
+    filter_query = if filter_search == nil, do: "%", else: "%#{filter_search}%"
+
+    q =
+      from(
+        s in query_sessions(site, query),
+        inner_lateral_join: meta in "entry_meta",
+        as: :meta,
+        select: meta.value,
+        where: fragment("? ilike ?", meta.value, ^filter_query),
+        group_by: meta.value,
+        order_by: [desc: fragment("count(*)")],
+        limit: 25
+      )
+
+    q =
+      case Query.get_filter_by_prefix(query, "visit:entry_props") do
+        {"visit:entry_props:" <> key, _filter} -> from([s, m] in q, where: m.key == ^key)
         _ -> q
       end
 

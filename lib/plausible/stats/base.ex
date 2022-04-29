@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Base do
   def base_event_query(site, query) do
     events_q = query_events(site, query)
 
-    if Enum.any?(Filters.visit_props() ++ ["goal", "page"], &query.filters["visit:" <> &1]) do
+    if Query.has_visit_filters?(query) do
       sessions_q =
         from(
           s in query_sessions(site, query),
@@ -151,32 +151,11 @@ defmodule Plausible.Stats.Base do
       |> add_sample_hint(query)
 
     sessions_q =
-      case {query.filters["visit:goal"], query.filters["visit:page"]} do
-        {nil, nil} ->
-          sessions_q
-
-        {goal_filter, page_filter} ->
-          events_query =
-            Query.put_filter(query, "event:goal", goal_filter)
-            |> Query.put_filter("event:name", nil)
-            |> Query.put_filter("event:page", page_filter)
-
-          events_q =
-            from(
-              s in query_events(site, events_query),
-              select: %{session_id: fragment("DISTINCT ?", s.session_id)}
-            )
-
-          from(
-            s in sessions_q,
-            join: sq in subquery(events_q),
-            on: s.session_id == sq.session_id
-          )
-      end
-
-    sessions_q =
       case Query.get_filter_by_prefix(query, "visit:entry_props:") do
         nil ->
+          sessions_q
+
+        {"visit:entry_props:", _} ->
           sessions_q
 
         {"visit:entry_props:" <> prop_name, filter_value} ->
