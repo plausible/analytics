@@ -509,7 +509,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         name: "Signup",
         url: "http://gigride.live/",
         domain: "custom-prop-test-4.com",
-        props: Jason.encode!(%{wat: ["some-thing"]})
+        props: Jason.encode!(%{wat: ["some-thing"], other: "key"})
       }
 
       conn = post(conn, "/api/event", params)
@@ -518,8 +518,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       event = get_event("custom-prop-test-4.com")
 
-      assert Map.get(event, :"meta.key") == []
-      assert Map.get(event, :"meta.value") == []
+      assert Map.get(event, :"meta.key") == ["other"]
+      assert Map.get(event, :"meta.value") == ["key"]
     end
 
     test "ignores custom prop with map value", %{conn: conn} do
@@ -527,7 +527,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         name: "Signup",
         url: "http://gigride.live/",
         domain: "custom-prop-test-5.com",
-        props: Jason.encode!(%{foo: %{bar: "baz"}})
+        props: Jason.encode!(%{foo: %{bar: "baz"}, other_key: 1})
       }
 
       conn = post(conn, "/api/event", params)
@@ -536,8 +536,26 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       event = get_event("custom-prop-test-5.com")
 
-      assert Map.get(event, :"meta.key") == []
-      assert Map.get(event, :"meta.value") == []
+      assert Map.get(event, :"meta.key") == ["other_key"]
+      assert Map.get(event, :"meta.value") == ["1"]
+    end
+
+    test "ignores custom prop with empty string value", %{conn: conn} do
+      params = %{
+        name: "Signup",
+        url: "http://gigride.live/",
+        domain: "custom-prop-test-empty-string-val.com",
+        props: Jason.encode!(%{foo: "", other_key: true})
+      }
+
+      conn = post(conn, "/api/event", params)
+
+      assert conn.status == 202
+
+      event = get_event("custom-prop-test-empty-string-val.com")
+
+      assert Map.get(event, :"meta.key") == ["other_key"]
+      assert Map.get(event, :"meta.value") == ["true"]
     end
 
     test "ignores a malformed referrer URL", %{conn: conn} do

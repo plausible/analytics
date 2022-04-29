@@ -200,21 +200,19 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp parse_meta(params) do
     raw_meta = params["m"] || params["meta"] || params["p"] || params["props"]
 
-    with {:ok, parsed_json} <- decode_raw_props(raw_meta),
-         :ok <- validate_custom_props(parsed_json) do
-      parsed_json
-    else
-      _ -> %{}
+    case decode_raw_props(raw_meta) do
+      {:ok, parsed_json} ->
+        Enum.filter(parsed_json, fn
+          {_, ""} -> false
+          {_, val} when is_list(val) -> false
+          {_, val} when is_map(val) -> false
+          _ -> true
+        end)
+        |> Map.new()
+
+      _ ->
+        %{}
     end
-  end
-
-  defp validate_custom_props(props) do
-    is_valid =
-      Enum.all?(props, fn {_key, val} ->
-        !is_list(val) && !is_map(val)
-      end)
-
-    if is_valid, do: :ok, else: :invalid_props
   end
 
   defp decode_raw_props(props) when is_map(props), do: {:ok, props}
