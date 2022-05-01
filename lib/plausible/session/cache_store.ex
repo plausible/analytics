@@ -35,7 +35,7 @@ defmodule Plausible.Session.CacheStore do
 
   defp persist_session(session) do
     key = {session.domain, session.user_id}
-    Cachex.put(:sessions, key, session, ttl: session_length_ms())
+    Cachex.put(:sessions, key, session, ttl: :timer.minutes(30))
     session
   end
 
@@ -121,7 +121,4 @@ defmodule Plausible.Session.CacheStore do
       start: event.timestamp
     }
   end
-
-  defp session_length_ms(),
-    do: Application.get_env(:plausible, :session_length_minutes) * 60 * 100
 end
