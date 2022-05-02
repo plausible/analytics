@@ -2,7 +2,7 @@
 # platform specific, it makes sense to build it in the docker
 
 #### Builder
-FROM hexpm/elixir:1.12.2-erlang-24.0-alpine-3.13.3 as buildcontainer
+FROM hexpm/elixir:1.13.4-erlang-24.0-alpine-3.13.3 as buildcontainer
 
 # preparation
 ARG APP_VER=0.0.1

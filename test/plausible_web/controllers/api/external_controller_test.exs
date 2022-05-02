@@ -818,22 +818,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.utm_source == "%balle%"
     end
 
-    test "ignores invalid query param part", %{conn: conn} do
-      params = %{
-        n: "pageview",
-        u:
-          "https://test.com/?utm_source=Bing%20%7C%20Text%20%7C%20Leads%20%7C%20EIGEN%20NAAM-most%20broad%20(Various%20search%20term%20matches)%20%7C%20Afweging,%20Consumptie%20%7C%20T%3A%",
-        d: "invalid-query-test.com"
-      }
-
-      conn = post(conn, "/api/event", params)
-
-      assert conn.status == 202
-
-      pageview = get_event("invalid-query-test.com")
-      assert pageview.utm_source == ""
-    end
-
     test "can use double quotes in query params", %{conn: conn} do
       q = URI.encode_query(%{"utm_source" => "Something \"quoted\""})
 
