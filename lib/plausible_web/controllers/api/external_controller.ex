@@ -358,6 +358,8 @@ defmodule PlausibleWeb.Api.ExternalController do
     6_947_481 => 2_886_242,
     # Beuel -> Bonn
     2_949_619 => 2_946_447,
+    # Innenstadt I -> Frankfurt am Main
+    6_946_225 => 2_925_533,
 
     # India
     # Navi Mumbai -> Mumbai
