@@ -2,7 +2,7 @@
 # platform specific, it makes sense to build it in the docker
 
 #### Builder
-FROM hexpm/elixir:1.13.4-erlang-24.0-alpine-3.13.3 as buildcontainer
+FROM hexpm/elixir:1.13.4-erlang-24.3.3-alpine-3.15.3 as buildcontainer
 
 # preparation
 ARG APP_VER=0.0.1
@@ -52,7 +52,7 @@ COPY rel rel
 RUN mix release plausible
 
 # Main Docker Image
-FROM alpine:3.13.3
+FROM alpine:3.15.3
 LABEL maintainer="tckb <tckb@tgrthi.me>"
 ENV LANG=C.UTF-8
 
