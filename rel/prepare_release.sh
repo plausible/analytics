@@ -17,3 +17,6 @@ fi
 
 mkdir -p $TARGET_FOLDER
 echo "{\"version\": \"$VERSION\", \"commit\": \"$COMMIT\"}" > $TARGET_FOLDER/version.json
+
+echo "ADDED VERSION INFO TO $TARGET_FOLDER/version.json"
+cat $TARGET_FOLDER/version.json
