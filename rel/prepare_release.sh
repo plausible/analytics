@@ -8,5 +8,12 @@ then
 fi
 
 
+if [ "$GITHUB_WORKSPACE" != "" ]
+then
+  TARGET=$GITHUB_WORKSPACE/priv/static/version.json
+else
+  TARGET=$(pwd)/priv/static/version.json
+fi
 
-echo "{\"version\": \"$VERSION\", \"commit\": \"$COMMIT\"}" > priv/static/version.json
+echo $TARGET
+echo "{\"version\": \"$VERSION\", \"commit\": \"$COMMIT\"}" > $TARGET
