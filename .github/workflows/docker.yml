@@ -21,7 +21,7 @@ jobs:
       - name: Prepeare release
         shell: bash
         run: ./rel/prepare_release.sh ${{ steps.extract_branch.outputs.branch }}
-        id: extract_branch
+        id: prepare_release
 
 
       -
