@@ -136,6 +136,32 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
     )
   end
 
+  test "does not send multiple notifications on second year", %{user: user} do
+    insert(:subscription,
+      user: user,
+      paddle_plan_id: @yearly_plan,
+      next_bill_date: Timex.shift(Timex.today(), days: 7)
+    )
+
+    Repo.insert_all("sent_renewal_notifications", [
+      %{
+        user_id: user.id,
+        timestamp: Timex.shift(Timex.today(), years: -1) |> Timex.to_naive_datetime()
+      }
+    ])
+
+    NotifyAnnualRenewal.perform(nil)
+
+    assert_email_delivered_with(
+      to: [{user.name, user.email}],
+      subject: "Your Plausible subscription is up for renewal"
+    )
+
+    NotifyAnnualRenewal.perform(nil)
+
+    assert_no_emails_delivered()
+  end
+
   test "sends renewal notification to user on v2 yearly pricing plans", %{
     user: user
   } do
