@@ -18,6 +18,12 @@ jobs:
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
 
+      - name: Prepeare release
+        shell: bash
+        run: ./rel/prepare_release.sh ${{ steps.extract_branch.outputs.branch }}
+        id: extract_branch
+
+
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
