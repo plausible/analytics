@@ -189,7 +189,8 @@ defmodule PlausibleWeb.StatsController do
           embedded: conn.params["embed"] == "true",
           background: conn.params["background"],
           theme: conn.params["theme"],
-          flags: get_flags(conn.assigns[:current_user])
+          flags: get_flags(conn.assigns[:current_user]),
+          is_dbip: is_dbip()
         )
 
       shared_link.site.locked ->
