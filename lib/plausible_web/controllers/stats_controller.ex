@@ -26,7 +26,8 @@ defmodule PlausibleWeb.StatsController do
           title: "Plausible · " <> site.domain,
           offer_email_report: offer_email_report,
           demo: demo,
-          flags: get_flags(conn.assigns[:current_user])
+          flags: get_flags(conn.assigns[:current_user]),
+          is_dbip: is_dbip()
         )
 
       !stats_start_date && can_see_stats ->
@@ -214,5 +215,17 @@ defmodule PlausibleWeb.StatsController do
     %{
       custom_dimension_filter: FunWithFlags.enabled?(:custom_dimension_filter, for: user)
     }
+  end
+
+  defp is_dbip() do
+    if Application.get_env(:plausible, :is_selfhost) do
+      case Geolix.metadata([:geolocation]) do
+        %{geolocation: %{database_type: type}} ->
+          String.starts_with?(type, "DBIP")
+
+        _ ->
+          false
+      end
+    end
   end
 end

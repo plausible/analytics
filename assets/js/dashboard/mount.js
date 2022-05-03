@@ -16,7 +16,7 @@ if (container) {
     statsBegin: container.dataset.statsBegin,
     embedded: container.dataset.embedded,
     background: container.dataset.background,
-    selfhosted: container.dataset.selfhosted === 'true',
+    isDbip: container.dataset.isDbip === 'true',
     flags: JSON.parse(container.dataset.flags)
   }
 
