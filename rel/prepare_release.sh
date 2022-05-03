@@ -11,6 +11,15 @@ fi
 if [ "$GITHUB_WORKSPACE" != "" ]
 then
   TARGET=$GITHUB_WORKSPACE/priv/static/version.json
+
+  echo "===================="
+  echo "> ls GITHUB_WORKSPACE"
+  ls $GITHUB_WORKSPACE
+  echo "> ls GITHUB_WORKSPACE/priv"
+  ls $GITHUB_WORKSPACE/priv
+  echo "> ls GITHUB_WORKSPACE/priv/static"
+  ls $GITHUB_WORKSPACE/priv/static
+  echo "===================="
 else
   TARGET=$(pwd)/priv/static/version.json
 fi
