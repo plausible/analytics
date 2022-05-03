@@ -50,7 +50,6 @@ npm-debug.log
 .elixir_ls
 plausible-report.xml
 
-*.sh
 .idea
 *.iml
 *.log
