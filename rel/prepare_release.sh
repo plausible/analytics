@@ -10,12 +10,11 @@ fi
 
 if [ "$GITHUB_WORKSPACE" != "" ]
 then
-  TARGET_FOLDER=$GITHUB_WORKSPACE/priv/static
+  TARGET_FOLDER=$GITHUB_WORKSPACE/assets/static
 else
-  TARGET_FOLDER=$(pwd)/priv/static
+  TARGET_FOLDER=$(pwd)/assets/static
 fi
 
-mkdir -p $TARGET_FOLDER
 echo "{\"version\": \"$VERSION\", \"commit\": \"$COMMIT\"}" > $TARGET_FOLDER/version.json
 
 echo "ADDED VERSION INFO TO $TARGET_FOLDER/version.json"
