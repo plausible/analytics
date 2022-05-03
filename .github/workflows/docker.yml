@@ -20,7 +20,7 @@ jobs:
 
       - name: WAT
         shell: bash
-        run: ls $GITHUB_WORKSPACE/priv/static
+        run: ls $GITHUB_WORKSPACE/priv
         id: ls_github_workspace
 
       - name: Prepeare release
