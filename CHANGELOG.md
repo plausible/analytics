@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
 - Move `entry_page` and `exit_page` to be part of the `Page` filter group
 - Paginate /api/sites results and add a `View all` link to the site-switcher dropdown in the dashboard.
 - Remove the `+ Add Site` link to the site-switcher dropdown in the dashboard.
+- `DISABLE_REGISTRATIONS` configuration parameter can now accept `invite_only` to allow invited users to register an account while keeping regular registrations disabled plausible/analytics#1841
 
 ## v1.4.1
 
