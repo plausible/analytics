@@ -115,7 +115,7 @@ geolite2_country_db =
   get_var_from_path_or_env(
     config_dir,
     "GEOLITE2_COUNTRY_DB",
-    Application.app_dir(:plausible) <> "/priv/geodb/dbip-country.mmdb"
+    Application.app_dir(:plausible) <> "/priv/geodb/dbip-city-lite-2022-05.mmdb"
   )
 
 ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", geolite2_country_db)
