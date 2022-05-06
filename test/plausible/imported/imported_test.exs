@@ -211,6 +211,7 @@ defmodule Plausible.ImportedTest do
     test "UTM terms data imported from Google Analytics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, utm_term: "oat milk", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, utm_term: "Sweden", timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, utm_term: "Sweden", timestamp: ~N[2021-01-01 00:00:00])
       ])
 
@@ -243,9 +244,9 @@ defmodule Plausible.ImportedTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Sweden",
-                 "visitors" => 2,
-                 "bounce_rate" => 50.0,
-                 "visit_duration" => 50.0
+                 "visitors" => 3,
+                 "bounce_rate" => 67.0,
+                 "visit_duration" => 33.3
                },
                %{
                  "name" => "oat milk",

@@ -606,7 +606,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         build(:pageview,
           domain: site.domain,
           pathname: "/non-existing",
-          user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:01]
         ),
         build(:pageview,
@@ -641,7 +640,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
       assert json_response(conn, 200) == %{
                "results" => [
-                 %{"name" => "pageview", "visitors" => 1, "events" => 4},
+                 %{"name" => "pageview", "visitors" => 2, "events" => 4},
                  %{"name" => "404", "visitors" => 1, "events" => 2}
                ]
              }
@@ -924,6 +923,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         ),
         build(:event,
           name: "Purchase",
+          "meta.key": ["cost"],
+          "meta.value": ["16"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
           domain: site.domain,
           timestamp: ~N[2021-01-01 00:25:00]
         ),
@@ -954,7 +960,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
       assert json_response(conn, 200) == %{
                "results" => [
-                 %{"cost" => "16", "visitors" => 2},
+                 %{"cost" => "16", "visitors" => 3},
                  %{"cost" => "14", "visitors" => 2},
                  %{"cost" => "(none)", "visitors" => 1}
                ]

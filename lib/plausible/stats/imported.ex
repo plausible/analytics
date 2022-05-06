@@ -408,7 +408,7 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([s, i], %{
       visit_duration:
         fragment(
-          "(? + ? * ?) / (? + ?)",
+          "round((? + ? * ?) / (? + ?), 1)",
           i.visit_duration,
           s.visit_duration,
           s.visits,
