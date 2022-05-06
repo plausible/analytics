@@ -1,14 +1,10 @@
 #!/bin/sh
+
 set -e
 
-if [ "$1" = 'run' ]; then
-      exec /app/bin/plausible start
+# Confirm database exists in the required state
+/app/createdb.sh
+/app/migrate.sh
 
-elif [ "$1" = 'db' ]; then
-      exec /app/"$2".sh
- else
-      exec "$@"
-
-fi
-
-exec "$@"
+# Start Plausible
+/app/bin/plausible start

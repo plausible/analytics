@@ -71,6 +71,5 @@ USER plausibleuser
 WORKDIR /app
 ENV GEONAMES_SOURCE_FILE=/app/lib/plausible-0.0.1/priv/geonames.csv
 ENV LISTEN_IP=0.0.0.0
-ENTRYPOINT ["/entrypoint.sh"]
 EXPOSE 8000
-CMD ["run"]
+CMD ["/entrypoint.sh"]
