@@ -1,5 +1,5 @@
 defmodule Plausible.Workers.SpikeNotifierTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   use Bamboo.Test
   import Double
   alias Plausible.Workers.SpikeNotifier

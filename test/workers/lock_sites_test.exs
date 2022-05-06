@@ -1,5 +1,5 @@
 defmodule Plausible.Workers.LockSitesTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   alias Plausible.Workers.LockSites
 
   test "does not lock trial user's site" do

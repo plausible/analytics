@@ -1,5 +1,5 @@
 defmodule Plausible.SiteAdminTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   import Plausible.TestUtils
   alias Plausible.{SiteAdmin, ClickhouseRepo, ClickhouseEvent, ClickhouseSession}
 

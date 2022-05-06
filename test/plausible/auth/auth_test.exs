@@ -1,5 +1,5 @@
 defmodule Plausible.AuthTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   alias Plausible.Auth
 
   describe "user_completed_setup?" do

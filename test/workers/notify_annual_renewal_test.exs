@@ -1,5 +1,5 @@
 defmodule Plausible.Workers.NotifyAnnualRenewalTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   use Bamboo.Test
   import Plausible.TestUtils
   alias Plausible.Workers.NotifyAnnualRenewal

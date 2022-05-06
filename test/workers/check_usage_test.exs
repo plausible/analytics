@@ -1,5 +1,5 @@
 defmodule Plausible.Workers.CheckUsageTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   use Bamboo.Test
   import Double
   import Plausible.TestUtils

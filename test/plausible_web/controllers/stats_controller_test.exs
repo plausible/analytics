@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.StatsControllerTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
   import Plausible.TestUtils
 

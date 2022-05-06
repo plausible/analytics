@@ -1,5 +1,5 @@
 defmodule Plausible.Billing.PlansTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   alias Plausible.Billing.Plans
 
   @v1_plan_id "558018"
