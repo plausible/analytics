@@ -36,6 +36,8 @@ defmodule Plausible.ClickhouseEvent do
     field :browser, :string, default: ""
     field :browser_version, :string, default: ""
 
+    field :careers_application_form_uuid, :string, default: ""
+
     field :"meta.key", {:array, :string}, default: []
     field :"meta.value", {:array, :string}, default: []
   end
@@ -76,6 +78,7 @@ defmodule Plausible.ClickhouseEvent do
         :subdivision2_code,
         :city_geoname_id,
         :screen_size,
+        :careers_application_form_uuid,
         :"meta.key",
         :"meta.value"
       ],

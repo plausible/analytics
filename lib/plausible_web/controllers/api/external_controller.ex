@@ -122,6 +122,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         browser: ua && browser_name(ua),
         browser_version: ua && browser_version(ua),
         screen_size: calculate_screen_size(params["screen_width"]),
+        careers_application_form_uuid: params["careers_application_form_uuid"],
         "meta.key": Map.keys(params["meta"]),
         "meta.value": Map.values(params["meta"]) |> Enum.map(&Kernel.to_string/1)
       }
@@ -188,7 +189,14 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   defp parse_additional_params(params) do
-    additional_param_names = ["company_id", "job_id", "page_id", "site_id"]
+    additional_param_names = [
+      "company_id",
+      "job_id",
+      "page_id",
+      "site_id",
+      "careers_application_form_uuid"
+    ]
+
     meta = parse_meta(params)
 
     meta
