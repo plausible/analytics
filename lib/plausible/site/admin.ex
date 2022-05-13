@@ -28,7 +28,7 @@ defmodule Plausible.SiteAdmin do
       timezone: nil,
       public: nil,
       owner: %{value: &get_owner_email/1},
-      other_members: %{value: &get_other_members_emails/1}
+      other_members: %{value: &get_other_members/1}
     ]
   end
 
@@ -52,9 +52,17 @@ defmodule Plausible.SiteAdmin do
     Enum.find(site.memberships, fn m -> m.role == :owner end).user.email
   end
 
-  defp get_other_members_emails(site) do
-    memberships = Enum.reject(site.memberships, fn m -> m.role == :owner end)
-    Enum.map(memberships, fn m -> m.user.email end) |> Enum.join(", ")
+  defp get_other_members(site) do
+    Enum.reduce(site.memberships, "", fn m, acc ->
+      case m.role do
+        :owner ->
+          acc
+
+        _ ->
+          acc = if acc != "", do: acc <> ", ", else: acc
+          acc <> m.user.email <> "(#{to_string(m.role)})"
+      end
+    end)
   end
 
   def transfer_data([from_site], params) do

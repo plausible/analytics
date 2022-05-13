@@ -20,7 +20,7 @@ defmodule Plausible.Auth.UserAdmin do
       email: nil,
       inserted_at: %{name: "Created at", value: &format_date(&1.inserted_at)},
       trial_expiry_date: %{name: "Trial expiry", value: &format_date(&1.trial_expiry_date)},
-      subscription_tier: %{value: &subscription_tier/1},
+      subscription_plan: %{value: &subscription_tier/1},
       subscription_status: %{value: &subscription_status/1},
       grace_period: %{value: &grace_period_status/1}
     ]
@@ -31,6 +31,14 @@ defmodule Plausible.Auth.UserAdmin do
       remove_grace_period: %{
         name: "Remove grace period",
         action: fn _, user -> remove_grace_period(user) end
+      },
+      lock_sites: %{
+        name: "Lock sites",
+        action: fn _, user -> set_lock_status_for(user, true) end
+      },
+      unlock_sites: %{
+        name: "Unlock sites",
+        action: fn _, user -> set_lock_status_for(user, false) end
       }
     ]
   end
@@ -41,6 +49,11 @@ defmodule Plausible.Auth.UserAdmin do
     else
       {:error, user, "No active grace period on this user"}
     end
+  end
+
+  defp set_lock_status_for(user, status) do
+    Plausible.Billing.SiteLocker.set_lock_status_for(user, status)
+    {:ok, user}
   end
 
   defp grace_period_status(%{grace_period: nil}), do: "--"
@@ -58,7 +71,13 @@ defmodule Plausible.Auth.UserAdmin do
     if user.subscription && user.subscription.status == "active" do
       quota = PlausibleWeb.AuthView.subscription_quota(user.subscription)
       interval = PlausibleWeb.AuthView.subscription_interval(user.subscription)
-      "#{quota} (#{interval})"
+
+      manage_url =
+        Plausible.Billing.PaddleApi.vendors_domain() <>
+          "/subscriptions/customers/manage/" <>
+          user.subscription.paddle_subscription_id
+
+      {:safe, ~s(<a href="#{manage_url}">#{quota} \(#{interval}\)</a>)}
     else
       "--"
     end
