@@ -479,7 +479,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
           company_id: 10,
           site_id: 9,
           job_id: 12,
-          page_id: 15
+          page_id: 15,
+          careers_application_form_uuid: "313a26c2-741c-421c-9a6b-f39c02c8d35c"
         }
       }
 
@@ -492,6 +493,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert Map.get(event, :site_id) == 9
       assert Map.get(event, :job_id) == 12
       assert Map.get(event, :page_id) == 15
+
+      assert Map.get(event, :careers_application_form_uuid) ==
+               "313a26c2-741c-421c-9a6b-f39c02c8d35c"
+
       assert Map.get(event, :"meta.key") == []
       assert Map.get(event, :"meta.value") == []
     end
