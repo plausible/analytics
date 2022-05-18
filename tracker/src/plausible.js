@@ -10,9 +10,6 @@
   var scriptEl = document.currentScript;
   {{/if}}
   var endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint(scriptEl)
-  {{#if exclusions}}
-  var excludedPaths = scriptEl && scriptEl.getAttribute('data-exclude').split(',');
-  {{/if}}
 
   function warn(reason) {
     console.warn('Ignoring Event: ' + reason);
@@ -43,11 +40,18 @@
 
     }
     {{#if exclusions}}
-    if (excludedPaths) {
-      for (var i = 0; i < excludedPaths.length; i++) {
-        if (eventName === 'pageview' && location.pathname.match(new RegExp('^' + excludedPaths[i].trim().replace(/\*\*/g, '.*').replace(/([^\.])\*/g, '$1[^\\s\/]*') + '\/?$')))
-          return warn('exclusion rule');
-      }
+    var dataIncludeAttr = scriptEl && scriptEl.getAttribute('data-include')  
+    var dataExcludeAttr = scriptEl && scriptEl.getAttribute('data-exclude')
+
+    if (eventName === 'pageview') {
+      var isIncluded = !dataIncludeAttr || (dataIncludeAttr && dataIncludeAttr.split(',').some(pathMatches))
+      var isExcluded = dataExcludeAttr && dataExcludeAttr.split(',').some(pathMatches)
+
+      if (!isIncluded || isExcluded) return warn('exclusion rule')
+    }
+
+    function pathMatches(wildcardPath) {
+      return location.pathname.match(new RegExp('^' + wildcardPath.trim().replace(/\*\*/g, '.*').replace(/([^\.])\*/g, '$1[^\\s\/]*') + '\/?$'))
     }
     {{/if}}
 
