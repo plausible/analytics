@@ -35,18 +35,20 @@ defmodule PlausibleWeb.Tracker do
   end
 
   def call(conn, files: files) do
-    filename = case conn.request_path do
-      "/js/p.js" ->
-        "p.js"
+    filename =
+      case conn.request_path do
+        "/js/p.js" ->
+          "p.js"
 
-      "/js/" <> script_alias when script_alias in @script_aliases ->
-        "plausible.js"
+        "/js/" <> script_alias when script_alias in @script_aliases ->
+          "plausible.js"
 
-      "/js/" <> requested_filename ->
-        sorted_script_variant(requested_filename)
+        "/js/" <> requested_filename ->
+          sorted_script_variant(requested_filename)
 
-      _ -> nil
-    end
+        _ ->
+          nil
+      end
 
     case filename && Enum.find(files, &(&1 == filename)) do
       nil ->
@@ -77,7 +79,8 @@ defmodule PlausibleWeb.Tracker do
 
         "plausible.#{sorted_variants}.js"
 
-      _ -> nil
+      _ ->
+        nil
     end
   end
 end
