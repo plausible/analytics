@@ -22,26 +22,18 @@ defmodule PlausibleWeb.Tracker do
     end)
     |> List.flatten()
 
-  # Formats power set into filenames
-  files_available =
-    ["plausible.js", "p.js"] ++ Enum.map(variants, fn v -> "plausible.#{v}.js" end)
+  @base_filenames ["plausible", "script", "analytics"]
+  @files_available ["plausible.js", "p.js"] ++ Enum.map(variants, fn v -> "plausible.#{v}.js" end)
 
-  @script_aliases ["plausible.js", "script.js", "analytics.js"]
-  @base_filenames ["plausible", "script"]
-  @files_available files_available
-
-  def init(_) do
-    [files: @files_available]
+  def init(opts) do
+    Keyword.merge(opts, files_available: MapSet.new(@files_available))
   end
 
-  def call(conn, files: files) do
+  def call(conn, files_available: files_available) do
     filename =
       case conn.request_path do
         "/js/p.js" ->
           "p.js"
-
-        "/js/" <> script_alias when script_alias in @script_aliases ->
-          "plausible.js"
 
         "/js/" <> requested_filename ->
           sorted_script_variant(requested_filename)
@@ -50,21 +42,19 @@ defmodule PlausibleWeb.Tracker do
           nil
       end
 
-    case filename && Enum.find(files, &(&1 == filename)) do
-      nil ->
-        conn
+    if filename && MapSet.member?(files_available, filename) do
+      location = Application.app_dir(:plausible, "priv/tracker/js/" <> filename)
 
-      found ->
-        location = Application.app_dir(:plausible, "priv/tracker/js/" <> found)
-
-        conn
-        |> put_resp_header("content-type", "application/javascript")
-        |> put_resp_header("x-content-type-options", "nosniff")
-        |> put_resp_header("cross-origin-resource-policy", "cross-origin")
-        |> put_resp_header("access-control-allow-origin", "*")
-        |> put_resp_header("cache-control", "public, max-age=86400, must-revalidate")
-        |> send_file(200, location)
-        |> halt()
+      conn
+      |> put_resp_header("content-type", "application/javascript")
+      |> put_resp_header("x-content-type-options", "nosniff")
+      |> put_resp_header("cross-origin-resource-policy", "cross-origin")
+      |> put_resp_header("access-control-allow-origin", "*")
+      |> put_resp_header("cache-control", "public, max-age=86400, must-revalidate")
+      |> send_file(200, location)
+      |> halt()
+    else
+      conn
     end
   end
 
@@ -75,9 +65,8 @@ defmodule PlausibleWeb.Tracker do
           rest
           |> List.delete("js")
           |> Enum.sort()
-          |> Enum.join(".")
 
-        "plausible.#{sorted_variants}.js"
+        Enum.join(["plausible"] ++ sorted_variants ++ ["js"], ".")
 
       _ ->
         nil
