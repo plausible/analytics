@@ -10,6 +10,7 @@ fi
 
 if [ "$GITHUB_WORKSPACE" != "" ]
 then
+  ls $GITHUB_WORKSPACE
   TARGET_FOLDER=$GITHUB_WORKSPACE/priv
 else
   TARGET_FOLDER=$(pwd)/priv
