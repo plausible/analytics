@@ -12,13 +12,6 @@ jobs:
     runs-on: buildjet-4vcpu-ubuntu-2004
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Extract branch name
-        shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-        id: extract_branch
-
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
@@ -40,17 +33,15 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      -
-        name: Build and push
+      - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
         with:
-          context: .
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=plausible/analytics:${{ steps.extract_branch.outputs.branch }}
-          cache-to: type=inline
-      -
-        name: Image digest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: BUILD_METADATA=${{ steps.meta.outputs.json }}
+      - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
