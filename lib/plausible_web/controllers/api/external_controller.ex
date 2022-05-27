@@ -55,6 +55,34 @@ defmodule PlausibleWeb.Api.ExternalController do
     })
   end
 
+  def info(conn, _params) do
+    version_file = Application.app_dir(:plausible, "priv/static/version.json")
+
+    version =
+      with {:ok, file} <- File.read(version_file),
+           {:ok, json} <- Jason.decode(file) do
+        json
+      else
+        _ -> %{}
+      end
+
+    geo_database =
+      case Geolix.metadata([:geolocation]) do
+        %{geolocation: %{database_type: type}} ->
+          type
+
+        _ ->
+          "(not configured)"
+      end
+
+    info =
+      Map.merge(version, %{
+        geo_database: geo_database
+      })
+
+    json(conn, info)
+  end
+
   defp parse_user_agent(conn) do
     user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
 
