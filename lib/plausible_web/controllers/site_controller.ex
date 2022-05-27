@@ -77,8 +77,6 @@ defmodule PlausibleWeb.SiteController do
 
     case Sites.create(user, site_params) do
       {:ok, %{site: site}} ->
-        Plausible.Slack.notify("#{user.name} created #{site.domain} [email=#{user.email}]")
-
         if is_first_site do
           PlausibleWeb.Email.welcome_email(user)
           |> Plausible.Mailer.send_email()

@@ -103,7 +103,6 @@ paddle_auth_code = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_AUTH_CODE
 paddle_vendor_id = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_ID")
 google_cid = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_ID")
 google_secret = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_SECRET")
-slack_hook_url = get_var_from_path_or_env(config_dir, "SLACK_WEBHOOK")
 postmark_api_key = get_var_from_path_or_env(config_dir, "POSTMARK_API_KEY")
 
 cron_enabled =
@@ -235,8 +234,6 @@ config :plausible, :paddle,
 config :plausible, :google,
   client_id: google_cid,
   client_secret: google_secret
-
-config :plausible, :slack, webhook: slack_hook_url
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],

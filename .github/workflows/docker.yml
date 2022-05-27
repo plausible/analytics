@@ -18,11 +18,6 @@ jobs:
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
 
-      - name: WAT
-        shell: bash
-        run: ls $GITHUB_WORKSPACE/priv
-        id: ls_github_workspace
-
       - name: Prepeare release
         shell: bash
         run: ./rel/prepare_release.sh ${{ steps.extract_branch.outputs.branch }}
