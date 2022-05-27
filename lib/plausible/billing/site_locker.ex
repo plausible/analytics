@@ -19,7 +19,7 @@ defmodule Plausible.Billing.SiteLocker do
     end
   end
 
-  defp set_lock_status_for(user, status) do
+  def set_lock_status_for(user, status) do
     site_ids =
       Repo.all(
         from s in Plausible.Site.Membership,
