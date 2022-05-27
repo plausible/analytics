@@ -10,9 +10,9 @@ fi
 
 if [ "$GITHUB_WORKSPACE" != "" ]
 then
-  TARGET_FOLDER=$GITHUB_WORKSPACE/assets/static
+  TARGET_FOLDER=$GITHUB_WORKSPACE/priv
 else
-  TARGET_FOLDER=$(pwd)/assets/static
+  TARGET_FOLDER=$(pwd)/priv
 fi
 
 echo "{\"version\": \"$VERSION\", \"commit\": \"$COMMIT\"}" > $TARGET_FOLDER/version.json

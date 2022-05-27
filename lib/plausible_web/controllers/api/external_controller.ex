@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   def info(conn, _params) do
-    version_file = Application.app_dir(:plausible, "priv/static/version.json")
+    version_file = Application.app_dir(:plausible, "priv/version.json")
 
     version =
       with {:ok, file} <- File.read(version_file),
