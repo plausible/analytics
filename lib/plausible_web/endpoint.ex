@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Endpoint do
     at: "/",
     from: :plausible,
     gzip: false,
-    only: ~w(css fonts images js favicon.ico robots.txt version.json)
+    only: ~w(css fonts images js favicon.ico robots.txt)
 
   plug Plug.Static,
     at: "/kaffy",
