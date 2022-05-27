@@ -42,6 +42,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-arg: BUILD_METADATA=${{ steps.meta.outputs.json }}
+          build-args: |
+            BUILD_METADATA=${{ steps.meta.outputs.json }}
+
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}

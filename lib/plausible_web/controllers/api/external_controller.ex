@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         _ -> %{}
       end
 
-    build_info = System.get_env("BUILD_METADATA", "{}") |> Jason.decode!()
+    build_metadata = System.get_env("BUILD_METADATA", "{}") |> Jason.decode!()
 
     geo_database =
       case Geolix.metadata([:geolocation]) do
@@ -80,7 +80,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     info =
       Map.merge(version, %{
         geo_database: geo_database,
-        build: build_info
+        build: build_metadata
       })
 
     json(conn, info)
