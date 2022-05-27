@@ -56,16 +56,6 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   def info(conn, _params) do
-    version_file = Application.app_dir(:plausible, "priv/version.json")
-
-    version =
-      with {:ok, file} <- File.read(version_file),
-           {:ok, json} <- Jason.decode(file) do
-        json
-      else
-        _ -> %{}
-      end
-
     build_metadata = System.get_env("BUILD_METADATA", "{}") |> Jason.decode!()
 
     geo_database =
@@ -77,11 +67,15 @@ defmodule PlausibleWeb.Api.ExternalController do
           "(not configured)"
       end
 
-    info =
-      Map.merge(version, %{
-        geo_database: geo_database,
-        build: build_metadata
-      })
+    info = %{
+      geo_database: geo_database,
+      build: %{
+        version: get_in(build_metadata, ["labels", "org.opencontainers.image.version"]),
+        commit: get_in(build_metadata, ["labels", "org.opencontainers.image.revision"]),
+        created: get_in(build_metadata, ["labels", "org.opencontainers.image.created"]),
+        tags: get_in(build_metadata, ["tags"])
+      }
+    }
 
     json(conn, info)
   end

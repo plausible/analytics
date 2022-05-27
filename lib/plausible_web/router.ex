@@ -114,6 +114,8 @@ defmodule PlausibleWeb.Router do
     get "/error", Api.ExternalController, :error
     get "/health", Api.ExternalController, :health
     get "/info", Api.ExternalController, :info
+    get "/system/metadata", Api.ExternalController, :info
+    get "/system/health", Api.ExternalController, :health
 
     post "/paddle/webhook", Api.PaddleController, :webhook
 
