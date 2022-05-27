@@ -20,7 +20,7 @@ defmodule Plausible.Auth.UserAdmin do
       email: nil,
       inserted_at: %{name: "Created at", value: &format_date(&1.inserted_at)},
       trial_expiry_date: %{name: "Trial expiry", value: &format_date(&1.trial_expiry_date)},
-      subscription_plan: %{value: &subscription_tier/1},
+      subscription_plan: %{value: &subscription_plan/1},
       subscription_status: %{value: &subscription_status/1},
       grace_period: %{value: &grace_period_status/1}
     ]
@@ -28,32 +28,21 @@ defmodule Plausible.Auth.UserAdmin do
 
   def resource_actions(_) do
     [
-      remove_grace_period: %{
-        name: "Remove grace period",
-        action: fn _, user -> remove_grace_period(user) end
-      },
-      lock_sites: %{
-        name: "Lock sites",
-        action: fn _, user -> set_lock_status_for(user, true) end
-      },
-      unlock_sites: %{
-        name: "Unlock sites",
-        action: fn _, user -> set_lock_status_for(user, false) end
+      unlock: %{
+        name: "Unlock",
+        action: fn _, user -> unlock(user) end
       }
     ]
   end
 
-  defp remove_grace_period(user) do
+  defp unlock(user) do
     if user.grace_period do
       Plausible.Auth.User.remove_grace_period(user) |> Repo.update()
+      Plausible.Billing.SiteLocker.set_lock_status_for(user, false)
+      {:ok, user}
     else
       {:error, user, "No active grace period on this user"}
     end
-  end
-
-  defp set_lock_status_for(user, status) do
-    Plausible.Billing.SiteLocker.set_lock_status_for(user, status)
-    {:ok, user}
   end
 
   defp grace_period_status(%{grace_period: nil}), do: "--"
@@ -67,7 +56,7 @@ defmodule Plausible.Auth.UserAdmin do
     end
   end
 
-  defp subscription_tier(user) do
+  defp subscription_plan(user) do
     if user.subscription && user.subscription.status == "active" do
       quota = PlausibleWeb.AuthView.subscription_quota(user.subscription)
       interval = PlausibleWeb.AuthView.subscription_interval(user.subscription)

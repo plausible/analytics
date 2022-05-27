@@ -53,16 +53,9 @@ defmodule Plausible.SiteAdmin do
   end
 
   defp get_other_members(site) do
-    Enum.reduce(site.memberships, "", fn m, acc ->
-      case m.role do
-        :owner ->
-          acc
-
-        _ ->
-          acc = if acc != "", do: acc <> ", ", else: acc
-          acc <> m.user.email <> "(#{to_string(m.role)})"
-      end
-    end)
+    Enum.filter(site.memberships, &(&1.role != :owner))
+    |> Enum.map(fn m -> m.user.email <> "(#{to_string(m.role)})" end)
+    |> Enum.join(", ")
   end
 
   def transfer_data([from_site], params) do

@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.CreateSandboxSubscription do
+defmodule Mix.Tasks.PullSandboxSubscription do
   use Mix.Task
   use Plausible.Repo
   alias Plausible.{Repo, Auth.User, Billing.Subscription}
@@ -13,7 +13,7 @@ defmodule Mix.Tasks.CreateSandboxSubscription do
   #    https://sandbox-vendors.paddle.com/subscriptions/customers
   #
   # 3) run from command line:
-  #    mix create_sandbox_subscription <subscription_ID>
+  #    mix pull_sandbox_subscription <subscription_ID>
 
   @headers [
     {"Content-type", "application/json"},
