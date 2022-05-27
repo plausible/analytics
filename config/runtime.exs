@@ -218,14 +218,21 @@ config :fun_with_flags, :persistence,
   adapter: FunWithFlags.Store.Persistent.Ecto,
   repo: Plausible.Repo
 
+included_environments = if sentry_dsn, do: ["prod", "staging"], else: []
+
 config :sentry,
   dsn: sentry_dsn,
   environment_name: env,
-  included_environments: ["prod", "staging"],
+  included_environments: included_environments,
   release: app_version,
   tags: %{app_version: app_version},
   enable_source_code_context: true,
   root_source_code_path: [File.cwd!()]
+
+config :logger, Sentry.LoggerBackend,
+  capture_log_messages: true,
+  level: :error,
+  excluded_domains: []
 
 config :plausible, :paddle,
   vendor_auth_code: paddle_auth_code,
@@ -413,11 +420,6 @@ end
 config :logger,
   level: log_level,
   backends: [:console]
-
-config :logger, Sentry.LoggerBackend,
-  capture_log_messages: true,
-  level: :error,
-  excluded_domains: []
 
 if honeycomb_api_key && honeycomb_dataset do
   sample_rate = if env == "prod", do: 0.01, else: 1.0
