@@ -187,6 +187,59 @@
   document.addEventListener('auxclick', handleDownload);
   {{/if}}
 
+  {{#if tagged_events}}
+  function handleTaggedFormSubmit(event) {
+    if (event.target.getAttribute('data-event-name')) {
+      event.preventDefault()
+      sendTaggedEvent(event.target)
+      setTimeout(function() { event.target.submit() }, 150)
+    }
+  }
+
+  function handleTaggedLinkClick(event) {  
+    var link = event.target
+    var middle = event.type === 'auxclick' && event.which === 2
+    var click = event.type === 'click'
+    while (link && (typeof link.tagName === 'undefined' || link.tagName.toLowerCase() !== 'a' || !link.href)) {
+      link = link.parentNode
+    }
+    if (link && link.href && link.getAttribute('data-event-name')) {
+      (middle || click) && sendTaggedEvent(link) 
+
+      if (!link.target || link.target.match(/^_(self|parent|top)$/i)) {
+        if (!(event.ctrlKey || event.metaKey || event.shiftKey) && click) {
+          setTimeout(function() { location.href = link.href }, 150)
+          event.preventDefault()
+        }
+      }
+    }
+  }
+
+  function sendTaggedEvent(targetEl) {
+    var eventName = targetEl.getAttribute('data-event-name')
+    var eventProps = getEventProps(targetEl.attributes)
+    if (targetEl.href) { eventProps['url'] = targetEl.href }
+
+    plausible(eventName, { props: eventProps })
+  }
+
+  function getEventProps(attributes) {
+    var eventProps = {}
+    for (var i = 0; i < attributes.length; i++) {
+        var propName = attributes[i].name
+        if (propName.substring(0, 11) === 'data-event-' && propName !== 'data-event-name') {
+            var formattedPropName = propName.replace('data-event-', '')
+            eventProps[formattedPropName] = attributes[i].value
+        }
+    }
+    return eventProps
+  }
+
+  document.addEventListener('submit', handleTaggedFormSubmit)
+  document.addEventListener('click', handleTaggedLinkClick)
+  document.addEventListener('auxclick', handleTaggedLinkClick)
+  {{/if}}
+
   var queue = (window.plausible && window.plausible.q) || []
   window.plausible = trigger
   for (var i = 0; i < queue.length; i++) {

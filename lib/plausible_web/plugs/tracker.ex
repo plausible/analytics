@@ -10,7 +10,8 @@ defmodule PlausibleWeb.Tracker do
     "local",
     "manual",
     "file-downloads",
-    "dimensions"
+    "dimensions",
+    "tagged-events"
   ]
 
   # Generates Power Set of all variants

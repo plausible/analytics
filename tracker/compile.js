@@ -16,7 +16,7 @@ function compilefile(input, output, templateVars = {}) {
   fs.writeFileSync(output, result.code)
 }
 
-const base_variants = ["hash", "outbound-links", "exclusions", "compat", "local", "manual", "file-downloads", "dimensions"]
+const base_variants = ["hash", "outbound-links", "exclusions", "compat", "local", "manual", "file-downloads", "dimensions", "tagged-events"]
 const variants = [...g.clone.powerSet(base_variants)].filter(a => a.length > 0).map(a => a.sort());
 
 compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.js'))
