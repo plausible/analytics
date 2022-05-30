@@ -124,7 +124,7 @@ defmodule Plausible.TestUtils do
         Map.put(sessions, {event.domain, event.user_id}, session_id)
       end)
 
-    Enum.map(events, fn event ->
+    Enum.each(events, fn event ->
       event = Map.put(event, :session_id, sessions[{event.domain, event.user_id}])
       Plausible.Event.WriteBuffer.insert(event)
     end)
