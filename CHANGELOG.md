@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Added `tagged-events` script extension with support for form submits and link clicks
 - The `exclusions` script extension now also takes a `data-include` attribute tag
 - A `file-downloads` script extension for automatically tracking file downloads as custom events
 - Integration with [Matomo's referrer spam list](https://github.com/matomo-org/referrer-spam-list/blob/master/spammers.txt) to block known spammers
