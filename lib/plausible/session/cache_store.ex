@@ -2,18 +2,17 @@ defmodule Plausible.Session.CacheStore do
   require Logger
   alias Plausible.Session.WriteBuffer
 
-  def on_event(event, prev_user_id) do
-    found_session =
-      find_session(event.domain, event.user_id) || find_session(event.domain, prev_user_id)
+  def on_event(event, prev_user_id, buffer \\ WriteBuffer) do
+    found_session = find_session(event, event.user_id) || find_session(event, prev_user_id)
 
     session =
       if found_session do
         updated_session = update_session(found_session, event)
-        WriteBuffer.insert([%{updated_session | sign: 1}, %{found_session | sign: -1}])
+        buffer.insert([%{updated_session | sign: 1}, %{found_session | sign: -1}])
         persist_session(updated_session)
       else
         new_session = new_session_from_event(event)
-        WriteBuffer.insert([new_session])
+        buffer.insert([new_session])
         persist_session(new_session)
       end
 
@@ -22,10 +21,15 @@ defmodule Plausible.Session.CacheStore do
 
   defp find_session(_domain, nil), do: nil
 
-  defp find_session(domain, user_id) do
-    case Cachex.get(:sessions, {domain, user_id}) do
-      {:ok, val} ->
-        val
+  defp find_session(event, user_id) do
+    case Cachex.get(:sessions, {event.domain, user_id}) do
+      {:ok, nil} ->
+        nil
+
+      {:ok, session} ->
+        if Timex.diff(event.timestamp, session.timestamp, :minutes) <= 30 do
+          session
+        end
 
       {:error, e} ->
         Sentry.capture_message("Cachex error", extra: %{error: e})
@@ -118,7 +122,9 @@ defmodule Plausible.Session.CacheStore do
       browser: event.browser,
       browser_version: event.browser_version,
       timestamp: event.timestamp,
-      start: event.timestamp
+      start: event.timestamp,
+      "entry_meta.key": Map.get(event, :"meta.key"),
+      "entry_meta.value": Map.get(event, :"meta.value")
     }
   end
 end
