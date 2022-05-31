@@ -349,14 +349,12 @@ export default class VisitorGraph extends React.Component {
     const topStatLabels = topStatData && topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
     const prevTopStatLabels = prevState.topStatData && prevState.topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
     if (topStatLabels && `${topStatLabels}` !== `${prevTopStatLabels}`) {
-      if (!topStatLabels.includes(savedMetric) && savedMetric !== "") {
-        if (this.props.query.filters.goal && metric !== 'conversions') {
-          this.setState({ metric: 'conversions' })
-        } else {
-          this.setState({ metric: topStatLabels[0] })
-        }
-      } else {
+      if (this.props.query.filters.goal && metric !== 'conversions') {
+        this.setState({ metric: 'conversions' })
+      } else if (topStatLabels.includes(savedMetric) && savedMetric !== "") {
         this.setState({ metric: savedMetric })
+      } else {
+        this.setState({ metric: topStatLabels[0] })
       }
     }
   }
