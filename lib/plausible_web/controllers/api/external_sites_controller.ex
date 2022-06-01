@@ -28,6 +28,16 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  def get_site(conn, %{"site_id" => site_id}) do
+    site = Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin])
+
+    if site do
+      json(conn, site)
+    else
+      H.not_found(conn, "Site could not be found")
+    end
+  end
+
   def delete_site(conn, %{"site_id" => site_id}) do
     site = Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner])
 
