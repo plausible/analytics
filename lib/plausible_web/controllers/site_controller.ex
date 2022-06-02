@@ -654,7 +654,6 @@ defmodule PlausibleWeb.SiteController do
 
   def import_from_google_view_id_form(conn, %{"access_token" => access_token}) do
     site = conn.assigns[:site]
-
     view_ids = Plausible.Google.Api.get_analytics_view_ids(access_token)
 
     conn
@@ -674,6 +673,20 @@ defmodule PlausibleWeb.SiteController do
     start_date = Plausible.Google.Api.get_analytics_start_date(view_id, access_token)
 
     case start_date do
+      {:ok, nil} ->
+        site = conn.assigns[:site]
+        view_ids = Plausible.Google.Api.get_analytics_view_ids(access_token)
+
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("import_from_google_view_id_form.html",
+          access_token: access_token,
+          site: site,
+          view_ids: view_ids,
+          selected_view_id_error: "No data found. Nothing to import",
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
       {:ok, date} ->
         if Timex.before?(date, @google_analytics_new_user_metric_date) do
           redirect(conn,
