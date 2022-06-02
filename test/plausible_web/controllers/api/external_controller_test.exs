@@ -141,6 +141,21 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.pathname == "/"
     end
 
+    test "trailing whitespace is removed", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://www.example.com/path ",
+        domain: "external-controller-test-trailing-whitespace.com"
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-trailing-whitespace.com")
+
+      assert pageview.pathname == "/path"
+    end
+
     test "bots and crawlers are ignored", %{conn: conn} do
       params = %{
         name: "pageview",
