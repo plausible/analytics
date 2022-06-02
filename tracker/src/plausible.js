@@ -105,141 +105,6 @@
     }
   }
 
-  {{#if outbound_links}}
-  function handleOutbound(event) {
-    var link = event.target;
-    var middle = event.type === 'auxclick' && event.which === 2;
-    var click = event.type === 'click';
-      while(link && (typeof link.tagName === 'undefined' || link.tagName.toLowerCase() !== 'a' || !link.href)) {
-        link = link.parentNode
-      }
-
-      if (link && link.href && link.host && link.host !== location.host) {
-        if (middle || click) {
-          plausible('Outbound Link: Click', {props: {url: link.href}})
-        }
-
-        // Delay navigation so that Plausible is notified of the click
-        if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
-          if (!(event.ctrlKey || event.metaKey || event.shiftKey) && click) {
-            setTimeout(function() {
-              location.href = link.href;
-            }, 150);
-            event.preventDefault();
-          }
-        }
-      }
-  }
-
-  function registerOutboundLinkEvents() {
-    document.addEventListener('click', handleOutbound)
-    document.addEventListener('auxclick', handleOutbound)
-  }
-  {{/if}}
-
-  {{#if outbound_links}}
-  registerOutboundLinkEvents()
-  {{/if}}
-
-  {{#if file_downloads}}
-  var defaultFileTypes = ['pdf', 'xlsx', 'docx', 'txt', 'rtf', 'csv', 'exe', 'key', 'pps', 'ppt', 'pptx', '7z', 'pkg', 'rar', 'gz', 'zip', 'avi', 'mov', 'mp4', 'mpeg', 'wmv', 'midi', 'mp3', 'wav', 'wma']
-  var fileTypesAttr = scriptEl.getAttribute('file-types')
-  var addFileTypesAttr = scriptEl.getAttribute('add-file-types')
-  var fileTypesToTrack = (fileTypesAttr && fileTypesAttr.split(",")) || (addFileTypesAttr && addFileTypesAttr.split(",").concat(defaultFileTypes)) || defaultFileTypes;
-
-  function handleDownload(event) {
-    
-    var link = event.target;
-    var middle = event.type === 'auxclick' && event.which === 2;
-    var click = event.type === 'click';
-
-    while(link && (typeof link.tagName === 'undefined' || link.tagName.toLowerCase() !== 'a' || !link.href)) {
-      link = link.parentNode
-    }
-
-    var linkTarget = link && link.href && link.href.split('?')[0]
-    if (linkTarget && isDownloadToTrack(linkTarget)) {
-
-      if (middle || click) {
-        plausible('File Download', {props: {url: linkTarget}})
-      }
-
-      // Delay navigation so that Plausible is notified of the click
-      if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
-        if (!(event.ctrlKey || event.metaKey || event.shiftKey) && click) {
-          setTimeout(function() {
-            location.href = link.href;
-          }, 150);
-          event.preventDefault();
-        }
-      }
-    }
-  }
-
-  function isDownloadToTrack(url) {
-    var fileType = url.split('.').pop();
-    return fileTypesToTrack.some(function(fileTypeToTrack) {
-      return fileTypeToTrack === fileType
-    })
-  }
-
-  document.addEventListener('click', handleDownload);
-  document.addEventListener('auxclick', handleDownload);
-  {{/if}}
-
-  {{#if tagged_events}}
-  function handleTaggedFormSubmit(event) {
-    if (event.target.getAttribute('data-event-name')) {
-      event.preventDefault()
-      sendTaggedEvent(event.target)
-      setTimeout(function() { event.target.submit() }, 150)
-    }
-  }
-
-  function handleTaggedLinkClick(event) {  
-    var link = event.target
-    var middle = event.type === 'auxclick' && event.which === 2
-    var click = event.type === 'click'
-    while (link && (typeof link.tagName === 'undefined' || link.tagName.toLowerCase() !== 'a' || !link.href)) {
-      link = link.parentNode
-    }
-    if (link && link.href && link.getAttribute('data-event-name')) {
-      (middle || click) && sendTaggedEvent(link) 
-
-      if (!link.target || link.target.match(/^_(self|parent|top)$/i)) {
-        if (!(event.ctrlKey || event.metaKey || event.shiftKey) && click) {
-          setTimeout(function() { location.href = link.href }, 150)
-          event.preventDefault()
-        }
-      }
-    }
-  }
-
-  function sendTaggedEvent(targetEl) {
-    var eventName = targetEl.getAttribute('data-event-name')
-    var eventProps = getEventProps(targetEl.attributes)
-    if (targetEl.href) { eventProps['url'] = targetEl.href }
-
-    plausible(eventName, { props: eventProps })
-  }
-
-  function getEventProps(attributes) {
-    var eventProps = {}
-    for (var i = 0; i < attributes.length; i++) {
-        var propName = attributes[i].name
-        if (propName.substring(0, 11) === 'data-event-' && propName !== 'data-event-name') {
-            var formattedPropName = propName.replace('data-event-', '')
-            eventProps[formattedPropName] = attributes[i].value
-        }
-    }
-    return eventProps
-  }
-
-  document.addEventListener('submit', handleTaggedFormSubmit)
-  document.addEventListener('click', handleTaggedLinkClick)
-  document.addEventListener('auxclick', handleTaggedLinkClick)
-  {{/if}}
-
   var queue = (window.plausible && window.plausible.q) || []
   window.plausible = trigger
   for (var i = 0; i < queue.length; i++) {
@@ -284,4 +149,175 @@
       page()
     }
   {{/unless}}
+
+  // BELOW ARE THE SCRIPT EXTENSIONS FOR CUSTOM EVENT TRACKING
+
+  {{#if outbound_links}}
+  function handleOutbound(event) {
+    var middle = event.type === 'auxclick' && event.which === 2
+    var click = event.type === 'click'
+    
+    var link = event.target
+    while(link && (typeof link.tagName === 'undefined' || link.tagName.toLowerCase() !== 'a' || !link.href)) {
+      link = link.parentNode
+    }
+
+    var isOutbound = link && link.href && link.host && link.host !== location.host
+    if (!isOutbound || !(middle || click)) { return }
+
+    var defaultAlreadyPrevented = event.defaultPrevented
+    var targetsThisWindow = !link.target || link.target.match(/^_(self|parent|top)$/i)
+    var opensInThisWindow = targetsThisWindow && !(event.ctrlKey || event.metaKey || event.shiftKey) && click
+    var linkOpened = false
+
+    function openLink() {
+      if (opensInThisWindow && !defaultAlreadyPrevented && !linkOpened) {
+        linkOpened = true
+        window.location = link.href
+      }
+    }
+
+    // Delay navigation so that Plausible is notified of the click
+    if (opensInThisWindow && !defaultAlreadyPrevented) {
+      event.preventDefault()
+      setTimeout(openLink, 1000)
+    }
+
+    plausible('Outbound Link: Click', {props: {url: link.href}, callback: openLink})
+  }
+
+  document.addEventListener('click', handleOutbound)
+  document.addEventListener('auxclick', handleOutbound)
+  {{/if}}
+
+  {{#if file_downloads}}
+  var defaultFileTypes = ['pdf', 'xlsx', 'docx', 'txt', 'rtf', 'csv', 'exe', 'key', 'pps', 'ppt', 'pptx', '7z', 'pkg', 'rar', 'gz', 'zip', 'avi', 'mov', 'mp4', 'mpeg', 'wmv', 'midi', 'mp3', 'wav', 'wma']
+  var fileTypesAttr = scriptEl.getAttribute('file-types')
+  var addFileTypesAttr = scriptEl.getAttribute('add-file-types')
+  var fileTypesToTrack = (fileTypesAttr && fileTypesAttr.split(",")) || (addFileTypesAttr && addFileTypesAttr.split(",").concat(defaultFileTypes)) || defaultFileTypes;
+
+  function handleDownload(event) {
+    var middle = event.type === 'auxclick' && event.which === 2
+    var click = event.type === 'click'
+    
+    var link = event.target
+    while(link && (typeof link.tagName === 'undefined' || link.tagName.toLowerCase() !== 'a' || !link.href)) {
+      link = link.parentNode
+    }
+
+    var linkHref = link && link.href && link.href.split('?')[0]
+    var shouldTrackDownload = linkHref && isDownloadToTrack(linkHref)
+    if (!shouldTrackDownload || !(middle || click)) { return }
+    
+    var defaultAlreadyPrevented = event.defaultPrevented
+    var targetsThisWindow = !link.target || link.target.match(/^_(self|parent|top)$/i)
+    var opensInThisWindow = targetsThisWindow && !(event.ctrlKey || event.metaKey || event.shiftKey) && click
+    var linkOpened = false
+
+    function openLink() {
+      if (opensInThisWindow && !defaultAlreadyPrevented && !linkOpened) {
+        linkOpened = true
+        window.location = link.href
+      }
+    }
+
+    // Delay navigation so that Plausible is notified of the download
+    if (opensInThisWindow && !defaultAlreadyPrevented) {
+      event.preventDefault()
+      setTimeout(openLink, 1000)
+    }
+
+    plausible('File Download', {props: {url: linkHref}, callback: openLink})
+  }
+
+  function isDownloadToTrack(url) {
+    var fileType = url.split('.').pop()
+    return fileTypesToTrack.some(function(fileTypeToTrack) {
+      return fileTypeToTrack === fileType
+    })
+  }
+
+  document.addEventListener('click', handleDownload)
+  document.addEventListener('auxclick', handleDownload)
+  {{/if}}
+
+  {{#if tagged_events}}
+  function handleTaggedFormSubmit(event) {
+    if (!event.target.getAttribute('data-event-name')) { return }
+
+    var defaultAlreadyPrevented = event.defaultPrevented
+    var formSubmitted = false
+
+    function submitForm() {
+      if (!defaultAlreadyPrevented && !formSubmitted) {
+        formSubmitted = true
+        event.target.submit()
+      }
+    }
+
+    if (!defaultAlreadyPrevented) {
+      event.preventDefault()
+      setTimeout(submitForm, 1000)
+    }
+
+    sendTaggedEvent(event.target, submitForm)
+  }
+
+  function handleTaggedLinkClick(event) {  
+    var middle = event.type === 'auxclick' && event.which === 2
+    var click = event.type === 'click'
+
+    var link = event.target
+    while (link && (typeof link.tagName === 'undefined' || link.tagName.toLowerCase() !== 'a' || !link.href)) {
+      link = link.parentNode
+    }
+
+    var isTaggedLink = link && !!link.getAttribute('data-event-name')
+    if (!isTaggedLink || !(middle || click)) { return }
+
+    var defaultAlreadyPrevented = event.defaultPrevented
+    var targetsThisWindow = !link.target || link.target.match(/^_(self|parent|top)$/i)
+    var opensInThisWindow = targetsThisWindow && !(event.ctrlKey || event.metaKey || event.shiftKey) && click
+    var linkOpened = false
+
+    function openLink() {
+      if (opensInThisWindow && !defaultAlreadyPrevented && !linkOpened) {
+        linkOpened = true
+        window.location = link.href
+      }
+    }
+
+    // Delay navigation so that Plausible is notified of the click
+    if (opensInThisWindow && !defaultAlreadyPrevented) {
+      event.preventDefault()
+      setTimeout(openLink, 1000)
+    }
+
+    sendTaggedEvent(link, openLink)
+  }
+
+  function sendTaggedEvent(targetEl, callback) {
+    var eventName = targetEl.getAttribute('data-event-name')
+    var eventProps = getEventProps(targetEl.attributes)
+    if (targetEl.href) { eventProps['url'] = targetEl.href }
+
+    plausible(eventName, { props: eventProps, callback: callback })
+  }
+
+  function getEventProps(attributes) {
+    var eventProps = {}
+    for (var i = 0; i < attributes.length; i++) {
+        var propName = attributes[i].name
+        if (propName.substring(0, 11) === 'data-event-' && propName !== 'data-event-name') {
+            var formattedPropName = propName.replace('data-event-', '')
+            eventProps[formattedPropName] = attributes[i].value
+        }
+    }
+    return eventProps
+  }
+
+  document.addEventListener('submit', handleTaggedFormSubmit)
+  document.addEventListener('click', handleTaggedLinkClick)
+  document.addEventListener('auxclick', handleTaggedLinkClick)
+  {{/if}}
 })();
