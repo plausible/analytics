@@ -54,7 +54,16 @@ export function formatDayShort(date) {
 }
 
 export function parseUTCDate(dateString) {
-  var date = new Date(dateString);
+  var date;
+  // Safari Compatibility
+  if (typeof dateString === "string" && dateString.includes(' ')) {
+    const parts = dateString.split(/[^0-9]/);
+    parts[1] -= 1;
+    date = new Date(...parts);
+  } else {
+    date = new Date(dateString);
+  }
+
   return new Date(date.getTime() + date.getTimezoneOffset() * 60000);
 }
 
