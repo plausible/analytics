@@ -1,18 +1,17 @@
-defmodule Plausible.Session.StoreTest do
+defmodule Plausible.Session.CacheStoreTest do
   use Plausible.DataCase
   import Double
-  alias Plausible.Session.{Store, WriteBuffer}
+  alias Plausible.Session.{CacheStore, WriteBuffer}
 
   setup do
     buffer =
       WriteBuffer
       |> stub(:insert, fn _sessions -> nil end)
 
-    {:ok, store} = GenServer.start_link(Store, buffer: buffer)
-    [store: store, buffer: buffer]
+    [buffer: buffer]
   end
 
-  test "creates a session from an event", %{store: store} do
+  test "creates a session from an event", %{buffer: buffer} do
     event =
       build(:event,
         name: "pageview",
@@ -33,7 +32,7 @@ defmodule Plausible.Session.StoreTest do
         "meta.value": ["true", "false"]
       )
 
-    Store.on_event(event, nil, store)
+    CacheStore.on_event(event, nil, buffer)
 
     assert_receive({WriteBuffer, :insert, [sessions]})
     assert [session] = sessions
@@ -65,7 +64,7 @@ defmodule Plausible.Session.StoreTest do
     # assert Map.get(session, :"entry.meta.value") == ["true", "false"]
   end
 
-  test "updates a session", %{store: store} do
+  test "updates a session", %{buffer: buffer} do
     timestamp = Timex.now()
     event1 = build(:event, name: "pageview", timestamp: timestamp |> Timex.shift(seconds: -10))
 
@@ -86,8 +85,8 @@ defmodule Plausible.Session.StoreTest do
         browser_version: "10"
       )
 
-    Store.on_event(event1, nil, store)
-    Store.on_event(event2, nil, store)
+    CacheStore.on_event(event1, nil, buffer)
+    CacheStore.on_event(event2, nil, buffer)
     assert_receive({WriteBuffer, :insert, [[session, _negative_record]]})
     assert session.is_bounce == false
     assert session.duration == 10
@@ -104,7 +103,7 @@ defmodule Plausible.Session.StoreTest do
     assert session.screen_size == "Desktop"
   end
 
-  test "calculates duration correctly for out-of-order events", %{store: store} do
+  test "calculates duration correctly for out-of-order events", %{buffer: buffer} do
     timestamp = Timex.now()
     event1 = build(:event, name: "pageview", timestamp: timestamp |> Timex.shift(seconds: 10))
 
@@ -116,8 +115,8 @@ defmodule Plausible.Session.StoreTest do
         timestamp: timestamp
       )
 
-    Store.on_event(event1, nil, store)
-    Store.on_event(event2, nil, store)
+    CacheStore.on_event(event1, nil, buffer)
+    CacheStore.on_event(event2, nil, buffer)
 
     assert_receive({WriteBuffer, :insert, [[session, _negative_record]]})
     assert session.duration == 10

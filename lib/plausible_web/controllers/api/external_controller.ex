@@ -178,14 +178,8 @@ defmodule PlausibleWeb.Api.ExternalController do
           event = Ecto.Changeset.apply_changes(changeset)
 
           session_id =
-            if FunWithFlags.enabled?(:cache_store, for: "domain:" <> domain) do
-              Tracer.with_span "cache_store_event" do
-                Plausible.Session.CacheStore.on_event(event, previous_user_id)
-              end
-            else
-              Tracer.with_span "store_event" do
-                Plausible.Session.Store.on_event(event, previous_user_id)
-              end
+            Tracer.with_span "cache_store_event" do
+              Plausible.Session.CacheStore.on_event(event, previous_user_id)
             end
 
           event

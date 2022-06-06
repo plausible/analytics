@@ -645,10 +645,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           pathname: "/page2",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
-        )
-      ])
-
-      populate_stats(site, [
+        ),
         build(:pageview,
           pathname: "/page2",
           user_id: @user_id,
