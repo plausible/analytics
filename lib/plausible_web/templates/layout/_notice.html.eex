@@ -18,7 +18,7 @@
           </h3>
           <div class="mt-2 text-sm text-yellow-700">
             <p>
-            In order to keep your stats running, we require you to upgrade your account. If you do not upgrade your account <%= grace_period_end(@conn.assigns[:current_user]) %>, we will lock your sites and they won't be accessible. <%= link("Upgrade now →", to: "/settings", class: "text-sm font-medium text-yellow-800") %>
+            In order to keep your stats running, we require you to upgrade your account. If you do not upgrade your account <%= grace_period_end(@conn.assigns[:current_user]) %>, we will lock your stats and they won't be accessible. <%= link("Upgrade now →", to: "/settings", class: "text-sm font-medium text-yellow-800") %>
             </p>
           </div>
         </div>
