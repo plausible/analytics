@@ -603,7 +603,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   defp get_referrer_source(query, ref) do
-    source = query["utm_source"] || query["source"] || query["ref"]
+    source = query["source"] || query["utm_source"]
     source || PlausibleWeb.RefInspector.parse(ref)
   end
 
