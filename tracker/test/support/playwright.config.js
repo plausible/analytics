@@ -11,7 +11,8 @@ const config = {
   globalTeardown: require.resolve('./global-teardown'),
   timeout: 60000,
   use: {
-    viewport: null
+    viewport: null,
+    baseURL: 'http://localhost:3000'
   },
   projects: [
     // -- BrowserStack Projects --

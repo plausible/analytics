@@ -69,3 +69,21 @@ exports.test = base.test.extend({
     }
   },
 });
+
+exports.mockRequest = async function(page, path) {
+  return new Promise(async (resolve, reject) => {
+    const timer = setTimeout(() => { reject(new Error(`No request to ${path} after 5000 ms`)) }, 5000);
+
+    await page.route(path, (route, request) => {
+
+      clearTimeout(timer);
+      resolve(request)
+
+      return route.fulfill({
+        status: 202,
+        contentType: 'text/plain',
+        body: 'ok'
+      });
+    });
+  })
+}
