@@ -1,0 +1,26 @@
+{
+    "name": "Plausible Analytics",
+    "short_name": "Plausible",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "any",
+    "status_bar": "black",
+    "icons": [
+        {
+            "src": "\/images\/icon\/plausible_logo_sm.png",
+            "type": "image\/png",
+            "sizes": "150x200",
+            "purpose": "any"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Create",
+            "description": "Create",
+            "url": "\/create",
+            "icons": [
+                []
+            ]
+        }
+    ]
+}
