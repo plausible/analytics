@@ -1,7 +1,7 @@
 import { METRIC_LABELS, METRIC_FORMATTER } from './visitor-graph'
 import {parseUTCDate, formatMonthYYYY, formatDay} from '../../util/date'
 
-export const dateFormatter = (interval, longForm) => {
+export const dateFormatter = (interval, longForm, ampmFormat = false) => {
   return function(isoDate, _index, _ticks) {
     let date = parseUTCDate(isoDate)
 
@@ -9,7 +9,7 @@ export const dateFormatter = (interval, longForm) => {
       return formatMonthYYYY(date);
     } else if (interval === 'date') {
       return formatDay(date);
-    } else if (interval === 'hour') {
+    } else if (interval === 'hour' && ampmFormat) {
       const parts = isoDate.split(/[^0-9]/);
       date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5])
       var hours = date.getHours(); // Not sure why getUTCHours doesn't work here
@@ -17,6 +17,15 @@ export const dateFormatter = (interval, longForm) => {
       hours = hours % 12;
       hours = hours ? hours : 12; // the hour '0' should be '12'
       return hours + ampm;
+    } else if (interval === 'hour' && !ampmFormat) {
+      const parts = isoDate.split(/[^0-9]/);
+      date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5])
+      var hours = date.getHours(); // Not sure why getUTCHours doesn't work here
+      var suffix = "h";
+      if (hours >= 12) {
+        hours = hours % 12 + 12;
+      }
+      return hours + suffix;
     } else if (interval === 'minute') {
       if (longForm) {
         const minutesAgo = Math.abs(isoDate)
