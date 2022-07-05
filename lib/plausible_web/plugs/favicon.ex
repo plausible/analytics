@@ -14,21 +14,24 @@ defmodule PlausibleWeb.Favicon do
     [favicon_domains: domains]
   end
 
-  def call(conn, favicon_domains: favicon_domains) do
+  def call(conn, _opts) do
     case conn.path_info do
-      ["favicon", "sources", source] ->
-        clean_source = URI.decode_www_form(source)
-        domain = Map.get(favicon_domains, clean_source, clean_source)
-        res = HTTPoison.get!("https://icons.duckduckgo.com/ip3/#{domain}.ico")
-
-        conn =
-          Enum.filter(res.headers, fn {key, _val} -> key != "Transfer-Encoding" end)
-          |> Enum.reduce(conn, fn {key, val}, conn ->
-            put_resp_header(conn, key, val)
-          end)
-
-        send_resp(conn, 200, res.body)
+      ["favicon", "sources", _source] ->
+        send_resp(conn, 404, "")
         |> halt
+
+      # clean_source = URI.decode_www_form(source)
+      # domain = Map.get(favicon_domains, clean_source, clean_source)
+      # res = HTTPoison.get!("https://icons.duckduckgo.com/ip3/#{domain}.ico")
+
+      # conn =
+      #   Enum.filter(res.headers, fn {key, _val} -> key != "Transfer-Encoding" end)
+      #   |> Enum.reduce(conn, fn {key, val}, conn ->
+      #     put_resp_header(conn, key, val)
+      #   end)
+
+      # send_resp(conn, 200, res.body)
+      # |> halt
 
       _ ->
         conn
