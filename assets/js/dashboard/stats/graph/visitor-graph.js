@@ -62,6 +62,7 @@ class LineGraph extends React.Component {
     const dataSet = buildDataSet(graphData.plot, graphData.present_index, this.ctx, METRIC_LABELS[metric])
     // const prev_dataSet = graphData.prev_plot && buildDataSet(graphData.prev_plot, false, this.ctx, METRIC_LABELS[metric], true)
     // const combinedDataSets = comparison.enabled && prev_dataSet ? [...dataSet, ...prev_dataSet] : dataSet;
+    const timeformat = this.props.site.timeformat
 
     return new Chart(this.ctx, {
       type: 'line',
@@ -102,7 +103,7 @@ class LineGraph extends React.Component {
             grid: { display: false },
             ticks: {
               maxTicksLimit: 8,
-              callback: function(val, _index, _ticks) { return dateFormatter(graphData.interval)(this.getLabelForValue(val)) },
+              callback: function(val, _index, _ticks) { return dateFormatter(graphData.interval, false, timeformat)(this.getLabelForValue(val)) },
               color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             }
           }
