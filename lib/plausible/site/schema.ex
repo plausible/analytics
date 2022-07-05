@@ -19,6 +19,7 @@ defmodule Plausible.Site do
   schema "sites" do
     field :domain, :string
     field :timezone, :string, default: "Etc/UTC"
+    field :timeformat, Ecto.Enum, values: ~w(am/pm 24h)a, default: :'am/pm'
     field :public, :boolean
     field :locked, :boolean
     field :stats_start_date, :date
@@ -39,8 +40,8 @@ defmodule Plausible.Site do
 
   def changeset(site, attrs \\ %{}) do
     site
-    |> cast(attrs, [:domain, :timezone])
-    |> validate_required([:domain, :timezone])
+    |> cast(attrs, [:domain, :timezone, :timeformat])
+    |> validate_required([:domain, :timezone, :timeformat])
     |> validate_format(:domain, ~r/^[a-zA-Z0-9\-\.\/\:]*$/,
       message: "only letters, numbers, slashes and period allowed"
     )
