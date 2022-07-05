@@ -314,6 +314,20 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert updated.timezone == "Europe/London"
       assert redirected_to(conn, 302) == "/#{site.domain}/settings/general"
     end
+
+    test "updates the timeformat", %{conn: conn, site: site} do
+      conn =
+        put(conn, "/#{site.domain}/settings", %{
+          "site" => %{
+            "timeformat" => "24h"
+          }
+        })
+
+      updated = Repo.get(Plausible.Site, site.id)
+      assert updated.timeformat == :'24h'
+      assert site.timeformat == :'am/pm'
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/general"
+    end
   end
 
   describe "POST /sites/:website/make-public" do
