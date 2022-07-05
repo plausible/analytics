@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 - Add filter for custom property
 - Add ability to import historical data from GA: plausible/analytics#1753
 - API route `GET /api/v1/sites/:site_id`
+- The time format (am/pm or 24h) for graph timelines can now be set via a site's general settings
 
 ### Fixed
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
