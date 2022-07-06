@@ -36,7 +36,8 @@ defmodule Plausible.MixProject do
       mod: {Plausible.Application, []},
       extra_applications: [
         :logger,
-        :runtime_tools
+        :runtime_tools,
+        :tls_certificate_check
       ]
     ]
   end
