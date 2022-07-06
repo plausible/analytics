@@ -101,6 +101,12 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   require OpenTelemetry.Tracer, as: Tracer
 
+  defp blocked_via_flag?(domain) do
+    blocked? = FunWithFlags.enabled?(:block_event_ingest, for: domain)
+    Tracer.set_attribute("blocked_by_flag", blocked?)
+    blocked?
+  end
+
   defp create_event(conn, params) do
     params = %{
       "name" => params["n"] || params["name"],
@@ -119,11 +125,8 @@ defmodule PlausibleWeb.Api.ExternalController do
 
     blacklist_domain = params["domain"] in Application.get_env(:plausible, :domain_blacklist)
 
-    blocked_via_flag? = fn ->
-      FunWithFlags.enabled?(:block_event_ingest, for: params["domain"])
-    end
-
-    if blacklist_domain || is_bot?(ua) || is_spammer?(params["referrer"]) || blocked_via_flag?.() do
+    if blacklist_domain || is_bot?(ua) || is_spammer?(params["referrer"]) ||
+         blocked_via_flag?(params["domain"]) do
       :ok
     else
       uri = params["url"] && URI.parse(params["url"])
