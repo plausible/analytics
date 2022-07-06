@@ -1,3 +1,5 @@
+.PHONY: install server clickhouse clickhouse-arm clickhouse-stop postgres postgres-stop dummy_event
+
 install:
 	mix deps.get
 	mix ecto.create
