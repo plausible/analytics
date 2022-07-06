@@ -59,6 +59,7 @@
   "metrics": {:hex, :metrics, "1.0.1", "25f094dea2cda98213cecc3aeff09e940299d950904393b2a29d191c346a8486", [:rebar3], [], "hexpm", "69b09adddc4f74a40716ae54d140f93beb0fb8978d8636eaded0c31b6f099f16"},
   "mime": {:hex, :mime, "1.6.0", "dabde576a497cef4bbdd60aceee8160e02a6c89250d6c0b29e56c0dfb00db3d2", [:mix], [], "hexpm", "31a1a8613f8321143dde1dafc36006a17d28d02bdfecb9e95a880fa7aabd19a7"},
   "mimerl": {:hex, :mimerl, "1.2.0", "67e2d3f571088d5cfd3e550c383094b47159f3eee8ffa08e64106cdf5e981be3", [:rebar3], [], "hexpm", "f278585650aa581986264638ebf698f8bb19df297f66ad91b18910dfc6e19323"},
+  "mimic": {:hex, :mimic, "1.7.2", "27007e4e0c746ddb6d56a386c40585088b35621ae2d7167160e8c3283e8cd585", [:mix], [], "hexpm", "e4d40550523841055aa469f5125d124ab89ce8b2d3686cab908b98dff5e6111b"},
   "mmdb2_decoder": {:hex, :mmdb2_decoder, "3.0.0", "54828676a36e75e9a25bc9a0bb0598d4c7fcc767bf0b40674850b22e05b7b6cc", [:mix], [], "hexpm", "359dc9242915538d1dceb9f6d96c72201dca76ce62e49d22e2ed1e86f20bea8e"},
   "nanoid": {:hex, :nanoid, "2.0.5", "1d2948d8967ef2d948a58c3fef02385040bd9823fc6394bd604b8d98e5516b22", [:mix], [], "hexpm", "956e8876321104da72aa48770539ff26b36b744cd26753ec8e7a8a37e53d5f58"},
   "oauther": {:hex, :oauther, "1.3.0", "82b399607f0ca9d01c640438b34d74ebd9e4acd716508f868e864537ecdb1f76", [:mix], [], "hexpm", "78eb888ea875c72ca27b0864a6f550bc6ee84f2eeca37b093d3d833fbcaec04e"},

@@ -105,7 +105,8 @@ defmodule Plausible.MixProject do
       {:opentelemetry_phoenix, "~> 1.0"},
       {:telemetry, "~> 1.0", override: true},
       {:opentelemetry_ecto, "~> 1.0.0"},
-      {:observer_cli, "~> 1.7"}
+      {:observer_cli, "~> 1.7"},
+      {:mimic, "~> 1.7", only: :test}
     ]
   end
 
