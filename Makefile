@@ -2,6 +2,7 @@ install:
 	mix deps.get
 	mix ecto.create
 	mix ecto.migrate
+	mix download_country_database
 	npm install --prefix assets
 
 server:
