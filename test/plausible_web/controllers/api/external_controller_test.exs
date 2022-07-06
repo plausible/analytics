@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Api.ExternalControllerTest do
   use PlausibleWeb.ConnCase
+  use Mimic
   use Plausible.ClickhouseRepo
 
   defp get_event(domain) do
@@ -263,6 +264,30 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert !get_event("ignore-spammers-test.com")
+    end
+
+    test "feature flag - blocks traffic from a domain when block_traffic is enabled", %{
+      conn: conn
+    } do
+      FunWithFlags
+      |> stub(:enabled?, fn
+        :block_event_ingest, [for: "feature-flag-test.com"] -> true
+        _, _ -> false
+      end)
+
+      params = %{
+        domain: "feature-flag-test.com",
+        name: "pageview",
+        url: "https://feature-flag-test.com"
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      assert response(conn, 202) == "ok"
+      refute get_event("feature-flag-test.com")
     end
 
     test "ignores when referrer is internal", %{conn: conn} do

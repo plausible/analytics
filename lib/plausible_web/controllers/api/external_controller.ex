@@ -118,9 +118,12 @@ defmodule PlausibleWeb.Api.ExternalController do
       end
 
     blacklist_domain = params["domain"] in Application.get_env(:plausible, :domain_blacklist)
-    referrer_spam = is_spammer?(params["referrer"])
 
-    if is_bot?(ua) || blacklist_domain || referrer_spam do
+    blocked_via_flag? = fn ->
+      FunWithFlags.enabled?(:block_event_ingest, for: params["domain"])
+    end
+
+    if blacklist_domain || is_bot?(ua) || is_spammer?(params["referrer"]) || blocked_via_flag?.() do
       :ok
     else
       uri = params["url"] && URI.parse(params["url"])
