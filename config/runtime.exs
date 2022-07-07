@@ -114,7 +114,7 @@ geolite2_country_db =
   get_var_from_path_or_env(
     config_dir,
     "GEOLITE2_COUNTRY_DB",
-    Application.app_dir(:plausible) <> "/priv/geodb/dbip-city-lite-2022-05.mmdb"
+    Application.app_dir(:plausible, "/priv/geodb/dbip-country.mmdb")
   )
 
 ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", geolite2_country_db)
@@ -227,7 +227,9 @@ config :sentry,
   release: app_version,
   tags: %{app_version: app_version},
   enable_source_code_context: true,
-  root_source_code_path: [File.cwd!()]
+  root_source_code_path: [File.cwd!()],
+  hackney_pool_max_connections: get_int_from_path_or_env(config_dir, "SENTRY_POOL_SIZE", 50),
+  sample_rate: 1.0
 
 config :logger, Sentry.LoggerBackend,
   capture_log_messages: true,
@@ -403,6 +405,10 @@ config :kaffy,
 
 if config_env() != :test do
   config :geolix,
+    pool: [
+      size: get_int_from_path_or_env(config_dir, "GEOLIX_POOL_SIZE", 5),
+      max_overflow: get_int_from_path_or_env(config_dir, "GEOLIX_POOL_MAX_OVERFLOW", 10)
+    ],
     databases: [
       %{
         id: :geolocation,

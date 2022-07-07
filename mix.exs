@@ -36,7 +36,8 @@ defmodule Plausible.MixProject do
       mod: {Plausible.Application, []},
       extra_applications: [
         :logger,
-        :runtime_tools
+        :runtime_tools,
+        :tls_certificate_check
       ]
     ]
   end
@@ -104,7 +105,9 @@ defmodule Plausible.MixProject do
       {:opentelemetry_exporter, "~> 1.0"},
       {:opentelemetry_phoenix, "~> 1.0"},
       {:telemetry, "~> 1.0", override: true},
-      {:opentelemetry_ecto, "~> 1.0.0"}
+      {:opentelemetry_ecto, "~> 1.0.0"},
+      {:observer_cli, "~> 1.7"},
+      {:mimic, "~> 1.7", only: :test}
     ]
   end
 

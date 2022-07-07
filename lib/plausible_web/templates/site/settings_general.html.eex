@@ -47,6 +47,8 @@
   </div>
 <% end %>
 
+<%= if FunWithFlags.enabled?(:google_analytics_imports, for: @conn.assigns[:current_user]) do %>
+
 <div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
   <header class="relative mt-4">
     <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Data Import from Google Analytics</h2>
@@ -111,3 +113,4 @@
           </div>
         <% end %>
 </div>
+<% end %>
