@@ -12,6 +12,10 @@ defmodule Plausible.Sentry.Client do
     with a dummy module for the sake of the contract.
     """
     use Agent
+
+    def start_link(:noop) do
+      Agent.start_link(fn -> nil end, name: __MODULE__)
+    end
   end
 
   def child_spec do
