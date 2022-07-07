@@ -234,8 +234,7 @@ config :sentry,
 
 config :logger, Sentry.LoggerBackend,
   capture_log_messages: true,
-  level: :error,
-  excluded_domains: []
+  level: :error
 
 config :plausible, :paddle,
   vendor_auth_code: paddle_auth_code,
