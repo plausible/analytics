@@ -51,6 +51,7 @@ defmodule Plausible.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:finch, "~> 0.12.0"},
       {:bcrypt_elixir, "~> 2.0"},
       {:combination, "~> 0.0.3"},
       {:cors_plug, "~> 3.0"},

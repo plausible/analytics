@@ -94,6 +94,36 @@ ch_db_url =
   |> get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE", "10000")
   |> Integer.parse()
 
+{default_finch_pool_size, ""} =
+  config_dir
+  |> get_var_from_path_or_env("DEFAULT_FINCH_POOL_SIZE", "10")
+  |> Integer.parse()
+
+{default_finch_pool_count, ""} =
+  config_dir
+  |> get_var_from_path_or_env("DEFAULT_FINCH_POOL_COUNT", "1")
+  |> Integer.parse()
+
+{sentry_finch_pool_size, ""} =
+  config_dir
+  |> get_var_from_path_or_env("SENTRY_FINCH_POOL_SIZE", "10")
+  |> Integer.parse()
+
+{sentry_finch_pool_count, ""} =
+  config_dir
+  |> get_var_from_path_or_env("SENTRY_FINCH_POOL_COUNT", "1")
+  |> Integer.parse()
+
+{sentry_finch_pool_timeout, ""} =
+  config_dir
+  |> get_var_from_path_or_env("SENTRY_FINCH_POOL_TIMEOUT", "5000")
+  |> Integer.parse()
+
+{sentry_finch_receive_timeout, ""} =
+  config_dir
+  |> get_var_from_path_or_env("SENTRY_FINCH_RECEIVE_TIMEOUT", "5000")
+  |> Integer.parse()
+
 ### Mandatory params End
 
 sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
@@ -366,6 +396,18 @@ end
 config :plausible, :hcaptcha,
   sitekey: hcaptcha_sitekey,
   secret: hcaptcha_secret
+
+config :plausible, Plausible.Finch,
+  default_pool_size: default_finch_pool_size,
+  default_pool_count: default_finch_pool_count,
+  sentry_pool_size: sentry_finch_pool_size,
+  sentry_pool_count: sentry_finch_pool_count
+
+config :plausible, Plausible.Sentry.Client,
+  finch_request_opts: [
+    pool_timeout: sentry_finch_pool_timeout,
+    receive_timeout: sentry_finch_receive_timeout
+  ]
 
 config :ref_inspector,
   init: {Plausible.Release, :configure_ref_inspector}
