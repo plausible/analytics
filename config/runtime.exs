@@ -228,7 +228,8 @@ config :sentry,
   tags: %{app_version: app_version},
   enable_source_code_context: true,
   root_source_code_path: [File.cwd!()],
-  hackney_pool_max_connections: get_int_from_path_or_env(config_dir, "SENTRY_POOL_SIZE", 50)
+  hackney_pool_max_connections: get_int_from_path_or_env(config_dir, "SENTRY_POOL_SIZE", 50),
+  sample_rate: 1.0
 
 config :logger, Sentry.LoggerBackend,
   capture_log_messages: true,
