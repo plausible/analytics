@@ -45,20 +45,8 @@ defmodule Plausible.Application do
 
     sentry_dsn = Application.get_env(:sentry, :dsn)
 
-    sentry_domain =
-      if is_binary(sentry_dsn) do
-        sentry_dsn
-        |> URI.new!()
-        |> Map.merge(%{
-          path: nil,
-          query: nil,
-          userinfo: nil
-        })
-        |> to_string()
-      end
-
-    if sentry_domain do
-      Map.put(pool_config, sentry_domain,
+    if is_binary(sentry_dsn) do
+      Map.put(pool_config, sentry_dsn,
         size: config[:sentry_pool_size],
         count: config[:sentry_pool_count]
       )
