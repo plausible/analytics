@@ -228,7 +228,7 @@ config :sentry,
   tags: %{app_version: app_version},
   enable_source_code_context: true,
   root_source_code_path: [File.cwd!()],
-  hackney_pool_max_connections: get_var_from_path_or_env(config_dir, "SENTRY_POOL_SIZE") || 50
+  hackney_pool_max_connections: get_int_from_path_or_env(config_dir, "SENTRY_POOL_SIZE", 50)
 
 config :logger, Sentry.LoggerBackend,
   capture_log_messages: true,
@@ -405,8 +405,8 @@ config :kaffy,
 if config_env() != :test do
   config :geolix,
     pool: [
-      size: get_var_from_path_or_env(config_dir, "GEOLIX_POOL_SIZE") || 5,
-      max_overflow: get_var_from_path_or_env(config_dir, "GEOLIX_POOL_MAX_OVERLFOW") || 10
+      size: get_int_from_path_or_env(config_dir, "GEOLIX_POOL_SIZE", 5),
+      max_overflow: get_int_from_path_or_env(config_dir, "GEOLIX_POOL_MAX_OVERFLOW", 10)
     ],
     databases: [
       %{
