@@ -218,7 +218,7 @@ config :fun_with_flags, :persistence,
   adapter: FunWithFlags.Store.Persistent.Ecto,
   repo: Plausible.Repo
 
-included_environments = if sentry_dsn, do: ["prod", "staging"], else: []
+included_environments = if sentry_dsn, do: ["prod", "staging", "dev"], else: []
 
 config :sentry,
   dsn: sentry_dsn,
@@ -229,7 +229,8 @@ config :sentry,
   enable_source_code_context: true,
   root_source_code_path: [File.cwd!()],
   hackney_pool_max_connections: get_int_from_path_or_env(config_dir, "SENTRY_POOL_SIZE", 50),
-  sample_rate: 1.0
+  sample_rate: 1.0,
+  client: Plausible.Sentry.Client
 
 config :logger, Sentry.LoggerBackend,
   capture_log_messages: true,
