@@ -1,7 +1,7 @@
 defmodule Plausible.Sentry.Client do
   @behaviour Sentry.HTTPClient
 
-  defguard is_redirect(status) when is_integer(status) and status >= 300 and status < 400
+  defguardp is_redirect(status) when is_integer(status) and status >= 300 and status < 400
 
   require Logger
 
@@ -28,6 +28,7 @@ defmodule Plausible.Sentry.Client do
   defp handle_response(resp) do
     case resp do
       {:ok, %{status: status, headers: _}} when is_redirect(status) ->
+        # Just playing safe here. hackney client didn't support those; redirects are opt-in in hackney
         Logger.error("Sentry returned a redirect that is not handled yet.")
         {:error, :stop}
 
