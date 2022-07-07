@@ -5,21 +5,15 @@ defmodule Plausible.Sentry.Client do
 
   require Logger
 
-  defmodule DummyChild do
-    @moduledoc """
-    The Sentry.HTTPClient behaviour requires a child spec to be supplied.
-    In this case we don't want Sentry to manage our Finch instances, hence it's fed
-    with a dummy module for the sake of the contract.
-    """
-    use Agent
+  @doc """
+  The Sentry.HTTPClient behaviour requires a child spec to be supplied.
+  In this case we don't want Sentry to manage our Finch instances, hence it's fed
+  with a dummy module for the sake of the contract.
 
-    def start_link(:noop) do
-      Agent.start_link(fn -> nil end, name: __MODULE__)
-    end
-  end
-
+  XXX: Submit a Sentry PR making the child spec callback optional.
+  """
   def child_spec do
-    DummyChild.child_spec(:noop)
+    Task.child_spec(fn -> :noop end)
   end
 
   def post(url, headers, body) do
