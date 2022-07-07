@@ -3,10 +3,12 @@ const { expect } = require('@playwright/test');
 
 test.describe('Basic installation', () => {
   test('Sends pageview automatically', async ({ page }) => {
-    const request = mockRequest(page, '/api/event')
+    const expectedEventRequest = mockRequest(page, '/api/event')
 
     await page.goto('/simple.html');
 
-    expect((await request).url()).toContain('/api/event')
+    eventRequest = await expectedEventRequest
+    expect(eventRequest.url()).toContain('/api/event')
+    expect(eventRequest.postDataJSON().n).toEqual('pageview')
   });
 });

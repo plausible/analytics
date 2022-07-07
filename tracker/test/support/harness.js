@@ -6,10 +6,6 @@ const clientPlaywrightVersion = cp
   .trim()
   .split(' ')[1];
 
-if (!process.env.BROWSERSTACK_ACCESS_KEY) {
-  throw 'Please configure BROWSERSTACK_ACCESS_KEY and BROWSERSTACK_USERNAME'
-}
-
 // BrowserStack Specific Capabilities.
 const caps = {
   browser: 'chrome',

@@ -6,11 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Plausible Playwright tests</title>
-  <script src="./snippet.js" variant="plausible.local.js"></script>
+
+  <!-- Dynamically create the Plausible snippet -->
+  <script src="./snippet.js" variant="plausible.local.outbound-links.js"></script>
 </head>
 
 <body>
-  HELLO!
+  <a id="outbound-link" href="https://awesome.website.com">Outbound</a>
 </body>
 
 </html>

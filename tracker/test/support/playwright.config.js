@@ -1,6 +1,7 @@
 // playwright.config.js
 // @ts-check
 const { devices } = require('@playwright/test');
+const { LOCAL_SERVER_ADDR } = require('./server')
 
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 const config = {
@@ -12,7 +13,7 @@ const config = {
   timeout: 60000,
   use: {
     viewport: null,
-    baseURL: 'http://localhost:3000'
+    baseURL: LOCAL_SERVER_ADDR
   },
   projects: [
     // -- BrowserStack Projects --
