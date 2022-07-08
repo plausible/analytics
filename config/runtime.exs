@@ -416,10 +416,6 @@ config :kaffy,
 
 if config_env() != :test do
   config :geolix,
-    pool: [
-      size: get_int_from_path_or_env(config_dir, "GEOLIX_POOL_SIZE", 5),
-      max_overflow: get_int_from_path_or_env(config_dir, "GEOLIX_POOL_MAX_OVERFLOW", 10)
-    ],
     databases: [
       %{
         id: :geolocation,
