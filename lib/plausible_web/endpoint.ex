@@ -30,6 +30,7 @@ defmodule PlausibleWeb.Endpoint do
   end
 
   plug Plug.RequestId
+  plug PromEx.Plug, prom_ex_module: Plausible.PromEx
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
   plug Plug.Logger
 

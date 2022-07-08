@@ -51,7 +51,7 @@ defmodule Plausible.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:finch, "~> 0.12.0"},
+      {:finch, "~> 0.12.0", override: true},
       {:bcrypt_elixir, "~> 2.0"},
       {:combination, "~> 0.0.3"},
       {:cors_plug, "~> 3.0"},
@@ -108,7 +108,8 @@ defmodule Plausible.MixProject do
       {:telemetry, "~> 1.0", override: true},
       {:opentelemetry_ecto, "~> 1.0.0"},
       {:observer_cli, "~> 1.7"},
-      {:mimic, "~> 1.7", only: :test}
+      {:mimic, "~> 1.7", only: :test},
+      {:prom_ex, "~> 1.7.1"}
     ]
   end
 

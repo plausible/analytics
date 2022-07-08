@@ -461,3 +461,15 @@ end
 config :tzdata,
        :data_dir,
        get_var_from_path_or_env(config_dir, "STORAGE_DIR", Application.app_dir(:tzdata, "priv"))
+
+promex_disabled? =
+  config_dir
+  |> get_var_from_path_or_env("PROMEX_DISABLED", "true")
+  |> String.to_existing_atom()
+
+config :plausible, Plausible.PromEx,
+  disabled: promex_disabled?,
+  manual_metrics_start_delay: :no_delay,
+  drop_metrics_groups: [],
+  grafana: :disabled,
+  metrics_server: :disabled
