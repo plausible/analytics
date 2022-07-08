@@ -221,7 +221,7 @@ defmodule PlausibleWeb.StatsController do
   defp is_dbip() do
     if Application.get_env(:plausible, :is_selfhost) do
       case Geolix.metadata(where: :geolocation) do
-        %{geolocation: %{database_type: type}} ->
+        %{database_type: type} ->
           String.starts_with?(type, "DBIP")
 
         _ ->

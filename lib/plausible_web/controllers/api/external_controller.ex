@@ -60,7 +60,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
     geo_database =
       case Geolix.metadata(where: :geolocation) do
-        %{geolocation: %{database_type: type}} ->
+        %{database_type: type} ->
           type
 
         _ ->
@@ -480,10 +480,10 @@ defmodule PlausibleWeb.Api.ExternalController do
       |> Geolix.lookup(where: :geolocation)
 
     country_code =
-      get_in(result, [:geolocation, :country, :iso_code])
+      get_in(result, [:country, :iso_code])
       |> ignore_unknown_country
 
-    city_geoname_id = get_in(result, [:geolocation, :city, :geoname_id])
+    city_geoname_id = get_in(result, [:city, :geoname_id])
 
     subdivision1_code =
       case result do
