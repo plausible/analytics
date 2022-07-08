@@ -36,7 +36,7 @@ defmodule Plausible.Sentry.Client do
         {:ok, status, headers, body}
 
       {:error, error} = e ->
-        Logger.error("Sentry call failed with: #{inspect(error)}")
+        Logger.warn("Sentry call failed with: #{inspect(error)}")
         e
     end
   end
