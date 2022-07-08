@@ -92,6 +92,7 @@
     payload.h = 1
     {{/if}}
 
+    {{#if compat}}
     var request = new XMLHttpRequest();
     request.open('POST', endpoint, true);
     request.setRequestHeader('Content-Type', 'text/plain');
@@ -103,6 +104,12 @@
         options && options.callback && options.callback()
       }
     }
+    {{else}}
+    var requestQueued = navigator.sendBeacon(endpoint, JSON.stringify(payload));
+    if (requestQueued) {
+      options && options.callback && options.callback()
+    }
+    {{/if}}
   }
 
   {{#if outbound_links}}
@@ -119,6 +126,7 @@
           plausible('Outbound Link: Click', {props: {url: link.href}})
         }
 
+        {{#if compat}}
         // Delay navigation so that Plausible is notified of the click
         if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
           if (!(event.ctrlKey || event.metaKey || event.shiftKey) && click) {
@@ -128,6 +136,7 @@
             event.preventDefault();
           }
         }
+        {{/if}}
       }
   }
 
@@ -163,7 +172,8 @@
       if (middle || click) {
         plausible('File Download', {props: {url: linkTarget}})
       }
-
+      
+      {{#if compat}}
       // Delay navigation so that Plausible is notified of the click
       if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
         if (!(event.ctrlKey || event.metaKey || event.shiftKey) && click) {
@@ -173,6 +183,7 @@
           event.preventDefault();
         }
       }
+      {{/if}}
     }
   }
 
