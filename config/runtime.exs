@@ -376,7 +376,7 @@ config :plausible, Plausible.Finch,
 config :plausible, Plausible.Sentry.Client,
   finch_request_opts: [
     pool_timeout: get_int_from_path_or_env(config_dir, "SENTRY_FINCH_POOL_TIMEOUT", 5000),
-    receive_timeout: get_int_from_path_or_env(config_dir, "SENTRY_FINCH_RECEIVE_TIMEOUT", 5000)
+    receive_timeout: get_int_from_path_or_env(config_dir, "SENTRY_FINCH_RECEIVE_TIMEOUT", 15000)
   ]
 
 config :ref_inspector,
