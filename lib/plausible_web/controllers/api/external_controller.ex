@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     build_metadata = System.get_env("BUILD_METADATA", "{}") |> Jason.decode!()
 
     geo_database =
-      case Geolix.metadata([:geolocation]) do
+      case Geolix.metadata(where: :geolocation) do
         %{geolocation: %{database_type: type}} ->
           type
 
@@ -477,7 +477,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp visitor_location_details(conn) do
     result =
       PlausibleWeb.RemoteIp.get(conn)
-      |> Geolix.lookup()
+      |> Geolix.lookup(where: :geolocation)
 
     country_code =
       get_in(result, [:geolocation, :country, :iso_code])
