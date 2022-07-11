@@ -9,6 +9,7 @@ defmodule Plausible.Application do
     children = [
       Plausible.Repo,
       Plausible.ClickhouseRepo,
+      {Finch, name: Plausible.Finch, pools: finch_pool_config()},
       {Phoenix.PubSub, name: Plausible.PubSub},
       Plausible.Session.Salts,
       Plausible.Event.WriteBuffer,
@@ -33,6 +34,25 @@ defmodule Plausible.Application do
   def config_change(changed, _new, removed) do
     PlausibleWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp finch_pool_config() do
+    config = Application.fetch_env!(:plausible, Plausible.Finch)
+
+    pool_config = %{
+      :default => [size: config[:default_pool_size], count: config[:default_pool_count]]
+    }
+
+    sentry_dsn = Application.get_env(:sentry, :dsn)
+
+    if is_binary(sentry_dsn) do
+      Map.put(pool_config, sentry_dsn,
+        size: config[:sentry_pool_size],
+        count: config[:sentry_pool_count]
+      )
+    else
+      pool_config
+    end
   end
 
   defp setup_cache_stats() do
