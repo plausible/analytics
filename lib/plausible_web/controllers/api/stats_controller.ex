@@ -475,7 +475,7 @@ defmodule PlausibleWeb.Api.StatsController do
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
       else
-        pages |> to_csv([:name, :visitors, :bounce_rate, :time_on_page])
+        pages |> to_csv([:name, :visitors, :pageviews, :bounce_rate, :time_on_page])
       end
     else
       json(conn, pages)
