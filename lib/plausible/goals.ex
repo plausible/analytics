@@ -37,6 +37,10 @@ defmodule Plausible.Goals do
     )
   end
 
+  def get_by_id_and_domain(id, domain) do
+    Repo.one(from g in Goal, where: g.domain == ^domain and g.id == ^id)
+  end
+
   def delete(id) do
     Repo.one(from g in Goal, where: g.id == ^id) |> Repo.delete!()
   end

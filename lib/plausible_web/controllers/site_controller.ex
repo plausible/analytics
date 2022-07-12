@@ -161,6 +161,24 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: Routes.site_path(conn, :settings_goals, website))
   end
 
+  def reset_goal(conn, %{"website" => website, "id" => goal_id}) do
+    with %Plausible.Goal{} = goal <-
+           Goals.get_by_id_and_domain(goal_id, conn.assigns.site.domain),
+         :ok <- Plausible.ClickhouseRepo.clear_events_for(goal.domain, goal.event_name) do
+      conn
+      |> put_flash(
+        :success,
+        "Your request to reset goal stats is in process. This may take a few minutes."
+      )
+      |> redirect(to: Routes.site_path(conn, :settings_goals, website))
+    else
+      nil ->
+        conn
+        |> put_flash(:error, "Goal does not exist")
+        |> redirect(to: Routes.site_path(conn, :settings_goals, website))
+    end
+  end
+
   def settings(conn, %{"website" => website}) do
     redirect(conn, to: Routes.site_path(conn, :settings_general, website))
   end

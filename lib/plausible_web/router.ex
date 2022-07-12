@@ -245,6 +245,7 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/danger-zone", SiteController, :settings_danger_zone
     get "/:website/goals/new", SiteController, :new_goal
     post "/:website/goals", SiteController, :create_goal
+    post "/:website/goals/:id/reset", SiteController, :reset_goal
     delete "/:website/goals/:id", SiteController, :delete_goal
     put "/:website/settings", SiteController, :update_settings
     put "/:website/settings/google", SiteController, :update_google_auth

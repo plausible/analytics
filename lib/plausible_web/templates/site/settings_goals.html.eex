@@ -1,4 +1,4 @@
-<div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
+<div class="shadow bg-white dark:bg-gray-800 sm:rounded-md py-6 px-4 sm:p-6">
   <header class="relative">
     <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Goals</h2>
     <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">Define actions that you want your users to take like visiting a certain page, submitting a form, etc.</p>
@@ -10,9 +10,39 @@
     <%= if Enum.count(@goals) > 0 do %>
       <div class="mt-4">
         <%= for goal <- @goals do %>
-          <div class="border-b border-gray-300 dark:border-gray-500 py-3 flex justify-between">
-            <span class="text-sm font-medium text-gray-900 dark:text-gray-100"><%= goal_name(goal) %></span>
-            <%= button(to: "/#{URI.encode_www_form(@site.domain)}/goals/#{goal.id}", method: :delete, class: "text-sm text-red-600", data: [confirm: "Are you sure you want to remove goal #{goal_name(goal)}? This will just affect the UI, all of your analytics data will stay intact."]) do %>
+          <div class="border-b border-gray-300 dark:border-gray-500 py-3 flex">
+            <span class="flex-auto text-sm font-medium text-gray-900 dark:text-gray-100"><%= goal_name(goal) %></span>
+            <div x-data="{open: false}" @click.away="open = false" x-cloak class="relative">
+              <button @click="open = !open" class="flex-none inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
+                Reset stats
+                <svg class="w-4 h-4 pt-px ml-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+              </button>
+              <ul
+                x-show="open"
+                x-transition:leave="transition ease-in duration-100"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="origin-top-right absolute z-10 right-0 mt-2 w-72 rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-400 ring-1 ring-black ring-opacity-5 focus:outline-none" tabindex="-1" role="listbox" aria-labelledby="listbox-label" aria-activedescendant="listbox-option-0"
+                tabindex="-1"
+                role="listbox"
+                aria-labelledby="listbox-label"
+                aria-activedescendant="listbox-option-0"
+                >
+                  <li class="p-4 text-sm cursor-default group flex justify-between" role="option">
+                    <div>
+                      <p class="text-base font-medium text-gray-900 dark:text-gray-100">Reset stats</p>
+                      <p class="mt-1 text-sm text-gray-500">Resetting stats is a destructive action. Data will not be recoverable.</p>
+                    </div>
+                  </li>
+                  <li class="select-none hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600" role="option">
+                    <%= button(to: "/#{URI.encode_www_form(@site.domain)}/goals/#{goal.id}/reset", method: :post, class: "inline-block w-full p-4 text-sm text-red-600 font-medium", data: [confirm: "Are you sure you want to reset goal #{goal_name(goal)}? This is a destructive action."]) do %>
+                      <%= "Reset #{goal_name(goal)} stats" %>
+                    <% end %>
+                  </li>
+              </ul>
+            </div>
+
+            <%= button(to: "/#{URI.encode_www_form(@site.domain)}/goals/#{goal.id}", method: :delete, class: "flex-none ml-3 text-sm text-red-600", data: [confirm: "Are you sure you want to remove goal #{goal_name(goal)}? This will just affect the UI, all of your analytics data will stay intact."]) do %>
               <svg class="feather feather-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
             <% end %>
           </div>

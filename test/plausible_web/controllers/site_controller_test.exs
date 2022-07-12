@@ -443,6 +443,57 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
+  describe "POST /:website/goals/:id/reset" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "reset goals", %{conn: conn, site: %{domain: domain} = site} do
+      goal = insert(:goal, domain: site.domain, event_name: "Custom event")
+      populate_stats(site, build_list(5, :event, name: "Custom event"))
+
+      conn = post(conn, "/#{site.domain}/goals/#{goal.id}/reset")
+
+      assert eventually(fn ->
+               from(e in Plausible.ClickhouseEvent,
+                 where: e.domain == ^domain and e.name == "Custom event"
+               )
+               |> Plausible.ClickhouseRepo.aggregate(:count)
+               |> Kernel.==(0)
+             end),
+             "expected events to be deleted"
+
+      expected_redirect_path = "/#{site.domain}/settings/goals"
+      assert expected_redirect_path == redirected_to(conn, 302)
+
+      conn = get(recycle(conn), expected_redirect_path)
+
+      assert html_response(conn, 200) =~
+               "Your request to reset goal stats is in process. This may take a few minutes."
+    end
+
+    test "returns error when goal does not belong to current site", %{conn: conn, site: site} do
+      %{domain: other_site_domain} = other_site = insert(:site)
+      goal = insert(:goal, domain: other_site.domain, event_name: "Custom event")
+      populate_stats(other_site, build_list(5, :event, name: "Custom event"))
+
+      conn = post(conn, "/#{site.domain}/goals/#{goal.id}/reset")
+
+      assert eventually(fn ->
+               from(e in Plausible.ClickhouseEvent,
+                 where: e.domain == ^other_site_domain and e.name == "Custom event"
+               )
+               |> Plausible.ClickhouseRepo.aggregate(:count)
+               |> Kernel.==(5)
+             end),
+             "expected events to be left untouched"
+
+      expected_redirect_path = "/#{site.domain}/settings/goals"
+      assert expected_redirect_path == redirected_to(conn, 302)
+
+      conn = get(recycle(conn), expected_redirect_path)
+      assert html_response(conn, 200) =~ "Goal does not exist"
+    end
+  end
+
   describe "POST /sites/:website/weekly-report/enable" do
     setup [:create_user, :log_in, :create_site]
 
