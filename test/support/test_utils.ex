@@ -143,4 +143,15 @@ defmodule Plausible.TestUtils do
     |> Timex.shift(shifts)
     |> NaiveDateTime.truncate(:second)
   end
+
+  def eventually(expectation, wait_time \\ 100, retries \\ 10) do
+    Enum.reduce_while(1..retries, nil, fn _i, _acc ->
+      if expectation.() do
+        {:halt, true}
+      else
+        :timer.sleep(wait_time)
+        {:cont, false}
+      end
+    end)
+  end
 end

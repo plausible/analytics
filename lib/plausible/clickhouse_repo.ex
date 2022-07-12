@@ -18,6 +18,17 @@ defmodule Plausible.ClickhouseRepo do
     Ecto.Adapters.SQL.query!(__MODULE__, sessions_sql, [domain])
   end
 
+  @doc """
+  Deletes all past events for the given domain and event name. This is executed
+  asynchronously and might take some time to actually delete the records.
+  """
+  @spec clear_events_for(String.t(), String.t()) :: :ok
+  def clear_events_for(domain, name) do
+    events_sql = "ALTER TABLE events DELETE WHERE domain = ? AND name = ? AND timestamp <= ?"
+    Ecto.Adapters.SQL.query!(__MODULE__, events_sql, [domain, name, DateTime.utc_now()])
+    :ok
+  end
+
   def clear_imported_stats_for(site_id) do
     [
       "imported_visitors",
