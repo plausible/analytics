@@ -11,6 +11,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateEventsAndSessions do
                            engine:
                              "MergeTree() PARTITION BY toYYYYMM(timestamp) ORDER BY (company_id, toDate(timestamp), name) SETTINGS index_granularity = 8192"
                          ) do
+      add(:company_id, :string)
       add(:name, :string)
       add(:domain, :string)
       add(:user_id, :UInt64)
@@ -33,6 +34,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateEventsAndSessions do
                            engine:
                              "CollapsingMergeTree(sign) PARTITION BY toYYYYMM(start) ORDER BY (company_id, toDate(start)) SETTINGS index_granularity = 8192"
                          ) do
+      add(:company_id, :string)
       add(:session_id, :UInt64)
       add(:sign, :Int8)
       add(:domain, :string)
