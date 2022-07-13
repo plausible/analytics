@@ -32,7 +32,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateEventsAndSessions do
   defp create_sessions() do
     create_if_not_exists table(:sessions,
                            engine:
-                             "CollapsingMergeTree(sign) PARTITION BY toYYYYMM(start) ORDER BY (company_id, toDate(start)) SETTINGS index_granularity = 8192"
+                             "CollapsingMergeTree(sign) PARTITION BY toYYYYMM(start) ORDER BY (company_id, toDate(start), session_id) SETTINGS index_granularity = 8192"
                          ) do
       add(:company_id, :UInt64)
       add(:session_id, :UInt64)
