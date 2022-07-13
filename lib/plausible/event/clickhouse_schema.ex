@@ -43,7 +43,7 @@ defmodule Plausible.ClickhouseEvent do
   end
 
   def random_event_id() do
-    :crypto.strong_rand_bytes(12) |> :binary.decode_unsigned()
+    :crypto.strong_rand_bytes(8) |> :binary.decode_unsigned()
   end
 
   def new(attrs) do
