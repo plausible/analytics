@@ -9,7 +9,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateEventsAndSessions do
   defp create_events() do
     create_if_not_exists table(:events,
                            engine:
-                             "MergeTree() PARTITION BY toYYYYMM(timestamp) ORDER BY (domain, toDate(timestamp), user_id) SETTINGS index_granularity = 8192"
+                             "MergeTree() PARTITION BY toYYYYMM(timestamp) ORDER BY (company_id, toDate(timestamp), name) SETTINGS index_granularity = 8192"
                          ) do
       add(:name, :string)
       add(:domain, :string)
@@ -31,7 +31,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateEventsAndSessions do
   defp create_sessions() do
     create_if_not_exists table(:sessions,
                            engine:
-                             "CollapsingMergeTree(sign) PARTITION BY toYYYYMM(start) ORDER BY (domain, toDate(start), user_id, session_id) SETTINGS index_granularity = 8192"
+                             "CollapsingMergeTree(sign) PARTITION BY toYYYYMM(start) ORDER BY (company_id, toDate(start)) SETTINGS index_granularity = 8192"
                          ) do
       add(:session_id, :UInt64)
       add(:sign, :Int8)
