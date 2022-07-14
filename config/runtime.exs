@@ -229,7 +229,8 @@ config :sentry,
   enable_source_code_context: true,
   root_source_code_path: [File.cwd!()],
   client: Plausible.Sentry.Client,
-  send_max_attempts: 2
+  send_max_attempts: 1,
+  filter: Plausible.SentryFilter
 
 config :logger, Sentry.LoggerBackend,
   capture_log_messages: true,
