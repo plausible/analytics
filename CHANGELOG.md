@@ -32,6 +32,7 @@ All notable changes to this project will be documented in this file.
 - Choice of metric for main-graph both in UI and API (visitors, pageviews, bounce_rate, visit_duration) plausible/analytics#1364
 - New width=manual mode for embedded dashboards plausible/analytics#2148
 - Add more timezone options
+- Add new strategy to recommend timezone when creating a new site
 
 ### Fixed
 - Hash part of the URL can now be used when excluding pages with `script.exclusions.hash.js`.
