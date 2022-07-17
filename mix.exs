@@ -110,7 +110,7 @@ defmodule Plausible.MixProject do
       {:sentry, "~> 8.0"},
       {:siphash, "~> 3.2"},
       {:telemetry, "~> 1.0", override: true},
-      {:timex, "~> 3.6"},
+      {:timex, "~> 3.7"},
       {:ua_inspector, "~> 3.0"}
     ]
   end
