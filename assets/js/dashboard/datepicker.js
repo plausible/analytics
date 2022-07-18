@@ -181,7 +181,7 @@ class DatePicker extends React.Component {
     this.setState({open: false});
 
     const keys = ['d', 'e', 'r', 'w', 'm', 'y', 't', 's', 'l', 'a'];
-    const redirects = [{date: false, period: 'day'}, {date: shiftDays(nowForSite(this.props.site), -1), period: 'day'}, {period: 'realtime'}, {date: false, period: '7d'}, {date: false, period: 'month'}, {date: false, period: 'year'}, {date: false, period: '30d'}, {date: false, period: '6mo'}, {date: false, period: '12mo'}, {date: false, period: 'all'}];
+    const redirects = [{date: false, period: 'day'}, {date: formatISO(shiftDays(nowForSite(this.props.site), -1)), period: 'day'}, {period: 'realtime'}, {date: false, period: '7d'}, {date: false, period: 'month'}, {date: false, period: 'year'}, {date: false, period: '30d'}, {date: false, period: '6mo'}, {date: false, period: '12mo'}, {date: false, period: 'all'}];
 
     if (keys.includes(e.key.toLowerCase())) {
       navigateToQuery(history, query, {...newSearch, ...(redirects[keys.indexOf(e.key.toLowerCase())])});
