@@ -2,6 +2,7 @@ import React from 'react';
 
 import * as storage from '../../util/storage'
 import ListReport from '../reports/list'
+import DonutChartTab from '../graph/donut-chart'
 import * as api from '../../api'
 import * as url from '../../util/url'
 
@@ -74,17 +75,22 @@ function ScreenSizes({query, site}) {
     return iconFor(screenSize.name)
   }
 
+  function renderColor(screenSize, lightBoost=1) {
+    return colorFor(screenSize.name, lightBoost)
+  }
+
   function renderTooltipText(screenSize) {
     return EXPLANATION[screenSize.name]
   }
 
   return (
-    <ListReport
+    <DonutChartTab
       fetchData={fetchData}
       filter={{screen: 'name'}}
       keyLabel="Screen size"
       query={query}
       renderIcon={renderIcon}
+      renderColor={renderColor}
       tooltipText={renderTooltipText}
     />
   )
@@ -114,6 +120,20 @@ function iconFor(screenSize) {
     return (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
     )
+  }
+}
+
+function colorFor(screenSize, lightnestBoost=1) {
+  if (screenSize === 'Mobile') {
+    return `hsl(212, 42%, ${lightnestBoost * 58}%)`
+  } else if (screenSize === 'Tablet') {
+    return `hsl(43, 57%, ${lightnestBoost * 60}%)`
+  } else if (screenSize === 'Laptop') {
+    lightnestBoost *= 1.2  // FIXME this adjustment should depend on hue
+    return `hsl(109, 27%, ${lightnestBoost * 49}%)`
+  } else if (screenSize === 'Desktop') {
+    lightnestBoost *= 1.1  // FIXME this adjustment should depend on hue
+    return `hsl(17, 42%, ${lightnestBoost * 55}%)`
   }
 }
 

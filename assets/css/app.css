@@ -362,6 +362,24 @@ iframe[hidden] {
 
 }
 
+.donut {
+    margin: 0 auto;
+}
+
+.donut-legend-color-circle {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    text-align: center;
+    vertical-align: middle;
+    border-radius: 50%;
+    padding: 1px 3px 5px 3px;
+    margin: -3px 0.5rem 0 0;
+    border-width: 1px;
+    border-style: solid;
+    box-sizing: content-box;
+}
+
 /* This class is used for styling embedded dashboards. Do not remove. */
 /* stylelint-disable */
 .date-option-group { }

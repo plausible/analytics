@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
 - The exported `pages.csv` file now includes pageviews again [plausible/analytics#1878](https://github.com/plausible/analytics/issues/1878)
 
 ### Changed
+- Add a pie/donut chart for Mobile/Desktop/Tablet/Laptop in Screen Size
 - Cache the tracking script for 24 hours
 - Move `entry_page` and `exit_page` to be part of the `Page` filter group
 - Paginate /api/sites results and add a `View all` link to the site-switcher dropdown in the dashboard.
