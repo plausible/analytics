@@ -803,6 +803,38 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  def preferred_languages(conn, params) do
+    site = conn.assigns[:site]
+    query = site |> Query.from(params) |> Filters.add_prefix()
+    pagination = parse_pagination(params)
+
+    preferred_languages =
+      Stats.breakdown(site, query, "visit:preferred_language", [:visitors], pagination)
+      |> maybe_add_cr(site, query, pagination, :preferred_language, "visit:preferred_language")
+      |> transform_keys(%{preferred_language: :name})
+      |> maybe_add_percentages(query)
+      |> Enum.map(fn %{name: code} = row ->
+        name =
+          if code in [nil, ""], do: "N/A", else: Plausible.Event.Language.get_by_code(row.name)
+
+        row
+        |> Map.put(:code, code)
+        |> Map.put(:name, name)
+      end)
+
+    if params["csv"] do
+      if Map.has_key?(query.filters, "event:goal") do
+        preferred_languages
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
+      else
+        preferred_languages |> to_csv([:name, :visitors])
+      end
+    else
+      json(conn, preferred_languages)
+    end
+  end
+
   defp calculate_cr(nil, _converted_visitors), do: 100.0
 
   defp calculate_cr(unique_visitors, converted_visitors) do

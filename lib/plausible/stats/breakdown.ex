@@ -518,6 +518,14 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
+  defp do_group_by(q, "visit:preferred_language") do
+    from(
+      s in q,
+      group_by: s.preferred_language,
+      select_merge: %{preferred_language: s.preferred_language}
+    )
+  end
+
   defp transform_keys(results, keys_to_replace) do
     Enum.map(results, fn map ->
       Enum.map(map, fn {key, val} ->
