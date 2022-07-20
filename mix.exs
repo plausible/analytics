@@ -109,7 +109,9 @@ defmodule Plausible.MixProject do
       {:opentelemetry_ecto, "~> 1.0.0"},
       {:observer_cli, "~> 1.7"},
       {:mimic, "~> 1.7", only: :test},
-      {:prom_ex, "~> 1.7.1"}
+      {:prom_ex, "~> 1.7.1"},
+      {:esbuild, "~> 0.5.0", runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.1.8", runtime: Mix.env() == :dev}
     ]
   end
 
@@ -118,7 +120,8 @@ defmodule Plausible.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate", "test", "clean_clickhouse"],
-      sentry_recompile: ["compile", "deps.compile sentry --force"]
+      sentry_recompile: ["compile", "deps.compile sentry --force"],
+      "assets.deploy": ["tailwind default --minify", "esbuild default --minify"],
     ]
   end
 end

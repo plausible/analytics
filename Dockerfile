@@ -13,8 +13,7 @@ WORKDIR /app
 
 # install build dependencies
 RUN apk add --no-cache git nodejs yarn python3 npm ca-certificates wget gnupg make erlang gcc libc-dev && \
-  npm install npm@latest -g && \
-  npm install -g webpack
+  npm install npm@latest -g
 
 RUN wget https://s3.eu-central-1.wasabisys.com/plausible-application/geonames.csv -q
 
@@ -37,7 +36,7 @@ COPY config ./config
 COPY priv ./priv
 COPY lib ./lib
 
-RUN npm run deploy --prefix ./assets && \
+RUN mix assets.deploy && \
   npm run deploy --prefix ./tracker && \
   mix phx.digest priv/static && \
   mix download_country_database && \
