@@ -912,6 +912,33 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
                }
              }
     end
+
+    test "parses accept-language header", %{conn: conn} do
+      %{
+        "" => "",
+        "گچپژ" => "",
+        ",;" => "",
+        "᚛ᚄᚓᚐᚋᚒᚄ ᚑᚄᚂᚑᚏᚅ᚜, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5" => "",
+        "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5" => "fr",
+        "en-US,en;q=0.5" => "en",
+        "de" => "de"
+      }
+      |> Enum.with_index()
+      |> Enum.each(fn {{header, expected}, index} ->
+        params = %{
+          name: "pageview",
+          url: "http://dummy.site",
+          domain: "accept-language-test-#{index}.test"
+        }
+
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> put_req_header("accept-language", header)
+        |> post("/api/event", params)
+
+        assert get_event("accept-language-test-#{index}.test").preferred_language == expected
+      end)
+    end
   end
 
   describe "user_id generation" do

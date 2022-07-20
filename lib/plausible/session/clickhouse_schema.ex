@@ -39,6 +39,7 @@ defmodule Plausible.ClickhouseSession do
     field :operating_system_version, :string
     field :browser, :string
     field :browser_version, :string
+    field :preferred_language, :string
     field :timestamp, :naive_datetime
 
     field :transferred_from, :string, default: ""
@@ -74,7 +75,8 @@ defmodule Plausible.ClickhouseSession do
       :subdivision1_code,
       :subdivision2_code,
       :city_geoname_id,
-      :screen_size
+      :screen_size,
+      :preferred_language
     ])
     |> validate_required([:hostname, :domain, :fingerprint, :is_bounce, :start])
   end

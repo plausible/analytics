@@ -121,6 +121,7 @@ defmodule Plausible.Session.CacheStore do
       operating_system_version: event.operating_system_version,
       browser: event.browser,
       browser_version: event.browser_version,
+      preferred_language: event.preferred_language,
       timestamp: event.timestamp,
       start: event.timestamp,
       "entry_meta.key": Map.get(event, :"meta.key"),

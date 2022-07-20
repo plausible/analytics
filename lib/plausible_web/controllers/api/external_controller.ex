@@ -142,6 +142,12 @@ defmodule PlausibleWeb.Api.ExternalController do
 
       salts = Plausible.Session.Salts.fetch()
 
+      preferred_language =
+        conn
+        |> Plug.Conn.get_req_header("accept-language")
+        |> List.first()
+        |> Plausible.Event.Language.parse_accept_language()
+
       event_attrs = %{
         timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
         name: params["name"],
@@ -164,6 +170,7 @@ defmodule PlausibleWeb.Api.ExternalController do
         browser: ua && browser_name(ua),
         browser_version: ua && browser_version(ua),
         screen_size: calculate_screen_size(params["screen_width"]),
+        preferred_language: preferred_language,
         "meta.key": Map.keys(params["meta"]),
         "meta.value": Map.values(params["meta"]) |> Enum.map(&Kernel.to_string/1)
       }
