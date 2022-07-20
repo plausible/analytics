@@ -4,11 +4,7 @@ module.exports = {
   content: [
     './js/**/*.js',
     '../lib/*_web.ex',
-    '../lib/*_web/**/*.*ex',
-  ],
-  purge: [
-    './js/**/*.js',
-    '../lib/plausible_web/templates/**/*.html.eex',
+    '../lib/*_web/**/*.*ex'
   ],
   darkMode: 'class',
   theme: {
