@@ -65,6 +65,21 @@ function OperatingSystemVersions({query, site}) {
   )
 }
 
+function Languages({query, site}) {
+  function fetchData() {
+    return api.get(url.apiPath(site, '/preferred-languages'), query)
+  }
+
+  return (
+    <ListReport
+      fetchData={fetchData}
+      filter={{preferred_language: 'code', preferred_language_name: 'name'}}
+      keyLabel="Browser language"
+      query={query}
+    />
+  )
+}
+
 function ScreenSizes({query, site}) {
   function fetchData() {
     return api.get(url.apiPath(site, '/screen-sizes'), query)
@@ -147,6 +162,8 @@ export default class Devices extends React.Component {
           return <OperatingSystemVersions site={this.props.site} query={this.props.query} timer={this.props.timer} />
         }
         return <OperatingSystems site={this.props.site} query={this.props.query} timer={this.props.timer} />
+      case 'language':
+        return <Languages site={this.props.site} query={this.props.query} timer={this.props.timer} />
       case 'size':
       default:
         return (
@@ -192,6 +209,7 @@ export default class Devices extends React.Component {
               { this.renderPill('Size', 'size') }
               { this.renderPill('Browser', 'browser') }
               { this.renderPill('OS', 'os') }
+              { this.renderPill('Language', 'language') }
             </ul>
           </div>
           { this.renderContent() }

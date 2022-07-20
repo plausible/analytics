@@ -13,6 +13,7 @@ defmodule Plausible.Stats.Filters do
     "browser_version",
     "os",
     "os_version",
+    "preferred_language",
     "country",
     "region",
     "city",

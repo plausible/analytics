@@ -117,6 +117,25 @@ defmodule Plausible.Stats.FilterSuggestions do
     end)
   end
 
+  def filter_suggestions(site, query, "preferred_language", filter_search) do
+    filter_search = String.downcase(filter_search)
+
+    q =
+      from(
+        e in query_sessions(site, query),
+        group_by: e.preferred_language,
+        order_by: [desc: fragment("count(*)")],
+        select: e.preferred_language,
+        where: e.preferred_language != "",
+        limit: 100
+      )
+
+    q
+    |> ClickhouseRepo.all()
+    |> Enum.map(&%{code: &1, name: Plausible.Event.Language.get_by_code(&1)})
+    |> Enum.filter(&(&1.name |> String.downcase() |> String.contains?(filter_search)))
+  end
+
   def filter_suggestions(site, _query, "goal", filter_search) do
     Repo.all(from g in Plausible.Goal, where: g.domain == ^site.domain)
     |> Enum.map(fn x -> if x.event_name, do: x.event_name, else: "Visit #{x.page_path}" end)
@@ -292,6 +311,12 @@ defmodule Plausible.Stats.FilterSuggestions do
           from(e in q,
             select: e.screen_size,
             where: fragment("? ilike ?", e.screen_size, ^filter_query)
+          )
+
+        "preferred_language" ->
+          from(e in q,
+            select: e.preferred_language,
+            where: fragment("? ilike ?", e.preferred_language, ^filter_query)
           )
       end
 

@@ -15,12 +15,14 @@ export const FILTER_GROUPS = {
   'source': ['source', 'referrer'],
   'location': ['country', 'region', 'city'],
   'screen': ['screen'],
-  'browser': ['browser', 'browser_version'],
+  'browser': ['browser', 'browser_version', 'preferred_language'],
   'os': ['os', 'os_version'],
   'utm': ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
   'goal': ['goal'],
   'props': ['prop_key', 'prop_value']
 }
+
+const SEARCH_BY_LABEL_FILTERS = [...FILTER_GROUPS['location'], 'preferred_language']
 
 function getFormState(filterGroup, query) {
   if (filterGroup === 'props') {
@@ -53,6 +55,9 @@ function getFormState(filterGroup, query) {
     }
     if (filter === 'city' && filterValue !== '') {
       filterName = (new URLSearchParams(window.location.search)).get('city_name')
+    }
+    if (filter === 'preferred_language' && filterValue !== '') {
+      filterName = (new URLSearchParams(window.location.search)).get('preferred_language_name')
     }
     return Object.assign(result, {[filter]: {name: filterName, value: filterValue, type}})
   }, {})
@@ -165,6 +170,7 @@ class FilterModal extends React.Component {
       if (filterKey === 'country') { res.push({filter: 'country_name', value: name}) }
       if (filterKey === 'region') { res.push({filter: 'region_name', value: name}) }
       if (filterKey === 'city') { res.push({filter: 'city_name', value: name}) }
+      if (filterKey === 'preferred_language') { res.push({filter: 'preferred_language_name', value: name}) }
       if (filterKey === 'prop_value') {return res}
       if (filterKey === 'prop_key') {
         let propValue = formState['prop_value']
@@ -181,7 +187,7 @@ class FilterModal extends React.Component {
   }
 
   onSelect(filterName) {
-    if (this.state.selectedFilterGroup !== 'location') {
+    if (!(SEARCH_BY_LABEL_FILTERS.includes(filterName))) {
       return () => {}
     }
 
@@ -193,7 +199,7 @@ class FilterModal extends React.Component {
   }
 
   onInput(filterName) {
-    if (this.state.selectedFilterGroup === 'location') {
+    if (SEARCH_BY_LABEL_FILTERS.includes(filterName)) {
       return () => {}
     }
 
@@ -216,6 +222,7 @@ class FilterModal extends React.Component {
       const formFilters = Object.fromEntries(
         Object.entries(formState).map(([k, v]) => [k, v.code || v.value])
       )
+
       const updatedQuery = this.queryForSuggestions(query, formFilters, filter)
       return api.get(apiPath(this.props.site, `/suggestions/${filter}`), updatedQuery, { q: input.trim() })
     }

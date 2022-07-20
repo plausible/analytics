@@ -17,9 +17,10 @@ function removeFilter(key, history, query) {
   const newOpts = {
     [key]: false
   }
-  if (key === 'country') { newOpts.country_name = false }
-  if (key === 'region')  { newOpts.region_name = false }
-  if (key === 'city')    { newOpts.city_name = false }
+  if (key === 'country')            { newOpts.country_name = false }
+  if (key === 'region')             { newOpts.region_name = false }
+  if (key === 'city')               { newOpts.city_name = false }
+  if (key === 'preferred_language') { newOpts.preferred_language_name = false }
 
   navigateToQuery(
     history,
@@ -56,6 +57,11 @@ function filterText(key, rawValue, query) {
   if (key === "os_version") {
     const osName = query.filters.os ? query.filters.os : 'OS'
     return <>{osName}.Version {type} <b>{value}</b></>
+  }
+  if (key === "preferred_language") {
+    const q = new URLSearchParams(window.location.search)
+    const name = q.get('preferred_language_name')
+    return <>Browser language {type} <b>{name}</b></>
   }
   if (key === "country") {
     const q = new URLSearchParams(window.location.search)
