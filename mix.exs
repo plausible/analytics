@@ -51,7 +51,7 @@ defmodule Plausible.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:finch, "~> 0.12.0"},
+      {:finch, "~> 0.12.0", override: true},
       {:bcrypt_elixir, "~> 2.0"},
       {:combination, "~> 0.0.3"},
       {:cors_plug, "~> 3.0"},
@@ -85,10 +85,10 @@ defmodule Plausible.MixProject do
       {:nanoid, "~> 2.0.2"},
       {:siphash, "~> 3.2"},
       {:oban, "~> 2.11"},
-      {:geolix, "~> 1.0"},
+      {:geolix, "~> 2.0"},
       {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
       {:location, git: "https://github.com/plausible/location.git"},
-      {:geolix_adapter_mmdb2, "~> 0.5.0"},
+      {:geolix_adapter_mmdb2, "~> 0.6.0"},
       {:cachex, "~> 3.4"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
@@ -108,7 +108,8 @@ defmodule Plausible.MixProject do
       {:telemetry, "~> 1.0", override: true},
       {:opentelemetry_ecto, "~> 1.0.0"},
       {:observer_cli, "~> 1.7"},
-      {:mimic, "~> 1.7", only: :test}
+      {:mimic, "~> 1.7", only: :test},
+      {:prom_ex, "~> 1.7.1"}
     ]
   end
 

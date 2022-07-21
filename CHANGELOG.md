@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 - Add filter for custom property
 - Add ability to import historical data from GA: plausible/analytics#1753
 - API route `GET /api/v1/sites/:site_id`
+- Hovering on top of list items will now show a [tooltip with the exact number instead of a shortened version](https://github.com/plausible/analytics/discussions/1968)
 
 ### Fixed
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
@@ -33,6 +34,7 @@ All notable changes to this project will be documented in this file.
 - Guests can now use the favicon to toggle additional info about the site bing viewed (such as in public embeds).
 - Fix SecurityError in tracking script when user has blocked all local storage
 - Prevent dashboard graph from being selected when long pressing on the graph in a mobile browser
+- The exported `pages.csv` file now includes pageviews again [plausible/analytics#1878](https://github.com/plausible/analytics/issues/1878)
 
 ### Changed
 - Cache the tracking script for 24 hours

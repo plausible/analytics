@@ -229,7 +229,8 @@ config :sentry,
   enable_source_code_context: true,
   root_source_code_path: [File.cwd!()],
   client: Plausible.Sentry.Client,
-  send_max_attempts: 2
+  send_max_attempts: 1,
+  filter: Plausible.SentryFilter
 
 config :logger, Sentry.LoggerBackend,
   capture_log_messages: true,
@@ -416,10 +417,6 @@ config :kaffy,
 
 if config_env() != :test do
   config :geolix,
-    pool: [
-      size: get_int_from_path_or_env(config_dir, "GEOLIX_POOL_SIZE", 5),
-      max_overflow: get_int_from_path_or_env(config_dir, "GEOLIX_POOL_MAX_OVERFLOW", 10)
-    ],
     databases: [
       %{
         id: :geolocation,
@@ -461,3 +458,15 @@ end
 config :tzdata,
        :data_dir,
        get_var_from_path_or_env(config_dir, "STORAGE_DIR", Application.app_dir(:tzdata, "priv"))
+
+promex_disabled? =
+  config_dir
+  |> get_var_from_path_or_env("PROMEX_DISABLED", "true")
+  |> String.to_existing_atom()
+
+config :plausible, Plausible.PromEx,
+  disabled: promex_disabled?,
+  manual_metrics_start_delay: :no_delay,
+  drop_metrics_groups: [],
+  grafana: :disabled,
+  metrics_server: :disabled
