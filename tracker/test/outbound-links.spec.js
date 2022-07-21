@@ -1,20 +1,45 @@
-const { test, mockRequest } = require('./support/harness');
+const { test } = require('./support/harness')
+const { mockRequest, isMac, expectCustomEvent } = require('./support/test-utils')
 const { expect } = require('@playwright/test');
-const outboundURL = 'https://awesome.website.com'
 
-test.describe('Outbound link click', () => {
-  test('sends event and navigates to outbound URL', async ({ page }) => {    
+test.describe('outbound-links extension', () => {
+
+  test('sends event and does not navigate when link opens in new tab', async ({ page }, workerInfo) => {
     await page.goto('/outbound-link.html')
-    
-    const expectedEventRequest = mockRequest(page, '/api/event')
-    const expectedNavigationRequest = mockRequest(page, outboundURL)
+    const outboundURL = await page.locator('#link').getAttribute('href')
 
-    await page.click('#outbound-link', {button: 'left'})
+    const eventRequest = mockRequest(page, '/api/event')
+    const navigationRequest = mockRequest(page, outboundURL)
 
-    const payload = (await expectedEventRequest).postDataJSON()
-    expect(payload.n).toEqual('Outbound Link: Click')
-    expect(payload.p.url).toContain(outboundURL)
+    await page.click('#link', { modifiers: [isMac(workerInfo) ? 'Meta' : 'Control'] })
 
-    expect((await expectedNavigationRequest).url()).toContain(outboundURL)
+    expectCustomEvent(await eventRequest, 'Outbound Link: Click', { url: outboundURL })
+    expect(navigationRequest).rejects.toThrow(`No request to ${outboundURL} after 5000 ms`)
+  });
+
+  test('sends event and navigates to target when link child is clicked', async ({ page }) => {
+    await page.goto('/outbound-link.html')
+    const outboundURL = await page.locator('#link').getAttribute('href')
+
+    const eventRequest = mockRequest(page, '/api/event')
+    const navigationRequest = mockRequest(page, outboundURL)
+
+    await page.click('#link-child')
+
+    expectCustomEvent(await eventRequest, 'Outbound Link: Click', { url: outboundURL })
+    expect((await navigationRequest).url()).toContain(outboundURL)
+  });
+
+  test('sends event and does not navigate if default externally prevented', async ({ page }) => {
+    await page.goto('/outbound-link.html')
+    const outboundURL = await page.locator('#link').getAttribute('href')
+
+    const eventRequest = mockRequest(page, '/api/event')
+    const navigationRequest = mockRequest(page, outboundURL)
+
+    await page.click('#link-default-prevented')
+
+    expectCustomEvent(await eventRequest, 'Outbound Link: Click', { url: outboundURL })
+    expect(navigationRequest).rejects.toThrow(`No request to ${outboundURL} after 5000 ms`)
   });
 });

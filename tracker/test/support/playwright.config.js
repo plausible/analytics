@@ -18,15 +18,16 @@ const config = {
   projects: [
     // -- BrowserStack Projects --
     // name should be of the format browser@browser_version:os os_version@browserstack
+    // supported options: https://www.browserstack.com/docs/automate/playwright/browsers-and-os
     {
-      name: 'chrome@latest:Windows 10@browserstack', // FAIL
+      name: 'chrome@latest:OSX Big Sur@browserstack',
       use: {
         browserName: 'chromium',
         channel: 'chrome'
       },
     },
     {
-      name: 'edge@90:Windows 10@browserstack', // FAIL
+      name: 'edge@90:Windows 10@browserstack',
       use: {
         browserName: 'chromium'
       },
@@ -38,7 +39,7 @@ const config = {
       },
     },
     {
-      name: 'playwright-webkit@latest:OSX Big Sur@browserstack',
+      name: 'playwright-webkit@latest:Windows 11@browserstack',
       use: {
         browserName: 'webkit',
       },

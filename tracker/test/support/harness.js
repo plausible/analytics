@@ -18,6 +18,11 @@ const caps = {
     process.env.BROWSERSTACK_ACCESS_KEY || 'YOUR_ACCESS_KEY',
   'browserstack.local': process.env.BROWSERSTACK_LOCAL || false,
   'client.playwrightVersion': clientPlaywrightVersion,
+  'browserstack.debug': true,
+  'browserstack.networkLogs': true,
+  'browserstack.networkLogsOptions': {
+    "captureContent": "true"
+  }
 };
 
 // Patching the capabilities dynamically according to the project name.
@@ -65,21 +70,3 @@ exports.test = base.test.extend({
     }
   },
 });
-
-exports.mockRequest = async function(page, path) {
-  return new Promise(async (resolve, reject) => {
-    const timer = setTimeout(() => { reject(new Error(`No request to ${path} after 5000 ms`)) }, 5000);
-
-    await page.route(path, (route, request) => {
-
-      clearTimeout(timer);
-      resolve(request)
-
-      return route.fulfill({
-        status: 202,
-        contentType: 'text/plain',
-        body: 'ok'
-      });
-    });
-  })
-}
