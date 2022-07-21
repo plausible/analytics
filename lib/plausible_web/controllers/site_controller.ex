@@ -670,7 +670,7 @@ defmodule PlausibleWeb.SiteController do
   @google_analytics_new_user_metric_date ~D[2016-08-24]
   def import_from_google_view_id(conn, %{"view_id" => view_id, "access_token" => access_token}) do
     site = conn.assigns[:site]
-    start_date = Plausible.Google.Api.get_analytics_start_date(view_id, access_token)
+    start_date = Plausible.Google.HTTP.get_analytics_start_date(view_id, access_token)
 
     case start_date do
       {:ok, nil} ->
@@ -711,7 +711,7 @@ defmodule PlausibleWeb.SiteController do
   def import_from_google_confirm(conn, %{"access_token" => access_token, "view_id" => view_id}) do
     site = conn.assigns[:site]
 
-    start_date = Plausible.Google.Api.get_analytics_start_date(view_id, access_token)
+    start_date = Plausible.Google.HTTP.get_analytics_start_date(view_id, access_token)
 
     end_date =
       Plausible.Stats.Clickhouse.pageview_start_date_local(site) || Timex.today(site.timezone)
