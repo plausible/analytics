@@ -132,6 +132,7 @@ defmodule Plausible.Google.Api do
     }
   ]
 
+  @one_day_in_ms 86_400_000
   @doc """
   API reference:
   https://developers.google.com/analytics/devguides/reporting/core/v4/rest/v4/reports/batchGet#ReportRequest
@@ -139,48 +140,27 @@ defmodule Plausible.Google.Api do
   Dimensions reference: https://ga-dev-tools.web.app/dimensions-metrics-explorer
   """
   def import_analytics(site, date_range, view_id, access_token) do
-    for month_batch <- prepare_batches(date_range, view_id, access_token) do
-      tasks =
-        for batch_request <- month_batch do
-          Task.async(fn -> fetch_and_persist(site, batch_request) end)
-        end
-
-      # 1 hour max to get 1 month's worth of data
-      Task.await_many(tasks, 3_600_000)
-    end
-
-    :ok
-  end
-
-  defp prepare_batches(import_date_range, view_id, access_token) do
-    total_months = Timex.diff(import_date_range.last, import_date_range.first, :months)
-
-    monthly_batches =
-      for month <- 0..total_months do
-        batch_start_date = Timex.shift(import_date_range.first, months: month)
-        batch_end_date = Timex.shift(batch_start_date, months: 1, days: -1)
-
-        batch_end_date =
-          if Timex.before?(import_date_range.last, batch_end_date),
-            do: import_date_range.last,
-            else: batch_end_date
-
-        Date.range(batch_start_date, batch_end_date)
-      end
-
-    for date_range <- monthly_batches do
-      for {dataset, dimensions, metrics} <- @request_data do
-        %{
-          dataset: dataset,
-          dimensions: dimensions,
-          metrics: metrics,
-          date_range: date_range,
-          view_id: view_id,
-          access_token: access_token,
-          page_token: nil
-        }
-      end
-    end
+    @request_data
+    |> Task.async_stream(
+      fn {dataset, dimensions, metrics} ->
+        fetch_and_persist(
+          site,
+          %{
+            dataset: dataset,
+            dimensions: dimensions,
+            metrics: metrics,
+            date_range: date_range,
+            view_id: view_id,
+            access_token: access_token,
+            page_token: nil
+          }
+        )
+      end,
+      ordered: false,
+      max_concurrency: 3,
+      timeout: @one_day_in_ms
+    )
+    |> Stream.run()
   end
 
   @max_attempts 5
