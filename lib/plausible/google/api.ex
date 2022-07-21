@@ -1,5 +1,5 @@
 defmodule Plausible.Google.Api do
-  alias Plausible.{Imported, Google.HTTP}
+  alias Plausible.Google.{ReportRequest, HTTP}
   use Timex
   require Logger
 
@@ -36,8 +36,6 @@ defmodule Plausible.Google.Api do
       |> Enum.map(fn site -> site["siteUrl"] end)
       |> Enum.map(fn url -> String.trim_trailing(url, "/") end)
       |> then(&{:ok, &1})
-    else
-      err -> err
     end
   end
 
@@ -49,8 +47,6 @@ defmodule Plausible.Google.Api do
       |> Map.get("rows", [])
       |> Enum.filter(fn row -> row["clicks"] > 0 end)
       |> Enum.map(fn row -> %{name: row["keys"], visitors: round(row["clicks"])} end)
-    else
-      any -> any
     end
   end
 
@@ -77,61 +73,7 @@ defmodule Plausible.Google.Api do
     {"#{host} - #{name}", Map.get(view, "id")}
   end
 
-  # Each element is: {dataset, dimensions, metrics}
-  @request_data [
-    {
-      "imported_visitors",
-      ["ga:date"],
-      [
-        "ga:users",
-        "ga:pageviews",
-        "ga:bounces",
-        "ga:sessions",
-        "ga:sessionDuration"
-      ]
-    },
-    {
-      "imported_sources",
-      ["ga:date", "ga:source", "ga:medium", "ga:campaign", "ga:adContent", "ga:keyword"],
-      ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-    },
-    {
-      "imported_pages",
-      ["ga:date", "ga:hostname", "ga:pagePath"],
-      ["ga:users", "ga:pageviews", "ga:exits", "ga:timeOnPage"]
-    },
-    {
-      "imported_entry_pages",
-      ["ga:date", "ga:landingPagePath"],
-      ["ga:users", "ga:entrances", "ga:sessionDuration", "ga:bounces"]
-    },
-    {
-      "imported_exit_pages",
-      ["ga:date", "ga:exitPagePath"],
-      ["ga:users", "ga:exits"]
-    },
-    {
-      "imported_locations",
-      ["ga:date", "ga:countryIsoCode", "ga:regionIsoCode"],
-      ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-    },
-    {
-      "imported_devices",
-      ["ga:date", "ga:deviceCategory"],
-      ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-    },
-    {
-      "imported_browsers",
-      ["ga:date", "ga:browser"],
-      ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-    },
-    {
-      "imported_operating_systems",
-      ["ga:date", "ga:operatingSystem"],
-      ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-    }
-  ]
-
+  @per_page 10_000
   @one_day_in_ms 86_400_000
   @doc """
   API reference:
@@ -140,52 +82,55 @@ defmodule Plausible.Google.Api do
   Dimensions reference: https://ga-dev-tools.web.app/dimensions-metrics-explorer
   """
   def import_analytics(site, date_range, view_id, access_token) do
-    @request_data
+    {:ok, buffer} = Plausible.Google.Buffer.start_link()
+
+    ReportRequest.full_report()
     |> Task.async_stream(
-      fn {dataset, dimensions, metrics} ->
-        fetch_and_persist(
-          site,
-          %{
-            dataset: dataset,
-            dimensions: dimensions,
-            metrics: metrics,
-            date_range: date_range,
+      fn %ReportRequest{} = report_request ->
+        report_request = %ReportRequest{
+          report_request
+          | date_range: date_range,
             view_id: view_id,
             access_token: access_token,
-            page_token: nil
-          }
-        )
+            page_token: nil,
+            page_size: @per_page
+        }
+
+        fetch_and_persist(site, report_request, buffer: buffer)
       end,
       ordered: false,
       max_concurrency: 3,
       timeout: @one_day_in_ms
     )
     |> Stream.run()
+
+    Plausible.Google.Buffer.flush(buffer)
+    Plausible.Google.Buffer.stop(buffer)
+
+    :ok
   end
 
   @max_attempts 5
-  def fetch_and_persist(site, request, opts \\ []) do
+  def fetch_and_persist(site, %ReportRequest{} = report_request, opts \\ []) do
+    buffer_pid = Keyword.get(opts, :buffer)
     http_client = Keyword.get(opts, :http_client, HTTPoison)
     attempt = Keyword.get(opts, :attempt, 1)
     sleep_time = Keyword.get(opts, :sleep_time, 1000)
 
-    case HTTP.get_report(
-           http_client,
-           request.access_token,
-           request.view_id,
-           request.date_range,
-           request.dimensions,
-           request.metrics,
-           10_000,
-           request.page_token
-         ) do
-      {:ok, {rows, nil}} ->
-        Imported.from_google_analytics(rows, site.id, request.dataset)
-        :ok
-
+    case HTTP.get_report(http_client, report_request) do
       {:ok, {rows, next_page_token}} ->
-        Imported.from_google_analytics(rows, site.id, request.dataset)
-        fetch_and_persist(site, %{request | page_token: next_page_token})
+        records = Plausible.Imported.from_google_analytics(rows, site.id, report_request.dataset)
+        :ok = Plausible.Google.Buffer.insert_many(buffer_pid, report_request.dataset, records)
+
+        if next_page_token do
+          fetch_and_persist(
+            site,
+            %ReportRequest{report_request | page_token: next_page_token},
+            opts
+          )
+        else
+          :ok
+        end
 
       error ->
         context_key = "request:#{attempt}"
@@ -195,7 +140,7 @@ defmodule Plausible.Google.Api do
           raise "Google API request failed too many times"
         else
           Process.sleep(sleep_time)
-          fetch_and_persist(site, request, Keyword.merge(opts, attempt: attempt + 1))
+          fetch_and_persist(site, report_request, Keyword.merge(opts, attempt: attempt + 1))
         end
     end
   end

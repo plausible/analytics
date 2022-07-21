@@ -7,18 +7,10 @@ defmodule Plausible.Imported do
     Plausible.ClickhouseRepo.clear_imported_stats_for(site.id)
   end
 
-  def from_google_analytics(nil, _site_id, _metric), do: {:ok, nil}
+  def from_google_analytics(nil, _site_id, _metric), do: nil
 
   def from_google_analytics(data, site_id, table) do
-    data =
-      Enum.map(data, fn row ->
-        new_from_google_analytics(site_id, table, row)
-      end)
-
-    case ClickhouseRepo.insert_all(table, data) do
-      {n_rows, _} when n_rows > 0 -> :ok
-      error -> error
-    end
+    Enum.map(data, fn row -> new_from_google_analytics(site_id, table, row) end)
   end
 
   defp parse_number(nr) do

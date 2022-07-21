@@ -1,41 +1,39 @@
 defmodule Plausible.Google.HTTP do
-  def get_report(
-        http_client,
-        access_token,
-        view_id,
-        date_range,
-        dimensions,
-        metrics,
-        page_size,
-        pagination_token
-      ) do
+  @spec get_report(module(), Plausible.Google.ReportRequest.t()) ::
+          {:ok, {map(), String.t() | nil}} | {:error, any()}
+  def get_report(http_client, %Plausible.Google.ReportRequest{} = report_request) do
     params =
       Jason.encode!(%{
         reportRequests: [
           %{
-            viewId: view_id,
-            dateRanges: [%{startDate: date_range.first, endDate: date_range.last}],
-            dimensions: Enum.map(dimensions, &%{name: &1, histogramBuckets: []}),
-            metrics: Enum.map(metrics, &%{expression: &1}),
+            viewId: report_request.view_id,
+            dateRanges: [
+              %{
+                startDate: report_request.date_range.first,
+                endDate: report_request.date_range.last
+              }
+            ],
+            dimensions: Enum.map(report_request.dimensions, &%{name: &1, histogramBuckets: []}),
+            metrics: Enum.map(report_request.metrics, &%{expression: &1}),
             hideTotals: true,
             hideValueRanges: true,
             orderBys: [%{fieldName: "ga:date", sortOrder: "DESCENDING"}],
-            pageSize: page_size,
-            pageToken: pagination_token
+            pageSize: report_request.page_size,
+            pageToken: report_request.page_token
           }
         ]
       })
 
     response =
-      http_client.post(
+      :post
+      |> Finch.build(
         "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
-        params,
-        [Authorization: "Bearer #{access_token}"],
-        timeout: 30_000,
-        recv_timeout: 30_000
+        [{"Authorization", "Bearer #{report_request.access_token}"}],
+        params
       )
+      |> Finch.request(Plausible.Finch)
 
-    with {:ok, %{status_code: 200, body: body}} <- response,
+    with {:ok, %{status: 200, body: body}} <- response,
          {:ok, %{"reports" => [report | _]}} <- Jason.decode(body),
          token <- Map.get(report, "nextPageToken"),
          {:ok, data} <- get_non_empty_rows(report) do
