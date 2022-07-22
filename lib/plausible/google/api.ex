@@ -54,8 +54,6 @@ defmodule Plausible.Google.Api do
         |> Enum.map(fn url -> String.trim_trailing(url, "/") end)
 
       {:ok, domains}
-    else
-      err -> err
     end
   end
 
@@ -69,8 +67,6 @@ defmodule Plausible.Google.Api do
   def fetch_stats(site, query, limit) do
     with {:ok, auth} <- refresh_if_needed(site.google_auth) do
       do_fetch_stats(auth, query, limit)
-    else
-      err -> err
     end
   end
 
