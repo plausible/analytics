@@ -153,6 +153,7 @@ defmodule Plausible.Stats.Query do
   def from(site, %{"period" => "12mo"} = params) do
     end_date =
       parse_single_date(site.timezone, params)
+      |> Timex.shift(months: -1)
       |> Timex.end_of_month()
 
     start_date =

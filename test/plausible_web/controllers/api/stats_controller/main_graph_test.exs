@@ -160,7 +160,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph?period=12mo&date=2021-12-31&with_imported=true"
+          "/api/stats/#{site.domain}/main-graph?period=12mo&date=2022-01-01&with_imported=true"
         )
 
       assert %{"plot" => plot} = json_response(conn, 200)

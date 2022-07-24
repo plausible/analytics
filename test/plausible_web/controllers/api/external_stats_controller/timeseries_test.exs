@@ -315,10 +315,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
 
   test "shows last 12 months of visitors", %{conn: conn, site: site} do
     populate_stats([
-      build(:pageview, domain: site.domain, timestamp: ~N[2020-02-01 00:00:00]),
-      build(:pageview, domain: site.domain, timestamp: ~N[2020-12-31 00:00:00]),
-      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
-      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
+      build(:pageview, domain: site.domain, timestamp: ~N[2020-01-01 00:00:00]),
+      build(:pageview, domain: site.domain, timestamp: ~N[2020-11-30 00:00:00]),
+      build(:pageview, domain: site.domain, timestamp: ~N[2020-12-01 00:00:00]),
+      build(:pageview, domain: site.domain, timestamp: ~N[2020-12-01 00:00:00])
     ])
 
     conn =
@@ -330,7 +330,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
 
     assert json_response(conn, 200) == %{
              "results" => [
-               %{"date" => "2020-02-01", "visitors" => 1},
+               %{"date" => "2020-01-01", "visitors" => 1},
+               %{"date" => "2020-02-01", "visitors" => 0},
                %{"date" => "2020-03-01", "visitors" => 0},
                %{"date" => "2020-04-01", "visitors" => 0},
                %{"date" => "2020-05-01", "visitors" => 0},
@@ -339,9 +340,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                %{"date" => "2020-08-01", "visitors" => 0},
                %{"date" => "2020-09-01", "visitors" => 0},
                %{"date" => "2020-10-01", "visitors" => 0},
-               %{"date" => "2020-11-01", "visitors" => 0},
-               %{"date" => "2020-12-01", "visitors" => 1},
-               %{"date" => "2021-01-01", "visitors" => 2}
+               %{"date" => "2020-11-01", "visitors" => 1},
+               %{"date" => "2020-12-01", "visitors" => 2}
              ]
            }
   end

@@ -53,11 +53,11 @@ defmodule Plausible.Stats.QueryTest do
 
   test "parses 12 month format" do
     q = Query.from(@site, %{"period" => "12mo"})
+    start_date = Timex.today() |> Timex.shift(months: -12) |> Timex.beginning_of_month()
+    end_date = Timex.today() |> Timex.shift(months: -1) |> Timex.end_of_month()
 
-    assert q.date_range.first ==
-             Timex.shift(Timex.today(), months: -11) |> Timex.beginning_of_month()
-
-    assert q.date_range.last == Timex.today() |> Timex.end_of_month()
+    assert q.date_range.first == start_date
+    assert q.date_range.last == end_date
     assert q.interval == "month"
   end
 
