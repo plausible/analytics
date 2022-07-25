@@ -109,7 +109,8 @@ defmodule Plausible.MixProject do
       {:opentelemetry_ecto, "~> 1.0.0"},
       {:observer_cli, "~> 1.7"},
       {:mimic, "~> 1.7", only: :test},
-      {:prom_ex, "~> 1.7.1"}
+      {:prom_ex, "~> 1.7.1"},
+      {:exvcr, "~> 0.11", only: :test}
     ]
   end
 

@@ -31,7 +31,7 @@ defmodule Plausible.Google.HTTP do
         [{"Authorization", "Bearer #{report_request.access_token}"}],
         params
       )
-      |> Finch.request(Plausible.Finch)
+      |> http_client.request(Plausible.Finch)
 
     with {:ok, %{status: 200, body: body}} <- response,
          {:ok, %{"reports" => [report | _]}} <- Jason.decode(body),

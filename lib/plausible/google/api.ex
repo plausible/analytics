@@ -113,9 +113,9 @@ defmodule Plausible.Google.Api do
   @max_attempts 5
   def fetch_and_persist(site, %ReportRequest{} = report_request, opts \\ []) do
     buffer_pid = Keyword.get(opts, :buffer)
-    http_client = Keyword.get(opts, :http_client, HTTPoison)
     attempt = Keyword.get(opts, :attempt, 1)
     sleep_time = Keyword.get(opts, :sleep_time, 1000)
+    http_client = Keyword.get(opts, :http_client, Finch)
 
     case HTTP.get_report(http_client, report_request) do
       {:ok, {rows, next_page_token}} ->

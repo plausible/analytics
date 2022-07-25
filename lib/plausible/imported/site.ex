@@ -35,10 +35,10 @@ defmodule Plausible.Imported do
       site_id: site_id,
       date: get_date(row),
       source: row.dimensions |> Map.fetch!("ga:source") |> parse_referrer(),
-      utm_medium: row.dimensions |> Map.fetch!("ga:medium") |> nil_if_missing(),
-      utm_campaign: row.dimensions |> Map.fetch!("ga:campaign") |> nil_if_missing(),
-      utm_content: row.dimensions |> Map.fetch!("ga:adContent") |> nil_if_missing(),
-      utm_term: row.dimensions |> Map.fetch!("ga:keyword") |> nil_if_missing(),
+      utm_medium: row.dimensions |> Map.fetch!("ga:medium") |> default_if_missing(),
+      utm_campaign: row.dimensions |> Map.fetch!("ga:campaign") |> default_if_missing(),
+      utm_content: row.dimensions |> Map.fetch!("ga:adContent") |> default_if_missing(),
+      utm_term: row.dimensions |> Map.fetch!("ga:keyword") |> default_if_missing(),
       visitors: row.metrics |> Map.fetch!("ga:users") |> parse_number(),
       visits: row.metrics |> Map.fetch!("ga:sessions") |> parse_number(),
       bounces: row.metrics |> Map.fetch!("ga:bounces") |> parse_number(),
@@ -82,16 +82,11 @@ defmodule Plausible.Imported do
   end
 
   defp new_from_google_analytics(site_id, "imported_locations", row) do
-    country = Map.fetch!(row.dimensions, "ga:countryIsoCode")
-    region = Map.fetch!(row.dimensions, "ga:regionIsoCode")
-    country = if country == "(not set)", do: "", else: country
-    region = if region == "(not set)", do: "", else: region
-
     %{
       site_id: site_id,
       date: get_date(row),
-      country: country,
-      region: region,
+      country: row.dimensions |> Map.fetch!("ga:countryIsoCode") |> default_if_missing(""),
+      region: row.dimensions |> Map.fetch!("ga:regionIsoCode") |> default_if_missing(""),
       city: 0,
       visitors: row.metrics |> Map.fetch!("ga:users") |> parse_number(),
       visits: row.metrics |> Map.fetch!("ga:sessions") |> parse_number(),
@@ -163,8 +158,9 @@ defmodule Plausible.Imported do
   end
 
   @missing_values ["(none)", "(not set)", "(not provided)"]
-  def nil_if_missing(value) when value in @missing_values, do: nil
-  def nil_if_missing(value), do: value
+  defp default_if_missing(value, default \\ nil)
+  defp default_if_missing(value, default) when value in @missing_values, do: default
+  defp default_if_missing(value, _default), do: value
 
   defp parse_referrer(nil), do: nil
   defp parse_referrer("(direct)"), do: nil
