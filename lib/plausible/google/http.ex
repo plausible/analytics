@@ -1,6 +1,6 @@
 defmodule Plausible.Google.HTTP do
   @spec get_report(module(), Plausible.Google.ReportRequest.t()) ::
-          {:ok, {map(), String.t() | nil}} | {:error, any()}
+          {:ok, {[map()], String.t() | nil}} | {:error, any()}
   def get_report(http_client, %Plausible.Google.ReportRequest{} = report_request) do
     params =
       Jason.encode!(%{
@@ -36,18 +36,25 @@ defmodule Plausible.Google.HTTP do
     with {:ok, %{status: 200, body: body}} <- response,
          {:ok, %{"reports" => [report | _]}} <- Jason.decode(body),
          token <- Map.get(report, "nextPageToken"),
-         {:ok, data} <- get_non_empty_rows(report) do
-      {:ok, {data, token}}
-    else
-      error -> error
+         report <- convert_to_maps(report) do
+      {:ok, {report, token}}
     end
   end
 
-  defp get_non_empty_rows(report) do
-    case get_in(report, ["data", "rows"]) do
-      [] -> {:error, :empty_response_rows}
-      rows -> {:ok, rows}
-    end
+  defp convert_to_maps(%{
+         "data" => %{"rows" => rows},
+         "columnHeader" => %{
+           "dimensions" => dimension_headers,
+           "metricHeader" => %{"metricHeaderEntries" => metric_headers}
+         }
+       }) do
+    metric_headers = Enum.map(metric_headers, & &1["name"])
+
+    Enum.map(rows, fn %{"dimensions" => dimensions, "metrics" => [%{"values" => metrics}]} ->
+      metrics = Enum.zip(metric_headers, metrics)
+      dimensions = Enum.zip(dimension_headers, dimensions)
+      %{metrics: Map.new(metrics), dimensions: Map.new(dimensions)}
+    end)
   end
 
   def list_sites(access_token) do
