@@ -36,6 +36,7 @@ All notable changes to this project will be documented in this file.
 - Fix SecurityError in tracking script when user has blocked all local storage
 - Prevent dashboard graph from being selected when long pressing on the graph in a mobile browser
 - The exported `pages.csv` file now includes pageviews again [plausible/analytics#1878](https://github.com/plausible/analytics/issues/1878)
+- Fix a bug where city, region and country filters were filtering stats but not the location list
 
 ### Changed
 - Cache the tracking script for 24 hours

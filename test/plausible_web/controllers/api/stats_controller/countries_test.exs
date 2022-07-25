@@ -267,5 +267,27 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                }
              ]
     end
+
+    test "when list is filtered by country returns one country only", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, country_code: "EE"),
+        build(:pageview, country_code: "EE"),
+        build(:pageview, country_code: "GB")
+      ])
+
+      filters = Jason.encode!(%{country: "GB"})
+      conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "code" => "GB",
+                 "alpha_3" => "GBR",
+                 "name" => "United Kingdom",
+                 "flag" => "🇬🇧",
+                 "visitors" => 1,
+                 "percentage" => 100
+               }
+             ]
+    end
   end
 end
