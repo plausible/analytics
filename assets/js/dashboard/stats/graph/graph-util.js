@@ -17,19 +17,13 @@ export const dateFormatter = (interval, longForm) => {
       );
       const parts = isoDate.split(/[^0-9]/);
       date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5])
-      var hours = date.getHours(); // Not sure why getUTCHours doesn't work here
+      var hours = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' }).format(date);
       if (uses12hTime) {
-        var ampm = hours >= 12 ? 'pm' : 'am';
-        hours = hours % 12;
-        hours = hours ? hours : 12; // the hour '0' should be '12'
-        return hours + ampm;
+        hours = hours.toLowerCase().replace(/\s/g, "");
       } else {
-        var suffix = "h";
-        if (hours >= 12) {
-          hours = hours % 12 + 12;
-        }
-        return hours + suffix;
+        hours = hours.concat("h");
       }
+      return hours;
     } else if (interval === 'minute') {
       if (longForm) {
         const minutesAgo = Math.abs(isoDate)
