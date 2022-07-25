@@ -44,6 +44,7 @@ All notable changes to this project will be documented in this file.
 - Remove the `+ Add Site` link to the site-switcher dropdown in the dashboard.
 - `DISABLE_REGISTRATIONS` configuration parameter can now accept `invite_only` to allow invited users to register an account while keeping regular registrations disabled plausible/analytics#1841
 - New and improved Session tracking module for higher throughput and lower latency. [PR#1934](https://github.com/plausible/analytics#1934)
+- Last 12 months now shows the last year up until the previous month of the current one [PR#2055](https://github.com/plausible/analytics/pull/2055)
 
 ## v1.4.1
 
