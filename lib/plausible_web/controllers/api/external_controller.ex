@@ -481,13 +481,13 @@ defmodule PlausibleWeb.Api.ExternalController do
 
     country_code =
       get_in(result, [:country, :iso_code])
-      |> ignore_unknown_country
+      |> ignore_unknown_country()
 
     city_geoname_id = get_in(result, [:city, :geoname_id])
 
     subdivision1_code =
       case result do
-        %{geolocation: %{subdivisions: [%{iso_code: iso_code} | _rest]}} ->
+        %{subdivisions: [%{iso_code: iso_code} | _rest]} ->
           country_code <> "-" <> iso_code
 
         _ ->
@@ -496,7 +496,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
     subdivision2_code =
       case result do
-        %{geolocation: %{subdivisions: [_first, %{iso_code: iso_code} | _rest]}} ->
+        %{subdivisions: [_first, %{iso_code: iso_code} | _rest]} ->
           country_code <> "-" <> iso_code
 
         _ ->
