@@ -4,7 +4,7 @@
 
 The easiest way to get up and running is to [install](https://docs.docker.com/get-docker/) and use Docker for running both Postgres and Clickhouse.
 
-Make sure Docker, Elixir, Erlang and Node.js are all installed on your development machine.
+Make sure Docker, Elixir, Erlang and Node.js are all installed on your development machine. The [`.tool-versions`](https://github.com/plausible/analytics/blob/master/.tool-versions) file is available to use with [asdf](https://github.com/asdf-vm/asdf) or similar tools.
 
 ### Start the environment:
 
@@ -38,4 +38,4 @@ Note: Since we are deleting the containers, be careful when deleting volumes wit
 
 ### Pre-commit hooks
 
-`pre-commit` requires Python to be available locally and covers JavaScript and CSS. Set up with `pip install --user pre-commit` followed by `pre-commit install`. Conversely, if the prompts are far too bothersome, remove with `pre-commit uninstall`.
+`pre-commit` requires Python to be available locally and covers Elixir, JavaScript, and CSS. Set up with `pip install --user pre-commit` followed by `pre-commit install`. Conversely, if the prompts are far too bothersome, remove with `pre-commit uninstall`.
