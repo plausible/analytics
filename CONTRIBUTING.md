@@ -1,5 +1,7 @@
 # Contributing
 
+We welcome everyone to contribute to Plausible. This document is to help you on setting up your environment, finding a task, and opening pull requests.
+
 ## Development setup
 
 The easiest way to get up and running is to [install](https://docs.docker.com/get-docker/) and use Docker for running both Postgres and Clickhouse.
@@ -39,3 +41,11 @@ Note: Since we are deleting the containers, be careful when deleting volumes wit
 ### Pre-commit hooks
 
 `pre-commit` requires Python to be available locally and covers Elixir, JavaScript, and CSS. Set up with `pip install --user pre-commit` followed by `pre-commit install`. Conversely, if the prompts are far too bothersome, remove with `pre-commit uninstall`.
+
+## Finding a task
+
+Bugs can be found in our [issue tracker](https://github.com/plausible/analytics/issues). Issues are usually up for grabs.
+
+New features need to be discussed with the core team and the community first. If you're tackling a feature, please make sure it has been already discussed in the [Discussions tab](https://github.com/plausible/analytics/discussions). We kindly ask contributors to use the discussion comment section to propose a solution before opening a pull request.
+
+Pull requests without an associated issue or discussion may still be merged, but we will focus on changes that have already been talked through.
