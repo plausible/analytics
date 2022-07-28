@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 - API route `GET /api/v1/sites/:site_id`
 - Hovering on top of list items will now show a [tooltip with the exact number instead of a shortened version](https://github.com/plausible/analytics/discussions/1968)
 - Filter goals in realtime filter by clicking goal name
+- The time format (12 hour or 24 hour) for graph timelines is now presented based on the browser's defined language
 
 ### Fixed
 - UI fix where multi-line text in pills would not be underlined properly on small screens.

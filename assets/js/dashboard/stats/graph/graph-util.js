@@ -10,13 +10,20 @@ export const dateFormatter = (interval, longForm) => {
     } else if (interval === 'date') {
       return formatDay(date);
     } else if (interval === 'hour') {
+      var uses12hTime = /h12/.test(
+        Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
+        .resolvedOptions()
+        .hourCycle
+      );
       const parts = isoDate.split(/[^0-9]/);
       date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5])
-      var hours = date.getHours(); // Not sure why getUTCHours doesn't work here
-      var ampm = hours >= 12 ? 'pm' : 'am';
-      hours = hours % 12;
-      hours = hours ? hours : 12; // the hour '0' should be '12'
-      return hours + ampm;
+      var hours = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' }).format(date);
+      if (uses12hTime) {
+        hours = hours.toLowerCase().replace(/\s/g, "");
+      } else {
+        hours = hours.concat("h");
+      }
+      return hours;
     } else if (interval === 'minute') {
       if (longForm) {
         const minutesAgo = Math.abs(isoDate)
