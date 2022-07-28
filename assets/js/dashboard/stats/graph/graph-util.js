@@ -19,7 +19,7 @@ export const dateFormatter = (interval, longForm) => {
       date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5])
       var hours = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' }).format(date);
       if (uses12hTime) {
-        hours = hours.toLowerCase().replace(/\s/g, "");
+        hours = hours.toLowerCase().replace(" ", "");
       } else {
         hours = hours.concat("h");
       }
