@@ -1,4 +1,9 @@
 defmodule Mix.Tasks.DownloadCountryDatabase do
+  @moduledoc """
+  This task downloads the Country Lite database from DB-IP for self-hosted or development purposes.
+  Plausible Cloud runs a paid version of DB-IP with more detailed geolocation data.
+  """
+
   use Mix.Task
   use Plausible.Repo
   require Logger

@@ -60,3 +60,6 @@ plausible-report.xml
 /priv/plts/*.plt.hash
 
 .env
+
+# Geolocation databases
+/priv/geodb/*.mmdb
