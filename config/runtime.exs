@@ -341,13 +341,15 @@ cloud_queues = [
 queues = if(is_selfhost, do: base_queues, else: base_queues ++ cloud_queues)
 cron_enabled = !disable_cron
 
+thirty_days_in_seconds = 60 * 60 * 24 * 30
+
 cond do
   config_env() == :prod ->
     config :plausible, Oban,
       repo: Plausible.Repo,
       plugins: [
         # Keep 30 days history
-        {Oban.Plugins.Pruner, max_age: :timer.hours(24 * 30)},
+        {Oban.Plugins.Pruner, max_age: thirty_days_in_seconds},
         {Oban.Plugins.Cron, crontab: if(cron_enabled, do: crontab, else: [])},
         # Rescue orphaned jobs after 2 hours
         {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)},

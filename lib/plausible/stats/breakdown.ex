@@ -381,6 +381,7 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:country") do
     from(
       s in q,
+      where: s.country_code != "\0\0",
       group_by: s.country_code,
       select_merge: %{country: s.country_code}
     )
@@ -389,6 +390,7 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:region") do
     from(
       s in q,
+      where: s.subdivision1_code != "",
       group_by: s.subdivision1_code,
       select_merge: %{region: s.subdivision1_code}
     )
@@ -397,6 +399,7 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:city") do
     from(
       s in q,
+      where: s.city_geoname_id != 0,
       group_by: s.city_geoname_id,
       select_merge: %{city: s.city_geoname_id}
     )
