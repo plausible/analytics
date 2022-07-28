@@ -1,10 +1,11 @@
-const { test, mockRequest } = require('./support/harness');
+const { test } = require('./support/harness');
+const { mockRequest } = require('./support/test-utils')
 const { expect } = require('@playwright/test');
 
 test.describe('Basic installation', () => {
   test('Sends pageview automatically', async ({ page }) => {
     const expectedEventRequest = mockRequest(page, '/api/event')
-
+    
     await page.goto('/simple.html');
 
     eventRequest = await expectedEventRequest

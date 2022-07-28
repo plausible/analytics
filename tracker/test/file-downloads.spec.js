@@ -29,19 +29,6 @@ test.describe('file-downloads extension', () => {
     expect((await downloadRequest).url()).toContain(downloadURL)
   });
 
-  test('sends event and does not start download if default externally prevented', async ({ page }) => {
-    await page.goto('/file-download.html')
-    const downloadURL = await page.locator('#link-default-prevented').getAttribute('href')
-
-    const eventRequest = mockRequest(page, '/api/event')
-    const downloadRequest = mockRequest(page, downloadURL)
-
-    await page.click('#link-default-prevented')
-
-    expectCustomEvent(await eventRequest, 'File Download', { url: downloadURL })
-    expect(downloadRequest).rejects.toThrow(`No request to ${downloadURL} after 5000 ms`)
-  });
-
   test('sends File Download event with query-stripped url property', async ({ page }) => {
     await page.goto('/file-download.html')
     const downloadURL = await page.locator('#link-query').getAttribute('href')

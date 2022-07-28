@@ -29,17 +29,4 @@ test.describe('outbound-links extension', () => {
     expectCustomEvent(await eventRequest, 'Outbound Link: Click', { url: outboundURL })
     expect((await navigationRequest).url()).toContain(outboundURL)
   });
-
-  test('sends event and does not navigate if default externally prevented', async ({ page }) => {
-    await page.goto('/outbound-link.html')
-    const outboundURL = await page.locator('#link').getAttribute('href')
-
-    const eventRequest = mockRequest(page, '/api/event')
-    const navigationRequest = mockRequest(page, outboundURL)
-
-    await page.click('#link-default-prevented')
-
-    expectCustomEvent(await eventRequest, 'Outbound Link: Click', { url: outboundURL })
-    expect(navigationRequest).rejects.toThrow(`No request to ${outboundURL} after 5000 ms`)
-  });
 });

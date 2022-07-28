@@ -33,10 +33,15 @@ const patchCaps = (name, title) => {
   let osCapsSplit = osCaps.split(/ /);
   let os = osCapsSplit.shift();
   let os_version = osCapsSplit.join(' ');
-  caps.browser = browser ? browser : 'chrome';
-  caps.browser_version = browser_version ? browser_version : 'latest';
-  caps.os = os ? os : 'osx';
-  caps.os_version = os_version ? os_version : 'catalina';
+
+  caps.browser = browser;
+  if (browser.includes('playwright-')) {
+    caps['browserstack.playwrightVersion'] = browser_version;
+  } else {
+    caps.browser_version = browser_version;
+  }
+  caps.os = os;
+  caps.os_version = os_version;
   caps.name = title;
 };
 
