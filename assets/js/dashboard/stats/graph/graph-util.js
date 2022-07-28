@@ -21,7 +21,7 @@ export const dateFormatter = (interval, longForm) => {
       if (uses12hTime) {
         hours = hours.toLowerCase().replace(" ", "");
       } else {
-        hours = hours.concat("h");
+        hours = hours.concat(":00");
       }
       return hours;
     } else if (interval === 'minute') {
