@@ -1,5 +1,5 @@
 import { METRIC_LABELS, METRIC_FORMATTER } from './visitor-graph'
-import {parseUTCDate, formatMonthYYYY, formatDay} from '../../util/date'
+import { parseUTCDate, formatMonthYYYY, formatDay } from '../../util/date'
 
 export const dateFormatter = (interval, longForm) => {
   return function(isoDate, _index, _ticks) {
@@ -12,8 +12,8 @@ export const dateFormatter = (interval, longForm) => {
     } else if (interval === 'hour') {
       var uses12hTime = /h12/.test(
         Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
-        .resolvedOptions()
-        .hourCycle
+          .resolvedOptions()
+          .hourCycle
       );
       const parts = isoDate.split(/[^0-9]/);
       date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5])
@@ -36,91 +36,91 @@ export const dateFormatter = (interval, longForm) => {
 }
 
 export const GraphTooltip = (graphData, metric) => {
-	return (context) => {
-		const tooltipModel = context.tooltip;
+  return (context) => {
+    const tooltipModel = context.tooltip;
     const offset = document.getElementById("main-graph-canvas").getBoundingClientRect()
 
-		// Tooltip Element
-		let tooltipEl = document.getElementById('chartjs-tooltip');
+    // Tooltip Element
+    let tooltipEl = document.getElementById('chartjs-tooltip');
 
-		// Create element on first render
-		if (!tooltipEl) {
-			tooltipEl = document.createElement('div');
-			tooltipEl.id = 'chartjs-tooltip';
-			tooltipEl.style.display = 'none';
-			tooltipEl.style.opacity = 0;
-			document.body.appendChild(tooltipEl);
-		}
+    // Create element on first render
+    if (!tooltipEl) {
+      tooltipEl = document.createElement('div');
+      tooltipEl.id = 'chartjs-tooltip';
+      tooltipEl.style.display = 'none';
+      tooltipEl.style.opacity = 0;
+      document.body.appendChild(tooltipEl);
+    }
 
-		if (tooltipEl && offset && window.innerWidth < 768) {
-			tooltipEl.style.top = offset.y + offset.height + window.scrollY + 15 + 'px'
-			tooltipEl.style.left = offset.x + 'px'
-			tooltipEl.style.right = null;
+    if (tooltipEl && offset && window.innerWidth < 768) {
+      tooltipEl.style.top = offset.y + offset.height + window.scrollY + 15 + 'px'
+      tooltipEl.style.left = offset.x + 'px'
+      tooltipEl.style.right = null;
       tooltipEl.style.opacity = 1;
-		}
+    }
 
-		// Stop if no tooltip showing
-		if (tooltipModel.opacity === 0) {
-			tooltipEl.style.display = 'none';
-			return;
-		}
+    // Stop if no tooltip showing
+    if (tooltipModel.opacity === 0) {
+      tooltipEl.style.display = 'none';
+      return;
+    }
 
-		function getBody(bodyItem) {
-			return bodyItem.lines;
-		}
+    function getBody(bodyItem) {
+      return bodyItem.lines;
+    }
 
-		function renderLabel(label, prev_label) {
-			const formattedLabel = dateFormatter(graphData.interval, true)(label)
-			const prev_formattedLabel = prev_label && dateFormatter(graphData.interval, true)(prev_label)
+    function renderLabel(label, prev_label) {
+      const formattedLabel = dateFormatter(graphData.interval, true)(label)
+      const prev_formattedLabel = prev_label && dateFormatter(graphData.interval, true)(prev_label)
 
-			if (graphData.interval === 'month') {
-				return !prev_label ? formattedLabel : prev_formattedLabel
-			}
+      if (graphData.interval === 'month') {
+        return !prev_label ? formattedLabel : prev_formattedLabel
+      }
 
-			if (graphData.interval === 'date') {
-				return !prev_label ? formattedLabel : prev_formattedLabel
-			}
+      if (graphData.interval === 'date') {
+        return !prev_label ? formattedLabel : prev_formattedLabel
+      }
 
-			if (graphData.interval === 'hour') {
-				return !prev_label ? `${dateFormatter("date", true)(label)}, ${formattedLabel}` : `${dateFormatter("date", true)(prev_label)}, ${dateFormatter(graphData.interval, true)(prev_label)}`
-			}
+      if (graphData.interval === 'hour') {
+        return !prev_label ? `${dateFormatter("date", true)(label)}, ${formattedLabel}` : `${dateFormatter("date", true)(prev_label)}, ${dateFormatter(graphData.interval, true)(prev_label)}`
+      }
 
-			return !prev_label ? formattedLabel : prev_formattedLabel
-		}
+      return !prev_label ? formattedLabel : prev_formattedLabel
+    }
 
-		// function renderComparison(change) {
-		//   const formattedComparison = numberFormatter(Math.abs(change))
+    // function renderComparison(change) {
+    //   const formattedComparison = numberFormatter(Math.abs(change))
 
-		//   if (change > 0) {
-		//     return `<span class='text-green-500 font-bold'>${formattedComparison}%</span>`
-		//   }
-		//   if (change < 0) {
-		//     return `<span class='text-red-400 font-bold'>${formattedComparison}%</span>`
-		//   }
-		//   if (change === 0) {
-		//     return `<span class='font-bold'>0%</span>`
-		//   }
-		// }
+    //   if (change > 0) {
+    //     return `<span class='text-green-500 font-bold'>${formattedComparison}%</span>`
+    //   }
+    //   if (change < 0) {
+    //     return `<span class='text-red-400 font-bold'>${formattedComparison}%</span>`
+    //   }
+    //   if (change === 0) {
+    //     return `<span class='font-bold'>0%</span>`
+    //   }
+    // }
 
-		// Set Tooltip Body
-		if (tooltipModel.body) {
-			var bodyLines = tooltipModel.body.map(getBody);
+    // Set Tooltip Body
+    if (tooltipModel.body) {
+      var bodyLines = tooltipModel.body.map(getBody);
 
-			// Remove duplicated line on overlap between dashed and normal
-			if (bodyLines.length == 3) {
-				bodyLines[1] = false
-			}
+      // Remove duplicated line on overlap between dashed and normal
+      if (bodyLines.length == 3) {
+        bodyLines[1] = false
+      }
 
-			const data = tooltipModel.dataPoints[0]
-			const label = graphData.labels[data.dataIndex]
-			const point = data.raw || 0
+      const data = tooltipModel.dataPoints[0]
+      const label = graphData.labels[data.dataIndex]
+      const point = data.raw || 0
 
-			// const prev_data = tooltipModel.dataPoints.slice(-1)[0]
-			// const prev_label = graphData.prev_labels && graphData.prev_labels[prev_data.dataIndex]
-			// const prev_point = prev_data.raw || 0
-			// const pct_change = point === prev_point ? 0 : prev_point === 0 ? 100 : Math.round(((point - prev_point) / prev_point * 100).toFixed(1))
+      // const prev_data = tooltipModel.dataPoints.slice(-1)[0]
+      // const prev_label = graphData.prev_labels && graphData.prev_labels[prev_data.dataIndex]
+      // const prev_point = prev_data.raw || 0
+      // const pct_change = point === prev_point ? 0 : prev_point === 0 ? 100 : Math.round(((point - prev_point) / prev_point * 100).toFixed(1))
 
-			let innerHtml = `
+      let innerHtml = `
 			<div class='text-gray-100 flex flex-col'>
 				<div class='flex justify-between items-center'>
 						<span class='font-semibold mr-4 text-lg'>${METRIC_LABELS[metric]}</span>
@@ -138,10 +138,10 @@ export const GraphTooltip = (graphData, metric) => {
 			</div>
 			`;
 
-			tooltipEl.innerHTML = innerHtml;
-		}
-		tooltipEl.style.display = null;
-	}
+      tooltipEl.innerHTML = innerHtml;
+    }
+    tooltipEl.style.display = null;
+  }
 }
 
 export const buildDataSet = (plot, present_index, ctx, label, isPrevious) => {
