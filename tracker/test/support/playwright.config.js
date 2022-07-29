@@ -1,6 +1,5 @@
 // playwright.config.js
 // @ts-check
-const { devices } = require('@playwright/test');
 const { LOCAL_SERVER_ADDR } = require('./server')
 
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
@@ -24,7 +23,7 @@ const config = {
 
     // see which playwright versions use which browser versions:
     //    https://www.browserstack.com/docs/automate/playwright/playwright-browser-compatibility
-    // 
+    //
     // supported os and browser options:
     //    https://www.browserstack.com/docs/automate/playwright/browsers-and-os
 

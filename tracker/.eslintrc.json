@@ -1,0 +1,13 @@
+{
+  "parserOptions": { "ecmaVersion": "latest" },
+  "env": { "node": true, "es6": true },
+  "extends": ["eslint:recommended", "plugin:playwright/playwright-test"],
+  "rules": {
+    "max-len": [0, {"code": 120}],
+    "max-classes-per-file": [0],
+    "no-unused-expressions": [1, { "allowShortCircuit": true }],
+    "no-unused-vars": [2, { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }],
+    "no-prototype-builtins": [0],
+    "playwright/no-conditional-in-test": [0]
+  }
+}
