@@ -45,8 +45,21 @@ const patchCaps = (name, title) => {
   caps.name = title;
 };
 
-const isHash = (entity) => Boolean(entity && typeof (entity) === "object" && !Array.isArray(entity));
+const isHash = (entity) => Boolean(entity && typeof(entity) === "object" && !Array.isArray(entity));
 const nestedKeyValue = (hash, keys) => keys.reduce((hash, key) => (isHash(hash) ? hash[key] : undefined), hash);
+const isUndefined = val => (val === undefined || val === null || val === '');
+const evaluateSessionStatus = (status) => {
+  if (!isUndefined(status)) {
+    status = status.toLowerCase();
+  }
+  if (status === "passed") {
+    return "passed";
+  } else if (status === "failed" || status === "timedout") {
+    return "failed";
+  } else {
+    return "";
+  }
+}
 
 exports.test = base.test.extend({
   page: async ({ page, playwright }, use, testInfo) => {
@@ -58,17 +71,19 @@ exports.test = base.test.extend({
           `wss://cdp.browserstack.com/playwright?caps=` +
           `${encodeURIComponent(JSON.stringify(caps))}`,
       });
-      const vPage = await vBrowser.newPage(testInfo.project.use);
+      const vContext = await vBrowser.newContext(testInfo.project.use);
+      const vPage = await vContext.newPage();
       await use(vPage);
       const testResult = {
         action: 'setSessionStatus',
         arguments: {
-          status: testInfo.status,
+          status: evaluateSessionStatus(testInfo.status),
           reason: nestedKeyValue(testInfo, ['error', 'message'])
         },
       };
-      await vPage.evaluate(() => { },
-        `browserstack_executor: ${JSON.stringify(testResult)}`);
+      await vPage.evaluate(() => {},
+      `browserstack_executor: ${JSON.stringify(testResult)}`);
+      await vPage.close();
       await vBrowser.close();
     } else {
       use(page);
