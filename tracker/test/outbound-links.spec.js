@@ -8,25 +8,26 @@ test.describe('outbound-links extension', () => {
     await page.goto('/outbound-link.html')
     const outboundURL = await page.locator('#link').getAttribute('href')
 
-    const eventRequest = mockRequest(page, '/api/event')
-    const navigationRequest = mockRequest(page, outboundURL)
+    const plausibleRequestMock = mockRequest(page, '/api/event')
+    const navigationRequestMock = mockRequest(page, outboundURL)
 
     await page.click('#link', { modifiers: [isMac(workerInfo) ? 'Meta' : 'Control'] })
 
-    expectCustomEvent(await eventRequest, 'Outbound Link: Click', { url: outboundURL })
-    expect(navigationRequest).rejects.toThrow(`No request to ${outboundURL} after 5000 ms`)
+    expectCustomEvent(await plausibleRequestMock, 'Outbound Link: Click', { url: outboundURL })
+    expect(await navigationRequestMock, "should not have made navigation request").toBeNull()
   });
 
   test('sends event and navigates to target when link child is clicked', async ({ page }) => {
     await page.goto('/outbound-link.html')
     const outboundURL = await page.locator('#link').getAttribute('href')
 
-    const eventRequest = mockRequest(page, '/api/event')
-    const navigationRequest = mockRequest(page, outboundURL)
+    const plausibleRequestMock = mockRequest(page, '/api/event')
+    const navigationRequestMock = mockRequest(page, outboundURL)
 
     await page.click('#link-child')
 
-    expectCustomEvent(await eventRequest, 'Outbound Link: Click', { url: outboundURL })
-    expect((await navigationRequest).url()).toContain(outboundURL)
+    const navigationRequest = await navigationRequestMock
+    expectCustomEvent(await plausibleRequestMock, 'Outbound Link: Click', { url: outboundURL })
+    expect(navigationRequest.url()).toContain(outboundURL)
   });
 });

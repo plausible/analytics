@@ -10,6 +10,7 @@ const config = {
   globalSetup: require.resolve('./global-setup'),
   globalTeardown: require.resolve('./global-teardown'),
   timeout: 60000,
+  retries: 2,
   use: {
     viewport: null,
     baseURL: LOCAL_SERVER_ADDR
@@ -42,7 +43,7 @@ const config = {
         channel: 'chrome'
       },
     },
-    // // Chrome on Windows
+    // Chrome on Windows
     {
       name: 'chrome@latest:Windows 11@browserstack',
       use: {
@@ -57,7 +58,7 @@ const config = {
         channel: 'chrome'
       },
     },
-    // // Firefox on Mac
+    // // // Firefox on Mac
     {
       name: 'playwright-firefox@1.latest:OSX Big Sur@browserstack',
       use: {
@@ -83,7 +84,7 @@ const config = {
         browserName: 'firefox',
       },
     },
-    // // Safari on Mac
+    // // // Safari on Mac
     {
       name: 'playwright-webkit@1.latest:OSX Monterey@browserstack',
       use: {
