@@ -10,20 +10,18 @@ export const dateFormatter = (interval, longForm) => {
     } else if (interval === 'date') {
       return formatDay(date);
     } else if (interval === 'hour') {
-      var uses12hTime = /h12/.test(
-        Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
-          .resolvedOptions()
-          .hourCycle
-      );
       const parts = isoDate.split(/[^0-9]/);
       date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5])
-      var hours = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' }).format(date);
-      if (uses12hTime) {
-        hours = hours.toLowerCase().replace(" ", "");
+
+      const dateFormat = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
+      const twelveHourClock = dateFormat.resolvedOptions().hour12
+      const formattedHours = dateFormat.format(date)
+
+      if (twelveHourClock) {
+        return formattedHours.replace(' ', '').toLowerCase()
       } else {
-        hours = hours.concat(":00");
+        return formattedHours.replace(/[^0-9]/g, '').concat(":00")
       }
-      return hours;
     } else if (interval === 'minute') {
       if (longForm) {
         const minutesAgo = Math.abs(isoDate)
