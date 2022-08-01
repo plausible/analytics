@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file.
 - Hovering on top of list items will now show a [tooltip with the exact number instead of a shortened version](https://github.com/plausible/analytics/discussions/1968)
 - Filter goals in realtime filter by clicking goal name
 - The time format (12 hour or 24 hour) for graph timelines is now presented based on the browser's defined language
+- Choice of metric for main-graph both in UI and API (visitors, pageviews, bounce_rate, visit_duration) plausible/analytics#1364
 
 ### Fixed
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
@@ -69,7 +70,6 @@ All notable changes to this project will be documented in this file.
 - Ability to invite users to sites with different roles plausible/analytics#1122
 - Option to configure a custom name for the script file
 - Add Conversion Rate to Top Sources, Top Pages Devices, Countries when filtered by a goal plausible/analytics#1299
-- Choice of metric for main-graph both in UI and API (visitors, pageviews, bounce_rate, visit_duration) plausible/analytics#1364
 - Add list view for countries report in dashboard plausible/analytics#1381
 - Add ability to view more than 100 custom goal properties plausible/analytics#1382
 
