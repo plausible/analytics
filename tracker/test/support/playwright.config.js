@@ -58,7 +58,7 @@ const config = {
         channel: 'chrome'
       },
     },
-    // // // Firefox on Mac
+    // Firefox on Mac
     {
       name: 'playwright-firefox@1.latest:OSX Big Sur@browserstack',
       use: {
@@ -71,7 +71,7 @@ const config = {
         browserName: 'firefox',
       },
     },
-    // // Firefox on Windows
+    // Firefox on Windows
     {
       name: 'playwright-firefox@1.latest:Windows 11@browserstack',
       use: {
@@ -84,7 +84,7 @@ const config = {
         browserName: 'firefox',
       },
     },
-    // // // Safari on Mac
+    // Safari on Mac
     {
       name: 'playwright-webkit@1.latest:OSX Monterey@browserstack',
       use: {
@@ -93,19 +93,6 @@ const config = {
     },
     {
       name: 'playwright-webkit@1.19.1:OSX Big Sur@browserstack',
-      use: {
-        browserName: 'webkit',
-      },
-    },
-    // // Safari on Windows
-    {
-      name: 'playwright-webkit@1.latest:Windows 10@browserstack',
-      use: {
-        browserName: 'webkit',
-      },
-    },
-    {
-      name: 'playwright-webkit@1.18.1:Windows 11@browserstack',
       use: {
         browserName: 'webkit',
       },
