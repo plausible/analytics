@@ -202,3 +202,48 @@
 - regex: 'jsdom/([\.\d]+)'
   name: 'jsdom'
   version: '$1'
+
+# Container-related useragents
+- regex: 'Artifactory/([\.\d]+)'
+  name: 'artifactory'
+  version: '$1'
+
+- regex: 'BSRPC ([\.\d]+)'
+  name: 'openbuildservice'
+  version: '$1'
+
+- regex: 'Buildah/([\.\d]+)'
+  name: 'buildah'
+  version: '$1'
+
+- regex: 'buildkit/(?:(v))?([\.\d]+)'
+  name: 'buildkit'
+  version: '$1'
+
+- regex: 'containerd/(?:(v))?([\.\d]+)'
+  name: 'containerd'
+  version: '$1'
+
+- regex: 'containers/([\.\d]+)'
+  name: 'containers'
+  version: '$1'
+
+- regex: 'cri-o/([\.\d]+)'
+  name: 'cri-o'
+  version: '$1'
+
+- regex: 'docker/([\.\d]+)'
+  name: 'docker'
+  version: '$1'
+
+- regex: 'go-containerregistry/v([\.\d]+)'
+  name: 'gcr'
+  version: '$1'
+
+- regex: 'libpod/([\.\d]+)'
+  name: 'libpod'
+  version: '$1'
+
+- regex: 'skopeo/([\.\d]+)'
+  name: 'skopeo'
+  version: '$1'
