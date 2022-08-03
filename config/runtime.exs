@@ -242,7 +242,8 @@ config :plausible, :paddle,
 
 config :plausible, :google,
   client_id: google_cid,
-  client_secret: google_secret
+  client_secret: google_secret,
+  max_buffer_size: get_int_from_path_or_env(config_dir, "GOOGLE_MAX_BUFFER_SIZE", 10_000)
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],

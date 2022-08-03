@@ -537,7 +537,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def google_auth_callback(conn, %{"code" => code, "state" => state}) do
-    res = Plausible.Google.Api.fetch_access_token(code)
+    res = Plausible.Google.HTTP.fetch_access_token(code)
     [site_id, redirect_to] = Jason.decode!(state)
     site = Repo.get(Plausible.Site, site_id)
 

@@ -5,6 +5,12 @@ defmodule Plausible.ImportedTest do
 
   @user_id 123
 
+  defp import_data(ga_data, site_id, table_name) do
+    ga_data
+    |> Plausible.Imported.from_google_analytics(site_id, table_name)
+    |> then(&Plausible.ClickhouseRepo.insert_all(table_name, &1))
+  end
+
   describe "Parse and import third party data fetched from Google Analytics" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
@@ -14,21 +20,32 @@ defmodule Plausible.ImportedTest do
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
       ])
 
-      assert :ok =
-               Plausible.Imported.from_google_analytics(
-                 [
-                   %{
-                     "dimensions" => ["20210101"],
-                     "metrics" => [%{"values" => ["1", "1", "0", "1", "60"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210131"],
-                     "metrics" => [%{"values" => ["1", "1", "1", "1", "60"]}]
-                   }
-                 ],
-                 site.id,
-                 "imported_visitors"
-               )
+      import_data(
+        [
+          %{
+            dimensions: %{"ga:date" => "20210101"},
+            metrics: %{
+              "ga:users" => "1",
+              "ga:pageviews" => "1",
+              "ga:bounces" => "0",
+              "ga:sessions" => "1",
+              "ga:sessionDuration" => "60"
+            }
+          },
+          %{
+            dimensions: %{"ga:date" => "20210131"},
+            metrics: %{
+              "ga:users" => "1",
+              "ga:pageviews" => "1",
+              "ga:bounces" => "0",
+              "ga:sessions" => "1",
+              "ga:sessionDuration" => "60"
+            }
+          }
+        ],
+        site.id,
+        "imported_visitors"
+      )
 
       conn =
         get(
@@ -63,44 +80,108 @@ defmodule Plausible.ImportedTest do
         )
       ])
 
-      assert :ok =
-               Plausible.Imported.from_google_analytics(
-                 [
-                   %{
-                     "dimensions" => ["20210101", "duckduckgo.com", "organic", "", "", ""],
-                     "metrics" => [%{"values" => ["1", "1", "0", "60"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210131", "google.com", "organic", "", "", ""],
-                     "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210101", "google.com", "paid", "", "", ""],
-                     "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210101", "Twitter", "social", "", "", ""],
-                     "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
-                   },
-                   %{
-                     "dimensions" => [
-                       "20210131",
-                       "A Nice Newsletter",
-                       "email",
-                       "newsletter",
-                       "",
-                       ""
-                     ],
-                     "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210101", "(direct)", "(none)", "", "", ""],
-                     "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
-                   }
-                 ],
-                 site.id,
-                 "imported_sources"
-               )
+      import_data(
+        [
+          %{
+            dimensions: %{
+              "ga:adContent" => "",
+              "ga:campaign" => "",
+              "ga:date" => "20210101",
+              "ga:keyword" => "",
+              "ga:medium" => "organic",
+              "ga:source" => "duckduckgo.com"
+            },
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "60",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{
+              "ga:adContent" => "",
+              "ga:campaign" => "",
+              "ga:date" => "20210131",
+              "ga:keyword" => "",
+              "ga:medium" => "organic",
+              "ga:source" => "google.com"
+            },
+            metrics: %{
+              "ga:bounces" => "1",
+              "ga:sessionDuration" => "60",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{
+              "ga:adContent" => "",
+              "ga:campaign" => "",
+              "ga:date" => "20210101",
+              "ga:keyword" => "",
+              "ga:medium" => "paid",
+              "ga:source" => "google.com"
+            },
+            metrics: %{
+              "ga:bounces" => "1",
+              "ga:sessionDuration" => "60",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{
+              "ga:adContent" => "",
+              "ga:campaign" => "",
+              "ga:date" => "20210101",
+              "ga:keyword" => "",
+              "ga:medium" => "social",
+              "ga:source" => "Twitter"
+            },
+            metrics: %{
+              "ga:bounces" => "1",
+              "ga:sessionDuration" => "60",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{
+              "ga:adContent" => "",
+              "ga:campaign" => "newsletter",
+              "ga:date" => "20210131",
+              "ga:keyword" => "",
+              "ga:medium" => "email",
+              "ga:source" => "A Nice Newsletter"
+            },
+            metrics: %{
+              "ga:bounces" => "1",
+              "ga:sessionDuration" => "60",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{
+              "ga:adContent" => "",
+              "ga:campaign" => "",
+              "ga:date" => "20210101",
+              "ga:keyword" => "",
+              "ga:medium" => "(none)",
+              "ga:source" => "(direct)"
+            },
+            metrics: %{
+              "ga:bounces" => "1",
+              "ga:sessionDuration" => "60",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          }
+        ],
+        site.id,
+        "imported_sources"
+      )
 
       conn =
         get(
@@ -108,10 +189,10 @@ defmodule Plausible.ImportedTest do
           "/api/stats/#{site.domain}/sources?period=month&date=2021-01-01&with_imported=true"
         )
 
-      assert json_response(conn, 200) == [
-               %{"name" => "Google", "visitors" => 4},
-               %{"name" => "DuckDuckGo", "visitors" => 2},
+      assert conn |> json_response(200) |> Enum.sort() == [
                %{"name" => "A Nice Newsletter", "visitors" => 1},
+               %{"name" => "DuckDuckGo", "visitors" => 2},
+               %{"name" => "Google", "visitors" => 4},
                %{"name" => "Twitter", "visitors" => 1}
              ]
     end
@@ -128,21 +209,44 @@ defmodule Plausible.ImportedTest do
         )
       ])
 
-      assert :ok =
-               Plausible.Imported.from_google_analytics(
-                 [
-                   %{
-                     "dimensions" => ["20210101", "Twitter", "social", "", "", ""],
-                     "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210101", "(direct)", "(none)", "", "", ""],
-                     "metrics" => [%{"values" => ["1", "1", "1", "60"]}]
-                   }
-                 ],
-                 site.id,
-                 "imported_sources"
-               )
+      import_data(
+        [
+          %{
+            dimensions: %{
+              "ga:adContent" => "",
+              "ga:campaign" => "",
+              "ga:date" => "20210101",
+              "ga:keyword" => "",
+              "ga:medium" => "social",
+              "ga:source" => "Twitter"
+            },
+            metrics: %{
+              "ga:bounces" => "1",
+              "ga:sessionDuration" => "60",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{
+              "ga:adContent" => "",
+              "ga:campaign" => "",
+              "ga:date" => "20210101",
+              "ga:keyword" => "",
+              "ga:medium" => "(none)",
+              "ga:source" => "(direct)"
+            },
+            metrics: %{
+              "ga:bounces" => "1",
+              "ga:sessionDuration" => "60",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          }
+        ],
+        site.id,
+        "imported_sources"
+      )
 
       conn =
         get(
@@ -166,25 +270,60 @@ defmodule Plausible.ImportedTest do
         build(:pageview, utm_campaign: "august", timestamp: ~N[2021-01-01 00:00:00])
       ])
 
-      assert :ok =
-               Plausible.Imported.from_google_analytics(
-                 [
-                   %{
-                     "dimensions" => ["20210101", "Twitter", "social", "profile", "", ""],
-                     "metrics" => [%{"values" => ["1", "1", "1", "100"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210101", "Gmail", "email", "august", "", ""],
-                     "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210101", "Gmail", "email", "(not set)", "", ""],
-                     "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
-                   }
-                 ],
-                 site.id,
-                 "imported_sources"
-               )
+      import_data(
+        [
+          %{
+            dimensions: %{
+              "ga:adContent" => "",
+              "ga:campaign" => "profile",
+              "ga:date" => "20210101",
+              "ga:keyword" => "",
+              "ga:medium" => "social",
+              "ga:source" => "Twitter"
+            },
+            metrics: %{
+              "ga:bounces" => "1",
+              "ga:sessionDuration" => "100",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{
+              "ga:adContent" => "",
+              "ga:campaign" => "august",
+              "ga:date" => "20210101",
+              "ga:keyword" => "",
+              "ga:medium" => "email",
+              "ga:source" => "Gmail"
+            },
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "100",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{
+              "ga:adContent" => "",
+              "ga:campaign" => "(not set)",
+              "ga:date" => "20210101",
+              "ga:keyword" => "",
+              "ga:medium" => "email",
+              "ga:source" => "Gmail"
+            },
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "100",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          }
+        ],
+        site.id,
+        "imported_sources"
+      )
 
       conn =
         get(
@@ -215,25 +354,60 @@ defmodule Plausible.ImportedTest do
         build(:pageview, utm_term: "Sweden", timestamp: ~N[2021-01-01 00:00:00])
       ])
 
-      assert :ok =
-               Plausible.Imported.from_google_analytics(
-                 [
-                   %{
-                     "dimensions" => ["20210101", "Google", "paid", "", "", "oat milk"],
-                     "metrics" => [%{"values" => ["1", "1", "1", "100"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210101", "Google", "paid", "", "", "Sweden"],
-                     "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210101", "Google", "paid", "", "", "(not set)"],
-                     "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
-                   }
-                 ],
-                 site.id,
-                 "imported_sources"
-               )
+      import_data(
+        [
+          %{
+            dimensions: %{
+              "ga:adContent" => "",
+              "ga:campaign" => "",
+              "ga:date" => "20210101",
+              "ga:keyword" => "oat milk",
+              "ga:medium" => "paid",
+              "ga:source" => "Google"
+            },
+            metrics: %{
+              "ga:bounces" => "1",
+              "ga:sessionDuration" => "100",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{
+              "ga:adContent" => "",
+              "ga:campaign" => "",
+              "ga:date" => "20210101",
+              "ga:keyword" => "Sweden",
+              "ga:medium" => "paid",
+              "ga:source" => "Google"
+            },
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "100",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{
+              "ga:adContent" => "",
+              "ga:campaign" => "",
+              "ga:date" => "20210101",
+              "ga:keyword" => "(not set)",
+              "ga:medium" => "paid",
+              "ga:source" => "Google"
+            },
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "100",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          }
+        ],
+        site.id,
+        "imported_sources"
+      )
 
       conn =
         get(
@@ -263,25 +437,60 @@ defmodule Plausible.ImportedTest do
         build(:pageview, utm_content: "blog", timestamp: ~N[2021-01-01 00:00:00])
       ])
 
-      assert :ok =
-               Plausible.Imported.from_google_analytics(
-                 [
-                   %{
-                     "dimensions" => ["20210101", "Google", "paid", "", "ad", ""],
-                     "metrics" => [%{"values" => ["1", "1", "1", "100"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210101", "Google", "paid", "", "blog", ""],
-                     "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210101", "Google", "paid", "", "(not set)", ""],
-                     "metrics" => [%{"values" => ["1", "1", "0", "100"]}]
-                   }
-                 ],
-                 site.id,
-                 "imported_sources"
-               )
+      import_data(
+        [
+          %{
+            dimensions: %{
+              "ga:adContent" => "ad",
+              "ga:campaign" => "",
+              "ga:date" => "20210101",
+              "ga:keyword" => "",
+              "ga:medium" => "paid",
+              "ga:source" => "Google"
+            },
+            metrics: %{
+              "ga:bounces" => "1",
+              "ga:sessionDuration" => "100",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{
+              "ga:adContent" => "blog",
+              "ga:campaign" => "",
+              "ga:date" => "20210101",
+              "ga:keyword" => "",
+              "ga:medium" => "paid",
+              "ga:source" => "Google"
+            },
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "100",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{
+              "ga:adContent" => "(not set)",
+              "ga:campaign" => "",
+              "ga:date" => "20210101",
+              "ga:keyword" => "",
+              "ga:medium" => "paid",
+              "ga:source" => "Google"
+            },
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "100",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          }
+        ],
+        site.id,
+        "imported_sources"
+      )
 
       conn =
         get(
@@ -321,37 +530,67 @@ defmodule Plausible.ImportedTest do
         )
       ])
 
-      assert :ok =
-               Plausible.Imported.from_google_analytics(
-                 [
-                   %{
-                     "dimensions" => ["20210101", "host-a.com", "/"],
-                     "metrics" => [%{"values" => ["1", "1", "0", "700"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210101", "host-b.com", "/some-other-page"],
-                     "metrics" => [%{"values" => ["1", "2", "1", "60"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210101", "host-b.com", "/some-other-page?wat=wot"],
-                     "metrics" => [%{"values" => ["1", "1", "0", "60"]}]
-                   }
-                 ],
-                 site.id,
-                 "imported_pages"
-               )
+      import_data(
+        [
+          %{
+            dimensions: %{
+              "ga:date" => "20210101",
+              "ga:hostname" => "host-a.com",
+              "ga:pagePath" => "/"
+            },
+            metrics: %{
+              "ga:exits" => "0",
+              "ga:pageviews" => "1",
+              "ga:timeOnPage" => "700",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{
+              "ga:date" => "20210101",
+              "ga:hostname" => "host-b.com",
+              "ga:pagePath" => "/some-other-page"
+            },
+            metrics: %{
+              "ga:exits" => "1",
+              "ga:pageviews" => "2",
+              "ga:timeOnPage" => "60",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{
+              "ga:date" => "20210101",
+              "ga:hostname" => "host-b.com",
+              "ga:pagePath" => "/some-other-page?wat=wot"
+            },
+            metrics: %{
+              "ga:exits" => "0",
+              "ga:pageviews" => "1",
+              "ga:timeOnPage" => "60",
+              "ga:users" => "1"
+            }
+          }
+        ],
+        site.id,
+        "imported_pages"
+      )
 
-      assert :ok =
-               Plausible.Imported.from_google_analytics(
-                 [
-                   %{
-                     "dimensions" => ["20210101", "/"],
-                     "metrics" => [%{"values" => ["1", "3", "10", "1"]}]
-                   }
-                 ],
-                 site.id,
-                 "imported_entry_pages"
-               )
+      import_data(
+        [
+          %{
+            dimensions: %{"ga:date" => "20210101", "ga:landingPagePath" => "/"},
+            metrics: %{
+              "ga:bounces" => "1",
+              "ga:entrances" => "3",
+              "ga:sessionDuration" => "10",
+              "ga:users" => "1"
+            }
+          }
+        ],
+        site.id,
+        "imported_entry_pages"
+      )
 
       conn =
         get(
@@ -399,29 +638,36 @@ defmodule Plausible.ImportedTest do
         )
       ])
 
-      assert :ok =
-               Plausible.Imported.from_google_analytics(
-                 [
-                   %{
-                     "dimensions" => ["20210101", "host-a.com", "/page2"],
-                     "metrics" => [%{"values" => ["2", "4", "0", "10"]}]
-                   }
-                 ],
-                 site.id,
-                 "imported_pages"
-               )
+      import_data(
+        [
+          %{
+            dimensions: %{
+              "ga:date" => "20210101",
+              "ga:hostname" => "host-a.com",
+              "ga:pagePath" => "/page2"
+            },
+            metrics: %{
+              "ga:exits" => "0",
+              "ga:pageviews" => "4",
+              "ga:timeOnPage" => "10",
+              "ga:users" => "2"
+            }
+          }
+        ],
+        site.id,
+        "imported_pages"
+      )
 
-      assert :ok =
-               Plausible.Imported.from_google_analytics(
-                 [
-                   %{
-                     "dimensions" => ["20210101", "/page2"],
-                     "metrics" => [%{"values" => ["2", "3"]}]
-                   }
-                 ],
-                 site.id,
-                 "imported_exit_pages"
-               )
+      import_data(
+        [
+          %{
+            dimensions: %{"ga:date" => "20210101", "ga:exitPagePath" => "/page2"},
+            metrics: %{"ga:exits" => "3", "ga:users" => "2"}
+          }
+        ],
+        site.id,
+        "imported_exit_pages"
+      )
 
       conn =
         get(
@@ -456,21 +702,38 @@ defmodule Plausible.ImportedTest do
         )
       ])
 
-      assert :ok =
-               Plausible.Imported.from_google_analytics(
-                 [
-                   %{
-                     "dimensions" => ["20210101", "EE", "Tartumaa"],
-                     "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210101", "GB", "Midlothian"],
-                     "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
-                   }
-                 ],
-                 site.id,
-                 "imported_locations"
-               )
+      import_data(
+        [
+          %{
+            dimensions: %{
+              "ga:countryIsoCode" => "EE",
+              "ga:date" => "20210101",
+              "ga:regionIsoCode" => "Tartumaa"
+            },
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "10",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{
+              "ga:countryIsoCode" => "GB",
+              "ga:date" => "20210101",
+              "ga:regionIsoCode" => "Midlothian"
+            },
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "10",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          }
+        ],
+        site.id,
+        "imported_locations"
+      )
 
       conn =
         get(
@@ -505,21 +768,30 @@ defmodule Plausible.ImportedTest do
         build(:pageview, screen_size: "Laptop", timestamp: ~N[2021-01-01 00:15:00])
       ])
 
-      assert :ok =
-               Plausible.Imported.from_google_analytics(
-                 [
-                   %{
-                     "dimensions" => ["20210101", "mobile"],
-                     "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210101", "Laptop"],
-                     "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
-                   }
-                 ],
-                 site.id,
-                 "imported_devices"
-               )
+      import_data(
+        [
+          %{
+            dimensions: %{"ga:date" => "20210101", "ga:deviceCategory" => "mobile"},
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "10",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{"ga:date" => "20210101", "ga:deviceCategory" => "Laptop"},
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "10",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          }
+        ],
+        site.id,
+        "imported_devices"
+      )
 
       conn =
         get(
@@ -540,21 +812,33 @@ defmodule Plausible.ImportedTest do
         build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-01 00:15:00])
       ])
 
-      assert :ok =
-               Plausible.Imported.from_google_analytics(
-                 [
-                   %{
-                     "dimensions" => ["20210101", "User-Agent: Mozilla"],
-                     "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210101", "Android Browser"],
-                     "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
-                   }
-                 ],
-                 site.id,
-                 "imported_browsers"
-               )
+      import_data(
+        [
+          %{
+            dimensions: %{
+              "ga:browser" => "User-Agent: Mozilla",
+              "ga:date" => "20210101"
+            },
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "10",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{"ga:browser" => "Android Browser", "ga:date" => "20210101"},
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "10",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          }
+        ],
+        site.id,
+        "imported_browsers"
+      )
 
       conn =
         get(
@@ -576,21 +860,30 @@ defmodule Plausible.ImportedTest do
         build(:pageview, operating_system: "GNU/Linux", timestamp: ~N[2021-01-01 00:15:00])
       ])
 
-      assert :ok =
-               Plausible.Imported.from_google_analytics(
-                 [
-                   %{
-                     "dimensions" => ["20210101", "Macintosh"],
-                     "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210101", "Linux"],
-                     "metrics" => [%{"values" => ["1", "1", "0", "10"]}]
-                   }
-                 ],
-                 site.id,
-                 "imported_operating_systems"
-               )
+      import_data(
+        [
+          %{
+            dimensions: %{"ga:date" => "20210101", "ga:operatingSystem" => "Macintosh"},
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "10",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{"ga:date" => "20210101", "ga:operatingSystem" => "Linux"},
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "10",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          }
+        ],
+        site.id,
+        "imported_operating_systems"
+      )
 
       conn =
         get(
@@ -610,21 +903,32 @@ defmodule Plausible.ImportedTest do
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
       ])
 
-      assert :ok =
-               Plausible.Imported.from_google_analytics(
-                 [
-                   %{
-                     "dimensions" => ["20210101"],
-                     "metrics" => [%{"values" => ["1", "1", "0", "1", "1.391607E7"]}]
-                   },
-                   %{
-                     "dimensions" => ["20210131"],
-                     "metrics" => [%{"values" => ["1", "1", "1", "1", "60"]}]
-                   }
-                 ],
-                 site.id,
-                 "imported_visitors"
-               )
+      import_data(
+        [
+          %{
+            dimensions: %{"ga:date" => "20210101"},
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:pageviews" => "1",
+              "ga:sessionDuration" => "1.391607E7",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{"ga:date" => "20210131"},
+            metrics: %{
+              "ga:bounces" => "1",
+              "ga:pageviews" => "1",
+              "ga:sessionDuration" => "60",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          }
+        ],
+        site.id,
+        "imported_visitors"
+      )
 
       conn =
         get(
