@@ -9,9 +9,9 @@ defmodule PlausibleWeb.Api.ExternalController do
   require Logger
 
   def event(conn, _params) do
-    with {:ok, params} <- parse_body(conn),
-         _ <- Sentry.Context.set_extra_context(%{request: params}),
-         :ok <- create_event(conn, params) do
+    with {:ok, ingestion_request} <- Plausible.Ingestion.Request.build(conn),
+         _ <- Sentry.Context.set_extra_context(%{request: ingestion_request.params}),
+         :ok <- create_event(ingestion_request) do
       conn |> put_status(202) |> text("ok")
     else
       {:error, :invalid_json} ->
@@ -80,10 +80,8 @@ defmodule PlausibleWeb.Api.ExternalController do
     json(conn, info)
   end
 
-  defp parse_user_agent(conn) do
-    user_agent = Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
-
-    if user_agent do
+  defp parse_user_agent(%Plausible.Ingestion.Request{} = request) do
+    if user_agent = request.headers["user-agent"] do
       res =
         Cachex.fetch(:user_agents, user_agent, fn ua ->
           UAInspector.parse(ua)
@@ -107,53 +105,42 @@ defmodule PlausibleWeb.Api.ExternalController do
     blocked?
   end
 
-  defp create_event(conn, params) do
-    params = %{
-      "name" => params["n"] || params["name"],
-      "url" => params["u"] || params["url"],
-      "referrer" => params["r"] || params["referrer"],
-      "domain" => params["d"] || params["domain"],
-      "screen_width" => params["w"] || params["screen_width"],
-      "hash_mode" => params["h"] || params["hashMode"],
-      "meta" => parse_meta(params)
-    }
-
+  defp create_event(%Plausible.Ingestion.Request{} = request) do
     ua =
       Tracer.with_span "parse_user_agent" do
-        parse_user_agent(conn)
+        parse_user_agent(request)
       end
 
-    blacklist_domain = params["domain"] in Application.get_env(:plausible, :domain_blacklist)
+    blacklist_domain = request.params.domain in Application.get_env(:plausible, :domain_blacklist)
 
-    if blacklist_domain || is_bot?(ua) || is_spammer?(params["referrer"]) ||
-         blocked_via_flag?(params["domain"]) do
+    if blacklist_domain || is_bot?(ua) || is_spammer?(request.params.referrer) ||
+         blocked_via_flag?(request.params.domain) do
       :ok
     else
-      uri = params["url"] && URI.parse(params["url"])
+      uri = request.params.url && URI.parse(request.params.url)
       host = if uri && uri.host == "", do: "(none)", else: uri && uri.host
-      query = decode_query_params(uri)
 
-      ref = parse_referrer(uri, params["referrer"])
+      ref = parse_referrer(uri, request.params.referrer)
 
       location_details =
         Tracer.with_span "parse_visitor_location" do
-          visitor_location_details(conn)
+          visitor_location_details(request)
         end
 
       salts = Plausible.Session.Salts.fetch()
 
       event_attrs = %{
         timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
-        name: params["name"],
+        name: request.params.name,
         hostname: strip_www(host),
-        pathname: get_pathname(uri, params["hash_mode"]),
-        referrer_source: get_referrer_source(query, ref),
+        pathname: get_pathname(uri, request.params.hash_mode),
+        referrer_source: get_referrer_source(request, ref),
         referrer: clean_referrer(ref),
-        utm_medium: query["utm_medium"],
-        utm_source: query["utm_source"],
-        utm_campaign: query["utm_campaign"],
-        utm_content: query["utm_content"],
-        utm_term: query["utm_term"],
+        utm_medium: request.query_params["utm_medium"],
+        utm_source: request.query_params["utm_source"],
+        utm_campaign: request.query_params["utm_campaign"],
+        utm_content: request.query_params["utm_content"],
+        utm_term: request.query_params["utm_term"],
         country_code: location_details[:country_code],
         country_geoname_id: location_details[:country_geoname_id],
         subdivision1_code: location_details[:subdivision1_code],
@@ -163,17 +150,17 @@ defmodule PlausibleWeb.Api.ExternalController do
         operating_system_version: ua && os_version(ua),
         browser: ua && browser_name(ua),
         browser_version: ua && browser_version(ua),
-        screen_size: calculate_screen_size(params["screen_width"]),
-        "meta.key": Map.keys(params["meta"]),
-        "meta.value": Map.values(params["meta"]) |> Enum.map(&Kernel.to_string/1)
+        screen_size: calculate_screen_size(request.params.screen_width),
+        "meta.key": Map.keys(request.params.meta),
+        "meta.value": Map.values(request.params.meta) |> Enum.map(&Kernel.to_string/1)
       }
 
-      Enum.reduce_while(get_domains(params, uri), @no_domain_error, fn domain, _res ->
-        user_id = generate_user_id(conn, domain, event_attrs[:hostname], salts[:current])
+      Enum.reduce_while(get_domains(request, uri), @no_domain_error, fn domain, _res ->
+        user_id = generate_user_id(request, domain, event_attrs[:hostname], salts[:current])
 
         previous_user_id =
           salts[:previous] &&
-            generate_user_id(conn, domain, event_attrs[:hostname], salts[:previous])
+            generate_user_id(request, domain, event_attrs[:hostname], salts[:previous])
 
         changeset =
           event_attrs
@@ -222,42 +209,9 @@ defmodule PlausibleWeb.Api.ExternalController do
     ReferrerBlocklist.is_spammer?(strip_www(uri.host))
   end
 
-  defp parse_meta(params) do
-    raw_meta = params["m"] || params["meta"] || params["p"] || params["props"]
-
-    case decode_raw_props(raw_meta) do
-      {:ok, parsed_json} ->
-        Enum.filter(parsed_json, fn
-          {_, ""} -> false
-          {_, nil} -> false
-          {_, val} when is_list(val) -> false
-          {_, val} when is_map(val) -> false
-          _ -> true
-        end)
-        |> Map.new()
-
-      _ ->
-        %{}
-    end
-  end
-
-  defp decode_raw_props(props) when is_map(props), do: {:ok, props}
-
-  defp decode_raw_props(raw_json) when is_binary(raw_json) do
-    case Jason.decode(raw_json) do
-      {:ok, parsed_props} when is_map(parsed_props) ->
-        {:ok, parsed_props}
-
-      _ ->
-        :not_a_map
-    end
-  end
-
-  defp decode_raw_props(_), do: :bad_format
-
-  defp get_domains(params, uri) do
-    if params["domain"] do
-      String.split(params["domain"], ",")
+  defp get_domains(request, uri) do
+    if request.params.domain do
+      String.split(request.params.domain, ",")
       |> Enum.map(&String.trim/1)
       |> Enum.map(&strip_www/1)
     else
@@ -474,10 +428,8 @@ defmodule PlausibleWeb.Api.ExternalController do
     2_647_694 => 2_643_743
   }
 
-  defp visitor_location_details(conn) do
-    result =
-      PlausibleWeb.RemoteIp.get(conn)
-      |> Geolix.lookup(where: :geolocation)
+  defp visitor_location_details(request) do
+    result = Geolix.lookup(request.remote_ip, where: :geolocation)
 
     country_code =
       get_in(result, [:country, :iso_code])
@@ -524,13 +476,12 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp generate_user_id(conn, domain, hostname, salt) do
-    user_agent = List.first(Plug.Conn.get_req_header(conn, "user-agent")) || ""
-    ip_address = PlausibleWeb.RemoteIp.get(conn)
+  defp generate_user_id(request, domain, hostname, salt) do
+    user_agent = request.headers["user-agent"] || ""
     root_domain = get_root_domain(hostname)
 
     if domain && root_domain do
-      SipHash.hash!(salt, user_agent <> ip_address <> domain <> root_domain)
+      SipHash.hash!(salt, user_agent <> request.remote_ip <> domain <> root_domain)
     end
   end
 
@@ -558,21 +509,6 @@ defmodule PlausibleWeb.Api.ExternalController do
       host = String.replace_prefix(uri.host, "www.", "")
       path = uri.path || ""
       host <> String.trim_trailing(path, "/")
-    end
-  end
-
-  defp parse_body(conn) do
-    case conn.body_params do
-      %Plug.Conn.Unfetched{} ->
-        {:ok, body, _conn} = Plug.Conn.read_body(conn)
-
-        case Jason.decode(body) do
-          {:ok, params} -> {:ok, params}
-          _ -> {:error, :invalid_json}
-        end
-
-      params ->
-        {:ok, params}
     end
   end
 
@@ -631,19 +567,11 @@ defmodule PlausibleWeb.Api.ExternalController do
     end
   end
 
-  defp get_referrer_source(query, ref) do
-    source = query["utm_source"] || query["source"] || query["ref"]
+  defp get_referrer_source(request, ref) do
+    source =
+      request.query_params["utm_source"] || request.query_params["source"] ||
+        request.query_params["ref"]
+
     source || PlausibleWeb.RefInspector.parse(ref)
-  end
-
-  defp decode_query_params(nil), do: nil
-  defp decode_query_params(%URI{query: nil}), do: nil
-
-  defp decode_query_params(%URI{query: query_part}) do
-    try do
-      URI.decode_query(query_part)
-    rescue
-      _ -> nil
-    end
   end
 end
