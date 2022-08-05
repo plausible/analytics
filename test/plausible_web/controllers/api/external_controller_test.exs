@@ -842,6 +842,22 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.pathname == "/#page-a"
     end
 
+    test "does not record hash when hash mode is 0", %{conn: conn} do
+      params = %{
+        n: "pageview",
+        u: "http://www.example.com/#page-a",
+        d: "external-controller-test-hash-0.com",
+        h: 0
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-hash-0.com")
+
+      assert pageview.pathname == "/"
+    end
+
     test "decodes URL pathname, fragment and search", %{conn: conn} do
       params = %{
         n: "pageview",
