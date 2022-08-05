@@ -482,6 +482,7 @@ defmodule PlausibleWeb.AuthController do
 
   def create_api_key(conn, %{"api_key" => key_params}) do
     api_key = %Auth.ApiKey{user_id: conn.assigns[:current_user].id}
+    key_params = Map.delete(key_params, "user_id")
     changeset = Auth.ApiKey.changeset(api_key, key_params)
 
     case Repo.insert(changeset) do
@@ -499,7 +500,12 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def delete_api_key(conn, %{"id" => id}) do
-    Repo.get_by(Auth.ApiKey, id: id)
+    query =
+      from k in Auth.ApiKey,
+        where: k.id == ^id and k.user_id == ^conn.assigns[:current_user].id
+
+    query
+    |> Repo.one!()
     |> Repo.delete!()
 
     conn

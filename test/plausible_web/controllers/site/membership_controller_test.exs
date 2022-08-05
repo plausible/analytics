@@ -159,6 +159,28 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert membership.role == :viewer
       assert redirected_to(conn) == "/#{site.domain}"
     end
+
+    test "admin can't make themselves an owner", %{conn: conn, user: user} do
+      admin = insert(:user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner),
+            build(:site_membership, user: admin, role: :admin)
+          ]
+        )
+
+      membership = Repo.get_by(Plausible.Site.Membership, user_id: admin.id)
+
+      assert_raise Ecto.InvalidChangesetError, fn ->
+        put(conn, "/sites/#{site.domain}/memberships/#{membership.id}/role/owner")
+      end
+
+      membership = Repo.reload!(membership)
+
+      assert membership.role == :admin
+    end
   end
 
   describe "DELETE /sites/memberships/:id" do

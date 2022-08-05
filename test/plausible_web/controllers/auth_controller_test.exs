@@ -628,4 +628,52 @@ defmodule PlausibleWeb.AuthControllerTest do
       refute Repo.get(Plausible.Site, owner_site.id)
     end
   end
+
+  describe "POST /settings/api-keys" do
+    setup [:create_user, :log_in]
+    import Ecto.Query
+
+    test "can't create api key into another site", %{conn: conn, user: me} do
+      my_site = insert(:site)
+      insert(:site_membership, site: my_site, user: me, role: "owner")
+
+      other_user = insert(:user)
+      other_site = insert(:site)
+      insert(:site_membership, site: other_site, user: other_user, role: "owner")
+
+      conn =
+        post(conn, "/settings/api-keys", %{
+          "api_key" => %{
+            "user_id" => other_user.id,
+            "name" => "all your code are belong to us",
+            "key" => "swordfish"
+          }
+        })
+
+      assert conn.status == 302
+
+      refute Plausible.Auth.ApiKey |> where(user_id: ^other_user.id) |> Repo.one()
+    end
+  end
+
+  describe "DELETE /settings/api-keys/:id" do
+    setup [:create_user, :log_in]
+    alias Plausible.Auth.ApiKey
+
+    test "can't delete api key that doesn't belong to me", %{conn: conn} do
+      other_user = insert(:user)
+      insert(:site_membership, site: insert(:site), user: other_user, role: "owner")
+
+      assert {:ok, %ApiKey{} = api_key} =
+               %ApiKey{user_id: other_user.id}
+               |> ApiKey.changeset(%{"name" => "other user's key"})
+               |> Repo.insert()
+
+      assert_raise Ecto.NoResultsError, fn ->
+        delete(conn, "/settings/api-keys/#{api_key.id}")
+      end
+
+      assert Repo.get(ApiKey, api_key.id)
+    end
+  end
 end
