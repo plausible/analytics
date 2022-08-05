@@ -19,7 +19,9 @@ defmodule Plausible.Application do
       Supervisor.child_spec({Cachex, name: :sessions, limit: nil}, id: :cachex_sessions),
       PlausibleWeb.Endpoint,
       {Oban, Application.get_env(:plausible, Oban)},
-      Plausible.PromEx
+      Plausible.PromEx,
+      Plausible.Ingestion.Sink,
+      Plausible.Ingestion.Drain
     ]
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]

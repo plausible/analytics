@@ -110,7 +110,8 @@ defmodule Plausible.MixProject do
       {:observer_cli, "~> 1.7"},
       {:mimic, "~> 1.7", only: :test},
       {:prom_ex, "~> 1.7.1"},
-      {:exvcr, "~> 0.11", only: :test}
+      {:exvcr, "~> 0.11", only: :test},
+      {:gen_stage, "~> 1.1"}
     ]
   end
 
