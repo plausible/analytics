@@ -273,7 +273,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       |> URI.decode()
       |> String.trim_trailing()
 
-    if hash_mode && uri.fragment do
+    if hash_mode == 1 && uri.fragment do
       pathname <> "#" <> URI.decode(uri.fragment)
     else
       pathname
