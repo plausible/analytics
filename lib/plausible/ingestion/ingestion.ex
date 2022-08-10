@@ -1,5 +1,6 @@
 defmodule Plausible.Ingestion do
   require OpenTelemetry.Tracer, as: Tracer
+  alias Plausible.Ingestion.Request
 
   @no_domain_error {:error, %{domain: ["can't be blank"]}}
 
@@ -479,18 +480,13 @@ defmodule Plausible.Ingestion do
     source || PlausibleWeb.RefInspector.parse(ref)
   end
 
-  defp parse_user_agent(%Plausible.Ingestion.Request{} = request) do
-    if user_agent = request.headers["user-agent"] do
-      res =
-        Cachex.fetch(:user_agents, user_agent, fn ua ->
-          UAInspector.parse(ua)
-        end)
-
-      case res do
-        {:ok, user_agent} -> user_agent
-        {:commit, user_agent} -> user_agent
-        _ -> nil
-      end
+  defp parse_user_agent(%Request{user_agent: user_agent}) when is_binary(user_agent) do
+    case Cachex.fetch(:user_agents, user_agent, &UAInspector.parse/1) do
+      {:ok, user_agent} -> user_agent
+      {:commit, user_agent} -> user_agent
+      _ -> nil
     end
   end
+
+  defp parse_user_agent(%Request{}), do: nil
 end

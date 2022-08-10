@@ -1,15 +1,14 @@
 defmodule Plausible.Ingestion.Request do
-  defstruct ~w(remote_ip params query_params headers)a
+  defstruct ~w(remote_ip params query_params user_agent)a
 
   @type t() :: %__MODULE__{
           remote_ip: String.t() | nil,
           params: map(),
           query_params: map(),
-          headers: map()
+          user_agent: String.t() | nil
         }
 
   @allowed_query_params ~w(utm_medium utm_source utm_campaign utm_content utm_term utm_source source ref)
-  @allowed_headers ~w(user-agent)
 
   @spec build(Plug.Conn.t()) :: {:ok, t()} | {:error, :invalid_json}
   @doc """
@@ -19,15 +18,12 @@ defmodule Plausible.Ingestion.Request do
     with {:ok, body} <- parse_body(conn),
          %{} = params <- build_params(body),
          %{} = query_params <- decode_query_params(params),
-         %{} = headers <- build_headers(conn),
          remote_ip <- PlausibleWeb.RemoteIp.get(conn) do
-      {:ok,
-       %__MODULE__{
-         remote_ip: remote_ip,
-         params: params,
-         query_params: query_params,
-         headers: headers
-       }}
+      %__MODULE__{}
+      |> Map.put(:remote_ip, remote_ip)
+      |> Map.put(:params, params)
+      |> Map.put(:query_params, query_params)
+      |> put_user_agent(conn)
     end
   end
 
@@ -113,10 +109,12 @@ defmodule Plausible.Ingestion.Request do
     end
   end
 
-  defp build_headers(conn) do
-    Enum.reduce(@allowed_headers, %{}, fn header, acc ->
-      value = conn |> Plug.Conn.get_req_header(header) |> List.first()
-      if value, do: Map.put(acc, header, value), else: acc
-    end)
+  defp put_user_agent(%__MODULE__{} = request, %Plug.Conn{} = conn) do
+    user_agent =
+      conn
+      |> Plug.Conn.get_req_header("user-agent")
+      |> List.first()
+
+    %__MODULE__{request | user_agent: user_agent}
   end
 end
