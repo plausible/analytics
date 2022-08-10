@@ -10,16 +10,16 @@ defmodule Plausible.Ingestion do
         parse_user_agent(request)
       end
 
-    blacklist_domain = request.params.domain in Application.get_env(:plausible, :domain_blacklist)
+    blacklist_domain = request.domain in Application.get_env(:plausible, :domain_blacklist)
 
-    if blacklist_domain || is_bot?(ua) || is_spammer?(request.params.referrer) ||
-         blocked_via_flag?(request.params.domain) do
+    if blacklist_domain || is_bot?(ua) || is_spammer?(request.referrer) ||
+         blocked_via_flag?(request.domain) do
       :ok
     else
-      uri = request.params.url && URI.parse(request.params.url)
+      uri = request.url && URI.parse(request.url)
       host = if uri && uri.host == "", do: "(none)", else: uri && uri.host
 
-      ref = parse_referrer(uri, request.params.referrer)
+      ref = parse_referrer(uri, request.referrer)
 
       location_details =
         Tracer.with_span "parse_visitor_location" do
@@ -30,16 +30,16 @@ defmodule Plausible.Ingestion do
 
       event_attrs = %{
         timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
-        name: request.params.name,
+        name: request.event_name,
         hostname: strip_www(host),
-        pathname: get_pathname(uri, request.params.hash_mode),
+        pathname: get_pathname(uri, request.hash_mode),
         referrer_source: get_referrer_source(request, ref),
         referrer: clean_referrer(ref),
-        utm_medium: request.query_params["utm_medium"],
-        utm_source: request.query_params["utm_source"],
-        utm_campaign: request.query_params["utm_campaign"],
-        utm_content: request.query_params["utm_content"],
-        utm_term: request.query_params["utm_term"],
+        utm_medium: request.utm_medium,
+        utm_source: request.utm_source,
+        utm_campaign: request.utm_campaign,
+        utm_content: request.utm_content,
+        utm_term: request.utm_term,
         country_code: location_details[:country_code],
         country_geoname_id: location_details[:country_geoname_id],
         subdivision1_code: location_details[:subdivision1_code],
@@ -49,9 +49,9 @@ defmodule Plausible.Ingestion do
         operating_system_version: ua && os_version(ua),
         browser: ua && browser_name(ua),
         browser_version: ua && browser_version(ua),
-        screen_size: calculate_screen_size(request.params.screen_width),
-        "meta.key": Map.keys(request.params.meta),
-        "meta.value": Map.values(request.params.meta) |> Enum.map(&Kernel.to_string/1)
+        screen_size: calculate_screen_size(request.screen_width),
+        "meta.key": Map.keys(request.meta),
+        "meta.value": Map.values(request.meta) |> Enum.map(&Kernel.to_string/1)
       }
 
       Enum.reduce_while(get_domains(request, uri), @no_domain_error, fn domain, _res ->
@@ -115,8 +115,8 @@ defmodule Plausible.Ingestion do
   end
 
   defp get_domains(request, uri) do
-    if request.params.domain do
-      String.split(request.params.domain, ",")
+    if request.domain do
+      String.split(request.domain, ",")
       |> Enum.map(&String.trim/1)
       |> Enum.map(&strip_www/1)
     else
@@ -382,7 +382,7 @@ defmodule Plausible.Ingestion do
   end
 
   defp generate_user_id(request, domain, hostname, salt) do
-    user_agent = request.headers["user-agent"] || ""
+    user_agent = request.user_agent || ""
     root_domain = get_root_domain(hostname)
 
     if domain && root_domain do
@@ -473,10 +473,7 @@ defmodule Plausible.Ingestion do
   end
 
   defp get_referrer_source(request, ref) do
-    source =
-      request.query_params["utm_source"] || request.query_params["source"] ||
-        request.query_params["ref"]
-
+    source = request.utm_source || request.source_param || request.ref_param
     source || PlausibleWeb.RefInspector.parse(ref)
   end
 

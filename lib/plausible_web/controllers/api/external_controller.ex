@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   def event(conn, _params) do
     with {:ok, ingestion_request} <- Plausible.Ingestion.Request.build(conn),
-         _ <- Sentry.Context.set_extra_context(%{request: ingestion_request.params}),
+         _ <- Sentry.Context.set_extra_context(%{request: ingestion_request}),
          :ok <- Plausible.Ingestion.add_to_buffer(ingestion_request) do
       conn |> put_status(202) |> text("ok")
     else
