@@ -247,7 +247,7 @@ config :plausible, :google,
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
-  queue_target: 500,
+  queue_target: 5000,
   queue_interval: 2000,
   url: ch_db_url,
   flush_interval_ms: ch_flush_interval_ms,
