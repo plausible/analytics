@@ -1,130 +1,45 @@
 defmodule Plausible.Ingestion do
   require OpenTelemetry.Tracer, as: Tracer
-  alias Plausible.Ingestion.Request
+  alias Plausible.Ingestion.{Request, CityOverrides}
 
-  @no_domain_error {:error, %{domain: ["can't be blank"]}}
+  @spec build_and_buffer(Request.t()) :: :ok | :skip | {:error, Ecto.Changeset.t()}
+  @doc """
+  Builds events from %Plausible.Ingestion.Request{} and adds them to Plausible.Event.WriteBuffer.
+  This fetches geolocation data and parses the user agent string. Returns :skip if the request is
+  identified as spam, or blocked.
+  """
+  def build_and_buffer(%Request{} = request) do
+    with :ok <- spam_or_blocked?(request),
+         salts <- Plausible.Session.Salts.fetch(),
+         event <- %Plausible.ClickhouseEvent{},
+         %{} = event <- put_user_agent(event, request),
+         %{} = event <- put_basic_info(event, request),
+         %{} = event <- put_referrer(event, request),
+         %{} = event <- put_geolocation(event, request),
+         %{} = event <- put_screen_size(event, request),
+         %{} = event <- put_meta(event, request),
+         events when is_list(events) <- map_domains(event, request),
+         events when is_list(events) <- put_user_id(events, request, salts),
+         :ok <- validate_events(events),
+         events when is_list(events) <- register_session(events, request, salts) do
+      Enum.each(events, &Plausible.Event.WriteBuffer.insert/1)
+    end
+  end
 
-  def add_to_buffer(%Plausible.Ingestion.Request{} = request) do
-    ua =
-      Tracer.with_span "parse_user_agent" do
-        parse_user_agent(request)
-      end
+  defp put_basic_info(%Plausible.ClickhouseEvent{} = event, %Request{} = request) do
+    uri = request.url && URI.parse(request.url)
+    host = if uri && uri.host == "", do: "(none)", else: uri && uri.host
 
-    blacklist_domain = request.domain in Application.get_env(:plausible, :domain_blacklist)
-
-    if blacklist_domain || is_bot?(ua) || is_spammer?(request.referrer) ||
-         blocked_via_flag?(request.domain) do
-      :ok
-    else
-      uri = request.url && URI.parse(request.url)
-      host = if uri && uri.host == "", do: "(none)", else: uri && uri.host
-
-      ref = parse_referrer(uri, request.referrer)
-
-      location_details =
-        Tracer.with_span "parse_visitor_location" do
-          visitor_location_details(request)
-        end
-
-      salts = Plausible.Session.Salts.fetch()
-
-      event_attrs = %{
-        timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
+    %Plausible.ClickhouseEvent{
+      event
+      | timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
         name: request.event_name,
         hostname: strip_www(host),
-        pathname: get_pathname(uri, request.hash_mode),
-        referrer_source: get_referrer_source(request, ref),
-        referrer: clean_referrer(ref),
-        utm_medium: request.utm_medium,
-        utm_source: request.utm_source,
-        utm_campaign: request.utm_campaign,
-        utm_content: request.utm_content,
-        utm_term: request.utm_term,
-        country_code: location_details[:country_code],
-        country_geoname_id: location_details[:country_geoname_id],
-        subdivision1_code: location_details[:subdivision1_code],
-        subdivision2_code: location_details[:subdivision2_code],
-        city_geoname_id: location_details[:city_geoname_id],
-        operating_system: ua && os_name(ua),
-        operating_system_version: ua && os_version(ua),
-        browser: ua && browser_name(ua),
-        browser_version: ua && browser_version(ua),
-        screen_size: calculate_screen_size(request.screen_width),
-        "meta.key": Map.keys(request.meta),
-        "meta.value": Map.values(request.meta) |> Enum.map(&Kernel.to_string/1)
-      }
-
-      Enum.reduce_while(get_domains(request, uri), @no_domain_error, fn domain, _res ->
-        user_id = generate_user_id(request, domain, event_attrs[:hostname], salts[:current])
-
-        previous_user_id =
-          salts[:previous] &&
-            generate_user_id(request, domain, event_attrs[:hostname], salts[:previous])
-
-        changeset =
-          event_attrs
-          |> Map.merge(%{domain: domain, user_id: user_id})
-          |> Plausible.ClickhouseEvent.new()
-
-        if changeset.valid? do
-          event = Ecto.Changeset.apply_changes(changeset)
-
-          session_id =
-            Tracer.with_span "cache_store_event" do
-              Plausible.Session.CacheStore.on_event(event, previous_user_id)
-            end
-
-          event
-          |> Map.put(:session_id, session_id)
-          |> Plausible.Event.WriteBuffer.insert()
-
-          {:cont, :ok}
-        else
-          errors = Ecto.Changeset.traverse_errors(changeset, &encode_error/1)
-          {:halt, {:error, errors}}
-        end
-      end)
-    end
+        pathname: get_pathname(uri, request.hash_mode)
+    }
   end
 
-  defp blocked_via_flag?(domain) do
-    blocked? = FunWithFlags.enabled?(:block_event_ingest, for: domain)
-    Tracer.set_attribute("blocked_by_flag", blocked?)
-    blocked?
-  end
-
-  # https://hexdocs.pm/ecto/Ecto.Changeset.html#traverse_errors/2-examples
-  defp encode_error({msg, opts}) do
-    Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
-      opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
-    end)
-  end
-
-  defp is_bot?(%UAInspector.Result.Bot{}), do: true
-
-  defp is_bot?(%UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}}),
-    do: true
-
-  defp is_bot?(_), do: false
-
-  defp is_spammer?(nil), do: false
-
-  defp is_spammer?(referrer_str) do
-    uri = URI.parse(referrer_str)
-    ReferrerBlocklist.is_spammer?(strip_www(uri.host))
-  end
-
-  defp get_domains(request, uri) do
-    if request.domain do
-      String.split(request.domain, ",")
-      |> Enum.map(&String.trim/1)
-      |> Enum.map(&strip_www/1)
-    else
-      List.wrap(strip_www(uri && uri.host))
-    end
-  end
-
-  defp get_pathname(nil, _), do: "/"
+  defp get_pathname(_uri = nil, _hash_mode), do: "/"
 
   defp get_pathname(uri, hash_mode) do
     pathname =
@@ -139,239 +54,33 @@ defmodule Plausible.Ingestion do
     end
   end
 
-  @city_overrides %{
-    # Austria
-    # Gemeindebezirk Floridsdorf -> Vienna
-    2_779_467 => 2_761_369,
-    # Gemeindebezirk Leopoldstadt -> Vienna
-    2_772_614 => 2_761_369,
-    # Gemeindebezirk Landstrasse -> Vienna
-    2_773_040 => 2_761_369,
-    # Gemeindebezirk Donaustadt -> Vienna
-    2_780_851 => 2_761_369,
-    # Gemeindebezirk Favoriten -> Vienna
-    2_779_776 => 2_761_369,
-    # Gemeindebezirk Währing -> Vienna
-    2_762_091 => 2_761_369,
-    # Gemeindebezirk Wieden -> Vienna
-    2_761_393 => 2_761_369,
-    # Gemeindebezirk Innere Stadt -> Vienna
-    2_775_259 => 2_761_369,
-    # Gemeindebezirk Alsergrund -> Vienna
-    2_782_729 => 2_761_369,
-    # Gemeindebezirk Liesing -> Vienna
-    2_772_484 => 2_761_369,
-    # Urfahr -> Linz
-    2_762_518 => 2_772_400,
+  defp put_meta(%Plausible.ClickhouseEvent{} = event, %Request{} = request) do
+    if is_map(request.meta) do
+      event
+      |> Map.put(:"meta.key", Map.keys(request.meta))
+      |> Map.put(:"meta.value", Map.values(request.meta) |> Enum.map(&to_string/1))
+    else
+      event
+    end
+  end
 
-    # Canada
-    # Old Toronto -> Toronto
-    8_436_019 => 6_167_865,
-    # Etobicoke -> Toronto
-    5_950_267 => 6_167_865,
-    # East York -> Toronto
-    5_946_235 => 6_167_865,
-    # Scarborough -> Toronto
-    6_948_711 => 6_167_865,
-    # North York -> Toronto
-    6_091_104 => 6_167_865,
+  defp put_referrer(%Plausible.ClickhouseEvent{} = event, %Request{} = request) do
+    uri = request.url && URI.parse(request.url)
+    ref = parse_referrer(uri, request.referrer)
 
-    # Czech republic
-    # Praha 5 -> Prague
-    11_951_220 => 3_067_696,
-    # Praha 4 -> Prague
-    11_951_218 => 3_067_696,
-    # Praha 11 -> Prague
-    11_951_232 => 3_067_696,
-    # Praha 10 -> Prague
-    11_951_210 => 3_067_696,
-    # Praha 4 -> Prague
-    8_378_772 => 3_067_696,
-
-    # Denmark
-    # København SV -> Copenhagen
-    11_747_123 => 2_618_425,
-    # København NV -> Copenhagen
-    11_746_894 => 2_618_425,
-    # Odense S -> Odense
-    11_746_825 => 2_615_876,
-    # Odense M -> Odense
-    11_746_974 => 2_615_876,
-    # Odense SØ -> Odense
-    11_746_888 => 2_615_876,
-    # Aarhus C -> Aarhus
-    11_746_746 => 2_624_652,
-    # Aarhus N -> Aarhus
-    11_746_890 => 2_624_652,
-
-    # Estonia
-    # Kristiine linnaosa -> Tallinn
-    11_050_530 => 588_409,
-    # Kesklinna linnaosa -> Tallinn
-    11_053_706 => 588_409,
-    # Lasnamäe linnaosa -> Tallinn
-    11_050_526 => 588_409,
-    # Põhja-Tallinna linnaosa -> Tallinn
-    11_049_594 => 588_409,
-    # Mustamäe linnaosa -> Tallinn
-    11_050_531 => 588_409,
-    # Haabersti linnaosa -> Tallinn
-    11_053_707 => 588_409,
-    # Viimsi -> Tallinn
-    587_629 => 588_409,
-
-    # Germany
-    # Bezirk Tempelhof-Schöneberg -> Berlin
-    3_336_297 => 2_950_159,
-    # Bezirk Mitte -> Berlin
-    2_870_912 => 2_950_159,
-    # Bezirk Charlottenburg-Wilmersdorf -> Berlin
-    3_336_294 => 2_950_159,
-    # Bezirk Friedrichshain-Kreuzberg -> Berlin
-    3_336_295 => 2_950_159,
-    # Moosach -> Munich
-    8_351_447 => 2_867_714,
-    # Schwabing-Freimann -> Munich
-    8_351_448 => 2_867_714,
-    # Stadtbezirk 06 -> Düsseldorf
-    6_947_276 => 2_934_246,
-    # Stadtbezirk 04 -> Düsseldorf
-    6_947_274 => 2_934_246,
-    # Köln-Ehrenfeld -> Köln
-    6_947_479 => 2_886_242,
-    # Köln-Lindenthal- -> Köln
-    6_947_481 => 2_886_242,
-    # Beuel -> Bonn
-    2_949_619 => 2_946_447,
-    # Innenstadt I -> Frankfurt am Main
-    6_946_225 => 2_925_533,
-
-    # India
-    # Navi Mumbai -> Mumbai
-    6_619_347 => 1_275_339,
-
-    # Mexico
-    # Miguel Hidalgo Villa Olímpica -> Mexico city
-    11_561_026 => 3_530_597,
-    # Zedec Santa Fe -> Mexico city
-    3_517_471 => 3_530_597,
-    #  Fuentes del Pedregal-> Mexico city
-    11_562_596 => 3_530_597,
-    #  Centro -> Mexico city
-    9_179_691 => 3_530_597,
-    #  Cuauhtémoc-> Mexico city
-    12_266_959 => 3_530_597,
-
-    # Netherlands
-    # Schiphol-Rijk -> Amsterdam
-    10_173_838 => 2_759_794,
-    # Westpoort -> Amsterdam
-    11_525_047 => 2_759_794,
-    # Amsterdam-Zuidoost -> Amsterdam
-    6_544_881 => 2_759_794,
-    # Loosduinen -> The Hague
-    11_525_037 => 2_747_373,
-    # Laak -> The Hague
-    11_525_042 => 2_747_373,
-
-    # Norway
-    # Nordre Aker District -> Oslo
-    6_940_981 => 3_143_244,
-
-    # Romania
-    # Sector 1 -> Bucharest,
-    11_055_041 => 683_506,
-    # Sector 2 -> Bucharest
-    11_055_040 => 683_506,
-    # Sector 3 -> Bucharest
-    11_055_044 => 683_506,
-    # Sector 4 -> Bucharest
-    11_055_042 => 683_506,
-    # Sector 5 -> Bucharest
-    11_055_043 => 683_506,
-    # Sector 6 -> Bucharest
-    11_055_039 => 683_506,
-    # Bucuresti -> Bucharest
-    6_691_781 => 683_506,
-
-    # Slovakia
-    # Bratislava -> Bratislava
-    3_343_955 => 3_060_972,
-
-    # Sweden
-    # Södermalm -> Stockholm
-    2_676_209 => 2_673_730,
-
-    # Switzerland
-    # Vorstädte -> Basel
-    11_789_440 => 2_661_604,
-    # Zürich (Kreis 11) / Oerlikon -> Zürich
-    2_659_310 => 2_657_896,
-    # Zürich (Kreis 3) / Alt-Wiedikon -> Zürich
-    2_658_007 => 2_657_896,
-    # Zürich (Kreis 5) -> Zürich
-    6_295_521 => 2_657_896,
-    # Zürich (Kreis 1) / Hochschulen -> Zürich
-    6_295_489 => 2_657_896,
-
-    # UK
-    # Shadwell -> London
-    6_690_595 => 2_643_743,
-    # City of London -> London
-    2_643_741 => 2_643_743,
-    # South Bank -> London
-    6_545_251 => 2_643_743,
-    # Soho -> London
-    6_545_173 => 2_643_743,
-    # Whitechapel -> London
-    2_634_112 => 2_643_743,
-    # King's Cross -> London
-    6_690_589 => 2_643_743,
-    # Poplar -> London
-    2_640_091 => 2_643_743,
-    # Hackney -> London
-    2_647_694 => 2_643_743
-  }
-
-  defp visitor_location_details(request) do
-    result = Geolix.lookup(request.remote_ip, where: :geolocation)
-
-    country_code =
-      get_in(result, [:country, :iso_code])
-      |> ignore_unknown_country()
-
-    city_geoname_id = get_in(result, [:city, :geoname_id])
-
-    subdivision1_code =
-      case result do
-        %{subdivisions: [%{iso_code: iso_code} | _rest]} ->
-          country_code <> "-" <> iso_code
-
-        _ ->
-          ""
-      end
-
-    subdivision2_code =
-      case result do
-        %{subdivisions: [_first, %{iso_code: iso_code} | _rest]} ->
-          country_code <> "-" <> iso_code
-
-        _ ->
-          ""
-      end
-
-    %{
-      country_code: country_code,
-      subdivision1_code: subdivision1_code,
-      subdivision2_code: subdivision2_code,
-      city_geoname_id: Map.get(@city_overrides, city_geoname_id, city_geoname_id)
+    %Plausible.ClickhouseEvent{
+      event
+      | utm_medium: request.utm_medium,
+        utm_source: request.utm_source,
+        utm_campaign: request.utm_campaign,
+        utm_content: request.utm_content,
+        utm_term: request.utm_term,
+        referrer_source: get_referrer_source(request, ref),
+        referrer: clean_referrer(ref)
     }
   end
 
-  defp ignore_unknown_country("ZZ"), do: nil
-  defp ignore_unknown_country(country), do: country
-
-  defp parse_referrer(_, nil), do: nil
+  defp parse_referrer(_uri, _referrer_str = nil), do: nil
 
   defp parse_referrer(uri, referrer_str) do
     referrer_uri = URI.parse(referrer_str)
@@ -381,29 +90,10 @@ defmodule Plausible.Ingestion do
     end
   end
 
-  defp generate_user_id(request, domain, hostname, salt) do
-    user_agent = request.user_agent || ""
-    root_domain = get_root_domain(hostname)
-
-    if domain && root_domain do
-      SipHash.hash!(salt, user_agent <> request.remote_ip <> domain <> root_domain)
-    end
+  defp get_referrer_source(request, ref) do
+    source = request.utm_source || request.source_param || request.ref_param
+    source || PlausibleWeb.RefInspector.parse(ref)
   end
-
-  defp get_root_domain(nil), do: "(none)"
-
-  defp get_root_domain(hostname) do
-    case PublicSuffix.registrable_domain(hostname) do
-      domain when is_binary(domain) -> domain
-      _ -> hostname
-    end
-  end
-
-  defp calculate_screen_size(nil), do: nil
-  defp calculate_screen_size(width) when width < 576, do: "Mobile"
-  defp calculate_screen_size(width) when width < 992, do: "Tablet"
-  defp calculate_screen_size(width) when width < 1440, do: "Laptop"
-  defp calculate_screen_size(width) when width >= 1440, do: "Desktop"
 
   defp clean_referrer(nil), do: nil
 
@@ -417,11 +107,39 @@ defmodule Plausible.Ingestion do
     end
   end
 
-  defp strip_www(nil), do: nil
+  defp put_user_agent(%Plausible.ClickhouseEvent{} = event, %Request{} = request) do
+    case parse_user_agent(request) do
+      %UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}} ->
+        :skip
 
-  defp strip_www(hostname) do
-    String.replace_prefix(hostname, "www.", "")
+      %UAInspector.Result.Bot{} ->
+        :skip
+
+      %UAInspector.Result{} = user_agent ->
+        %Plausible.ClickhouseEvent{
+          event
+          | operating_system: os_name(user_agent),
+            operating_system_version: os_version(user_agent),
+            browser: browser_name(user_agent),
+            browser_version: browser_version(user_agent)
+        }
+
+      _any ->
+        event
+    end
   end
+
+  defp parse_user_agent(%Request{user_agent: user_agent}) when is_binary(user_agent) do
+    Tracer.with_span "parse_user_agent" do
+      case Cachex.fetch(:user_agents, user_agent, &UAInspector.parse/1) do
+        {:ok, user_agent} -> user_agent
+        {:commit, user_agent} -> user_agent
+        _ -> nil
+      end
+    end
+  end
+
+  defp parse_user_agent(request), do: request
 
   defp browser_name(ua) do
     case ua.client do
@@ -439,15 +157,6 @@ defmodule Plausible.Ingestion do
       %UAInspector.Result.Client{type: "mobile app"} -> "Mobile App"
       client -> client.name
     end
-  end
-
-  defp major_minor(:unknown), do: ""
-
-  defp major_minor(version) do
-    version
-    |> String.split(".")
-    |> Enum.take(2)
-    |> Enum.join(".")
   end
 
   defp browser_version(ua) do
@@ -472,18 +181,168 @@ defmodule Plausible.Ingestion do
     end
   end
 
-  defp get_referrer_source(request, ref) do
-    source = request.utm_source || request.source_param || request.ref_param
-    source || PlausibleWeb.RefInspector.parse(ref)
-  end
+  defp major_minor(version) do
+    case version do
+      :unknown ->
+        ""
 
-  defp parse_user_agent(%Request{user_agent: user_agent}) when is_binary(user_agent) do
-    case Cachex.fetch(:user_agents, user_agent, &UAInspector.parse/1) do
-      {:ok, user_agent} -> user_agent
-      {:commit, user_agent} -> user_agent
-      _ -> nil
+      version ->
+        version
+        |> String.split(".")
+        |> Enum.take(2)
+        |> Enum.join(".")
     end
   end
 
-  defp parse_user_agent(%Request{}), do: nil
+  defp put_screen_size(%Plausible.ClickhouseEvent{} = event, %Request{} = request) do
+    screen_width =
+      case request.screen_width do
+        nil -> nil
+        width when width < 576 -> "Mobile"
+        width when width < 992 -> "Tablet"
+        width when width < 1440 -> "Laptop"
+        width when width >= 1440 -> "Desktop"
+      end
+
+    %Plausible.ClickhouseEvent{event | screen_size: screen_width}
+  end
+
+  defp put_geolocation(%Plausible.ClickhouseEvent{} = event, %Request{} = request) do
+    Tracer.with_span "parse_visitor_location" do
+      result = Geolix.lookup(request.remote_ip, where: :geolocation)
+
+      country_code =
+        get_in(result, [:country, :iso_code])
+        |> ignore_unknown_country()
+
+      city_geoname_id = get_in(result, [:city, :geoname_id])
+
+      subdivision1_code =
+        case result do
+          %{subdivisions: [%{iso_code: iso_code} | _rest]} ->
+            country_code <> "-" <> iso_code
+
+          _ ->
+            ""
+        end
+
+      subdivision2_code =
+        case result do
+          %{subdivisions: [_first, %{iso_code: iso_code} | _rest]} ->
+            country_code <> "-" <> iso_code
+
+          _ ->
+            ""
+        end
+
+      %Plausible.ClickhouseEvent{
+        event
+        | country_code: country_code,
+          subdivision1_code: subdivision1_code,
+          subdivision2_code: subdivision2_code,
+          city_geoname_id: Map.get(CityOverrides.get(), city_geoname_id, city_geoname_id)
+      }
+    end
+  end
+
+  defp ignore_unknown_country("ZZ"), do: nil
+  defp ignore_unknown_country(country), do: country
+
+  defp map_domains(%Plausible.ClickhouseEvent{} = event, %Request{} = request) do
+    domains =
+      if request.domain do
+        String.split(request.domain, ",")
+        |> Enum.map(&String.trim/1)
+        |> Enum.map(&strip_www/1)
+      else
+        uri = request.url && URI.parse(request.url)
+        [strip_www(uri && uri.host)]
+      end
+
+    for domain <- domains, do: %Plausible.ClickhouseEvent{event | domain: domain}
+  end
+
+  defp put_user_id(events, %Request{} = request, salts) do
+    for %Plausible.ClickhouseEvent{} = event <- events do
+      user_id = generate_user_id(request, event.domain, event.hostname, salts.current)
+
+      %Plausible.ClickhouseEvent{event | user_id: user_id}
+    end
+  end
+
+  defp register_session(events, %Request{} = request, salts) do
+    for %Plausible.ClickhouseEvent{} = event <- events do
+      previous_user_id = generate_user_id(request, event.domain, event.hostname, salts.previous)
+
+      session_id =
+        Tracer.with_span "cache_store_event" do
+          Plausible.Session.CacheStore.on_event(event, previous_user_id)
+        end
+
+      %Plausible.ClickhouseEvent{event | session_id: session_id}
+    end
+  end
+
+  defp generate_user_id(request, domain, hostname, salt) do
+    cond do
+      is_nil(salt) ->
+        nil
+
+      is_nil(domain) ->
+        nil
+
+      true ->
+        user_agent = request.user_agent || ""
+        root_domain = get_root_domain(hostname)
+
+        SipHash.hash!(salt, user_agent <> request.remote_ip <> domain <> root_domain)
+    end
+  end
+
+  defp get_root_domain(nil), do: "(none)"
+
+  defp get_root_domain(hostname) do
+    case PublicSuffix.registrable_domain(hostname) do
+      domain when is_binary(domain) -> domain
+      _any -> hostname
+    end
+  end
+
+  defp spam_or_blocked?(%Request{} = request) do
+    cond do
+      request.domain in Application.get_env(:plausible, :domain_blacklist) ->
+        :skip
+
+      FunWithFlags.enabled?(:block_event_ingest, for: request.domain) ->
+        Tracer.set_attribute("blocked_by_flag", true)
+        :skip
+
+      request.referrer &&
+          URI.parse(request.referrer).host |> strip_www() |> ReferrerBlocklist.is_spammer?() ->
+        :skip
+
+      true ->
+        :ok
+    end
+  end
+
+  defp validate_events(events) do
+    Enum.reduce_while(events, :ok, fn %Plausible.ClickhouseEvent{} = event, _acc ->
+      event
+      |> Map.from_struct()
+      |> Plausible.ClickhouseEvent.new()
+      |> case do
+        %Ecto.Changeset{valid?: true} -> {:cont, :ok}
+        %Ecto.Changeset{valid?: false} = changeset -> {:halt, {:error, changeset}}
+      end
+    end)
+  end
+
+  defp strip_www(hostname) do
+    if hostname do
+      String.replace_prefix(hostname, "www.", "")
+    else
+      nil
+    end
+  end
 end
