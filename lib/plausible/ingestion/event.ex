@@ -2,27 +2,49 @@ defmodule Plausible.Ingestion.Event do
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Ingestion.{Request, CityOverrides}
 
-  @spec build_and_buffer(Request.t()) :: :ok | :skip | {:error, Ecto.Changeset.t()}
+  @spec build_and_buffer(Request.t(), [atom()], [{atom(), map()}]) ::
+          {:ok, [{atom(), map()}]} | :skip | {:error, Ecto.Changeset.t()}
   @doc """
   Builds events from %Plausible.Ingestion.Request{} and adds them to Plausible.Event.WriteBuffer.
-  This fetches geolocation data and parses the user agent string. Returns :skip if the request is
-  identified as spam, or blocked.
+  This function reads geolocation data and parses the user agent string. Returns :skip if the
+  request is identified as spam, or blocked.
+
+    iex> build_and_buffer(request)
+    {:ok, []}
+
+  The `stash` and `apply` options allows given %Plausible.ClickhouseEvent{} fields be used later.
+  This is useful when the caller makes two subsequent requests and don't want to re-fetch
+  geolocation and user agent dependent fields. Check the following example:
+
+    iex> {:ok, stash} = build_and_buffer(first_request, [:geolocation])
+    ...> {:ok, stash} = build_and_buffer(second_request, [:geolocation], stash)
+    ...> {:ok, stash} = build_and_buffer(third_request, [:geolocation], stash)
+    iex> stash
+    [geolocation: %{country_code: "BR"}]
+
+  Currently `stash` only supports `:geolocation` and `:user_agent`, which are the most expensive
+  calls.
+
   """
-  def build_and_buffer(%Request{} = request) do
+  def build_and_buffer(%Request{} = request, stash \\ [], apply \\ []) do
     with :ok <- spam_or_blocked?(request),
          salts <- Plausible.Session.Salts.fetch(),
          event <- %Plausible.ClickhouseEvent{},
-         %{} = event <- put_user_agent(event, request),
+         %{} = event <-
+           apply_stash(event, apply[:user_agent], fn -> put_user_agent(event, request) end),
          %{} = event <- put_basic_info(event, request),
          %{} = event <- put_referrer(event, request),
-         %{} = event <- put_geolocation(event, request),
+         %{} = event <-
+           apply_stash(event, apply[:geolocation], fn -> put_geolocation(event, request) end),
          %{} = event <- put_screen_size(event, request),
          %{} = event <- put_meta(event, request),
          events when is_list(events) <- map_domains(event, request),
          events when is_list(events) <- put_user_id(events, request, salts),
          :ok <- validate_events(events),
-         events when is_list(events) <- register_session(events, request, salts) do
+         events when is_list(events) <- register_session(events, request, salts),
+         stash <- save_stash(events, stash) do
       Enum.each(events, &Plausible.Event.WriteBuffer.insert/1)
+      {:ok, stash}
     end
   end
 
@@ -344,5 +366,22 @@ defmodule Plausible.Ingestion.Event do
     else
       nil
     end
+  end
+
+  defp apply_stash(%Plausible.ClickhouseEvent{} = event, stashed, fallback_fun) do
+    if stashed, do: Map.merge(event, stashed), else: fallback_fun.()
+  end
+
+  @stash_mapping [
+    user_agent: [:operating_system, :operating_system_version, :browser, :browser_version],
+    geolocation: [:country_code, :subdivision1_code, :subdivision2_code, :city_geoname_id]
+  ]
+
+  defp save_stash([%Plausible.ClickhouseEvent{} = event | _rest], stash) do
+    Enum.map(stash, fn stash_key ->
+      event_keys = @stash_mapping[stash_key] || []
+      attrs = Map.take(event, event_keys)
+      {stash_key, attrs}
+    end)
   end
 end
