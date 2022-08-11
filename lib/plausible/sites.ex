@@ -27,6 +27,23 @@ defmodule Plausible.Sites do
     end
   end
 
+  def create(user, params, force: true) do
+    site_changeset = Plausible.Site.changeset(%Plausible.Site{}, params)
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.insert(:site, site_changeset)
+    |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
+      membership_changeset =
+        Plausible.Site.Membership.changeset(%Plausible.Site.Membership{}, %{
+          site_id: site.id,
+          user_id: user.id
+        })
+
+      repo.insert(membership_changeset)
+    end)
+    |> Repo.transaction()
+  end
+
   defp maybe_start_trial(multi, user) do
     case user.trial_expiry_date do
       nil ->
