@@ -1,4 +1,4 @@
-defmodule Plausible.Ingestion do
+defmodule Plausible.Ingestion.Event do
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Ingestion.{Request, CityOverrides}
 
