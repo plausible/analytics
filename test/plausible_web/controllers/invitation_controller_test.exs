@@ -40,8 +40,10 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
         subject: "[Plausible Analytics] #{user.email} accepted your invitation to #{site.domain}"
       )
     end
+  end
 
-    test "ownership transfer - notifies the original inviter with a different email", %{
+  describe "POST /sites/invitations/:invitation_id/accept - ownership transfer" do
+    test "notifies the original inviter with a different email", %{
       conn: conn,
       user: user
     } do
@@ -60,7 +62,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       )
     end
 
-    test "ownership transfer - downgrades previous owner to admin", %{conn: conn, user: user} do
+    test "downgrades previous owner to admin", %{conn: conn, user: user} do
       old_owner = insert(:user)
       site = insert(:site, members: [old_owner])
 
@@ -82,7 +84,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert new_owner_membership.role == :owner
     end
 
-    test "ownership transfer - will lock the site if new owner does not have an active subscription or trial",
+    test "will lock the site if new owner does not have an active subscription or trial",
          %{
            conn: conn,
            user: user
@@ -102,7 +104,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert Repo.reload!(site).locked
     end
 
-    test "ownership transfer - will end the trial of the new owner immediately", %{
+    test "will end the trial of the new owner immediately", %{
       conn: conn,
       user: user
     } do
@@ -122,7 +124,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert Repo.reload!(site).locked
     end
 
-    test "ownership transfer - if new owner does not have a trial - will set trial_expiry_date to yesterday",
+    test "if new owner does not have a trial - will set trial_expiry_date to yesterday",
          %{
            conn: conn,
            user: user
@@ -141,6 +143,24 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
       assert Timex.before?(Repo.reload!(user).trial_expiry_date, Timex.today())
       assert Repo.reload!(site).locked
+    end
+
+    test "can upgrade admin to owner", %{conn: conn, user: user} do
+      old_owner = insert(:user)
+      site = insert(:site, members: [old_owner])
+      insert(:site_membership, site: site, user: user, role: :admin)
+
+      invitation =
+        insert(:invitation, site_id: site.id, inviter: old_owner, email: user.email, role: :owner)
+
+      post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+
+      refute Repo.exists?(from(i in Plausible.Auth.Invitation, where: i.email == ^user.email))
+
+      new_owner_membership =
+        Repo.get_by(Plausible.Site.Membership, user_id: user.id, site_id: site.id)
+
+      assert new_owner_membership.role == :owner
     end
   end
 

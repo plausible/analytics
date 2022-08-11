@@ -25,11 +25,9 @@ defmodule PlausibleWeb.InvitationController do
       end
 
     membership_changeset =
-      Membership.changeset(existing_membership || %Membership{}, %{
-        user_id: user.id,
-        site_id: invitation.site.id,
-        role: invitation.role
-      })
+      (existing_membership ||
+         %Membership{user_id: user.id, site_id: invitation.site.id})
+      |> Membership.override_role(invitation.role)
 
     multi =
       multi
@@ -46,7 +44,7 @@ defmodule PlausibleWeb.InvitationController do
         |> put_flash(:success, "You now have access to #{invitation.site.domain}")
         |> redirect(to: "/#{URI.encode_www_form(invitation.site.domain)}")
 
-      {:error, _} ->
+      {:error, _, _} ->
         conn
         |> put_flash(:error, "Something went wrong, please try again")
         |> redirect(to: "/sites")
