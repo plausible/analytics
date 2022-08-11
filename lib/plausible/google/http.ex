@@ -1,4 +1,6 @@
 defmodule Plausible.Google.HTTP do
+  alias Plausible.HTTPClient
+
   @spec get_report(module(), Plausible.Google.ReportRequest.t()) ::
           {:ok, {[map()], String.t() | nil}} | {:error, any()}
   def get_report(http_client, %Plausible.Google.ReportRequest{} = report_request) do
@@ -58,31 +60,46 @@ defmodule Plausible.Google.HTTP do
   end
 
   def list_sites(access_token) do
-    "https://www.googleapis.com/webmasters/v3/sites"
-    |> HTTPoison.get!("Content-Type": "application/json", Authorization: "Bearer #{access_token}")
+    url = "https://www.googleapis.com/webmasters/v3/sites"
+    headers = [{"Content-Type", "application/json"}, {"Authorization", "Bearer #{access_token}"}]
+
+    {:ok, response} = HTTPClient.get(url, headers)
+
+    response
     |> Map.get(:body)
     |> Jason.decode!()
     |> then(&{:ok, &1})
   end
 
   def fetch_access_token(code) do
-    "https://www.googleapis.com/oauth2/v4/token"
-    |> HTTPoison.post!(
-      "client_id=#{client_id()}&client_secret=#{client_secret()}&code=#{code}&grant_type=authorization_code&redirect_uri=#{redirect_uri()}",
-      "Content-Type": "application/x-www-form-urlencoded"
-    )
+    url = "https://www.googleapis.com/oauth2/v4/token"
+    headers = [{"Content-Type", "application/x-www-form-urlencoded"}]
+
+    params =
+      "client_id=#{client_id()}&client_secret=#{client_secret()}&code=#{code}&grant_type=authorization_code&redirect_uri=#{redirect_uri()}"
+
+    {:ok, response} = HTTPClient.post(url, headers, params)
+
+    response
     |> Map.get(:body)
     |> Jason.decode!()
   end
 
   def list_views_for_user(access_token) do
-    "https://www.googleapis.com/analytics/v3/management/accounts/~all/webproperties/~all/profiles"
-    |> HTTPoison.get!(Authorization: "Bearer #{access_token}")
-    |> case do
-      %{body: body, status_code: 200} ->
+    url =
+      "https://www.googleapis.com/analytics/v3/management/accounts/~all/webproperties/~all/profiles"
+
+    headers = [{"Authorization", "Bearer #{access_token}"}]
+
+    case HTTPClient.get(url, headers) do
+      {:ok, %Finch.Response{body: body, status: 200}} ->
         {:ok, Jason.decode!(body)}
 
-      %{body: body} ->
+      {:error, %Mint.TransportError{reason: reason}} ->
+        Sentry.capture_message("Error fetching Google view ID", extra: inspect(reason))
+        {:error, reason}
+
+      {:error, %Finch.Response{body: body}} ->
         Sentry.capture_message("Error fetching Google view ID", extra: Jason.decode!(body))
         {:error, body}
     end
@@ -108,27 +125,23 @@ defmodule Plausible.Google.HTTP do
         dimensionFilterGroups: filter_groups
       })
 
-    :post
-    |> Finch.build(
-      "https://www.googleapis.com/webmasters/v3/sites/#{property}/searchAnalytics/query",
-      [{"Authorization", "Bearer #{access_token}"}],
-      params
-    )
-    |> Finch.request(Plausible.Finch)
-    |> case do
-      {:ok, %{status: 200, body: body}} ->
+    url = "https://www.googleapis.com/webmasters/v3/sites/#{property}/searchAnalytics/query"
+    headers = [{"Authorization", "Bearer #{access_token}"}]
+
+    case HTTPClient.post(url, headers, params) do
+      {:ok, %Finch.Response{body: body, status: 200}} ->
         {:ok, Jason.decode!(body)}
 
-      {:ok, %{status: 401, body: body}} ->
+      {:ok, %Finch.Response{body: body, status: 401}} ->
         Sentry.capture_message("Error fetching Google queries", extra: Jason.decode!(body))
         {:error, :invalid_credentials}
 
-      {:ok, %{status: 403, body: body}} ->
+      {:ok, %Finch.Response{body: body, status: 403}} ->
         body = Jason.decode!(body)
         Sentry.capture_message("Error fetching Google queries", extra: body)
         {:error, get_in(body, ["error", "message"])}
 
-      {:ok, %{body: body}} ->
+      {:ok, %Finch.Response{body: body}} ->
         Sentry.capture_message("Error fetching Google queries", extra: Jason.decode!(body))
         {:error, :unknown}
     end
@@ -138,16 +151,17 @@ defmodule Plausible.Google.HTTP do
   defp property_base_url(url), do: url
 
   def refresh_auth_token(refresh_token) do
-    "https://www.googleapis.com/oauth2/v4/token"
-    |> HTTPoison.post!(
-      "client_id=#{client_id()}&client_secret=#{client_secret()}&refresh_token=#{refresh_token}&grant_type=refresh_token&redirect_uri=#{redirect_uri()}",
-      "Content-Type": "application/x-www-form-urlencoded"
-    )
-    |> case do
-      %{body: body, status_code: 200} ->
+    url = "https://www.googleapis.com/oauth2/v4/token"
+    headers = [{"Content-Type", "application/x-www-form-urlencoded"}]
+
+    params =
+      "client_id=#{client_id()}&client_secret=#{client_secret()}&refresh_token=#{refresh_token}&grant_type=refresh_token&redirect_uri=#{redirect_uri()}"
+
+    case HTTPClient.post(url, headers, params) do
+      {:ok, %Finch.Response{body: body, status: 200}} ->
         {:ok, Jason.decode!(body)}
 
-      %{body: body} ->
+      {:error, %Finch.Response{body: body}} ->
         body
         |> Jason.decode!(body)
         |> Map.get("error")
@@ -175,15 +189,11 @@ defmodule Plausible.Google.HTTP do
         ]
       })
 
-    "https://analyticsreporting.googleapis.com/v4/reports:batchGet"
-    |> HTTPoison.post!(
-      params,
-      [Authorization: "Bearer #{access_token}"],
-      timeout: 15_000,
-      recv_timeout: 15_000
-    )
-    |> case do
-      %{status_code: 200, body: body} ->
+    url = "https://analyticsreporting.googleapis.com/v4/reports:batchGet"
+    headers = [{"Authorization", "Bearer #{access_token}"}]
+
+    case HTTPClient.post(url, headers, params) do
+      {:ok, %Finch.Response{body: body, status: 200}} ->
         report = List.first(Jason.decode!(body)["reports"])
 
         date =
@@ -197,7 +207,7 @@ defmodule Plausible.Google.HTTP do
 
         {:ok, date}
 
-      %{body: body} ->
+      {:error, %Finch.Response{body: body}} ->
         Sentry.capture_message("Error fetching Google view ID", extra: Jason.decode!(body))
         {:error, body}
     end

@@ -1,4 +1,6 @@
 defmodule PlausibleWeb.Captcha do
+  alias Plausible.HTTPClient
+
   @verify_endpoint "https://hcaptcha.com/siteverify"
 
   def enabled? do
@@ -13,7 +15,11 @@ defmodule PlausibleWeb.Captcha do
   def verify(token) do
     if enabled?() do
       res =
-        HTTPoison.post!(@verify_endpoint, {:form, [{"response", token}, {"secret", secret()}]})
+        HTTPClient.post(
+          @verify_endpoint,
+          [],
+          {:form, [{"response", token}, {"secret", secret()}]}
+        )
 
       json = Jason.decode!(res.body)
       json["success"]
