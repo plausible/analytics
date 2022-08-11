@@ -55,10 +55,6 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         _ -> 0
       end
 
-    :telemetry.execute([:prom_ex, :plugin, :cachex, :sessions_count], %{
-      count: user_agents_count
-    })
-
     sessions_count =
       case Cachex.stats(:sessions) do
         {:ok, stats} -> stats
