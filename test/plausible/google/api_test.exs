@@ -1,18 +1,19 @@
 defmodule Plausible.Google.ApiTest do
   use Plausible.DataCase, async: true
+  use ExVCR.Mock, adapter: ExVCR.Adapter.Finch
   alias Plausible.Google.Api
   import Plausible.TestUtils
   import Double
 
-  @ok_response File.read!("fixture/ga_batch_report.json")
-
-  def start_buffer(_setup_args) do
-    {:ok, pid} = Plausible.Google.Buffer.start_link()
-    {:ok, buffer: pid}
-  end
+  setup [:create_user, :create_new_site]
 
   describe "fetch_and_persist/4" do
-    setup [:create_user, :create_new_site, :start_buffer]
+    @ok_response File.read!("fixture/ga_batch_report.json")
+
+    setup do
+      {:ok, pid} = Plausible.Google.Buffer.start_link()
+      {:ok, buffer: pid}
+    end
 
     test "will fetch and persist import data from Google Analytics", %{site: site, buffer: buffer} do
       finch_double =
@@ -82,6 +83,68 @@ defmodule Plausible.Google.ApiTest do
       assert_receive({Finch, :request, [_, _]})
       assert_receive({Finch, :request, [_, _]})
       assert_receive({Finch, :request, [_, _]})
+    end
+  end
+
+  describe "fetch_stats/3" do
+    test "returns name and visitor count", %{user: user, site: site} do
+      use_cassette "google_analytics_stats", match_requests_on: [:request_body] do
+        insert(:google_auth,
+          user: user,
+          site: site,
+          property: "sc-domain:dummy.test",
+          expires: NaiveDateTime.add(NaiveDateTime.utc_now(), 3600)
+        )
+
+        query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+
+        assert {:ok,
+                [
+                  %{name: ["keyword1", "keyword2"], visitors: 25},
+                  %{name: ["keyword3", "keyword4"], visitors: 15}
+                ]} = Plausible.Google.Api.fetch_stats(site, query, 5)
+      end
+    end
+
+    test "returns next page when page argument is set", %{user: user, site: site} do
+      use_cassette "google_analytics_stats#with_page", match_requests_on: [:request_body] do
+        insert(:google_auth,
+          user: user,
+          site: site,
+          property: "sc-domain:dummy.test",
+          expires: NaiveDateTime.add(NaiveDateTime.utc_now(), 3600)
+        )
+
+        query = %Plausible.Stats.Query{
+          filters: %{"page" => 5},
+          date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])
+        }
+
+        assert {:ok,
+                [
+                  %{name: ["keyword1", "keyword2"], visitors: 25},
+                  %{name: ["keyword3", "keyword4"], visitors: 15}
+                ]} = Plausible.Google.Api.fetch_stats(site, query, 5)
+      end
+    end
+
+    test "defaults first page when page argument is not set", %{user: user, site: site} do
+      use_cassette "google_analytics_stats#without_page", match_requests_on: [:request_body] do
+        insert(:google_auth,
+          user: user,
+          site: site,
+          property: "sc-domain:dummy.test",
+          expires: NaiveDateTime.add(NaiveDateTime.utc_now(), 3600)
+        )
+
+        query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+
+        assert {:ok,
+                [
+                  %{name: ["keyword1", "keyword2"], visitors: 25},
+                  %{name: ["keyword3", "keyword4"], visitors: 15}
+                ]} = Plausible.Google.Api.fetch_stats(site, query, 5)
+      end
     end
   end
 end

@@ -39,14 +39,17 @@ defmodule Plausible.Google.Api do
     end
   end
 
-  def fetch_stats(site, %{date_range: date_range, filters: %{"page" => page}}, limit) do
-    with {:ok, %{access_token: access_token, property: property}} <-
+  def fetch_stats(site, %{filters: %{} = filters, date_range: date_range}, limit) do
+    with site <- Plausible.Repo.preload(site, :google_auth),
+         {:ok, %{access_token: access_token, property: property}} <-
            refresh_if_needed(site.google_auth),
-         {:ok, stats} <- HTTP.list_stats(access_token, property, date_range, limit, page) do
+         {:ok, stats} <-
+           HTTP.list_stats(access_token, property, date_range, limit, filters["page"]) do
       stats
       |> Map.get("rows", [])
       |> Enum.filter(fn row -> row["clicks"] > 0 end)
       |> Enum.map(fn row -> %{name: row["keys"], visitors: round(row["clicks"])} end)
+      |> then(&{:ok, &1})
     end
   end
 

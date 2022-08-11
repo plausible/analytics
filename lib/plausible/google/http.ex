@@ -108,25 +108,27 @@ defmodule Plausible.Google.HTTP do
         dimensionFilterGroups: filter_groups
       })
 
-    "https://www.googleapis.com/webmasters/v3/sites/#{property}/searchAnalytics/query"
-    |> HTTPoison.post!(params,
-      "Content-Type": "application/json",
-      Authorization: "Bearer #{access_token}"
+    :post
+    |> Finch.build(
+      "https://www.googleapis.com/webmasters/v3/sites/#{property}/searchAnalytics/query",
+      [{"Authorization", "Bearer #{access_token}"}],
+      params
     )
+    |> Finch.request(Plausible.Finch)
     |> case do
-      %{status_code: 200, body: body} ->
+      {:ok, %{status: 200, body: body}} ->
         {:ok, Jason.decode!(body)}
 
-      %{status_code: 401, body: body} ->
+      {:ok, %{status: 401, body: body}} ->
         Sentry.capture_message("Error fetching Google queries", extra: Jason.decode!(body))
         {:error, :invalid_credentials}
 
-      %{status_code: 403, body: body} ->
+      {:ok, %{status: 403, body: body}} ->
         body = Jason.decode!(body)
         Sentry.capture_message("Error fetching Google queries", extra: body)
         {:error, get_in(body, ["error", "message"])}
 
-      %{body: body} ->
+      {:ok, %{body: body}} ->
         Sentry.capture_message("Error fetching Google queries", extra: Jason.decode!(body))
         {:error, :unknown}
     end
