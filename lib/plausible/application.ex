@@ -28,7 +28,6 @@ defmodule Plausible.Application do
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
     setup_sentry()
-    setup_cache_stats()
     OpentelemetryPhoenix.setup()
     OpentelemetryEcto.setup([:plausible, :repo])
     OpentelemetryEcto.setup([:plausible, :clickhouse_repo])
@@ -57,14 +56,6 @@ defmodule Plausible.Application do
       )
     else
       pool_config
-    end
-  end
-
-  defp setup_cache_stats() do
-    conf = Application.get_env(:plausible, :user_agent_cache)
-
-    if conf[:stats] do
-      :timer.apply_interval(1000 * 10, Plausible.Application, :report_cache_stats, [])
     end
   end
 

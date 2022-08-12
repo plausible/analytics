@@ -35,8 +35,4 @@ config :plausible, Plausible.Repo,
   connect_timeout: 300_000,
   handshake_timeout: 300_000
 
-config :plausible, :user_agent_cache,
-  limit: 1000,
-  stats: false
-
 import_config "#{config_env()}.exs"
