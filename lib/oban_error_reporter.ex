@@ -1,4 +1,4 @@
-defmodule ErrorReporter do
+defmodule ObanErrorReporter do
   def handle_event([:oban, :job, :exception], measure, %{job: job} = meta, _) do
     extra =
       job
