@@ -37,7 +37,12 @@
           <% end %>
         <% {:error, error} -> %>
           <p class="text-gray-700 dark:text-gray-300 mt-6">The following error happened when fetching your Google Search Console domains.</p>
-          <p class="text-red-700 font-medium mt-3"><%= error %></p>
+
+          <%= if error == "invalid_grant" do %>
+            <p class="text-red-700 font-medium mt-3"><a href="https://plausible.io/docs/google-search-console-integration#i-get-the-invalid-grant-error">Invalid Grant error returned from Google. <span class="text-indigo-500">See here on how to fix it.</a></p>
+          <% else %>
+            <p class="text-red-700 font-medium mt-3"><%= error %></p>
+          <% end %>
       <% end %>
     <% else %>
       <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(@site.id, "search-console"), class: "button mt-8") %>
