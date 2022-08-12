@@ -163,7 +163,7 @@ defmodule Plausible.Google.HTTP do
 
       {:error, %Finch.Response{body: body}} ->
         body
-        |> Jason.decode!(body)
+        |> Jason.decode!()
         |> Map.get("error")
         |> then(&{:error, &1})
     end
