@@ -91,7 +91,7 @@ export default class SearchTerms extends React.Component {
           <RocketIcon />
           <div>Could not find any search terms for this period</div>
           <div>Google Search Console data is sampled and delayed by 24-36h</div>
-          <div>Read more on <a href="https://docs.plausible.io/google-search-console-integration/#i-dont-see-google-search-query-data-in-my-dashboard" target="_blank" rel="noreferrer" className="hover:underline text-indigo-700 dark:text-indigo-500">our documentation</a></div>
+          <div>Read more on <a href="https://plausible.io/docs/google-search-console-integration#i-dont-see-google-search-query-data-in-my-dashboard" target="_blank" rel="noreferrer" className="hover:underline text-indigo-700 dark:text-indigo-500">our documentation</a></div>
         </div>
       )
     }
