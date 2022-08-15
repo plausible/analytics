@@ -4,7 +4,7 @@ defmodule Plausible.Ingestion.Request do
   """
 
   defstruct ~w(
-    remote_ip user_agent event_name url referrer domain screen_width hash_mode meta utm_medium
+    remote_ip user_agent event_name url referrer domain screen_width hash_mode props utm_medium
     utm_source utm_campaign utm_content utm_term source_param ref_param
   )a
 
@@ -17,7 +17,7 @@ defmodule Plausible.Ingestion.Request do
           domain: term(),
           screen_width: term(),
           hash_mode: term(),
-          meta: map(),
+          props: map(),
           utm_medium: String.t() | nil,
           utm_source: String.t() | nil,
           utm_campaign: String.t() | nil,
@@ -66,15 +66,15 @@ defmodule Plausible.Ingestion.Request do
         domain: request_body["d"] || request_body["domain"],
         screen_width: request_body["w"] || request_body["screen_width"],
         hash_mode: request_body["h"] || request_body["hashMode"],
-        meta: parse_meta(request_body)
+        props: parse_props(request_body)
     }
   end
 
-  defp parse_meta(%{} = request_body) do
-    raw_meta =
+  defp parse_props(%{} = request_body) do
+    raw_props =
       request_body["m"] || request_body["meta"] || request_body["p"] || request_body["props"]
 
-    case decode_raw_props(raw_meta) do
+    case decode_raw_props(raw_props) do
       {:ok, parsed_json} ->
         parsed_json
         |> Enum.filter(&valid_prop_value?/1)

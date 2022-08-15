@@ -37,7 +37,7 @@ defmodule Plausible.Ingestion.Event do
          %{} = event <-
            apply_stash(event, apply[:geolocation], fn -> put_geolocation(event, request) end),
          %{} = event <- put_screen_size(event, request),
-         %{} = event <- put_meta(event, request),
+         %{} = event <- put_props(event, request),
          events when is_list(events) <- map_domains(event, request),
          events when is_list(events) <- put_user_id(events, request, salts),
          :ok <- validate_events(events),
@@ -76,11 +76,11 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp put_meta(%Plausible.ClickhouseEvent{} = event, %Request{} = request) do
-    if is_map(request.meta) do
+  defp put_props(%Plausible.ClickhouseEvent{} = event, %Request{} = request) do
+    if is_map(request.props) do
       event
-      |> Map.put(:"meta.key", Map.keys(request.meta))
-      |> Map.put(:"meta.value", Map.values(request.meta) |> Enum.map(&to_string/1))
+      |> Map.put(:"meta.key", Map.keys(request.props))
+      |> Map.put(:"meta.value", Map.values(request.props) |> Enum.map(&to_string/1))
     else
       event
     end
