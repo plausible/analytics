@@ -92,11 +92,11 @@ defmodule Plausible.Ingestion.Event do
 
     %Plausible.ClickhouseEvent{
       event
-      | utm_medium: request.utm_medium,
-        utm_source: request.utm_source,
-        utm_campaign: request.utm_campaign,
-        utm_content: request.utm_content,
-        utm_term: request.utm_term,
+      | utm_medium: request.query_params["utm_medium"],
+        utm_source: request.query_params["utm_source"],
+        utm_campaign: request.query_params["utm_campaign"],
+        utm_content: request.query_params["utm_content"],
+        utm_term: request.query_params["utm_term"],
         referrer_source: get_referrer_source(request, ref),
         referrer: clean_referrer(ref)
     }
@@ -113,7 +113,10 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp get_referrer_source(request, ref) do
-    source = request.utm_source || request.source_param || request.ref_param
+    source =
+      request.query_params["utm_source"] || request.query_params["source"] ||
+        request.query_params["ref"]
+
     source || PlausibleWeb.RefInspector.parse(ref)
   end
 

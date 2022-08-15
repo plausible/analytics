@@ -3,10 +3,18 @@ defmodule Plausible.Ingestion.Request do
   The %Plausible.Ingestion.Request{} struct stores all needed fields to create an event downstream.
   """
 
-  defstruct ~w(
-    remote_ip user_agent event_name url referrer domain screen_width hash_mode props utm_medium
-    utm_source utm_campaign utm_content utm_term source_param ref_param
-  )a
+  defstruct [
+    :remote_ip,
+    :user_agent,
+    :event_name,
+    :url,
+    :referrer,
+    :domain,
+    :screen_width,
+    :hash_mode,
+    props: %{},
+    query_params: %{}
+  ]
 
   @type t() :: %__MODULE__{
           remote_ip: String.t() | nil,
@@ -18,13 +26,7 @@ defmodule Plausible.Ingestion.Request do
           screen_width: term(),
           hash_mode: term(),
           props: map(),
-          utm_medium: String.t() | nil,
-          utm_source: String.t() | nil,
-          utm_campaign: String.t() | nil,
-          utm_content: String.t() | nil,
-          utm_term: String.t() | nil,
-          source_param: String.t() | nil,
-          ref_param: String.t() | nil
+          query_params: map()
         }
 
   @spec build(Plug.Conn.t()) :: {:ok, t()} | {:error, :invalid_json}
@@ -37,7 +39,7 @@ defmodule Plausible.Ingestion.Request do
       |> Map.put(:remote_ip, PlausibleWeb.RemoteIp.get(conn))
       |> put_user_agent(conn)
       |> put_request_params(request_body)
-      |> put_utm_fields()
+      |> put_query_params()
       |> then(&{:ok, &1})
     end
   end
@@ -109,21 +111,11 @@ defmodule Plausible.Ingestion.Request do
     end
   end
 
-  defp put_utm_fields(%__MODULE__{url: url} = request) do
+  defp put_query_params(%__MODULE__{url: url} = request) do
     with url when is_binary(url) <- url,
-         %URI{query: query} when is_binary(query) <- URI.parse(url) do
-      query
-      |> URI.query_decoder()
-      |> Enum.reduce(request, fn
-        {"utm_medium", value}, acc when is_binary(value) -> Map.put(acc, :utm_medium, value)
-        {"utm_source", value}, acc when is_binary(value) -> Map.put(acc, :utm_source, value)
-        {"utm_campaign", value}, acc when is_binary(value) -> Map.put(acc, :utm_campaign, value)
-        {"utm_content", value}, acc when is_binary(value) -> Map.put(acc, :utm_content, value)
-        {"utm_term", value}, acc when is_binary(value) -> Map.put(acc, :utm_term, value)
-        {"source", value}, acc when is_binary(value) -> Map.put(acc, :source_param, value)
-        {"ref", value}, acc when is_binary(value) -> Map.put(acc, :ref_param, value)
-        _any, acc -> acc
-      end)
+         %URI{query: query} when is_binary(query) <- URI.parse(url),
+         %{} = query_params <- URI.decode_query(query) do
+      Map.put(request, :query_params, query_params)
     else
       _any -> request
     end

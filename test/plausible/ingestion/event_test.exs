@@ -23,13 +23,15 @@ defmodule Plausible.Ingestion.EventTest do
     referrer: "http://m.facebook.test/",
     screen_width: 1440,
     hash_mode: nil,
-    utm_medium: "utm_medium",
-    utm_source: "utm_source",
-    utm_campaign: "utm_campaign",
-    utm_content: "utm_content",
-    utm_term: "utm_term",
-    source_param: "source_param",
-    ref_param: "ref_param"
+    query_params: %{
+      "utm_medium" => "utm_medium",
+      "utm_source" => "utm_source",
+      "utm_campaign" => "utm_campaign",
+      "utm_content" => "utm_content",
+      "utm_term" => "utm_term",
+      "source" => "source",
+      "ref" => "ref"
+    }
   }
 
   test "build_and_buffer/3 creates an event" do
