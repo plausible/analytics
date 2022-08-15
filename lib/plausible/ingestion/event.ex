@@ -29,7 +29,7 @@ defmodule Plausible.Ingestion.Event do
   def build_and_buffer(%Request{} = request, stash \\ [], apply \\ []) do
     with :ok <- spam_or_blocked?(request),
          salts <- Plausible.Session.Salts.fetch(),
-         event <- %Plausible.ClickhouseEvent{},
+         event <- Map.new(),
          %{} = event <-
            apply_stash(event, apply[:user_agent], fn -> put_user_agent(event, request) end),
          %{} = event <- put_basic_info(event, request),
@@ -40,7 +40,7 @@ defmodule Plausible.Ingestion.Event do
          %{} = event <- put_props(event, request),
          events when is_list(events) <- map_domains(event, request),
          events when is_list(events) <- put_user_id(events, request, salts),
-         :ok <- validate_events(events),
+         {:ok, events} <- validate_events(events),
          events when is_list(events) <- register_session(events, request, salts),
          stash <- save_stash(events, stash) do
       Enum.each(events, &Plausible.Event.WriteBuffer.insert/1)
@@ -48,17 +48,15 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp put_basic_info(%Plausible.ClickhouseEvent{} = event, %Request{} = request) do
+  defp put_basic_info(%{} = event, %Request{} = request) do
     uri = request.url && URI.parse(request.url)
     host = if uri && uri.host == "", do: "(none)", else: uri && uri.host
 
-    %Plausible.ClickhouseEvent{
-      event
-      | timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
-        name: request.event_name,
-        hostname: strip_www(host),
-        pathname: get_pathname(uri, request.hash_mode)
-    }
+    event
+    |> Map.put(:timestamp, NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second))
+    |> Map.put(:name, request.event_name)
+    |> Map.put(:hostname, strip_www(host))
+    |> Map.put(:pathname, get_pathname(uri, request.hash_mode))
   end
 
   defp get_pathname(_uri = nil, _hash_mode), do: "/"
@@ -76,7 +74,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp put_props(%Plausible.ClickhouseEvent{} = event, %Request{} = request) do
+  defp put_props(%{} = event, %Request{} = request) do
     if is_map(request.props) do
       event
       |> Map.put(:"meta.key", Map.keys(request.props))
@@ -86,20 +84,18 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp put_referrer(%Plausible.ClickhouseEvent{} = event, %Request{} = request) do
+  defp put_referrer(%{} = event, %Request{} = request) do
     uri = request.url && URI.parse(request.url)
     ref = parse_referrer(uri, request.referrer)
 
-    %Plausible.ClickhouseEvent{
-      event
-      | utm_medium: request.query_params["utm_medium"],
-        utm_source: request.query_params["utm_source"],
-        utm_campaign: request.query_params["utm_campaign"],
-        utm_content: request.query_params["utm_content"],
-        utm_term: request.query_params["utm_term"],
-        referrer_source: get_referrer_source(request, ref),
-        referrer: clean_referrer(ref)
-    }
+    event
+    |> Map.put(:utm_medium, request.query_params["utm_medium"])
+    |> Map.put(:utm_source, request.query_params["utm_source"])
+    |> Map.put(:utm_campaign, request.query_params["utm_campaign"])
+    |> Map.put(:utm_content, request.query_params["utm_content"])
+    |> Map.put(:utm_term, request.query_params["utm_term"])
+    |> Map.put(:referrer_source, get_referrer_source(request, ref))
+    |> Map.put(:referrer, clean_referrer(ref))
   end
 
   defp parse_referrer(_uri, _referrer_str = nil), do: nil
@@ -114,7 +110,8 @@ defmodule Plausible.Ingestion.Event do
 
   defp get_referrer_source(request, ref) do
     source =
-      request.query_params["utm_source"] || request.query_params["source"] ||
+      request.query_params["utm_source"] ||
+        request.query_params["source"] ||
         request.query_params["ref"]
 
     source || PlausibleWeb.RefInspector.parse(ref)
@@ -132,7 +129,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp put_user_agent(%Plausible.ClickhouseEvent{} = event, %Request{} = request) do
+  defp put_user_agent(%{} = event, %Request{} = request) do
     case parse_user_agent(request) do
       %UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}} ->
         :skip
@@ -141,13 +138,11 @@ defmodule Plausible.Ingestion.Event do
         :skip
 
       %UAInspector.Result{} = user_agent ->
-        %Plausible.ClickhouseEvent{
-          event
-          | operating_system: os_name(user_agent),
-            operating_system_version: os_version(user_agent),
-            browser: browser_name(user_agent),
-            browser_version: browser_version(user_agent)
-        }
+        event
+        |> Map.put(:operating_system, os_name(user_agent))
+        |> Map.put(:operating_system_version, os_version(user_agent))
+        |> Map.put(:browser, browser_name(user_agent))
+        |> Map.put(:browser_version, browser_version(user_agent))
 
       _any ->
         event
@@ -219,7 +214,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp put_screen_size(%Plausible.ClickhouseEvent{} = event, %Request{} = request) do
+  defp put_screen_size(%{} = event, %Request{} = request) do
     screen_width =
       case request.screen_width do
         nil -> nil
@@ -229,10 +224,10 @@ defmodule Plausible.Ingestion.Event do
         width when width >= 1440 -> "Desktop"
       end
 
-    %Plausible.ClickhouseEvent{event | screen_size: screen_width}
+    Map.put(event, :screen_size, screen_width)
   end
 
-  defp put_geolocation(%Plausible.ClickhouseEvent{} = event, %Request{} = request) do
+  defp put_geolocation(%{} = event, %Request{} = request) do
     Tracer.with_span "parse_visitor_location" do
       result = Geolix.lookup(request.remote_ip, where: :geolocation)
 
@@ -241,6 +236,7 @@ defmodule Plausible.Ingestion.Event do
         |> ignore_unknown_country()
 
       city_geoname_id = get_in(result, [:city, :geoname_id])
+      city_geoname_id = Map.get(CityOverrides.get(), city_geoname_id, city_geoname_id)
 
       subdivision1_code =
         case result do
@@ -260,20 +256,18 @@ defmodule Plausible.Ingestion.Event do
             ""
         end
 
-      %Plausible.ClickhouseEvent{
-        event
-        | country_code: country_code,
-          subdivision1_code: subdivision1_code,
-          subdivision2_code: subdivision2_code,
-          city_geoname_id: Map.get(CityOverrides.get(), city_geoname_id, city_geoname_id)
-      }
+      event
+      |> Map.put(:country_code, country_code)
+      |> Map.put(:subdivision1_code, subdivision1_code)
+      |> Map.put(:subdivision2_code, subdivision2_code)
+      |> Map.put(:city_geoname_id, city_geoname_id)
     end
   end
 
   defp ignore_unknown_country("ZZ"), do: nil
   defp ignore_unknown_country(country), do: country
 
-  defp map_domains(%Plausible.ClickhouseEvent{} = event, %Request{} = request) do
+  defp map_domains(%{} = event, %Request{} = request) do
     domains =
       if request.domain do
         String.split(request.domain, ",")
@@ -284,14 +278,13 @@ defmodule Plausible.Ingestion.Event do
         [strip_www(uri && uri.host)]
       end
 
-    for domain <- domains, do: %Plausible.ClickhouseEvent{event | domain: domain}
+    for domain <- domains, do: Map.put(event, :domain, domain)
   end
 
   defp put_user_id(events, %Request{} = request, salts) do
-    for %Plausible.ClickhouseEvent{} = event <- events do
+    for %{} = event <- events do
       user_id = generate_user_id(request, event.domain, event.hostname, salts.current)
-
-      %Plausible.ClickhouseEvent{event | user_id: user_id}
+      Map.put(event, :user_id, user_id)
     end
   end
 
@@ -304,7 +297,7 @@ defmodule Plausible.Ingestion.Event do
           Plausible.Session.CacheStore.on_event(event, previous_user_id)
         end
 
-      %Plausible.ClickhouseEvent{event | session_id: session_id}
+      Map.put(event, :session_id, session_id)
     end
   end
 
@@ -352,13 +345,13 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp validate_events(events) do
-    Enum.reduce_while(events, :ok, fn %Plausible.ClickhouseEvent{} = event, _acc ->
-      event
-      |> Map.from_struct()
+    Enum.reduce_while(events, {:ok, []}, fn %{} = attrs, {:ok, acc} ->
+      attrs
       |> Plausible.ClickhouseEvent.new()
+      |> Ecto.Changeset.apply_action(nil)
       |> case do
-        %Ecto.Changeset{valid?: true} -> {:cont, :ok}
-        %Ecto.Changeset{valid?: false} = changeset -> {:halt, {:error, changeset}}
+        {:ok, event} -> {:cont, {:ok, [event | acc]}}
+        {:error, changeset} -> {:halt, {:error, changeset}}
       end
     end)
   end
@@ -371,7 +364,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp apply_stash(%Plausible.ClickhouseEvent{} = event, stashed, fallback_fun) do
+  defp apply_stash(%{} = event, stashed, fallback_fun) do
     if stashed, do: Map.merge(event, stashed), else: fallback_fun.()
   end
 
@@ -380,7 +373,7 @@ defmodule Plausible.Ingestion.Event do
     geolocation: [:country_code, :subdivision1_code, :subdivision2_code, :city_geoname_id]
   ]
 
-  defp save_stash([%Plausible.ClickhouseEvent{} = event | _rest], stash) do
+  defp save_stash([%{} = event | _rest], stash) do
     Enum.map(stash, fn stash_key ->
       event_keys = @stash_mapping[stash_key] || []
       attrs = Map.take(event, event_keys)
