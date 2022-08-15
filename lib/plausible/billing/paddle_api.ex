@@ -1,4 +1,6 @@
 defmodule Plausible.Billing.PaddleApi do
+  alias Plausible.HTTPClient
+
   @update_endpoint "https://vendors.paddle.com/api/2.0/subscription/users/update"
   @get_endpoint "https://vendors.paddle.com/api/2.0/subscription/users"
   @headers [
@@ -21,10 +23,10 @@ defmodule Plausible.Billing.PaddleApi do
     }
 
     {:ok, response} =
-      HTTPoison.post(
+      HTTPClient.post(
         vendors_domain() <> "/api/2.0/subscription/preview_update",
-        Jason.encode!(params),
-        @headers
+        @headers,
+        Jason.encode!(params)
       )
 
     body = Jason.decode!(response.body)
@@ -50,7 +52,7 @@ defmodule Plausible.Billing.PaddleApi do
         quantity: 1
       })
 
-    {:ok, response} = HTTPoison.post(@update_endpoint, Jason.encode!(params), @headers)
+    {:ok, response} = HTTPClient.post(@update_endpoint, @headers, Jason.encode!(params))
     body = Jason.decode!(response.body)
 
     if body["success"] do
@@ -69,7 +71,7 @@ defmodule Plausible.Billing.PaddleApi do
       subscription_id: paddle_subscription_id
     }
 
-    {:ok, response} = HTTPoison.post(@get_endpoint, Jason.encode!(params), @headers)
+    {:ok, response} = HTTPClient.post(@get_endpoint, @headers, Jason.encode!(params))
     body = Jason.decode!(response.body)
 
     if body["success"] do
@@ -94,7 +96,7 @@ defmodule Plausible.Billing.PaddleApi do
       to: Timex.shift(Timex.today(), days: 1) |> Timex.format!("{YYYY}-{0M}-{0D}")
     }
 
-    case HTTPoison.post(invoices_endpoint(), Jason.encode!(params), @headers) do
+    case HTTPClient.post(invoices_endpoint(), @headers, Jason.encode!(params)) do
       {:ok, response} ->
         body = Jason.decode!(response.body)
 
