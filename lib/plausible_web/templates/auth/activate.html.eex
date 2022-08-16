@@ -24,7 +24,7 @@
         <%= if Application.get_env(:plausible, :is_selfhost) do %>
           <li>Ask on our <%= link("community-supported forum", to: "https://github.com/plausible/analytics/discussions", class: "text-indigo-600 underline" ) %></li>
         <% else %>
-          <li>Contact <a class="underline text-indigo-600" href="mailto:support@plausible.io">support@plausible.io</a> if the problem persists</li>
+          <li><a class="underline text-indigo-600" href="https://plausible.io/contact">Contact us</a> if the problem persists</li>
         <% end %>
       </ol>
       <div class="mt-4 text-sm dark:text-gray-100">
