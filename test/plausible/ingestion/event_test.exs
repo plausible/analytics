@@ -71,4 +71,42 @@ defmodule Plausible.Ingestion.EventTest do
     assert is_integer(session_id)
     assert is_integer(user_id)
   end
+
+  test "build_and_buffer/3 takes a list of requests" do
+    requests = [
+      %Plausible.Ingestion.Request{
+        @valid_request
+        | domain: "plausible-ingestion-event-multiple-1.test"
+      },
+      %Plausible.Ingestion.Request{
+        @valid_request
+        | domain: "plausible-ingestion-event-multiple-2.test"
+      }
+    ]
+
+    assert :ok == Plausible.Ingestion.Event.build_and_buffer(requests)
+
+    assert %Plausible.ClickhouseEvent{domain: "plausible-ingestion-event-multiple-1.test"} =
+             get_event("plausible-ingestion-event-multiple-1.test")
+
+    assert %Plausible.ClickhouseEvent{domain: "plausible-ingestion-event-multiple-2.test"} =
+             get_event("plausible-ingestion-event-multiple-2.test")
+  end
+
+  test "build_and_buffer/3 stops at the first error when passing a list of requests" do
+    requests = [
+      %Plausible.Ingestion.Request{
+        @valid_request
+        | domain: "plausible-ingestion-event-multiple-with-error-1.test"
+      },
+      %Plausible.Ingestion.Request{@valid_request | domain: nil}
+    ]
+
+    assert {:error, %Ecto.Changeset{valid?: false}} =
+             Plausible.Ingestion.Event.build_and_buffer(requests)
+
+    assert %Plausible.ClickhouseEvent{
+             domain: "plausible-ingestion-event-multiple-with-error-1.test"
+           } = get_event("plausible-ingestion-event-multiple-with-error-1.test")
+  end
 end

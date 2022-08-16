@@ -1,14 +1,27 @@
 defmodule Plausible.Ingestion.Event do
   alias Plausible.Ingestion.{Request, CityOverrides}
 
-  @spec build_and_buffer(Request.t()) :: :ok | :skip | {:error, Ecto.Changeset.t()}
+  @spec build_and_buffer(Request.t() | [Request.t()]) ::
+          :ok | :skip | {:error, Ecto.Changeset.t()}
   @doc """
   Builds events from %Plausible.Ingestion.Request{} and adds them to Plausible.Event.WriteBuffer.
   This function reads geolocation data and parses the user agent string. Returns :skip if the
   request is identified as spam, or blocked.
   """
+  def build_and_buffer(request_or_requests)
+
+  def build_and_buffer(requests) when is_list(requests) do
+    Enum.reduce_while(requests, :ok, fn %Request{} = request, _acc ->
+      case build_and_buffer(request) do
+        :ok -> {:cont, :ok}
+        error -> {:halt, error}
+      end
+    end)
+  end
+
   def build_and_buffer(%Request{} = request) do
-    with :ok <- spam_or_blocked?(request),
+    with :ok <- skip_if_spam(request),
+         :ok <- skip_if_blocked(request),
          salts <- Plausible.Session.Salts.fetch(),
          event <- Map.new(),
          %{} = event <- put_user_agent(event, request),
@@ -17,11 +30,11 @@ defmodule Plausible.Ingestion.Event do
          %{} = event <- put_geolocation(event, request),
          %{} = event <- put_screen_size(event, request),
          %{} = event <- put_props(event, request),
-         events when is_list(events) <- map_domains(event, request),
-         events when is_list(events) <- put_user_id(events, request, salts),
-         {:ok, events} <- validate_events(events),
-         events when is_list(events) <- register_session(events, request, salts) do
-      Enum.each(events, &Plausible.Event.WriteBuffer.insert/1)
+         %{} = event <- put_user_id(event, request, salts),
+         {:ok, event} <- validate_event(event),
+         %{} = event <- register_session(event, request, salts) do
+      Plausible.Event.WriteBuffer.insert(event)
+      :ok
     end
   end
 
@@ -34,6 +47,7 @@ defmodule Plausible.Ingestion.Event do
       end
 
     event
+    |> Map.put(:domain, request.domain)
     |> Map.put(:timestamp, NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second))
     |> Map.put(:name, request.event_name)
     |> Map.put(:hostname, Request.sanitize_hostname(host))
@@ -244,35 +258,16 @@ defmodule Plausible.Ingestion.Event do
   defp ignore_unknown_country("ZZ"), do: nil
   defp ignore_unknown_country(country), do: country
 
-  defp map_domains(%{} = event, %Request{} = request) do
-    domains =
-      if request.domain do
-        String.split(request.domain, ",")
-        |> Enum.map(&String.trim/1)
-        |> Enum.map(&strip_www/1)
-      else
-        uri = request.url && URI.parse(request.url)
-        [strip_www(uri && uri.host)]
-      end
-
-    for domain <- domains, do: Map.put(event, :domain, domain)
+  defp put_user_id(%{} = event, %Request{} = request, salts) do
+    user_id = generate_user_id(request, event.domain, event.hostname, salts.current)
+    Map.put(event, :user_id, user_id)
   end
 
-  defp put_user_id(events, %Request{} = request, salts) do
-    for %{} = event <- events do
-      user_id = generate_user_id(request, event.domain, event.hostname, salts.current)
-      Map.put(event, :user_id, user_id)
-    end
-  end
+  defp register_session(event, %Request{} = request, salts) do
+    previous_user_id = generate_user_id(request, event.domain, event.hostname, salts.previous)
+    session_id = Plausible.Session.CacheStore.on_event(event, previous_user_id)
 
-  defp register_session(events, %Request{} = request, salts) do
-    for %Plausible.ClickhouseEvent{} = event <- events do
-      previous_user_id = generate_user_id(request, event.domain, event.hostname, salts.previous)
-
-      session_id = Plausible.Session.CacheStore.on_event(event, previous_user_id)
-
-      Map.put(event, :session_id, session_id)
-    end
+    Map.put(event, :session_id, session_id)
   end
 
   defp generate_user_id(request, domain, hostname, salt) do
@@ -300,7 +295,18 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp spam_or_blocked?(%Request{} = request) do
+  defp skip_if_spam(%Request{} = request) do
+    if request.referrer &&
+         URI.parse(request.referrer).host
+         |> Request.sanitize_hostname()
+         |> ReferrerBlocklist.is_spammer?() do
+      :skip
+    else
+      :ok
+    end
+  end
+
+  defp skip_if_blocked(%Request{} = request) do
     cond do
       request.domain in Application.get_env(:plausible, :domain_blacklist) ->
         :skip
@@ -308,32 +314,18 @@ defmodule Plausible.Ingestion.Event do
       FunWithFlags.enabled?(:block_event_ingest, for: request.domain) ->
         :skip
 
-      request.referrer &&
-          URI.parse(request.referrer).host |> strip_www() |> ReferrerBlocklist.is_spammer?() ->
-        :skip
-
       true ->
         :ok
     end
   end
 
-  defp validate_events(events) do
-    Enum.reduce_while(events, {:ok, []}, fn %{} = attrs, {:ok, acc} ->
-      attrs
-      |> Plausible.ClickhouseEvent.new()
-      |> Ecto.Changeset.apply_action(nil)
-      |> case do
-        {:ok, event} -> {:cont, {:ok, [event | acc]}}
-        {:error, changeset} -> {:halt, {:error, changeset}}
-      end
-    end)
-  end
-
-  defp strip_www(hostname) do
-    if hostname do
-      String.replace_prefix(hostname, "www.", "")
-    else
-      nil
+  defp validate_event(%{} = attrs) do
+    attrs
+    |> Plausible.ClickhouseEvent.new()
+    |> Ecto.Changeset.apply_action(nil)
+    |> case do
+      {:ok, event} -> {:ok, event}
+      {:error, changeset} -> {:error, changeset}
     end
   end
 end

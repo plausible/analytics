@@ -29,9 +29,9 @@ defmodule Plausible.Ingestion.Request do
           query_params: map()
         }
 
-  @spec build(Plug.Conn.t()) :: {:ok, t()} | {:error, :invalid_json}
+  @spec build(Plug.Conn.t()) :: {:ok, [t()]} | {:error, :invalid_json}
   @doc """
-  Builds a %Plausible.Ingestion.Request{} struct from %Plug.Conn{}.
+  Builds a list of %Plausible.Ingestion.Request{} struct from %Plug.Conn{}.
   """
   def build(%Plug.Conn{} = conn) do
     with {:ok, request_body} <- parse_body(conn) do
@@ -41,6 +41,7 @@ defmodule Plausible.Ingestion.Request do
       |> put_user_agent(conn)
       |> put_request_params(request_body)
       |> put_query_params()
+      |> map_domains(request_body)
       |> then(&{:ok, &1})
     end
   end
@@ -65,11 +66,23 @@ defmodule Plausible.Ingestion.Request do
       request
       | event_name: request_body["n"] || request_body["name"],
         referrer: request_body["r"] || request_body["referrer"],
-        domain: request_body["d"] || request_body["domain"],
         screen_width: request_body["w"] || request_body["screen_width"],
         hash_mode: request_body["h"] || request_body["hashMode"],
         props: parse_props(request_body)
     }
+  end
+
+  defp map_domains(%__MODULE__{} = request, %{} = request_body) do
+    domains =
+      if raw = request_body["d"] || request_body["domain"] do
+        raw
+        |> String.split(",")
+        |> Enum.map(&sanitize_hostname/1)
+      else
+        [sanitize_hostname(request.uri)]
+      end
+
+    for domain <- domains, do: %__MODULE__{request | domain: domain}
   end
 
   defp put_uri(%__MODULE__{} = request, %{} = request_body) do
