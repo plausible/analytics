@@ -26,14 +26,18 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp put_basic_info(%{} = event, %Request{} = request) do
-    uri = request.url && URI.parse(request.url)
-    host = if uri && uri.host == "", do: "(none)", else: uri && uri.host
+    host =
+      if request.uri && request.uri.host == "" do
+        "(none)"
+      else
+        request.uri && request.uri.host
+      end
 
     event
     |> Map.put(:timestamp, NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second))
     |> Map.put(:name, request.event_name)
-    |> Map.put(:hostname, strip_www(host))
-    |> Map.put(:pathname, get_pathname(uri, request.hash_mode))
+    |> Map.put(:hostname, Request.sanitize_hostname(host))
+    |> Map.put(:pathname, get_pathname(request.uri, request.hash_mode))
   end
 
   defp get_pathname(_uri = nil, _hash_mode), do: "/"
@@ -62,8 +66,7 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp put_referrer(%{} = event, %Request{} = request) do
-    uri = request.url && URI.parse(request.url)
-    ref = parse_referrer(uri, request.referrer)
+    ref = parse_referrer(request.uri, request.referrer)
 
     event
     |> Map.put(:utm_medium, request.query_params["utm_medium"])
@@ -80,7 +83,8 @@ defmodule Plausible.Ingestion.Event do
   defp parse_referrer(uri, referrer_str) do
     referrer_uri = URI.parse(referrer_str)
 
-    if strip_www(referrer_uri.host) !== strip_www(uri.host) && referrer_uri.host !== "localhost" do
+    if Request.sanitize_hostname(referrer_uri.host) !== Request.sanitize_hostname(uri.host) &&
+         referrer_uri.host !== "localhost" do
       RefInspector.parse(referrer_str)
     end
   end

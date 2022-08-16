@@ -7,7 +7,7 @@ defmodule Plausible.Ingestion.Request do
     :remote_ip,
     :user_agent,
     :event_name,
-    :url,
+    :uri,
     :referrer,
     :domain,
     :screen_width,
@@ -20,7 +20,7 @@ defmodule Plausible.Ingestion.Request do
           remote_ip: String.t() | nil,
           user_agent: String.t() | nil,
           event_name: term(),
-          url: term(),
+          uri: URI.t() | nil,
           referrer: term(),
           domain: term(),
           screen_width: term(),
@@ -37,6 +37,7 @@ defmodule Plausible.Ingestion.Request do
     with {:ok, request_body} <- parse_body(conn) do
       %__MODULE__{}
       |> Map.put(:remote_ip, PlausibleWeb.RemoteIp.get(conn))
+      |> put_uri(request_body)
       |> put_user_agent(conn)
       |> put_request_params(request_body)
       |> put_query_params()
@@ -63,13 +64,20 @@ defmodule Plausible.Ingestion.Request do
     %__MODULE__{
       request
       | event_name: request_body["n"] || request_body["name"],
-        url: request_body["u"] || request_body["url"],
         referrer: request_body["r"] || request_body["referrer"],
         domain: request_body["d"] || request_body["domain"],
         screen_width: request_body["w"] || request_body["screen_width"],
         hash_mode: request_body["h"] || request_body["hashMode"],
         props: parse_props(request_body)
     }
+  end
+
+  defp put_uri(%__MODULE__{} = request, %{} = request_body) do
+    if url = request_body["u"] || request_body["url"] do
+      %__MODULE__{request | uri: URI.parse(url)}
+    else
+      request
+    end
   end
 
   defp parse_props(%{} = request_body) do
@@ -111,13 +119,13 @@ defmodule Plausible.Ingestion.Request do
     end
   end
 
-  defp put_query_params(%__MODULE__{url: url} = request) do
-    with url when is_binary(url) <- url,
-         %URI{query: query} when is_binary(query) <- URI.parse(url),
-         %{} = query_params <- URI.decode_query(query) do
-      Map.put(request, :query_params, query_params)
-    else
-      _any -> request
+  defp put_query_params(%__MODULE__{} = request) do
+    case request do
+      %__MODULE__{uri: %URI{query: query}} when is_binary(query) ->
+        %__MODULE__{request | query_params: URI.decode_query(query)}
+
+      _any ->
+        request
     end
   end
 
@@ -128,5 +136,22 @@ defmodule Plausible.Ingestion.Request do
       |> List.first()
 
     %__MODULE__{request | user_agent: user_agent}
+  end
+
+  @doc """
+  Removes the "www" part of a hostname.
+  """
+  def sanitize_hostname(%URI{host: hostname}) do
+    sanitize_hostname(hostname)
+  end
+
+  def sanitize_hostname(hostname) when is_binary(hostname) do
+    hostname
+    |> String.trim()
+    |> String.replace_prefix("www.", "")
+  end
+
+  def sanitize_hostname(nil) do
+    nil
   end
 end
