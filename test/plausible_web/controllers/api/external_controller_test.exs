@@ -927,7 +927,9 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert json_response(conn, 400) == %{
                "errors" => %{
-                 "domain" => ["can't be blank"]
+                 "domain" => ["can't be blank"],
+                 "hostname" => ["can't be blank"],
+                 "user_id" => ["can't be blank"]
                }
              }
     end

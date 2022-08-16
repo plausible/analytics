@@ -1,33 +1,46 @@
 defmodule Plausible.Ingestion.Request do
-  defstruct ~w(remote_ip params query_params headers)a
+  @moduledoc """
+  The %Plausible.Ingestion.Request{} struct stores all needed fields to create an event downstream.
+  """
+
+  defstruct [
+    :remote_ip,
+    :user_agent,
+    :event_name,
+    :url,
+    :referrer,
+    :domain,
+    :screen_width,
+    :hash_mode,
+    props: %{},
+    query_params: %{}
+  ]
 
   @type t() :: %__MODULE__{
           remote_ip: String.t() | nil,
-          params: map(),
-          query_params: map(),
-          headers: map()
+          user_agent: String.t() | nil,
+          event_name: term(),
+          url: term(),
+          referrer: term(),
+          domain: term(),
+          screen_width: term(),
+          hash_mode: term(),
+          props: map(),
+          query_params: map()
         }
-
-  @allowed_query_params ~w(utm_medium utm_source utm_campaign utm_content utm_term utm_source source ref)
-  @allowed_headers ~w(user-agent)
 
   @spec build(Plug.Conn.t()) :: {:ok, t()} | {:error, :invalid_json}
   @doc """
   Builds a %Plausible.Ingestion.Request{} struct from %Plug.Conn{}.
   """
   def build(%Plug.Conn{} = conn) do
-    with {:ok, body} <- parse_body(conn),
-         %{} = params <- build_params(body),
-         %{} = query_params <- decode_query_params(params),
-         %{} = headers <- build_headers(conn),
-         remote_ip <- PlausibleWeb.RemoteIp.get(conn) do
-      {:ok,
-       %__MODULE__{
-         remote_ip: remote_ip,
-         params: params,
-         query_params: query_params,
-         headers: headers
-       }}
+    with {:ok, request_body} <- parse_body(conn) do
+      %__MODULE__{}
+      |> Map.put(:remote_ip, PlausibleWeb.RemoteIp.get(conn))
+      |> put_user_agent(conn)
+      |> put_request_params(request_body)
+      |> put_query_params()
+      |> then(&{:ok, &1})
     end
   end
 
@@ -46,33 +59,30 @@ defmodule Plausible.Ingestion.Request do
     end
   end
 
-  defp build_params(body) do
-    %{
-      name: body["n"] || body["name"],
-      url: body["u"] || body["url"],
-      referrer: body["r"] || body["referrer"],
-      domain: body["d"] || body["domain"],
-      screen_width: body["w"] || body["screen_width"],
-      hash_mode: body["h"] || body["hashMode"],
-      meta: parse_meta(body)
+  defp put_request_params(%__MODULE__{} = request, %{} = request_body) do
+    %__MODULE__{
+      request
+      | event_name: request_body["n"] || request_body["name"],
+        url: request_body["u"] || request_body["url"],
+        referrer: request_body["r"] || request_body["referrer"],
+        domain: request_body["d"] || request_body["domain"],
+        screen_width: request_body["w"] || request_body["screen_width"],
+        hash_mode: request_body["h"] || request_body["hashMode"],
+        props: parse_props(request_body)
     }
   end
 
-  defp parse_meta(params) do
-    raw_meta = params["m"] || params["meta"] || params["p"] || params["props"]
+  defp parse_props(%{} = request_body) do
+    raw_props =
+      request_body["m"] || request_body["meta"] || request_body["p"] || request_body["props"]
 
-    case decode_raw_props(raw_meta) do
+    case decode_raw_props(raw_props) do
       {:ok, parsed_json} ->
-        Enum.filter(parsed_json, fn
-          {_, ""} -> false
-          {_, nil} -> false
-          {_, val} when is_list(val) -> false
-          {_, val} when is_map(val) -> false
-          _ -> true
-        end)
+        parsed_json
+        |> Enum.filter(&valid_prop_value?/1)
         |> Map.new()
 
-      _ ->
+      _error ->
         %{}
     end
   end
@@ -91,32 +101,32 @@ defmodule Plausible.Ingestion.Request do
 
   defp decode_raw_props(_), do: :bad_format
 
-  defp decode_query_params(params) do
-    with url when is_binary(url) <- params.url,
-         %URI{query: query} when is_binary(query) <- URI.parse(url) do
-      do_decode_query_params(query)
+  defp valid_prop_value?({key, value}) do
+    case {key, value} do
+      {_key, ""} -> false
+      {_key, nil} -> false
+      {_key, value} when is_list(value) -> false
+      {_key, value} when is_map(value) -> false
+      {_key, _value} -> true
+    end
+  end
+
+  defp put_query_params(%__MODULE__{url: url} = request) do
+    with url when is_binary(url) <- url,
+         %URI{query: query} when is_binary(query) <- URI.parse(url),
+         %{} = query_params <- URI.decode_query(query) do
+      Map.put(request, :query_params, query_params)
     else
-      _any -> %{}
+      _any -> request
     end
   end
 
-  defp do_decode_query_params(query) do
-    try do
-      query
-      |> URI.query_decoder()
-      |> Enum.reduce(%{}, fn
-        {key, value}, acc when key in @allowed_query_params -> Map.put(acc, key, value)
-        _any, acc -> acc
-      end)
-    rescue
-      _ -> %{}
-    end
-  end
+  defp put_user_agent(%__MODULE__{} = request, %Plug.Conn{} = conn) do
+    user_agent =
+      conn
+      |> Plug.Conn.get_req_header("user-agent")
+      |> List.first()
 
-  defp build_headers(conn) do
-    Enum.reduce(@allowed_headers, %{}, fn header, acc ->
-      value = conn |> Plug.Conn.get_req_header(header) |> List.first()
-      if value, do: Map.put(acc, header, value), else: acc
-    end)
+    %__MODULE__{request | user_agent: user_agent}
   end
 end

@@ -10,16 +10,26 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   def event(conn, _params) do
     with {:ok, ingestion_request} <- Plausible.Ingestion.Request.build(conn),
-         _ <- Sentry.Context.set_extra_context(%{request: ingestion_request.params}),
-         :ok <- Plausible.Ingestion.add_to_buffer(ingestion_request) do
+         _ <- Sentry.Context.set_extra_context(%{request: ingestion_request}),
+         :ok <- Plausible.Ingestion.Event.build_and_buffer(ingestion_request) do
       conn |> put_status(202) |> text("ok")
     else
+      :skip ->
+        conn |> put_status(202) |> text("ok")
+
       {:error, :invalid_json} ->
         conn
         |> put_status(400)
         |> json(%{errors: %{request: "Unable to parse request body as json"}})
 
-      {:error, errors} ->
+      {:error, %Ecto.Changeset{} = changeset} ->
+        errors =
+          Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+            Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+              opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+            end)
+          end)
+
         conn |> put_status(400) |> json(%{errors: errors})
     end
   end
