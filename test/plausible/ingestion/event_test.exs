@@ -19,7 +19,7 @@ defmodule Plausible.Ingestion.EventTest do
     user_agent:
       "Mozilla/5.0 (iPad; U; CPU OS 3_2_1 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Mobile/7B405",
     event_name: "pageview",
-    url: "http://skywalker.test",
+    uri: URI.parse("http://skywalker.test"),
     referrer: "http://m.facebook.test/",
     screen_width: 1440,
     hash_mode: nil,
