@@ -3,24 +3,39 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
   use Mimic
   use Plausible.ClickhouseRepo
 
-  defp get_event(domain) do
-    Plausible.Event.WriteBuffer.flush()
-
-    ClickhouseRepo.one(
-      from e in Plausible.ClickhouseEvent,
-        where: e.domain == ^domain,
-        order_by: [desc: e.timestamp]
-    )
+  defp put_ip_address(conn) do
+    ip = Enum.map_join(1..4, ".", fn _part -> :rand.uniform(512) end)
+    put_req_header(conn, "x-forwarded-for", ip)
   end
 
-  defp get_events(domain) do
-    Plausible.Event.WriteBuffer.flush()
+  defp get_event(domain) do
+    Plausible.TestUtils.eventually(fn ->
+      Plausible.Event.WriteBuffer.flush()
 
-    ClickhouseRepo.all(
-      from e in Plausible.ClickhouseEvent,
-        where: e.domain == ^domain,
-        order_by: [desc: e.timestamp]
-    )
+      event =
+        ClickhouseRepo.one(
+          from e in Plausible.ClickhouseEvent,
+            where: e.domain == ^domain,
+            order_by: [desc: e.timestamp]
+        )
+
+      {!is_nil(event), event}
+    end)
+  end
+
+  defp get_events(domain, count) do
+    Plausible.TestUtils.eventually(fn ->
+      Plausible.Event.WriteBuffer.flush()
+
+      events =
+        ClickhouseRepo.all(
+          from e in Plausible.ClickhouseEvent,
+            where: e.domain == ^domain,
+            order_by: [desc: e.timestamp]
+        )
+
+      {length(events) == count, events}
+    end)
   end
 
   @user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
@@ -37,7 +52,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       conn =
         conn
-        |> put_req_header("user-agent", @user_agent)
+        |> put_req_header("x-forwarded-for", "2.2.2.2")
         |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-1.com")
@@ -59,6 +74,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("content-type", "text/plain")
+        |> put_ip_address()
         |> post("/api/event", Jason.encode!(params))
 
       pageview = get_event("external-controller-test-text-plain.com")
@@ -73,6 +89,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("content-type", "text/plain")
+        |> put_ip_address()
         |> post("/api/event", "")
 
       assert conn.status == 400
@@ -90,6 +107,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
       assert response(conn, 202) == "ok"
@@ -105,6 +123,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
+      |> put_ip_address()
       |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-2.com")
@@ -120,6 +139,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
+      |> put_ip_address()
       |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-3.com")
@@ -135,6 +155,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
+      |> put_ip_address()
       |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-4.com")
@@ -150,6 +171,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
+      |> put_ip_address()
       |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-trailing-whitespace.com")
@@ -166,6 +188,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       conn
       |> put_req_header("user-agent", "generic crawler")
+      |> put_ip_address()
       |> post("/api/event", params)
 
       assert get_event("external-controller-test-5.com") == nil
@@ -183,6 +206,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         "user-agent",
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/85.0.4183.83 Safari/537.36"
       )
+      |> put_ip_address()
       |> post("/api/event", params)
 
       assert get_event("headless-chrome-test.com") == nil
@@ -198,6 +222,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-6.com")
@@ -220,6 +245,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-7.com")
@@ -239,6 +265,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-8.com")
@@ -260,6 +287,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
       assert response(conn, 202) == "ok"
@@ -269,8 +297,9 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "feature flag - blocks traffic from a domain when block_traffic is enabled", %{
       conn: conn
     } do
-      FunWithFlags
-      |> stub(:enabled?, fn
+      set_mimic_global()
+
+      stub(FunWithFlags, :enabled?, fn
         :block_event_ingest, [for: "feature-flag-test.com"] -> true
         _, _ -> false
       end)
@@ -284,6 +313,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
       assert response(conn, 202) == "ok"
@@ -301,6 +331,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-9.com")
@@ -320,6 +351,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-10.com")
@@ -339,6 +371,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-11.com")
@@ -356,6 +389,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
+      |> put_ip_address()
       |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-12.com")
@@ -372,6 +406,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
+      |> put_ip_address()
       |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-13.com")
@@ -388,6 +423,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
+      |> put_ip_address()
       |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-utm-tags.com")
@@ -408,6 +444,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-14.com")
@@ -427,6 +464,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-15.com")
@@ -446,6 +484,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-16.com")
@@ -464,6 +503,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-17.com")
@@ -482,6 +522,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
       event = get_event("external-controller-test-18.com")
@@ -502,6 +543,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
+      |> put_ip_address()
       |> post("/api/event", params)
 
       event = get_event("custom-prop-test.com")
@@ -519,6 +561,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
+      |> put_ip_address()
       |> post("/api/event", params)
 
       event = get_event("custom-prop-test-2.com")
@@ -536,6 +579,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
+      |> put_ip_address()
       |> post("/api/event", params)
 
       event = get_event("custom-prop-test-3.com")
@@ -552,7 +596,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         props: Jason.encode!(%{wat: ["some-thing"], other: "key"})
       }
 
-      conn = post(conn, "/api/event", params)
+      conn =
+        conn
+        |> put_ip_address()
+        |> post("/api/event", params)
 
       assert conn.status == 202
 
@@ -570,7 +617,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         props: Jason.encode!(%{foo: %{bar: "baz"}, other_key: 1})
       }
 
-      conn = post(conn, "/api/event", params)
+      conn =
+        conn
+        |> put_ip_address()
+        |> post("/api/event", params)
 
       assert conn.status == 202
 
@@ -588,7 +638,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         props: Jason.encode!(%{foo: "", other_key: true})
       }
 
-      conn = post(conn, "/api/event", params)
+      conn =
+        conn
+        |> put_ip_address()
+        |> post("/api/event", params)
 
       assert conn.status == 202
 
@@ -606,7 +659,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         props: Jason.encode!(%{foo: nil, other_key: true})
       }
 
-      conn = post(conn, "/api/event", params)
+      conn =
+        conn
+        |> put_ip_address()
+        |> post("/api/event", params)
 
       assert conn.status == 202
 
@@ -627,6 +683,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
       event = get_event("external-controller-test-19.com")
@@ -799,6 +856,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
+      |> put_ip_address()
       |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-21.com")
@@ -816,6 +874,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
+      |> put_ip_address()
       |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-22.com")
@@ -835,6 +894,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
+      |> put_ip_address()
       |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-23.com")
@@ -851,6 +911,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
+      |> put_ip_address()
       |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-hash-0.com")
@@ -868,6 +929,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
+      |> put_ip_address()
       |> post("/api/event", params)
 
       pageview = get_event("url-decode-test.com")
@@ -888,6 +950,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
+      |> put_ip_address()
       |> post("/api/event", params)
 
       pageview = get_event("quote-encode-test.com")
@@ -895,7 +958,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.utm_source == "Something \"quoted\""
     end
 
-    test "responds 400 when required fields are missing", %{conn: conn} do
+    test "responds 202 when required fields are missing", %{conn: conn} do
       params = %{
         domain: "some-domain.com",
         name: "pageview"
@@ -904,16 +967,15 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
-      assert json_response(conn, 400) == %{
-               "errors" => %{
-                 "hostname" => ["can't be blank"]
-               }
-             }
+      # TODO: Test events with validation errors are not persisted in
+      # Plausible.Ingestion.UserTest
+      assert response(conn, 202) == "ok"
     end
 
-    test "responds 400 with errors when domain is missing", %{conn: conn} do
+    test "responds 202 when domain is missing", %{conn: conn} do
       params = %{
         domain: nil,
         url: "about:config",
@@ -923,15 +985,12 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn =
         conn
         |> put_req_header("user-agent", @user_agent)
+        |> put_ip_address()
         |> post("/api/event", params)
 
-      assert json_response(conn, 400) == %{
-               "errors" => %{
-                 "domain" => ["can't be blank"],
-                 "hostname" => ["can't be blank"],
-                 "user_id" => ["can't be blank"]
-               }
-             }
+      # TODO: Test events with validation errors are not persisted in
+      # Plausible.Ingestion.Test
+      assert response(conn, 202) == "ok"
     end
   end
 
@@ -953,7 +1012,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> put_req_header("x-forwarded-for", "127.0.0.1")
       |> post("/api/event", params)
 
-      [one, two] = get_events("user-id-test-domain.com")
+      [one, two] = get_events("user-id-test-domain.com", 2)
 
       assert one.user_id == two.user_id
     end
@@ -975,7 +1034,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> put_req_header("x-forwarded-for", "982.32.12.1")
       |> post("/api/event", params)
 
-      [one, two] = get_events("user-id-test-domain-2.com")
+      [one, two] = get_events("user-id-test-domain-2.com", 2)
 
       assert one.user_id != two.user_id
     end
@@ -997,7 +1056,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> put_req_header("x-forwarded-for", "127.0.0.1")
       |> post("/api/event", params)
 
-      [one, two] = get_events("user-id-test-domain-3.com")
+      [one, two] = get_events("user-id-test-domain-3.com", 2)
 
       assert one.user_id != two.user_id
     end
@@ -1042,7 +1101,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> put_req_header("x-forwarded-for", "127.0.0.1")
       |> post("/api/event", Map.put(params, :url, "https://other-domain.com/"))
 
-      [one, two] = get_events("user-id-test-domain-5.com")
+      [one, two] = get_events("user-id-test-domain-5.com", 2)
 
       assert one.user_id != two.user_id
     end
@@ -1066,7 +1125,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> put_req_header("x-forwarded-for", "127.0.0.1")
       |> post("/api/event", Map.put(params, :url, "https://app.user-id-test-domain.com/"))
 
-      [one, two] = get_events("user-id-test-domain-6.com")
+      [one, two] = get_events("user-id-test-domain-6.com", 2)
 
       assert one.user_id == two.user_id
     end
@@ -1082,6 +1141,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     conn =
       conn
       |> put_req_header("content-type", "text/plain")
+      |> put_ip_address()
       |> post("/api/event", Jason.encode!(params))
 
     pageview = get_event("url-with-hostname-missing.com")
@@ -1100,6 +1160,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     conn =
       conn
       |> put_req_header("content-type", "text/plain")
+      |> put_ip_address()
       |> post("/api/event", Jason.encode!(params))
 
     pageview = get_event("chrome-extension-url.com")

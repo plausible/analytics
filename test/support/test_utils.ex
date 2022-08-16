@@ -113,21 +113,22 @@ defmodule Plausible.TestUtils do
         end
       end)
 
-    if native, do: populate_native_stats(native)
-    if imported, do: populate_imported_stats(imported)
+    populate_native_stats(native)
+    populate_imported_stats(imported)
   end
 
   defp populate_native_stats(events) do
-    sessions =
-      Enum.reduce(events, %{}, fn event, sessions ->
-        session_id = Plausible.Session.CacheStore.on_event(event, nil)
-        Map.put(sessions, {event.domain, event.user_id}, session_id)
-      end)
+    events
+    |> Enum.map(fn event ->
+      pid =
+        Plausible.Ingestion.Session.DynamicSupervisor.find_or_spawn(event.domain, event.user_id)
 
-    Enum.each(events, fn event ->
-      event = Map.put(event, :session_id, sessions[{event.domain, event.user_id}])
-      Plausible.Event.WriteBuffer.insert(event)
+      :ok = Plausible.Ingestion.Session.Actor.send_event(pid, event)
+
+      pid
     end)
+    |> Enum.uniq()
+    |> Enum.each(&GenServer.stop(&1))
 
     Plausible.Session.WriteBuffer.flush()
     Plausible.Event.WriteBuffer.flush()

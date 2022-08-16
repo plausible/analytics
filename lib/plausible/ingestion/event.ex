@@ -2,13 +2,13 @@ defmodule Plausible.Ingestion.Event do
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Ingestion.{Request, CityOverrides}
 
-  @spec build_and_buffer(Request.t()) :: :ok | :skip | {:error, Ecto.Changeset.t()}
+  @spec build(Request.t()) ::
+          {:ok, %Plausible.ClickhouseEvent{}} | :skip | {:error, Ecto.Changeset.t()}
   @doc """
-  Builds events from %Plausible.Ingestion.Request{} and adds them to Plausible.Event.WriteBuffer.
-  This function reads geolocation data and parses the user agent string. Returns :skip if the
-  request is identified as spam, or blocked.
+  Builds events from %Plausible.Ingestion.Request{}. This function reads geolocation data and
+  parses the user agent string. Returns :skip if the request is identified as spam, or blocked.
   """
-  def build_and_buffer(%Request{} = request) do
+  def build(%Request{} = request) do
     with :ok <- skip_if_spam(request),
          :ok <- skip_if_blocked(request),
          salts <- Plausible.Session.Salts.fetch(),
@@ -21,10 +21,16 @@ defmodule Plausible.Ingestion.Event do
          %{} = event <- put_props(event, request),
          %{} = event <- put_user_id(event, request, salts),
          {:ok, event} <- validate_event(event),
-         %{} = event <- register_session(event, request, salts) do
-      Plausible.Event.WriteBuffer.insert(event)
-      :ok
-    end
+         do: {:ok, event}
+  end
+
+  def get_user_id(%Request{domain: domain} = request) do
+    salt = Plausible.Session.Salts.fetch().current
+
+    user_agent = request.user_agent || ""
+    root_domain = request.uri |> Request.sanitize_hostname() |> get_root_domain()
+
+    SipHash.hash!(salt, user_agent <> request.remote_ip <> domain <> root_domain)
   end
 
   defp put_basic_info(%{} = event, %Request{} = request) do
@@ -254,17 +260,6 @@ defmodule Plausible.Ingestion.Event do
   defp put_user_id(%{} = event, %Request{} = request, salts) do
     user_id = generate_user_id(request, event.domain, event.hostname, salts.current)
     Map.put(event, :user_id, user_id)
-  end
-
-  defp register_session(event, %Request{} = request, salts) do
-    previous_user_id = generate_user_id(request, event.domain, event.hostname, salts.previous)
-
-    session_id =
-      Tracer.with_span "cache_store_event" do
-        Plausible.Session.CacheStore.on_event(event, previous_user_id)
-      end
-
-    Map.put(event, :session_id, session_id)
   end
 
   defp generate_user_id(request, domain, hostname, salt) do

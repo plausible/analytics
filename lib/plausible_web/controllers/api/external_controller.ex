@@ -9,9 +9,9 @@ defmodule PlausibleWeb.Api.ExternalController do
   require Logger
 
   def event(conn, _params) do
-    with {:ok, ingestion_request} <- Plausible.Ingestion.Request.build(conn),
-         _ <- Sentry.Context.set_extra_context(%{request: ingestion_request}),
-         :ok <- Plausible.Ingestion.Event.build_and_buffer(ingestion_request) do
+    with {:ok, requests} <- Plausible.Ingestion.Request.build(conn),
+         _ <- Sentry.Context.set_extra_context(%{request: requests}),
+         :ok <- Plausible.Ingestion.from_requests(requests) do
       conn |> put_status(202) |> text("ok")
     else
       :skip ->

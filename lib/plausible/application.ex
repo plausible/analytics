@@ -23,7 +23,9 @@ defmodule Plausible.Application do
       ),
       PlausibleWeb.Endpoint,
       {Oban, Application.get_env(:plausible, Oban)},
-      Plausible.PromEx
+      Plausible.PromEx,
+      Plausible.Ingestion.Session.Registry.child_spec(),
+      Plausible.Ingestion.Session.DynamicSupervisor
     ]
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
