@@ -5,7 +5,7 @@ We're super excited to have you on board!
 <br /><br />
 Here's how to get the most out of your Plausible experience:
 <br /><br />
-* <%= link("Enable email reports", to: "https://docs.plausible.io/email-reports/") %> and notifications for <%= link("traffic spikes", to: "https://plausible.io/docs/traffic-spikes") %><br />
+* <%= link("Enable email reports", to: "https://plausible.io/docs/email-reports") %> and notifications for <%= link("traffic spikes", to: "https://plausible.io/docs/traffic-spikes") %><br />
 * <%= link("Integrate with Search Console", to: "https://plausible.io/docs/google-search-console-integration") %> to get keyword phrases people find your site with<br />
 * <%= link("Invite team members and other collaborators", to: "https://plausible.io/docs/users-roles") %><br />
 * Set up easy goals including <%= link("404 error pages", to: "https://plausible.io/docs/error-pages-tracking-404") %>, <%= link("file downloads", to: "https://plausible.io/docs/file-downloads-tracking") %> and <%= link("outbound link clicks", to: "https://plausible.io/docs/outbound-link-click-tracking") %><br />
