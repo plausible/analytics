@@ -25,7 +25,7 @@ defmodule PlausibleWeb.Favicon do
           {:ok, res} ->
             send_response(conn, res)
 
-          e ->
+          _ ->
             send_resp(conn, 503, "") |> halt
         end
 
