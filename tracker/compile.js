@@ -4,6 +4,10 @@ const path = require('path')
 const Handlebars = require("handlebars");
 const g = require("generatorics");
 
+Handlebars.registerHelper('any', function (...args) {
+  return args.slice(0, -1).some(Boolean)
+})
+
 function relPath(segment) {
   return path.join(__dirname, segment)
 }
