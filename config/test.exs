@@ -18,6 +18,10 @@ config :plausible,
   paddle_api: Plausible.PaddleApi.Mock,
   google_api: Plausible.Google.Api.Mock
 
+config :plausible, :google,
+  client_id: "fake_client_id",
+  client_secret: "fake_client_secret"
+
 config :bamboo, :refute_timeout, 10
 
 geolix_sample_lookup = %{

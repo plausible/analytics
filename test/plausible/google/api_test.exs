@@ -146,5 +146,22 @@ defmodule Plausible.Google.ApiTest do
                 ]} = Plausible.Google.Api.fetch_stats(site, query, 5)
       end
     end
+
+    test "returns error when token refresh fails", %{user: user, site: site} do
+      use_cassette "google_analytics_auth#invalid_grant" do
+        insert(:google_auth,
+          user: user,
+          site: site,
+          property: "sc-domain:dummy.test",
+          access_token: "*****",
+          refresh_token: "*****",
+          expires: NaiveDateTime.add(NaiveDateTime.utc_now(), -3600)
+        )
+
+        query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+
+        assert {:error, "invalid_grant"} = Plausible.Google.Api.fetch_stats(site, query, 5)
+      end
+    end
   end
 end
