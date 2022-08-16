@@ -1,6 +1,6 @@
 {:ok, _} = Application.ensure_all_started(:ex_machina)
 Plausible.Test.ClickhouseSetup.run()
 Mimic.copy(FunWithFlags)
-ExUnit.start()
+ExUnit.start(capture_log: true)
 Application.ensure_all_started(:double)
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
