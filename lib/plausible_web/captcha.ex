@@ -17,12 +17,18 @@ defmodule PlausibleWeb.Captcha do
       res =
         HTTPClient.post(
           @verify_endpoint,
-          [],
-          {:form, [{"response", token}, {"secret", secret()}]}
+          [{"Content-Type", "application/x-www-form-urlencoded"}],
+          "response=#{token}&secret=#{secret()}"
         )
 
-      json = Jason.decode!(res.body)
-      json["success"]
+      case res do
+        {:ok, %Finch.Response{status: 200, body: body}} ->
+          json = Jason.decode!(body)
+          json["success"]
+
+        _ ->
+          false
+      end
     else
       true
     end
