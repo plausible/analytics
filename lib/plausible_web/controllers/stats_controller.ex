@@ -6,6 +6,26 @@ defmodule PlausibleWeb.StatsController do
 
   plug PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export]
 
+  def stats(%{assigns: %{site: %{domain: "all"} = site}} = conn, _params) do
+    can_see_stats = conn.assigns[:current_user_role] == :owner
+
+    if can_see_stats do
+      conn
+      |> assign(:skip_plausible_tracking, true)
+      |> remove_email_report_banner(site)
+      |> put_resp_header("x-robots-tag", "noindex")
+      |> render("stats.html",
+        site: site,
+        has_goals: false,
+        title: "Careers Analtyics",
+        offer_email_report: false,
+        demo: false
+      )
+    else
+      render_error(conn, 404)
+    end
+  end
+
   def stats(%{assigns: %{site: site}} = conn, _params) do
     has_stats = Plausible.Sites.has_stats?(site)
     can_see_stats = !site.locked || conn.assigns[:current_user_role] == :super_admin
