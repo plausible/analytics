@@ -2,6 +2,8 @@ defmodule Plausible.ClickhouseEvent do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
   @primary_key false
   schema "events" do
     field :name, :string

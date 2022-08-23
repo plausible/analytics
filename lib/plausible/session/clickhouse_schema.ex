@@ -2,6 +2,8 @@ defmodule Plausible.ClickhouseSession do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
   @primary_key false
   schema "sessions" do
     field :hostname, :string

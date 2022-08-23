@@ -3,7 +3,7 @@ defmodule Plausible.Ingestion.Event do
   alias Plausible.Ingestion.{Request, CityOverrides}
 
   @spec build(Request.t()) ::
-          {:ok, %Plausible.ClickhouseEvent{}} | :skip | {:error, Ecto.Changeset.t()}
+          {:ok, Plausible.ClickhouseEvent.t()} | :skip | {:error, Ecto.Changeset.t()}
   @doc """
   Builds events from %Plausible.Ingestion.Request{}. This function reads geolocation data and
   parses the user agent string. Returns :skip if the request is identified as spam, or blocked.

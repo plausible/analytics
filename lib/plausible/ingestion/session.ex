@@ -1,6 +1,6 @@
 defmodule Plausible.Ingestion.Session do
-  @spec upsert_from_event(%Plausible.ClickhouseSession{} | nil, %Plausible.ClickhouseEvent{}) ::
-          %Plausible.ClickhouseSession{}
+  @spec upsert_from_event(Plausible.ClickhouseSession.t() | nil, Plausible.ClickhouseEvent.t()) ::
+          Plausible.ClickhouseSession.t()
   @doc """
   Builds and buffers a new session if it does not exist, or updates the existing one from an
   event.
