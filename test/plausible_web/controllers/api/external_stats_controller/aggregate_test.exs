@@ -186,12 +186,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           domain: site.domain,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-03-01 00:00:00])
+      ])
+
+      populate_stats([
         build(:pageview,
           user_id: @user_id,
           domain: site.domain,
           timestamp: ~N[2021-02-01 00:25:00]
-        ),
-        build(:pageview, domain: site.domain, timestamp: ~N[2021-03-01 00:00:00])
+        )
       ])
 
       conn =
