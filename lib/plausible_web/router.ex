@@ -36,10 +36,10 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.AuthorizeSiteAccess
   end
 
-  pipeline :public_api do
-    plug :accepts, ["json"]
-    plug PlausibleWeb.Firewall
-  end
+  # pipeline :public_api do
+  #   plug :accepts, ["json"]
+  #   plug PlausibleWeb.Firewall
+  # end
 
   # if Mix.env() == :dev do
   #   forward "/sent-emails", Bamboo.SentEmailViewerPlug
