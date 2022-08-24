@@ -2,7 +2,7 @@ defmodule Plausible.Stats.CurrentVisitors do
   use Plausible.ClickhouseRepo
   use Plausible.Stats.Fragments
 
-  def current_visitors(%{domain: "all"} = site) do
+  def current_visitors(%{domain: "all"}) do
     from_datetime =
       NaiveDateTime.utc_now()
       |> Timex.shift(minutes: -5)

@@ -245,7 +245,7 @@ defmodule Plausible.Stats.Query do
     from(site, new_params)
   end
 
-  def from(%{domain: "all"} = site, %{"period" => "custom", "date" => date} = params) do
+  def from(%{domain: "all"}, %{"period" => "custom", "date" => date} = params) do
     [from, to] = String.split(date, ",")
     from_date = Date.from_iso8601!(String.trim(from))
     to_date = Date.from_iso8601!(String.trim(to))
