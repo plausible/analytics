@@ -7,7 +7,6 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Plausible Playwright tests</title>
 
-  <!-- Dynamically create the Plausible snippet -->
   <script defer src="/tracker/js/plausible.local.manual.outbound-links.js"></script>
 </head>
 
@@ -15,6 +14,15 @@
   <a id="link" href="https://awesome.website.com/">
     <span id="link-child">Outbound</span>
   </a>
+  <a id="link-default-prevented" href="https://awesome.website.com/">Link with default prevented</a>
+
+  <script>
+    let link = document.getElementById('link-default-prevented')
+    link.addEventListener('click', function (e) {
+      e.preventDefault()
+      console.log("Default externally prevented")
+    })
+  </script>
 </body>
 
 </html>

@@ -176,9 +176,15 @@
   }
 
   function shouldFollowlink(link, event) {
-      var targetsCurrentWindow = !link.target || link.target.match(/^_(self|parent|top)$/i)
-      var isRegularClick = event.type === 'click' && !(event.ctrlKey || event.metaKey || event.shiftKey)
-      return targetsCurrentWindow && isRegularClick && (!event.defaultPrevented || plausiblePreventedDefault)
+    var targetsCurrentWindow = !link.target || link.target.match(/^_(self|parent|top)$/i)
+    var isRegularClick = event.type === 'click' && !(event.ctrlKey || event.metaKey || event.shiftKey)
+
+    // If default has been prevented by an external script, Plausible will not intercept with default behavior.
+    // event.defaultPrevented will also become true if Plausible calls event.preventDefault(), this is why we need to
+    // set and check the plausiblePreventedDefault flag
+    var defaultExternallyPrevented = event.defaultPrevented && !plausiblePreventedDefault
+
+    return targetsCurrentWindow && isRegularClick && !defaultExternallyPrevented
   }
 
   function eventCallback(eventName, continueFn) {
