@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Router do
   use PlausibleWeb, :router
+
   # @two_weeks_in_seconds 60 * 60 * 24 * 14
 
   # pipeline :browser do
