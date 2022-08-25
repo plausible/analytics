@@ -28,6 +28,7 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.Firewall
     plug :fetch_session
     plug PlausibleWeb.AuthPlug
+    plug PlausibleWeb.LoggerMetadataPlug
   end
 
   # pipeline :internal_stats_api do
