@@ -1,7 +1,9 @@
 defmodule Plausible.Ingestion.Event do
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Ingestion.{Request, CityOverrides}
+  use OpenTelemetryDecorator
 
+  @decorate trace("ingestion.build_event_struct")
   @spec build(Request.t()) ::
           {:ok, Plausible.ClickhouseEvent.t()} | :skip | {:error, Ecto.Changeset.t()}
   @doc """
@@ -24,6 +26,7 @@ defmodule Plausible.Ingestion.Event do
          do: {:ok, event}
   end
 
+  @decorate trace("ingestion.generate_user_id")
   def get_user_id(%Request{domain: domain} = request) do
     salt = Plausible.Session.Salts.fetch().current
 
@@ -139,13 +142,12 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
+  @decorate trace("ingestion.parse_user_agent")
   defp parse_user_agent(%Request{user_agent: user_agent}) when is_binary(user_agent) do
-    Tracer.with_span "parse_user_agent" do
-      case Cachex.fetch(:user_agents, user_agent, &UAInspector.parse/1) do
-        {:ok, user_agent} -> user_agent
-        {:commit, user_agent} -> user_agent
-        _ -> nil
-      end
+    case Cachex.fetch(:user_agents, user_agent, &UAInspector.parse/1) do
+      {:ok, user_agent} -> user_agent
+      {:commit, user_agent} -> user_agent
+      _ -> nil
     end
   end
 
@@ -217,41 +219,40 @@ defmodule Plausible.Ingestion.Event do
     Map.put(event, :screen_size, screen_width)
   end
 
+  @decorate trace("ingestion.parse_visitor_location")
   defp put_geolocation(%{} = event, %Request{} = request) do
-    Tracer.with_span "parse_visitor_location" do
-      result = Geolix.lookup(request.remote_ip, where: :geolocation)
+    result = Geolix.lookup(request.remote_ip, where: :geolocation)
 
-      country_code =
-        get_in(result, [:country, :iso_code])
-        |> ignore_unknown_country()
+    country_code =
+      get_in(result, [:country, :iso_code])
+      |> ignore_unknown_country()
 
-      city_geoname_id = get_in(result, [:city, :geoname_id])
-      city_geoname_id = Map.get(CityOverrides.get(), city_geoname_id, city_geoname_id)
+    city_geoname_id = get_in(result, [:city, :geoname_id])
+    city_geoname_id = Map.get(CityOverrides.get(), city_geoname_id, city_geoname_id)
 
-      subdivision1_code =
-        case result do
-          %{subdivisions: [%{iso_code: iso_code} | _rest]} ->
-            country_code <> "-" <> iso_code
+    subdivision1_code =
+      case result do
+        %{subdivisions: [%{iso_code: iso_code} | _rest]} ->
+          country_code <> "-" <> iso_code
 
-          _ ->
-            ""
-        end
+        _ ->
+          ""
+      end
 
-      subdivision2_code =
-        case result do
-          %{subdivisions: [_first, %{iso_code: iso_code} | _rest]} ->
-            country_code <> "-" <> iso_code
+    subdivision2_code =
+      case result do
+        %{subdivisions: [_first, %{iso_code: iso_code} | _rest]} ->
+          country_code <> "-" <> iso_code
 
-          _ ->
-            ""
-        end
+        _ ->
+          ""
+      end
 
-      event
-      |> Map.put(:country_code, country_code)
-      |> Map.put(:subdivision1_code, subdivision1_code)
-      |> Map.put(:subdivision2_code, subdivision2_code)
-      |> Map.put(:city_geoname_id, city_geoname_id)
-    end
+    event
+    |> Map.put(:country_code, country_code)
+    |> Map.put(:subdivision1_code, subdivision1_code)
+    |> Map.put(:subdivision2_code, subdivision2_code)
+    |> Map.put(:city_geoname_id, city_geoname_id)
   end
 
   defp ignore_unknown_country("ZZ"), do: nil

@@ -3,6 +3,8 @@ defmodule Plausible.Ingestion.Request do
   The %Plausible.Ingestion.Request{} struct stores all needed fields to create an event downstream.
   """
 
+  use OpenTelemetryDecorator
+
   defstruct [
     :remote_ip,
     :user_agent,
@@ -29,6 +31,7 @@ defmodule Plausible.Ingestion.Request do
           query_params: map()
         }
 
+  @decorate trace("ingestion.build_request_struct")
   @spec build(Plug.Conn.t()) :: {:ok, [t()]} | {:error, :invalid_json}
   @doc """
   Builds a list of %Plausible.Ingestion.Request{} struct from %Plug.Conn{}.

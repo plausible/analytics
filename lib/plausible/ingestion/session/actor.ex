@@ -7,6 +7,7 @@ defmodule Plausible.Ingestion.Session.Actor do
   alias Plausible.{Ingestion, Ingestion.Session}
   require Logger
   use GenServer, restart: :transient, shutdown: :timer.minutes(30)
+  use OpenTelemetryDecorator
 
   @spec send_event(pid(), map()) :: :ok
   def send_event(pid, request_or_event), do: GenServer.cast(pid, {:send_event, request_or_event})
@@ -34,6 +35,7 @@ defmodule Plausible.Ingestion.Session.Actor do
   end
 
   @impl true
+  @decorate trace("ingestion.session_send_event")
   def handle_cast({:send_event, request_or_event}, %State{} = state) do
     Logger.debug("Ingestion: Processing new event for session #{state.domain}@#{state.user_id}")
 
