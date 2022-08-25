@@ -104,7 +104,8 @@ defmodule Plausible.MixProject do
       {:opentelemetry_ecto, "1.0.0-rc.3"},
       {:opentelemetry_oban, "~> 0.2.0-rc.2"},
       {:floki, "~> 0.32.0", only: :test},
-      {:referrer_blocklist, git: "https://github.com/plausible/referrer-blocklist.git"}
+      {:referrer_blocklist,
+       git: "https://github.com/plausible/referrer-blocklist.git", ref: "d6f52c2"}
     ]
   end
 
