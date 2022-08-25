@@ -28,11 +28,28 @@ defmodule Mix.Tasks.DownloadCountryDatabase do
       end
 
     if res.status_code == 200 do
-      File.mkdir("priv/geodb")
-      File.write!("priv/geodb/dbip-country.mmdb", res.body)
+      File.mkdir(geodb_dir_path())
+      File.write!(geodb_file_path(), res.body)
       Logger.info("Downloaded and saved the database successfully")
     else
       Logger.error("Unable to download and save the database. Response: #{inspect(res)}")
+    end
+  end
+
+  defp geodb_dir_path do
+    geodb_file_path()
+    |> String.split("/")
+    |> List.pop_at(-1)
+    |> then(fn {_, elements} -> Enum.join(elements, "/") end)
+  end
+
+  defp geodb_file_path do
+    default_file_path = "geodb/dbip-country.mmdb"
+
+    with [%{source: path} | _] <- Application.get_env(:geolix, :databases) do
+      path
+    else
+      _ -> default_file_path
     end
   end
 end
