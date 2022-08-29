@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Plausible Playwright tests</title>
+
+  <script defer src="/tracker/js/plausible.file-downloads.local.manual.outbound-links.js"></script>
+</head>
+
+<body>
+  <a id="link" href="https://awesome.website.com/dowloads/file.pdf">Outbound File Download Link</a>
+
+  <a id="link-default-prevented" href="https://awesome.website.com/dowloads/file.pdf">Outbound File Download Link</a>
+  <script>
+    let link = document.getElementById('link-default-prevented')
+    link.addEventListener('click', function (e) {
+      e.preventDefault()
+      console.log("Default externally prevented")
+    })
+  </script>
+</body>
+
+</html>

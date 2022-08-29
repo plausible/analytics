@@ -14,6 +14,24 @@ exports.mockRequest = function (page, path) {
   })
 }
 
+// Mocks a specified number of Plausible event requests. Returns a promise that resolves to a list
+// of event names as soon as the specified number of requests is made, or 10 seconds has passed.
+exports.mockManyPlausibleRequests = function(page, path, numberOfRequests) {
+  return new Promise((resolve, _reject) => {
+    let requestList = []
+    const requestTimeoutTimer = setTimeout(() => resolve(requestList), 10000)
+
+    page.route(path, (route, request) => {
+      requestList.push(request.postDataJSON().n)
+      if (requestList.length === numberOfRequests) {
+        clearTimeout(requestTimeoutTimer)
+        resolve(requestList)
+      }
+      return route.fulfill({ status: 202, contentType: 'text/plain', body: 'ok' })
+    })
+  })
+}
+
 exports.isMac = function (workerInfo) {
   return workerInfo.project.name.includes('OSX')
 }
