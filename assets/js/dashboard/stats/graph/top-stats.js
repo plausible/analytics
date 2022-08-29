@@ -1,9 +1,10 @@
 import React from "react";
-import numberFormatter, {durationFormatter} from '../../util/number-formatter'
+import { Tooltip } from '../../util/tooltip'
+import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { METRIC_MAPPING, METRIC_LABELS } from './visitor-graph'
 
 export default class TopStats extends React.Component {
-	renderComparison(name, comparison) {
+  renderComparison(name, comparison) {
     const formattedComparison = numberFormatter(Math.abs(comparison))
 
     if (comparison > 0) {
@@ -38,7 +39,7 @@ export default class TopStats extends React.Component {
   }
 
   titleFor(stat) {
-    if(this.props.metric === METRIC_MAPPING[stat.name]) {
+    if (this.props.metric === METRIC_MAPPING[stat.name]) {
       return `Hide ${METRIC_LABELS[METRIC_MAPPING[stat.name]].toLowerCase()} from graph`
     } else {
       return `Show ${METRIC_LABELS[METRIC_MAPPING[stat.name]].toLowerCase()} on graph`
@@ -47,10 +48,10 @@ export default class TopStats extends React.Component {
 
   renderStat(stat) {
     return (
-      <div className="flex items-center justify-between my-1 whitespace-nowrap">
-        <b className="mr-4 text-xl md:text-2xl dark:text-gray-100" tooltip={this.topStatTooltip(stat)}>{this.topStatNumberShort(stat)}</b>
+      <Tooltip info={this.topStatTooltip(stat)} className="flex items-center justify-between my-1 whitespace-nowrap">
+        <b className="mr-4 text-xl md:text-2xl dark:text-gray-100">{this.topStatNumberShort(stat)}</b>
         {this.renderComparison(stat.name, stat.change)}
-      </div>
+      </Tooltip>
     )
   }
 
@@ -66,7 +67,7 @@ export default class TopStats extends React.Component {
 
       return (
         <React.Fragment key={stat.name}>
-          { isClickable ?
+          {isClickable ?
             (
               <div className={`px-4 md:px-6 w-1/2 my-4 lg:w-auto group cursor-pointer select-none ${border}`} onClick={() => { updateMetric(METRIC_MAPPING[stat.name]) }} tabIndex={0} title={this.titleFor(stat)}>
                 <div
@@ -74,14 +75,14 @@ export default class TopStats extends React.Component {
                   {statDisplayName}
                   {statExtraName && <span className="hidden sm:inline-block ml-1">{statExtraName}</span>}
                 </div>
-                { this.renderStat(stat) }
+                {this.renderStat(stat)}
               </div>
             ) : (
               <div className={`px-4 md:px-6 w-1/2 my-4 lg:w-auto ${border}`}>
                 <div className='text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex'>
                   {stat.name}
                 </div>
-                { this.renderStat(stat) }
+                {this.renderStat(stat)}
               </div>
             )}
         </React.Fragment>
