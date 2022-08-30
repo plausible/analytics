@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { usePopper } from 'react-popper';
 import classNames from 'classnames'
 
-export function Tooltip({ children, info, className }) {
+export function Tooltip({ children, info, className, onClick }) {
   const [visible, setVisible] = useState(false);
   const [referenceElement, setReferenceElement] = useState(null);
   const [popperElement, setPopperElement] = useState(null);
@@ -22,10 +22,10 @@ export function Tooltip({ children, info, className }) {
 
   return (
     <div className={classNames('relative', className)}>
-      <button ref={setReferenceElement} onMouseEnter={() => setVisible(true)} onMouseLeave={() => setVisible(false)}>
+      <div ref={setReferenceElement} onMouseEnter={() => setVisible(true)} onMouseLeave={() => setVisible(false)} onClick={onClick}>
         {children}
 
-      </button>
+      </div>
       {info && visible && <div ref={setPopperElement} style={styles.popper} {...attributes.popper} className="z-50 p-2 rounded text-sm text-gray-100 font-bold popper-tooltip" role="tooltip">
         {info}
         <div ref={setArrowElement} style={styles.arrow} className="tooltip-arrow"></div>
