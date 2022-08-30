@@ -55,9 +55,9 @@ defmodule PlausibleWeb.StatsView do
 
   def stats_container_class(conn) do
     cond do
-      !conn.assigns[:embedded] -> "container"
-      conn.assigns[:embedded] && conn.assigns[:align] == "left" -> "max-w-screen-lg"
+      conn.assigns[:embedded] && conn.assigns[:width] == "manual" -> ""
       conn.assigns[:embedded] -> "max-width-screen-lg mx-auto"
+      !conn.assigns[:embedded] -> "container"
     end
   end
 
