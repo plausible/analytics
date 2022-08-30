@@ -91,7 +91,6 @@ class AllSources extends React.Component<AllSourcesProps, AllSourcesState> {
             </Link>
           </span>
         </Bar>
-        {/* @ts-ignore */}
         <span
           className="font-medium dark:text-gray-200 w-20 text-right"
           tooltip={referrer.visitors}
@@ -137,7 +136,6 @@ class AllSources extends React.Component<AllSourcesProps, AllSourcesState> {
           <FlipMove className="flex-grow">
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
-          {/* @ts-ignore */}
           <MoreLink
             site={this.props.site}
             list={this.state.referrers}
@@ -156,7 +154,6 @@ class AllSources extends React.Component<AllSourcesProps, AllSourcesState> {
 
   renderContent() {
     return (
-      // @ts-ignore
       <LazyLoader
         className="flex flex-col flex-grow"
         onVisible={this.onVisible}
@@ -284,7 +281,6 @@ class UTMSources extends React.Component<UTMSourcesProps, UTMSourcesState> {
             </Link>
           </span>
         </Bar>
-        {/* @ts-ignore */}
         <span
           className="font-medium dark:text-gray-200 w-20 text-right"
           tooltip={referrer.visitors}
@@ -331,7 +327,6 @@ class UTMSources extends React.Component<UTMSourcesProps, UTMSourcesState> {
             {/* @ts-ignore */}
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
-          {/* @ts-ignore */}
           <MoreLink
             site={this.props.site}
             list={this.state.referrers}
