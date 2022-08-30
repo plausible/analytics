@@ -29,14 +29,23 @@ export default class TopStats extends React.Component {
     }
   }
 
+  topStatNumberLong(stat) {
+    if (['visit duration', 'time on page'].includes(stat.name.toLowerCase())) {
+      return durationFormatter(stat.value)
+    } else if (['bounce rate', 'conversion rate'].includes(stat.name.toLowerCase())) {
+      return stat.value + '%'
+    } else {
+      return stat.value.toLocaleString()
+    }
+  }
+
   topStatTooltip(stat) {
-    let name = stat.name.toLowerCase()
-    name = stat.value === 1 ? name.slice(0, -1) : name
-    const statValue = stat.value.toLocaleString() + ' ' + name
+    let statName = stat.name.toLowerCase()
+    statName = stat.value === 1 ? statName.slice(0, -1) : statName
 
     return (
       <div>
-        <div>{statValue}</div>
+        <div>{this.topStatNumberLong(stat)} {statName}</div>
         {this.canMetricBeGraphed(stat) && <div className="font-normal text-xs">{this.titleFor(stat)}</div>}
       </div>
     )
