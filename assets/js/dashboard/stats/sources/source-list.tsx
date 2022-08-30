@@ -135,7 +135,6 @@ class AllSources extends React.Component<AllSourcesProps, AllSourcesState> {
             </div>
           </div>
 
-          {/* @ts-ignore */}
           <FlipMove className="flex-grow">
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
@@ -220,7 +219,7 @@ type UTMSourcesProps = {
   tab?: string
   site?: SiteType
   renderTabs?: () => JSX.Element
-  setTab?: () => void
+  setTab?: (tab: string) => () => void
 }
 type UTMSourcesState = { loading?: boolean; referrers?: ReferrersType }
 
@@ -329,9 +328,7 @@ class UTMSources extends React.Component<UTMSourcesProps, UTMSourcesState> {
             </div>
           </div>
 
-          {/* @ts-ignore */}
           <FlipMove className="flex-grow">
-            {/* @ts-ignore */}
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
           <MoreLink
@@ -387,9 +384,7 @@ export default class SourceList extends React.Component<
 > {
   constructor(props: SourceListProps) {
     super(props)
-    // @ts-ignore
     this.tabKey = 'sourceTab__' + props.site.domain
-    // @ts-ignore
     const storedTab = storage.getItem(this.tabKey)
     this.state = {
       tab: storedTab || 'all'
@@ -398,7 +393,6 @@ export default class SourceList extends React.Component<
 
   setTab(tab) {
     return () => {
-      // @ts-ignore
       storage.setItem(this.tabKey, tab)
       this.setState({ tab })
     }

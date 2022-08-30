@@ -2,15 +2,12 @@ const colors = require('tailwindcss/colors')
 
 /** @type {import('tailwindcss/tailwind-config').TailwindConfig} */
 module.exports = {
-  purge: [
-    './js/**/*.js',
-    '../lib/plausible_web/templates/**/*.html.eex',
-  ],
+  purge: ['./src/js/**/*.js', '../lib/plausible_web/templates/**/*.html.eex'],
   darkMode: 'class',
   theme: {
     container: {
       center: true,
-      padding: '1rem',
+      padding: '1rem'
     },
     extend: {
       colors: {
@@ -20,26 +17,26 @@ module.exports = {
         'gray-825': 'rgb(37, 47, 63)'
       },
       spacing: {
-        '44': '11rem'
+        44: '11rem'
       },
       width: {
         '31percent': '31%',
-        'content': 'fit-content'
+        content: 'fit-content'
       },
       opacity: {
-        '15': '0.15',
+        15: '0.15'
       },
       zIndex: {
-        '9': 9,
+        9: 9
       },
       maxWidth: {
         '2xs': '15rem',
-        '3xs': '12rem',
+        '3xs': '12rem'
       },
       transitionProperty: {
-        'padding': 'padding',
+        padding: 'padding'
       }
-    },
+    }
   },
   variants: {
     textColor: ['responsive', 'hover', 'focus', 'group-hover'],
@@ -58,6 +55,6 @@ module.exports = {
   plugins: [
     require('@tailwindcss/forms'),
     require('@tailwindcss/typography'),
-    require('@tailwindcss/aspect-ratio'),
+    require('@tailwindcss/aspect-ratio')
   ]
 }

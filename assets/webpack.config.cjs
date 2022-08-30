@@ -6,15 +6,15 @@ const CssMinimizerWebpackPlugin = require('css-minimizer-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 /** @type {import('webpack').Configuration} */
-module.exports = (_env, _options) => ({
+module.exports = () => ({
   optimization: {
     minimizer: [new TerserPlugin(), new CssMinimizerWebpackPlugin()]
   },
   entry: {
-    app: ['./js/app.tsx'],
-    dashboard: ['./js/dashboard/mount.tsx'],
-    'embed.host': ['./js/embed.host.tsx'],
-    'embed.content': ['./js/embed.content.tsx']
+    app: ['./js/app.ts'],
+    dashboard: ['./js/dashboard/mount.ts'],
+    'embed.host': ['./js/embed.host.ts'],
+    'embed.content': ['./js/embed.content.ts']
   },
   output: {
     filename: '[name].js',
