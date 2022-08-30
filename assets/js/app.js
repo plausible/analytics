@@ -1,21 +1,21 @@
-import "../css/app.css"
-import "flatpickr/dist/flatpickr.min.css"
-import "./polyfills/closest"
+import '../css/app.css'
+import 'flatpickr/dist/flatpickr.min.css'
+import './polyfills/closest'
 import 'abortcontroller-polyfill/dist/polyfill-patch-fetch'
-import "phoenix_html"
+import 'phoenix_html'
 import 'alpinejs'
 
 const triggers = document.querySelectorAll('[data-dropdown-trigger]')
 
 for (const trigger of triggers) {
-  trigger.addEventListener('click', function(e) {
+  trigger.addEventListener('click', function (e) {
     e.stopPropagation()
     e.currentTarget.nextElementSibling.classList.remove('hidden')
   })
 }
 
 if (triggers.length > 0) {
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', function (e) {
     const dropdown = e.target.closest('[data-dropdown]')
 
     if (dropdown && e.target.tagName === 'A') {
@@ -23,7 +23,7 @@ if (triggers.length > 0) {
     }
   })
 
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', function (e) {
     const clickedInDropdown = e.target.closest('[data-dropdown]')
 
     if (!clickedInDropdown) {
@@ -37,19 +37,19 @@ if (triggers.length > 0) {
 const registerForm = document.getElementById('register-form')
 
 if (registerForm) {
-  registerForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    setTimeout(submitForm, 1000);
-    var formSubmitted = false;
+  registerForm.addEventListener('submit', function (e) {
+    e.preventDefault()
+    setTimeout(submitForm, 1000)
+    var formSubmitted = false
 
     function submitForm() {
       if (!formSubmitted) {
-        formSubmitted = true;
-        registerForm.submit();
+        formSubmitted = true
+        registerForm.submit()
       }
     }
     /* eslint-disable-next-line no-undef */
-    plausible('Signup', {callback: submitForm});
+    plausible('Signup', { callback: submitForm })
   })
 }
 
@@ -58,12 +58,14 @@ const changelogNotification = document.getElementById('changelog-notification')
 if (changelogNotification) {
   showChangelogNotification(changelogNotification)
 
-  fetch('https://plausible.io/changes.txt', {headers: {'Content-Type': 'text/plain'}})
+  fetch('https://plausible.io/changes.txt', {
+    headers: { 'Content-Type': 'text/plain' }
+  })
     .then((res) => res.text())
     .then((res) => {
       localStorage.lastChangelogUpdate = new Date(res).getTime()
       showChangelogNotification(changelogNotification)
-  })
+    })
 }
 
 function showChangelogNotification(el) {
@@ -71,7 +73,7 @@ function showChangelogNotification(el) {
   const lastChecked = Number(localStorage.lastChangelogClick)
 
   const hasNewUpdateSinceLastClicked = lastUpdated > lastChecked
-  const notOlderThanThreeDays = Date.now() - lastUpdated <  1000 * 60 * 60 * 72
+  const notOlderThanThreeDays = Date.now() - lastUpdated < 1000 * 60 * 60 * 72
   if ((!lastChecked || hasNewUpdateSinceLastClicked) && notOlderThanThreeDays) {
     el.innerHTML = `
       <a href="https://plausible.io/changelog" target="_blank">
@@ -84,9 +86,11 @@ function showChangelogNotification(el) {
       </a>
       `
     const link = el.getElementsByTagName('a')[0]
-    link.addEventListener('click', function() {
+    link.addEventListener('click', function () {
       localStorage.lastChangelogClick = Date.now()
-      setTimeout(() => { link.remove() }, 100)
+      setTimeout(() => {
+        link.remove()
+      }, 100)
     })
   }
 }
@@ -94,7 +98,7 @@ function showChangelogNotification(el) {
 const embedButton = document.getElementById('generate-embed')
 
 if (embedButton) {
-  embedButton.addEventListener('click', function(_e) {
+  embedButton.addEventListener('click', function (_e) {
     const baseUrl = document.getElementById('base-url').value
     const embedCode = document.getElementById('embed-code')
     const theme = document.getElementById('theme').value.toLowerCase()
@@ -113,7 +117,8 @@ if (embedButton) {
 <script async src="${baseUrl}/js/embed.host.js"></script>`
     } catch (e) {
       console.error(e)
-      embedCode.value = 'ERROR: Please enter a valid URL in the shared link field'
+      embedCode.value =
+        'ERROR: Please enter a valid URL in the shared link field'
     }
   })
 }

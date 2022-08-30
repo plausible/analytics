@@ -1,13 +1,13 @@
-import React from 'react';
+import React from 'react'
 
 import * as storage from '../../util/storage'
 import * as url from '../../util/url'
 import * as api from '../../api'
 import ListReport from './../reports/list'
 
-function EntryPages({query, site}) {
+function EntryPages({ query, site }) {
   function fetchData() {
-    return api.get(url.apiPath(site, '/entry-pages'), query, {limit: 9})
+    return api.get(url.apiPath(site, '/entry-pages'), query, { limit: 9 })
   }
 
   function externalLinkDest(page) {
@@ -17,7 +17,7 @@ function EntryPages({query, site}) {
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{entry_page: 'name'}}
+      filter={{ entry_page: 'name' }}
       keyLabel="Entry page"
       valueLabel="Unique Entrances"
       valueKey="unique_entrances"
@@ -29,9 +29,9 @@ function EntryPages({query, site}) {
   )
 }
 
-function ExitPages({query, site}) {
+function ExitPages({ query, site }) {
   function fetchData() {
-    return api.get(url.apiPath(site, '/exit-pages'), query, {limit: 9})
+    return api.get(url.apiPath(site, '/exit-pages'), query, { limit: 9 })
   }
 
   function externalLinkDest(page) {
@@ -41,7 +41,7 @@ function ExitPages({query, site}) {
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{exit_page: 'name'}}
+      filter={{ exit_page: 'name' }}
       keyLabel="Exit page"
       valueLabel="Unique Exits"
       valueKey="unique_exits"
@@ -53,9 +53,9 @@ function ExitPages({query, site}) {
   )
 }
 
-function TopPages({query, site}) {
+function TopPages({ query, site }) {
   function fetchData() {
-    return api.get(url.apiPath(site, '/pages'), query, {limit: 9})
+    return api.get(url.apiPath(site, '/pages'), query, { limit: 9 })
   }
 
   function externalLinkDest(page) {
@@ -65,7 +65,7 @@ function TopPages({query, site}) {
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{page: 'name'}}
+      filter={{ page: 'name' }}
       keyLabel="Page"
       detailsLink={url.sitePath(site, '/pages')}
       query={query}
@@ -76,15 +76,15 @@ function TopPages({query, site}) {
 }
 
 const labelFor = {
-	'pages': 'Top Pages',
-	'entry-pages': 'Entry Pages',
-	'exit-pages': 'Exit Pages',
+  pages: 'Top Pages',
+  'entry-pages': 'Entry Pages',
+  'exit-pages': 'Exit Pages'
 }
 
 export default class Pages extends React.Component {
   constructor(props) {
     super(props)
-    this.tabKey = `pageTab__${  props.site.domain}`
+    this.tabKey = `pageTab__${props.site.domain}`
     const storedTab = storage.getItem(this.tabKey)
     this.state = {
       mode: storedTab || 'pages'
@@ -94,31 +94,46 @@ export default class Pages extends React.Component {
   setMode(mode) {
     return () => {
       storage.setItem(this.tabKey, mode)
-      this.setState({mode})
+      this.setState({ mode })
     }
   }
 
   renderContent() {
-    switch(this.state.mode) {
-    case "entry-pages":
-      return <EntryPages site={this.props.site} query={this.props.query} timer={this.props.timer} />
-    case "exit-pages":
-      return <ExitPages site={this.props.site} query={this.props.query} timer={this.props.timer} />
-    case "pages":
-    default:
-      return <TopPages site={this.props.site} query={this.props.query} timer={this.props.timer} />
+    switch (this.state.mode) {
+      case 'entry-pages':
+        return (
+          <EntryPages
+            site={this.props.site}
+            query={this.props.query}
+            timer={this.props.timer}
+          />
+        )
+      case 'exit-pages':
+        return (
+          <ExitPages
+            site={this.props.site}
+            query={this.props.query}
+            timer={this.props.timer}
+          />
+        )
+      case 'pages':
+      default:
+        return (
+          <TopPages
+            site={this.props.site}
+            query={this.props.query}
+            timer={this.props.timer}
+          />
+        )
     }
   }
-
 
   renderPill(name, mode) {
     const isActive = this.state.mode === mode
 
     if (isActive) {
       return (
-        <li
-          className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading"
-        >
+        <li className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading">
           {name}
         </li>
       )
@@ -136,25 +151,21 @@ export default class Pages extends React.Component {
 
   render() {
     return (
-      <div
-        className="stats-item flex flex-col w-full mt-6 stats-item--has-header"
-      >
-        <div
-          className="stats-item-header flex flex-col flex-grow bg-white dark:bg-gray-825 shadow-xl rounded p-4 relative"
-        >
+      <div className="stats-item flex flex-col w-full mt-6 stats-item--has-header">
+        <div className="stats-item-header flex flex-col flex-grow bg-white dark:bg-gray-825 shadow-xl rounded p-4 relative">
           {/* Header Container */}
           <div className="w-full flex justify-between">
             <h3 className="font-bold dark:text-gray-100">
               {labelFor[this.state.mode] || 'Page Visits'}
             </h3>
             <ul className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
-              { this.renderPill('Top Pages', 'pages') }
-              { this.renderPill('Entry Pages', 'entry-pages') }
-              { this.renderPill('Exit Pages', 'exit-pages') }
+              {this.renderPill('Top Pages', 'pages')}
+              {this.renderPill('Entry Pages', 'entry-pages')}
+              {this.renderPill('Exit Pages', 'exit-pages')}
             </ul>
           </div>
           {/* Main Contents */}
-          { this.renderContent() }
+          {this.renderContent()}
         </div>
       </div>
     )

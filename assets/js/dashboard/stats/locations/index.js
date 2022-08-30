@@ -1,17 +1,21 @@
-import React from 'react';
+import React from 'react'
 
 import * as storage from '../../util/storage'
 import CountriesMap from './map'
 
 import * as api from '../../api'
-import {apiPath, sitePath} from '../../util/url'
+import { apiPath, sitePath } from '../../util/url'
 import ListReport from '../reports/list'
 
-function Countries({query, site, onClick}) {
+function Countries({ query, site, onClick }) {
   function fetchData() {
-    return api.get(apiPath(site, '/countries'), query, {limit: 9}).then((res) => {
-      return res.map(row => Object.assign({}, row, {percentage: undefined}))
-    })
+    return api
+      .get(apiPath(site, '/countries'), query, { limit: 9 })
+      .then((res) => {
+        return res.map((row) =>
+          Object.assign({}, row, { percentage: undefined })
+        )
+      })
   }
 
   function renderIcon(country) {
@@ -21,7 +25,7 @@ function Countries({query, site, onClick}) {
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{country: 'code', country_name: 'name'}}
+      filter={{ country: 'code', country_name: 'name' }}
       onClick={onClick}
       keyLabel="Country"
       detailsLink={sitePath(site, '/countries')}
@@ -32,9 +36,9 @@ function Countries({query, site, onClick}) {
   )
 }
 
-function Regions({query, site, onClick}) {
+function Regions({ query, site, onClick }) {
   function fetchData() {
-    return api.get(apiPath(site, '/regions'), query, {limit: 9})
+    return api.get(apiPath(site, '/regions'), query, { limit: 9 })
   }
 
   function renderIcon(region) {
@@ -44,7 +48,7 @@ function Regions({query, site, onClick}) {
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{region: 'code', region_name: 'name'}}
+      filter={{ region: 'code', region_name: 'name' }}
       onClick={onClick}
       keyLabel="Region"
       detailsLink={sitePath(site, '/regions')}
@@ -55,9 +59,9 @@ function Regions({query, site, onClick}) {
   )
 }
 
-function Cities({query, site}) {
+function Cities({ query, site }) {
   function fetchData() {
-    return api.get(apiPath(site, '/cities'), query, {limit: 9})
+    return api.get(apiPath(site, '/cities'), query, { limit: 9 })
   }
 
   function renderIcon(city) {
@@ -67,7 +71,7 @@ function Cities({query, site}) {
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{city: 'code', city_name: 'name'}}
+      filter={{ city: 'code', city_name: 'name' }}
       keyLabel="City"
       detailsLink={sitePath(site, '/cities')}
       query={query}
@@ -77,19 +81,18 @@ function Cities({query, site}) {
   )
 }
 
-
 const labelFor = {
-	'countries': 'Countries',
-	'regions': 'Regions',
-	'cities': 'Cities',
+  countries: 'Countries',
+  regions: 'Regions',
+  cities: 'Cities'
 }
 
 export default class Locations extends React.Component {
-	constructor(props) {
+  constructor(props) {
     super(props)
     this.onCountryFilter = this.onCountryFilter.bind(this)
     this.onRegionFilter = this.onRegionFilter.bind(this)
-    this.tabKey = `geoTab__${  props.site.domain}`
+    this.tabKey = `geoTab__${props.site.domain}`
     const storedTab = storage.getItem(this.tabKey)
     this.state = {
       mode: storedTab || 'map'
@@ -98,7 +101,10 @@ export default class Locations extends React.Component {
 
   componentDidUpdate(prevProps) {
     const isRemovingFilter = (filterName) => {
-      return prevProps.query.filters[filterName] && !this.props.query.filters[filterName]
+      return (
+        prevProps.query.filters[filterName] &&
+        !this.props.query.filters[filterName]
+      )
     }
 
     if (this.state.mode === 'cities' && isRemovingFilter('region')) {
@@ -113,7 +119,7 @@ export default class Locations extends React.Component {
   setMode(mode) {
     return () => {
       storage.setItem(this.tabKey, mode)
-      this.setState({mode})
+      this.setState({ mode })
     }
   }
 
@@ -128,28 +134,53 @@ export default class Locations extends React.Component {
     this.setMode('cities')()
   }
 
-	renderContent() {
-    switch(this.state.mode) {
-		case "cities":
-      return <Cities site={this.props.site} query={this.props.query} timer={this.props.timer}/>
-		case "regions":
-      return <Regions onClick={this.onRegionFilter} site={this.props.site} query={this.props.query} timer={this.props.timer}/>
-		case "countries":
-      return <Countries onClick={this.onCountryFilter('countries')} site={this.props.site} query={this.props.query} timer={this.props.timer}/>
-    case "map":
-    default:
-      return <CountriesMap onClick={this.onCountryFilter('map')} site={this.props.site} query={this.props.query} timer={this.props.timer}/>
+  renderContent() {
+    switch (this.state.mode) {
+      case 'cities':
+        return (
+          <Cities
+            site={this.props.site}
+            query={this.props.query}
+            timer={this.props.timer}
+          />
+        )
+      case 'regions':
+        return (
+          <Regions
+            onClick={this.onRegionFilter}
+            site={this.props.site}
+            query={this.props.query}
+            timer={this.props.timer}
+          />
+        )
+      case 'countries':
+        return (
+          <Countries
+            onClick={this.onCountryFilter('countries')}
+            site={this.props.site}
+            query={this.props.query}
+            timer={this.props.timer}
+          />
+        )
+      case 'map':
+      default:
+        return (
+          <CountriesMap
+            onClick={this.onCountryFilter('map')}
+            site={this.props.site}
+            query={this.props.query}
+            timer={this.props.timer}
+          />
+        )
     }
   }
 
-	renderPill(name, mode) {
+  renderPill(name, mode) {
     const isActive = this.state.mode === mode
 
     if (isActive) {
       return (
-        <li
-          className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading"
-        >
+        <li className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading">
           {name}
         </li>
       )
@@ -165,26 +196,22 @@ export default class Locations extends React.Component {
     )
   }
 
-	render() {
+  render() {
     return (
-      <div
-        className="stats-item flex flex-col w-full mt-6 stats-item--has-header"
-      >
-        <div
-          className="stats-item-header flex flex-col flex-grow bg-white dark:bg-gray-825 shadow-xl rounded p-4 relative"
-        >
+      <div className="stats-item flex flex-col w-full mt-6 stats-item--has-header">
+        <div className="stats-item-header flex flex-col flex-grow bg-white dark:bg-gray-825 shadow-xl rounded p-4 relative">
           <div className="w-full flex justify-between">
             <h3 className="font-bold dark:text-gray-100">
               {labelFor[this.state.mode] || 'Locations'}
             </h3>
             <ul className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
-              { this.renderPill('Map', 'map') }
-              { this.renderPill('Countries', 'countries') }
-              { this.renderPill('Regions', 'regions') }
-              { this.renderPill('Cities', 'cities') }
+              {this.renderPill('Map', 'map')}
+              {this.renderPill('Countries', 'countries')}
+              {this.renderPill('Regions', 'regions')}
+              {this.renderPill('Cities', 'cities')}
             </ul>
           </div>
-          { this.renderContent() }
+          {this.renderContent()}
         </div>
       </div>
     )

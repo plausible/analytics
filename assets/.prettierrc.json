@@ -1,5 +1,5 @@
 {
   "singleQuote": true,
-  "requirePragma": true,
-  "insertPragma": true
+  "trailingComma": "none",
+  "semi": false
 }

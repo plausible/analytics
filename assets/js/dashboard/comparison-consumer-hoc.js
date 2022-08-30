@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 import { ComparisonContext } from './comparison-context'
 
 export const withComparisonConsumer = (WrappedComponent) => {
@@ -6,11 +6,15 @@ export const withComparisonConsumer = (WrappedComponent) => {
     render() {
       return (
         <ComparisonContext.Consumer>
-          {({data, modifyComparison}) => (
-            <WrappedComponent comparison={data} modifyComparison={modifyComparison} {...this.props} />
+          {({ data, modifyComparison }) => (
+            <WrappedComponent
+              comparison={data}
+              modifyComparison={modifyComparison}
+              {...this.props}
+            />
           )}
         </ComparisonContext.Consumer>
-      );
+      )
     }
   }
 }
