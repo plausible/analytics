@@ -1,6 +1,6 @@
-import React from 'react';
+import React from 'react'
 import { Link } from 'react-router-dom'
-import FlipMove from 'react-flip-move';
+import FlipMove from 'react-flip-move'
 
 import * as storage from '../../util/storage'
 import FadeIn from '../../fade-in'
@@ -11,13 +11,20 @@ import * as api from '../../api'
 import * as url from '../../util/url'
 import LazyLoader from '../../components/lazy-loader'
 
-type TimerType =  {onTick:(x:void)=>void};
-type QueryType = {period:string,filters:{goal:string}}
-type ReferrersType =  [] | null;
-type SiteType = {domain:string;}
+type TimerType = { onTick: (x: void) => void }
+type QueryType = { period: string; filters: { goal: string } }
+type ReferrersType = [] | null
+type SiteType = { domain: string }
 
-type AllSourcesProps = { tab?:string; timer?: TimerType, query?:QueryType; site?:SiteType, renderTabs?:()=>JSX.Element; setTab?:()=>void; }
-type AllSourcesState = { loading?: boolean, referrers?: ReferrersType }
+type AllSourcesProps = {
+  tab?: string
+  timer?: TimerType
+  query?: QueryType
+  site?: SiteType
+  renderTabs?: () => JSX.Element
+  setTab?: () => void
+}
+type AllSourcesState = { loading?: boolean; referrers?: ReferrersType }
 
 class AllSources extends React.Component<AllSourcesProps, AllSourcesState> {
   constructor(props: AllSourcesProps) {
@@ -28,7 +35,8 @@ class AllSources extends React.Component<AllSourcesProps, AllSourcesState> {
 
   onVisible() {
     this.fetchReferrers()
-    if (this.props.timer) this.props.timer.onTick(this.fetchReferrers.bind(this))
+    if (this.props.timer)
+      this.props.timer.onTick(this.fetchReferrers.bind(this))
   }
 
   componentDidUpdate(prevProps) {
@@ -47,12 +55,17 @@ class AllSources extends React.Component<AllSourcesProps, AllSourcesState> {
   }
 
   fetchReferrers() {
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/sources`, this.props.query, { show_noref: this.showNoRef() })
+    api
+      .get(
+        `/api/stats/${encodeURIComponent(this.props.site.domain)}/sources`,
+        this.props.query,
+        { show_noref: this.showNoRef() }
+      )
       .then((res) => this.setState({ loading: false, referrers: res }))
   }
 
   renderReferrer(referrer) {
-    const maxWidthDeduction = this.showConversionRate() ? "10rem" : "5rem"
+    const maxWidthDeduction = this.showConversionRate() ? '10rem' : '5rem'
 
     return (
       <div
@@ -79,8 +92,17 @@ class AllSources extends React.Component<AllSourcesProps, AllSourcesState> {
           </span>
         </Bar>
         {/* @ts-ignore */}
-        <span className="font-medium dark:text-gray-200 w-20 text-right" tooltip={referrer.visitors}>{numberFormatter(referrer.visitors)}</span>
-        {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
+        <span
+          className="font-medium dark:text-gray-200 w-20 text-right"
+          tooltip={referrer.visitors}
+        >
+          {numberFormatter(referrer.visitors)}
+        </span>
+        {this.showConversionRate() && (
+          <span className="font-medium dark:text-gray-200 w-20 text-right">
+            {referrer.conversion_rate}%
+          </span>
+        )}
       </div>
     )
   }
@@ -105,7 +127,9 @@ class AllSources extends React.Component<AllSourcesProps, AllSourcesState> {
             <span>Source</span>
             <div className="text-right">
               <span className="inline-block w-20">{this.label()}</span>
-              {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
+              {this.showConversionRate() && (
+                <span className="inline-block w-20">CR</span>
+              )}
             </div>
           </div>
 
@@ -114,23 +138,38 @@ class AllSources extends React.Component<AllSourcesProps, AllSourcesState> {
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
           {/* @ts-ignore */}
-          <MoreLink site={this.props.site} list={this.state.referrers} endpoint="sources" />
+          <MoreLink
+            site={this.props.site}
+            list={this.state.referrers}
+            endpoint="sources"
+          />
         </React.Fragment>
       )
     } else {
-      return <div className="font-medium text-center text-gray-500 mt-44">No data yet</div>
+      return (
+        <div className="font-medium text-center text-gray-500 mt-44">
+          No data yet
+        </div>
+      )
     }
   }
 
   renderContent() {
     return (
       // @ts-ignore
-      <LazyLoader className="flex flex-col flex-grow" onVisible={this.onVisible}>
+      <LazyLoader
+        className="flex flex-col flex-grow"
+        onVisible={this.onVisible}
+      >
         <div id="sources" className="flex justify-between w-full">
           <h3 className="font-bold dark:text-gray-100">Top Sources</h3>
           {this.props.renderTabs()}
         </div>
-        {this.state.loading && <div className="mx-auto loading mt-44"><div></div></div>}
+        {this.state.loading && (
+          <div className="mx-auto loading mt-44">
+            <div></div>
+          </div>
+        )}
         <FadeIn show={!this.state.loading} className="flex flex-col flex-grow">
           {this.renderList()}
         </FadeIn>
@@ -140,9 +179,7 @@ class AllSources extends React.Component<AllSourcesProps, AllSourcesState> {
 
   render() {
     return (
-      <div
-        className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col mt-6 w-full dark:bg-gray-825"
-      >
+      <div className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col mt-6 w-full dark:bg-gray-825">
         {this.renderContent()}
       </div>
     )
@@ -150,16 +187,38 @@ class AllSources extends React.Component<AllSourcesProps, AllSourcesState> {
 }
 
 const UTM_TAGS = {
-  utm_medium: { label: 'UTM Medium', shortLabel: 'UTM Medium', endpoint: 'utm_mediums' },
-  utm_source: { label: 'UTM Source', shortLabel: 'UTM Source', endpoint: 'utm_sources' },
-  utm_campaign: { label: 'UTM Campaign', shortLabel: 'UTM Campai', endpoint: 'utm_campaigns' },
-  utm_content: { label: 'UTM Content', shortLabel: 'UTM Conten', endpoint: 'utm_contents' },
-  utm_term: { label: 'UTM Term', shortLabel: 'UTM Term', endpoint: 'utm_terms' },
+  utm_medium: {
+    label: 'UTM Medium',
+    shortLabel: 'UTM Medium',
+    endpoint: 'utm_mediums'
+  },
+  utm_source: {
+    label: 'UTM Source',
+    shortLabel: 'UTM Source',
+    endpoint: 'utm_sources'
+  },
+  utm_campaign: {
+    label: 'UTM Campaign',
+    shortLabel: 'UTM Campai',
+    endpoint: 'utm_campaigns'
+  },
+  utm_content: {
+    label: 'UTM Content',
+    shortLabel: 'UTM Conten',
+    endpoint: 'utm_contents'
+  },
+  utm_term: { label: 'UTM Term', shortLabel: 'UTM Term', endpoint: 'utm_terms' }
 }
 
-
-type UTMSourcesProps = { timer?:TimerType, query?: QueryType, tab?: string; site?: SiteType, renderTabs?:()=>JSX.Element; setTab?:()=>void; }
-type UTMSourcesState = { loading?: boolean; referrers?: ReferrersType;}
+type UTMSourcesProps = {
+  timer?: TimerType
+  query?: QueryType
+  tab?: string
+  site?: SiteType
+  renderTabs?: () => JSX.Element
+  setTab?: () => void
+}
+type UTMSourcesState = { loading?: boolean; referrers?: ReferrersType }
 
 class UTMSources extends React.Component<UTMSourcesProps, UTMSourcesState> {
   constructor(props: UTMSourcesProps) {
@@ -169,11 +228,15 @@ class UTMSources extends React.Component<UTMSourcesProps, UTMSourcesState> {
 
   componentDidMount() {
     this.fetchReferrers()
-    if (this.props.timer) this.props.timer.onTick(this.fetchReferrers.bind(this))
+    if (this.props.timer)
+      this.props.timer.onTick(this.fetchReferrers.bind(this))
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.query !== prevProps.query || this.props.tab !== prevProps.tab) {
+    if (
+      this.props.query !== prevProps.query ||
+      this.props.tab !== prevProps.tab
+    ) {
       this.setState({ loading: true, referrers: null })
       this.fetchReferrers()
     }
@@ -189,12 +252,17 @@ class UTMSources extends React.Component<UTMSourcesProps, UTMSourcesState> {
 
   fetchReferrers() {
     const endpoint = UTM_TAGS[this.props.tab].endpoint
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/${endpoint}`, this.props.query, { show_noref: this.showNoRef() })
+    api
+      .get(
+        `/api/stats/${encodeURIComponent(this.props.site.domain)}/${endpoint}`,
+        this.props.query,
+        { show_noref: this.showNoRef() }
+      )
       .then((res) => this.setState({ loading: false, referrers: res }))
   }
 
   renderReferrer(referrer) {
-    const maxWidthDeduction = this.showConversionRate() ? "10rem" : "5rem"
+    const maxWidthDeduction = this.showConversionRate() ? '10rem' : '5rem'
 
     return (
       <div
@@ -207,7 +275,6 @@ class UTMSources extends React.Component<UTMSourcesProps, UTMSourcesState> {
           bg="bg-blue-50 dark:bg-gray-500 dark:bg-opacity-15"
           maxWidthDeduction={maxWidthDeduction}
         >
-
           <span className="flex px-2 py-1.5 dark:text-gray-300 relative z-9 break-all">
             <Link
               className="md:truncate block hover:underline"
@@ -218,8 +285,17 @@ class UTMSources extends React.Component<UTMSourcesProps, UTMSourcesState> {
           </span>
         </Bar>
         {/* @ts-ignore */}
-        <span className="font-medium dark:text-gray-200 w-20 text-right" tooltip={referrer.visitors}>{numberFormatter(referrer.visitors)}</span>
-        {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
+        <span
+          className="font-medium dark:text-gray-200 w-20 text-right"
+          tooltip={referrer.visitors}
+        >
+          {numberFormatter(referrer.visitors)}
+        </span>
+        {this.showConversionRate() && (
+          <span className="font-medium dark:text-gray-200 w-20 text-right">
+            {referrer.conversion_rate}%
+          </span>
+        )}
       </div>
     )
   }
@@ -244,7 +320,9 @@ class UTMSources extends React.Component<UTMSourcesProps, UTMSourcesState> {
             <span>{UTM_TAGS[this.props.tab].label}</span>
             <div className="text-right">
               <span className="inline-block w-20">{this.label()}</span>
-              {this.showConversionRate() && <span className="inline-block w-20">CR</span>}
+              {this.showConversionRate() && (
+                <span className="inline-block w-20">CR</span>
+              )}
             </div>
           </div>
 
@@ -254,11 +332,19 @@ class UTMSources extends React.Component<UTMSourcesProps, UTMSourcesState> {
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
           {/* @ts-ignore */}
-          <MoreLink site={this.props.site} list={this.state.referrers} endpoint={UTM_TAGS[this.props.tab].endpoint} />
+          <MoreLink
+            site={this.props.site}
+            list={this.state.referrers}
+            endpoint={UTM_TAGS[this.props.tab].endpoint}
+          />
         </div>
       )
     } else {
-      return <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">No data yet</div>
+      return (
+        <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">
+          No data yet
+        </div>
+      )
     }
   }
 
@@ -269,7 +355,11 @@ class UTMSources extends React.Component<UTMSourcesProps, UTMSourcesState> {
           <h3 className="font-bold dark:text-gray-100">Top Sources</h3>
           {this.props.renderTabs()}
         </div>
-        {this.state.loading && <div className="mx-auto loading mt-44"><div></div></div>}
+        {this.state.loading && (
+          <div className="mx-auto loading mt-44">
+            <div></div>
+          </div>
+        )}
         <FadeIn show={!this.state.loading} className="flex flex-col flex-grow">
           {this.renderList()}
         </FadeIn>
@@ -279,9 +369,7 @@ class UTMSources extends React.Component<UTMSourcesProps, UTMSourcesState> {
 
   render() {
     return (
-      <div
-        className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col dark:bg-gray-825 mt-6 w-full"
-      >
+      <div className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col dark:bg-gray-825 mt-6 w-full">
         {this.renderContent()}
       </div>
     )
@@ -293,11 +381,14 @@ import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/solid'
 import classNames from 'classnames'
 
-type SourceListProps = { site? : SiteType }
-type SourceListState = { tab?: string}
+type SourceListProps = { site?: SiteType }
+type SourceListState = { tab?: string }
 
-export default class SourceList extends React.Component<SourceListProps,SourceListState> {
-  constructor(props:SourceListProps) {
+export default class SourceList extends React.Component<
+  SourceListProps,
+  SourceListState
+> {
+  constructor(props: SourceListProps) {
     super(props)
     // @ts-ignore
     this.tabKey = 'sourceTab__' + props.site.domain
@@ -317,20 +408,45 @@ export default class SourceList extends React.Component<SourceListProps,SourceLi
   }
 
   renderTabs() {
-    const activeClass = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading truncate text-left'
-    const defaultClass = 'hover:text-indigo-600 cursor-pointer truncate text-left'
-    const dropdownOptions = ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content']
-    let buttonText = UTM_TAGS[this.state.tab] ? UTM_TAGS[this.state.tab].label : 'Campaigns'
+    const activeClass =
+      'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading truncate text-left'
+    const defaultClass =
+      'hover:text-indigo-600 cursor-pointer truncate text-left'
+    const dropdownOptions = [
+      'utm_medium',
+      'utm_source',
+      'utm_campaign',
+      'utm_term',
+      'utm_content'
+    ]
+    let buttonText = UTM_TAGS[this.state.tab]
+      ? UTM_TAGS[this.state.tab].label
+      : 'Campaigns'
 
     return (
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
-        <div className={this.state.tab === 'all' ? activeClass : defaultClass} onClick={this.setTab('all')}>All</div>
+        <div
+          className={this.state.tab === 'all' ? activeClass : defaultClass}
+          onClick={this.setTab('all')}
+        >
+          All
+        </div>
 
         <Menu as="div" className="relative inline-block text-left">
           <div>
             <Menu.Button className="inline-flex justify-between focus:outline-none">
-              <span style={{ width: '4.2rem' }} className={this.state.tab.startsWith('utm_') ? activeClass : defaultClass}>{buttonText}</span>
-              <ChevronDownIcon className="-mr-1 ml-px h-4 w-4" aria-hidden="true" />
+              <span
+                style={{ width: '4.2rem' }}
+                className={
+                  this.state.tab.startsWith('utm_') ? activeClass : defaultClass
+                }
+              >
+                {buttonText}
+              </span>
+              <ChevronDownIcon
+                className="-mr-1 ml-px h-4 w-4"
+                aria-hidden="true"
+              />
             </Menu.Button>
           </div>
 
@@ -352,7 +468,9 @@ export default class SourceList extends React.Component<SourceListProps,SourceLi
                         <span
                           onClick={this.setTab(option)}
                           className={classNames(
-                            active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer' : 'text-gray-700 dark:text-gray-200',
+                            active
+                              ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer'
+                              : 'text-gray-700 dark:text-gray-200',
                             'block px-4 py-2 text-sm',
                             this.state.tab === option ? 'font-bold' : ''
                           )}
@@ -373,17 +491,59 @@ export default class SourceList extends React.Component<SourceListProps,SourceLi
 
   render() {
     if (this.state.tab === 'all') {
-      return <AllSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
+      return (
+        <AllSources
+          tab={this.state.tab}
+          setTab={this.setTab.bind(this)}
+          renderTabs={this.renderTabs.bind(this)}
+          {...this.props}
+        />
+      )
     } else if (this.state.tab === 'utm_medium') {
-      return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
+      return (
+        <UTMSources
+          tab={this.state.tab}
+          setTab={this.setTab.bind(this)}
+          renderTabs={this.renderTabs.bind(this)}
+          {...this.props}
+        />
+      )
     } else if (this.state.tab === 'utm_source') {
-      return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
+      return (
+        <UTMSources
+          tab={this.state.tab}
+          setTab={this.setTab.bind(this)}
+          renderTabs={this.renderTabs.bind(this)}
+          {...this.props}
+        />
+      )
     } else if (this.state.tab === 'utm_campaign') {
-      return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
+      return (
+        <UTMSources
+          tab={this.state.tab}
+          setTab={this.setTab.bind(this)}
+          renderTabs={this.renderTabs.bind(this)}
+          {...this.props}
+        />
+      )
     } else if (this.state.tab === 'utm_content') {
-      return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
+      return (
+        <UTMSources
+          tab={this.state.tab}
+          setTab={this.setTab.bind(this)}
+          renderTabs={this.renderTabs.bind(this)}
+          {...this.props}
+        />
+      )
     } else if (this.state.tab === 'utm_term') {
-      return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
+      return (
+        <UTMSources
+          tab={this.state.tab}
+          setTab={this.setTab.bind(this)}
+          renderTabs={this.renderTabs.bind(this)}
+          {...this.props}
+        />
+      )
     }
   }
 }

@@ -1,11 +1,11 @@
-import React from 'react';
+import React from 'react'
 import { withRouter } from 'react-router-dom'
 
 import Historical from './historical'
 import Realtime from './realtime'
-import {parseQuery} from './query'
+import { parseQuery } from './query'
 import * as api from './api'
-import { withComparisonProvider } from './comparison-provider-hoc';
+import { withComparisonProvider } from './comparison-provider-hoc'
 
 const THIRTY_SECONDS = 30000
 
@@ -38,15 +38,33 @@ class Dashboard extends React.Component {
   componentDidUpdate(prevProps) {
     if (prevProps.location.search !== this.props.location.search) {
       api.cancelAll()
-      this.setState({query: parseQuery(this.props.location.search, this.props.site)})
+      this.setState({
+        query: parseQuery(this.props.location.search, this.props.site)
+      })
     }
   }
 
   render() {
     if (this.state.query.period === 'realtime') {
-      return <Realtime timer={this.state.timer} site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} query={this.state.query} />
+      return (
+        <Realtime
+          timer={this.state.timer}
+          site={this.props.site}
+          loggedIn={this.props.loggedIn}
+          currentUserRole={this.props.currentUserRole}
+          query={this.state.query}
+        />
+      )
     } else {
-      return <Historical timer={this.state.timer} site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} query={this.state.query} />
+      return (
+        <Historical
+          timer={this.state.timer}
+          site={this.props.site}
+          loggedIn={this.props.loggedIn}
+          currentUserRole={this.props.currentUserRole}
+          query={this.state.query}
+        />
+      )
     }
   }
 }

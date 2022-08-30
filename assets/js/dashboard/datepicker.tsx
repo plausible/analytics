@@ -1,6 +1,6 @@
-import React, { Fragment } from "react";
-import { withRouter } from "react-router-dom";
-import Flatpickr from "react-flatpickr";
+import React, { Fragment } from 'react'
+import { withRouter } from 'react-router-dom'
+import Flatpickr from 'react-flatpickr'
 import { ChevronDownIcon } from '@heroicons/react/solid'
 import { Transition } from '@headlessui/react'
 import {
@@ -19,30 +19,30 @@ import {
   isThisYear,
   parseUTCDate,
   isBefore,
-  isAfter,
-} from "./util/date";
-import { navigateToQuery, QueryLink, QueryButton } from "./query";
+  isAfter
+} from './util/date'
+import { navigateToQuery, QueryLink, QueryButton } from './query'
 
 function renderArrow(query, site, period, prevDate, nextDate) {
-  const insertionDate = parseUTCDate(site.statsBegin);
-  const disabledLeft = isBefore(
-    parseUTCDate(prevDate),
-    insertionDate,
-    period
-  );
+  const insertionDate = parseUTCDate(site.statsBegin)
+  const disabledLeft = isBefore(parseUTCDate(prevDate), insertionDate, period)
   const disabledRight = isAfter(
     parseUTCDate(nextDate),
     nowForSite(site),
     period
-  );
+  )
 
   const leftClasses = `flex items-center px-1 sm:px-2 border-r border-gray-300 rounded-l
       dark:border-gray-500 dark:text-gray-100 ${
-      disabledLeft ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
-    }`;
+        disabledLeft
+          ? 'bg-gray-300 dark:bg-gray-950'
+          : 'hover:bg-gray-100 dark:hover:bg-gray-900'
+      }`
   const rightClasses = `flex items-center px-1 sm:px-2 rounded-r dark:text-gray-100 ${
-      disabledRight ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
-    }`;
+    disabledRight
+      ? 'bg-gray-300 dark:bg-gray-950'
+      : 'hover:bg-gray-100 dark:hover:bg-gray-900'
+  }`
   return (
     <div className="flex rounded shadow bg-white mr-2 sm:mr-4 cursor-pointer dark:bg-gray-800">
       <QueryButton
@@ -84,25 +84,25 @@ function renderArrow(query, site, period, prevDate, nextDate) {
         </svg>
       </QueryButton>
     </div>
-  );
+  )
 }
 
-function DatePickerArrows({site, query}) {
-  if (query.period === "year") {
-    const prevDate = formatISO(shiftMonths(query.date, -12));
-    const nextDate = formatISO(shiftMonths(query.date, 12));
+function DatePickerArrows({ site, query }) {
+  if (query.period === 'year') {
+    const prevDate = formatISO(shiftMonths(query.date, -12))
+    const nextDate = formatISO(shiftMonths(query.date, 12))
 
-    return renderArrow(query, site, "year", prevDate, nextDate);
-  } else if (query.period === "month") {
-    const prevDate = formatISO(shiftMonths(query.date, -1));
-    const nextDate = formatISO(shiftMonths(query.date, 1));
+    return renderArrow(query, site, 'year', prevDate, nextDate)
+  } else if (query.period === 'month') {
+    const prevDate = formatISO(shiftMonths(query.date, -1))
+    const nextDate = formatISO(shiftMonths(query.date, 1))
 
-    return renderArrow(query, site, "month", prevDate, nextDate);
-  } else if (query.period === "day") {
-    const prevDate = formatISO(shiftDays(query.date, -1));
-    const nextDate = formatISO(shiftDays(query.date, 1));
+    return renderArrow(query, site, 'month', prevDate, nextDate)
+  } else if (query.period === 'day') {
+    const prevDate = formatISO(shiftDays(query.date, -1))
+    const nextDate = formatISO(shiftDays(query.date, 1))
 
-    return renderArrow(query, site, "day", prevDate, nextDate);
+    return renderArrow(query, site, 'day', prevDate, nextDate)
   }
 
   return null
@@ -110,214 +110,259 @@ function DatePickerArrows({site, query}) {
 
 class DatePicker extends React.Component {
   constructor(props) {
-    super(props);
-    this.handleKeydown = this.handleKeydown.bind(this);
-    this.handleClick = this.handleClick.bind(this);
-    this.setCustomDate = this.setCustomDate.bind(this);
-    this.openCalendar = this.openCalendar.bind(this);
-    this.close = this.close.bind(this);
-    this.toggle = this.toggle.bind(this);
-    this.state = { mode: "menu", open: false };
+    super(props)
+    this.handleKeydown = this.handleKeydown.bind(this)
+    this.handleClick = this.handleClick.bind(this)
+    this.setCustomDate = this.setCustomDate.bind(this)
+    this.openCalendar = this.openCalendar.bind(this)
+    this.close = this.close.bind(this)
+    this.toggle = this.toggle.bind(this)
+    this.state = { mode: 'menu', open: false }
   }
 
   componentDidMount() {
-    document.addEventListener("keydown", this.handleKeydown);
-    document.addEventListener("mousedown", this.handleClick, false);
+    document.addEventListener('keydown', this.handleKeydown)
+    document.addEventListener('mousedown', this.handleClick, false)
   }
 
   componentWillUnmount() {
-    document.removeEventListener("keydown", this.handleKeydown);
-    document.removeEventListener("mousedown", this.handleClick, false);
+    document.removeEventListener('keydown', this.handleKeydown)
+    document.removeEventListener('mousedown', this.handleClick, false)
   }
 
   handleKeydown(e) {
-    const { query, history } = this.props;
+    const { query, history } = this.props
 
-    if (e.target.tagName === 'INPUT') return true;
-    if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.keyCode === 229) return true;
+    if (e.target.tagName === 'INPUT') return true
+    if (
+      e.ctrlKey ||
+      e.metaKey ||
+      e.altKey ||
+      e.isComposing ||
+      e.keyCode === 229
+    )
+      return true
 
     const newSearch = {
       period: false,
       from: false,
       to: false,
-      date: false,
-    };
+      date: false
+    }
 
-    const insertionDate = parseUTCDate(this.props.site.statsBegin);
+    const insertionDate = parseUTCDate(this.props.site.statsBegin)
 
-    if (e.key === "ArrowLeft") {
-      const prevDate = formatISO(shiftDays(query.date, -1));
-      const prevMonth = formatISO(shiftMonths(query.date, -1));
-      const prevYear = formatISO(shiftMonths(query.date, -12));
+    if (e.key === 'ArrowLeft') {
+      const prevDate = formatISO(shiftDays(query.date, -1))
+      const prevMonth = formatISO(shiftMonths(query.date, -1))
+      const prevYear = formatISO(shiftMonths(query.date, -12))
 
-      if (query.period === "day" && !isBefore(parseUTCDate(prevDate), insertionDate, query.period)) {
-        newSearch.period = "day";
-        newSearch.date = prevDate;
-      } else if (query.period === "month" && !isBefore(parseUTCDate(prevMonth), insertionDate, query.period)) {
-        newSearch.period = "month";
-        newSearch.date = prevMonth;
-      } else if (query.period === "year" && !isBefore(parseUTCDate(prevYear), insertionDate, query.period)) {
-        newSearch.period = "year";
-        newSearch.date = prevYear;
+      if (
+        query.period === 'day' &&
+        !isBefore(parseUTCDate(prevDate), insertionDate, query.period)
+      ) {
+        newSearch.period = 'day'
+        newSearch.date = prevDate
+      } else if (
+        query.period === 'month' &&
+        !isBefore(parseUTCDate(prevMonth), insertionDate, query.period)
+      ) {
+        newSearch.period = 'month'
+        newSearch.date = prevMonth
+      } else if (
+        query.period === 'year' &&
+        !isBefore(parseUTCDate(prevYear), insertionDate, query.period)
+      ) {
+        newSearch.period = 'year'
+        newSearch.date = prevYear
       }
-    } else if (e.key === "ArrowRight") {
+    } else if (e.key === 'ArrowRight') {
       const now = nowForSite(this.props.site)
-      const nextDate = formatISO(shiftDays(query.date, 1));
-      const nextMonth = formatISO(shiftMonths(query.date, 1));
-      const nextYear = formatISO(shiftMonths(query.date, 12));
+      const nextDate = formatISO(shiftDays(query.date, 1))
+      const nextMonth = formatISO(shiftMonths(query.date, 1))
+      const nextYear = formatISO(shiftMonths(query.date, 12))
 
-      if (query.period === "day" && !isAfter(parseUTCDate(nextDate), now, query.period)) {
-        newSearch.period = "day";
-        newSearch.date = nextDate;
-      } else if (query.period === "month" && !isAfter(parseUTCDate(nextMonth), now, query.period)) {
-        newSearch.period = "month";
-        newSearch.date = nextMonth;
-      } else if (query.period === "year" && !isAfter(parseUTCDate(nextYear), now, query.period)) {
-        newSearch.period = "year";
-        newSearch.date = nextYear;
+      if (
+        query.period === 'day' &&
+        !isAfter(parseUTCDate(nextDate), now, query.period)
+      ) {
+        newSearch.period = 'day'
+        newSearch.date = nextDate
+      } else if (
+        query.period === 'month' &&
+        !isAfter(parseUTCDate(nextMonth), now, query.period)
+      ) {
+        newSearch.period = 'month'
+        newSearch.date = nextMonth
+      } else if (
+        query.period === 'year' &&
+        !isAfter(parseUTCDate(nextYear), now, query.period)
+      ) {
+        newSearch.period = 'year'
+        newSearch.date = nextYear
       }
     }
 
-    this.setState({open: false});
+    this.setState({ open: false })
 
-    const keys = ['d', 'e', 'r', 'w', 'm', 'y', 't', 's', 'l', 'a'];
-    const redirects = [{date: false, period: 'day'}, {date: formatISO(shiftDays(nowForSite(this.props.site), -1)), period: 'day'}, {period: 'realtime'}, {date: false, period: '7d'}, {date: false, period: 'month'}, {date: false, period: 'year'}, {date: false, period: '30d'}, {date: false, period: '6mo'}, {date: false, period: '12mo'}, {date: false, period: 'all'}];
+    const keys = ['d', 'e', 'r', 'w', 'm', 'y', 't', 's', 'l', 'a']
+    const redirects = [
+      { date: false, period: 'day' },
+      {
+        date: formatISO(shiftDays(nowForSite(this.props.site), -1)),
+        period: 'day'
+      },
+      { period: 'realtime' },
+      { date: false, period: '7d' },
+      { date: false, period: 'month' },
+      { date: false, period: 'year' },
+      { date: false, period: '30d' },
+      { date: false, period: '6mo' },
+      { date: false, period: '12mo' },
+      { date: false, period: 'all' }
+    ]
 
     if (keys.includes(e.key.toLowerCase())) {
-      navigateToQuery(history, query, {...newSearch, ...(redirects[keys.indexOf(e.key.toLowerCase())])});
+      navigateToQuery(history, query, {
+        ...newSearch,
+        ...redirects[keys.indexOf(e.key.toLowerCase())]
+      })
     } else if (e.key.toLowerCase() === 'c') {
-      this.setState({mode: 'calendar', open: true}, this.openCalendar);
+      this.setState({ mode: 'calendar', open: true }, this.openCalendar)
     } else if (newSearch.date) {
-      navigateToQuery(history, query, newSearch);
+      navigateToQuery(history, query, newSearch)
     }
   }
 
   handleClick(e) {
-    if (this.dropDownNode && this.dropDownNode.contains(e.target)) return;
+    if (this.dropDownNode && this.dropDownNode.contains(e.target)) return
 
-    this.setState({ open: false });
+    this.setState({ open: false })
   }
 
   setCustomDate(dates) {
     if (dates.length === 2) {
       const [from, to] = dates
       if (formatISO(from) === formatISO(to)) {
-        navigateToQuery(
-          this.props.history,
-          this.props.query,
-          {
-            period: 'day',
-            date: formatISO(from),
-            from: false,
-            to: false,
-          }
-        )
+        navigateToQuery(this.props.history, this.props.query, {
+          period: 'day',
+          date: formatISO(from),
+          from: false,
+          to: false
+        })
       } else {
-        navigateToQuery(
-          this.props.history,
-          this.props.query,
-          {
-            period: 'custom',
-            date: false,
-            from: formatISO(from),
-            to: formatISO(to),
-          }
-        )
+        navigateToQuery(this.props.history, this.props.query, {
+          period: 'custom',
+          date: false,
+          from: formatISO(from),
+          to: formatISO(to)
+        })
       }
       this.close()
     }
   }
 
   timeFrameText() {
-    const { query, site } = this.props;
+    const { query, site } = this.props
 
-    if (query.period === "day") {
+    if (query.period === 'day') {
       if (isToday(site, query.date)) {
-        return "Today";
+        return 'Today'
       }
-      return formatDay(query.date);
-    } if (query.period === '7d') {
+      return formatDay(query.date)
+    }
+    if (query.period === '7d') {
       return 'Last 7 days'
-    } if (query.period === '30d') {
+    }
+    if (query.period === '30d') {
       return 'Last 30 days'
-    } if (query.period === 'month') {
+    }
+    if (query.period === 'month') {
       if (isThisMonth(site, query.date)) {
         return 'Month to Date'
       }
       return formatMonthYYYY(query.date)
-    } if (query.period === '6mo') {
+    }
+    if (query.period === '6mo') {
       return 'Last 6 months'
-    } if (query.period === '12mo') {
+    }
+    if (query.period === '12mo') {
       return 'Last 12 months'
-    } if (query.period === 'year') {
+    }
+    if (query.period === 'year') {
       if (isThisYear(site, query.date)) {
         return 'Year to Date'
       }
       return formatYear(query.date)
-    } if (query.period === 'all') {
+    }
+    if (query.period === 'all') {
       return 'All time'
-    } if (query.period === 'custom') {
+    }
+    if (query.period === 'custom') {
       return `${formatDayShort(query.from)} - ${formatDayShort(query.to)}`
     }
     return 'Realtime'
   }
 
   toggle() {
-    const newMode = this.state.mode === 'calendar' && !this.state.open ? 'menu' : this.state.mode
-    this.setState(prevState => ({ mode: newMode, open: !prevState.open }));
+    const newMode =
+      this.state.mode === 'calendar' && !this.state.open
+        ? 'menu'
+        : this.state.mode
+    this.setState((prevState) => ({ mode: newMode, open: !prevState.open }))
   }
 
   close() {
-    this.setState({ open: false });
+    this.setState({ open: false })
   }
 
   openCalendar() {
-    this.calendar && this.calendar.flatpickr.open();
+    this.calendar && this.calendar.flatpickr.open()
   }
 
   renderLink(period, text, opts = {}) {
-    const { query, site } = this.props;
-    let boldClass;
-    if (query.period === "day" && period === "day") {
-      boldClass = isToday(site, query.date) ? "font-bold" : "";
-    } else if (query.period === "month" && period === "month") {
-      const linkDate = opts.date || nowForSite(site);
-      boldClass = isSameMonth(linkDate, query.date) ? "font-bold" : "";
+    const { query, site } = this.props
+    let boldClass
+    if (query.period === 'day' && period === 'day') {
+      boldClass = isToday(site, query.date) ? 'font-bold' : ''
+    } else if (query.period === 'month' && period === 'month') {
+      const linkDate = opts.date || nowForSite(site)
+      boldClass = isSameMonth(linkDate, query.date) ? 'font-bold' : ''
     } else {
-      boldClass = query.period === period ? "font-bold" : "";
+      boldClass = query.period === period ? 'font-bold' : ''
     }
 
-    opts.date = opts.date ? formatISO(opts.date) : false;
+    opts.date = opts.date ? formatISO(opts.date) : false
 
     const keybinds = {
-      'Today': 'D',
-      'Realtime': 'R',
+      Today: 'D',
+      Realtime: 'R',
       'Last 7 days': 'W',
       'Month to Date': 'M',
       'Year to Date': 'Y',
       'Last 12 months': 'L',
       'Last 30 days': 'T',
-      'All time': 'A',
-    };
+      'All time': 'A'
+    }
 
     return (
       <QueryLink
-        to={{from: false, to: false, period, ...opts}}
+        to={{ from: false, to: false, period, ...opts }}
         onClick={this.close}
         query={this.props.query}
-        className={`${boldClass  } px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900
+        className={`${boldClass} px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900
           dark:hover:bg-gray-900 dark:hover:text-gray-100 flex items-center justify-between`}
       >
         {text}
-        <span className='font-normal'>{keybinds[text]}</span>
+        <span className="font-normal">{keybinds[text]}</span>
       </QueryLink>
-    );
+    )
   }
 
   renderDropDownContent() {
     const { site } = this.props
 
-    if (this.state.mode === "menu") {
+    if (this.state.mode === 'menu') {
       return (
         <div
           id="datemenu"
@@ -328,26 +373,32 @@ class DatePicker extends React.Component {
             font-medium text-gray-800 dark:text-gray-200 date-options"
           >
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              {this.renderLink("day", "Today")}
-              {this.renderLink("realtime", "Realtime")}
+              {this.renderLink('day', 'Today')}
+              {this.renderLink('realtime', 'Realtime')}
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              {this.renderLink("7d", "Last 7 days")}
-              {this.renderLink("30d", "Last 30 days")}
+              {this.renderLink('7d', 'Last 7 days')}
+              {this.renderLink('30d', 'Last 30 days')}
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              { this.renderLink('month', 'Month to Date') }
-              { this.renderLink('month', 'Last month', {date: lastMonth(site)}) }
+              {this.renderLink('month', 'Month to Date')}
+              {this.renderLink('month', 'Last month', {
+                date: lastMonth(site)
+              })}
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              {this.renderLink("year", "Year to Date")}
-              {this.renderLink("12mo", "Last 12 months")}
+              {this.renderLink('year', 'Year to Date')}
+              {this.renderLink('12mo', 'Last 12 months')}
             </div>
             <div className="py-1 date-option-group">
-              {this.renderLink("all", "All time")}
+              {this.renderLink('all', 'All time')}
               <span
-                onClick={() => this.setState({mode: 'calendar'}, this.openCalendar)}
-                onKeyPress={() => this.setState({mode: 'calendar'}, this.openCalendar)}
+                onClick={() =>
+                  this.setState({ mode: 'calendar' }, this.openCalendar)
+                }
+                onKeyPress={() =>
+                  this.setState({ mode: 'calendar' }, this.openCalendar)
+                }
                 className="px-4 py-2 text-sm leading-tight hover:bg-gray-100
                   dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100
                   cursor-pointer flex items-center justify-between"
@@ -358,15 +409,16 @@ class DatePicker extends React.Component {
                 aria-controls="calendar"
               >
                 Custom range
-                <span className='font-normal'>C</span>
+                <span className="font-normal">C</span>
               </span>
             </div>
           </div>
         </div>
-      );
-    } if (this.state.mode === "calendar") {
-      const insertionDate = new Date(this.props.site.statsBegin);
-      const dayBeforeCreation = insertionDate - 86400000;
+      )
+    }
+    if (this.state.mode === 'calendar') {
+      const insertionDate = new Date(this.props.site.statsBegin)
+      const dayBeforeCreation = insertionDate - 86400000
       return (
         <div className="h-0">
           <Flatpickr
@@ -377,13 +429,14 @@ class DatePicker extends React.Component {
               minDate: dayBeforeCreation,
               showMonths: 1,
               static: true,
-              animate: true}}
-            ref={calendar => this.calendar = calendar}
+              animate: true
+            }}
+            ref={(calendar) => (this.calendar = calendar)}
             className="invisible"
             onChange={this.setCustomDate}
           />
         </div>
-        )
+      )
     }
   }
 
@@ -425,7 +478,7 @@ class DatePicker extends React.Component {
           {this.renderDropDownContent()}
         </Transition>
       </div>
-    );
+    )
   }
 
   render() {
@@ -438,4 +491,4 @@ class DatePicker extends React.Component {
   }
 }
 
-export default withRouter(DatePicker);
+export default withRouter(DatePicker)

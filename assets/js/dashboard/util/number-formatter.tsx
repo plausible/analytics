@@ -12,21 +12,21 @@ export default function numberFormatter(num) {
     if (thousands === Math.floor(thousands) || num >= HUNDRED_THOUSAND) {
       return Math.floor(thousands) + 'k'
     } else {
-      return (Math.floor(thousands * 10) / 10) + 'k'
+      return Math.floor(thousands * 10) / 10 + 'k'
     }
   } else if (num >= MILLION && num < BILLION) {
     const millions = num / MILLION
     if (millions === Math.floor(millions) || num >= HUNDRED_MILLION) {
       return Math.floor(millions) + 'M'
     } else {
-      return (Math.floor(millions * 10) / 10) + 'M'
+      return Math.floor(millions * 10) / 10 + 'M'
     }
   } else if (num >= BILLION && num < TRILLION) {
     const billions = num / BILLION
     if (billions === Math.floor(billions) || num >= HUNDRED_BILLION) {
       return Math.floor(billions) + 'B'
     } else {
-      return (Math.floor(billions * 10) / 10) + 'B'
+      return Math.floor(billions * 10) / 10 + 'B'
     }
   } else {
     return num
@@ -34,13 +34,13 @@ export default function numberFormatter(num) {
 }
 
 function pad(num, size) {
-  return ('000' + num).slice(size * -1);
+  return ('000' + num).slice(size * -1)
 }
 
 export function durationFormatter(duration) {
   const hours = Math.floor(duration / 60 / 60)
   const minutes = Math.floor(duration / 60) % 60
-  const seconds = Math.floor(duration - (minutes * 60) - (hours * 60 * 60))
+  const seconds = Math.floor(duration - minutes * 60 - hours * 60 * 60)
   if (hours > 0) {
     return `${hours}h ${minutes}m ${seconds}s`
   } else if (minutes > 0) {

@@ -1,10 +1,10 @@
-import React from "react";
+import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter from '../../util/number-formatter'
-import {parseQuery, toHuman} from '../../query'
+import { parseQuery, toHuman } from '../../query'
 import RocketIcon from './rocket-icon'
 
 class GoogleKeywordsModal extends React.Component {
@@ -18,33 +18,52 @@ class GoogleKeywordsModal extends React.Component {
 
   componentDidMount() {
     if (this.state.query.filters.goal) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers/Google`, this.state.query, {limit: 100})
-        .then((res) => this.setState({
-          loading: false,
-          searchTerms: res.search_terms,
-          totalVisitors: res.total_visitors,
-          notConfigured: res.not_configured,
-          isOwner: res.is_owner
-        }))
+      api
+        .get(
+          `/api/stats/${encodeURIComponent(
+            this.props.site.domain
+          )}/goal/referrers/Google`,
+          this.state.query,
+          { limit: 100 }
+        )
+        .then((res) =>
+          this.setState({
+            loading: false,
+            searchTerms: res.search_terms,
+            totalVisitors: res.total_visitors,
+            notConfigured: res.not_configured,
+            isOwner: res.is_owner
+          })
+        )
     } else {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/Google`, this.state.query, {limit: 100})
-        .then((res) => this.setState({
-          loading: false,
-          searchTerms: res.search_terms,
-          totalVisitors: res.total_visitors,
-          notConfigured: res.not_configured,
-          isOwner: res.is_owner
-        }))
+      api
+        .get(
+          `/api/stats/${encodeURIComponent(
+            this.props.site.domain
+          )}/referrers/Google`,
+          this.state.query,
+          { limit: 100 }
+        )
+        .then((res) =>
+          this.setState({
+            loading: false,
+            searchTerms: res.search_terms,
+            totalVisitors: res.total_visitors,
+            notConfigured: res.not_configured,
+            isOwner: res.is_owner
+          })
+        )
     }
   }
 
   renderTerm(term) {
     return (
       <React.Fragment key={term.name}>
-
         <tr className="text-sm dark:text-gray-200" key={term.name}>
           <td className="p-2 truncate">{term.name}</td>
-          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(term.visitors)}</td>
+          <td className="p-2 w-32 font-medium" align="right">
+            {numberFormatter(term.visitors)}
+          </td>
         </tr>
       </React.Fragment>
     )
@@ -55,7 +74,10 @@ class GoogleKeywordsModal extends React.Component {
       return (
         <div className="text-center text-gray-700 dark:text-gray-300 mt-6">
           <RocketIcon />
-          <div className="text-lg">Sorry, we cannot show which keywords converted best for goal <b>{this.state.query.filters.goal}</b></div>
+          <div className="text-lg">
+            Sorry, we cannot show which keywords converted best for goal{' '}
+            <b>{this.state.query.filters.goal}</b>
+          </div>
           <div className="text-lg">Google does not share this information</div>
         </div>
       )
@@ -64,16 +86,29 @@ class GoogleKeywordsModal extends React.Component {
         return (
           <div className="text-center text-gray-700 dark:text-gray-300 mt-6">
             <RocketIcon />
-            <div className="text-lg">The site is not connected to Google Search Keywords</div>
-            <div className="text-lg">Configure the integration to view search terms</div>
-            <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/search-console`} className="button mt-4">Connect with Google</a>
+            <div className="text-lg">
+              The site is not connected to Google Search Keywords
+            </div>
+            <div className="text-lg">
+              Configure the integration to view search terms
+            </div>
+            <a
+              href={`/${encodeURIComponent(
+                this.props.site.domain
+              )}/settings/search-console`}
+              className="button mt-4"
+            >
+              Connect with Google
+            </a>
           </div>
         )
       } else {
         return (
           <div className="text-center text-gray-700 dark:text-gray-300 mt-6">
             <RocketIcon />
-            <div className="text-lg">The site is not connected to Google Search Kewyords</div>
+            <div className="text-lg">
+              The site is not connected to Google Search Kewyords
+            </div>
             <div className="text-lg">Cannot show search terms</div>
           </div>
         )
@@ -83,8 +118,18 @@ class GoogleKeywordsModal extends React.Component {
         <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
           <thead>
             <tr>
-              <th className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Search Term</th>
-              <th className="p-2 w-32 lg:w-1/2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visitors</th>
+              <th
+                className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                align="left"
+              >
+                Search Term
+              </th>
+              <th
+                className="p-2 w-32 lg:w-1/2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                align="right"
+              >
+                Visitors
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -96,7 +141,9 @@ class GoogleKeywordsModal extends React.Component {
       return (
         <div className="text-center text-gray-700 dark:text-gray-300 mt-6">
           <RocketIcon />
-          <div className="text-lg">Could not find any search terms for this period</div>
+          <div className="text-lg">
+            Could not find any search terms for this period
+          </div>
         </div>
       )
     }
@@ -105,7 +152,9 @@ class GoogleKeywordsModal extends React.Component {
   renderGoalText() {
     if (this.state.query.filters.goal) {
       return (
-        <h1 className="text-xl font-semibold text-gray-500 dark:text-gray-200 leading-none">completed {this.state.query.filters.goal}</h1>
+        <h1 className="text-xl font-semibold text-gray-500 dark:text-gray-200 leading-none">
+          completed {this.state.query.filters.goal}
+        </h1>
       )
     }
   }
@@ -113,21 +162,31 @@ class GoogleKeywordsModal extends React.Component {
   renderBody() {
     if (this.state.loading) {
       return (
-        <div className="loading mt-32 mx-auto"><div></div></div>
+        <div className="loading mt-32 mx-auto">
+          <div></div>
+        </div>
       )
     } else {
       return (
         <React.Fragment>
-          <Link to={`/${encodeURIComponent(this.props.site.domain)}/referrers${window.location.search}`} className="font-bold text-gray-700 dark:text-gray-200 hover:underline">← All referrers</Link>
+          <Link
+            to={`/${encodeURIComponent(this.props.site.domain)}/referrers${
+              window.location.search
+            }`}
+            className="font-bold text-gray-700 dark:text-gray-200 hover:underline"
+          >
+            ← All referrers
+          </Link>
 
           <div className="my-4 border-b border-gray-300 dark:border-gray-500"></div>
           <main className="modal__content">
             <h1 className="text-xl font-semibold mb-0 leading-none dark:text-gray-200">
-              {this.state.totalVisitors} visitors from Google<br />
+              {this.state.totalVisitors} visitors from Google
+              <br />
               {toHuman(this.state.query)}
             </h1>
             {this.renderGoalText()}
-            { this.renderKeywords() }
+            {this.renderKeywords()}
           </main>
         </React.Fragment>
       )
@@ -137,7 +196,7 @@ class GoogleKeywordsModal extends React.Component {
   render() {
     return (
       <Modal site={this.props.site} show={!this.state.loading}>
-        { this.renderBody() }
+        {this.renderBody()}
       </Modal>
     )
   }

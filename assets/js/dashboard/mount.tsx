@@ -1,6 +1,6 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import 'url-search-params-polyfill';
+import React from 'react'
+import ReactDOM from 'react-dom'
+import 'url-search-params-polyfill'
 
 import Router from './router'
 import ErrorBoundary from './error-boundary'
@@ -29,9 +29,13 @@ if (container) {
 
   const app = (
     <ErrorBoundary>
-      <Router site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} />
+      <Router
+        site={site}
+        loggedIn={loggedIn}
+        currentUserRole={currentUserRole}
+      />
     </ErrorBoundary>
   )
 
-  ReactDOM.render(app, container);
+  ReactDOM.render(app, container)
 }

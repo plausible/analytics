@@ -6,12 +6,12 @@
   display: block;
 }
 
-.modal[aria-hidden="false"] .modal__overlay {
-  animation: mmfadeIn .2s ease-in;
+.modal[aria-hidden='false'] .modal__overlay {
+  animation: mmfadeIn 0.2s ease-in;
 }
 
-.modal[aria-hidden="true"] .modal__overlay {
-  animation: mmfadeOut .2s ease-in;
+.modal[aria-hidden='true'] .modal__overlay {
+  animation: mmfadeOut 0.2s ease-in;
 }
 
 .modal-enter {
@@ -29,7 +29,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 99;
   overflow-x: auto;
   overflow-y: auto;
@@ -54,18 +54,28 @@
   right: 24px;
 }
 
-.modal__close:before { content: "\2715"; }
+.modal__close:before {
+  content: '\2715';
+}
 
 .modal__content {
   margin-bottom: 2rem;
 }
 
 @keyframes mmfadeIn {
-    from { opacity: 0; }
-      to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes mmfadeOut {
-    from { opacity: 1; }
-      to { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }

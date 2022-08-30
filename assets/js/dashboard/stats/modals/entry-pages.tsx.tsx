@@ -1,11 +1,10 @@
-import React from "react";
-import { Link , withRouter } from 'react-router-dom'
-
+import React from 'react'
+import { Link, withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
-import {parseQuery} from '../../query'
+import { parseQuery } from '../../query'
 
 class EntryPagesModal extends React.Component {
   constructor(props) {
@@ -20,19 +19,20 @@ class EntryPagesModal extends React.Component {
   }
 
   componentDidMount() {
-    this.loadPages();
+    this.loadPages()
   }
 
   loadPages() {
-    const {query, page} = this.state;
+    const { query, page } = this.state
 
-    api.get(
-      `/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`,
-      query,
-      {limit: 100, page}
-    )
-      .then(
-        (res) => this.setState((state) => ({
+    api
+      .get(
+        `/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`,
+        query,
+        { limit: 100, page }
+      )
+      .then((res) =>
+        this.setState((state) => ({
           loading: false,
           pages: state.pages.concat(res),
           moreResultsAvailable: res.length === 100
@@ -41,15 +41,15 @@ class EntryPagesModal extends React.Component {
   }
 
   loadMore() {
-    const { page } = this.state;
-    this.setState({loading: true, page: page + 1}, this.loadPages.bind(this))
+    const { page } = this.state
+    this.setState({ loading: true, page: page + 1 }, this.loadPages.bind(this))
   }
 
   formatBounceRate(page) {
-    if (typeof(page.bounce_rate) === 'number') {
-      return `${page.bounce_rate}%`;
+    if (typeof page.bounce_rate === 'number') {
+      return `${page.bounce_rate}%`
     }
-    return '-';
+    return '-'
   }
 
   showConversionRate() {
@@ -89,22 +89,48 @@ class EntryPagesModal extends React.Component {
             {page.name}
           </Link>
         </td>
-        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_visitors)}</td>}
-        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.unique_entrances)}</td>
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_entrances)}</td>}
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{durationFormatter(page.visit_duration)}</td>}
-        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.conversion_rate)}%</td>}
+        {this.showConversionRate() && (
+          <td className="p-2 w-32 font-medium" align="right">
+            {numberFormatter(page.total_visitors)}
+          </td>
+        )}
+        <td className="p-2 w-32 font-medium" align="right">
+          {numberFormatter(page.unique_entrances)}
+        </td>
+        {this.showExtra() && (
+          <td className="p-2 w-32 font-medium" align="right">
+            {numberFormatter(page.total_entrances)}
+          </td>
+        )}
+        {this.showExtra() && (
+          <td className="p-2 w-32 font-medium" align="right">
+            {durationFormatter(page.visit_duration)}
+          </td>
+        )}
+        {this.showConversionRate() && (
+          <td className="p-2 w-32 font-medium" align="right">
+            {numberFormatter(page.conversion_rate)}%
+          </td>
+        )}
       </tr>
     )
   }
 
   renderLoading() {
     if (this.state.loading) {
-      return <div className="loading my-16 mx-auto"><div></div></div>
+      return (
+        <div className="loading my-16 mx-auto">
+          <div></div>
+        </div>
+      )
     } else if (this.state.moreResultsAvailable) {
       return (
         <div className="w-full text-center my-4">
-          <button onClick={this.loadMore.bind(this)} type="button" className="button">
+          <button
+            onClick={this.loadMore.bind(this)}
+            type="button"
+            className="button"
+          >
             Load more
           </button>
         </div>
@@ -126,18 +152,50 @@ class EntryPagesModal extends React.Component {
                   <th
                     className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
                     align="left"
-                  >Page url
+                  >
+                    Page url
                   </th>
-                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Total Visitors </th>}
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >{this.label()} </th>
-                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Total Entrances </th> }
-                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Visit Duration </th> }
-                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >CR </th>}
+                  {this.showConversionRate() && (
+                    <th
+                      className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                      align="right"
+                    >
+                      Total Visitors{' '}
+                    </th>
+                  )}
+                  <th
+                    className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                    align="right"
+                  >
+                    {this.label()}{' '}
+                  </th>
+                  {this.showExtra() && (
+                    <th
+                      className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                      align="right"
+                    >
+                      Total Entrances{' '}
+                    </th>
+                  )}
+                  {this.showExtra() && (
+                    <th
+                      className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                      align="right"
+                    >
+                      Visit Duration{' '}
+                    </th>
+                  )}
+                  {this.showConversionRate() && (
+                    <th
+                      className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                      align="right"
+                    >
+                      CR{' '}
+                    </th>
+                  )}
                 </tr>
               </thead>
-              <tbody>
-                { this.state.pages.map(this.renderPage.bind(this)) }
-              </tbody>
+              <tbody>{this.state.pages.map(this.renderPage.bind(this))}</tbody>
             </table>
           </main>
         </>
@@ -148,8 +206,8 @@ class EntryPagesModal extends React.Component {
   render() {
     return (
       <Modal site={this.props.site}>
-        { this.renderBody() }
-        { this.renderLoading() }
+        {this.renderBody()}
+        {this.renderLoading()}
       </Modal>
     )
   }
