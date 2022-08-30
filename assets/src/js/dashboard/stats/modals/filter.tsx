@@ -461,7 +461,10 @@ class FilterModal extends React.Component {
                   onClick={() => {
                     const updatedFilters = FILTER_GROUPS[
                       selectedFilterGroup
-                    ].map((filterName) => ({ filter: filterName, value: null }))
+                    ].map((filterName) => ({
+                      filter: filterName,
+                      value: null
+                    }))
                     this.selectFiltersAndCloseModal(updatedFilters)
                   }}
                 >

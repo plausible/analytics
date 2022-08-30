@@ -63,3 +63,6 @@ plausible-report.xml
 
 # Geolocation databases
 /priv/geodb/*.mmdb
+
+# MacOS
+.DS_Store

@@ -1,6 +1,9 @@
-import React from 'react'
+import React, { Fragment } from 'react'
 import { Link } from 'react-router-dom'
 import FlipMove from 'react-flip-move'
+import { Menu, Transition } from '@headlessui/react'
+import { ChevronDownIcon } from '@heroicons/react/solid'
+import classNames from 'classnames'
 
 import * as storage from '../../util/storage'
 import FadeIn from '../../fade-in'
@@ -204,7 +207,11 @@ const UTM_TAGS = {
     shortLabel: 'UTM Conten',
     endpoint: 'utm_contents'
   },
-  utm_term: { label: 'UTM Term', shortLabel: 'UTM Term', endpoint: 'utm_terms' }
+  utm_term: {
+    label: 'UTM Term',
+    shortLabel: 'UTM Term',
+    endpoint: 'utm_terms'
+  }
 }
 
 type UTMSourcesProps = {
@@ -370,11 +377,6 @@ class UTMSources extends React.Component<UTMSourcesProps, UTMSourcesState> {
     )
   }
 }
-
-import { Fragment } from 'react'
-import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon } from '@heroicons/react/solid'
-import classNames from 'classnames'
 
 type SourceListProps = { site?: SiteType }
 type SourceListState = { tab?: string }

@@ -1,15 +1,12 @@
 {
   "repository": {},
-  "version": "1.4.0",
+  "version": "1.5.0",
   "license": "AGPL-3.0-or-later",
-  "engines": {
-    "node": ">=12.0.0 <17.0.0"
-  },
   "scripts": {
     "deploy": "$(npm bin)/webpack --mode production",
     "watch": "$(npm bin)/webpack --mode development --watch",
-    "format": "$(npm bin)/prettier --write {css,js}/**",
-    "check-format": "$(npm bin)/prettier --check {css,js}/**",
+    "format": "$(npm bin)/prettier --write ./src/**/*",
+    "check-format": "$(npm bin)/prettier --check ./src/**/*",
     "lint": "$(npm bin)/eslint js/**",
     "bundlemon": "$(npm bin)/bundlemon"
   },

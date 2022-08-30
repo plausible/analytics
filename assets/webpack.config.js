@@ -1,23 +1,20 @@
-const path = require('path');
-const webpack = require('webpack');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const TerserPlugin = require('terser-webpack-plugin');
-const CssMinimizerWebpackPlugin = require('css-minimizer-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+const path = require('path')
+const webpack = require('webpack')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const TerserPlugin = require('terser-webpack-plugin')
+const CssMinimizerWebpackPlugin = require('css-minimizer-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 /** @type {import('webpack').Configuration} */
 module.exports = (_env, _options) => ({
   optimization: {
-    minimizer: [
-      new TerserPlugin(),
-      new CssMinimizerWebpackPlugin()
-    ]
+    minimizer: [new TerserPlugin(), new CssMinimizerWebpackPlugin()]
   },
   entry: {
-      'app': ['./js/app.tsx'],
-      'dashboard': ['./js/dashboard/mount.tsx'],
-      'embed.host': ['./js/embed.host.tsx'],
-      'embed.content': ['./js/embed.content.tsx']
+    app: ['./js/app.tsx'],
+    dashboard: ['./js/dashboard/mount.tsx'],
+    'embed.host': ['./js/embed.host.tsx'],
+    'embed.content': ['./js/embed.content.tsx']
   },
   output: {
     filename: '[name].js',
@@ -28,7 +25,7 @@ module.exports = (_env, _options) => ({
       {
         test: /\.tsx?$/,
         use: 'ts-loader',
-        exclude: /node_modules/,
+        exclude: /node_modules/
       },
       {
         test: /\.css$/,
@@ -37,14 +34,14 @@ module.exports = (_env, _options) => ({
     ]
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js'],
+    extensions: ['.tsx', '.ts', '.js']
   },
   externals: { moment: 'moment' },
   plugins: [
-    new MiniCssExtractPlugin({filename: '../css/[name].css'}),
-    new CopyWebpackPlugin({patterns: [{from: 'static/', to: '../' }]}),
+    new MiniCssExtractPlugin({ filename: '../css/[name].css' }),
+    new CopyWebpackPlugin({ patterns: [{ from: 'static/', to: '../' }] }),
     new webpack.ProvidePlugin({
       ResizeObserver: ['@juggle/resize-observer', 'ResizeObserver'] // https://caniuse.com/?search=ResizeObserver
     })
   ]
-});
+})

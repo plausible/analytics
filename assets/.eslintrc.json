@@ -1,18 +1,16 @@
 {
   "env": {
-    "browser": true
+    "browser": true,
+    "node": true
   },
-  "extends": ["eslint:recommended",
-    "plugin:react/recommended",
-    "prettier"
-  ],
+  "extends": ["eslint:recommended", "plugin:react/recommended", "prettier"],
   "parser": "babel-eslint",
   "plugins": ["prettier"],
   "globals": {
     "JSX": true
   },
   "rules": {
-    "max-len": [0, {"code": 120}],
+    "max-len": [0, { "code": 120 }],
     "prettier/prettier": [2],
     "react/jsx-filename-extension": [1, { "extensions": [".tsx"] }],
     "react/destructuring-assignment": [0],
@@ -22,7 +20,10 @@
     "react/jsx-one-expression-per-line": [0],
     "react/self-closing-comp": [0],
     "no-unused-expressions": [1, { "allowShortCircuit": true }],
-    "no-unused-vars": [2, { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }],
+    "no-unused-vars": [
+      2,
+      { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }
+    ],
     "no-prototype-builtins": [0],
     "react/jsx-props-no-spreading": [0],
     "jsx-a11y/click-events-have-key-events": [0],
@@ -31,10 +32,9 @@
   },
   "settings": {
     "react": {
-      "createClass": "createReactClass", // Regex for Component Factory to use,
-                                         // default to "createReactClass"
-      "pragma": "React",  // Pragma to use, default to "React"
-      "fragment": "Fragment",  // Fragment to use (may be a property of <pragma>), default to "Fragment"
+      "createClass": "createReactClass", // Regex for Component Factory to use, default to "createReactClass"
+      "pragma": "React", // Pragma to use, default to "React"
+      "fragment": "Fragment", // Fragment to use (may be a property of <pragma>), default to "Fragment"
       "version": "detect"
     }
   }
