@@ -44,13 +44,14 @@ defmodule Plausible.Google.HTTP do
   end
 
   defp convert_to_maps(%{
-         "data" => %{"rows" => rows},
+         "data" => %{} = data,
          "columnHeader" => %{
            "dimensions" => dimension_headers,
            "metricHeader" => %{"metricHeaderEntries" => metric_headers}
          }
        }) do
     metric_headers = Enum.map(metric_headers, & &1["name"])
+    rows = Map.get(data, "rows", [])
 
     Enum.map(rows, fn %{"dimensions" => dimensions, "metrics" => [%{"values" => metrics}]} ->
       metrics = Enum.zip(metric_headers, metrics)

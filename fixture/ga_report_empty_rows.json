@@ -1,0 +1,25 @@
+{
+  "reports": [
+    {
+      "columnHeader": {
+        "dimensions": [
+          "ga:date",
+          "ga:source",
+          "ga:medium",
+          "ga:campaign",
+          "ga:adContent",
+          "ga:keyword"
+        ],
+        "metricHeader": {
+          "metricHeaderEntries": [
+            { "name": "ga:users", "type": "INTEGER" },
+            { "name": "ga:sessions", "type": "INTEGER" },
+            { "name": "ga:bounces", "type": "INTEGER" },
+            { "name": "ga:sessionDuration", "type": "TIME" }
+          ]
+        }
+      },
+      "data": { "isDataGolden": true }
+    }
+  ]
+}

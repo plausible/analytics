@@ -24,7 +24,7 @@
       Didn't receive an email?
     </div>
     <div class="mt-2 text-sm text-gray-500 leading-tight">
-      Please check your spam folder and contact <a class="underline text-indigo-500" href="mailto:support@plausible.io">support@plausible.io</a> if the problem persists
+      Please check your spam folder and <a class="underline text-indigo-500" href="https://plausible.io/contact">contact us</a> if the problem persists
     </div>
   <% end %>
 

@@ -15,7 +15,7 @@ defmodule Plausible.Application do
       Plausible.Event.WriteBuffer,
       Plausible.Session.WriteBuffer,
       ReferrerBlocklist,
-      Supervisor.child_spec({Cachex, name: :user_agents, limit: 1000, stats: true},
+      Supervisor.child_spec({Cachex, name: :user_agents, limit: 10_000, stats: true},
         id: :cachex_user_agents
       ),
       Supervisor.child_spec({Cachex, name: :sessions, limit: nil, stats: true},
