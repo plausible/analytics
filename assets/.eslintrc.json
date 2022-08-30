@@ -8,6 +8,9 @@
   ],
   "parser": "babel-eslint",
   "plugins": ["prettier"],
+  "globals": {
+    "JSX": true
+  },
   "rules": {
     "max-len": [0, {"code": 120}],
     "prettier/prettier": [2],

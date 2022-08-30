@@ -11,8 +11,16 @@ import * as api from '../../api'
 import * as url from '../../util/url'
 import LazyLoader from '../../components/lazy-loader'
 
-class AllSources extends React.Component {
-  constructor(props) {
+type TimerType =  {onTick:(x:void)=>void};
+type QueryType = {period:string,filters:{goal:string}}
+type ReferrersType =  [] | null;
+type SiteType = {domain:string;}
+
+type AllSourcesProps = { tab?:string; timer?: TimerType, query?:QueryType; site?:SiteType, renderTabs?:()=>JSX.Element; setTab?:()=>void; }
+type AllSourcesState = { loading?: boolean, referrers?: ReferrersType }
+
+class AllSources extends React.Component<AllSourcesProps, AllSourcesState> {
+  constructor(props: AllSourcesProps) {
     super(props)
     this.onVisible = this.onVisible.bind(this)
     this.state = { loading: true }
@@ -70,6 +78,7 @@ class AllSources extends React.Component {
             </Link>
           </span>
         </Bar>
+        {/* @ts-ignore */}
         <span className="font-medium dark:text-gray-200 w-20 text-right" tooltip={referrer.visitors}>{numberFormatter(referrer.visitors)}</span>
         {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
       </div>
@@ -100,9 +109,11 @@ class AllSources extends React.Component {
             </div>
           </div>
 
+          {/* @ts-ignore */}
           <FlipMove className="flex-grow">
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
+          {/* @ts-ignore */}
           <MoreLink site={this.props.site} list={this.state.referrers} endpoint="sources" />
         </React.Fragment>
       )
@@ -113,6 +124,7 @@ class AllSources extends React.Component {
 
   renderContent() {
     return (
+      // @ts-ignore
       <LazyLoader className="flex flex-col flex-grow" onVisible={this.onVisible}>
         <div id="sources" className="flex justify-between w-full">
           <h3 className="font-bold dark:text-gray-100">Top Sources</h3>
@@ -145,8 +157,12 @@ const UTM_TAGS = {
   utm_term: { label: 'UTM Term', shortLabel: 'UTM Term', endpoint: 'utm_terms' },
 }
 
-class UTMSources extends React.Component {
-  constructor(props) {
+
+type UTMSourcesProps = { timer?:TimerType, query?: QueryType, tab?: string; site?: SiteType, renderTabs?:()=>JSX.Element; setTab?:()=>void; }
+type UTMSourcesState = { loading?: boolean; referrers?: ReferrersType;}
+
+class UTMSources extends React.Component<UTMSourcesProps, UTMSourcesState> {
+  constructor(props: UTMSourcesProps) {
     super(props)
     this.state = { loading: true }
   }
@@ -201,6 +217,7 @@ class UTMSources extends React.Component {
             </Link>
           </span>
         </Bar>
+        {/* @ts-ignore */}
         <span className="font-medium dark:text-gray-200 w-20 text-right" tooltip={referrer.visitors}>{numberFormatter(referrer.visitors)}</span>
         {this.showConversionRate() && <span className="font-medium dark:text-gray-200 w-20 text-right">{referrer.conversion_rate}%</span>}
       </div>
@@ -231,9 +248,12 @@ class UTMSources extends React.Component {
             </div>
           </div>
 
+          {/* @ts-ignore */}
           <FlipMove className="flex-grow">
+            {/* @ts-ignore */}
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
+          {/* @ts-ignore */}
           <MoreLink site={this.props.site} list={this.state.referrers} endpoint={UTM_TAGS[this.props.tab].endpoint} />
         </div>
       )
@@ -273,10 +293,15 @@ import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/solid'
 import classNames from 'classnames'
 
-export default class SourceList extends React.Component {
-  constructor(props) {
+type SourceListProps = { site? : SiteType }
+type SourceListState = { tab?: string}
+
+export default class SourceList extends React.Component<SourceListProps,SourceListState> {
+  constructor(props:SourceListProps) {
     super(props)
+    // @ts-ignore
     this.tabKey = 'sourceTab__' + props.site.domain
+    // @ts-ignore
     const storedTab = storage.getItem(this.tabKey)
     this.state = {
       tab: storedTab || 'all'
@@ -285,6 +310,7 @@ export default class SourceList extends React.Component {
 
   setTab(tab) {
     return () => {
+      // @ts-ignore
       storage.setItem(this.tabKey, tab)
       this.setState({ tab })
     }
