@@ -58,6 +58,8 @@
     "@types/iframe-resizer": "^3.5.9",
     "@types/react": "^18.0.17",
     "@types/react-dom": "^18.0.6",
+    "@types/react-router-dom": "^5.3.3",
+    "@types/tailwindcss": "^2.1.2",
     "babel-eslint": "^10.1.0",
     "bundlemon": "^1.2.0",
     "eslint": "^7.2.0",

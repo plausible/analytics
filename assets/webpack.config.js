@@ -5,7 +5,8 @@ const TerserPlugin = require('terser-webpack-plugin');
 const CssMinimizerWebpackPlugin = require('css-minimizer-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
-module.exports = (env, options) => ({
+/** @type {import('webpack').Configuration} */
+module.exports = (_env, _options) => ({
   optimization: {
     minimizer: [
       new TerserPlugin(),
