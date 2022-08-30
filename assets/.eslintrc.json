@@ -1,6 +1,7 @@
 {
   "env": {
-    "browser": true
+    "browser": true,
+    "node": true
   },
   "extends": ["eslint:recommended",
     "plugin:react/recommended",
@@ -11,7 +12,7 @@
   "rules": {
     "max-len": [0, {"code": 120}],
     "prettier/prettier": [2],
-    "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
+    "react/jsx-filename-extension": [1, { "extensions": [".tsx"] }],
     "react/destructuring-assignment": [0],
     "react/prop-types": [0],
     "max-classes-per-file": [0],

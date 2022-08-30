@@ -1,5 +1,4 @@
 const path = require('path');
-const glob = require('glob');
 const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
@@ -14,10 +13,10 @@ module.exports = (env, options) => ({
     ]
   },
   entry: {
-      'app': ['./js/app.js'],
-      'dashboard': ['./js/dashboard/mount.js'],
-      'embed.host': ['./js/embed.host.js'],
-      'embed.content': ['./js/embed.content.js']
+      'app': ['./js/app.tsx'],
+      'dashboard': ['./js/dashboard/mount.tsx'],
+      'embed.host': ['./js/embed.host.tsx'],
+      'embed.content': ['./js/embed.content.tsx']
   },
   output: {
     filename: '[name].js',
@@ -26,17 +25,18 @@ module.exports = (env, options) => ({
   module: {
     rules: [
       {
-        test: /\.(js|jsx)$/,
+        test: /\.tsx?$/,
+        use: 'ts-loader',
         exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader'
-        }
       },
       {
         test: /\.css$/,
         use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader']
       }
     ]
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js'],
   },
   externals: { moment: 'moment' },
   plugins: [
