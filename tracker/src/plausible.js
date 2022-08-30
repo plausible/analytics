@@ -164,15 +164,16 @@
   }
 
   function sendLinkClickEvent(link, event, eventName, eventProps) {
-      if (shouldFollowlink(link, event)) {
-          event.preventDefault()
-          plausiblePreventedDefault = true
-          var callbackFn = eventCallback(eventName, function() { window.location = link.href })
-          setTimeout(callbackFn, 5000)
-          sendCustomEvent(eventName, eventProps, callbackFn)
-      } else {
-          sendCustomEvent(eventName, eventProps, eventCallback(eventName, null))
-      }
+    var callbackFn
+    if (shouldFollowlink(link, event)) {
+      event.preventDefault()
+      plausiblePreventedDefault = true
+      callbackFn = eventCallback(eventName, function() { window.location = link.href })
+    } else {
+      callbackFn = eventCallback(eventName, null)
+    }
+    setTimeout(callbackFn, 5000)
+    sendCustomEvent(eventName, eventProps, callbackFn)
   }
 
   function shouldFollowlink(link, event) {
@@ -198,6 +199,7 @@
   }
 
   function sendCustomEvent(eventName, eventProps, callbackFn) {
+      if (inFlightRequests[eventName]) { return }
       inFlightRequests[eventName] = true
       plausible(eventName, {props: eventProps, callback: callbackFn})
   }
