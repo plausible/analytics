@@ -52,7 +52,7 @@ export default class TopStats extends React.Component {
   }
 
   titleFor(stat) {
-    const isClickable = Object.keys(METRIC_MAPPING).includes(stat.name) && !(this.props.query.filters.goal && stat.name === 'Unique visitors')
+    const isClickable = this.canMetricBeGraphed(stat)
 
     if (isClickable && this.props.metric === METRIC_MAPPING[stat.name]) {
       return "Click to hide"
