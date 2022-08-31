@@ -131,7 +131,7 @@ defmodule Plausible.Workers.CheckUsage do
 
   defp check_site_limit(subscriber) do
     allowance = subscriber.enterprise_plan.site_limit
-    total_sites = Plausible.Sites.count_owned_by(subscriber)
+    total_sites = Plausible.Sites.owned_sites_count(subscriber)
 
     if total_sites >= allowance do
       {:over_limit, {total_sites, allowance}}
