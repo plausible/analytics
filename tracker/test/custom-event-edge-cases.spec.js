@@ -6,7 +6,7 @@ test('sends file download and outbound link event at the same time and navigates
     await page.goto('/custom-event-edge-case.html')
     const linkURL = await page.locator('#link').getAttribute('href')
 
-    const plausibleRequestMockList = mockManyPlausibleRequests(page, '/api/event', 2)
+    const plausibleRequestMockList = mockManyPlausibleRequests(page, 2)
     const navigationRequestMock = mockRequest(page, linkURL)
 
     await page.click('#link')
@@ -21,7 +21,7 @@ test('sends file download and outbound link event at the same time and does not 
     await page.goto('/custom-event-edge-case.html')
     const linkURL = await page.locator('#link-default-prevented').getAttribute('href')
 
-    const plausibleRequestMockList = mockManyPlausibleRequests(page, '/api/event', 2)
+    const plausibleRequestMockList = mockManyPlausibleRequests(page, 2)
     const navigationRequestMock = mockRequest(page, linkURL)
 
     await page.click('#link-default-prevented')
