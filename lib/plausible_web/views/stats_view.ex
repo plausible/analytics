@@ -53,6 +53,14 @@ defmodule PlausibleWeb.StatsView do
     """
   end
 
+  def stats_container_class(conn) do
+    cond do
+      conn.assigns[:embedded] && conn.assigns[:width] == "manual" -> ""
+      conn.assigns[:embedded] -> "max-width-screen-lg mx-auto"
+      !conn.assigns[:embedded] -> "container"
+    end
+  end
+
   defp bar_width(count, all) do
     max =
       Enum.max_by(all, fn
