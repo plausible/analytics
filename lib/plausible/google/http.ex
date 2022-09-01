@@ -1,4 +1,5 @@
 defmodule Plausible.Google.HTTP do
+  require Logger
   alias Plausible.HTTPClient
 
   @spec get_report(module(), Plausible.Google.ReportRequest.t()) ::
@@ -36,10 +37,30 @@ defmodule Plausible.Google.HTTP do
       |> http_client.request(Plausible.Finch)
 
     with {:ok, %{status: 200, body: body}} <- response,
-         {:ok, %{"reports" => [report | _]}} <- Jason.decode(body),
+         {:ok, report} <- parse_report_from_response(body),
          token <- Map.get(report, "nextPageToken"),
-         report <- convert_to_maps(report) do
+         {:ok, report} <- convert_to_maps(report) do
       {:ok, {report, token}}
+    end
+  end
+
+  defp parse_report_from_response(raw_body) do
+    with {:ok, map} <- Jason.decode(raw_body),
+         %{"reports" => [report | _]} <- map do
+      {:ok, report}
+    else
+      {:error, cause} ->
+        Logger.error("Google Analytics: Failed to parse JSON. Reason: #{inspect(cause)}")
+        Sentry.Context.set_extra_context(%{google_analytics_response: raw_body})
+        {:error, cause}
+
+      %{} = response ->
+        Logger.error(
+          "Google Analytics: Failed to find report in response. Reason: #{inspect(response)}"
+        )
+
+        Sentry.Context.set_extra_context(%{google_analytics_response: response})
+        {:error, {:invalid_response, response}}
     end
   end
 
@@ -53,11 +74,23 @@ defmodule Plausible.Google.HTTP do
     metric_headers = Enum.map(metric_headers, & &1["name"])
     rows = Map.get(data, "rows", [])
 
-    Enum.map(rows, fn %{"dimensions" => dimensions, "metrics" => [%{"values" => metrics}]} ->
-      metrics = Enum.zip(metric_headers, metrics)
-      dimensions = Enum.zip(dimension_headers, dimensions)
-      %{metrics: Map.new(metrics), dimensions: Map.new(dimensions)}
-    end)
+    report =
+      Enum.map(rows, fn %{"dimensions" => dimensions, "metrics" => [%{"values" => metrics}]} ->
+        metrics = Enum.zip(metric_headers, metrics)
+        dimensions = Enum.zip(dimension_headers, dimensions)
+        %{metrics: Map.new(metrics), dimensions: Map.new(dimensions)}
+      end)
+
+    {:ok, report}
+  end
+
+  defp convert_to_maps(response) do
+    Logger.error(
+      "Google Analytics: Failed to read report in response. Reason: #{inspect(response)}"
+    )
+
+    Sentry.Context.set_extra_context(%{google_analytics_response: response})
+    {:error, {:invalid_response, response}}
   end
 
   def list_sites(access_token) do
