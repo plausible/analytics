@@ -107,6 +107,10 @@ defmodule Plausible.Ingestion.CityOverrides do
     2_949_619 => 2_946_447,
     # Innenstadt I -> Frankfurt am Main
     6_946_225 => 2_925_533,
+    # Innenstadt II -> Frankfurt am Main
+    6_946_226 => 2_925_533,
+    # Innenstadt III -> Frankfurt am Main
+    6_946_227 => 2_925_533,
 
     # India
     # Navi Mumbai -> Mumbai
