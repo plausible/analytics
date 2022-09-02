@@ -32,7 +32,7 @@ jobs:
 
       - name: Docker private meta
         id: private-meta
-        if: startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/pulls/')
+        if: startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/pull/')
         uses: docker/metadata-action@v4
         with:
           images: plausible/analytics-private
