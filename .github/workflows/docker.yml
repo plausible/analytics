@@ -15,16 +15,25 @@ jobs:
 
     steps:
       - name: Docker meta
-        id: meta
+        id: public-meta
+        if: startsWith(github.ref, 'refs/tags/')
         uses: docker/metadata-action@v4
         with:
           images: plausible/analytics
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
+
+      - name: Docker meta
+        id: private-meta
+        if: startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/pulls/')
+        uses: docker/metadata-action@v4
+        with:
+          images: plausible/analytics-private
+          tags: |
+            type=ref,event=pr
+            type=ref,event=branch
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
