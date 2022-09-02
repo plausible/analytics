@@ -14,8 +14,8 @@ jobs:
     runs-on: buildjet-4vcpu-ubuntu-2004
 
     steps:
-      - name: Docker meta
-        id: public-meta
+      - name: Docker public meta
+        id: public_meta
         if: startsWith(github.ref, 'refs/tags/')
         uses: docker/metadata-action@v4
         with:
@@ -25,8 +25,8 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
 
-      - name: Docker meta
-        id: private-meta
+      - name: Docker private meta
+        id: private_meta
         if: startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/pull/')
         uses: docker/metadata-action@v4
         with:
@@ -34,6 +34,11 @@ jobs:
           tags: |
             type=ref,event=pr
             type=ref,event=branch
+
+      - name: Dump  context
+        env:
+          STEPS: ${{ toJson(steps) }}
+        run: echo "$STEPS"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
