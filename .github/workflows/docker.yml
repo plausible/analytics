@@ -14,7 +14,12 @@ jobs:
     runs-on: buildjet-4vcpu-ubuntu-2004
 
     steps:
-      - name: Docker meta
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+      - name: Docker public meta
         id: public-meta
         if: startsWith(github.ref, 'refs/tags/')
         uses: docker/metadata-action@v4
@@ -25,7 +30,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
 
-      - name: Docker meta
+      - name: Docker private meta
         id: private-meta
         if: startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/pulls/')
         uses: docker/metadata-action@v4
