@@ -51,7 +51,13 @@
     }
 
     function pathMatches(wildcardPath) {
-      return location.pathname.match(new RegExp('^' + wildcardPath.trim().replace(/\*\*/g, '.*').replace(/([^\.])\*/g, '$1[^\\s\/]*') + '\/?$'))
+      var actualPath = location.pathname
+
+      {{#if hash}}
+      actualPath += location.hash
+      {{/if}}
+
+      return actualPath.match(new RegExp('^' + wildcardPath.trim().replace(/\*\*/g, '.*').replace(/([^\.])\*/g, '$1[^\\s\/]*') + '\/?$'))
     }
     {{/if}}
 
