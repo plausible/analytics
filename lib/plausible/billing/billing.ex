@@ -159,17 +159,16 @@ defmodule Plausible.Billing do
 
   def last_two_billing_months_usage(user, today \\ Timex.today()) do
     {first, second} = last_two_billing_cycles(user, today)
-    sites = Plausible.Sites.owned_by(user)
+    domains = Plausible.Sites.owned_sites_domains(user)
 
-    usage_for_sites = fn sites, date_range ->
-      domains = Enum.map(sites, & &1.domain)
+    usage_for_sites = fn domains, date_range ->
       {pageviews, custom_events} = Plausible.Stats.Clickhouse.usage_breakdown(domains, date_range)
       pageviews + custom_events
     end
 
     {
-      usage_for_sites.(sites, first),
-      usage_for_sites.(sites, second)
+      usage_for_sites.(domains, first),
+      usage_for_sites.(domains, second)
     }
   end
 
@@ -194,7 +193,7 @@ defmodule Plausible.Billing do
   end
 
   def usage_breakdown(user) do
-    domains = Plausible.Sites.owned_by(user) |> Enum.map(& &1.domain)
+    domains = Plausible.Sites.owned_sites_domains(user)
     Plausible.Stats.Clickhouse.usage_breakdown(domains)
   end
 

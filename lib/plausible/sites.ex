@@ -1,12 +1,12 @@
 defmodule Plausible.Sites do
   use Plausible.Repo
   alias Plausible.Site.SharedLink
+  import Ecto.Query
 
   def create(user, params) do
-    count = Enum.count(owned_by(user))
     limit = Plausible.Billing.sites_limit(user)
 
-    if count >= limit do
+    if owned_sites_count(user) >= limit do
       {:error, :limit, limit}
     else
       site_changeset = Plausible.Site.changeset(%Plausible.Site{}, params)
@@ -116,24 +116,25 @@ defmodule Plausible.Sites do
     )
   end
 
-  def owned_by(user) do
-    Repo.all(
-      from s in Plausible.Site,
-        join: sm in Plausible.Site.Membership,
-        on: sm.site_id == s.id,
-        where: sm.role == :owner,
-        where: sm.user_id == ^user.id
-    )
+  def owned_sites_count(user) do
+    user
+    |> owned_sites_query()
+    |> Repo.aggregate(:count)
   end
 
-  def count_owned_by(user) do
-    Repo.one(
-      from s in Plausible.Site,
-        join: sm in Plausible.Site.Membership,
-        on: sm.site_id == s.id,
-        where: sm.role == :owner,
-        where: sm.user_id == ^user.id,
-        select: count(sm)
+  def owned_sites_domains(user) do
+    user
+    |> owned_sites_query()
+    |> select([site], site.domain)
+    |> Repo.all()
+  end
+
+  defp owned_sites_query(user) do
+    from(s in Plausible.Site,
+      join: sm in Plausible.Site.Membership,
+      on: sm.site_id == s.id,
+      where: sm.role == :owner,
+      where: sm.user_id == ^user.id
     )
   end
 
