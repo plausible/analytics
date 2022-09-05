@@ -846,11 +846,11 @@ defmodule Plausible.ImportedTest do
           "/api/stats/#{site.domain}/browsers?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert json_response(conn, 200) == [
-               %{"name" => "Firefox", "visitors" => 2, "percentage" => 50},
-               %{"name" => "Mobile App", "visitors" => 1, "percentage" => 25},
-               %{"name" => "Chrome", "visitors" => 1, "percentage" => 25}
-             ]
+      assert stats = json_response(conn, 200)
+      assert length(stats) == 3
+      assert %{"name" => "Firefox", "visitors" => 2, "percentage" => 50} in stats
+      assert %{"name" => "Mobile App", "visitors" => 1, "percentage" => 25} in stats
+      assert %{"name" => "Chrome", "visitors" => 1, "percentage" => 25} in stats
     end
 
     test "OS data imported from Google Analytics", %{conn: conn, site: site} do
