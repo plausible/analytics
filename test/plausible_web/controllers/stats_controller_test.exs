@@ -263,6 +263,11 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert html_response(conn, 200) =~ "Site locked"
       refute String.contains?(html_response(conn, 200), "Back to my sites")
     end
+
+    test "renders bad request when no auth parameter supplied", %{conn: conn} do
+      conn = get(conn, "/share/example.com")
+      assert response(conn, 400) =~ "Bad Request"
+    end
   end
 
   describe "POST /share/:slug/authenticate" do
