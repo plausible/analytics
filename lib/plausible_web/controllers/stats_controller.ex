@@ -144,6 +144,10 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
+  def shared_link(conn, _) do
+    render_error(conn, 400)
+  end
+
   def authenticate_shared_link(conn, %{"slug" => slug, "password" => password}) do
     shared_link =
       Repo.get_by(Plausible.Site.SharedLink, slug: slug)
