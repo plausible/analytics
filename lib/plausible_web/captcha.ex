@@ -17,8 +17,11 @@ defmodule PlausibleWeb.Captcha do
       res =
         HTTPClient.post(
           @verify_endpoint,
-          [{"Content-Type", "application/x-www-form-urlencoded"}],
-          "response=#{token}&secret=#{secret()}"
+          [{"content-type", "application/x-www-form-urlencoded"}],
+          %{
+            response: token,
+            secret: secret()
+          }
         )
 
       case res do

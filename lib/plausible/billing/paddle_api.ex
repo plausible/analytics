@@ -1,11 +1,9 @@
 defmodule Plausible.Billing.PaddleApi do
   alias Plausible.HTTPClient
 
-  @update_endpoint "https://vendors.paddle.com/api/2.0/subscription/users/update"
-  @get_endpoint "https://vendors.paddle.com/api/2.0/subscription/users"
   @headers [
-    {"Content-type", "application/json"},
-    {"Accept", "application/json"}
+    {"content-type", "application/json"},
+    {"accept", "application/json"}
   ]
 
   def update_subscription_preview(paddle_subscription_id, new_plan_id) do
@@ -22,19 +20,18 @@ defmodule Plausible.Billing.PaddleApi do
       quantity: 1
     }
 
-    {:ok, response} =
-      HTTPClient.post(
-        vendors_domain() <> "/api/2.0/subscription/preview_update",
-        @headers,
-        Jason.encode!(params)
-      )
+    case HTTPClient.post(preview_update_url(), @headers, params) do
+      {:ok, response} ->
+        body = Jason.decode!(response.body)
 
-    body = Jason.decode!(response.body)
+        if body["success"] do
+          {:ok, body["response"]}
+        else
+          {:error, body["error"]}
+        end
 
-    if body["success"] do
-      {:ok, body["response"]}
-    else
-      {:error, body["error"]}
+      {:error, error} ->
+        {:error, error}
     end
   end
 
@@ -52,13 +49,18 @@ defmodule Plausible.Billing.PaddleApi do
         quantity: 1
       })
 
-    {:ok, response} = HTTPClient.post(@update_endpoint, @headers, Jason.encode!(params))
-    body = Jason.decode!(response.body)
+    case HTTPClient.post(update_subscription_url(), @headers, params) do
+      {:ok, response} ->
+        body = Jason.decode!(response.body)
 
-    if body["success"] do
-      {:ok, body["response"]}
-    else
-      {:error, body["error"]}
+        if body["success"] do
+          {:ok, body["response"]}
+        else
+          {:error, body["error"]}
+        end
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
     end
   end
 
@@ -71,14 +73,19 @@ defmodule Plausible.Billing.PaddleApi do
       subscription_id: paddle_subscription_id
     }
 
-    {:ok, response} = HTTPClient.post(@get_endpoint, @headers, Jason.encode!(params))
-    body = Jason.decode!(response.body)
+    case HTTPClient.post(get_subscription_url(), @headers, params) do
+      {:ok, response} ->
+        body = Jason.decode!(response.body)
 
-    if body["success"] do
-      [subscription] = body["response"]
-      {:ok, subscription}
-    else
-      {:error, body["error"]}
+        if body["success"] do
+          [subscription] = body["response"]
+          {:ok, subscription}
+        else
+          {:error, body["error"]}
+        end
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
     end
   end
 
@@ -96,7 +103,7 @@ defmodule Plausible.Billing.PaddleApi do
       to: Timex.shift(Timex.today(), days: 1) |> Timex.format!("{YYYY}-{0M}-{0D}")
     }
 
-    case HTTPClient.post(invoices_endpoint(), @headers, Jason.encode!(params)) do
+    case HTTPClient.post(invoices_url(), @headers, params) do
       {:ok, response} ->
         body = Jason.decode!(response.body)
 
@@ -108,13 +115,6 @@ defmodule Plausible.Billing.PaddleApi do
 
       {:error, _reason} ->
         {:error, :request_failed}
-    end
-  end
-
-  defp invoices_endpoint() do
-    case Application.get_env(:plausible, :environment) do
-      "dev" -> "https://sandbox-vendors.paddle.com/api/2.0/subscription/payments"
-      _ -> "https://vendors.paddle.com/api/2.0/subscription/payments"
     end
   end
 
@@ -141,5 +141,21 @@ defmodule Plausible.Billing.PaddleApi do
 
   defp get_config() do
     Application.get_env(:plausible, :paddle)
+  end
+
+  defp invoices_url() do
+    Path.join(vendors_domain(), "/api/2.0/subscription/payments")
+  end
+
+  defp preview_update_url() do
+    Path.join(vendors_domain(), "/api/2.0/subscription/preview_update")
+  end
+
+  defp update_subscription_url() do
+    Path.join(vendors_domain(), "/api/2.0/subscription/users/update")
+  end
+
+  defp get_subscription_url() do
+    Path.join(vendors_domain(), "/api/2.0/subscription/users")
   end
 end
