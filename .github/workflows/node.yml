@@ -9,25 +9,25 @@ on:
 jobs:
   build:
     name: Build and test
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Read .tool-versions
-      uses: marocchino/tool-versions-action@v1
-      id: versions
-    - name: Set up Node
-      uses: actions/setup-node@v2
-      with:
-        node-version: ${{steps.versions.outputs.nodejs}}
-    - run: npm install --prefix ./assets
-    - run: npm install --prefix ./tracker
-    - run: npm run lint --prefix ./assets
-    - run: npm run check-format --prefix ./assets
-    - run: npm run deploy --prefix ./assets
-    - run: npm run deploy --prefix ./tracker
-    - name: Run BundleMon
-      run: npm run bundlemon --prefix ./assets
-      env:
-        BUNDLEMON_PROJECT_ID: "619e0b6ad4a54a00089861ac"
-        CI_COMMIT_SHA: ${{github.event.pull_request.head.sha || github.sha}} # important!
+      - uses: actions/checkout@v2
+      - name: Read .tool-versions
+        uses: marocchino/tool-versions-action@v1
+        id: versions
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{steps.versions.outputs.nodejs}}
+      - run: npm install --prefix ./assets
+      - run: npm install --prefix ./tracker
+      - run: npm run lint --prefix ./assets
+      - run: npm run check-format --prefix ./assets
+      - run: npm run deploy --prefix ./assets
+      - run: npm run deploy --prefix ./tracker
+      - name: Run BundleMon
+        run: npm run bundlemon --prefix ./assets
+        env:
+          BUNDLEMON_PROJECT_ID: "619e0b6ad4a54a00089861ac"
+          CI_COMMIT_SHA: ${{github.event.pull_request.head.sha || github.sha}} # important!
