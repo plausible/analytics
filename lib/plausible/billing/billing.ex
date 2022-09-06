@@ -1,6 +1,6 @@
 defmodule Plausible.Billing do
   use Plausible.Repo
-  alias Plausible.Billing.{Subscription, PaddleApi}
+  alias Plausible.Billing.Subscription
 
   def active_subscription_for(user_id) do
     Repo.get_by(Subscription, user_id: user_id, status: "active")
@@ -113,7 +113,16 @@ defmodule Plausible.Billing do
   end
 
   def change_plan_preview(subscription, new_plan_id) do
-    PaddleApi.update_subscription_preview(subscription.paddle_subscription_id, new_plan_id)
+    case paddle_api().update_subscription_preview(
+           subscription.paddle_subscription_id,
+           new_plan_id
+         ) do
+      {:ok, response} ->
+        {:ok, response}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   def needs_to_upgrade?(%Plausible.Auth.User{trial_expiry_date: nil}), do: {true, :no_trial}

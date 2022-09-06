@@ -109,18 +109,16 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def change_plan_preview(conn, %{"plan_id" => new_plan_id}) do
-    subscription = Billing.active_subscription_for(conn.assigns[:current_user].id)
-
-    if subscription do
-      {:ok, preview_info} = Billing.change_plan_preview(subscription, new_plan_id)
-
+    with {:ok, {subscription, preview_info}} <-
+           preview_subscription(conn.assigns.current_user, new_plan_id) do
       render(conn, "change_plan_preview.html",
         subscription: subscription,
         preview_info: preview_info,
         layout: {PlausibleWeb.LayoutView, "focus.html"}
       )
     else
-      redirect(conn, to: "/billing/upgrade")
+      _ ->
+        redirect(conn, to: "/billing/upgrade")
     end
   end
 
@@ -158,5 +156,21 @@ defmodule PlausibleWeb.BillingController do
         |> put_flash(:error, msg)
         |> redirect(to: "/settings")
     end
+  end
+
+  defp preview_subscription(%{id: user_id}, new_plan_id) do
+    subscription = Billing.active_subscription_for(user_id)
+
+    if subscription do
+      with {:ok, preview_info} <- Billing.change_plan_preview(subscription, new_plan_id) do
+        {:ok, {subscription, preview_info}}
+      end
+    else
+      {:error, :no_subscription}
+    end
+  end
+
+  def preview_susbcription(_, _) do
+    {:error, :no_user_id}
   end
 end
