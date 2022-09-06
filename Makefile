@@ -11,7 +11,7 @@ server:
 	mix phx.server
 
 clickhouse:
-	docker run --detach -p 8123:8123 --ulimit nofile=262144:262144 --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse --name plausible_clickhouse yandex/clickhouse-server:21.3.2.5
+	docker run --detach -p 8123:8123 --ulimit nofile=262144:262144 --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse --name plausible_clickhouse clickhouse/clickhouse-server:21.11.3.6
 
 clickhouse-arm:
 	docker run --detach -p 8123:8123 --ulimit nofile=262144:262144 --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse --name plausible_clickhouse altinity/clickhouse-server:21.12.3.32.altinitydev.arm
