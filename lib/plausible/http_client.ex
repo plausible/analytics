@@ -12,7 +12,7 @@ defmodule Plausible.HTTPClient do
   @type url() :: Finch.Request.url()
   @type headers() :: Finch.Request.headers()
   @type params() :: Finch.Request.body() | map()
-  @type response() :: {:ok, Finch.Response.t()} | {:error, Mint.Types.error()}
+  @type response() :: {:ok, Finch.Response.t()} | {:error, Mint.Types.error() | Finch.Error.t()}
 
   @doc """
   Make a POST request
