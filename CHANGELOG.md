@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 - New width=manual mode for embedded dashboards plausible/analytics#2148
 
 ### Fixed
+- Hash part of the URL can now be used when excluding pages with `script.exclusions.hash.js`.
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
 - UI fix to align footer columns
 - Guests can now use the favicon to toggle additional info about the site bing viewed (such as in public embeds).
