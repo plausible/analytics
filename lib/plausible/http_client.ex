@@ -25,13 +25,13 @@ defmodule Plausible.HTTPClient do
   @doc """
   Make a GET request
   """
-  @spec get(url(), headers(), params()) :: response()
-  def get(url, headers \\ [], params \\ nil) do
-    call(:get, url, headers, params)
+  @spec get(url(), headers()) :: response()
+  def get(url, headers \\ []) do
+    call(:get, url, headers, nil)
   end
 
   defp call(method, url, headers, params) do
-    params = maybe_encode_params(params, headers)
+    {params, headers} = maybe_encode_params(params, headers)
 
     method
     |> build_request(url, headers, params)
@@ -46,8 +46,8 @@ defmodule Plausible.HTTPClient do
     Finch.request(request, Plausible.Finch)
   end
 
-  defp maybe_encode_params(params, _headers) when is_binary(params) or is_nil(params) do
-    params
+  defp maybe_encode_params(params, headers) when is_binary(params) or is_nil(params) do
+    {params, headers}
   end
 
   defp maybe_encode_params(params, headers) when is_map(params) do
@@ -60,10 +60,13 @@ defmodule Plausible.HTTPClient do
 
     case String.downcase(content_type) do
       "application/x-www-form-urlencoded" ->
-        URI.encode_query(params)
+        {URI.encode_query(params), headers}
+
+      "application/json" ->
+        {Jason.encode!(params), headers}
 
       _ ->
-        Jason.encode!(params)
+        {Jason.encode!(params), [{"content-type", "application/json"} | headers]}
     end
   end
 end
