@@ -59,7 +59,7 @@ defmodule Plausible.HTTPClient do
       end)
 
     case String.downcase(content_type) do
-      "x-www-form-urlencoded" ->
+      "application/x-www-form-urlencoded" ->
         URI.encode_query(params)
 
       _ ->
