@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.QueryTest do
+defmodule Plausible.HTTPClientTest do
   use ExUnit.Case, async: true
 
   alias Plausible.HTTPClient
