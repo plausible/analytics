@@ -243,6 +243,8 @@ config :plausible, :paddle,
 config :plausible, :google,
   client_id: google_cid,
   client_secret: google_secret,
+  api_url: "https://www.googleapis.com",
+  reporting_api_url: "https://analyticsreporting.googleapis.com",
   max_buffer_size: get_int_from_path_or_env(config_dir, "GOOGLE_MAX_BUFFER_SIZE", 10_000)
 
 config :plausible, Plausible.ClickhouseRepo,

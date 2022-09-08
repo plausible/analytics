@@ -30,7 +30,7 @@ defmodule Plausible.Google.HTTP do
     response =
       :post
       |> Finch.build(
-        "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
+        "#{reporting_api_url()}/v4/reports:batchGet",
         [{"Authorization", "Bearer #{report_request.access_token}"}],
         params
       )
@@ -94,7 +94,7 @@ defmodule Plausible.Google.HTTP do
   end
 
   def list_sites(access_token) do
-    url = "https://www.googleapis.com/webmasters/v3/sites"
+    url = "#{api_url()}/webmasters/v3/sites"
     headers = [{"Content-Type", "application/json"}, {"Authorization", "Bearer #{access_token}"}]
 
     case HTTPClient.get(url, headers) do
@@ -111,7 +111,7 @@ defmodule Plausible.Google.HTTP do
   end
 
   def fetch_access_token(code) do
-    url = "https://www.googleapis.com/oauth2/v4/token"
+    url = "#{api_url()}/oauth2/v4/token"
     headers = [{"Content-Type", "application/x-www-form-urlencoded"}]
 
     params = %{
@@ -130,8 +130,7 @@ defmodule Plausible.Google.HTTP do
   end
 
   def list_views_for_user(access_token) do
-    url =
-      "https://www.googleapis.com/analytics/v3/management/accounts/~all/webproperties/~all/profiles"
+    url = "#{api_url()}/analytics/v3/management/accounts/~all/webproperties/~all/profiles"
 
     headers = [{"Authorization", "Bearer #{access_token}"}]
 
@@ -168,7 +167,7 @@ defmodule Plausible.Google.HTTP do
       dimensionFilterGroups: filter_groups
     }
 
-    url = "https://www.googleapis.com/webmasters/v3/sites/#{property}/searchAnalytics/query"
+    url = "#{api_url()}/webmasters/v3/sites/#{property}/searchAnalytics/query"
     headers = [{"Authorization", "Bearer #{access_token}"}]
 
     case HTTPClient.post(url, headers, params) do
@@ -198,7 +197,7 @@ defmodule Plausible.Google.HTTP do
   defp property_base_url(url), do: url
 
   def refresh_auth_token(refresh_token) do
-    url = "https://www.googleapis.com/oauth2/v4/token"
+    url = "#{api_url()}/oauth2/v4/token"
     headers = [{"content-type", "application/x-www-form-urlencoded"}]
 
     params = %{
@@ -244,7 +243,7 @@ defmodule Plausible.Google.HTTP do
       ]
     }
 
-    url = "https://analyticsreporting.googleapis.com/v4/reports:batchGet"
+    url = "#{reporting_api_url()}/v4/reports:batchGet"
     headers = [{"Authorization", "Bearer #{access_token}"}]
 
     case HTTPClient.post(url, headers, params) do
@@ -275,5 +274,7 @@ defmodule Plausible.Google.HTTP do
   defp config, do: Application.get_env(:plausible, :google)
   defp client_id, do: Keyword.fetch!(config(), :client_id)
   defp client_secret, do: Keyword.fetch!(config(), :client_secret)
+  defp reporting_api_url, do: Keyword.fetch!(config(), :reporting_api_url)
+  defp api_url, do: Keyword.fetch!(config(), :api_url)
   defp redirect_uri, do: PlausibleWeb.Endpoint.url() <> "/auth/google/callback"
 end
