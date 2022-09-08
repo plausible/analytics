@@ -1,0 +1,67 @@
+{
+  "kind": "analytics#profiles",
+  "username": "email@provider.test",
+  "totalResults": 2,
+  "startIndex": 1,
+  "itemsPerPage": 1000,
+  "items": [
+    {
+      "id": "57238190",
+      "kind": "analytics#profile",
+      "selfLink": "https://www.googleapis.com/analytics/v3/management/accounts/61782930/webproperties/UA-1625528-17/profiles/57238190",
+      "accountId": "61782930",
+      "webPropertyId": "UA-61782930-17",
+      "internalWebPropertyId": "53451925",
+      "name": "one.test",
+      "currency": "USD",
+      "timezone": "Europe/London",
+      "websiteUrl": "http://one.test/",
+      "type": "WEB",
+      "permissions": {
+        "effective": [
+          "READ_AND_ANALYZE"
+        ]
+      },
+      "created": "2011-12-25T15:16:53.069Z",
+      "updated": "2012-07-26T09:45:03.811Z",
+      "eCommerceTracking": false,
+      "parentLink": {
+        "type": "analytics#webproperty",
+        "href": "https://www.googleapis.com/analytics/v3/management/accounts/61782930/webproperties/UA-1625528-17"
+      },
+      "childLink": {
+        "type": "analytics#goals",
+        "href": "https://www.googleapis.com/analytics/v3/management/accounts/61782930/webproperties/UA-1625528-17/profiles/57238190/goals"
+      }
+    },
+    {
+      "id": "54460083",
+      "kind": "analytics#profile",
+      "selfLink": "https://www.googleapis.com/analytics/v3/management/accounts/61782930/webproperties/UA-1625528-18/profiles/54460083",
+      "accountId": "61782930",
+      "webPropertyId": "UA-61782930-18",
+      "internalWebPropertyId": "53597744",
+      "name": "two.test",
+      "currency": "USD",
+      "timezone": "Europe/London",
+      "websiteUrl": "http://two.test/",
+      "type": "WEB",
+      "permissions": {
+        "effective": [
+          "READ_AND_ANALYZE"
+        ]
+      },
+      "created": "2011-12-31T19:14:11.434Z",
+      "updated": "2012-04-03T18:34:11.475Z",
+      "eCommerceTracking": false,
+      "parentLink": {
+        "type": "analytics#webproperty",
+        "href": "https://www.googleapis.com/analytics/v3/management/accounts/61782930/webproperties/UA-1625528-18"
+      },
+      "childLink": {
+        "type": "analytics#goals",
+        "href": "https://www.googleapis.com/analytics/v3/management/accounts/61782930/webproperties/UA-1625528-18/profiles/54460083/goals"
+      }
+    }
+  ]
+}
