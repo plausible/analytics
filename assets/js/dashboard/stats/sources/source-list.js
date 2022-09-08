@@ -317,7 +317,7 @@ export default class SourceList extends React.Component {
             leaveFrom="transform opacity-100 scale-100"
             leaveTo="transform opacity-0 scale-95"
           >
-            <Menu.Items className="text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+            <Menu.Items className="text-left origin-top-right absolute right-0 mt-2 w-56 divide-y divide-gray-100 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
               <div className="py-1">
                 {dropdownOptions.map((option) => {
                   return (
@@ -337,6 +337,27 @@ export default class SourceList extends React.Component {
                     </Menu.Item>
                   )
                 })}
+              </div>
+              <div className="py-1">
+                <Menu.Item key="utm_builder">
+                  {({ active }) => (
+                    <a
+                      href="https://plausible.io/blog/utm-tracking-tags#plausible-utm-tag-builder-tool"
+                      target="_blank"
+                      rel="noreferrer"
+                      className={classNames(
+                        active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer' : 'text-gray-700 dark:text-gray-200',
+                        'flex items-center px-4 py-2 text-sm'
+                      )}
+                    >
+                      UTM Tag builder
+
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 inline ml-1">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                      </svg>
+                    </a>
+                  )}
+                </Menu.Item>
               </div>
             </Menu.Items>
           </Transition>
