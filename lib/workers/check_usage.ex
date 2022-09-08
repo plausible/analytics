@@ -71,7 +71,7 @@ defmodule Plausible.Workers.CheckUsage do
 
       {{_, {last_cycle, last_cycle_usage}}, {_, {site_usage, site_allowance}}} ->
         template =
-          PlausibleWeb.Email.enterprise_over_limit_email(
+          PlausibleWeb.Email.enterprise_over_limit_internal_email(
             subscriber,
             last_cycle_usage,
             last_cycle,
