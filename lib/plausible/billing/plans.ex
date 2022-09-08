@@ -26,6 +26,16 @@ defmodule Plausible.Billing.Plans do
     }
   ]
 
+  @type plan() ::
+          %{
+            limit: non_neg_integer(),
+            monthly_product_id: String.t(),
+            yearly_product_id: String.t(),
+            monthly_cost: String.t(),
+            yearly_cost: String.t()
+          }
+          | :enterprise
+
   def plans_for(user) do
     user = Repo.preload(user, :subscription)
     sandbox_plans = plans_sandbox()
@@ -109,15 +119,21 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  def get_enterprise_plan(subscription) do
+  defp get_enterprise_plan(%Plausible.Billing.Subscription{} = subscription) do
     Repo.get_by(Plausible.Billing.EnterprisePlan,
       user_id: subscription.user_id,
       paddle_plan_id: subscription.paddle_plan_id
     )
   end
 
-  def suggested_plan(user, usage) do
-    Enum.find(plans_for(user), fn plan -> usage < plan[:limit] end)
+  @enterprise_level_usage 20_000_000
+  @spec suggested_plan(Plausible.Auth.User.t(), non_neg_integer()) :: plan()
+  def suggested_plan(user, usage_during_cycle) do
+    cond do
+      usage_during_cycle > @enterprise_level_usage -> :enterprise
+      Plausible.Auth.enterprise?(user) -> :enterprise
+      true -> Enum.find(plans_for(user), fn plan -> usage_during_cycle < plan[:limit] end)
+    end
   end
 
   defp contains?(_plans, nil), do: false

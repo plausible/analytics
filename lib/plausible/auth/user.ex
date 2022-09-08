@@ -24,6 +24,8 @@ defmodule Plausible.Auth.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
   @required [:email, :name, :password, :password_confirmation]
   schema "users" do
     field :email, :string

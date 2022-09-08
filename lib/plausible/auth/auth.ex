@@ -98,4 +98,11 @@ defmodule Plausible.Auth do
   def is_super_admin?(user_id) do
     user_id in Application.get_env(:plausible, :super_admin_user_ids)
   end
+
+  def enterprise?(nil), do: false
+
+  def enterprise?(%Plausible.Auth.User{} = user) do
+    user = Repo.preload(user, :enterprise_plan)
+    user.enterprise_plan != nil
+  end
 end

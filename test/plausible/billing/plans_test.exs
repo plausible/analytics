@@ -82,4 +82,39 @@ defmodule Plausible.Billing.PlansTest do
       assert Plans.subscription_interval(subscription) == :yearly
     end
   end
+
+  describe "suggested_plan/2" do
+    test "returns suggested plan based on usage" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
+
+      assert %{
+               limit: 100_000,
+               monthly_cost: "$12",
+               monthly_product_id: "558745",
+               volume: "100k",
+               yearly_cost: "$96",
+               yearly_product_id: "590752"
+             } == Plans.suggested_plan(user, 10_000)
+
+      assert %{
+               limit: 200_000,
+               monthly_cost: "$18",
+               monthly_product_id: "597485",
+               volume: "200k",
+               yearly_cost: "$144",
+               yearly_product_id: "597486"
+             } == Plans.suggested_plan(user, 100_000)
+    end
+
+    test "returns nil when user has enterprise-level usage" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
+      assert :enterprise == Plans.suggested_plan(user, 100_000_000)
+    end
+
+    test "returns nil when user is on an enterprise plan" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
+      _enterprise_plan = insert(:enterprise_plan, user_id: user.id, billing_interval: :yearly)
+      assert :enterprise == Plans.suggested_plan(user, 10_000)
+    end
+  end
 end
