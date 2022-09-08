@@ -652,7 +652,7 @@ defmodule PlausibleWeb.SiteController do
 
   def import_from_google_view_id_form(conn, %{"access_token" => access_token}) do
     site = conn.assigns[:site]
-    view_ids = Plausible.Google.Api.get_analytics_view_ids(access_token)
+    view_ids = Plausible.Google.Api.list_views(access_token)
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -673,7 +673,7 @@ defmodule PlausibleWeb.SiteController do
     case start_date do
       {:ok, nil} ->
         site = conn.assigns[:site]
-        view_ids = Plausible.Google.Api.get_analytics_view_ids(access_token)
+        view_ids = Plausible.Google.Api.list_views(access_token)
 
         conn
         |> assign(:skip_plausible_tracking, true)
@@ -714,8 +714,7 @@ defmodule PlausibleWeb.SiteController do
     end_date =
       Plausible.Stats.Clickhouse.pageview_start_date_local(site) || Timex.today(site.timezone)
 
-    {:ok, view_ids} = Plausible.Google.Api.get_analytics_view_ids(access_token)
-    {view_id_name, _} = Enum.find(view_ids, fn {_, v} -> v == view_id end)
+    {:ok, {view_name, view_id}} = Plausible.Google.Api.get_view(access_token, view_id)
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -723,7 +722,7 @@ defmodule PlausibleWeb.SiteController do
       access_token: access_token,
       site: site,
       selected_view_id: view_id,
-      selected_view_id_name: view_id_name,
+      selected_view_id_name: view_name,
       start_date: start_date,
       end_date: end_date,
       layout: {PlausibleWeb.LayoutView, "focus.html"}

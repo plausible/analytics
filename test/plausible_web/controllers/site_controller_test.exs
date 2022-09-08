@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.SiteControllerTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
   use Bamboo.Test
   use Oban.Testing, repo: Plausible.Repo
@@ -719,6 +719,37 @@ defmodule PlausibleWeb.SiteControllerTest do
       delete(conn, "/sites/#{site.domain}/custom-domains/#{domain.id}")
 
       assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 0
+    end
+  end
+
+  describe "GET /:website/import/google-analytics/view-id" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    test "lists Google Analytics views", %{conn: conn, site: site} do
+      bypass = Bypass.open()
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/analytics/v3/management/accounts/~all/webproperties/~all/profiles",
+        fn conn ->
+          response_body = File.read!("fixture/ga_list_views.json")
+          Plug.Conn.resp(conn, 200, response_body)
+        end
+      )
+
+      :plausible
+      |> Application.get_env(:google)
+      |> Keyword.put(:api_url, "http://0.0.0.0:#{bypass.port}")
+      |> then(&Application.put_env(:plausible, :google, &1))
+
+      response =
+        conn
+        |> get("/#{site.domain}/import/google-analytics/view-id", %{"access_token" => "token"})
+        |> html_response(200)
+
+      assert response =~ "57238190 - one.test"
+      assert response =~ "54460083 - two.test"
     end
   end
 

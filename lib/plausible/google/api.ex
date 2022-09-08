@@ -3,6 +3,8 @@ defmodule Plausible.Google.Api do
   use Timex
   require Logger
 
+  @type google_analytics_view() :: {view_name :: String.t(), view_id :: String.t()}
+
   @scope URI.encode_www_form(
            "https://www.googleapis.com/auth/webmasters.readonly email https://www.googleapis.com/auth/analytics.readonly"
          )
@@ -53,27 +55,52 @@ defmodule Plausible.Google.Api do
     end
   end
 
-  def get_analytics_view_ids(access_token) do
+  @spec list_views(access_token :: String.t()) ::
+          {:ok, %{(hostname :: String.t()) => [google_analytics_view()]}} | {:error, term()}
+  @doc """
+  Lists Google Analytics views grouped by hostname.
+  """
+  def list_views(access_token) do
     case HTTP.list_views_for_user(access_token) do
       {:ok, %{"items" => views}} ->
-        view_ids = for view <- views, do: build_view_ids(view), into: %{}
-        {:ok, view_ids}
+        views = Enum.group_by(views, &view_hostname/1, &view_names/1)
+        {:ok, views}
 
       error ->
         error
     end
   end
 
-  defp build_view_ids(view) do
-    uri = URI.parse(Map.get(view, "websiteUrl", ""))
-
-    if !uri.host do
-      Sentry.capture_message("No URI for view ID", extra: view)
+  defp view_hostname(view) do
+    case view do
+      %{"websiteUrl" => url} when is_binary(url) -> url |> URI.parse() |> Map.get(:host)
+      _any -> "Others"
     end
+  end
 
-    host = uri.host || Map.get(view, "id", "")
-    name = Map.get(view, "name")
-    {"#{host} - #{name}", Map.get(view, "id")}
+  defp view_names(%{"name" => name, "id" => id}) do
+    {"#{id} - #{name}", id}
+  end
+
+  @spec get_view(access_token :: String.t(), lookup_id :: String.t()) ::
+          {:ok, google_analytics_view()} | {:ok, nil} | {:error, term()}
+  @doc """
+  Returns a single Google Analytics view if the user has access to it.
+  """
+  def get_view(access_token, lookup_id) do
+    case list_views(access_token) do
+      {:ok, views} ->
+        view =
+          views
+          |> Map.values()
+          |> List.flatten()
+          |> Enum.find(fn {_name, id} -> id == lookup_id end)
+
+        {:ok, view}
+
+      {:error, cause} ->
+        {:error, cause}
+    end
   end
 
   @per_page 10_000
