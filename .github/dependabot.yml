@@ -4,5 +4,19 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    open-pull-requests-limit: 3
-    registries: "*"
+    open-pull-requests-limit: 1
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 1
+  - package-ecosystem: "npm"
+    directory: "/assets"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 1
+  - package-ecosystem: "npm"
+    directory: "/tracker"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 1
