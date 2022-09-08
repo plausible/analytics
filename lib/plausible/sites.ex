@@ -93,6 +93,19 @@ defmodule Plausible.Sites do
     )
   end
 
+  def get_sites_for_user(user_id, roles \\ [:owner, :admin, :viewer]),
+    do: Repo.all(get_sites_for_user_q(user_id, roles))
+
+  defp get_sites_for_user_q(user_id, roles) do
+    from(s in Plausible.Site,
+      join: sm in Plausible.Site.Membership,
+      on: sm.site_id == s.id,
+      where: sm.user_id == ^user_id,
+      where: sm.role in ^roles,
+      select: s
+    )
+  end
+
   def has_goals?(site) do
     Repo.exists?(
       from g in Plausible.Goal,

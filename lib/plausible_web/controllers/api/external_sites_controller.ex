@@ -28,6 +28,13 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  def get_sites(conn, _) do
+    user = conn.assigns[:current_user]
+
+    sites = Sites.get_sites_for_user(user.id, [:owner, :admin])
+    json(conn, sites)
+  end
+
   def get_site(conn, %{"site_id" => site_id}) do
     site = Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin])
 

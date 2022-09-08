@@ -385,6 +385,16 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     end
   end
 
+  describe "GET /api/v1/sites" do
+    setup :create_new_site
+
+    test "get all sites ", %{conn: conn, site: site} do
+      conn = get(conn, "/api/v1/sites")
+
+      assert json_response(conn, 200) == [%{"domain" => site.domain, "timezone" => site.timezone}]
+    end
+  end
+
   describe "GET /api/v1/sites/:site_id" do
     setup :create_new_site
 
