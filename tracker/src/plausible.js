@@ -166,12 +166,16 @@
   {{/if}}
 
   {{#if outbound_links}}
+  function isOutboundLink(link) {
+    return link && link.href && link.host && link.host !== location.host
+  }
+
   function handleOutbound(event) {
     var link = getLinkEl(event.target)
     var middle = event.type === 'auxclick' && event.which === 2;
     var click = event.type === 'click';
 
-    if (link && link.href && link.host && link.host !== location.host) {
+    if (isOutboundLink(link)) {
       if (middle || click) {
         plausible('Outbound Link: Click', {props: {url: link.href}})
       }
