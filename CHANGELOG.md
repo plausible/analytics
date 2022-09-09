@@ -31,7 +31,6 @@ All notable changes to this project will be documented in this file.
 - The time format (12 hour or 24 hour) for graph timelines is now presented based on the browser's defined language
 - Choice of metric for main-graph both in UI and API (visitors, pageviews, bounce_rate, visit_duration) plausible/analytics#1364
 - New width=manual mode for embedded dashboards plausible/analytics#2148
-- Add link to UTM builder in the campaigns report plausible/analytics#2195
 
 ### Fixed
 - Hash part of the URL can now be used when excluding pages with `script.exclusions.hash.js`.
