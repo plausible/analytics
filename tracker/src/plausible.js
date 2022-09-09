@@ -169,19 +169,14 @@
     var isRegularClick = !(event.ctrlKey || event.metaKey || event.shiftKey) && event.type === 'click'
     return targetsCurrentWindow && isRegularClick
   }
-  {{/if}}
 
-  {{#if outbound_links}}
-  function isOutboundLink(link) {
-    return link && link.href && link.host && link.host !== location.host
-  }
-
-  function handleOutbound(event) {
+  function handleLinkClickEvent(event) {
     if (event.type === 'auxclick' && event.which !== 2) { return }
 
     var link = getLinkEl(event.target)
+    var hrefWithoutQuery = link && link.href && link.href.split('?')[0]
 
-    if (isOutboundLink(link)) {
+    if (typeof isOutboundLink === 'function' && isOutboundLink(link)) {
       plausible('Outbound Link: Click', {props: {url: link.href}})
 
       if (shouldFollowLink(event, link)) {
@@ -191,32 +186,8 @@
         event.preventDefault();
       }
     }
-  }
-
-  function registerOutboundLinkEvents() {
-    document.addEventListener('click', handleOutbound)
-    document.addEventListener('auxclick', handleOutbound)
-  }
-  {{/if}}
-
-  {{#if outbound_links}}
-  registerOutboundLinkEvents()
-  {{/if}}
-
-  {{#if file_downloads}}
-  var defaultFileTypes = ['pdf', 'xlsx', 'docx', 'txt', 'rtf', 'csv', 'exe', 'key', 'pps', 'ppt', 'pptx', '7z', 'pkg', 'rar', 'gz', 'zip', 'avi', 'mov', 'mp4', 'mpeg', 'wmv', 'midi', 'mp3', 'wav', 'wma']
-  var fileTypesAttr = scriptEl.getAttribute('file-types')
-  var addFileTypesAttr = scriptEl.getAttribute('add-file-types')
-  var fileTypesToTrack = (fileTypesAttr && fileTypesAttr.split(",")) || (addFileTypesAttr && addFileTypesAttr.split(",").concat(defaultFileTypes)) || defaultFileTypes;
-
-  function handleDownload(event) {
-    if (event.type === 'auxclick' && event.which !== 2) { return }
-
-    var link = getLinkEl(event.target)
-
-    var linkTarget = link && link.href && link.href.split('?')[0]
-    if (linkTarget && isDownloadToTrack(linkTarget)) {
-      plausible('File Download', {props: {url: linkTarget}})
+    else if (typeof isDownloadToTrack === 'function' && isDownloadToTrack(hrefWithoutQuery)) {
+      plausible('File Download', {props: {url: hrefWithoutQuery}})
 
       if (shouldFollowLink(event, link)) {
         setTimeout(function() {
@@ -227,14 +198,29 @@
     }
   }
 
+  document.addEventListener('click', handleLinkClickEvent)
+  document.addEventListener('auxclick', handleLinkClickEvent)
+  {{/if}}
+
+  {{#if outbound_links}}
+  function isOutboundLink(link) {
+    return link && link.href && link.host && link.host !== location.host
+  }
+  {{/if}}
+
+  {{#if file_downloads}}
+  var defaultFileTypes = ['pdf', 'xlsx', 'docx', 'txt', 'rtf', 'csv', 'exe', 'key', 'pps', 'ppt', 'pptx', '7z', 'pkg', 'rar', 'gz', 'zip', 'avi', 'mov', 'mp4', 'mpeg', 'wmv', 'midi', 'mp3', 'wav', 'wma']
+  var fileTypesAttr = scriptEl.getAttribute('file-types')
+  var addFileTypesAttr = scriptEl.getAttribute('add-file-types')
+  var fileTypesToTrack = (fileTypesAttr && fileTypesAttr.split(",")) || (addFileTypesAttr && addFileTypesAttr.split(",").concat(defaultFileTypes)) || defaultFileTypes;
+
   function isDownloadToTrack(url) {
+    if (!url) { return false }
+
     var fileType = url.split('.').pop();
     return fileTypesToTrack.some(function(fileTypeToTrack) {
       return fileTypeToTrack === fileType
     })
   }
-
-  document.addEventListener('click', handleDownload);
-  document.addEventListener('auxclick', handleDownload);
   {{/if}}
 })();
