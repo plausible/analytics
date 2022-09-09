@@ -164,9 +164,9 @@
     return link
   }
 
-  function shouldFollowLink(event, link, click) {
+  function shouldFollowLink(event, link) {
     var targetsCurrentWindow = !link.target || link.target.match(/^_(self|parent|top)$/i)
-    var isRegularClick = !(event.ctrlKey || event.metaKey || event.shiftKey) && click
+    var isRegularClick = !(event.ctrlKey || event.metaKey || event.shiftKey) && event.type === 'click'
     return targetsCurrentWindow && isRegularClick
   }
   {{/if}}
@@ -177,16 +177,14 @@
   }
 
   function handleOutbound(event) {
+    if (event.type === 'auxclick' && event.which !== 2) { return }
+
     var link = getLinkEl(event.target)
-    var middle = event.type === 'auxclick' && event.which === 2;
-    var click = event.type === 'click';
 
     if (isOutboundLink(link)) {
-      if (middle || click) {
-        plausible('Outbound Link: Click', {props: {url: link.href}})
-      }
+      plausible('Outbound Link: Click', {props: {url: link.href}})
 
-      if (shouldFollowLink(event, link, click)) {
+      if (shouldFollowLink(event, link)) {
         setTimeout(function() {
           location.href = link.href;
         }, 150);
@@ -212,19 +210,15 @@
   var fileTypesToTrack = (fileTypesAttr && fileTypesAttr.split(",")) || (addFileTypesAttr && addFileTypesAttr.split(",").concat(defaultFileTypes)) || defaultFileTypes;
 
   function handleDownload(event) {
+    if (event.type === 'auxclick' && event.which !== 2) { return }
 
     var link = getLinkEl(event.target)
-    var middle = event.type === 'auxclick' && event.which === 2;
-    var click = event.type === 'click';
 
     var linkTarget = link && link.href && link.href.split('?')[0]
     if (linkTarget && isDownloadToTrack(linkTarget)) {
+      plausible('File Download', {props: {url: linkTarget}})
 
-      if (middle || click) {
-        plausible('File Download', {props: {url: linkTarget}})
-      }
-
-      if (shouldFollowLink(event, link, click)) {
+      if (shouldFollowLink(event, link)) {
         setTimeout(function() {
           location.href = link.href;
         }, 150);
