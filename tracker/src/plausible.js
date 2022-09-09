@@ -111,30 +111,75 @@
     }
   }
 
+  var queue = (window.plausible && window.plausible.q) || []
+  window.plausible = trigger
+  for (var i = 0; i < queue.length; i++) {
+    trigger.apply(this, queue[i])
+  }
+
+  {{#unless manual}}
+    var lastPage;
+
+    function page() {
+      {{#unless hash}}
+      if (lastPage === location.pathname) return;
+      {{/unless}}
+      lastPage = location.pathname
+      trigger('pageview')
+    }
+
+    {{#if hash}}
+    window.addEventListener('hashchange', page)
+    {{else}}
+    var his = window.history
+    if (his.pushState) {
+      var originalPushState = his['pushState']
+      his.pushState = function() {
+        originalPushState.apply(this, arguments)
+        page();
+      }
+      window.addEventListener('popstate', page)
+    }
+    {{/if}}
+
+    function handleVisibilityChange() {
+      if (!lastPage && document.visibilityState === 'visible') {
+        page()
+      }
+    }
+
+    if (document.visibilityState === 'prerender') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    } else {
+      page()
+    }
+  {{/unless}}
+
+  // CUSTOM EVENT TRACKING
   {{#if outbound_links}}
   function handleOutbound(event) {
     var link = event.target;
     var middle = event.type === 'auxclick' && event.which === 2;
     var click = event.type === 'click';
-      while(link && (typeof link.tagName === 'undefined' || link.tagName.toLowerCase() !== 'a' || !link.href)) {
-        link = link.parentNode
+    while(link && (typeof link.tagName === 'undefined' || link.tagName.toLowerCase() !== 'a' || !link.href)) {
+      link = link.parentNode
+    }
+
+    if (link && link.href && link.host && link.host !== location.host) {
+      if (middle || click) {
+        plausible('Outbound Link: Click', {props: {url: link.href}})
       }
 
-      if (link && link.href && link.host && link.host !== location.host) {
-        if (middle || click) {
-          plausible('Outbound Link: Click', {props: {url: link.href}})
-        }
-
-        // Delay navigation so that Plausible is notified of the click
-        if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
-          if (!(event.ctrlKey || event.metaKey || event.shiftKey) && click) {
-            setTimeout(function() {
-              location.href = link.href;
-            }, 150);
-            event.preventDefault();
-          }
+      // Delay navigation so that Plausible is notified of the click
+      if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
+        if (!(event.ctrlKey || event.metaKey || event.shiftKey) && click) {
+          setTimeout(function() {
+            location.href = link.href;
+          }, 150);
+          event.preventDefault();
         }
       }
+    }
   }
 
   function registerOutboundLinkEvents() {
@@ -192,49 +237,4 @@
   document.addEventListener('click', handleDownload);
   document.addEventListener('auxclick', handleDownload);
   {{/if}}
-
-  var queue = (window.plausible && window.plausible.q) || []
-  window.plausible = trigger
-  for (var i = 0; i < queue.length; i++) {
-    trigger.apply(this, queue[i])
-  }
-
-  {{#unless manual}}
-    var lastPage;
-
-    function page() {
-      {{#unless hash}}
-      if (lastPage === location.pathname) return;
-      {{/unless}}
-      lastPage = location.pathname
-      trigger('pageview')
-    }
-
-    {{#if hash}}
-    window.addEventListener('hashchange', page)
-    {{else}}
-    var his = window.history
-    if (his.pushState) {
-      var originalPushState = his['pushState']
-      his.pushState = function() {
-        originalPushState.apply(this, arguments)
-        page();
-      }
-      window.addEventListener('popstate', page)
-    }
-    {{/if}}
-
-    function handleVisibilityChange() {
-      if (!lastPage && document.visibilityState === 'visible') {
-        page()
-      }
-    }
-
-
-    if (document.visibilityState === 'prerender') {
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-    } else {
-      page()
-    }
-  {{/unless}}
 })();
