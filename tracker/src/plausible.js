@@ -163,6 +163,12 @@
     }
     return link
   }
+
+  function shouldFollowLink(event, link, click) {
+    var targetsCurrentWindow = !link.target || link.target.match(/^_(self|parent|top)$/i)
+    var isRegularClick = !(event.ctrlKey || event.metaKey || event.shiftKey) && click
+    return targetsCurrentWindow && isRegularClick
+  }
   {{/if}}
 
   {{#if outbound_links}}
@@ -180,14 +186,11 @@
         plausible('Outbound Link: Click', {props: {url: link.href}})
       }
 
-      // Delay navigation so that Plausible is notified of the click
-      if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
-        if (!(event.ctrlKey || event.metaKey || event.shiftKey) && click) {
-          setTimeout(function() {
-            location.href = link.href;
-          }, 150);
-          event.preventDefault();
-        }
+      if (shouldFollowLink(event, link, click)) {
+        setTimeout(function() {
+          location.href = link.href;
+        }, 150);
+        event.preventDefault();
       }
     }
   }
@@ -221,14 +224,11 @@
         plausible('File Download', {props: {url: linkTarget}})
       }
 
-      // Delay navigation so that Plausible is notified of the click
-      if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
-        if (!(event.ctrlKey || event.metaKey || event.shiftKey) && click) {
-          setTimeout(function() {
-            location.href = link.href;
-          }, 150);
-          event.preventDefault();
-        }
+      if (shouldFollowLink(event, link, click)) {
+        setTimeout(function() {
+          location.href = link.href;
+        }, 150);
+        event.preventDefault();
       }
     }
   }
