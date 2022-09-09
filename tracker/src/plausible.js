@@ -156,14 +156,20 @@
   {{/unless}}
 
   // CUSTOM EVENT TRACKING
-  {{#if outbound_links}}
-  function handleOutbound(event) {
-    var link = event.target;
-    var middle = event.type === 'auxclick' && event.which === 2;
-    var click = event.type === 'click';
-    while(link && (typeof link.tagName === 'undefined' || link.tagName.toLowerCase() !== 'a' || !link.href)) {
+  {{#if (any outbound_links file_downloads)}}
+  function getLinkEl(link) {
+    while (link && (typeof link.tagName === 'undefined' || link.tagName.toLowerCase() !== 'a' || !link.href)) {
       link = link.parentNode
     }
+    return link
+  }
+  {{/if}}
+
+  {{#if outbound_links}}
+  function handleOutbound(event) {
+    var link = getLinkEl(event.target)
+    var middle = event.type === 'auxclick' && event.which === 2;
+    var click = event.type === 'click';
 
     if (link && link.href && link.host && link.host !== location.host) {
       if (middle || click) {
@@ -200,13 +206,9 @@
 
   function handleDownload(event) {
 
-    var link = event.target;
+    var link = getLinkEl(event.target)
     var middle = event.type === 'auxclick' && event.which === 2;
     var click = event.type === 'click';
-
-    while(link && (typeof link.tagName === 'undefined' || link.tagName.toLowerCase() !== 'a' || !link.href)) {
-      link = link.parentNode
-    }
 
     var linkTarget = link && link.href && link.href.split('?')[0]
     if (linkTarget && isDownloadToTrack(linkTarget)) {
