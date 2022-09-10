@@ -189,13 +189,21 @@
   }
 
   function sendLinkClickEvent(event, link, eventName, eventProps) {
-    plausible(eventName, {props: eventProps})
+    var followedLink = false
+
+    function followLink() {
+      if (!followedLink) {
+        followedLink = true
+        window.location = link.href
+      }
+    }
 
     if (shouldFollowLink(event, link)) {
-      setTimeout(function() {
-        location.href = link.href;
-      }, 150);
-      event.preventDefault();
+      plausible(eventName, { props: eventProps, callback: followLink })
+      setTimeout(followLink, 5000)
+      event.preventDefault()
+    } else {
+      plausible(eventName, { props: eventProps })
     }
   }
 
