@@ -105,7 +105,7 @@ defmodule Plausible.Google.HTTP do
         |> then(&{:ok, &1})
 
       {:error, reason} = e ->
-        Logger.error("Google Analytics: failed to list sites: #{reason}")
+        Logger.error("Google Analytics: failed to list sites: #{inspect(reason)}")
         e
     end
   end
@@ -142,8 +142,8 @@ defmodule Plausible.Google.HTTP do
         Sentry.capture_message("Error fetching Google view ID", extra: Jason.decode!(body))
         {:error, body}
 
-      {:error, %{reason: reason}} ->
-        Sentry.capture_message("Error fetching Google view ID", extra: inspect(reason))
+      {:error, %{reason: reason} = e} ->
+        Sentry.capture_message("Error fetching Google view ID", extra: e)
         {:error, reason}
     end
   end
@@ -187,8 +187,8 @@ defmodule Plausible.Google.HTTP do
         Sentry.capture_message("Error fetching Google queries", extra: Jason.decode!(body))
         {:error, :unknown}
 
-      {:error, %{reason: reason}} ->
-        Sentry.capture_message("Error fetching Google queries", extra: reason)
+      {:error, %{reason: _} = e} ->
+        Sentry.capture_message("Error fetching Google queries", extra: e)
         {:error, :unknown}
     end
   end
@@ -218,8 +218,8 @@ defmodule Plausible.Google.HTTP do
         |> Map.get("error")
         |> then(&{:error, &1})
 
-      {:error, %{reason: reason}} ->
-        Sentry.capture_message("Error fetching Google queries", extra: reason)
+      {:error, %{reason: _} = e} ->
+        Sentry.capture_message("Error fetching Google queries", extra: e)
         {:error, :unknown}
     end
   end
@@ -265,8 +265,8 @@ defmodule Plausible.Google.HTTP do
         Sentry.capture_message("Error fetching Google view ID", extra: Jason.decode!(body))
         {:error, body}
 
-      {:error, %{reason: reason}} ->
-        Sentry.capture_message("Error fetching Google view ID", extra: reason)
+      {:error, %{reason: reason} = e} ->
+        Sentry.capture_message("Error fetching Google view ID", extra: e)
         {:error, reason}
     end
   end
