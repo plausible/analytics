@@ -177,24 +177,25 @@
     var hrefWithoutQuery = link && link.href && link.href.split('?')[0]
 
     if (typeof isOutboundLink === 'function' && isOutboundLink(link)) {
-      plausible('Outbound Link: Click', {props: {url: link.href}})
-
-      if (shouldFollowLink(event, link)) {
-        setTimeout(function() {
-          location.href = link.href;
-        }, 150);
-        event.preventDefault();
-      }
+      var eventName = 'Outbound Link: Click'
+      var eventProps = {url: link.href}
+      sendLinkClickEvent(event, link, eventName, eventProps)
     }
     else if (typeof isDownloadToTrack === 'function' && isDownloadToTrack(hrefWithoutQuery)) {
-      plausible('File Download', {props: {url: hrefWithoutQuery}})
+      var eventName = 'File Download'
+      var eventProps = {url: hrefWithoutQuery}
+      sendLinkClickEvent(event, link, eventName, eventProps)
+    }
+  }
 
-      if (shouldFollowLink(event, link)) {
-        setTimeout(function() {
-          location.href = link.href;
-        }, 150);
-        event.preventDefault();
-      }
+  function sendLinkClickEvent(event, link, eventName, eventProps) {
+    plausible(eventName, {props: eventProps})
+
+    if (shouldFollowLink(event, link)) {
+      setTimeout(function() {
+        location.href = link.href;
+      }, 150);
+      event.preventDefault();
     }
   }
 
