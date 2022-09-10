@@ -165,6 +165,9 @@
   }
 
   function shouldFollowLink(event, link) {
+    // If default has been prevented by an external script, Plausible should not intercept navigation.
+    if (event.defaultPrevented) { return false }
+
     var targetsCurrentWindow = !link.target || link.target.match(/^_(self|parent|top)$/i)
     var isRegularClick = !(event.ctrlKey || event.metaKey || event.shiftKey) && event.type === 'click'
     return targetsCurrentWindow && isRegularClick
