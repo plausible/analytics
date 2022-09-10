@@ -17,7 +17,11 @@ function compilefile(input, output, templateVars = {}) {
   const template = Handlebars.compile(code)
   const rendered = template(templateVars)
   const result = uglify.minify(rendered)
-  fs.writeFileSync(output, result.code)
+  if (result.code) {
+    fs.writeFileSync(output, result.code)
+  } else {
+    throw new Error(`Failed to compile ${output.split('/').pop()}.\n${result.error}\n`)
+  }
 }
 
 const base_variants = ["hash", "outbound-links", "exclusions", "compat", "local", "manual", "file-downloads", "dimensions"]
