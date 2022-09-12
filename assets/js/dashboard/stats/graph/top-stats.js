@@ -45,7 +45,7 @@ export default class TopStats extends React.Component {
 
     return (
       <div>
-        <div>{this.topStatNumberLong(stat)} {statName}</div>
+        <div className="whitespace-nowrap">{this.topStatNumberLong(stat)} {statName}</div>
         {this.canMetricBeGraphed(stat) && <div className="font-normal text-xs">{this.titleFor(stat)}</div>}
       </div>
     )
@@ -99,7 +99,7 @@ export default class TopStats extends React.Component {
       })
 
       return (
-        <Tooltip key={stat.name} info={this.topStatTooltip(stat)} className={className} onClick={() => { this.maybeUpdateMetric(stat) }}>
+        <Tooltip key={stat.name} info={this.topStatTooltip(stat)} className={className} onClick={() => { this.maybeUpdateMetric(stat) }} boundary={this.props.tooltipBoundary}>
           <div
             className={`text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-content border-b ${isSelected ? 'text-indigo-700 dark:text-indigo-500 border-indigo-700 dark:border-indigo-500' : 'group-hover:text-indigo-700 dark:group-hover:text-indigo-500 border-transparent'}`}>
             {statDisplayName}

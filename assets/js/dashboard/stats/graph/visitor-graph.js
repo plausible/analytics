@@ -48,6 +48,7 @@ export const METRIC_FORMATTER = {
 class LineGraph extends React.Component {
   constructor(props) {
     super(props);
+    this.boundary = React.createRef()
     this.regenerateChart = this.regenerateChart.bind(this);
     this.updateWindowDimensions =  this.updateWindowDimensions.bind(this);
     this.state = {
