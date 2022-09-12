@@ -1,5 +1,5 @@
 defmodule Plausible.HTTPClientTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   alias Plausible.HTTPClient
   alias Plug.Conn
@@ -10,19 +10,21 @@ defmodule Plausible.HTTPClientTest do
   end
 
   test "get/2 works", %{bypass: bypass} do
-    Bypass.expect_once(bypass, "GET", "/", fn conn ->
+    Bypass.expect_once(bypass, "GET", "/get", fn conn ->
       Conn.resp(conn, 200, "ok")
     end)
 
-    assert {:ok, %Finch.Response{status: 200, body: "ok"}} = HTTPClient.get(bypass_url(bypass))
+    assert {:ok, %Finch.Response{status: 200, body: "ok"}} =
+             HTTPClient.get(bypass_url(bypass, path: "/get"))
   end
 
   test "post/3 works", %{bypass: bypass} do
-    Bypass.expect_once(bypass, "POST", "/", fn conn ->
+    Bypass.expect_once(bypass, "POST", "/post", fn conn ->
       Conn.resp(conn, 200, "ok")
     end)
 
-    assert {:ok, %Finch.Response{status: 200, body: "ok"}} = HTTPClient.post(bypass_url(bypass))
+    assert {:ok, %Finch.Response{status: 200, body: "ok"}} =
+             HTTPClient.post(bypass_url(bypass, path: "/post"))
   end
 
   test "post/3 doesn't alter params if binary passed",
@@ -32,7 +34,7 @@ defmodule Plausible.HTTPClientTest do
     body = "raw binary"
     headers = []
 
-    Bypass.expect_once(bypass, "POST", "/", fn conn ->
+    Bypass.expect_once(bypass, "POST", "/post", fn conn ->
       opts = Plug.Parsers.init(parsers: [:urlencoded, {:json, json_decoder: Jason}])
 
       conn
@@ -41,7 +43,7 @@ defmodule Plausible.HTTPClientTest do
     end)
 
     assert {:ok, %Finch.Response{status: 200, body: ^body}} =
-             HTTPClient.post(bypass_url(bypass), headers, body)
+             HTTPClient.post(bypass_url(bypass, path: "/post"), headers, body)
   end
 
   test "post/3 URL-encodes params if request content-type is set to application/x-www-form-urlencoded and a map is supplied",
@@ -51,7 +53,7 @@ defmodule Plausible.HTTPClientTest do
     body = %{hello: :world, alice: :bob}
     headers = [{"Content-Type", "application/x-www-form-urlencoded"}]
 
-    Bypass.expect_once(bypass, "POST", "/", fn conn ->
+    Bypass.expect_once(bypass, "POST", "/post", fn conn ->
       opts = Plug.Parsers.init(parsers: [:urlencoded])
       conn = Plug.Parsers.call(conn, opts)
 
@@ -62,7 +64,7 @@ defmodule Plausible.HTTPClientTest do
     end)
 
     assert {:ok, %Finch.Response{status: 200, body: "ok"}} =
-             HTTPClient.post(bypass_url(bypass), headers, body)
+             HTTPClient.post(bypass_url(bypass, path: "/post"), headers, body)
   end
 
   test "post/3 JSON-encodes params if request content-type is other than application/x-www-form-urlencoded and a map is supplied",
@@ -100,7 +102,7 @@ defmodule Plausible.HTTPClientTest do
              HTTPClient.post(bypass_url(bypass, path: "/any"), headers_no_content_type, params)
   end
 
-  defp bypass_url(bypass, opts \\ []) do
+  defp bypass_url(bypass, opts) do
     port = bypass.port
     path = Keyword.get(opts, :path, "/")
 
