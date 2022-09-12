@@ -34,6 +34,8 @@ All notable changes to this project will be documented in this file.
 - New width=manual mode for embedded dashboards plausible/analytics#2148
 - Add more timezone options
 - Add new strategy to recommend timezone when creating a new site
+- Alert outgrown enterprise users of their usage plausible/analytics#2197
+- Manually lock and unlock enterprise users plausible/analytics#2197
 
 ### Fixed
 - Hash part of the URL can now be used when excluding pages with `script.exclusions.hash.js`.

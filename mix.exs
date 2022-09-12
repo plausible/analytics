@@ -135,7 +135,8 @@ defmodule Plausible.MixProject do
       extras:
         Path.wildcard("guides/**/*.md") ++
           [
-            "README.md": [filename: "readme", title: "Introduction"]
+            "README.md": [filename: "readme", title: "Introduction"],
+            "CONTRIBUTING.md": [filename: "contributing", title: "Contributing"]
           ],
       groups_for_extras: [
         Features: Path.wildcard("guides/features/*.md")
