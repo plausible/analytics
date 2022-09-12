@@ -3,6 +3,9 @@ defmodule Plausible.MixProject do
 
   def project do
     [
+      name: "Plausible",
+      source_url: "https://github.com/plausible/analytics",
+      docs: docs(),
       app: :plausible,
       version: System.get_env("APP_VERSION", "0.0.1"),
       elixir: "~> 1.11",
@@ -111,7 +114,8 @@ defmodule Plausible.MixProject do
       {:siphash, "~> 3.2"},
       {:telemetry, "~> 1.0", override: true},
       {:timex, "~> 3.7"},
-      {:ua_inspector, "~> 3.0"}
+      {:ua_inspector, "~> 3.0"},
+      {:ex_doc, "~> 0.28"}
     ]
   end
 
@@ -121,6 +125,21 @@ defmodule Plausible.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate", "test", "clean_clickhouse"],
       sentry_recompile: ["compile", "deps.compile sentry --force"]
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      logo: "assets/static/images/icon/plausible_favicon.png",
+      extras:
+        Path.wildcard("guides/**/*.md") ++
+          [
+            "README.md": [filename: "readme", title: "Introduction"]
+          ],
+      groups_for_extras: [
+        Features: Path.wildcard("guides/features/*.md")
+      ]
     ]
   end
 end
