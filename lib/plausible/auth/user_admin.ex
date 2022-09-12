@@ -37,7 +37,7 @@ defmodule Plausible.Auth.UserAdmin do
 
   defp unlock(user) do
     if user.grace_period do
-      Plausible.Auth.User.remove_grace_period(user) |> Repo.update()
+      Plausible.Auth.GracePeriod.remove_changeset(user) |> Repo.update()
       Plausible.Billing.SiteLocker.set_lock_status_for(user, false)
       {:ok, user}
     else

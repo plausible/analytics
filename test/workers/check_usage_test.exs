@@ -98,7 +98,7 @@ defmodule Plausible.Workers.CheckUsageTest do
   end
 
   test "skips checking users who already have a grace period", %{user: user} do
-    Plausible.Auth.User.start_grace_period(user, 12_000) |> Repo.update()
+    user |> Plausible.Auth.GracePeriod.start_changeset(12_000) |> Repo.update()
 
     billing_stub =
       Plausible.Billing
@@ -221,8 +221,7 @@ defmodule Plausible.Workers.CheckUsageTest do
       )
 
       CheckUsage.perform(nil, billing_stub)
-
-      assert Repo.reload(user).grace_period.end_date == Timex.shift(Timex.today(), days: 7)
+      assert user |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
     end
   end
 

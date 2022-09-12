@@ -131,12 +131,9 @@ defmodule Plausible.Billing do
     trial_is_over = Timex.before?(user.trial_expiry_date, Timex.today())
     subscription_active = subscription_is_active?(user.subscription)
 
-    grace_period_ended =
-      user.grace_period && Timex.before?(user.grace_period.end_date, Timex.today())
-
     cond do
       trial_is_over && !subscription_active -> {true, :no_active_subscription}
-      grace_period_ended -> {true, :grace_period_ended}
+      Plausible.Auth.GracePeriod.expired?(user) -> {true, :grace_period_ended}
       true -> false
     end
   end
@@ -274,7 +271,8 @@ defmodule Plausible.Billing do
         new_allowance = Plausible.Billing.Plans.allowance(user.subscription)
 
         if new_allowance > allowance_required do
-          Plausible.Auth.User.remove_grace_period(user)
+          user
+          |> Plausible.Auth.GracePeriod.remove_changeset()
           |> Repo.update()
         else
           {:ok, user}

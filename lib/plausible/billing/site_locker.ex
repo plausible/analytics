@@ -8,7 +8,7 @@ defmodule Plausible.Billing.SiteLocker do
 
         if !user.grace_period.is_over do
           send_grace_period_end_email(user)
-          Plausible.Auth.User.end_grace_period(user) |> Repo.update()
+          Plausible.Auth.GracePeriod.end_changeset(user) |> Repo.update()
         end
 
       {true, _} ->

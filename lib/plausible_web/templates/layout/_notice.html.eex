@@ -3,7 +3,7 @@
 <% end %>
 
 
-<%= if on_grace_period?(@conn.assigns[:current_user]) do %>
+<%= if Plausible.Auth.GracePeriod.active?(@conn.assigns[:current_user]) do %>
   <div class="container">
     <div class="rounded-md bg-yellow-100 p-4">
       <div class="flex">
@@ -27,7 +27,7 @@
   </div>
 <% end %>
 
-<%= if grace_period_over?(@conn.assigns[:current_user]) do %>
+<%= if Plausible.Auth.GracePeriod.expired?(@conn.assigns[:current_user]) do %>
   <div class="container">
     <div class="rounded-md bg-yellow-100 p-4">
       <div class="flex">
