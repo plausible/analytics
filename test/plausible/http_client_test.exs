@@ -1,5 +1,5 @@
 defmodule Plausible.HTTPClientTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   alias Plausible.HTTPClient
   alias Plug.Conn
