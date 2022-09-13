@@ -61,7 +61,7 @@ RUN apk upgrade --no-cache
 
 RUN apk add --no-cache openssl ncurses libstdc++ libgcc
 
-COPY .gitlab/build-scripts/docker-entrypoint.sh /entrypoint.sh
+COPY ./rel/docker-entrypoint.sh /entrypoint.sh
 
 RUN chmod a+x /entrypoint.sh && \
   adduser -h /app -u 1000 -s /bin/sh -D plausibleuser
