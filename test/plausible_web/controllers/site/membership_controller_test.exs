@@ -160,26 +160,49 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert redirected_to(conn) == "/#{site.domain}"
     end
 
-    test "admin can't make themselves an owner", %{conn: conn, user: user} do
-      admin = insert(:user)
+    test "admin can make another user admin", %{
+      conn: conn,
+      user: user
+    } do
+      viewer = insert(:user)
 
       site =
         insert(:site,
           memberships: [
-            build(:site_membership, user: user, role: :owner),
-            build(:site_membership, user: admin, role: :admin)
+            build(:site_membership, user: user, role: :admin),
+            build(:site_membership, user: viewer, role: :viewer)
           ]
         )
 
-      membership = Repo.get_by(Plausible.Site.Membership, user_id: admin.id)
+      viewer_membership = Repo.get_by(Plausible.Site.Membership, user_id: viewer.id)
 
-      assert_raise Ecto.InvalidChangesetError, fn ->
-        put(conn, "/sites/#{site.domain}/memberships/#{membership.id}/role/owner")
-      end
+      conn = put(conn, "/sites/#{site.domain}/memberships/#{viewer_membership.id}/role/admin")
+
+      viewer_membership = Repo.reload!(viewer_membership)
+
+      assert viewer_membership.role == :admin
+      assert redirected_to(conn) == "/#{site.domain}/settings/people"
+    end
+
+    test "admin can't make themselves an owner", %{conn: conn, user: user} do
+      owner = insert(:user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: owner, role: :owner),
+            build(:site_membership, user: user, role: :admin)
+          ]
+        )
+
+      membership = Repo.get_by(Plausible.Site.Membership, user_id: user.id)
+
+      conn = put(conn, "/sites/#{site.domain}/memberships/#{membership.id}/role/owner")
 
       membership = Repo.reload!(membership)
 
       assert membership.role == :admin
+      assert get_flash(conn, :error) == "You are not allowed to grant the owner role"
     end
   end
 

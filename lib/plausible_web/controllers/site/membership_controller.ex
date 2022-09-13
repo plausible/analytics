@@ -101,27 +101,47 @@ defmodule PlausibleWeb.Site.MembershipController do
     |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
   end
 
-  def update_role(conn, %{"id" => id, "new_role" => new_role}) do
-    membership =
-      Repo.get!(Membership, id)
-      |> Repo.preload([:site, :user])
-      |> Membership.changeset(%{role: new_role})
-      |> Repo.update!()
+  def update_role(conn, %{"id" => id, "new_role" => new_role_str, "website" => domain}) do
+    new_role = intern_role(new_role_str)
 
-    redirect_target =
-      if membership.user.id == conn.assigns[:current_user].id && new_role == "viewer" do
-        "/#{URI.encode_www_form(membership.site.domain)}"
-      else
-        Routes.site_path(conn, :settings_people, membership.site.domain)
-      end
+    current_user_membership =
+      Repo.get_by(Plausible.Site.Membership, user_id: conn.assigns[:current_user].id)
 
-    conn
-    |> put_flash(
-      :success,
-      "#{membership.user.name} is now #{PlausibleWeb.SiteView.with_indefinite_article(new_role)}"
-    )
-    |> redirect(to: redirect_target)
+    if can_grant_role?(current_user_membership.role, new_role) do
+      membership =
+        Repo.get!(Membership, id)
+        |> Repo.preload([:site, :user])
+        |> Membership.changeset(%{role: new_role})
+        |> Repo.update!()
+
+      redirect_target =
+        if membership.user.id == conn.assigns[:current_user].id && new_role == :viewer do
+          "/#{URI.encode_www_form(domain)}"
+        else
+          Routes.site_path(conn, :settings_people, domain)
+        end
+
+      conn
+      |> put_flash(
+        :success,
+        "#{membership.user.name} is now #{PlausibleWeb.SiteView.with_indefinite_article(new_role_str)}"
+      )
+      |> redirect(to: redirect_target)
+    else
+      conn
+      |> put_flash(:error, "You are not allowed to grant the #{new_role} role")
+      |> redirect(to: Routes.site_path(conn, :settings_people, domain))
+    end
   end
+
+  defp intern_role("owner"), do: :owner
+  defp intern_role("admin"), do: :admin
+  defp intern_role("viewer"), do: :viewer
+
+  defp can_grant_role?(:owner, _), do: true
+  defp can_grant_role?(:admin, :admin), do: true
+  defp can_grant_role?(:admin, :viewer), do: true
+  defp can_grant_role?(_, _), do: false
 
   def remove_member(conn, %{"id" => id}) do
     membership =
