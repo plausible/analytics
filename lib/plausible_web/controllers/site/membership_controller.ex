@@ -144,7 +144,7 @@ defmodule PlausibleWeb.Site.MembershipController do
         |> Repo.update!()
 
       redirect_target =
-        if membership.user.id == current_user.id && new_role == :viewer do
+        if membership.user.id == current_user.id and new_role == :viewer do
           "/#{URI.encode_www_form(site.domain)}"
         else
           Routes.site_path(conn, :settings_people, site.domain)
