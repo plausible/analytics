@@ -31,8 +31,21 @@ defmodule Plausible.Auth.UserAdmin do
       unlock: %{
         name: "Unlock",
         action: fn _, user -> unlock(user) end
+      },
+      lock: %{
+        name: "Lock",
+        action: fn _, user -> lock(user) end
       }
     ]
+  end
+
+  defp lock(user) do
+    if user.grace_period do
+      Plausible.Billing.SiteLocker.set_lock_status_for(user, true)
+      {:ok, user}
+    else
+      {:error, user, "No active grace period on this user"}
+    end
   end
 
   defp unlock(user) do
@@ -45,14 +58,20 @@ defmodule Plausible.Auth.UserAdmin do
     end
   end
 
-  defp grace_period_status(%{grace_period: nil}), do: "--"
+  defp grace_period_status(%{grace_period: grace_period}) do
+    case grace_period do
+      nil ->
+        "--"
 
-  defp grace_period_status(user) do
-    if user.grace_period.is_over do
-      "ended"
-    else
-      days_left = Timex.diff(user.grace_period.end_date, Timex.now(), :days)
-      "#{days_left} days left"
+      %{manual_lock: true} ->
+        "Manual lock"
+
+      %{is_over: true} ->
+        "ended"
+
+      %{end_date: %Date{} = end_date} ->
+        days_left = Timex.diff(end_date, Timex.now(), :days)
+        "#{days_left} days left"
     end
   end
 

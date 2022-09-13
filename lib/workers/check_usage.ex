@@ -82,7 +82,7 @@ defmodule Plausible.Workers.CheckUsage do
         Plausible.Mailer.send_email_safe(template)
 
         subscriber
-        |> Plausible.Auth.GracePeriod.start_changeset(last_cycle_usage)
+        |> Plausible.Auth.GracePeriod.start_manual_lock_changeset(last_cycle_usage)
         |> Repo.update()
     end
   end

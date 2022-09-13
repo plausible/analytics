@@ -2,6 +2,20 @@ defmodule Plausible.Workers.LockSitesTest do
   use Plausible.DataCase, async: true
   alias Plausible.Workers.LockSites
 
+  test "does not lock enterprise site on grace period" do
+    user =
+      :user
+      |> build()
+      |> Plausible.Auth.GracePeriod.start_manual_lock_changeset(100)
+      |> Plausible.Repo.insert!()
+
+    site = insert(:site, members: [user])
+
+    LockSites.perform(nil)
+
+    refute Repo.reload!(site).locked
+  end
+
   test "does not lock trial user's site" do
     user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
     site = insert(:site, members: [user])

@@ -72,4 +72,34 @@ defmodule Plausible.Auth.GracePeriodTest do
 
     refute Plausible.Auth.GracePeriod.expired?(user)
   end
+
+  test "start_manual_lock_changeset/1 creates an active grace period" do
+    user = build(:user)
+    changeset = Plausible.Auth.GracePeriod.start_manual_lock_changeset(user, 1)
+    user = Ecto.Changeset.apply_changes(changeset)
+
+    assert Plausible.Auth.GracePeriod.active?(user)
+    refute Plausible.Auth.GracePeriod.expired?(user)
+  end
+
+  test "start_changeset/1 creates an active grace period" do
+    user = build(:user)
+    changeset = Plausible.Auth.GracePeriod.start_changeset(user, 1)
+    user = Ecto.Changeset.apply_changes(changeset)
+
+    assert Plausible.Auth.GracePeriod.active?(user)
+    refute Plausible.Auth.GracePeriod.expired?(user)
+  end
+
+  test "remove_changeset/1 removes the active grace period" do
+    user = build(:user)
+    start_changeset = Plausible.Auth.GracePeriod.start_changeset(user, 1)
+    user = Ecto.Changeset.apply_changes(start_changeset)
+
+    remove_changeset = Plausible.Auth.GracePeriod.remove_changeset(user)
+    user = Ecto.Changeset.apply_changes(remove_changeset)
+
+    refute Plausible.Auth.GracePeriod.active?(user)
+    refute Plausible.Auth.GracePeriod.expired?(user)
+  end
 end
