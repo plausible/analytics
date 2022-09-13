@@ -43,7 +43,45 @@ defmodule Plausible.Application do
   defp finch_pool_config() do
     config = Application.fetch_env!(:plausible, Plausible.Finch)
 
-    pool_config = %{
+    pool_config =
+      case config[:preset] do
+        "CLOUD" ->
+          finch_cloud_preset(config)
+
+        "SELF_HOSTED" ->
+          finch_self_hosted_preset()
+
+        other ->
+          raise """
+          Unexpected FINCH_PRESET value:
+
+              #{inspect(other)}
+
+          Should be one of:
+          - CLOUD
+          - SELF_HOSTED
+
+          Example:
+
+              export FINCH_PRESET=SELF_HOSTED
+
+          """
+      end
+
+    sentry_dsn = Application.get_env(:sentry, :dsn)
+
+    if is_binary(sentry_dsn) do
+      Map.put(pool_config, sentry_dsn,
+        size: config[:sentry_pool_size],
+        count: config[:sentry_pool_count]
+      )
+    else
+      pool_config
+    end
+  end
+
+  defp finch_cloud_preset(config) do
+    %{
       :default => [size: config[:default_pool_size], count: config[:default_pool_count]],
       "https://vendors.paddle.com" => [
         protocol: :http2,
@@ -66,17 +104,14 @@ defmodule Plausible.Application do
         conn_opts: [transport_opts: [timeout: 15_000]]
       ]
     }
+  end
 
-    sentry_dsn = Application.get_env(:sentry, :dsn)
-
-    if is_binary(sentry_dsn) do
-      Map.put(pool_config, sentry_dsn,
-        size: config[:sentry_pool_size],
-        count: config[:sentry_pool_count]
-      )
-    else
-      pool_config
-    end
+  defp finch_self_hosted_preset do
+    %{
+      "https://www.googleapis.com" => [protocol: :http2],
+      "https://analyticsreporting.googleapis.com" => [protocol: :http2],
+      "https://icons.duckduckgo.com" => [protocol: :http2]
+    }
   end
 
   def setup_sentry() do

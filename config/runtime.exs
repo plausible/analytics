@@ -373,6 +373,7 @@ config :plausible, :hcaptcha,
   secret: hcaptcha_secret
 
 config :plausible, Plausible.Finch,
+  preset: get_var_from_path_or_env(config_dir, "FINCH_PRESET", "SELF_HOSTED"),
   default_pool_size: get_int_from_path_or_env(config_dir, "DEFAULT_FINCH_POOL_SIZE", 50),
   default_pool_count: get_int_from_path_or_env(config_dir, "DEFAULT_FINCH_POOL_COUNT", 1),
   sentry_pool_size: get_int_from_path_or_env(config_dir, "SENTRY_FINCH_POOL_SIZE", 50),
