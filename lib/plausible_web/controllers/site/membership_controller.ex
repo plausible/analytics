@@ -154,7 +154,8 @@ defmodule PlausibleWeb.Site.MembershipController do
   defp intern_role("admin"), do: :admin
   defp intern_role("viewer"), do: :viewer
 
-  defp can_grant_role?(:owner, _), do: true
+  defp can_grant_role?(:owner, :admin), do: true
+  defp can_grant_role?(:owner, :viewer), do: true
   defp can_grant_role?(:admin, :admin), do: true
   defp can_grant_role?(:admin, :viewer), do: true
   defp can_grant_role?(_, _), do: false
