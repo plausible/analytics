@@ -130,14 +130,14 @@ defmodule PlausibleWeb.Site.MembershipController do
     membership = Repo.get!(Membership, id) |> Repo.preload(:user)
     new_role = Map.fetch!(@role_mappings, new_role_str)
 
-    can_grant_role =
+    can_grant_role? =
       if membership.user.id == current_user.id do
         can_grant_role_to_self?(current_user_role, new_role)
       else
         can_grant_role_to_other?(current_user_role, new_role)
       end
 
-    if can_grant_role do
+    if can_grant_role? do
       membership =
         membership
         |> Membership.changeset(%{role: new_role})
