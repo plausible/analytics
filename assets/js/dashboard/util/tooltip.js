@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { usePopper } from 'react-popper';
 import classNames from 'classnames'
 
-export function Tooltip({ children, info, className, onClick }) {
+export function Tooltip({ children, info, className, onClick, boundary }) {
   const [visible, setVisible] = useState(false);
   const [referenceElement, setReferenceElement] = useState(null);
   const [popperElement, setPopperElement] = useState(null);
@@ -15,6 +15,12 @@ export function Tooltip({ children, info, className, onClick }) {
         name: 'offset',
         options: {
           offset: [0, 4],
+        },
+      },
+      boundary && {
+        name: 'preventOverflow',
+        options: {
+          boundary: boundary,
         },
       },
     ],
