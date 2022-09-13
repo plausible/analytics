@@ -125,18 +125,26 @@ defmodule PlausibleWeb.Site.MembershipController do
                  |> Enum.into(%{})
 
   def update_role(conn, %{"id" => id, "new_role" => new_role_str}) do
-    %{site: site, current_user_role: current_user_role} = conn.assigns
+    %{site: site, current_user: current_user, current_user_role: current_user_role} = conn.assigns
+
+    membership = Repo.get!(Membership, id) |> Repo.preload(:user)
     new_role = Map.fetch!(@role_mappings, new_role_str)
 
-    if can_grant_role?(current_user_role, new_role) do
+    can_grant_role =
+      if membership.user.id == current_user.id do
+        can_grant_role_to_self?(current_user_role, new_role)
+      else
+        can_grant_role_to_other?(current_user_role, new_role)
+      end
+
+    if can_grant_role do
       membership =
-        Repo.get!(Membership, id)
-        |> Repo.preload(:user)
+        membership
         |> Membership.changeset(%{role: new_role})
         |> Repo.update!()
 
       redirect_target =
-        if membership.user.id == conn.assigns[:current_user].id && new_role == :viewer do
+        if membership.user.id == current_user.id && new_role == :viewer do
           "/#{URI.encode_www_form(site.domain)}"
         else
           Routes.site_path(conn, :settings_people, site.domain)
@@ -155,11 +163,14 @@ defmodule PlausibleWeb.Site.MembershipController do
     end
   end
 
-  defp can_grant_role?(:owner, :admin), do: true
-  defp can_grant_role?(:owner, :viewer), do: true
-  defp can_grant_role?(:admin, :admin), do: true
-  defp can_grant_role?(:admin, :viewer), do: true
-  defp can_grant_role?(_, _), do: false
+  defp can_grant_role_to_self?(:admin, :viewer), do: true
+  defp can_grant_role_to_self?(_, _), do: false
+
+  defp can_grant_role_to_other?(:owner, :admin), do: true
+  defp can_grant_role_to_other?(:owner, :viewer), do: true
+  defp can_grant_role_to_other?(:admin, :admin), do: true
+  defp can_grant_role_to_other?(:admin, :viewer), do: true
+  defp can_grant_role_to_other?(_, _), do: false
 
   def remove_member(conn, %{"id" => id}) do
     membership =

@@ -184,6 +184,22 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert get_flash(conn, :error) == "You are not allowed to grant the owner role"
     end
 
+    test "owner cannot downgrade themselves", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
+
+      membership = Repo.get_by(Plausible.Site.Membership, user_id: user.id)
+
+      conn = put(conn, "/sites/#{site.domain}/memberships/#{membership.id}/role/admin")
+
+      membership = Repo.reload!(membership)
+
+      assert membership.role == :owner
+      assert get_flash(conn, :error) == "You are not allowed to grant the admin role"
+    end
+
     test "admin can make another user admin", %{
       conn: conn,
       user: user
