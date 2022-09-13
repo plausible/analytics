@@ -104,7 +104,6 @@ defmodule Plausible.Google.Api do
   end
 
   @per_page 10_000
-  @one_day_in_ms 86_400_000
   @doc """
   API reference:
   https://developers.google.com/analytics/devguides/reporting/core/v4/rest/v4/reports/batchGet#ReportRequest
@@ -115,24 +114,18 @@ defmodule Plausible.Google.Api do
     {:ok, buffer} = Plausible.Google.Buffer.start_link()
 
     ReportRequest.full_report()
-    |> Task.async_stream(
-      fn %ReportRequest{} = report_request ->
-        report_request = %ReportRequest{
-          report_request
-          | date_range: date_range,
-            view_id: view_id,
-            access_token: access_token,
-            page_token: nil,
-            page_size: @per_page
-        }
+    |> Enum.each(fn %ReportRequest{} = report_request ->
+      report_request = %ReportRequest{
+        report_request
+        | date_range: date_range,
+          view_id: view_id,
+          access_token: access_token,
+          page_token: nil,
+          page_size: @per_page
+      }
 
-        fetch_and_persist(site, report_request, buffer: buffer)
-      end,
-      ordered: false,
-      max_concurrency: 3,
-      timeout: @one_day_in_ms
-    )
-    |> Stream.run()
+      fetch_and_persist(site, report_request, buffer: buffer)
+    end)
 
     Plausible.Google.Buffer.flush(buffer)
     Plausible.Google.Buffer.stop(buffer)
