@@ -180,22 +180,19 @@
     var link = getLinkEl(event.target)
     var hrefWithoutQuery = link && link.href && link.href.split('?')[0]
 
-    // if clause for syntax - allows dynamically injecting 0 or more `else if` clauses
-    if (false) {}
-
     {{#if outbound_links}}
-    else if (isOutboundLink(link)) {
+    if (isOutboundLink(link)) {
       var eventName = 'Outbound Link: Click'
       var eventProps = {url: link.href}
-      sendLinkClickEvent(event, link, eventName, eventProps)
+      return sendLinkClickEvent(event, link, eventName, eventProps)
     }
     {{/if}}
 
     {{#if file_downloads}}
-    else if (isDownloadToTrack(hrefWithoutQuery)) {
+    if (isDownloadToTrack(hrefWithoutQuery)) {
       var eventName = 'File Download'
       var eventProps = {url: hrefWithoutQuery}
-      sendLinkClickEvent(event, link, eventName, eventProps)
+      return sendLinkClickEvent(event, link, eventName, eventProps)
     }
     {{/if}}
   }
