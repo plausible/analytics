@@ -15,10 +15,4 @@ defmodule Plausible.Site.Membership do
     |> cast(attrs, [:user_id, :site_id, :role])
     |> validate_required([:user_id, :site_id])
   end
-
-  def override_role(schema, role) do
-    schema
-    |> change(%{role: role})
-    |> validate_required([:user_id, :site_id, :role])
-  end
 end
