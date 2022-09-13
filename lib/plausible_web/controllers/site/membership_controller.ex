@@ -101,24 +101,22 @@ defmodule PlausibleWeb.Site.MembershipController do
     |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
   end
 
-  def update_role(conn, %{"id" => id, "new_role" => new_role_str, "website" => domain}) do
+  def update_role(conn, %{"id" => id, "new_role" => new_role_str}) do
+    %{site: site, current_user_role: current_user_role} = conn.assigns
     new_role = intern_role(new_role_str)
 
-    current_user_membership =
-      Repo.get_by(Plausible.Site.Membership, user_id: conn.assigns[:current_user].id)
-
-    if can_grant_role?(current_user_membership.role, new_role) do
+    if can_grant_role?(current_user_role, new_role) do
       membership =
         Repo.get!(Membership, id)
-        |> Repo.preload([:site, :user])
+        |> Repo.preload(:user)
         |> Membership.changeset(%{role: new_role})
         |> Repo.update!()
 
       redirect_target =
         if membership.user.id == conn.assigns[:current_user].id && new_role == :viewer do
-          "/#{URI.encode_www_form(domain)}"
+          "/#{URI.encode_www_form(site.domain)}"
         else
-          Routes.site_path(conn, :settings_people, domain)
+          Routes.site_path(conn, :settings_people, site.domain)
         end
 
       conn
@@ -130,7 +128,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     else
       conn
       |> put_flash(:error, "You are not allowed to grant the #{new_role} role")
-      |> redirect(to: Routes.site_path(conn, :settings_people, domain))
+      |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
     end
   end
 
