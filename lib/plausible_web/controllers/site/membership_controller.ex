@@ -13,6 +13,17 @@ defmodule PlausibleWeb.Site.MembershipController do
   plug PlausibleWeb.AuthorizeSiteAccess,
        [:owner, :admin] when action not in @only_owner_is_allowed_to
 
+  @moduledoc """
+    This controller deals with user management via the UI in Site Settings -> People. It's important to enforce permissions in this controller.
+
+    Owner - Can manage users, can trigger a 'transfer ownership' request
+    Admin - Can manage users
+    Viewer - Can not access user management settings
+    Anyone - Can accept invitations
+
+    Everything else should be explicitly disallowed.
+  """
+
   def invite_member_form(conn, %{"website" => site_domain}) do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
 
@@ -101,6 +112,13 @@ defmodule PlausibleWeb.Site.MembershipController do
     |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
   end
 
+  @doc """
+    Updates the role of a user. The user being updated could be the same or different from the user taking
+    the action. When updating the role, it's important to enforce permissions:
+
+    Owner - Can update anyone's role except for themselves. If they want to change their own role, they have to use the 'transfer ownership' feature.
+    Admin - Can update anyone's role except for owners. Can downgrade their own access to 'viewer'. Can promote a viewer to admin.
+  """
   def update_role(conn, %{"id" => id, "new_role" => new_role_str}) do
     %{site: site, current_user_role: current_user_role} = conn.assigns
     new_role = intern_role(new_role_str)
