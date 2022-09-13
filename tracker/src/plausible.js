@@ -173,9 +173,10 @@
     return targetsCurrentWindow && isRegularClick
   }
 
+  var MIDDLE_MOUSE_BUTTON = 1
+
   function handleLinkClickEvent(event) {
-    var middleMouseButton = 1
-    if (event.type === 'auxclick' && event.button !== middleMouseButton) { return }
+    if (event.type === 'auxclick' && event.button !== MIDDLE_MOUSE_BUTTON) { return }
 
     var link = getLinkEl(event.target)
     var hrefWithoutQuery = link && link.href && link.href.split('?')[0]
