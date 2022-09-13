@@ -119,9 +119,14 @@ defmodule PlausibleWeb.Site.MembershipController do
     Owner - Can update anyone's role except for themselves. If they want to change their own role, they have to use the 'transfer ownership' feature.
     Admin - Can update anyone's role except for owners. Can downgrade their own access to 'viewer'. Can promote a viewer to admin.
   """
+  @role_mappings Membership
+                 |> Ecto.Enum.mappings(:role)
+                 |> Enum.map(fn {k, v} -> {v, k} end)
+                 |> Enum.into(%{})
+
   def update_role(conn, %{"id" => id, "new_role" => new_role_str}) do
     %{site: site, current_user_role: current_user_role} = conn.assigns
-    new_role = intern_role(new_role_str)
+    new_role = Map.fetch!(@role_mappings, new_role_str)
 
     if can_grant_role?(current_user_role, new_role) do
       membership =
@@ -149,10 +154,6 @@ defmodule PlausibleWeb.Site.MembershipController do
       |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
     end
   end
-
-  defp intern_role("owner"), do: :owner
-  defp intern_role("admin"), do: :admin
-  defp intern_role("viewer"), do: :viewer
 
   defp can_grant_role?(:owner, :admin), do: true
   defp can_grant_role?(:owner, :viewer), do: true
