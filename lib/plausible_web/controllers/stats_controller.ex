@@ -174,31 +174,15 @@ defmodule PlausibleWeb.StatsController do
     The cookie allows the user to access the dashboard for 24 hours without entering the password again.
   """
   def shared_link(conn, %{"domain" => domain, "auth" => auth}) do
-    shared_link =
-      Repo.get_by(Plausible.Site.SharedLink, slug: auth)
-      |> Repo.preload(:site)
+    case find_shared_link(domain, auth) do
+      {:password_protected, shared_link} ->
+        render_password_protected_shared_link(conn, shared_link)
 
-    if shared_link && shared_link.site.domain == domain do
-      if shared_link.password_hash do
-        with conn <- Plug.Conn.fetch_cookies(conn),
-             {:ok, token} <- Map.fetch(conn.req_cookies, shared_link_cookie_name(auth)),
-             {:ok, %{slug: token_slug}} <- Plausible.Auth.Token.verify_shared_link(token),
-             true <- token_slug == shared_link.slug do
-          render_shared_link(conn, shared_link)
-        else
-          _e ->
-            conn
-            |> assign(:skip_plausible_tracking, true)
-            |> render("shared_link_password.html",
-              link: shared_link,
-              layout: {PlausibleWeb.LayoutView, "focus.html"}
-            )
-        end
-      else
+      {:unlisted, shared_link} ->
         render_shared_link(conn, shared_link)
-      end
-    else
-      render_error(conn, 404)
+
+      :not_found ->
+        render_error(conn, 404)
     end
   end
 
@@ -216,6 +200,35 @@ defmodule PlausibleWeb.StatsController do
 
   def shared_link(conn, _) do
     render_error(conn, 400)
+  end
+
+  defp render_password_protected_shared_link(conn, shared_link) do
+    with conn <- Plug.Conn.fetch_cookies(conn),
+         {:ok, token} <- Map.fetch(conn.req_cookies, shared_link_cookie_name(shared_link.slug)),
+         {:ok, %{slug: token_slug}} <- Plausible.Auth.Token.verify_shared_link(token),
+         true <- token_slug == shared_link.slug do
+      render_shared_link(conn, shared_link)
+    else
+      _e ->
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("shared_link_password.html",
+          link: shared_link,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+    end
+  end
+
+  defp find_shared_link(domain, auth) do
+    shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: auth) |> Repo.preload(:site)
+    exists? = shared_link && shared_link.site.domain == domain
+    password_protected? = shared_link && shared_link.password_hash
+
+    cond do
+      exists? && password_protected? -> {:password_protected, shared_link}
+      exists? -> {:unlisted, shared_link}
+      true -> :not_found
+    end
   end
 
   def authenticate_shared_link(conn, %{"slug" => slug, "password" => password}) do
