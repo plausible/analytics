@@ -34,6 +34,7 @@ All notable changes to this project will be documented in this file.
 - New width=manual mode for embedded dashboards plausible/analytics#2148
 - Add more timezone options
 - Add new strategy to recommend timezone when creating a new site
+- `FINCH_PRESET` configuration parameter plausible/analytics#2224
 
 ### Fixed
 - Hash part of the URL can now be used when excluding pages with `script.exclusions.hash.js`.
