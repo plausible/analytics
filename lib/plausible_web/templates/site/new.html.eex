@@ -63,8 +63,18 @@
       </div>
     </div>
     <script>
-      var offset = (new Date()).getTimezoneOffset()
-      var option = document.querySelector('#tz-select option[offset="' + offset + '"]')
+      var option;
+
+      if (typeof Intl !== "undefined") {
+        var timezoneName = Intl.DateTimeFormat().resolvedOptions().timeZone
+        option = document.querySelector('#tz-select option[value="' + timezoneName + '"]')
+      }
+
+      if (!option) {
+        var offset = (new Date()).getTimezoneOffset()
+        option = document.querySelector('#tz-select option[offset="' + offset + '"]')
+      }
+
       if (option) { option.selected = "selected"}
     </script>
 
