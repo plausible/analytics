@@ -223,7 +223,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
-  describe "GET /share/:slug" do
+  describe "GET /share/:domain?auth=:auth" do
     test "prompts a password for a password-protected link", %{conn: conn} do
       site = insert(:site)
 
@@ -267,6 +267,20 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "renders bad request when no auth parameter supplied", %{conn: conn} do
       conn = get(conn, "/share/example.com")
       assert response(conn, 400) =~ "Bad Request"
+    end
+
+    test "renders 404 not found when non-existent auth parameter is supplied", %{conn: conn} do
+      conn = get(conn, "/share/example.com?auth=bad-token")
+      assert response(conn, 404) =~ "nothing here"
+    end
+
+    test "renders 404 not found when auth parameter for another site is supplied", %{conn: conn} do
+      site1 = insert(:site, domain: "test-site-1.com")
+      site2 = insert(:site, domain: "test-site-2.com")
+      site1_link = insert(:shared_link, site: site1)
+
+      conn = get(conn, "/share/#{site2.domain}/?auth=#{site1_link.slug}")
+      assert response(conn, 404) =~ "nothing here"
     end
   end
 

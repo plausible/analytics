@@ -129,6 +129,8 @@ defmodule PlausibleWeb.StatsController do
       else
         render_shared_link(conn, shared_link)
       end
+    else
+      render_error(conn, 404)
     end
   end
 
