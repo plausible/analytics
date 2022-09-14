@@ -1,4 +1,60 @@
 defmodule PlausibleWeb.StatsController do
+  @moduledoc """
+  This controller is responsible for rendering stats dashboards.
+
+  The stats dashboards are currently the only part of the app that uses client-side
+  rendering. Since the dashboards are heavily interactive, they are built with React
+  which is an appropraite choice for highly interactive browser UIs.
+
+                                     +---------------+                +-----------------+ +---------------------+
+                                     | BrowserClient |                | StatsController | | ApiStatsController  |
+                                     +---------------+                +-----------------+ +---------------------+
+                                             |                                 |                     |
+                                             | GET /mydomain.com               |                     |
+                                             |-------------------------------->|                     |
+                                             |                                 |                     |
+                                             | StatsView.render("stats.html")  |                     |
+                                             |<--------------------------------|                     |
+      -------------------------------------\ |                                 |                     |
+      |  JS renders with ReactDom.mount()  |-|                                 |                     |
+      |------------------------------------| |                                 |                     |
+  -----------------------------------------\ |                                 |                     |
+  |  Hydrate React reports in parallel...  |-|                                 |                     |
+  |----------------------------------------| |                                 |                     |
+                                             |                                 |                     |
+                                             | GET /api/stats/mydomain.com/top-stats                 |
+                                             |------------------------------------------------------>|
+                                             |                                 |                     |
+                                             |                                 |       JSON response |
+                                             |<------------------------------------------------------|
+                       --------------------\ |                                 |                     |
+                       | TopStats.render() |-|                                 |                     |
+                       |-------------------| |                                 |                     |
+                                             |                                 |                     |
+                                             | GET /api/stats/mydomain.com/sources                   |
+                                             |------------------------------------------------------>|
+                                             |                                 |                     |
+                                             |                                 |       JSON response |
+                                             |<------------------------------------------------------|
+                        -------------------\ |                                 |                     |
+                        | Sources.render() |-|                                 |                     |
+                        |------------------| |                                 |                     |
+                                             |                                 |                     |
+                                                     ... ETC until all reports are hydrated ...
+
+
+  This reasoning for this sequence is as follows:
+    1. First paint is fast because it doesn't do any data aggregation yet - good UX
+    2. The basic structure of the dashboard is rendered with spinners before reports are ready - good UX
+    2. Rendering on the frontend allows for maximum interactivity. Re-rendering and re-fetching can be as granular as needed.
+    3. Routing on the frontend allows the user to navigate the dashboard without reloading the page and losing context
+    4. Rendering on the frontend allows caching results in the browser to reduce pressure on backends and storage
+      3.1 No client-side caching has been implemented yet. This is still theoretical. See https://github.com/plausible/analytics/discussions/1278
+      3.2 This is a big potential opportunity, because analytics data is mostly immutable. Clients can cache all historical data.
+    5. Since frontend rendering & navigation is harder to build and maintain than regular server-rendered HTML, we don't use SPA-style rendering anywhere else
+    .The only place currently where the benefits outweight the costs is the dashboard.
+  """
+
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias PlausibleWeb.Api
@@ -105,6 +161,18 @@ defmodule PlausibleWeb.StatsController do
     |> send_resp(200, zip_content)
   end
 
+  @doc """
+    See: https://plausible.io/docs/shared-links
+
+    Authorizes and renders a shared link:
+    1. Shared link with no password protection: needs to just make sure the shared link entry is still
+    in our database. This check makes sure shared link access can be revoked by the site admins. If the
+    shared link exists, render it directly.
+
+    2. Shared link with password protection: Same checks as without the password, but an extra step is taken to
+    protect the page with a password. When the user passes the password challenge, a cookie is set with Plausible.Auth.Token.sign_shared_link().
+    The cookie allows the user to access the dashboard for 24 hours without entering the password again.
+  """
   def shared_link(conn, %{"domain" => domain, "auth" => auth}) do
     shared_link =
       Repo.get_by(Plausible.Site.SharedLink, slug: auth)
