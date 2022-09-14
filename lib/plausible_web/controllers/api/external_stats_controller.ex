@@ -62,8 +62,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_date(params),
          {:ok, property} <- validate_property(params),
          query <- Query.from(site, params),
-         {:ok, metrics} <- parse_metrics(params, property, query) do
-      limit = String.to_integer(Map.get(params, "limit", "100"))
+         {:ok, metrics} <- parse_metrics(params, property, query),
+         {:ok, limit} <- validate_or_default_limit(params) do
       page = String.to_integer(Map.get(params, "page", "1"))
       results = Plausible.Stats.breakdown(site, query, property, metrics, {limit, page})
 
@@ -95,6 +95,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     {:error,
      "The `property` parameter is required. Please provide at least one property to show a breakdown by."}
   end
+
+  @max_breakdown_limit 1000
+  defp validate_or_default_limit(%{"limit" => limit}) do
+    limit = String.to_integer(limit)
+
+    if limit <= @max_breakdown_limit do
+      {:ok, limit}
+    else
+      {:error, "Limit too large. Please use a limit not higher than #{@max_breakdown_limit}."}
+    end
+  end
+
+  @default_breakdown_limit 100
+  defp validate_or_default_limit(_), do: {:ok, @default_breakdown_limit}
 
   defp event_only_property?("event:name"), do: true
   defp event_only_property?("event:props:" <> _), do: true

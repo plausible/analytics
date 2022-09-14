@@ -1567,6 +1567,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       assert Enum.count(res["results"]) == 2
     end
 
+    test "returns error when limit too large", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:page",
+          "limit" => 1001
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "Limit too large. Please use a limit not higher than 1000."
+             }
+    end
+
     test "can paginate results", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview, pathname: "/a", domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
