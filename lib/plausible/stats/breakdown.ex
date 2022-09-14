@@ -381,7 +381,7 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:country") do
     from(
       s in q,
-      where: s.country_code != "\0\0",
+      where: s.country_code != "\0\0" and s.country_code != "ZZ",
       group_by: s.country_code,
       select_merge: %{country: s.country_code}
     )

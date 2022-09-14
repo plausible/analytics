@@ -67,6 +67,14 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
              ]
     end
 
+    test "ignores unknown country code ZZ", %{conn: conn, site: site} do
+      populate_stats(site, [build(:pageview, country_code: "ZZ")])
+
+      conn = get(conn, "/api/stats/#{site.domain}/countries?period=day")
+
+      assert json_response(conn, 200) == []
+    end
+
     test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
