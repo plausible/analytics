@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.28.5">
+    <meta name="project" content="Plausible v0.0.1">
+
+    <title>Account locking — Plausible v0.0.1</title>
+    <link rel="stylesheet" href="dist/elixir-64c5e2b63575bddb1c5b.css" />
+
+    <script src="dist/sidebar_items-3ad0840957.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/app-b5f3440501744dc8be3d.js"></script>
+
+
+  </head>
+  <body data-type="extras">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+
+<section class="sidebar">
+  <button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+    <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+  </button>
+
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+      <a href="readme.html">
+        <img src="assets/logo.png" alt="Plausible" class="sidebar-projectImage">
+      </a>
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+Plausible
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v0.0.1
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+        <li><a id="tasks-list-link" href="#full-list"><span translate="no">Mix</span> Tasks</a></li>
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/plausible/analytics/blob/main/guides/features/account-locking.md#L1" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span>Account locking</span>
+</h1>
+
+<p>This document explains the account locking feature from a technical perspective. Account locking happens when users have outgrown their accounts, and despite alert, don't upgrade after a grace period.</p><h2 id="usage-alert-and-grace-period" class="section-heading">
+  <a href="#usage-alert-and-grace-period" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">usage-alert-and-grace-period</p>
+  </a>
+  Usage alert and grace period
+</h2>
+<p>The <a href="Plausible.Workers.CheckUsage.html"><code class="inline">Plausible.Workers.CheckUsage</code></a> daily background job alerts users they have reached their subscription limits. This runs for outgrown users one day after their last billing date.</p><p>When users reach the number of sites limit, or use &gt;110% of their pageview limit for 2 consecutive billing cycles, the background job sends them an e-mail alert. The e-mail suggests a suitable subscription plan based on usage. For enterprise users, an additional internal e-mail is sent to <code class="inline">enterprise@plausible.io</code>.</p><p>The user is given 7 days to upgrade their account after the alert, and this is called grace period. After sending the e-mail, the background job starts the grace period by updating <code class="inline">users.grace_period</code> JSON field. </p><pre><code class="json">// SELECT grace_period FROM users LIMIT 1
+
+{
+  &quot;id&quot;: &quot;1aa855bd-022d-4dfc-b572-6853442c3f19&quot;,
+  &quot;is_over&quot;: true,
+  &quot;end_date&quot;: &quot;2022-03-09&quot;,
+  &quot;allowance_required&quot;: 100
+}</code></pre><p>During this period, the following alert pops up on the dashboard:</p><p><img src="https://files.gitbook.com/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FN4GLWMwCrTuTcf31kYE9%2Fuploads%2FmsLk4CdSHKzU8TbfvaPq%2FPasted%20image%2020220909120933.png?alt=media&token=76f247a1-28cf-4d88-a0fa-06547268aee9" alt=""/></p><p>If the user upgrades to a suitable plan, the grace period is removed (check <a href="Plausible.Billing.html#subscription_updated/1"><code class="inline">Plausible.Billing.subscription_updated/1</code></a>), otherwise [[#Account locking]] follows.</p><h2 id="account-locking" class="section-heading">
+  <a href="#account-locking" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">account-locking</p>
+  </a>
+  Account locking
+</h2>
+<p>The grace period is checked daily by the <a href="Plausible.Workers.LockSites.html"><code class="inline">Plausible.Workers.LockSites</code></a> background job.</p><p>For users that expired their grace period, <code class="inline">sites.locked</code> is is set to <code class="inline">true</code>, restricting access to dashboards. This does not stop event ingestion, so users can have their stats up to date when they finally upgrade.</p><p><img src="https://files.gitbook.com/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FN4GLWMwCrTuTcf31kYE9%2Fuploads%2FAplurtG7UsGXMskZOlUO%2FPasted%20image%2020220909122622.png?alt=media&token=5c8156d7-d4a7-4c99-8bac-2f1e9b7d4cae" alt=""/></p>
+<div class="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="readme.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+Introduction
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+  </div>
+</div>
+
+      <footer class="footer">
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.28.5) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+
+  </body>
+</html>

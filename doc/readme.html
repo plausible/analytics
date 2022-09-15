@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.28.5">
+    <meta name="project" content="Plausible v0.0.1">
+
+    <title>Introduction — Plausible v0.0.1</title>
+    <link rel="stylesheet" href="dist/elixir-64c5e2b63575bddb1c5b.css" />
+
+    <script src="dist/sidebar_items-3ad0840957.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/app-b5f3440501744dc8be3d.js"></script>
+
+
+  </head>
+  <body data-type="extras">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+
+<section class="sidebar">
+  <button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+    <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+  </button>
+
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+      <a href="readme.html">
+        <img src="assets/logo.png" alt="Plausible" class="sidebar-projectImage">
+      </a>
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+Plausible
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v0.0.1
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+        <li><a id="tasks-list-link" href="#full-list"><span translate="no">Mix</span> Tasks</a></li>
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/plausible/analytics/blob/main/README.md#L1" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span>Plausible Analytics</span>
+</h1>
+
+<p align="center">  <a href="https://plausible.io/">
+    <img src="https://raw.githubusercontent.com/plausible/docs/master/static/img/plausible-analytics-icon-top.png" width="140px" alt="Plausible Analytics" />
+  </a></p><p align="center">    <a href="https://plausible.io/simple-web-analytics">Simple Metrics</a> |
+    <a href="https://plausible.io/lightweight-web-analytics">Lightweight Script</a> |
+    <a href="https://plausible.io/privacy-focused-web-analytics">Privacy Focused</a> |
+    <a href="https://plausible.io/open-source-website-analytics">Open Source</a> |
+    <a href="https://plausible.io/docs">Docs</a> |
+    <a href="https://github.com/plausible/analytics/blob/master/CONTRIBUTING.md">Contributing</a> |
+    <a href="https://twitter.com/plausiblehq">Twitter</a> |
+    <a href="https://fosstodon.org/@plausible">Mastodon</a>
+    <br /><br /></p><p><a href="https://plausible.io/">Plausible Analytics</a> is a simple, lightweight (&lt; 1 KB), open-source and privacy-friendly alternative to Google Analytics. It doesn’t use cookies and is fully compliant with GDPR, CCPA and PECR. You can self-host Plausible or have us run it for you in the Cloud. Here's <a href="https://plausible.io/plausible.io">the live demo of our own website stats</a>. Made and hosted in the EU 🇪🇺</p><p>We are dedicated to making web analytics more privacy-friendly. Our mission is to reduce corporate surveillance by providing an alternative web analytics tool which doesn’t come from the AdTech world. The full-time team consists of Uku Taht and Marko Saric. We are completely independent, self-funded and bootstrapped.</p><p><img src="https://docs.plausible.io/img/plausible-analytics.png" alt=""/></p><h2 id="why-plausible" class="section-heading">
+  <a href="#why-plausible" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">why-plausible</p>
+  </a>
+  Why Plausible?
+</h2>
+<p>Here's what makes Plausible a great Google Analytics alternative and why we're trusted by thousands of paying subscribers to deliver their website and business insights:</p><ul><li><strong>Clutter Free</strong>: Plausible Analytics provides <a href="https://plausible.io/simple-web-analytics">simple web analytics</a> and it cuts through the noise. No layers of menus, no need for custom reports. Get all the important insights on one single page. No training necessary.</li><li><strong>GDPR/CCPA/PECR compliant</strong>: Measure traffic, not individuals. No personal data or IP addresses are ever stored in our database. We don't use cookies or any other persistent identifiers. <a href="https://plausible.io/data-policy">Read more about our data policy</a></li><li><strong>Lightweight</strong>: Plausible Analytics works by loading a script on your website, like Google Analytics. Our script is <a href="https://plausible.io/lightweight-web-analytics">45x smaller</a>, making your website quicker to load.</li><li><strong>Email or Slack reports</strong>: Keep an eye on your traffic with weekly and/or monthly email or Slack reports. You can also get traffic spike notifications.</li><li><strong>Open website stats</strong>: You have the option to be transparent and open your web analytics to everyone. Your website stats are private by default but you can choose to make them public so anyone with your custom link can view them.</li><li><strong>Define key goals and track conversions</strong>: Set custom events or page URLs as your goals and see how they convert over time to understand and identify the trends that matter. Includes easy ways to track outbound link clicks and 404 error pages.</li><li><strong>Search keywords</strong>: Integrate your dashboard with Google Search Console to get the most accurate reporting on your search keywords.</li><li><strong>SPA support</strong>: Plausible is built with modern web frameworks in mind and it works automatically with any pushState based router on the frontend. We also support frameworks that use the URL hash for routing. See <a href="https://plausible.io/docs/hash-based-routing">our documentation</a>.</li></ul><p>Interested to learn more? <a href="https://plausible.io">Read more on our website</a>, learn more about the team and the goals of the project on <a href="https://plausible.io/about">our about page</a> or explore <a href="https://plausible.io/docs">the documentation</a>.</p><h2 id="why-is-plausible-analytics-cloud-not-free-like-google-analytics" class="section-heading">
+  <a href="#why-is-plausible-analytics-cloud-not-free-like-google-analytics" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">why-is-plausible-analytics-cloud-not-free-like-google-analytics</p>
+  </a>
+  Why is Plausible Analytics Cloud not free like Google Analytics?
+</h2>
+<p>Plausible Analytics is an independently owned and actively developed project. To keep the project development going, to stay in business, to continue putting effort into building a better product and to cover our costs, we need to charge a fee.</p><p>Google Analytics is free because Google has built their company and their wealth by collecting and analyzing huge amounts of personal information from web users and using these personal and behavioral insights to sell advertisements.</p><p>Plausible has no part in that business model. No personal data is being collected and analyzed either. With Plausible, you 100% own and control all of your website data. This data is not being shared with or sold to any third-parties.</p><p>We choose the subscription business model rather than the business model of surveillance capitalism. See reasons why we believe you should <a href="https://plausible.io/blog/remove-google-analytics">stop using Google Analytics on your website</a>.</p><h2 id="getting-started-with-plausible" class="section-heading">
+  <a href="#getting-started-with-plausible" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">getting-started-with-plausible</p>
+  </a>
+  Getting started with Plausible
+</h2>
+<p>The easiest way to get started with Plausible is with <a href="https://plausible.io/#pricing">our official managed service in the Cloud</a>. It takes 2 minutes to start counting your stats with a worldwide CDN, high availability, backups, security and maintenance all done for you by us.</p><p>In order to be compliant with the GDPR and the Schrems II ruling, all visitor data for our managed service in the Cloud is exclusively processed on servers and cloud infrastructure owned and operated by European providers. Your website data never leaves the EU.</p><p>Our managed hosting can save a substantial amount of developer time and resources. For most sites this ends up being the best value option and the revenue goes to funding the maintenance and further development of Plausible. So you’ll be supporting open source software and getting a great service!</p><h3 id="can-plausible-analytics-be-self-hosted" class="section-heading">
+  <a href="#can-plausible-analytics-be-self-hosted" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">can-plausible-analytics-be-self-hosted</p>
+  </a>
+  Can Plausible Analytics be self-hosted?
+</h3>
+<p>Plausible is fully <a href="https://plausible.io/open-source-website-analytics">open source web analytics</a> and we have a free as in beer <a href="https://plausible.io/self-hosted-web-analytics">Plausible Analytics Self-Hosted</a> solution. It’s exactly the same product as our Cloud solution with a less frequent release schedule (think of it as a long term support release).</p><p>Bug fixes and new features are released to the cloud version several times per week. Features are battle-tested in the cloud which allows us to fix any bugs before the general self-hosted release. Every six months we combine all the changes into a new self-hosted release.</p><p>The main difference between the two is that the self-hosted version you have to install, host and manage yourself on your own infrastructure while the Cloud version we manage everything for your ease and convenience. Here's the overview of all the differences:</p><table><thead><tr><th style="text-align: left;"></th><th style="text-align: left;">Cloud</th><th style="text-align: left;">Self-hosted</th></tr></thead><tbody><tr><td style="text-align: left;">Hosting</td><td style="text-align: left;">Easy and convenient. We manage everything for you so you don’t have to worry about anything. We take care of the installation, upgrades, server, security, maintenance, uptime, stability, consistency, loading time and so on.</td><td style="text-align: left;">You do it all yourself. You need to get a server and you need to install, maintain and manage Plausible on that server. You are responsible for installation, maintenance, upgrades, server capacity, uptime, backup and so on.</td></tr><tr><td style="text-align: left;">Storage</td><td style="text-align: left;">We keep your site data on a secure, encrypted and green energy powered server in Germany. A server that ensures that your site data is protected by the strict European Union data privacy laws.</td><td style="text-align: left;">You have full control and can host your Plausible Analytics on any server in any country that you wish. Host it on a server in your basement or host it with any cloud provider wherever you want.</td></tr><tr><td style="text-align: left;">Raw data</td><td style="text-align: left;">You see all your site stats and metrics on our modern-looking, simple to use and fast loading dashboard. You can only see the stats aggregated in the dashboard.</td><td style="text-align: left;">Are you an analyst and want access to the raw data? Hosting Plausible yourself gives you that option. Take the data directly from the ClickHouse database and import it to a data analysis tool of your choice.</td></tr><tr><td style="text-align: left;">Costs</td><td style="text-align: left;">There’s a cost associated with providing an analytics service so we charge a subscription fee. We choose the subscription business model rather than the business model of surveillance capitalism.</td><td style="text-align: left;">You only need to pay for your server and whatever cost there is associated with running a server. You never have to pay any fees to us, only to your cloud provider.</td></tr><tr><td style="text-align: left;">Support</td><td style="text-align: left;">Premium support is available via email.</td><td style="text-align: left;">Community support only.</td></tr><tr><td style="text-align: left;">Releases</td><td style="text-align: left;">Continuously developed and improved with new features and updates multiple times per week.</td><td style="text-align: left;"><a href="https://plausible.io/blog/building-open-source">It's a long term release</a> published twice per year so latest features won't be immediately available as they're battled-tested in the cloud first. You can see all the <a href="https://github.com/plausible/analytics/blob/master/CHANGELOG.md">currently unreleased features in the changelog</a>.</td></tr></tbody></table><p>Interested in self-hosting Plausible on your server? Take a look at our <a href="https://plausible.io/docs/self-hosting">self-hosting installation instructions</a>.</p><p>Plausible Self-Hosted is a community supported project and there are no guarantees that you will get support from the creators of Plausible to troubleshoot your self-hosting issues. There is a <a href="https://github.com/plausible/analytics/discussions/categories/self-hosted-support">community supported forum</a> where you can ask for help.</p><p>Our only source of funding is our premium, managed service for running Plausible in the cloud. If you're looking for an alternative way to support the project, we've put together some sponsorship packages. If you choose to self-host Plausible you can <a href="https://github.com/sponsors/plausible">become a sponsor</a> which is a great way to give back to the community and to contribute to the long-term sustainability of the project.</p><h2 id="technology" class="section-heading">
+  <a href="#technology" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">technology</p>
+  </a>
+  Technology
+</h2>
+<p>Plausible Analytics is a standard Elixir/Phoenix application backed by a PostgreSQL database for general data and a Clickhouse
+database for stats. On the frontend we use <a href="https://tailwindcss.com/">TailwindCSS</a> for styling and React to make the dashboard interactive.</p><h2 id="contributors" class="section-heading">
+  <a href="#contributors" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">contributors</p>
+  </a>
+  Contributors
+</h2>
+<p>For anyone wishing to contribute to Plausible, we recommend taking a look at <a href="https://github.com/plausible/analytics/blob/master/CONTRIBUTING.md">our contributor guide</a>.</p><a href="https://github.com/plausible/analytics/graphs/contributors"><img src="https://opencollective.com/plausible/contributors.svg?width=800&button=false" /></a><h2 id="feedback-roadmap" class="section-heading">
+  <a href="#feedback-roadmap" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">feedback-roadmap</p>
+  </a>
+  Feedback &amp; Roadmap
+</h2>
+<p>We welcome feedback from our community. We have a public roadmap driven by the features suggested by the community members. Take a look at our <a href="https://plausible.io/feedback">feedback board</a> and our <a href="https://plausible.io/roadmap">public roadmap</a> directly here on GitHub. Please let us know if you have any requests and vote on open issues so we can better prioritize.</p><p>To stay up to date with all the latest news and product updates, make sure to follow us on <a href="https://twitter.com/plausiblehq">Twitter</a> or <a href="https://fosstodon.org/@plausible">Mastodon</a>.</p><h2 id="license" class="section-heading">
+  <a href="#license" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">license</p>
+  </a>
+  License
+</h2>
+<p>Plausible is open-source under the GNU Affero General Public License Version 3 (AGPLv3) or any later version. You can <a href="https://github.com/plausible/analytics/blob/master/LICENSE.md">find it here</a>.</p><p>The only exception is our javascript tracker which gets included on your website. To avoid issues with AGPL virality, we've
+released the tracker under the MIT license. You can <a href="https://github.com/plausible/analytics/blob/master/tracker/LICENSE.md">find it here</a>.</p>
+<div class="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="api-reference.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+API Reference
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="account-locking.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+Account locking
+        </span>
+      </a>
+
+  </div>
+</div>
+
+      <footer class="footer">
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.28.5) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+
+  </body>
+</html>

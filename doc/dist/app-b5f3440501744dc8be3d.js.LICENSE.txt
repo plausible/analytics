@@ -1,0 +1,61 @@
+/*!
+ * lunr.Builder
+ * Copyright (C) 2019 Oliver Nightingale
+ */
+
+/*!
+ * lunr.Index
+ * Copyright (C) 2019 Oliver Nightingale
+ */
+
+/*!
+ * lunr.Pipeline
+ * Copyright (C) 2019 Oliver Nightingale
+ */
+
+/*!
+ * lunr.Set
+ * Copyright (C) 2019 Oliver Nightingale
+ */
+
+/*!
+ * lunr.TokenSet
+ * Copyright (C) 2019 Oliver Nightingale
+ */
+
+/*!
+ * lunr.Vector
+ * Copyright (C) 2019 Oliver Nightingale
+ */
+
+/*!
+ * lunr.stemmer
+ * Copyright (C) 2019 Oliver Nightingale
+ * Includes code from - http://tartarus.org/~martin/PorterStemmer/js.txt
+ */
+
+/*!
+ * lunr.stopWordFilter
+ * Copyright (C) 2019 Oliver Nightingale
+ */
+
+/*!
+ * lunr.tokenizer
+ * Copyright (C) 2019 Oliver Nightingale
+ */
+
+/*!
+ * lunr.trimmer
+ * Copyright (C) 2019 Oliver Nightingale
+ */
+
+/*!
+ * lunr.utils
+ * Copyright (C) 2019 Oliver Nightingale
+ */
+
+/**
+ * lunr - http://lunrjs.com - A bit like Solr, but much smaller and not as bright - 2.3.8
+ * Copyright (C) 2019 Oliver Nightingale
+ * @license MIT
+ */

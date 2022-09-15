@@ -1,0 +1,3268 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.28.5">
+    <meta name="project" content="Plausible v0.0.1">
+
+    <title>PlausibleWeb.Router.Helpers — Plausible v0.0.1</title>
+    <link rel="stylesheet" href="dist/elixir-64c5e2b63575bddb1c5b.css" />
+
+    <script src="dist/sidebar_items-3ad0840957.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/app-b5f3440501744dc8be3d.js"></script>
+
+
+  </head>
+  <body data-type="modules">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+
+<section class="sidebar">
+  <button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+    <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+  </button>
+
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+      <a href="readme.html">
+        <img src="assets/logo.png" alt="Plausible" class="sidebar-projectImage">
+      </a>
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+Plausible
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v0.0.1
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+        <li><a id="tasks-list-link" href="#full-list"><span translate="no">Mix</span> Tasks</a></li>
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span translate="no">PlausibleWeb.Router.Helpers</span> 
+  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+
+</h1>
+
+
+  <section id="moduledoc">
+<p>Module with named helpers generated from PlausibleWeb.Router.</p>
+  </section>
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+      Summary
+    </h1>
+
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#auth_path/2" translate="no">auth_path(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#auth_path/3" translate="no">auth_path(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#auth_path/4" translate="no">auth_path(conn_or_endpoint, action, id, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#auth_url/2" translate="no">auth_url(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#auth_url/3" translate="no">auth_url(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#auth_url/4" translate="no">auth_url(conn_or_endpoint, action, id, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#billing_path/2" translate="no">billing_path(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#billing_path/3" translate="no">billing_path(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#billing_path/4" translate="no">billing_path(conn_or_endpoint, action, plan_id, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#billing_url/2" translate="no">billing_url(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#billing_url/3" translate="no">billing_url(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#billing_url/4" translate="no">billing_url(conn_or_endpoint, action, plan_id, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#external_path/2" translate="no">external_path(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#external_path/3" translate="no">external_path(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#external_sites_path/2" translate="no">external_sites_path(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#external_sites_path/3" translate="no">external_sites_path(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#external_sites_path/4" translate="no">external_sites_path(conn_or_endpoint, action, goal_id, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#external_sites_url/2" translate="no">external_sites_url(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#external_sites_url/3" translate="no">external_sites_url(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#external_sites_url/4" translate="no">external_sites_url(conn_or_endpoint, action, goal_id, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#external_stats_path/2" translate="no">external_stats_path(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#external_stats_path/3" translate="no">external_stats_path(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#external_stats_url/2" translate="no">external_stats_url(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#external_stats_url/3" translate="no">external_stats_url(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#external_url/2" translate="no">external_url(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#external_url/3" translate="no">external_url(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#internal_path/2" translate="no">internal_path(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#internal_path/3" translate="no">internal_path(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#internal_path/4" translate="no">internal_path(conn_or_endpoint, action, domain, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#internal_url/2" translate="no">internal_url(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#internal_url/3" translate="no">internal_url(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#internal_url/4" translate="no">internal_url(conn_or_endpoint, action, domain, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#invitation_path/3" translate="no">invitation_path(conn_or_endpoint, action, invitation_id)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#invitation_path/4" translate="no">invitation_path(conn_or_endpoint, action, invitation_id, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#invitation_url/3" translate="no">invitation_url(conn_or_endpoint, action, invitation_id)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#invitation_url/4" translate="no">invitation_url(conn_or_endpoint, action, invitation_id, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_api_resource_path/4" translate="no">kaffy_api_resource_path(conn_or_endpoint, action, context, resource)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_api_resource_path/5" translate="no">kaffy_api_resource_path(conn_or_endpoint, action, context, resource, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_api_resource_url/4" translate="no">kaffy_api_resource_url(conn_or_endpoint, action, context, resource)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_api_resource_url/5" translate="no">kaffy_api_resource_url(conn_or_endpoint, action, context, resource, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_dashboard_path/2" translate="no">kaffy_dashboard_path(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_dashboard_path/3" translate="no">kaffy_dashboard_path(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_dashboard_url/2" translate="no">kaffy_dashboard_url(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_dashboard_url/3" translate="no">kaffy_dashboard_url(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_home_path/2" translate="no">kaffy_home_path(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_home_path/3" translate="no">kaffy_home_path(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_home_url/2" translate="no">kaffy_home_url(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_home_url/3" translate="no">kaffy_home_url(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_page_path/3" translate="no">kaffy_page_path(conn_or_endpoint, action, slug)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_page_path/4" translate="no">kaffy_page_path(conn_or_endpoint, action, slug, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_page_url/3" translate="no">kaffy_page_url(conn_or_endpoint, action, slug)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_page_url/4" translate="no">kaffy_page_url(conn_or_endpoint, action, slug, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_resource_path/4" translate="no">kaffy_resource_path(conn_or_endpoint, action, context, resource)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_resource_path/5" translate="no">kaffy_resource_path(conn_or_endpoint, action, context, resource, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_resource_path/6" translate="no">kaffy_resource_path(conn_or_endpoint, action, context, resource, id, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_resource_path/7" translate="no">kaffy_resource_path(conn_or_endpoint, action, context, resource, id, action_key, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_resource_url/4" translate="no">kaffy_resource_url(conn_or_endpoint, action, context, resource)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_resource_url/5" translate="no">kaffy_resource_url(conn_or_endpoint, action, context, resource, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_resource_url/6" translate="no">kaffy_resource_url(conn_or_endpoint, action, context, resource, id, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_resource_url/7" translate="no">kaffy_resource_url(conn_or_endpoint, action, context, resource, id, action_key, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_task_path/2" translate="no">kaffy_task_path(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_task_path/3" translate="no">kaffy_task_path(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_task_url/2" translate="no">kaffy_task_url(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#kaffy_task_url/3" translate="no">kaffy_task_url(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#membership_path/3" translate="no">membership_path(conn_or_endpoint, action, website)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#membership_path/4" translate="no">membership_path(conn_or_endpoint, action, website, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#membership_path/5" translate="no">membership_path(conn_or_endpoint, action, website, id, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#membership_path/6" translate="no">membership_path(conn_or_endpoint, action, website, id, new_role, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#membership_url/3" translate="no">membership_url(conn_or_endpoint, action, website)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#membership_url/4" translate="no">membership_url(conn_or_endpoint, action, website, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#membership_url/5" translate="no">membership_url(conn_or_endpoint, action, website, id, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#membership_url/6" translate="no">membership_url(conn_or_endpoint, action, website, id, new_role, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#paddle_path/2" translate="no">paddle_path(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#paddle_path/3" translate="no">paddle_path(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#paddle_url/2" translate="no">paddle_url(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#paddle_url/3" translate="no">paddle_url(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#page_path/2" translate="no">page_path(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#page_path/3" translate="no">page_path(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#page_url/2" translate="no">page_url(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#page_url/3" translate="no">page_url(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#path/2" translate="no">path(data, path)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p>Generates the path information including any necessary prefix.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#site_path/2" translate="no">site_path(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#site_path/3" translate="no">site_path(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#site_path/4" translate="no">site_path(conn_or_endpoint, action, website, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#site_path/5" translate="no">site_path(conn_or_endpoint, action, website, id, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#site_url/2" translate="no">site_url(conn_or_endpoint, action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#site_url/3" translate="no">site_url(conn_or_endpoint, action, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#site_url/4" translate="no">site_url(conn_or_endpoint, action, website, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#site_url/5" translate="no">site_url(conn_or_endpoint, action, website, id, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#static_integrity/2" translate="no">static_integrity(endpoint, path)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p>Generates an integrity hash to a static asset given its file path.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#static_path/2" translate="no">static_path(conn, path)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p>Generates path to a static asset given its file path.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#static_url/2" translate="no">static_url(conn, path)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p>Generates url to a static asset given its file path.</p></div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#stats_path/3" translate="no">stats_path(conn_or_endpoint, action, slug)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#stats_path/4" translate="no">stats_path(conn_or_endpoint, action, slug, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#stats_path/5" translate="no">stats_path(conn_or_endpoint, action, domain, filter_name, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#stats_url/3" translate="no">stats_url(conn_or_endpoint, action, slug)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#stats_url/4" translate="no">stats_url(conn_or_endpoint, action, slug, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#stats_url/5" translate="no">stats_url(conn_or_endpoint, action, domain, filter_name, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#unsubscribe_path/3" translate="no">unsubscribe_path(conn_or_endpoint, action, website)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#unsubscribe_path/4" translate="no">unsubscribe_path(conn_or_endpoint, action, website, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#unsubscribe_url/3" translate="no">unsubscribe_url(conn_or_endpoint, action, website)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#unsubscribe_url/4" translate="no">unsubscribe_url(conn_or_endpoint, action, website, params)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#url/1" translate="no">url(data)</a>
+
+        </div>
+
+          <div class="summary-synopsis"><p>Generates the connection/endpoint base URL without any path information.</p></div>
+
+      </div>
+
+  </div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Functions
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="auth_path/2">
+
+  <div class="detail-header">
+    <a href="#auth_path/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">auth_path(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="auth_path/3">
+
+  <div class="detail-header">
+    <a href="#auth_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">auth_path(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="auth_path/4">
+
+  <div class="detail-header">
+    <a href="#auth_path/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">auth_path(conn_or_endpoint, action, id, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="auth_url/2">
+
+  <div class="detail-header">
+    <a href="#auth_url/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">auth_url(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="auth_url/3">
+
+  <div class="detail-header">
+    <a href="#auth_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">auth_url(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="auth_url/4">
+
+  <div class="detail-header">
+    <a href="#auth_url/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">auth_url(conn_or_endpoint, action, id, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="billing_path/2">
+
+  <div class="detail-header">
+    <a href="#billing_path/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">billing_path(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="billing_path/3">
+
+  <div class="detail-header">
+    <a href="#billing_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">billing_path(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="billing_path/4">
+
+  <div class="detail-header">
+    <a href="#billing_path/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">billing_path(conn_or_endpoint, action, plan_id, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="billing_url/2">
+
+  <div class="detail-header">
+    <a href="#billing_url/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">billing_url(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="billing_url/3">
+
+  <div class="detail-header">
+    <a href="#billing_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">billing_url(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="billing_url/4">
+
+  <div class="detail-header">
+    <a href="#billing_url/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">billing_url(conn_or_endpoint, action, plan_id, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="external_path/2">
+
+  <div class="detail-header">
+    <a href="#external_path/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">external_path(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="external_path/3">
+
+  <div class="detail-header">
+    <a href="#external_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">external_path(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="external_sites_path/2">
+
+  <div class="detail-header">
+    <a href="#external_sites_path/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">external_sites_path(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="external_sites_path/3">
+
+  <div class="detail-header">
+    <a href="#external_sites_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">external_sites_path(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="external_sites_path/4">
+
+  <div class="detail-header">
+    <a href="#external_sites_path/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">external_sites_path(conn_or_endpoint, action, goal_id, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="external_sites_url/2">
+
+  <div class="detail-header">
+    <a href="#external_sites_url/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">external_sites_url(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="external_sites_url/3">
+
+  <div class="detail-header">
+    <a href="#external_sites_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">external_sites_url(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="external_sites_url/4">
+
+  <div class="detail-header">
+    <a href="#external_sites_url/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">external_sites_url(conn_or_endpoint, action, goal_id, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="external_stats_path/2">
+
+  <div class="detail-header">
+    <a href="#external_stats_path/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">external_stats_path(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="external_stats_path/3">
+
+  <div class="detail-header">
+    <a href="#external_stats_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">external_stats_path(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="external_stats_url/2">
+
+  <div class="detail-header">
+    <a href="#external_stats_url/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">external_stats_url(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="external_stats_url/3">
+
+  <div class="detail-header">
+    <a href="#external_stats_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">external_stats_url(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="external_url/2">
+
+  <div class="detail-header">
+    <a href="#external_url/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">external_url(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="external_url/3">
+
+  <div class="detail-header">
+    <a href="#external_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">external_url(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="internal_path/2">
+
+  <div class="detail-header">
+    <a href="#internal_path/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">internal_path(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="internal_path/3">
+
+  <div class="detail-header">
+    <a href="#internal_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">internal_path(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="internal_path/4">
+
+  <div class="detail-header">
+    <a href="#internal_path/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">internal_path(conn_or_endpoint, action, domain, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="internal_url/2">
+
+  <div class="detail-header">
+    <a href="#internal_url/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">internal_url(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="internal_url/3">
+
+  <div class="detail-header">
+    <a href="#internal_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">internal_url(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="internal_url/4">
+
+  <div class="detail-header">
+    <a href="#internal_url/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">internal_url(conn_or_endpoint, action, domain, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="invitation_path/3">
+
+  <div class="detail-header">
+    <a href="#invitation_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">invitation_path(conn_or_endpoint, action, invitation_id)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="invitation_path/4">
+
+  <div class="detail-header">
+    <a href="#invitation_path/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">invitation_path(conn_or_endpoint, action, invitation_id, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="invitation_url/3">
+
+  <div class="detail-header">
+    <a href="#invitation_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">invitation_url(conn_or_endpoint, action, invitation_id)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="invitation_url/4">
+
+  <div class="detail-header">
+    <a href="#invitation_url/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">invitation_url(conn_or_endpoint, action, invitation_id, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_api_resource_path/4">
+
+  <div class="detail-header">
+    <a href="#kaffy_api_resource_path/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_api_resource_path(conn_or_endpoint, action, context, resource)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_api_resource_path/5">
+
+  <div class="detail-header">
+    <a href="#kaffy_api_resource_path/5" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_api_resource_path(conn_or_endpoint, action, context, resource, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_api_resource_url/4">
+
+  <div class="detail-header">
+    <a href="#kaffy_api_resource_url/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_api_resource_url(conn_or_endpoint, action, context, resource)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_api_resource_url/5">
+
+  <div class="detail-header">
+    <a href="#kaffy_api_resource_url/5" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_api_resource_url(conn_or_endpoint, action, context, resource, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_dashboard_path/2">
+
+  <div class="detail-header">
+    <a href="#kaffy_dashboard_path/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_dashboard_path(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_dashboard_path/3">
+
+  <div class="detail-header">
+    <a href="#kaffy_dashboard_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_dashboard_path(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_dashboard_url/2">
+
+  <div class="detail-header">
+    <a href="#kaffy_dashboard_url/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_dashboard_url(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_dashboard_url/3">
+
+  <div class="detail-header">
+    <a href="#kaffy_dashboard_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_dashboard_url(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_home_path/2">
+
+  <div class="detail-header">
+    <a href="#kaffy_home_path/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_home_path(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_home_path/3">
+
+  <div class="detail-header">
+    <a href="#kaffy_home_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_home_path(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_home_url/2">
+
+  <div class="detail-header">
+    <a href="#kaffy_home_url/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_home_url(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_home_url/3">
+
+  <div class="detail-header">
+    <a href="#kaffy_home_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_home_url(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_page_path/3">
+
+  <div class="detail-header">
+    <a href="#kaffy_page_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_page_path(conn_or_endpoint, action, slug)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_page_path/4">
+
+  <div class="detail-header">
+    <a href="#kaffy_page_path/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_page_path(conn_or_endpoint, action, slug, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_page_url/3">
+
+  <div class="detail-header">
+    <a href="#kaffy_page_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_page_url(conn_or_endpoint, action, slug)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_page_url/4">
+
+  <div class="detail-header">
+    <a href="#kaffy_page_url/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_page_url(conn_or_endpoint, action, slug, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_resource_path/4">
+
+  <div class="detail-header">
+    <a href="#kaffy_resource_path/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_resource_path(conn_or_endpoint, action, context, resource)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_resource_path/5">
+
+  <div class="detail-header">
+    <a href="#kaffy_resource_path/5" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_resource_path(conn_or_endpoint, action, context, resource, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_resource_path/6">
+
+  <div class="detail-header">
+    <a href="#kaffy_resource_path/6" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_resource_path(conn_or_endpoint, action, context, resource, id, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_resource_path/7">
+
+  <div class="detail-header">
+    <a href="#kaffy_resource_path/7" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_resource_path(conn_or_endpoint, action, context, resource, id, action_key, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_resource_url/4">
+
+  <div class="detail-header">
+    <a href="#kaffy_resource_url/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_resource_url(conn_or_endpoint, action, context, resource)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_resource_url/5">
+
+  <div class="detail-header">
+    <a href="#kaffy_resource_url/5" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_resource_url(conn_or_endpoint, action, context, resource, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_resource_url/6">
+
+  <div class="detail-header">
+    <a href="#kaffy_resource_url/6" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_resource_url(conn_or_endpoint, action, context, resource, id, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_resource_url/7">
+
+  <div class="detail-header">
+    <a href="#kaffy_resource_url/7" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_resource_url(conn_or_endpoint, action, context, resource, id, action_key, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_task_path/2">
+
+  <div class="detail-header">
+    <a href="#kaffy_task_path/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_task_path(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_task_path/3">
+
+  <div class="detail-header">
+    <a href="#kaffy_task_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_task_path(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_task_url/2">
+
+  <div class="detail-header">
+    <a href="#kaffy_task_url/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_task_url(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="kaffy_task_url/3">
+
+  <div class="detail-header">
+    <a href="#kaffy_task_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">kaffy_task_url(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="membership_path/3">
+
+  <div class="detail-header">
+    <a href="#membership_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">membership_path(conn_or_endpoint, action, website)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="membership_path/4">
+
+  <div class="detail-header">
+    <a href="#membership_path/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">membership_path(conn_or_endpoint, action, website, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="membership_path/5">
+
+  <div class="detail-header">
+    <a href="#membership_path/5" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">membership_path(conn_or_endpoint, action, website, id, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="membership_path/6">
+
+  <div class="detail-header">
+    <a href="#membership_path/6" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">membership_path(conn_or_endpoint, action, website, id, new_role, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="membership_url/3">
+
+  <div class="detail-header">
+    <a href="#membership_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">membership_url(conn_or_endpoint, action, website)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="membership_url/4">
+
+  <div class="detail-header">
+    <a href="#membership_url/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">membership_url(conn_or_endpoint, action, website, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="membership_url/5">
+
+  <div class="detail-header">
+    <a href="#membership_url/5" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">membership_url(conn_or_endpoint, action, website, id, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="membership_url/6">
+
+  <div class="detail-header">
+    <a href="#membership_url/6" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">membership_url(conn_or_endpoint, action, website, id, new_role, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="paddle_path/2">
+
+  <div class="detail-header">
+    <a href="#paddle_path/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">paddle_path(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="paddle_path/3">
+
+  <div class="detail-header">
+    <a href="#paddle_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">paddle_path(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="paddle_url/2">
+
+  <div class="detail-header">
+    <a href="#paddle_url/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">paddle_url(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="paddle_url/3">
+
+  <div class="detail-header">
+    <a href="#paddle_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">paddle_url(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="page_path/2">
+
+  <div class="detail-header">
+    <a href="#page_path/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">page_path(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="page_path/3">
+
+  <div class="detail-header">
+    <a href="#page_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">page_path(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="page_url/2">
+
+  <div class="detail-header">
+    <a href="#page_url/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">page_url(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="page_url/3">
+
+  <div class="detail-header">
+    <a href="#page_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">page_url(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="path/2">
+
+  <div class="detail-header">
+    <a href="#path/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">path(data, path)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Generates the path information including any necessary prefix.</p>
+  </section>
+</section>
+<section class="detail" id="site_path/2">
+
+  <div class="detail-header">
+    <a href="#site_path/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">site_path(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="site_path/3">
+
+  <div class="detail-header">
+    <a href="#site_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">site_path(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="site_path/4">
+
+  <div class="detail-header">
+    <a href="#site_path/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">site_path(conn_or_endpoint, action, website, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="site_path/5">
+
+  <div class="detail-header">
+    <a href="#site_path/5" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">site_path(conn_or_endpoint, action, website, id, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="site_url/2">
+
+  <div class="detail-header">
+    <a href="#site_url/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">site_url(conn_or_endpoint, action)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="site_url/3">
+
+  <div class="detail-header">
+    <a href="#site_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">site_url(conn_or_endpoint, action, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="site_url/4">
+
+  <div class="detail-header">
+    <a href="#site_url/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">site_url(conn_or_endpoint, action, website, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="site_url/5">
+
+  <div class="detail-header">
+    <a href="#site_url/5" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">site_url(conn_or_endpoint, action, website, id, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="static_integrity/2">
+
+  <div class="detail-header">
+    <a href="#static_integrity/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">static_integrity(endpoint, path)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Generates an integrity hash to a static asset given its file path.</p>
+  </section>
+</section>
+<section class="detail" id="static_path/2">
+
+  <div class="detail-header">
+    <a href="#static_path/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">static_path(conn, path)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Generates path to a static asset given its file path.</p>
+  </section>
+</section>
+<section class="detail" id="static_url/2">
+
+  <div class="detail-header">
+    <a href="#static_url/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">static_url(conn, path)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Generates url to a static asset given its file path.</p>
+  </section>
+</section>
+<section class="detail" id="stats_path/3">
+
+  <div class="detail-header">
+    <a href="#stats_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">stats_path(conn_or_endpoint, action, slug)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="stats_path/4">
+
+  <div class="detail-header">
+    <a href="#stats_path/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">stats_path(conn_or_endpoint, action, slug, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="stats_path/5">
+
+  <div class="detail-header">
+    <a href="#stats_path/5" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">stats_path(conn_or_endpoint, action, domain, filter_name, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="stats_url/3">
+
+  <div class="detail-header">
+    <a href="#stats_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">stats_url(conn_or_endpoint, action, slug)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="stats_url/4">
+
+  <div class="detail-header">
+    <a href="#stats_url/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">stats_url(conn_or_endpoint, action, slug, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="stats_url/5">
+
+  <div class="detail-header">
+    <a href="#stats_url/5" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">stats_url(conn_or_endpoint, action, domain, filter_name, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="unsubscribe_path/3">
+
+  <div class="detail-header">
+    <a href="#unsubscribe_path/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">unsubscribe_path(conn_or_endpoint, action, website)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="unsubscribe_path/4">
+
+  <div class="detail-header">
+    <a href="#unsubscribe_path/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">unsubscribe_path(conn_or_endpoint, action, website, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="unsubscribe_url/3">
+
+  <div class="detail-header">
+    <a href="#unsubscribe_url/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">unsubscribe_url(conn_or_endpoint, action, website)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="unsubscribe_url/4">
+
+  <div class="detail-header">
+    <a href="#unsubscribe_url/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">unsubscribe_url(conn_or_endpoint, action, website, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="url/1">
+
+  <div class="detail-header">
+    <a href="#url/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">url(data)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/router.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Generates the connection/endpoint base URL without any path information.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.28.5) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+
+  </body>
+</html>
