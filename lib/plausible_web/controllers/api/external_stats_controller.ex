@@ -98,12 +98,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   @max_breakdown_limit 1000
   defp validate_or_default_limit(%{"limit" => limit}) do
-    limit = String.to_integer(limit)
-
-    if limit <= @max_breakdown_limit do
+    with {limit, ""} when limit > 0 and limit <= @max_breakdown_limit <- Integer.parse(limit) do
       {:ok, limit}
     else
-      {:error, "Limit too large. Please use a limit not higher than #{@max_breakdown_limit}."}
+      _ ->
+        {:error, "Please provide limit as a number between 1 and #{@max_breakdown_limit}."}
     end
   end
 

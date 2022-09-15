@@ -1567,19 +1567,39 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       assert Enum.count(res["results"]) == 2
     end
 
+    @invalid_limit_message "Please provide limit as a number between 1 and 1000."
+
     test "returns error when limit too large", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/breakdown", %{
           "site_id" => site.domain,
-          "period" => "day",
-          "date" => "2021-01-01",
           "property" => "event:page",
           "limit" => 1001
         })
 
-      assert json_response(conn, 400) == %{
-               "error" => "Limit too large. Please use a limit not higher than 1000."
-             }
+      assert json_response(conn, 400) == %{"error" => @invalid_limit_message}
+    end
+
+    test "returns error with non-integer limit", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "event:page",
+          "limit" => "bad_limit"
+        })
+
+      assert json_response(conn, 400) == %{"error" => @invalid_limit_message}
+    end
+
+    test "returns error with negative integer limit", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "event:page",
+          "limit" => -1
+        })
+
+      assert json_response(conn, 400) == %{"error" => @invalid_limit_message}
     end
 
     test "can paginate results", %{conn: conn, site: site} do
