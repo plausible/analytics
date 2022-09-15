@@ -28,11 +28,17 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
-  def get_sites(conn, _) do
-    user = conn.assigns[:current_user]
+  def get_sites(conn, params) do
+    limit = String.to_integer(Map.get(params, "limit", "20"))
+    page = String.to_integer(Map.get(params, "page", "1"))
+    params = %{"per_page" => limit, "page" => page}
+    { sites, pagination } = Sites.get_sites_for_user(conn.assigns[:current_user].id, [:owner, :admin], params)
+    response = %{
+      data: Enum.map(sites, &%{domain: &1.domain, timezone: &1.timezone}),
+      pagination: %{ total_pages:  pagination.total_pages }
+    }
 
-    sites = Sites.get_sites_for_user(user.id, [:owner, :admin])
-    json(conn, sites)
+    json(conn, response)
   end
 
   def get_site(conn, %{"site_id" => site_id}) do

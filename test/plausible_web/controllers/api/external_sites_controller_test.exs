@@ -386,12 +386,48 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   end
 
   describe "GET /api/v1/sites" do
-    setup :create_new_site
+    test "get sites", %{conn: conn, user: user} do
+      {:ok, site: site} = create_site(%{user: user})
 
-    test "get all sites ", %{conn: conn, site: site} do
       conn = get(conn, "/api/v1/sites")
 
-      assert json_response(conn, 200) == [%{"domain" => site.domain, "timezone" => site.timezone}]
+      assert json_response(conn, 200) == %{
+        "data" => [
+          %{"domain" => site.domain, "timezone" => site.timezone}
+        ],
+        "pagination" => %{
+          "total_pages" => 1
+        }
+      }
+    end
+
+    test "paginates sites", %{conn: conn, user: user} do
+      {:ok, site: site1} = create_new_site(%{user: user})
+      {:ok, site: site2} = create_new_site(%{user: user})
+      {:ok, site: site3} = create_new_site(%{user: user})
+
+      conn = get(conn, "/api/v1/sites?limit=2")
+
+      assert json_response(conn, 200) == %{
+        "data" => [
+          %{"domain" => site1.domain, "timezone" => site1.timezone},
+          %{"domain" => site2.domain, "timezone" => site2.timezone},
+        ],
+        "pagination" => %{
+          "total_pages" => 2
+        }
+      }
+
+      conn = get(conn, "/api/v1/sites?limit=2&page=2")
+
+      assert json_response(conn, 200) == %{
+        "data" => [
+          %{"domain" => site3.domain, "timezone" => site3.timezone},
+        ],
+        "pagination" => %{
+          "total_pages" => 2
+        }
+      }
     end
   end
 

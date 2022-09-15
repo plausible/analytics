@@ -93,8 +93,8 @@ defmodule Plausible.Sites do
     )
   end
 
-  def get_sites_for_user(user_id, roles \\ [:owner, :admin, :viewer]),
-    do: Repo.all(get_sites_for_user_q(user_id, roles))
+  def get_sites_for_user(user_id, roles \\ [:owner, :admin, :viewer], params),
+    do: Repo.paginate(get_sites_for_user_q(user_id, roles), params)
 
   defp get_sites_for_user_q(user_id, roles) do
     from(s in Plausible.Site,
