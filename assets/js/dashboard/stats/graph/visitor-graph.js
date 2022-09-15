@@ -291,9 +291,9 @@ class LineGraph extends React.Component {
     const extraClass = this.props.graphData && this.props.graphData.interval === 'hour' ? '' : 'cursor-pointer'
 
     return (
-      <div className="graph-inner">
+      <div className="graph-inner" ref={this.boundary}>
         <div className="flex flex-wrap">
-          <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData}/>
+          <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary} />
         </div>
         <div className="relative px-2">
           <div className="absolute right-4 -top-10 flex">
