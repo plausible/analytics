@@ -1,4 +1,5 @@
 defmodule Plausible.Timezones do
+  @spec options() :: [{:key, String.t()}, {:value, String.t()}, {:offset, integer()}]
   def options do
     Tzdata.zone_list()
     |> Enum.map(&build_option/1)
@@ -7,7 +8,7 @@ defmodule Plausible.Timezones do
 
   defp build_option(timezone_code) do
     timezone_info = Timex.Timezone.get(timezone_code)
-    offset_in_minutes = div(timezone_info.offset_utc, -60)
+    offset_in_minutes = timezone_info |> Timex.Timezone.total_offset() |> div(-60)
 
     hhmm_formatted_offset =
       timezone_info
