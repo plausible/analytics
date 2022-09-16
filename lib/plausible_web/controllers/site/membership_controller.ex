@@ -1,4 +1,15 @@
 defmodule PlausibleWeb.Site.MembershipController do
+  @moduledoc """
+    This controller deals with user management via the UI in Site Settings -> People. It's important to enforce permissions in this controller.
+
+    Owner - Can manage users, can trigger a 'transfer ownership' request
+    Admin - Can manage users
+    Viewer - Can not access user management settings
+    Anyone - Can accept invitations
+
+    Everything else should be explicitly disallowed.
+  """
+
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias Plausible.Sites
@@ -101,27 +112,65 @@ defmodule PlausibleWeb.Site.MembershipController do
     |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
   end
 
-  def update_role(conn, %{"id" => id, "new_role" => new_role}) do
-    membership =
-      Repo.get!(Membership, id)
-      |> Repo.preload([:site, :user])
-      |> Membership.changeset(%{role: new_role})
-      |> Repo.update!()
+  @doc """
+    Updates the role of a user. The user being updated could be the same or different from the user taking
+    the action. When updating the role, it's important to enforce permissions:
 
-    redirect_target =
-      if membership.user.id == conn.assigns[:current_user].id && new_role == "viewer" do
-        "/#{URI.encode_www_form(membership.site.domain)}"
+    Owner - Can update anyone's role except for themselves. If they want to change their own role, they have to use the 'transfer ownership' feature.
+    Admin - Can update anyone's role except for owners. Can downgrade their own access to 'viewer'. Can promote a viewer to admin.
+  """
+  @role_mappings Membership
+                 |> Ecto.Enum.mappings(:role)
+                 |> Enum.map(fn {k, v} -> {v, k} end)
+                 |> Enum.into(%{})
+
+  def update_role(conn, %{"id" => id, "new_role" => new_role_str}) do
+    %{site: site, current_user: current_user, current_user_role: current_user_role} = conn.assigns
+
+    membership = Repo.get!(Membership, id) |> Repo.preload(:user)
+    new_role = Map.fetch!(@role_mappings, new_role_str)
+
+    can_grant_role? =
+      if membership.user.id == current_user.id do
+        can_grant_role_to_self?(current_user_role, new_role)
       else
-        Routes.site_path(conn, :settings_people, membership.site.domain)
+        can_grant_role_to_other?(current_user_role, new_role)
       end
 
-    conn
-    |> put_flash(
-      :success,
-      "#{membership.user.name} is now #{PlausibleWeb.SiteView.with_indefinite_article(new_role)}"
-    )
-    |> redirect(to: redirect_target)
+    if can_grant_role? do
+      membership =
+        membership
+        |> Membership.changeset(%{role: new_role})
+        |> Repo.update!()
+
+      redirect_target =
+        if membership.user.id == current_user.id and new_role == :viewer do
+          "/#{URI.encode_www_form(site.domain)}"
+        else
+          Routes.site_path(conn, :settings_people, site.domain)
+        end
+
+      conn
+      |> put_flash(
+        :success,
+        "#{membership.user.name} is now #{PlausibleWeb.SiteView.with_indefinite_article(new_role_str)}"
+      )
+      |> redirect(to: redirect_target)
+    else
+      conn
+      |> put_flash(:error, "You are not allowed to grant the #{new_role} role")
+      |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+    end
   end
+
+  defp can_grant_role_to_self?(:admin, :viewer), do: true
+  defp can_grant_role_to_self?(_, _), do: false
+
+  defp can_grant_role_to_other?(:owner, :admin), do: true
+  defp can_grant_role_to_other?(:owner, :viewer), do: true
+  defp can_grant_role_to_other?(:admin, :admin), do: true
+  defp can_grant_role_to_other?(:admin, :viewer), do: true
+  defp can_grant_role_to_other?(_, _), do: false
 
   def remove_member(conn, %{"id" => id}) do
     membership =

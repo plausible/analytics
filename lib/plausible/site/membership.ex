@@ -14,17 +14,5 @@ defmodule Plausible.Site.Membership do
     schema
     |> cast(attrs, [:user_id, :site_id, :role])
     |> validate_required([:user_id, :site_id])
-    |> validate_inclusion(:role, valid_roles(schema.role))
   end
-
-  def override_role(schema, role) do
-    schema
-    |> change(%{role: role})
-    |> validate_required([:user_id, :site_id, :role])
-  end
-
-  defp valid_roles(_prev_role = nil), do: [:owner, :admin, :viewer]
-  defp valid_roles(:owner), do: [:owner, :admin, :viewer]
-  defp valid_roles(:admin), do: [:admin, :viewer]
-  defp valid_roles(:viewer), do: [:viewer]
 end
