@@ -42,7 +42,7 @@ defmodule Plausible.Auth.UserAdmin do
   defp lock(user) do
     if user.grace_period do
       Plausible.Billing.SiteLocker.set_lock_status_for(user, true)
-      {:ok, user}
+      user |> Plausible.Auth.GracePeriod.end_changeset() |> Repo.update()
     else
       {:error, user, "No active grace period on this user"}
     end
@@ -63,8 +63,11 @@ defmodule Plausible.Auth.UserAdmin do
       nil ->
         "--"
 
-      %{manual_lock: true} ->
-        "Manual lock"
+      %{manual_lock: true, is_over: true} ->
+        "Manually locked"
+
+      %{manual_lock: true, is_over: false} ->
+        "Waiting for manual lock"
 
       %{is_over: true} ->
         "ended"
