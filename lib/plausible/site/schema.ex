@@ -15,6 +15,8 @@ defmodule Plausible.Site do
   alias Plausible.Auth.User
   alias Plausible.Site.GoogleAuth
 
+  @type t() :: %__MODULE__{}
+
   @derive {Jason.Encoder, only: [:domain, :timezone]}
   schema "sites" do
     field :domain, :string
