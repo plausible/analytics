@@ -92,37 +92,13 @@ defmodule Plausible.Billing.PaddleApi do
   def get_invoices(nil), do: {:error, :no_subscription}
 
   def get_invoices(subscription) do
-    config = get_config()
-
-    params = %{
-      vendor_id: config[:vendor_id],
-      vendor_auth_code: config[:vendor_auth_code],
-      subscription_id: subscription.paddle_subscription_id,
-      is_paid: 1,
-      from: Timex.shift(Timex.today(), years: -5) |> Timex.format!("{YYYY}-{0M}-{0D}"),
-      to: Timex.shift(Timex.today(), days: 1) |> Timex.format!("{YYYY}-{0M}-{0D}")
-    }
-
-    case HTTPClient.post(invoices_url(), @headers, params) do
+    case do_get_invoices(subscription) do
       {:ok, response} ->
-        body = Jason.decode!(response.body)
+        response
 
-        if body["success"] && body["response"] != [] do
-          body["response"] |> last_12_invoices()
-        else
-          {:error, :request_failed}
-        end
-
-      {:error, _reason} ->
-        {:error, :request_failed}
+      {:error, _} = e ->
+        e
     end
-  end
-
-  defp last_12_invoices(invoice_list) do
-    Enum.sort(invoice_list, fn %{"payout_date" => d1}, %{"payout_date" => d2} ->
-      Date.compare(Date.from_iso8601!(d1), Date.from_iso8601!(d2)) == :gt
-    end)
-    |> Enum.take(12)
   end
 
   def checkout_domain() do
@@ -157,5 +133,36 @@ defmodule Plausible.Billing.PaddleApi do
 
   defp get_subscription_url() do
     Path.join(vendors_domain(), "/api/2.0/subscription/users")
+  end
+
+  defp do_get_invoices(subscription) do
+    config = get_config()
+
+    params = %{
+      vendor_id: config[:vendor_id],
+      vendor_auth_code: config[:vendor_auth_code],
+      subscription_id: subscription.paddle_subscription_id,
+      is_paid: 1,
+      from: Timex.shift(Timex.today(), years: -5) |> Timex.format!("{YYYY}-{0M}-{0D}"),
+      to: Timex.shift(Timex.today(), days: 1) |> Timex.format!("{YYYY}-{0M}-{0D}")
+    }
+
+    with {:ok, response} <- HTTPClient.post(invoices_url(), @headers, params),
+         {:ok, body} <- Jason.decode(response.body),
+         true <- Map.get(body, "success"),
+         [_ | _] = response <- Map.get(body, "response") do
+      Enum.sort(response, fn %{"payout_date" => d1}, %{"payout_date" => d2} ->
+        Date.compare(Date.from_iso8601!(d1), Date.from_iso8601!(d2)) == :gt
+      end)
+      |> Enum.take(12)
+      |> then(&{:ok, &1})
+    else
+      error ->
+        Sentry.capture_message("Failed to retrieve invoices from Paddle",
+          extra: %{extra: error}
+        )
+
+        {:error, :request_failed}
+    end
   end
 end
