@@ -9,10 +9,24 @@ defmodule Plausible.HTTPClient do
   URL encoding is invoked.
   """
 
+  defmodule Non200Error do
+    defstruct reason: nil
+
+    @type t :: %__MODULE__{reason: Finch.Response.t()}
+
+    @spec new(Finch.Response.t()) :: t()
+    def new(%Finch.Response{status: status} = response)
+        when is_integer(status) and (status < 200 or status >= 300) do
+      %__MODULE__{reason: response}
+    end
+  end
+
   @type url() :: Finch.Request.url()
   @type headers() :: Finch.Request.headers()
   @type params() :: Finch.Request.body() | map()
-  @type response() :: {:ok, Finch.Response.t()} | {:error, Mint.Types.error() | Finch.Error.t()}
+  @type response() ::
+          {:ok, Finch.Response.t()}
+          | {:error, Mint.Types.error() | Finch.Error.t() | Non200Error.t()}
 
   @doc """
   Make a POST request
@@ -35,7 +49,8 @@ defmodule Plausible.HTTPClient do
 
     method
     |> build_request(url, headers, params)
-    |> do_request
+    |> do_request()
+    |> tag_error()
   end
 
   defp build_request(method, url, headers, params) do
@@ -68,5 +83,18 @@ defmodule Plausible.HTTPClient do
       _ ->
         {Jason.encode!(params), [{"content-type", "application/json"} | headers]}
     end
+  end
+
+  defp tag_error({:ok, %Finch.Response{status: status}} = ok)
+       when is_integer(status) and status >= 200 and status < 300 do
+    ok
+  end
+
+  defp tag_error({:ok, %Finch.Response{status: _} = response}) do
+    {:error, Non200Error.new(response)}
+  end
+
+  defp tag_error({:error, _} = error) do
+    error
   end
 end
