@@ -113,24 +113,27 @@ defmodule Plausible.Google.Api do
   def import_analytics(site, date_range, view_id, access_token) do
     {:ok, buffer} = Plausible.Google.Buffer.start_link()
 
-    ReportRequest.full_report()
-    |> Enum.each(fn %ReportRequest{} = report_request ->
-      report_request = %ReportRequest{
-        report_request
-        | date_range: date_range,
-          view_id: view_id,
-          access_token: access_token,
-          page_token: nil,
-          page_size: @per_page
-      }
+    result =
+      Enum.reduce_while(ReportRequest.full_report(), :ok, fn report_request, :ok ->
+        report_request = %ReportRequest{
+          report_request
+          | date_range: date_range,
+            view_id: view_id,
+            access_token: access_token,
+            page_token: nil,
+            page_size: @per_page
+        }
 
-      fetch_and_persist(site, report_request, buffer: buffer)
-    end)
+        case fetch_and_persist(site, report_request, buffer: buffer) do
+          :ok -> {:cont, :ok}
+          {:error, _} = error -> {:halt, error}
+        end
+      end)
 
     Plausible.Google.Buffer.flush(buffer)
     Plausible.Google.Buffer.stop(buffer)
 
-    :ok
+    result
   end
 
   @max_attempts 5
@@ -155,12 +158,13 @@ defmodule Plausible.Google.Api do
           :ok
         end
 
-      error ->
-        context_key = "request:#{attempt}"
-        Sentry.Context.set_extra_context(%{context_key => error})
-
+      {:error, cause} ->
         if attempt >= @max_attempts do
-          raise "Google API request failed too many times"
+          Sentry.capture_message("Failed to import from Google Analytics",
+            extra: %{site: site.domain, error: cause}
+          )
+
+          {:error, cause}
         else
           Process.sleep(sleep_time)
           fetch_and_persist(site, report_request, Keyword.merge(opts, attempt: attempt + 1))
