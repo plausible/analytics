@@ -77,7 +77,7 @@ defmodule Plausible.MixProject do
       {:exvcr, "~> 0.11", only: :test},
       {:finch, "~> 0.12.0", override: true},
       {:floki, "~> 0.32.0", only: :test},
-      {:fun_with_flags, "~> 1.8.1"},
+      {:fun_with_flags, "~> 1.9.0"},
       {:fun_with_flags_ui, "~> 0.8"},
       {:geolix, "~> 2.0"},
       {:geolix_adapter_mmdb2, "~> 0.6.0"},
