@@ -139,11 +139,11 @@ defmodule Plausible.Google.HTTP do
         {:ok, Jason.decode!(body)}
 
       {:error, %{reason: %Finch.Response{body: body}}} ->
-        Sentry.capture_message("Error fetching Google view ID", extra: Jason.decode!(body))
+        Sentry.capture_message("Error fetching Google view ID", extra: %{body: inspect(body)})
         {:error, body}
 
       {:error, %{reason: reason} = e} ->
-        Sentry.capture_message("Error fetching Google view ID", extra: e)
+        Sentry.capture_message("Error fetching Google view ID", extra: %{error: inspect(e)})
         {:error, reason}
     end
   end
@@ -175,20 +175,19 @@ defmodule Plausible.Google.HTTP do
         {:ok, Jason.decode!(body)}
 
       {:error, %{reason: %Finch.Response{body: body, status: 401}}} ->
-        Sentry.capture_message("Error fetching Google queries", extra: Jason.decode!(body))
+        Sentry.capture_message("Error fetching Google queries", extra: %{body: inspect(body)})
         {:error, :invalid_credentials}
 
       {:error, %{reason: %Finch.Response{body: body, status: 403}}} ->
-        body = Jason.decode!(body)
-        Sentry.capture_message("Error fetching Google queries", extra: body)
+        Sentry.capture_message("Error fetching Google queries", extra: %{body: inspect(body)})
         {:error, get_in(body, ["error", "message"])}
 
       {:error, %{reason: %Finch.Response{body: body}}} ->
-        Sentry.capture_message("Error fetching Google queries", extra: Jason.decode!(body))
+        Sentry.capture_message("Error fetching Google queries", extra: %{body: inspect(body)})
         {:error, :unknown}
 
       {:error, %{reason: _} = e} ->
-        Sentry.capture_message("Error fetching Google queries", extra: e)
+        Sentry.capture_message("Error fetching Google queries", extra: %{error: inspect(e)})
         {:error, :unknown}
     end
   end
@@ -219,7 +218,7 @@ defmodule Plausible.Google.HTTP do
         |> then(&{:error, &1})
 
       {:error, %{reason: _} = e} ->
-        Sentry.capture_message("Error fetching Google queries", extra: e)
+        Sentry.capture_message("Error fetching Google queries", extra: %{error: inspect(e)})
         {:error, :unknown}
     end
   end
@@ -262,11 +261,11 @@ defmodule Plausible.Google.HTTP do
         {:ok, date}
 
       {:error, %{reason: %Finch.Response{body: body}}} ->
-        Sentry.capture_message("Error fetching Google view ID", extra: Jason.decode!(body))
+        Sentry.capture_message("Error fetching Google view ID", extra: %{body: inspect(body)})
         {:error, body}
 
       {:error, %{reason: reason} = e} ->
-        Sentry.capture_message("Error fetching Google view ID", extra: e)
+        Sentry.capture_message("Error fetching Google view ID", extra: %{error: inspect(e)})
         {:error, reason}
     end
   end
