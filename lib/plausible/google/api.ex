@@ -151,12 +151,8 @@ defmodule Plausible.Google.Api do
     result
   end
 
-  @spec fetch_and_persist(Plausible.Site.t(), ReportRequest.t(),
-          buffer: pid(),
-          attempt: non_neg_integer(),
-          sleep_time: non_neg_integer(),
-          http_client: module()
-        ) :: :ok | {:error, term()}
+  @spec fetch_and_persist(Plausible.Site.t(), ReportRequest.t(), Keyword.t()) ::
+          :ok | {:error, term()}
   def fetch_and_persist(site, %ReportRequest{} = report_request, opts \\ []) do
     buffer_pid = Keyword.get(opts, :buffer)
     attempt = Keyword.get(opts, :attempt, 1)
