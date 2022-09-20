@@ -70,13 +70,12 @@ defmodule Plausible.Google.ApiTest do
         page_size: 10_000
       }
 
-      assert_raise RuntimeError, "Google API request failed too many times", fn ->
-        Api.fetch_and_persist(site, request,
-          http_client: finch_double,
-          sleep_time: 0,
-          buffer: buffer
-        )
-      end
+      assert {:error, :request_failed} =
+               Api.fetch_and_persist(site, request,
+                 http_client: finch_double,
+                 sleep_time: 0,
+                 buffer: buffer
+               )
 
       assert_receive({Finch, :request, [_, _]})
       assert_receive({Finch, :request, [_, _]})

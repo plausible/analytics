@@ -41,6 +41,13 @@ defmodule Plausible.Google.HTTP do
          token <- Map.get(report, "nextPageToken"),
          {:ok, report} <- convert_to_maps(report) do
       {:ok, {report, token}}
+    else
+      {:ok, %{status: _non_http_200, body: body}} ->
+        Sentry.Context.set_extra_context(%{google_analytics_response: body})
+        {:error, :request_failed}
+
+      {:error, cause} ->
+        {:error, cause}
     end
   end
 
