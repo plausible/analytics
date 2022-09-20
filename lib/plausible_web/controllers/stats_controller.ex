@@ -204,14 +204,23 @@ defmodule PlausibleWeb.StatsController do
   end
 
   defp find_shared_link(domain, auth) do
-    shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: auth) |> Repo.preload(:site)
-    exists? = shared_link && shared_link.site.domain == domain
-    password_protected? = shared_link && shared_link.password_hash
+    link_query =
+      from link in Plausible.Site.SharedLink,
+        inner_join: site in assoc(link, :site),
+        where: link.slug == ^auth,
+        where: site.domain == ^domain,
+        limit: 1,
+        preload: [site: site]
 
-    cond do
-      exists? && password_protected? -> {:password_protected, shared_link}
-      exists? -> {:unlisted, shared_link}
-      true -> :not_found
+    case Repo.one(link_query) do
+      %Plausible.Site.SharedLink{password_hash: hash} = link when not is_nil(hash) ->
+        {:password_protected, link}
+
+      %Plausible.Site.SharedLink{} = link ->
+        {:unlisted, link}
+
+      nil ->
+        :not_found
     end
   end
 
