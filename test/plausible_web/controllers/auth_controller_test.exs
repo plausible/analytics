@@ -559,6 +559,14 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = get(conn, "/settings")
       assert !(html_response(conn, 200) =~ "Invoices")
     end
+
+    test "does not show invoice section for a free subscription", %{conn: conn, user: user} do
+      Plausible.Billing.Subscription.free(%{user_id: user.id, currency_code: "EUR"})
+      |> Repo.insert!()
+
+      conn = get(conn, "/settings")
+      assert !(html_response(conn, 200) =~ "Invoices")
+    end
   end
 
   describe "PUT /settings" do

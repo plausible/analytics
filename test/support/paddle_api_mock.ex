@@ -26,7 +26,8 @@ defmodule Plausible.PaddleApi.Mock do
      }}
   end
 
-  def get_invoices(nil), do: {:error, :no_subscription}
+  def get_invoices(nil), do: {:error, :no_invoices}
+  def get_invoices(%{paddle_subscription_id: nil}), do: {:error, :no_invoices}
 
   def get_invoices(subscription) do
     case subscription.paddle_subscription_id do
