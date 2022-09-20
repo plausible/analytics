@@ -179,7 +179,7 @@ defmodule Plausible.Google.HTTP do
         {:error, :invalid_credentials}
 
       {:error, %{reason: %Finch.Response{body: body, status: 403}}} ->
-        Sentry.capture_message("Error fetching Google queries", extra: %{body: inspect(body)}
+        Sentry.capture_message("Error fetching Google queries", extra: %{body: inspect(body)})
         {:error, get_in(body, ["error", "message"])}
 
       {:error, %{reason: %Finch.Response{body: body}}} ->
