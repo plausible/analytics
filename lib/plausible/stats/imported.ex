@@ -179,7 +179,7 @@ defmodule Plausible.Stats.Imported do
           |> select_merge([i], %{exit_page: i.exit_page, visits: sum(i.exits)})
 
         :country ->
-          imported_q |> select_merge([i], %{country: i.country})
+          imported_q |> where([i], i.country != "ZZ") |> select_merge([i], %{country: i.country})
 
         :region ->
           imported_q |> where([i], i.region != "") |> select_merge([i], %{region: i.region})
