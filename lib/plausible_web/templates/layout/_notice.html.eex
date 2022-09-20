@@ -3,7 +3,7 @@
 <% end %>
 
 
-<%= if on_grace_period?(@conn.assigns[:current_user]) do %>
+<%= if Plausible.Auth.GracePeriod.active?(@conn.assigns[:current_user]) do %>
   <div class="container">
     <div class="rounded-md bg-yellow-100 p-4">
       <div class="flex">
@@ -14,11 +14,26 @@
         </div>
         <div class="ml-3">
           <h3 class="text-sm font-medium text-yellow-800">
-            Please upgrade your account
+            <%= if Plausible.Auth.enterprise?(@conn.assigns[:current_user]) do %>
+              You have outgrown your Plausible subscription tier
+            <% else %>
+              Please upgrade your account
+            <% end %>
           </h3>
           <div class="mt-2 text-sm text-yellow-700">
             <p>
-            In order to keep your stats running, we require you to upgrade your account. If you do not upgrade your account <%= grace_period_end(@conn.assigns[:current_user]) %>, we will lock your stats and they won't be accessible. <%= link("Upgrade now →", to: "/settings", class: "text-sm font-medium text-yellow-800") %>
+            <%= if Plausible.Auth.enterprise?(@conn.assigns[:current_user]) do %>
+              In order to keep your stats running, we require you to upgrade 
+              your account to accommodate your new usage levels. Please contact
+              us to discuss a new custom enterprise plan.
+              <%= link("Contact us →", to: "mailto:enterprise@plausible.io", class: "text-sm font-medium text-yellow-800") %>
+            <% else %>
+              In order to keep your stats running, we require you to upgrade 
+              your account. If you do not upgrade your account
+              <%= grace_period_end(@conn.assigns[:current_user]) %>, we will 
+              lock your stats and they won't be accessible.
+              <%= link("Upgrade now →", to: "/settings", class: "text-sm font-medium text-yellow-800") %>
+            <% end %>
             </p>
           </div>
         </div>
@@ -27,7 +42,7 @@
   </div>
 <% end %>
 
-<%= if grace_period_over?(@conn.assigns[:current_user]) do %>
+<%= if Plausible.Auth.GracePeriod.expired?(@conn.assigns[:current_user]) do %>
   <div class="container">
     <div class="rounded-md bg-yellow-100 p-4">
       <div class="flex">
@@ -42,7 +57,9 @@
           </h3>
           <div class="mt-2 text-sm text-yellow-700">
             <p>
-            As you have outgrown your subscription tier, we kindly ask you to upgrade your subscription to accommodate your new traffic levels. <%= link("Upgrade now →", to: "/settings", class: "text-sm font-medium text-yellow-800") %>
+            As you have outgrown your subscription tier, we kindly ask you to 
+            upgrade your subscription to accommodate your new traffic levels.
+            <%= link("Upgrade now →", to: "/settings", class: "text-sm font-medium text-yellow-800") %>
             </p>
           </div>
         </div>

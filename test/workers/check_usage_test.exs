@@ -98,7 +98,7 @@ defmodule Plausible.Workers.CheckUsageTest do
   end
 
   test "skips checking users who already have a grace period", %{user: user} do
-    Plausible.Auth.User.start_grace_period(user, 12_000) |> Repo.update()
+    user |> Plausible.Auth.GracePeriod.start_changeset(12_000) |> Repo.update()
 
     billing_stub =
       Plausible.Billing
@@ -202,6 +202,26 @@ defmodule Plausible.Workers.CheckUsageTest do
         to: [{nil, "enterprise@plausible.io"}],
         subject: "#{user.email} has outgrown their enterprise plan"
       )
+    end
+
+    test "starts grace period when plan is outgrown", %{user: user} do
+      billing_stub =
+        Plausible.Billing
+        |> stub(:last_two_billing_months_usage, fn _user -> {1_100_000, 1_100_000} end)
+        |> stub(:last_two_billing_cycles, fn _user ->
+          {Date.range(Timex.today(), Timex.today()), Date.range(Timex.today(), Timex.today())}
+        end)
+
+      enterprise_plan = insert(:enterprise_plan, user: user, monthly_pageview_limit: 1_000_000)
+
+      insert(:subscription,
+        user: user,
+        paddle_plan_id: enterprise_plan.paddle_plan_id,
+        last_bill_date: Timex.shift(Timex.today(), days: -1)
+      )
+
+      CheckUsage.perform(nil, billing_stub)
+      assert user |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
     end
   end
 

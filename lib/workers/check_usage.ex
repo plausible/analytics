@@ -71,7 +71,7 @@ defmodule Plausible.Workers.CheckUsage do
 
       {{_, {last_cycle, last_cycle_usage}}, {_, {site_usage, site_allowance}}} ->
         template =
-          PlausibleWeb.Email.enterprise_over_limit_email(
+          PlausibleWeb.Email.enterprise_over_limit_internal_email(
             subscriber,
             last_cycle_usage,
             last_cycle,
@@ -80,6 +80,10 @@ defmodule Plausible.Workers.CheckUsage do
           )
 
         Plausible.Mailer.send_email_safe(template)
+
+        subscriber
+        |> Plausible.Auth.GracePeriod.start_manual_lock_changeset(last_cycle_usage)
+        |> Repo.update()
     end
   end
 
@@ -97,7 +101,10 @@ defmodule Plausible.Workers.CheckUsage do
           )
 
         Plausible.Mailer.send_email_safe(template)
-        Plausible.Auth.User.start_grace_period(subscriber, last_cycle_usage) |> Repo.update()
+
+        subscriber
+        |> Plausible.Auth.GracePeriod.start_changeset(last_cycle_usage)
+        |> Repo.update()
 
       _ ->
         nil

@@ -10,19 +10,11 @@ defimpl FunWithFlags.Actor, for: Plausible.Auth.User do
   end
 end
 
-defmodule Plausible.Auth.GracePeriod do
-  use Ecto.Schema
-
-  embedded_schema do
-    field :end_date, :date
-    field :allowance_required, :integer
-    field :is_over, :boolean
-  end
-end
-
 defmodule Plausible.Auth.User do
   use Ecto.Schema
   import Ecto.Changeset
+
+  @type t() :: %__MODULE__{}
 
   @required [:email, :name, :password, :password_confirmation]
   schema "users" do
@@ -94,24 +86,6 @@ defmodule Plausible.Auth.User do
 
   def end_trial(user) do
     change(user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
-  end
-
-  def start_grace_period(user, allowance_required) do
-    grace_period = %Plausible.Auth.GracePeriod{
-      end_date: Timex.today() |> Timex.shift(days: 7),
-      allowance_required: allowance_required,
-      is_over: false
-    }
-
-    change(user, grace_period: grace_period)
-  end
-
-  def end_grace_period(user) do
-    change(user, grace_period: %{is_over: true})
-  end
-
-  def remove_grace_period(user) do
-    change(user, grace_period: nil)
   end
 
   defp trial_expiry() do
