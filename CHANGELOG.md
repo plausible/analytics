@@ -48,6 +48,8 @@ All notable changes to this project will be documented in this file.
 - Fix a bug where city, region and country filters were filtering stats but not the location list
 - Fix a bug where regions were not being saved
 - Timezone offset labels now update with time changes
+- Render 404 if shared link auth cannot be verified [plausible/analytics#2225](https://github.com/plausible/analytics/pull/2225)
+- Restore compatibility with older format of shared links [plausible/analytics#2225](https://github.com/plausible/analytics/pull/2225)
 
 ### Changed
 - Cache the tracking script for 24 hours

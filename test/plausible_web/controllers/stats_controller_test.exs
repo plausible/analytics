@@ -223,7 +223,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
-  describe "GET /share/:slug" do
+  describe "GET /share/:domain?auth=:auth" do
     test "prompts a password for a password-protected link", %{conn: conn} do
       site = insert(:site)
 
@@ -264,9 +264,41 @@ defmodule PlausibleWeb.StatsControllerTest do
       refute String.contains?(html_response(conn, 200), "Back to my sites")
     end
 
-    test "renders bad request when no auth parameter supplied", %{conn: conn} do
+    test "renders 404 not found when no auth parameter supplied", %{conn: conn} do
       conn = get(conn, "/share/example.com")
-      assert response(conn, 400) =~ "Bad Request"
+      assert response(conn, 404) =~ "nothing here"
+    end
+
+    test "renders 404 not found when non-existent auth parameter is supplied", %{conn: conn} do
+      conn = get(conn, "/share/example.com?auth=bad-token")
+      assert response(conn, 404) =~ "nothing here"
+    end
+
+    test "renders 404 not found when auth parameter for another site is supplied", %{conn: conn} do
+      site1 = insert(:site, domain: "test-site-1.com")
+      site2 = insert(:site, domain: "test-site-2.com")
+      site1_link = insert(:shared_link, site: site1)
+
+      conn = get(conn, "/share/#{site2.domain}/?auth=#{site1_link.slug}")
+      assert response(conn, 404) =~ "nothing here"
+    end
+  end
+
+  describe "GET /share/:slug - backwards compatibility" do
+    test "it redirects to new shared link format for historical links", %{conn: conn} do
+      site = insert(:site, domain: "test-site.com")
+      site_link = insert(:shared_link, site: site, inserted_at: ~N[2021-12-31 00:00:00])
+
+      conn = get(conn, "/share/#{site_link.slug}")
+      assert redirected_to(conn, 302) == "/share/#{site.domain}?auth=#{site_link.slug}"
+    end
+
+    test "it does nothing for newer links", %{conn: conn} do
+      site = insert(:site, domain: "test-site.com")
+      site_link = insert(:shared_link, site: site, inserted_at: ~N[2022-01-01 00:00:00])
+
+      conn = get(conn, "/share/#{site_link.slug}")
+      assert response(conn, 404) =~ "nothing here"
     end
   end
 

@@ -1,4 +1,44 @@
 defmodule PlausibleWeb.StatsController do
+  @moduledoc """
+  This controller is responsible for rendering stats dashboards.
+
+  The stats dashboards are currently the only part of the app that uses client-side
+  rendering. Since the dashboards are heavily interactive, they are built with React
+  which is an appropraite choice for highly interactive browser UIs.
+
+  <div class="mermaid">
+  sequenceDiagram
+    Browser->>StatsController: GET /mydomain.com
+    StatsController-->>Browser: StatsView.render("stats.html")
+    Note left of Browser: ReactDom.render(Dashboard)
+
+    Browser -) Api.StatsController: GET /api/stats/mydomain.com/top-stats
+    Api.StatsController --) Browser: {"top_stats": [...]}
+    Note left of Browser: TopStats.render()
+
+    Browser -) Api.StatsController: GET /api/stats/mydomain.com/main-graph
+    Api.StatsController --) Browser: [{"plot": [...], "labels": [...]}, ...]
+    Note left of Browser: VisitorGraph.render()
+
+    Browser -) Api.StatsController: GET /api/stats/mydomain.com/sources
+    Api.StatsController --) Browser: [{"name": "Google", "visitors": 292150}, ...]
+    Note left of Browser: Sources.render()
+
+    Note over Browser,StatsController: And so on, for all reports in the viewport
+  </div>
+
+  This reasoning for this sequence is as follows:
+    1. First paint is fast because it doesn't do any data aggregation yet - good UX
+    2. The basic structure of the dashboard is rendered with spinners before reports are ready - good UX
+    2. Rendering on the frontend allows for maximum interactivity. Re-rendering and re-fetching can be as granular as needed.
+    3. Routing on the frontend allows the user to navigate the dashboard without reloading the page and losing context
+    4. Rendering on the frontend allows caching results in the browser to reduce pressure on backends and storage
+      3.1 No client-side caching has been implemented yet. This is still theoretical. See https://github.com/plausible/analytics/discussions/1278
+      3.2 This is a big potential opportunity, because analytics data is mostly immutable. Clients can cache all historical data.
+    5. Since frontend rendering & navigation is harder to build and maintain than regular server-rendered HTML, we don't use SPA-style rendering anywhere else
+    .The only place currently where the benefits outweight the costs is the dashboard.
+  """
+
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias PlausibleWeb.Api
@@ -105,40 +145,48 @@ defmodule PlausibleWeb.StatsController do
     |> send_resp(200, zip_content)
   end
 
-  def shared_link(conn, %{"domain" => domain, "auth" => auth}) do
-    shared_link =
-      Repo.get_by(Plausible.Site.SharedLink, slug: auth)
-      |> Repo.preload(:site)
+  @doc """
+    Authorizes and renders a shared link:
+    1. Shared link with no password protection: needs to just make sure the shared link entry is still
+    in our database. This check makes sure shared link access can be revoked by the site admins. If the
+    shared link exists, render it directly.
 
-    if shared_link && shared_link.site.domain == domain do
-      if shared_link.password_hash do
-        with conn <- Plug.Conn.fetch_cookies(conn),
-             {:ok, token} <- Map.fetch(conn.req_cookies, shared_link_cookie_name(auth)),
-             {:ok, %{slug: token_slug}} <- Plausible.Auth.Token.verify_shared_link(token),
-             true <- token_slug == shared_link.slug do
-          render_shared_link(conn, shared_link)
-        else
-          _e ->
-            conn
-            |> assign(:skip_plausible_tracking, true)
-            |> render("shared_link_password.html",
-              link: shared_link,
-              layout: {PlausibleWeb.LayoutView, "focus.html"}
-            )
-        end
-      else
+    2. Shared link with password protection: Same checks as without the password, but an extra step is taken to
+    protect the page with a password. When the user passes the password challenge, a cookie is set with Plausible.Auth.Token.sign_shared_link().
+    The cookie allows the user to access the dashboard for 24 hours without entering the password again.
+
+    ### Backwards compatibility
+
+    The URL format for shared links was changed in [this pull request](https://github.com/plausible/analytics/pull/752) in order
+    to make the URLs easier to bookmark. The old format is supported along with the new in order to not break old links.
+
+    See: https://plausible.io/docs/shared-links
+  """
+  def shared_link(conn, %{"domain" => domain, "auth" => auth}) do
+    case find_shared_link(domain, auth) do
+      {:password_protected, shared_link} ->
+        render_password_protected_shared_link(conn, shared_link)
+
+      {:unlisted, shared_link} ->
         render_shared_link(conn, shared_link)
-      end
+
+      :not_found ->
+        render_error(conn, 404)
     end
   end
 
-  def shared_link(conn, %{"slug" => slug}) do
+  @old_format_deprecation_date ~N[2022-01-01 00:00:00]
+  def shared_link(conn, %{"domain" => slug}) do
     shared_link =
-      Repo.get_by(Plausible.Site.SharedLink, slug: slug)
-      |> Repo.preload(:site)
+      Repo.one(
+        from l in Plausible.Site.SharedLink,
+          where: l.slug == ^slug and l.inserted_at < ^@old_format_deprecation_date,
+          preload: :site
+      )
 
     if shared_link do
-      redirect(conn, to: "/share/#{URI.encode_www_form(shared_link.site.domain)}?auth=#{slug}")
+      new_link_format = Routes.stats_path(conn, :shared_link, shared_link.site.domain, auth: slug)
+      redirect(conn, to: new_link_format)
     else
       render_error(conn, 404)
     end
@@ -146,6 +194,44 @@ defmodule PlausibleWeb.StatsController do
 
   def shared_link(conn, _) do
     render_error(conn, 400)
+  end
+
+  defp render_password_protected_shared_link(conn, shared_link) do
+    with conn <- Plug.Conn.fetch_cookies(conn),
+         {:ok, token} <- Map.fetch(conn.req_cookies, shared_link_cookie_name(shared_link.slug)),
+         {:ok, %{slug: token_slug}} <- Plausible.Auth.Token.verify_shared_link(token),
+         true <- token_slug == shared_link.slug do
+      render_shared_link(conn, shared_link)
+    else
+      _e ->
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("shared_link_password.html",
+          link: shared_link,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+    end
+  end
+
+  defp find_shared_link(domain, auth) do
+    link_query =
+      from link in Plausible.Site.SharedLink,
+        inner_join: site in assoc(link, :site),
+        where: link.slug == ^auth,
+        where: site.domain == ^domain,
+        limit: 1,
+        preload: [site: site]
+
+    case Repo.one(link_query) do
+      %Plausible.Site.SharedLink{password_hash: hash} = link when not is_nil(hash) ->
+        {:password_protected, link}
+
+      %Plausible.Site.SharedLink{} = link ->
+        {:unlisted, link}
+
+      nil ->
+        :not_found
+    end
   end
 
   def authenticate_shared_link(conn, %{"slug" => slug, "password" => password}) do

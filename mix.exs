@@ -115,7 +115,7 @@ defmodule Plausible.MixProject do
       {:telemetry, "~> 1.0", override: true},
       {:timex, "~> 3.7"},
       {:ua_inspector, "~> 3.0"},
-      {:ex_doc, "~> 0.28"}
+      {:ex_doc, "~> 0.28", only: :dev, runtime: false}
     ]
   end
 
@@ -140,7 +140,17 @@ defmodule Plausible.MixProject do
           ],
       groups_for_extras: [
         Features: Path.wildcard("guides/features/*.md")
-      ]
+      ],
+      before_closing_body_tag: fn
+        :html ->
+          """
+          <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+          <script>mermaid.initialize({startOnLoad: true})</script>
+          """
+
+        _ ->
+          ""
+      end
     ]
   end
 end
