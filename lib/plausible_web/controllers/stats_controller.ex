@@ -146,8 +146,6 @@ defmodule PlausibleWeb.StatsController do
   end
 
   @doc """
-    See: https://plausible.io/docs/shared-links
-
     Authorizes and renders a shared link:
     1. Shared link with no password protection: needs to just make sure the shared link entry is still
     in our database. This check makes sure shared link access can be revoked by the site admins. If the
@@ -156,6 +154,13 @@ defmodule PlausibleWeb.StatsController do
     2. Shared link with password protection: Same checks as without the password, but an extra step is taken to
     protect the page with a password. When the user passes the password challenge, a cookie is set with Plausible.Auth.Token.sign_shared_link().
     The cookie allows the user to access the dashboard for 24 hours without entering the password again.
+
+    ### Backwards compatibility
+
+    The URL format for shared links was changed in [this pull request](https://github.com/plausible/analytics/pull/752) in order
+    to make the URLs easier to bookmark. The old format is supported along with the new in order to not break old links.
+
+    See: https://plausible.io/docs/shared-links
   """
   def shared_link(conn, %{"domain" => domain, "auth" => auth}) do
     case find_shared_link(domain, auth) do
@@ -170,13 +175,18 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  def shared_link(conn, %{"slug" => slug}) do
+  @old_format_deprecation_date ~N[2022-01-01 00:00:00]
+  def shared_link(conn, %{"domain" => slug}) do
     shared_link =
-      Repo.get_by(Plausible.Site.SharedLink, slug: slug)
-      |> Repo.preload(:site)
+      Repo.one(
+        from l in Plausible.Site.SharedLink,
+          where: l.slug == ^slug and l.inserted_at < ^@old_format_deprecation_date,
+          preload: :site
+      )
 
     if shared_link do
-      redirect(conn, to: "/share/#{URI.encode_www_form(shared_link.site.domain)}?auth=#{slug}")
+      new_link_format = Routes.stats_path(conn, :shared_link, shared_link.site.domain, auth: slug)
+      redirect(conn, to: new_link_format)
     else
       render_error(conn, 404)
     end
