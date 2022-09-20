@@ -181,7 +181,7 @@ defmodule Plausible.Google.Api do
       {:error, cause} ->
         if attempt >= @max_attempts do
           Sentry.capture_message("Failed to import from Google Analytics",
-            extra: %{site: site.domain, error: cause}
+            extra: %{site: site.domain, error: inspect(cause)}
           )
 
           {:error, cause}
