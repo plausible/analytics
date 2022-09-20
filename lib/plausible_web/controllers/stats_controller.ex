@@ -6,42 +6,26 @@ defmodule PlausibleWeb.StatsController do
   rendering. Since the dashboards are heavily interactive, they are built with React
   which is an appropraite choice for highly interactive browser UIs.
 
-                                     +---------------+                +-----------------+ +---------------------+
-                                     | BrowserClient |                | StatsController | | ApiStatsController  |
-                                     +---------------+                +-----------------+ +---------------------+
-                                             |                                 |                     |
-                                             | GET /mydomain.com               |                     |
-                                             |-------------------------------->|                     |
-                                             |                                 |                     |
-                                             | StatsView.render("stats.html")  |                     |
-                                             |<--------------------------------|                     |
-      -------------------------------------\ |                                 |                     |
-      |  JS renders with ReactDom.mount()  |-|                                 |                     |
-      |------------------------------------| |                                 |                     |
-  -----------------------------------------\ |                                 |                     |
-  |  Hydrate React reports in parallel...  |-|                                 |                     |
-  |----------------------------------------| |                                 |                     |
-                                             |                                 |                     |
-                                             | GET /api/stats/mydomain.com/top-stats                 |
-                                             |------------------------------------------------------>|
-                                             |                                 |                     |
-                                             |                                 |       JSON response |
-                                             |<------------------------------------------------------|
-                       --------------------\ |                                 |                     |
-                       | TopStats.render() |-|                                 |                     |
-                       |-------------------| |                                 |                     |
-                                             |                                 |                     |
-                                             | GET /api/stats/mydomain.com/sources                   |
-                                             |------------------------------------------------------>|
-                                             |                                 |                     |
-                                             |                                 |       JSON response |
-                                             |<------------------------------------------------------|
-                        -------------------\ |                                 |                     |
-                        | Sources.render() |-|                                 |                     |
-                        |------------------| |                                 |                     |
-                                             |                                 |                     |
-                                                     ... ETC until all reports are hydrated ...
+  <div class="mermaid">
+  sequenceDiagram
+    Browser->>StatsController: GET /mydomain.com
+    StatsController-->>Browser: StatsView.render("stats.html")
+    Note left of Browser: ReactDom.render(Dashboard)
 
+    Browser -) Api.StatsController: GET /api/stats/mydomain.com/top-stats
+    Api.StatsController --) Browser: {"top_stats": [...]}
+    Note left of Browser: TopStats.render()
+
+    Browser -) Api.StatsController: GET /api/stats/mydomain.com/main-graph
+    Api.StatsController --) Browser: [{"name": "Google", "visitors": 292150}, ...]
+    Note left of Browser: VisitorGraph.render()
+
+    Browser -) Api.StatsController: GET /api/stats/mydomain.com/sources
+    Api.StatsController --) Browser: [{"name": "Google", "visitors": 292150}, ...]
+    Note left of Browser: Sources.render()
+
+    Note over Browser,StatsController: And so on, for all reports in the viewport
+  </div>
 
   This reasoning for this sequence is as follows:
     1. First paint is fast because it doesn't do any data aggregation yet - good UX
