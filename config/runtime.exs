@@ -372,12 +372,6 @@ config :plausible, :hcaptcha,
   sitekey: hcaptcha_sitekey,
   secret: hcaptcha_secret
 
-config :plausible, Plausible.Finch,
-  default_pool_size: get_int_from_path_or_env(config_dir, "DEFAULT_FINCH_POOL_SIZE", 50),
-  default_pool_count: get_int_from_path_or_env(config_dir, "DEFAULT_FINCH_POOL_COUNT", 1),
-  sentry_pool_size: get_int_from_path_or_env(config_dir, "SENTRY_FINCH_POOL_SIZE", 50),
-  sentry_pool_count: get_int_from_path_or_env(config_dir, "SENTRY_FINCH_POOL_COUNT", 1)
-
 config :plausible, Plausible.Sentry.Client,
   finch_request_opts: [
     pool_timeout: get_int_from_path_or_env(config_dir, "SENTRY_FINCH_POOL_TIMEOUT", 5000),
