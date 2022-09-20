@@ -979,13 +979,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         build(:event,
           name: "Purchase",
           "meta.key": ["cost"],
-          "meta.value": ["16"],
-          domain: site.domain,
-          timestamp: ~N[2021-01-01 00:00:00]
-        ),
-        build(:event,
-          name: "Purchase",
-          "meta.key": ["cost"],
           "meta.value": ["18"],
           domain: site.domain,
           timestamp: ~N[2021-01-01 00:25:00]
@@ -1019,7 +1012,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       assert json_response(conn, 200) == %{
                "results" => [
                  %{"cost" => "14", "visitors" => 2},
-                 %{"cost" => "16", "visitors" => 2}
+                 %{"cost" => "16", "visitors" => 1}
                ]
              }
     end
