@@ -34,20 +34,21 @@ defmodule Plausible.PaddleApi.Mock do
         {:error, :request_failed}
 
       _ ->
-        [
-          %{
-            "amount" => 11.11,
-            "currency" => "EUR",
-            "payout_date" => "2020-12-24",
-            "receipt_url" => "https://some-receipt-url.com"
-          },
-          %{
-            "amount" => 22,
-            "currency" => "USD",
-            "payout_date" => "2020-11-24",
-            "receipt_url" => "https://other-receipt-url.com"
-          }
-        ]
+        {:ok,
+         [
+           %{
+             "amount" => 11.11,
+             "currency" => "EUR",
+             "payout_date" => "2020-12-24",
+             "receipt_url" => "https://some-receipt-url.com"
+           },
+           %{
+             "amount" => 22,
+             "currency" => "USD",
+             "payout_date" => "2020-11-24",
+             "receipt_url" => "https://other-receipt-url.com"
+           }
+         ]}
     end
   end
 end

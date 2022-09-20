@@ -89,6 +89,10 @@ defmodule Plausible.Billing.PaddleApi do
     end
   end
 
+  @spec get_invoices(Plausible.Billing.Subscription.t()) ::
+          {:ok, list()}
+          | {:error, :request_failed}
+          | {:error, :no_subscription}
   def get_invoices(nil), do: {:error, :no_subscription}
 
   def get_invoices(subscription) do
@@ -103,26 +107,23 @@ defmodule Plausible.Billing.PaddleApi do
       to: Timex.shift(Timex.today(), days: 1) |> Timex.format!("{YYYY}-{0M}-{0D}")
     }
 
-    case HTTPClient.post(invoices_url(), @headers, params) do
-      {:ok, response} ->
-        body = Jason.decode!(response.body)
+    with {:ok, response} <- HTTPClient.post(invoices_url(), @headers, params),
+         {:ok, body} <- Jason.decode(response.body),
+         true <- Map.get(body, "success"),
+         [_ | _] = response <- Map.get(body, "response") do
+      Enum.sort(response, fn %{"payout_date" => d1}, %{"payout_date" => d2} ->
+        Date.compare(Date.from_iso8601!(d1), Date.from_iso8601!(d2)) == :gt
+      end)
+      |> Enum.take(12)
+      |> then(&{:ok, &1})
+    else
+      error ->
+        Sentry.capture_message("Failed to retrieve invoices from Paddle",
+          extra: %{extra: error}
+        )
 
-        if body["success"] && body["response"] != [] do
-          body["response"] |> last_12_invoices()
-        else
-          {:error, :request_failed}
-        end
-
-      {:error, _reason} ->
         {:error, :request_failed}
     end
-  end
-
-  defp last_12_invoices(invoice_list) do
-    Enum.sort(invoice_list, fn %{"payout_date" => d1}, %{"payout_date" => d2} ->
-      Date.compare(Date.from_iso8601!(d1), Date.from_iso8601!(d2)) == :gt
-    end)
-    |> Enum.take(12)
   end
 
   def checkout_domain() do

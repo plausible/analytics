@@ -41,7 +41,7 @@
           <%= if error == "invalid_grant" do %>
             <p class="text-red-700 font-medium mt-3"><a href="https://plausible.io/docs/google-search-console-integration#i-get-the-invalid-grant-error">Invalid Grant error returned from Google. <span class="text-indigo-500">See here on how to fix it.</a></p>
           <% else %>
-            <p class="text-red-700 font-medium mt-3"><%= error %></p>
+            <p class="text-red-700 font-medium mt-3">Something went wrong</p>
           <% end %>
       <% end %>
     <% else %>
