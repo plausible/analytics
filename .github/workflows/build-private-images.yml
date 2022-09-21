@@ -3,10 +3,10 @@ name: Build Private Images
 on:
   push:
     branches: [master, stable]
-    tags: ['r*']
-  pull_request:
-    branches: [master]
-    types: [synchronize, labeled]
+    tags: ["r*"]
+  # pull_request:
+  #   branches: [master]
+  #   types: [synchronize, labeled]
 
 jobs:
   build:

@@ -3,8 +3,8 @@ name: Elixir CI
 on:
   push:
     branches: [master, stable]
-  pull_request:
-    branches: [master, stable]
+  # pull_request:
+  #   branches: [master, stable]
 
 jobs:
   build:
