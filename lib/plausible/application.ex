@@ -41,41 +41,53 @@ defmodule Plausible.Application do
   end
 
   defp finch_pool_config() do
-    config = Application.fetch_env!(:plausible, Plausible.Finch)
-
-    pool_config = %{
-      :default => [size: config[:default_pool_size], count: config[:default_pool_count]],
-      "https://vendors.paddle.com" => [
-        protocol: :http2,
-        count: 50,
-        conn_opts: [transport_opts: [timeout: 15_000]]
-      ],
-      "https://www.googleapis.com" => [
-        protocol: :http2,
-        count: 200,
-        conn_opts: [transport_opts: [timeout: 15_000]]
-      ],
-      "https://analyticsreporting.googleapis.com" => [
-        protocol: :http2,
-        count: 200,
-        conn_opts: [transport_opts: [timeout: 15_000]]
-      ],
+    base_config = %{
       "https://icons.duckduckgo.com" => [
-        protocol: :http2,
-        count: 100,
         conn_opts: [transport_opts: [timeout: 15_000]]
       ]
     }
 
-    sentry_dsn = Application.get_env(:sentry, :dsn)
+    base_config
+    |> maybe_add_sentry_pool()
+    |> maybe_add_paddle_pool()
+    |> maybe_add_google_pools()
+  end
 
-    if is_binary(sentry_dsn) do
-      Map.put(pool_config, sentry_dsn,
-        size: config[:sentry_pool_size],
-        count: config[:sentry_pool_count]
-      )
-    else
-      pool_config
+  defp maybe_add_sentry_pool(pool_config) do
+    case Application.get_env(:sentry, :dsn) do
+      dsn when is_binary(dsn) ->
+        Map.put(pool_config, dsn, size: 50)
+
+      _ ->
+        pool_config
+    end
+  end
+
+  defp maybe_add_paddle_pool(pool_config) do
+    paddle_conf = Application.get_env(:plausible, :paddle)
+
+    cond do
+      paddle_conf[:vendor_id] && paddle_conf[:vendor_auth_code] ->
+        Map.put(pool_config, Plausible.Billing.PaddleApi.vendors_domain(),
+          conn_opts: [transport_opts: [timeout: 15_000]]
+        )
+
+      true ->
+        pool_config
+    end
+  end
+
+  defp maybe_add_google_pools(pool_config) do
+    google_conf = Application.get_env(:plausible, :google)
+
+    cond do
+      google_conf[:client_id] && google_conf[:client_secret] ->
+        pool_config
+        |> Map.put(google_conf[:api_url], conn_opts: [transport_opts: [timeout: 15_000]])
+        |> Map.put(google_conf[:reporting_api_url], conn_opts: [transport_opts: [timeout: 15_000]])
+
+      true ->
+        pool_config
     end
   end
 
