@@ -557,7 +557,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "does not show invoice section for a user with no subscription", %{conn: conn} do
       conn = get(conn, "/settings")
-      assert !(html_response(conn, 200) =~ "Invoices")
+      refute html_response(conn, 200) =~ "Invoices"
     end
 
     test "does not show invoice section for a free subscription", %{conn: conn, user: user} do
