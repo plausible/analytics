@@ -43,7 +43,6 @@ defmodule Plausible.Application do
   defp finch_pool_config() do
     base_config = %{
       "https://icons.duckduckgo.com" => [
-        protocol: :http2,
         conn_opts: [transport_opts: [timeout: 15_000]]
       ]
     }
@@ -70,7 +69,6 @@ defmodule Plausible.Application do
     cond do
       paddle_conf[:vendor_id] && paddle_conf[:vendor_auth_code] ->
         Map.put(pool_config, Plausible.Billing.PaddleApi.vendors_domain(),
-          protocol: :http2,
           conn_opts: [transport_opts: [timeout: 15_000]]
         )
 
@@ -85,14 +83,8 @@ defmodule Plausible.Application do
     cond do
       google_conf[:client_id] && google_conf[:client_secret] ->
         pool_config
-        |> Map.put(google_conf[:api_url],
-          protocol: :http2,
-          conn_opts: [transport_opts: [timeout: 15_000]]
-        )
-        |> Map.put(google_conf[:reporting_api_url],
-          protocol: :http2,
-          conn_opts: [transport_opts: [timeout: 15_000]]
-        )
+        |> Map.put(google_conf[:api_url], conn_opts: [transport_opts: [timeout: 15_000]])
+        |> Map.put(google_conf[:reporting_api_url], conn_opts: [transport_opts: [timeout: 15_000]])
 
       true ->
         pool_config
