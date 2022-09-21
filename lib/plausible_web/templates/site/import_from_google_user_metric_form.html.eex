@@ -22,5 +22,5 @@
     </p>
   </div>
 
-  <%= link("Continue ->", to: Routes.site_path(@conn, :import_from_google_confirm, @site.domain, view_id: @view_id, access_token: @access_token), class: "button mt-6") %>
+  <%= link("Continue ->", to: Routes.site_path(@conn, :import_from_google_confirm, @site.domain, view_id: @view_id, access_token: @access_token, refresh_token: @refresh_token, expires_at: @expires_at), class: "button mt-6") %>
 </div>

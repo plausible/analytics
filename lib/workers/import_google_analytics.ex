@@ -9,13 +9,13 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
   @impl Oban.Worker
   def perform(
         %Oban.Job{
-          args: %{
-            "site_id" => site_id,
-            "view_id" => view_id,
-            "start_date" => start_date,
-            "end_date" => end_date,
-            "access_token" => access_token
-          }
+          args:
+            %{
+              "site_id" => site_id,
+              "view_id" => view_id,
+              "start_date" => start_date,
+              "end_date" => end_date
+            } = args
         },
         google_api \\ Plausible.Google.Api
       ) do
@@ -24,7 +24,9 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
     end_date = Date.from_iso8601!(end_date)
     date_range = Date.range(start_date, end_date)
 
-    case google_api.import_analytics(site, date_range, view_id, access_token) do
+    auth = {args["access_token"], args["refresh_token"], args["token_expires_at"]}
+
+    case google_api.import_analytics(site, date_range, view_id, auth) do
       :ok ->
         Plausible.Site.import_success(site)
         |> Repo.update!()
