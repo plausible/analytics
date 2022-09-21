@@ -20,6 +20,7 @@ RUN wget https://s3.eu-central-1.wasabisys.com/plausible-application/geonames.cs
 
 COPY mix.exs ./
 COPY mix.lock ./
+COPY config ./config
 RUN mix local.hex --force && \
   mix local.rebar --force && \
   mix deps.get --only prod && \
@@ -33,7 +34,6 @@ RUN npm install --prefix ./assets && \
 
 COPY assets ./assets
 COPY tracker ./tracker
-COPY config ./config
 COPY priv ./priv
 COPY lib ./lib
 
