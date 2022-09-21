@@ -565,7 +565,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       |> Repo.insert!()
 
       conn = get(conn, "/settings")
-      assert !(html_response(conn, 200) =~ "Invoices")
+      refute html_response(conn, 200) =~ "Invoices"
     end
   end
 
