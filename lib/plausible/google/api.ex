@@ -30,8 +30,8 @@ defmodule Plausible.Google.Api do
   end
 
   def fetch_verified_properties(auth) do
-    with {:ok, auth} <- refresh_if_needed(auth),
-         {:ok, sites} <- Plausible.Google.HTTP.list_sites(auth.access_token) do
+    with {:ok, access_token} <- maybe_refresh_token(auth),
+         {:ok, sites} <- Plausible.Google.HTTP.list_sites(access_token) do
       sites
       |> Map.get("siteEntry", [])
       |> Enum.filter(fn site -> site["permissionLevel"] in @verified_permission_levels end)
@@ -43,10 +43,15 @@ defmodule Plausible.Google.Api do
 
   def fetch_stats(site, %{filters: %{} = filters, date_range: date_range}, limit) do
     with site <- Plausible.Repo.preload(site, :google_auth),
-         {:ok, %{access_token: access_token, property: property}} <-
-           refresh_if_needed(site.google_auth),
+         {:ok, access_token} <- maybe_refresh_token(site.google_auth),
          {:ok, stats} <-
-           HTTP.list_stats(access_token, property, date_range, limit, filters["page"]) do
+           HTTP.list_stats(
+             access_token,
+             site.google_auth.property,
+             date_range,
+             limit,
+             filters["page"]
+           ) do
       stats
       |> Map.get("rows", [])
       |> Enum.filter(fn row -> row["clicks"] > 0 end)
@@ -103,9 +108,15 @@ defmodule Plausible.Google.Api do
     end
   end
 
+  @type import_auth :: {
+          access_token :: String.t(),
+          refresh_token :: String.t(),
+          expires_at :: String.t()
+        }
+
   @per_page 10_000
   @max_attempts 5
-  @spec import_analytics(Plausible.Site.t(), Date.Range.t(), String.t(), String.t()) ::
+  @spec import_analytics(Plausible.Site.t(), Date.Range.t(), String.t(), import_auth()) ::
           :ok | {:error, term()}
   @doc """
   Imports stats from a Google Analytics UA view to a Plausible site.
@@ -125,7 +136,21 @@ defmodule Plausible.Google.Api do
   - [GA Dimensions reference](https://ga-dev-tools.web.app/dimensions-metrics-explorer)
 
   """
-  def import_analytics(site, date_range, view_id, access_token) do
+  def import_analytics(site, date_range, view_id, auth) do
+    with {:ok, access_token} <- maybe_refresh_token(auth),
+         :ok <- do_import_analytics(site, date_range, view_id, access_token) do
+      :ok
+    else
+      {:error, cause} ->
+        Sentry.capture_message("Failed to import from Google Analytics",
+          extra: %{site: site.domain, error: inspect(cause)}
+        )
+
+        {:error, cause}
+    end
+  end
+
+  defp do_import_analytics(site, date_range, view_id, access_token) do
     {:ok, buffer} = Plausible.Google.Buffer.start_link()
 
     result =
@@ -176,10 +201,6 @@ defmodule Plausible.Google.Api do
 
       {:error, cause} ->
         if attempt >= @max_attempts do
-          Sentry.capture_message("Failed to import from Google Analytics",
-            extra: %{site: site.domain, error: inspect(cause)}
-          )
-
           {:error, cause}
         else
           Process.sleep(sleep_time)
@@ -188,26 +209,54 @@ defmodule Plausible.Google.Api do
     end
   end
 
-  defp refresh_if_needed(auth) do
-    if Timex.before?(auth.expires, Timex.now() |> Timex.shift(seconds: 30)) do
-      do_refresh_token(auth)
+  defp maybe_refresh_token(%Plausible.Site.GoogleAuth{} = auth) do
+    with true <- needs_to_refresh_token?(auth.expires),
+         {:ok, {new_access_token, expires_at}} <- do_refresh_token(auth.refresh_token),
+         changeset <-
+           Plausible.Site.GoogleAuth.changeset(auth, %{
+             access_token: new_access_token,
+             expires: expires_at
+           }),
+         {:ok, _google_auth} <- Plausible.Repo.update(changeset) do
+      {:ok, new_access_token}
     else
-      {:ok, auth}
+      false -> {:ok, auth.access_token}
+      {:error, cause} -> {:error, cause}
     end
   end
 
-  defp do_refresh_token(auth) do
-    case HTTP.refresh_auth_token(auth.refresh_token) do
-      {:ok, %{"access_token" => access_token, "expires_in" => expires_in}} ->
-        expires_in = NaiveDateTime.add(NaiveDateTime.utc_now(), expires_in)
+  defp maybe_refresh_token({access_token, nil, nil}) do
+    {:ok, access_token}
+  end
 
-        auth
-        |> Plausible.Site.GoogleAuth.changeset(%{access_token: access_token, expires: expires_in})
-        |> Plausible.Repo.update()
-
-      error ->
-        error
+  defp maybe_refresh_token({access_token, refresh_token, expires_at}) do
+    if needs_to_refresh_token?(expires_at) do
+      do_refresh_token(refresh_token)
+    else
+      {:ok, access_token}
     end
+  end
+
+  defp do_refresh_token(refresh_token) do
+    case HTTP.refresh_auth_token(refresh_token) do
+      {:ok, %{"access_token" => new_access_token, "expires_at" => expires_in}} ->
+        expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(), expires_in)
+        {:ok, {new_access_token, expires_at}}
+
+      {:error, cause} ->
+        {:error, cause}
+    end
+  end
+
+  defp needs_to_refresh_token?(expires_at) when is_binary(expires_at) do
+    expires_at
+    |> NaiveDateTime.from_iso8601!()
+    |> needs_to_refresh_token?()
+  end
+
+  defp needs_to_refresh_token?(%NaiveDateTime{} = expires_at) do
+    thirty_seconds_ago = Timex.shift(Timex.now(), seconds: 30)
+    Timex.before?(expires_at, thirty_seconds_ago)
   end
 
   defp client_id() do

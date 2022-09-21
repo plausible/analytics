@@ -21,11 +21,13 @@ defmodule Plausible.Google.Api.VCRTest do
       inserts_before_importing = get_insert_count()
       before_importing_timestamp = DateTime.utc_now()
 
-      access_token = "***"
       view_id = "54297898"
       date_range = Date.range(~D[2011-01-01], ~D[2022-07-19])
 
-      assert :ok == Plausible.Google.Api.import_analytics(site, date_range, view_id, access_token)
+      future = DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.to_iso8601()
+      auth = {"***", "refresh_token", future}
+
+      assert :ok == Plausible.Google.Api.import_analytics(site, date_range, view_id, auth)
 
       total_seconds = DateTime.diff(DateTime.utc_now(), before_importing_timestamp, :second)
       total_inserts = get_insert_count() - inserts_before_importing
