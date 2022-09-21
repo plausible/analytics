@@ -546,13 +546,16 @@ defmodule PlausibleWeb.AuthController do
     res = Plausible.Google.HTTP.fetch_access_token(code)
     [site_id, redirect_to] = Jason.decode!(state)
     site = Repo.get(Plausible.Site, site_id)
+    expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(), res["expires_in"])
 
     case redirect_to do
       "import" ->
         redirect(conn,
           to:
             Routes.site_path(conn, :import_from_google_view_id_form, site.domain,
-              access_token: res["access_token"]
+              access_token: res["access_token"],
+              refresh_token: res["refresh_token"],
+              expires_at: NaiveDateTime.to_iso8601(expires_at)
             )
         )
 
@@ -565,7 +568,7 @@ defmodule PlausibleWeb.AuthController do
           email: id["email"],
           refresh_token: res["refresh_token"],
           access_token: res["access_token"],
-          expires: NaiveDateTime.utc_now() |> NaiveDateTime.add(res["expires_in"]),
+          expires_at: expires_at,
           user_id: conn.assigns[:current_user].id,
           site_id: site_id
         })
