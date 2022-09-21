@@ -28,6 +28,12 @@ config :plausible,
   session_timeout: 1000 * 60 * 30,
   session_length_minutes: 30
 
+config :fun_with_flags, :cache_bust_notifications, enabled: false
+
+config :fun_with_flags, :persistence,
+  adapter: FunWithFlags.Store.Persistent.Ecto,
+  repo: Plausible.Repo
+
 config :plausible, Plausible.ClickhouseRepo, loggers: [Ecto.LogEntry]
 
 config :plausible, Plausible.Repo,
