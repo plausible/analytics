@@ -224,7 +224,8 @@ config :sentry,
   root_source_code_path: [File.cwd!()],
   client: Plausible.Sentry.Client,
   send_max_attempts: 1,
-  filter: Plausible.SentryFilter
+  filter: Plausible.SentryFilter,
+  before_send_event: {Plausible.SentryFilter, :before_send}
 
 config :logger, Sentry.LoggerBackend,
   capture_log_messages: true,
