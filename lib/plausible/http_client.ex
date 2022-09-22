@@ -1,26 +1,16 @@
-defmodule Plausible.HTTPClient do
-  @moduledoc """
-  HTTP Client built on top of Finch.
+defmodule Plausible.HTTPClient.Non200Error do
+  defstruct reason: nil
 
-  By default, request parameters are json-encoded.
+  @type t :: %__MODULE__{reason: Finch.Response.t()}
 
-  If a raw binary value is supplied, no encoding is performed.
-  If x-www-form-urlencoded content-type is set in headers, 
-  URL encoding is invoked.
-  """
-
-  defmodule Non200Error do
-    defstruct reason: nil
-
-    @type t :: %__MODULE__{reason: Finch.Response.t()}
-
-    @spec new(Finch.Response.t()) :: t()
-    def new(%Finch.Response{status: status} = response)
-        when is_integer(status) and (status < 200 or status >= 300) do
-      %__MODULE__{reason: response}
-    end
+  @spec new(Finch.Response.t()) :: t()
+  def new(%Finch.Response{status: status} = response)
+      when is_integer(status) and (status < 200 or status >= 300) do
+    %__MODULE__{reason: response}
   end
+end
 
+defmodule Plausible.HTTPClient.Interface do
   @type url() :: Finch.Request.url()
   @type headers() :: Finch.Request.headers()
   @type params() :: Finch.Request.body() | map()
@@ -28,18 +18,34 @@ defmodule Plausible.HTTPClient do
           {:ok, Finch.Response.t()}
           | {:error, Mint.Types.error() | Finch.Error.t() | Non200Error.t()}
 
+  @callback get(url(), headers()) :: response()
+  @callback post(url(), headers(), params()) :: response()
+end
+
+defmodule Plausible.HTTPClient do
+  @behaviour Plausible.HTTPClient.Interface
+  @moduledoc """
+  HTTP Client built on top of Finch.
+
+  By default, request parameters are json-encoded.
+
+  If a raw binary value is supplied, no encoding is performed.
+  If x-www-form-urlencoded content-type is set in headers,
+  URL encoding is invoked.
+  """
+
   @doc """
   Make a POST request
   """
-  @spec post(url(), headers(), params()) :: response()
-  def(post(url, headers \\ [], params \\ nil)) do
+  @impl Plausible.HTTPClient.Interface
+  def post(url, headers \\ [], params \\ nil) do
     call(:post, url, headers, params)
   end
 
   @doc """
   Make a GET request
   """
-  @spec get(url(), headers()) :: response()
+  @impl Plausible.HTTPClient.Interface
   def get(url, headers \\ []) do
     call(:get, url, headers, nil)
   end
@@ -91,7 +97,7 @@ defmodule Plausible.HTTPClient do
   end
 
   defp tag_error({:ok, %Finch.Response{status: _} = response}) do
-    {:error, Non200Error.new(response)}
+    {:error, Plausible.HTTPClient.Non200Error.new(response)}
   end
 
   defp tag_error({:error, _} = error) do
