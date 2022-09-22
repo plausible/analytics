@@ -46,24 +46,14 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
   end
 
   @doc """
-  Add telemetry events for Cachex user agents and sessions
+  Add telemetry events for Cachex sessions
   """
   def execute_cache_metrics do
-    user_agents_count =
-      case Cachex.stats(:user_agents) do
-        {:ok, stats} -> stats
-        _ -> 0
-      end
-
     sessions_count =
       case Cachex.stats(:sessions) do
         {:ok, stats} -> stats
         _ -> 0
       end
-
-    :telemetry.execute([:prom_ex, :plugin, :cachex, :user_agents_count], %{
-      count: user_agents_count
-    })
 
     :telemetry.execute([:prom_ex, :plugin, :cachex, :sessions_count], %{
       count: sessions_count
@@ -99,11 +89,6 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         last_value(
           metric_prefix ++ [:events, :cache_size, :count],
           event_name: [:prom_ex, :plugin, :cachex, :sessions_count],
-          measurement: :count
-        ),
-        last_value(
-          metric_prefix ++ [:sessions, :cache_size, :count],
-          event_name: [:prom_ex, :plugin, :cachex, :user_agents_count],
           measurement: :count
         )
       ]

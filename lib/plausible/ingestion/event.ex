@@ -128,12 +128,8 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp parse_user_agent(%Request{user_agent: user_agent}) when is_binary(user_agent) do
-    Tracer.with_span "parse_user_agent" do
-      case Cachex.fetch(:user_agents, user_agent, &UAInspector.parse/1) do
-        {:ok, user_agent} -> user_agent
-        {:commit, user_agent} -> user_agent
-        _ -> nil
-      end
+    Tracer.with_span "ingestion.parse_user_agent" do
+      UAInspector.parse(user_agent)
     end
   end
 
@@ -206,7 +202,7 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp put_geolocation(%{} = event, %Request{} = request) do
-    Tracer.with_span "parse_visitor_location" do
+    Tracer.with_span "ingestion.parse_visitor_location" do
       result = Geolix.lookup(request.remote_ip, where: :geolocation)
 
       country_code =
@@ -271,7 +267,7 @@ defmodule Plausible.Ingestion.Event do
       previous_user_id = generate_user_id(request, event.domain, event.hostname, salts.previous)
 
       session_id =
-        Tracer.with_span "cache_store_event" do
+        Tracer.with_span "ingestion.cache_store_event" do
           Plausible.Session.CacheStore.on_event(event, previous_user_id)
         end
 

@@ -15,9 +15,6 @@ defmodule Plausible.Application do
       Plausible.Event.WriteBuffer,
       Plausible.Session.WriteBuffer,
       ReferrerBlocklist,
-      Supervisor.child_spec({Cachex, name: :user_agents, limit: 10_000, stats: true},
-        id: :cachex_user_agents
-      ),
       Supervisor.child_spec({Cachex, name: :sessions, limit: nil, stats: true},
         id: :cachex_sessions
       ),
@@ -100,15 +97,5 @@ defmodule Plausible.Application do
       &ObanErrorReporter.handle_event/4,
       %{}
     )
-  end
-
-  def report_cache_stats() do
-    case Cachex.stats(:user_agents) do
-      {:ok, stats} ->
-        Logger.info("User agent cache stats: #{inspect(stats)}")
-
-      e ->
-        IO.puts("Unable to show cache stats: #{inspect(e)}")
-    end
   end
 end
