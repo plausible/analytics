@@ -35,12 +35,23 @@ defmodule PlausibleWeb.Favicon do
   end
 
   defp send_response(conn, res) do
-    conn =
-      Enum.filter(res.headers, fn {key, _val} -> key != "Transfer-Encoding" end)
-      |> Enum.reduce(conn, fn {key, val}, conn ->
-        put_resp_header(conn, key, val)
-      end)
+    headers = remove_hop_by_hop_headers(res)
+    conn = %Plug.Conn{conn | resp_headers: headers}
 
     send_resp(conn, 200, res.body) |> halt
+  end
+
+  @hop_by_hop_headers [
+    "connection",
+    "keep-alive",
+    "proxy-authenticate",
+    "proxy-authorization",
+    "te",
+    "trailers",
+    "transfer-encoding",
+    "upgrade"
+  ]
+  defp remove_hop_by_hop_headers(%Finch.Response{headers: headers}) do
+    Enum.filter(headers, fn {key, _} -> key not in @hop_by_hop_headers end)
   end
 end
