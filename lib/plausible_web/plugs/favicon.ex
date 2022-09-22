@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.Favicon do
+  @referer_domains_file "priv/referer_favicon_domains.json"
   @moduledoc """
     A Plug that fetches favicon images from DuckDuckGo and returns them
     to the Plausible frontend.
@@ -25,7 +26,6 @@ defmodule PlausibleWeb.Favicon do
     The mapping from source category -> source hostname is stored in "#{@referer_domains_file}" and
     managed by `Mix.Tasks.GenerateReferrerFavicons.run/1`
   """
-  @referer_domains_file "priv/referer_favicon_domains.json"
   import Plug.Conn
   alias Plausible.HTTPClient
 
@@ -54,7 +54,10 @@ defmodule PlausibleWeb.Favicon do
 
         case HTTPClient.impl().get("https://icons.duckduckgo.com/ip3/#{domain}.ico") do
           {:ok, res} ->
-            send_response(conn, res)
+            conn
+            |> copy_end_to_end_headers(res)
+            |> send_resp(200, res.body)
+            |> halt
 
           _ ->
             send_resp(conn, 503, "") |> halt
@@ -65,11 +68,10 @@ defmodule PlausibleWeb.Favicon do
     end
   end
 
-  defp send_response(conn, res) do
-    headers = remove_hop_by_hop_headers(res)
-    conn = %Plug.Conn{conn | resp_headers: headers}
+  defp copy_end_to_end_headers(conn, %Finch.Response{headers: headers}) do
+    end_to_end_headers = remove_hop_by_hop_headers(headers)
 
-    send_resp(conn, 200, res.body) |> halt
+    %Plug.Conn{conn | resp_headers: end_to_end_headers}
   end
 
   @hop_by_hop_headers [
@@ -82,7 +84,7 @@ defmodule PlausibleWeb.Favicon do
     "transfer-encoding",
     "upgrade"
   ]
-  defp remove_hop_by_hop_headers(%Finch.Response{headers: headers}) do
+  defp remove_hop_by_hop_headers(headers) do
     Enum.filter(headers, fn {key, _} -> key not in @hop_by_hop_headers end)
   end
 end
