@@ -19,6 +19,7 @@ defmodule Plausible.HTTPClient.Interface do
           | {:error, Mint.Types.error() | Finch.Error.t() | Non200Error.t()}
 
   @callback get(url(), headers()) :: response()
+  @callback get(url()) :: response()
   @callback post(url(), headers(), params()) :: response()
 end
 
