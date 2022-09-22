@@ -50,6 +50,13 @@ defmodule Plausible.HTTPClient do
     call(:get, url, headers, nil)
   end
 
+  # TODO: Is it possible to tell the type checker that we're returning a module that conforms to the
+  # Plausible.HTTPClient.Interface behaviour?
+  @spec impl() :: module()
+  def impl() do
+    Application.get_env(:plausible, :http_impl, __MODULE__)
+  end
+
   defp call(method, url, headers, params) do
     {params, headers} = maybe_encode_params(params, headers)
 
