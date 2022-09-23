@@ -122,6 +122,16 @@ defmodule Plausible.HTTPClientTest do
             }} = HTTPClient.get(bypass_url(bypass, path: "/get"))
   end
 
+  test "header keys are downcased but values are not", %{bypass: bypass} do
+    Bypass.expect_once(bypass, "GET", "/get", fn conn ->
+      Conn.resp(conn, 200, "ok")
+      |> Conn.put_resp_header("Some-Header", "Header-Value")
+    end)
+
+    assert {:ok, res} = HTTPClient.get(bypass_url(bypass, path: "/get"))
+    assert {"some-header", "Header-Value"} in res.headers
+  end
+
   defp bypass_url(bypass, opts) do
     port = bypass.port
     path = Keyword.get(opts, :path, "/")

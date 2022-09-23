@@ -62,4 +62,5 @@ config :geolix,
   ]
 
 config :plausible,
-  session_timeout: 0
+  session_timeout: 0,
+  http_impl: Plausible.HTTPClient.Mock
