@@ -2,7 +2,6 @@
 Plausible.Test.ClickhouseSetup.run()
 Mimic.copy(FunWithFlags)
 Mox.defmock(Plausible.HTTPClient.Mock, for: Plausible.HTTPClient.Interface)
-Application.put_env(:plausible, :http_impl, Plausible.HTTPClient.Mock)
 ExUnit.start()
 Application.ensure_all_started(:double)
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
