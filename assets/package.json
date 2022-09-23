@@ -55,7 +55,7 @@
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",
-    "bundlemon": "^1.2.0",
+    "bundlemon": "^1.4.0",
     "eslint": "^7.2.0",
     "eslint-config-prettier": "^7.0.0",
     "eslint-plugin-import": "^2.26.0",
