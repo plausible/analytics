@@ -24,7 +24,6 @@ defmodule Plausible.HTTPClient.Interface do
 end
 
 defmodule Plausible.HTTPClient do
-  @behaviour Plausible.HTTPClient.Interface
   @moduledoc """
   HTTP Client built on top of Finch.
 
@@ -38,6 +37,8 @@ defmodule Plausible.HTTPClient do
   @doc """
   Make a POST request
   """
+  @behaviour Plausible.HTTPClient.Interface
+
   @impl Plausible.HTTPClient.Interface
   def post(url, headers \\ [], params \\ nil) do
     call(:post, url, headers, params)
