@@ -31,13 +31,8 @@ defmodule PlausibleWeb.Favicon do
 
   def init(_) do
     domains =
-      case File.read(Application.app_dir(:plausible, @referer_domains_file)) do
-        {:ok, contents} ->
-          Jason.decode!(contents)
-
-        _ ->
-          %{}
-      end
+      File.read!(Application.app_dir(:plausible, @referer_domains_file))
+      |> Jason.decode!()
 
     [favicon_domains: domains]
   end
