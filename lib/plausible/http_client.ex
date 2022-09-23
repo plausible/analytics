@@ -16,7 +16,7 @@ defmodule Plausible.HTTPClient.Interface do
   @type params() :: Finch.Request.body() | map()
   @type response() ::
           {:ok, Finch.Response.t()}
-          | {:error, Mint.Types.error() | Finch.Error.t() | Non200Error.t()}
+          | {:error, Mint.Types.error() | Finch.Error.t() | Plausible.HTTPClient.Non200Error.t()}
 
   @callback get(url(), headers()) :: response()
   @callback get(url()) :: response()
@@ -54,7 +54,7 @@ defmodule Plausible.HTTPClient do
 
   # TODO: Is it possible to tell the type checker that we're returning a module that conforms to the
   # Plausible.HTTPClient.Interface behaviour?
-  @spec impl() :: module()
+  @spec impl() :: Plausible.HTTPClient
   def impl() do
     Application.get_env(:plausible, :http_impl, __MODULE__)
   end
