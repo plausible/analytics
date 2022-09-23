@@ -13,11 +13,11 @@ defmodule PlausibleWeb.FaviconTest do
   end
 
   test "ignores request on a URL it does not need to handle", %{plug_opts: plug_opts} do
-    conn =
-      conn(:get, "/irrelevant")
-      |> Favicon.call(plug_opts)
+    old_conn = conn(:get, "/irrelevant")
+    new_conn = Favicon.call(old_conn, plug_opts)
 
-    refute conn.halted
+    refute new_conn.halted
+    assert old_conn == new_conn
   end
 
   test "proxies request on favicon URL to duckduckgo", %{plug_opts: plug_opts} do
