@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Favicon do
         case HTTPClient.impl().get("https://icons.duckduckgo.com/ip3/#{domain}.ico") do
           {:ok, res} ->
             conn
-            |> copy_end_to_end_headers(res)
+            |> forward_headers(res)
             |> send_resp(200, res.body)
             |> halt
 
@@ -63,23 +63,9 @@ defmodule PlausibleWeb.Favicon do
     end
   end
 
-  defp copy_end_to_end_headers(conn, %Finch.Response{headers: headers}) do
-    end_to_end_headers = remove_hop_by_hop_headers(headers)
-
-    %Plug.Conn{conn | resp_headers: end_to_end_headers}
-  end
-
-  @hop_by_hop_headers [
-    "connection",
-    "keep-alive",
-    "proxy-authenticate",
-    "proxy-authorization",
-    "te",
-    "trailers",
-    "transfer-encoding",
-    "upgrade"
-  ]
-  defp remove_hop_by_hop_headers(headers) do
-    Enum.filter(headers, fn {key, _} -> key not in @hop_by_hop_headers end)
+  @forwarded_headers ["content-type", "cache-control", "expires"]
+  defp forward_headers(conn, response) do
+    headers = Enum.filter(response.headers, fn {k, _} -> k in @forwarded_headers end)
+    %Plug.Conn{conn | resp_headers: headers}
   end
 end

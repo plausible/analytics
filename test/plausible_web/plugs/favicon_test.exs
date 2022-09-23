@@ -56,7 +56,7 @@ defmodule PlausibleWeb.FaviconTest do
     assert conn.resp_body == "favicon response body"
   end
 
-  test "removes hop-by-hop headers from the proxied response", %{plug_opts: plug_opts} do
+  test "copies content-type header from the proxied response", %{plug_opts: plug_opts} do
     expect(
       Plausible.HTTPClient.Mock,
       :get,
@@ -67,9 +67,6 @@ defmodule PlausibleWeb.FaviconTest do
            body: "favicon response body",
            headers: [
              {"transfer-encoding", "chunked"},
-             {"connection", "keep-alive"},
-             {"keep-alive", "timeout=5, max=1000"},
-             {"upgrade", "example/1"},
              {"content-type", "should-pass-through"}
            ]
          }}
