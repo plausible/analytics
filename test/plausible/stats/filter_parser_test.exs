@@ -59,5 +59,15 @@ defmodule Plausible.Stats.FilterParserTest do
         "visit:country" => {:member, ["FR", "GB", "DE"]}
       })
     end
+
+    test "escaping pipe character" do
+      "utm_campaign==campaign \\| 1"
+      |> assert_parsed(%{"utm_campaign" => {:is, "campaign | 1"}})
+    end
+
+    test "escaping pipe character in member filter" do
+      "utm_campaign==campaign \\| 1|campaign \\| 2"
+      |> assert_parsed(%{"utm_campaign" => {:member, ["campaign | 1", "campaign | 2"]}})
+    end
   end
 end
