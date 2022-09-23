@@ -1,4 +1,27 @@
 defmodule Plausible.Stats.FilterParser do
+  @moduledoc """
+  A module for parsing filters used in stat queries.
+  """
+
+  @doc """
+  Parses different filter formats. Expects a map with `filters` as an argument.
+
+  Depending on the format and type of `filters`, returns:
+
+    * a decoded map, when `filters` is encoded JSON
+    * a parsed filter map, when `filters` is a filter expression string
+    * the same map, when `filters` is a map
+
+  Returns an empty map when the argument is not a map or is missing the `filters` key.
+
+  ### Examples:
+
+      iex> FilterParser.parse_filters(%{"filters" => "{\\"page\\":\\"/blog/**\\"}"})
+      %{"page" => "/blog/**"}
+
+      iex> FilterParser.parse_filters(%{"filters" => "visit:browser!=Chrome"})
+      %{"visit:browser" => {:is_not, "Chrome"}}
+  """
   def parse_filters(%{"filters" => filters}) when is_binary(filters) do
     case Jason.decode(filters) do
       {:ok, parsed} -> parsed

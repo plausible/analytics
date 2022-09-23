@@ -2,6 +2,8 @@ defmodule Plausible.Stats.FilterParserTest do
   use ExUnit.Case, async: true
   alias Plausible.Stats.FilterParser
 
+  doctest Plausible.Stats.FilterParser
+
   def assert_parsed(input, expected_output) do
     assert FilterParser.parse_filters(%{"filters" => input}) == expected_output
   end
