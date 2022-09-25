@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- The ability to escape `|` characters with `\` in Stats API filter values
 - An upper bound of 1000 to the `limit` parameter in Stats API
 - The `exclusions` script extension now also takes a `data-include` attribute tag
 - A `file-downloads` script extension for automatically tracking file downloads as custom events
