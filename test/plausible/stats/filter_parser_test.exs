@@ -71,5 +71,10 @@ defmodule Plausible.Stats.FilterParserTest do
       "utm_campaign==campaign \\| 1|campaign \\| 2"
       |> assert_parsed(%{"utm_campaign" => {:member, ["campaign | 1", "campaign | 2"]}})
     end
+
+    test "keeps escape characters in member + wildcard filter" do
+      "event:page==/**\\|page|/other/page"
+      |> assert_parsed(%{"event:page" => {:matches, "/**\\|page|/other/page"}})
+    end
   end
 end

@@ -54,8 +54,8 @@ defmodule Plausible.Stats.FilterParser do
 
     cond do
       key == "event:goal" -> {key, parse_goal_filter(final_value)}
-      is_wildcard && is_negated -> {key, {:does_not_match, final_value}}
-      is_wildcard -> {key, {:matches, final_value}}
+      is_wildcard && is_negated -> {key, {:does_not_match, raw_value}}
+      is_wildcard -> {key, {:matches, raw_value}}
       is_list -> {key, {:member, parse_member_list(raw_value)}}
       is_negated -> {key, {:is_not, final_value}}
       true -> {key, {:is, final_value}}
