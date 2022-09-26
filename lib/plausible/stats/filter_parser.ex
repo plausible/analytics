@@ -4,32 +4,35 @@ defmodule Plausible.Stats.FilterParser do
   """
 
   @doc """
-  Parses different filter formats. Expects a map with `filters` as an argument.
+  Parses different filter formats.
 
-  Depending on the format and type of `filters`, returns:
+  Depending on the format and type of the `filters` argument, returns:
 
     * a decoded map, when `filters` is encoded JSON
     * a parsed filter map, when `filters` is a filter expression string
     * the same map, when `filters` is a map
 
-  Returns an empty map when the argument is not a map or is missing the `filters` key.
+  Returns an empty map when argument type is unexpected (e.g. `nil`).
 
   ### Examples:
 
-      iex> FilterParser.parse_filters(%{"filters" => "{\\"page\\":\\"/blog/**\\"}"})
+      iex> FilterParser.parse_filters("{\\"page\\":\\"/blog/**\\"}")
       %{"page" => "/blog/**"}
 
-      iex> FilterParser.parse_filters(%{"filters" => "visit:browser!=Chrome"})
+      iex> FilterParser.parse_filters("visit:browser!=Chrome")
       %{"visit:browser" => {:is_not, "Chrome"}}
+
+      iex> FilterParser.parse_filters(nil)
+      %{}
   """
-  def parse_filters(%{"filters" => filters}) when is_binary(filters) do
+  def parse_filters(filters) when is_binary(filters) do
     case Jason.decode(filters) do
       {:ok, parsed} -> parsed
       {:error, err} -> parse_filter_expression(err.data)
     end
   end
 
-  def parse_filters(%{"filters" => filters}) when is_map(filters), do: filters
+  def parse_filters(filters) when is_map(filters), do: filters
   def parse_filters(_), do: %{}
 
   defp parse_filter_expression(str) do

@@ -5,7 +5,7 @@ defmodule Plausible.Stats.FilterParserTest do
   doctest Plausible.Stats.FilterParser
 
   def assert_parsed(input, expected_output) do
-    assert FilterParser.parse_filters(%{"filters" => input}) == expected_output
+    assert FilterParser.parse_filters(input) == expected_output
   end
 
   describe "parses filter expression" do
