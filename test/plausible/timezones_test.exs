@@ -11,4 +11,9 @@ defmodule Plausible.TimezonesTest do
     hawaii = Enum.find(options, &(&1[:value] == "US/Hawaii"))
     assert [key: "(GMT-10:00) US/Hawaii", value: "US/Hawaii", offset: 600] = hawaii
   end
+
+  test "options/0 does not fail during time changes" do
+    options = Plausible.Timezones.options(~N[2021-10-03 02:31:07])
+    refute Enum.empty?(options)
+  end
 end
