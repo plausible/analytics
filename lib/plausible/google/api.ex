@@ -239,7 +239,7 @@ defmodule Plausible.Google.Api do
 
   defp do_refresh_token(refresh_token) do
     case HTTP.refresh_auth_token(refresh_token) do
-      {:ok, %{"access_token" => new_access_token, "expires_at" => expires_in}} ->
+      {:ok, %{"access_token" => new_access_token, "expires_in" => expires_in}} ->
         expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(), expires_in)
         {:ok, {new_access_token, expires_at}}
 
