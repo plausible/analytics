@@ -34,7 +34,7 @@ defmodule Plausible.Google.HTTP do
         [{"Authorization", "Bearer #{report_request.access_token}"}],
         params
       )
-      |> http_client.request(Plausible.Finch)
+      |> http_client.request(Plausible.Finch, receive_timeout: 30_000)
 
     with {:ok, %{status: 200, body: body}} <- response,
          {:ok, report} <- parse_report_from_response(body),

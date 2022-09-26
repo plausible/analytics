@@ -18,7 +18,7 @@ defmodule Plausible.Google.ApiTest do
     test "will fetch and persist import data from Google Analytics", %{site: site, buffer: buffer} do
       finch_double =
         Finch
-        |> stub(:request, fn _, _ ->
+        |> stub(:request, fn _, _, _ ->
           {:ok, %Finch.Response{status: 200, body: @ok_response}}
         end)
 
@@ -54,11 +54,11 @@ defmodule Plausible.Google.ApiTest do
     } do
       finch_double =
         Finch
-        |> stub(:request, fn _, _ -> {:error, :timeout} end)
-        |> stub(:request, fn _, _ -> {:error, :nx_domain} end)
-        |> stub(:request, fn _, _ -> {:error, :closed} end)
-        |> stub(:request, fn _, _ -> {:ok, %Finch.Response{status: 503}} end)
-        |> stub(:request, fn _, _ -> {:ok, %Finch.Response{status: 502}} end)
+        |> stub(:request, fn _, _, _ -> {:error, :timeout} end)
+        |> stub(:request, fn _, _, _ -> {:error, :nx_domain} end)
+        |> stub(:request, fn _, _, _ -> {:error, :closed} end)
+        |> stub(:request, fn _, _, _ -> {:ok, %Finch.Response{status: 503}} end)
+        |> stub(:request, fn _, _, _ -> {:ok, %Finch.Response{status: 502}} end)
 
       request = %Plausible.Google.ReportRequest{
         view_id: "123",
@@ -77,17 +77,17 @@ defmodule Plausible.Google.ApiTest do
                  buffer: buffer
                )
 
-      assert_receive({Finch, :request, [_, _]})
-      assert_receive({Finch, :request, [_, _]})
-      assert_receive({Finch, :request, [_, _]})
-      assert_receive({Finch, :request, [_, _]})
-      assert_receive({Finch, :request, [_, _]})
+      assert_receive({Finch, :request, [_, _, [receive_timeout: 30_000]]})
+      assert_receive({Finch, :request, [_, _, [receive_timeout: 30_000]]})
+      assert_receive({Finch, :request, [_, _, [receive_timeout: 30_000]]})
+      assert_receive({Finch, :request, [_, _, [receive_timeout: 30_000]]})
+      assert_receive({Finch, :request, [_, _, [receive_timeout: 30_000]]})
     end
 
     test "does not fail when report does not have rows key", %{site: site, buffer: buffer} do
       finch_double =
         Finch
-        |> stub(:request, fn _, _ ->
+        |> stub(:request, fn _, _, _ ->
           {:ok,
            %Finch.Response{status: 200, body: File.read!("fixture/ga_report_empty_rows.json")}}
         end)
