@@ -781,5 +781,23 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
 
       assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 3}}
     end
+
+    test "can escape pipe character in member + wildcard filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog/post|1"),
+        build(:pageview, pathname: "/otherpost|1"),
+        build(:pageview, pathname: "/blog/post|2"),
+        build(:pageview, pathname: "/something-else")
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors",
+          "filters" => "event:page==**post\\|1|/something-else"
+        })
+
+      assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 3}}
+    end
   end
 end
