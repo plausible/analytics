@@ -568,7 +568,7 @@ defmodule PlausibleWeb.AuthController do
           email: id["email"],
           refresh_token: res["refresh_token"],
           access_token: res["access_token"],
-          expires_at: expires_at,
+          expires: expires_at,
           user_id: conn.assigns[:current_user].id,
           site_id: site_id
         })
