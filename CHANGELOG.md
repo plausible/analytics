@@ -36,6 +36,7 @@ All notable changes to this project will be documented in this file.
 - Add new strategy to recommend timezone when creating a new site
 - Alert outgrown enterprise users of their usage plausible/analytics#2197
 - Manually lock and unlock enterprise users plausible/analytics#2197
+- ARM64 support for docker images plausible/analytics#2103
 
 ### Fixed
 - Hash part of the URL can now be used when excluding pages with `script.exclusions.hash.js`.
