@@ -636,7 +636,9 @@ defmodule PlausibleWeb.SiteController do
 
   def import_from_google_user_metric_notice(conn, %{
         "view_id" => view_id,
-        "access_token" => access_token
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "expires_at" => expires_at
       }) do
     site = conn.assigns[:site]
 
@@ -646,11 +648,17 @@ defmodule PlausibleWeb.SiteController do
       site: site,
       view_id: view_id,
       access_token: access_token,
+      refresh_token: refresh_token,
+      expires_at: expires_at,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
 
-  def import_from_google_view_id_form(conn, %{"access_token" => access_token}) do
+  def import_from_google_view_id_form(conn, %{
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "expires_at" => expires_at
+      }) do
     site = conn.assigns[:site]
     view_ids = Plausible.Google.Api.list_views(access_token)
 
@@ -658,6 +666,8 @@ defmodule PlausibleWeb.SiteController do
     |> assign(:skip_plausible_tracking, true)
     |> render("import_from_google_view_id_form.html",
       access_token: access_token,
+      refresh_token: refresh_token,
+      expires_at: expires_at,
       site: site,
       view_ids: view_ids,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
@@ -666,7 +676,12 @@ defmodule PlausibleWeb.SiteController do
 
   # see https://stackoverflow.com/a/57416769
   @google_analytics_new_user_metric_date ~D[2016-08-24]
-  def import_from_google_view_id(conn, %{"view_id" => view_id, "access_token" => access_token}) do
+  def import_from_google_view_id(conn, %{
+        "view_id" => view_id,
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "expires_at" => expires_at
+      }) do
     site = conn.assigns[:site]
     start_date = Plausible.Google.HTTP.get_analytics_start_date(view_id, access_token)
 
@@ -679,6 +694,8 @@ defmodule PlausibleWeb.SiteController do
         |> assign(:skip_plausible_tracking, true)
         |> render("import_from_google_view_id_form.html",
           access_token: access_token,
+          refresh_token: refresh_token,
+          expires_at: expires_at,
           site: site,
           view_ids: view_ids,
           selected_view_id_error: "No data found. Nothing to import",
@@ -691,7 +708,9 @@ defmodule PlausibleWeb.SiteController do
             to:
               Routes.site_path(conn, :import_from_google_user_metric_notice, site.domain,
                 view_id: view_id,
-                access_token: access_token
+                access_token: access_token,
+                refresh_token: refresh_token,
+                expires_at: expires_at
               )
           )
         else
@@ -699,14 +718,21 @@ defmodule PlausibleWeb.SiteController do
             to:
               Routes.site_path(conn, :import_from_google_confirm, site.domain,
                 view_id: view_id,
-                access_token: access_token
+                access_token: access_token,
+                refresh_token: refresh_token,
+                expires_at: expires_at
               )
           )
         end
     end
   end
 
-  def import_from_google_confirm(conn, %{"access_token" => access_token, "view_id" => view_id}) do
+  def import_from_google_confirm(conn, %{
+        "view_id" => view_id,
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "expires_at" => expires_at
+      }) do
     site = conn.assigns[:site]
 
     start_date = Plausible.Google.HTTP.get_analytics_start_date(view_id, access_token)
@@ -720,6 +746,8 @@ defmodule PlausibleWeb.SiteController do
     |> assign(:skip_plausible_tracking, true)
     |> render("import_from_google_confirm.html",
       access_token: access_token,
+      refresh_token: refresh_token,
+      expires_at: expires_at,
       site: site,
       selected_view_id: view_id,
       selected_view_id_name: view_name,
@@ -733,7 +761,9 @@ defmodule PlausibleWeb.SiteController do
         "view_id" => view_id,
         "start_date" => start_date,
         "end_date" => end_date,
-        "access_token" => access_token
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "expires_at" => expires_at
       }) do
     site = conn.assigns[:site]
 
@@ -743,7 +773,9 @@ defmodule PlausibleWeb.SiteController do
         "view_id" => view_id,
         "start_date" => start_date,
         "end_date" => end_date,
-        "access_token" => access_token
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "token_expires_at" => expires_at
       })
 
     Ecto.Multi.new()

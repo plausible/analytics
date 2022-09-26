@@ -2,6 +2,8 @@
   <h2 class="text-xl font-black dark:text-gray-100">Import from Google Analytics</h2>
 
   <%= hidden_input(f, :access_token, value: @access_token) %>
+  <%= hidden_input(f, :refresh_token, value: @refresh_token) %>
+  <%= hidden_input(f, :expires_at, value: @expires_at) %>
 
   <%= case @view_ids do %>
     <% {:ok, view_ids} -> %>

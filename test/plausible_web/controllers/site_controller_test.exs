@@ -745,7 +745,11 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       response =
         conn
-        |> get("/#{site.domain}/import/google-analytics/view-id", %{"access_token" => "token"})
+        |> get("/#{site.domain}/import/google-analytics/view-id", %{
+          "access_token" => "token",
+          "refresh_token" => "foo",
+          "expires_at" => "2022-09-22T20:01:37.112777"
+        })
         |> html_response(200)
 
       assert response =~ "57238190 - one.test"
@@ -761,7 +765,9 @@ defmodule PlausibleWeb.SiteControllerTest do
         "view_id" => "123",
         "start_date" => "2018-03-01",
         "end_date" => "2022-03-01",
-        "access_token" => "token"
+        "access_token" => "token",
+        "refresh_token" => "foo",
+        "expires_at" => "2022-09-22T20:01:37.112777"
       })
 
       imported_data = Repo.reload(site).imported_data
@@ -777,7 +783,9 @@ defmodule PlausibleWeb.SiteControllerTest do
         "view_id" => "123",
         "start_date" => "2018-03-01",
         "end_date" => "2022-03-01",
-        "access_token" => "token"
+        "access_token" => "token",
+        "refresh_token" => "foo",
+        "expires_at" => "2022-09-22T20:01:37.112777"
       })
 
       assert_enqueued(
@@ -787,7 +795,9 @@ defmodule PlausibleWeb.SiteControllerTest do
           "view_id" => "123",
           "start_date" => "2018-03-01",
           "end_date" => "2022-03-01",
-          "access_token" => "token"
+          "access_token" => "token",
+          "refresh_token" => "foo",
+          "token_expires_at" => "2022-09-22T20:01:37.112777"
         }
       )
     end
