@@ -19,7 +19,7 @@ defmodule Mix.Tasks.SendPageview do
     user_agent: :string,
     domain: :string,
     page: :string,
-    referer: :string
+    referrer: :string
   ]
 
   def run(opts) do
