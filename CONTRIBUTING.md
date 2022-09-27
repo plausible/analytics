@@ -26,7 +26,7 @@ Make sure Docker, Elixir, Erlang and Node.js are all installed on your developme
 1. Navigate to `http://localhost:8000/register` and fill in the form.
 2. Fill in the rest of the forms and for the domain use `dummy.site`
 3. Skip the JS snippet and click start collecting data.
-4. Run `make dummy_event` from the terminal to generate a fake pageview event for the dummy site.
+4. Run `mix send_pageview` from the terminal to generate a fake pageview event for the dummy site.
 5. You should now be all set!
 
 ### Stopping Docker containers
