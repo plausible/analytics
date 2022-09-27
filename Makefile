@@ -1,4 +1,4 @@
-.PHONY: install server clickhouse clickhouse-arm clickhouse-stop postgres postgres-stop dummy_event
+.PHONY: install server clickhouse clickhouse-arm clickhouse-stop postgres postgres-stop
 
 install:
 	mix deps.get
