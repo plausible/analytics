@@ -71,4 +71,30 @@ defmodule PlausibleWeb.StatsView do
 
     count / max * 100
   end
+
+  @doc """
+  Returns a readable stats URL.
+
+  Native Phoenix router functions percent-encode all diacritics, resulting in
+  ugly URLs, e.g. `https://plausible.io/café.com` transforms into
+  `https://plausible.io/caf%C3%A9.com`.
+
+  This function encodes only the slash (`/`) character from the site's domain.
+
+  ## Examples
+
+     iex> PlausibleWeb.StatsView.pretty_stats_url(%Plausible.Site{domain: "user.gittea.io/repo"})
+     "http://localhost:8000/user.gittea.io%2Frepo"
+
+     iex> PlausibleWeb.StatsView.pretty_stats_url(%Plausible.Site{domain: "anakin.test"})
+     "http://localhost:8000/anakin.test"
+
+     iex> PlausibleWeb.StatsView.pretty_stats_url(%Plausible.Site{domain: "café.test"})
+     "http://localhost:8000/café.test"
+
+  """
+  def pretty_stats_url(%Plausible.Site{domain: domain}) when is_binary(domain) do
+    pretty_domain = String.replace(domain, "/", "%2F")
+    "#{plausible_url()}/#{pretty_domain}"
+  end
 end

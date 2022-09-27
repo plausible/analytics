@@ -12,14 +12,18 @@
       <%= button(to: Routes.site_path(@conn, :make_private, @site.domain), method: "POST", class: "bg-indigo-600 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
         <span class="inline-block w-5 h-5 bg-white rounded-full shadow translate-x-5 dark:bg-gray-800 transform transition ease-in-out duration-200"></span>
       <% end %>
-      <span class="text-sm font-medium text-gray-900 leading-5 dark:text-gray-100">Make stats publicly available on <a href="<%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%>" class="text-indigo-500"><%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%></a></span>
+      <span class="text-sm font-medium text-gray-900 leading-5 dark:text-gray-100">
+        Stats are publicly available on <%= link(PlausibleWeb.StatsView.pretty_stats_url(@site), to: Routes.stats_path(@conn, :stats, @site.domain, []), class: "text-indigo-500") %>
+      </span>
     </div>
   <% else %>
     <div class="flex items-center mt-4 space-x-3">
       <%= button(to: Routes.site_path(@conn, :make_public, @site.domain), method: "POST", class: "bg-gray-200 dark:bg-gray-700 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
         <span class="inline-block w-5 h-5 bg-white rounded-full shadow translate-x-0 dark:bg-gray-800 transform transition ease-in-out duration-200"></span>
       <% end %>
-      <span class="text-sm font-medium text-gray-900 leading-5 dark:text-gray-100">Make stats publicly available on <a href="<%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%>" class="text-indigo-500"><%= plausible_url() <> "/" <> URI.encode_www_form(@site.domain)%></a></span>
+      <span class="text-sm font-medium text-gray-900 leading-5 dark:text-gray-100">
+        Make stats publicly available on <%= link(PlausibleWeb.StatsView.pretty_stats_url(@site), to: Routes.stats_path(@conn, :stats, @site.domain, []), class: "text-indigo-500") %>
+      </span>
     </div>
   <% end %>
 </div>
