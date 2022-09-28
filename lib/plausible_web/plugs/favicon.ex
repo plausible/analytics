@@ -29,6 +29,9 @@ defmodule PlausibleWeb.Favicon do
   import Plug.Conn
   alias Plausible.HTTPClient
 
+  @placeholder_icon_location "priv/static/placeholder_favicon.ico"
+  @placeholder_icon File.read!(@placeholder_icon_location)
+
   def init(_) do
     domains =
       File.read!(Application.app_dir(:plausible, @referer_domains_file))
@@ -37,9 +40,19 @@ defmodule PlausibleWeb.Favicon do
     [favicon_domains: domains]
   end
 
+  @ddg_broken_icon <<137, 80, 78, 71, 13, 10, 26, 10>>
   @doc """
     Proxies HTTP request to DuckDuckGo favicon service. Swallows hop-by-hop HTTP headers that
     should not be forwarded as defined in RFC 2616 (https://www.rfc-editor.org/rfc/rfc2616#section-13.5.1)
+
+    Cases where we show a placeholder icon instead:
+    * In case of network error to DuckDuckGo
+    * In case of non-2xx status code from DuckDuckGo
+    * In case of broken image response body from DuckDuckGo
+
+    I'm not sure why DDG sometimes returns a broken PNG image in their response but we filter that out.
+    When the icon request fails, we show a placeholder favicon instead. The placeholder is an emoji
+    from https://favicon.io/emoji-favicons/
   """
   def call(conn, favicon_domains: favicon_domains) do
     case conn.path_info do
@@ -48,14 +61,14 @@ defmodule PlausibleWeb.Favicon do
         domain = Map.get(favicon_domains, clean_source, clean_source)
 
         case HTTPClient.impl().get("https://icons.duckduckgo.com/ip3/#{domain}.ico") do
-          {:ok, res} ->
+          {:ok, %Finch.Response{body: body, headers: headers}} when body != @ddg_broken_icon ->
             conn
-            |> forward_headers(res)
-            |> send_resp(200, res.body)
+            |> forward_headers(headers)
+            |> send_resp(200, body)
             |> halt
 
           _ ->
-            send_resp(conn, 503, "") |> halt
+            send_placeholder(conn)
         end
 
       _ ->
@@ -63,9 +76,17 @@ defmodule PlausibleWeb.Favicon do
     end
   end
 
+  defp send_placeholder(conn) do
+    conn
+    |> put_resp_content_type("image/x-icon")
+    |> put_resp_header("cache-control", "public, max-age=2592000")
+    |> send_resp(200, @placeholder_icon)
+    |> halt
+  end
+
   @forwarded_headers ["content-type", "cache-control", "expires"]
-  defp forward_headers(conn, response) do
-    headers = Enum.filter(response.headers, fn {k, _} -> k in @forwarded_headers end)
-    %Plug.Conn{conn | resp_headers: headers}
+  defp forward_headers(conn, headers) do
+    headers_to_forward = Enum.filter(headers, fn {k, _} -> k in @forwarded_headers end)
+    %Plug.Conn{conn | resp_headers: headers_to_forward}
   end
 end
