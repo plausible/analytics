@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalControllerTest do
   use PlausibleWeb.ConnCase
-  use Mimic
   use Plausible.ClickhouseRepo
 
   defp get_event(domain) do
@@ -269,11 +268,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "feature flag - blocks traffic from a domain when block_traffic is enabled", %{
       conn: conn
     } do
-      FunWithFlags
-      |> stub(:enabled?, fn
-        :block_event_ingest, [for: "feature-flag-test.com"] -> true
-        _, _ -> false
-      end)
+      FunWithFlags.enable(:block_event_ingest, for_actor: "feature-flag-test.com")
 
       params = %{
         domain: "feature-flag-test.com",
