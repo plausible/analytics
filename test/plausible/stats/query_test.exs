@@ -90,6 +90,16 @@ defmodule Plausible.Stats.QueryTest do
     assert q.date_range.last == Timex.today("America/Cancun")
   end
 
+  test "all time shows today if site has no start date" do
+    site = Map.put(@site, :stats_start_date, nil)
+    q = Query.from(site, %{"period" => "all"})
+
+    assert q.date_range.first == Timex.today()
+    assert q.date_range.last == Timex.today()
+    assert q.period == "all"
+    assert q.interval == "hour"
+  end
+
   test "all time shows hourly if site is completely new" do
     site = Map.put(@site, :stats_start_date, Timex.now())
     q = Query.from(site, %{"period" => "all"})

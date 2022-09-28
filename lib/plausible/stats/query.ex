@@ -188,13 +188,8 @@ defmodule Plausible.Stats.Query do
   end
 
   def from(site, %{"period" => "all"} = params) do
-    start_date =
-      site.stats_start_date
-      |> Timex.Timezone.convert("UTC")
-      |> Timex.Timezone.convert(site.timezone)
-      |> Timex.to_date()
-
     now = today(site.timezone)
+    start_date = Plausible.Site.local_start_date(site) || now
 
     cond do
       Timex.diff(now, start_date, :months) > 0 ->
