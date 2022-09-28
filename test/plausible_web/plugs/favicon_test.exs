@@ -84,4 +84,65 @@ defmodule PlausibleWeb.FaviconTest do
              {"content-type", "should-pass-through"}
            ]
   end
+
+  describe "Fallback to placeholder icon" do
+    @placholder_icon File.read!("priv/placeholder_favicon.ico")
+
+    test "falls back to placeholder when DDG returns a non-2xx response", %{plug_opts: plug_opts} do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn "https://icons.duckduckgo.com/ip3/plausible.io.ico" ->
+          res = %Finch.Response{status: 503, body: "bad gateway"}
+          {:error, Plausible.HTTPClient.Non200Error.new(res)}
+        end
+      )
+
+      conn =
+        conn(:get, "/favicon/sources/plausible.io")
+        |> Favicon.call(plug_opts)
+
+      assert conn.halted
+      assert conn.status == 200
+      assert conn.resp_body == @placholder_icon
+    end
+
+    test "falls back to placeholder in case of a network error", %{plug_opts: plug_opts} do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn "https://icons.duckduckgo.com/ip3/plausible.io.ico" ->
+          {:error, %Mint.TransportError{reason: :closed}}
+        end
+      )
+
+      conn =
+        conn(:get, "/favicon/sources/plausible.io")
+        |> Favicon.call(plug_opts)
+
+      assert conn.halted
+      assert conn.status == 200
+      assert conn.resp_body == @placholder_icon
+    end
+
+    test "falls back to placeholder when DDG returns a broken image response", %{
+      plug_opts: plug_opts
+    } do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn "https://icons.duckduckgo.com/ip3/plausible.io.ico" ->
+          {:ok, %Finch.Response{status: 200, body: <<137, 80, 78, 71, 13, 10, 26, 10>>}}
+        end
+      )
+
+      conn =
+        conn(:get, "/favicon/sources/plausible.io")
+        |> Favicon.call(plug_opts)
+
+      assert conn.halted
+      assert conn.status == 200
+      assert conn.resp_body == @placholder_icon
+    end
+  end
 end
