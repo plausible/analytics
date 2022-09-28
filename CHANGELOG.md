@@ -53,7 +53,10 @@ All notable changes to this project will be documented in this file.
 - Timezone offset labels now update with time changes
 - Render 404 if shared link auth cannot be verified [plausible/analytics#2225](https://github.com/plausible/analytics/pull/2225)
 - Restore compatibility with older format of shared links [plausible/analytics#2225](https://github.com/plausible/analytics/pull/2225)
+- Fix 'All time' period for sites with no recorded stats [plausible/analytics#2277](https://github.com/plausible/analytics/pull/2277)
 - Ensure settings page can be rendered after a form error [plausible/analytics#2278](https://github.com/plausible/analytics/pull/2278)
+
+>>>>>>> 09af319b (Add changelog)
 
 ### Changed
 - Cache the tracking script for 24 hours
