@@ -86,7 +86,7 @@ defmodule PlausibleWeb.FaviconTest do
   end
 
   describe "Fallback to placeholder icon" do
-    @placholder_icon File.read!("priv/static/placeholder_favicon.ico")
+    @placholder_icon File.read!("priv/placeholder_favicon.ico")
 
     test "falls back to placeholder when DDG returns a non-2xx response", %{plug_opts: plug_opts} do
       expect(
