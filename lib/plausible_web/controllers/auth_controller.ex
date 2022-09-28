@@ -437,20 +437,8 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def user_settings(conn, _params) do
-    user = conn.assigns[:current_user]
-    changeset = Auth.User.changeset(user)
-
-    {usage_pageviews, usage_custom_events} = Plausible.Billing.usage_breakdown(user)
-
-    render(conn, "user_settings.html",
-      user: user |> Repo.preload(:api_keys),
-      changeset: changeset,
-      subscription: user.subscription,
-      invoices: Plausible.Billing.paddle_api().get_invoices(user.subscription),
-      theme: user.theme || "system",
-      usage_pageviews: usage_pageviews,
-      usage_custom_events: usage_custom_events
-    )
+    changeset = Auth.User.changeset(conn.assigns[:current_user])
+    render_settings(conn, changeset)
   end
 
   def save_settings(conn, %{"user" => user_params}) do
@@ -463,11 +451,23 @@ defmodule PlausibleWeb.AuthController do
         |> redirect(to: Routes.auth_path(conn, :user_settings))
 
       {:error, changeset} ->
-        render(conn, "user_settings.html",
-          changeset: changeset,
-          subscription: conn.assigns[:current_user].subscription
-        )
+        render_settings(conn, changeset)
     end
+  end
+
+  defp render_settings(conn, changeset) do
+    user = conn.assigns[:current_user]
+    {usage_pageviews, usage_custom_events} = Plausible.Billing.usage_breakdown(user)
+
+    render(conn, "user_settings.html",
+      user: user |> Repo.preload(:api_keys),
+      changeset: changeset,
+      subscription: user.subscription,
+      invoices: Plausible.Billing.paddle_api().get_invoices(user.subscription),
+      theme: user.theme || "system",
+      usage_pageviews: usage_pageviews,
+      usage_custom_events: usage_custom_events
+    )
   end
 
   def new_api_key(conn, _params) do
