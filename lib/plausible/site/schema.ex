@@ -43,14 +43,15 @@ defmodule Plausible.Site do
     site
     |> cast(attrs, [:domain, :timezone])
     |> validate_required([:domain, :timezone])
-    |> validate_format(:domain, ~r/^[a-zA-Z0-9\-\.\/\:]*$/,
+    |> clean_domain()
+    |> validate_format(:domain, ~r/^[-\.\\\/:\p{L}\d]*$/u,
       message: "only letters, numbers, slashes and period allowed"
     )
+    |> validate_domain_reserved_characters()
     |> unique_constraint(:domain,
       message:
         "This domain has already been taken. Perhaps one of your team members registered it? If that's not the case, please contact support@plausible.io"
     )
-    |> clean_domain
   end
 
   def make_public(site) do
@@ -113,5 +114,21 @@ defmodule Plausible.Site do
     change(changeset, %{
       domain: clean_domain
     })
+  end
+
+  # https://tools.ietf.org/html/rfc3986#section-2.2
+  @uri_reserved_chars ~w(: ? # [ ] @ ! $ & ' \( \) * + , ; =)
+  defp validate_domain_reserved_characters(changeset) do
+    domain = get_field(changeset, :domain) || ""
+
+    if String.contains?(domain, @uri_reserved_chars) do
+      add_error(
+        changeset,
+        :domain,
+        "must not contain URI reserved characters #{@uri_reserved_chars}"
+      )
+    else
+      changeset
+    end
   end
 end

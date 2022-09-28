@@ -38,6 +38,7 @@ All notable changes to this project will be documented in this file.
 - Alert outgrown enterprise users of their usage plausible/analytics#2197
 - Manually lock and unlock enterprise users plausible/analytics#2197
 - ARM64 support for docker images plausible/analytics#2103
+- Add support for international domain names (IDNs) plausible/analytics#2034
 
 ### Fixed
 - Hash part of the URL can now be used when excluding pages with `script.exclusions.hash.js`.
