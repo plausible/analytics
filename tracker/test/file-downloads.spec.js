@@ -1,6 +1,8 @@
 const { test } = require('./support/harness');
-const { mockRequest, expectCustomEvent, isMac } = require('./support/test-utils');
+const { mockRequest, expectCustomEvent, isMac, mockManyRequests } = require('./support/test-utils');
 const { expect } = require('@playwright/test');
+const { LOCAL_SERVER_ADDR } = require('./support/server');
+
 
 test.describe('file-downloads extension', () => {
   test('sends event and does not start download when link opens in new tab', async ({ page }, workerInfo) => {
@@ -36,5 +38,15 @@ test.describe('file-downloads extension', () => {
 
     const expectedURL = downloadURL.split("?")[0]
     expectCustomEvent(await plausibleRequestMock, 'File Download', { url: expectedURL })
+  });
+
+  test('starts download only once', async ({ page }) => {
+    await page.goto('/file-download.html')
+    const downloadURL = LOCAL_SERVER_ADDR + '/' + await page.locator('#local-download').getAttribute('href')
+
+    const downloadRequestMockList = mockManyRequests(page, downloadURL, 2)
+    await page.click('#local-download')
+
+    expect((await downloadRequestMockList).length).toBe(1)
   });
 });

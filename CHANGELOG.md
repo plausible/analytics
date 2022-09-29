@@ -41,6 +41,7 @@ All notable changes to this project will be documented in this file.
 - Add support for international domain names (IDNs) plausible/analytics#2034
 
 ### Fixed
+- Plausible script does not prevent default if it's been prevented by an external script [plausible/analytics#1941](https://github.com/plausible/analytics/issues/1941)
 - Hash part of the URL can now be used when excluding pages with `script.exclusions.hash.js`.
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
 - UI fix to align footer columns
@@ -59,6 +60,8 @@ All notable changes to this project will be documented in this file.
 >>>>>>> 09af319b (Add changelog)
 
 ### Changed
+- `script.file-downloads.outbound-links.js` only sends an outbound link event when an outbound download link is clicked
+- Plausible script now uses callback navigation (instead of waiting for 150ms every time) when sending custom events
 - Cache the tracking script for 24 hours
 - Move `entry_page` and `exit_page` to be part of the `Page` filter group
 - Paginate /api/sites results and add a `View all` link to the site-switcher dropdown in the dashboard.
