@@ -172,6 +172,7 @@ defmodule PlausibleWeb.Router do
     get "/billing/upgrade/enterprise/:plan_id", BillingController, :upgrade_enterprise_plan
     get "/billing/change-plan/enterprise/:plan_id", BillingController, :change_enterprise_plan
     get "/billing/upgrade-success", BillingController, :upgrade_success
+    get "/billing/subscription/ping", BillingController, :ping_subscription
 
     get "/sites", SiteController, :index
     get "/sites/new", SiteController, :new

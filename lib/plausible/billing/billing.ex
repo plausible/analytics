@@ -2,8 +2,23 @@ defmodule Plausible.Billing do
   use Plausible.Repo
   alias Plausible.Billing.Subscription
 
+  @spec active_subscription_for(integer()) :: Subscription.t() | nil
   def active_subscription_for(user_id) do
-    Repo.get_by(Subscription, user_id: user_id, status: "active")
+    user_id |> active_subscription_query() |> Repo.one()
+  end
+
+  @spec has_active_subscription?(integer()) :: boolean()
+  def has_active_subscription?(user_id) do
+    user_id |> active_subscription_query() |> Repo.exists?()
+  end
+
+  defp active_subscription_query(user_id) do
+    from(
+      s in Subscription,
+      where: s.user_id == ^user_id and s.status == "active",
+      order_by: [desc: s.inserted_at],
+      limit: 1
+    )
   end
 
   def subscription_created(params) do
