@@ -12,7 +12,28 @@
     <div class="loading my-12 mx-auto"><div></div></div>
 
     <script>
-      setTimeout(function() {window.location='/settings'}, 3500);
+      const pingSubscriptionUrl = "<%= Routes.billing_path(@conn, :ping_subscription) %>"
+      const redirectTo = "<%= Routes.auth_path(@conn, :user_settings) %>"
+
+      const ping = async function(fun) {
+        let result = {}
+
+        while (!result.is_subscribed) {
+          await wait();
+          const response = await fetch(pingSubscriptionUrl)
+          result = await response.json()
+        }
+
+        window.location = redirectTo
+      }
+
+      const wait = function(ms = 2000) {
+        return new Promise(resolve => { setTimeout(resolve, ms) })
+      }
+
+      // Pings pingSubscriptionUrl every 2 seconds until an active subscription
+      // is created from Paddle webhooks.
+      ping()
     </script>
   </div>
 </div>
