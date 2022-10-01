@@ -924,10 +924,22 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp parse_pagination(params) do
-    limit = if params["limit"], do: String.to_integer(params["limit"]), else: 9
-    page = if params["page"], do: String.to_integer(params["page"]), else: 1
+    limit = to_int(params["limit"], 9)
+    page = to_int(params["page"], 1)
     {limit, page}
   end
+
+  defp to_int(string, default) when is_binary(string) do
+    case Integer.parse(string) do
+      {i, ""} when is_integer(i) ->
+        i
+
+      _ ->
+        default
+    end
+  end
+
+  defp to_int(_, default), do: default
 
   defp maybe_add_percentages(stat_list, query) do
     if Map.has_key?(query.filters, "event:goal") do
