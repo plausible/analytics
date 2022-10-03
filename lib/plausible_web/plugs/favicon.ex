@@ -60,6 +60,9 @@ defmodule PlausibleWeb.Favicon do
   """
   def call(conn, favicon_domains: favicon_domains) do
     case conn.path_info do
+      ["favicon", "sources", "placeholder"] ->
+        send_placeholder(conn)
+
       ["favicon", "sources", source] ->
         clean_source = URI.decode_www_form(source)
         domain = Map.get(favicon_domains, clean_source, clean_source)

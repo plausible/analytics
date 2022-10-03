@@ -1,6 +1,18 @@
 import React from 'react';
 import { Transition } from '@headlessui/react'
 
+function Favicon({ domain, className }) {
+  return (
+    <img
+      src={`/favicon/sources/${encodeURIComponent(domain)}`}
+      onError={(e) => { e.target.onerror = null; e.target.src = "/favicon/sources/placeholder" }}
+      referrerPolicy="no-referrer"
+      className={className}
+    />
+  )
+
+}
+
 export default class SiteSwitcher extends React.Component {
   constructor() {
     super()
@@ -99,7 +111,7 @@ export default class SiteSwitcher extends React.Component {
     return (
       <a href={domain === this.props.site.domain ? null : `/${encodeURIComponent(domain)}`} key={domain} className={`flex items-center justify-between truncate px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 ${extraClass}`}>
         <span>
-          <img src={`/favicon/sources/${encodeURIComponent(domain)}`} className="inline w-4 mr-2 align-middle" />
+          <Favicon domain={domain} className="inline w-4 mr-2 align-middle"></Favicon>
           <span className="truncate inline-block align-middle max-w-3xs pr-2">{domain}</span>
         </span>
         {showHotkey ? index < 9 && <span>{index+1}</span> : null}
@@ -171,8 +183,7 @@ export default class SiteSwitcher extends React.Component {
     return (
       <div className="relative inline-block text-left mr-2 sm:mr-4">
         <button ref={this.siteSwitcherButton} className={`inline-flex items-center md:text-lg w-full rounded-md py-2 leading-5 font-bold text-gray-700 dark:text-gray-300 focus:outline-none transition ease-in-out duration-150 ${hoverClass}`}>
-
-          <img src={`https://icons.duckduckgo.com/ip3/${this.props.site.domain}.ico`} onError={(e)=>{e.target.onerror = null; e.target.src="https://icons.duckduckgo.com/ip3/placeholder.ico"}} referrerPolicy="no-referrer" className="inline w-4 mr-1 md:mr-2 align-middle" />
+          <Favicon domain={this.props.site.domain} className="w-4 mr-1 md:mr-2 align-middle w-4 mr-2 align-middle"></Favicon>
           <span className="hidden sm:inline-block">{this.props.site.domain}</span>
           {this.renderArrow()}
         </button>
