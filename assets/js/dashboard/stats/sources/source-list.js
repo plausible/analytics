@@ -270,7 +270,7 @@ class UTMSources extends React.Component {
 
 import { Fragment } from 'react'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon } from '@heroicons/react/solid'
+import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 
 export default class SourceList extends React.Component {
