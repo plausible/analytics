@@ -2,6 +2,10 @@ defmodule Plausible.SiteAdmin do
   use Plausible.Repo
   import Ecto.Query
 
+  def ordering(_schema) do
+    [desc: :inserted_at]
+  end
+
   def search_fields(_schema) do
     [
       :domain,
@@ -49,7 +53,11 @@ defmodule Plausible.SiteAdmin do
   end
 
   defp get_owner_email(site) do
-    Enum.find(site.memberships, fn m -> m.role == :owner end).user.email
+    owner = Enum.find(site.memberships, fn m -> m.role == :owner end)
+
+    if owner do
+      owner.user.email
+    end
   end
 
   defp get_other_members(site) do
