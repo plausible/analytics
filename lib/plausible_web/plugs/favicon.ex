@@ -53,17 +53,26 @@ defmodule PlausibleWeb.Favicon do
   I'm not sure why DDG sometimes returns a broken PNG image in their response but we filter that out.
   When the icon request fails, we show a placeholder favicon instead. The placeholder is an emoji
   from https://favicon.io/emoji-favicons/
+
+  DuckDuckGo favicon service has some issues with [svg favicons](https://css-tricks.com/svg-favicons-and-all-the-fun-things-we-can-do-with-them/).
+  For some reason, they return them with `content-type=image/x-icon` whereas SVG icons should be returned with `content-type=image/svg+xml`.
+  This plug detects when the response body starts with <svg and will override the content-type to correct it.
   """
   def call(conn, favicon_domains: favicon_domains) do
     case conn.path_info do
+      ["favicon", "sources", "placeholder"] ->
+        send_placeholder(conn)
+
       ["favicon", "sources", source] ->
         clean_source = URI.decode_www_form(source)
         domain = Map.get(favicon_domains, clean_source, clean_source)
 
         case HTTPClient.impl().get("https://icons.duckduckgo.com/ip3/#{domain}.ico") do
-          {:ok, %Finch.Response{body: body, headers: headers}} when body != @ddg_broken_icon ->
+          {:ok, %Finch.Response{status: 200, body: body, headers: headers}}
+          when body != @ddg_broken_icon ->
             conn
             |> forward_headers(headers)
+            |> maybe_override_content_type(body)
             |> send_resp(200, body)
             |> halt
 
@@ -89,4 +98,10 @@ defmodule PlausibleWeb.Favicon do
     headers_to_forward = Enum.filter(headers, fn {k, _} -> k in @forwarded_headers end)
     %Plug.Conn{conn | resp_headers: headers_to_forward}
   end
+
+  defp maybe_override_content_type(conn, "<svg" <> _rest) do
+    conn |> put_resp_content_type("image/svg+xml")
+  end
+
+  defp maybe_override_content_type(conn, _), do: conn
 end

@@ -39,7 +39,7 @@
       <div class="group cursor-pointer" @click="invitationOpen = true; selectedInvitation = invitations['<%= invitation.invitation_id %>']">
         <li class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
           <div class="w-full flex items-center justify-between space-x-4">
-            <img src="/favicon/sources/<%= invitation.site.domain %>.ico" onerror="this.onerror=null; this.src='/favicon/sources/placeholder.ico';" class="w-4 h-4 flex-shrink-0 mt-px">
+            <img src="/favicon/sources/<%= invitation.site.domain %>.ico" onerror="this.onerror=null; this.src='/favicon/sources/placeholder';" class="w-4 h-4 flex-shrink-0 mt-px">
             <div class="flex-1 truncate -mt-px">
               <h3 class="text-gray-900 font-medium text-lg truncate dark:text-gray-100"><%= invitation.site.domain %></h3>
             </div>

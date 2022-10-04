@@ -1,6 +1,6 @@
 import React, { Fragment, useState } from 'react';
 import { Link, withRouter } from 'react-router-dom'
-import { AdjustmentsIcon, SearchIcon, XIcon, PencilIcon } from '@heroicons/react/solid'
+import { AdjustmentsVerticalIcon, MagnifyingGlassIcon, XMarkIcon, PencilSquareIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import { Menu, Transition } from '@headlessui/react'
 
@@ -95,10 +95,10 @@ function renderDropdownFilter(site, history, [key, value], query) {
           style={{width: 'calc(100% - 1.5rem)'}}
         >
           <span className="inline-block w-full truncate">{filterText(key, value, query)}</span>
-          <PencilIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
+          <PencilSquareIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
         </Link>
         <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>
-          <XIcon className="w-4 h-4" />
+          <XMarkIcon className="w-4 h-4" />
         </b>
       </div>
     </Menu.Item>
@@ -241,7 +241,7 @@ class Filters extends React.Component {
           <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(key, value, query)}</span>
         </Link>
         <span title={`Remove filter: ${formattedFilters[key]}`} className="flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center" onClick={() => removeFilter(key, history, query)}>
-          <XIcon className="w-4 h-4" />
+          <XMarkIcon className="w-4 h-4" />
         </span>
       </span>
     )
@@ -252,7 +252,7 @@ class Filters extends React.Component {
       const filterCount = appliedFilters(this.props.query).length
       return (
         <>
-          <AdjustmentsIcon className="-ml-1 mr-1 h-4 w-4" aria-hidden="true" />
+          <AdjustmentsVerticalIcon className="-ml-1 mr-1 h-4 w-4" aria-hidden="true" />
           {filterCount} Filter{filterCount === 1 ? '' : 's'}
         </>
       )
@@ -260,7 +260,7 @@ class Filters extends React.Component {
 
     return (
       <>
-        <SearchIcon className="-ml-1 mr-1 h-4 w-4 md:h-4 md:w-4" aria-hidden="true" />
+        <MagnifyingGlassIcon className="-ml-1 mr-1 h-4 w-4 md:h-4 md:w-4" aria-hidden="true" />
         {/* This would have been a good use-case for JSX! But in the interest of keeping the breakpoint width logic with TailwindCSS, this is a better long-term way to deal with it. */}
         <span className="sm:hidden">Filter</span><span className="hidden sm:inline-block">Filter</span>
       </>

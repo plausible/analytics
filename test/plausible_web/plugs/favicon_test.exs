@@ -85,6 +85,33 @@ defmodule PlausibleWeb.FaviconTest do
            ]
   end
 
+  test "overrides content-type header if proxied response starts with <svg", %{
+    plug_opts: plug_opts
+  } do
+    expect(
+      Plausible.HTTPClient.Mock,
+      :get,
+      fn "https://icons.duckduckgo.com/ip3/plausible.io.ico" ->
+        {:ok,
+         %Finch.Response{
+           status: 200,
+           body: "<svg>icon</svg>",
+           headers: [{"content-type", "image/x-icon"}]
+         }}
+      end
+    )
+
+    conn =
+      conn(:get, "/favicon/sources/plausible.io")
+      |> Favicon.call(plug_opts)
+
+    assert conn.halted
+
+    assert conn.resp_headers == [
+             {"content-type", "image/svg+xml; charset=utf-8"}
+           ]
+  end
+
   describe "Fallback to placeholder icon" do
     @placholder_icon File.read!("priv/placeholder_favicon.ico")
 

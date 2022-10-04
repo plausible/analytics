@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import { withRouter } from 'react-router-dom'
 import classNames from 'classnames'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon } from '@heroicons/react/solid'
+import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
 import SearchSelect from '../../components/search-select'
 import Modal from './modal'
