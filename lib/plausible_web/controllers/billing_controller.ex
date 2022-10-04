@@ -6,6 +6,11 @@ defmodule PlausibleWeb.BillingController do
 
   plug PlausibleWeb.RequireAccountPlug
 
+  def ping_subscription(%Plug.Conn{} = conn, _params) do
+    subscribed? = Billing.has_active_subscription?(conn.assigns.current_user.id)
+    json(conn, %{is_subscribed: subscribed?})
+  end
+
   def upgrade(conn, _params) do
     user =
       conn.assigns[:current_user]
