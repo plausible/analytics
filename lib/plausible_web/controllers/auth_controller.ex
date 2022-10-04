@@ -145,9 +145,14 @@ defmodule PlausibleWeb.AuthController do
 
   defp send_email_verification(user) do
     code = Auth.issue_email_verification(user)
-    Logger.info("VERIFICATION CODE: #{code}")
     email_template = PlausibleWeb.Email.activation_email(user, code)
-    Plausible.Mailer.send_email(email_template)
+    result = Plausible.Mailer.send_email(email_template)
+
+    Logger.debug(
+      "E-mail verification e-mail sent. In dev environment GET /sent-emails for details."
+    )
+
+    result
   end
 
   defp set_user_session(conn, user) do
@@ -250,9 +255,12 @@ defmodule PlausibleWeb.AuthController do
       if user do
         token = Auth.Token.sign_password_reset(email)
         url = PlausibleWeb.Endpoint.url() <> "/password/reset?token=#{token}"
-        Logger.debug("PASSWORD RESET LINK: " <> url)
         email_template = PlausibleWeb.Email.password_reset_email(email, url)
         Plausible.Mailer.deliver_later(email_template)
+
+        Logger.debug(
+          "Password reset e-mail sent. In dev environment GET /sent-emails for details."
+        )
 
         render(conn, "password_reset_request_success.html",
           email: email,
