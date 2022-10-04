@@ -41,6 +41,7 @@ All notable changes to this project will be documented in this file.
 - Add support for international domain names (IDNs) plausible/analytics#2034
 
 ### Fixed
+- Stats API is now protected from access in case of missing active subscription
 - Plausible script does not prevent default if it's been prevented by an external script [plausible/analytics#1941](https://github.com/plausible/analytics/issues/1941)
 - Hash part of the URL can now be used when excluding pages with `script.exclusions.hash.js`.
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
