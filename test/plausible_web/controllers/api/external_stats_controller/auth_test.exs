@@ -67,16 +67,26 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
     })
   end
 
-  test "can access as an admin", %{conn: conn, user: user, api_key: api_key} do
-    Application.put_env(:plausible, :super_admin_user_ids, [user.id])
-    site = insert(:site)
+  describe "admin access" do
+    setup %{user: user} do
+      original_env = Application.get_env(:plausible, :super_admin_user_ids)
+      Application.put_env(:plausible, :super_admin_user_ids, [user.id])
 
-    conn
-    |> with_api_key(api_key)
-    |> get("/api/v1/stats/aggregate", %{"site_id" => site.domain, "metrics" => "pageviews"})
-    |> assert_ok(%{
-      "results" => %{"pageviews" => %{"value" => 0}}
-    })
+      on_exit(fn ->
+        Application.put_env(:plausible, :super_admin_user_ids, original_env)
+      end)
+    end
+
+    test "can access as an admin", %{conn: conn, api_key: api_key} do
+      site = insert(:site)
+
+      conn
+      |> with_api_key(api_key)
+      |> get("/api/v1/stats/aggregate", %{"site_id" => site.domain, "metrics" => "pageviews"})
+      |> assert_ok(%{
+        "results" => %{"pageviews" => %{"value" => 0}}
+      })
+    end
   end
 
   test "limits the rate of API requests", %{user: user} do
