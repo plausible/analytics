@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Favicon do
   from https://favicon.io/emoji-favicons/
 
   DuckDuckGo favicon service has some issues with [svg favicons](https://css-tricks.com/svg-favicons-and-all-the-fun-things-we-can-do-with-them/).
-  For some reason, they return then with `content-type=image/x-icon` whereas SVG icons should be returned with `conten-type=image/svg+xml`.
+  For some reason, they return them with `content-type=image/x-icon` whereas SVG icons should be returned with `content-type=image/svg+xml`.
   This plug detects when the response body starts with <svg and will override the content-type to correct it.
   """
   def call(conn, favicon_domains: favicon_domains) do
