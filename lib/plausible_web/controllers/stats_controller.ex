@@ -41,17 +41,19 @@ defmodule PlausibleWeb.StatsController do
 
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias PlausibleWeb.Api
+
+  alias Plausible.Sites
   alias Plausible.Stats.{Query, Filters}
+  alias PlausibleWeb.Api
 
   plug PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export]
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
     stats_start_date = Plausible.Sites.stats_start_date(site)
-    can_see_stats = !site.locked || conn.assigns[:current_user_role] == :super_admin
+    can_see_stats? = not Sites.locked?(site) or conn.assigns[:current_user_role] == :super_admin
 
     cond do
-      stats_start_date && can_see_stats ->
+      stats_start_date && can_see_stats? ->
         demo = site.domain == PlausibleWeb.Endpoint.host()
         offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
 
@@ -70,13 +72,13 @@ defmodule PlausibleWeb.StatsController do
           is_dbip: is_dbip()
         )
 
-      !stats_start_date && can_see_stats ->
+      !stats_start_date && can_see_stats? ->
         conn
         |> assign(:skip_plausible_tracking, true)
         |> render("waiting_first_pageview.html", site: site)
 
-      site.locked ->
-        owner = Plausible.Sites.owner_for(site)
+      Sites.locked?(site) ->
+        owner = Sites.owner_for(site)
 
         conn
         |> assign(:skip_plausible_tracking, true)
@@ -269,7 +271,7 @@ defmodule PlausibleWeb.StatsController do
         |> delete_resp_header("x-frame-options")
         |> render("stats.html",
           site: shared_link.site,
-          has_goals: Plausible.Sites.has_goals?(shared_link.site),
+          has_goals: Sites.has_goals?(shared_link.site),
           stats_start_date: shared_link.site.stats_start_date,
           title: "Plausible · " <> shared_link.site.domain,
           offer_email_report: false,
@@ -283,8 +285,8 @@ defmodule PlausibleWeb.StatsController do
           is_dbip: is_dbip()
         )
 
-      shared_link.site.locked ->
-        owner = Plausible.Sites.owner_for(shared_link.site)
+      Sites.locked?(shared_link.site) ->
+        owner = Sites.owner_for(shared_link.site)
 
         conn
         |> assign(:skip_plausible_tracking, true)

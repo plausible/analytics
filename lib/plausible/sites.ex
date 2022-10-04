@@ -1,5 +1,6 @@
 defmodule Plausible.Sites do
   use Plausible.Repo
+  alias Plausible.Site
   alias Plausible.Site.SharedLink
   import Ecto.Query
 
@@ -9,13 +10,13 @@ defmodule Plausible.Sites do
     if owned_sites_count(user) >= limit do
       {:error, :limit, limit}
     else
-      site_changeset = Plausible.Site.changeset(%Plausible.Site{}, params)
+      site_changeset = Site.changeset(%Site{}, params)
 
       Ecto.Multi.new()
       |> Ecto.Multi.insert(:site, site_changeset)
       |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
         membership_changeset =
-          Plausible.Site.Membership.changeset(%Plausible.Site.Membership{}, %{
+          Site.Membership.changeset(%Site.Membership{}, %{
             site_id: site.id,
             user_id: user.id
           })
@@ -45,7 +46,7 @@ defmodule Plausible.Sites do
       start_date = Plausible.Stats.Clickhouse.pageview_start_date_local(site)
 
       if start_date do
-        Plausible.Site.set_stats_start_date(site, start_date)
+        Site.set_stats_start_date(site, start_date)
         |> Repo.update()
 
         start_date
@@ -83,8 +84,8 @@ defmodule Plausible.Sites do
     do: Repo.one(get_for_user_q(user_id, domain, roles))
 
   defp get_for_user_q(user_id, domain, roles) do
-    from(s in Plausible.Site,
-      join: sm in Plausible.Site.Membership,
+    from(s in Site,
+      join: sm in Site.Membership,
       on: sm.site_id == s.id,
       where: sm.user_id == ^user_id,
       where: sm.role in ^roles,
@@ -108,9 +109,13 @@ defmodule Plausible.Sites do
     role(user_id, site) in [:admin, :owner]
   end
 
+  def locked?(%Site{locked: locked}) do
+    locked
+  end
+
   def role(user_id, site) do
     Repo.one(
-      from sm in Plausible.Site.Membership,
+      from sm in Site.Membership,
         where: sm.user_id == ^user_id and sm.site_id == ^site.id,
         select: sm.role
     )
@@ -130,8 +135,8 @@ defmodule Plausible.Sites do
   end
 
   defp owned_sites_query(user) do
-    from(s in Plausible.Site,
-      join: sm in Plausible.Site.Membership,
+    from(s in Site,
+      join: sm in Site.Membership,
       on: sm.site_id == s.id,
       where: sm.role == :owner,
       where: sm.user_id == ^user.id
@@ -141,7 +146,7 @@ defmodule Plausible.Sites do
   def owner_for(site) do
     Repo.one(
       from u in Plausible.Auth.User,
-        join: sm in Plausible.Site.Membership,
+        join: sm in Site.Membership,
         on: sm.user_id == u.id,
         where: sm.site_id == ^site.id,
         where: sm.role == :owner
