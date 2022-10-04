@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
   test "bad API key - returns 401", %{conn: conn} do
     conn =
       conn
-      |> Plug.Conn.put_req_header("authorization", "Bearer bad-key")
+      |> with_api_key("Bad key")
       |> get("/api/v1/stats/aggregate", %{"site_id" => "some-site.com", "metrics" => "pageviews"})
 
     assert json_response(conn, 401) == %{
@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
   test "good API key but bad site id - returns 401", %{conn: conn, api_key: api_key} do
     conn =
       conn
-      |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key}")
+      |> with_api_key(api_key)
       |> get("/api/v1/stats/aggregate", %{"site_id" => "some-site.com", "metrics" => "pageviews"})
 
     assert json_response(conn, 401) == %{
@@ -43,7 +43,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
   test "good API key but missing site id - returns 400", %{conn: conn, api_key: api_key} do
     conn =
       conn
-      |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key}")
+      |> with_api_key(api_key)
       |> get("/api/v1/stats/aggregate", %{"metrics" => "pageviews"})
 
     assert json_response(conn, 400) == %{
@@ -52,12 +52,25 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
            }
   end
 
+  test "locked site - returns 402", %{conn: conn, api_key: api_key, user: user} do
+    site = insert(:site, members: [user])
+    {1, _} = Plausible.Billing.SiteLocker.set_lock_status_for(user, true)
+
+    conn =
+      conn
+      |> with_api_key(api_key)
+      |> get("/api/v1/stats/aggregate", %{"site_id" => site.domain, "metrics" => "pageviews"})
+
+    assert %{"error" => error} = json_response(conn, 402)
+    assert error =~ "missing active subscription"
+  end
+
   test "can access with correct API key and site ID", %{conn: conn, user: user, api_key: api_key} do
     site = insert(:site, members: [user])
 
     conn =
       conn
-      |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key}")
+      |> with_api_key(api_key)
       |> get("/api/v1/stats/aggregate", %{"site_id" => site.domain, "metrics" => "pageviews"})
 
     assert json_response(conn, 200) == %{
@@ -71,7 +84,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
 
     conn =
       conn
-      |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key}")
+      |> with_api_key(api_key)
       |> get("/api/v1/stats/aggregate", %{"site_id" => site.domain, "metrics" => "pageviews"})
 
     assert json_response(conn, 200) == %{
@@ -83,24 +96,28 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
     api_key = insert(:api_key, user_id: user.id, hourly_request_limit: 3)
 
     build_conn()
-    |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
+    |> with_api_key(api_key.key)
     |> get("/api/v1/stats/aggregate")
 
     build_conn()
-    |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
+    |> with_api_key(api_key.key)
     |> get("/api/v1/stats/aggregate")
 
     build_conn()
-    |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
+    |> with_api_key(api_key.key)
     |> get("/api/v1/stats/aggregate")
 
     conn =
       build_conn()
-      |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
+      |> with_api_key(api_key.key)
       |> get("/api/v1/stats/aggregate")
 
     assert json_response(conn, 429) == %{
              "error" => "Too many API requests. Your API key is limited to 3 requests per hour."
            }
+  end
+
+  defp with_api_key(conn, api_key) do
+    Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key}")
   end
 end
