@@ -57,9 +57,9 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
         is_super_admin? = Plausible.Auth.is_super_admin?(api_key.user_id)
 
         cond do
+          is_super_admin? -> {:ok, site}
           Sites.locked?(site) -> {:error, :site_locked}
           is_member? -> {:ok, site}
-          is_super_admin? -> {:ok, site}
           true -> {:error, :invalid_api_key}
         end
 

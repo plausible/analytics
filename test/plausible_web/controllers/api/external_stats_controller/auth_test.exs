@@ -67,7 +67,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
     })
   end
 
-  describe "admin access" do
+  describe "super admin access" do
     setup %{user: user} do
       original_env = Application.get_env(:plausible, :super_admin_user_ids)
       Application.put_env(:plausible, :super_admin_user_ids, [user.id])
@@ -77,8 +77,24 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
       end)
     end
 
-    test "can access as an admin", %{conn: conn, api_key: api_key} do
+    test "can access as a super admin", %{conn: conn, api_key: api_key} do
       site = insert(:site)
+
+      conn
+      |> with_api_key(api_key)
+      |> get("/api/v1/stats/aggregate", %{"site_id" => site.domain, "metrics" => "pageviews"})
+      |> assert_ok(%{
+        "results" => %{"pageviews" => %{"value" => 0}}
+      })
+    end
+
+    test "can access as a super admin even if site is locked", %{
+      conn: conn,
+      api_key: api_key,
+      user: user
+    } do
+      site = insert(:site, members: [user])
+      {1, _} = Plausible.Billing.SiteLocker.set_lock_status_for(user, true)
 
       conn
       |> with_api_key(api_key)
