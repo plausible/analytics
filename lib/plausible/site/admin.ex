@@ -19,7 +19,7 @@ defmodule Plausible.SiteAdmin do
 
   def form_fields(_) do
     [
-      domain: nil,
+      domain: %{update: :readonly},
       timezone: nil,
       public: nil
     ]
