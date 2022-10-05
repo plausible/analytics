@@ -11,9 +11,13 @@ jobs:
     name: Build and test
     runs-on: buildjet-4vcpu-ubuntu-2004
 
+    strategy:
+      matrix:
+        postgres_version: [12,13,14]
+
     services:
       postgres:
-        image: postgres:12
+        image: postgres:${{ matrix.postgres_version }}
         ports:
           - 5432:5432
         env:
