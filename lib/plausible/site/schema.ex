@@ -54,6 +54,12 @@ defmodule Plausible.Site do
     )
   end
 
+  def crm_changeset(site, attrs) do
+    site
+    |> cast(attrs, [:timezone, :public, :stats_start_date])
+    |> validate_required([:timezone])
+  end
+
   def make_public(site) do
     change(site, public: true)
   end

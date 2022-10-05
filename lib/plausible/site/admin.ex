@@ -21,7 +21,8 @@ defmodule Plausible.SiteAdmin do
     [
       domain: %{update: :readonly},
       timezone: nil,
-      public: nil
+      public: nil,
+      stats_start_date: nil
     ]
   end
 
@@ -130,4 +131,7 @@ defmodule Plausible.SiteAdmin do
     end)
     |> stringify_fields()
   end
+
+  def create_changeset(schema, attrs), do: Plausible.Site.crm_changeset(schema, attrs)
+  def update_changeset(schema, attrs), do: Plausible.Site.crm_changeset(schema, attrs)
 end
