@@ -49,11 +49,11 @@ defmodule Plausible.Sites do
   """
   def stats_start_date(site)
 
-  def stats_start_date(%Plausible.Site{stats_start_date: %Date{} = date}) do
+  def stats_start_date(%Site{stats_start_date: %Date{} = date}) do
     date
   end
 
-  def stats_start_date(%Plausible.Site{} = site) do
+  def stats_start_date(%Site{} = site) do
     if start_date = Plausible.Stats.Clickhouse.pageview_start_date_local(site) do
       updated_site =
         site
