@@ -39,18 +39,28 @@ defmodule Plausible.Sites do
     end
   end
 
-  def stats_start_date(site) do
-    if site.stats_start_date do
-      site.stats_start_date
-    else
-      start_date = Plausible.Stats.Clickhouse.pageview_start_date_local(site)
+  @spec stats_start_date(Plausible.Site.t()) :: Date.t() | nil
+  @doc """
+  Returns the date of the first event of the given site, or `nil` if the site
+  does not have stats yet.
 
-      if start_date do
-        Site.set_stats_start_date(site, start_date)
-        |> Repo.update()
+  If this is the first time the function is called for the site, it queries
+  Clickhouse and saves the date in the sites table.
+  """
+  def stats_start_date(site)
 
-        start_date
-      end
+  def stats_start_date(%Site{stats_start_date: %Date{} = date}) do
+    date
+  end
+
+  def stats_start_date(%Site{} = site) do
+    if start_date = Plausible.Stats.Clickhouse.pageview_start_date_local(site) do
+      updated_site =
+        site
+        |> Site.set_stats_start_date(start_date)
+        |> Repo.update!()
+
+      updated_site.stats_start_date
     end
   end
 

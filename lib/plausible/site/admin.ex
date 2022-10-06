@@ -19,9 +19,10 @@ defmodule Plausible.SiteAdmin do
 
   def form_fields(_) do
     [
-      domain: nil,
-      timezone: nil,
-      public: nil
+      domain: %{update: :readonly},
+      timezone: %{choices: Plausible.Timezones.options()},
+      public: nil,
+      stats_start_date: nil
     ]
   end
 
@@ -130,4 +131,7 @@ defmodule Plausible.SiteAdmin do
     end)
     |> stringify_fields()
   end
+
+  def create_changeset(schema, attrs), do: Plausible.Site.crm_changeset(schema, attrs)
+  def update_changeset(schema, attrs), do: Plausible.Site.crm_changeset(schema, attrs)
 end
