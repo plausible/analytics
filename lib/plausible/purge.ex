@@ -9,6 +9,18 @@ defmodule Plausible.Purge do
   - [Synchronicity of `ALTER` Queries](https://clickhouse.com/docs/en/sql-reference/statements/alter/#synchronicity-of-alter-queries)
   """
 
+  @doc """
+  Deletes a site and all associated stats.
+  """
+  @spec delete_site!(Plausible.Site.t()) :: :ok
+  def delete_site!(site) do
+    Plausible.Repo.delete!(site)
+    delete_native_stats!(site)
+    delete_imported_stats!(site)
+
+    :ok
+  end
+
   @spec delete_imported_stats!(Plausible.Site.t()) :: :ok
   @doc """
   Deletes imported stats from Google Analytics.

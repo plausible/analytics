@@ -531,7 +531,7 @@ defmodule PlausibleWeb.AuthController do
       Repo.delete!(membership)
 
       if membership.role == :owner do
-        Plausible.Sites.delete!(membership.site)
+        Plausible.Purge.delete_site!(membership.site)
       end
     end
 

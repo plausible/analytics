@@ -162,9 +162,4 @@ defmodule Plausible.Sites do
         where: sm.role == :owner
     )
   end
-
-  def delete!(site) do
-    Repo.delete!(site)
-    Plausible.Purge.delete_native_stats!(site)
-  end
 end

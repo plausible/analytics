@@ -51,4 +51,20 @@ defmodule Plausible.PurgeTest do
     sessions_query = from(s in Plausible.ClickhouseSession, where: s.domain == ^site.domain)
     assert_count(sessions_query, 0)
   end
+
+  test "delete_site!/1 deletes the site and all stats", %{site: site} do
+    assert :ok == Plausible.Purge.delete_site!(site)
+    assert nil == Plausible.Repo.reload(site)
+
+    events_query = from(s in Plausible.ClickhouseSession, where: s.domain == ^site.domain)
+    assert_count(events_query, 0)
+
+    sessions_query = from(s in Plausible.ClickhouseSession, where: s.domain == ^site.domain)
+    assert_count(sessions_query, 0)
+
+    Enum.each(Plausible.Imported.tables(), fn table ->
+      query = from(imported in table, where: imported.site_id == ^site.id)
+      assert_count(query, 0)
+    end)
+  end
 end
