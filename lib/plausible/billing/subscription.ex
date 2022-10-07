@@ -2,6 +2,8 @@ defmodule Plausible.Billing.Subscription do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
   @required_fields [
     :paddle_subscription_id,
     :paddle_plan_id,
@@ -18,17 +20,17 @@ defmodule Plausible.Billing.Subscription do
   @valid_statuses ["active", "past_due", "deleted", "paused"]
 
   schema "subscriptions" do
-    field :paddle_subscription_id, :string
-    field :paddle_plan_id, :string
-    field :update_url, :string
-    field :cancel_url, :string
-    field :status, :string
-    field :next_bill_amount, :string
-    field :next_bill_date, :date
-    field :last_bill_date, :date
-    field :currency_code, :string
+    field(:paddle_subscription_id, :string)
+    field(:paddle_plan_id, :string)
+    field(:update_url, :string)
+    field(:cancel_url, :string)
+    field(:status, :string)
+    field(:next_bill_amount, :string)
+    field(:next_bill_date, :date)
+    field(:last_bill_date, :date)
+    field(:currency_code, :string)
 
-    belongs_to :user, Plausible.Auth.User
+    belongs_to(:user, Plausible.Auth.User)
 
     timestamps()
   end
