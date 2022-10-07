@@ -432,6 +432,7 @@ config :logger,
 if honeycomb_api_key && honeycomb_dataset do
   config :opentelemetry,
     resource: [service: %{name: "plausible"}],
+    sampler: {Plausible.OpenTelemetry.Sampler, nil},
     span_processor: :batch,
     traces_exporter: :otlp
 
