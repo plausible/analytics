@@ -14,9 +14,9 @@ defmodule Plausible.Purge do
   """
   @spec delete_site!(Plausible.Site.t()) :: :ok
   def delete_site!(site) do
-    Plausible.Repo.delete!(site)
     delete_native_stats!(site)
     delete_imported_stats!(site)
+    Plausible.Repo.delete!(site)
 
     :ok
   end
@@ -35,12 +35,23 @@ defmodule Plausible.Purge do
   end
 
   @spec delete_native_stats!(Plausible.Site.t()) :: :ok
+  @doc """
+  Deletes native stats for a site, and clears the `stats_start_date` field.
+  """
   def delete_native_stats!(site) do
     events_sql = "ALTER TABLE events DELETE WHERE domain = ?"
     sessions_sql = "ALTER TABLE sessions DELETE WHERE domain = ?"
     Ecto.Adapters.SQL.query!(Plausible.ClickhouseRepo, events_sql, [site.domain])
     Ecto.Adapters.SQL.query!(Plausible.ClickhouseRepo, sessions_sql, [site.domain])
 
+    clear_stats_start_date!(site)
+
     :ok
+  end
+
+  defp clear_stats_start_date!(site) do
+    site
+    |> Ecto.Changeset.change(stats_start_date: nil)
+    |> Plausible.Repo.update!()
   end
 end

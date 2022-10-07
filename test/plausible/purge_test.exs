@@ -22,10 +22,14 @@ defmodule Plausible.PurgeTest do
   end
 
   defp assert_count(query, expected) do
-    assert eventually(fn ->
-             count = Plausible.ClickhouseRepo.aggregate(query, :count)
-             {count == expected, count}
-           end)
+    assert eventually(
+             fn ->
+               count = Plausible.ClickhouseRepo.aggregate(query, :count)
+               {count == expected, count}
+             end,
+             200,
+             10
+           )
   end
 
   test "delete_imported_stats!/1 deletes imported data", %{site: site} do
@@ -50,6 +54,11 @@ defmodule Plausible.PurgeTest do
 
     sessions_query = from(s in Plausible.ClickhouseSession, where: s.domain == ^site.domain)
     assert_count(sessions_query, 0)
+  end
+
+  test "delete_native_stats!/1 resets stats_start_date", %{site: site} do
+    assert :ok == Plausible.Purge.delete_native_stats!(site)
+    assert %Plausible.Site{stats_start_date: nil} = Plausible.Repo.reload(site)
   end
 
   test "delete_site!/1 deletes the site and all stats", %{site: site} do
