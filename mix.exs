@@ -62,6 +62,7 @@ defmodule Plausible.MixProject do
       {:bypass, "~> 2.1", only: [:dev, :test]},
       {:cachex, "~> 3.4"},
       {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
+      {:clickhousex, github: "plausible/clickhousex", branch: "rebase-upstream", override: true},
       {:combination, "~> 0.0.3"},
       {:connection, "~> 1.1", override: true},
       {:cors_plug, "~> 3.0"},
