@@ -1,4 +1,18 @@
 defmodule PlausibleWeb.TrackerTest do
+  @moduledoc """
+  This test module uses auto-generated JavaScript tracker files in priv/tracker/js.
+
+  To speed up running Elixir tests locally, the tracker files are not automatically generated
+  with every `mix test` command. That means, you have to manually run the below command
+  once before executing `mix test`. This is to make sure all tracker files are in place and up to date.
+
+  ```
+  npm run deploy --prefix tracker
+  ```
+
+  If you're making changes in the tracker template files (`src/plausible.js`, `compile.js`),
+  do regenerate the files before running tests, so they're up to date.
+  """
   use PlausibleWeb.ConnCase
   use Plug.Test
 

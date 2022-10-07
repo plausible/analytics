@@ -64,6 +64,8 @@ jobs:
         run: mix format --check-formatted
       - name: Check Compile Warnings
         run: mix compile --warnings-as-errors --all-warnings
+      - name: Generate tracker files
+        run: npm run deploy --prefix ./tracker
       - name: Run tests
         run: mix test
       #- name: Check Dialyzer
