@@ -165,6 +165,6 @@ defmodule Plausible.Sites do
 
   def delete!(site) do
     Repo.delete!(site)
-    Plausible.ClickhouseRepo.clear_stats_for(site.domain)
+    Plausible.Purge.delete_native_stats!(site)
   end
 end

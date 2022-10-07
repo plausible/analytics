@@ -3,8 +3,16 @@ defmodule Plausible.Imported do
   use Timex
   require Logger
 
+  @tables ~w(
+    imported_visitors imported_sources imported_pages imported_entry_pages
+    imported_exit_pages imported_locations imported_devices imported_browsers
+    imported_operating_systems
+  )
+  @spec tables() :: [String.t()]
+  def tables, do: @tables
+
   def forget(site) do
-    Plausible.ClickhouseRepo.clear_imported_stats_for(site.id)
+    Plausible.Purge.delete_imported_stats!(site)
   end
 
   def from_google_analytics(nil, _site_id, _metric), do: nil
