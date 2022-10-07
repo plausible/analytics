@@ -430,23 +430,22 @@ config :logger,
   backends: [:console]
 
 if honeycomb_api_key && honeycomb_dataset do
-  sample_rate = if env == "prod", do: 0.01, else: 1.0
-
   config :opentelemetry,
-    sampler: {:parent_based, %{root: {:trace_id_ratio_based, sample_rate}}},
     resource: [service: %{name: "plausible"}],
     span_processor: :batch,
-    exporter: :otlp
+    traces_exporter: :otlp
 
   config :opentelemetry_exporter,
     otlp_protocol: :grpc,
-    otlp_endpoint: 'https://api.honeycomb.io:443',
+    otlp_endpoint: "https://api.honeycomb.io:443",
     otlp_headers: [
       {"x-honeycomb-team", honeycomb_api_key},
       {"x-honeycomb-dataset", honeycomb_dataset}
     ]
 else
-  config :opentelemetry, sampler: {:parent_based, %{root: {:trace_id_ratio_based, 0.0}}}
+  config :opentelemetry,
+    sampler: :always_off,
+    traces_exporter: :none
 end
 
 config :tzdata,
