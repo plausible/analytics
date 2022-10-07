@@ -115,7 +115,8 @@ defmodule Plausible.MixProject do
       {:telemetry, "~> 1.0", override: true},
       {:timex, "~> 3.7"},
       {:ua_inspector, "~> 3.0"},
-      {:ex_doc, "~> 0.28", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.28", only: :dev, runtime: false},
+      {:clickhousex, github: "plausible/clickhousex", branch: "rebase-upstream", override: true}
     ]
   end
 
