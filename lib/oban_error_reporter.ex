@@ -42,7 +42,8 @@ defmodule ObanErrorReporter do
          args: %{"site_id" => site_id},
          state: "executing"
        }) do
-    Plausible.ClickhouseRepo.clear_imported_stats_for(site_id)
+    site = Plausible.Repo.get(Plausible.Site, site_id)
+    Plausible.Purge.delete_imported_stats!(site)
   end
 
   defp on_job_exception(_job), do: :ignore

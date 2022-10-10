@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     site = Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner])
 
     if site do
-      Sites.delete!(site)
+      Plausible.Purge.delete_site!(site)
       json(conn, %{"deleted" => true})
     else
       H.not_found(conn, "Site could not be found")

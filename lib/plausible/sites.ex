@@ -162,9 +162,4 @@ defmodule Plausible.Sites do
         where: sm.role == :owner
     )
   end
-
-  def delete!(site) do
-    Repo.delete!(site)
-    Plausible.ClickhouseRepo.clear_stats_for(site.domain)
-  end
 end
