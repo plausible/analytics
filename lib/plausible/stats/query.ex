@@ -317,18 +317,8 @@ defmodule Plausible.Stats.Query do
   defp parse_single_date(tz, params) do
     case params["date"] do
       "today" -> Timex.now(tz) |> Timex.to_date()
-      date when is_binary(date) -> sanitize_date(tz, date)
+      date when is_binary(date) -> Date.from_iso8601!(date)
       _ -> Timex.now(tz) |> Timex.to_date()
-    end
-  end
-
-  defp sanitize_date(tz, input_date) do
-    case Date.from_iso8601(input_date) do
-      {:ok, parsed_date} ->
-        parsed_date
-
-      _ ->
-        Timex.now(tz) |> Timex.to_date()
     end
   end
 
