@@ -145,13 +145,13 @@ defmodule Plausible.TestUtils do
   end
 
   def eventually(expectation, wait_time_ms \\ 50, retries \\ 10) do
-    Enum.reduce_while(1..retries, nil, fn _i, _acc ->
+    Enum.reduce_while(1..retries, nil, fn attempt, _acc ->
       case expectation.() do
         {true, result} ->
           {:halt, result}
 
         {false, _} ->
-          Process.sleep(wait_time_ms)
+          Process.sleep(wait_time_ms * attempt)
           {:cont, nil}
       end
     end)
