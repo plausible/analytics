@@ -9,6 +9,7 @@ defmodule Mix.Tasks.SendPageview do
   use Mix.Task
   require Logger
 
+  @default_host "http://localhost:8000"
   @default_ip_address "127.0.0.1"
   @default_user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36 OPR/71.0.3770.284"
   @default_domain "dummy.site"
@@ -19,7 +20,8 @@ defmodule Mix.Tasks.SendPageview do
     user_agent: :string,
     domain: :string,
     page: :string,
-    referrer: :string
+    referrer: :string,
+    host: :string
   ]
 
   def run(opts) do
@@ -41,8 +43,9 @@ defmodule Mix.Tasks.SendPageview do
   defp do_send_pageview(parsed_opts) do
     ip = Keyword.get(parsed_opts, :ip, @default_ip_address)
     user_agent = Keyword.get(parsed_opts, :user_agent, @default_user_agent)
+    host = Keyword.get(parsed_opts, :host, @default_host)
 
-    url = get_url()
+    url = get_url(host)
     headers = get_headers(ip, user_agent)
     body = get_body(parsed_opts)
 
@@ -57,8 +60,8 @@ defmodule Mix.Tasks.SendPageview do
     end
   end
 
-  defp get_url() do
-    "http://localhost:8000/api/event"
+  defp get_url(host) do
+    Path.join(host, "/api/event")
   end
 
   defp get_headers(ip, user_agent) do
