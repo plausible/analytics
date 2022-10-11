@@ -1,7 +1,7 @@
 {
   "scripts": {
     "deploy": "node compile.js",
-    "test": "BROWSERSTACK_LOCAL=true npx playwright test --config=./test/support/playwright.config.js"
+    "test": "npm run deploy && BROWSERSTACK_LOCAL=true npx playwright test --config=./test/support/playwright.config.js"
   },
   "license": "MIT",
   "dependencies": {

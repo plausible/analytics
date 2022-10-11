@@ -59,11 +59,13 @@ jobs:
           key: ${{ runner.os }}-mix-v2-${{ hashFiles('**/mix.lock') }}
           restore-keys: ${{ runner.os }}-mix-v2-
       - name: Install dependencies
-        run: mix deps.get
+        run: mix deps.get && npm install --prefix ./tracker
       - name: Check Formatting
         run: mix format --check-formatted
       - name: Check Compile Warnings
         run: mix compile --warnings-as-errors --all-warnings
+      - name: Generate tracker files
+        run: npm run deploy --prefix ./tracker
       - name: Run tests
         run: mix test
       #- name: Check Dialyzer
