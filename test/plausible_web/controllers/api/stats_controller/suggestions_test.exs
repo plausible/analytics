@@ -2,6 +2,8 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
   use PlausibleWeb.ConnCase
   import Plausible.TestUtils
 
+  @moduletag capture_log: true
+
   describe "GET /api/stats/:domain/suggestions/:filter_name" do
     setup [:create_user, :log_in, :create_site]
 
@@ -272,7 +274,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       assert json_response(conn, 200) |> Enum.sort() == ["Uku Taht"]
     end
 
-    test "when date is borked, does not crash and fall back to today's date", %{
+    test "when date is borked, bad request is returned", %{
       conn: conn,
       site: site
     } do
@@ -300,7 +302,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
           "/api/stats/#{site.domain}/suggestions/prop_value?period=all&date=CLEVER_SECURITY_RESEARCH&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == ["Alice Bob"]
+      assert json_response(conn, 400) == %{"error" => "input validation error"}
     end
   end
 end
