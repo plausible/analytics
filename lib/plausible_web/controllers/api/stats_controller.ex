@@ -5,8 +5,6 @@ defmodule PlausibleWeb.Api.StatsController do
   alias Plausible.Stats
   alias Plausible.Stats.{Query, Filters}
 
-  require Logger
-
   def main_graph(conn, params) do
     site = conn.assigns[:site]
 
@@ -1053,8 +1051,6 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp bad_request(conn) do
-    Logger.error("Input validation error in #{__MODULE__}, returning Bad Request to the client.")
-
     conn
     |> put_status(400)
     |> json(%{error: "input validation error"})
