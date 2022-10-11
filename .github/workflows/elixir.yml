@@ -41,6 +41,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Read .tool-versions
         uses: marocchino/tool-versions-action@v1
         id: versions
@@ -67,7 +69,7 @@ jobs:
       - name: Generate tracker files
         run: npm run deploy --prefix ./tracker
       - name: Check Credo Warnings
-        run: mix credo diff --from-git-merge-base master
+        run: mix credo suggest --files-included $(git diff --name-only master HEAD | grep -E 'lib/|test/')
       - name: Run tests
         run: mix test
       - name: Check Dialyzer

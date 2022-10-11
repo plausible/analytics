@@ -1,4 +1,5 @@
 defmodule Plausible.Billing.Subscription do
+  @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
 
