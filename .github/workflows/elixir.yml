@@ -66,11 +66,11 @@ jobs:
         run: mix compile --warnings-as-errors --all-warnings
       - name: Generate tracker files
         run: npm run deploy --prefix ./tracker
+      - name: Check Credo Warnings
+        run: mix credo diff --from-git-merge-base master
       - name: Run tests
         run: mix test
-      #- name: Check Dialyzer
-      #  run: mix dialyzer <-- false negatives
-      - name: Check Credo Warnings
-        run: mix credo --strict --only warning --ignore Consistency
+      - name: Check Dialyzer
+        run: mix dialyzer
 env:
   MIX_ENV: test
