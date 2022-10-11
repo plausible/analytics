@@ -50,31 +50,50 @@ defmodule PlausibleWeb.Site.MembershipController do
         skip_plausible_tracking: true
       )
     else
-      invitation =
-        Invitation.new(%{
-          email: email,
-          role: role,
-          site_id: site.id,
-          inviter_id: conn.assigns[:current_user].id
-        })
-        |> Repo.insert!()
-        |> Repo.preload([:site, :inviter])
+      case Repo.insert(
+             Invitation.new(%{
+               email: email,
+               role: role,
+               site_id: site.id,
+               inviter_id: conn.assigns[:current_user].id
+             })
+           ) do
+        {:ok, invitation} ->
+          invitation = Repo.preload(invitation, [:site, :inviter])
 
-      email_template =
-        if user do
-          PlausibleWeb.Email.existing_user_invitation(invitation)
-        else
-          PlausibleWeb.Email.new_user_invitation(invitation)
-        end
+          email_template =
+            if user do
+              PlausibleWeb.Email.existing_user_invitation(invitation)
+            else
+              PlausibleWeb.Email.new_user_invitation(invitation)
+            end
 
-      Plausible.Mailer.send_email(email_template)
+          Plausible.Mailer.send_email(email_template)
 
-      conn
-      |> put_flash(
-        :success,
-        "#{email} has been invited to #{site_domain} as #{PlausibleWeb.SiteView.with_indefinite_article(role)}"
-      )
-      |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+          conn
+          |> put_flash(
+            :success,
+            "#{email} has been invited to #{site_domain} as #{PlausibleWeb.SiteView.with_indefinite_article(role)}"
+          )
+          |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+
+        {:error, changeset} ->
+          error_msg =
+            case changeset.errors[:invitation] do
+              {"already sent", _} ->
+                "This invitation has been already sent. To send again, remove it from pending invitations first."
+
+              _ ->
+                "Something went wrong."
+            end
+
+          conn
+          |> put_flash(
+            :error,
+            error_msg
+          )
+          |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+      end
     end
   end
 

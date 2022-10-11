@@ -74,6 +74,46 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert html_response(conn, 200) =~
                "#{second_member.email} is already a member of #{site.domain}"
     end
+
+    test "redirects with an error flash when the invitation already exists", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site, members: [user])
+
+      _req1 =
+        post(conn, "/sites/#{site.domain}/memberships/invite", %{
+          email: "joe@example.com",
+          role: "admin"
+        })
+
+      assert_email_delivered_with(
+        to: [nil: "joe@example.com"],
+        subject: "[Plausible Analytics] You've been invited to #{site.domain}"
+      )
+
+      req2 =
+        post(conn, "/sites/#{site.domain}/memberships/invite", %{
+          email: "joe@example.com",
+          role: "admin"
+        })
+
+      refute_email_delivered_with(
+        to: [nil: "joe@example.com"],
+        subject: "[Plausible Analytics] You've been invited to #{site.domain}"
+      )
+
+      assert people_settings = redirected_to(req2, 302)
+
+      assert ^people_settings =
+               PlausibleWeb.Router.Helpers.site_path(
+                 PlausibleWeb.Endpoint,
+                 :settings_people,
+                 site.domain
+               )
+
+      assert get_flash(req2, :error) =~ "This invitation has been already sent."
+    end
   end
 
   describe "GET /sites/:website/transfer-ownership" do
