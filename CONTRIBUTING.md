@@ -16,8 +16,9 @@ Make sure Docker, Elixir, Erlang and Node.js are all installed on your developme
     1. Run `mix deps.get`. This will download the required Elixir dependencies.
     2. Run `mix ecto.create`. This will create the required databases in both Postgres and Clickhouse.
     3. Run `mix ecto.migrate` to build the database schema.
-    4. Run `npm ci --prefix assets` to install the required node dependencies.
-    5. Run `mix download_country_database` to fetch geolocation database
+    4. Run `npm ci --prefix assets` to install the required client-side dependencies.
+    5. Run `npm ci --prefix tracker` to install the required tracker dependencies.
+    6. Run `mix download_country_database` to fetch geolocation database
 3. Run `make server` or `mix phx.server` to start the Phoenix server.
 4. The system is now available on `localhost:8000`.
 

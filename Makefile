@@ -6,6 +6,7 @@ install:
 	mix ecto.migrate
 	mix download_country_database
 	npm install --prefix assets
+	npm install --prefix tracker
 
 server:
 	mix phx.server
