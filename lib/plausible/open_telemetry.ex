@@ -1,3 +1,34 @@
+defmodule Plausible.OpenTelemetry do
+  @moduledoc false
+
+  require OpenTelemetry.Tracer, as: Tracer
+
+  def add_site_attributes(%Plausible.Site{} = site) do
+    Tracer.set_attributes([
+      {"plausible.site.id", site.id},
+      {"plausible.site.domain", site.domain}
+    ])
+  end
+
+  def add_user_attributes(%Plausible.Auth.User{} = user) do
+    Tracer.set_attributes([
+      {"plausible.user.id", user.id},
+      {"plausible.user.name", user.name},
+      {"plausible.user.email", user.email}
+    ])
+  end
+
+  # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md#service
+  def resource_attributes(build_metadata) do
+    [
+      {"service.name", "analytics"},
+      {"service.namespace", "plausible"},
+      {"service.instance.id", "app01"}, # FIXME: add node name accordingly
+      {"service.version", build_metadata[:version]}
+    ]
+  end
+end
+
 defmodule Plausible.OpenTelemetry.Sampler do
   @moduledoc """
   [Custom OpenTelemetry sampler](https://hexdocs.pm/opentelemetry/readme.html#samplers)

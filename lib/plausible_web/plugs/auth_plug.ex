@@ -9,6 +9,7 @@ defmodule PlausibleWeb.AuthPlug do
   def call(conn, _opts) do
     with id when is_integer(id) <- get_session(conn, :current_user_id),
          %Plausible.Auth.User{} = user <- find_user(id) do
+      Plausible.OpenTelemetry.add_user_attributes(user)
       Sentry.Context.set_user_context(%{id: user.id, name: user.name, email: user.email})
       assign(conn, :current_user, user)
     else
