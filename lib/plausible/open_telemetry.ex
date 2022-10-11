@@ -23,7 +23,7 @@ defmodule Plausible.OpenTelemetry do
     [
       {"service.name", "analytics"},
       {"service.namespace", "plausible"},
-      {"service.instance.id", "app01"}, # FIXME: add node name accordingly
+      {"service.instance.id", "app00"},
       {"service.version", build_metadata[:version]}
     ]
   end

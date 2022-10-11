@@ -96,6 +96,21 @@ ch_db_url =
 
 ### Mandatory params End
 
+build_metadata =
+  config_dir
+  |> get_var_from_path_or_env("BUILD_METADATA", "{}")
+  |> Jason.decode!()
+
+runtime_metadata = [
+  version: get_in(build_metadata, ["labels", "org.opencontainers.image.version"]),
+  commit: get_in(build_metadata, ["labels", "org.opencontainers.image.revision"]),
+  created: get_in(build_metadata, ["labels", "org.opencontainers.image.created"]),
+  tags: get_in(build_metadata, ["tags"]),
+  host: get_var_from_path_or_env(config_dir, "APP_HOST", "app-unknown")
+]
+
+config :plausible, :runtime_metadata, runtime_metadata
+
 sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
 honeycomb_api_key = get_var_from_path_or_env(config_dir, "HONEYCOMB_API_KEY")
 honeycomb_dataset = get_var_from_path_or_env(config_dir, "HONEYCOMB_DATASET")
@@ -431,7 +446,7 @@ config :logger,
 
 if honeycomb_api_key && honeycomb_dataset do
   config :opentelemetry,
-    resource: [service: %{name: "plausible"}],
+    resource: Plausible.OpenTelemetry.resource_attributes(runtime_metadata),
     sampler: {Plausible.OpenTelemetry.Sampler, nil},
     span_processor: :batch,
     traces_exporter: :otlp
