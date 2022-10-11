@@ -585,7 +585,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn, 302) == "/settings"
     end
 
-    test "renders form with error if form validations fail", %{conn: conn, user: user} do
+    test "renders form with error if form validations fail", %{conn: conn} do
       conn = put(conn, "/settings", %{"user" => %{"name" => ""}})
 
       assert html_response(conn, 200) =~ "can&#39;t be blank"

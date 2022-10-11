@@ -271,5 +271,36 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
       assert json_response(conn, 200) |> Enum.sort() == ["Uku Taht"]
     end
+
+    test "when date is borked, bad request is returned", %{
+      conn: conn,
+      site: site
+    } do
+      today = (Date.utc_today() |> Date.to_iso8601()) <> " 00:00:00"
+      naive_today = NaiveDateTime.from_iso8601!(today)
+
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Alice Bob"],
+          timestamp: naive_today
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Cecil"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{author: "!(none)"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/prop_value?period=all&date=CLEVER_SECURITY_RESEARCH&filters=#{filters}"
+        )
+
+      assert json_response(conn, 400) == %{"error" => "input validation error"}
+    end
   end
 end

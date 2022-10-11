@@ -39,30 +39,39 @@ defmodule Plausible.Stats.FilterParser do
     filters = String.split(str, ";")
 
     Enum.map(filters, &parse_single_filter/1)
+    |> Enum.reject(fn parsed -> parsed == :error end)
     |> Enum.into(%{})
   end
 
   @non_escaped_pipe_regex ~r/(?<!\\)\|/
   defp parse_single_filter(str) do
-    [key, raw_value] =
-      String.trim(str)
-      |> String.split(["==", "!="], trim: true)
-      |> Enum.map(&String.trim/1)
+    case to_kv(str) do
+      [key, raw_value] ->
+        is_negated = String.contains?(str, "!=")
+        is_list = Regex.match?(@non_escaped_pipe_regex, raw_value)
+        is_wildcard = String.contains?(raw_value, "*")
 
-    is_negated = String.contains?(str, "!=")
-    is_list = Regex.match?(@non_escaped_pipe_regex, raw_value)
-    is_wildcard = String.contains?(raw_value, "*")
+        final_value = remove_escape_chars(raw_value)
 
-    final_value = remove_escape_chars(raw_value)
+        cond do
+          key == "event:goal" -> {key, parse_goal_filter(final_value)}
+          is_wildcard && is_negated -> {key, {:does_not_match, raw_value}}
+          is_wildcard -> {key, {:matches, raw_value}}
+          is_list -> {key, {:member, parse_member_list(raw_value)}}
+          is_negated -> {key, {:is_not, final_value}}
+          true -> {key, {:is, final_value}}
+        end
 
-    cond do
-      key == "event:goal" -> {key, parse_goal_filter(final_value)}
-      is_wildcard && is_negated -> {key, {:does_not_match, raw_value}}
-      is_wildcard -> {key, {:matches, raw_value}}
-      is_list -> {key, {:member, parse_member_list(raw_value)}}
-      is_negated -> {key, {:is_not, final_value}}
-      true -> {key, {:is, final_value}}
+      _ ->
+        :error
     end
+  end
+
+  defp to_kv(str) do
+    str
+    |> String.trim()
+    |> String.split(["==", "!="], trim: true)
+    |> Enum.map(&String.trim/1)
   end
 
   defp parse_goal_filter("Visit " <> page), do: {:is, :page, page}

@@ -76,5 +76,10 @@ defmodule Plausible.Stats.FilterParserTest do
       "event:page==/**\\|page|/other/page"
       |> assert_parsed(%{"event:page" => {:matches, "/**\\|page|/other/page"}})
     end
+
+    test "gracefully fails to parse garbage" do
+      "bfg10309\uff1cs1\ufe65s2\u02bas3\u02b9hjl10309"
+      |> assert_parsed(%{})
+    end
   end
 end

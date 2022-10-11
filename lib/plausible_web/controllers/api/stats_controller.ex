@@ -7,54 +7,68 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def main_graph(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site, params) |> Filters.add_prefix()
 
-    selected_metric =
-      if !params["metric"] || params["metric"] == "conversions" do
-        "visitors"
-      else
-        params["metric"]
-      end
+    with :ok <- validate_params(params) do
+      query = Query.from(site, params) |> Filters.add_prefix()
 
-    timeseries_query =
-      if query.period == "realtime" do
-        %Query{query | period: "30m"}
-      else
-        query
-      end
+      selected_metric =
+        if !params["metric"] || params["metric"] == "conversions" do
+          "visitors"
+        else
+          params["metric"]
+        end
 
-    timeseries_result =
-      Stats.timeseries(site, timeseries_query, [String.to_existing_atom(selected_metric)])
+      timeseries_query =
+        if query.period == "realtime" do
+          %Query{query | period: "30m"}
+        else
+          query
+        end
 
-    plot =
-      Enum.map(timeseries_result, fn row -> row[String.to_existing_atom(selected_metric)] || 0 end)
+      timeseries_result =
+        Stats.timeseries(site, timeseries_query, [String.to_existing_atom(selected_metric)])
 
-    labels = Enum.map(timeseries_result, fn row -> row[:date] end)
-    present_index = present_index_for(site, query, labels)
+      plot =
+        Enum.map(timeseries_result, fn row ->
+          row[String.to_existing_atom(selected_metric)] || 0
+        end)
 
-    json(conn, %{
-      plot: plot,
-      labels: labels,
-      present_index: present_index,
-      interval: query.interval,
-      with_imported: query.include_imported,
-      imported_source: site.imported_data && site.imported_data.source
-    })
+      labels = Enum.map(timeseries_result, fn row -> row[:date] end)
+      present_index = present_index_for(site, query, labels)
+
+      json(conn, %{
+        plot: plot,
+        labels: labels,
+        present_index: present_index,
+        interval: query.interval,
+        with_imported: query.include_imported,
+        imported_source: site.imported_data && site.imported_data.source
+      })
+    else
+      _ ->
+        bad_request(conn)
+    end
   end
 
   def top_stats(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site, params) |> Filters.add_prefix()
 
-    {top_stats, sample_percent} = fetch_top_stats(site, query)
+    with :ok <- validate_params(params) do
+      query = Query.from(site, params) |> Filters.add_prefix()
 
-    json(conn, %{
-      top_stats: top_stats,
-      interval: query.interval,
-      sample_percent: sample_percent,
-      with_imported: query.include_imported,
-      imported_source: site.imported_data && site.imported_data.source
-    })
+      {top_stats, sample_percent} = fetch_top_stats(site, query)
+
+      json(conn, %{
+        top_stats: top_stats,
+        interval: query.interval,
+        sample_percent: sample_percent,
+        with_imported: query.include_imported,
+        imported_source: site.imported_data && site.imported_data.source
+      })
+    else
+      _ ->
+        bad_request(conn)
+    end
   end
 
   defp present_index_for(site, query, dates) do
@@ -909,9 +923,15 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def filter_suggestions(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site, params) |> Filters.add_prefix()
 
-    json(conn, Stats.filter_suggestions(site, query, params["filter_name"], params["q"]))
+    with :ok <- validate_params(params) do
+      query = Query.from(site, params) |> Filters.add_prefix()
+
+      json(conn, Stats.filter_suggestions(site, query, params["filter_name"], params["q"]))
+    else
+      _ ->
+        bad_request(conn)
+    end
   end
 
   defp transform_keys(results, keys_to_replace) do
@@ -924,10 +944,22 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp parse_pagination(params) do
-    limit = if params["limit"], do: String.to_integer(params["limit"]), else: 9
-    page = if params["page"], do: String.to_integer(params["page"]), else: 1
+    limit = to_int(params["limit"], 9)
+    page = to_int(params["page"], 1)
     {limit, page}
   end
+
+  defp to_int(string, default) when is_binary(string) do
+    case Integer.parse(string) do
+      {i, ""} when is_integer(i) ->
+        i
+
+      _ ->
+        default
+    end
+  end
+
+  defp to_int(_, default), do: default
 
   defp maybe_add_percentages(stat_list, query) do
     if Map.has_key?(query.filters, "event:goal") do
@@ -1006,5 +1038,21 @@ defmodule PlausibleWeb.Api.StatsController do
       country ->
         country
     end
+  end
+
+  defp validate_params(%{"date" => date}) do
+    with {:ok, _} <- Date.from_iso8601(date) do
+      :ok
+    end
+  end
+
+  defp validate_params(_) do
+    :ok
+  end
+
+  defp bad_request(conn) do
+    conn
+    |> put_status(400)
+    |> json(%{error: "input validation error"})
   end
 end
