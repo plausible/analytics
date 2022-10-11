@@ -10,6 +10,10 @@ defmodule Plausible.OpenTelemetry do
     ])
   end
 
+  def add_user_attributes(user_id) when is_integer(user_id) do
+    Tracer.set_attributes([{"plausible.user.id", user_id}])
+  end
+
   def add_user_attributes(%Plausible.Auth.User{} = user) do
     Tracer.set_attributes([
       {"plausible.user.id", user.id},
@@ -19,12 +23,12 @@ defmodule Plausible.OpenTelemetry do
   end
 
   # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md#service
-  def resource_attributes(build_metadata) do
+  def resource_attributes(runtime_metadata) do
     [
       {"service.name", "analytics"},
       {"service.namespace", "plausible"},
-      {"service.instance.id", "app00"},
-      {"service.version", build_metadata[:version]}
+      {"service.instance.id", runtime_metadata[:host]},
+      {"service.version", runtime_metadata[:version]}
     ]
   end
 end

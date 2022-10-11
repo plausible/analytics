@@ -228,13 +228,14 @@ else
 end
 
 included_environments = if sentry_dsn, do: ["prod", "staging", "dev"], else: []
+sentry_app_version = runtime_metadata[:version] || app_version
 
 config :sentry,
   dsn: sentry_dsn,
   environment_name: env,
   included_environments: included_environments,
-  release: runtime_metadata[:version],
-  tags: %{app_version: runtime_metadata[:version], server_name: runtime_metadata[:host]},
+  release: sentry_app_version,
+  tags: %{app_version: sentry_app_version, server_name: runtime_metadata[:host]},
   enable_source_code_context: true,
   root_source_code_path: [File.cwd!()],
   client: Plausible.Sentry.Client,
