@@ -69,7 +69,7 @@ jobs:
       - name: Generate tracker files
         run: npm run deploy --prefix ./tracker
       - name: Check Credo Warnings
-        run: mix credo suggest --files-included $(git diff --name-only origin/master HEAD | grep -E 'lib/|test/')
+        run: git diff --name-only master HEAD | grep -E 'lib/|test/' | xargs -I % mix credo suggest --files-included %
       - name: Run tests
         run: mix test
       - name: Check Dialyzer
