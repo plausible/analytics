@@ -3,23 +3,37 @@ defmodule Plausible.OpenTelemetry do
 
   require OpenTelemetry.Tracer, as: Tracer
 
-  def add_site_attributes(%Plausible.Site{} = site) do
-    Tracer.set_attributes([
-      {"plausible.site.id", site.id},
-      {"plausible.site.domain", site.domain}
-    ])
+  def add_site_attributes(site) do
+    case site do
+      %Plausible.Site{} = site ->
+        Tracer.set_attributes([
+          {"plausible.site.id", site.id},
+          {"plausible.site.domain", site.domain}
+        ])
+
+      id when is_integer(id) ->
+        Tracer.set_attributes([{"plausible.site.id", id}])
+
+      _any ->
+        :ignore
+    end
   end
 
-  def add_user_attributes(user_id) when is_integer(user_id) do
-    Tracer.set_attributes([{"plausible.user.id", user_id}])
-  end
+  def add_user_attributes(user) do
+    case user do
+      %Plausible.Auth.User{} = user ->
+        Tracer.set_attributes([
+          {"plausible.user.id", user.id},
+          {"plausible.user.name", user.name},
+          {"plausible.user.email", user.email}
+        ])
 
-  def add_user_attributes(%Plausible.Auth.User{} = user) do
-    Tracer.set_attributes([
-      {"plausible.user.id", user.id},
-      {"plausible.user.name", user.name},
-      {"plausible.user.email", user.email}
-    ])
+      id when is_integer(id) ->
+        Tracer.set_attributes([{"plausible.user.id", id}])
+
+      _any ->
+        :ignore
+    end
   end
 
   # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md#service
