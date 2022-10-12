@@ -156,7 +156,7 @@
   {{/unless}}
 
   // CUSTOM EVENT TRACKING
-  {{#if (any outbound_links file_downloads)}}
+  {{#if (any outbound_links file_downloads tagged_events)}}
   function getLinkEl(link) {
     while (link && (typeof link.tagName === 'undefined' || link.tagName.toLowerCase() !== 'a' || !link.href)) {
       link = link.parentNode
@@ -180,6 +180,14 @@
 
     var link = getLinkEl(event.target)
     var hrefWithoutQuery = link && link.href && link.href.split('?')[0]
+
+    {{#if tagged_events}}
+    var eventName = getPlausibleEventName(link)
+    if (eventName) {
+      var eventProps = {}
+      return sendLinkClickEvent(event, link, eventName, eventProps)
+    }
+    {{/if}}
 
     {{#if outbound_links}}
     if (isOutboundLink(link)) {
@@ -241,5 +249,21 @@
       return fileTypeToTrack === fileType
     })
   }
+  {{/if}}
+
+  {{#if tagged_events}}
+  function getPlausibleEventName(link) {
+    var classList = link && link.classList
+    if (!classList) { return null }
+
+    var eventName
+    classList.forEach(function (className) {
+      if (className.match(/plausible-event-name=.+/)) {
+        eventName = className.split('=')[1]
+      }
+    })
+    return eventName
+  }
+
   {{/if}}
 })();
