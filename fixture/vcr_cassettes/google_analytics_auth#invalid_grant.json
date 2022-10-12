@@ -1,0 +1,35 @@
+[
+  {
+    "request": {
+      "body": "client_id=fake_client_id&client_secret=fake_client_secret&refresh_token=*****&grant_type=refresh_token&redirect_uri=http://localhost:8000/auth/google/callback",
+      "headers": {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      "method": "post",
+      "options": [],
+      "request_body": "",
+      "url": "https://www.googleapis.com/oauth2/v4/token"
+    },
+    "response": {
+      "binary": false,
+      "body": "{\n  \"error\": \"invalid_grant\",\n  \"error_description\": \"Bad Request\"\n}",
+      "headers": {
+        "date": "Fri, 12 Aug 2022 16:43:57 GMT",
+        "pragma": "no-cache",
+        "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+        "expires": "Mon, 01 Jan 1990 00:00:00 GMT",
+        "content-type": "application/json; charset=utf-8",
+        "vary": "X-Origin",
+        "server": "scaffolding on HTTPServer2",
+        "x-xss-protection": "0",
+        "x-frame-options": "SAMEORIGIN",
+        "x-content-type-options": "nosniff",
+        "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000,h3-Q050=\":443\"; ma=2592000,h3-Q046=\":443\"; ma=2592000,h3-Q043=\":443\"; ma=2592000,quic=\":443\"; ma=2592000; v=\"46,43\"",
+        "accept-ranges": "none",
+        "transfer-encoding": "chunked"
+      },
+      "status_code": 400,
+      "type": "ok"
+    }
+  }
+]

@@ -214,13 +214,13 @@ defmodule Plausible.Stats.Imported do
           |> select_merge([i], %{exit_page: i.exit_page, visits: sum(i.exits)})
 
         :country ->
-          imported_q |> select_merge([i], %{country: i.country})
+          imported_q |> where([i], i.country != "ZZ") |> select_merge([i], %{country: i.country})
 
         :region ->
-          imported_q |> select_merge([i], %{region: i.region})
+          imported_q |> where([i], i.region != "") |> select_merge([i], %{region: i.region})
 
         :city ->
-          imported_q |> select_merge([i], %{city: i.city})
+          imported_q |> where([i], i.city != 0) |> select_merge([i], %{city: i.city})
 
         :device ->
           imported_q |> select_merge([i], %{device: i.device})
@@ -443,7 +443,7 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([s, i], %{
       visit_duration:
         fragment(
-          "(? + ? * ?) / (? + ?)",
+          "round((? + ? * ?) / (? + ?), 1)",
           i.visit_duration,
           s.visit_duration,
           s.visits,

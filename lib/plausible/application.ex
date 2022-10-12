@@ -9,23 +9,29 @@ defmodule Plausible.Application do
     children = [
       Plausible.Repo,
       Plausible.ClickhouseRepo,
+      {Finch, name: Plausible.Finch, pools: finch_pool_config()},
       {Phoenix.PubSub, name: Plausible.PubSub},
-      PlausibleWeb.Endpoint,
+      Plausible.Session.Salts,
       Plausible.Event.WriteBuffer,
       Plausible.Session.WriteBuffer,
-      Plausible.Session.Store,
-      Plausible.Session.Salts,
       ReferrerBlocklist,
+      Supervisor.child_spec({Cachex, name: :user_agents, limit: 10_000, stats: true},
+        id: :cachex_user_agents
+      ),
+      Supervisor.child_spec({Cachex, name: :sessions, limit: nil, stats: true},
+        id: :cachex_sessions
+      ),
+      PlausibleWeb.Endpoint,
       {Oban, Application.get_env(:plausible, Oban)},
-      {Cachex,
-       Keyword.merge(Application.get_env(:plausible, :user_agent_cache), name: :user_agents)}
+      Plausible.PromEx
     ]
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
     setup_sentry()
-    setup_cache_stats()
+    OpentelemetryPhoenix.setup()
+    OpentelemetryEcto.setup([:plausible, :repo])
+    OpentelemetryEcto.setup([:plausible, :clickhouse_repo])
     Location.load_all()
-    Application.put_env(:plausible, :server_start, Timex.now())
     Supervisor.start_link(children, opts)
   end
 
@@ -34,11 +40,54 @@ defmodule Plausible.Application do
     :ok
   end
 
-  defp setup_cache_stats() do
-    conf = Application.get_env(:plausible, :user_agent_cache)
+  defp finch_pool_config() do
+    base_config = %{
+      "https://icons.duckduckgo.com" => [
+        conn_opts: [transport_opts: [timeout: 15_000]]
+      ]
+    }
 
-    if conf[:stats] do
-      :timer.apply_interval(1000 * 10, Plausible.Application, :report_cache_stats, [])
+    base_config
+    |> maybe_add_sentry_pool()
+    |> maybe_add_paddle_pool()
+    |> maybe_add_google_pools()
+  end
+
+  defp maybe_add_sentry_pool(pool_config) do
+    case Application.get_env(:sentry, :dsn) do
+      dsn when is_binary(dsn) ->
+        Map.put(pool_config, dsn, size: 50)
+
+      _ ->
+        pool_config
+    end
+  end
+
+  defp maybe_add_paddle_pool(pool_config) do
+    paddle_conf = Application.get_env(:plausible, :paddle)
+
+    cond do
+      paddle_conf[:vendor_id] && paddle_conf[:vendor_auth_code] ->
+        Map.put(pool_config, Plausible.Billing.PaddleApi.vendors_domain(),
+          conn_opts: [transport_opts: [timeout: 15_000]]
+        )
+
+      true ->
+        pool_config
+    end
+  end
+
+  defp maybe_add_google_pools(pool_config) do
+    google_conf = Application.get_env(:plausible, :google)
+
+    cond do
+      google_conf[:client_id] && google_conf[:client_secret] ->
+        pool_config
+        |> Map.put(google_conf[:api_url], conn_opts: [transport_opts: [timeout: 15_000]])
+        |> Map.put(google_conf[:reporting_api_url], conn_opts: [transport_opts: [timeout: 15_000]])
+
+      true ->
+        pool_config
     end
   end
 
@@ -47,8 +96,8 @@ defmodule Plausible.Application do
 
     :telemetry.attach_many(
       "oban-errors",
-      [[:oban, :job, :exception], [:oban, :circuit, :trip]],
-      &ErrorReporter.handle_event/4,
+      [[:oban, :job, :exception], [:oban, :notifier, :exception], [:oban, :plugin, :exception]],
+      &ObanErrorReporter.handle_event/4,
       %{}
     )
   end

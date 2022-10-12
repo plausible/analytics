@@ -594,4 +594,24 @@ defmodule Plausible.BillingTest do
       assert subscription.next_bill_amount == "6.00"
     end
   end
+
+  test "active_subscription_for/1 returns active subscription" do
+    active = insert(:subscription, user: insert(:user), status: "active")
+    paused = insert(:subscription, user: insert(:user), status: "paused")
+    user_without_subscription = insert(:user)
+
+    assert Billing.active_subscription_for(active.user_id).id == active.id
+    assert Billing.active_subscription_for(paused.user_id) == nil
+    assert Billing.active_subscription_for(user_without_subscription.id) == nil
+  end
+
+  test "has_active_subscription?/1 returns whether the user has an active subscription" do
+    active = insert(:subscription, user: insert(:user), status: "active")
+    paused = insert(:subscription, user: insert(:user), status: "paused")
+    user_without_subscription = insert(:user)
+
+    assert Billing.has_active_subscription?(active.user_id)
+    refute Billing.has_active_subscription?(paused.user_id)
+    refute Billing.has_active_subscription?(user_without_subscription.id)
+  end
 end

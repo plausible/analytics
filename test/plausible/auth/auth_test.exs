@@ -1,5 +1,5 @@
 defmodule Plausible.AuthTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   alias Plausible.Auth
 
   describe "user_completed_setup?" do
@@ -35,5 +35,14 @@ defmodule Plausible.AuthTest do
 
       refute Auth.has_active_sites?(user, [:owner])
     end
+  end
+
+  test "enterprise?/1 returns whether the user has an enterprise plan" do
+    user_without_plan = insert(:user)
+    user_with_plan = insert(:user, enterprise_plan: build(:enterprise_plan))
+
+    assert Auth.enterprise?(user_with_plan)
+    refute Auth.enterprise?(user_without_plan)
+    refute Auth.enterprise?(nil)
   end
 end

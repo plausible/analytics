@@ -59,20 +59,6 @@ export default class Conversions extends React.Component {
       .then((res) => this.setState({loading: false, goals: res, prevHeight: null}))
   }
 
-  renderGoalText(goalName) {
-    if (this.props.query.period === 'realtime') {
-      return <span className="block px-2 py-1.5 relative z-9 md:truncate break-all dark:text-gray-200">{goalName}</span>
-    } else {
-      return (
-        <Link to={url.setQuery('goal', goalName)} className="block px-2 py-1.5 hover:underline relative z-9 break-all lg:truncate dark:text-gray-200">
-          {goalName}
-        </Link>
-      )
-    }
-  }
-
-
-
   renderGoal(goal) {
     const { viewport } = this.state;
     const renderProps = this.props.query.filters['goal'] == goal.name && goal.prop_names
@@ -87,7 +73,7 @@ export default class Conversions extends React.Component {
             maxWidthDeduction={this.getBarMaxWidth()}
             plot="unique_conversions"
           >
-            {this.renderGoalText(goal.name)}
+            <Link to={url.setQuery('goal', goal.name)} className="block px-2 py-1.5 hover:underline relative z-9 break-all lg:truncate dark:text-gray-200">{goal.name}</Link>
           </Bar>
           <div className="dark:text-gray-200">
             <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.unique_conversions)}</span>

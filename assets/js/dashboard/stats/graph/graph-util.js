@@ -31,7 +31,7 @@ export const METRIC_FORMATTER = {
 
 export const dateFormatter = (interval, longForm, period, full) => {
   return function(isoDate, _index, _ticks) {
-    const date = parseUTCDate(isoDate)
+    let date = parseUTCDate(isoDate)
     const minutes = date.getMinutes();
     const ampm = date.getHours() >= 12 ? 'pm' : 'am';
     const hours = date.getHours() % 12 ? date.getHours() % 12 : 12;
@@ -55,7 +55,18 @@ export const dateFormatter = (interval, longForm, period, full) => {
         return formatDayShort(date);
       }
     } else if (interval === 'hour') {
-      return hours + ampm;
+      const parts = isoDate.split(/[^0-9]/);
+      date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5])
+
+      const dateFormat = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
+      const twelveHourClock = dateFormat.resolvedOptions().hour12
+      const formattedHours = dateFormat.format(date)
+
+      if (twelveHourClock) {
+        return formattedHours.replace(' ', '').toLowerCase()
+      } else {
+        return formattedHours.replace(/[^0-9]/g, '').concat(":00")
+      }
     } else if (interval === 'minute' && period === 'realtime') {
       if (longForm) {
         const minutesAgo = Math.abs(isoDate)
@@ -74,22 +85,22 @@ export const GraphTooltip = (graphData, metric, query) => {
 		const tooltipModel = context.tooltip;
     const offset = document.getElementById("main-graph-canvas").getBoundingClientRect()
 
-		// Tooltip Element
-		let tooltipEl = document.getElementById('chartjs-tooltip');
+    // Tooltip Element
+    let tooltipEl = document.getElementById('chartjs-tooltip');
 
-		// Create element on first render
-		if (!tooltipEl) {
-			tooltipEl = document.createElement('div');
-			tooltipEl.id = 'chartjs-tooltip';
-			tooltipEl.style.display = 'none';
-			tooltipEl.style.opacity = 0;
-			document.body.appendChild(tooltipEl);
-		}
+    // Create element on first render
+    if (!tooltipEl) {
+      tooltipEl = document.createElement('div');
+      tooltipEl.id = 'chartjs-tooltip';
+      tooltipEl.style.display = 'none';
+      tooltipEl.style.opacity = 0;
+      document.body.appendChild(tooltipEl);
+    }
 
-		if (tooltipEl && offset && window.innerWidth < 768) {
-			tooltipEl.style.top = offset.y + offset.height + window.scrollY + 15 + 'px'
-			tooltipEl.style.left = offset.x + 'px'
-			tooltipEl.style.right = null;
+    if (tooltipEl && offset && window.innerWidth < 768) {
+      tooltipEl.style.top = offset.y + offset.height + window.scrollY + 15 + 'px'
+      tooltipEl.style.left = offset.x + 'px'
+      tooltipEl.style.right = null;
       tooltipEl.style.opacity = 1;
 		}
 
@@ -164,7 +175,7 @@ export const GraphTooltip = (graphData, metric, query) => {
 			let innerHtml = `
 			<div class='text-gray-100 flex flex-col'>
 				<div class='flex justify-between items-center'>
-						<span class='font-bold mr-4 text-lg'>${METRIC_LABELS[metric]}</span>
+						<span class='font-semibold mr-4 text-lg'>${METRIC_LABELS[metric]}</span>
 				</div>
 				<div class='flex flex-col'>
 					<div class='flex flex-row justify-between items-center'>
@@ -172,17 +183,17 @@ export const GraphTooltip = (graphData, metric, query) => {
 							<div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(101,116,205)'></div>
 							<span>${renderLabel(label)}</span>
 						</span>
-						<span>${METRIC_FORMATTER[metric](point)}</span>
+						<span class='text-base font-bold'>${METRIC_FORMATTER[metric](point)}</span>
 					</div>
 				</div>
-				<span class='font-bold text-'>${graphData.interval === 'month' ? 'Click to view month' : graphData.interval === 'date' ? 'Click to view day' : ''}</span>
+				<span class='font-semibold italic'>${graphData.interval === 'month' ? 'Click to view month' : graphData.interval === 'date' ? 'Click to view day' : ''}</span>
 			</div>
 			`;
 
-			tooltipEl.innerHTML = innerHtml;
-		}
-		tooltipEl.style.display = null;
-	}
+      tooltipEl.innerHTML = innerHtml;
+    }
+    tooltipEl.style.display = null;
+  }
 }
 
 export const buildDataSet = (plot, present_index, ctx, label, isPrevious) => {

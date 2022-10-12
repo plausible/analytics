@@ -32,7 +32,6 @@
 
 html {
   @apply text-gray-800;
-  overflow-x: hidden;
 }
 
 body {
@@ -71,6 +70,7 @@ blockquote {
 .main-graph {
   position: relative;
   height: 0;
+
   /* Formula is: (top row height + (graph height / graph width * 100%) - adjustment for stat selectors) */
   padding-top: calc(168px + (451 / 1088 * 100%) - 20px);
 }
@@ -365,3 +365,26 @@ iframe[hidden] {
 /* This class is used for styling embedded dashboards. Do not remove. */
 /* stylelint-disable */
 .date-option-group { }
+
+
+.popper-tooltip {
+  background-color: rgba(25, 30, 56);
+}
+
+.tooltip-arrow,
+.tooltip-arrow::before {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: inherit;
+}
+
+.tooltip-arrow {
+  visibility: hidden;
+}
+
+.tooltip-arrow::before {
+  visibility: visible;
+  content: '';
+  transform: rotate(45deg) translateY(1px);
+}

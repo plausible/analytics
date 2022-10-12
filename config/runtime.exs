@@ -103,7 +103,6 @@ paddle_auth_code = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_AUTH_CODE
 paddle_vendor_id = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_ID")
 google_cid = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_ID")
 google_secret = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_SECRET")
-slack_hook_url = get_var_from_path_or_env(config_dir, "SLACK_WEBHOOK")
 postmark_api_key = get_var_from_path_or_env(config_dir, "POSTMARK_API_KEY")
 
 cron_enabled =
@@ -115,7 +114,7 @@ geolite2_country_db =
   get_var_from_path_or_env(
     config_dir,
     "GEOLITE2_COUNTRY_DB",
-    Application.app_dir(:plausible) <> "/priv/geodb/dbip-country.mmdb"
+    Application.app_dir(:plausible, "/priv/geodb/dbip-country.mmdb")
   )
 
 ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", geolite2_country_db)
@@ -135,6 +134,10 @@ disable_registration =
   config_dir
   |> get_var_from_path_or_env("DISABLE_REGISTRATION", "false")
   |> String.to_existing_atom()
+
+if disable_registration not in [true, false, :invite_only] do
+  raise "DISABLE_REGISTRATION must be one of `true`, `false`, or `invite_only`. See https://plausible.io/docs/self-hosting-configuration#server"
+end
 
 hcaptcha_sitekey = get_var_from_path_or_env(config_dir, "HCAPTCHA_SITEKEY")
 hcaptcha_secret = get_var_from_path_or_env(config_dir, "HCAPTCHA_SECRET")
@@ -174,16 +177,6 @@ disable_cron =
   |> get_var_from_path_or_env("DISABLE_CRON", "false")
   |> String.to_existing_atom()
 
-{user_agent_cache_limit, ""} =
-  config_dir
-  |> get_var_from_path_or_env("USER_AGENT_CACHE_LIMIT", "1000")
-  |> Integer.parse()
-
-user_agent_cache_stats =
-  config_dir
-  |> get_var_from_path_or_env("USER_AGENT_CACHE_STATS", "false")
-  |> String.to_existing_atom()
-
 config :plausible,
   admin_user: admin_user,
   admin_email: admin_email,
@@ -219,14 +212,24 @@ else
     database: get_var_from_path_or_env(config_dir, "DATABASE_NAME", "plausible")
 end
 
+included_environments = if sentry_dsn, do: ["prod", "staging", "dev"], else: []
+
 config :sentry,
   dsn: sentry_dsn,
   environment_name: env,
-  included_environments: ["prod", "staging"],
+  included_environments: included_environments,
   release: app_version,
   tags: %{app_version: app_version},
   enable_source_code_context: true,
-  root_source_code_path: [File.cwd!()]
+  root_source_code_path: [File.cwd!()],
+  client: Plausible.Sentry.Client,
+  send_max_attempts: 1,
+  filter: Plausible.SentryFilter,
+  before_send_event: {Plausible.SentryFilter, :before_send}
+
+config :logger, Sentry.LoggerBackend,
+  capture_log_messages: true,
+  level: :error
 
 config :plausible, :paddle,
   vendor_auth_code: paddle_auth_code,
@@ -234,9 +237,10 @@ config :plausible, :paddle,
 
 config :plausible, :google,
   client_id: google_cid,
-  client_secret: google_secret
-
-config :plausible, :slack, webhook: slack_hook_url
+  client_secret: google_secret,
+  api_url: "https://www.googleapis.com",
+  reporting_api_url: "https://analyticsreporting.googleapis.com",
+  max_buffer_size: get_int_from_path_or_env(config_dir, "GOOGLE_MAX_BUFFER_SIZE", 10_000)
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
@@ -335,19 +339,22 @@ cloud_queues = [
 queues = if(is_selfhost, do: base_queues, else: base_queues ++ cloud_queues)
 cron_enabled = !disable_cron
 
+thirty_days_in_seconds = 60 * 60 * 24 * 30
+
 cond do
   config_env() == :prod ->
     config :plausible, Oban,
       repo: Plausible.Repo,
       plugins: [
         # Keep 30 days history
-        {Oban.Plugins.Pruner, max_age: :timer.hours(24 * 30)},
+        {Oban.Plugins.Pruner, max_age: thirty_days_in_seconds},
         {Oban.Plugins.Cron, crontab: if(cron_enabled, do: crontab, else: [])},
         # Rescue orphaned jobs after 2 hours
         {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)},
         {Oban.Plugins.Stager, interval: :timer.seconds(5)}
       ],
-      queues: if(cron_enabled, do: queues, else: [])
+      queues: if(cron_enabled, do: queues, else: []),
+      peer: if(cron_enabled, do: Oban.Peers.Postgres, else: false)
 
   true ->
     config :plausible, Oban,
@@ -360,15 +367,17 @@ config :plausible, :hcaptcha,
   sitekey: hcaptcha_sitekey,
   secret: hcaptcha_secret
 
+config :plausible, Plausible.Sentry.Client,
+  finch_request_opts: [
+    pool_timeout: get_int_from_path_or_env(config_dir, "SENTRY_FINCH_POOL_TIMEOUT", 5000),
+    receive_timeout: get_int_from_path_or_env(config_dir, "SENTRY_FINCH_RECEIVE_TIMEOUT", 15000)
+  ]
+
 config :ref_inspector,
   init: {Plausible.Release, :configure_ref_inspector}
 
 config :ua_inspector,
   init: {Plausible.Release, :configure_ua_inspector}
-
-config :plausible, :user_agent_cache,
-  limit: user_agent_cache_limit,
-  stats: user_agent_cache_stats
 
 config :hammer,
   backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 4, cleanup_interval_ms: 60_000 * 10]}
@@ -420,26 +429,38 @@ config :logger,
   level: log_level,
   backends: [:console]
 
-config :logger, Sentry.LoggerBackend,
-  capture_log_messages: true,
-  level: :error,
-  excluded_domains: []
+if honeycomb_api_key && honeycomb_dataset do
+  sample_rate = if env == "prod", do: 0.01, else: 1.0
 
-# if honeycomb_api_key && honeycomb_dataset do
-#   config :opentelemetry, :processors,
-#     otel_batch_processor: %{
-#       exporter:
-#         {:opentelemetry_exporter,
-#          %{
-#            endpoints: ['https://api.honeycomb.io:443'],
-#            headers: [
-#              {"x-honeycomb-team", honeycomb_api_key},
-#              {"x-honeycomb-dataset", honeycomb_dataset}
-#            ]
-#          }}
-#     }
-# end
+  config :opentelemetry,
+    sampler: {:parent_based, %{root: {:trace_id_ratio_based, sample_rate}}},
+    resource: [service: %{name: "plausible"}],
+    span_processor: :batch,
+    exporter: :otlp
+
+  config :opentelemetry_exporter,
+    otlp_protocol: :grpc,
+    otlp_endpoint: 'https://api.honeycomb.io:443',
+    otlp_headers: [
+      {"x-honeycomb-team", honeycomb_api_key},
+      {"x-honeycomb-dataset", honeycomb_dataset}
+    ]
+else
+  config :opentelemetry, sampler: {:parent_based, %{root: {:trace_id_ratio_based, 0.0}}}
+end
 
 config :tzdata,
        :data_dir,
        get_var_from_path_or_env(config_dir, "STORAGE_DIR", Application.app_dir(:tzdata, "priv"))
+
+promex_disabled? =
+  config_dir
+  |> get_var_from_path_or_env("PROMEX_DISABLED", "true")
+  |> String.to_existing_atom()
+
+config :plausible, Plausible.PromEx,
+  disabled: promex_disabled?,
+  manual_metrics_start_delay: :no_delay,
+  drop_metrics_groups: [],
+  grafana: :disabled,
+  metrics_server: :disabled

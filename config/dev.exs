@@ -17,6 +17,11 @@ config :plausible, PlausibleWeb.Endpoint,
       "--watch",
       "--watch-options-stdin",
       cd: Path.expand("../assets", __DIR__)
+    ],
+    npm: [
+      "run",
+      "deploy",
+      cd: Path.expand("../tracker", __DIR__)
     ]
   ],
   live_reload: [

@@ -38,6 +38,13 @@ defmodule PlausibleWeb.FormHelpers do
     Phoenix.HTML.Form.select(form, field, options, opts)
   end
 
+  @error_opts [class: "mt-1 block text-sm font-medium text-red-700 dark:text-red-500"]
+  def styled_error(nil), do: nil
+
+  def styled_error(error) when is_binary(error) do
+    Phoenix.HTML.Tag.content_tag(:p, error, @error_opts)
+  end
+
   defp merge_opts(opts1, opts2) do
     Keyword.merge(opts1, opts2, fn
       :class, v1, v2 -> v1 <> " " <> v2

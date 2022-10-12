@@ -3,7 +3,7 @@ import React, {useState, useCallback} from 'react'
 import {useCombobox} from 'downshift'
 import classNames from 'classnames'
 import debounce from 'debounce-promise'
-import { ChevronDownIcon } from '@heroicons/react/solid'
+import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
 function selectInputText(e) {
   e.target.select()

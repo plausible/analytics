@@ -44,6 +44,24 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
              }
     end
 
+    test "accepts international domain names", %{conn: conn} do
+      ["müllers-café.test", "音乐.cn", "до.101домен.рф/pages"]
+      |> Enum.each(fn idn_domain ->
+        conn = post(conn, "/api/v1/sites", %{"domain" => idn_domain})
+        assert %{"domain" => ^idn_domain} = json_response(conn, 200)
+      end)
+    end
+
+    test "validates uri breaking domains", %{conn: conn} do
+      ["quero:café.test", "h&llo.test", "iamnotsur&about?this.com"]
+      |> Enum.each(fn bad_domain ->
+        conn = post(conn, "/api/v1/sites", %{"domain" => bad_domain})
+
+        assert %{"error" => error} = json_response(conn, 400)
+        assert error =~ "domain must not contain URI reserved characters"
+      end)
+    end
+
     test "does not allow creating more sites than the limit", %{conn: conn, user: user} do
       Application.put_env(:plausible, :site_limit, 3)
       insert(:site, members: [user])
@@ -382,6 +400,22 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                "error" =>
                  "Invalid API key. Please make sure you're using a valid API key with access to the resource you've requested."
              }
+    end
+  end
+
+  describe "GET /api/v1/sites/:site_id" do
+    setup :create_new_site
+
+    test "get a site by it's domain", %{conn: conn, site: site} do
+      conn = get(conn, "/api/v1/sites/" <> site.domain)
+
+      assert json_response(conn, 200) == %{"domain" => site.domain, "timezone" => site.timezone}
+    end
+
+    test "is 404 when site cannot be found", %{conn: conn} do
+      conn = get(conn, "/api/v1/sites/foobar.baz")
+
+      assert json_response(conn, 404) == %{"error" => "Site could not be found"}
     end
   end
 end

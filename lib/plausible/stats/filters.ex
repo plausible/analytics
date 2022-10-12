@@ -54,7 +54,7 @@ defmodule Plausible.Stats.Filters do
 
           name == "props" ->
             Enum.reduce(val, new_filters, fn {prop_key, prop_val}, new_filters ->
-              Map.put(new_filters, "event:props:" <> prop_key, {:is, prop_val})
+              Map.put(new_filters, "event:props:" <> prop_key, filter_value(name, prop_val))
             end)
         end
       end)

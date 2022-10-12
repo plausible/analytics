@@ -54,7 +54,7 @@
                     </div>
                 </li>
               </ul>
-            <%  Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) -> %>
+            <%  Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) != false -> %>
               <ul class="flex" x-show="!document.cookie.includes('logged_in=true')">
                 <li>
                     <div class="inline-flex">

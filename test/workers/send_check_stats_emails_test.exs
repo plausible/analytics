@@ -1,5 +1,5 @@
 defmodule Plausible.Workers.SendCheckStatsEmailsTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   use Oban.Testing, repo: Plausible.Repo
   use Bamboo.Test
   alias Plausible.Workers.SendCheckStatsEmails

@@ -20,6 +20,75 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
              ]
     end
 
+    test "returns top browsers with :is filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          browser: "Chrome"
+        ),
+        build(:pageview,
+          user_id: 123,
+          browser: "Chrome",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"]
+        ),
+        build(:pageview,
+          browser: "Firefox",
+          "meta.key": ["author"],
+          "meta.value": ["other"]
+        ),
+        build(:pageview,
+          browser: "Safari"
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Chrome", "visitors" => 1, "percentage" => 100}
+             ]
+    end
+
+    test "returns top browsers with :is_not filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          browser: "Chrome",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"]
+        ),
+        build(:pageview,
+          user_id: 123,
+          browser: "Chrome",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"]
+        ),
+        build(:pageview,
+          browser: "Firefox",
+          "meta.key": ["author"],
+          "meta.value": ["other"]
+        ),
+        build(:pageview,
+          browser: "Safari"
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
+      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Firefox", "visitors" => 1, "percentage" => 50},
+               %{"name" => "Safari", "visitors" => 1, "percentage" => 50}
+             ]
+    end
+
     test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1, browser: "Chrome"),

@@ -74,6 +74,46 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert html_response(conn, 200) =~
                "#{second_member.email} is already a member of #{site.domain}"
     end
+
+    test "redirects with an error flash when the invitation already exists", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site, members: [user])
+
+      _req1 =
+        post(conn, "/sites/#{site.domain}/memberships/invite", %{
+          email: "joe@example.com",
+          role: "admin"
+        })
+
+      assert_email_delivered_with(
+        to: [nil: "joe@example.com"],
+        subject: "[Plausible Analytics] You've been invited to #{site.domain}"
+      )
+
+      req2 =
+        post(conn, "/sites/#{site.domain}/memberships/invite", %{
+          email: "joe@example.com",
+          role: "admin"
+        })
+
+      refute_email_delivered_with(
+        to: [nil: "joe@example.com"],
+        subject: "[Plausible Analytics] You've been invited to #{site.domain}"
+      )
+
+      assert people_settings = redirected_to(req2, 302)
+
+      assert ^people_settings =
+               PlausibleWeb.Router.Helpers.site_path(
+                 PlausibleWeb.Endpoint,
+                 :settings_people,
+                 site.domain
+               )
+
+      assert get_flash(req2, :error) =~ "This invitation has been already sent."
+    end
   end
 
   describe "GET /sites/:website/transfer-ownership" do
@@ -158,6 +198,91 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       assert membership.role == :viewer
       assert redirected_to(conn) == "/#{site.domain}"
+    end
+
+    test "owner cannot make anyone else owner", %{
+      conn: conn,
+      user: user
+    } do
+      admin = insert(:user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner),
+            build(:site_membership, user: admin, role: :admin)
+          ]
+        )
+
+      membership = Repo.get_by(Plausible.Site.Membership, user_id: admin.id)
+
+      conn = put(conn, "/sites/#{site.domain}/memberships/#{membership.id}/role/owner")
+
+      membership = Repo.reload!(membership)
+
+      assert membership.role == :admin
+      assert get_flash(conn, :error) == "You are not allowed to grant the owner role"
+    end
+
+    test "owner cannot downgrade themselves", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
+
+      membership = Repo.get_by(Plausible.Site.Membership, user_id: user.id)
+
+      conn = put(conn, "/sites/#{site.domain}/memberships/#{membership.id}/role/admin")
+
+      membership = Repo.reload!(membership)
+
+      assert membership.role == :owner
+      assert get_flash(conn, :error) == "You are not allowed to grant the admin role"
+    end
+
+    test "admin can make another user admin", %{
+      conn: conn,
+      user: user
+    } do
+      viewer = insert(:user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :admin),
+            build(:site_membership, user: viewer, role: :viewer)
+          ]
+        )
+
+      viewer_membership = Repo.get_by(Plausible.Site.Membership, user_id: viewer.id)
+
+      conn = put(conn, "/sites/#{site.domain}/memberships/#{viewer_membership.id}/role/admin")
+
+      viewer_membership = Repo.reload!(viewer_membership)
+
+      assert viewer_membership.role == :admin
+      assert redirected_to(conn) == "/#{site.domain}/settings/people"
+    end
+
+    test "admin can't make themselves an owner", %{conn: conn, user: user} do
+      owner = insert(:user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: owner, role: :owner),
+            build(:site_membership, user: user, role: :admin)
+          ]
+        )
+
+      membership = Repo.get_by(Plausible.Site.Membership, user_id: user.id)
+
+      conn = put(conn, "/sites/#{site.domain}/memberships/#{membership.id}/role/owner")
+
+      membership = Repo.reload!(membership)
+
+      assert membership.role == :admin
+      assert get_flash(conn, :error) == "You are not allowed to grant the owner role"
     end
   end
 

@@ -1,8 +1,9 @@
 defmodule Plausible.Google.Api do
-  alias Plausible.Imported
+  alias Plausible.Google.{ReportRequest, HTTP}
   use Timex
   require Logger
-  require HTTPoison.Retry
+
+  @type google_analytics_view() :: {view_name :: String.t(), view_id :: String.t()}
 
   @scope URI.encode_www_form(
            "https://www.googleapis.com/auth/webmasters.readonly email https://www.googleapis.com/auth/analytics.readonly"
@@ -28,390 +29,238 @@ defmodule Plausible.Google.Api do
     end
   end
 
-  def fetch_access_token(code) do
-    res =
-      HTTPoison.post!(
-        "https://www.googleapis.com/oauth2/v4/token",
-        "client_id=#{client_id()}&client_secret=#{client_secret()}&code=#{code}&grant_type=authorization_code&redirect_uri=#{redirect_uri()}",
-        "Content-Type": "application/x-www-form-urlencoded"
-      )
-
-    Jason.decode!(res.body)
+  def fetch_verified_properties(auth) do
+    with {:ok, access_token} <- maybe_refresh_token(auth),
+         {:ok, sites} <- Plausible.Google.HTTP.list_sites(access_token) do
+      sites
+      |> Map.get("siteEntry", [])
+      |> Enum.filter(fn site -> site["permissionLevel"] in @verified_permission_levels end)
+      |> Enum.map(fn site -> site["siteUrl"] end)
+      |> Enum.map(fn url -> String.trim_trailing(url, "/") end)
+      |> then(&{:ok, &1})
+    end
   end
 
-  def fetch_verified_properties(auth) do
-    with {:ok, auth} <- refresh_if_needed(auth) do
-      res =
-        HTTPoison.get!("https://www.googleapis.com/webmasters/v3/sites",
-          "Content-Type": "application/json",
-          Authorization: "Bearer #{auth.access_token}"
+  def fetch_stats(site, %{filters: %{} = filters, date_range: date_range}, limit) do
+    with site <- Plausible.Repo.preload(site, :google_auth),
+         {:ok, access_token} <- maybe_refresh_token(site.google_auth),
+         {:ok, stats} <-
+           HTTP.list_stats(
+             access_token,
+             site.google_auth.property,
+             date_range,
+             limit,
+             filters["page"]
+           ) do
+      stats
+      |> Map.get("rows", [])
+      |> Enum.filter(fn row -> row["clicks"] > 0 end)
+      |> Enum.map(fn row -> %{name: row["keys"], visitors: round(row["clicks"])} end)
+      |> then(&{:ok, &1})
+    end
+  end
+
+  @spec list_views(access_token :: String.t()) ::
+          {:ok, %{(hostname :: String.t()) => [google_analytics_view()]}} | {:error, term()}
+  @doc """
+  Lists Google Analytics views grouped by hostname.
+  """
+  def list_views(access_token) do
+    case HTTP.list_views_for_user(access_token) do
+      {:ok, %{"items" => views}} ->
+        views = Enum.group_by(views, &view_hostname/1, &view_names/1)
+        {:ok, views}
+
+      error ->
+        error
+    end
+  end
+
+  defp view_hostname(view) do
+    case view do
+      %{"websiteUrl" => url} when is_binary(url) -> url |> URI.parse() |> Map.get(:host)
+      _any -> "Others"
+    end
+  end
+
+  defp view_names(%{"name" => name, "id" => id}) do
+    {"#{id} - #{name}", id}
+  end
+
+  @spec get_view(access_token :: String.t(), lookup_id :: String.t()) ::
+          {:ok, google_analytics_view()} | {:ok, nil} | {:error, term()}
+  @doc """
+  Returns a single Google Analytics view if the user has access to it.
+  """
+  def get_view(access_token, lookup_id) do
+    case list_views(access_token) do
+      {:ok, views} ->
+        view =
+          views
+          |> Map.values()
+          |> List.flatten()
+          |> Enum.find(fn {_name, id} -> id == lookup_id end)
+
+        {:ok, view}
+
+      {:error, cause} ->
+        {:error, cause}
+    end
+  end
+
+  @type import_auth :: {
+          access_token :: String.t(),
+          refresh_token :: String.t(),
+          expires_at :: String.t()
+        }
+
+  @per_page 10_000
+  @max_attempts 5
+  @spec import_analytics(Plausible.Site.t(), Date.Range.t(), String.t(), import_auth()) ::
+          :ok | {:error, term()}
+  @doc """
+  Imports stats from a Google Analytics UA view to a Plausible site.
+
+  This function fetches Google Analytics reports in batches of #{@per_page} per
+  request. The batches are then buffered to Clickhouse by the
+  `Plausible.Google.Buffer` process.
+
+  Requests to Google Analytics can fail, and are retried at most
+  #{@max_attempts} times. Returns `:ok` when importing has finished or
+  `{:error, term()}` when a request to GA failed too many times.
+
+  Useful links:
+
+  - [Feature documentation](https://plausible.io/docs/google-analytics-import)
+  - [GA API reference](https://developers.google.com/analytics/devguides/reporting/core/v4/rest/v4/reports/batchGet#ReportRequest)
+  - [GA Dimensions reference](https://ga-dev-tools.web.app/dimensions-metrics-explorer)
+
+  """
+  def import_analytics(site, date_range, view_id, auth) do
+    with {:ok, access_token} <- maybe_refresh_token(auth),
+         :ok <- do_import_analytics(site, date_range, view_id, access_token) do
+      :ok
+    else
+      {:error, cause} ->
+        Sentry.capture_message("Failed to import from Google Analytics",
+          extra: %{site: site.domain, error: inspect(cause)}
         )
 
-      domains =
-        Jason.decode!(res.body)
-        |> Map.get("siteEntry", [])
-        |> Enum.filter(fn site -> site["permissionLevel"] in @verified_permission_levels end)
-        |> Enum.map(fn site -> site["siteUrl"] end)
-        |> Enum.map(fn url -> String.trim_trailing(url, "/") end)
-
-      {:ok, domains}
-    else
-      err -> err
+        {:error, cause}
     end
   end
 
-  defp property_base_url(property) do
-    case property do
-      "sc-domain:" <> domain -> "https://" <> domain
-      url -> url
-    end
-  end
+  defp do_import_analytics(site, date_range, view_id, access_token) do
+    {:ok, buffer} = Plausible.Google.Buffer.start_link()
 
-  def fetch_stats(site, query, limit) do
-    with {:ok, auth} <- refresh_if_needed(site.google_auth) do
-      do_fetch_stats(auth, query, limit)
-    else
-      err -> err
-    end
-  end
-
-  defp do_fetch_stats(auth, query, limit) do
-    property = URI.encode_www_form(auth.property)
-    base_url = property_base_url(auth.property)
-
-    filter_groups =
-      if query.filters["page"] do
-        [
-          %{
-            filters: [
-              %{
-                dimension: "page",
-                expression: "https://#{base_url}#{query.filters["page"]}"
-              }
-            ]
-          }
-        ]
-      end
-
-    res =
-      HTTPoison.post!(
-        "https://www.googleapis.com/webmasters/v3/sites/#{property}/searchAnalytics/query",
-        Jason.encode!(%{
-          startDate: Date.to_iso8601(query.date_range.first),
-          endDate: Date.to_iso8601(query.date_range.last),
-          dimensions: ["query"],
-          rowLimit: limit,
-          dimensionFilterGroups: filter_groups || %{}
-        }),
-        "Content-Type": "application/json",
-        Authorization: "Bearer #{auth.access_token}"
-      )
-
-    case res.status_code do
-      200 ->
-        terms =
-          (Jason.decode!(res.body)["rows"] || [])
-          |> Enum.filter(fn row -> row["clicks"] > 0 end)
-          |> Enum.map(fn row -> %{name: row["keys"], visitors: round(row["clicks"])} end)
-
-        {:ok, terms}
-
-      401 ->
-        Sentry.capture_message("Error fetching Google queries", extra: Jason.decode!(res.body))
-        {:error, :invalid_credentials}
-
-      403 ->
-        Sentry.capture_message("Error fetching Google queries", extra: Jason.decode!(res.body))
-        msg = Jason.decode!(res.body)["error"]["message"]
-        {:error, msg}
-
-      _ ->
-        Sentry.capture_message("Error fetching Google queries", extra: Jason.decode!(res.body))
-        {:error, :unknown}
-    end
-  end
-
-  def get_analytics_view_ids(token) do
-    res =
-      HTTPoison.get!(
-        "https://www.googleapis.com/analytics/v3/management/accounts/~all/webproperties/~all/profiles",
-        Authorization: "Bearer #{token}"
-      )
-
-    case res.status_code do
-      200 ->
-        profiles =
-          Jason.decode!(res.body)
-          |> Map.get("items")
-          |> Enum.map(fn item ->
-            uri = URI.parse(Map.get(item, "websiteUrl", ""))
-
-            if !uri.host do
-              Sentry.capture_message("No URI for view ID", extra: Jason.decode!(res.body))
-            end
-
-            host = uri.host || Map.get(item, "id", "")
-            name = Map.get(item, "name")
-            {"#{host} - #{name}", Map.get(item, "id")}
-          end)
-          |> Map.new()
-
-        {:ok, profiles}
-
-      _ ->
-        Sentry.capture_message("Error fetching Google view ID", extra: Jason.decode!(res.body))
-        {:error, res.body}
-    end
-  end
-
-  def get_analytics_start_date(view_id, token) do
-    report = %{
-      viewId: view_id,
-      dateRanges: [
-        %{
-          # The earliest valid date
-          startDate: "2005-01-01",
-          endDate: Timex.today() |> Date.to_iso8601()
+    result =
+      Enum.reduce_while(ReportRequest.full_report(), :ok, fn report_request, :ok ->
+        report_request = %ReportRequest{
+          report_request
+          | date_range: date_range,
+            view_id: view_id,
+            access_token: access_token,
+            page_token: nil,
+            page_size: @per_page
         }
-      ],
-      dimensions: [%{name: "ga:date", histogramBuckets: []}],
-      metrics: [%{expression: "ga:pageviews"}],
-      hideTotals: true,
-      hideValueRanges: true,
-      orderBys: [
-        %{
-          fieldName: "ga:date",
-          sortOrder: "ASCENDING"
-        }
-      ],
-      pageSize: 1
-    }
 
-    res =
-      HTTPoison.post!(
-        "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
-        Jason.encode!(%{reportRequests: [report]}),
-        [Authorization: "Bearer #{token}"],
-        timeout: 15_000,
-        recv_timeout: 15_000
-      )
+        case fetch_and_persist(site, report_request, buffer: buffer) do
+          :ok -> {:cont, :ok}
+          {:error, _} = error -> {:halt, error}
+        end
+      end)
 
-    case res.status_code do
-      200 ->
-        report = List.first(Jason.decode!(res.body)["reports"])
+    Plausible.Google.Buffer.flush(buffer)
+    Plausible.Google.Buffer.stop(buffer)
 
-        date =
-          case report["data"]["rows"] do
-            [%{"dimensions" => [date_str]}] ->
-              Timex.parse!(date_str, "%Y%m%d", :strftime) |> NaiveDateTime.to_date()
-
-            _ ->
-              nil
-          end
-
-        {:ok, date}
-
-      _ ->
-        Sentry.capture_message("Error fetching Google view ID", extra: Jason.decode!(res.body))
-        {:error, res.body}
-    end
+    result
   end
 
-  # Each element is: {dataset, dimensions, metrics}
-  @request_data [
-    {
-      "imported_visitors",
-      ["ga:date"],
-      [
-        "ga:users",
-        "ga:pageviews",
-        "ga:bounces",
-        "ga:sessions",
-        "ga:sessionDuration"
-      ]
-    },
-    {
-      "imported_sources",
-      ["ga:date", "ga:source", "ga:medium", "ga:campaign", "ga:adContent", "ga:keyword"],
-      ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-    },
-    {
-      "imported_pages",
-      ["ga:date", "ga:hostname", "ga:pagePath"],
-      ["ga:users", "ga:pageviews", "ga:exits", "ga:timeOnPage"]
-    },
-    {
-      "imported_entry_pages",
-      ["ga:date", "ga:landingPagePath"],
-      ["ga:users", "ga:entrances", "ga:sessionDuration", "ga:bounces"]
-    },
-    {
-      "imported_exit_pages",
-      ["ga:date", "ga:exitPagePath"],
-      ["ga:users", "ga:exits"]
-    },
-    {
-      "imported_locations",
-      ["ga:date", "ga:countryIsoCode", "ga:regionIsoCode"],
-      ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-    },
-    {
-      "imported_devices",
-      ["ga:date", "ga:deviceCategory"],
-      ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-    },
-    {
-      "imported_browsers",
-      ["ga:date", "ga:browser"],
-      ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-    },
-    {
-      "imported_operating_systems",
-      ["ga:date", "ga:operatingSystem"],
-      ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
-    }
-  ]
+  @spec fetch_and_persist(Plausible.Site.t(), ReportRequest.t(), Keyword.t()) ::
+          :ok | {:error, term()}
+  def fetch_and_persist(site, %ReportRequest{} = report_request, opts \\ []) do
+    buffer_pid = Keyword.get(opts, :buffer)
+    attempt = Keyword.get(opts, :attempt, 1)
+    sleep_time = Keyword.get(opts, :sleep_time, 1000)
+    http_client = Keyword.get(opts, :http_client, Finch)
 
-  @doc """
-  API reference:
-  https://developers.google.com/analytics/devguides/reporting/core/v4/rest/v4/reports/batchGet#ReportRequest
+    case HTTP.get_report(http_client, report_request) do
+      {:ok, {rows, next_page_token}} ->
+        records = Plausible.Imported.from_google_analytics(rows, site.id, report_request.dataset)
+        :ok = Plausible.Google.Buffer.insert_many(buffer_pid, report_request.dataset, records)
 
-  Dimensions reference: https://ga-dev-tools.web.app/dimensions-metrics-explorer
-  """
-  def import_analytics(site, date_range, view_id, access_token) do
-    for month_batch <- prepare_batches(date_range, view_id, access_token) do
-      tasks =
-        for batch_request <- month_batch do
-          Task.async(fn -> fetch_and_persist(site, batch_request) end)
+        if next_page_token do
+          fetch_and_persist(
+            site,
+            %ReportRequest{report_request | page_token: next_page_token},
+            opts
+          )
+        else
+          :ok
         end
 
-      # 1 hour max to get 1 month's worth of data
-      Task.await_many(tasks, 3_600_000)
-    end
-
-    :ok
-  end
-
-  defp prepare_batches(import_date_range, view_id, access_token) do
-    total_months = Timex.diff(import_date_range.last, import_date_range.first, :months)
-
-    monthly_batches =
-      for month <- 0..total_months do
-        batch_start_date = Timex.shift(import_date_range.first, months: month)
-        batch_end_date = Timex.shift(batch_start_date, months: 1, days: -1)
-
-        batch_end_date =
-          if Timex.before?(import_date_range.last, batch_end_date),
-            do: import_date_range.last,
-            else: batch_end_date
-
-        Date.range(batch_start_date, batch_end_date)
-      end
-
-    for date_range <- monthly_batches do
-      for {dataset, dimensions, metrics} <- @request_data do
-        %{
-          dataset: dataset,
-          dimensions: dimensions,
-          metrics: metrics,
-          date_range: date_range,
-          view_id: view_id,
-          access_token: access_token,
-          page_token: nil
-        }
-      end
+      {:error, cause} ->
+        if attempt >= @max_attempts do
+          {:error, cause}
+        else
+          Process.sleep(sleep_time)
+          fetch_and_persist(site, report_request, Keyword.merge(opts, attempt: attempt + 1))
+        end
     end
   end
 
-  defp fetch_and_persist(site, request) do
-    report_request = build_import_report_request(request)
-
-    {:ok, res} =
-      HTTPoison.post(
-        "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
-        Jason.encode!(%{reportRequests: [report_request]}),
-        [Authorization: "Bearer #{request.access_token}"],
-        timeout: 30_000,
-        recv_timeout: 30_000
-      )
-      |> HTTPoison.Retry.autoretry(max_attempts: 5, wait: 5_000)
-
-    if res.status_code == 200 do
-      report = List.first(Jason.decode!(res.body)["reports"])
-      data = get_in(report, ["data", "rows"])
-      Imported.from_google_analytics(data, site.id, request.dataset)
-
-      case report["nextPageToken"] do
-        nil ->
-          :ok
-
-        token ->
-          fetch_and_persist(site, %{request | page_token: token})
-      end
+  defp maybe_refresh_token(%Plausible.Site.GoogleAuth{} = auth) do
+    with true <- needs_to_refresh_token?(auth.expires),
+         {:ok, {new_access_token, expires_at}} <- do_refresh_token(auth.refresh_token),
+         changeset <-
+           Plausible.Site.GoogleAuth.changeset(auth, %{
+             access_token: new_access_token,
+             expires: expires_at
+           }),
+         {:ok, _google_auth} <- Plausible.Repo.update(changeset) do
+      {:ok, new_access_token}
     else
-      {:error, Jason.decode!(res.body)["error"]["message"]}
+      false -> {:ok, auth.access_token}
+      {:error, cause} -> {:error, cause}
     end
   end
 
-  defp build_import_report_request(request) do
-    %{
-      viewId: request.view_id,
-      dateRanges: [
-        %{
-          startDate: request.date_range.first,
-          endDate: request.date_range.last
-        }
-      ],
-      dimensions: Enum.map(request.dimensions, &%{name: &1, histogramBuckets: []}),
-      metrics: Enum.map(request.metrics, &%{expression: &1}),
-      hideTotals: true,
-      hideValueRanges: true,
-      orderBys: [
-        %{
-          fieldName: "ga:date",
-          sortOrder: "DESCENDING"
-        }
-      ],
-      pageSize: 10_000,
-      pageToken: request.page_token
-    }
+  defp maybe_refresh_token({access_token, nil, nil}) do
+    {:ok, access_token}
   end
 
-  defp refresh_if_needed(auth) do
-    if Timex.before?(auth.expires, Timex.now() |> Timex.shift(seconds: 30)) do
-      refresh_token(auth)
+  defp maybe_refresh_token({access_token, refresh_token, expires_at}) do
+    if needs_to_refresh_token?(expires_at) do
+      do_refresh_token(refresh_token)
     else
-      {:ok, auth}
+      {:ok, access_token}
     end
   end
 
-  defp refresh_token(auth) do
-    res =
-      HTTPoison.post!(
-        "https://www.googleapis.com/oauth2/v4/token",
-        "client_id=#{client_id()}&client_secret=#{client_secret()}&refresh_token=#{auth.refresh_token}&grant_type=refresh_token&redirect_uri=#{redirect_uri()}",
-        "Content-Type": "application/x-www-form-urlencoded"
-      )
+  defp do_refresh_token(refresh_token) do
+    case HTTP.refresh_auth_token(refresh_token) do
+      {:ok, %{"access_token" => new_access_token, "expires_in" => expires_in}} ->
+        expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(), expires_in)
+        {:ok, {new_access_token, expires_at}}
 
-    body = Jason.decode!(res.body)
-
-    if res.status_code == 200 do
-      Plausible.Site.GoogleAuth.changeset(auth, %{
-        access_token: body["access_token"],
-        expires: NaiveDateTime.utc_now() |> NaiveDateTime.add(body["expires_in"])
-      })
-      |> Plausible.Repo.update()
-    else
-      {:error, body["error"]}
+      {:error, cause} ->
+        {:error, cause}
     end
+  end
+
+  defp needs_to_refresh_token?(expires_at) when is_binary(expires_at) do
+    expires_at
+    |> NaiveDateTime.from_iso8601!()
+    |> needs_to_refresh_token?()
+  end
+
+  defp needs_to_refresh_token?(%NaiveDateTime{} = expires_at) do
+    thirty_seconds_ago = Timex.shift(Timex.now(), seconds: 30)
+    Timex.before?(expires_at, thirty_seconds_ago)
   end
 
   defp client_id() do
     Keyword.fetch!(Application.get_env(:plausible, :google), :client_id)
-  end
-
-  defp client_secret() do
-    Keyword.fetch!(Application.get_env(:plausible, :google), :client_secret)
   end
 
   defp redirect_uri() do

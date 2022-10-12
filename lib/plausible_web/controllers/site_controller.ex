@@ -50,14 +50,12 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def new(conn, _params) do
-    current_user = conn.assigns[:current_user] |> Repo.preload(site_memberships: :site)
+    current_user = conn.assigns[:current_user]
 
-    owned_site_count =
-      current_user.site_memberships |> Enum.filter(fn m -> m.role == :owner end) |> Enum.count()
-
+    owned_site_count = Plausible.Sites.owned_sites_count(current_user)
     site_limit = Plausible.Billing.sites_limit(current_user)
     is_at_limit = site_limit && owned_site_count >= site_limit
-    is_first_site = Enum.empty?(current_user.site_memberships)
+    is_first_site = owned_site_count == 0
 
     changeset = Plausible.Site.changeset(%Plausible.Site{})
 
@@ -72,13 +70,11 @@ defmodule PlausibleWeb.SiteController do
 
   def create_site(conn, %{"site" => site_params}) do
     user = conn.assigns[:current_user]
-    site_count = Enum.count(Plausible.Sites.owned_by(user))
+    site_count = Plausible.Sites.owned_sites_count(user)
     is_first_site = site_count == 0
 
     case Sites.create(user, site_params) do
       {:ok, %{site: site}} ->
-        Plausible.Slack.notify("#{user.name} created #{site.domain} [email=#{user.email}]")
-
         if is_first_site do
           PlausibleWeb.Email.welcome_email(user)
           |> Plausible.Mailer.send_email()
@@ -341,7 +337,7 @@ defmodule PlausibleWeb.SiteController do
 
   def reset_stats(conn, _params) do
     site = conn.assigns[:site]
-    Plausible.ClickhouseRepo.clear_stats_for(site.domain)
+    Plausible.Purge.delete_native_stats!(site)
 
     conn
     |> put_flash(:success, "#{site.domain} stats will be reset in a few minutes")
@@ -351,7 +347,7 @@ defmodule PlausibleWeb.SiteController do
   def delete_site(conn, _params) do
     site = conn.assigns[:site]
 
-    Plausible.Sites.delete!(site)
+    Plausible.Purge.delete_site!(site)
 
     conn
     |> put_flash(:success, "Site deleted successfully along with all pageviews")
@@ -640,7 +636,9 @@ defmodule PlausibleWeb.SiteController do
 
   def import_from_google_user_metric_notice(conn, %{
         "view_id" => view_id,
-        "access_token" => access_token
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "expires_at" => expires_at
       }) do
     site = conn.assigns[:site]
 
@@ -650,19 +648,26 @@ defmodule PlausibleWeb.SiteController do
       site: site,
       view_id: view_id,
       access_token: access_token,
+      refresh_token: refresh_token,
+      expires_at: expires_at,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
 
-  def import_from_google_view_id_form(conn, %{"access_token" => access_token}) do
+  def import_from_google_view_id_form(conn, %{
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "expires_at" => expires_at
+      }) do
     site = conn.assigns[:site]
-
-    view_ids = Plausible.Google.Api.get_analytics_view_ids(access_token)
+    view_ids = Plausible.Google.Api.list_views(access_token)
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("import_from_google_view_id_form.html",
       access_token: access_token,
+      refresh_token: refresh_token,
+      expires_at: expires_at,
       site: site,
       view_ids: view_ids,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
@@ -671,18 +676,41 @@ defmodule PlausibleWeb.SiteController do
 
   # see https://stackoverflow.com/a/57416769
   @google_analytics_new_user_metric_date ~D[2016-08-24]
-  def import_from_google_view_id(conn, %{"view_id" => view_id, "access_token" => access_token}) do
+  def import_from_google_view_id(conn, %{
+        "view_id" => view_id,
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "expires_at" => expires_at
+      }) do
     site = conn.assigns[:site]
-    start_date = Plausible.Google.Api.get_analytics_start_date(view_id, access_token)
+    start_date = Plausible.Google.HTTP.get_analytics_start_date(view_id, access_token)
 
     case start_date do
+      {:ok, nil} ->
+        site = conn.assigns[:site]
+        view_ids = Plausible.Google.Api.list_views(access_token)
+
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("import_from_google_view_id_form.html",
+          access_token: access_token,
+          refresh_token: refresh_token,
+          expires_at: expires_at,
+          site: site,
+          view_ids: view_ids,
+          selected_view_id_error: "No data found. Nothing to import",
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
       {:ok, date} ->
         if Timex.before?(date, @google_analytics_new_user_metric_date) do
           redirect(conn,
             to:
               Routes.site_path(conn, :import_from_google_user_metric_notice, site.domain,
                 view_id: view_id,
-                access_token: access_token
+                access_token: access_token,
+                refresh_token: refresh_token,
+                expires_at: expires_at
               )
           )
         else
@@ -690,31 +718,37 @@ defmodule PlausibleWeb.SiteController do
             to:
               Routes.site_path(conn, :import_from_google_confirm, site.domain,
                 view_id: view_id,
-                access_token: access_token
+                access_token: access_token,
+                refresh_token: refresh_token,
+                expires_at: expires_at
               )
           )
         end
     end
   end
 
-  def import_from_google_confirm(conn, %{"access_token" => access_token, "view_id" => view_id}) do
+  def import_from_google_confirm(conn, %{
+        "view_id" => view_id,
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "expires_at" => expires_at
+      }) do
     site = conn.assigns[:site]
 
-    start_date = Plausible.Google.Api.get_analytics_start_date(view_id, access_token)
+    start_date = Plausible.Google.HTTP.get_analytics_start_date(view_id, access_token)
+    end_date = Plausible.Sites.stats_start_date(site) || Timex.today(site.timezone)
 
-    end_date =
-      Plausible.Stats.Clickhouse.pageview_start_date_local(site) || Timex.today(site.timezone)
-
-    {:ok, view_ids} = Plausible.Google.Api.get_analytics_view_ids(access_token)
-    {view_id_name, _} = Enum.find(view_ids, fn {_, v} -> v == view_id end)
+    {:ok, {view_name, view_id}} = Plausible.Google.Api.get_view(access_token, view_id)
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("import_from_google_confirm.html",
       access_token: access_token,
+      refresh_token: refresh_token,
+      expires_at: expires_at,
       site: site,
       selected_view_id: view_id,
-      selected_view_id_name: view_id_name,
+      selected_view_id_name: view_name,
       start_date: start_date,
       end_date: end_date,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
@@ -725,7 +759,9 @@ defmodule PlausibleWeb.SiteController do
         "view_id" => view_id,
         "start_date" => start_date,
         "end_date" => end_date,
-        "access_token" => access_token
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "expires_at" => expires_at
       }) do
     site = conn.assigns[:site]
 
@@ -735,7 +771,9 @@ defmodule PlausibleWeb.SiteController do
         "view_id" => view_id,
         "start_date" => start_date,
         "end_date" => end_date,
-        "access_token" => access_token
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "token_expires_at" => expires_at
       })
 
     Ecto.Multi.new()

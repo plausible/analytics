@@ -6,7 +6,11 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
   def init(allowed_roles), do: allowed_roles
 
   def call(conn, allowed_roles) do
-    site = Repo.get_by(Plausible.Site, domain: conn.params["domain"] || conn.params["website"])
+    site =
+      Repo.get_by(Plausible.Site,
+        domain: conn.path_params["domain"] || conn.path_params["website"]
+      )
+
     shared_link_auth = conn.params["auth"]
 
     shared_link_record =

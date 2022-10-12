@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- The ability to escape `|` characters with `\` in Stats API filter values
+- An upper bound of 1000 to the `limit` parameter in Stats API
+- The `exclusions` script extension now also takes a `data-include` attribute tag
 - A `file-downloads` script extension for automatically tracking file downloads as custom events
 - Integration with [Matomo's referrer spam list](https://github.com/matomo-org/referrer-spam-list/blob/master/spammers.txt) to block known spammers
 - API route `PUT /api/v1/sites/goals` with form params `site_id`, `event_name` and/or `page_path`, and `goal_type` with supported types `event` and `page`
@@ -22,19 +25,51 @@ All notable changes to this project will be documented in this file.
 - The breakdown endpoint with the property query `property=event:goal` returns custom goal properties (within `props`)
 - Added IPv6 Ecto support (via the environment-variable `ECTO_IPV6`)
 - New filter type: `contains`, available for `page`, `entry_page`, `exit_page`
+- Add filter for custom property
+- Add ability to import historical data from GA: plausible/analytics#1753
+- API route `GET /api/v1/sites/:site_id`
+- Hovering on top of list items will now show a [tooltip with the exact number instead of a shortened version](https://github.com/plausible/analytics/discussions/1968)
+- Filter goals in realtime filter by clicking goal name
+- The time format (12 hour or 24 hour) for graph timelines is now presented based on the browser's defined language
+- Choice of metric for main-graph both in UI and API (visitors, pageviews, bounce_rate, visit_duration) plausible/analytics#1364
+- New width=manual mode for embedded dashboards plausible/analytics#2148
+- Add more timezone options
+- Add new strategy to recommend timezone when creating a new site
+- Alert outgrown enterprise users of their usage plausible/analytics#2197
+- Manually lock and unlock enterprise users plausible/analytics#2197
+- ARM64 support for docker images plausible/analytics#2103
+- Add support for international domain names (IDNs) plausible/analytics#2034
 
 ### Fixed
+- Plausible script does not prevent default if it's been prevented by an external script [plausible/analytics#1941](https://github.com/plausible/analytics/issues/1941)
+- Hash part of the URL can now be used when excluding pages with `script.exclusions.hash.js`.
 - UI fix where multi-line text in pills would not be underlined properly on small screens.
 - UI fix to align footer columns
 - Guests can now use the favicon to toggle additional info about the site bing viewed (such as in public embeds).
 - Fix SecurityError in tracking script when user has blocked all local storage
 - Prevent dashboard graph from being selected when long pressing on the graph in a mobile browser
+- The exported `pages.csv` file now includes pageviews again [plausible/analytics#1878](https://github.com/plausible/analytics/issues/1878)
+- Fix a bug where city, region and country filters were filtering stats but not the location list
+- Fix a bug where regions were not being saved
+- Timezone offset labels now update with time changes
+- Render 404 if shared link auth cannot be verified [plausible/analytics#2225](https://github.com/plausible/analytics/pull/2225)
+- Restore compatibility with older format of shared links [plausible/analytics#2225](https://github.com/plausible/analytics/pull/2225)
+- Fix 'All time' period for sites with no recorded stats [plausible/analytics#2277](https://github.com/plausible/analytics/pull/2277)
+- Ensure settings page can be rendered after a form error [plausible/analytics#2278](https://github.com/plausible/analytics/pull/2278)
+
+>>>>>>> 09af319b (Add changelog)
 
 ### Changed
+- `script.file-downloads.outbound-links.js` only sends an outbound link event when an outbound download link is clicked
+- Plausible script now uses callback navigation (instead of waiting for 150ms every time) when sending custom events
 - Cache the tracking script for 24 hours
 - Move `entry_page` and `exit_page` to be part of the `Page` filter group
 - Paginate /api/sites results and add a `View all` link to the site-switcher dropdown in the dashboard.
 - Remove the `+ Add Site` link to the site-switcher dropdown in the dashboard.
+- `DISABLE_REGISTRATIONS` configuration parameter can now accept `invite_only` to allow invited users to register an account while keeping regular registrations disabled plausible/analytics#1841
+- New and improved Session tracking module for higher throughput and lower latency. [PR#1934](https://github.com/plausible/analytics#1934)
+- Do not display ZZ country code in countries report [PR#1934](https://github.com/plausible/analytics#2223)
+- Add fallback icon for when DDG favicon cannot be fetched [PR#2279](https://github.com/plausible/analytics#2279)
 
 ## v1.4.1
 
@@ -57,7 +92,6 @@ All notable changes to this project will be documented in this file.
 - Ability to invite users to sites with different roles plausible/analytics#1122
 - Option to configure a custom name for the script file
 - Add Conversion Rate to Top Sources, Top Pages Devices, Countries when filtered by a goal plausible/analytics#1299
-- Choice of metric for main-graph both in UI and API (visitors, pageviews, bounce_rate, visit_duration) plausible/analytics#1364
 - Add list view for countries report in dashboard plausible/analytics#1381
 - Add ability to view more than 100 custom goal properties plausible/analytics#1382
 

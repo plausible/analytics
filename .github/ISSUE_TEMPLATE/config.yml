@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🚑 Self-Hosted help and support
+    url: https://github.com/plausible/analytics/discussions/categories/self-hosted-support
+    about: Please use the self-hosted community forum for any self-hosted issues and questions
+  - name: 💡 Feature requests and ideas
+    url: https://github.com/plausible/analytics/discussions/categories/feature-requests
+    about: Please vote for and post new feature ideas in the community forum
+  - name: 📖 Documentation
+    url: https://plausible.io/docs
+    about: A great place to find instructions and answers on how to get the most out of your Plausible experience

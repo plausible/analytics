@@ -15,6 +15,8 @@ defmodule Plausible.Site do
   alias Plausible.Auth.User
   alias Plausible.Site.GoogleAuth
 
+  @type t() :: %__MODULE__{}
+
   @derive {Jason.Encoder, only: [:domain, :timezone]}
   schema "sites" do
     field :domain, :string
@@ -41,14 +43,21 @@ defmodule Plausible.Site do
     site
     |> cast(attrs, [:domain, :timezone])
     |> validate_required([:domain, :timezone])
-    |> validate_format(:domain, ~r/^[a-zA-Z0-9\-\.\/\:]*$/,
+    |> clean_domain()
+    |> validate_format(:domain, ~r/^[-\.\\\/:\p{L}\d]*$/u,
       message: "only letters, numbers, slashes and period allowed"
     )
+    |> validate_domain_reserved_characters()
     |> unique_constraint(:domain,
       message:
         "This domain has already been taken. Perhaps one of your team members registered it? If that's not the case, please contact support@plausible.io"
     )
-    |> clean_domain
+  end
+
+  def crm_changeset(site, attrs) do
+    site
+    |> cast(attrs, [:timezone, :public, :stats_start_date])
+    |> validate_required([:timezone, :public])
   end
 
   def make_public(site) do
@@ -98,6 +107,39 @@ defmodule Plausible.Site do
     change(site, imported_data: nil)
   end
 
+  @doc """
+  Returns the date of the first recorded stat in the timezone configured by the user.
+  This function does 2 transformations:
+    UTC %NaiveDateTime{} -> Local %DateTime{} -> Local %Date
+
+  ## Examples
+
+    iex> Plausible.Site.local_start_date(%Plausible.Site{stats_start_date: nil})
+    nil
+
+    iex> utc_start = ~N[2022-09-28 00:00:00]
+    iex> tz = "Europe/Helsinki"
+    iex> site = %Plausible.Site{stats_start_date: utc_start, timezone: tz}
+    iex> Plausible.Site.local_start_date(site)
+    ~D[2022-09-28]
+
+    iex> utc_start = ~N[2022-09-28 00:00:00]
+    iex> tz = "America/Los_Angeles"
+    iex> site = %Plausible.Site{stats_start_date: utc_start, timezone: tz}
+    iex> Plausible.Site.local_start_date(site)
+    ~D[2022-09-27]
+  """
+  def local_start_date(%__MODULE__{stats_start_date: nil}) do
+    nil
+  end
+
+  def local_start_date(site) do
+    site.stats_start_date
+    |> Timex.Timezone.convert("UTC")
+    |> Timex.Timezone.convert(site.timezone)
+    |> Timex.to_date()
+  end
+
   defp clean_domain(changeset) do
     clean_domain =
       (get_field(changeset, :domain) || "")
@@ -111,5 +153,21 @@ defmodule Plausible.Site do
     change(changeset, %{
       domain: clean_domain
     })
+  end
+
+  # https://tools.ietf.org/html/rfc3986#section-2.2
+  @uri_reserved_chars ~w(: ? # [ ] @ ! $ & ' \( \) * + , ; =)
+  defp validate_domain_reserved_characters(changeset) do
+    domain = get_field(changeset, :domain) || ""
+
+    if String.contains?(domain, @uri_reserved_chars) do
+      add_error(
+        changeset,
+        :domain,
+        "must not contain URI reserved characters #{@uri_reserved_chars}"
+      )
+    else
+      changeset
+    end
   end
 end

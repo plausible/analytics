@@ -120,23 +120,17 @@ defmodule Plausible.TestUtils do
   defp populate_native_stats(events) do
     sessions =
       Enum.reduce(events, %{}, fn event, sessions ->
-        Plausible.Session.Store.reconcile_event(sessions, event)
+        session_id = Plausible.Session.CacheStore.on_event(event, nil)
+        Map.put(sessions, {event.domain, event.user_id}, session_id)
       end)
 
-    events =
-      Enum.map(events, fn event ->
-        Map.put(event, :session_id, sessions[{event.domain, event.user_id}].session_id)
-      end)
+    Enum.each(events, fn event ->
+      event = Map.put(event, :session_id, sessions[{event.domain, event.user_id}])
+      Plausible.Event.WriteBuffer.insert(event)
+    end)
 
-    Plausible.ClickhouseRepo.insert_all(
-      Plausible.ClickhouseEvent,
-      Enum.map(events, &schema_to_map/1)
-    )
-
-    Plausible.ClickhouseRepo.insert_all(
-      Plausible.ClickhouseSession,
-      Enum.map(Map.values(sessions), &schema_to_map/1)
-    )
+    Plausible.Session.WriteBuffer.flush()
+    Plausible.Event.WriteBuffer.flush()
   end
 
   defp populate_imported_stats(events) do
@@ -150,8 +144,16 @@ defmodule Plausible.TestUtils do
     |> NaiveDateTime.truncate(:second)
   end
 
-  defp schema_to_map(schema) do
-    Map.from_struct(schema)
-    |> Map.delete(:__meta__)
+  def eventually(expectation, wait_time_ms \\ 50, retries \\ 10) do
+    Enum.reduce_while(1..retries, nil, fn _i, _acc ->
+      case expectation.() do
+        {true, result} ->
+          {:halt, result}
+
+        {false, _} ->
+          Process.sleep(wait_time_ms)
+          {:cont, nil}
+      end
+    end)
   end
 end

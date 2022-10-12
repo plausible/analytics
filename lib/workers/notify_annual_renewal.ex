@@ -19,6 +19,12 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
         }
       )
 
+    sent_notification =
+      from(
+        s in "sent_renewal_notifications",
+        where: s.timestamp > fragment("now() - INTERVAL '1 month'")
+      )
+
     users =
       Repo.all(
         from u in Plausible.Auth.User,
@@ -26,13 +32,13 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
           on: cs.user_id == u.id,
           join: s in Plausible.Billing.Subscription,
           on: s.inserted_at == cs.inserted_at,
-          left_join: sent in "sent_renewal_notifications",
+          left_join: sent in ^sent_notification,
           on: s.user_id == sent.user_id,
+          where: is_nil(sent.id),
           where: s.paddle_plan_id in @yearly_plans,
           where:
             s.next_bill_date > fragment("now()::date") and
               s.next_bill_date <= fragment("now()::date + INTERVAL '7 days'"),
-          where: is_nil(sent.id) or sent.timestamp < fragment("now() - INTERVAL '1 month'"),
           preload: [subscription: s]
       )
 

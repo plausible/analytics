@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.SiteControllerTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
   use Bamboo.Test
   use Oban.Testing, repo: Plausible.Repo
@@ -722,6 +722,41 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
+  describe "GET /:website/import/google-analytics/view-id" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    test "lists Google Analytics views", %{conn: conn, site: site} do
+      bypass = Bypass.open()
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/analytics/v3/management/accounts/~all/webproperties/~all/profiles",
+        fn conn ->
+          response_body = File.read!("fixture/ga_list_views.json")
+          Plug.Conn.resp(conn, 200, response_body)
+        end
+      )
+
+      :plausible
+      |> Application.get_env(:google)
+      |> Keyword.put(:api_url, "http://0.0.0.0:#{bypass.port}")
+      |> then(&Application.put_env(:plausible, :google, &1))
+
+      response =
+        conn
+        |> get("/#{site.domain}/import/google-analytics/view-id", %{
+          "access_token" => "token",
+          "refresh_token" => "foo",
+          "expires_at" => "2022-09-22T20:01:37.112777"
+        })
+        |> html_response(200)
+
+      assert response =~ "57238190 - one.test"
+      assert response =~ "54460083 - two.test"
+    end
+  end
+
   describe "POST /:website/settings/google-import" do
     setup [:create_user, :log_in, :create_new_site]
 
@@ -730,7 +765,9 @@ defmodule PlausibleWeb.SiteControllerTest do
         "view_id" => "123",
         "start_date" => "2018-03-01",
         "end_date" => "2022-03-01",
-        "access_token" => "token"
+        "access_token" => "token",
+        "refresh_token" => "foo",
+        "expires_at" => "2022-09-22T20:01:37.112777"
       })
 
       imported_data = Repo.reload(site).imported_data
@@ -746,7 +783,9 @@ defmodule PlausibleWeb.SiteControllerTest do
         "view_id" => "123",
         "start_date" => "2018-03-01",
         "end_date" => "2022-03-01",
-        "access_token" => "token"
+        "access_token" => "token",
+        "refresh_token" => "foo",
+        "expires_at" => "2022-09-22T20:01:37.112777"
       })
 
       assert_enqueued(
@@ -756,7 +795,9 @@ defmodule PlausibleWeb.SiteControllerTest do
           "view_id" => "123",
           "start_date" => "2018-03-01",
           "end_date" => "2022-03-01",
-          "access_token" => "token"
+          "access_token" => "token",
+          "refresh_token" => "foo",
+          "token_expires_at" => "2022-09-22T20:01:37.112777"
         }
       )
     end

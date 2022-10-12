@@ -1,6 +1,6 @@
 import React, { Fragment, useState } from 'react';
 import { Link, withRouter } from 'react-router-dom'
-import { AdjustmentsIcon, SearchIcon, XIcon, PencilIcon } from '@heroicons/react/solid'
+import { AdjustmentsVerticalIcon, MagnifyingGlassIcon, XMarkIcon, PencilSquareIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import { Menu, Transition } from '@headlessui/react'
 
@@ -17,7 +17,6 @@ function removeFilter(key, history, query) {
   const newOpts = {
     [key]: false
   }
-  if (key === 'goal')    { newOpts.props = false }
   if (key === 'country') { newOpts.country_name = false }
   if (key === 'region')  { newOpts.region_name = false }
   if (key === 'city')    { newOpts.city_name = false }
@@ -39,7 +38,7 @@ function clearAllFilters(history, query) {
 }
 
 function filterText(key, rawValue, query) {
-  const type = toFilterType(rawValue)
+  let type = toFilterType(rawValue)
   const value = valueWithoutPrefix(rawValue)
 
   if (key === "goal") {
@@ -48,7 +47,7 @@ function filterText(key, rawValue, query) {
   if (key === "props") {
     const [metaKey, metaValue] = Object.entries(value)[0]
     const eventName = query.filters.goal ? query.filters.goal : 'event'
-    return <>{eventName}.{metaKey} is <b>{metaValue}</b></>
+    return <>{eventName}.{metaKey} {toFilterType(metaValue)} <b>{valueWithoutPrefix(metaValue)}</b></>
   }
   if (key === "browser_version") {
     const browserName = query.filters.browser ? query.filters.browser : 'Browser'
@@ -86,19 +85,6 @@ function filterText(key, rawValue, query) {
 }
 
 function renderDropdownFilter(site, history, [key, value], query) {
-  if (key === 'props') {
-    return (
-      <Menu.Item key={key}>
-        <div className="px-4 sm:py-2 py-3 text-sm leading-tight flex items-center justify-between" key={key + value}>
-          <span className="inline-block w-full truncate">{filterText(key, value, query)}</span>
-          <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>
-            <XIcon className="w-4 h-4" />
-          </b>
-        </div>
-      </Menu.Item>
-    )
-  }
-
   return (
     <Menu.Item key={key}>
       <div className="px-3 md:px-4 sm:py-2 py-3 text-sm leading-tight flex items-center justify-between" key={key + value}>
@@ -109,10 +95,10 @@ function renderDropdownFilter(site, history, [key, value], query) {
           style={{width: 'calc(100% - 1.5rem)'}}
         >
           <span className="inline-block w-full truncate">{filterText(key, value, query)}</span>
-          <PencilIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
+          <PencilSquareIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
         </Link>
         <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>
-          <XIcon className="w-4 h-4" />
+          <XMarkIcon className="w-4 h-4" />
         </b>
       </div>
     </Menu.Item>
@@ -141,7 +127,9 @@ function DropdownContent({history, site, query, wrapped}) {
   const [addingFilter, setAddingFilter] = useState(false);
 
   if (wrapped === 0 || addingFilter) {
-    return Object.keys(FILTER_GROUPS).map((option) => filterDropdownOption(site, option))
+    return Object.keys(FILTER_GROUPS)
+      .filter((option) => option === 'props' ? site.flags.custom_dimension_filter : true)
+      .map((option) => filterDropdownOption(site, option))
   }
 
   return (
@@ -249,19 +237,11 @@ class Filters extends React.Component {
   renderListFilter(history, [key, value], query) {
     return (
       <span key={key} title={value} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
-        {key === 'props' ? (
-          <span className="flex w-full h-full items-center py-2 pl-3">
-            <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(key, value, query)}</span>
-          </span>
-        ) : (
-          <>
-            <Link title={`Edit filter: ${formattedFilters[key]}`} className="flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}>
-              <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(key, value, query)}</span>
-            </Link>
-          </>
-        )}
+        <Link title={`Edit filter: ${formattedFilters[key]}`} className="flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}>
+          <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(key, value, query)}</span>
+        </Link>
         <span title={`Remove filter: ${formattedFilters[key]}`} className="flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center" onClick={() => removeFilter(key, history, query)}>
-          <XIcon className="w-4 h-4" />
+          <XMarkIcon className="w-4 h-4" />
         </span>
       </span>
     )
@@ -272,7 +252,7 @@ class Filters extends React.Component {
       const filterCount = appliedFilters(this.props.query).length
       return (
         <>
-          <AdjustmentsIcon className="-ml-1 mr-1 h-4 w-4" aria-hidden="true" />
+          <AdjustmentsVerticalIcon className="-ml-1 mr-1 h-4 w-4" aria-hidden="true" />
           {filterCount} Filter{filterCount === 1 ? '' : 's'}
         </>
       )
@@ -280,7 +260,7 @@ class Filters extends React.Component {
 
     return (
       <>
-        <SearchIcon className="-ml-1 mr-1 h-4 w-4 md:h-4 md:w-4" aria-hidden="true" />
+        <MagnifyingGlassIcon className="-ml-1 mr-1 h-4 w-4 md:h-4 md:w-4" aria-hidden="true" />
         {/* This would have been a good use-case for JSX! But in the interest of keeping the breakpoint width logic with TailwindCSS, this is a better long-term way to deal with it. */}
         <span className="sm:hidden">Filter</span><span className="hidden sm:inline-block">Filter</span>
       </>

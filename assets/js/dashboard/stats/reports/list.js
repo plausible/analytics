@@ -91,7 +91,7 @@ export default function ListReport(props) {
             <ExternalLink item={listItem} externalLinkDest={props.externalLinkDest}  />
           </span>
         </Bar>
-        <span className="font-medium dark:text-gray-200 w-20 text-right">
+        <span className="font-medium dark:text-gray-200 w-20 text-right" tooltip={listItem[valueKey]}>
           {numberFormatter(listItem[valueKey])}
           {
             listItem.percentage >= 0

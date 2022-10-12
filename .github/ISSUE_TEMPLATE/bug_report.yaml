@@ -14,7 +14,7 @@ body:
 
        Have an issue with your self-hosted install? Self-hosted is community supported and you can ask in [our self-hosted forum](https://github.com/plausible/analytics/discussions/categories/self-hosted-support).
 
-       Note also that self-hosted is a long term release published twice per year so latest features won’t be immediately available as they’re battled-tested in the cloud first. Take a look [at this list for features available in the self-hosted](https://github.com/plausible/analytics/releases).
+       Note that self-hosted is a long term release published twice per year so latest features won’t be immediately available. You can see all the [currently unreleased features in the changelog](https://github.com/plausible/analytics/blob/master/CHANGELOG.md).
 
        **Thanks!**
   - type: checkboxes

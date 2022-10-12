@@ -557,7 +557,15 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "does not show invoice section for a user with no subscription", %{conn: conn} do
       conn = get(conn, "/settings")
-      assert !(html_response(conn, 200) =~ "Invoices")
+      refute html_response(conn, 200) =~ "Invoices"
+    end
+
+    test "does not show invoice section for a free subscription", %{conn: conn, user: user} do
+      Plausible.Billing.Subscription.free(%{user_id: user.id, currency_code: "EUR"})
+      |> Repo.insert!()
+
+      conn = get(conn, "/settings")
+      refute html_response(conn, 200) =~ "Invoices"
     end
   end
 
@@ -575,6 +583,12 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = put(conn, "/settings", %{"user" => %{"name" => "New name"}})
 
       assert redirected_to(conn, 302) == "/settings"
+    end
+
+    test "renders form with error if form validations fail", %{conn: conn} do
+      conn = put(conn, "/settings", %{"user" => %{"name" => ""}})
+
+      assert html_response(conn, 200) =~ "can&#39;t be blank"
     end
   end
 
@@ -626,6 +640,54 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert Repo.get(Plausible.Site, viewer_site.id)
       refute Repo.get(Plausible.Site, owner_site.id)
+    end
+  end
+
+  describe "POST /settings/api-keys" do
+    setup [:create_user, :log_in]
+    import Ecto.Query
+
+    test "can't create api key into another site", %{conn: conn, user: me} do
+      my_site = insert(:site)
+      insert(:site_membership, site: my_site, user: me, role: "owner")
+
+      other_user = insert(:user)
+      other_site = insert(:site)
+      insert(:site_membership, site: other_site, user: other_user, role: "owner")
+
+      conn =
+        post(conn, "/settings/api-keys", %{
+          "api_key" => %{
+            "user_id" => other_user.id,
+            "name" => "all your code are belong to us",
+            "key" => "swordfish"
+          }
+        })
+
+      assert conn.status == 302
+
+      refute Plausible.Auth.ApiKey |> where(user_id: ^other_user.id) |> Repo.one()
+    end
+  end
+
+  describe "DELETE /settings/api-keys/:id" do
+    setup [:create_user, :log_in]
+    alias Plausible.Auth.ApiKey
+
+    test "can't delete api key that doesn't belong to me", %{conn: conn} do
+      other_user = insert(:user)
+      insert(:site_membership, site: insert(:site), user: other_user, role: "owner")
+
+      assert {:ok, %ApiKey{} = api_key} =
+               %ApiKey{user_id: other_user.id}
+               |> ApiKey.changeset(%{"name" => "other user's key"})
+               |> Repo.insert()
+
+      assert_raise Ecto.NoResultsError, fn ->
+        delete(conn, "/settings/api-keys/#{api_key.id}")
+      end
+
+      assert Repo.get(ApiKey, api_key.id)
     end
   end
 end

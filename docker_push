@@ -1,4 +1,0 @@
-#!/bin/bash
-echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-docker build -t plausible/analytics:dev .
-docker push plausible/analytics:dev

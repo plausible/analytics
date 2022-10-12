@@ -28,4 +28,11 @@ defmodule PlausibleWeb.Api.Helpers do
     |> Phoenix.Controller.json(%{error: msg})
     |> halt()
   end
+
+  def payment_required(conn, msg) do
+    conn
+    |> put_status(402)
+    |> Phoenix.Controller.json(%{error: msg})
+    |> halt()
+  end
 end

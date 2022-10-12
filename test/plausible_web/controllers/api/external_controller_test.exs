@@ -141,6 +141,21 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.pathname == "/"
     end
 
+    test "trailing whitespace is removed", %{conn: conn} do
+      params = %{
+        name: "pageview",
+        url: "http://www.example.com/path ",
+        domain: "external-controller-test-trailing-whitespace.com"
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-trailing-whitespace.com")
+
+      assert pageview.pathname == "/path"
+    end
+
     test "bots and crawlers are ignored", %{conn: conn} do
       params = %{
         name: "pageview",
@@ -248,6 +263,26 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert !get_event("ignore-spammers-test.com")
+    end
+
+    test "feature flag - blocks traffic from a domain when block_traffic is enabled", %{
+      conn: conn
+    } do
+      FunWithFlags.enable(:block_event_ingest, for_actor: "feature-flag-test.com")
+
+      params = %{
+        domain: "feature-flag-test.com",
+        name: "pageview",
+        url: "https://feature-flag-test.com"
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      assert response(conn, 202) == "ok"
+      refute get_event("feature-flag-test.com")
     end
 
     test "ignores when referrer is internal", %{conn: conn} do
@@ -509,7 +544,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         name: "Signup",
         url: "http://gigride.live/",
         domain: "custom-prop-test-4.com",
-        props: Jason.encode!(%{wat: ["some-thing"]})
+        props: Jason.encode!(%{wat: ["some-thing"], other: "key"})
       }
 
       conn = post(conn, "/api/event", params)
@@ -518,8 +553,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       event = get_event("custom-prop-test-4.com")
 
-      assert Map.get(event, :"meta.key") == []
-      assert Map.get(event, :"meta.value") == []
+      assert Map.get(event, :"meta.key") == ["other"]
+      assert Map.get(event, :"meta.value") == ["key"]
     end
 
     test "ignores custom prop with map value", %{conn: conn} do
@@ -527,7 +562,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         name: "Signup",
         url: "http://gigride.live/",
         domain: "custom-prop-test-5.com",
-        props: Jason.encode!(%{foo: %{bar: "baz"}})
+        props: Jason.encode!(%{foo: %{bar: "baz"}, other_key: 1})
       }
 
       conn = post(conn, "/api/event", params)
@@ -536,8 +571,44 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       event = get_event("custom-prop-test-5.com")
 
-      assert Map.get(event, :"meta.key") == []
-      assert Map.get(event, :"meta.value") == []
+      assert Map.get(event, :"meta.key") == ["other_key"]
+      assert Map.get(event, :"meta.value") == ["1"]
+    end
+
+    test "ignores custom prop with empty string value", %{conn: conn} do
+      params = %{
+        name: "Signup",
+        url: "http://gigride.live/",
+        domain: "custom-prop-test-empty-string-val.com",
+        props: Jason.encode!(%{foo: "", other_key: true})
+      }
+
+      conn = post(conn, "/api/event", params)
+
+      assert conn.status == 202
+
+      event = get_event("custom-prop-test-empty-string-val.com")
+
+      assert Map.get(event, :"meta.key") == ["other_key"]
+      assert Map.get(event, :"meta.value") == ["true"]
+    end
+
+    test "ignores custom prop with nil value", %{conn: conn} do
+      params = %{
+        name: "Signup",
+        url: "http://gigride.live/",
+        domain: "custom-prop-test-nil.com",
+        props: Jason.encode!(%{foo: nil, other_key: true})
+      }
+
+      conn = post(conn, "/api/event", params)
+
+      assert conn.status == 202
+
+      event = get_event("custom-prop-test-nil.com")
+
+      assert Map.get(event, :"meta.key") == ["other_key"]
+      assert Map.get(event, :"meta.value") == ["true"]
     end
 
     test "ignores a malformed referrer URL", %{conn: conn} do
@@ -560,7 +631,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     end
 
     # Fake data is set up in config/test.exs
-    test "looks up the country from the ip address", %{conn: conn} do
+    test "looks up location data from the ip address", %{conn: conn} do
       params = %{
         name: "pageview",
         domain: "external-controller-test-20.com",
@@ -568,12 +639,15 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> put_req_header("x-forwarded-for", "2.2.2.2")
       |> post("/api/event", params)
 
       pageview = get_event("external-controller-test-20.com")
 
-      assert pageview.country_code == "US"
+      assert pageview.country_code == "FR"
+      assert pageview.subdivision1_code == "FR-IDF"
+      assert pageview.subdivision2_code == "FR-75"
+      assert pageview.city_geoname_id == 2_988_507
     end
 
     test "ignores unknown country code ZZ", %{conn: conn} do
@@ -763,6 +837,22 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.pathname == "/#page-a"
     end
 
+    test "does not record hash when hash mode is 0", %{conn: conn} do
+      params = %{
+        n: "pageview",
+        u: "http://www.example.com/#page-a",
+        d: "external-controller-test-hash-0.com",
+        h: 0
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      pageview = get_event("external-controller-test-hash-0.com")
+
+      assert pageview.pathname == "/"
+    end
+
     test "decodes URL pathname, fragment and search", %{conn: conn} do
       params = %{
         n: "pageview",
@@ -780,22 +870,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.hostname == "test.com"
       assert pageview.pathname == "/ﺝﻭﺎﺋﺯ-ﻮﻤﺳﺎﺒﻗﺎﺗ"
       assert pageview.utm_source == "%balle%"
-    end
-
-    test "ignores invalid query param part", %{conn: conn} do
-      params = %{
-        n: "pageview",
-        u:
-          "https://test.com/?utm_source=Bing%20%7C%20Text%20%7C%20Leads%20%7C%20EIGEN%20NAAM-most%20broad%20(Various%20search%20term%20matches)%20%7C%20Afweging,%20Consumptie%20%7C%20T%3A%",
-        d: "invalid-query-test.com"
-      }
-
-      conn = post(conn, "/api/event", params)
-
-      assert conn.status == 202
-
-      pageview = get_event("invalid-query-test.com")
-      assert pageview.utm_source == ""
     end
 
     test "can use double quotes in query params", %{conn: conn} do
@@ -848,7 +922,9 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert json_response(conn, 400) == %{
                "errors" => %{
-                 "domain" => ["can't be blank"]
+                 "domain" => ["can't be blank"],
+                 "hostname" => ["can't be blank"],
+                 "user_id" => ["can't be blank"]
                }
              }
     end

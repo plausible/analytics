@@ -2,6 +2,7 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
   import Plug.Conn
   use Plausible.Repo
   alias Plausible.Auth.ApiKey
+  alias Plausible.Sites
   alias PlausibleWeb.Api.Helpers, as: H
 
   def init(options) do
@@ -38,20 +39,32 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
           conn,
           "Invalid API key or site ID. Please make sure you're using a valid API key with access to the site you've requested."
         )
+
+      {:error, :site_locked} ->
+        H.payment_required(
+          conn,
+          "This Plausible site is locked due to missing active subscription. In order to access it, the site owner should subscribe to a suitable plan"
+        )
     end
   end
 
   defp verify_access(_api_key, nil), do: {:error, :missing_site_id}
 
   defp verify_access(api_key, site_id) do
-    site = Repo.get_by(Plausible.Site, domain: site_id)
-    is_member = site && Plausible.Sites.is_member?(api_key.user_id, site)
-    is_super_admin = Plausible.Auth.is_super_admin?(api_key.user_id)
+    case Repo.get_by(Plausible.Site, domain: site_id) do
+      %Plausible.Site{} = site ->
+        is_member? = Sites.is_member?(api_key.user_id, site)
+        is_super_admin? = Plausible.Auth.is_super_admin?(api_key.user_id)
 
-    cond do
-      site && is_member -> {:ok, site}
-      site && is_super_admin -> {:ok, site}
-      true -> {:error, :invalid_api_key}
+        cond do
+          is_super_admin? -> {:ok, site}
+          Sites.locked?(site) -> {:error, :site_locked}
+          is_member? -> {:ok, site}
+          true -> {:error, :invalid_api_key}
+        end
+
+      nil ->
+        {:error, :invalid_api_key}
     end
   end
 
