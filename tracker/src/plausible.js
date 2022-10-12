@@ -182,10 +182,9 @@
     var hrefWithoutQuery = link && link.href && link.href.split('?')[0]
 
     {{#if tagged_events}}
-    var eventName = getPlausibleEventName(link)
-    if (eventName) {
-      var eventProps = {}
-      return sendLinkClickEvent(event, link, eventName, eventProps)
+    var eventAttrs = getTaggedEventAttributes(link)
+    if (eventAttrs.name) {
+      return sendLinkClickEvent(event, link, eventAttrs.name, eventAttrs.props)
     }
     {{/if}}
 
@@ -252,18 +251,29 @@
   {{/if}}
 
   {{#if tagged_events}}
-  function getPlausibleEventName(link) {
-    var classList = link && link.classList
-    if (!classList) { return null }
+  // Iterates over `link.classList` to find Plausible event attributes.
+  // Returns an object with `name` and `props` keys.
+  function getTaggedEventAttributes(link) {
+    var eventAttrs = { name: null, props: {} }
 
-    var eventName
+    var classList = link && link.classList
+    if (!classList) { return eventAttrs }
+
     classList.forEach(function (className) {
-      if (className.match(/plausible-event-name=.+/)) {
-        eventName = className.split('=')[1]
+      var matchList = className.match(/plausible-event-(.+)=(.+)/)
+      if (!matchList) { return }
+
+      var key = matchList[1]
+      var value = matchList[2]
+
+      if (key.toLowerCase() === 'name') {
+        eventAttrs.name = value
+      } else {
+        eventAttrs.props[key] = value
       }
     })
-    return eventName
-  }
 
+    return eventAttrs
+  }
   {{/if}}
 })();
