@@ -251,18 +251,18 @@
   {{/if}}
 
   {{#if tagged_events}}
-  // Iterates over `link.classList` to find Plausible event attributes.
+  // Iterates over `htmlElement.classList` to find Plausible event attributes.
   // Returns an object with `name` and `props` keys.
-  function getTaggedEventAttributes(link) {
+  function getTaggedEventAttributes(htmlElement) {
     var eventAttrs = { name: null, props: {} }
 
-    var classList = link && link.classList
+    var classList = htmlElement && htmlElement.classList
     if (!classList) { return eventAttrs }
 
     classList.forEach(function (className) {
-      // url is a special prop with the dynamic link.href value
-      if (className === 'plausible-event-url') {
-        eventAttrs.props.url = link.href
+      // Only for link elements: url is a special prop with the dynamic link.href value
+      if (htmlElement.tagName.toLowerCase() === 'a' && className === 'plausible-event-url') {
+        eventAttrs.props.url = htmlElement.href
         return
       }
 
