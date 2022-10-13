@@ -301,6 +301,20 @@
     plausible(eventAttrs.name, { props: eventAttrs.props, callback: submitForm })
   }
 
+  function handleOtherElementClickEvent(event) {
+    if (event.type === 'auxclick' && event.button !== MIDDLE_MOUSE_BUTTON) { return }
+
+    var tagName = event.target.tagName.toLowerCase()
+    if (tagName === 'form' || tagName === 'a') { return }
+
+    var eventAttrs = getTaggedEventAttributes(event.target)
+    if (eventAttrs.name) {
+      plausible(eventAttrs.name, { props: eventAttrs.props })
+    }
+  }
+
   document.addEventListener('submit', handleFormSubmitEvent)
+  document.addEventListener('click', handleOtherElementClickEvent)
+  document.addEventListener('auxclick', handleOtherElementClickEvent)
   {{/if}}
 })();
