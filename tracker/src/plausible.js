@@ -260,6 +260,12 @@
     if (!classList) { return eventAttrs }
 
     classList.forEach(function (className) {
+      // url is a special prop with the dynamic link.href value
+      if (className === 'plausible-event-url') {
+        eventAttrs.props.url = link.href
+        return
+      }
+
       var matchList = className.match(/plausible-event-(.+)=(.+)/)
       if (!matchList) { return }
 
