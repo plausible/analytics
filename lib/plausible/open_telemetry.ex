@@ -63,7 +63,7 @@ defmodule Plausible.OpenTelemetry.Sampler do
   def setup(_sampler_opts), do: []
 
   @impl true
-  def description(_sampler_config), do: "#{__MODULE__}"
+  def description(_sampler_config), do: inspect(__MODULE__)
 
   @impl true
   def should_sample(context, trace_id, links, name, kind, attributes, _config)
