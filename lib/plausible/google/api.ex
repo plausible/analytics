@@ -114,7 +114,7 @@ defmodule Plausible.Google.Api do
           expires_at :: String.t()
         }
 
-  @per_page 10_000
+  @per_page 7_500
   @max_attempts 5
   @spec import_analytics(Plausible.Site.t(), Date.Range.t(), String.t(), import_auth()) ::
           :ok | {:error, term()}

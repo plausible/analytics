@@ -77,11 +77,11 @@ defmodule Plausible.Google.ApiTest do
                  buffer: buffer
                )
 
-      assert_receive({Finch, :request, [_, _, [receive_timeout: 30_000]]})
-      assert_receive({Finch, :request, [_, _, [receive_timeout: 30_000]]})
-      assert_receive({Finch, :request, [_, _, [receive_timeout: 30_000]]})
-      assert_receive({Finch, :request, [_, _, [receive_timeout: 30_000]]})
-      assert_receive({Finch, :request, [_, _, [receive_timeout: 30_000]]})
+      assert_receive({Finch, :request, [_, _, [receive_timeout: 60_000]]})
+      assert_receive({Finch, :request, [_, _, [receive_timeout: 60_000]]})
+      assert_receive({Finch, :request, [_, _, [receive_timeout: 60_000]]})
+      assert_receive({Finch, :request, [_, _, [receive_timeout: 60_000]]})
+      assert_receive({Finch, :request, [_, _, [receive_timeout: 60_000]]})
     end
 
     test "does not fail when report does not have rows key", %{site: site, buffer: buffer} do
