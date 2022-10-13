@@ -105,11 +105,8 @@ defmodule Plausible.Google.HTTP do
     headers = [{"Content-Type", "application/json"}, {"Authorization", "Bearer #{access_token}"}]
 
     case HTTPClient.get(url, headers) do
-      {:ok, response} ->
-        response
-        |> Map.get(:body)
-        |> Jason.decode!()
-        |> then(&{:ok, &1})
+      {:ok, %{body: body}} ->
+        {:ok, body}
 
       {:error, reason} = e ->
         Logger.error("Google Analytics: failed to list sites: #{inspect(reason)}")
@@ -131,9 +128,7 @@ defmodule Plausible.Google.HTTP do
 
     {:ok, response} = HTTPClient.post(url, headers, params)
 
-    response
-    |> Map.get(:body)
-    |> Jason.decode!()
+    response.body
   end
 
   def list_views_for_user(access_token) do
@@ -143,7 +138,7 @@ defmodule Plausible.Google.HTTP do
 
     case HTTPClient.get(url, headers) do
       {:ok, %Finch.Response{body: body, status: 200}} ->
-        {:ok, Jason.decode!(body)}
+        {:ok, body}
 
       {:error, %{reason: %Finch.Response{body: body}}} ->
         Sentry.capture_message("Error fetching Google view ID", extra: %{body: inspect(body)})
@@ -179,7 +174,7 @@ defmodule Plausible.Google.HTTP do
 
     case HTTPClient.post(url, headers, params) do
       {:ok, %Finch.Response{body: body, status: 200}} ->
-        {:ok, Jason.decode!(body)}
+        {:ok, body}
 
       {:error, %{reason: %Finch.Response{body: body, status: 401}}} ->
         Sentry.capture_message("Error fetching Google queries", extra: %{body: inspect(body)})
@@ -216,11 +211,10 @@ defmodule Plausible.Google.HTTP do
 
     case HTTPClient.post(url, headers, params) do
       {:ok, %Finch.Response{body: body, status: 200}} ->
-        {:ok, Jason.decode!(body)}
+        {:ok, body}
 
       {:error, %{reason: %Finch.Response{body: body, status: _non_http_200}}} ->
         body
-        |> Jason.decode!()
         |> Map.get("error")
         |> then(&{:error, &1})
 
@@ -254,7 +248,7 @@ defmodule Plausible.Google.HTTP do
 
     case HTTPClient.post(url, headers, params) do
       {:ok, %Finch.Response{body: body, status: 200}} ->
-        report = List.first(Jason.decode!(body)["reports"])
+        report = List.first(body["reports"])
 
         date =
           case report["data"]["rows"] do
