@@ -270,7 +270,7 @@
       if (!matchList) { return }
 
       var key = matchList[1]
-      var value = matchList[2]
+      var value = matchList[2].replace(/\+/g, ' ')
 
       if (key.toLowerCase() === 'name') {
         eventAttrs.name = value

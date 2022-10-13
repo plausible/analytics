@@ -9,6 +9,6 @@ test.describe('tagged-events extension', () => {
 
         const plausibleRequestMock = mockRequest(page, '/api/event')
         await page.click('#link')
-        expectCustomEvent(await plausibleRequestMock, 'Payment', { amount: '100', method: "Credit+Card", url: linkURL })
+        expectCustomEvent(await plausibleRequestMock, 'Payment Complete', { amount: '100', method: "Credit Card", url: linkURL })
     });
 });
