@@ -11,4 +11,11 @@ test.describe('tagged-events extension', () => {
         await page.click('#link')
         expectCustomEvent(await plausibleRequestMock, 'Payment Complete', { amount: '100', method: "Credit Card", url: linkURL })
     });
+
+    test('tracks a tagged form submit with custom props and ignores plausible-event-url class', async ({ page }) => {
+        await page.goto('/tagged-event.html')
+        const plausibleRequestMock = mockRequest(page, '/api/event')
+        await page.click('#form-submit')
+        expectCustomEvent(await plausibleRequestMock, 'Signup', { type: "Newsletter" })
+    });
 });

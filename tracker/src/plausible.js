@@ -281,5 +281,26 @@
 
     return eventAttrs
   }
+
+  function handleFormSubmitEvent(event) {
+    var form = event.target
+    var eventAttrs = getTaggedEventAttributes(form)
+    if (!eventAttrs.name) { return }
+
+    event.preventDefault()
+    var formSubmitted = false
+
+    function submitForm() {
+      if (!formSubmitted) {
+        formSubmitted = true
+        form.submit()
+      }
+    }
+
+    setTimeout(submitForm, 5000)
+    plausible(eventAttrs.name, { props: eventAttrs.props, callback: submitForm })
+  }
+
+  document.addEventListener('submit', handleFormSubmitEvent)
   {{/if}}
 })();
