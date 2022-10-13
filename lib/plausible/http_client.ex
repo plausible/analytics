@@ -65,6 +65,7 @@ defmodule Plausible.HTTPClient do
     method
     |> build_request(url, headers, params)
     |> do_request()
+    |> maybe_decode_body()
     |> tag_error()
   end
 
@@ -111,5 +112,29 @@ defmodule Plausible.HTTPClient do
 
   defp tag_error({:error, _} = error) do
     error
+  end
+
+  defp maybe_decode_body({:ok, %{headers: headers, body: body} = resp})
+       when is_binary(body) and body != "" do
+    if json?(headers) do
+      {:ok, update_in(resp.body, &Jason.decode!/1)}
+    else
+      {:ok, resp}
+    end
+  end
+
+  defp maybe_decode_body(resp), do: resp
+
+  defp json?(headers) do
+    found =
+      Enum.find(headers, fn
+        {"content-type", "application/json" <> _} ->
+          true
+
+        _ ->
+          false
+      end)
+
+    is_tuple(found)
   end
 end
