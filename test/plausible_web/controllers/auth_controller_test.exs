@@ -761,21 +761,14 @@ defmodule PlausibleWeb.AuthControllerTest do
   end
 
   defp mock_captcha_success() do
-    expect(
-      Plausible.HTTPClient.Mock,
-      :post,
-      fn _, _, _ ->
-        {:ok,
-         %Finch.Response{
-           status: 200,
-           headers: [{"content-type", "application/json"}],
-           body: %{"success" => true}
-         }}
-      end
-    )
+    mock_captcha(true)
   end
 
   defp mock_captcha_failure() do
+    mock_captcha(false)
+  end
+
+  defp mock_captcha(success) do
     expect(
       Plausible.HTTPClient.Mock,
       :post,
@@ -784,7 +777,7 @@ defmodule PlausibleWeb.AuthControllerTest do
          %Finch.Response{
            status: 200,
            headers: [{"content-type", "application/json"}],
-           body: %{"success" => false}
+           body: %{"success" => success}
          }}
       end
     )
