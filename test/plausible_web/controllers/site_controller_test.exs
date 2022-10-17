@@ -734,10 +734,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         "/analytics/v3/management/accounts/~all/webproperties/~all/profiles",
         fn conn ->
           response_body = File.read!("fixture/ga_list_views.json")
-
-          conn
-          |> Plug.Conn.put_resp_header("content-type", "application/json")
-          |> Plug.Conn.resp(200, response_body)
+          Plug.Conn.resp(conn, 200, response_body)
         end
       )
 
