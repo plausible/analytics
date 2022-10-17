@@ -4,18 +4,17 @@ defmodule PlausibleWeb.Captcha do
   @verify_endpoint "https://hcaptcha.com/siteverify"
 
   def enabled? do
-    !!sitekey()
+    is_binary(sitekey())
   end
 
   def sitekey() do
-    Application.get_env(:plausible, :hcaptcha, [])
-    |> Keyword.fetch!(:sitekey)
+    Application.get_env(:plausible, :hcaptcha, [])[:sitekey]
   end
 
   def verify(token) do
     if enabled?() do
       res =
-        HTTPClient.post(
+        HTTPClient.impl().post(
           @verify_endpoint,
           [{"content-type", "application/x-www-form-urlencoded"}],
           %{
@@ -25,9 +24,8 @@ defmodule PlausibleWeb.Captcha do
         )
 
       case res do
-        {:ok, %Finch.Response{status: 200, body: body}} ->
-          json = Jason.decode!(body)
-          json["success"]
+        {:ok, %Finch.Response{status: 200, body: %{"success" => success}}} ->
+          success
 
         _ ->
           false
@@ -38,7 +36,6 @@ defmodule PlausibleWeb.Captcha do
   end
 
   defp secret() do
-    Application.get_env(:plausible, :hcaptcha, [])
-    |> Keyword.fetch!(:secret)
+    Application.get_env(:plausible, :hcaptcha, [])[:secret]
   end
 end
