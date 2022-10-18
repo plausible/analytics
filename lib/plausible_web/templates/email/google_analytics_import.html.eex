@@ -32,7 +32,7 @@ Hey <%= user_salutation(@user) %>,
   <%= if !Application.get_env(:plausible, :is_selfhost) do %>
     <br /> <br />
 
-    Please reach out to <%= link("our support", to: "https://plausible.io/contact") %> and let us know if you're still experiencing issues with the import. Thanks!
+    Please reply to this email to let us know if you're still experiencing issues with the import. Thanks!
     <br /> <br />
 
     The Plausible Team 💌
