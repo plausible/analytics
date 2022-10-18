@@ -40,7 +40,7 @@ defmodule PlausibleWeb.AdminAuthControllerTest do
           password: Application.get_env(:plausible, :admin_pwd)
         )
 
-      # change admin user email
+      # change admin user's email address
       {:ok, admin_user} =
         og_admin_user
         |> Ecto.Changeset.change(%{email: "new-admin@email.com"})

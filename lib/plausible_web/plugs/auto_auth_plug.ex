@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.AutoAuthPlug do
   import Plug.Conn
-  alias PlausibleWeb.AuthController
+  alias PlausibleWeb.{AuthController, AuthView}
 
   def init(options) do
     options
@@ -10,6 +10,7 @@ defmodule PlausibleWeb.AutoAuthPlug do
     cond do
       Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_authentication) ->
         conn
+        |> Phoenix.Controller.put_view(AuthView)
         |> AuthController.login(%{
           "email" => Application.fetch_env!(:plausible, :admin_email),
           "password" => Application.fetch_env!(:plausible, :admin_pwd)
