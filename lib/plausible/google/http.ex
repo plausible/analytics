@@ -42,12 +42,22 @@ defmodule Plausible.Google.HTTP do
          {:ok, report} <- convert_to_maps(report) do
       {:ok, {report, token}}
     else
-      {:ok, %{status: _non_http_200, body: body}} ->
-        Sentry.Context.set_extra_context(%{google_analytics_response: body})
+      {:ok, %{status: _non_http_200, body: _body} = response} ->
+        report_failed_request_to_sentry(response)
         {:error, :request_failed}
 
       {:error, cause} ->
         {:error, cause}
+    end
+  end
+
+  defp report_failed_request_to_sentry(%{status: status, body: body}) do
+    case Jason.decode(body) do
+      {:ok, %{} = body} ->
+        Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: status}})
+
+      _error ->
+        Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: status}})
     end
   end
 
