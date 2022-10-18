@@ -40,7 +40,8 @@ defmodule Plausible.MixProject do
       extra_applications: [
         :logger,
         :runtime_tools,
-        :tls_certificate_check
+        :tls_certificate_check,
+        :opentelemetry_exporter
       ]
     ]
   end
@@ -92,11 +93,12 @@ defmodule Plausible.MixProject do
       {:oauther, "~> 1.3"},
       {:oban, "~> 2.11"},
       {:observer_cli, "~> 1.7"},
-      {:opentelemetry, "~> 1.0"},
-      {:opentelemetry_api, "~> 1.0"},
+      {:opentelemetry, "~> 1.1"},
+      {:opentelemetry_api, "~> 1.1"},
       {:opentelemetry_ecto, "~> 1.0.0"},
-      {:opentelemetry_exporter, "~> 1.0"},
+      {:opentelemetry_exporter, "~> 1.2.0"},
       {:opentelemetry_phoenix, "~> 1.0"},
+      {:opentelemetry_oban, "~> 0.2.0-rc.5"},
       {:phoenix, "~> 1.6.0"},
       {:phoenix_ecto, "~> 4.0"},
       {:phoenix_html, "~> 2.12"},
@@ -112,7 +114,6 @@ defmodule Plausible.MixProject do
       {:referrer_blocklist, git: "https://github.com/plausible/referrer-blocklist.git"},
       {:sentry, "~> 8.0"},
       {:siphash, "~> 3.2"},
-      {:telemetry, "~> 1.0", override: true},
       {:timex, "~> 3.7"},
       {:ua_inspector, "~> 3.0"},
       {:ex_doc, "~> 0.28", only: :dev, runtime: false}

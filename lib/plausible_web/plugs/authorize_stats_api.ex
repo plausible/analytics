@@ -14,6 +14,7 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
          {:ok, api_key} <- find_api_key(token),
          :ok <- check_api_key_rate_limit(api_key),
          {:ok, site} <- verify_access(api_key, conn.params["site_id"]) do
+      Plausible.OpenTelemetry.add_site_attributes(site)
       assign(conn, :site, site)
     else
       {:error, :missing_api_key} ->

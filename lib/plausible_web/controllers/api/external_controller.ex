@@ -66,7 +66,11 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   def info(conn, _params) do
-    build_metadata = System.get_env("BUILD_METADATA", "{}") |> Jason.decode!()
+    build =
+      :plausible
+      |> Application.get_env(:runtime_metadata)
+      |> Keyword.take([:version, :commit, :created, :tags])
+      |> Map.new()
 
     geo_database =
       case Geolix.metadata(where: :geolocation) do
@@ -77,16 +81,9 @@ defmodule PlausibleWeb.Api.ExternalController do
           "(not configured)"
       end
 
-    info = %{
+    json(conn, %{
       geo_database: geo_database,
-      build: %{
-        version: get_in(build_metadata, ["labels", "org.opencontainers.image.version"]),
-        commit: get_in(build_metadata, ["labels", "org.opencontainers.image.revision"]),
-        created: get_in(build_metadata, ["labels", "org.opencontainers.image.created"]),
-        tags: get_in(build_metadata, ["tags"])
-      }
-    }
-
-    json(conn, info)
+      build: build
+    })
   end
 end

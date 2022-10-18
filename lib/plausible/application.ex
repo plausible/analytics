@@ -28,9 +28,7 @@ defmodule Plausible.Application do
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
     setup_sentry()
-    OpentelemetryPhoenix.setup()
-    OpentelemetryEcto.setup([:plausible, :repo])
-    OpentelemetryEcto.setup([:plausible, :clickhouse_repo])
+    setup_opentelemetry()
     Location.load_all()
     Supervisor.start_link(children, opts)
   end
@@ -110,5 +108,12 @@ defmodule Plausible.Application do
       e ->
         IO.puts("Unable to show cache stats: #{inspect(e)}")
     end
+  end
+
+  defp setup_opentelemetry() do
+    OpentelemetryPhoenix.setup()
+    OpentelemetryEcto.setup([:plausible, :repo])
+    OpentelemetryEcto.setup([:plausible, :clickhouse_repo])
+    OpentelemetryOban.setup()
   end
 end
