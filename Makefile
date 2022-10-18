@@ -1,4 +1,4 @@
-.PHONY: help install server clickhouse clickhouse-arm clickhouse-stop postgres postgres-stop
+.PHONY: help install server clickhouse clickhouse-prod clickhouse-ci clickhouse-stop postgres postgres-prod postgres-stop
 
 help:
 	@perl -nle'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
