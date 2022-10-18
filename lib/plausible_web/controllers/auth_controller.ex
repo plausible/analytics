@@ -430,10 +430,19 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def set_password(conn, %{"password" => pw}) do
-    changeset = Auth.User.set_password(conn.assigns[:current_user], pw)
+    current_user = conn.assigns[:current_user]
+
+    self_hosted_admin? =
+      current_user && current_user.email == Application.fetch_env!(:plausible, :admin_email)
+
+    changeset = Auth.User.set_password(current_user, pw)
 
     case Repo.update(changeset) do
       {:ok, _user} ->
+        if self_hosted_admin? do
+          :ok = Application.put_env(:plausible, :admin_pwd, pw)
+        end
+
         redirect(conn, to: "/sites/new")
 
       {:error, changeset} ->
@@ -450,10 +459,19 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def save_settings(conn, %{"user" => user_params}) do
-    changes = Auth.User.changeset(conn.assigns[:current_user], user_params)
+    current_user = conn.assigns[:current_user]
+
+    self_hosted_admin? =
+      current_user && current_user.email == Application.fetch_env!(:plausible, :admin_email)
+
+    changes = Auth.User.changeset(current_user, user_params)
 
     case Repo.update(changes) do
-      {:ok, _user} ->
+      {:ok, user} ->
+        if self_hosted_admin? do
+          :ok = Application.put_env(:plausible, :admin_email, user.email)
+        end
+
         conn
         |> put_flash(:success, "Account settings saved successfully")
         |> redirect(to: Routes.auth_path(conn, :user_settings))

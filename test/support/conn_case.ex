@@ -35,6 +35,26 @@ defmodule PlausibleWeb.ConnCase do
       Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, {:shared, self()})
     end
 
+    prev_admin_email = Application.fetch_env!(:plausible, :admin_email)
+    prev_admin_password = Application.fetch_env!(:plausible, :admin_pwd)
+
+    on_exit(fn ->
+      email_changed? = prev_admin_email != Application.fetch_env!(:plausible, :admin_email)
+      pwd_changed? = prev_admin_password != Application.fetch_env!(:plausible, :admin_pwd)
+
+      if tags[:async] && (email_changed? || pwd_changed?) do
+        raise "this test edits admin credentials stored in app env, please make sure to run it in sync mode"
+      end
+
+      if email_changed? do
+        :ok = Application.put_env(:plausible, :admin_email, prev_admin_email)
+      end
+
+      if pwd_changed? do
+        :ok = Application.put_env(:plausible, :admin_pwd, prev_admin_password)
+      end
+    end)
+
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end
