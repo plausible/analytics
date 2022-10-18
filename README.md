@@ -92,9 +92,9 @@ For anyone wishing to contribute to Plausible, we recommend taking a look at [ou
 
 ## Feedback & Roadmap
 
-We welcome feedback from our community. We have a public roadmap driven by the features suggested by the community members. Take a look at our [feedback board](https://plausible.io/feedback) and our [public roadmap](https://plausible.io/roadmap) directly here on GitHub. Please let us know if you have any requests and vote on open issues so we can better prioritize.
+We welcome feedback from our community. We have a public roadmap driven by the features suggested by the community members. Take a look at our [feedback board](https://plausible.io/feedback) directly here on GitHub. Please let us know if you have any requests and vote on open issues so we can better prioritize.
 
-To stay up to date with all the latest news and product updates, make sure to follow us on [Twitter](https://twitter.com/plausiblehq) or [Mastodon](https://fosstodon.org/@plausible).
+To stay up to date with all the latest news and product updates, make sure to follow us on [Twitter](https://twitter.com/plausiblehq), [LinkedIn](https://www.linkedin.com/company/plausible-analytics/) or [Mastodon](https://fosstodon.org/@plausible).
 
 ## License
 
