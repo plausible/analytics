@@ -15,9 +15,9 @@ jobs:
         with:
           images: plausible/analytics
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=semver,pattern={{version}},prefix=v
+            type=semver,pattern={{major}}.{{minor}},prefix=v
+            type=semver,pattern={{major}},prefix=v
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
