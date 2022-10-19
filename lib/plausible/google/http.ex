@@ -104,13 +104,19 @@ defmodule Plausible.Google.HTTP do
     url = "#{api_url()}/webmasters/v3/sites"
     headers = [{"Content-Type", "application/json"}, {"Authorization", "Bearer #{access_token}"}]
 
-    case HTTPClient.get(url, headers) do
+    case HTTPClient.impl().get(url, headers) do
       {:ok, %{body: body}} ->
         {:ok, body}
 
-      {:error, reason} = e ->
+      {:error, %{reason: %{status: s}}} when s in [401, 403] ->
+        {:error, "google_auth_error"}
+
+      {:error, %{reason: %{body: %{"error" => error}}}} ->
+        {:error, error}
+
+      {:error, reason} ->
         Logger.error("Google Analytics: failed to list sites: #{inspect(reason)}")
-        e
+        {:error, "failed_to_list_sites"}
     end
   end
 
