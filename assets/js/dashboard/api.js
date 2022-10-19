@@ -4,9 +4,10 @@ let abortController = new AbortController()
 let SHARED_LINK_AUTH = null
 
 class ApiError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "ApiError";
+  constructor(message, payload) {
+    super(message)
+    this.name = "ApiError"
+    this.payload = payload
   }
 }
 
@@ -56,7 +57,7 @@ export function get(url, query={}, ...extraQuery) {
     .then( response => {
       if (!response.ok) {
         return response.json().then((msg) => {
-          throw new ApiError(msg.error)
+          throw new ApiError(msg.error, msg)
         })
       }
       return response.json()
