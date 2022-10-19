@@ -73,7 +73,7 @@ export default class SearchTerms extends React.Component {
           <RocketIcon />
           <div>The site is not connected to Google Search Keywords</div>
           <div>Cannot show search terms.
-          {this.state.isAdmin && this.state.error && <><br/><br/>Google responded with:<p class="text-red-600">{this.state.error}</p></>}
+          {this.state.isAdmin && this.state.error && <><br/><br/>Google responded with:<p className="text-red-600">{this.state.error}</p></>}
           </div>
           {this.state.isAdmin && <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/search-console`} className="button mt-4">Connect with Google</a> }
         </div>
