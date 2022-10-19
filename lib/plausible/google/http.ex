@@ -178,25 +178,20 @@ defmodule Plausible.Google.HTTP do
     url = "#{api_url()}/webmasters/v3/sites/#{property}/searchAnalytics/query"
     headers = [{"Authorization", "Bearer #{access_token}"}]
 
-    case HTTPClient.post(url, headers, params) do
+    case HTTPClient.impl().post(url, headers, params) do
       {:ok, %Finch.Response{body: body, status: 200}} ->
         {:ok, body}
 
-      {:error, %{reason: %Finch.Response{body: body, status: 401}}} ->
-        Sentry.capture_message("Error fetching Google queries", extra: %{body: inspect(body)})
-        {:error, :invalid_credentials}
+      {:error, %{reason: %Finch.Response{body: _body, status: status}}}
+      when status in [401, 403] ->
+        {:error, "google_auth_error"}
 
-      {:error, %{reason: %Finch.Response{body: body, status: 403}}} ->
-        Sentry.capture_message("Error fetching Google queries", extra: %{body: inspect(body)})
-        {:error, get_in(body, ["error", "message"])}
+      {:error, %{reason: %{body: %{"error" => error}}}} ->
+        {:error, error}
 
-      {:error, %{reason: %Finch.Response{body: body}}} ->
-        Sentry.capture_message("Error fetching Google queries", extra: %{body: inspect(body)})
-        {:error, :unknown}
-
-      {:error, %{reason: _} = e} ->
-        Sentry.capture_message("Error fetching Google queries", extra: %{error: inspect(e)})
-        {:error, :unknown}
+      {:error, reason} ->
+        Logger.error("Google Analytics: failed to list stats: #{inspect(reason)}")
+        {:error, "failed_to_list_stats"}
     end
   end
 
