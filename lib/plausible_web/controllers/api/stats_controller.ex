@@ -439,19 +439,14 @@ defmodule PlausibleWeb.Api.StatsController do
       {:ok, terms} ->
         json(conn, %{search_terms: terms, total_visitors: total_visitors})
 
-      {:error, e} when is_binary(e) or is_atom(e) ->
+      {:error, _} ->
         conn
         |> put_status(502)
         |> json(%{
           not_configured: true,
           is_admin: is_admin,
-          total_visitors: total_visitors,
-          error: e
+          total_visitors: total_visitors
         })
-
-      {:error, e} ->
-        put_status(conn, 500)
-        |> json(%{error: e})
     end
   end
 
