@@ -182,9 +182,8 @@ defmodule Plausible.Google.Api do
     buffer_pid = Keyword.get(opts, :buffer)
     attempt = Keyword.get(opts, :attempt, 1)
     sleep_time = Keyword.get(opts, :sleep_time, 1000)
-    http_client = Keyword.get(opts, :http_client, Finch)
 
-    case HTTP.get_report(http_client, report_request) do
+    case HTTP.get_report(report_request) do
       {:ok, {rows, next_page_token}} ->
         records = Plausible.Imported.from_google_analytics(rows, site.id, report_request.dataset)
         :ok = Plausible.Google.Buffer.insert_many(buffer_pid, report_request.dataset, records)
