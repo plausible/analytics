@@ -10,6 +10,7 @@ install: ## Run the initial setup
 	mix download_country_database
 	npm install --prefix assets
 	npm install --prefix tracker
+	npm run deploy --prefix tracker
 
 server: ## Start the web server
 	mix phx.server
