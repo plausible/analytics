@@ -9,6 +9,27 @@ defmodule Plausible.TestUtils do
     end
   end
 
+  defmacro patch_env(env_key, value) do
+    quote do
+      original_env = Application.get_env(:plausible, unquote(env_key))
+      Application.put_env(:plausible, unquote(env_key), unquote(value))
+
+      on_exit(fn ->
+        Application.put_env(:plausible, unquote(env_key), original_env)
+      end)
+
+      {:ok, %{patched_env: true}}
+    end
+  end
+
+  defmacro setup_patch_env(env_key, value) do
+    quote do
+      setup do
+        patch_env(unquote(env_key), unquote(value))
+      end
+    end
+  end
+
   def create_user(_) do
     {:ok, user: Factory.insert(:user)}
   end

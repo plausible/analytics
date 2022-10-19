@@ -4,6 +4,8 @@ defmodule Plausible.Google.Api.VCRTest do
   require Ecto.Query
 
   setup [:create_user, :create_site]
+  # We need real HTTP Client for VCR tests
+  setup_patch_env(:http_impl, Plausible.HTTPClient)
 
   defp get_insert_count do
     Plausible.ClickhouseRepo.aggregate(
