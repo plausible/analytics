@@ -1,6 +1,6 @@
 defmodule Plausible.SitesTest do
   use Plausible.DataCase
-  import Plausible.TestUtils
+
   alias Plausible.Sites
 
   describe "is_member?" do

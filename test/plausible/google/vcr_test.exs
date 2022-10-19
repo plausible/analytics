@@ -2,7 +2,6 @@ defmodule Plausible.Google.Api.VCRTest do
   use Plausible.DataCase, async: false
   use ExVCR.Mock, adapter: ExVCR.Adapter.Finch
   require Ecto.Query
-  import Plausible.TestUtils
 
   setup [:create_user, :create_site]
 

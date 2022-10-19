@@ -2,7 +2,6 @@ defmodule Plausible.Google.ApiTest do
   use Plausible.DataCase, async: true
   use ExVCR.Mock, adapter: ExVCR.Adapter.Finch
   alias Plausible.Google.Api
-  import Plausible.TestUtils
   import Double
 
   setup [:create_user, :create_new_site]

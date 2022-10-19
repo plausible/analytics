@@ -2,7 +2,7 @@ defmodule Plausible.Workers.SendSiteSetupEmailsTest do
   use Plausible.DataCase, async: true
   use Bamboo.Test
   use Oban.Testing, repo: Plausible.Repo
-  import Plausible.TestUtils
+
   alias Plausible.Workers.SendSiteSetupEmails
 
   describe "when user has not managed to set up the site" do

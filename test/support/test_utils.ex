@@ -2,6 +2,13 @@ defmodule Plausible.TestUtils do
   use Plausible.Repo
   alias Plausible.Factory
 
+  defmacro __using__(_) do
+    quote do
+      require Plausible.TestUtils
+      import Plausible.TestUtils
+    end
+  end
+
   def create_user(_) do
     {:ok, user: Factory.insert(:user)}
   end

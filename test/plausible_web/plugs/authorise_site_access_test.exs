@@ -2,7 +2,6 @@ defmodule PlausibleWeb.AuthorizeSiteAccessTest do
   use PlausibleWeb.ConnCase, async: true
   alias PlausibleWeb.AuthorizeSiteAccess
 
-  import Plausible.TestUtils
   setup [:create_user, :log_in]
 
   test "doesn't allow :website bypass with :domain in body", %{conn: conn, user: me} do

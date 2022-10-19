@@ -2,7 +2,6 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
   use PlausibleWeb.ConnCase
   use Plausible.Repo
   use Bamboo.Test
-  import Plausible.TestUtils
 
   setup [:create_user, :log_in]
 

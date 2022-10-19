@@ -3,7 +3,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   use Plausible.Repo
   use Bamboo.Test
   use Oban.Testing, repo: Plausible.Repo
-  import Plausible.TestUtils
+
 
   describe "GET /sites/new" do
     setup [:create_user, :log_in]

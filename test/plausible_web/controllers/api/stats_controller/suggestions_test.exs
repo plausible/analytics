@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
   use PlausibleWeb.ConnCase
-  import Plausible.TestUtils
 
   describe "GET /api/stats/:domain/suggestions/:filter_name" do
     setup [:create_user, :log_in, :create_site]

@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.Api.StatsController.PagesTest do
   use PlausibleWeb.ConnCase
-  import Plausible.TestUtils
+
   @user_id 123
 
   describe "GET /api/stats/:domain/pages" do

@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.CurrentVisitorsTest do
   use PlausibleWeb.ConnCase
-  import Plausible.TestUtils
 
   describe "GET /api/stats/:domain/current-visitors" do
     setup [:create_user, :log_in, :create_site]

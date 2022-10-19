@@ -1,6 +1,6 @@
 defmodule Plausible.Google.BufferTest do
   use Plausible.DataCase, async: false
-  import Plausible.TestUtils
+
   import Ecto.Query
   alias Plausible.Google.Buffer
 
