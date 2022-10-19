@@ -214,14 +214,12 @@ defmodule Plausible.Google.HTTP do
       {:ok, %Finch.Response{body: body, status: 200}} ->
         {:ok, body}
 
-      {:error, %{reason: %Finch.Response{body: body, status: _non_http_200}}} ->
-        body
-        |> Map.get("error")
-        |> then(&{:error, &1})
+      {:error, %{reason: %Finch.Response{body: %{"error" => error}, status: _non_http_200}}} ->
+        {:error, error}
 
       {:error, %{reason: _} = e} ->
         Sentry.capture_message("Error fetching Google queries", extra: %{error: inspect(e)})
-        {:error, :unknown}
+        {:error, :unknown_error}
     end
   end
 
