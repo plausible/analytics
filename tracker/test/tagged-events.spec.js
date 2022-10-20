@@ -31,6 +31,21 @@ test.describe('tagged-events extension', () => {
 
         const requests = await plausibleRequestMockList
         expect(requests.length).toBe(3)
-        requests.forEach(request => expectCustomEvent(request, 'Custom Event', {foo: "bar"}))
+        requests.forEach(request => expectCustomEvent(request, 'Custom Event', { foo: "bar" }))
+    });
+
+    test('does not track link click without plausible-event-name class and navigates', async ({ page }) => {
+        await page.goto('/tagged-event.html')
+        const linkLocator = page.locator('#not-tracked-link')
+
+        const linkURL = await linkLocator.getAttribute('href')
+
+        const plausibleRequestMock = mockRequest(page, '/api/event')
+        const navigationRequestMock = mockRequest(page, linkURL)
+
+        await linkLocator.click()
+
+        expect(await plausibleRequestMock, "should not have made Plausible request").toBeNull()
+        expect((await navigationRequestMock).url()).toContain(linkURL)
     });
 });
