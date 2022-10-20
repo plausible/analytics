@@ -40,12 +40,11 @@ defmodule Plausible.Google.HTTP do
          {:ok, report} <- convert_to_maps(report) do
       {:ok, {report, token}}
     else
-
-      {:error, %{reason: %{status: status, body: body} = response}} ->
+      {:error, %{reason: %{status: status, body: body}}} ->
         Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: status}})
         {:error, :request_failed}
 
-      {:error, cause} ->
+      {:error, _} ->
         {:error, :request_failed}
     end
   end
