@@ -310,17 +310,24 @@
   function handleOtherElementClickEvent(event) {
     if (event.type === 'auxclick' && event.button !== MIDDLE_MOUSE_BUTTON) { return }
 
-    var tagName = event.target.tagName.toLowerCase()
+    var taggedElement = event.currentTarget
+
+    var tagName = taggedElement.tagName.toLowerCase()
     if (isSpecialTag(tagName)) { return }
 
-    var eventAttrs = getTaggedEventAttributes(event.target)
+    var eventAttrs = getTaggedEventAttributes(taggedElement)
     if (eventAttrs.name) {
       plausible(eventAttrs.name, { props: eventAttrs.props })
     }
   }
 
   document.addEventListener('submit', handleFormSubmitEvent)
-  document.addEventListener('click', handleOtherElementClickEvent)
-  document.addEventListener('auxclick', handleOtherElementClickEvent)
+
+  var taggedElements = document.querySelectorAll("[class*=plausible-event-name]")
+  for (var i = 0; i < taggedElements.length; i++) {
+    taggedElements[i].addEventListener('click', handleOtherElementClickEvent)
+    taggedElements[i].addEventListener('auxclick', handleOtherElementClickEvent)
+  }
+
   {{/if}}
 })();

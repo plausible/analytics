@@ -50,4 +50,17 @@ test.describe('tagged-events extension', () => {
         expect(await plausibleRequestMock, "should not have made Plausible request").toBeNull()
         expect((await navigationRequestMock).url()).toContain(linkURL)
     });
+
+    test('tracks tagged HTML elements when their child element is clicked', async ({ page }, workerInfo) => {
+        await page.goto('/tagged-event.html')
+
+        const plausibleRequestMockList = mockManyRequests(page, '/api/event', 2)
+
+        await page.click('#div-child')
+        await page.click('#link-child', { modifiers: [isMac(workerInfo) ? 'Meta' : 'Control'] })
+
+        const requests = await plausibleRequestMockList
+        expect(requests.length).toBe(2)
+        requests.forEach(request => expectCustomEvent(request, 'Custom Event', { foo: "bar" }))
+    });
 });
