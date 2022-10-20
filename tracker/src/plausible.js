@@ -323,11 +323,15 @@
 
   document.addEventListener('submit', handleFormSubmitEvent)
 
-  var taggedElements = document.querySelectorAll("[class*=plausible-event-name]")
-  for (var i = 0; i < taggedElements.length; i++) {
-    taggedElements[i].addEventListener('click', handleOtherElementClickEvent)
-    taggedElements[i].addEventListener('auxclick', handleOtherElementClickEvent)
-  }
+  // Add eventListeners to all tagged elements.
+  // This has to wait until all DOM content is loaded.
+  document.addEventListener('DOMContentLoaded', function (_e) {
+    var taggedElements = document.querySelectorAll("[class*=plausible-event-name]")
+    for (var i = 0; i < taggedElements.length; i++) {
+      taggedElements[i].addEventListener('click', handleOtherElementClickEvent)
+      taggedElements[i].addEventListener('auxclick', handleOtherElementClickEvent)
+    }
+  })
 
   {{/if}}
 })();
