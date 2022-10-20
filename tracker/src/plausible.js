@@ -259,15 +259,17 @@
     var classList = htmlElement && htmlElement.classList
     if (!classList) { return eventAttrs }
 
-    classList.forEach(function (className) {
+    for (var i = 0; i < classList.length; i++) {
+      var className = classList.item(i)
+
       // Only for link elements: url is a special prop with the dynamic link.href value
       if (htmlElement.tagName.toLowerCase() === 'a' && className === 'plausible-event-url') {
         eventAttrs.props.url = htmlElement.href
-        return
+        continue
       }
 
       var matchList = className.match(/plausible-event-(.+)=(.+)/)
-      if (!matchList) { return }
+      if (!matchList) { continue }
 
       var key = matchList[1]
       var value = matchList[2].replace(/\+/g, ' ')
@@ -277,7 +279,7 @@
       } else {
         eventAttrs.props[key] = value
       }
-    })
+    }
 
     return eventAttrs
   }
