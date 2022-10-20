@@ -301,11 +301,17 @@
     plausible(eventAttrs.name, { props: eventAttrs.props, callback: submitForm })
   }
 
+  var SPECIAL_TAGS = ['form', 'a']
+
+  function isSpecialTag(tagName) {
+    return SPECIAL_TAGS.some(function(specialTag) {return specialTag === tagName})
+  }
+
   function handleOtherElementClickEvent(event) {
     if (event.type === 'auxclick' && event.button !== MIDDLE_MOUSE_BUTTON) { return }
 
     var tagName = event.target.tagName.toLowerCase()
-    if (tagName === 'form' || tagName === 'a') { return }
+    if (isSpecialTag(tagName)) { return }
 
     var eventAttrs = getTaggedEventAttributes(event.target)
     if (eventAttrs.name) {
