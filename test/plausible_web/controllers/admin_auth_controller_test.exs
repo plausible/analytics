@@ -1,5 +1,15 @@
 defmodule PlausibleWeb.AdminAuthControllerTest do
   use PlausibleWeb.ConnCase
+  alias Plausible.Release
+
+  setup do
+    prev_env = Application.get_all_env(:plausible)
+    on_exit(fn -> Application.put_all_env(plausible: prev_env) end)
+  end
+
+  setup do
+    :ok = Application.put_env(:plausible, :is_selfhost, true)
+  end
 
   describe "GET /" do
     test "no landing page", %{conn: conn} do
@@ -33,6 +43,17 @@ defmodule PlausibleWeb.AdminAuthControllerTest do
       set_config(disable_registration: true)
       conn = get(conn, "/register")
       assert redirected_to(conn) == "/login"
+    end
+
+    test "disable registration + first launch", %{conn: conn} do
+      set_config(disable_registration: true)
+
+      true = Release.should_be_first_launch?()
+      :ok = Release.set_first_launch()
+
+      # "first launch" takes precedence
+      conn = get(conn, "/register")
+      assert html_response(conn, 200) =~ "Enter your details"
     end
   end
 
