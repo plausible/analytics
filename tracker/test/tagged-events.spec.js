@@ -56,8 +56,8 @@ test.describe('tagged-events extension', () => {
 
         const plausibleRequestMockList = mockManyRequests(page, '/api/event', 2)
 
-        await page.click('#div-child')
-        await page.click('#link-child', { modifiers: [isMac(workerInfo) ? 'Meta' : 'Control'] })
+        await page.click('#h2-with-link-parent', { modifiers: [isMac(workerInfo) ? 'Meta' : 'Control'] })
+        await page.click('#link-with-div-parent')
 
         const requests = await plausibleRequestMockList
         expect(requests.length).toBe(2)
