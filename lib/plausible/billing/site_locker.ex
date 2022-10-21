@@ -50,6 +50,6 @@ defmodule Plausible.Billing.SiteLocker do
         suggested_plan
       )
 
-    Plausible.Mailer.send_email_safe(template)
+    Plausible.Mailer.send(template)
   end
 end
