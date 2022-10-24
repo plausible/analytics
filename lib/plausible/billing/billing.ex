@@ -13,12 +13,10 @@ defmodule Plausible.Billing do
   end
 
   defp active_subscription_query(user_id) do
-    from(
-      s in Subscription,
+    from s in Subscription,
       where: s.user_id == ^user_id and s.status == "active",
       order_by: [desc: s.inserted_at],
       limit: 1
-    )
   end
 
   def subscription_created(params) do
