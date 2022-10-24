@@ -2,9 +2,10 @@ defmodule Plausible.Google.Api.VCRTest do
   use Plausible.DataCase, async: false
   use ExVCR.Mock, adapter: ExVCR.Adapter.Finch
   require Ecto.Query
-  import Plausible.TestUtils
 
   setup [:create_user, :create_site]
+  # We need real HTTP Client for VCR tests
+  setup_patch_env(:http_impl, Plausible.HTTPClient)
 
   test "imports page views from Google Analytics", %{site: site} do
     use_cassette "google_analytics_import#1", match_requests_on: [:request_body] do

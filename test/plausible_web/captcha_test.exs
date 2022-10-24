@@ -50,14 +50,7 @@ defmodule PlausibleWeb.CaptchaTest do
   end
 
   describe "with patched application env" do
-    setup do
-      original_env = Application.get_env(:plausible, :hcaptcha)
-      Application.put_env(:plausible, :hcaptcha, sitekey: nil)
-
-      on_exit(fn ->
-        Application.put_env(:plausible, :hcaptcha, original_env)
-      end)
-    end
+    setup_patch_env(:hcaptcha, sitekey: nil)
 
     test "returns true when disabled" do
       assert Captcha.verify("disabled")

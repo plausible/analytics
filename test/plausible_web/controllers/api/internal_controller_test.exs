@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Api.InternalControllerTest do
   use PlausibleWeb.ConnCase
   use Plausible.Repo
-  import Plausible.TestUtils
 
   describe "GET /api/:domain/status" do
     setup [:create_user, :log_in]

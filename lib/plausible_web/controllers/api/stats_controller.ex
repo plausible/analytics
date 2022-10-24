@@ -429,18 +429,24 @@ defmodule PlausibleWeb.Api.StatsController do
 
     %{:visitors => %{value: total_visitors}} = Stats.aggregate(site, query, [:visitors])
 
+    user_id = get_session(conn, :current_user_id)
+    is_admin = user_id && Plausible.Sites.has_admin_access?(user_id, site)
+
     case search_terms do
       nil ->
-        user_id = get_session(conn, :current_user_id)
-        is_admin = user_id && Plausible.Sites.has_admin_access?(user_id, site)
         json(conn, %{not_configured: true, is_admin: is_admin, total_visitors: total_visitors})
 
       {:ok, terms} ->
         json(conn, %{search_terms: terms, total_visitors: total_visitors})
 
-      {:error, e} ->
-        put_status(conn, 500)
-        |> json(%{error: e})
+      {:error, _} ->
+        conn
+        |> put_status(502)
+        |> json(%{
+          not_configured: true,
+          is_admin: is_admin,
+          total_visitors: total_visitors
+        })
     end
   end
 

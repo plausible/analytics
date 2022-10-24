@@ -1,6 +1,6 @@
 defmodule Plausible.Google.BufferTest do
   use Plausible.DataCase, async: false
-  import Plausible.TestUtils
+
   import Ecto.Query
   alias Plausible.Google.Buffer
 
@@ -8,10 +8,7 @@ defmodule Plausible.Google.BufferTest do
 
   defp set_buffer_size(_setup_args) do
     google_setting = Application.get_env(:plausible, :google)
-    on_exit(fn -> Application.put_env(:plausible, :google, google_setting) end)
-    test_setting = Keyword.put(google_setting, :max_buffer_size, 10)
-    Application.put_env(:plausible, :google, test_setting)
-
+    patch_env(:google, Keyword.put(google_setting, :max_buffer_size, 10))
     :ok
   end
 

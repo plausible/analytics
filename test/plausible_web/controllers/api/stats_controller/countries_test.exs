@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.CountriesTest do
   use PlausibleWeb.ConnCase
-  import Plausible.TestUtils
 
   describe "GET /api/stats/:domain/countries" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]

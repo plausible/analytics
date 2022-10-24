@@ -2,82 +2,65 @@ defmodule Plausible.Google.HTTP do
   require Logger
   alias Plausible.HTTPClient
 
-  @spec get_report(module(), Plausible.Google.ReportRequest.t()) ::
+  @spec get_report(Plausible.Google.ReportRequest.t()) ::
           {:ok, {[map()], String.t() | nil}} | {:error, any()}
-  def get_report(http_client, %Plausible.Google.ReportRequest{} = report_request) do
-    params =
-      Jason.encode!(%{
-        reportRequests: [
-          %{
-            viewId: report_request.view_id,
-            dateRanges: [
-              %{
-                startDate: report_request.date_range.first,
-                endDate: report_request.date_range.last
-              }
-            ],
-            dimensions: Enum.map(report_request.dimensions, &%{name: &1, histogramBuckets: []}),
-            metrics: Enum.map(report_request.metrics, &%{expression: &1}),
-            hideTotals: true,
-            hideValueRanges: true,
-            orderBys: [%{fieldName: "ga:date", sortOrder: "DESCENDING"}],
-            pageSize: report_request.page_size,
-            pageToken: report_request.page_token
-          }
-        ]
-      })
+  def get_report(%Plausible.Google.ReportRequest{} = report_request) do
+    params = %{
+      reportRequests: [
+        %{
+          viewId: report_request.view_id,
+          dateRanges: [
+            %{
+              startDate: report_request.date_range.first,
+              endDate: report_request.date_range.last
+            }
+          ],
+          dimensions: Enum.map(report_request.dimensions, &%{name: &1, histogramBuckets: []}),
+          metrics: Enum.map(report_request.metrics, &%{expression: &1}),
+          hideTotals: true,
+          hideValueRanges: true,
+          orderBys: [%{fieldName: "ga:date", sortOrder: "DESCENDING"}],
+          pageSize: report_request.page_size,
+          pageToken: report_request.page_token
+        }
+      ]
+    }
 
     response =
-      :post
-      |> Finch.build(
+      HTTPClient.impl().post(
         "#{reporting_api_url()}/v4/reports:batchGet",
         [{"Authorization", "Bearer #{report_request.access_token}"}],
-        params
+        params,
+        receive_timeout: 60_000
       )
-      |> http_client.request(Plausible.Finch, receive_timeout: 60_000)
 
-    with {:ok, %{status: 200, body: body}} <- response,
+    with {:ok, %{body: body}} <- response,
          {:ok, report} <- parse_report_from_response(body),
          token <- Map.get(report, "nextPageToken"),
          {:ok, report} <- convert_to_maps(report) do
       {:ok, {report, token}}
     else
-      {:ok, %{status: _non_http_200, body: _body} = response} ->
-        report_failed_request_to_sentry(response)
+      {:error, %{reason: %{status: status, body: body}}} ->
+        Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: status}})
         {:error, :request_failed}
 
-      {:error, cause} ->
-        {:error, cause}
+      {:error, _} ->
+        {:error, :request_failed}
     end
   end
 
-  defp report_failed_request_to_sentry(%{status: status, body: body}) do
-    case Jason.decode(body) do
-      {:ok, %{} = body} ->
-        Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: status}})
-
-      _error ->
-        Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: status}})
-    end
-  end
-
-  defp parse_report_from_response(raw_body) do
-    with {:ok, map} <- Jason.decode(raw_body),
-         %{"reports" => [report | _]} <- map do
+  defp parse_report_from_response(body) do
+    with %{"reports" => [report | _]} <- body do
       {:ok, report}
     else
-      {:error, cause} ->
-        Logger.error("Google Analytics: Failed to parse JSON. Reason: #{inspect(cause)}")
-        Sentry.Context.set_extra_context(%{google_analytics_response: raw_body})
-        {:error, cause}
+      _ ->
+        Sentry.Context.set_extra_context(%{google_analytics_response: body})
 
-      %{} = response ->
         Logger.error(
-          "Google Analytics: Failed to find report in response. Reason: #{inspect(response)}"
+          "Google Analytics: Failed to find report in response. Reason: #{inspect(body)}"
         )
 
-        Sentry.Context.set_extra_context(%{google_analytics_response: response})
-        {:error, {:invalid_response, response}}
+        {:error, {:invalid_response, body}}
     end
   end
 
@@ -114,13 +97,19 @@ defmodule Plausible.Google.HTTP do
     url = "#{api_url()}/webmasters/v3/sites"
     headers = [{"Content-Type", "application/json"}, {"Authorization", "Bearer #{access_token}"}]
 
-    case HTTPClient.get(url, headers) do
+    case HTTPClient.impl().get(url, headers) do
       {:ok, %{body: body}} ->
         {:ok, body}
 
-      {:error, reason} = e ->
+      {:error, %{reason: %{status: s}}} when s in [401, 403] ->
+        {:error, "google_auth_error"}
+
+      {:error, %{reason: %{body: %{"error" => error}}}} ->
+        {:error, error}
+
+      {:error, reason} ->
         Logger.error("Google Analytics: failed to list sites: #{inspect(reason)}")
-        e
+        {:error, "failed_to_list_sites"}
     end
   end
 
@@ -182,25 +171,20 @@ defmodule Plausible.Google.HTTP do
     url = "#{api_url()}/webmasters/v3/sites/#{property}/searchAnalytics/query"
     headers = [{"Authorization", "Bearer #{access_token}"}]
 
-    case HTTPClient.post(url, headers, params) do
+    case HTTPClient.impl().post(url, headers, params) do
       {:ok, %Finch.Response{body: body, status: 200}} ->
         {:ok, body}
 
-      {:error, %{reason: %Finch.Response{body: body, status: 401}}} ->
-        Sentry.capture_message("Error fetching Google queries", extra: %{body: inspect(body)})
-        {:error, :invalid_credentials}
+      {:error, %{reason: %Finch.Response{body: _body, status: status}}}
+      when status in [401, 403] ->
+        {:error, "google_auth_error"}
 
-      {:error, %{reason: %Finch.Response{body: body, status: 403}}} ->
-        Sentry.capture_message("Error fetching Google queries", extra: %{body: inspect(body)})
-        {:error, get_in(body, ["error", "message"])}
+      {:error, %{reason: %{body: %{"error" => error}}}} ->
+        {:error, error}
 
-      {:error, %{reason: %Finch.Response{body: body}}} ->
-        Sentry.capture_message("Error fetching Google queries", extra: %{body: inspect(body)})
-        {:error, :unknown}
-
-      {:error, %{reason: _} = e} ->
-        Sentry.capture_message("Error fetching Google queries", extra: %{error: inspect(e)})
-        {:error, :unknown}
+      {:error, reason} ->
+        Logger.error("Google Analytics: failed to list stats: #{inspect(reason)}")
+        {:error, "failed_to_list_stats"}
     end
   end
 
@@ -223,14 +207,12 @@ defmodule Plausible.Google.HTTP do
       {:ok, %Finch.Response{body: body, status: 200}} ->
         {:ok, body}
 
-      {:error, %{reason: %Finch.Response{body: body, status: _non_http_200}}} ->
-        body
-        |> Map.get("error")
-        |> then(&{:error, &1})
+      {:error, %{reason: %Finch.Response{body: %{"error" => error}, status: _non_http_200}}} ->
+        {:error, error}
 
       {:error, %{reason: _} = e} ->
         Sentry.capture_message("Error fetching Google queries", extra: %{error: inspect(e)})
-        {:error, :unknown}
+        {:error, :unknown_error}
     end
   end
 

@@ -1,6 +1,5 @@
 defmodule Plausible.PurgeTest do
   use Plausible.DataCase
-  import Plausible.TestUtils
 
   setup do
     site = insert(:site, stats_start_date: ~D[2020-01-01])

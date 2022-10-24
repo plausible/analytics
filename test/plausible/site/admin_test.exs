@@ -1,6 +1,6 @@
 defmodule Plausible.SiteAdminTest do
   use Plausible.DataCase, async: true
-  import Plausible.TestUtils
+
   alias Plausible.{SiteAdmin, ClickhouseRepo, ClickhouseEvent, ClickhouseSession}
 
   describe "transfer_data" do

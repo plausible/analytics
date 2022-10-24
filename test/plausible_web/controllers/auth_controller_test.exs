@@ -2,7 +2,6 @@ defmodule PlausibleWeb.AuthControllerTest do
   use PlausibleWeb.ConnCase
   use Bamboo.Test
   use Plausible.Repo
-  import Plausible.TestUtils
 
   import Mox
   setup :verify_on_exit!

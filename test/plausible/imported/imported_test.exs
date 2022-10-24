@@ -1,7 +1,6 @@
 defmodule Plausible.ImportedTest do
   use PlausibleWeb.ConnCase
   use Timex
-  import Plausible.TestUtils
 
   @user_id 123
 

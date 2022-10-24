@@ -1,7 +1,7 @@
 defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   use Plausible.DataCase, async: true
   use Bamboo.Test
-  import Plausible.TestUtils
+
   alias Plausible.Workers.NotifyAnnualRenewal
 
   setup [:create_user, :create_site]

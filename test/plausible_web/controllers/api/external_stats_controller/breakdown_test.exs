@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   use PlausibleWeb.ConnCase
-  import Plausible.TestUtils
+
   @user_id 1231
 
   setup [:create_user, :create_new_site, :create_api_key, :use_api_key]

@@ -2,7 +2,7 @@ defmodule Plausible.Workers.CheckUsageTest do
   use Plausible.DataCase, async: true
   use Bamboo.Test
   import Double
-  import Plausible.TestUtils
+
   alias Plausible.Workers.CheckUsage
 
   setup [:create_user, :create_site]
