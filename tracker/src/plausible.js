@@ -158,10 +158,14 @@
   // CUSTOM EVENT TRACKING
   {{#if (any outbound_links file_downloads tagged_events)}}
   function getLinkEl(link) {
-    while (link && (typeof link.tagName === 'undefined' || link.tagName.toLowerCase() !== 'a' || !link.href)) {
+    while (link && (typeof link.tagName === 'undefined' || !isLink(link) || !link.href)) {
       link = link.parentNode
     }
     return link
+  }
+
+  function isLink(element) {
+    return element.tagName.toLowerCase() === 'a'
   }
 
   function shouldFollowLink(event, link) {
@@ -263,7 +267,7 @@
       var className = classList.item(i)
 
       // Only for link elements: url is a special prop with the dynamic link.href value
-      if (htmlElement.tagName.toLowerCase() === 'a' && className === 'plausible-event-url') {
+      if (isLink(htmlElement) && className === 'plausible-event-url') {
         eventAttrs.props.url = htmlElement.href
         continue
       }
@@ -303,10 +307,8 @@
     plausible(eventAttrs.name, { props: eventAttrs.props, callback: submitForm })
   }
 
-  var SPECIAL_TAGS = ['form', 'a']
-
-  function isSpecialTag(tagName) {
-    return SPECIAL_TAGS.some(function(specialTag) {return specialTag === tagName})
+  function isForm(element) {
+    return element.tagName.toLowerCase() === 'form'
   }
 
   function handleOtherElementClickEvent(event) {
@@ -314,8 +316,8 @@
 
     var taggedElement = event.currentTarget
 
-    var tagName = taggedElement.tagName.toLowerCase()
-    if (isSpecialTag(tagName)) { return }
+    // ignore special cases handled by other event handlers
+    if (isForm(taggedElement) || isLink(taggedElement)) { return }
 
     var eventAttrs = getTaggedEventAttributes(taggedElement)
     if (eventAttrs.name) {
