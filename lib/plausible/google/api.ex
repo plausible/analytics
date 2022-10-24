@@ -115,6 +115,7 @@ defmodule Plausible.Google.Api do
         }
 
   @per_page 7_500
+  @backoff_factor :timer.seconds(10)
   @max_attempts 5
   @spec import_analytics(Plausible.Site.t(), Date.Range.t(), String.t(), import_auth()) ::
           :ok | {:error, term()}
@@ -126,8 +127,9 @@ defmodule Plausible.Google.Api do
   `Plausible.Google.Buffer` process.
 
   Requests to Google Analytics can fail, and are retried at most
-  #{@max_attempts} times. Returns `:ok` when importing has finished or
-  `{:error, term()}` when a request to GA failed too many times.
+  #{@max_attempts} times with an exponential backoff. Returns `:ok` when
+  importing has finished or `{:error, term()}` when a request to GA failed too 
+  many times.
 
   Useful links:
 
@@ -181,7 +183,7 @@ defmodule Plausible.Google.Api do
   def fetch_and_persist(site, %ReportRequest{} = report_request, opts \\ []) do
     buffer_pid = Keyword.get(opts, :buffer)
     attempt = Keyword.get(opts, :attempt, 1)
-    sleep_time = Keyword.get(opts, :sleep_time, 1000)
+    sleep_time = Keyword.get(opts, :sleep_time, @backoff_factor)
 
     case HTTP.get_report(report_request) do
       {:ok, {rows, next_page_token}} ->
@@ -202,7 +204,7 @@ defmodule Plausible.Google.Api do
         if attempt >= @max_attempts do
           {:error, cause}
         else
-          Process.sleep(sleep_time)
+          Process.sleep(attempt * sleep_time)
           fetch_and_persist(site, report_request, Keyword.merge(opts, attempt: attempt + 1))
         end
     end
