@@ -45,9 +45,9 @@ defmodule Plausible.PurgeTest do
     end)
   end
 
-  test "delete_imported_stats!/1 does not reset stats_start_date", %{site: site} do
+  test "delete_imported_stats!/1 resets stats_start_date", %{site: site} do
     assert :ok == Plausible.Purge.delete_imported_stats!(site)
-    assert %Date{} = site.stats_start_date
+    assert %Plausible.Site{stats_start_date: nil} = Plausible.Repo.reload(site)
   end
 
   test "delete_native_stats!/1 deletes native stats", %{site: site} do
