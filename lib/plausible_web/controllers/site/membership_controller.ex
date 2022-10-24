@@ -68,7 +68,7 @@ defmodule PlausibleWeb.Site.MembershipController do
               PlausibleWeb.Email.new_user_invitation(invitation)
             end
 
-          Plausible.Mailer.send_email(email_template)
+          Plausible.Mailer.send(email_template)
 
           conn
           |> put_flash(
@@ -124,7 +124,7 @@ defmodule PlausibleWeb.Site.MembershipController do
       |> Repo.preload([:site, :inviter])
 
     PlausibleWeb.Email.ownership_transfer_request(invitation, user)
-    |> Plausible.Mailer.send_email_safe()
+    |> Plausible.Mailer.send()
 
     conn
     |> put_flash(:success, "Site transfer request has been sent to #{email}")
@@ -199,7 +199,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     Repo.delete!(membership)
 
     PlausibleWeb.Email.site_member_removed(membership)
-    |> Plausible.Mailer.send_email()
+    |> Plausible.Mailer.send()
 
     redirect_target =
       if membership.user.id == conn.assigns[:current_user].id do

@@ -77,7 +77,7 @@ defmodule PlausibleWeb.SiteController do
       {:ok, %{site: site}} ->
         if is_first_site do
           PlausibleWeb.Email.welcome_email(user)
-          |> Plausible.Mailer.send_email()
+          |> Plausible.Mailer.send()
         end
 
         conn

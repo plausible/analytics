@@ -29,7 +29,7 @@ defmodule Plausible.Workers.SendCheckStatsEmails do
 
   defp send_check_stats_email(user) do
     PlausibleWeb.Email.check_stats_email(user)
-    |> Plausible.Mailer.send_email_safe()
+    |> Plausible.Mailer.send()
 
     Repo.insert_all("check_stats_emails", [
       %{

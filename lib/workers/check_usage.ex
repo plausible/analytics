@@ -79,7 +79,7 @@ defmodule Plausible.Workers.CheckUsage do
             site_allowance
           )
 
-        Plausible.Mailer.send_email_safe(template)
+        Plausible.Mailer.send(template)
 
         subscriber
         |> Plausible.Auth.GracePeriod.start_manual_lock_changeset(last_cycle_usage)
@@ -100,7 +100,7 @@ defmodule Plausible.Workers.CheckUsage do
             suggested_plan
           )
 
-        Plausible.Mailer.send_email_safe(template)
+        Plausible.Mailer.send(template)
 
         subscriber
         |> Plausible.Auth.GracePeriod.start_changeset(last_cycle_usage)
