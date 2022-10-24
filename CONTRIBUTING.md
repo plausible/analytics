@@ -17,7 +17,8 @@ Make sure Docker, Elixir, Erlang and Node.js are all installed on your developme
     3. Run `mix ecto.migrate` to build the database schema.
     4. Run `npm ci --prefix assets` to install the required client-side dependencies.
     5. Run `npm ci --prefix tracker` to install the required tracker dependencies.
-    6. Run `mix download_country_database` to fetch geolocation database
+    6. Run `npm run deploy --prefix tracker` to generate tracker files in `priv/tracker/js`
+    7. Run `mix download_country_database` to fetch geolocation database
 3. Run `make server` or `mix phx.server` to start the Phoenix server.
 4. The system is now available on `localhost:8000`.
 
