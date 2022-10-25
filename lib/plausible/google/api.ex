@@ -219,15 +219,13 @@ defmodule Plausible.Google.Api do
     end
   end
 
-  defp maybe_refresh_token({access_token, nil, nil}) do
-    {:ok, access_token}
-  end
-
   defp maybe_refresh_token({access_token, refresh_token, expires_at}) do
-    if needs_to_refresh_token?(expires_at) do
-      do_refresh_token(refresh_token)
+    with true <- needs_to_refresh_token?(expires_at),
+         {:ok, {new_access_token, _expires_at}} <- do_refresh_token(refresh_token) do
+      {:ok, new_access_token}
     else
-      {:ok, access_token}
+      false -> {:ok, access_token}
+      {:error, cause} -> {:error, cause}
     end
   end
 
