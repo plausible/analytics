@@ -213,7 +213,7 @@ defmodule PlausibleWeb.SiteController do
 
   def settings_goals(conn, _params) do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
-    goals = Goals.for_site(site.domain)
+    goals = Goals.for_domain(site.domain)
 
     conn
     |> assign(:skip_plausible_tracking, true)

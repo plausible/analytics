@@ -2,6 +2,7 @@ defmodule Plausible.Stats.Breakdown do
   use Plausible.ClickhouseRepo
   import Plausible.Stats.{Base, Imported}
   alias Plausible.Stats.Query
+  alias Plausible.Goals
   @no_ref "Direct / None"
 
   @event_metrics [:visitors, :pageviews, :events]
@@ -10,7 +11,8 @@ defmodule Plausible.Stats.Breakdown do
 
   def breakdown(site, query, "event:goal", metrics, pagination) do
     {event_goals, pageview_goals} =
-      Plausible.Repo.all(from g in Plausible.Goal, where: g.domain == ^site.domain)
+      site.domain
+      |> Goals.for_domain()
       |> Enum.split_with(fn goal -> goal.event_name end)
 
     events = Enum.map(event_goals, & &1.event_name)
