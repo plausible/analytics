@@ -4,7 +4,7 @@ defmodule PlausibleWeb.StatsController do
 
   The stats dashboards are currently the only part of the app that uses client-side
   rendering. Since the dashboards are heavily interactive, they are built with React
-  which is an appropraite choice for highly interactive browser UIs.
+  which is an appropriate choice for highly interactive browser UIs.
 
   <div class="mermaid">
   sequenceDiagram
@@ -36,7 +36,7 @@ defmodule PlausibleWeb.StatsController do
       3.1 No client-side caching has been implemented yet. This is still theoretical. See https://github.com/plausible/analytics/discussions/1278
       3.2 This is a big potential opportunity, because analytics data is mostly immutable. Clients can cache all historical data.
     5. Since frontend rendering & navigation is harder to build and maintain than regular server-rendered HTML, we don't use SPA-style rendering anywhere else
-    .The only place currently where the benefits outweight the costs is the dashboard.
+    .The only place currently where the benefits outweigh the costs is the dashboard.
   """
 
   use PlausibleWeb, :controller

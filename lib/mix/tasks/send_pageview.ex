@@ -35,7 +35,7 @@ defmodule Mix.Tasks.SendPageview do
 
       [invalid_option | _] ->
         {key, _val} = invalid_option
-        IO.puts("Invalid opton #{key}. Aborting.")
+        IO.puts("Invalid option #{key}. Aborting.")
         IO.puts(usage())
     end
   end
@@ -52,7 +52,7 @@ defmodule Mix.Tasks.SendPageview do
     case Plausible.HTTPClient.post(url, headers, body) do
       {:ok, _} ->
         IO.puts(
-          "✅ Succesfully sent #{body[:name]} event to #{url} ✅ \n\nip=#{ip}\nuser_agent=#{user_agent}\nbody= #{inspect(body, pretty: true)}"
+          "✅ Successfully sent #{body[:name]} event to #{url} ✅ \n\nip=#{ip}\nuser_agent=#{user_agent}\nbody= #{inspect(body, pretty: true)}"
         )
 
       {:error, e} ->
