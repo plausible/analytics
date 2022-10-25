@@ -387,7 +387,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:webiste/settings/search-console for self-hosting" do
+  describe "GET /:website/settings/search-console for self-hosting" do
     setup [:create_user, :log_in, :create_site]
 
     test "display search console settings", %{conn: conn, site: site} do
@@ -399,7 +399,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:webiste/settings/search-console" do
+  describe "GET /:website/settings/search-console" do
     setup [:create_user, :log_in, :create_site]
 
     setup_patch_env(:google, client_id: "some", api_url: "https://www.googleapis.com")
