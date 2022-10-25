@@ -194,28 +194,24 @@
     }
     if (eventAttrs.name) {
       eventAttrs.props.url = link.href
-      return sendLinkClickEvent(event, link, eventAttrs.name, eventAttrs.props)
+      return sendLinkClickEvent(event, link, eventAttrs)
     }
     {{/if}}
 
     {{#if outbound_links}}
     if (isOutboundLink(link)) {
-      var eventName = 'Outbound Link: Click'
-      var eventProps = {url: link.href}
-      return sendLinkClickEvent(event, link, eventName, eventProps)
+      return sendLinkClickEvent(event, link, {name: 'Outbound Link: Click', props: {url: link.href}})
     }
     {{/if}}
 
     {{#if file_downloads}}
     if (isDownloadToTrack(hrefWithoutQuery)) {
-      var eventName = 'File Download'
-      var eventProps = {url: hrefWithoutQuery}
-      return sendLinkClickEvent(event, link, eventName, eventProps)
+      return sendLinkClickEvent(event, link, {name: 'File Download', props: {url: hrefWithoutQuery}})
     }
     {{/if}}
   }
 
-  function sendLinkClickEvent(event, link, eventName, eventProps) {
+  function sendLinkClickEvent(event, link, eventAttrs) {
     var followedLink = false
 
     function followLink() {
@@ -226,11 +222,11 @@
     }
 
     if (shouldFollowLink(event, link)) {
-      plausible(eventName, { props: eventProps, callback: followLink })
+      plausible(eventAttrs.name, { props: eventAttrs.props, callback: followLink })
       setTimeout(followLink, 5000)
       event.preventDefault()
     } else {
-      plausible(eventName, { props: eventProps })
+      plausible(eventAttrs.name, { props: eventAttrs.props })
     }
   }
 
