@@ -126,7 +126,7 @@ defmodule Plausible.Billing.Plans do
     )
   end
 
-  @enterprise_level_usage 20_000_000
+  @enterprise_level_usage 10_000_000
   @spec suggested_plan(Plausible.Auth.User.t(), non_neg_integer()) :: plan()
   def suggested_plan(user, usage_during_cycle) do
     cond do
