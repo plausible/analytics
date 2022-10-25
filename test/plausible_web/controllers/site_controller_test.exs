@@ -281,10 +281,17 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "GET /:website/settings/general" do
     setup [:create_user, :log_in, :create_site]
 
+    setup_patch_env(:google, client_id: "some", api_url: "https://www.googleapis.com")
+
     test "shows settings form", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/general")
+      resp = html_response(conn, 200)
 
-      assert html_response(conn, 200) =~ "General information"
+      assert resp =~ "General information"
+      assert resp =~ "Data Import from Google Analytics"
+      assert resp =~ "https://accounts.google.com/o/oauth2/v2/auth?"
+      assert resp =~ "analytics.readonly"
+      refute resp =~ "webmasters.readonly"
     end
   end
 
@@ -407,6 +414,17 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup %{site: site, user: user} = context do
       insert(:google_auth, user: user, site: site, property: "sc-domain:#{site.domain}")
       context
+    end
+
+    test "displays Continue with Google link", %{conn: conn, user: user} do
+      site = insert(:site, domain: "notconnectedyet.example.com", members: [user])
+
+      conn = get(conn, "/#{site.domain}/settings/search-console")
+      resp = html_response(conn, 200)
+      assert resp =~ "Continue with Google"
+      assert resp =~ "https://accounts.google.com/o/oauth2/v2/auth?"
+      assert resp =~ "webmasters.readonly"
+      refute resp =~ "analytics.readonly"
     end
 
     test "displays appropriate error in case of google account `google_auth_error`", %{

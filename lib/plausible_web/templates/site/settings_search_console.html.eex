@@ -57,7 +57,7 @@
           <% end %>
       <% end %>
     <% else %>
-      <%= button("Continue with Google", to: Plausible.Google.Api.authorize_url(@site.id, "search-console"), class: "button mt-8") %>
+      <%= button("Continue with Google", to: Plausible.Google.Api.search_console_authorize_url(@site.id, "search-console"), class: "button mt-8") %>
 
       <div class="text-gray-700 dark:text-gray-300 mt-8">
         NB: You also need to set up your site on <%= link("Google Search Console", to: "https://search.google.com/search-console/about") %> for the integration to work. <%= link("Read the docs", to: "https://plausible.io/docs/google-search-console-integration", class: "text-indigo-500", rel: "noreferrer") %>
