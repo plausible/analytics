@@ -66,3 +66,6 @@ plausible-report.xml
 
 # Auto-generated tracker files
 /priv/tracker/js/*.js
+
+# For apple fanboys
+.DS_Store
