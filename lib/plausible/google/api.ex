@@ -5,28 +5,21 @@ defmodule Plausible.Google.Api do
 
   @type google_analytics_view() :: {view_name :: String.t(), view_id :: String.t()}
 
-  @scope URI.encode_www_form(
-           "https://www.googleapis.com/auth/webmasters.readonly email https://www.googleapis.com/auth/analytics.readonly"
-         )
+  @search_console_scope URI.encode_www_form(
+                          "email https://www.googleapis.com/auth/webmasters.readonly"
+                        )
   @import_scope URI.encode_www_form("email https://www.googleapis.com/auth/analytics.readonly")
+
   @verified_permission_levels ["siteOwner", "siteFullUser", "siteRestrictedUser"]
 
-  def authorize_url(site_id, redirect_to) do
-    if Application.get_env(:plausible, :environment) == "test" do
-      ""
-    else
-      "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@scope}&state=" <>
-        Jason.encode!([site_id, redirect_to])
-    end
+  def search_console_authorize_url(site_id, redirect_to) do
+    "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@search_console_scope}&state=" <>
+      Jason.encode!([site_id, redirect_to])
   end
 
   def import_authorize_url(site_id, redirect_to) do
-    if Application.get_env(:plausible, :environment) == "test" do
-      ""
-    else
-      "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@import_scope}&state=" <>
-        Jason.encode!([site_id, redirect_to])
-    end
+    "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@import_scope}&state=" <>
+      Jason.encode!([site_id, redirect_to])
   end
 
   def fetch_verified_properties(auth) do
