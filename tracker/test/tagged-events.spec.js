@@ -13,7 +13,7 @@ test.describe('tagged-events extension', () => {
         expectCustomEvent(await plausibleRequestMock, 'Payment Complete', { amount: '100', method: "Credit Card", url: linkURL })
     });
 
-    test('tracks a tagged form submit with custom props and ignores plausible-event-url class', async ({ page }) => {
+    test('tracks a tagged form submit with custom props', async ({ page }) => {
         await page.goto('/tagged-event.html')
         const plausibleRequestMock = mockRequest(page, '/api/event')
         await page.click('#form-submit')

@@ -193,6 +193,7 @@
       eventAttrs = getTaggedEventAttributes(link && link.parentNode)
     }
     if (eventAttrs.name) {
+      eventAttrs.props.url = link.href
       return sendLinkClickEvent(event, link, eventAttrs.name, eventAttrs.props)
     }
     {{/if}}
@@ -270,12 +271,6 @@
 
     for (var i = 0; i < classList.length; i++) {
       var className = classList.item(i)
-
-      // Only for link elements: url is a special prop with the dynamic link.href value
-      if (isLink(htmlElement) && className === 'plausible-event-url') {
-        eventAttrs.props.url = htmlElement.href
-        continue
-      }
 
       var matchList = className.match(/plausible-event-(.+)=(.+)/)
       if (!matchList) { continue }
