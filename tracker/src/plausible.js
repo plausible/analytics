@@ -165,7 +165,7 @@
   }
 
   function isLink(element) {
-    return element.tagName.toLowerCase() === 'a'
+    return element && element.tagName.toLowerCase() === 'a'
   }
 
   function shouldFollowLink(event, link) {
@@ -186,7 +186,12 @@
     var hrefWithoutQuery = link && link.href && link.href.split('?')[0]
 
     {{#if tagged_events}}
-    var eventAttrs = getTaggedEventAttributes(link)
+    var eventAttrs
+    if (isTagged(link)) {
+      eventAttrs = getTaggedEventAttributes(link)
+    } else {
+      eventAttrs = getTaggedEventAttributes(link && link.parentNode)
+    }
     if (eventAttrs.name) {
       return sendLinkClickEvent(event, link, eventAttrs.name, eventAttrs.props)
     }
@@ -315,14 +320,33 @@
     if (event.type === 'auxclick' && event.button !== MIDDLE_MOUSE_BUTTON) { return }
 
     var taggedElement = event.currentTarget
+    var clickedElement = event.target
 
     // ignore special cases handled by other event handlers
-    if (isForm(taggedElement) || isLink(taggedElement)) { return }
+    if (isForm(taggedElement) || wasLinkClicked(clickedElement, taggedElement)) { return }
 
     var eventAttrs = getTaggedEventAttributes(taggedElement)
     if (eventAttrs.name) {
       plausible(eventAttrs.name, { props: eventAttrs.props })
     }
+  }
+
+  // This function bubbles up from the clicked element until a specified parent.
+  // Returns `true` if a link element is found along the way, and `false` otherwise.
+  function wasLinkClicked(targetEl, bubbleUntilParent) {
+    if (isLink(targetEl)) { return true }
+    if (targetEl === bubbleUntilParent) { return false }
+    return wasLinkClicked(targetEl && targetEl.parentNode, bubbleUntilParent)
+  }
+
+  function isTagged(element) {
+    var classList = element && element.classList
+    if (classList) {
+      for (var i = 0; i < classList.length; i++) {
+        if (classList.item(i).match(/plausible-event-name=(.+)/)) { return true }
+      }
+    }
+    return false
   }
 
   document.addEventListener('submit', handleFormSubmitEvent)
@@ -336,6 +360,5 @@
       taggedElements[i].addEventListener('auxclick', handleOtherElementClickEvent)
     }
   })
-
   {{/if}}
 })();
