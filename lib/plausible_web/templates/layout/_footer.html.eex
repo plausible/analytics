@@ -90,6 +90,24 @@
             </ul>
           </div>
         </div>
+        <div class="mt-32 md:mt-0">
+            <h4 class="text-sm font-semibold tracking-wider text-gray-400 uppercase leading-5">
+              Tools
+            </h4>
+            <ul class="mt-4">
+              <li>
+                <a rel="noferrer" href="https://plausible.io/docs/stats-api" class="text-base text-gray-300 leading-6 hover:text-white">
+                  Plausible APIs
+                </a>
+              </li>
+              <li class="mt-4">
+                <a rel="noferrer" href="https://plausible.io/blog/utm-tracking-tags#plausible-utm-tag-builder-tool" class="text-base text-gray-300 leading-6 hover:text-white">
+                  UTM tag builder
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
 <div class="md:grid md:grid-cols-2 md:gap-8">
           <div>
             <h4 class="text-sm leading-5 font-semibold tracking-wider text-gray-400 uppercase">
