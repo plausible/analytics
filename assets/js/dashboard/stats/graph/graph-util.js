@@ -206,18 +206,18 @@ export const buildDataSet = (plot, present_index, ctx, label, isPrevious) => {
         backgroundColor: gradient,
         fill: true,
       },
-        {
-          label,
-          data: dashedPlot,
-          borderWidth: 3,
-          borderDash: [3, 3],
-          borderColor: 'rgba(101,116,205)',
-          pointHoverBackgroundColor: 'rgba(71, 87, 193)',
-          pointBorderColor: 'transparent',
-          pointHoverRadius: 4,
-          backgroundColor: gradient,
-          fill: true,
-        }]
+      {
+        label,
+        data: dashedPlot,
+        borderWidth: 3,
+        borderDash: [3, 3],
+        borderColor: 'rgba(101,116,205)',
+        pointHoverBackgroundColor: 'rgba(71, 87, 193)',
+        pointBorderColor: 'transparent',
+        pointHoverRadius: 4,
+        backgroundColor: gradient,
+        fill: true,
+      }]
     } else {
       return [{
         label,
