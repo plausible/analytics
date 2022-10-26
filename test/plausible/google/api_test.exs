@@ -9,6 +9,51 @@ defmodule Plausible.Google.ApiTest do
 
   setup [:create_user, :create_new_site]
 
+  @refresh_token_body Jason.decode!(File.read!("fixture/ga_refresh_token.json"))
+
+  @full_report_mock [
+                      "ga_report_imported_visitors.json",
+                      "ga_report_imported_sources.json",
+                      "ga_report_imported_pages.json",
+                      "ga_report_imported_entry_pages.json",
+                      "ga_report_imported_exit_pages.json",
+                      "ga_report_imported_locations.json",
+                      "ga_report_imported_devices.json",
+                      "ga_report_imported_browsers.json",
+                      "ga_report_imported_operating_systems.json"
+                    ]
+                    |> Enum.map(&File.read!/1)
+                    |> Enum.map(&Jason.decode!/1)
+
+  test "import_analytics/4 refreshes OAuth token when needed", %{site: site} do
+    past = DateTime.add(DateTime.utc_now(), -3600, :second)
+    auth = {"redacted_access_token", "redacted_refresh_token", DateTime.to_iso8601(past)}
+    range = Date.range(~D[2020-01-01], ~D[2020-02-02])
+
+    expect(Plausible.HTTPClient.Mock, :post, fn "https://www.googleapis.com/oauth2/v4/token",
+                                                headers,
+                                                body ->
+      assert [{"content-type", "application/x-www-form-urlencoded"}] == headers
+
+      assert %{
+               grant_type: :refresh_token,
+               redirect_uri: "http://localhost:8000/auth/google/callback",
+               refresh_token: "redacted_refresh_token"
+             } = body
+
+      {:ok, %Finch.Response{status: 200, body: @refresh_token_body}}
+    end)
+
+    for report <- @full_report_mock do
+      expect(Plausible.HTTPClient.Mock, :post, fn _url, headers, _body, _opts ->
+        assert [{"Authorization", "Bearer 1/fFAGRNJru1FTz70BzhT3Zg"}] == headers
+        {:ok, %Finch.Response{status: 200, body: report}}
+      end)
+    end
+
+    assert :ok == Plausible.Google.Api.import_analytics(site, range, "123551", auth)
+  end
+
   describe "fetch_and_persist/4" do
     @ok_response Jason.decode!(File.read!("fixture/ga_batch_report.json"))
     @no_report_response Jason.decode!(File.read!("fixture/ga_report_empty_rows.json"))

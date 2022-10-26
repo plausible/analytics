@@ -203,7 +203,7 @@ defmodule Plausible.Google.HTTP do
       redirect_uri: redirect_uri()
     }
 
-    case HTTPClient.post(url, headers, params) do
+    case HTTPClient.impl().post(url, headers, params) do
       {:ok, %Finch.Response{body: body, status: 200}} ->
         {:ok, body}
 
