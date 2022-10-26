@@ -274,7 +274,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "shows snippet", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/snippet")
 
-      assert html_response(conn, 200) =~ "Add javascript snippet"
+      assert html_response(conn, 200) =~ "Add JavaScript snippet"
     end
   end
 
