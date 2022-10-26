@@ -29,7 +29,7 @@
 
 <%= form_for @conn, "/", [class: "shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6"], fn f -> %>
   <header class="relative">
-    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Javascript snippet</h2>
+    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">JavaScript snippet</h2>
     <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">Include this snippet in the <code>&lt;head&gt;</code> of your website.</p>
 
     <%= link(to: "https://plausible.io/docs/plausible-script", target: "_blank", rel: "noreferrer") do %>
@@ -96,7 +96,7 @@
               <div class="text-sm mt-2 text-gray-900 dark:text-gray-100">Your latest import has failed. You can try importing again by clicking the button below. If you try multiple times and the import keeps failing, please contact support.</div>
             <% end %>
             <div class="flex mt-2">
-              <%= button(to: Plausible.Google.Api.authorize_url(@site.id, "import"), class: "inline-flex pr-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50 dark:hover:bg-gray-700") do %>
+              <%= button(to: Plausible.Google.Api.import_authorize_url(@site.id, "import"), class: "inline-flex pr-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50 dark:hover:bg-gray-700") do %>
                 <%= google_logo() %>
                 <span style="font-family: Roboto, system-ui" class="text-sm font-medium text-gray-600 dark:text-gray-50">Continue with Google<span>
                   <% end %>

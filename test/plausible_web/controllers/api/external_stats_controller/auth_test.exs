@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
   use PlausibleWeb.ConnCase
-  import Plausible.TestUtils
 
   setup [:create_user, :create_api_key]
 
@@ -69,12 +68,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
 
   describe "super admin access" do
     setup %{user: user} do
-      original_env = Application.get_env(:plausible, :super_admin_user_ids)
-      Application.put_env(:plausible, :super_admin_user_ids, [user.id])
-
-      on_exit(fn ->
-        Application.put_env(:plausible, :super_admin_user_ids, original_env)
-      end)
+      patch_env(:super_admin_user_ids, [user.id])
     end
 
     test "can access as a super admin", %{conn: conn, api_key: api_key} do

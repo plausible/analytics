@@ -146,7 +146,7 @@ defmodule PlausibleWeb.AuthController do
   defp send_email_verification(user) do
     code = Auth.issue_email_verification(user)
     email_template = PlausibleWeb.Email.activation_email(user, code)
-    result = Plausible.Mailer.send_email(email_template)
+    result = Plausible.Mailer.send(email_template)
 
     Logger.debug(
       "E-mail verification e-mail sent. In dev environment GET /sent-emails for details."
@@ -228,7 +228,7 @@ defmodule PlausibleWeb.AuthController do
     code = Auth.issue_email_verification(user)
 
     email_template = PlausibleWeb.Email.activation_email(user, code)
-    Plausible.Mailer.send_email(email_template)
+    Plausible.Mailer.send(email_template)
 
     conn
     |> put_flash(:success, "Activation code was sent to #{user.email}")

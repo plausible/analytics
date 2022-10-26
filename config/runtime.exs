@@ -96,6 +96,21 @@ ch_db_url =
 
 ### Mandatory params End
 
+build_metadata =
+  config_dir
+  |> get_var_from_path_or_env("BUILD_METADATA", "{}")
+  |> Jason.decode!()
+
+runtime_metadata = [
+  version: get_in(build_metadata, ["labels", "org.opencontainers.image.version"]),
+  commit: get_in(build_metadata, ["labels", "org.opencontainers.image.revision"]),
+  created: get_in(build_metadata, ["labels", "org.opencontainers.image.created"]),
+  tags: get_in(build_metadata, ["tags"]),
+  host: get_var_from_path_or_env(config_dir, "APP_HOST", "app-unknown")
+]
+
+config :plausible, :runtime_metadata, runtime_metadata
+
 sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
 honeycomb_api_key = get_var_from_path_or_env(config_dir, "HONEYCOMB_API_KEY")
 honeycomb_dataset = get_var_from_path_or_env(config_dir, "HONEYCOMB_DATASET")
@@ -197,7 +212,12 @@ config :plausible, :selfhost,
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [scheme: base_url.scheme, host: base_url.host, path: base_url.path, port: base_url.port],
-  http: [port: port, ip: listen_ip, transport_options: [max_connections: :infinity]],
+  http: [
+    port: port,
+    ip: listen_ip,
+    transport_options: [max_connections: :infinity],
+    protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
+  ],
   secret_key_base: secret_key_base
 
 maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
@@ -213,13 +233,14 @@ else
 end
 
 included_environments = if sentry_dsn, do: ["prod", "staging", "dev"], else: []
+sentry_app_version = runtime_metadata[:version] || app_version
 
 config :sentry,
   dsn: sentry_dsn,
   environment_name: env,
   included_environments: included_environments,
-  release: app_version,
-  tags: %{app_version: app_version},
+  release: sentry_app_version,
+  tags: %{app_version: sentry_app_version, server_name: runtime_metadata[:host]},
   enable_source_code_context: true,
   root_source_code_path: [File.cwd!()],
   client: Plausible.Sentry.Client,
@@ -430,23 +451,23 @@ config :logger,
   backends: [:console]
 
 if honeycomb_api_key && honeycomb_dataset do
-  sample_rate = if env == "prod", do: 0.01, else: 1.0
-
   config :opentelemetry,
-    sampler: {:parent_based, %{root: {:trace_id_ratio_based, sample_rate}}},
-    resource: [service: %{name: "plausible"}],
+    resource: Plausible.OpenTelemetry.resource_attributes(runtime_metadata),
+    sampler: {Plausible.OpenTelemetry.Sampler, nil},
     span_processor: :batch,
-    exporter: :otlp
+    traces_exporter: :otlp
 
   config :opentelemetry_exporter,
     otlp_protocol: :grpc,
-    otlp_endpoint: 'https://api.honeycomb.io:443',
+    otlp_endpoint: "https://api.honeycomb.io:443",
     otlp_headers: [
       {"x-honeycomb-team", honeycomb_api_key},
       {"x-honeycomb-dataset", honeycomb_dataset}
     ]
 else
-  config :opentelemetry, sampler: {:parent_based, %{root: {:trace_id_ratio_based, 0.0}}}
+  config :opentelemetry,
+    sampler: :always_off,
+    traces_exporter: :none
 end
 
 config :tzdata,

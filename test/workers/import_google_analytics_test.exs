@@ -2,7 +2,7 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
   use Plausible.DataCase
   use Bamboo.Test
   import Double
-  import Plausible.TestUtils
+
   alias Plausible.Workers.ImportGoogleAnalytics
 
   @imported_data %Plausible.Site.ImportedData{

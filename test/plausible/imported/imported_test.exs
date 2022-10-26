@@ -1,7 +1,6 @@
 defmodule Plausible.ImportedTest do
   use PlausibleWeb.ConnCase
   use Timex
-  import Plausible.TestUtils
 
   @user_id 123
 
@@ -941,6 +940,66 @@ defmodule Plausible.ImportedTest do
       visit_duration = Enum.find(top_stats, fn stat -> stat["name"] == "Visit duration" end)
 
       assert visit_duration["value"] == 3_479_033
+    end
+
+    test "skips empty dates from import", %{conn: conn, site: site} do
+      import_data(
+        [
+          %{
+            dimensions: %{"ga:date" => "20210101"},
+            metrics: %{
+              "ga:users" => "1",
+              "ga:pageviews" => "1",
+              "ga:bounces" => "0",
+              "ga:sessions" => "1",
+              "ga:sessionDuration" => "60"
+            }
+          },
+          %{
+            dimensions: %{"ga:date" => "(other)"},
+            metrics: %{
+              "ga:users" => "1",
+              "ga:pageviews" => "1",
+              "ga:bounces" => "0",
+              "ga:sessions" => "1",
+              "ga:sessionDuration" => "60"
+            }
+          }
+        ],
+        site.id,
+        "imported_visitors"
+      )
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&with_imported=true"
+        )
+
+      assert %{
+               "top_stats" => [
+                 %{
+                   "change" => 100,
+                   "name" => "Unique visitors",
+                   "value" => 1
+                 },
+                 %{
+                   "change" => 100,
+                   "name" => "Total pageviews",
+                   "value" => 1
+                 },
+                 %{
+                   "change" => nil,
+                   "name" => "Bounce rate",
+                   "value" => 0
+                 },
+                 %{
+                   "change" => 100,
+                   "name" => "Visit duration",
+                   "value" => 60
+                 }
+               ]
+             } = json_response(conn, 200)
     end
   end
 end

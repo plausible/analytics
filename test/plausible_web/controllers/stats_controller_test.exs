@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.StatsControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
-  import Plausible.TestUtils
 
   describe "GET /:website - anonymous user" do
     test "public site - shows site stats", %{conn: conn} do

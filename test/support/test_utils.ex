@@ -2,6 +2,34 @@ defmodule Plausible.TestUtils do
   use Plausible.Repo
   alias Plausible.Factory
 
+  defmacro __using__(_) do
+    quote do
+      require Plausible.TestUtils
+      import Plausible.TestUtils
+    end
+  end
+
+  defmacro patch_env(env_key, value) do
+    quote do
+      original_env = Application.get_env(:plausible, unquote(env_key))
+      Application.put_env(:plausible, unquote(env_key), unquote(value))
+
+      on_exit(fn ->
+        Application.put_env(:plausible, unquote(env_key), original_env)
+      end)
+
+      {:ok, %{patched_env: true}}
+    end
+  end
+
+  defmacro setup_patch_env(env_key, value) do
+    quote do
+      setup do
+        patch_env(unquote(env_key), unquote(value))
+      end
+    end
+  end
+
   def create_user(_) do
     {:ok, user: Factory.insert(:user)}
   end
@@ -145,13 +173,13 @@ defmodule Plausible.TestUtils do
   end
 
   def eventually(expectation, wait_time_ms \\ 50, retries \\ 10) do
-    Enum.reduce_while(1..retries, nil, fn _i, _acc ->
+    Enum.reduce_while(1..retries, nil, fn attempt, _acc ->
       case expectation.() do
         {true, result} ->
           {:halt, result}
 
         {false, _} ->
-          Process.sleep(wait_time_ms)
+          Process.sleep(wait_time_ms * attempt)
           {:cont, nil}
       end
     end)

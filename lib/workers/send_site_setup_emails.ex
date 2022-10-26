@@ -76,7 +76,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
 
   defp send_create_site_email(user) do
     PlausibleWeb.Email.create_site_email(user)
-    |> Plausible.Mailer.send_email_safe()
+    |> Plausible.Mailer.send()
 
     Repo.insert_all("create_site_emails", [
       %{
@@ -88,7 +88,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
 
   defp send_setup_success_email(user, site) do
     PlausibleWeb.Email.site_setup_success(user, site)
-    |> Plausible.Mailer.send_email_safe()
+    |> Plausible.Mailer.send()
 
     Repo.insert_all("setup_success_emails", [
       %{
@@ -100,7 +100,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
 
   defp send_setup_help_email(user, site) do
     PlausibleWeb.Email.site_setup_help(user, site)
-    |> Plausible.Mailer.send_email_safe()
+    |> Plausible.Mailer.send()
 
     Repo.insert_all("setup_help_emails", [
       %{

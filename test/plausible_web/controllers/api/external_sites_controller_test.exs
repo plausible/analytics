@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   use PlausibleWeb.ConnCase
   use Plausible.Repo
-  import Plausible.TestUtils
 
   setup %{conn: conn} do
     user = insert(:user)

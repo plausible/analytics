@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.RegionsTest do
   use PlausibleWeb.ConnCase
-  import Plausible.TestUtils
 
   describe "GET /api/stats/:domain/regions" do
     defp seed(%{site: site}) do

@@ -2,13 +2,61 @@ defmodule Plausible.Google.ApiTest do
   use Plausible.DataCase, async: true
   use ExVCR.Mock, adapter: ExVCR.Adapter.Finch
   alias Plausible.Google.Api
-  import Plausible.TestUtils
-  import Double
+
+  import ExUnit.CaptureLog
+  import Mox
+  setup :verify_on_exit!
 
   setup [:create_user, :create_new_site]
 
+  @refresh_token_body Jason.decode!(File.read!("fixture/ga_refresh_token.json"))
+
+  @full_report_mock [
+                      "ga_report_imported_visitors.json",
+                      "ga_report_imported_sources.json",
+                      "ga_report_imported_pages.json",
+                      "ga_report_imported_entry_pages.json",
+                      "ga_report_imported_exit_pages.json",
+                      "ga_report_imported_locations.json",
+                      "ga_report_imported_devices.json",
+                      "ga_report_imported_browsers.json",
+                      "ga_report_imported_operating_systems.json"
+                    ]
+                    |> Enum.map(&File.read!/1)
+                    |> Enum.map(&Jason.decode!/1)
+
+  test "import_analytics/4 refreshes OAuth token when needed", %{site: site} do
+    past = DateTime.add(DateTime.utc_now(), -3600, :second)
+    auth = {"redacted_access_token", "redacted_refresh_token", DateTime.to_iso8601(past)}
+    range = Date.range(~D[2020-01-01], ~D[2020-02-02])
+
+    expect(Plausible.HTTPClient.Mock, :post, fn "https://www.googleapis.com/oauth2/v4/token",
+                                                headers,
+                                                body ->
+      assert [{"content-type", "application/x-www-form-urlencoded"}] == headers
+
+      assert %{
+               grant_type: :refresh_token,
+               redirect_uri: "http://localhost:8000/auth/google/callback",
+               refresh_token: "redacted_refresh_token"
+             } = body
+
+      {:ok, %Finch.Response{status: 200, body: @refresh_token_body}}
+    end)
+
+    for report <- @full_report_mock do
+      expect(Plausible.HTTPClient.Mock, :post, fn _url, headers, _body, _opts ->
+        assert [{"Authorization", "Bearer 1/fFAGRNJru1FTz70BzhT3Zg"}] == headers
+        {:ok, %Finch.Response{status: 200, body: report}}
+      end)
+    end
+
+    assert :ok == Plausible.Google.Api.import_analytics(site, range, "123551", auth)
+  end
+
   describe "fetch_and_persist/4" do
-    @ok_response File.read!("fixture/ga_batch_report.json")
+    @ok_response Jason.decode!(File.read!("fixture/ga_batch_report.json"))
+    @no_report_response Jason.decode!(File.read!("fixture/ga_report_empty_rows.json"))
 
     setup do
       {:ok, pid} = Plausible.Google.Buffer.start_link()
@@ -16,12 +64,6 @@ defmodule Plausible.Google.ApiTest do
     end
 
     test "will fetch and persist import data from Google Analytics", %{site: site, buffer: buffer} do
-      finch_double =
-        Finch
-        |> stub(:request, fn _, _, _ ->
-          {:ok, %Finch.Response{status: 200, body: @ok_response}}
-        end)
-
       request = %Plausible.Google.ReportRequest{
         dataset: "imported_exit_pages",
         view_id: "123",
@@ -33,8 +75,36 @@ defmodule Plausible.Google.ApiTest do
         page_size: 10_000
       }
 
+      expect(
+        Plausible.HTTPClient.Mock,
+        :post,
+        fn
+          "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
+          [{"Authorization", "Bearer fake-token"}],
+          %{
+            reportRequests: [
+              %{
+                dateRanges: [%{endDate: ~D[2022-02-01], startDate: ~D[2022-01-01]}],
+                dimensions: [
+                  %{histogramBuckets: [], name: "ga:date"},
+                  %{histogramBuckets: [], name: "ga:exitPagePath"}
+                ],
+                hideTotals: true,
+                hideValueRanges: true,
+                metrics: [%{expression: "ga:users"}, %{expression: "ga:exits"}],
+                orderBys: [%{fieldName: "ga:date", sortOrder: "DESCENDING"}],
+                pageSize: 10000,
+                pageToken: nil,
+                viewId: "123"
+              }
+            ]
+          },
+          [receive_timeout: 60_000] ->
+            {:ok, %Finch.Response{status: 200, body: @ok_response}}
+        end
+      )
+
       Api.fetch_and_persist(site, request,
-        http_client: finch_double,
         sleep_time: 0,
         buffer: buffer
       )
@@ -52,13 +122,21 @@ defmodule Plausible.Google.ApiTest do
       site: site,
       buffer: buffer
     } do
-      finch_double =
-        Finch
-        |> stub(:request, fn _, _, _ -> {:error, :timeout} end)
-        |> stub(:request, fn _, _, _ -> {:error, :nx_domain} end)
-        |> stub(:request, fn _, _, _ -> {:error, :closed} end)
-        |> stub(:request, fn _, _, _ -> {:ok, %Finch.Response{status: 503}} end)
-        |> stub(:request, fn _, _, _ -> {:ok, %Finch.Response{status: 502}} end)
+      expect(
+        Plausible.HTTPClient.Mock,
+        :post,
+        5,
+        fn
+          "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
+          _,
+          _,
+          [receive_timeout: 60_000] ->
+            Enum.random([
+              {:error, %Mint.TransportError{reason: :nxdomain}},
+              {:error, %{reason: %Finch.Response{status: 500}}}
+            ])
+        end
+      )
 
       request = %Plausible.Google.ReportRequest{
         view_id: "123",
@@ -72,25 +150,23 @@ defmodule Plausible.Google.ApiTest do
 
       assert {:error, :request_failed} =
                Api.fetch_and_persist(site, request,
-                 http_client: finch_double,
                  sleep_time: 0,
                  buffer: buffer
                )
-
-      assert_receive({Finch, :request, [_, _, [receive_timeout: 30_000]]})
-      assert_receive({Finch, :request, [_, _, [receive_timeout: 30_000]]})
-      assert_receive({Finch, :request, [_, _, [receive_timeout: 30_000]]})
-      assert_receive({Finch, :request, [_, _, [receive_timeout: 30_000]]})
-      assert_receive({Finch, :request, [_, _, [receive_timeout: 30_000]]})
     end
 
     test "does not fail when report does not have rows key", %{site: site, buffer: buffer} do
-      finch_double =
-        Finch
-        |> stub(:request, fn _, _, _ ->
-          {:ok,
-           %Finch.Response{status: 200, body: File.read!("fixture/ga_report_empty_rows.json")}}
-        end)
+      expect(
+        Plausible.HTTPClient.Mock,
+        :post,
+        fn
+          "https://analyticsreporting.googleapis.com/v4/reports:batchGet",
+          _,
+          _,
+          [receive_timeout: 60_000] ->
+            {:ok, %Finch.Response{status: 200, body: @no_report_response}}
+        end
+      )
 
       request = %Plausible.Google.ReportRequest{
         dataset: "imported_exit_pages",
@@ -105,14 +181,92 @@ defmodule Plausible.Google.ApiTest do
 
       assert :ok ==
                Api.fetch_and_persist(site, request,
-                 http_client: finch_double,
                  sleep_time: 0,
                  buffer: buffer
                )
     end
   end
 
-  describe "fetch_stats/3" do
+  describe "fetch_stats/3 errors" do
+    setup %{user: user, site: site} do
+      insert(:google_auth,
+        user: user,
+        site: site,
+        property: "sc-domain:dummy.test",
+        expires: NaiveDateTime.add(NaiveDateTime.utc_now(), 3600)
+      )
+
+      :ok
+    end
+
+    test "returns generic google_auth_error on 401/403", %{site: site} do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :post,
+        fn
+          "https://www.googleapis.com/webmasters/v3/sites/sc-domain%3Adummy.test/searchAnalytics/query",
+          [{"Authorization", "Bearer 123"}],
+          %{
+            dimensionFilterGroups: %{},
+            dimensions: ["query"],
+            endDate: "2022-01-05",
+            rowLimit: 5,
+            startDate: "2022-01-01"
+          } ->
+            {:error, %{reason: %Finch.Response{status: Enum.random([401, 403])}}}
+        end
+      )
+
+      query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+
+      assert {:error, "google_auth_error"} = Plausible.Google.Api.fetch_stats(site, query, 5)
+    end
+
+    test "returns whatever error code google returns on API client error", %{site: site} do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :post,
+        fn
+          "https://www.googleapis.com/webmasters/v3/sites/sc-domain%3Adummy.test/searchAnalytics/query",
+          _,
+          _ ->
+            {:error, %{reason: %Finch.Response{status: 400, body: %{"error" => "some_error"}}}}
+        end
+      )
+
+      query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+
+      assert {:error, "some_error"} = Plausible.Google.Api.fetch_stats(site, query, 5)
+    end
+
+    test "returns generic HTTP error and logs it", %{site: site} do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :post,
+        fn
+          "https://www.googleapis.com/webmasters/v3/sites/sc-domain%3Adummy.test/searchAnalytics/query",
+          _,
+          _ ->
+            {:error, Finch.Error.exception(:some_reason)}
+        end
+      )
+
+      query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+
+      log =
+        capture_log(fn ->
+          assert {:error, "failed_to_list_stats"} =
+                   Plausible.Google.Api.fetch_stats(site, query, 5)
+        end)
+
+      assert log =~ "Google Analytics: failed to list stats: %Finch.Error{reason: :some_reason}"
+    end
+  end
+
+  describe "fetch_stats/3 with VCR cassetes" do
+    # We need real HTTP Client for VCR tests
+    setup_patch_env(:http_impl, Plausible.HTTPClient)
+
     test "returns name and visitor count", %{user: user, site: site} do
       use_cassette "google_analytics_stats", match_requests_on: [:request_body] do
         insert(:google_auth,

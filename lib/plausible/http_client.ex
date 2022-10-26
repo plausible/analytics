@@ -11,6 +11,7 @@ defmodule Plausible.HTTPClient.Non200Error do
 end
 
 defmodule Plausible.HTTPClient.Interface do
+  @type finch_request_opts() :: Keyword.t()
   @type url() :: Finch.Request.url()
   @type headers() :: Finch.Request.headers()
   @type params() :: Finch.Request.body() | map()
@@ -21,6 +22,7 @@ defmodule Plausible.HTTPClient.Interface do
   @callback get(url(), headers()) :: response()
   @callback get(url()) :: response()
   @callback post(url(), headers(), params()) :: response()
+  @callback post(url(), headers(), params(), finch_request_opts()) :: response()
 end
 
 defmodule Plausible.HTTPClient do
@@ -40,8 +42,8 @@ defmodule Plausible.HTTPClient do
   @behaviour Plausible.HTTPClient.Interface
 
   @impl Plausible.HTTPClient.Interface
-  def post(url, headers \\ [], params \\ nil) do
-    call(:post, url, headers, params)
+  def post(url, headers \\ [], params \\ nil, finch_req_opts \\ []) do
+    call(:post, url, headers, params, finch_req_opts)
   end
 
   @doc """
@@ -59,12 +61,13 @@ defmodule Plausible.HTTPClient do
     Application.get_env(:plausible, :http_impl, __MODULE__)
   end
 
-  defp call(method, url, headers, params) do
+  defp call(method, url, headers, params, finch_req_opts \\ []) do
     {params, headers} = maybe_encode_params(params, headers)
 
     method
     |> build_request(url, headers, params)
-    |> do_request()
+    |> do_request(finch_req_opts)
+    |> maybe_decode_body()
     |> tag_error()
   end
 
@@ -72,8 +75,8 @@ defmodule Plausible.HTTPClient do
     Finch.build(method, url, headers, params)
   end
 
-  defp do_request(request) do
-    Finch.request(request, Plausible.Finch)
+  defp do_request(request, finch_req_opts) do
+    Finch.request(request, Plausible.Finch, finch_req_opts)
   end
 
   defp maybe_encode_params(params, headers) when is_binary(params) or is_nil(params) do
@@ -111,5 +114,29 @@ defmodule Plausible.HTTPClient do
 
   defp tag_error({:error, _} = error) do
     error
+  end
+
+  defp maybe_decode_body({:ok, %{headers: headers, body: body} = resp})
+       when is_binary(body) and body != "" do
+    if json?(headers) do
+      {:ok, update_in(resp.body, &Jason.decode!/1)}
+    else
+      {:ok, resp}
+    end
+  end
+
+  defp maybe_decode_body(response), do: response
+
+  defp json?(headers) do
+    found =
+      Enum.find(headers, fn
+        {"content-type", "application/json" <> _} ->
+          true
+
+        _ ->
+          false
+      end)
+
+    is_tuple(found)
   end
 end

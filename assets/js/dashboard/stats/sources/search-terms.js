@@ -30,7 +30,11 @@ export default class SearchTerms extends React.Component {
         searchTerms: res.search_terms || [],
         notConfigured: res.not_configured,
         isAdmin: res.is_admin
-      }))
+      })).catch((error) => 
+        {
+            this.setState({ loading: false, searchTerms: [], notConfigured: true, error: true, isAdmin: error.payload.is_admin })
+        }
+      )
   }
 
   renderSearchTerm(term) {
@@ -67,8 +71,10 @@ export default class SearchTerms extends React.Component {
       return (
         <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
           <RocketIcon />
-          <div>The site is not connected to Google Search Keywords</div>
-          <div>Cannot show search terms</div>
+          <div>
+          This site is not connected to Search Console so we cannot show the search phrases.
+          {this.state.isAdmin && this.state.error && <><br/><br/><p>Please click below to connect your Search Console account.</p></>}
+          </div>
           {this.state.isAdmin && <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/search-console`} className="button mt-4">Connect with Google</a> }
         </div>
       )

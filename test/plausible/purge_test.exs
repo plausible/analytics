@@ -1,21 +1,20 @@
 defmodule Plausible.PurgeTest do
   use Plausible.DataCase
-  import Plausible.TestUtils
 
   setup do
     site = insert(:site, stats_start_date: ~D[2020-01-01])
 
     populate_stats(site, [
-      build(:pageview, domain: site.domain),
-      build(:imported_visitors, site_id: site.id),
-      build(:imported_sources, site_id: site.id),
-      build(:imported_pages, site_id: site.id),
-      build(:imported_entry_pages, site_id: site.id),
-      build(:imported_exit_pages, site_id: site.id),
-      build(:imported_locations, site_id: site.id),
-      build(:imported_devices, site_id: site.id),
-      build(:imported_browsers, site_id: site.id),
-      build(:imported_operating_systems, site_id: site.id)
+      build(:pageview),
+      build(:imported_visitors),
+      build(:imported_sources),
+      build(:imported_pages),
+      build(:imported_entry_pages),
+      build(:imported_exit_pages),
+      build(:imported_locations),
+      build(:imported_devices),
+      build(:imported_browsers),
+      build(:imported_operating_systems)
     ])
 
     {:ok, %{site: site}}
@@ -33,6 +32,11 @@ defmodule Plausible.PurgeTest do
   end
 
   test "delete_imported_stats!/1 deletes imported data", %{site: site} do
+    Enum.each(Plausible.Imported.tables(), fn table ->
+      query = from(imported in table, where: imported.site_id == ^site.id)
+      assert_count(query, 1)
+    end)
+
     assert :ok == Plausible.Purge.delete_imported_stats!(site)
 
     Enum.each(Plausible.Imported.tables(), fn table ->
@@ -41,18 +45,21 @@ defmodule Plausible.PurgeTest do
     end)
   end
 
-  test "delete_imported_stats!/1 does not reset stats_start_date", %{site: site} do
+  test "delete_imported_stats!/1 resets stats_start_date", %{site: site} do
     assert :ok == Plausible.Purge.delete_imported_stats!(site)
-    assert %Date{} = site.stats_start_date
+    assert %Plausible.Site{stats_start_date: nil} = Plausible.Repo.reload(site)
   end
 
   test "delete_native_stats!/1 deletes native stats", %{site: site} do
-    assert :ok == Plausible.Purge.delete_native_stats!(site)
-
-    events_query = from(s in Plausible.ClickhouseSession, where: s.domain == ^site.domain)
-    assert_count(events_query, 0)
+    events_query = from(s in Plausible.ClickhouseEvent, where: s.domain == ^site.domain)
+    assert_count(events_query, 1)
 
     sessions_query = from(s in Plausible.ClickhouseSession, where: s.domain == ^site.domain)
+    assert_count(sessions_query, 1)
+
+    assert :ok == Plausible.Purge.delete_native_stats!(site)
+
+    assert_count(events_query, 0)
     assert_count(sessions_query, 0)
   end
 
@@ -62,13 +69,16 @@ defmodule Plausible.PurgeTest do
   end
 
   test "delete_site!/1 deletes the site and all stats", %{site: site} do
+    events_query = from(s in Plausible.ClickhouseEvent, where: s.domain == ^site.domain)
+    assert_count(events_query, 1)
+
+    sessions_query = from(s in Plausible.ClickhouseSession, where: s.domain == ^site.domain)
+    assert_count(sessions_query, 1)
+
     assert :ok == Plausible.Purge.delete_site!(site)
     assert nil == Plausible.Repo.reload(site)
 
-    events_query = from(s in Plausible.ClickhouseSession, where: s.domain == ^site.domain)
     assert_count(events_query, 0)
-
-    sessions_query = from(s in Plausible.ClickhouseSession, where: s.domain == ^site.domain)
     assert_count(sessions_query, 0)
 
     Enum.each(Plausible.Imported.tables(), fn table ->

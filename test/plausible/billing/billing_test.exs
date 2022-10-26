@@ -2,7 +2,6 @@ defmodule Plausible.BillingTest do
   use Plausible.DataCase
   use Bamboo.Test, shared: true
   alias Plausible.Billing
-  import Plausible.TestUtils
 
   describe "usage" do
     test "is 0 with no events" do

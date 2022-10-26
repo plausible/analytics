@@ -11,14 +11,14 @@ Make sure Docker, Elixir, Erlang and Node.js are all installed on your developme
 ### Start the environment:
 
 1. Run both `make postgres` and `make clickhouse`.
-    1. If you are using Apple Silicon (any of the M1 or similar SoC variants), `make clickhouse-arm` offers a development-only substitute that will work on your local machine. Not intended for production.
 2. You can set up everything with `make install`, alternatively run each command separately:
     1. Run `mix deps.get`. This will download the required Elixir dependencies.
     2. Run `mix ecto.create`. This will create the required databases in both Postgres and Clickhouse.
     3. Run `mix ecto.migrate` to build the database schema.
     4. Run `npm ci --prefix assets` to install the required client-side dependencies.
     5. Run `npm ci --prefix tracker` to install the required tracker dependencies.
-    6. Run `mix download_country_database` to fetch geolocation database
+    6. Run `npm run deploy --prefix tracker` to generate tracker files in `priv/tracker/js`
+    7. Run `mix download_country_database` to fetch geolocation database
 3. Run `make server` or `mix phx.server` to start the Phoenix server.
 4. The system is now available on `localhost:8000`.
 

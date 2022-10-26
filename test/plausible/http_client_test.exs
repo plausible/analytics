@@ -102,6 +102,18 @@ defmodule Plausible.HTTPClientTest do
              HTTPClient.post(bypass_url(bypass, path: "/any"), headers_no_content_type, params)
   end
 
+  test "post/4 accepts finch request opts", %{bypass: bypass} do
+    Bypass.expect_once(bypass, "POST", "/timeout", fn conn ->
+      Process.sleep(500)
+      Conn.resp(conn, 200, "ok")
+    end)
+
+    assert {:error, %Mint.TransportError{reason: :timeout}} ==
+             HTTPClient.post(bypass_url(bypass, path: "/timeout"), [], %{}, receive_timeout: 100)
+
+    Bypass.down(bypass)
+  end
+
   test "non-200 responses are tagged as errors", %{bypass: bypass} do
     Bypass.expect_once(bypass, "GET", "/get", fn conn ->
       Conn.resp(conn, 300, "oops")
@@ -124,8 +136,9 @@ defmodule Plausible.HTTPClientTest do
 
   test "header keys are downcased but values are not", %{bypass: bypass} do
     Bypass.expect_once(bypass, "GET", "/get", fn conn ->
-      Conn.resp(conn, 200, "ok")
+      conn
       |> Conn.put_resp_header("Some-Header", "Header-Value")
+      |> Conn.resp(200, "ok")
     end)
 
     assert {:ok, res} = HTTPClient.get(bypass_url(bypass, path: "/get"))
@@ -137,5 +150,17 @@ defmodule Plausible.HTTPClientTest do
     path = Keyword.get(opts, :path, "/")
 
     "http://localhost:#{port}#{path}"
+  end
+
+  test "decodes json in case content-type is found", %{bypass: bypass} do
+    Bypass.expect_once(bypass, "GET", "/json", fn conn ->
+      conn
+      |> Conn.put_resp_header("content-type", "application/json; something")
+      |> Conn.resp(200, """
+      {"answer": 42}
+      """)
+    end)
+
+    assert {:ok, %{body: %{"answer" => 42}}} = HTTPClient.get(bypass_url(bypass, path: "/json"))
   end
 end

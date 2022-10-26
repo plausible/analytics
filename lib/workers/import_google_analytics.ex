@@ -34,7 +34,7 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
         Enum.each(site.memberships, fn membership ->
           if membership.role in [:owner, :admin] do
             PlausibleWeb.Email.import_success(membership.user, site)
-            |> Plausible.Mailer.send_email_safe()
+            |> Plausible.Mailer.send()
           end
         end)
 
@@ -62,7 +62,7 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
     Enum.each(site.memberships, fn membership ->
       if membership.role in [:owner, :admin] do
         PlausibleWeb.Email.import_failure(membership.user, site)
-        |> Plausible.Mailer.send_email_safe()
+        |> Plausible.Mailer.send()
       end
     end)
   end

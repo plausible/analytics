@@ -22,12 +22,10 @@ defmodule Plausible.Billing.PaddleApi do
 
     case HTTPClient.post(preview_update_url(), @headers, params) do
       {:ok, response} ->
-        body = Jason.decode!(response.body)
-
-        if body["success"] do
-          {:ok, body["response"]}
+        if response.body["success"] do
+          {:ok, response.body["response"]}
         else
-          {:error, body["error"]}
+          {:error, response.body["error"]}
         end
 
       {:error, error} ->
@@ -51,12 +49,10 @@ defmodule Plausible.Billing.PaddleApi do
 
     case HTTPClient.post(update_subscription_url(), @headers, params) do
       {:ok, response} ->
-        body = Jason.decode!(response.body)
-
-        if body["success"] do
-          {:ok, body["response"]}
+        if response.body["success"] do
+          {:ok, response.body["response"]}
         else
-          {:error, body["error"]}
+          {:error, response.body["error"]}
         end
 
       {:error, %{reason: reason}} ->
@@ -75,13 +71,11 @@ defmodule Plausible.Billing.PaddleApi do
 
     case HTTPClient.post(get_subscription_url(), @headers, params) do
       {:ok, response} ->
-        body = Jason.decode!(response.body)
-
-        if body["success"] do
-          [subscription] = body["response"]
+        if response.body["success"] do
+          [subscription] = response.body["response"]
           {:ok, subscription}
         else
-          {:error, body["error"]}
+          {:error, response.body["error"]}
         end
 
       {:error, %{reason: reason}} ->
@@ -108,8 +102,7 @@ defmodule Plausible.Billing.PaddleApi do
       to: Timex.shift(Timex.today(), days: 1) |> Timex.format!("{YYYY}-{0M}-{0D}")
     }
 
-    with {:ok, response} <- HTTPClient.post(invoices_url(), @headers, params),
-         {:ok, body} <- Jason.decode(response.body),
+    with {:ok, %{body: body}} <- HTTPClient.post(invoices_url(), @headers, params),
          true <- Map.get(body, "success"),
          [_ | _] = response <- Map.get(body, "response") do
       Enum.sort(response, fn %{"payout_date" => d1}, %{"payout_date" => d2} ->

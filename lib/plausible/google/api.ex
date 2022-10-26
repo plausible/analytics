@@ -5,28 +5,21 @@ defmodule Plausible.Google.Api do
 
   @type google_analytics_view() :: {view_name :: String.t(), view_id :: String.t()}
 
-  @scope URI.encode_www_form(
-           "https://www.googleapis.com/auth/webmasters.readonly email https://www.googleapis.com/auth/analytics.readonly"
-         )
+  @search_console_scope URI.encode_www_form(
+                          "email https://www.googleapis.com/auth/webmasters.readonly"
+                        )
   @import_scope URI.encode_www_form("email https://www.googleapis.com/auth/analytics.readonly")
+
   @verified_permission_levels ["siteOwner", "siteFullUser", "siteRestrictedUser"]
 
-  def authorize_url(site_id, redirect_to) do
-    if Application.get_env(:plausible, :environment) == "test" do
-      ""
-    else
-      "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@scope}&state=" <>
-        Jason.encode!([site_id, redirect_to])
-    end
+  def search_console_authorize_url(site_id, redirect_to) do
+    "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@search_console_scope}&state=" <>
+      Jason.encode!([site_id, redirect_to])
   end
 
   def import_authorize_url(site_id, redirect_to) do
-    if Application.get_env(:plausible, :environment) == "test" do
-      ""
-    else
-      "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@import_scope}&state=" <>
-        Jason.encode!([site_id, redirect_to])
-    end
+    "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@import_scope}&state=" <>
+      Jason.encode!([site_id, redirect_to])
   end
 
   def fetch_verified_properties(auth) do
@@ -114,7 +107,8 @@ defmodule Plausible.Google.Api do
           expires_at :: String.t()
         }
 
-  @per_page 10_000
+  @per_page 7_500
+  @backoff_factor :timer.seconds(10)
   @max_attempts 5
   @spec import_analytics(Plausible.Site.t(), Date.Range.t(), String.t(), import_auth()) ::
           :ok | {:error, term()}
@@ -126,8 +120,9 @@ defmodule Plausible.Google.Api do
   `Plausible.Google.Buffer` process.
 
   Requests to Google Analytics can fail, and are retried at most
-  #{@max_attempts} times. Returns `:ok` when importing has finished or
-  `{:error, term()}` when a request to GA failed too many times.
+  #{@max_attempts} times with an exponential backoff. Returns `:ok` when
+  importing has finished or `{:error, term()}` when a request to GA failed too 
+  many times.
 
   Useful links:
 
@@ -181,10 +176,9 @@ defmodule Plausible.Google.Api do
   def fetch_and_persist(site, %ReportRequest{} = report_request, opts \\ []) do
     buffer_pid = Keyword.get(opts, :buffer)
     attempt = Keyword.get(opts, :attempt, 1)
-    sleep_time = Keyword.get(opts, :sleep_time, 1000)
-    http_client = Keyword.get(opts, :http_client, Finch)
+    sleep_time = Keyword.get(opts, :sleep_time, @backoff_factor)
 
-    case HTTP.get_report(http_client, report_request) do
+    case HTTP.get_report(report_request) do
       {:ok, {rows, next_page_token}} ->
         records = Plausible.Imported.from_google_analytics(rows, site.id, report_request.dataset)
         :ok = Plausible.Google.Buffer.insert_many(buffer_pid, report_request.dataset, records)
@@ -203,7 +197,7 @@ defmodule Plausible.Google.Api do
         if attempt >= @max_attempts do
           {:error, cause}
         else
-          Process.sleep(sleep_time)
+          Process.sleep(attempt * sleep_time)
           fetch_and_persist(site, report_request, Keyword.merge(opts, attempt: attempt + 1))
         end
     end
@@ -225,15 +219,13 @@ defmodule Plausible.Google.Api do
     end
   end
 
-  defp maybe_refresh_token({access_token, nil, nil}) do
-    {:ok, access_token}
-  end
-
   defp maybe_refresh_token({access_token, refresh_token, expires_at}) do
-    if needs_to_refresh_token?(expires_at) do
-      do_refresh_token(refresh_token)
+    with true <- needs_to_refresh_token?(expires_at),
+         {:ok, {new_access_token, _expires_at}} <- do_refresh_token(refresh_token) do
+      {:ok, new_access_token}
     else
-      {:ok, access_token}
+      false -> {:ok, access_token}
+      {:error, cause} -> {:error, cause}
     end
   end
 

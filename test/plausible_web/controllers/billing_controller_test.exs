@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.BillingControllerTest do
   use PlausibleWeb.ConnCase
-  import Plausible.TestUtils
 
   describe "GET /upgrade" do
     setup [:create_user, :log_in]

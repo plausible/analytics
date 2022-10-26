@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   use PlausibleWeb.ConnCase
-  import Plausible.TestUtils
+
   @user_id 123
 
   describe "GET /api/stats/main-graph - plot" do
