@@ -30,6 +30,8 @@ defmodule Plausible.Goal do
     |> cast(attrs, [:domain, :event_name, :page_path])
     |> validate_required([:domain])
     |> validate_event_name_and_page_path()
+    |> update_change(:event_name, &String.trim/1)
+    |> update_change(:page_path, &String.trim/1)
   end
 
   defp validate_event_name_and_page_path(changeset) do
