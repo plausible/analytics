@@ -115,13 +115,12 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
          {:ok, goal_id} <- expect_param_key(params, "goal_id"),
          site when not is_nil(site) <-
            Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin]) do
-      goal = Repo.get_by(Plausible.Goal, id: goal_id)
+      case Goals.delete(goal_id, site.domain) do
+        :ok ->
+          json(conn, %{"deleted" => true})
 
-      if goal do
-        Goals.delete(goal_id)
-        json(conn, %{"deleted" => true})
-      else
-        H.not_found(conn, "Goal could not be found")
+        {:error, :not_found} ->
+          H.not_found(conn, "Goal could not be found")
       end
     else
       nil ->

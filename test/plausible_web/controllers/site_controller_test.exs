@@ -336,6 +336,25 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert updated.public
       assert redirected_to(conn, 302) == "/#{site.domain}/settings/visibility"
     end
+
+    test "fails to make site public with insufficient permissions", %{conn: conn, user: user} do
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
+      conn = post(conn, "/sites/#{site.domain}/make-public")
+      assert conn.status == 404
+      refute Repo.get(Plausible.Site, site.id).public
+    end
+
+    test "fails to make foreign site public", %{conn: my_conn, user: me} do
+      _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: :owner)])
+
+      other_user = insert(:user)
+      other_site = insert(:site)
+      insert(:site_membership, site: other_site, user: other_user, role: "owner")
+
+      my_conn = post(my_conn, "/sites/#{other_site.domain}/make-public")
+      assert my_conn.status == 404
+      refute Repo.get(Plausible.Site, other_site.id).public
+    end
   end
 
   describe "POST /sites/:website/make-private" do
@@ -362,6 +381,33 @@ defmodule PlausibleWeb.SiteControllerTest do
       delete(conn, "/#{site.domain}")
 
       refute Repo.exists?(from s in Plausible.Site, where: s.id == ^site.id)
+    end
+
+    test "fails to delete a site with insufficient permissions", %{conn: conn, user: user} do
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
+      insert(:google_auth, user: user, site: site)
+      insert(:custom_domain, site: site)
+      insert(:spike_notification, site: site)
+
+      conn = delete(conn, "/#{site.domain}")
+
+      assert conn.status == 404
+      assert Repo.exists?(from s in Plausible.Site, where: s.id == ^site.id)
+    end
+
+    test "fails to delete a foreign site", %{conn: my_conn, user: me} do
+      _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: :owner)])
+
+      other_user = insert(:user)
+      other_site = insert(:site)
+      insert(:site_membership, site: other_site, user: other_user, role: "owner")
+      insert(:google_auth, user: other_user, site: other_site)
+      insert(:custom_domain, site: other_site)
+      insert(:spike_notification, site: other_site)
+
+      my_conn = delete(my_conn, "/#{other_site.domain}")
+      assert my_conn.status == 404
+      assert Repo.exists?(from s in Plausible.Site, where: s.id == ^other_site.id)
     end
   end
 
@@ -391,6 +437,18 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       refute Repo.exists?(Plausible.Site.GoogleAuth)
       assert redirected_to(conn, 302) == "/#{site.domain}/settings/search-console"
+    end
+
+    test "fails to delete associated google auth from the outside", %{
+      conn: conn,
+      user: user
+    } do
+      other_site = insert(:site)
+      insert(:google_auth, user: user, site: other_site)
+      conn = delete(conn, "/#{other_site.domain}/settings/google-search")
+
+      assert conn.status == 404
+      assert Repo.exists?(Plausible.Site.GoogleAuth)
     end
   end
 
@@ -566,13 +624,23 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "DELETE /:website/goals/:id" do
     setup [:create_user, :log_in, :create_site]
 
-    test "lists goals for the site", %{conn: conn, site: site} do
+    test "deletes goal", %{conn: conn, site: site} do
       goal = insert(:goal, domain: site.domain, event_name: "Custom event")
 
       conn = delete(conn, "/#{site.domain}/goals/#{goal.id}")
 
       assert Repo.aggregate(Plausible.Goal, :count, :id) == 0
       assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
+    end
+
+    test "fails to deletes goal for a foreign site", %{conn: conn, site: site} do
+      another_site = insert(:site)
+      goal = insert(:goal, domain: another_site.domain, event_name: "Custom event")
+
+      conn = delete(conn, "/#{site.domain}/goals/#{goal.id}")
+
+      assert Repo.aggregate(Plausible.Goal, :count, :id) == 1
+      assert get_flash(conn, :error) == "Could not find goal"
     end
   end
 
@@ -601,6 +669,15 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       refute Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
     end
+
+    test "fails to delete the weekly report record for a foreign site", %{conn: conn} do
+      site = insert(:site)
+      insert(:weekly_report, site: site)
+
+      post(conn, "/sites/#{site.domain}/weekly-report/disable")
+
+      assert Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
+    end
   end
 
   describe "POST /sites/:website/weekly-report/recipients" do
@@ -626,6 +703,20 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
       assert report.recipients == []
+    end
+
+    test "fails to removes a recipient from the weekly report in a foreign website", %{conn: conn} do
+      site = insert(:site)
+      insert(:weekly_report, site: site, recipients: ["recipient@email.com"])
+
+      conn = delete(conn, "/sites/#{site.domain}/weekly-report/recipients/recipient@email.com")
+      assert conn.status == 404
+
+      conn = delete(conn, "/sites/#{site.domain}/weekly-report/recipients/recipient%40email.com")
+      assert conn.status == 404
+
+      report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
+      assert [_] = report.recipients
     end
   end
 
@@ -679,6 +770,22 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
       assert report.recipients == []
+    end
+
+    test "fails to remove a recipient from the monthly report in a foreign website", %{
+      conn: conn
+    } do
+      site = insert(:site)
+      insert(:monthly_report, site: site, recipients: ["recipient@email.com"])
+
+      conn = delete(conn, "/sites/#{site.domain}/monthly-report/recipients/recipient@email.com")
+      assert conn.status == 404
+
+      conn = delete(conn, "/sites/#{site.domain}/monthly-report/recipients/recipient%40email.com")
+      assert conn.status == 404
+
+      report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
+      assert [_] = report.recipients
     end
   end
 
@@ -763,6 +870,26 @@ defmodule PlausibleWeb.SiteControllerTest do
       report = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
       assert report.recipients == []
     end
+
+    test "fails to remove a recipient from the spike notification in a foreign website", %{
+      conn: conn
+    } do
+      site = insert(:site)
+      insert(:spike_notification, site: site, recipients: ["recipient@email.com"])
+
+      conn =
+        delete(conn, "/sites/#{site.domain}/spike-notification/recipients/recipient@email.com")
+
+      assert conn.status == 404
+
+      conn =
+        delete(conn, "/sites/#{site.domain}/spike-notification/recipients/recipient%40email.com")
+
+      assert conn.status == 404
+
+      report = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
+      assert [_] = report.recipients
+    end
   end
 
   describe "GET /sites/:website/shared-links/new" do
@@ -833,25 +960,52 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "DELETE /sites/:website/shared-links/:slug" do
     setup [:create_user, :log_in, :create_site]
 
-    test "shows form for new shared link", %{conn: conn, site: site} do
+    test "deletes shared link", %{conn: conn, site: site} do
       link = insert(:shared_link, site: site)
 
       conn = delete(conn, "/sites/#{site.domain}/shared-links/#{link.slug}")
 
       refute Repo.one(Plausible.Site.SharedLink)
       assert redirected_to(conn, 302) =~ "/#{site.domain}/settings"
+      assert get_flash(conn, :success) == "Shared Link deleted"
+    end
+
+    test "fails to delete shared link from the outside", %{conn: conn, site: site} do
+      other_site = insert(:site)
+      link = insert(:shared_link, site: other_site)
+
+      conn = delete(conn, "/sites/#{site.domain}/shared-links/#{link.slug}")
+
+      assert Repo.one(Plausible.Site.SharedLink)
+      assert redirected_to(conn, 302) =~ "/#{site.domain}/settings"
+      assert get_flash(conn, :error) == "Could not find Shared Link"
     end
   end
 
   describe "DELETE sites/:website/custom-domains/:id" do
     setup [:create_user, :log_in, :create_site]
 
-    test "lists goals for the site", %{conn: conn, site: site} do
+    test "deletes custom domain", %{conn: conn, site: site} do
       domain = insert(:custom_domain, site: site)
 
-      delete(conn, "/sites/#{site.domain}/custom-domains/#{domain.id}")
+      conn = delete(conn, "/sites/#{site.domain}/custom-domains/#{domain.id}")
+      assert get_flash(conn, :success) == "Custom domain deleted successfully"
 
       assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 0
+    end
+
+    test "fails to deletes custom domain not owning it", %{conn: conn, site: site} do
+      _og_domain = insert(:custom_domain, site: site)
+
+      foreign_site = insert(:site)
+      foreign_domain = insert(:custom_domain, site: foreign_site)
+
+      assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 2
+
+      conn = delete(conn, "/sites/#{site.domain}/custom-domains/#{foreign_domain.id}")
+      assert get_flash(conn, :error) == "Failed to delete custom domain"
+
+      assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 2
     end
   end
 

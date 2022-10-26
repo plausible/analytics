@@ -24,8 +24,8 @@ defmodule PlausibleWeb.Site.MembershipController do
   plug PlausibleWeb.AuthorizeSiteAccess,
        [:owner, :admin] when action not in @only_owner_is_allowed_to
 
-  def invite_member_form(conn, %{"website" => site_domain}) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
+  def invite_member_form(conn, _params) do
+    site = Sites.get_for_user!(conn.assigns[:current_user].id, conn.assigns[:site].domain)
 
     render(
       conn,
@@ -36,7 +36,8 @@ defmodule PlausibleWeb.Site.MembershipController do
     )
   end
 
-  def invite_member(conn, %{"website" => site_domain, "email" => email, "role" => role}) do
+  def invite_member(conn, %{"email" => email, "role" => role}) do
+    site_domain = conn.assigns[:site].domain
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
     user = Plausible.Auth.find_user_by(email: email)
 
@@ -97,7 +98,8 @@ defmodule PlausibleWeb.Site.MembershipController do
     end
   end
 
-  def transfer_ownership_form(conn, %{"website" => site_domain}) do
+  def transfer_ownership_form(conn, _params) do
+    site_domain = conn.assigns[:site].domain
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
 
     render(
@@ -109,7 +111,8 @@ defmodule PlausibleWeb.Site.MembershipController do
     )
   end
 
-  def transfer_ownership(conn, %{"website" => site_domain, "email" => email}) do
+  def transfer_ownership(conn, %{"email" => email}) do
+    site_domain = conn.assigns[:site].domain
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
     user = Plausible.Auth.find_user_by(email: email)
 
@@ -192,27 +195,46 @@ defmodule PlausibleWeb.Site.MembershipController do
   defp can_grant_role_to_other?(_, _), do: false
 
   def remove_member(conn, %{"id" => id}) do
-    membership =
-      Repo.get!(Membership, id)
-      |> Repo.preload([:user, :site])
+    site = conn.assigns[:site]
+    site_id = site.id
 
-    Repo.delete!(membership)
+    membership_q =
+      from m in Membership,
+        where: m.id == ^id,
+        where: m.site_id == ^site_id,
+        inner_join: user in assoc(m, :user),
+        inner_join: site in assoc(m, :site),
+        preload: [user: user, site: site]
 
-    PlausibleWeb.Email.site_member_removed(membership)
-    |> Plausible.Mailer.send()
+    membership = Repo.one(membership_q)
 
-    redirect_target =
-      if membership.user.id == conn.assigns[:current_user].id do
-        "/#{URI.encode_www_form(membership.site.domain)}"
-      else
-        Routes.site_path(conn, :settings_people, membership.site.domain)
-      end
+    if membership do
+      Repo.delete!(membership)
 
-    conn
-    |> put_flash(
-      :success,
-      "#{membership.user.name} has been removed from #{membership.site.domain}"
-    )
-    |> redirect(to: redirect_target)
+      membership
+      |> PlausibleWeb.Email.site_member_removed()
+      |> Plausible.Mailer.send()
+
+      redirect_target =
+        if membership.user.id == conn.assigns[:current_user].id do
+          "/#{URI.encode_www_form(membership.site.domain)}"
+        else
+          Routes.site_path(conn, :settings_people, site.domain)
+        end
+
+      conn
+      |> put_flash(
+        :success,
+        "#{membership.user.name} has been removed from #{site.domain}"
+      )
+      |> redirect(to: redirect_target)
+    else
+      conn
+      |> put_flash(
+        :error,
+        "Failed to find membership to remove"
+      )
+      |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+    end
   end
 end
