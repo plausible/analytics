@@ -389,19 +389,24 @@ export default class VisitorGraph extends React.Component {
   }
 
   fetchGraphData() {
-    if (this.state.metric) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/main-graph`, this.props.query, {metric: this.state.metric || 'none', interval: this.state.interval})
-        .then((res) => {
-          this.setState({ loadingMainGraph: false, graphData: res })
-          return res
-        })
-        .catch((err) => {
-          console.log(err)
-          this.setState({ loadingMainGraph: false, graphData: false })
-        })
-    } else {
+    if (!this.state.metric) {
       this.setState({ loadingMainGraph: false, graphData: null })
+      return
     }
+
+    const url = `/api/stats/${encodeURIComponent(this.props.site.domain)}/main-graph`
+    let params = {metric: this.state.metric || 'none'}
+    if (this.state.interval) { params.interval = this.state.interval }
+
+    api.get(url, this.props.query, params)
+      .then((res) => {
+        this.setState({ loadingMainGraph: false, graphData: res })
+        return res
+      })
+      .catch((err) => {
+        console.log(err)
+        this.setState({ loadingMainGraph: false, graphData: false })
+      })
   }
 
   fetchTopStatData() {
