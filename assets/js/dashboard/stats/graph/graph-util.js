@@ -81,8 +81,8 @@ export const dateFormatter = (interval, longForm, period, full) => {
 }
 
 export const GraphTooltip = (graphData, metric, query) => {
-	return (context) => {
-		const tooltipModel = context.tooltip;
+  return (context) => {
+    const tooltipModel = context.tooltip;
     const offset = document.getElementById("main-graph-canvas").getBoundingClientRect()
 
     // Tooltip Element
@@ -102,31 +102,31 @@ export const GraphTooltip = (graphData, metric, query) => {
       tooltipEl.style.left = offset.x + 'px'
       tooltipEl.style.right = null;
       tooltipEl.style.opacity = 1;
-		}
+    }
 
-		// Stop if no tooltip showing
-		if (tooltipModel.opacity === 0) {
-			tooltipEl.style.display = 'none';
-			return;
-		}
+    // Stop if no tooltip showing
+    if (tooltipModel.opacity === 0) {
+      tooltipEl.style.display = 'none';
+      return;
+    }
 
-		function getBody(bodyItem) {
-			return bodyItem.lines;
-		}
+    function getBody(bodyItem) {
+      return bodyItem.lines;
+    }
 
-		function renderLabel(label, prev_label) {
-			const formattedLabel = dateFormatter(graphData.interval, true, query.period, ['week', 'month'].includes(graphData.interval) && graphData.full_intervals[label])(label)
-			const prev_formattedLabel = prev_label && dateFormatter(graphData.interval, true, query.period, ['week', 'month'].includes(graphData.interval) && graphData.full_intervals[prev_label])(prev_label)
+    function renderLabel(label, prev_label) {
+      const formattedLabel = dateFormatter(graphData.interval, true, query.period, ['week', 'month'].includes(graphData.interval) && graphData.full_intervals[label])(label)
+      const prev_formattedLabel = prev_label && dateFormatter(graphData.interval, true, query.period, ['week', 'month'].includes(graphData.interval) && graphData.full_intervals[prev_label])(prev_label)
 
-			if (graphData.interval === 'month') {
-				return !prev_label ? formattedLabel : prev_formattedLabel
-			}
+      if (graphData.interval === 'month') {
+        return !prev_label ? formattedLabel : prev_formattedLabel
+      }
 
-			if (graphData.interval === 'date') {
-				return !prev_label ? formattedLabel : prev_formattedLabel
-			}
+      if (graphData.interval === 'date') {
+        return !prev_label ? formattedLabel : prev_formattedLabel
+      }
 
-			if (graphData.interval === 'hour') {
+      if (graphData.interval === 'hour') {
         return `${dateFormatter("date", true, query.period)(label)}, ${formattedLabel}`
       }
 
@@ -135,60 +135,41 @@ export const GraphTooltip = (graphData, metric, query) => {
           return dateFormatter(graphData.interval, true, query.period)(label)
         }
         return `${dateFormatter("date", true, query.period)(label)}, ${formattedLabel}`
-			}
+      }
 
-			return !prev_label ? formattedLabel : prev_formattedLabel
-		}
+      return !prev_label ? formattedLabel : prev_formattedLabel
+    }
 
-		// function renderComparison(change) {
-		//   const formattedComparison = numberFormatter(Math.abs(change))
+    // Set Tooltip Body
+    if (tooltipModel.body) {
+      var bodyLines = tooltipModel.body.map(getBody);
 
-		//   if (change > 0) {
-		//     return `<span class='text-green-500 font-bold'>${formattedComparison}%</span>`
-		//   }
-		//   if (change < 0) {
-		//     return `<span class='text-red-400 font-bold'>${formattedComparison}%</span>`
-		//   }
-		//   if (change === 0) {
-		//     return `<span class='font-bold'>0%</span>`
-		//   }
-		// }
+      // Remove duplicated line on overlap between dashed and normal
+      if (bodyLines.length == 3) {
+        bodyLines[1] = false
+      }
 
-		// Set Tooltip Body
-		if (tooltipModel.body) {
-			var bodyLines = tooltipModel.body.map(getBody);
+      const data = tooltipModel.dataPoints[0]
+      const label = graphData.labels[data.dataIndex]
+      const point = data.raw || 0
 
-			// Remove duplicated line on overlap between dashed and normal
-			if (bodyLines.length == 3) {
-				bodyLines[1] = false
-			}
-
-			const data = tooltipModel.dataPoints[0]
-			const label = graphData.labels[data.dataIndex]
-			const point = data.raw || 0
-
-			// const prev_data = tooltipModel.dataPoints.slice(-1)[0]
-			// const prev_label = graphData.prev_labels && graphData.prev_labels[prev_data.dataIndex]
-			// const prev_point = prev_data.raw || 0
-			// const pct_change = point === prev_point ? 0 : prev_point === 0 ? 100 : Math.round(((point - prev_point) / prev_point * 100).toFixed(1))
-
-			let innerHtml = `
-			<div class='text-gray-100 flex flex-col'>
-				<div class='flex justify-between items-center'>
-						<span class='font-semibold mr-4 text-lg'>${METRIC_LABELS[metric]}</span>
-				</div>
-				<div class='flex flex-col'>
-					<div class='flex flex-row justify-between items-center'>
-						<span class='flex items-center mr-4'>
-							<div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(101,116,205)'></div>
-							<span>${renderLabel(label)}</span>
-						</span>
-						<span class='text-base font-bold'>${METRIC_FORMATTER[metric](point)}</span>
-					</div>
-				</div>
-				<span class='font-semibold italic'>${graphData.interval === 'month' ? 'Click to view month' : graphData.interval === 'date' ? 'Click to view day' : ''}</span>
-			</div>
-			`;
+      let innerHtml = `
+      <div class='text-gray-100 flex flex-col'>
+        <div class='flex justify-between items-center'>
+          <span class='font-semibold mr-4 text-lg'>${METRIC_LABELS[metric]}</span>
+        </div>
+        <div class='flex flex-col'>
+          <div class='flex flex-row justify-between items-center'>
+            <span class='flex items-center mr-4'>
+              <div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(101,116,205)'></div>
+              <span>${renderLabel(label)}</span>
+            </span>
+            <span class='text-base font-bold'>${METRIC_FORMATTER[metric](point)}</span>
+          </div>
+        </div>
+        <span class='font-semibold italic'>${graphData.interval === 'month' ? 'Click to view month' : graphData.interval === 'date' ? 'Click to view day' : ''}</span>
+      </div>
+      `;
 
       tooltipEl.innerHTML = innerHtml;
     }
@@ -225,18 +206,18 @@ export const buildDataSet = (plot, present_index, ctx, label, isPrevious) => {
         backgroundColor: gradient,
         fill: true,
       },
-      {
-        label,
-        data: dashedPlot,
-        borderWidth: 3,
-        borderDash: [3, 3],
-        borderColor: 'rgba(101,116,205)',
-        pointHoverBackgroundColor: 'rgba(71, 87, 193)',
-        pointBorderColor: 'transparent',
-        pointHoverRadius: 4,
-        backgroundColor: gradient,
-        fill: true,
-      }]
+        {
+          label,
+          data: dashedPlot,
+          borderWidth: 3,
+          borderDash: [3, 3],
+          borderColor: 'rgba(101,116,205)',
+          pointHoverBackgroundColor: 'rgba(71, 87, 193)',
+          pointBorderColor: 'transparent',
+          pointHoverRadius: 4,
+          backgroundColor: gradient,
+          fill: true,
+        }]
     } else {
       return [{
         label,
@@ -255,7 +236,6 @@ export const buildDataSet = (plot, present_index, ctx, label, isPrevious) => {
       label,
       data: plot,
       borderWidth: 2,
-      // borderDash: [10, 1],
       borderColor: 'rgba(166,187,210,0.5)',
       pointHoverBackgroundColor: 'rgba(166,187,210,0.8)',
       pointBorderColor: 'transparent',
