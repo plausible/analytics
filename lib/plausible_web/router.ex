@@ -221,9 +221,11 @@ defmodule PlausibleWeb.Router do
     get "/sites/:website/memberships/invite", Site.MembershipController, :invite_member_form
     post "/sites/:website/memberships/invite", Site.MembershipController, :invite_member
 
-    post "/sites//invitations/:invitation_id/accept", InvitationController, :accept_invitation
-    post "/sites//invitations/:invitation_id/reject", InvitationController, :reject_invitation
-    delete "/sites//invitations/:invitation_id", InvitationController, :remove_invitation
+    post "/sites/invitations/:invitation_id/accept", InvitationController, :accept_invitation
+
+    post "/sites/invitations/:invitation_id/reject", InvitationController, :reject_invitation
+
+    delete "/sites/:website/invitations/:invitation_id", InvitationController, :remove_invitation
 
     get "/sites/:website/transfer-ownership", Site.MembershipController, :transfer_ownership_form
     post "/sites/:website/transfer-ownership", Site.MembershipController, :transfer_ownership

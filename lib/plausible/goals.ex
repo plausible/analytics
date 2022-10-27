@@ -40,8 +40,15 @@ defmodule Plausible.Goals do
     |> Enum.map(&maybe_trim/1)
   end
 
-  def delete(id) do
-    Repo.one(from g in Goal, where: g.id == ^id) |> Repo.delete!()
+  def delete(id, domain) do
+    case Repo.delete_all(
+           from g in Goal,
+             where: g.id == ^id,
+             where: g.domain == ^domain
+         ) do
+      {1, _} -> :ok
+      {0, _} -> {:error, :not_found}
+    end
   end
 
   defp maybe_trim(%Goal{} = goal) do
