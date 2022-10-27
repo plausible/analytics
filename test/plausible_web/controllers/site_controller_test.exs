@@ -633,7 +633,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
     end
 
-    test "fails to deletes goal for a foreign site", %{conn: conn, site: site} do
+    test "fails to delete goal for a foreign site", %{conn: conn, site: site} do
       another_site = insert(:site)
       goal = insert(:goal, domain: another_site.domain, event_name: "Custom event")
 
@@ -705,7 +705,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert report.recipients == []
     end
 
-    test "fails to removes a recipient from the weekly report in a foreign website", %{conn: conn} do
+    test "fails to remove a recipient from the weekly report in a foreign website", %{conn: conn} do
       site = insert(:site)
       insert(:weekly_report, site: site, recipients: ["recipient@email.com"])
 
@@ -994,7 +994,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 0
     end
 
-    test "fails to deletes custom domain not owning it", %{conn: conn, site: site} do
+    test "fails to delete custom domain not owning it", %{conn: conn, site: site} do
       _og_domain = insert(:custom_domain, site: site)
 
       foreign_site = insert(:site)
