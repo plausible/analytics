@@ -440,9 +440,17 @@ geo_opts =
       Missing geolocation database configuration.
 
       Please set the IP_GEOLOCATION_DB environment value to the location of
-      your IP geolocation .mmdb file. Or authenticate with MaxMind by
-      configuring MAXMIND_LICENSE_KEY and MAXMIND_EDITION environment
-      variables.
+      your IP geolocation .mmdb file:
+
+          IP_GEOLOCATION_DB=/etc/plausible/dbip-city.mmdb
+
+      Or authenticate with MaxMind by
+      configuring MAXMIND_LICENSE_KEY and (optionally) MAXMIND_EDITION environment
+      variables:
+
+          MAXMIND_LICENSE_KEY=LNpsJCCKPis6XvBP
+          MAXMIND_EDITION=GeoLite2-City # this is the default edition
+
       """
   end
 
