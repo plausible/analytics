@@ -1,6 +1,62 @@
 defmodule Plausible.Geo do
   @moduledoc "Geolocation functions"
-  @adapter Application.compile_env!(:plausible, [__MODULE__, :adapter])
+  @db :geolocation
+
+  @doc """
+  Starts the geodatabase loading process. Two options are supported, local file and maxmind key.
+
+  Loading a local file:
+
+      iex> load_db(path: "/etc/plausible/dbip-city.mmdb")
+      :ok
+
+  Loading a maxmind db:
+
+      # this license key is no longer active
+      iex> load_db(license_key: "LNpsJCCKPis6XvBP", edition: "GeoLite2-City", async: true)
+      :ok
+
+  """
+  def load_db(opts) do
+    cond do
+      license_key = opts[:license_key] ->
+        edition = opts[:edition] || "GeoLite2-City"
+        :ok = :locus.start_loader(@db, {:maxmind, edition}, license_key: license_key)
+
+      path = opts[:path] ->
+        :ok = :locus.start_loader(@db, path)
+
+      true ->
+        raise "failed to load geolocation db: need :path or :license_key to be provided"
+    end
+
+    unless opts[:async] do
+      {:ok, _version} = :locus.await_loader(@db)
+    end
+
+    :ok
+  end
+
+  @doc """
+  Returns geodatabase type. Used for deciding whether to show the DBIP disclaimer.
+
+  Example:
+
+      # in the case of a dbip db
+      iex> database_type()
+      "DBIP-City-Lite"
+
+      # in the case of a maxmind db
+      iex> database_type()
+      "GeoLite2-City"
+
+  """
+  def database_type do
+    case :locus.get_info(@db, :metadata) do
+      {:ok, %{database_type: type}} -> type
+      _other -> nil
+    end
+  end
 
   @doc """
   Looks up geo info about an ip address.
@@ -88,43 +144,15 @@ defmodule Plausible.Geo do
 
   """
   def lookup(ip_address) do
-    @adapter.lookup(ip_address)
-  end
+    case :locus.lookup(@db, ip_address) do
+      {:ok, entry} ->
+        entry
 
-  @doc """
-  Starts the geodatabase loading process. Two options are supported, local file and maxmind key.
+      :not_found ->
+        nil
 
-  Loading a local file:
-
-      iex> load_db(path: "/etc/plausible/dbip-city.mmdb")
-      :ok
-
-  Loading a maxmind db:
-
-      # this license key is no longer active
-      iex> load_db(license_key: "LNpsJCCKPis6XvBP", edition: "GeoLite2-City", async: true)
-      :ok
-
-  """
-  def load_db(opts \\ []) do
-    @adapter.load_db(opts)
-  end
-
-  @doc """
-  Returns geodatabase type. Used for deciding whether to show the DBIP disclaimer.
-
-  Example:
-
-      # in the case of a dbip db
-      iex> database_type()
-      "DBIP-City-Lite"
-
-      # in the case of a maxmind db
-      iex> database_type()
-      "GeoLite2-City"
-
-  """
-  def database_type do
-    @adapter.database_type()
+      {:error, reason} ->
+        raise "failed to lookup ip address #{inspect(ip_address)}: " <> inspect(reason)
+    end
   end
 end

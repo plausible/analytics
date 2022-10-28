@@ -41,6 +41,4 @@ config :plausible, Plausible.Repo,
   connect_timeout: 300_000,
   handshake_timeout: 300_000
 
-config :plausible, Plausible.Geo, adapter: Plausible.Geo.Locus
-
 import_config "#{config_env()}.exs"
