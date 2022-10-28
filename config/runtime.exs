@@ -444,14 +444,14 @@ geo_opts =
       [path: ip_geolocation_db]
 
     true ->
-       raise """
-       Missing geolocation database configuration.
+      raise """
+      Missing geolocation database configuration.
 
-       Please set the IP_GEOLOCATION_DB environment value to the location of 
-       your IP geolocation .mmdb file. Or authenticate with MaxMind by 
-       configuring MAXMIND_LICENSE_KEY and MAXMIND_EDITION environment 
-       variables.
-       """
+      Please set the IP_GEOLOCATION_DB environment value to the location of
+      your IP geolocation .mmdb file. Or authenticate with MaxMind by
+      configuring MAXMIND_LICENSE_KEY and MAXMIND_EDITION environment
+      variables.
+      """
   end
 
 config :plausible, Plausible.Geo, geo_opts
