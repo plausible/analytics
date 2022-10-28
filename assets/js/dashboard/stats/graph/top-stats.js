@@ -15,7 +15,7 @@ export default class TopStats extends React.Component {
       const color = name === 'Bounce rate' ? 'text-green-500' : 'text-red-400'
       return <span className="text-xs dark:text-gray-100"><span className={color + ' font-bold'}>&darr;</span> {formattedComparison}%</span>
     } else if (comparison === 0) {
-      return <span className="text-xs text-gray-700 dark:text-gray-300">&#12336; N/A</span>
+      return <span className="text-xs text-gray-700 dark:text-gray-300">&#12336; 0%</span>
     }
   }
 
