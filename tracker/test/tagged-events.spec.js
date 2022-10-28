@@ -13,11 +13,28 @@ test.describe('tagged-events extension', () => {
         expectCustomEvent(await plausibleRequestMock, 'Payment Complete', { amount: '100', method: "Credit Card", url: linkURL })
     });
 
-    test('tracks a tagged form submit with custom props', async ({ page }) => {
+    test('tracks a tagged form submit with custom props when submitting by pressing enter', async ({ page }) => {
         await page.goto('/tagged-event.html')
         const plausibleRequestMock = mockRequest(page, '/api/event')
-        await page.click('#form-submit')
+
+        const inputLocator = page.locator('#form-text-input')
+        await inputLocator.type('some input')
+        await inputLocator.press('Enter')
+
         expectCustomEvent(await plausibleRequestMock, 'Signup', { type: "Newsletter" })
+    });
+
+    test('tracks submit on a form with a tagged parent when submit button is clicked', async ({ page }) => {
+        await page.goto('/tagged-event.html')
+
+        const plausibleRequestMockList = mockManyRequests(page, '/api/event', 2)
+
+        await page.click('#submit-form-with-tagged-parent')
+
+        const requests = await plausibleRequestMockList
+
+        expect(requests.length).toBe(1)
+        expectCustomEvent(requests[0], "Form Submit", {})
     });
 
     test('tracks click and auxclick on any tagged HTML element', async ({ page }, workerInfo) => {

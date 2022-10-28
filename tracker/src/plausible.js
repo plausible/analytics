@@ -186,12 +186,7 @@
     var hrefWithoutQuery = link && link.href && link.href.split('?')[0]
 
     {{#if tagged_events}}
-    var eventAttrs
-    if (isTagged(link)) {
-      eventAttrs = getTaggedEventAttributes(link)
-    } else {
-      eventAttrs = getTaggedEventAttributes(link && link.parentNode)
-    }
+    var eventAttrs = getTaggedEventAttributes(link)
     if (eventAttrs.name) {
       eventAttrs.props.url = link.href
       return sendLinkClickEvent(event, link, eventAttrs)
@@ -257,12 +252,13 @@
   {{/if}}
 
   {{#if tagged_events}}
-  // Iterates over `htmlElement.classList` to find Plausible event attributes.
-  // Returns an object with `name` and `props` keys.
+  // Finds event attributes by iterating over the given element's (or its
+  // parent's) classList. Returns an object with `name` and `props` keys.
   function getTaggedEventAttributes(htmlElement) {
+    var taggedElement = isTagged(htmlElement) ? htmlElement : htmlElement && htmlElement.parentNode
     var eventAttrs = { name: null, props: {} }
 
-    var classList = htmlElement && htmlElement.classList
+    var classList = taggedElement && taggedElement.classList
     if (!classList) { return eventAttrs }
 
     for (var i = 0; i < classList.length; i++) {
@@ -314,7 +310,8 @@
     var clickedElement = event.target
 
     // ignore special cases handled by other event handlers
-    if (isForm(taggedElement) || wasLinkClicked(clickedElement, taggedElement)) { return }
+    if (bubbleUpElementFound(clickedElement, taggedElement, isForm)) { return }
+    if (bubbleUpElementFound(clickedElement, taggedElement, isLink)) { return }
 
     var eventAttrs = getTaggedEventAttributes(taggedElement)
     if (eventAttrs.name) {
@@ -323,11 +320,12 @@
   }
 
   // This function bubbles up from the clicked element until a specified parent.
-  // Returns `true` if a link element is found along the way, and `false` otherwise.
-  function wasLinkClicked(targetEl, bubbleUntilParent) {
-    if (isLink(targetEl)) { return true }
-    if (targetEl === bubbleUntilParent) { return false }
-    return wasLinkClicked(targetEl && targetEl.parentNode, bubbleUntilParent)
+  // Returns `true` if an element satisfying `isElementFn` is found along
+  // the way, and `false` otherwise.
+  function bubbleUpElementFound(fromEl, untilEl, isElementFn) {
+    if (isElementFn(fromEl)) { return true }
+    if (fromEl === untilEl) { return false }
+    return bubbleUpElementFound(fromEl && fromEl.parentNode, untilEl, isElementFn)
   }
 
   function isTagged(element) {
