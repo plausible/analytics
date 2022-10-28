@@ -27,5 +27,3 @@ config :bamboo, :refute_timeout, 10
 config :plausible,
   session_timeout: 0,
   http_impl: Plausible.HTTPClient.Mock
-
-config :plausible, Plausible.Geo, adapter: Plausible.Geo.Stub
