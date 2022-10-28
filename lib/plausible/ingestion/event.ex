@@ -203,18 +203,18 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp put_geolocation(%{} = event, %Request{} = request) do
-    result = Geolix.lookup(request.remote_ip, where: :geolocation)
+    result = Plausible.Geo.lookup(request.remote_ip)
 
     country_code =
-      get_in(result, [:country, :iso_code])
+      get_in(result, ["country", "iso_code"])
       |> ignore_unknown_country()
 
-    city_geoname_id = get_in(result, [:city, :geoname_id])
+    city_geoname_id = get_in(result, ["city", "geoname_id"])
     city_geoname_id = Map.get(CityOverrides.get(), city_geoname_id, city_geoname_id)
 
     subdivision1_code =
       case result do
-        %{subdivisions: [%{iso_code: iso_code} | _rest]} ->
+        %{"subdivisions" => [%{"iso_code" => iso_code} | _rest]} ->
           country_code <> "-" <> iso_code
 
         _ ->
@@ -223,7 +223,7 @@ defmodule Plausible.Ingestion.Event do
 
     subdivision2_code =
       case result do
-        %{subdivisions: [_first, %{iso_code: iso_code} | _rest]} ->
+        %{"subdivisions" => [_first, %{"iso_code" => iso_code} | _rest]} ->
           country_code <> "-" <> iso_code
 
         _ ->

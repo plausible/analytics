@@ -134,6 +134,8 @@ geolite2_country_db =
 
 ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", geolite2_country_db)
 geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
+maxmind_license_key = get_var_from_path_or_env(config_dir, "MAXMIND_LICENSE_KEY")
+maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION")
 
 disable_auth =
   config_dir
@@ -430,17 +432,24 @@ config :kaffy,
     ]
   ]
 
-if config_env() != :test do
-  config :geolix,
-    databases: [
-      %{
-        id: :geolocation,
-        adapter: Geolix.Adapter.MMDB2,
-        source: ip_geolocation_db,
-        result_as: :raw
-      }
-    ]
-end
+geo_opts =
+  cond do
+    maxmind_license_key ->
+      [
+        license_key: maxmind_license_key,
+        edition: maxmind_edition
+      ]
+
+    ip_geolocation_db ->
+      [path: ip_geolocation_db]
+
+    true ->
+      # adapter would fail on incorrect / missing opts anyway
+      # so leaving unhandled cases as empty opts
+      []
+  end
+
+config :plausible, Plausible.Geo, geo_opts
 
 if geonames_source_file do
   config :location, :geonames_source_file, geonames_source_file
