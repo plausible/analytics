@@ -9,7 +9,9 @@ defmodule Plausible.Application do
     children = [
       Plausible.Repo,
       Plausible.ClickhouseRepo,
-      {Plausible.Release.BlockingChild, fn -> Plausible.Release.set_first_launch() end},
+      {Plausible.Release.BlockingChild,
+       fn -> Plausible.Release.wait_for_repo(Plausible.Repo) end},
+      maybe_set_first_launch(),
       {Finch, name: Plausible.Finch, pools: finch_pool_config()},
       {Phoenix.PubSub, name: Plausible.PubSub},
       Plausible.Session.Salts,
@@ -27,6 +29,7 @@ defmodule Plausible.Application do
       Plausible.PromEx
     ]
 
+    children = Enum.reject(children, &is_nil/1)
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
     setup_sentry()
     setup_opentelemetry()
@@ -116,5 +119,16 @@ defmodule Plausible.Application do
     OpentelemetryEcto.setup([:plausible, :repo])
     OpentelemetryEcto.setup([:plausible, :clickhouse_repo])
     OpentelemetryOban.setup()
+  end
+
+  defp maybe_set_first_launch do
+    alias Plausible.Release
+
+    if Release.self_hosted?() do
+      {Release.BlockingChild, fn -> Release.set_first_launch() end}
+    else
+      Release.set_first_launch(false)
+      _child = nil
+    end
   end
 end
