@@ -271,11 +271,9 @@ class LineGraph extends React.Component {
 
     return (
       <div className="graph-inner">
-        <FadeIn show={topStatData}>
-          <div className="flex flex-wrap">
-            {topStatData && <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData}/>}
-          </div>
-        </FadeIn>
+        <div className="flex flex-wrap" ref={this.boundary}>
+          <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current}/>
+        </div>
         <div className="relative px-2">
           <div className="absolute right-4 -top-10 flex">
             <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={this.props.updateInterval}/>
