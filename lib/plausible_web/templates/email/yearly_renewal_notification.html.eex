@@ -4,7 +4,7 @@ Time flies! This is a reminder that your annual subscription for Plausible Analy
 <br /><br />
 There's no action required if you're happy to continue using Plausible to count your website stats in a privacy-friendly way.
 <br /><br />
-If you don't want to continue your subscription, you can cancel it on your <%= link("account settings page", to: "#{plausible_url()}/billing/upgrade") %>.
+If you don't want to continue your subscription, you can cancel it on your <%= link("account settings page", to: "#{plausible_url()}/settings") %>.
 <br /><br />
 Have a question, feedback or need some guidance? Do reply back to this email.
 <br /><br />
