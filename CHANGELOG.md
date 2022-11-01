@@ -69,12 +69,12 @@ All notable changes to this project will be documented in this file.
 - Do not display ZZ country code in countries report [PR#1934](https://github.com/plausible/analytics#2223)
 - Add fallback icon for when DDG favicon cannot be fetched [PR#2279](https://github.com/plausible/analytics#2279)
 
-## v1.4.1
+## v1.4.1 - 2021-11-29
 
 ### Fixed
 - Fixes database error when pathname contains a question mark
 
-## v1.4.0
+## v1.4.0 - 2021-10-27
 
 ### Added
 - New parameter `metrics` for the `/api/v1/stats/timeseries` endpoint plausible/analytics#952
