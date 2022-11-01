@@ -78,13 +78,15 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
   def execute_cache_metrics do
     user_agents_count =
       case Cachex.stats(:user_agents) do
-        {:ok, stats} -> stats
+        # https://github.com/whitfin/cachex/pull/301
+        {:ok, %{writes: w, evictions: e}} when is_integer(w) and is_integer(e) -> w - e
         _ -> 0
       end
 
     sessions_count =
       case Cachex.stats(:sessions) do
-        {:ok, stats} -> stats
+        # https://github.com/whitfin/cachex/pull/301
+        {:ok, %{writes: w, evictions: e}} when is_integer(w) and is_integer(e) -> w - e
         _ -> 0
       end
 
