@@ -50,14 +50,11 @@ end
 defmodule Plausible.OpenTelemetry.Sampler do
   @moduledoc """
   [Custom OpenTelemetry sampler](https://hexdocs.pm/opentelemetry/readme.html#samplers)
-  implementation that samples 1% of the `/api/event` traces, but records 100% of
-  other traces.
+  implementation that ignores `/api/event` traces, while recording 100% of other traces.
   """
 
   @behaviour :otel_sampler
   require OpenTelemetry.Tracer, as: Tracer
-
-  @ratio_sampler :otel_sampler_trace_id_ratio_based.setup(0.01)
 
   @impl true
   def setup(_sampler_opts), do: []
@@ -66,17 +63,10 @@ defmodule Plausible.OpenTelemetry.Sampler do
   def description(_sampler_config), do: inspect(__MODULE__)
 
   @impl true
-  def should_sample(context, trace_id, links, name, kind, attributes, _config)
+  def should_sample(context, _trace_id, _links, _name, _kind, attributes, _config)
       when attributes."http.target" == "/api/event" do
-    :otel_sampler_trace_id_ratio_based.should_sample(
-      context,
-      trace_id,
-      links,
-      name,
-      kind,
-      attributes,
-      @ratio_sampler
-    )
+    tracestate = context |> Tracer.current_span_ctx() |> OpenTelemetry.Span.tracestate()
+    {:drop, [], tracestate}
   end
 
   @impl true
