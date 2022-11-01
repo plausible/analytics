@@ -18,6 +18,33 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
     ]
   end
 
+  @impl true
+  def event_metrics(_opts) do
+    metric_prefix = [:plausible, :profiling]
+
+    Event.build(
+      :plausible_event_metrics,
+      [
+        counter(
+          metric_prefix ++ [:ingestion, :site, :lookup, :counter],
+          event_name: [:plausible, :ingestion, :site, :lookup],
+          measurement: fn _ -> 1 end,
+          description: "Ingestion site lookup counter"
+        ),
+        distribution(
+          metric_prefix ++ [:ingestion, :site, :lookup, :duration, :milliseconds],
+          event_name: [:plausible, :ingestion, :site, :lookup],
+          description: "Ingestion site lookup duration",
+          measurement: :duration,
+          reporter_options: [
+            buckets: [5, 10, 50, 250, 1_000, 5_000]
+          ],
+          unit: {:native, :millisecond}
+        )
+      ]
+    )
+  end
+
   @doc """
   Add telemetry events for Session and Event write buffers
   """
@@ -51,13 +78,15 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
   def execute_cache_metrics do
     user_agents_count =
       case Cachex.stats(:user_agents) do
-        {:ok, stats} -> stats
+        # https://github.com/whitfin/cachex/pull/301
+        {:ok, %{writes: w, evictions: e}} when is_integer(w) and is_integer(e) -> w - e
         _ -> 0
       end
 
     sessions_count =
       case Cachex.stats(:sessions) do
-        {:ok, stats} -> stats
+        # https://github.com/whitfin/cachex/pull/301
+        {:ok, %{writes: w, evictions: e}} when is_integer(w) and is_integer(e) -> w - e
         _ -> 0
       end
 
