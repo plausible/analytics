@@ -7,50 +7,9 @@ defmodule Plausible.Release do
     :ecto
   ]
 
-  def self_hosted? do
-    Application.fetch_env!(@app, :is_selfhost)
-  end
-
-  def wait_for_repo(repo, sleep_time \\ :timer.seconds(1)) do
-    repo.query!("select 1")
-  rescue
-    DBConnection.ConnectionError ->
-      :timer.sleep(sleep_time)
-      wait_for_repo(repo, sleep_time)
-  end
-
-  @first_launch_key :first_launch?
-
   def should_be_first_launch? do
-    has_users? = Repo.exists?(Plausible.Auth.User)
-    self_hosted?() and not has_users?
-  end
-
-  def set_first_launch(first_launch? \\ should_be_first_launch?()) do
-    Application.put_env(@app, @first_launch_key, first_launch?)
-  end
-
-  @spec first_launch? :: boolean
-  def first_launch? do
-    Application.fetch_env!(@app, @first_launch_key)
-  end
-
-  defmodule BlockingChild do
-    @moduledoc """
-    A GenServer process that runs the supplied function in `init`
-    thus blocking other children from starting until it finishes.
-    """
-    use GenServer
-
-    def start_link(fun) do
-      GenServer.start_link(__MODULE__, fun)
-    end
-
-    @impl true
-    def init(fun) when is_function(fun, 0) do
-      fun.()
-      :ignore
-    end
+    self_hosted? = Application.fetch_env!(@app, :is_selfhost)
+    self_hosted? and not (_has_users? = Repo.exists?(Plausible.Auth.User))
   end
 
   def init_admin do

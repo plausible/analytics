@@ -29,7 +29,7 @@ defmodule PlausibleWeb.AuthController do
   defp maybe_disable_registration(conn, _opts) do
     selfhost_config = Application.get_env(:plausible, :selfhost)
     disable_registration = Keyword.fetch!(selfhost_config, :disable_registration)
-    first_launch? = Release.first_launch?()
+    first_launch? = Release.should_be_first_launch?()
 
     cond do
       first_launch? ->
@@ -59,16 +59,13 @@ defmodule PlausibleWeb.AuthController do
     if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
       case Repo.insert(user) do
         {:ok, user} ->
-          if Release.first_launch?(), do: Release.set_first_launch(false)
           conn = set_user_session(conn, user)
 
-          case user.email_verified do
-            false ->
-              send_email_verification(user)
-              redirect(conn, to: Routes.auth_path(conn, :activate_form))
-
-            true ->
-              redirect(conn, to: Routes.site_path(conn, :new))
+          if user.email_verified do
+            redirect(conn, to: Routes.site_path(conn, :new))
+          else
+            send_email_verification(user)
+            redirect(conn, to: Routes.auth_path(conn, :activate_form))
           end
 
         {:error, changeset} ->
