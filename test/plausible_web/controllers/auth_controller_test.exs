@@ -111,34 +111,6 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert html_response(conn, 200) =~ "Please complete the captcha"
     end
-
-    test "sets first_launch? to false", %{conn: conn} do
-      alias Plausible.Release
-
-      prev_env = Application.get_all_env(:plausible)
-      on_exit(fn -> Application.put_all_env(plausible: prev_env) end)
-
-      :ok = Application.put_env(:plausible, :is_selfhost, true)
-      :ok = Release.set_first_launch()
-      true = Release.first_launch?()
-
-      mock_captcha_success()
-
-      conn =
-        post(conn, "/register",
-          user: %{
-            name: "Jane Doe",
-            email: "user@example.com",
-            password: "very-secret",
-            password_confirmation: "very-secret"
-          }
-        )
-
-      assert conn.status == 302
-
-      assert Release.should_be_first_launch?() == false
-      assert Release.first_launch?() == false
-    end
   end
 
   describe "GET /register/invitations/:invitation_id" do

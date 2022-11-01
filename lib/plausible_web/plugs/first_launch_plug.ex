@@ -15,15 +15,10 @@ defmodule PlausibleWeb.FirstLaunchPlug do
   def call(%Plug.Conn{request_path: path} = conn, path), do: conn
 
   def call(conn, redirect_to) do
-    if Release.first_launch?() do
-      if Release.should_be_first_launch?() do
-        conn
-        |> Phoenix.Controller.redirect(to: redirect_to)
-        |> Plug.Conn.halt()
-      else
-        Release.set_first_launch(false)
-        conn
-      end
+    if Release.should_be_first_launch?() do
+      conn
+      |> Phoenix.Controller.redirect(to: redirect_to)
+      |> Plug.Conn.halt()
     else
       conn
     end
