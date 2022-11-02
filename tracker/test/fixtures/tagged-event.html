@@ -58,6 +58,18 @@
   <span id="not-tracked-span" class="plausible-event-name= still not tracked">
     Span (without plausible-event-name class)
   </span>
+
+
+  <script>
+    // Dynamically add a tagged element to DOM after one second
+    setTimeout(function () {
+      let taggedElement = document.createElement('button')
+      taggedElement.id = 'dynamic-tagged-button'
+      taggedElement.classList.add('plausible-event-name=Custom+Event')
+      taggedElement.innerHTML += 'Dynamic tagged button'
+      document.body.appendChild(taggedElement)
+    }, 1000)
+  </script>
 </body>
 
 </html>

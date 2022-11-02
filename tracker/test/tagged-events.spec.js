@@ -80,4 +80,18 @@ test.describe('tagged-events extension', () => {
         expect(requests.length).toBe(2)
         requests.forEach(request => expectCustomEvent(request, 'Custom Event', { foo: "bar" }))
     });
+
+    test('tracks tagged element that is dynamically added to the DOM', async ({ page }) => {
+        await page.goto('/tagged-event.html')
+
+        const plausibleRequestMock = mockRequest(page, '/api/event')
+
+        const buttonLocator = page.locator('#dynamic-tagged-button')
+        await buttonLocator.waitFor({state: 'visible'})
+        await page.waitForTimeout(500)
+
+        await buttonLocator.click()
+
+        expectCustomEvent(await plausibleRequestMock, 'Custom Event', {})
+    });
 });
