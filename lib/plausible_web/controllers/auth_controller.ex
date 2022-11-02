@@ -25,6 +25,7 @@ defmodule PlausibleWeb.AuthController do
             ]
 
   plug :maybe_disable_registration when action in [:register_form, :register]
+  plug :is_selfhost
 
   defp maybe_disable_registration(conn, _opts) do
     selfhost_config = Application.get_env(:plausible, :selfhost)
@@ -41,6 +42,10 @@ defmodule PlausibleWeb.AuthController do
       true ->
         conn
     end
+  end
+
+  defp is_selfhost(conn, _opts) do
+    assign(conn, :is_selfhost, Plausible.Release.is_selfhost())
   end
 
   def register_form(conn, _params) do
