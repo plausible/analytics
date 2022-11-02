@@ -10,9 +10,8 @@
         <%= if !Application.get_env(:plausible, :is_selfhost) do %>
           Made and hosted in the EU <span class="text-lg">🇪🇺</span><br />
         <% end %>
-        We <a class="text-gray-300 hover:text-white" rel="noreferrer" href="https://plausible.io/giving-back">give back</a> 5% of our revenue<br />
-        100% self-funded and independent <br />
-        Built by <a class="text-gray-100 hover:text-white" rel="noreferrer" href="https://twitter.com/ukutaht">@ukutaht</a> and <a class="text-gray-100 hover:text-white" rel="noreferrer" href="https://twitter.com/markosaric">@markosaric</a><br />
+        We <a class="text-gray-300 hover:text-white" rel="noreferrer" href="https://plausible.io/giving-back">give back</a> 5% of our revenue.<br />
+        Solely funded by our subscribers.<br />
         </p>
         <%= if Application.get_env(:plausible, :is_selfhost) do %>
           <div class="mt-4">
