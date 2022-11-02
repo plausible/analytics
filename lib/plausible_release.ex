@@ -7,9 +7,13 @@ defmodule Plausible.Release do
     :ecto
   ]
 
+  @spec is_selfhost :: boolean
+  def is_selfhost do
+    Application.fetch_env!(@app, :is_selfhost)
+  end
+
   def should_be_first_launch? do
-    self_hosted? = Application.fetch_env!(@app, :is_selfhost)
-    self_hosted? and not (_has_users? = Repo.exists?(Plausible.Auth.User))
+    is_selfhost() and not (_has_users? = Repo.exists?(Plausible.Auth.User))
   end
 
   def init_admin do
