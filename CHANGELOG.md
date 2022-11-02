@@ -57,8 +57,6 @@ All notable changes to this project will be documented in this file.
 - Fix 'All time' period for sites with no recorded stats [plausible/analytics#2277](https://github.com/plausible/analytics/pull/2277)
 - Ensure settings page can be rendered after a form error [plausible/analytics#2278](https://github.com/plausible/analytics/pull/2278)
 
->>>>>>> 09af319b (Add changelog)
-
 ### Changed
 - `script.file-downloads.outbound-links.js` only sends an outbound link event when an outbound download link is clicked
 - Plausible script now uses callback navigation (instead of waiting for 150ms every time) when sending custom events
