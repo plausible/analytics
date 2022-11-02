@@ -33,8 +33,11 @@ export const dateFormatter = (interval, longForm, period, full) => {
   return function(isoDate, _index, _ticks) {
     let date = parseUTCDate(isoDate)
     const minutes = date.getMinutes();
-    const ampm = date.getHours() >= 12 ? 'pm' : 'am';
-    const hours = date.getHours() % 12 ? date.getHours() % 12 : 12;
+    const parts = isoDate.split(/[^0-9]/);
+    const localDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
+    const dateFormat = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
+    const twelveHourClock = dateFormat.resolvedOptions().hour12
+    const formattedHours = dateFormat.format(localDate)
 
     if (interval === 'month') {
       if (longForm) {
@@ -55,13 +58,6 @@ export const dateFormatter = (interval, longForm, period, full) => {
         return formatDayShort(date);
       }
     } else if (interval === 'hour') {
-      const parts = isoDate.split(/[^0-9]/);
-      date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5])
-
-      const dateFormat = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
-      const twelveHourClock = dateFormat.resolvedOptions().hour12
-      const formattedHours = dateFormat.format(date)
-
       if (twelveHourClock) {
         return formattedHours.replace(' ', '').toLowerCase()
       } else {
@@ -75,7 +71,11 @@ export const dateFormatter = (interval, longForm, period, full) => {
         return isoDate + 'm'
       }
     } else if (interval === 'minute') {
-      return hours + ':' + (minutes < 10 ? `0${minutes}` : minutes) + ampm;
+      if (twelveHourClock) {
+        return formattedHours.replace(' ', ':' + (minutes < 10 ? `0${minutes}` : minutes)).toLowerCase()
+      } else {
+        return formattedHours.replace(/[^0-9]/g, '').concat(":" + (minutes < 10 ? `0${minutes}` : minutes))
+      }
     }
   }
 }
