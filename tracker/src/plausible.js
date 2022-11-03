@@ -165,7 +165,7 @@
   }
 
   function isLink(element) {
-    return element && element.tagName.toLowerCase() === 'a'
+    return element && element.tagName && element.tagName.toLowerCase() === 'a'
   }
 
   function shouldFollowLink(event, link) {
@@ -186,10 +186,10 @@
     var hrefWithoutQuery = link && link.href && link.href.split('?')[0]
 
     {{#if tagged_events}}
-    var eventAttrs = getTaggedEventAttributes(link)
-    if (eventAttrs.name) {
-      eventAttrs.props.url = link.href
-      return sendLinkClickEvent(event, link, eventAttrs)
+    if (isElementOrParentTagged(link, 0)) {
+      // Return to prevent sending multiple events with the same action.
+      // Clicks on tagged links are handled by another function.
+      return
     }
     {{/if}}
 
@@ -280,7 +280,7 @@
     return eventAttrs
   }
 
-  function handleFormSubmitEvent(event) {
+  function handleTaggedFormSubmitEvent(event) {
     var form = event.target
     var eventAttrs = getTaggedEventAttributes(form)
     if (!eventAttrs.name) { return }
@@ -300,32 +300,40 @@
   }
 
   function isForm(element) {
-    return element.tagName.toLowerCase() === 'form'
+    return element && element.tagName && element.tagName.toLowerCase() === 'form'
   }
 
-  function handleOtherElementClickEvent(event) {
+  var PARENTS_TO_SEARCH_LIMIT = 3
+
+  function handleTaggedElementClickEvent(event) {
     if (event.type === 'auxclick' && event.button !== MIDDLE_MOUSE_BUTTON) { return }
 
-    var taggedElement = event.currentTarget
-    var clickedElement = event.target
+    var clicked = event.target
 
-    // ignore special cases handled by other event handlers
-    if (bubbleUpElementFound(clickedElement, taggedElement, isForm)) { return }
-    if (bubbleUpElementFound(clickedElement, taggedElement, isLink)) { return }
+    var clickedLink
+    var taggedElement
+    // Iterate over parents to find the tagged element. Also search for
+    // a link element to call for different tracking behavior if found.
+    for (var i = 0; i <= PARENTS_TO_SEARCH_LIMIT; i++) {
+      if (!clicked) { break }
 
-    var eventAttrs = getTaggedEventAttributes(taggedElement)
-    if (eventAttrs.name) {
-      plausible(eventAttrs.name, { props: eventAttrs.props })
+      // Clicks inside forms are not tracked. Only form submits are.
+      if (isForm(clicked)) { return }
+      if (isLink(clicked)) { clickedLink = clicked }
+      if (isTagged(clicked)) { taggedElement = clicked }
+      clicked = clicked.parentNode
     }
-  }
 
-  // This function bubbles up from the clicked element until a specified parent.
-  // Returns `true` if an element satisfying `isElementFn` is found along
-  // the way, and `false` otherwise.
-  function bubbleUpElementFound(fromEl, untilEl, isElementFn) {
-    if (isElementFn(fromEl)) { return true }
-    if (fromEl === untilEl) { return false }
-    return bubbleUpElementFound(fromEl && fromEl.parentNode, untilEl, isElementFn)
+    if (taggedElement) {
+      var eventAttrs = getTaggedEventAttributes(taggedElement)
+
+      if (clickedLink) {
+        eventAttrs.props.url = clickedLink.href
+        sendLinkClickEvent(event, clickedLink, eventAttrs)
+      } else {
+        plausible(eventAttrs.name, { props: eventAttrs.props })
+      }
+    }
   }
 
   function isTagged(element) {
@@ -338,16 +346,14 @@
     return false
   }
 
-  document.addEventListener('submit', handleFormSubmitEvent)
+  function isElementOrParentTagged(element, parentsChecked) {
+    if (!element || parentsChecked > PARENTS_TO_SEARCH_LIMIT) { return false }
+    if (isTagged(element)) {return true}
+    return isElementOrParentTagged(element.parentNode, parentsChecked + 1)
+  }
 
-  // Add eventListeners to all tagged elements.
-  // This has to wait until all DOM content is loaded.
-  document.addEventListener('DOMContentLoaded', function (_e) {
-    var taggedElements = document.querySelectorAll("[class*=plausible-event-name]")
-    for (var i = 0; i < taggedElements.length; i++) {
-      taggedElements[i].addEventListener('click', handleOtherElementClickEvent)
-      taggedElements[i].addEventListener('auxclick', handleOtherElementClickEvent)
-    }
-  })
+  document.addEventListener('submit', handleTaggedFormSubmitEvent)
+  document.addEventListener('click', handleTaggedElementClickEvent)
+  document.addEventListener('auxclick', handleTaggedElementClickEvent)
   {{/if}}
 })();
