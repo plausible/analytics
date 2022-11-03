@@ -58,9 +58,6 @@ db_url =
 
 db_socket_dir = get_var_from_path_or_env(config_dir, "DATABASE_SOCKET_DIR")
 
-admin_user = get_var_from_path_or_env(config_dir, "ADMIN_USER_NAME")
-admin_email = get_var_from_path_or_env(config_dir, "ADMIN_USER_EMAIL")
-
 super_admin_user_ids =
   get_var_from_path_or_env(config_dir, "ADMIN_USER_IDS", "")
   |> String.split(",")
@@ -71,7 +68,6 @@ super_admin_user_ids =
   end)
   |> Enum.filter(& &1)
 
-admin_pwd = get_var_from_path_or_env(config_dir, "ADMIN_USER_PWD")
 env = get_var_from_path_or_env(config_dir, "ENVIRONMENT", "prod")
 mailer_adapter = get_var_from_path_or_env(config_dir, "MAILER_ADAPTER", "Bamboo.SMTPAdapter")
 mailer_email = get_var_from_path_or_env(config_dir, "MAILER_EMAIL", "hello@plausible.local")
@@ -193,9 +189,6 @@ disable_cron =
   |> String.to_existing_atom()
 
 config :plausible,
-  admin_user: admin_user,
-  admin_email: admin_email,
-  admin_pwd: admin_pwd,
   environment: env,
   mailer_email: mailer_email,
   super_admin_user_ids: super_admin_user_ids,

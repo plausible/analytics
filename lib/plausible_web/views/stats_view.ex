@@ -1,10 +1,6 @@
 defmodule PlausibleWeb.StatsView do
   use PlausibleWeb, :view
 
-  def admin_email do
-    Application.get_env(:plausible, :admin_email)
-  end
-
   def base_domain do
     PlausibleWeb.Endpoint.host()
   end

@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.PageController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  plug PlausibleWeb.AutoAuthPlug
 
   def index(conn, _params) do
     if conn.assigns[:current_user] do
