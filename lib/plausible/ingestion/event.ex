@@ -20,7 +20,6 @@ defmodule Plausible.Ingestion.Event do
          events when is_list(events) <- map_domains(event, request),
          events when is_list(events) <- put_user_id(events, request, salts),
          {:ok, events} <- validate_events(events),
-         :ok <- measured_sites_get(events),
          events when is_list(events) <- register_session(events, request, salts) do
       Enum.each(events, &Plausible.Event.WriteBuffer.insert/1)
     end
@@ -332,28 +331,5 @@ defmodule Plausible.Ingestion.Event do
     else
       nil
     end
-  end
-
-  defp measured_sites_get(events) do
-    events
-    |> Enum.map(& &1.domain)
-    |> Enum.uniq()
-    |> Enum.each(fn domain ->
-      if should_lookup_site?(domain) do
-        start = System.monotonic_time()
-        Plausible.Sites.get_by_domain(domain)
-        stop = System.monotonic_time()
-
-        :telemetry.execute(
-          [:plausible, :ingestion, :site, :lookup],
-          %{duration: stop - start},
-          %{}
-        )
-      end
-    end)
-  end
-
-  defp should_lookup_site?(domain) do
-    FunWithFlags.enabled?(:ingestion_pg_lookup, for: domain)
   end
 end
