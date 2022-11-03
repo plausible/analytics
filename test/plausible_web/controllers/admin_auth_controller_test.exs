@@ -5,34 +5,6 @@ defmodule PlausibleWeb.AdminAuthControllerTest do
   setup_patch_env(:is_selfhost, true)
 
   describe "GET /" do
-    test "no landing page", %{conn: conn} do
-      prevent_first_launch()
-      patch_config(disable_authentication: false)
-      conn = get(conn, "/")
-      assert redirected_to(conn) == "/login"
-    end
-
-    test "logs admin user in automatically when authentication is disabled", %{conn: conn} do
-      patch_config(disable_authentication: true)
-
-      admin_user =
-        insert(:user,
-          email: Application.get_env(:plausible, :admin_email),
-          password: Application.get_env(:plausible, :admin_pwd)
-        )
-
-      # goto landing page
-      conn = get(conn, "/")
-      assert get_session(conn, :current_user_id) == admin_user.id
-      assert redirected_to(conn) == "/sites"
-
-      # trying logging out
-      conn = get(conn, "/logout")
-      assert redirected_to(conn) == "/"
-      conn = get(conn, "/")
-      assert redirected_to(conn) == "/sites"
-    end
-
     test "disable registration", %{conn: conn} do
       prevent_first_launch()
       patch_config(disable_registration: true)

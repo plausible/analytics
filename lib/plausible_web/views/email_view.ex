@@ -1,10 +1,6 @@
 defmodule PlausibleWeb.EmailView do
   use PlausibleWeb, :view
 
-  def admin_email do
-    Application.get_env(:plausible, :admin_email)
-  end
-
   def plausible_url do
     PlausibleWeb.Endpoint.url()
   end

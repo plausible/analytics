@@ -1,6 +1,6 @@
 #!/bin/sh
 # Create an admin user
 
-BIN_DIR=$(dirname "$0")
-
-"${BIN_DIR}"/bin/plausible eval Plausible.Release.init_admin
+# TODO 1.6.0 remove this custom command
+echo "init-admin is deprecated and is no-op now"
+echo "user registration on first launch happens via Web UI instead"
