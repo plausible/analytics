@@ -7,6 +7,7 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
   @impl true
   def polling_metrics(opts) do
     poll_rate = Keyword.get(opts, :poll_rate, 5_000)
+
     otp_app = Keyword.fetch!(opts, :otp_app)
 
     metric_prefix =
@@ -76,15 +77,23 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
   Add telemetry events for Cachex user agents and sessions
   """
   def execute_cache_metrics do
+    {:ok, user_agents_stats} = Cachex.stats(:user_agents)
+    {:ok, sessions_stats} = Cachex.stats(:sessions)
+
+    user_agents_hit_rate = Map.get(user_agents_stats, :hit_rate, 0.0)
+    sessions_hit_rate = Map.get(sessions_stats, :hit_rate, 0.0)
+
     {:ok, user_agents_count} = Cachex.size(:user_agents)
     {:ok, sessions_count} = Cachex.size(:sessions)
 
-    :telemetry.execute([:prom_ex, :plugin, :cachex, :user_agents_count], %{
-      count: user_agents_count
+    :telemetry.execute([:prom_ex, :plugin, :cachex, :user_agents], %{
+      count: user_agents_count,
+      hit_rate: user_agents_hit_rate
     })
 
-    :telemetry.execute([:prom_ex, :plugin, :cachex, :sessions_count], %{
-      count: sessions_count
+    :telemetry.execute([:prom_ex, :plugin, :cachex, :sessions], %{
+      count: sessions_count,
+      hit_rate: sessions_hit_rate
     })
   end
 
@@ -116,13 +125,25 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
       [
         last_value(
           metric_prefix ++ [:cache, :sessions, :size],
-          event_name: [:prom_ex, :plugin, :cachex, :sessions_count],
+          event_name: [:prom_ex, :plugin, :cachex, :sessions],
           measurement: :count
         ),
         last_value(
           metric_prefix ++ [:cache, :user_agents, :size],
-          event_name: [:prom_ex, :plugin, :cachex, :user_agents_count],
+          event_name: [:prom_ex, :plugin, :cachex, :user_agents],
           measurement: :count
+        ),
+        last_value(
+          metric_prefix ++ [:cache, :user_agents, :hit_ratio],
+          event_name: [:prom_ex, :plugin, :cachex, :user_agents],
+          description: "UA cache hit ratio",
+          measurement: :hit_rate
+        ),
+        last_value(
+          metric_prefix ++ [:cache, :sessions, :hit_ratio],
+          event_name: [:prom_ex, :plugin, :cachex, :sessions],
+          description: "Sessions cache hit ratio",
+          measurement: :hit_rate
         )
       ]
     )
