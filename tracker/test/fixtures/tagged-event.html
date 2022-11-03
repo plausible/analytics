@@ -17,7 +17,7 @@
 
   <form class="plausible-event-name=Signup plausible-event-type=Newsletter"
     action="https://awesome.website.com/register" method="post">
-    <input type="text" id='form-text-input'/>
+    <input type="text" id='form-text-input' />
     <input id="form-submit" type="submit" value="Submit" />
   </form>
 
@@ -33,20 +33,18 @@
     <a id="link-with-div-parent" href="https://awesome.website.com/payment/">Div child</a>
   </div>
 
-  <a class="plausible-event-name=Custom+Event plausible-event-foo=bar"
-    href="https://awesome.website.com/payment/">
+  <a class="plausible-event-name=Custom+Event plausible-event-foo=bar" href="https://awesome.website.com/payment/">
     <h2 id="h2-with-link-parent">Link child</h2>
   </a>
 
   <div class="plausible-event-name=Form+Submit">
     <form action="https://awesome.website.com/register" method="post">
-      <input type="text" value="Form"/>
-      <input id="submit-form-with-tagged-parent" type="submit" value="Submit"/>
+      <input type="text" value="Form" />
+      <input id="submit-form-with-tagged-parent" type="submit" value="Submit" />
     </form>
   </div>
 
-  <a id="not-tracked-link"
-    class="plausible-event-amount=100 plausible-event-method=Credit+Card"
+  <a id="not-tracked-link" class="plausible-event-amount=100 plausible-event-method=Credit+Card"
     href="https://awesome.website.com/payment/">
     Link (without plausible-event-name class)
   </a>
@@ -70,6 +68,13 @@
       document.body.appendChild(taggedElement)
     }, 1000)
   </script>
+
+  <form id="form" class="plausible-event-name=Signup plausible-event-type=Newsletter"
+    action="https://awesome.website.com/register" method="post">
+    <input type="text" id='form-input' />
+    <div id="form-div">div in a form</div>
+    <input type="submit" value="Submit" />
+  </form>
 </body>
 
 </html>

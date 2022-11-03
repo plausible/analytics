@@ -94,4 +94,16 @@ test.describe('tagged-events extension', () => {
 
         expectCustomEvent(await plausibleRequestMock, 'Custom Event', {})
     });
+
+    test('does not track clicks inside a tagged form, except submit click', async ({ page }) => {
+        await page.goto('/tagged-event.html')
+
+        const plausibleRequestMock = mockRequest(page, '/api/event')
+
+        await page.click('#form')
+        await page.click('#form-input')
+        await page.click('#form-div')
+
+        expect(await plausibleRequestMock, "should not have made Plausible request").toBeNull()
+    });
 });
