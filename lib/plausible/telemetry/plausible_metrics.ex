@@ -76,19 +76,8 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
   Add telemetry events for Cachex user agents and sessions
   """
   def execute_cache_metrics do
-    user_agents_count =
-      case Cachex.stats(:user_agents) do
-        # https://github.com/whitfin/cachex/pull/301
-        {:ok, %{writes: w, evictions: e}} when is_integer(w) and is_integer(e) -> w - e
-        _ -> 0
-      end
-
-    sessions_count =
-      case Cachex.stats(:sessions) do
-        # https://github.com/whitfin/cachex/pull/301
-        {:ok, %{writes: w, evictions: e}} when is_integer(w) and is_integer(e) -> w - e
-        _ -> 0
-      end
+    {:ok, user_agents_count} = Cachex.size(:user_agents)
+    {:ok, sessions_count} = Cachex.size(:sessions)
 
     :telemetry.execute([:prom_ex, :plugin, :cachex, :user_agents_count], %{
       count: user_agents_count
@@ -126,12 +115,12 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
       {__MODULE__, :execute_cache_metrics, []},
       [
         last_value(
-          metric_prefix ++ [:events, :cache_size, :count],
+          metric_prefix ++ [:cache, :sessions, :size],
           event_name: [:prom_ex, :plugin, :cachex, :sessions_count],
           measurement: :count
         ),
         last_value(
-          metric_prefix ++ [:sessions, :cache_size, :count],
+          metric_prefix ++ [:cache, :user_agents, :size],
           event_name: [:prom_ex, :plugin, :cachex, :user_agents_count],
           measurement: :count
         )
