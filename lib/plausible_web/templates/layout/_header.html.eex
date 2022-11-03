@@ -46,14 +46,6 @@
                 <li id="changelog-notification" class="relative py-2"></li>
               <% end %>
             </ul>
-            <%  Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_authentication) -> %>
-              <ul class="flex" x-show="!document.cookie.includes('logged_in=true')">
-                <li>
-                    <div class="inline-flex ml-6 rounded shadow">
-                      <a href="/" class="inline-flex items-center justify-center px-5 py-2 text-base font-medium text-white bg-indigo-600 border border-transparent leading-6 rounded-md hover:bg-indigo-500 focus:outline-none focus:ring transition duration-150 ease-in-out">My Sites</a>
-                    </div>
-                </li>
-              </ul>
             <%  Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) != false -> %>
               <ul class="flex" x-show="!document.cookie.includes('logged_in=true')">
                 <li>

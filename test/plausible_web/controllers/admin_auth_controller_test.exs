@@ -23,12 +23,7 @@ defmodule PlausibleWeb.AdminAuthControllerTest do
   end
 
   def patch_config(config) do
-    updated_config =
-      Keyword.merge(
-        [disable_authentication: false, disable_registration: false],
-        config
-      )
-
+    updated_config = Keyword.merge([disable_registration: false], config)
     patch_env(:selfhost, updated_config)
   end
 
