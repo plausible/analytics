@@ -131,10 +131,11 @@ geolite2_country_db =
 ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", geolite2_country_db)
 geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
 
-disable_auth =
-  config_dir
-  |> get_var_from_path_or_env("DISABLE_AUTH", "false")
-  |> String.to_existing_atom()
+# TODO 1.6.0 remove warning
+if System.get_env("DISABLE_AUTH") do
+  require Logger
+  Logger.warn("DISABLE_AUTH env var is no longer supported")
+end
 
 enable_email_verification =
   config_dir
@@ -199,9 +200,8 @@ config :plausible,
   domain_blacklist: domain_blacklist
 
 config :plausible, :selfhost,
-  disable_authentication: disable_auth,
   enable_email_verification: enable_email_verification,
-  disable_registration: if(!disable_auth, do: disable_registration, else: false)
+  disable_registration: disable_registration
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [scheme: base_url.scheme, host: base_url.host, path: base_url.path, port: base_url.port],
