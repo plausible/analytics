@@ -8,6 +8,8 @@ Handlebars.registerHelper('any', function (...args) {
   return args.slice(0, -1).some(Boolean)
 })
 
+Handlebars.registerPartial('customEvents', Handlebars.compile(fs.readFileSync(relPath('src/customEvents.js')).toString()))
+
 function relPath(segment) {
   return path.join(__dirname, segment)
 }
