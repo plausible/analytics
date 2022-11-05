@@ -13,12 +13,10 @@ defmodule Plausible.Billing do
   end
 
   defp active_subscription_query(user_id) do
-    from(
-      s in Subscription,
+    from s in Subscription,
       where: s.user_id == ^user_id and s.status == "active",
       order_by: [desc: s.inserted_at],
       limit: 1
-    )
   end
 
   def subscription_created(params) do
@@ -47,7 +45,7 @@ defmodule Plausible.Billing do
       Repo.get(Plausible.Auth.User, subscription.user_id)
       |> Map.put(:subscription, subscription)
 
-    {:ok, user}
+    user
     |> maybe_remove_grace_period
     |> check_lock_status
     |> maybe_adjust_api_key_limits
@@ -251,12 +249,13 @@ defmodule Plausible.Billing do
 
   defp has_active_enterprise_subscription(user) do
     Plausible.Repo.exists?(
-      from s in Plausible.Billing.Subscription,
+      from(s in Plausible.Billing.Subscription,
         join: e in Plausible.Billing.EnterprisePlan,
         on: s.user_id == e.user_id and s.paddle_plan_id == e.paddle_plan_id,
         where: s.user_id == ^user.id,
         where: s.paddle_plan_id == ^user.enterprise_plan.paddle_plan_id,
         where: s.status == "active"
+      )
     )
   end
 
@@ -278,7 +277,7 @@ defmodule Plausible.Billing do
   defp present?(nil), do: false
   defp present?(_), do: true
 
-  defp maybe_remove_grace_period({:ok, user}) do
+  defp maybe_remove_grace_period(%Plausible.Auth.User{} = user) do
     alias Plausible.Auth.GracePeriod
 
     case user.grace_period do
@@ -297,8 +296,6 @@ defmodule Plausible.Billing do
         {:ok, user}
     end
   end
-
-  defp maybe_remove_grace_period(err), do: err
 
   defp check_lock_status({:ok, user}) do
     Plausible.Billing.SiteLocker.check_sites_for(user)
