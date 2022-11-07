@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("activation-email")
-    |> subject("#{code} is your Plausible email verification code")
+    |> subject("#{code} es tu código de verificación")
     |> render("activation_email.html", user: user, code: code)
   end
 
@@ -18,7 +18,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("welcome-email")
-    |> subject("Welcome to Plausible")
+    |> subject("Bienvenido a nuestras estadísticas!")
     |> render("welcome_email.html", user: user)
   end
 
@@ -26,7 +26,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("create-site-email")
-    |> subject("Your Plausible setup: Add your website details")
+    |> subject("Agrega los detalles de tu sitio")
     |> render("create_site_email.html", user: user)
   end
 
@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("help-email")
-    |> subject("Your Plausible setup: Waiting for the first page views")
+    |> subject("Esperando las primeras visitas")
     |> render("site_setup_help_email.html", user: user, site: site)
   end
 
@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("setup-success-email")
-    |> subject("Plausible is now tracking your website stats")
+    |> subject("Estamos registrando las estadísticas")
     |> render("site_setup_success_email.html", user: user, site: site)
   end
 
@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("check-stats-email")
-    |> subject("Check your Plausible website stats")
+    |> subject("Chequea las estadísticas")
     |> render("check_stats_email.html", user: user)
   end
 
@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(email)
     |> tag("password-reset-email")
-    |> subject("Plausible password reset")
+    |> subject("Reiniciamos tu contraseña")
     |> render("password_reset_email.html", reset_link: reset_link)
   end
 
@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("trial-one-week-reminder")
-    |> subject("Your Plausible trial expires next week")
+    |> subject("Tu cuenta trial expira en una semana")
     |> render("trial_one_week_reminder.html", user: user)
   end
 
@@ -76,7 +76,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("trial-upgrade-email")
-    |> subject("Your Plausible trial ends #{day}")
+    |> subject("Tu cuenta trial expira en #{day} días")
     |> render("trial_upgrade_email.html",
       user: user,
       day: day,
@@ -90,7 +90,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("trial-over-email")
-    |> subject("Your Plausible trial has ended")
+    |> subject("Tu período a prueba finalizó!")
     |> render("trial_over_email.html", user: user)
   end
 
@@ -98,7 +98,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(email)
     |> tag("weekly-report")
-    |> subject("#{assigns[:name]} report for #{site.domain}")
+    |> subject("#{assigns[:name]} reporte para #{site.domain}")
     |> render("weekly_report.html", Keyword.put(assigns, :site, site))
   end
 
@@ -106,7 +106,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(email)
     |> tag("spike-notification")
-    |> subject("Traffic spike on #{site.domain}")
+    |> subject("Hype en #{site.domain}!")
     |> render("spike_notification.html", %{
       site: site,
       current_visitors: current_visitors,
@@ -119,7 +119,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("over-limit")
-    |> subject("[Action required] You have outgrown your Plausible subscription tier")
+    |> subject("[Acción requerida] Superaste tu plan!")
     |> render("over_limit.html", %{
       user: user,
       usage: usage,
@@ -132,7 +132,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to("enterprise@plausible.io")
     |> tag("enterprise-over-limit")
-    |> subject("#{user.email} has outgrown their enterprise plan")
+    |> subject("#{user.email} superó su plan")
     |> render("enterprise_over_limit_internal.html", %{
       user: user,
       usage: usage,
@@ -146,7 +146,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("dashboard-locked")
-    |> subject("[Action required] Your Plausible dashboard is now locked")
+    |> subject("[Acción requerida] Tu panel de estadísticas está bloqueado")
     |> render("dashboard_locked.html", %{
       user: user,
       usage: usage,
@@ -161,7 +161,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("yearly-renewal")
-    |> subject("Your Plausible subscription is up for renewal")
+    |> subject("Tu suscripción está por renovarse")
     |> render("yearly_renewal_notification.html", %{
       user: user,
       date: date,
@@ -176,7 +176,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("yearly-expiration")
-    |> subject("Your Plausible subscription is about to expire")
+    |> subject("Tu subscripción está por expirar")
     |> render("yearly_expiration_notification.html", %{
       user: user,
       date: date
@@ -187,7 +187,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user.email)
     |> tag("cancelled-email")
-    |> subject("Your Plausible Analytics subscription has been canceled")
+    |> subject("Tu subscripción fue cancelada")
     |> render("cancellation_email.html", name: user.name)
   end
 
@@ -195,7 +195,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(invitation.email)
     |> tag("new-user-invitation")
-    |> subject("[Plausible Analytics] You've been invited to #{invitation.site.domain}")
+    |> subject("Fuiste invitado a #{invitation.site.domain}")
     |> render("new_user_invitation.html",
       invitation: invitation
     )
@@ -205,7 +205,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(invitation.email)
     |> tag("existing-user-invitation")
-    |> subject("[Plausible Analytics] You've been invited to #{invitation.site.domain}")
+    |> subject("Fuiste invitado a #{invitation.site.domain}")
     |> render("existing_user_invitation.html",
       invitation: invitation
     )
@@ -215,7 +215,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(invitation.email)
     |> tag("ownership-transfer-request")
-    |> subject("[Plausible Analytics] Request to transfer ownership of #{invitation.site.domain}")
+    |> subject("Transferir propiedad a #{invitation.site.domain}")
     |> render("ownership_transfer_request.html",
       invitation: invitation,
       new_owner_account: new_owner_account
@@ -227,7 +227,7 @@ defmodule PlausibleWeb.Email do
     |> to(invitation.inviter.email)
     |> tag("invitation-accepted")
     |> subject(
-      "[Plausible Analytics] #{invitation.email} accepted your invitation to #{invitation.site.domain}"
+      "#{invitation.email} aceptó tu invitación a #{invitation.site.domain}"
     )
     |> render("invitation_accepted.html",
       invitation: invitation
@@ -239,7 +239,7 @@ defmodule PlausibleWeb.Email do
     |> to(invitation.inviter.email)
     |> tag("invitation-rejected")
     |> subject(
-      "[Plausible Analytics] #{invitation.email} rejected your invitation to #{invitation.site.domain}"
+      "#{invitation.email} rechazó tu invitación a #{invitation.site.domain}"
     )
     |> render("invitation_rejected.html",
       invitation: invitation
@@ -251,7 +251,7 @@ defmodule PlausibleWeb.Email do
     |> to(invitation.inviter.email)
     |> tag("ownership-transfer-accepted")
     |> subject(
-      "[Plausible Analytics] #{invitation.email} accepted the ownership transfer of #{invitation.site.domain}"
+      "#{invitation.email} aceptó la transferencia de #{invitation.site.domain}"
     )
     |> render("ownership_transfer_accepted.html",
       invitation: invitation
@@ -263,7 +263,7 @@ defmodule PlausibleWeb.Email do
     |> to(invitation.inviter.email)
     |> tag("ownership-transfer-rejected")
     |> subject(
-      "[Plausible Analytics] #{invitation.email} rejected the ownership transfer of #{invitation.site.domain}"
+      "#{invitation.email} rechazó la transferencia de #{invitation.site.domain}"
     )
     |> render("ownership_transfer_rejected.html",
       invitation: invitation
@@ -274,7 +274,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(membership.user.email)
     |> tag("site-member-removed")
-    |> subject("[Plausible Analytics] Your access to #{membership.site.domain} has been revoked")
+    |> subject("Tu acceso a #{membership.site.domain} fue revocado")
     |> render("site_member_removed.html",
       membership: membership
     )
@@ -284,7 +284,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("import-success-email")
-    |> subject("Google Analytics data imported for #{site.domain}")
+    |> subject("La carga de GA finalizó para #{site.domain}")
     |> render("google_analytics_import.html", %{
       site: site,
       link: PlausibleWeb.Endpoint.url() <> "/" <> URI.encode_www_form(site.domain),
@@ -297,7 +297,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("import-failure-email")
-    |> subject("Google Analytics import failed for #{site.domain}")
+    |> subject("La carga de GA falló en #{site.domain}")
     |> render("google_analytics_import.html", %{
       user: user,
       site: site,
