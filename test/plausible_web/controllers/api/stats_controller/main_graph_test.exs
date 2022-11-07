@@ -406,7 +406,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.at(plot, 1) == 1
     end
 
-    test "displays visitors for a day on an minute scale", %{conn: conn, site: site} do
+    test "displays visitors for a day on a minute scale", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-01 00:15:01]),
@@ -426,7 +426,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.at(plot, 15) == 2
     end
 
-    test "displays visitors for 6mo on an day scale", %{conn: conn, site: site} do
+    test "displays visitors for 6mo on a day scale", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-15 00:00:00]),
@@ -450,7 +450,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert List.last(plot) == 1
     end
 
-    test "displays visitors for custom on an month scale", %{conn: conn, site: site} do
+    test "displays visitors for a custom period on a monthly scale", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-15 00:00:00]),
@@ -490,7 +490,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert List.first(plot) == 2
     end
 
-    test "displays visitors for a day on an month scale", %{conn: conn, site: site} do
+    test "displays visitors for a day on a monthly scale", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-01 00:15:01]),
@@ -509,7 +509,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert List.first(plot) == 3
     end
 
-    test "displays visitors for a month on an week scale", %{conn: conn, site: site} do
+    test "displays visitors for a month on a weekly scale", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-01 00:15:01]),
