@@ -1,0 +1,74 @@
+defmodule Plausible.Site.CacheTest do
+  use Plausible.DataCase, async: true
+
+  alias Plausible.Site
+  alias Plausible.Site.Cache
+
+  test "cache process is started, but falls back to the database if cache is disabled" do
+    insert(:site, domain: "example.test")
+    refute Cache.enabled?()
+    assert Process.alive?(Process.whereis(Cache.name()))
+    refute Process.whereis(Cache.Warmer)
+    assert %Site{domain: "example.test"} = Cache.get("example.test")
+    assert Cache.size() == 0
+    refute Cache.get("other.test")
+  end
+
+  test "cache warmer process warms up the cache", %{test: test} do
+    test_pid = self()
+    opts = [force_start?: true, warmer: report_back(test_pid), cache_name: test]
+
+    {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
+
+    assert Process.whereis(Cache.Warmer)
+    assert_receive {:cache_warmed, got_opts}
+    assert got_opts[:cache_name] == test
+  end
+
+  test "cache warmer sends telemetry event", %{test: test} do
+    test_pid = self()
+
+    :telemetry.attach(
+      "test-cache-warmer",
+      Cache.Warmer.telemetry_event_refresh(test),
+      fn _event, %{duration: d}, %{}, %{} when is_integer(d) ->
+        send(test_pid, :telemetry_handled)
+      end,
+      %{}
+    )
+
+    opts = [force_start?: true, warmer: report_back(test_pid), cache_name: test]
+    {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
+
+    assert_receive {:cache_warmed, _}
+    assert_receive :telemetry_handled
+  end
+
+  test "cache caches", %{test: test} do
+    {:ok, _} =
+      Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_cache_caches_id]}],
+        strategy: :one_for_one,
+        name: Test.Supervisor.Cache
+      )
+
+    site1 = insert(:site, domain: "site1.example.com")
+    _ = insert(:site, domain: "site2.example.com")
+
+    :ok = Cache.Warmer.warm(cache_name: test)
+
+    {:ok, _} = Plausible.Repo.delete(site1)
+
+    assert Cache.size(test) == 2
+
+    assert Cache.get("site1.example.com", force?: true, cache_name: test)
+    assert Cache.get("site2.example.com", force?: true, cache_name: test)
+    assert Cache.get("site2.example.com", cache_name: test)
+  end
+
+  defp report_back(test_pid) do
+    fn opts ->
+      send(test_pid, {:cache_warmed, opts})
+      :ok
+    end
+  end
+end

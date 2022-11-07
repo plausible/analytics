@@ -41,4 +41,9 @@ config :plausible, Plausible.Repo,
   connect_timeout: 300_000,
   handshake_timeout: 300_000
 
+config :plausible,
+  sites_by_domain_cache_enabled: true,
+  sites_by_domain_cache_refresh_interval_max_jitter: :timer.seconds(5),
+  sites_by_domain_cache_refresh_interval: :timer.minutes(15)
+
 import_config "#{config_env()}.exs"

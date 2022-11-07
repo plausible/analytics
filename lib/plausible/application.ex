@@ -21,6 +21,8 @@ defmodule Plausible.Application do
       Supervisor.child_spec({Cachex, name: :sessions, limit: nil, stats: true},
         id: :cachex_sessions
       ),
+      {Plausible.Site.Cache, []},
+      {Plausible.Site.Cache.Warmer, []},
       PlausibleWeb.Endpoint,
       {Oban, Application.get_env(:plausible, Oban)},
       Plausible.PromEx

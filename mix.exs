@@ -80,6 +80,7 @@ defmodule Plausible.MixProject do
       {:floki, "~> 0.32.0", only: :test},
       {:fun_with_flags, "~> 1.9.0"},
       {:fun_with_flags_ui, "~> 0.8"},
+      {:gen_cycle, "~> 1.0"},
       {:geolix, "~> 2.0"},
       {:geolix_adapter_mmdb2, "~> 0.6.0"},
       {:hackney, "~> 1.8"},
