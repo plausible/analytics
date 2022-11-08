@@ -1,5 +1,3 @@
-Hey <%= user_salutation(@user) %>,
-<br /><br />
 We are building Plausible to provide a simple and ethical approach to tracking website visitors.
 We're super excited to have you on board!
 <br /><br />

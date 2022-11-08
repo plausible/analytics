@@ -1,5 +1,3 @@
-Hey <%= user_salutation(@user) %>,
-<br /><br />
 Time flies! Your 30-day free trial of Plausible will end next week.
 <br /><br />
 Over the last three weeks, I hope you got to experience the potential benefits of having website stats in a simple dashboard while respecting the privacy of your visitors, not annoying them with the cookie and privacy notices and still having a fast loading site.

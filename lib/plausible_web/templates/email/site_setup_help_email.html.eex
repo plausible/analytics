@@ -1,5 +1,3 @@
-Hey <%= user_salutation(@user) %>,
-<br /><br />
 <%= if Plausible.Billing.on_trial?(@user) do %>
   You signed up for a free 30-day trial of Plausible, a simple and privacy-friendly website analytics tool.
   <br /><br />

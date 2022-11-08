@@ -1,5 +1,3 @@
-Hey <%= user_salutation(@user) %>,
-<br /><br />
 You've activated your free 30-day trial of Plausible, a simple and privacy-friendly website analytics tool.
 <br /><br />
 <%= link("Click here", to: "#{plausible_url()}/sites/new") %> to add your website URL, your timezone and install our one-line JavaScript snippet to start collecting visitor statistics.
