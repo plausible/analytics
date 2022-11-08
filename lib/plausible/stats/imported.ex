@@ -23,7 +23,7 @@ defmodule Plausible.Stats.Imported do
         select: %{}
       )
       |> select_imported_metrics(metrics)
-      |> apply_interval(query, site)
+      |> apply_interval(query, site.timezone)
 
     from(s in Ecto.Query.subquery(native_q),
       full_join: i in subquery(imported_q),
@@ -33,21 +33,21 @@ defmodule Plausible.Stats.Imported do
     |> select_joined_metrics(metrics)
   end
 
-  defp apply_interval(imported_q, %Plausible.Stats.Query{interval: "month"}, _site) do
+  defp apply_interval(imported_q, %Plausible.Stats.Query{interval: "month"}, _timezone) do
     imported_q
     |> group_by([i], fragment("toStartOfMonth(?)", i.date))
     |> select_merge([i], %{date: fragment("toStartOfMonth(?)", i.date)})
   end
 
-  defp apply_interval(imported_q, %Plausible.Stats.Query{interval: "week"} = query, site) do
-    {first_datetime, _} = utc_boundaries(query, site.timezone)
+  defp apply_interval(imported_q, %Plausible.Stats.Query{interval: "week"} = query, timezone) do
+    {first_datetime, _} = utc_boundaries(query, timezone)
 
     imported_q
     |> group_by([i], nearest_monday_not_past(i.date, ^first_datetime))
     |> select_merge([i], %{date: nearest_monday_not_past(i.date, ^first_datetime)})
   end
 
-  defp apply_interval(imported_q, _query, _site) do
+  defp apply_interval(imported_q, _query, _timezone) do
     imported_q
     |> group_by([i], i.date)
     |> select_merge([i], %{date: i.date})
