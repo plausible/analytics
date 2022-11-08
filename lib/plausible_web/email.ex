@@ -305,11 +305,21 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  defp base_email() do
+  defp base_email(), do: base_email(%{layout: "base_email.html"})
+
+  defp base_email(%{layout: layout}) do
     mailer_from = Application.get_env(:plausible, :mailer_email)
 
     new_email()
     |> put_param("TrackOpens", false)
     |> from(mailer_from)
+    |> maybe_put_layout(layout)
+  end
+
+  defp maybe_put_layout(email, nil), do: email
+
+  defp maybe_put_layout(email, layout) do
+    email
+    |> put_html_layout({PlausibleWeb.LayoutView, layout})
   end
 end

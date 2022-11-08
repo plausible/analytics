@@ -1,0 +1,24 @@
+<%= case Map.get(assigns, :user) do
+  %{name: name} when is_binary(name) -> "Hey #{String.split(name) |> List.first()},"
+  _any -> "Hey,"
+end %>
+<br /><br />
+
+<%= @inner_content %>
+<br /><br />
+
+Thanks,<br />
+<%= if Application.get_env(:plausible, :is_selfhost) do %>
+Plausible
+<% else %>
+Uku and Marko
+<% end %>
+<br /><br />
+
+--
+<br /><br />
+<%= link(plausible_url(), to: plausible_url()) %><br />
+
+<%= if Map.get(assigns, :unsubscribe, false) do %>
+{{{ pm:unsubscribe }}}
+<% end %>
