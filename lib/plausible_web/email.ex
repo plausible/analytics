@@ -188,7 +188,7 @@ defmodule PlausibleWeb.Email do
     |> to(user.email)
     |> tag("cancelled-email")
     |> subject("Your Plausible Analytics subscription has been canceled")
-    |> render("cancellation_email.html", name: user.name)
+    |> render("cancellation_email.html", user: user)
   end
 
   def new_user_invitation(invitation) do
@@ -230,6 +230,7 @@ defmodule PlausibleWeb.Email do
       "[Plausible Analytics] #{invitation.email} accepted your invitation to #{invitation.site.domain}"
     )
     |> render("invitation_accepted.html",
+      user: invitation.inviter,
       invitation: invitation
     )
   end
@@ -242,6 +243,7 @@ defmodule PlausibleWeb.Email do
       "[Plausible Analytics] #{invitation.email} rejected your invitation to #{invitation.site.domain}"
     )
     |> render("invitation_rejected.html",
+      user: invitation.inviter,
       invitation: invitation
     )
   end
@@ -254,6 +256,7 @@ defmodule PlausibleWeb.Email do
       "[Plausible Analytics] #{invitation.email} accepted the ownership transfer of #{invitation.site.domain}"
     )
     |> render("ownership_transfer_accepted.html",
+      user: invitation.inviter,
       invitation: invitation
     )
   end
@@ -266,6 +269,7 @@ defmodule PlausibleWeb.Email do
       "[Plausible Analytics] #{invitation.email} rejected the ownership transfer of #{invitation.site.domain}"
     )
     |> render("ownership_transfer_rejected.html",
+      user: invitation.inviter,
       invitation: invitation
     )
   end
@@ -276,6 +280,7 @@ defmodule PlausibleWeb.Email do
     |> tag("site-member-removed")
     |> subject("[Plausible Analytics] Your access to #{membership.site.domain} has been revoked")
     |> render("site_member_removed.html",
+      user: membership.user,
       membership: membership
     )
   end
