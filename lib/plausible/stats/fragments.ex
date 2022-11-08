@@ -35,6 +35,46 @@ defmodule Plausible.Stats.Fragments do
     end
   end
 
+  @doc """
+  Converts time or date and time to the specified timezone.
+
+  Reference: https://clickhouse.com/docs/en/sql-reference/functions/date-time-functions/#totimezone
+  """
+  defmacro to_timezone(date, timezone) do
+    quote do
+      fragment("toTimeZone(?, ?)", unquote(date), unquote(timezone))
+    end
+  end
+
+  @doc """
+  Returns the nearest Monday not past a given date. If the nearest Monday is
+  past the given date, returns the latter.
+  """
+  defmacro nearest_monday_not_past(date_to_round, not_past_date) do
+    quote do
+      fragment(
+        "if(toMonday(?) < toDate(?), toDate(?), toMonday(?))",
+        unquote(date_to_round),
+        unquote(not_past_date),
+        unquote(not_past_date),
+        unquote(date_to_round)
+      )
+    end
+  end
+
+  @doc """
+  Same as Plausible.Stats.Fragments.nearest_monday_not_past/2 but converts dates
+  to the specified timezone.
+  """
+  defmacro nearest_monday_not_past(date_to_round, not_past_date, timezone) do
+    quote do
+      nearest_monday_not_past(
+        to_timezone(unquote(date_to_round), unquote(timezone)),
+        unquote(not_past_date)
+      )
+    end
+  end
+
   defmacro __using__(_) do
     quote do
       import Plausible.Stats.Fragments

@@ -3,6 +3,7 @@ defmodule Plausible.Stats.Imported do
   alias Plausible.Stats.Query
   import Ecto.Query
   import Plausible.Stats.Base
+  import Plausible.Stats.Fragments
 
   @no_ref "Direct / None"
 
@@ -42,26 +43,8 @@ defmodule Plausible.Stats.Imported do
     {first_datetime, _} = utc_boundaries(query, site.timezone)
 
     imported_q
-    |> group_by(
-      [i],
-      fragment(
-        "if(toMonday(?) < toDate(?), toDate(?), toMonday(?))",
-        i.date,
-        ^first_datetime,
-        ^first_datetime,
-        i.date
-      )
-    )
-    |> select_merge([i], %{
-      date:
-        fragment(
-          "if(toMonday(?) < toDate(?), toDate(?), toMonday(?))",
-          i.date,
-          ^first_datetime,
-          ^first_datetime,
-          i.date
-        )
-    })
+    |> group_by([i], nearest_monday_not_past(i.date, ^first_datetime))
+    |> select_merge([i], %{date: nearest_monday_not_past(i.date, ^first_datetime)})
   end
 
   defp apply_interval(imported_q, _query, _site) do
