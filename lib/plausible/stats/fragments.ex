@@ -47,30 +47,52 @@ defmodule Plausible.Stats.Fragments do
   end
 
   @doc """
-  Returns the nearest Monday not past a given date. If the nearest Monday is
-  past the given date, returns the latter.
+  Returns the weekstart for `date`. If the weekstart is before the `not_before`
+  boundary, `not_before` is returned.
+
+  ## Examples
+
+  In this pseudo-code example, the fragment returns the weekstart. The
+  `not_before` boundary is set to the past Saturday, which is before the
+  weekstart, therefore the cap does not apply.
+
+    iex> this_wednesday = ~D[2022-11-09]
+    ...> past_saturday = ~D[2022-11-05]
+    ...> weekstart_not_before(this_wednesday, past_saturday)
+    ~D[2022-11-07]
+
+
+  In this other example, the fragment returns Tuesday and not the weekstart.
+  The `not_before` boundary is set to Tuesday, which is past the weekstart,
+  therefore the cap applies.
+
+    iex> this_wednesday = ~D[2022-11-09]
+    ...> this_tuesday = ~D[2022-11-08]
+    ...> weekstart_not_before(this_wednesday, this_tuesday)
+    ~D[2022-11-08]
+
   """
-  defmacro nearest_monday_not_past(date_to_round, not_past_date) do
+  defmacro weekstart_not_before(date, not_before) do
     quote do
       fragment(
         "if(toMonday(?) < toDate(?), toDate(?), toMonday(?))",
-        unquote(date_to_round),
-        unquote(not_past_date),
-        unquote(not_past_date),
-        unquote(date_to_round)
+        unquote(date),
+        unquote(not_before),
+        unquote(not_before),
+        unquote(date)
       )
     end
   end
 
   @doc """
-  Same as Plausible.Stats.Fragments.nearest_monday_not_past/2 but converts dates
-  to the specified timezone.
+  Same as Plausible.Stats.Fragments.weekstart_not_before/2 but converts dates to
+  the specified timezone.
   """
-  defmacro nearest_monday_not_past(date_to_round, not_past_date, timezone) do
+  defmacro weekstart_not_before(date, not_before, timezone) do
     quote do
-      nearest_monday_not_past(
-        to_timezone(unquote(date_to_round), unquote(timezone)),
-        unquote(not_past_date)
+      weekstart_not_before(
+        to_timezone(unquote(date), unquote(timezone)),
+        unquote(not_before)
       )
     end
   end

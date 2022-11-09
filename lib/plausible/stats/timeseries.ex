@@ -127,9 +127,9 @@ defmodule Plausible.Stats.Timeseries do
 
     from(
       e in q,
-      select_merge: %{date: nearest_monday_not_past(e.timestamp, ^first_datetime, ^site.timezone)},
-      group_by: nearest_monday_not_past(e.timestamp, ^first_datetime, ^site.timezone),
-      order_by: nearest_monday_not_past(e.timestamp, ^first_datetime, ^site.timezone)
+      select_merge: %{date: weekstart_not_before(e.timestamp, ^first_datetime, ^site.timezone)},
+      group_by: weekstart_not_before(e.timestamp, ^first_datetime, ^site.timezone),
+      order_by: weekstart_not_before(e.timestamp, ^first_datetime, ^site.timezone)
     )
   end
 

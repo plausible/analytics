@@ -43,8 +43,8 @@ defmodule Plausible.Stats.Imported do
     {first_datetime, _} = utc_boundaries(query, timezone)
 
     imported_q
-    |> group_by([i], nearest_monday_not_past(i.date, ^first_datetime))
-    |> select_merge([i], %{date: nearest_monday_not_past(i.date, ^first_datetime)})
+    |> group_by([i], weekstart_not_before(i.date, ^first_datetime))
+    |> select_merge([i], %{date: weekstart_not_before(i.date, ^first_datetime)})
   end
 
   defp apply_interval(imported_q, _query, _timezone) do
