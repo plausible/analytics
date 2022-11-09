@@ -100,7 +100,7 @@ defmodule Plausible.Stats.Timeseries do
     Enum.into(-30..-1, [])
   end
 
-  @full_day_in_minutes 1440
+  @full_day_in_minutes 1439
   defp buckets(%Query{interval: "minute"} = query) do
     n_buckets =
       if query.date_range.first == query.date_range.last do

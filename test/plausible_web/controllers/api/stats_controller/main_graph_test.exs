@@ -421,7 +421,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
-      assert Enum.count(plot) == 1441
+      assert Enum.count(plot) == 1440
       assert List.first(plot) == 1
       assert Enum.at(plot, 15) == 2
     end
