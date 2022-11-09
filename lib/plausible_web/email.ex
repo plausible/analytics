@@ -63,7 +63,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def password_reset_email(email, reset_link) do
-    base_email()
+    base_email(%{layout: nil})
     |> to(email)
     |> tag("password-reset-email")
     |> subject("Plausible password reset")
@@ -104,7 +104,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def weekly_report(email, site, assigns) do
-    base_email()
+    base_email(%{layout: nil})
     |> to(email)
     |> tag("weekly-report")
     |> subject("#{assigns[:name]} report for #{site.domain}")
