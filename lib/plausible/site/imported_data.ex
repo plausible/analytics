@@ -8,4 +8,3 @@ defmodule Plausible.Site.ImportedData do
     field :status, :string
   end
 end
-
