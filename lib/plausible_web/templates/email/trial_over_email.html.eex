@@ -10,4 +10,3 @@ Thanks,<br />
 Uku and Marko<br />
 --<br />
 <%= plausible_url() %><br />
-{{{ pm:unsubscribe }}}

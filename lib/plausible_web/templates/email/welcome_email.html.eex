@@ -20,4 +20,3 @@ Uku and Marko
 --
 <br />
 <%= plausible_url() %><br />
-{{{ pm:unsubscribe }}}

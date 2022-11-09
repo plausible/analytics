@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("welcome-email")
     |> subject("Welcome to Plausible")
-    |> render("welcome_email.html", user: user)
+    |> render("welcome_email.html", user: user, unsubscribe: true)
   end
 
   def create_site_email(user) do
@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("create-site-email")
     |> subject("Your Plausible setup: Add your website details")
-    |> render("create_site_email.html", user: user)
+    |> render("create_site_email.html", user: user, unsubscribe: true)
   end
 
   def site_setup_help(user, site) do
@@ -35,7 +35,11 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("help-email")
     |> subject("Your Plausible setup: Waiting for the first page views")
-    |> render("site_setup_help_email.html", user: user, site: site)
+    |> render("site_setup_help_email.html",
+      user: user,
+      site: site,
+      unsubscribe: true
+    )
   end
 
   def site_setup_success(user, site) do
@@ -43,7 +47,11 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("setup-success-email")
     |> subject("Plausible is now tracking your website stats")
-    |> render("site_setup_success_email.html", user: user, site: site)
+    |> render("site_setup_success_email.html",
+      user: user,
+      site: site,
+      unsubscribe: true
+    )
   end
 
   def check_stats_email(user) do
@@ -51,7 +59,7 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("check-stats-email")
     |> subject("Check your Plausible website stats")
-    |> render("check_stats_email.html", user: user)
+    |> render("check_stats_email.html", user: user, unsubscribe: true)
   end
 
   def password_reset_email(email, reset_link) do
@@ -67,7 +75,7 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("trial-one-week-reminder")
     |> subject("Your Plausible trial expires next week")
-    |> render("trial_one_week_reminder.html", user: user)
+    |> render("trial_one_week_reminder.html", user: user, unsubscribe: true)
   end
 
   def trial_upgrade_email(user, day, {pageviews, custom_events}) do
@@ -82,7 +90,8 @@ defmodule PlausibleWeb.Email do
       day: day,
       custom_events: custom_events,
       usage: pageviews + custom_events,
-      suggested_plan: suggested_plan
+      suggested_plan: suggested_plan,
+      unsubscribe: true
     )
   end
 
@@ -91,7 +100,7 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("trial-over-email")
     |> subject("Your Plausible trial has ended")
-    |> render("trial_over_email.html", user: user)
+    |> render("trial_over_email.html", user: user, unsubscribe: true)
   end
 
   def weekly_report(email, site, assigns) do
@@ -124,7 +133,8 @@ defmodule PlausibleWeb.Email do
       user: user,
       usage: usage,
       last_cycle: last_cycle,
-      suggested_plan: suggested_plan
+      suggested_plan: suggested_plan,
+      unsubscribe: true
     })
   end
 
