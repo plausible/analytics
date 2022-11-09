@@ -14,6 +14,9 @@ defmodule Plausible.Site do
     field :locked, :boolean
     field :stats_start_date, :date
 
+    field :ingest_rate_limit_scale_seconds, :integer, default: 60
+    field :ingest_rate_limit_threshold, :integer
+
     embeds_one :imported_data, Plausible.Site.ImportedData, on_replace: :update
 
     many_to_many :members, User, join_through: Plausible.Site.Membership
@@ -45,8 +48,22 @@ defmodule Plausible.Site do
 
   def crm_changeset(site, attrs) do
     site
-    |> cast(attrs, [:timezone, :public, :stats_start_date])
+    |> cast(attrs, [
+      :timezone,
+      :public,
+      :stats_start_date,
+      :ingest_rate_limit_threshold,
+      :ingest_rate_limit_scale_seconds
+    ])
     |> validate_required([:timezone, :public])
+    |> validate_number(:ingest_rate_limit_scale_seconds,
+      greater_than_or_equal_to: 1,
+      message: "must be at least 1 second"
+    )
+    |> validate_number(:ingest_rate_limit_threshold,
+      greater_than_or_equal_to: 0,
+      message: "must be empty, zero or positive"
+    )
   end
 
   def make_public(site) do
