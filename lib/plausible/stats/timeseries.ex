@@ -79,17 +79,18 @@ defmodule Plausible.Stats.Timeseries do
     Enum.into(query.date_range, [])
   end
 
-  @full_day 23
+  @full_day_in_hours 23
   defp buckets(%Query{interval: "hour"} = query) do
     n_buckets =
       if query.date_range.first == query.date_range.last do
-        @full_day
+        @full_day_in_hours
       else
         Timex.diff(query.date_range.last, query.date_range.first, :hours)
       end
 
     Enum.map(0..n_buckets, fn step ->
-      Timex.to_datetime(query.date_range.first)
+      query.date_range.first
+      |> Timex.to_datetime()
       |> Timex.shift(hours: step)
       |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
     end)
@@ -99,13 +100,18 @@ defmodule Plausible.Stats.Timeseries do
     Enum.into(-30..-1, [])
   end
 
-  @day_in_minutes 24 * 60
+  @full_day_in_minutes 1440
   defp buckets(%Query{interval: "minute"} = query) do
-    n_minutes = Timex.diff(query.date_range.last, query.date_range.first, :minutes)
-    n_buckets = if n_minutes == 0, do: @day_in_minutes, else: n_minutes
+    n_buckets =
+      if query.date_range.first == query.date_range.last do
+        @full_day_in_minutes
+      else
+        Timex.diff(query.date_range.last, query.date_range.first, :minutes)
+      end
 
     Enum.map(0..n_buckets, fn step ->
-      Timex.to_datetime(query.date_range.first)
+      query.date_range.first
+      |> Timex.to_datetime()
       |> Timex.shift(minutes: step)
       |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
     end)
