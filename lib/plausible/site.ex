@@ -1,4 +1,7 @@
 defmodule Plausible.Site do
+  @moduledoc """
+  Site schema
+  """
   use Ecto.Schema
   import Ecto.Changeset
   alias Plausible.Auth.User
