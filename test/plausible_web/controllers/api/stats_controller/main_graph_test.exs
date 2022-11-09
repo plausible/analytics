@@ -426,6 +426,33 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.at(plot, 15) == 2
     end
 
+    test "displays visitors for date range on a minute scale", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:15:01]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:15:02]),
+        build(:pageview, timestamp: ~N[2021-01-02 00:10:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 00:11:01]),
+        build(:pageview, timestamp: ~N[2021-01-02 01:00:02]),
+        build(:pageview, timestamp: ~N[2021-01-04 03:10:00]),
+        build(:pageview, timestamp: ~N[2021-01-04 04:11:01]),
+        build(:pageview, timestamp: ~N[2021-01-04 05:00:02])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=custom&from=2021-01-01&to=2021-01-04&metric=visitors&interval=minute"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 4321
+      assert List.first(plot) == 1
+      assert Enum.at(plot, 15) == 2
+      assert Enum.at(plot, 1450) == 1
+    end
+
     test "displays visitors for 6mo on a day scale", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
