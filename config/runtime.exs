@@ -131,7 +131,6 @@ geolite2_country_db =
 ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", geolite2_country_db)
 geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
 
-# TODO 1.6.0 remove warning
 if System.get_env("DISABLE_AUTH") do
   require Logger
   Logger.warn("DISABLE_AUTH env var is no longer supported")
