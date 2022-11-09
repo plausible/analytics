@@ -320,9 +320,9 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  defp base_email(), do: base_email(%{layout: "base_email.html"})
+  def base_email(), do: base_email(%{layout: "base_email.html"})
 
-  defp base_email(%{layout: layout}) do
+  def base_email(%{layout: layout}) do
     mailer_from = Application.get_env(:plausible, :mailer_email)
 
     new_email()
