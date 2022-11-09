@@ -84,6 +84,12 @@ ch_db_url =
     "http://plausible_events_db:8123/plausible_events_db"
   )
 
+ch_db_url_scheme =
+  case URI.parse(ch_db_url) do
+    %URI{scheme: "https"} -> :https
+    _other -> :http
+  end
+
 {ch_flush_interval_ms, ""} =
   config_dir
   |> get_var_from_path_or_env("CLICKHOUSE_FLUSH_INTERVAL_MS", "5000")
@@ -268,6 +274,7 @@ config :plausible, Plausible.ClickhouseRepo,
   queue_target: 500,
   queue_interval: 2000,
   url: ch_db_url,
+  scheme: ch_db_url_scheme,
   flush_interval_ms: ch_flush_interval_ms,
   max_buffer_size: ch_max_buffer_size
 
