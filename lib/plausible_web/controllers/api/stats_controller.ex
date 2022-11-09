@@ -5,6 +5,88 @@ defmodule PlausibleWeb.Api.StatsController do
   alias Plausible.Stats
   alias Plausible.Stats.{Query, Filters}
 
+  @doc """
+  Returns a time-series based on given parameters.
+
+  ## Parameters
+
+  This API accepts the following parameters:
+
+    * `period` - x-axis of the graph, e.g. `12mo`, `day`, `custom`.
+
+    * `metric` - y-axis of the graph, e.g. `visits`, `visitors`, `pageviews`.
+      See the Stats API ["Metrics"](https://plausible.io/docs/stats-api#metrics)
+      section for more details. Defaults to `visitors`.
+
+    * `interval` - granularity of the time-series data. You can think of it as
+      a `GROUP BY` clause. Possible values are `minute`, `hour`, `date`, `week`,
+      and `month`. The default depends on the `period` parameter. Check
+      `Plausible.Query.from/2` for each default.
+
+    * `filters` - optional filters to drill down data. See the Stats API
+      ["Filtering"](https://plausible.io/docs/stats-api#filtering) section for
+      more details.
+
+    * `with_imported` - boolean indicating whether to include Google Analytics
+      imported data or not. Defaults to `false`.
+
+  Full example:
+  ```elixir
+  %{
+    "from" => "2021-09-06",
+    "interval" => "month",
+    "metric" => "visitors",
+    "period" => "custom",
+    "to" => "2021-12-13"
+  }
+  ```
+
+  ## Response
+
+  Returns a map with the following keys:
+
+    * `plot` - list of values for the requested metric representing the y-axis
+      of the graph.
+
+    * `labels` - list of date times representing the x-axis of the graph.
+
+    * `present_index` - index of the element representing the current date in
+      `labels` and `plot` lists.
+
+    * `interval` - the interval used for querying.
+
+    * `with_imported` - boolean indicating whether the Google Analytics data
+      was queried or not.
+
+    * `imported_source` - the source of the imported data, when applicable.
+      Currently only Google Analytics is supported.
+
+    * `full_intervals` - map of dates indicating whether the interval has been
+      cut off by the requested date range or not. For example, if looking at a
+      month week-by-week, some weeks may be cut off by the month boundaries.
+      It's useful to adjust the graph display slightly in case the interval is
+      not 'full' so that the user understands why the numbers might be lower for
+      those partial periods.
+
+  Full example:
+  ```elixir
+  %{
+    "full_intervals" => %{
+      "2021-09-01" => false,
+      "2021-10-01" => true,
+      "2021-11-01" => true,
+      "2021-12-01" => false
+    },
+    "imported_source" => nil,
+    "interval" => "month",
+    "labels" => ["2021-09-01", "2021-10-01", "2021-11-01", "2021-12-01"],
+    "plot" => [0, 0, 0, 0],
+    "present_index" => nil,
+    "with_imported" => false
+  }
+  ```
+
+  """
   def main_graph(conn, params) do
     site = conn.assigns[:site]
 
