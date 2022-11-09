@@ -5,8 +5,3 @@ There's no action required if you're happy to continue using Plausible to count 
 If you don't want to continue your subscription, you can cancel it on your <%= link("account settings page", to: "#{plausible_url()}/settings") %>.
 <br /><br />
 Have a question, feedback or need some guidance? Do reply back to this email.
-<br /><br />
-Thanks,<br />
-Uku and Marko<br />
---<br />
-<%= plausible_url() %><br />

@@ -3,10 +3,3 @@ Plausible is tracking your website stats without compromising the user experienc
 <%= link("View your Plausible dashboard now", to: "#{plausible_url()}") %> for the most valuable traffic insights at a glance.
 <br /><br />
 Do reply back to this email if you have any questions or need some guidance.
-<br /></br>
-Thanks,<br />
-Uku Taht
-<br /><br />
---
-<br /><br />
-<%= plausible_url() %><br />

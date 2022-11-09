@@ -5,8 +5,3 @@ Over the last three weeks, I hope you got to experience the potential benefits o
 In order to continue receiving valuable website traffic insights at a glance, you’ll need to <%= link("Upgrade your account", to: "#{plausible_url()}/billing/upgrade") %>.
 <br /><br />
 If you have any questions or feedback for me, feel free to reply to this email.
-<br /><br />
-Thanks,<br />
-Uku and Marko<br />
---<br />
-<%= plausible_url() %><br />

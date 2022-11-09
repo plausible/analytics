@@ -13,10 +13,3 @@ Here's how to get the most out of your Plausible experience:
 Then you're ready to start exploring your fast loading, ethical and actionable <%= link("Plausible dashboard", to: "https://plausible.io/sites") %>.
 <br /><br />
 Have a question, feedback or need some guidance? Do reply back to this email.
-<br /><br />
-Thanks,<br />
-Uku and Marko
-<br />
---
-<br />
-<%= plausible_url() %><br />

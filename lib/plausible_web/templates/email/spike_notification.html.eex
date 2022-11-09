@@ -12,7 +12,3 @@ There are currently <%= @current_visitors %> visitors on <%= link(@site.domain, 
 <br /><br />
 View dashboard: <%= link(@link, to: @link) %>
 <% end %>
-<br /><br />
---
-<br /><br />
-<%= plausible_url() %><br />

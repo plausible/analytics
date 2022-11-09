@@ -14,8 +14,3 @@ Based on that we recommend you select the <%= @suggested_plan[:volume] %>/mo pla
 The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire. We will unlock your dashboard immediately after your account has been upgraded to the appropriate tier.
 <br /><br />
 Thanks for understanding and for being a Plausible subscriber!
-<br /><br />
-Thanks,<br />
-Uku and Marko<br />
---<br />
-<%= plausible_url() %><br />

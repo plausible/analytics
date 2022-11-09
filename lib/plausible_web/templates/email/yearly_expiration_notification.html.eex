@@ -5,8 +5,3 @@ You need to renew your subscription on <%= link("account settings page", to: "#{
 If you don't want to continue your subscription, there's no action required. You will lose access to the stats on <%= @date %>.
 <br /><br />
 Have a question, feedback or need some guidance? Just reply to this email to get in touch!
-<br /><br />
-Thanks,<br />
-Uku and Marko<br />
---<br />
-<%= plausible_url() %><br />

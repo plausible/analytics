@@ -9,8 +9,3 @@ Congrats! The Plausible script has been installed correctly on <%= link(@site.do
 PS: You can import your historical Google Analytics (Universal Analytics) stats into your Plausible dashboard. <%= link("Learn how our GA importer works", to: "https://plausible.io/docs/google-analytics-import") %>.
 <br /><br />
 Do reply back to this email if you have any questions.
-<br /><br />
-Thanks,<br />
-Uku and Marko<br />
---<br />
-<%= plausible_url() %><br />

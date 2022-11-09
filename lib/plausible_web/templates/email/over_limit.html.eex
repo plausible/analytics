@@ -18,8 +18,3 @@ You can upgrade your subscription using our self-serve platform. The new charge 
 Have questions or need help with anything? Just reply to this email and we'll gladly help.
 <br /><br />
 Thanks again for using our product and for your support!
-<br /><br />
-Thanks,<br />
-Uku and Marko<br />
---<br />
-<%= plausible_url() %><br />
