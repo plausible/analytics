@@ -1,18 +1,11 @@
-<%= case Map.get(assigns, :user) do
-  %{name: name} when is_binary(name) -> "Hey #{String.split(name) |> List.first()},"
-  _any -> "Hey,"
-end %>
+<%= PlausibleWeb.EmailView.greet_recipient(assigns) %>
 <br /><br />
 
 <%= @inner_content %>
 <br /><br />
 
-Thanks,<br />
-<%= if Application.get_env(:plausible, :is_selfhost) do %>
-Plausible
-<% else %>
-Uku and Marko
-<% end %>
+Regards,<br />
+The Plausible Team 💌
 <br /><br />
 
 --
