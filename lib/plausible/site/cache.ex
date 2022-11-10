@@ -22,6 +22,12 @@ defmodule Plausible.Site.Cache do
     size
   end
 
+  @spec hit_rate() :: float()
+  def hit_rate(cache_name \\ @cache_name) do
+    {:ok, stats} = Cachex.stats(cache_name)
+    Map.get(stats, :hit_rate, 0)
+  end
+
   @spec get(String.t(), Keyword.t()) :: nil | %Plausible.Site{}
   def get(domain, opts \\ []) do
     cache_name = Keyword.get(opts, :cache_name, @cache_name)

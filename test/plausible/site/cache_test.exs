@@ -83,6 +83,23 @@ defmodule Plausible.Site.CacheTest do
     assert Cache.get("site2.example.com", cache_name: test)
   end
 
+  test "cache exposes hit rate", %{test: test} do
+    {:ok, _} =
+      Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_cache_caches_id]}],
+        strategy: :one_for_one,
+        name: Test.Supervisor.HitRateCache
+      )
+
+    insert(:site, domain: "site1.example.com")
+    :ok = Cache.Warmer.warm(cache_name: test)
+
+    assert Cache.hit_rate(test) == 0
+    assert Cache.get("site1.example.com", force?: true, cache_name: test)
+    assert Cache.hit_rate(test) == 100
+    refute Cache.get("nonexisting.example.com", force?: true, cache_name: test)
+    assert Cache.hit_rate(test) == 50
+  end
+
   defp report_back(test_pid) do
     fn opts ->
       send(test_pid, {:cache_warmed, %{at: System.monotonic_time(), opts: opts}})
