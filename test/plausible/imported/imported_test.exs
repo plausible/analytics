@@ -60,6 +60,52 @@ defmodule Plausible.ImportedTest do
       assert Enum.sum(plot) == 4
     end
 
+    test "returns data grouped by week", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-31 00:00:00])
+      ])
+
+      import_data(
+        [
+          %{
+            dimensions: %{"ga:date" => "20210101"},
+            metrics: %{
+              "ga:users" => "1",
+              "ga:pageviews" => "1",
+              "ga:bounces" => "0",
+              "ga:sessions" => "1",
+              "ga:sessionDuration" => "60"
+            }
+          },
+          %{
+            dimensions: %{"ga:date" => "20210131"},
+            metrics: %{
+              "ga:users" => "1",
+              "ga:pageviews" => "1",
+              "ga:bounces" => "0",
+              "ga:sessions" => "1",
+              "ga:sessionDuration" => "60"
+            }
+          }
+        ],
+        site.id,
+        "imported_visitors"
+      )
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true&interval=week"
+        )
+
+      assert %{"plot" => plot, "imported_source" => "Google Analytics"} = json_response(conn, 200)
+      assert Enum.count(plot) == 5
+      assert List.first(plot) == 2
+      assert List.last(plot) == 2
+      assert Enum.sum(plot) == 4
+    end
+
     test "Sources are imported", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
