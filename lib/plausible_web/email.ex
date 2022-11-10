@@ -139,7 +139,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def enterprise_over_limit_internal_email(user, usage, last_cycle, site_usage, site_allowance) do
-    base_email()
+    base_email(%{layout: nil})
     |> to("enterprise@plausible.io")
     |> tag("enterprise-over-limit")
     |> subject("#{user.email} has outgrown their enterprise plan")
