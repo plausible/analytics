@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Timeseries do
   @event_metrics [:visitors, :pageviews]
   @session_metrics [:visits, :bounce_rate, :visit_duration]
   def timeseries(site, query, metrics) do
-    steps = buckets(site, query)
+    steps = buckets(query)
 
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
@@ -50,7 +50,7 @@ defmodule Plausible.Stats.Timeseries do
     |> ClickhouseRepo.all()
   end
 
-  def buckets(_site, %Query{interval: "month"} = query) do
+  def buckets(%Query{interval: "month"} = query) do
     n_buckets = Timex.diff(query.date_range.last, query.date_range.first, :months)
 
     Enum.map(n_buckets..0, fn shift ->
@@ -60,12 +60,17 @@ defmodule Plausible.Stats.Timeseries do
     end)
   end
 
-  def buckets(_site, %Query{interval: "date"} = query) do
+  def buckets(%Query{interval: "date"} = query) do
     Enum.into(query.date_range, [])
   end
 
-  def buckets(site, %Query{interval: "hour"} = query) do
-    {first_datetime, _last_datetime} = utc_boundaries(query, site.timezone)
+  def buckets(%Query{interval: "hour"} = query) do
+    # Adjusts hourly buckets in accordance with the Clickhouse server timezone.
+    # See: https://github.com/plausible/analytics/issues/2432.
+    # TODO: replace with ClickHouse's timezone when it's supported by HTTP API.
+    {:ok, res} = ClickhouseRepo.query("SELECT timezone()")
+    [[timezone]] = res.rows
+    {first_datetime, _last_datetime} = utc_boundaries(query, timezone)
 
     Enum.map(0..23, fn step ->
       first_datetime
@@ -74,7 +79,7 @@ defmodule Plausible.Stats.Timeseries do
     end)
   end
 
-  def buckets(_site, %Query{period: "30m", interval: "minute"}) do
+  def buckets(%Query{period: "30m", interval: "minute"}) do
     Enum.into(-30..-1, [])
   end
 
