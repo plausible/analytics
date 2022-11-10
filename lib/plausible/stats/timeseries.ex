@@ -67,7 +67,8 @@ defmodule Plausible.Stats.Timeseries do
   def buckets(%Query{interval: "hour"} = query) do
     # Adjusts hourly buckets in accordance with the Clickhouse server timezone.
     # See: https://github.com/plausible/analytics/issues/2432.
-    # TODO: replace with ClickHouse's timezone when it's supported by HTTP API.
+    # It would be better to replace it with ClickHouse's client timezone when
+    # it is supported by HTTP API.
     {:ok, res} = ClickhouseRepo.query("SELECT timezone()")
     [[timezone]] = res.rows
     {first_datetime, _last_datetime} = utc_boundaries(query, timezone)
