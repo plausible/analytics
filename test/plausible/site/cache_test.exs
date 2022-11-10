@@ -21,7 +21,7 @@ defmodule Plausible.Site.CacheTest do
     {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
 
     assert Process.whereis(Cache.Warmer)
-    assert_receive {:cache_warmed, got_opts}
+    assert_receive {:cache_warmed, %{opts: got_opts}}
     assert got_opts[:cache_name] == test
   end
 
@@ -42,6 +42,24 @@ defmodule Plausible.Site.CacheTest do
 
     assert_receive {:cache_warmed, _}
     assert_receive :telemetry_handled
+  end
+
+  test "cache warmer warms periodically with an interval", %{test: test} do
+    test_pid = self()
+    opts = [force_start?: true, warmer: report_back(test_pid), cache_name: test, interval: 30]
+
+    {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
+
+    assert_receive {:cache_warmed, %{at: at1}}, 100
+    assert_receive {:cache_warmed, %{at: at2}}, 100
+    assert_receive {:cache_warmed, %{at: at3}}, 100
+
+    assert is_integer(at1)
+    assert is_integer(at2)
+    assert is_integer(at3)
+
+    assert at1 < at2
+    assert at3 > at2
   end
 
   test "cache caches", %{test: test} do
@@ -67,7 +85,7 @@ defmodule Plausible.Site.CacheTest do
 
   defp report_back(test_pid) do
     fn opts ->
-      send(test_pid, {:cache_warmed, opts})
+      send(test_pid, {:cache_warmed, %{at: System.monotonic_time(), opts: opts}})
       :ok
     end
   end
