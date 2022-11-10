@@ -1,5 +1,3 @@
-Hey <%= user_salutation(@user) %>,
-<br /><br />
 Last week we sent a reminder that your traffic has exceeded your Plausible Analytics subscription tier two months in a row.
 <br /><br />
 Your dashboard is now locked. We're still counting your stats, but you no longer have access to the stats. As you have outgrown your subscription tier, we kindly ask you to upgrade your subscription to accommodate your new traffic levels.
@@ -16,8 +14,3 @@ Based on that we recommend you select the <%= @suggested_plan[:volume] %>/mo pla
 The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire. We will unlock your dashboard immediately after your account has been upgraded to the appropriate tier.
 <br /><br />
 Thanks for understanding and for being a Plausible subscriber!
-<br /><br />
-Thanks,<br />
-Uku and Marko<br />
---<br />
-<%= plausible_url() %><br />
