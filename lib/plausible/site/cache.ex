@@ -1,4 +1,20 @@
 defmodule Plausible.Site.Cache do
+  @moduledoc """
+  A sites by domain caching interface.
+
+  Serves as a thin wrapper around Cachex, but the underlying
+  implementation can be transparently swapped.
+
+  Even though the Cachex process is started, cache access is disabled
+  during tests via the `:sites_by_domain_cache_enabled` application env key.
+  This can be overriden on case by case basis, using the child specs options.
+
+  When Cache is disabled via application env, the `get/1` function
+  falls back to pure database lookups. This should help with introducing
+  cached lookups in existing code, so that no existing tests should break.
+
+  See tests for more comprehensive examples.
+  """
   require Logger
 
   @cache_name :sites_by_domain

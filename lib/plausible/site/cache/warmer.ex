@@ -1,4 +1,32 @@
 defmodule Plausible.Site.Cache.Warmer do
+  @moduledoc """
+  A periodic cache warmer.
+  Queries all Sites from Postgres, every `interval` and pre-populates the cache.
+  After each run the process is hibernated, triggering garbage collection.
+
+  Currently Cachex is used, but the underlying implementation can be transparently swapped.
+
+  Child specification options available:
+
+    * `interval` - the number of milliseconds for each warm-up cycle, defaults
+      to `:sites_by_domain_cache_refresh_interval` application env value
+      with random jitter added, for which the maximum is stored under
+      `:sites_by_domain_cache_refresh_interval_max_jitter` key.
+    * `cache_name` - defaults to Cache.name() but can be overriden for testing
+    * `force_start?` - enforcess process startup for testing, even if it's barred
+      by `Cache.enabled?`. This is useful for avoiding issues with DB ownership
+      and async tests.
+    * `warmer` - used for testing, a custom function to retrieve the items meant
+      to be cached during the warm-up cycle.
+
+  On each warm-up cycle, a telemetry event is emitted with warm-up `duration` stored.
+  in the measurments map. The event name defaults to:
+
+    `[:prom_ex, :plugin, :cachex, Cache.name(), :refresh]`
+
+  See tests for more comprehensive examples.
+  """
+
   @behaviour :gen_cycle
 
   require Logger
