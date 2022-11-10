@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Timeseries do
   @event_metrics [:visitors, :pageviews]
   @session_metrics [:visits, :bounce_rate, :visit_duration]
   def timeseries(site, query, metrics) do
-    steps = buckets(query)
+    steps = buckets(site, query)
 
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
@@ -50,7 +50,7 @@ defmodule Plausible.Stats.Timeseries do
     |> ClickhouseRepo.all()
   end
 
-  def buckets(%Query{interval: "month"} = query) do
+  def buckets(_site, %Query{interval: "month"} = query) do
     n_buckets = Timex.diff(query.date_range.last, query.date_range.first, :months)
 
     Enum.map(n_buckets..0, fn shift ->
@@ -60,19 +60,21 @@ defmodule Plausible.Stats.Timeseries do
     end)
   end
 
-  def buckets(%Query{interval: "date"} = query) do
+  def buckets(_site, %Query{interval: "date"} = query) do
     Enum.into(query.date_range, [])
   end
 
-  def buckets(%Query{interval: "hour"} = query) do
+  def buckets(site, %Query{interval: "hour"} = query) do
+    {first_datetime, _last_datetime} = utc_boundaries(query, site.timezone)
+
     Enum.map(0..23, fn step ->
-      Timex.to_datetime(query.date_range.first)
+      first_datetime
       |> Timex.shift(hours: step)
       |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
     end)
   end
 
-  def buckets(%Query{period: "30m", interval: "minute"}) do
+  def buckets(_site, %Query{period: "30m", interval: "minute"}) do
     Enum.into(-30..-1, [])
   end
 
