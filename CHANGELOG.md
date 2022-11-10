@@ -39,6 +39,7 @@ All notable changes to this project will be documented in this file.
 - Manually lock and unlock enterprise users plausible/analytics#2197
 - ARM64 support for docker images plausible/analytics#2103
 - Add support for international domain names (IDNs) plausible/analytics#2034
+- Allow self-hosters to register an account on first launch
 
 ### Fixed
 - Plausible script does not prevent default if it's been prevented by an external script [plausible/analytics#1941](https://github.com/plausible/analytics/issues/1941)

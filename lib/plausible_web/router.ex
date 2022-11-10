@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Router do
     plug :fetch_session
     plug :fetch_flash
     plug :put_secure_browser_headers
+    plug PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
     plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.LastSeenPlug
