@@ -44,7 +44,7 @@ defmodule Plausible.Site.Cache do
     Map.get(stats, :hit_rate, 0)
   end
 
-  @spec get(String.t(), Keyword.t()) :: nil | %Plausible.Site{}
+  @spec get(String.t(), Keyword.t()) :: nil | Plausible.Site.t()
   def get(domain, opts \\ []) do
     cache_name = Keyword.get(opts, :cache_name, @cache_name)
     force? = Keyword.get(opts, :force?, false)
