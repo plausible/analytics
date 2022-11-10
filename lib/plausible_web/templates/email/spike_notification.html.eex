@@ -12,3 +12,6 @@ There are currently <%= @current_visitors %> visitors on <%= link(@site.domain, 
 <br /><br />
 View dashboard: <%= link(@link, to: @link) %>
 <% end %>
+<br /><br />
+
+Congrats on the spike in traffic!
