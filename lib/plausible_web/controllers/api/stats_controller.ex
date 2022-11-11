@@ -129,8 +129,7 @@ defmodule PlausibleWeb.Api.StatsController do
         full_intervals: full_intervals
       })
     else
-      _ ->
-        bad_request(conn)
+      {:error, message} when is_binary(message) -> bad_request(conn, message)
     end
   end
 
@@ -176,8 +175,7 @@ defmodule PlausibleWeb.Api.StatsController do
         imported_source: site.imported_data && site.imported_data.source
       })
     else
-      _ ->
-        bad_request(conn)
+      {:error, message} when is_binary(message) -> bad_request(conn, message)
     end
   end
 
@@ -1067,8 +1065,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
       json(conn, Stats.filter_suggestions(site, query, params["filter_name"], params["q"]))
     else
-      _ ->
-        bad_request(conn)
+      {:error, message} when is_binary(message) -> bad_request(conn, message)
     end
   end
 
@@ -1178,19 +1175,57 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp validate_params(%{"date" => date}) do
-    with {:ok, _} <- Date.from_iso8601(date) do
+  defp validate_params(params) do
+    with :ok <- validate_date(params),
+         :ok <- validate_interval(params),
+         do: validate_interval_granularity(params)
+  end
+
+  defp validate_date(params) do
+    with %{"date" => date} <- params,
+         {:ok, _} <- Date.from_iso8601(date) do
       :ok
+    else
+      %{} ->
+        :ok
+
+      {:error, _reason} ->
+        {:error,
+         "Failed to parse date argument. Only ISO 8601 dates are allowed, e.g. `2019-09-07`, `2020-01-01`"}
     end
   end
 
-  defp validate_params(_) do
-    :ok
+  defp validate_interval(params) do
+    with %{"interval" => interval} <- params,
+         true <- Plausible.Stats.Interval.valid?(interval) do
+      :ok
+    else
+      %{} ->
+        :ok
+
+      false ->
+        values = Enum.join(Plausible.Stats.Interval.list(), ", ")
+        {:error, "Invalid value for interval. Accepted values are: #{values}"}
+    end
   end
 
-  defp bad_request(conn) do
+  defp validate_interval_granularity(params) do
+    with %{"interval" => interval, "period" => period} <- params,
+         true <- Plausible.Stats.Interval.allowed_for_period?(period, interval) do
+      :ok
+    else
+      %{} ->
+        :ok
+
+      false ->
+        {:error,
+         "Invalid combination of interval and period. Interval must be smaller than the selected period, e.g. `period=day,interval=minute`"}
+    end
+  end
+
+  defp bad_request(conn, message) do
     conn
     |> put_status(400)
-    |> json(%{error: "input validation error"})
+    |> json(%{error: message})
   end
 end

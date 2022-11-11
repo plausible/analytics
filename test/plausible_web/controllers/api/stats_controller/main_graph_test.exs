@@ -499,41 +499,36 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert List.last(plot) == 1
     end
 
-    test "displays visitors for a month on a monthly scale", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-01-02 00:00:00])
-      ])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=visitors&interval=month"
-        )
-
-      assert %{"plot" => plot} = json_response(conn, 200)
-
-      assert Enum.count(plot) == 1
-      assert List.first(plot) == 2
-    end
-
-    test "displays visitors for a day on a monthly scale", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-01-01 00:15:01]),
-        build(:pageview, timestamp: ~N[2021-01-01 00:15:02])
-      ])
-
+    test "returns error when requesting an interval longer than the time period", %{
+      conn: conn,
+      site: site
+    } do
       conn =
         get(
           conn,
           "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&metric=visitors&interval=month"
         )
 
-      assert %{"plot" => plot} = json_response(conn, 200)
+      assert %{
+               "error" =>
+                 "Invalid combination of interval and period. Interval must be smaller than the selected period, e.g. `period=day,interval=minute`"
+             } == json_response(conn, 400)
+    end
 
-      assert Enum.count(plot) == 1
-      assert List.first(plot) == 3
+    test "returns error when the interval is not valid", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&metric=visitors&interval=biweekly"
+        )
+
+      assert %{
+               "error" =>
+                 "Invalid value for interval. Accepted values are: minute, hour, date, week, month"
+             } == json_response(conn, 400)
     end
 
     test "displays visitors for a month on a weekly scale", %{conn: conn, site: site} do
