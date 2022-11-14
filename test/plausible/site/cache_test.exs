@@ -46,13 +46,13 @@ defmodule Plausible.Site.CacheTest do
     assert_receive :telemetry_handled
   end
 
-  test "critical cache errors are logged and nil is returned", %{test: test} do
+  test "critical cache errors are logged and nil is returned" do
     log =
       capture_log(fn ->
-        assert Cache.get("key", force?: true, cache_name: test) == nil
+        assert Cache.get("key", force?: true, cache_name: NonExistingCache) == nil
       end)
 
-    assert log =~ "Error retrieving 'key' from 'test cache errors are logged': :no_cache"
+    assert log =~ "Error retrieving 'key' from 'NonExistingCache': :no_cache"
   end
 
   test "cache warmer warms periodically with an interval", %{test: test} do
