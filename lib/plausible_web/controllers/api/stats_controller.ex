@@ -5,6 +5,88 @@ defmodule PlausibleWeb.Api.StatsController do
   alias Plausible.Stats
   alias Plausible.Stats.{Query, Filters}
 
+  @doc """
+  Returns a time-series based on given parameters.
+
+  ## Parameters
+
+  This API accepts the following parameters:
+
+    * `period` - x-axis of the graph, e.g. `12mo`, `day`, `custom`.
+
+    * `metric` - y-axis of the graph, e.g. `visits`, `visitors`, `pageviews`.
+      See the Stats API ["Metrics"](https://plausible.io/docs/stats-api#metrics)
+      section for more details. Defaults to `visitors`.
+
+    * `interval` - granularity of the time-series data. You can think of it as
+      a `GROUP BY` clause. Possible values are `minute`, `hour`, `date`, `week`,
+      and `month`. The default depends on the `period` parameter. Check
+      `Plausible.Query.from/2` for each default.
+
+    * `filters` - optional filters to drill down data. See the Stats API
+      ["Filtering"](https://plausible.io/docs/stats-api#filtering) section for
+      more details.
+
+    * `with_imported` - boolean indicating whether to include Google Analytics
+      imported data or not. Defaults to `false`.
+
+  Full example:
+  ```elixir
+  %{
+    "from" => "2021-09-06",
+    "interval" => "month",
+    "metric" => "visitors",
+    "period" => "custom",
+    "to" => "2021-12-13"
+  }
+  ```
+
+  ## Response
+
+  Returns a map with the following keys:
+
+    * `plot` - list of values for the requested metric representing the y-axis
+      of the graph.
+
+    * `labels` - list of date times representing the x-axis of the graph.
+
+    * `present_index` - index of the element representing the current date in
+      `labels` and `plot` lists.
+
+    * `interval` - the interval used for querying.
+
+    * `with_imported` - boolean indicating whether the Google Analytics data
+      was queried or not.
+
+    * `imported_source` - the source of the imported data, when applicable.
+      Currently only Google Analytics is supported.
+
+    * `full_intervals` - map of dates indicating whether the interval has been
+      cut off by the requested date range or not. For example, if looking at a
+      month week-by-week, some weeks may be cut off by the month boundaries.
+      It's useful to adjust the graph display slightly in case the interval is
+      not 'full' so that the user understands why the numbers might be lower for
+      those partial periods.
+
+  Full example:
+  ```elixir
+  %{
+    "full_intervals" => %{
+      "2021-09-01" => false,
+      "2021-10-01" => true,
+      "2021-11-01" => true,
+      "2021-12-01" => false
+    },
+    "imported_source" => nil,
+    "interval" => "month",
+    "labels" => ["2021-09-01", "2021-10-01", "2021-11-01", "2021-12-01"],
+    "plot" => [0, 0, 0, 0],
+    "present_index" => nil,
+    "with_imported" => false
+  }
+  ```
+
+  """
   def main_graph(conn, params) do
     site = conn.assigns[:site]
 
@@ -35,6 +117,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
       labels = Enum.map(timeseries_result, fn row -> row[:date] end)
       present_index = present_index_for(site, query, labels)
+      full_intervals = build_full_intervals(query, labels)
 
       json(conn, %{
         plot: plot,
@@ -42,12 +125,38 @@ defmodule PlausibleWeb.Api.StatsController do
         present_index: present_index,
         interval: query.interval,
         with_imported: query.include_imported,
-        imported_source: site.imported_data && site.imported_data.source
+        imported_source: site.imported_data && site.imported_data.source,
+        full_intervals: full_intervals
       })
     else
-      _ ->
-        bad_request(conn)
+      {:error, message} when is_binary(message) -> bad_request(conn, message)
     end
+  end
+
+  defp build_full_intervals(%{interval: "week", date_range: range}, labels) do
+    for label <- labels, into: %{} do
+      interval_start = Timex.beginning_of_week(label)
+      interval_end = Timex.end_of_week(label)
+
+      within_interval? = Enum.member?(range, interval_start) && Enum.member?(range, interval_end)
+
+      {label, within_interval?}
+    end
+  end
+
+  defp build_full_intervals(%{interval: "month", date_range: range}, labels) do
+    for label <- labels, into: %{} do
+      interval_start = Timex.beginning_of_month(label)
+      interval_end = Timex.end_of_month(label)
+
+      within_interval? = Enum.member?(range, interval_start) && Enum.member?(range, interval_end)
+
+      {label, within_interval?}
+    end
+  end
+
+  defp build_full_intervals(_query, _labels) do
+    nil
   end
 
   def top_stats(conn, params) do
@@ -66,8 +175,7 @@ defmodule PlausibleWeb.Api.StatsController do
         imported_source: site.imported_data && site.imported_data.source
       })
     else
-      _ ->
-        bad_request(conn)
+      {:error, message} when is_binary(message) -> bad_request(conn, message)
     end
   end
 
@@ -87,6 +195,14 @@ defmodule PlausibleWeb.Api.StatsController do
 
         Enum.find_index(dates, &(&1 == current_date))
 
+      "week" ->
+        current_date =
+          Timex.now(site.timezone)
+          |> Timex.to_date()
+          |> date_or_weekstart(query)
+
+        Enum.find_index(dates, &(&1 == current_date))
+
       "month" ->
         current_date =
           Timex.now(site.timezone)
@@ -96,7 +212,21 @@ defmodule PlausibleWeb.Api.StatsController do
         Enum.find_index(dates, &(&1 == current_date))
 
       "minute" ->
-        nil
+        current_date =
+          Timex.now(site.timezone)
+          |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}:00")
+
+        Enum.find_index(dates, &(&1 == current_date))
+    end
+  end
+
+  defp date_or_weekstart(date, query) do
+    weekstart = Timex.beginning_of_week(date)
+
+    if Enum.member?(query.date_range, weekstart) do
+      weekstart
+    else
+      date
     end
   end
 
@@ -935,8 +1065,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
       json(conn, Stats.filter_suggestions(site, query, params["filter_name"], params["q"]))
     else
-      _ ->
-        bad_request(conn)
+      {:error, message} when is_binary(message) -> bad_request(conn, message)
     end
   end
 
@@ -1046,19 +1175,57 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp validate_params(%{"date" => date}) do
-    with {:ok, _} <- Date.from_iso8601(date) do
+  defp validate_params(params) do
+    with :ok <- validate_date(params),
+         :ok <- validate_interval(params),
+         do: validate_interval_granularity(params)
+  end
+
+  defp validate_date(params) do
+    with %{"date" => date} <- params,
+         {:ok, _} <- Date.from_iso8601(date) do
       :ok
+    else
+      %{} ->
+        :ok
+
+      {:error, _reason} ->
+        {:error,
+         "Failed to parse date argument. Only ISO 8601 dates are allowed, e.g. `2019-09-07`, `2020-01-01`"}
     end
   end
 
-  defp validate_params(_) do
-    :ok
+  defp validate_interval(params) do
+    with %{"interval" => interval} <- params,
+         true <- Plausible.Stats.Interval.valid?(interval) do
+      :ok
+    else
+      %{} ->
+        :ok
+
+      false ->
+        values = Enum.join(Plausible.Stats.Interval.list(), ", ")
+        {:error, "Invalid value for interval. Accepted values are: #{values}"}
+    end
   end
 
-  defp bad_request(conn) do
+  defp validate_interval_granularity(params) do
+    with %{"interval" => interval, "period" => period} <- params,
+         true <- Plausible.Stats.Interval.allowed_for_period?(period, interval) do
+      :ok
+    else
+      %{} ->
+        :ok
+
+      false ->
+        {:error,
+         "Invalid combination of interval and period. Interval must be smaller than the selected period, e.g. `period=day,interval=minute`"}
+    end
+  end
+
+  defp bad_request(conn, message) do
     conn
     |> put_status(400)
-    |> json(%{error: "input validation error"})
+    |> json(%{error: message})
   end
 end
