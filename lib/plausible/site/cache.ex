@@ -38,7 +38,7 @@ defmodule Plausible.Site.Cache do
     size
   end
 
-  @spec hit_rate() :: float()
+  @spec hit_rate() :: number()
   def hit_rate(cache_name \\ @cache_name) do
     {:ok, stats} = Cachex.stats(cache_name)
     Map.get(stats, :hit_rate, 0)
