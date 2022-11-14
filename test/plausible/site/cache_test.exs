@@ -16,7 +16,7 @@ defmodule Plausible.Site.CacheTest do
 
   test "cache warmer process warms up the cache", %{test: test} do
     test_pid = self()
-    opts = [force_start?: true, warmer: report_back(test_pid), cache_name: test]
+    opts = [force_start?: true, warmer_fn: report_back(test_pid), cache_name: test]
 
     {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
 
@@ -37,7 +37,7 @@ defmodule Plausible.Site.CacheTest do
       %{}
     )
 
-    opts = [force_start?: true, warmer: report_back(test_pid), cache_name: test]
+    opts = [force_start?: true, warmer_fn: report_back(test_pid), cache_name: test]
     {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
 
     assert_receive {:cache_warmed, _}
@@ -46,7 +46,7 @@ defmodule Plausible.Site.CacheTest do
 
   test "cache warmer warms periodically with an interval", %{test: test} do
     test_pid = self()
-    opts = [force_start?: true, warmer: report_back(test_pid), cache_name: test, interval: 30]
+    opts = [force_start?: true, warmer_fn: report_back(test_pid), cache_name: test, interval: 30]
 
     {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
 

@@ -16,7 +16,7 @@ defmodule Plausible.Site.Cache.Warmer do
     * `force_start?` - enforcess process startup for testing, even if it's barred
       by `Cache.enabled?`. This is useful for avoiding issues with DB ownership
       and async tests.
-    * `warmer` - used for testing, a custom function to retrieve the items meant
+    * `warmer_fn` - used for testing, a custom function to retrieve the items meant
       to be cached during the warm-up cycle.
 
   On each warm-up cycle, a telemetry event is emitted with warm-up `duration` stored.
@@ -62,8 +62,8 @@ defmodule Plausible.Site.Cache.Warmer do
     start = System.monotonic_time()
     Logger.info("Refreshing #{cache_name} cache...")
 
-    warmer = Keyword.get(opts, :warmer, &warm/1)
-    warmer.(opts)
+    warmer_fn = Keyword.get(opts, :warmer_fn, &warm/1)
+    warmer_fn.(opts)
 
     stop = System.monotonic_time()
 
