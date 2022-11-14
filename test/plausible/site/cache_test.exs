@@ -11,7 +11,7 @@ defmodule Plausible.Site.CacheTest do
     refute Cache.enabled?()
     assert Process.alive?(Process.whereis(Cache.name()))
     refute Process.whereis(Cache.Warmer)
-    assert %Site{domain: "example.test"} = Cache.get("example.test")
+    assert %Site{domain: "example.test", from_cache?: false} = Cache.get("example.test")
     assert Cache.size() == 0
     refute Cache.get("other.test")
   end
@@ -80,18 +80,24 @@ defmodule Plausible.Site.CacheTest do
         name: Test.Supervisor.Cache
       )
 
-    site1 = insert(:site, domain: "site1.example.com")
+    %{id: first_id} = site1 = insert(:site, domain: "site1.example.com")
     _ = insert(:site, domain: "site2.example.com")
 
-    :ok = Cache.Warmer.warm(cache_name: test)
+    :ok = Cache.prefill(cache_name: test)
 
     {:ok, _} = Plausible.Repo.delete(site1)
 
     assert Cache.size(test) == 2
 
-    assert Cache.get("site1.example.com", force?: true, cache_name: test)
-    assert Cache.get("site2.example.com", force?: true, cache_name: test)
-    assert Cache.get("site2.example.com", cache_name: test)
+    assert %Site{from_cache?: true, id: ^first_id} =
+             Cache.get("site1.example.com", force?: true, cache_name: test)
+
+    assert %Site{from_cache?: true} =
+             Cache.get("site2.example.com", force?: true, cache_name: test)
+
+    assert %Site{from_cache?: false} = Cache.get("site2.example.com", cache_name: test)
+
+    refute Cache.get("site3.example.com", cache_name: test, force?: true)
   end
 
   test "cache exposes hit rate", %{test: test} do
@@ -102,7 +108,7 @@ defmodule Plausible.Site.CacheTest do
       )
 
     insert(:site, domain: "site1.example.com")
-    :ok = Cache.Warmer.warm(cache_name: test)
+    :ok = Cache.prefill(cache_name: test)
 
     assert Cache.hit_rate(test) == 0
     assert Cache.get("site1.example.com", force?: true, cache_name: test)

@@ -63,7 +63,8 @@ defmodule Plausible.Site.Cache.Warmer do
     measure_duration(telemetry_event_refresh(cache_name), fn ->
       Logger.info("Refreshing #{cache_name} cache...")
 
-      warmer_fn = Keyword.get(opts, :warmer_fn, &warm/1)
+      warmer_fn = Keyword.get(opts, :warmer_fn, &Cache.prefill/1)
+
       warmer_fn.(opts)
     end)
 
@@ -85,21 +86,6 @@ defmodule Plausible.Site.Cache.Warmer do
     interval = Application.fetch_env!(:plausible, :sites_by_domain_cache_refresh_interval)
 
     interval + jitter()
-  end
-
-  @spec warm(Keyword.t()) :: :ok
-  def warm(opts) do
-    cache_name = Keyword.fetch!(opts, :cache_name)
-
-    sites_by_domain =
-      Plausible.Site
-      |> Plausible.Repo.all()
-      |> Enum.map(fn site ->
-        {site.domain, site}
-      end)
-
-    true = Cachex.put_many!(cache_name, sites_by_domain)
-    :ok
   end
 
   defp jitter() do

@@ -13,11 +13,35 @@ defmodule Plausible.Site.Cache do
   falls back to pure database lookups. This should help with introducing
   cached lookups in existing code, so that no existing tests should break.
 
-  See tests for more comprehensive examples.
+  To differentiate cached Site structs from those retrieved directly from the
+  database, a virtual schema field `from_cache?: true` is set.
+  This indicates the `Plausible.Site` struct is incomplete in comparison to its
+  database counterpart -- to spare bandwidth and query execution time,
+  only selected database columns are retrieved and cached.
+
+  The `@cached_schema_fields` attribute defines the list of DB columns
+  queried on cache pre-fill.
+
+  Also see tests for more comprehensive examples.
   """
   require Logger
 
+  import Ecto.Query
+
+  alias Plausible.Site
+
   @cache_name :sites_by_domain
+
+  @cached_schema_fields ~w(
+     id
+     ingest_rate_limit_scale_seconds
+     ingest_rate_limit_threshold
+     inserted_at
+     locked
+     public
+     timezone
+     updated_at
+   )a
 
   def name(), do: @cache_name
 
@@ -32,6 +56,23 @@ defmodule Plausible.Site.Cache do
     )
   end
 
+  @spec prefill(Keyword.t()) :: :ok
+  def prefill(opts) do
+    cache_name = Keyword.fetch!(opts, :cache_name)
+
+    sites_by_domain_query =
+      from s in Site,
+        select: {
+          s.domain,
+          %{struct(s, ^@cached_schema_fields) | from_cache?: true}
+        }
+
+    sites_by_domain = Plausible.Repo.all(sites_by_domain_query)
+
+    true = Cachex.put_many!(cache_name, sites_by_domain)
+    :ok
+  end
+
   @spec size() :: non_neg_integer()
   def size(cache_name \\ @cache_name) do
     {:ok, size} = Cachex.size(cache_name)
@@ -44,7 +85,7 @@ defmodule Plausible.Site.Cache do
     Map.get(stats, :hit_rate, 0)
   end
 
-  @spec get(String.t(), Keyword.t()) :: nil | Plausible.Site.t()
+  @spec get(String.t(), Keyword.t()) :: nil | Site.t()
   def get(domain, opts \\ []) do
     cache_name = Keyword.get(opts, :cache_name, @cache_name)
     force? = Keyword.get(opts, :force?, false)
