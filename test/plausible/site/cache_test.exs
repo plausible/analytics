@@ -4,6 +4,8 @@ defmodule Plausible.Site.CacheTest do
   alias Plausible.Site
   alias Plausible.Site.Cache
 
+  import ExUnit.CaptureLog
+
   test "cache process is started, but falls back to the database if cache is disabled" do
     insert(:site, domain: "example.test")
     refute Cache.enabled?()
@@ -42,6 +44,15 @@ defmodule Plausible.Site.CacheTest do
 
     assert_receive {:cache_warmed, _}
     assert_receive :telemetry_handled
+  end
+
+  test "critical cache errors are logged and nil is returned", %{test: test} do
+    log =
+      capture_log(fn ->
+        assert Cache.get("key", force?: true, cache_name: test) == nil
+      end)
+
+    assert log =~ "Error retrieving 'key' from 'test cache errors are logged': :no_cache"
   end
 
   test "cache warmer warms periodically with an interval", %{test: test} do

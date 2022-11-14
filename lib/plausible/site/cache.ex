@@ -51,8 +51,15 @@ defmodule Plausible.Site.Cache do
 
     if enabled?() or force? do
       case Cachex.get(cache_name, domain) do
-        {:ok, nil} -> nil
-        {:ok, site} -> site
+        {:ok, nil} ->
+          nil
+
+        {:ok, site} ->
+          site
+
+        {:error, e} ->
+          Logger.error("Error retrieving '#{domain}' from '#{cache_name}': #{inspect(e)}")
+          nil
       end
     else
       Plausible.Sites.get_by_domain(domain)
