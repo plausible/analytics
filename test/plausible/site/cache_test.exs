@@ -117,6 +117,60 @@ defmodule Plausible.Site.CacheTest do
     assert Cache.hit_rate(test) == 50
   end
 
+  test "a cached site can be refreshed", %{test: test} do
+    {:ok, _} =
+      Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_refresh_cache]}],
+        strategy: :one_for_one,
+        name: RefreshableCache
+      )
+
+    domain1 = "site1.example.com"
+    domain2 = "nonexisting.example.com"
+
+    cache_opts = [cache_name: test, force?: true]
+
+    assert Cache.get(domain1) == nil
+
+    insert(:site, domain: domain1)
+
+    assert {:ok, %{domain: ^domain1}} = Cache.refresh_one(domain1, cache_opts)
+    assert %Site{domain: ^domain1} = Cache.get(domain1, cache_opts)
+
+    assert {:ok, %Ecto.NoResultsError{}} = Cache.refresh_one(domain2, cache_opts)
+    assert %Ecto.NoResultsError{} = Cache.get(domain2, cache_opts)
+  end
+
+  test "deleted sites don't stay in cache on another prefill", %{test: test} do
+    {:ok, _} =
+      Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_deleted_sites]}],
+        strategy: :one_for_one,
+        name: DeletedSitesCache
+      )
+
+    domain1 = "site1.example.com"
+    domain2 = "site2.example.com"
+
+    site1 = insert(:site, domain: domain1)
+    _site2 = insert(:site, domain: domain2)
+
+    cache_opts = [cache_name: test, force?: true]
+
+    :ok = Cache.prefill(cache_opts)
+
+    assert Cache.get(domain1, cache_opts)
+    assert Cache.get(domain2, cache_opts)
+
+    Repo.delete!(site1)
+
+    :ok = Cache.prefill(cache_opts)
+
+    assert Cache.get(domain2, cache_opts)
+
+    refute Cache.get(domain1, cache_opts)
+    Cache.refresh_one(domain1, cache_opts)
+    assert Cache.get(domain1, cache_opts) == %Ecto.NoResultsError{}
+  end
+
   defp report_back(test_pid) do
     fn opts ->
       send(test_pid, {:cache_warmed, %{at: System.monotonic_time(), opts: opts}})

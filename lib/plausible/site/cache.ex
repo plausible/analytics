@@ -39,6 +39,8 @@ defmodule Plausible.Site.Cache do
      ingest_rate_limit_threshold
    )a
 
+  @type t() :: Site.t() | Ecto.NoResultsError.t()
+
   def name(), do: @cache_name
 
   @spec child_spec(Keyword.t()) :: Supervisor.child_spec()
@@ -65,6 +67,7 @@ defmodule Plausible.Site.Cache do
 
     sites_by_domain = Plausible.Repo.all(sites_by_domain_query)
 
+    Cachex.clear!(cache_name)
     true = Cachex.put_many!(cache_name, sites_by_domain)
     :ok
   end
@@ -81,7 +84,7 @@ defmodule Plausible.Site.Cache do
     Map.get(stats, :hit_rate, 0)
   end
 
-  @spec get(String.t(), Keyword.t()) :: nil | Site.t()
+  @spec get(String.t(), Keyword.t()) :: t() | nil
   def get(domain, opts \\ []) do
     cache_name = Keyword.get(opts, :cache_name, @cache_name)
     force? = Keyword.get(opts, :force?, false)
@@ -103,6 +106,31 @@ defmodule Plausible.Site.Cache do
       end
     else
       Plausible.Sites.get_by_domain(domain)
+    end
+  end
+
+  @spec refresh_one(String.t(), Keyword.t()) :: {:ok, t()} | {:error, any()}
+  def refresh_one(domain, opts) do
+    cache_name = Keyword.get(opts, :cache_name, @cache_name)
+    force? = Keyword.get(opts, :force?, false)
+
+    if enabled?() or force? do
+      site_by_domain_query =
+        from s in Site,
+          where: s.domain == ^domain,
+          select: %{struct(s, ^@cached_schema_fields) | from_cache?: true}
+
+      cached_item =
+        case Plausible.Repo.one(site_by_domain_query) do
+          nil -> %Ecto.NoResultsError{}
+          site -> site
+        end
+
+      with {:ok, _} <- Cachex.put(cache_name, domain, cached_item) do
+        {:ok, cached_item}
+      end
+    else
+      raise "Cache: '#{cache_name}' is disabled"
     end
   end
 
