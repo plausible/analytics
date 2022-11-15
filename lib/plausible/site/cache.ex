@@ -68,7 +68,11 @@ defmodule Plausible.Site.Cache do
     sites_by_domain = Plausible.Repo.all(sites_by_domain_query)
 
     Cachex.clear!(cache_name)
-    true = Cachex.put_many!(cache_name, sites_by_domain)
+
+    if not Enum.empty?(sites_by_domain) do
+      true = Cachex.put_many!(cache_name, sites_by_domain)
+    end
+
     :ok
   end
 
