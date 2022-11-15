@@ -2,7 +2,7 @@ import React from "react";
 import classNames from "classnames";
 import { Tooltip } from '../../util/tooltip'
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
-import { METRIC_MAPPING } from './visitor-graph'
+import { METRIC_MAPPING } from './graph-util'
 
 export default class TopStats extends React.Component {
   renderComparison(name, comparison) {
