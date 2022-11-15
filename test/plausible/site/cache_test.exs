@@ -6,169 +6,179 @@ defmodule Plausible.Site.CacheTest do
 
   import ExUnit.CaptureLog
 
-  test "cache process is started, but falls back to the database if cache is disabled" do
-    insert(:site, domain: "example.test")
-    refute Cache.enabled?()
-    assert Process.alive?(Process.whereis(Cache.name()))
-    refute Process.whereis(Cache.Warmer)
-    assert %Site{domain: "example.test", from_cache?: false} = Cache.get("example.test")
-    assert Cache.size() == 0
-    refute Cache.get("other.test")
+  describe "public cache interface" do
+    test "cache process is started, but falls back to the database if cache is disabled" do
+      insert(:site, domain: "example.test")
+      refute Cache.enabled?()
+      assert Process.alive?(Process.whereis(Cache.name()))
+      refute Process.whereis(Cache.Warmer)
+      assert %Site{domain: "example.test", from_cache?: false} = Cache.get("example.test")
+      assert Cache.size() == 0
+      refute Cache.get("other.test")
+    end
+
+    test "critical cache errors are logged and nil is returned" do
+      log =
+        capture_log(fn ->
+          assert Cache.get("key", force?: true, cache_name: NonExistingCache) == nil
+        end)
+
+      assert log =~ "Error retrieving 'key' from 'NonExistingCache': :no_cache"
+    end
+
+    test "cache caches", %{test: test} do
+      {:ok, _} =
+        Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_cache_caches_id]}],
+          strategy: :one_for_one,
+          name: Test.Supervisor.Cache
+        )
+
+      %{id: first_id} = site1 = insert(:site, domain: "site1.example.com")
+      _ = insert(:site, domain: "site2.example.com")
+
+      :ok = Cache.prefill(cache_name: test)
+
+      {:ok, _} = Plausible.Repo.delete(site1)
+
+      assert Cache.size(test) == 2
+
+      assert %Site{from_cache?: true, id: ^first_id} =
+               Cache.get("site1.example.com", force?: true, cache_name: test)
+
+      assert %Site{from_cache?: true} =
+               Cache.get("site2.example.com", force?: true, cache_name: test)
+
+      assert %Site{from_cache?: false} = Cache.get("site2.example.com", cache_name: test)
+
+      refute Cache.get("site3.example.com", cache_name: test, force?: true)
+    end
+
+    test "cache exposes hit rate", %{test: test} do
+      {:ok, _} =
+        Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_cache_caches_id]}],
+          strategy: :one_for_one,
+          name: Test.Supervisor.HitRateCache
+        )
+
+      insert(:site, domain: "site1.example.com")
+      :ok = Cache.prefill(cache_name: test)
+
+      assert Cache.hit_rate(test) == 0
+      assert Cache.get("site1.example.com", force?: true, cache_name: test)
+      assert Cache.hit_rate(test) == 100
+      refute Cache.get("nonexisting.example.com", force?: true, cache_name: test)
+      assert Cache.hit_rate(test) == 50
+    end
+
+    test "a cached site can be refreshed", %{test: test} do
+      {:ok, _} =
+        Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_refresh_cache]}],
+          strategy: :one_for_one,
+          name: RefreshableCache
+        )
+
+      domain1 = "site1.example.com"
+      domain2 = "nonexisting.example.com"
+
+      cache_opts = [cache_name: test, force?: true]
+
+      assert Cache.get(domain1) == nil
+
+      insert(:site, domain: domain1)
+
+      assert {:ok, %{domain: ^domain1}} = Cache.refresh_one(domain1, cache_opts)
+      assert %Site{domain: ^domain1} = Cache.get(domain1, cache_opts)
+
+      assert {:ok, %Ecto.NoResultsError{}} = Cache.refresh_one(domain2, cache_opts)
+      assert %Ecto.NoResultsError{} = Cache.get(domain2, cache_opts)
+    end
   end
 
-  test "cache warmer process warms up the cache", %{test: test} do
-    test_pid = self()
-    opts = [force_start?: true, warmer_fn: report_back(test_pid), cache_name: test]
+  describe "warming the cache" do
+    test "cache warmer process warms up the cache", %{test: test} do
+      test_pid = self()
+      opts = [force_start?: true, warmer_fn: report_back(test_pid), cache_name: test]
 
-    {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
+      {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
 
-    assert Process.whereis(Cache.Warmer)
-    assert_receive {:cache_warmed, %{opts: got_opts}}
-    assert got_opts[:cache_name] == test
-  end
+      assert Process.whereis(Cache.Warmer)
+      assert_receive {:cache_warmed, %{opts: got_opts}}
+      assert got_opts[:cache_name] == test
+    end
 
-  test "cache warmer sends telemetry event", %{test: test} do
-    test_pid = self()
+    test "cache warmer sends telemetry event", %{test: test} do
+      test_pid = self()
 
-    :telemetry.attach(
-      "test-cache-warmer",
-      Cache.Warmer.telemetry_event_refresh(test),
-      fn _event, %{duration: d}, %{}, %{} when is_integer(d) ->
-        send(test_pid, :telemetry_handled)
-      end,
-      %{}
-    )
-
-    opts = [force_start?: true, warmer_fn: report_back(test_pid), cache_name: test]
-    {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
-
-    assert_receive {:cache_warmed, _}
-    assert_receive :telemetry_handled
-  end
-
-  test "critical cache errors are logged and nil is returned" do
-    log =
-      capture_log(fn ->
-        assert Cache.get("key", force?: true, cache_name: NonExistingCache) == nil
-      end)
-
-    assert log =~ "Error retrieving 'key' from 'NonExistingCache': :no_cache"
-  end
-
-  test "cache warmer warms periodically with an interval", %{test: test} do
-    test_pid = self()
-    opts = [force_start?: true, warmer_fn: report_back(test_pid), cache_name: test, interval: 30]
-
-    {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
-
-    assert_receive {:cache_warmed, %{at: at1}}, 100
-    assert_receive {:cache_warmed, %{at: at2}}, 100
-    assert_receive {:cache_warmed, %{at: at3}}, 100
-
-    assert is_integer(at1)
-    assert is_integer(at2)
-    assert is_integer(at3)
-
-    assert at1 < at2
-    assert at3 > at2
-  end
-
-  test "cache caches", %{test: test} do
-    {:ok, _} =
-      Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_cache_caches_id]}],
-        strategy: :one_for_one,
-        name: Test.Supervisor.Cache
+      :telemetry.attach(
+        "test-cache-warmer",
+        Cache.Warmer.telemetry_event_refresh(test),
+        fn _event, %{duration: d}, %{}, %{} when is_integer(d) ->
+          send(test_pid, :telemetry_handled)
+        end,
+        %{}
       )
 
-    %{id: first_id} = site1 = insert(:site, domain: "site1.example.com")
-    _ = insert(:site, domain: "site2.example.com")
+      opts = [force_start?: true, warmer_fn: report_back(test_pid), cache_name: test]
+      {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
 
-    :ok = Cache.prefill(cache_name: test)
+      assert_receive {:cache_warmed, _}
+      assert_receive :telemetry_handled
+    end
 
-    {:ok, _} = Plausible.Repo.delete(site1)
+    test "cache warmer warms periodically with an interval", %{test: test} do
+      test_pid = self()
 
-    assert Cache.size(test) == 2
+      opts = [
+        force_start?: true,
+        warmer_fn: report_back(test_pid),
+        cache_name: test,
+        interval: 30
+      ]
 
-    assert %Site{from_cache?: true, id: ^first_id} =
-             Cache.get("site1.example.com", force?: true, cache_name: test)
+      {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
 
-    assert %Site{from_cache?: true} =
-             Cache.get("site2.example.com", force?: true, cache_name: test)
+      assert_receive {:cache_warmed, %{at: at1}}, 100
+      assert_receive {:cache_warmed, %{at: at2}}, 100
+      assert_receive {:cache_warmed, %{at: at3}}, 100
 
-    assert %Site{from_cache?: false} = Cache.get("site2.example.com", cache_name: test)
+      assert is_integer(at1)
+      assert is_integer(at2)
+      assert is_integer(at3)
 
-    refute Cache.get("site3.example.com", cache_name: test, force?: true)
-  end
+      assert at1 < at2
+      assert at3 > at2
+    end
 
-  test "cache exposes hit rate", %{test: test} do
-    {:ok, _} =
-      Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_cache_caches_id]}],
-        strategy: :one_for_one,
-        name: Test.Supervisor.HitRateCache
-      )
+    test "deleted sites don't stay in cache on another prefill", %{test: test} do
+      {:ok, _} =
+        Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_deleted_sites]}],
+          strategy: :one_for_one,
+          name: DeletedSitesCache
+        )
 
-    insert(:site, domain: "site1.example.com")
-    :ok = Cache.prefill(cache_name: test)
+      domain1 = "site1.example.com"
+      domain2 = "site2.example.com"
 
-    assert Cache.hit_rate(test) == 0
-    assert Cache.get("site1.example.com", force?: true, cache_name: test)
-    assert Cache.hit_rate(test) == 100
-    refute Cache.get("nonexisting.example.com", force?: true, cache_name: test)
-    assert Cache.hit_rate(test) == 50
-  end
+      site1 = insert(:site, domain: domain1)
+      _site2 = insert(:site, domain: domain2)
 
-  test "a cached site can be refreshed", %{test: test} do
-    {:ok, _} =
-      Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_refresh_cache]}],
-        strategy: :one_for_one,
-        name: RefreshableCache
-      )
+      cache_opts = [cache_name: test, force?: true]
 
-    domain1 = "site1.example.com"
-    domain2 = "nonexisting.example.com"
+      :ok = Cache.prefill(cache_opts)
 
-    cache_opts = [cache_name: test, force?: true]
+      assert Cache.get(domain1, cache_opts)
+      assert Cache.get(domain2, cache_opts)
 
-    assert Cache.get(domain1) == nil
+      Repo.delete!(site1)
 
-    insert(:site, domain: domain1)
+      :ok = Cache.prefill(cache_opts)
 
-    assert {:ok, %{domain: ^domain1}} = Cache.refresh_one(domain1, cache_opts)
-    assert %Site{domain: ^domain1} = Cache.get(domain1, cache_opts)
+      assert Cache.get(domain2, cache_opts)
 
-    assert {:ok, %Ecto.NoResultsError{}} = Cache.refresh_one(domain2, cache_opts)
-    assert %Ecto.NoResultsError{} = Cache.get(domain2, cache_opts)
-  end
-
-  test "deleted sites don't stay in cache on another prefill", %{test: test} do
-    {:ok, _} =
-      Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_deleted_sites]}],
-        strategy: :one_for_one,
-        name: DeletedSitesCache
-      )
-
-    domain1 = "site1.example.com"
-    domain2 = "site2.example.com"
-
-    site1 = insert(:site, domain: domain1)
-    _site2 = insert(:site, domain: domain2)
-
-    cache_opts = [cache_name: test, force?: true]
-
-    :ok = Cache.prefill(cache_opts)
-
-    assert Cache.get(domain1, cache_opts)
-    assert Cache.get(domain2, cache_opts)
-
-    Repo.delete!(site1)
-
-    :ok = Cache.prefill(cache_opts)
-
-    assert Cache.get(domain2, cache_opts)
-
-    refute Cache.get(domain1, cache_opts)
-    Cache.refresh_one(domain1, cache_opts)
-    assert Cache.get(domain1, cache_opts) == %Ecto.NoResultsError{}
+      refute Cache.get(domain1, cache_opts)
+      Cache.refresh_one(domain1, cache_opts)
+      assert Cache.get(domain1, cache_opts) == %Ecto.NoResultsError{}
+    end
   end
 
   defp report_back(test_pid) do
