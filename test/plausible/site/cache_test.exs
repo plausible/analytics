@@ -54,11 +54,7 @@ defmodule Plausible.Site.CacheTest do
     end
 
     test "cache exposes hit rate", %{test: test} do
-      {:ok, _} =
-        Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_cache_caches_id]}],
-          strategy: :one_for_one,
-          name: Test.Supervisor.HitRateCache
-        )
+      {:ok, _} = start_test_cache(test)
 
       insert(:site, domain: "site1.example.com")
       :ok = Cache.prefill(cache_name: test)
@@ -71,11 +67,7 @@ defmodule Plausible.Site.CacheTest do
     end
 
     test "a cached site can be refreshed", %{test: test} do
-      {:ok, _} =
-        Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_refresh_cache]}],
-          strategy: :one_for_one,
-          name: RefreshableCache
-        )
+      {:ok, _} = start_test_cache(test)
 
       domain1 = "site1.example.com"
       domain2 = "nonexisting.example.com"
@@ -100,8 +92,8 @@ defmodule Plausible.Site.CacheTest do
       opts = [force_start?: true, warmer_fn: report_back(test_pid), cache_name: test]
 
       {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
-
       assert Process.whereis(Cache.Warmer)
+
       assert_receive {:cache_warmed, %{opts: got_opts}}
       assert got_opts[:cache_name] == test
     end
@@ -119,7 +111,7 @@ defmodule Plausible.Site.CacheTest do
       )
 
       opts = [force_start?: true, warmer_fn: report_back(test_pid), cache_name: test]
-      {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
+      {:ok, _} = start_test_warmer(opts)
 
       assert_receive {:cache_warmed, _}
       assert_receive :telemetry_handled
@@ -135,7 +127,7 @@ defmodule Plausible.Site.CacheTest do
         interval: 30
       ]
 
-      {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
+      {:ok, _} = start_test_warmer(opts)
 
       assert_receive {:cache_warmed, %{at: at1}}, 100
       assert_receive {:cache_warmed, %{at: at2}}, 100
@@ -150,11 +142,7 @@ defmodule Plausible.Site.CacheTest do
     end
 
     test "deleted sites don't stay in cache on another prefill", %{test: test} do
-      {:ok, _} =
-        Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_deleted_sites]}],
-          strategy: :one_for_one,
-          name: DeletedSitesCache
-        )
+      {:ok, _} = start_test_cache(test)
 
       domain1 = "site1.example.com"
       domain2 = "site2.example.com"
@@ -186,5 +174,16 @@ defmodule Plausible.Site.CacheTest do
       send(test_pid, {:cache_warmed, %{at: System.monotonic_time(), opts: opts}})
       :ok
     end
+  end
+
+  defp start_test_cache(cache_name) do
+    %{start: {m, f, a}} = Cache.child_spec(cache_name: cache_name)
+    apply(m, f, a)
+  end
+
+  defp start_test_warmer(opts) do
+    child_name_opt = {:child_name, {:local, Keyword.fetch!(opts, :cache_name)}}
+    %{start: {m, f, a}} = Cache.Warmer.child_spec([child_name_opt | opts])
+    apply(m, f, a)
   end
 end
