@@ -34,13 +34,9 @@ defmodule Plausible.Site.Cache do
 
   @cached_schema_fields ~w(
      id
+     domain
      ingest_rate_limit_scale_seconds
      ingest_rate_limit_threshold
-     inserted_at
-     locked
-     public
-     timezone
-     updated_at
    )a
 
   def name(), do: @cache_name
