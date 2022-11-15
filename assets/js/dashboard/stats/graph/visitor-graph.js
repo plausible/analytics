@@ -2,48 +2,12 @@ import React from 'react';
 import { withRouter, Link } from 'react-router-dom'
 import Chart from 'chart.js/auto';
 import { navigateToQuery } from '../../query'
-import numberFormatter, {durationFormatter} from '../../util/number-formatter'
 import * as api from '../../api'
 import * as storage from '../../util/storage'
 import LazyLoader from '../../components/lazy-loader'
-import {GraphTooltip, buildDataSet, dateFormatter} from './graph-util';
+import {GraphTooltip, buildDataSet, dateFormatter, METRIC_MAPPING, METRIC_LABELS, METRIC_FORMATTER} from './graph-util';
 import TopStats from './top-stats';
 import * as url from '../../util/url'
-
-export const METRIC_MAPPING = {
-  'Unique visitors (last 30 min)': 'visitors',
-  'Pageviews (last 30 min)': 'pageviews',
-  'Unique visitors': 'visitors',
-  'Visit duration': 'visit_duration',
-  'Total pageviews': 'pageviews',
-  'Bounce rate': 'bounce_rate',
-  'Unique conversions': 'conversions',
-  // 'Time on Page': 'time',
-  // 'Conversion rate': 'conversion_rate',
-  // 'Total conversions': 't_conversions',
-}
-
-export const METRIC_LABELS = {
-  'visitors': 'Visitors',
-  'pageviews': 'Pageviews',
-  'bounce_rate': 'Bounce Rate',
-  'visit_duration': 'Visit Duration',
-  'conversions': 'Converted Visitors',
-  // 'time': 'Time on Page',
-  // 'conversion_rate': 'Conversion Rate',
-  // 't_conversions': 'Total Conversions'
-}
-
-export const METRIC_FORMATTER = {
-  'visitors': numberFormatter,
-  'pageviews': numberFormatter,
-  'bounce_rate': (number) => (`${number}%`),
-  'visit_duration': durationFormatter,
-  'conversions': numberFormatter,
-  // 'time': durationFormatter,
-  // 'conversion_rate': (number) => (`${Math.max(number, 100)}%`),
-  // 't_conversions': numberFormatter
-}
 
 class LineGraph extends React.Component {
   constructor(props) {
