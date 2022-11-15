@@ -35,9 +35,11 @@ defmodule Plausible.Site.Cache.Warmer do
 
   @spec child_spec(Keyword.t()) :: Supervisor.child_spec() | :ignore
   def child_spec(opts) do
+    child_name = Keyword.get(opts, :child_name, {:local, __MODULE__})
+
     %{
       id: __MODULE__,
-      start: {:gen_cycle, :start_link, [{:local, __MODULE__}, __MODULE__, opts]}
+      start: {:gen_cycle, :start_link, [child_name, __MODULE__, opts]}
     }
   end
 
