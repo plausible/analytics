@@ -3,6 +3,8 @@ defmodule Plausible.Stats.Base do
   alias Plausible.Stats.{Query, Filters}
   import Ecto.Query
 
+  # Ecto typespec has not been updated for this PR: https://github.com/elixir-ecto/ecto/pull/3592
+  @dialyzer {:nowarn_function, add_sample_hint: 2}
   @no_ref "Direct / None"
 
   def base_event_query(site, query) do

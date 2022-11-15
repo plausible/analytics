@@ -51,12 +51,7 @@ defmodule Plausible.Stats.Timeseries do
   end
 
   defp buckets(%Query{interval: "month"} = query) do
-    n_buckets =
-      Timex.diff(
-        query.date_range.last |> Timex.end_of_month(),
-        query.date_range.first |> Timex.beginning_of_month(),
-        :months
-      )
+    n_buckets = Timex.diff(query.date_range.last, query.date_range.first, :months)
 
     Enum.map(n_buckets..0, fn shift ->
       query.date_range.last
@@ -79,18 +74,18 @@ defmodule Plausible.Stats.Timeseries do
     Enum.into(query.date_range, [])
   end
 
+  @full_day_in_hours 23
   defp buckets(%Query{interval: "hour"} = query) do
-    n_hours = Timex.diff(query.date_range.last, query.date_range.first, :hours)
-
     n_buckets =
-      if n_hours == 0 do
-        23
+      if query.date_range.first == query.date_range.last do
+        @full_day_in_hours
       else
-        n_hours
+        Timex.diff(query.date_range.last, query.date_range.first, :hours)
       end
 
     Enum.map(0..n_buckets, fn step ->
-      Timex.to_datetime(query.date_range.first)
+      query.date_range.first
+      |> Timex.to_datetime()
       |> Timex.shift(hours: step)
       |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
     end)
@@ -100,18 +95,18 @@ defmodule Plausible.Stats.Timeseries do
     Enum.into(-30..-1, [])
   end
 
+  @full_day_in_minutes 1439
   defp buckets(%Query{interval: "minute"} = query) do
-    n_minutes = Timex.diff(query.date_range.last, query.date_range.first, :minutes)
-
     n_buckets =
-      if n_minutes == 0 do
-        1440
+      if query.date_range.first == query.date_range.last do
+        @full_day_in_minutes
       else
-        n_minutes
+        Timex.diff(query.date_range.last, query.date_range.first, :minutes)
       end
 
     Enum.map(0..n_buckets, fn step ->
-      Timex.to_datetime(query.date_range.first)
+      query.date_range.first
+      |> Timex.to_datetime()
       |> Timex.shift(minutes: step)
       |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
     end)
@@ -133,47 +128,9 @@ defmodule Plausible.Stats.Timeseries do
 
     from(
       e in q,
-      select_merge: %{
-        date:
-          fragment(
-            "if(toMonday(toTimeZone(?, ?)) < toDate(?),
-              toDate(?),
-              toMonday(toTimeZone(?, ?))
-            )",
-            e.timestamp,
-            ^site.timezone,
-            ^first_datetime,
-            ^first_datetime,
-            e.timestamp,
-            ^site.timezone
-          )
-      },
-      group_by:
-        fragment(
-          "if(toMonday(toTimeZone(?, ?)) < toDate(?),
-          toDate(?),
-          toMonday(toTimeZone(?, ?))
-        )",
-          e.timestamp,
-          ^site.timezone,
-          ^first_datetime,
-          ^first_datetime,
-          e.timestamp,
-          ^site.timezone
-        ),
-      order_by:
-        fragment(
-          "if(toMonday(toTimeZone(?, ?)) < toDate(?),
-          toDate(?),
-          toMonday(toTimeZone(?, ?))
-        )",
-          e.timestamp,
-          ^site.timezone,
-          ^first_datetime,
-          ^first_datetime,
-          e.timestamp,
-          ^site.timezone
-        )
+      select_merge: %{date: weekstart_not_before(e.timestamp, ^first_datetime, ^site.timezone)},
+      group_by: weekstart_not_before(e.timestamp, ^first_datetime, ^site.timezone),
+      order_by: weekstart_not_before(e.timestamp, ^first_datetime, ^site.timezone)
     )
   end
 

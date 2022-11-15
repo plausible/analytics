@@ -1,5 +1,3 @@
-Hey,
-<br /><br />
 <%= @invitation.inviter.email %> has requested to transfer the ownership of <%= @invitation.site.domain %> site on Plausible Analytics to you.
 <%= if @new_owner_account do %>
   <%= link("Click here", to: Routes.site_url(PlausibleWeb.Endpoint, :index)) %> to view and respond to the invitation.
@@ -8,8 +6,3 @@ Hey,
   <br /><br />
   Plausible is a lightweight and open-source website analytics tool. We hope you like our simple and ethical approach to tracking website visitors.
 <% end %>
-<br /><br />
-Thanks,<br />
-Uku and Marko<br />
---<br />
-<%= plausible_url() %><br />

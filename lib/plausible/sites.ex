@@ -4,6 +4,10 @@ defmodule Plausible.Sites do
   alias Plausible.Site.SharedLink
   import Ecto.Query
 
+  def get_by_domain(domain) do
+    Repo.get_by(Site, domain: domain)
+  end
+
   def create(user, params) do
     limit = Plausible.Billing.sites_limit(user)
 

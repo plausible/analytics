@@ -46,7 +46,7 @@ defmodule PlausibleWeb.StatsController do
   alias Plausible.Stats.{Query, Filters}
   alias PlausibleWeb.Api
 
-  plug PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export]
+  plug(PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export])
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
     stats_start_date = Plausible.Sites.stats_start_date(site)
@@ -106,7 +106,7 @@ defmodule PlausibleWeb.StatsController do
       |> Enum.join()
 
     filename =
-      "Plausible export #{params["domain"]} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.zip"
+      'Plausible export #{params["domain"]} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.zip'
 
     params = Map.merge(params, %{"limit" => "300", "csv" => "True", "detailed" => "True"})
     limited_params = Map.merge(params, %{"limit" => "100"})
@@ -181,9 +181,10 @@ defmodule PlausibleWeb.StatsController do
   def shared_link(conn, %{"domain" => slug}) do
     shared_link =
       Repo.one(
-        from l in Plausible.Site.SharedLink,
+        from(l in Plausible.Site.SharedLink,
           where: l.slug == ^slug and l.inserted_at < ^@old_format_deprecation_date,
           preload: :site
+        )
       )
 
     if shared_link do
@@ -217,12 +218,13 @@ defmodule PlausibleWeb.StatsController do
 
   defp find_shared_link(domain, auth) do
     link_query =
-      from link in Plausible.Site.SharedLink,
+      from(link in Plausible.Site.SharedLink,
         inner_join: site in assoc(link, :site),
         where: link.slug == ^auth,
         where: site.domain == ^domain,
         limit: 1,
         preload: [site: site]
+      )
 
     case Repo.one(link_query) do
       %Plausible.Site.SharedLink{password_hash: hash} = link when not is_nil(hash) ->

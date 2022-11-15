@@ -406,7 +406,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.at(plot, 1) == 1
     end
 
-    test "displays visitors for a day on an minute scale", %{conn: conn, site: site} do
+    test "displays visitors for a day on a minute scale", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-01 00:15:01]),
@@ -421,12 +421,39 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
-      assert Enum.count(plot) == 1441
+      assert Enum.count(plot) == 1440
       assert List.first(plot) == 1
       assert Enum.at(plot, 15) == 2
     end
 
-    test "displays visitors for 6mo on an day scale", %{conn: conn, site: site} do
+    test "displays visitors for date range on a minute scale", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:15:01]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:15:02]),
+        build(:pageview, timestamp: ~N[2021-01-02 00:10:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 00:11:01]),
+        build(:pageview, timestamp: ~N[2021-01-02 01:00:02]),
+        build(:pageview, timestamp: ~N[2021-01-04 03:10:00]),
+        build(:pageview, timestamp: ~N[2021-01-04 04:11:01]),
+        build(:pageview, timestamp: ~N[2021-01-04 05:00:02])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=custom&from=2021-01-01&to=2021-01-04&metric=visitors&interval=minute"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 4321
+      assert List.first(plot) == 1
+      assert Enum.at(plot, 15) == 2
+      assert Enum.at(plot, 1450) == 1
+    end
+
+    test "displays visitors for 6mo on a day scale", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-15 00:00:00]),
@@ -450,7 +477,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert List.last(plot) == 1
     end
 
-    test "displays visitors for custom on an month scale", %{conn: conn, site: site} do
+    test "displays visitors for a custom period on a monthly scale", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-15 00:00:00]),
@@ -472,44 +499,39 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert List.last(plot) == 1
     end
 
-    test "displays visitors for a month on a monthly scale", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-01-02 00:00:00])
-      ])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=visitors&interval=month"
-        )
-
-      assert %{"plot" => plot} = json_response(conn, 200)
-
-      assert Enum.count(plot) == 1
-      assert List.first(plot) == 2
-    end
-
-    test "displays visitors for a day on an month scale", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-01-01 00:15:01]),
-        build(:pageview, timestamp: ~N[2021-01-01 00:15:02])
-      ])
-
+    test "returns error when requesting an interval longer than the time period", %{
+      conn: conn,
+      site: site
+    } do
       conn =
         get(
           conn,
           "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&metric=visitors&interval=month"
         )
 
-      assert %{"plot" => plot} = json_response(conn, 200)
-
-      assert Enum.count(plot) == 1
-      assert List.first(plot) == 3
+      assert %{
+               "error" =>
+                 "Invalid combination of interval and period. Interval must be smaller than the selected period, e.g. `period=day,interval=minute`"
+             } == json_response(conn, 400)
     end
 
-    test "displays visitors for a month on an week scale", %{conn: conn, site: site} do
+    test "returns error when the interval is not valid", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&metric=visitors&interval=biweekly"
+        )
+
+      assert %{
+               "error" =>
+                 "Invalid value for interval. Accepted values are: minute, hour, date, week, month"
+             } == json_response(conn, 400)
+    end
+
+    test "displays visitors for a month on a weekly scale", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-01 00:15:01]),

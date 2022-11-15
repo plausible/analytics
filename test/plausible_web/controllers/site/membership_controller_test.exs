@@ -31,6 +31,39 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert redirected_to(conn) == "/#{site.domain}/settings/people"
     end
 
+    test "fails to create invitation with insufficient permissions", %{conn: conn, user: user} do
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
+
+      conn =
+        post(conn, "/sites/#{site.domain}/memberships/invite", %{
+          email: "john.doe@example.com",
+          role: "admin"
+        })
+
+      assert conn.status == 404
+
+      refute Repo.get_by(Plausible.Auth.Invitation, email: "john.doe@example.com")
+    end
+
+    test "fails to create invitation for a foreign site", %{conn: my_conn, user: me} do
+      my_site = insert(:site)
+      insert(:site_membership, site: my_site, user: me, role: "owner")
+
+      other_user = insert(:user)
+      other_site = insert(:site)
+      insert(:site_membership, site: other_site, user: other_user, role: "owner")
+
+      my_conn =
+        post(my_conn, "/sites/#{other_site.domain}/memberships/invite", %{
+          email: "john.doe@example.com",
+          role: "admin"
+        })
+
+      assert my_conn.status == 404
+
+      refute Repo.get_by(Plausible.Auth.Invitation, email: "john.doe@example.com")
+    end
+
     test "sends invitation email for new user", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
@@ -160,6 +193,20 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
         subject: "[Plausible Analytics] Request to transfer ownership of #{site.domain}"
       )
     end
+
+    test "fails to transfer ownership to a foreign domain", %{conn: conn, user: user} do
+      insert(:site, members: [user])
+      foreign_site = insert(:site)
+
+      conn =
+        post(conn, "/sites/#{foreign_site.domain}/transfer-ownership", %{
+          email: "john.doe@example.com"
+        })
+
+      assert conn.status == 404
+
+      refute Repo.get_by(Plausible.Auth.Invitation, email: "john.doe@example.com")
+    end
   end
 
   describe "PUT /sites/memberships/:id/role/:new_role" do
@@ -285,7 +332,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     end
   end
 
-  describe "DELETE /sites/memberships/:id" do
+  describe "DELETE /sites/:website/memberships/:id" do
     test "removes a member from a site", %{conn: conn, user: user} do
       admin = insert(:user)
 
@@ -299,9 +346,36 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       membership = Enum.find(site.memberships, &(&1.role == :admin))
 
-      delete(conn, "/sites/#{site.domain}/memberships/#{membership.id}")
+      conn = delete(conn, "/sites/#{site.domain}/memberships/#{membership.id}")
+      assert get_flash(conn, :success) =~ "has been removed"
 
       refute Repo.exists?(from sm in Plausible.Site.Membership, where: sm.user_id == ^admin.id)
+    end
+
+    test "fails to remove a member from a foreign site", %{conn: conn, user: user} do
+      foreign_site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: build(:user), role: :admin)
+          ]
+        )
+
+      [foreign_membership] = foreign_site.memberships
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner)
+          ]
+        )
+
+      conn = delete(conn, "/sites/#{site.domain}/memberships/#{foreign_membership.id}")
+      assert get_flash(conn, :error) == "Failed to find membership to remove"
+
+      assert Repo.exists?(
+               from sm in Plausible.Site.Membership,
+                 where: sm.user_id == ^foreign_membership.user.id
+             )
     end
 
     test "notifies the user who has been removed via email", %{conn: conn, user: user} do

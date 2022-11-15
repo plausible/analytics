@@ -2,10 +2,6 @@ defmodule PlausibleWeb.SiteView do
   use PlausibleWeb, :view
   import Phoenix.Pagination.HTML
 
-  def admin_email do
-    Application.get_env(:plausible, :admin_email)
-  end
-
   def plausible_url do
     PlausibleWeb.Endpoint.url()
   end
@@ -43,7 +39,7 @@ defmodule PlausibleWeb.SiteView do
       if site.custom_domain do
         "https://" <> site.custom_domain.domain <> "/js/index.js"
       else
-        "#{plausible_url()}/js/plausible.js"
+        "#{plausible_url()}/js/script.js"
       end
 
     """

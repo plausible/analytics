@@ -7,6 +7,11 @@ defmodule PlausibleWeb.InvitationController do
 
   plug PlausibleWeb.RequireAccountPlug
 
+  @require_owner [:remove_invitation]
+
+  plug PlausibleWeb.AuthorizeSiteAccess,
+       [:owner, :admin] when action in @require_owner
+
   def accept_invitation(conn, %{"invitation_id" => invitation_id}) do
     invitation =
       Repo.get_by!(Invitation, invitation_id: invitation_id)
@@ -111,7 +116,7 @@ defmodule PlausibleWeb.InvitationController do
 
   def remove_invitation(conn, %{"invitation_id" => invitation_id}) do
     invitation =
-      Repo.get_by!(Invitation, invitation_id: invitation_id)
+      Repo.get_by!(Invitation, invitation_id: invitation_id, site_id: conn.assigns[:site].id)
       |> Repo.preload(:site)
 
     Repo.delete!(invitation)

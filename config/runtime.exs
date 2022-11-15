@@ -58,9 +58,6 @@ db_url =
 
 db_socket_dir = get_var_from_path_or_env(config_dir, "DATABASE_SOCKET_DIR")
 
-admin_user = get_var_from_path_or_env(config_dir, "ADMIN_USER_NAME")
-admin_email = get_var_from_path_or_env(config_dir, "ADMIN_USER_EMAIL")
-
 super_admin_user_ids =
   get_var_from_path_or_env(config_dir, "ADMIN_USER_IDS", "")
   |> String.split(",")
@@ -71,7 +68,6 @@ super_admin_user_ids =
   end)
   |> Enum.filter(& &1)
 
-admin_pwd = get_var_from_path_or_env(config_dir, "ADMIN_USER_PWD")
 env = get_var_from_path_or_env(config_dir, "ENVIRONMENT", "prod")
 mailer_adapter = get_var_from_path_or_env(config_dir, "MAILER_ADAPTER", "Bamboo.SMTPAdapter")
 mailer_email = get_var_from_path_or_env(config_dir, "MAILER_EMAIL", "hello@plausible.local")
@@ -135,10 +131,10 @@ geolite2_country_db =
 ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", geolite2_country_db)
 geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
 
-disable_auth =
-  config_dir
-  |> get_var_from_path_or_env("DISABLE_AUTH", "false")
-  |> String.to_existing_atom()
+if System.get_env("DISABLE_AUTH") do
+  require Logger
+  Logger.warn("DISABLE_AUTH env var is no longer supported")
+end
 
 enable_email_verification =
   config_dir
@@ -193,9 +189,6 @@ disable_cron =
   |> String.to_existing_atom()
 
 config :plausible,
-  admin_user: admin_user,
-  admin_email: admin_email,
-  admin_pwd: admin_pwd,
   environment: env,
   mailer_email: mailer_email,
   super_admin_user_ids: super_admin_user_ids,
@@ -206,9 +199,8 @@ config :plausible,
   domain_blacklist: domain_blacklist
 
 config :plausible, :selfhost,
-  disable_authentication: disable_auth,
   enable_email_verification: enable_email_verification,
-  disable_registration: if(!disable_auth, do: disable_registration, else: false)
+  disable_registration: disable_registration
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [scheme: base_url.scheme, host: base_url.host, path: base_url.path, port: base_url.port],

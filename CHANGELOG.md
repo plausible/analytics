@@ -39,6 +39,7 @@ All notable changes to this project will be documented in this file.
 - Manually lock and unlock enterprise users plausible/analytics#2197
 - ARM64 support for docker images plausible/analytics#2103
 - Add support for international domain names (IDNs) plausible/analytics#2034
+- Allow self-hosters to register an account on first launch
 
 ### Fixed
 - Plausible script does not prevent default if it's been prevented by an external script [plausible/analytics#1941](https://github.com/plausible/analytics/issues/1941)
@@ -57,8 +58,6 @@ All notable changes to this project will be documented in this file.
 - Fix 'All time' period for sites with no recorded stats [plausible/analytics#2277](https://github.com/plausible/analytics/pull/2277)
 - Ensure settings page can be rendered after a form error [plausible/analytics#2278](https://github.com/plausible/analytics/pull/2278)
 
->>>>>>> 09af319b (Add changelog)
-
 ### Changed
 - `script.file-downloads.outbound-links.js` only sends an outbound link event when an outbound download link is clicked
 - Plausible script now uses callback navigation (instead of waiting for 150ms every time) when sending custom events
@@ -71,12 +70,12 @@ All notable changes to this project will be documented in this file.
 - Do not display ZZ country code in countries report [PR#1934](https://github.com/plausible/analytics#2223)
 - Add fallback icon for when DDG favicon cannot be fetched [PR#2279](https://github.com/plausible/analytics#2279)
 
-## v1.4.1
+## v1.4.1 - 2021-11-29
 
 ### Fixed
 - Fixes database error when pathname contains a question mark
 
-## v1.4.0
+## v1.4.0 - 2021-10-27
 
 ### Added
 - New parameter `metrics` for the `/api/v1/stats/timeseries` endpoint plausible/analytics#952

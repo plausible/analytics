@@ -36,6 +36,9 @@ defmodule Plausible.HTTPClient do
   URL encoding is invoked.
   """
 
+  require OpenTelemetry.Tracer
+  alias Plausible.HTTPClient.Non200Error
+
   @doc """
   Make a POST request
   """
@@ -62,13 +65,17 @@ defmodule Plausible.HTTPClient do
   end
 
   defp call(method, url, headers, params, finch_req_opts \\ []) do
-    {params, headers} = maybe_encode_params(params, headers)
+    OpenTelemetry.Tracer.with_span "http_client.request" do
+      {params, headers} = maybe_encode_params(params, headers)
 
-    method
-    |> build_request(url, headers, params)
-    |> do_request(finch_req_opts)
-    |> maybe_decode_body()
-    |> tag_error()
+      method
+      |> build_request(url, headers, params)
+      |> trace_request()
+      |> do_request(finch_req_opts)
+      |> maybe_decode_body()
+      |> tag_error()
+      |> trace_response()
+    end
   end
 
   defp build_request(method, url, headers, params) do
@@ -109,7 +116,7 @@ defmodule Plausible.HTTPClient do
   end
 
   defp tag_error({:ok, %Finch.Response{status: _} = response}) do
-    {:error, Plausible.HTTPClient.Non200Error.new(response)}
+    {:error, Non200Error.new(response)}
   end
 
   defp tag_error({:error, _} = error) do
@@ -138,5 +145,40 @@ defmodule Plausible.HTTPClient do
       end)
 
     is_tuple(found)
+  end
+
+  defp trace_request(%Finch.Request{} = request) do
+    OpenTelemetry.Tracer.set_attributes([
+      {"http_client.request.host", request.host},
+      {"http_client.request.method", request.method},
+      {"http_client.request.path", request.path}
+    ])
+
+    request
+  end
+
+  defp trace_response(response) do
+    case response do
+      {:ok, %{status: status}} ->
+        OpenTelemetry.Tracer.set_attributes([
+          {"http_client.response.status", status}
+        ])
+
+      {:error, %Non200Error{reason: %{status: status}}} ->
+        OpenTelemetry.Tracer.set_attributes([
+          {"http_client.request.failure", "non_200"},
+          {"http_client.response.status", status}
+        ])
+
+      {:error, exception} when is_exception(exception) ->
+        OpenTelemetry.Tracer.set_attributes([
+          {"http_client.request.failure", Exception.message(exception)}
+        ])
+
+      _any ->
+        :skip
+    end
+
+    response
   end
 end

@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("welcome-email")
     |> subject("Welcome to Plausible")
-    |> render("welcome_email.html", user: user)
+    |> render("welcome_email.html", user: user, unsubscribe: true)
   end
 
   def create_site_email(user) do
@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("create-site-email")
     |> subject("Your Plausible setup: Add your website details")
-    |> render("create_site_email.html", user: user)
+    |> render("create_site_email.html", user: user, unsubscribe: true)
   end
 
   def site_setup_help(user, site) do
@@ -35,7 +35,11 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("help-email")
     |> subject("Your Plausible setup: Waiting for the first page views")
-    |> render("site_setup_help_email.html", user: user, site: site)
+    |> render("site_setup_help_email.html",
+      user: user,
+      site: site,
+      unsubscribe: true
+    )
   end
 
   def site_setup_success(user, site) do
@@ -43,7 +47,11 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("setup-success-email")
     |> subject("Plausible is now tracking your website stats")
-    |> render("site_setup_success_email.html", user: user, site: site)
+    |> render("site_setup_success_email.html",
+      user: user,
+      site: site,
+      unsubscribe: true
+    )
   end
 
   def check_stats_email(user) do
@@ -51,11 +59,11 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("check-stats-email")
     |> subject("Check your Plausible website stats")
-    |> render("check_stats_email.html", user: user)
+    |> render("check_stats_email.html", user: user, unsubscribe: true)
   end
 
   def password_reset_email(email, reset_link) do
-    base_email()
+    base_email(%{layout: nil})
     |> to(email)
     |> tag("password-reset-email")
     |> subject("Plausible password reset")
@@ -67,7 +75,7 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("trial-one-week-reminder")
     |> subject("Your Plausible trial expires next week")
-    |> render("trial_one_week_reminder.html", user: user)
+    |> render("trial_one_week_reminder.html", user: user, unsubscribe: true)
   end
 
   def trial_upgrade_email(user, day, {pageviews, custom_events}) do
@@ -82,7 +90,8 @@ defmodule PlausibleWeb.Email do
       day: day,
       custom_events: custom_events,
       usage: pageviews + custom_events,
-      suggested_plan: suggested_plan
+      suggested_plan: suggested_plan,
+      unsubscribe: true
     )
   end
 
@@ -91,11 +100,11 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("trial-over-email")
     |> subject("Your Plausible trial has ended")
-    |> render("trial_over_email.html", user: user)
+    |> render("trial_over_email.html", user: user, unsubscribe: true)
   end
 
   def weekly_report(email, site, assigns) do
-    base_email()
+    base_email(%{layout: nil})
     |> to(email)
     |> tag("weekly-report")
     |> subject("#{assigns[:name]} report for #{site.domain}")
@@ -124,12 +133,13 @@ defmodule PlausibleWeb.Email do
       user: user,
       usage: usage,
       last_cycle: last_cycle,
-      suggested_plan: suggested_plan
+      suggested_plan: suggested_plan,
+      unsubscribe: true
     })
   end
 
   def enterprise_over_limit_internal_email(user, usage, last_cycle, site_usage, site_allowance) do
-    base_email()
+    base_email(%{layout: nil})
     |> to("enterprise@plausible.io")
     |> tag("enterprise-over-limit")
     |> subject("#{user.email} has outgrown their enterprise plan")
@@ -188,7 +198,7 @@ defmodule PlausibleWeb.Email do
     |> to(user.email)
     |> tag("cancelled-email")
     |> subject("Your Plausible Analytics subscription has been canceled")
-    |> render("cancellation_email.html", name: user.name)
+    |> render("cancellation_email.html", user: user)
   end
 
   def new_user_invitation(invitation) do
@@ -230,6 +240,7 @@ defmodule PlausibleWeb.Email do
       "[Plausible Analytics] #{invitation.email} accepted your invitation to #{invitation.site.domain}"
     )
     |> render("invitation_accepted.html",
+      user: invitation.inviter,
       invitation: invitation
     )
   end
@@ -242,6 +253,7 @@ defmodule PlausibleWeb.Email do
       "[Plausible Analytics] #{invitation.email} rejected your invitation to #{invitation.site.domain}"
     )
     |> render("invitation_rejected.html",
+      user: invitation.inviter,
       invitation: invitation
     )
   end
@@ -254,6 +266,7 @@ defmodule PlausibleWeb.Email do
       "[Plausible Analytics] #{invitation.email} accepted the ownership transfer of #{invitation.site.domain}"
     )
     |> render("ownership_transfer_accepted.html",
+      user: invitation.inviter,
       invitation: invitation
     )
   end
@@ -266,6 +279,7 @@ defmodule PlausibleWeb.Email do
       "[Plausible Analytics] #{invitation.email} rejected the ownership transfer of #{invitation.site.domain}"
     )
     |> render("ownership_transfer_rejected.html",
+      user: invitation.inviter,
       invitation: invitation
     )
   end
@@ -276,6 +290,7 @@ defmodule PlausibleWeb.Email do
     |> tag("site-member-removed")
     |> subject("[Plausible Analytics] Your access to #{membership.site.domain} has been revoked")
     |> render("site_member_removed.html",
+      user: membership.user,
       membership: membership
     )
   end
@@ -305,11 +320,21 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  defp base_email() do
+  def base_email(), do: base_email(%{layout: "base_email.html"})
+
+  def base_email(%{layout: layout}) do
     mailer_from = Application.get_env(:plausible, :mailer_email)
 
     new_email()
     |> put_param("TrackOpens", false)
     |> from(mailer_from)
+    |> maybe_put_layout(layout)
+  end
+
+  defp maybe_put_layout(email, nil), do: email
+
+  defp maybe_put_layout(email, layout) do
+    email
+    |> put_html_layout({PlausibleWeb.LayoutView, layout})
   end
 end

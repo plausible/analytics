@@ -141,8 +141,8 @@ defmodule Plausible.TestUtils do
         end
       end)
 
-    if native, do: populate_native_stats(native)
-    if imported, do: populate_imported_stats(imported)
+    populate_native_stats(native)
+    populate_imported_stats(imported)
   end
 
   defp populate_native_stats(events) do

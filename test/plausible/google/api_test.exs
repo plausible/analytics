@@ -12,15 +12,15 @@ defmodule Plausible.Google.ApiTest do
   @refresh_token_body Jason.decode!(File.read!("fixture/ga_refresh_token.json"))
 
   @full_report_mock [
-                      "ga_report_imported_visitors.json",
-                      "ga_report_imported_sources.json",
-                      "ga_report_imported_pages.json",
-                      "ga_report_imported_entry_pages.json",
-                      "ga_report_imported_exit_pages.json",
-                      "ga_report_imported_locations.json",
-                      "ga_report_imported_devices.json",
-                      "ga_report_imported_browsers.json",
-                      "ga_report_imported_operating_systems.json"
+                      "fixture/ga_report_imported_visitors.json",
+                      "fixture/ga_report_imported_sources.json",
+                      "fixture/ga_report_imported_pages.json",
+                      "fixture/ga_report_imported_entry_pages.json",
+                      "fixture/ga_report_imported_exit_pages.json",
+                      "fixture/ga_report_imported_locations.json",
+                      "fixture/ga_report_imported_devices.json",
+                      "fixture/ga_report_imported_browsers.json",
+                      "fixture/ga_report_imported_operating_systems.json"
                     ]
                     |> Enum.map(&File.read!/1)
                     |> Enum.map(&Jason.decode!/1)

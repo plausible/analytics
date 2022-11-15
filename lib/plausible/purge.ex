@@ -5,7 +5,7 @@ defmodule Plausible.Purge do
   Stats are stored on Clickhouse, and unlike other databases data deletion is
   done asynchronously.
 
-  - [Clickhouse `ALTER TABLE ... DELETE` Statement`](https://clickhouse.com/docs/en/sql-reference/statements/alter/delete)
+  - [Clickhouse `ALTER TABLE ... DELETE` Statement](https://clickhouse.com/docs/en/sql-reference/statements/alter/delete)
   - [Synchronicity of `ALTER` Queries](https://clickhouse.com/docs/en/sql-reference/statements/alter/#synchronicity-of-alter-queries)
   """
 
