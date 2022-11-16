@@ -3,12 +3,12 @@
   "version": "1.4.0",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "deploy": "$(npm bin)/webpack --mode production",
-    "watch": "$(npm bin)/webpack --mode development --watch",
-    "format": "$(npm bin)/prettier --write {css,js}/**",
-    "check-format": "$(npm bin)/prettier --check {css,js}/**",
-    "lint": "$(npm bin)/eslint js/**",
-    "bundlemon": "$(npm bin)/bundlemon"
+    "deploy": "webpack --mode production",
+    "watch": "webpack --mode development --watch",
+    "format": "prettier --write {css,js}/**",
+    "check-format": "prettier --check {css,js}/**",
+    "lint": "eslint js/**",
+    "bundlemon": "bundlemon"
   },
   "dependencies": {
     "@babel/core": "^7.14.3",
