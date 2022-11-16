@@ -143,11 +143,12 @@ defmodule Plausible.Site.Cache do
     measure_duration_with_metadata(telemetry_event_refresh(cache_name, :one), fn ->
       {found_in_db?, item_to_cache} = select_one(domain)
 
-      with {:ok, _} <- Cachex.put(cache_name, domain, item_to_cache) do
-        result = {:ok, item_to_cache}
-        {result, with_telemetry_metadata(found_in_db?: found_in_db?)}
-      else
-        error ->
+      case Cachex.put(cache_name, domain, item_to_cache) do
+        {:ok, _} ->
+          result = {:ok, item_to_cache}
+          {result, with_telemetry_metadata(found_in_db?: found_in_db?)}
+
+        {:error, _} = error ->
           {error, with_telemetry_metadata(error: true)}
       end
     end)
