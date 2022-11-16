@@ -31,13 +31,20 @@ export const METRIC_FORMATTER = {
 
 export const dateFormatter = (interval, longForm, period, full) => {
   return function(isoDate, _index, _ticks) {
-    let date = parseUTCDate(isoDate)
+    const date = parseUTCDate(isoDate)
     const minutes = date.getMinutes();
-    const parts = isoDate.split(/[^0-9]/);
-    const localDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
+
     const dateFormat = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
     const twelveHourClock = dateFormat.resolvedOptions().hour12
-    const formattedHours = dateFormat.format(localDate)
+
+    const getFormattedHours = () => {
+      const monthIndex = 1
+      const dateParts = isoDate.split(/[^0-9]/);
+      dateParts[monthIndex] = dateParts[monthIndex] - 1
+
+      const localDate = new Date(...dateParts)
+      return dateFormat.format(localDate)
+    }
 
     if (interval === 'month') {
       if (longForm) {
@@ -59,9 +66,9 @@ export const dateFormatter = (interval, longForm, period, full) => {
       }
     } else if (interval === 'hour') {
       if (twelveHourClock) {
-        return formattedHours.replace(' ', '').toLowerCase()
+        return getFormattedHours().replace(' ', '').toLowerCase()
       } else {
-        return formattedHours.replace(/[^0-9]/g, '').concat(":00")
+        return getFormattedHours().replace(/[^0-9]/g, '').concat(":00")
       }
     } else if (interval === 'minute' && period === 'realtime') {
       if (longForm) {
@@ -72,9 +79,9 @@ export const dateFormatter = (interval, longForm, period, full) => {
       }
     } else if (interval === 'minute') {
       if (twelveHourClock) {
-        return formattedHours.replace(' ', ':' + (minutes < 10 ? `0${minutes}` : minutes)).toLowerCase()
+        return getFormattedHours().replace(' ', ':' + (minutes < 10 ? `0${minutes}` : minutes)).toLowerCase()
       } else {
-        return formattedHours.replace(/[^0-9]/g, '').concat(":" + (minutes < 10 ? `0${minutes}` : minutes))
+        return getFormattedHours().replace(/[^0-9]/g, '').concat(":" + (minutes < 10 ? `0${minutes}` : minutes))
       }
     }
   }
