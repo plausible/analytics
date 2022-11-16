@@ -276,7 +276,8 @@ class LineGraph extends React.Component {
         </div>
         <div className="relative px-2">
           <div className="absolute right-4 -top-10 flex items-center">
-            <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={this.props.updateInterval}/>
+            { site.flags && site.flags.intervals && 
+              <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={this.props.updateInterval}/> }
             { this.downloadLink() }
             { this.samplingNotice() }
             { this.importedNotice() }
