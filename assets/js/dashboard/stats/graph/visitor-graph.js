@@ -275,7 +275,7 @@ class LineGraph extends React.Component {
           <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current}/>
         </div>
         <div className="relative px-2">
-          <div className="absolute right-4 -top-10 flex">
+          <div className="absolute right-4 -top-10 flex items-center">
             <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={this.props.updateInterval}/>
             { this.downloadLink() }
             { this.samplingNotice() }
