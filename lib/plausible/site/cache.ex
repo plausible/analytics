@@ -57,7 +57,8 @@ defmodule Plausible.Site.Cache do
      ingest_rate_limit_threshold
    )a
 
-  @type t() :: Site.t() | Ecto.NoResultsError.t()
+  @type not_found_in_db() :: %Ecto.NoResultsError{}
+  @type t() :: Site.t() | not_found_in_db()
 
   def name(), do: @cache_name
 
