@@ -31,6 +31,11 @@ defmodule Plausible.Site do
     has_one :custom_domain, Plausible.Site.CustomDomain
     has_one :spike_notification, Plausible.Site.SpikeNotification
 
+    # If `from_cache?` is set, the struct might be incomplete - see `Plausible.Site.Cache`.
+    # Use `Plausible.Repo.reload!(cached_site)` to pre-fill missing fields if
+    # strictly necessary.
+    field :from_cache?, :boolean, virtual: true, default: false
+
     timestamps()
   end
 
