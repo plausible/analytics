@@ -66,7 +66,7 @@ defmodule Plausible.Site.CacheTest do
       assert Cache.hit_rate(test) == 50
     end
 
-    test "a cached site can be refreshed", %{test: test} do
+    test "a single cached site can be refreshed", %{test: test} do
       {:ok, _} = start_test_cache(test)
 
       domain1 = "site1.example.com"
@@ -84,6 +84,51 @@ defmodule Plausible.Site.CacheTest do
       assert {:ok, %Ecto.NoResultsError{}} = Cache.refresh_one(domain2, cache_opts)
       assert %Ecto.NoResultsError{} = Cache.get(domain2, cache_opts)
     end
+
+    test "refreshing a single site sends a telemetry event indicating record not found in the database",
+         %{
+           test: test
+         } do
+      :ok =
+        start_test_cache_with_telemetry_handler(test,
+          event: Cache.telemetry_event_refresh(test, :one)
+        )
+
+      Cache.refresh_one("missing.example.com", force?: true, cache_name: test)
+      assert_receive {:telemetry_handled, %{found_in_db?: false}}
+    end
+
+    test "refreshing a single site sends a telemetry event indicating record found in the database",
+         %{
+           test: test
+         } do
+      domain = "site1.example.com"
+      insert(:site, domain: domain)
+
+      :ok =
+        start_test_cache_with_telemetry_handler(test,
+          event: Cache.telemetry_event_refresh(test, :one)
+        )
+
+      Cache.refresh_one(domain, force?: true, cache_name: test)
+      assert_receive {:telemetry_handled, %{found_in_db?: true}}
+    end
+
+    test "refreshing all sites sends a telemetry event",
+         %{
+           test: test
+         } do
+      domain = "site1.example.com"
+      insert(:site, domain: domain)
+
+      :ok =
+        start_test_cache_with_telemetry_handler(test,
+          event: Cache.telemetry_event_refresh(test, :all)
+        )
+
+      Cache.refresh_all(force?: true, cache_name: test)
+      assert_receive {:telemetry_handled, %{}}
+    end
   end
 
   describe "warming the cache" do
@@ -96,25 +141,6 @@ defmodule Plausible.Site.CacheTest do
 
       assert_receive {:cache_warmed, %{opts: got_opts}}
       assert got_opts[:cache_name] == test
-    end
-
-    test "cache warmer sends telemetry event", %{test: test} do
-      test_pid = self()
-
-      :telemetry.attach(
-        "test-cache-warmer",
-        Cache.Warmer.telemetry_event_refresh(test),
-        fn _event, %{duration: d}, %{}, %{} when is_integer(d) ->
-          send(test_pid, :telemetry_handled)
-        end,
-        %{}
-      )
-
-      opts = [force_start?: true, warmer_fn: report_back(test_pid), cache_name: test]
-      {:ok, _} = start_test_warmer(opts)
-
-      assert_receive {:cache_warmed, _}
-      assert_receive :telemetry_handled
     end
 
     test "cache warmer warms periodically with an interval", %{test: test} do
@@ -185,5 +211,19 @@ defmodule Plausible.Site.CacheTest do
     child_name_opt = {:child_name, {:local, Keyword.fetch!(opts, :cache_name)}}
     %{start: {m, f, a}} = Cache.Warmer.child_spec([child_name_opt | opts])
     apply(m, f, a)
+  end
+
+  defp start_test_cache_with_telemetry_handler(test, event: event) do
+    {:ok, _} = start_test_cache(test)
+    test_pid = self()
+
+    :telemetry.attach(
+      "#{test}-telemetry-handler",
+      event,
+      fn ^event, %{duration: d}, metadata, _ when is_integer(d) ->
+        send(test_pid, {:telemetry_handled, metadata})
+      end,
+      %{}
+    )
   end
 end

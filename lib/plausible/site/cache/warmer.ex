@@ -19,11 +19,6 @@ defmodule Plausible.Site.Cache.Warmer do
     * `warmer_fn` - used for testing, a custom function to retrieve the items meant
       to be cached during the warm-up cycle.
 
-  On each warm-up cycle, a telemetry event is emitted with warm-up `duration` stored.
-  in the measurments map. The event name defaults to:
-
-    `[:prom_ex, :plugin, :cachex, Cache.name(), :refresh]`
-
   See tests for more comprehensive examples.
   """
 
@@ -61,14 +56,10 @@ defmodule Plausible.Site.Cache.Warmer do
   @impl true
   def handle_cycle(opts) do
     cache_name = Keyword.fetch!(opts, :cache_name)
+    Logger.info("Refreshing #{cache_name} cache...")
 
-    measure_duration(telemetry_event_refresh(cache_name), fn ->
-      Logger.info("Refreshing #{cache_name} cache...")
-
-      warmer_fn = Keyword.get(opts, :warmer_fn, &Cache.refresh_all/1)
-
-      warmer_fn.(opts)
-    end)
+    warmer_fn = Keyword.get(opts, :warmer_fn, &Cache.refresh_all/1)
+    warmer_fn.(opts)
 
     {:continue_hibernated, opts}
   end
@@ -76,11 +67,6 @@ defmodule Plausible.Site.Cache.Warmer do
   @impl true
   def handle_info(_msg, state) do
     {:continue, state}
-  end
-
-  @spec telemetry_event_refresh(atom()) :: list(atom())
-  def telemetry_event_refresh(cache_name) do
-    [:prom_ex, :plugin, :cachex, cache_name, :refresh]
   end
 
   @spec interval() :: pos_integer()
@@ -95,19 +81,5 @@ defmodule Plausible.Site.Cache.Warmer do
       Application.fetch_env!(:plausible, :sites_by_domain_cache_refresh_interval_max_jitter)
 
     Enum.random(1..max_jitter)
-  end
-
-  defp measure_duration(event, fun) when is_function(fun, 0) do
-    start = System.monotonic_time()
-    result = fun.()
-    stop = System.monotonic_time()
-
-    :telemetry.execute(
-      event,
-      %{duration: stop - start},
-      %{}
-    )
-
-    result
   end
 end
