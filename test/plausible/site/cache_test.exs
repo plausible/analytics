@@ -36,7 +36,7 @@ defmodule Plausible.Site.CacheTest do
       %{id: first_id} = site1 = insert(:site, domain: "site1.example.com")
       _ = insert(:site, domain: "site2.example.com")
 
-      :ok = Cache.prefill(cache_name: test)
+      :ok = Cache.refresh_all(cache_name: test)
 
       {:ok, _} = Plausible.Repo.delete(site1)
 
@@ -57,7 +57,7 @@ defmodule Plausible.Site.CacheTest do
       {:ok, _} = start_test_cache(test)
 
       insert(:site, domain: "site1.example.com")
-      :ok = Cache.prefill(cache_name: test)
+      :ok = Cache.refresh_all(cache_name: test)
 
       assert Cache.hit_rate(test) == 0
       assert Cache.get("site1.example.com", force?: true, cache_name: test)
@@ -141,7 +141,7 @@ defmodule Plausible.Site.CacheTest do
       assert at3 > at2
     end
 
-    test "deleted sites don't stay in cache on another prefill", %{test: test} do
+    test "deleted sites don't stay in cache on another refresh", %{test: test} do
       {:ok, _} = start_test_cache(test)
 
       domain1 = "site1.example.com"
@@ -152,14 +152,14 @@ defmodule Plausible.Site.CacheTest do
 
       cache_opts = [cache_name: test, force?: true]
 
-      :ok = Cache.prefill(cache_opts)
+      :ok = Cache.refresh_all(cache_opts)
 
       assert Cache.get(domain1, cache_opts)
       assert Cache.get(domain2, cache_opts)
 
       Repo.delete!(site1)
 
-      :ok = Cache.prefill(cache_opts)
+      :ok = Cache.refresh_all(cache_opts)
 
       assert Cache.get(domain2, cache_opts)
 

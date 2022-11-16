@@ -54,8 +54,8 @@ defmodule Plausible.Site.Cache do
     )
   end
 
-  @spec prefill(Keyword.t()) :: :ok
-  def prefill(opts) do
+  @spec refresh_all(Keyword.t()) :: :ok
+  def refresh_all(opts) do
     cache_name = Keyword.fetch!(opts, :cache_name)
 
     sites_by_domain_query =

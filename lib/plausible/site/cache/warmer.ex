@@ -65,7 +65,7 @@ defmodule Plausible.Site.Cache.Warmer do
     measure_duration(telemetry_event_refresh(cache_name), fn ->
       Logger.info("Refreshing #{cache_name} cache...")
 
-      warmer_fn = Keyword.get(opts, :warmer_fn, &Cache.prefill/1)
+      warmer_fn = Keyword.get(opts, :warmer_fn, &Cache.refresh_all/1)
 
       warmer_fn.(opts)
     end)
