@@ -41,7 +41,7 @@ defmodule Plausible.Site.RateLimiter do
     "ingest:site:#{domain}"
   end
 
-  @spec policy_telemetry_event(:allow | :error) :: list(atom())
+  @spec policy_telemetry_event(:allow | :deny) :: list(atom())
   def policy_telemetry_event(policy) do
     [:plausible, :ingest, :rate_limit, policy]
   end
