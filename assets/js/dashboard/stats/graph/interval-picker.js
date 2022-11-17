@@ -2,19 +2,6 @@ import { Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import React, { Component, Fragment } from 'react';
 
-export const INTERVAL_MAPPING = {
-  'realtime': ['minute'],
-  'day': ['minute', 'hour'],
-  '7d': ['hour', 'date'],
-  'month': ['date', 'week'],
-  '30d': ['date', 'week'],
-  '6mo': ['date', 'week', 'month'],
-  '12mo': ['date', 'week', 'month'],
-  'year': ['date', 'week', 'month'],
-  'all': ['date', 'week', 'month'],
-  'custom': ['date', 'week', 'month']
-}
-
 export const INTERVAL_LABELS = {
   'minute': 'Minutes',
   'hour': 'Hours',
@@ -49,8 +36,7 @@ export default class IntervalPicker extends Component {
   }
 
   renderDropDownContent() {
-    const { query, graphData } = this.props
-
+    const { query, graphData, site } = this.props
     const currentInterval = (graphData && graphData.interval) || query.interval;
 
     return (
@@ -63,7 +49,7 @@ export default class IntervalPicker extends Component {
           font-medium text-gray-800 dark:text-gray-200"
         >
           <div className="py-1">
-            {INTERVAL_MAPPING[query.period].length > 1 && INTERVAL_MAPPING[query.period].map(interval => (
+            {site.allowedIntervalsForPeriod[query.period].map(interval => (
               currentInterval === interval ?
                 (
                   <div key={interval} className="font-bold px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-900 dark:hover:text-gray-100 flex items-center justify-between">

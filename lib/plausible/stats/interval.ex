@@ -38,18 +38,19 @@ defmodule Plausible.Stats.Interval do
     end
   end
 
-  @allowed_intervals_for_period %{
+  @allowed_for_period %{
     "realtime" => ["minute"],
     "day" => ["minute", "hour"],
-    "7d" => ["minute", "hour", "date"],
-    "month" => ["minute", "hour", "date", "week"],
-    "30d" => ["minute", "hour", "date", "week"],
-    "6mo" => ["minute", "hour", "date", "week", "month"],
-    "12mo" => ["minute", "hour", "date", "week", "month"],
-    "year" => ["minute", "hour", "date", "week", "month"],
-    "custom" => ["minute", "hour", "date", "week", "month"],
-    "all" => ["minute", "hour", "date", "week", "month"]
+    "7d" => ["hour", "date"],
+    "month" => [ "date", "week"],
+    "30d" => ["date", "week"],
+    "6mo" => ["date", "week", "month"],
+    "12mo" => ["date", "week", "month"],
+    "year" => ["date", "week", "month"],
+    "custom" => ["date", "week", "month"],
+    "all" => ["date", "week", "month"]
   }
+  def list_allowed_for_period, do: @allowed_for_period
 
   @spec allowed_for_period?(period(), t()) :: boolean()
   @doc """
@@ -72,7 +73,7 @@ defmodule Plausible.Stats.Interval do
 
   """
   def allowed_for_period?(period, interval) do
-    allowed = Map.get(@allowed_intervals_for_period, period, [])
+    allowed = Map.get(@allowed_for_period, period, [])
     interval in allowed
   end
 end

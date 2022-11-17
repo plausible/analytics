@@ -43,7 +43,7 @@ defmodule PlausibleWeb.StatsController do
   use Plausible.Repo
 
   alias Plausible.Sites
-  alias Plausible.Stats.{Query, Filters}
+  alias Plausible.Stats.{Query, Filters, Interval}
   alias PlausibleWeb.Api
 
   plug(PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export])
@@ -69,7 +69,8 @@ defmodule PlausibleWeb.StatsController do
           offer_email_report: offer_email_report,
           demo: demo,
           flags: get_flags(conn.assigns[:current_user]),
-          is_dbip: is_dbip()
+          is_dbip: is_dbip(),
+          allowed_intervals_for_period: Interval.list_allowed_for_period()
         )
 
       !stats_start_date && can_see_stats? ->
@@ -284,7 +285,8 @@ defmodule PlausibleWeb.StatsController do
           background: conn.params["background"],
           theme: conn.params["theme"],
           flags: get_flags(conn.assigns[:current_user]),
-          is_dbip: is_dbip()
+          is_dbip: is_dbip(),
+          allowed_intervals_for_period: Interval.list_allowed_for_period()
         )
 
       Sites.locked?(shared_link.site) ->

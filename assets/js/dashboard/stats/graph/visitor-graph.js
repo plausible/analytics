@@ -7,7 +7,7 @@ import * as storage from '../../util/storage'
 import LazyLoader from '../../components/lazy-loader'
 import {GraphTooltip, buildDataSet, dateFormatter, INTERVALS, METRIC_MAPPING, METRIC_LABELS, METRIC_FORMATTER} from './graph-util';
 import TopStats from './top-stats';
-import IntervalPicker, {INTERVAL_MAPPING} from './interval-picker';
+import IntervalPicker from './interval-picker';
 import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
 
@@ -313,7 +313,7 @@ export default class VisitorGraph extends React.Component {
   validateInterval() {
     const period = this.props.query && this.props.query.period
     const interval = storage.getItem(`interval__${period}__${this.props.site.domain}`)
-    const outOfRangeInterval = period !== 'custom' && !INTERVAL_MAPPING[period].includes(interval);
+    const outOfRangeInterval = period !== 'custom' && !this.props.site.allowedIntervalsForPeriod[period].includes(interval);
 
     if (!interval || !INTERVALS.includes(interval) || outOfRangeInterval) {
       this.setState({interval: undefined}, () => {
