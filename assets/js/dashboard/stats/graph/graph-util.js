@@ -121,30 +121,22 @@ export const GraphTooltip = (graphData, metric, query) => {
       return bodyItem.lines;
     }
 
-    function renderLabel(label, prev_label) {
-      const formattedLabel = dateFormatter(graphData.interval, true, query.period, ['week', 'month'].includes(graphData.interval) && graphData.full_intervals[label])(label)
-      const prev_formattedLabel = prev_label && dateFormatter(graphData.interval, true, query.period, ['week', 'month'].includes(graphData.interval) && graphData.full_intervals[prev_label])(prev_label)
+    // Returns a string describing the bucket. Used when hovering the graph to
+    // show time buckets.
+    function renderBucketLabel(label) {
+      const isPeriodFull = graphData.full_intervals?.[label]
+      const formattedLabel = dateFormatter(graphData.interval, true, query.period, isPeriodFull)(label)
 
-      if (graphData.interval === 'month') {
-        return !prev_label ? formattedLabel : prev_formattedLabel
+      if (query.period === 'realtime') {
+        return dateFormatter(graphData.interval, true, query.period)(label)
       }
 
-      if (graphData.interval === 'date') {
-        return !prev_label ? formattedLabel : prev_formattedLabel
+      if (graphData.interval === 'hour' || graphData.interval == 'minute') {
+        const date = dateFormatter("date", true, query.period)(label)
+        return `${date}, ${formattedLabel}`
       }
 
-      if (graphData.interval === 'hour') {
-        return `${dateFormatter("date", true, query.period)(label)}, ${formattedLabel}`
-      }
-
-      if (graphData.interval === 'minute') {
-        if (query.period === 'realtime') {
-          return dateFormatter(graphData.interval, true, query.period)(label)
-        }
-        return `${dateFormatter("date", true, query.period)(label)}, ${formattedLabel}`
-      }
-
-      return !prev_label ? formattedLabel : prev_formattedLabel
+      return formattedLabel
     }
 
     // Set Tooltip Body
@@ -169,7 +161,7 @@ export const GraphTooltip = (graphData, metric, query) => {
           <div class='flex flex-row justify-between items-center'>
             <span class='flex items-center mr-4'>
               <div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(101,116,205)'></div>
-              <span>${renderLabel(label)}</span>
+              <span>${renderBucketLabel(label)}</span>
             </span>
             <span class='text-base font-bold'>${METRIC_FORMATTER[metric](point)}</span>
           </div>
