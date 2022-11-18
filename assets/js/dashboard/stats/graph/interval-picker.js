@@ -1,6 +1,7 @@
-import { Transition } from '@headlessui/react';
+import { Menu, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import React, { Component, Fragment } from 'react';
+import classNames from 'classnames'
 
 export const INTERVAL_LABELS = {
   'minute': 'Minutes',
@@ -12,109 +13,45 @@ export const INTERVAL_LABELS = {
 
 export default class IntervalPicker extends Component {
   constructor(props) {
-    super(props);
-    this.state = {
-      open: false
-    };
-
-    this.handleClick = this.handleClick.bind(this);
-    this.renderDropDownContent = this.renderDropDownContent.bind(this);
-  }
-
-  componentDidMount() {
-    document.addEventListener("mousedown", this.handleClick);
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener("mousedown", this.handleClick);
-  }
-
-  handleClick(e) {
-    if (this.dropDownNode && this.dropDownNode.contains(e.target)) return;
-
-    this.setState({ open: false });
-  }
-
-  renderDropDownContent() {
-    const { query, graphData, site } = this.props
-    const currentInterval = (graphData && graphData.interval) || query.interval;
-
-    return (
-      <div
-        id="intervalmenu"
-        className="absolute w-56 sm:w-42 md:w-56 md:absolute right-0 mt-2 z-10"
-      >
-        <div
-          className="rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5
-          font-medium text-gray-800 dark:text-gray-200"
-        >
-          <div className="py-1">
-            {site.allowedIntervalsForPeriod[query.period].map(interval => (
-              currentInterval === interval ?
-                (
-                  <div key={interval} className="font-bold px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-900 dark:hover:text-gray-100 flex items-center justify-between">
-                    {INTERVAL_LABELS[interval]}
-                  </div>
-                ) : (
-                  <a
-                    onClick={() => {this.props.updateInterval(interval); this.setState({ open: false })}}
-                    key={interval}
-                    className="px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900
-                  dark:hover:bg-gray-900 dark:hover:text-gray-100 flex items-center justify-between cursor-pointer"
-                  >
-                    {INTERVAL_LABELS[interval]}
-                  </a>
-                )
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    super(props)
+    this.renderDropdownOption = this.renderDropdownOption.bind(this)
   }
 
   render() {
-    const { query, metric, graphData } = this.props;
+    if (this.props.query.period == 'realtime') return null
 
-    if (query.period === 'realtime') return null;
+    const currentInterval = this.props.graphData?.interval || this.props.query.interval || "all"
+    let possibleIntervals = this.props.site.allowedIntervalsForPeriod[this.props.query.period]
+    possibleIntervals = possibleIntervals.filter(interval => interval !== currentInterval)
 
     return (
-      <Transition
-        show={!!(metric && graphData)}
-        as={Fragment}
-        enter="transition ease-out duration-75"
-        enterFrom="transform opacity-0 scale-95"
-        enterTo="transform opacity-100 scale-100"
-        leave="transition ease-in duration-75"
-        leaveFrom="transform opacity-100 scale-100"
-        leaveTo="transform opacity-0 scale-95"
-      >
-        <div ref={node => this.dropDownNode = node}>
-          <button
-            className="text-sm font-normal text-gray-900 cursor-pointer text-gray-500 dark:text-gray-200 hover:text-indigo-700 dark:hover:text-indigo-500 inline-flex items-center"
-            onClick={() => this.setState((state) => ({ open: !state.open }))}
-            onKeyPress={() => this.setState((state) => ({ open: !state.open }))}
-            aria-haspopup="true"
-            aria-expanded="false"
-            aria-controls="intervalmenu"
-            title="Choose the interval to display on each step of the graph"
+      <Menu as="div" className="relative inline-block">
+        <Menu.Button className="inline-flex focus:outline-none text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600 items-center">
+          { INTERVAL_LABELS[currentInterval] }
+          <ChevronDownIcon className="h-5 w-5" aria-hidden="true" />
+        </Menu.Button>
+
+        <Menu.Items className="py-1 text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+          { possibleIntervals.map(this.renderDropdownOption) }
+        </Menu.Items>
+      </Menu>
+    )
+  }
+
+  renderDropdownOption(interval) {
+    return (
+      <Menu.Item onClick={() => { this.props.updateInterval(interval) }} key={interval}>
+        {({ active }) => (
+          <span
+            className={classNames(
+              active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer' : 'text-gray-700 dark:text-gray-200',
+              'block px-4 py-2 text-sm'
+            )}
           >
-            <span>Graph detail</span>
-            <ChevronDownIcon className="h-5 w-5" />
-          </button>
-          <Transition
-            show={this.state.open}
-            as={Fragment}
-            enter="transition ease-out duration-100"
-            enterFrom="transform opacity-0 scale-95"
-            enterTo="transform opacity-100 scale-100"
-            leave="transition ease-in duration-75"
-            leaveFrom="transform opacity-100 scale-100"
-            leaveTo="transform opacity-0 scale-95"
-          >
-            {this.renderDropDownContent()}
-          </Transition>
-        </div>
-      </Transition>
+            { INTERVAL_LABELS[interval] }
+          </span>
+        )}
+      </Menu.Item>
     )
   }
 }
