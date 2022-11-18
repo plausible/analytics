@@ -2,6 +2,7 @@ import { Menu, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import React, { Component, Fragment } from 'react';
 import classNames from 'classnames'
+import * as storage from '../../util/storage'
 
 export const INTERVAL_LABELS = {
   'minute': 'Minutes',
@@ -11,7 +12,15 @@ export const INTERVAL_LABELS = {
   'month': 'Months'
 }
 
-export default class IntervalPicker extends Component {
+export const getStoredInterval = function(period, domain) {
+  return storage.getItem(`interval__${period}__${domain}`)
+}
+
+export const storeInterval = function(period, domain, interval) {
+  storage.setItem(`interval__${period}__${domain}`, interval)
+}
+
+export class IntervalPicker extends Component {
   constructor(props) {
     super(props)
     this.renderDropdownOption = this.renderDropdownOption.bind(this)

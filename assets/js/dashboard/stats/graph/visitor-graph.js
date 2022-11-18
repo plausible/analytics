@@ -7,7 +7,7 @@ import * as storage from '../../util/storage'
 import LazyLoader from '../../components/lazy-loader'
 import {GraphTooltip, buildDataSet, dateFormatter, INTERVALS, METRIC_MAPPING, METRIC_LABELS, METRIC_FORMATTER} from './graph-util';
 import TopStats from './top-stats';
-import IntervalPicker from './interval-picker';
+import { IntervalPicker, getStoredInterval, storeInterval } from './interval-picker';
 import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
 
