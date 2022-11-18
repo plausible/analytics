@@ -42,7 +42,7 @@ defmodule Plausible.Stats.Interval do
     "realtime" => ["minute"],
     "day" => ["minute", "hour"],
     "7d" => ["hour", "date"],
-    "month" => [ "date", "week"],
+    "month" => ["date", "week"],
     "30d" => ["date", "week"],
     "6mo" => ["date", "week", "month"],
     "12mo" => ["date", "week", "month"],
