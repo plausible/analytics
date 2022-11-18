@@ -71,7 +71,13 @@ class LineGraph extends React.Component {
               maxTicksLimit: 8,
               callback: function (val, _index, _ticks) {
                 if (graphData.interval === 'hour' && query.period !== 'day') {
-                  return `${dateFormatter("date", false, query.period)(this.getLabelForValue(val))}, ${dateFormatter(graphData.interval, false, query.period)(this.getLabelForValue(val))}`
+                  const date = dateFormatter("date", false, query.period)(this.getLabelForValue(val))
+                  const hour = dateFormatter(graphData.interval, false, query.period)(this.getLabelForValue(val))
+
+                  // Returns a combination of date and hour. This is because
+                  // small intervals like hour may return multiple days
+                  // depending on the query period.
+                  return `${date}, ${hour}`
                 }
 
                 if (graphData.interval === 'minute' && query.period !== 'realtime') {
@@ -276,7 +282,7 @@ class LineGraph extends React.Component {
         </div>
         <div className="relative px-2">
           <div className="absolute right-4 -top-10 flex items-center">
-            { site.flags && site.flags.intervals && 
+            { site.flags && site.flags.intervals &&
               <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={this.props.updateInterval}/> }
             { this.downloadLink() }
             { this.samplingNotice() }
