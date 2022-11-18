@@ -5,7 +5,8 @@ import { navigateToQuery } from '../../query'
 import * as api from '../../api'
 import * as storage from '../../util/storage'
 import LazyLoader from '../../components/lazy-loader'
-import {GraphTooltip, buildDataSet, dateFormatter, INTERVALS, METRIC_MAPPING, METRIC_LABELS, METRIC_FORMATTER} from './graph-util';
+import {GraphTooltip, buildDataSet, INTERVALS, METRIC_MAPPING, METRIC_LABELS, METRIC_FORMATTER} from './graph-util';
+import dateFormatter from './date-formatter';
 import TopStats from './top-stats';
 import { IntervalPicker, getStoredInterval, storeInterval } from './interval-picker';
 import FadeIn from '../../fade-in';

@@ -1,5 +1,5 @@
 import numberFormatter, {durationFormatter} from '../../util/number-formatter'
-import {parseUTCDate, formatMonthYYYY, formatDay, formatDayShort} from '../../util/date'
+import dateFormatter from './date-formatter.js'
 
 export const INTERVALS = ["month", "week", "date", "hour", "minute"]
 
@@ -27,64 +27,6 @@ export const METRIC_FORMATTER = {
   'bounce_rate': (number) => (`${number}%`),
   'visit_duration': durationFormatter,
   'conversions': numberFormatter,
-}
-
-export const dateFormatter = (interval, longForm, period, full) => {
-  return function(isoDate, _index, _ticks) {
-    const date = parseUTCDate(isoDate)
-    const minutes = date.getMinutes();
-
-    const dateFormat = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
-    const twelveHourClock = dateFormat.resolvedOptions().hour12
-
-    const getFormattedHours = () => {
-      const monthIndex = 1
-      const dateParts = isoDate.split(/[^0-9]/);
-      dateParts[monthIndex] = dateParts[monthIndex] - 1
-
-      const localDate = new Date(...dateParts)
-      return dateFormat.format(localDate)
-    }
-
-    if (interval === 'month') {
-      if (longForm) {
-        return (full ? '' : 'Partial ') + formatMonthYYYY(date);
-      } else {
-        return formatMonthYYYY(date);
-      }
-    } else if (interval === 'week') {
-      if (longForm) {
-        return `${full ? 'W' : 'Partial w'}eek of ` + formatDayShort(date);
-      } else {
-        return formatDayShort(date);
-      }
-    } else if (interval === 'date') {
-      if (longForm) {
-        return formatDay(date);
-      } else {
-        return formatDayShort(date);
-      }
-    } else if (interval === 'hour') {
-      if (twelveHourClock) {
-        return getFormattedHours().replace(' ', '').toLowerCase()
-      } else {
-        return getFormattedHours().replace(/[^0-9]/g, '').concat(":00")
-      }
-    } else if (interval === 'minute' && period === 'realtime') {
-      if (longForm) {
-        const minutesAgo = Math.abs(isoDate)
-        return minutesAgo === 1 ? '1 minute ago' : minutesAgo + ' minutes ago'
-      } else {
-        return isoDate + 'm'
-      }
-    } else if (interval === 'minute') {
-      if (twelveHourClock) {
-        return getFormattedHours().replace(' ', ':' + (minutes < 10 ? `0${minutes}` : minutes)).toLowerCase()
-      } else {
-        return getFormattedHours().replace(/[^0-9]/g, '').concat(":" + (minutes < 10 ? `0${minutes}` : minutes))
-      }
-    }
-  }
 }
 
 export const GraphTooltip = (graphData, metric, query) => {
