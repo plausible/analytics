@@ -51,12 +51,10 @@ export class IntervalPicker extends Component {
     return (
       <Menu.Item onClick={() => { this.props.updateInterval(interval) }} key={interval}>
         {({ active }) => (
-          <span
-            className={classNames(
-              active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer' : 'text-gray-700 dark:text-gray-200',
-              'block px-4 py-2 text-sm'
-            )}
-          >
+          <span className={classNames({
+                  'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer': active,
+                  'text-gray-700 dark:text-gray-200': !active
+                }, 'block px-4 py-2 text-sm')}>
             { INTERVAL_LABELS[interval] }
           </span>
         )}
