@@ -306,28 +306,34 @@ export default class VisitorGraph extends React.Component {
       loadingTopStats: true,
       loadingMainGraph: true,
       metric: storage.getItem(`metric__${this.props.site.domain}`) || 'visitors',
-      interval: storage.getItem(`interval__${this.props.query.period}__${this.props.site.domain}`)
+      interval: getStoredInterval(this.props.query.period, this.props.site.domain)
     }
     this.onVisible = this.onVisible.bind(this)
     this.updateMetric = this.updateMetric.bind(this)
     this.fetchTopStatData = this.fetchTopStatData.bind(this)
     this.fetchGraphData = this.fetchGraphData.bind(this)
-    this.validateInterval = this.validateInterval.bind(this)
+    this.maybeRollbackInterval = this.maybeRollbackInterval.bind(this)
     this.updateInterval = this.updateInterval.bind(this)
   }
 
-  validateInterval() {
-    const period = this.props.query && this.props.query.period
-    const interval = storage.getItem(`interval__${period}__${this.props.site.domain}`)
-    const outOfRangeInterval = period !== 'custom' && !this.props.site.allowedIntervalsForPeriod[period].includes(interval);
+  isIntervalValid({ query, site }) {
+    const period = query?.period
+    const allowedIntervals = site.allowedIntervalsForPeriod[period] || []
+    const storedInterval = getStoredInterval(period, site.domain)
 
-    if (!interval || !INTERVALS.includes(interval) || outOfRangeInterval) {
-      this.setState({interval: undefined}, () => {
-        this.setState({graphData: null})
+    return allowedIntervals.includes(storedInterval)
+  }
+
+  maybeRollbackInterval() {
+    if (this.isIntervalValid(this.props)) {
+      const interval = getStoredInterval(this.props.query.period, this.props.site.domain)
+
+      this.setState({graphData: null, interval}, () => {
         this.fetchGraphData()
       })
     } else {
-      this.setState({graphData: null, interval}, () => {
+      this.setState({interval: undefined}, () => {
+        this.setState({graphData: null})
         this.fetchGraphData()
       })
     }
@@ -335,16 +341,16 @@ export default class VisitorGraph extends React.Component {
 
   updateInterval(interval) {
     if (INTERVALS.includes(interval)) {
-      this.setState({interval, loadingMainGraph: 2}, this.validateInterval)
-      storage.setItem(`interval__${this.props.query.period}__${this.props.site.domain}`, interval)
+      this.setState({interval, loadingMainGraph: 2}, this.maybeRollbackInterval)
+      storeInterval(this.props.query.period, this.props.site.domain, interval)
     }
   }
 
   onVisible() {
-    this.setState({loadingMainGraph: true}, this.validateInterval)
+    this.setState({loadingMainGraph: true}, this.maybeRollbackInterval)
     this.fetchTopStatData()
     if (this.props.timer) {
-      this.props.timer.onTick(this.validateInterval)
+      this.props.timer.onTick(this.maybeRollbackInterval)
       this.props.timer.onTick(this.fetchTopStatData)
     }
   }
@@ -354,7 +360,7 @@ export default class VisitorGraph extends React.Component {
 
     if (this.props.query !== prevProps.query) {
       if (metric) {
-        this.setState({ loadingMainGraph: true, loadingTopStats: true, graphData: null, topStatData: null }, this.validateInterval)
+        this.setState({ loadingMainGraph: true, loadingTopStats: true, graphData: null, topStatData: null }, this.maybeRollbackInterval)
       } else {
         this.setState({ loadingTopStats: true, topStatData: null })
       }
@@ -362,11 +368,11 @@ export default class VisitorGraph extends React.Component {
     }
 
     if (metric !== prevState.metric) {
-      this.setState({loadingMainGraph: 2}, this.validateInterval)
+      this.setState({loadingMainGraph: 2}, this.maybeRollbackInterval)
     }
 
     if (interval !== prevState.interval && interval) {
-      this.setState({loadingMainGraph: 2}, this.validateInterval)
+      this.setState({loadingMainGraph: 2}, this.maybeRollbackInterval)
     }
 
     const savedMetric = storage.getItem(`metric__${this.props.site.domain}`)
