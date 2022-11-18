@@ -10,6 +10,7 @@ import TopStats from './top-stats';
 import { IntervalPicker, getStoredInterval, storeInterval } from './interval-picker';
 import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
+import classNames from "classnames";
 
 class LineGraph extends React.Component {
   constructor(props) {
@@ -452,11 +453,16 @@ export default class VisitorGraph extends React.Component {
 
   render() {
     const {metric, loadingMainGraph, loadingTopStats} = this.state
+    const loaderClassName = classNames('mx-auto loading', {
+      'pt-52 sm:pt-56 md:pt-60': loadingMainGraph == 2,
+      'pt-32 sm:pt-36 md:pt-48': loadingMainGraph !== 2 && metric,
+      'pt-16 sm:pt-14 md:pt-18 lg:pt-5': loadingMainGraph !== 2 && !metric
+    })
 
     return (
       <LazyLoader onVisible={this.onVisible}>
         <div className={`relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825 transition-padding ease-in-out duration-150 ${metric ? 'main-graph' : 'top-stats-only'}`}>
-          {(loadingMainGraph || loadingTopStats) && <div className="graph-inner"><div className={`${loadingMainGraph === 2 ? 'pt-52 sm:pt-56 md:pt-60' : (!metric) ? 'pt-16 sm:pt-14 md:pt-18 lg:pt-5' : 'pt-32 sm:pt-36 md:pt-48'} mx-auto loading`}><div></div></div></div>}
+          {(loadingMainGraph || loadingTopStats) && <div className="graph-inner"><div className={loaderClassName}><div></div></div></div>}
           {this.renderInner()}
         </div>
       </LazyLoader>
