@@ -434,8 +434,17 @@ export default class VisitorGraph extends React.Component {
 
     const theme = document.querySelector('html').classList.contains('dark') || false
 
+    const mainGraphReadyOrRefreshing = (!loadingMainGraph || loadingMainGraph === 2)
+    const noMetricOrLoaded = (!metric || loadingMainGraph === 2)
+    const topStatAndGraphLoaded = !!(topStatData && graphData)
+
+    const showGraph =
+      !loadingTopStats &&
+      mainGraphReadyOrRefreshing &&
+      (topStatData && noMetricOrLoaded || topStatAndGraphLoaded)
+
     return (
-      <FadeIn show={(!loadingTopStats && (!loadingMainGraph || loadingMainGraph === 2) && (topStatData && (!metric || loadingMainGraph === 2) || !!(topStatData && graphData)))}>
+      <FadeIn show={showGraph}>
         <LineGraphWithRouter graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} updateInterval={this.updateInterval}/>
       </FadeIn>
     )
