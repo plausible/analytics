@@ -1,6 +1,6 @@
 import { Menu, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import React, { Component, Fragment } from 'react';
+import React, { Fragment } from 'react';
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
 
