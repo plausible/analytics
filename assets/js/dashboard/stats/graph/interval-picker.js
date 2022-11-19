@@ -1,6 +1,6 @@
-import { Menu } from '@headlessui/react';
+import { Menu, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
 
@@ -22,12 +22,12 @@ export const storeInterval = function(period, domain, interval) {
 
 function DropdownItem({ option, currentInterval, updateInterval }) {
   return (
-    <Menu.Item onClick={() => updateInterval(option)} key={option}>
+    <Menu.Item onClick={() => updateInterval(option)} key={option} disabled={option == currentInterval}>
       {({ active }) => (
         <span className={classNames({
                 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer': active,
                 'text-gray-700 dark:text-gray-200': !active,
-                'font-bold': option == currentInterval,
+                'font-bold cursor-none select-none': option == currentInterval,
               }, 'block px-4 py-2 text-sm')}>
           { INTERVAL_LABELS[option] }
         </span>
@@ -39,19 +39,29 @@ function DropdownItem({ option, currentInterval, updateInterval }) {
 export function IntervalPicker({ graphData, query, site, updateInterval }) {
   if (query.period == 'realtime') return null
 
-  const currentInterval = graphData?.interval || query.interval || "all"
+  const currentInterval = graphData?.interval
   const options = site.allowedIntervalsForPeriod[query.period]
 
   return (
-    <Menu as="div" className="relative inline-block">
-      <Menu.Button className="inline-flex focus:outline-none text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600 items-center">
+    <Menu as="div" className="relative inline-block pl-2">
+      <Menu.Button className="text-sm inline-flex focus:outline-none text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600 items-center">
         { INTERVAL_LABELS[currentInterval] }
-        <ChevronDownIcon className="h-5 w-5" aria-hidden="true" />
+        <ChevronDownIcon className="w-4 h-4" aria-hidden="true" />
       </Menu.Button>
 
-      <Menu.Items className="py-1 text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-        { options.map((option) => DropdownItem({ option, currentInterval, updateInterval })) }
-      </Menu.Items>
+      <Transition
+        as={Fragment}
+        enter="transition ease-out duration-100"
+        enterFrom="transform opacity-0 scale-95"
+        enterTo="transform opacity-100 scale-100"
+        leave="transition ease-in duration-75"
+        leaveFrom="transform opacity-100 scale-100"
+        leaveTo="transform opacity-0 scale-95"
+      >
+        <Menu.Items className="py-1 text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+          { options.map((option) => DropdownItem({ option, currentInterval, updateInterval })) }
+        </Menu.Items>
+      </Transition>
     </Menu>
   )
 }

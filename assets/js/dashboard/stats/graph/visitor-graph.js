@@ -289,12 +289,12 @@ class LineGraph extends React.Component {
           <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current}/>
         </div>
         <div className="relative px-2">
-          <div className="absolute right-4 -top-10 flex items-center">
-            { site.flags && site.flags.intervals &&
-              <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={this.props.updateInterval}/> }
+          <div className="absolute right-4 -top-10 py-2 md:py-0 flex items-center">
             { this.downloadLink() }
             { this.samplingNotice() }
             { this.importedNotice() }
+            { site.flags && site.flags.intervals &&
+              <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={this.props.updateInterval}/> }
           </div>
           <FadeIn show={graphData}>
             <canvas id="main-graph-canvas" className={'mt-4 select-none ' + extraClass} width="1054" height="342"></canvas>
@@ -336,7 +336,7 @@ export default class VisitorGraph extends React.Component {
     if (this.isIntervalValid(this.props)) {
       const interval = getStoredInterval(this.props.query.period, this.props.site.domain)
 
-      this.setState({graphData: null, interval}, () => {
+      this.setState({interval}, () => {
         this.fetchGraphData()
       })
     } else {
