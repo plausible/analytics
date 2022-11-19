@@ -68,7 +68,9 @@ defmodule PlausibleWeb.InvitationController do
   end
 
   defp maybe_end_trial_of_new_owner(multi, new_owner) do
-    if !Application.get_env(:plausible, :is_selfhost) do
+    if Application.get_env(:plausible, :is_selfhost) do
+      multi
+    else
       end_trial_of_new_owner(multi, new_owner)
     end
   end
