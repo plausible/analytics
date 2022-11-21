@@ -40,7 +40,7 @@ export function IntervalPicker({ graphData, query, site, updateInterval }) {
   if (query.period == 'realtime') return null
 
   const currentInterval = graphData?.interval
-  const options = site.allowedIntervalsForPeriod[query.period]
+  const options = site.validIntervalsByPeriod[query.period]
 
   return (
     <Menu as="div" className="relative inline-block pl-2">

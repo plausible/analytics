@@ -26,7 +26,7 @@
     data-is-dbip="<%= @is_dbip %>"
     data-current-user-role="<%= @conn.assigns[:current_user_role] %>"
     data-flags="<%= Jason.encode!(@flags) %>"
-    data-allowed-intervals-for-period="<%= Jason.encode!(@allowed_intervals_for_period) %>"
+    data-valid-intervals-by-period="<%= Plausible.Stats.Interval.valid_by_period() |> Jason.encode!() %>"
   />
   <div id="modal_root"></div>
   <%= if !@conn.assigns[:current_user] && @conn.assigns[:demo] do %>

@@ -1211,7 +1211,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp validate_interval_granularity(params) do
     with %{"interval" => interval, "period" => period} <- params,
-         true <- Plausible.Stats.Interval.allowed_for_period?(period, interval) do
+         true <- Plausible.Stats.Interval.valid_for_period?(period, interval) do
       :ok
     else
       %{} ->

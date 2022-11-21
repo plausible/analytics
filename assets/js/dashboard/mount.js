@@ -18,7 +18,7 @@ if (container) {
     background: container.dataset.background,
     isDbip: container.dataset.isDbip === 'true',
     flags: JSON.parse(container.dataset.flags),
-    allowedIntervalsForPeriod: JSON.parse(container.dataset.allowedIntervalsForPeriod)
+    validIntervalsByPeriod: JSON.parse(container.dataset.validIntervalsByPeriod)
   }
 
   const loggedIn = container.dataset.loggedIn === 'true'

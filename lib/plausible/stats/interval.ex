@@ -38,7 +38,7 @@ defmodule Plausible.Stats.Interval do
     end
   end
 
-  @allowed_for_period %{
+  @valid_by_period %{
     "realtime" => ["minute"],
     "day" => ["minute", "hour"],
     "7d" => ["hour", "date"],
@@ -50,9 +50,9 @@ defmodule Plausible.Stats.Interval do
     "custom" => ["date", "week", "month"],
     "all" => ["date", "week", "month"]
   }
-  def list_allowed_for_period, do: @allowed_for_period
+  def valid_by_period, do: @valid_by_period
 
-  @spec allowed_for_period?(period(), t()) :: boolean()
+  @spec valid_for_period?(period(), t()) :: boolean()
   @doc """
   Returns whether the given interval is valid for a time period.
 
@@ -62,18 +62,18 @@ defmodule Plausible.Stats.Interval do
   ## Examples
 
 
-    iex> Plausible.Stats.Interval.allowed_for_period?("month", "date")
+    iex> Plausible.Stats.Interval.valid_for_period?("month", "date")
     true
 
-    iex> Plausible.Stats.Interval.allowed_for_period?("30d", "month")
+    iex> Plausible.Stats.Interval.valid_for_period?("30d", "month")
     false
 
-    iex> Plausible.Stats.Interval.allowed_for_period?("realtime", "week")
+    iex> Plausible.Stats.Interval.valid_for_period?("realtime", "week")
     false
 
   """
-  def allowed_for_period?(period, interval) do
-    allowed = Map.get(@allowed_for_period, period, [])
+  def valid_for_period?(period, interval) do
+    allowed = Map.get(@valid_by_period, period, [])
     interval in allowed
   end
 end

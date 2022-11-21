@@ -326,10 +326,10 @@ export default class VisitorGraph extends React.Component {
 
   isIntervalValid({ query, site }) {
     const period = query?.period
-    const allowedIntervals = site.allowedIntervalsForPeriod[period] || []
+    const validIntervalsForPeriod = site.validIntervalsByPeriod[period] || []
     const storedInterval = getStoredInterval(period, site.domain)
 
-    return allowedIntervals.includes(storedInterval)
+    return validIntervalsForPeriod.includes(storedInterval)
   }
 
   maybeRollbackInterval() {
