@@ -76,6 +76,9 @@ defmodule Plausible.Site.RateLimiterTest do
       )
 
     {:ok, _} = Plausible.Repo.delete(site)
+    # We need some dummy site, otherwise the cache won't refresh in case the DB
+    # is completely empty
+    insert(:site)
 
     assert RateLimiter.allow?(domain, opts)
     :ok = Cache.refresh_all(opts[:cache_opts])
