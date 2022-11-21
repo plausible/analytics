@@ -195,6 +195,69 @@ defmodule Plausible.Site.CacheTest do
     end
   end
 
+  describe "merging the cache" do
+    test "merging adds new items", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+
+      :ok = Cache.merge([{"item1", :item1}], cache_name: test)
+      assert :item1 == Cache.get("item1", cache_name: test, force?: true)
+    end
+
+    test "merging no new items leaves the old cache intact", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+
+      :ok = Cache.merge([{"item1", :item1}], cache_name: test)
+      :ok = Cache.merge([], cache_name: test)
+      assert :item1 == Cache.get("item1", cache_name: test, force?: true)
+    end
+
+    test "merging removes stale items", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+
+      :ok = Cache.merge([{"item1", :item1}], cache_name: test)
+      :ok = Cache.merge([{"item2", :item2}], cache_name: test)
+
+      refute Cache.get("item1", cache_name: test, force?: true)
+      assert Cache.get("item2", cache_name: test, force?: true)
+    end
+
+    test "merging updates changed items", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+
+      :ok = Cache.merge([{"item1", :item1}, {"item2", :item2}], cache_name: test)
+      :ok = Cache.merge([{"item1", :changed}, {"item2", :item2}], cache_name: test)
+
+      assert :changed == Cache.get("item1", cache_name: test, force?: true)
+      assert :item2 == Cache.get("item2", cache_name: test, force?: true)
+    end
+
+    @items1 for i <- 1..200_000, do: {i, :batch1}
+    @items2 for _ <- 1..200_000, do: {Enum.random(1..400_000), :batch2}
+    @max_seconds 2
+    test "merging large sets is expected to be under #{@max_seconds} seconds", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+
+      {t1, :ok} =
+        :timer.tc(fn ->
+          :ok = Cache.merge(@items1, cache_name: test)
+        end)
+
+      {t2, :ok} =
+        :timer.tc(fn ->
+          :ok = Cache.merge(@items1, cache_name: test)
+        end)
+
+      {t3, :ok} =
+        :timer.tc(fn ->
+          :ok = Cache.merge(@items2, cache_name: test)
+        end)
+
+      assert t1 / 1_000_000 <= @max_seconds
+      assert t2 / 1_000_000 <= @max_seconds
+      assert t3 / 1_000_000 <= @max_seconds
+    end
+  end
+
   defp report_back(test_pid) do
     fn opts ->
       send(test_pid, {:cache_warmed, %{at: System.monotonic_time(), opts: opts}})
