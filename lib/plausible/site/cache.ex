@@ -22,7 +22,7 @@ defmodule Plausible.Site.Cache do
   There are two modes of refreshing the cache: `:all` and `:single`.
 
     * `:all` means querying the database for all Site entries and should be done
-      periodically (via `Cache.Warmer`). All existing Cache entries all cleared 
+      periodically (via `Cache.Warmer`). All existing Cache entries all cleared
       prior to writing the new batch.
 
     * `:single` attempts to re-query a specific site by domain and should be done
@@ -74,8 +74,8 @@ defmodule Plausible.Site.Cache do
   end
 
   @spec refresh_all(Keyword.t()) :: :ok
-  def refresh_all(opts) do
-    cache_name = Keyword.fetch!(opts, :cache_name)
+  def refresh_all(opts \\ []) do
+    cache_name = Keyword.get(opts, :cache_name, @cache_name)
 
     measure_duration(telemetry_event_refresh(cache_name, :all), fn ->
       sites_by_domain_query =
@@ -87,11 +87,29 @@ defmodule Plausible.Site.Cache do
 
       sites_by_domain = Plausible.Repo.all(sites_by_domain_query)
 
-      Cachex.clear!(cache_name)
+      :ok = merge(sites_by_domain, opts)
+    end)
 
-      if not Enum.empty?(sites_by_domain) do
-        true = Cachex.put_many!(cache_name, sites_by_domain)
-      end
+    :ok
+  end
+
+  @spec merge(new_items :: [Site.t()], opts :: Keyword.t()) :: :ok
+  def merge(new_items, opts \\ [])
+  def merge([], _), do: :ok
+
+  def merge(new_items, opts) do
+    cache_name = Keyword.get(opts, :cache_name, @cache_name)
+    {:ok, old_keys} = Cachex.keys(cache_name)
+
+    new = MapSet.new(Enum.into(new_items, [], fn {k, _} -> k end))
+    old = MapSet.new(old_keys)
+
+    true = Cachex.put_many!(cache_name, new_items)
+
+    old
+    |> MapSet.difference(new)
+    |> Enum.each(fn k ->
+      Cachex.del(cache_name, k)
     end)
 
     :ok
