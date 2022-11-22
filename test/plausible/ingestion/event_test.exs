@@ -1,19 +1,6 @@
 defmodule Plausible.Ingestion.EventTest do
   use Plausible.DataCase
 
-  def get_event(domain) do
-    Plausible.TestUtils.eventually(fn ->
-      Plausible.Event.WriteBuffer.flush()
-
-      event =
-        Plausible.ClickhouseRepo.one(
-          from e in Plausible.ClickhouseEvent, where: e.domain == ^domain
-        )
-
-      {!is_nil(event), event}
-    end)
-  end
-
   @valid_request %Plausible.Ingestion.Request{
     remote_ip: "2.2.2.2",
     user_agent:
@@ -34,79 +21,92 @@ defmodule Plausible.Ingestion.EventTest do
     }
   }
 
-  test "build_and_buffer/3 creates an event" do
-    assert :ok ==
-             @valid_request
-             |> Map.put(:domain, "plausible-ingestion-event-basic.test")
-             |> Plausible.Ingestion.Event.build_and_buffer()
+  describe "integration" do
+    test "build_and_buffer/1 creates an event" do
+      assert {:ok, %{buffered: [_], dropped: []}} =
+               @valid_request
+               |> Map.put(:domains, ["plausible-ingestion-event-basic.test"])
+               |> Plausible.Ingestion.Event.build_and_buffer()
 
-    assert %Plausible.ClickhouseEvent{
-             session_id: session_id,
-             user_id: user_id,
-             domain: "plausible-ingestion-event-basic.test",
-             browser: "Safari",
-             browser_version: "",
-             city_geoname_id: 2_988_507,
-             country_code: "FR",
-             hostname: "skywalker.test",
-             "meta.key": [],
-             "meta.value": [],
-             name: "pageview",
-             operating_system: "iOS",
-             operating_system_version: "3.2",
-             pathname: "/",
-             referrer: "m.facebook.test",
-             referrer_source: "utm_source",
-             screen_size: "Desktop",
-             subdivision1_code: "FR-IDF",
-             subdivision2_code: "FR-75",
-             transferred_from: "",
-             utm_campaign: "utm_campaign",
-             utm_content: "utm_content",
-             utm_medium: "utm_medium",
-             utm_source: "utm_source",
-             utm_term: "utm_term"
-           } = get_event("plausible-ingestion-event-basic.test")
+      assert %Plausible.ClickhouseEvent{
+               session_id: session_id,
+               user_id: user_id,
+               domain: "plausible-ingestion-event-basic.test",
+               browser: "Safari",
+               browser_version: "",
+               city_geoname_id: 2_988_507,
+               country_code: "FR",
+               hostname: "skywalker.test",
+               "meta.key": [],
+               "meta.value": [],
+               name: "pageview",
+               operating_system: "iOS",
+               operating_system_version: "3.2",
+               pathname: "/",
+               referrer: "m.facebook.test",
+               referrer_source: "utm_source",
+               screen_size: "Desktop",
+               subdivision1_code: "FR-IDF",
+               subdivision2_code: "FR-75",
+               transferred_from: "",
+               utm_campaign: "utm_campaign",
+               utm_content: "utm_content",
+               utm_medium: "utm_medium",
+               utm_source: "utm_source",
+               utm_term: "utm_term"
+             } = get_event("plausible-ingestion-event-basic.test")
 
-    assert is_integer(session_id)
-    assert is_integer(user_id)
-  end
+      assert is_integer(session_id)
+      assert is_integer(user_id)
+    end
 
-  test "build_and_buffer/3 takes a list of requests" do
-    requests = [
-      %Plausible.Ingestion.Request{
+    test "build_and_buffer/1 takes multiple domains" do
+      request = %Plausible.Ingestion.Request{
         @valid_request
-        | domain: "plausible-ingestion-event-multiple-1.test"
-      },
-      %Plausible.Ingestion.Request{
-        @valid_request
-        | domain: "plausible-ingestion-event-multiple-2.test"
+        | domains: [
+            "plausible-ingestion-event-multiple-1.test",
+            "plausible-ingestion-event-multiple-2.test"
+          ]
       }
-    ]
 
-    assert :ok == Plausible.Ingestion.Event.build_and_buffer(requests)
+      assert {:ok, %{buffered: [_, _], dropped: []}} =
+               Plausible.Ingestion.Event.build_and_buffer(request)
 
-    assert %Plausible.ClickhouseEvent{domain: "plausible-ingestion-event-multiple-1.test"} =
-             get_event("plausible-ingestion-event-multiple-1.test")
+      assert %Plausible.ClickhouseEvent{domain: "plausible-ingestion-event-multiple-1.test"} =
+               get_event("plausible-ingestion-event-multiple-1.test")
 
-    assert %Plausible.ClickhouseEvent{domain: "plausible-ingestion-event-multiple-2.test"} =
-             get_event("plausible-ingestion-event-multiple-2.test")
-  end
+      assert %Plausible.ClickhouseEvent{domain: "plausible-ingestion-event-multiple-2.test"} =
+               get_event("plausible-ingestion-event-multiple-2.test")
+    end
 
-  test "build_and_buffer/3 stops at the first error when passing a list of requests" do
-    requests = [
-      %Plausible.Ingestion.Request{
+    test "build_and_buffer/1 drops invalid events" do
+      request = %Plausible.Ingestion.Request{
         @valid_request
-        | domain: "plausible-ingestion-event-multiple-with-error-1.test"
-      },
-      %Plausible.Ingestion.Request{@valid_request | domain: nil}
-    ]
+        | domains: ["plausible-ingestion-event-multiple-with-error-1.test", nil]
+      }
 
-    assert {:error, %Ecto.Changeset{valid?: false}} =
-             Plausible.Ingestion.Event.build_and_buffer(requests)
+      assert {:ok, %{buffered: [_], dropped: [dropped]}} =
+               Plausible.Ingestion.Event.build_and_buffer(request)
 
-    assert %Plausible.ClickhouseEvent{
-             domain: "plausible-ingestion-event-multiple-with-error-1.test"
-           } = get_event("plausible-ingestion-event-multiple-with-error-1.test")
+      assert {:error, changeset} = dropped.drop_reason
+      refute changeset.valid?
+
+      assert %Plausible.ClickhouseEvent{
+               domain: "plausible-ingestion-event-multiple-with-error-1.test"
+             } = get_event("plausible-ingestion-event-multiple-with-error-1.test")
+    end
+
+    defp get_event(domain) do
+      Plausible.TestUtils.eventually(fn ->
+        Plausible.Event.WriteBuffer.flush()
+
+        event =
+          Plausible.ClickhouseRepo.one(
+            from e in Plausible.ClickhouseEvent, where: e.domain == ^domain
+          )
+
+        {!is_nil(event), event}
+      end)
+    end
   end
 end

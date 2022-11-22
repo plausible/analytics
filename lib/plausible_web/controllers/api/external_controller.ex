@@ -11,28 +11,51 @@ defmodule PlausibleWeb.Api.ExternalController do
   alias Plausible.Ingestion
 
   def event(conn, _params) do
-    with {:ok, requests} <- Ingestion.Request.build(conn),
-         _ <- Sentry.Context.set_extra_context(%{requests: requests}),
-         :ok <- Ingestion.Event.build_and_buffer(requests) do
-      conn |> put_status(202) |> text("ok")
-    else
-      :skip ->
-        conn |> put_status(202) |> text("ok")
+    case Ingestion.Request.build(conn) do
+      {:ok, request} ->
+        Sentry.Context.set_extra_context(%{request: request})
+
+        case Ingestion.Event.build_and_buffer(request) do
+          {:ok, %{dropped: [], buffered: _buffered}} ->
+            conn
+            |> put_status(202)
+            |> text("ok")
+
+          {:ok, %{dropped: dropped, buffered: _}} ->
+            first_invalid_changeset =
+              Enum.find_value(dropped, nil, fn dropped_event ->
+                case dropped_event.drop_reason do
+                  {:error, %Ecto.Changeset{} = changeset} -> changeset
+                  _ -> false
+                end
+              end)
+
+            if first_invalid_changeset do
+              user_facing_errors =
+                Ecto.Changeset.traverse_errors(first_invalid_changeset, fn {msg, opts} ->
+                  Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+                    opts
+                    |> Keyword.get(String.to_existing_atom(key), key)
+                    |> to_string()
+                  end)
+                end)
+
+              conn
+              |> put_resp_header("x-plausible-dropped", "#{Enum.count(dropped)}")
+              |> put_status(400)
+              |> json(%{errors: user_facing_errors})
+            else
+              conn
+              |> put_resp_header("x-plausible-dropped", "#{Enum.count(dropped)}")
+              |> put_status(202)
+              |> text("ok")
+            end
+        end
 
       {:error, :invalid_json} ->
         conn
         |> put_status(400)
         |> json(%{errors: %{request: "Unable to parse request body as json"}})
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        errors =
-          Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-            Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
-              opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
-            end)
-          end)
-
-        conn |> put_status(400) |> json(%{errors: errors})
     end
   end
 

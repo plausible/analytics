@@ -9,7 +9,7 @@ defmodule Plausible.Ingestion.Request do
     :event_name,
     :uri,
     :referrer,
-    :domain,
+    :domains,
     :screen_width,
     :hash_mode,
     props: %{},
@@ -22,14 +22,14 @@ defmodule Plausible.Ingestion.Request do
           event_name: term(),
           uri: URI.t() | nil,
           referrer: term(),
-          domain: term(),
+          domains: list(String.t()),
           screen_width: term(),
           hash_mode: term(),
           props: map(),
           query_params: map()
         }
 
-  @spec build(Plug.Conn.t()) :: {:ok, [t()]} | {:error, :invalid_json}
+  @spec build(Plug.Conn.t()) :: {:ok, t()} | {:error, :invalid_json}
   @doc """
   Builds a list of %Plausible.Ingestion.Request{} struct from %Plug.Conn{}.
   """
@@ -82,7 +82,7 @@ defmodule Plausible.Ingestion.Request do
         [sanitize_hostname(request.uri)]
       end
 
-    for domain <- domains, do: %__MODULE__{request | domain: domain}
+    %__MODULE__{request | domains: domains}
   end
 
   defp put_uri(%__MODULE__{} = request, %{} = request_body) do
