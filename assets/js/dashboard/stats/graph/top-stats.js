@@ -1,6 +1,6 @@
 import React from "react";
-import classNames from "classnames";
 import { Tooltip } from '../../util/tooltip'
+import classNames from "classnames";
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { METRIC_MAPPING } from './graph-util'
 
@@ -113,10 +113,10 @@ export default class TopStats extends React.Component {
       )
     })
 
-    if (query && query.period === 'realtime') {
+    if (stats && query && query.period === 'realtime') {
       stats.push(<div key="dot" className="block pulsating-circle" style={{ left: '125px', top: '52px' }}></div>)
     }
 
-    return stats
+    return stats || null;
   }
 }

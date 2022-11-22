@@ -1,5 +1,7 @@
-import { parseUTCDate, formatMonthYYYY, formatDay } from '../../util/date'
 import numberFormatter, {durationFormatter} from '../../util/number-formatter'
+import dateFormatter from './date-formatter.js'
+
+export const INTERVALS = ["month", "week", "date", "hour", "minute"]
 
 export const METRIC_MAPPING = {
   'Unique visitors (last 30 min)': 'visitors',
@@ -27,39 +29,7 @@ export const METRIC_FORMATTER = {
   'conversions': numberFormatter,
 }
 
-export const dateFormatter = (interval, longForm) => {
-  return function(isoDate, _index, _ticks) {
-    let date = parseUTCDate(isoDate)
-
-    if (interval === 'month') {
-      return formatMonthYYYY(date);
-    } else if (interval === 'date') {
-      return formatDay(date);
-    } else if (interval === 'hour') {
-      const parts = isoDate.split(/[^0-9]/);
-      date = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5])
-
-      const dateFormat = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
-      const twelveHourClock = dateFormat.resolvedOptions().hour12
-      const formattedHours = dateFormat.format(date)
-
-      if (twelveHourClock) {
-        return formattedHours.replace(' ', '').toLowerCase()
-      } else {
-        return formattedHours.replace(/[^0-9]/g, '').concat(":00")
-      }
-    } else if (interval === 'minute') {
-      if (longForm) {
-        const minutesAgo = Math.abs(isoDate)
-        return minutesAgo === 1 ? '1 minute ago' : minutesAgo + ' minutes ago'
-      } else {
-        return isoDate + 'm'
-      }
-    }
-  }
-}
-
-export const GraphTooltip = (graphData, metric) => {
+export const GraphTooltip = (graphData, metric, query) => {
   return (context) => {
     const tooltipModel = context.tooltip;
     const offset = document.getElementById("main-graph-canvas").getBoundingClientRect()
@@ -93,23 +63,22 @@ export const GraphTooltip = (graphData, metric) => {
       return bodyItem.lines;
     }
 
-    function renderLabel(label, prev_label) {
-      const formattedLabel = dateFormatter(graphData.interval, true)(label)
-      const prev_formattedLabel = prev_label && dateFormatter(graphData.interval, true)(prev_label)
+    // Returns a string describing the bucket. Used when hovering the graph to
+    // show time buckets.
+    function renderBucketLabel(label) {
+      const isPeriodFull = graphData.full_intervals?.[label]
+      const formattedLabel = dateFormatter(graphData.interval, true, query.period, isPeriodFull)(label)
 
-      if (graphData.interval === 'month') {
-        return !prev_label ? formattedLabel : prev_formattedLabel
+      if (query.period === 'realtime') {
+        return dateFormatter(graphData.interval, true, query.period)(label)
       }
 
-      if (graphData.interval === 'date') {
-        return !prev_label ? formattedLabel : prev_formattedLabel
+      if (graphData.interval === 'hour' || graphData.interval == 'minute') {
+        const date = dateFormatter("date", true, query.period)(label)
+        return `${date}, ${formattedLabel}`
       }
 
-      if (graphData.interval === 'hour') {
-        return !prev_label ? `${dateFormatter("date", true)(label)}, ${formattedLabel}` : `${dateFormatter("date", true)(prev_label)}, ${dateFormatter(graphData.interval, true)(prev_label)}`
-      }
-
-      return !prev_label ? formattedLabel : prev_formattedLabel
+      return formattedLabel
     }
 
     // Set Tooltip Body
@@ -134,7 +103,7 @@ export const GraphTooltip = (graphData, metric) => {
           <div class='flex flex-row justify-between items-center'>
             <span class='flex items-center mr-4'>
               <div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(101,116,205)'></div>
-              <span>${renderLabel(label)}</span>
+              <span>${renderBucketLabel(label)}</span>
             </span>
             <span class='text-base font-bold'>${METRIC_FORMATTER[metric](point)}</span>
           </div>
