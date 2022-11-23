@@ -117,10 +117,10 @@ defmodule Plausible.Ingestion.Event do
 
   defp put_basic_info(%__MODULE__{} = event) do
     host =
-      if event.request.uri && event.request.uri.host == "" do
-        "(none)"
-      else
-        event.request.uri && event.request.uri.host
+      case event.request.uri do
+        %{host: ""} -> "(none)"
+        %{host: host} when is_binary(host) -> host
+        _ -> nil
       end
 
     update_attrs(event, %{
