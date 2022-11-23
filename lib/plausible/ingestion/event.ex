@@ -62,6 +62,7 @@ defmodule Plausible.Ingestion.Event do
       &put_user_agent/1,
       &put_basic_info/1,
       &put_referrer/1,
+      &put_utm_tags/1,
       &put_geolocation/1,
       &put_screen_size/1,
       &put_props/1,
@@ -134,6 +135,14 @@ defmodule Plausible.Ingestion.Event do
 
   defp put_referrer(%__MODULE__{} = event) do
     ref = parse_referrer(event.request.uri, event.request.referrer)
+
+    update_attrs(event, %{
+      referrer_source: get_referrer_source(event.request, ref),
+      referrer: clean_referrer(ref)
+    })
+  end
+
+  defp put_utm_tags(%__MODULE__{} = event) do
     query_params = event.request.query_params
 
     update_attrs(event, %{
@@ -141,9 +150,7 @@ defmodule Plausible.Ingestion.Event do
       utm_source: query_params["utm_source"],
       utm_campaign: query_params["utm_campaign"],
       utm_content: query_params["utm_content"],
-      utm_term: query_params["utm_term"],
-      referrer_source: get_referrer_source(event.request, ref),
-      referrer: clean_referrer(ref)
+      utm_term: query_params["utm_term"]
     })
   end
 
