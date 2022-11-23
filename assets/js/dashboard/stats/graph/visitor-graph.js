@@ -233,7 +233,9 @@ class LineGraph extends React.Component {
           </div>
         )
       } else {
-        const endpoint = `/${encodeURIComponent(this.props.site.domain)}/export${api.serializeQuery(this.props.query)}`
+        const interval = this.props.graphData?.interval || this.state.interval
+        const queryParams = api.serializeQuery(this.props.query, [{ interval }])
+        const endpoint = `/${encodeURIComponent(this.props.site.domain)}/export${queryParams}`
 
         return (
           <a className="w-4 h-4 mx-2" href={endpoint} download onClick={this.downloadSpinner.bind(this)}>
