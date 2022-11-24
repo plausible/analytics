@@ -1,25 +1,39 @@
-defmodule Plausible.Site.RateLimiter do
-  @policy_for_non_existing_sites :deny
-  @policy_on_rate_limiting_backend_error :allow
+defmodule Plausible.Site.GateKeeper do
+  @allow :allow
+  @block :block
+  @deny :deny
+  @throttle :throttle
+
+  @type policy() :: :allow | :deny | :block | :throttle
+
+  @policy_for_non_existing_sites @deny
+  @policy_on_rate_limiting_backend_error @allow
+
+  defstruct passed?: false,
+            policy: nil
+
+  @type t() :: %__MODULE__{
+          passed?: boolean(),
+          policy: policy()
+        }
 
   @moduledoc """
-  Thin wrapper around Hammer for rate limiting domain-specific events
+  Thin wrapper around Hammer for gate keeping domainmain-specific events
   during the ingestion phase. Currently there are two policies
-  on which the `allow/2` function operates:
+  on which the `allowance/2` function operates:
     * `:allow`
     * `:deny`
+    * `:block` (synonymous to `:deny`, indicates disabled sites)
+    * `:throttle` (synonymous to `:deny`, indicates rate limiting)
 
   Rate Limiting buckets are configured per site (externally via the CRM).
   See: `Plausible.Site`
 
   To look up each site's configuration, the RateLimiter fetches
   a Site by domain using `Plausible.Cache` interface.
-  If the Site is not found in Cache, a DB refresh attempt is made.
-  The result of that last attempt gets stored in Cache to prevent
-  excessive DB queries.
 
   The module defines two policies outside the regular bucket inspection:
-    * when the site does not exist in the database: #{@policy_for_non_existing_sites}
+    * when the the site is not found in cache: #{@policy_for_non_existing_sites}
     * when the underlying rate limiting mechanism returns
       an internal error: #{@policy_on_rate_limiting_backend_error}
 
@@ -31,9 +45,14 @@ defmodule Plausible.Site.RateLimiter do
 
   require Logger
 
-  @spec allow?(String.t(), Keyword.t()) :: boolean()
-  def allow?(domain, opts \\ []) do
-    policy(domain, opts) == :allow
+  @spec allowance(String.t(), Keyword.t()) :: t()
+  def allowance(domain, opts \\ []) when is_binary(domain) do
+    policy = policy(domain, opts)
+
+    %__MODULE__{
+      policy: policy,
+      passed?: policy == @allow
+    }
   end
 
   @spec key(String.t()) :: String.t()
@@ -41,30 +60,36 @@ defmodule Plausible.Site.RateLimiter do
     "ingest:site:#{domain}"
   end
 
-  @spec policy_telemetry_event(:allow | :deny) :: list(atom())
+  @spec policy_telemetry_event(policy()) :: list(atom())
   def policy_telemetry_event(policy) do
-    [:plausible, :ingest, :rate_limit, policy]
+    [:plausible, :ingest, :gate, policy]
   end
 
-  defp policy(domain, opts) do
+  defp policy(nil, _) do
+    @policy_for_non_existing_sites
+  end
+
+  defp policy(domain, opts) when is_binary(domain) do
     result =
-      case get_from_cache_or_refresh(domain, Keyword.get(opts, :cache_opts, [])) do
-        %Ecto.NoResultsError{} ->
+      case Cache.get(domain, Keyword.get(opts, :cache_opts, [])) do
+        nil ->
           @policy_for_non_existing_sites
 
         %Site{} = site ->
           check_rate_limit(site, opts)
-
-        {:error, _} ->
-          @policy_on_rate_limiting_backend_error
       end
 
     :ok = emit_allowance_telemetry(result)
+
     result
   end
 
   defp check_rate_limit(%Site{ingest_rate_limit_threshold: nil}, _opts) do
-    :allow
+    @allow
+  end
+
+  defp check_rate_limit(%Site{ingest_rate_limit_threshold: 0}, _opts) do
+    @block
   end
 
   defp check_rate_limit(%Site{ingest_rate_limit_threshold: threshold} = site, opts)
@@ -74,10 +99,10 @@ defmodule Plausible.Site.RateLimiter do
 
     case Hammer.check_rate(key, scale_ms, threshold) do
       {:deny, _} ->
-        :deny
+        @throttle
 
       {:allow, _} ->
-        :allow
+        @allow
 
       {:error, reason} ->
         Logger.error(
@@ -85,21 +110,6 @@ defmodule Plausible.Site.RateLimiter do
         )
 
         @policy_on_rate_limiting_backend_error
-    end
-  end
-
-  defp get_from_cache_or_refresh(domain, cache_opts) do
-    case Cache.get(domain, cache_opts) do
-      %Site{} = site ->
-        site
-
-      %Ecto.NoResultsError{} = not_found ->
-        not_found
-
-      nil ->
-        with {:ok, refreshed_item} <- Cache.refresh_one(domain, cache_opts) do
-          refreshed_item
-        end
     end
   end
 

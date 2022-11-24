@@ -7,6 +7,7 @@ defmodule Plausible.Ingestion.Event do
   """
   alias Plausible.Ingestion.{Request, CityOverrides}
   alias Plausible.ClickhouseEvent
+  alias Plausible.Site.GateKeeper
 
   defstruct domain: nil,
             clickhouse_event_attrs: %{},
@@ -14,13 +15,14 @@ defmodule Plausible.Ingestion.Event do
             dropped?: false,
             drop_reason: nil,
             request: nil,
-            salts: nil
+            salts: nil,
+            changeset: nil
 
   @type drop_reason() ::
           :bot
-          | :domain_blocked
           | :spam_referrer
-          | {:error, Ecto.Changeset.t()}
+          | GateKeeper.policy()
+          | :invalid
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -29,31 +31,34 @@ defmodule Plausible.Ingestion.Event do
           dropped?: boolean(),
           drop_reason: drop_reason(),
           request: Request.t(),
-          salts: map()
+          salts: map(),
+          changeset: %Ecto.Changeset{}
         }
 
-  @spec build_and_buffer(Request.t()) ::
-          {:ok, %{dropped: [t()], buffered: [t()]}}
+  @spec build_and_buffer(Request.t()) :: {:ok, %{buffered: [t()], dropped: [t()]}}
   def build_and_buffer(%Request{domains: domains} = request) do
     processed_events =
       if spam_referrer?(request) do
         for domain <- domains, do: drop(new(domain, request), :spam_referrer)
       else
         Enum.reduce(domains, [], fn domain, acc ->
-          if domain_blocked?(domain) do
-            [drop(new(domain, request), :domain_blocked) | acc]
-          else
+          allowance = GateKeeper.allowance(domain)
+
+          if allowance.passed? do
             processed =
               domain
               |> new(request)
               |> process_unless_dropped(pipeline())
 
             [processed | acc]
+          else
+            [drop(new(domain, request), allowance.policy) | acc]
           end
         end)
       end
 
     {dropped, buffered} = Enum.split_with(processed_events, & &1.dropped?)
+
     {:ok, %{dropped: dropped, buffered: buffered}}
   end
 
@@ -84,15 +89,20 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp new(domain, request) do
-    %__MODULE__{domain: domain, request: request}
+    struct!(__MODULE__, domain: domain, request: request)
   end
 
-  defp drop(%__MODULE__{} = event, reason) do
-    %{event | dropped?: true, drop_reason: reason}
+  defp drop(%__MODULE__{} = event, reason, attrs \\ []) do
+    fields =
+      attrs
+      |> Keyword.put(:dropped?, true)
+      |> Keyword.put(:drop_reason, reason)
+
+    struct!(event, fields)
   end
 
   defp update_attrs(%__MODULE__{} = event, %{} = attrs) do
-    %{event | clickhouse_event_attrs: Map.merge(event.clickhouse_event_attrs, attrs)}
+    struct!(event, clickhouse_event_attrs: Map.merge(event.clickhouse_event_attrs, attrs))
   end
 
   defp put_user_agent(%__MODULE__{} = event) do
@@ -117,19 +127,12 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp put_basic_info(%__MODULE__{} = event) do
-    host =
-      case event.request.uri do
-        %{host: ""} -> "(none)"
-        %{host: host} when is_binary(host) -> host
-        _ -> nil
-      end
-
     update_attrs(event, %{
       domain: event.domain,
-      timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
+      timestamp: event.request.timestamp,
       name: event.request.event_name,
-      hostname: Request.sanitize_hostname(host),
-      pathname: get_pathname(event.request.uri, event.request.hash_mode)
+      hostname: event.request.hostname,
+      pathname: event.request.pathname
     })
   end
 
@@ -239,7 +242,7 @@ defmodule Plausible.Ingestion.Event do
         %{event | clickhouse_event: valid_clickhouse_event}
 
       {:error, changeset} ->
-        drop(event, {:error, changeset})
+        drop(event, :invalid, changeset: changeset)
     end
   end
 
@@ -261,21 +264,6 @@ defmodule Plausible.Ingestion.Event do
   defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event} = event) do
     {:ok, _} = Plausible.Event.WriteBuffer.insert(clickhouse_event)
     event
-  end
-
-  defp get_pathname(_uri = nil, _hash_mode), do: "/"
-
-  defp get_pathname(uri, hash_mode) do
-    pathname =
-      (uri.path || "/")
-      |> URI.decode()
-      |> String.trim_trailing()
-
-    if hash_mode == 1 && uri.fragment do
-      pathname <> "#" <> URI.decode(uri.fragment)
-    else
-      pathname
-    end
   end
 
   defp parse_referrer(_uri, _referrer_str = nil), do: nil
@@ -408,9 +396,4 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp spam_referrer?(_), do: false
-
-  defp domain_blocked?(domain) do
-    domain in Application.get_env(:plausible, :domain_blacklist) or
-      FunWithFlags.enabled?(:block_event_ingest, for: domain)
-  end
 end
