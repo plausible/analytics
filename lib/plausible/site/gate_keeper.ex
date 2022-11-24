@@ -18,7 +18,7 @@ defmodule Plausible.Site.GateKeeper do
         }
 
   @moduledoc """
-  Thin wrapper around Hammer for gate keeping domainmain-specific events
+  Thin wrapper around Hammer for gate keeping domain-specific events
   during the ingestion phase. Currently there are two policies
   on which the `allowance/2` function operates:
     * `:allow`
