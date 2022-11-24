@@ -66,7 +66,7 @@ defmodule Plausible.Site.CacheTest do
       assert Cache.hit_rate(test) == 50
     end
 
-    test "a single cached site can be refreshed", %{test: test} do
+    test "only recently updated sites can be refreshed", %{test: test} do
       {:ok, _} = start_test_cache(test)
 
       domain1 = "site1.example.com"
@@ -74,44 +74,18 @@ defmodule Plausible.Site.CacheTest do
 
       cache_opts = [cache_name: test, force?: true]
 
-      assert Cache.get(domain1) == nil
+      yesterday = DateTime.utc_now() |> DateTime.add(-1 * 60 * 60 * 24)
+      insert(:site, domain: domain1, inserted_at: yesterday, updated_at: yesterday)
 
-      insert(:site, domain: domain1)
+      insert(:site, domain: domain2)
 
-      assert {:ok, %{domain: ^domain1}} = Cache.refresh_one(domain1, cache_opts)
-      assert %Site{domain: ^domain1} = Cache.get(domain1, cache_opts)
+      assert Cache.get(domain1, cache_opts) == nil
+      assert Cache.get(domain2, cache_opts) == nil
 
-      assert {:ok, %Ecto.NoResultsError{}} = Cache.refresh_one(domain2, cache_opts)
-      assert %Ecto.NoResultsError{} = Cache.get(domain2, cache_opts)
-    end
+      assert :ok = Cache.refresh_updated_recently(cache_opts)
 
-    test "refreshing a single site sends a telemetry event indicating record not found in the database",
-         %{
-           test: test
-         } do
-      :ok =
-        start_test_cache_with_telemetry_handler(test,
-          event: Cache.telemetry_event_refresh(test, :one)
-        )
-
-      Cache.refresh_one("missing.example.com", force?: true, cache_name: test)
-      assert_receive {:telemetry_handled, %{found_in_db?: false}}
-    end
-
-    test "refreshing a single site sends a telemetry event indicating record found in the database",
-         %{
-           test: test
-         } do
-      domain = "site1.example.com"
-      insert(:site, domain: domain)
-
-      :ok =
-        start_test_cache_with_telemetry_handler(test,
-          event: Cache.telemetry_event_refresh(test, :one)
-        )
-
-      Cache.refresh_one(domain, force?: true, cache_name: test)
-      assert_receive {:telemetry_handled, %{found_in_db?: true}}
+      refute Cache.get(domain1, cache_opts)
+      assert %Site{domain: ^domain2} = Cache.get(domain2, cache_opts)
     end
 
     test "refreshing all sites sends a telemetry event",
@@ -190,8 +164,8 @@ defmodule Plausible.Site.CacheTest do
       assert Cache.get(domain2, cache_opts)
 
       refute Cache.get(domain1, cache_opts)
-      Cache.refresh_one(domain1, cache_opts)
-      assert Cache.get(domain1, cache_opts) == %Ecto.NoResultsError{}
+      :ok = Cache.refresh_all(cache_opts)
+      refute Cache.get(domain1, cache_opts)
     end
   end
 
@@ -218,6 +192,16 @@ defmodule Plausible.Site.CacheTest do
       :ok = Cache.merge([{"item2", :item2}], cache_name: test)
 
       refute Cache.get("item1", cache_name: test, force?: true)
+      assert Cache.get("item2", cache_name: test, force?: true)
+    end
+
+    test "merging optionally leaves stale items intact", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+
+      :ok = Cache.merge([{"item1", :item1}], cache_name: test)
+      :ok = Cache.merge([{"item2", :item2}], cache_name: test, delete_stale_items?: false)
+
+      assert Cache.get("item1", cache_name: test, force?: true)
       assert Cache.get("item2", cache_name: test, force?: true)
     end
 
@@ -271,7 +255,7 @@ defmodule Plausible.Site.CacheTest do
   end
 
   defp start_test_warmer(opts) do
-    child_name_opt = {:child_name, {:local, Keyword.fetch!(opts, :cache_name)}}
+    child_name_opt = {:child_name, Keyword.fetch!(opts, :cache_name)}
     %{start: {m, f, a}} = Cache.Warmer.child_spec([child_name_opt | opts])
     apply(m, f, a)
   end
