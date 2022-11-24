@@ -112,6 +112,8 @@ defmodule PlausibleWeb.Api.ExternalController do
         job_id: params["job_id"],
         page_id: params["page_id"],
         site_id: params["site_id"],
+        campaign_id: params["campaign_id"],
+        product_id: params["product_id"],
         country_code: location_details[:country_code],
         country_geoname_id: location_details[:country_geoname_id],
         subdivision1_code: location_details[:subdivision1_code],
@@ -190,11 +192,13 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   defp parse_additional_params(params) do
     additional_param_names = [
+      "campaign_id",
+      "careers_application_form_uuid",
       "company_id",
       "job_id",
       "page_id",
-      "site_id",
-      "careers_application_form_uuid"
+      "product_id",
+      "site_id"
     ]
 
     meta = parse_meta(params)
