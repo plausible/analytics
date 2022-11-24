@@ -65,10 +65,6 @@ defmodule Plausible.Site.GateKeeper do
     [:plausible, :ingest, :gate, policy]
   end
 
-  defp policy(nil, _) do
-    @policy_for_non_existing_sites
-  end
-
   defp policy(domain, opts) when is_binary(domain) do
     result =
       case Cache.get(domain, Keyword.get(opts, :cache_opts, [])) do
