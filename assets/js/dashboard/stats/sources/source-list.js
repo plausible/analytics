@@ -303,8 +303,8 @@ export default class SourceList extends React.Component {
         <Menu as="div" className="relative inline-block text-left">
           <div>
             <Menu.Button className="inline-flex justify-between focus:outline-none">
-              <span style={{ width: '4.2rem' }} className={this.state.tab.startsWith('utm_') ? activeClass : defaultClass}>{buttonText}</span>
-              <ChevronDownIcon className="-mr-1 ml-px h-4 w-4" aria-hidden="true" />
+              <span className={this.state.tab.startsWith('utm_') ? activeClass : defaultClass}>{buttonText}</span>
+              <ChevronDownIcon className="-mr-1 ml-1 h-4 w-4" aria-hidden="true" />
             </Menu.Button>
           </div>
 

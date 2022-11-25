@@ -63,7 +63,7 @@ export function IntervalPicker({ graphData, query, site, updateInterval }) {
         <>
           <Menu.Button ref={menuElement} className="text-sm inline-flex focus:outline-none text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600 items-center">
             { INTERVAL_LABELS[currentInterval] }
-            <ChevronDownIcon className="w-4 h-4" aria-hidden="true" />
+            <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
           </Menu.Button>
 
           <Transition
