@@ -22,6 +22,7 @@ import {
   isAfter,
 } from "./util/date";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
+import { shouldIgnoreKeypress } from "./keybinding.js"
 
 function renderArrow(query, site, period, prevDate, nextDate) {
   const insertionDate = parseUTCDate(site.statsBegin);
@@ -133,8 +134,7 @@ class DatePicker extends React.Component {
   handleKeydown(e) {
     const { query, history } = this.props;
 
-    if (e.target.tagName === 'INPUT') return true;
-    if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.keyCode === 229) return true;
+    if (shouldIgnoreKeypress(e)) return true
 
     const newSearch = {
       period: false,
