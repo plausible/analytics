@@ -8,7 +8,7 @@ defmodule Plausible.Ingestion.Request do
   use Ecto.Schema
   alias Ecto.Changeset
 
-  schema "" do
+  embedded_schema do
     field :remote_ip, :string
     field :user_agent, :string
     field :event_name, :string
@@ -37,28 +37,22 @@ defmodule Plausible.Ingestion.Request do
 
     case parse_body(conn) do
       {:ok, request_body} ->
-        changeset =
-          changeset
-          |> put_remote_ip(conn)
-          |> put_uri(request_body)
-          |> put_hostname()
-          |> put_user_agent(conn)
-          |> put_request_params(request_body)
-          |> put_pathname()
-          |> put_query_params()
-          |> map_domains(request_body)
-          |> Changeset.validate_required([
-            :event_name,
-            :hostname,
-            :pathname,
-            :timestamp
-          ])
-
-        if changeset.valid? do
-          {:ok, Changeset.apply_changes(changeset)}
-        else
-          {:error, changeset}
-        end
+        changeset
+        |> put_remote_ip(conn)
+        |> put_uri(request_body)
+        |> put_hostname()
+        |> put_user_agent(conn)
+        |> put_request_params(request_body)
+        |> put_pathname()
+        |> put_query_params()
+        |> map_domains(request_body)
+        |> Changeset.validate_required([
+          :event_name,
+          :hostname,
+          :pathname,
+          :timestamp
+        ])
+        |> Changeset.apply_action(nil)
 
       {:error, :invalid_json} ->
         {:error, Changeset.add_error(changeset, :request, "Unable to parse request body as json")}
@@ -96,7 +90,9 @@ defmodule Plausible.Ingestion.Request do
   end
 
   defp put_pathname(changeset) do
-    pathname = get_pathname(changeset.changes[:uri], changeset.changes[:hash_mode])
+    uri = Changeset.get_field(changeset, :uri)
+    hash_mode = Changeset.get_field(changeset, :hash_mode)
+    pathname = get_pathname(uri, hash_mode)
     Changeset.put_change(changeset, :pathname, pathname)
   end
 
@@ -117,7 +113,7 @@ defmodule Plausible.Ingestion.Request do
         Changeset.put_change(changeset, :domains, domains)
 
       nil ->
-        from_uri = sanitize_hostname(changeset.changes[:uri])
+        from_uri = sanitize_hostname(Changeset.get_field(changeset, :uri))
 
         if from_uri do
           Changeset.put_change(changeset, :domains, [from_uri])
@@ -144,7 +140,7 @@ defmodule Plausible.Ingestion.Request do
 
   defp put_hostname(changeset) do
     host =
-      case changeset.changes[:uri] do
+      case Changeset.get_field(changeset, :uri) do
         %{host: host} when is_binary(host) and host != "" -> host
         _ -> "(none)"
       end
@@ -192,7 +188,7 @@ defmodule Plausible.Ingestion.Request do
   end
 
   defp put_query_params(changeset) do
-    case changeset.changes[:uri] do
+    case Changeset.get_field(changeset, :uri) do
       %{query: query} when is_binary(query) ->
         Changeset.put_change(changeset, :query_params, URI.decode_query(query))
 
