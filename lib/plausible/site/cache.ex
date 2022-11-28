@@ -164,7 +164,7 @@ defmodule Plausible.Site.Cache do
   end
 
   @spec telemetry_event_refresh(atom(), atom()) :: list(atom())
-  def telemetry_event_refresh(cache_name, mode) when mode in @modes do
+  def telemetry_event_refresh(cache_name \\ @cache_name, mode) when mode in @modes do
     [:plausible, :cache, cache_name, :refresh, mode]
   end
 

@@ -58,8 +58,17 @@ defmodule Plausible.Ingestion.Event do
       end
 
     {dropped, buffered} = Enum.split_with(processed_events, & &1.dropped?)
-
     {:ok, %{dropped: dropped, buffered: buffered}}
+  end
+
+  @spec telemetry_event_buffered() :: [atom()]
+  def telemetry_event_buffered() do
+    [:plausible, :ingest, :event, :buffered]
+  end
+
+  @spec telemetry_event_dropped() :: [atom()]
+  def telemetry_event_dropped() do
+    [:plausible, :ingest, :event, :dropped]
   end
 
   defp pipeline() do
@@ -98,6 +107,7 @@ defmodule Plausible.Ingestion.Event do
       |> Keyword.put(:dropped?, true)
       |> Keyword.put(:drop_reason, reason)
 
+    emit_telemetry_dropped(reason)
     struct!(event, fields)
   end
 
@@ -263,6 +273,7 @@ defmodule Plausible.Ingestion.Event do
 
   defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event} = event) do
     {:ok, _} = Plausible.Event.WriteBuffer.insert(clickhouse_event)
+    emit_telemetry_buffered()
     event
   end
 
@@ -396,4 +407,12 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp spam_referrer?(_), do: false
+
+  defp emit_telemetry_buffered() do
+    :telemetry.execute(telemetry_event_buffered(), %{}, %{})
+  end
+
+  defp emit_telemetry_dropped(reason) do
+    :telemetry.execute(telemetry_event_dropped(), %{}, %{reason: reason})
+  end
 end

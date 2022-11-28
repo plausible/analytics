@@ -100,37 +100,6 @@ defmodule Plausible.Site.GateKeeperTest do
     assert log =~ "Falling back to: allow"
   end
 
-  test "telemetry event is emitted on :not_found", %{test: test, opts: opts} do
-    start_telemetry_handler(test, event: GateKeeper.policy_telemetry_event(:not_found))
-    GateKeeper.check("example.com", opts)
-    assert_receive :telemetry_handled
-  end
-
-  test "telemetry event is emitted on :allow", %{test: test, opts: opts} do
-    start_telemetry_handler(test, event: GateKeeper.policy_telemetry_event(:allow))
-
-    domain = "site1.example.com"
-    add_site_and_refresh_cache(test, domain: domain)
-
-    GateKeeper.check(domain, opts)
-    assert_receive :telemetry_handled
-  end
-
-  test "telemetry event is emitted on :block", %{test: test, opts: opts} do
-    start_telemetry_handler(test, event: GateKeeper.policy_telemetry_event(:block))
-    add_site_and_refresh_cache(test, domain: "example.com", ingest_rate_limit_threshold: 0)
-    GateKeeper.check("example.com", opts)
-    assert_receive :telemetry_handled
-  end
-
-  test "telemetry event is emitted on :throttle", %{test: test, opts: opts} do
-    start_telemetry_handler(test, event: GateKeeper.policy_telemetry_event(:throttle))
-    add_site_and_refresh_cache(test, domain: "example.com", ingest_rate_limit_threshold: 1)
-    GateKeeper.check("example.com", opts)
-    GateKeeper.check("example.com", opts)
-    assert_receive :telemetry_handled
-  end
-
   # We need a way to force Hammer to error-out on Hammer.check_rate/3.
   # This is tricky because we don't configure multiple backends,
   # so the easiest (and naive) way to do it, without mocking, is to
@@ -157,18 +126,5 @@ defmodule Plausible.Site.GateKeeperTest do
     site = insert(:site, site_data)
     Cache.refresh_updated_recently(cache_name: cache_name, force?: true)
     site
-  end
-
-  defp start_telemetry_handler(test, event: event) do
-    test_pid = self()
-
-    :telemetry.attach(
-      "#{test}-telemetry-handler",
-      event,
-      fn ^event, %{}, %{}, _ ->
-        send(test_pid, :telemetry_handled)
-      end,
-      %{}
-    )
   end
 end

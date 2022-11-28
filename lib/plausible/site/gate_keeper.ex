@@ -24,9 +24,6 @@ defmodule Plausible.Site.GateKeeper do
     * when the the site is not found in cache: #{@policy_for_non_existing_sites}
     * when the underlying rate limiting mechanism returns
       an internal error: #{@policy_on_rate_limiting_backend_error}
-
-  Each policy computation emits a single telemetry event.
-  See: `policy_telemetry_event/1`
   """
   alias Plausible.Site
   alias Plausible.Site.Cache
@@ -46,11 +43,6 @@ defmodule Plausible.Site.GateKeeper do
     "ingest:site:#{domain}"
   end
 
-  @spec policy_telemetry_event(policy()) :: list(atom())
-  def policy_telemetry_event(policy) do
-    [:plausible, :ingest, :gate, policy]
-  end
-
   defp policy(domain, opts) when is_binary(domain) do
     result =
       case Cache.get(domain, Keyword.get(opts, :cache_opts, [])) do
@@ -60,8 +52,6 @@ defmodule Plausible.Site.GateKeeper do
         %Site{} = site ->
           check_rate_limit(site, opts)
       end
-
-    :ok = emit_allowance_telemetry(result)
 
     result
   end
@@ -93,9 +83,5 @@ defmodule Plausible.Site.GateKeeper do
 
         @policy_on_rate_limiting_backend_error
     end
-  end
-
-  defp emit_allowance_telemetry(policy) do
-    :telemetry.execute(policy_telemetry_event(policy), %{}, %{})
   end
 end
