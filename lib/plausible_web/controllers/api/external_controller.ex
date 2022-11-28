@@ -35,10 +35,10 @@ defmodule PlausibleWeb.Api.ExternalController do
           end
       end
     else
-      {:error, :invalid_json} ->
+      {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(400)
-        |> json(%{errors: %{request: "Unable to parse request body as json"}})
+        |> json(%{errors: traverse_errors(changeset)})
     end
   end
 

@@ -21,11 +21,12 @@ defmodule Plausible.Application do
       Supervisor.child_spec({Cachex, name: :sessions, limit: nil, stats: true},
         id: :cachex_sessions
       ),
+      Plausible.PromEx,
       {Plausible.Site.Cache, []},
-      {Plausible.Site.Cache.Warmer, []},
+      {Plausible.Site.Cache.Warmer.All, []},
+      {Plausible.Site.Cache.Warmer.RecentlyUpdated, []},
       PlausibleWeb.Endpoint,
-      {Oban, Application.get_env(:plausible, Oban)},
-      Plausible.PromEx
+      {Oban, Application.get_env(:plausible, Oban)}
     ]
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]

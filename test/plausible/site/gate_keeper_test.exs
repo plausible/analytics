@@ -1,8 +1,8 @@
-defmodule Plausible.Site.RateLimiterTest do
+defmodule Plausible.Site.GateKeeperTest do
   use Plausible.DataCase, async: true
 
   alias Plausible.Site.Cache
-  alias Plausible.Site.RateLimiter
+  alias Plausible.Site.GateKeeper
 
   import ExUnit.CaptureLog
 
@@ -12,27 +12,15 @@ defmodule Plausible.Site.RateLimiterTest do
     {:ok, %{opts: opts}}
   end
 
-  test "(for now) throws an exception when cache is disabled" do
-    assert_raise(RuntimeError, fn -> RateLimiter.allow?("example.com") end)
-  end
-
-  test "sites not found in cache/DB are denied", %{opts: opts} do
-    refute RateLimiter.allow?("example.com", opts)
+  test "sites not found in cache are denied", %{opts: opts} do
+    assert {:deny, :not_found} = GateKeeper.check("example.com", opts)
   end
 
   test "site from cache with no ingest_rate_limit_threshold is allowed", %{test: test, opts: opts} do
     domain = "site1.example.com"
 
     add_site_and_refresh_cache(test, domain: domain)
-    assert RateLimiter.allow?(domain, opts)
-  end
-
-  test "site from DB with no ingest_rate_limit_threshold is allowed", %{opts: opts} do
-    domain = "site1.example.com"
-
-    insert(:site, domain: domain)
-
-    assert RateLimiter.allow?(domain, opts)
+    assert :allow = GateKeeper.check(domain, opts)
   end
 
   test "rate limiting works with threshold", %{test: test, opts: opts} do
@@ -44,9 +32,9 @@ defmodule Plausible.Site.RateLimiterTest do
       ingest_rate_limit_scale_seconds: 60
     )
 
-    assert RateLimiter.allow?(domain, opts)
-    refute RateLimiter.allow?(domain, opts)
-    refute RateLimiter.allow?(domain, opts)
+    assert :allow = GateKeeper.check(domain, opts)
+    assert {:deny, :throttle} = GateKeeper.check(domain, opts)
+    assert {:deny, :throttle} = GateKeeper.check(domain, opts)
   end
 
   test "rate limiting works with scale window", %{test: test, opts: opts} do
@@ -58,11 +46,11 @@ defmodule Plausible.Site.RateLimiterTest do
       ingest_rate_limit_scale_seconds: 1
     )
 
-    assert RateLimiter.allow?(domain, opts)
+    assert :allow = GateKeeper.check(domain, opts)
     Process.sleep(1)
-    refute RateLimiter.allow?(domain, opts)
+    assert {:deny, :throttle} = GateKeeper.check(domain, opts)
     Process.sleep(1_000)
-    assert RateLimiter.allow?(domain, opts)
+    assert :allow = GateKeeper.check(domain, opts)
   end
 
   test "rate limiting prioritises cache lookups", %{test: test, opts: opts} do
@@ -80,9 +68,9 @@ defmodule Plausible.Site.RateLimiterTest do
     # is completely empty
     insert(:site)
 
-    assert RateLimiter.allow?(domain, opts)
+    assert :allow = GateKeeper.check(domain, opts)
     :ok = Cache.refresh_all(opts[:cache_opts])
-    refute RateLimiter.allow?(domain, opts)
+    assert {:deny, :not_found} = GateKeeper.check(domain, opts)
   end
 
   test "rate limiter policy switches to allow when RL backend errors bubble-up", %{
@@ -94,36 +82,22 @@ defmodule Plausible.Site.RateLimiterTest do
     site =
       add_site_and_refresh_cache(test,
         domain: domain,
-        ingest_rate_limit_threshold: 0,
+        ingest_rate_limit_threshold: 1,
         ingest_rate_limit_scale_seconds: 600
       )
 
-    refute RateLimiter.allow?(domain, opts)
+    assert :allow = GateKeeper.check(domain, opts)
+    assert {:deny, :throttle} = GateKeeper.check(domain, opts)
+
     {:ok, :broken} = break_hammer(site)
 
     log =
       capture_log(fn ->
-        assert RateLimiter.allow?(domain, opts)
+        assert :allow = GateKeeper.check(domain, opts)
       end)
 
     assert log =~ "Error checking rate limit for 'ingest:site:causingerrors.example.com'"
     assert log =~ "Falling back to: allow"
-  end
-
-  test "telemetry event is emitted on :deny", %{test: test, opts: opts} do
-    start_telemetry_handler(test, event: RateLimiter.policy_telemetry_event(:deny))
-    RateLimiter.allow?("example.com", opts)
-    assert_receive :telemetry_handled
-  end
-
-  test "telemetry event is emitted on :allow", %{test: test, opts: opts} do
-    start_telemetry_handler(test, event: RateLimiter.policy_telemetry_event(:allow))
-
-    domain = "site1.example.com"
-    add_site_and_refresh_cache(test, domain: domain)
-
-    RateLimiter.allow?(domain, opts)
-    assert_receive :telemetry_handled
   end
 
   # We need a way to force Hammer to error-out on Hammer.check_rate/3.
@@ -137,7 +111,7 @@ defmodule Plausible.Site.RateLimiterTest do
   defp break_hammer(site) do
     scale_ms = site.ingest_rate_limit_scale_seconds * 1_000
     rogue_key = site.domain
-    our_key = RateLimiter.key(rogue_key)
+    our_key = GateKeeper.key(rogue_key)
     {_, key} = Hammer.Utils.stamp_key(our_key, scale_ms)
     true = :ets.insert(:hammer_ets_buckets, {key, 1, "TOTALLY-WRONG", "ABSOLUTELY-BREAKING"})
     {:ok, :broken}
@@ -150,20 +124,7 @@ defmodule Plausible.Site.RateLimiterTest do
 
   defp add_site_and_refresh_cache(cache_name, site_data) do
     site = insert(:site, site_data)
-    Cache.refresh_one(site.domain, cache_name: cache_name, force?: true)
+    Cache.refresh_updated_recently(cache_name: cache_name, force?: true)
     site
-  end
-
-  defp start_telemetry_handler(test, event: event) do
-    test_pid = self()
-
-    :telemetry.attach(
-      "#{test}-telemetry-handler",
-      event,
-      fn ^event, %{}, %{}, _ ->
-        send(test_pid, :telemetry_handled)
-      end,
-      %{}
-    )
   end
 end

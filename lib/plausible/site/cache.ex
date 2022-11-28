@@ -19,23 +19,18 @@ defmodule Plausible.Site.Cache do
   database counterpart -- to spare bandwidth and query execution time,
   only selected database columns are retrieved and cached.
 
-  There are two modes of refreshing the cache: `:all` and `:single`.
+  There are two modes of refreshing the cache: `:all` and `:updated_recently`.
 
     * `:all` means querying the database for all Site entries and should be done
-      periodically (via `Cache.Warmer`). All existing Cache entries all cleared
-      prior to writing the new batch.
+      periodically (via `Cache.Warmer`). All stale Cache entries are cleared
+      upon persisting the new batch.
 
-    * `:single` attempts to re-query a specific site by domain and should be done
-      only when the initial Cache.get attempt resulted with `nil`. Single refresh will
-      write `%Ecto.NoResultsError{}` to the cache so that subsequent Cache.get calls
-      indicate that we already failed to retrieve a Site.
+    * `:updated_recently` attempts to re-query sites updated within the last
+      15 minutes only, to account for most recent changes. This refresh
+      is lighter on the database and is meant to be executed more frequently
+      (via `Cache.Warmer.RecentlyUpdated`).
 
-      This helps in recognising missing/deleted Sites with minimal number of DB lookups
-      across a disconnected cluster within the periodic refresh window.
-
-      Refreshing a single Site emits a telemetry event including `duration` measurement
-      and meta-data indicating whether the site was found in the DB or is missing still.
-      The telemetry event is defined with `telemetry_event_refresh/2`.
+  Refreshing the cache emits telemetry event defined as per `telemetry_event_refresh/2`.
 
   The `@cached_schema_fields` attribute defines the list of DB columns
   queried on each cache refresh.
@@ -49,6 +44,7 @@ defmodule Plausible.Site.Cache do
   alias Plausible.Site
 
   @cache_name :sites_by_domain
+  @modes [:all, :updated_recently]
 
   @cached_schema_fields ~w(
      id
@@ -57,8 +53,7 @@ defmodule Plausible.Site.Cache do
      ingest_rate_limit_threshold
    )a
 
-  @type not_found_in_db() :: %Ecto.NoResultsError{}
-  @type t() :: Site.t() | not_found_in_db()
+  @type t() :: Site.t()
 
   def name(), do: @cache_name
 
@@ -75,22 +70,36 @@ defmodule Plausible.Site.Cache do
 
   @spec refresh_all(Keyword.t()) :: :ok
   def refresh_all(opts \\ []) do
-    cache_name = Keyword.get(opts, :cache_name, @cache_name)
+    sites_by_domain_query =
+      from s in Site,
+        select: {
+          s.domain,
+          %{struct(s, ^@cached_schema_fields) | from_cache?: true}
+        }
 
-    measure_duration(telemetry_event_refresh(cache_name, :all), fn ->
-      sites_by_domain_query =
-        from s in Site,
-          select: {
-            s.domain,
-            %{struct(s, ^@cached_schema_fields) | from_cache?: true}
-          }
+    refresh(
+      :all,
+      sites_by_domain_query,
+      Keyword.put(opts, :delete_stale_items?, true)
+    )
+  end
 
-      sites_by_domain = Plausible.Repo.all(sites_by_domain_query)
+  @spec refresh_updated_recently(Keyword.t()) :: :ok
+  def refresh_updated_recently(opts \\ []) do
+    recently_updated_sites_query =
+      from s in Site,
+        order_by: [asc: s.updated_at],
+        where: s.updated_at > ago(^15, "minute"),
+        select: {
+          s.domain,
+          %{struct(s, ^@cached_schema_fields) | from_cache?: true}
+        }
 
-      :ok = merge(sites_by_domain, opts)
-    end)
-
-    :ok
+    refresh(
+      :updated_recently,
+      recently_updated_sites_query,
+      Keyword.put(opts, :delete_stale_items?, false)
+    )
   end
 
   @spec merge(new_items :: [Site.t()], opts :: Keyword.t()) :: :ok
@@ -99,18 +108,20 @@ defmodule Plausible.Site.Cache do
 
   def merge(new_items, opts) do
     cache_name = Keyword.get(opts, :cache_name, @cache_name)
-    {:ok, old_keys} = Cachex.keys(cache_name)
-
-    new = MapSet.new(Enum.into(new_items, [], fn {k, _} -> k end))
-    old = MapSet.new(old_keys)
-
     true = Cachex.put_many!(cache_name, new_items)
 
-    old
-    |> MapSet.difference(new)
-    |> Enum.each(fn k ->
-      Cachex.del(cache_name, k)
-    end)
+    if Keyword.get(opts, :delete_stale_items?, true) do
+      {:ok, old_keys} = Cachex.keys(cache_name)
+
+      new = MapSet.new(Enum.into(new_items, [], fn {k, _} -> k end))
+      old = MapSet.new(old_keys)
+
+      old
+      |> MapSet.difference(new)
+      |> Enum.each(fn k ->
+        Cachex.del(cache_name, k)
+      end)
+    end
 
     :ok
   end
@@ -152,29 +163,8 @@ defmodule Plausible.Site.Cache do
     end
   end
 
-  @spec refresh_one(String.t(), Keyword.t()) :: {:ok, t()} | {:error, any()}
-  def refresh_one(domain, opts) do
-    cache_name = Keyword.get(opts, :cache_name, @cache_name)
-    force? = Keyword.get(opts, :force?, false)
-
-    if not enabled?() and not force?, do: raise("Cache: '#{cache_name}' is disabled")
-
-    measure_duration_with_metadata(telemetry_event_refresh(cache_name, :one), fn ->
-      {found_in_db?, item_to_cache} = select_one(domain)
-
-      case Cachex.put(cache_name, domain, item_to_cache) do
-        {:ok, _} ->
-          result = {:ok, item_to_cache}
-          {result, with_telemetry_metadata(found_in_db?: found_in_db?)}
-
-        {:error, _} = error ->
-          {error, with_telemetry_metadata(error: true)}
-      end
-    end)
-  end
-
-  @spec telemetry_event_refresh(atom(), :all | :one) :: list(atom())
-  def telemetry_event_refresh(cache_name, mode) when mode in [:all, :one] do
+  @spec telemetry_event_refresh(atom(), atom()) :: list(atom())
+  def telemetry_event_refresh(cache_name \\ @cache_name, mode) when mode in @modes do
     [:plausible, :cache, cache_name, :refresh, mode]
   end
 
@@ -182,26 +172,15 @@ defmodule Plausible.Site.Cache do
     Application.fetch_env!(:plausible, :sites_by_domain_cache_enabled) == true
   end
 
-  defp select_one(domain) do
-    site_by_domain_query =
-      from s in Site,
-        where: s.domain == ^domain,
-        select: %{struct(s, ^@cached_schema_fields) | from_cache?: true}
+  defp refresh(mode, query, opts) when mode in @modes do
+    cache_name = Keyword.get(opts, :cache_name, @cache_name)
 
-    case Plausible.Repo.one(site_by_domain_query) do
-      nil -> {false, %Ecto.NoResultsError{}}
-      site -> {true, site}
-    end
-  end
+    measure_duration(telemetry_event_refresh(cache_name, mode), fn ->
+      sites_by_domain = Plausible.Repo.all(query)
+      :ok = merge(sites_by_domain, opts)
+    end)
 
-  defp with_telemetry_metadata(props) do
-    Enum.into(props, %{})
-  end
-
-  defp measure_duration_with_metadata(event, fun) when is_function(fun, 0) do
-    {duration, {result, telemetry_metadata}} = time_it(fun)
-    :telemetry.execute(event, %{duration: duration}, telemetry_metadata)
-    result
+    :ok
   end
 
   defp measure_duration(event, fun) when is_function(fun, 0) do
