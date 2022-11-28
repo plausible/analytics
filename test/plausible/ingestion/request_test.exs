@@ -12,8 +12,8 @@ defmodule Plausible.Ingestion.RequestTest do
 
     errors = Keyword.keys(changeset.errors)
     assert :event_name in errors
-    assert :hostname in errors
     assert :domain in errors
+    assert :url in errors
   end
 
   test "request cannot be built from non-json payload" do

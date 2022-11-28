@@ -128,19 +128,25 @@ defmodule Plausible.Ingestion.Request do
   end
 
   defp put_uri(changeset, %{} = request_body) do
-    if url = request_body["u"] || request_body["url"] do
-      Changeset.put_change(changeset, :uri, URI.parse(url))
-    else
-      changeset
+    url = request_body["u"] || request_body["url"]
+
+    case url do
+      nil ->
+        Changeset.add_error(changeset, :url, "is required")
+
+      url when is_binary(url) ->
+        Changeset.put_change(changeset, :uri, URI.parse(url))
+
+      _ ->
+        Changeset.add_error(changeset, :url, "must be a string")
     end
   end
 
   defp put_hostname(changeset) do
     host =
       case changeset.changes[:uri] do
-        %{host: empty} when empty in ["", nil] -> "(none)"
-        %{host: host} when is_binary(host) -> host
-        _ -> nil
+        %{host: host} when is_binary(host) and host != "" -> host
+        _ -> "(none)"
       end
 
     Changeset.put_change(changeset, :hostname, sanitize_hostname(host))
