@@ -50,10 +50,12 @@ defmodule Mix.Tasks.SendPageview do
     body = get_body(parsed_opts)
 
     case Plausible.HTTPClient.post(url, headers, body) do
-      {:ok, _} ->
+      {:ok, resp} ->
         IO.puts(
           "✅ Successfully sent #{body[:name]} event to #{url} ✅ \n\nip=#{ip}\nuser_agent=#{user_agent}\nbody= #{inspect(body, pretty: true)}"
         )
+
+        IO.puts("Response headers: " <> inspect(resp.headers, pretty: true))
 
       {:error, e} ->
         IO.puts("❌ Could not send event to #{url}. Got the following error: \n\n #{inspect(e)}")
