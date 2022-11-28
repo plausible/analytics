@@ -68,6 +68,11 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
       count: sessions_count,
       hit_rate: sessions_hit_rate
     })
+
+    :telemetry.execute([:prom_ex, :plugin, :cachex, :sites], %{
+      count: Plausible.Site.Cache.size(),
+      hit_rate: Plausible.Site.Cache.hit_rate()
+    })
   end
 
   defp write_buffer_metrics(metric_prefix, poll_rate) do
@@ -109,13 +114,21 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         last_value(
           metric_prefix ++ [:cache, :user_agents, :hit_ratio],
           event_name: [:prom_ex, :plugin, :cachex, :user_agents],
-          description: "UA cache hit ratio",
           measurement: :hit_rate
         ),
         last_value(
           metric_prefix ++ [:cache, :sessions, :hit_ratio],
           event_name: [:prom_ex, :plugin, :cachex, :sessions],
-          description: "Sessions cache hit ratio",
+          measurement: :hit_rate
+        ),
+        last_value(
+          metric_prefix ++ [:cache, :sites, :size],
+          event_name: [:prom_ex, :plugin, :cachex, :sites],
+          measurement: :count
+        ),
+        last_value(
+          metric_prefix ++ [:cache, :sites, :hit_ratio],
+          event_name: [:prom_ex, :plugin, :cachex, :sites],
           measurement: :hit_rate
         )
       ]
