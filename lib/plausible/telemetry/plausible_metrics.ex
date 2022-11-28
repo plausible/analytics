@@ -33,7 +33,7 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           metric_prefix ++ [:cache_warmer, :sites, :refresh, :all],
           event_name: Site.Cache.telemetry_event_refresh(:all),
           reporter_options: [
-            buckets: [500, 1000, 2000, 5000, 10000]
+            buckets: [500, 1000, 2000, 5000, 10_000]
           ],
           unit: {:native, :millisecond},
           measurement: :duration
@@ -42,7 +42,7 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           metric_prefix ++ [:cache_warmer, :sites, :refresh, :updated_recently],
           event_name: Site.Cache.telemetry_event_refresh(:updated_recently),
           reporter_options: [
-            buckets: [500, 1000, 2000, 5000, 10000]
+            buckets: [500, 1000, 2000, 5000, 10_000]
           ],
           unit: {:native, :millisecond},
           measurement: :duration
