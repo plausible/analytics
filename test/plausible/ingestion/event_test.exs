@@ -30,7 +30,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert {:ok, request} = Request.build(conn)
 
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
-    assert dropped.drop_reason == :deny
+    assert dropped.drop_reason == :not_found
   end
 
   test "event pipeline drops a request when referrer is spam" do
@@ -80,7 +80,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert {:ok, request} = Request.build(conn)
 
     assert {:ok, %{buffered: [_], dropped: [dropped]}} = Event.build_and_buffer(request)
-    assert dropped.drop_reason == :deny
+    assert dropped.drop_reason == :not_found
   end
 
   test "event pipeline selectively drops an event when rate-limited" do

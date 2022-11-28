@@ -1,30 +1,18 @@
 defmodule Plausible.Site.GateKeeper do
-  @allow :allow
-  @block :block
-  @deny :deny
-  @throttle :throttle
+  @type policy() :: :allow | :not_found | :block | :throttle
+  @policy_for_non_existing_sites :not_found
+  @policy_on_rate_limiting_backend_error :allow
 
-  @type policy() :: :allow | :deny | :block | :throttle
-
-  @policy_for_non_existing_sites @deny
-  @policy_on_rate_limiting_backend_error @allow
-
-  defstruct passed?: false,
-            policy: nil
-
-  @type t() :: %__MODULE__{
-          passed?: boolean(),
-          policy: policy()
-        }
+  @type t() :: :allow | {:deny, policy()}
 
   @moduledoc """
   Thin wrapper around Hammer for gate keeping domain-specific events
-  during the ingestion phase. Currently there are two policies
-  on which the `allowance/2` function operates:
-    * `:allow`
-    * `:deny`
-    * `:block` (synonymous to `:deny`, indicates disabled sites)
-    * `:throttle` (synonymous to `:deny`, indicates rate limiting)
+  during the ingestion phase. When the site is allowed, gate keeping
+  check returns `:allow`, otherwise a `:deny` tagged tuple is returned
+  with one of the following policy markers:
+    * `:not_found` (indicates site not found in cache)
+    * `:block` (indicates disabled sites)
+    * `:throttle` (indicates rate limiting)
 
   Rate Limiting buckets are configured per site (externally via the CRM).
   See: `Plausible.Site`
@@ -45,14 +33,12 @@ defmodule Plausible.Site.GateKeeper do
 
   require Logger
 
-  @spec allowance(String.t(), Keyword.t()) :: t()
-  def allowance(domain, opts \\ []) when is_binary(domain) do
-    policy = policy(domain, opts)
-
-    %__MODULE__{
-      policy: policy,
-      passed?: policy == @allow
-    }
+  @spec check(String.t(), Keyword.t()) :: t()
+  def check(domain, opts \\ []) when is_binary(domain) do
+    case policy(domain, opts) do
+      :allow -> :allow
+      other -> {:deny, other}
+    end
   end
 
   @spec key(String.t()) :: String.t()
@@ -81,11 +67,11 @@ defmodule Plausible.Site.GateKeeper do
   end
 
   defp check_rate_limit(%Site{ingest_rate_limit_threshold: nil}, _opts) do
-    @allow
+    :allow
   end
 
   defp check_rate_limit(%Site{ingest_rate_limit_threshold: 0}, _opts) do
-    @block
+    :block
   end
 
   defp check_rate_limit(%Site{ingest_rate_limit_threshold: threshold} = site, opts)
@@ -95,10 +81,10 @@ defmodule Plausible.Site.GateKeeper do
 
     case Hammer.check_rate(key, scale_ms, threshold) do
       {:deny, _} ->
-        @throttle
+        :throttle
 
       {:allow, _} ->
-        @allow
+        :allow
 
       {:error, reason} ->
         Logger.error(

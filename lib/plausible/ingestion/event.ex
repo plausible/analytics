@@ -42,17 +42,17 @@ defmodule Plausible.Ingestion.Event do
         for domain <- domains, do: drop(new(domain, request), :spam_referrer)
       else
         Enum.reduce(domains, [], fn domain, acc ->
-          allowance = GateKeeper.allowance(domain)
+          case GateKeeper.check(domain) do
+            :allow ->
+              processed =
+                domain
+                |> new(request)
+                |> process_unless_dropped(pipeline())
 
-          if allowance.passed? do
-            processed =
-              domain
-              |> new(request)
-              |> process_unless_dropped(pipeline())
+              [processed | acc]
 
-            [processed | acc]
-          else
-            [drop(new(domain, request), allowance.policy) | acc]
+            {:deny, reason} ->
+              [drop(new(domain, request), reason) | acc]
           end
         end)
       end
