@@ -55,6 +55,7 @@ defmodule Plausible.Site.Cache do
 
   @type t() :: Site.t()
 
+  @spec name() :: atom()
   def name(), do: @cache_name
 
   @spec child_spec(Keyword.t()) :: Supervisor.child_spec()
@@ -66,6 +67,22 @@ defmodule Plausible.Site.Cache do
       {Cachex, name: cache_name, limit: nil, stats: true},
       id: child_id
     )
+  end
+
+  @doc """
+  Ensures the cache has non-zero size unless no sites exist.
+  Useful for orchestrating app startup to prevent the service
+  going up asynchronously with an empty cache.
+  """
+  @spec ready?(atom()) :: boolean
+  def ready?(cache_name \\ @cache_name) do
+    case size(cache_name) do
+      n when n > 0 ->
+        true
+
+      0 ->
+        Plausible.Repo.aggregate(Site, :count) == 0
+    end
   end
 
   @spec refresh_all(Keyword.t()) :: :ok

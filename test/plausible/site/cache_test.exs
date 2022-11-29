@@ -53,6 +53,24 @@ defmodule Plausible.Site.CacheTest do
       refute Cache.get("site3.example.com", cache_name: test, force?: true)
     end
 
+    test "cache is ready when no sites exist in the db", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+      assert Cache.ready?(test)
+    end
+
+    test "cache is not ready when sites exist in the db but cache needs refresh", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+      insert(:site)
+      refute Cache.ready?(test)
+    end
+
+    test "cache is ready when refreshed", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+      insert(:site)
+      :ok = Cache.refresh_all(cache_name: test)
+      assert Cache.ready?(test)
+    end
+
     test "cache exposes hit rate", %{test: test} do
       {:ok, _} = start_test_cache(test)
 

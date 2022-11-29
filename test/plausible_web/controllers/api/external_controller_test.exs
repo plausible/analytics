@@ -62,7 +62,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert conn.status == 400
     end
 
-    test "can send to multiple dashboards by listing multiple domains", %{
+    test "can send to multiple dashboards by listing multiple domains - same timestamp", %{
       conn: conn,
       domain: domain1
     } do
@@ -82,8 +82,34 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> post("/api/event", params)
 
       assert response(conn, 202) == "ok"
-      assert get_event(domain1)
-      assert get_event(domain2)
+      assert e1 = get_event(domain1)
+      assert e2 = get_event(domain2)
+
+      assert NaiveDateTime.compare(e1.timestamp, e2.timestamp) == :eq
+    end
+
+    test "timestamps differ when two events sent in a row", %{conn: conn, domain: domain} do
+      params = %{
+        domain: domain,
+        name: "pageview",
+        url: "http://gigride.live/",
+        referrer: "http://m.facebook.com/",
+        screen_width: 1440
+      }
+
+      conn
+      |> put_req_header("user-agent", @user_agent)
+      |> post("/api/event", params)
+
+      :timer.sleep(1500)
+
+      conn
+      |> put_req_header("user-agent", @user_agent)
+      |> post("/api/event", params)
+
+      [e1, e2] = get_events(domain)
+
+      assert NaiveDateTime.compare(e1.timestamp, e2.timestamp) == :gt
     end
 
     test "www. is stripped from domain", %{conn: conn, domain: domain} do
@@ -1120,7 +1146,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "returns 200 OK", %{conn: conn} do
       conn = get(conn, "/api/health")
 
-      assert conn.status == 200
+      assert payload = json_response(conn, 200)
+      assert payload["postgres"] == "ok"
+      assert payload["clickhouse"] == "ok"
+      assert payload["sites_cache"] == "ok"
     end
   end
 
