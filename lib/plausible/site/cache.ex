@@ -69,6 +69,11 @@ defmodule Plausible.Site.Cache do
     )
   end
 
+  @doc """
+  Ensures the cache has non-zero size unless no sites exist.
+  Useful for orchestrating app startup to prevent the service
+  going up asynchronously with an empty cache.
+  """
   @spec ready?(atom()) :: boolean
   def ready?(cache_name \\ @cache_name) do
     case size(cache_name) do
