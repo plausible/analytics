@@ -43,6 +43,24 @@ defmodule Plausible.Ingestion.RequestTest do
     assert request.props == %{}
   end
 
+  test "requests include moving timestamp" do
+    payload = %{
+      name: "pageview",
+      url: "http://dummy.site"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    assert {:ok, request1} = Request.build(conn)
+    :timer.sleep(1500)
+    assert {:ok, request2} = Request.build(conn)
+
+    ts1 = request1.timestamp
+    ts2 = request2.timestamp
+
+    assert NaiveDateTime.compare(ts1, ts2) == :lt
+  end
+
   test "request can be built with domain" do
     payload = %{
       name: "pageview",

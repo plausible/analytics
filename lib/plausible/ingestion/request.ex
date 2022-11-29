@@ -22,8 +22,7 @@ defmodule Plausible.Ingestion.Request do
     field :props, :map
     field :query_params, :map
 
-    field :timestamp, :naive_datetime,
-      default: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+    field :timestamp, :naive_datetime
   end
 
   @type t() :: %__MODULE__{}
@@ -33,7 +32,13 @@ defmodule Plausible.Ingestion.Request do
   Builds and initially validates %Plausible.Ingestion.Request{} struct from %Plug.Conn{}.
   """
   def build(%Plug.Conn{} = conn) do
-    changeset = Changeset.change(%__MODULE__{})
+    changeset =
+      %__MODULE__{}
+      |> Changeset.change()
+      |> Changeset.put_change(
+        :timestamp,
+        NaiveDateTime.utc_now()
+      )
 
     case parse_body(conn) do
       {:ok, request_body} ->
