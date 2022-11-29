@@ -1146,7 +1146,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "returns 200 OK", %{conn: conn} do
       conn = get(conn, "/api/health")
 
-      assert conn.status == 200
+      assert payload = json_response(conn, 200)
+      assert payload["postgres"] == "ok"
+      assert payload["clickhouse"] == "ok"
+      assert payload["sites_cache"] == "ok"
     end
   end
 
