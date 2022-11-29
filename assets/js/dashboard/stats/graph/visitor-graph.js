@@ -295,8 +295,7 @@ class LineGraph extends React.Component {
             { this.downloadLink() }
             { this.samplingNotice() }
             { this.importedNotice() }
-            { site.flags && site.flags.intervals &&
-              <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={this.props.updateInterval}/> }
+            <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={this.props.updateInterval}/>
           </div>
           <FadeIn show={graphData}>
             <canvas id="main-graph-canvas" className={'mt-4 select-none ' + extraClass} width="1054" height="342"></canvas>
