@@ -60,6 +60,7 @@ All notable changes to this project will be documented in this file.
 - Restore compatibility with older format of shared links [plausible/analytics#2225](https://github.com/plausible/analytics/pull/2225)
 - Fix 'All time' period for sites with no recorded stats [plausible/analytics#2277](https://github.com/plausible/analytics/pull/2277)
 - Ensure settings page can be rendered after a form error [plausible/analytics#2278](https://github.com/plausible/analytics/pull/2278)
+- Ensure newlines from settings files are trimmed [plausible/analytics#2480](https://github.com/plausible/analytics/pull/2480)
 
 ### Changed
 - `script.file-downloads.outbound-links.js` only sends an outbound link event when an outbound download link is clicked
