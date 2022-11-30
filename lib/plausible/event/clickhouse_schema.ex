@@ -15,8 +15,6 @@ defmodule Plausible.ClickhouseEvent do
     field :site_id, :integer
     field :page_id, :integer
     field :job_id, :integer
-    field :campaign_id, :integer
-    field :product_id, :integer
     field :timestamp, :naive_datetime
 
     field :referrer, :string, default: ""
@@ -26,6 +24,8 @@ defmodule Plausible.ClickhouseEvent do
     field :utm_campaign, :string, default: ""
     field :utm_content, :string, default: ""
     field :utm_term, :string, default: ""
+    field :campaign_id, :string, default: ""
+    field :product_id, :string, default: ""
 
     field :country_code, :string, default: ""
     field :subdivision1_code, :string, default: ""
