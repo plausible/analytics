@@ -98,16 +98,32 @@
     payload.h = 1
     {{/if}}
 
-    var request = new XMLHttpRequest();
-    request.open('POST', endpoint, true);
-    request.setRequestHeader('Content-Type', 'text/plain');
+    if (window.fetch) {
+      // if fetch is available, use it because the 'keepalive' flag
+      // will ensure delivery even if the user navigates away
+      window.fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      }).then(() => {
+        options && options.callback && options.callback();
+      });
+    } else {
+      // fallback to XMLHttpRequest
+      var request = new XMLHttpRequest();
+      request.open('POST', endpoint, true);
+      request.setRequestHeader('Content-Type', 'text/plain');
 
-    request.send(JSON.stringify(payload));
+      request.send(JSON.stringify(payload));
 
-    request.onreadystatechange = function() {
-      if (request.readyState === 4) {
-        options && options.callback && options.callback()
-      }
+      request.onreadystatechange = function() {
+        if (request.readyState === 4) {
+          options && options.callback && options.callback();
+        }
+      };
     }
   }
 
