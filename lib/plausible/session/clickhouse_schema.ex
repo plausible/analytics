@@ -10,8 +10,6 @@ defmodule Plausible.ClickhouseSession do
     field :session_id, :integer
     field :company_id, :integer
     field :site_id, :integer
-    field :campaign_id, :integer
-    field :product_id, :integer
 
     field :start, :naive_datetime
     field :duration, :integer
@@ -29,6 +27,8 @@ defmodule Plausible.ClickhouseSession do
     field :utm_term, :string
     field :referrer, :string
     field :referrer_source, :string
+    field :campaign_id, :string
+    field :product_id, :string
 
     field :country_code, :string, default: ""
     field :subdivision1_code, :string, default: ""
