@@ -74,6 +74,9 @@ All notable changes to this project will be documented in this file.
 - Do not display ZZ country code in countries report [PR#1934](https://github.com/plausible/analytics#2223)
 - Add fallback icon for when DDG favicon cannot be fetched [PR#2279](https://github.com/plausible/analytics#2279)
 
+### Security
+- Add Content-Security-Policy header to favicon path
+
 ## v1.4.1 - 2021-11-29
 
 ### Fixed

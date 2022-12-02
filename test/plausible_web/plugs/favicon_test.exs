@@ -38,6 +38,26 @@ defmodule PlausibleWeb.FaviconTest do
     assert conn.resp_body == "favicon response body"
   end
 
+  test "sets content-disposition and content-security-policy", %{plug_opts: plug_opts} do
+    expect(
+      Plausible.HTTPClient.Mock,
+      :get,
+      fn "https://icons.duckduckgo.com/ip3/plausible.io.ico" ->
+        {:ok, %Finch.Response{status: 200, body: "favicon response body"}}
+      end
+    )
+
+    conn =
+      conn(:get, "/favicon/sources/plausible.io")
+      |> Favicon.call(plug_opts)
+
+    assert conn.halted
+    assert conn.status == 200
+    assert conn.resp_body == "favicon response body"
+    assert Plug.Conn.get_resp_header(conn, "content-security-policy") == ["script-src 'none'"]
+    assert Plug.Conn.get_resp_header(conn, "content-disposition") == ["attachment"]
+  end
+
   test "maps a categorized source to URL for favicon", %{plug_opts: plug_opts} do
     expect(
       Plausible.HTTPClient.Mock,
@@ -79,10 +99,7 @@ defmodule PlausibleWeb.FaviconTest do
 
     assert conn.halted
     assert conn.status == 200
-
-    assert conn.resp_headers == [
-             {"content-type", "should-pass-through"}
-           ]
+    assert Plug.Conn.get_resp_header(conn, "content-type") == ["should-pass-through"]
   end
 
   test "overrides content-type header if proxied response starts with <svg", %{
@@ -106,10 +123,7 @@ defmodule PlausibleWeb.FaviconTest do
       |> Favicon.call(plug_opts)
 
     assert conn.halted
-
-    assert conn.resp_headers == [
-             {"content-type", "image/svg+xml; charset=utf-8"}
-           ]
+    assert Plug.Conn.get_resp_header(conn, "content-type") == ["image/svg+xml; charset=utf-8"]
   end
 
   describe "Fallback to placeholder icon" do
