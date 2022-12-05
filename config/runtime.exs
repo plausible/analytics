@@ -1,5 +1,6 @@
 import Config
 import Plausible.ConfigHelpers
+require Logger
 
 if config_env() in [:dev, :test] do
   Envy.load(["config/.env.#{config_env()}"])
@@ -92,10 +93,26 @@ ch_db_url =
 
 ### Mandatory params End
 
+build_metadata_raw = get_var_from_path_or_env(config_dir, "BUILD_METADATA", "{}")
+
 build_metadata =
-  config_dir
-  |> get_var_from_path_or_env("BUILD_METADATA", "{}")
-  |> Jason.decode!()
+  case Jason.decode(build_metadata_raw) do
+    {:ok, build_metadata} ->
+      build_metadata
+
+    {:error, error} ->
+      error = Exception.format(:error, error)
+
+      Logger.warn("""
+      failed to parse $BUILD_METADATA: #{error}
+
+          $BUILD_METADATA is set to #{build_metadata_raw}\
+      """)
+
+      Logger.warn("falling back to empty build metadata, as if $BUILD_METADATA was set to {}")
+
+      _fallback = %{}
+  end
 
 runtime_metadata = [
   version: get_in(build_metadata, ["labels", "org.opencontainers.image.version"]),
