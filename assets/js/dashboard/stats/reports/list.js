@@ -32,8 +32,11 @@ export default function ListReport(props) {
   const showConversionRate = !!props.query.filters.goal
   const prevQuery = useRef();
 
-  function fetchData() {
-    if (typeof(prevQuery.current) === 'undefined' || prevQuery.current !== props.query) {
+  function fetchData(force=false) {
+    const isFirstPaint = typeof(prevQuery.current) === 'undefined'
+    const queryHasChanged = prevQuery.current !== props.query
+
+    if (isFirstPaint || queryHasChanged || force) {
       prevQuery.current = props.query;
       setState({loading: true, list: null})
       props.fetchData()
@@ -41,10 +44,14 @@ export default function ListReport(props) {
     }
   }
 
+  function maybeForceFetchData() {
+    const shouldForce = props.query.period == 'realtime'
+    fetchData(shouldForce)
+  }
 
   function onVisible() {
     fetchData()
-    if (props.timer) props.timer.onTick(fetchData)
+    document.addEventListener('tick', maybeForceFetchData)
   }
 
 
@@ -60,7 +67,11 @@ export default function ListReport(props) {
     return props.valueLabel || 'Visitors'
   }
 
-  useEffect(fetchData, [props.query]);
+  useEffect(() => {
+    fetchData()
+
+    return () => { document.removeEventListener('tick', maybeForceFetchData) }
+  }, [props.query]);
 
   function renderListItem(listItem) {
     const query = new URLSearchParams(window.location.search)
