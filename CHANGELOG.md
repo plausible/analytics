@@ -3,7 +3,12 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-## v1.5.0 - 2022-12-02 
+## v1.5.1 - 2022-12-06
+
+### Fixed
+- Fallback to empty build metadata when failing to parse $BUILD_METADATA plausible/analytics#2503 
+
+## v1.5.0 - 2022-12-02
 
 ### Added
 - Set a different interval on the top graph plausible/analytics#1574 (thanks to @Vigasaurus for this feature)
