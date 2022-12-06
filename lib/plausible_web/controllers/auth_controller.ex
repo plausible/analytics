@@ -578,7 +578,7 @@ defmodule PlausibleWeb.AuthController do
         conn
         |> put_flash(
           :error,
-          "We are unable to authenticate your Google Analytics account at the moment. The authentication service is currently unavailable. Please try again in a few moments."
+          "We are unable to authenticate your Google Analytics account because Google's authentication service is temporarily unavailable. Please try again in a few moments."
         )
         |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
 
