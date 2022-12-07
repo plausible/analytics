@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom'
 
 import FadeIn from '../../fade-in'
@@ -28,6 +28,7 @@ function ExternalLink({item, externalLinkDest}) {
 
 export default function ListReport(props) {
   const [state, setState] = useState({loading: true, list: null})
+  const [visible, setVisible] = useState(false)
   const valueKey = props.valueKey || 'visitors'
   const showConversionRate = !!props.query.filters.goal
   const prevQuery = useRef();
@@ -44,16 +45,23 @@ export default function ListReport(props) {
     }
   }
 
-  function maybeForceFetchData() {
-    const shouldForce = props.query.period == 'realtime'
-    fetchData(shouldForce)
-  }
+  const maybeForceFetchData = useCallback(
+    () => {
+      const shouldForce = props.query.period == 'realtime'
+      fetchData(shouldForce)
+    }, [])
 
   function onVisible() {
     fetchData()
+    setVisible(true)
     document.addEventListener('tick', maybeForceFetchData)
   }
 
+  useEffect(() => {
+    if (visible) { fetchData() }
+
+    return () => { document.removeEventListener('tick', maybeForceFetchData) }
+  }, [props.query]);
 
   function label() {
     if (props.query.period === 'realtime') {
@@ -66,12 +74,6 @@ export default function ListReport(props) {
 
     return props.valueLabel || 'Visitors'
   }
-
-  useEffect(() => {
-    fetchData()
-
-    return () => { document.removeEventListener('tick', maybeForceFetchData) }
-  }, [props.query]);
 
   function renderListItem(listItem) {
     const query = new URLSearchParams(window.location.search)
