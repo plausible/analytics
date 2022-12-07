@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom'
 
 import FadeIn from '../../fade-in'
@@ -31,37 +31,27 @@ export default function ListReport(props) {
   const [visible, setVisible] = useState(false)
   const valueKey = props.valueKey || 'visitors'
   const showConversionRate = !!props.query.filters.goal
-  const prevQuery = useRef();
 
-  function fetchData(force=false) {
-    const isFirstPaint = typeof(prevQuery.current) === 'undefined'
-    const queryHasChanged = prevQuery.current !== props.query
-
-    if (isFirstPaint || queryHasChanged || force) {
-      prevQuery.current = props.query;
+  const fetchData = useCallback(() => {
       setState({loading: true, list: null})
       props.fetchData()
         .then((res) => setState({loading: false, list: res}))
-    }
-  }
-
-  const maybeForceFetchData = useCallback(
-    () => {
-      const shouldForce = props.query.period == 'realtime'
-      fetchData(shouldForce)
-    }, [])
+    }, [props.query])
 
   function onVisible() {
-    fetchData()
     setVisible(true)
-    document.addEventListener('tick', maybeForceFetchData)
+    if (props.query.period == 'realtime') {
+      document.addEventListener('tick', fetchData)
+    }
   }
 
   useEffect(() => {
     if (visible) { fetchData() }
+  }, [props.query, visible]);
 
-    return () => { document.removeEventListener('tick', maybeForceFetchData) }
-  }, [props.query]);
+  useEffect(() => {
+    return () => { document.removeEventListener('tick', fetchData) }
+  }, []);
 
   function label() {
     if (props.query.period === 'realtime') {
