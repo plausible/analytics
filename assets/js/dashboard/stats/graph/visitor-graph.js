@@ -358,9 +358,9 @@ export default class VisitorGraph extends React.Component {
   onVisible() {
     this.setState({mainGraphLoadingState: LOADING_STATE.loading}, this.maybeRollbackInterval)
     this.fetchTopStatData()
-    if (this.props.timer) {
-      this.props.timer.onTick(this.maybeRollbackInterval)
-      this.props.timer.onTick(this.fetchTopStatData)
+    if (this.props.query.period === 'realtime') {
+      document.addEventListener('tick', this.maybeRollbackInterval)
+      document.addEventListener('tick', this.fetchTopStatData)
     }
   }
 
@@ -396,6 +396,11 @@ export default class VisitorGraph extends React.Component {
         this.setState({ metric: topStatLabels[0] })
       }
     }
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('tick', this.maybeRollbackInterval)
+    document.removeEventListener('tick', this.fetchTopStatData)
   }
 
   updateMetric(newMetric) {
