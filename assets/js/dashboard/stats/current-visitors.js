@@ -8,11 +8,16 @@ export default class CurrentVisitors extends React.Component {
   constructor(props) {
     super(props)
     this.state = {currentVisitors: null}
+    this.updateCount = this.updateCount.bind(this)
   }
 
   componentDidMount() {
     this.updateCount()
-    this.props.timer.onTick(this.updateCount.bind(this))
+    document.addEventListener('tick', this.updateCount)
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('tick', this.updateCount)
   }
 
   updateCount() {
