@@ -293,7 +293,7 @@ export default class SourceList extends React.Component {
   renderTabs() {
     const activeClass = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading truncate text-left'
     const defaultClass = 'hover:text-indigo-600 cursor-pointer truncate text-left'
-    const dropdownOptions = ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content']
+    const dropdownOptions = Object.keys(UTM_TAGS)
     let buttonText = UTM_TAGS[this.state.tab] ? UTM_TAGS[this.state.tab].label : 'Campaigns'
 
     return (
@@ -348,15 +348,7 @@ export default class SourceList extends React.Component {
   render() {
     if (this.state.tab === 'all') {
       return <AllSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
-    } else if (this.state.tab === 'utm_medium') {
-      return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
-    } else if (this.state.tab === 'utm_source') {
-      return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
-    } else if (this.state.tab === 'utm_campaign') {
-      return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
-    } else if (this.state.tab === 'utm_content') {
-      return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
-    } else if (this.state.tab === 'utm_term') {
+    } else if (Object.keys(UTM_TAGS).includes(this.state.tab)) {
       return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
     }
   }
