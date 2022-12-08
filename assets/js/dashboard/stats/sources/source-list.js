@@ -155,11 +155,12 @@ const UTM_TAGS = {
 class UTMSources extends React.Component {
   constructor(props) {
     super(props)
+    this.onVisible = this.onVisible.bind(this)
     this.fetchReferrers = this.fetchReferrers.bind(this)
     this.state = { loading: true }
   }
 
-  componentDidMount() {
+  onVisible() {
     this.fetchReferrers()
     if (this.props.query.period === 'realtime') {
       document.addEventListener('tick', this.fetchReferrers)
@@ -258,7 +259,7 @@ class UTMSources extends React.Component {
 
   renderContent() {
     return (
-      <React.Fragment>
+      <LazyLoader onVisible={this.onVisible}>
         <div className="flex justify-between w-full">
           <h3 className="font-bold dark:text-gray-100">Top Sources</h3>
           {this.props.renderTabs()}
@@ -267,7 +268,7 @@ class UTMSources extends React.Component {
         <FadeIn show={!this.state.loading} className="flex flex-col flex-grow">
           {this.renderList()}
         </FadeIn>
-      </React.Fragment>
+      </LazyLoader>
     )
   }
 
