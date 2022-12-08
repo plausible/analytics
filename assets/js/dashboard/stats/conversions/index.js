@@ -20,7 +20,7 @@ export default class Conversions extends React.Component {
       viewport: DEFAULT_WIDTH,
     }
     this.onVisible = this.onVisible.bind(this)
-
+    this.fetchConversions = this.fetchConversions.bind(this)
     this.handleResize = this.handleResize.bind(this);
   }
 
@@ -31,6 +31,7 @@ export default class Conversions extends React.Component {
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.handleResize, false);
+    document.removeEventListener('tick', this.fetchConversions)
   }
 
   handleResize() {
@@ -39,6 +40,9 @@ export default class Conversions extends React.Component {
 
   onVisible() {
     this.fetchConversions()
+    if (this.props.query.period === 'realtime') {
+      document.addEventListener('tick', this.fetchConversions)
+    }
   }
 
   componentDidUpdate(prevProps) {
