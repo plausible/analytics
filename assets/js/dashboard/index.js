@@ -7,31 +7,11 @@ import {parseQuery} from './query'
 import * as api from './api'
 import { withComparisonProvider } from './comparison-provider-hoc';
 
-const THIRTY_SECONDS = 30000
-
-class Timer {
-  constructor() {
-    this.listeners = []
-    this.intervalId = setInterval(this.dispatchTick.bind(this), THIRTY_SECONDS)
-  }
-
-  onTick(listener) {
-    this.listeners.push(listener)
-  }
-
-  dispatchTick() {
-    for (const listener of this.listeners) {
-      listener()
-    }
-  }
-}
-
 class Dashboard extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
       query: parseQuery(props.location.search, this.props.site),
-      timer: new Timer()
     }
   }
 
@@ -44,9 +24,9 @@ class Dashboard extends React.Component {
 
   render() {
     if (this.state.query.period === 'realtime') {
-      return <Realtime timer={this.state.timer} site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} query={this.state.query} />
+      return <Realtime site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} query={this.state.query} />
     } else {
-      return <Historical timer={this.state.timer} site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} query={this.state.query} />
+      return <Historical site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} query={this.state.query} />
     }
   }
 }

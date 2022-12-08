@@ -138,7 +138,7 @@ export default class Locations extends React.Component {
       return <Countries onClick={this.onCountryFilter('countries')} site={this.props.site} query={this.props.query} />
     case "map":
     default:
-      return <CountriesMap onClick={this.onCountryFilter('map')} site={this.props.site} query={this.props.query} timer={this.props.timer}/>
+      return <CountriesMap onClick={this.onCountryFilter('map')} site={this.props.site} query={this.props.query}/>
     }
   }
 
