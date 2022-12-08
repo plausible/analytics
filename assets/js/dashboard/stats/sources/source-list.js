@@ -155,12 +155,15 @@ const UTM_TAGS = {
 class UTMSources extends React.Component {
   constructor(props) {
     super(props)
+    this.fetchReferrers = this.fetchReferrers.bind(this)
     this.state = { loading: true }
   }
 
   componentDidMount() {
     this.fetchReferrers()
-    if (this.props.timer) this.props.timer.onTick(this.fetchReferrers.bind(this))
+    if (this.props.query.period === 'realtime') {
+      document.addEventListener('tick', this.fetchReferrers)
+    }
   }
 
   componentDidUpdate(prevProps) {
@@ -168,6 +171,10 @@ class UTMSources extends React.Component {
       this.setState({ loading: true, referrers: null })
       this.fetchReferrers()
     }
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('tick', this.fetchReferrers)
   }
 
   showNoRef() {
