@@ -344,4 +344,60 @@ defmodule Plausible.Google.ApiTest do
       end
     end
   end
+
+  test "list_views/1 returns view IDs grouped by hostname" do
+    expect(
+      Plausible.HTTPClient.Mock,
+      :get,
+      fn url, _headers ->
+        assert url ==
+                 "https://www.googleapis.com/analytics/v3/management/accounts/~all/webproperties/~all/profiles"
+
+        response = "fixture/ga_list_views.json" |> File.read!() |> Jason.decode!()
+        {:ok, %Finch.Response{status: 200, body: response}}
+      end
+    )
+
+    assert {:ok,
+            %{
+              "one.test" => [{"57238190 - one.test", "57238190"}],
+              "two.test" => [{"54460083 - two.test", "54460083"}]
+            }} == Plausible.Google.Api.list_views("access_token")
+  end
+
+  test "list_views/1 returns authentication_failed when request fails with HTTP 403" do
+    expect(
+      Plausible.HTTPClient.Mock,
+      :get,
+      fn _url, _headers ->
+        {:error, %Plausible.HTTPClient.Non200Error{reason: %{status: 403, body: %{}}}}
+      end
+    )
+
+    assert {:error, :authentication_failed} == Plausible.Google.Api.list_views("access_token")
+  end
+
+  test "list_views/1 returns authentication_failed when request fails with HTTP 401" do
+    expect(
+      Plausible.HTTPClient.Mock,
+      :get,
+      fn _url, _headers ->
+        {:error, %Plausible.HTTPClient.Non200Error{reason: %{status: 401, body: %{}}}}
+      end
+    )
+
+    assert {:error, :authentication_failed} == Plausible.Google.Api.list_views("access_token")
+  end
+
+  test "list_views/1 returns error when request fails with HTTP 500" do
+    expect(
+      Plausible.HTTPClient.Mock,
+      :get,
+      fn _url, _headers ->
+        {:error, %Plausible.HTTPClient.Non200Error{reason: %{status: 500, body: "server error"}}}
+      end
+    )
+
+    assert {:error, :unknown} == Plausible.Google.Api.list_views("access_token")
+  end
 end

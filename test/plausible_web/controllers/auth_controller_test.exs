@@ -759,6 +759,17 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
+  describe "GET /auth/google/callback" do
+    test "shows error and redirects back to settings when authentication fails", %{conn: conn} do
+      site = insert(:site)
+      callback_params = %{"error" => "access_denied", "state" => "[#{site.id},\"import\"]"}
+      conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :settings_general, site.domain)
+      assert get_flash(conn, :error) =~ "unable to authenticate your Google Analytics"
+    end
+  end
+
   defp mock_captcha_success() do
     mock_captcha(true)
   end
