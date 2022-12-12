@@ -6,7 +6,8 @@ All notable changes to this project will be documented in this file.
 ## v1.5.1 - 2022-12-06
 
 ### Fixed
-- Fallback to empty build metadata when failing to parse $BUILD_METADATA plausible/analytics#2503 
+- Automatically update all visible dashboard reports in the realtime view
+- Fallback to empty build metadata when failing to parse $BUILD_METADATA plausible/analytics#2503
 
 ## v1.5.0 - 2022-12-02
 
