@@ -114,7 +114,7 @@ class AllSources extends React.Component {
         </React.Fragment>
       )
     } else {
-      return <div className="font-medium text-center text-gray-500 mt-44">No data yet</div>
+      return <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">No data yet</div>
     }
   }
 
