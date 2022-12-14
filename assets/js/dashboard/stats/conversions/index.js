@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
+import FlipMove from 'react-flip-move'
+
 
 import Bar from '../bar'
 import PropBreakdown from './prop-breakdown'
@@ -106,8 +108,9 @@ export default class Conversions extends React.Component {
               <span className="inline-block w-20">CR</span>
             </div>
           </div>
-
-          { this.state.goals.map(this.renderGoal.bind(this)) }
+          <FlipMove>
+            { this.state.goals.map(this.renderGoal.bind(this)) }
+          </FlipMove>
         </React.Fragment>
       )
     }
