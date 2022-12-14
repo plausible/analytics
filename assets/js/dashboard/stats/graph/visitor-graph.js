@@ -415,7 +415,7 @@ export default class VisitorGraph extends React.Component {
 
   fetchGraphData() {
     if (!this.state.metric) {
-      this.setState({ mainGraphLoadingState: LOADING_STATE.ready, graphData: null })
+      this.setState({ mainGraphLoadingState: LOADING_STATE.loaded, graphData: null })
       return
     }
 
@@ -425,19 +425,19 @@ export default class VisitorGraph extends React.Component {
 
     api.get(url, this.props.query, params)
       .then((res) => {
-        this.setState({ mainGraphLoadingState: LOADING_STATE.ready, graphData: res })
+        this.setState({ mainGraphLoadingState: LOADING_STATE.loaded, graphData: res })
         return res
       })
       .catch((err) => {
         console.log(err)
-        this.setState({ mainGraphLoadingState: LOADING_STATE.ready, graphData: false })
+        this.setState({ mainGraphLoadingState: LOADING_STATE.loaded, graphData: false })
       })
   }
 
   fetchTopStatData() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/top-stats`, this.props.query)
       .then((res) => {
-        this.setState({ topStatsLoadingState: LOADING_STATE.ready, topStatData: res })
+        this.setState({ topStatsLoadingState: LOADING_STATE.loaded, topStatData: res })
         return res
       })
   }
@@ -448,8 +448,8 @@ export default class VisitorGraph extends React.Component {
 
     const theme = document.querySelector('html').classList.contains('dark') || false
 
-    const topStatsReadyOrRefreshing = (topStatsLoadingState === LOADING_STATE.ready || topStatsLoadingState === LOADING_STATE.refreshing)
-    const mainGraphReadyOrRefreshing = (mainGraphLoadingState === LOADING_STATE.ready || mainGraphLoadingState === LOADING_STATE.refreshing)
+    const topStatsReadyOrRefreshing = (topStatsLoadingState === LOADING_STATE.loaded || topStatsLoadingState === LOADING_STATE.refreshing)
+    const mainGraphReadyOrRefreshing = (mainGraphLoadingState === LOADING_STATE.loaded || mainGraphLoadingState === LOADING_STATE.refreshing)
     const noMetricOrRefreshing = (!metric || mainGraphLoadingState === LOADING_STATE.refreshing)
     const topStatAndGraphLoaded = !!(topStatData && graphData)
 
