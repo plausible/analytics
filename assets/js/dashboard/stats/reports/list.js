@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom'
+import FlipMove from 'react-flip-move';
+
 
 import FadeIn from '../../fade-in'
 import MoreLink from '../more-link'
@@ -33,7 +35,6 @@ export default function ListReport(props) {
   const showConversionRate = !!props.query.filters.goal
 
   const fetchData = useCallback(() => {
-      setState({loading: true, list: null})
       props.fetchData()
         .then((res) => setState({loading: false, list: res}))
     }, [props.query])
@@ -118,7 +119,9 @@ export default function ListReport(props) {
               {showConversionRate && <span className="inline-block w-20">CR</span>}
             </span>
           </div>
-          { state.list && state.list.map(renderListItem) }
+          <FlipMove>
+          { state.list.map(renderListItem) }
+          </FlipMove>
         </>
       )
     }
