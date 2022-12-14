@@ -325,21 +325,15 @@ export default class VisitorGraph extends React.Component {
     this.updateInterval = this.updateInterval.bind(this)
   }
 
-  isIntervalValid({ query, site }) {
-    const period = query?.period
-    const validIntervalsForPeriod = site.validIntervalsByPeriod[period] || []
-    const storedInterval = getStoredInterval(period, site.domain)
-
-    return validIntervalsForPeriod.includes(storedInterval)
+  isIntervalValid(interval) {
+    const validIntervals = this.props.site.validIntervalsByPeriod[this.props.query.period] || []
+    return validIntervals.includes(interval)
   }
 
   maybeRollbackInterval() {
-    if (this.isIntervalValid(this.props)) {
-      const interval = getStoredInterval(this.props.query.period, this.props.site.domain)
-
-      this.setState({interval}, () => {
-        this.fetchGraphData()
-      })
+    const interval = getStoredInterval(this.props.query.period, this.props.site.domain)
+    if (this.isIntervalValid(interval)) {
+      this.setState({interval}, this.fetchGraphData)
     } else {
       this.setState({interval: undefined}, () => {
         this.setState({graphData: null})
