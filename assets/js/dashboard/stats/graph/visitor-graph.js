@@ -5,7 +5,7 @@ import { navigateToQuery } from '../../query'
 import * as api from '../../api'
 import * as storage from '../../util/storage'
 import LazyLoader from '../../components/lazy-loader'
-import {GraphTooltip, buildDataSet, INTERVALS, METRIC_MAPPING, METRIC_LABELS, METRIC_FORMATTER} from './graph-util';
+import {GraphTooltip, buildDataSet, METRIC_MAPPING, METRIC_LABELS, METRIC_FORMATTER} from './graph-util';
 import dateFormatter from './date-formatter';
 import TopStats from './top-stats';
 import { IntervalPicker, getStoredInterval, storeInterval } from './interval-picker';
@@ -331,9 +331,9 @@ export default class VisitorGraph extends React.Component {
   }
 
   maybeRollbackInterval() {
-    const interval = getStoredInterval(this.props.query.period, this.props.site.domain)
-    if (this.isIntervalValid(interval)) {
-      this.setState({interval}, this.fetchGraphData)
+    const storedInterval = getStoredInterval(this.props.query.period, this.props.site.domain)
+    if (storedInterval) {
+      this.setState({interval: storedInterval}, this.fetchGraphData)
     } else {
       this.setState({interval: undefined}, () => {
         this.setState({graphData: null})
@@ -343,8 +343,8 @@ export default class VisitorGraph extends React.Component {
   }
 
   updateInterval(interval) {
-    if (INTERVALS.includes(interval)) {
-      this.setState({interval, mainGraphLoadingState: LOADING_STATE.refreshing}, this.maybeRollbackInterval)
+    if (this.isIntervalValid(interval)) {
+      this.setState({interval, mainGraphLoadingState: LOADING_STATE.refreshing}, this.fetchGraphData)
       storeInterval(this.props.query.period, this.props.site.domain, interval)
     }
   }
