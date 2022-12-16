@@ -147,21 +147,21 @@ export default class Locations extends React.Component {
 
     if (isActive) {
       return (
-        <li
+        <button
           className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading"
         >
           {name}
-        </li>
+        </button>
       )
     }
 
     return (
-      <li
+      <button
         className="hover:text-indigo-600 cursor-pointer"
         onClick={this.setMode(mode)}
       >
         {name}
-      </li>
+      </button>
     )
   }
 
@@ -177,12 +177,12 @@ export default class Locations extends React.Component {
             <h3 className="font-bold dark:text-gray-100">
               {labelFor[this.state.mode] || 'Locations'}
             </h3>
-            <ul className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
+            <div className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
               { this.renderPill('Map', 'map') }
               { this.renderPill('Countries', 'countries') }
               { this.renderPill('Regions', 'regions') }
               { this.renderPill('Cities', 'cities') }
-            </ul>
+            </div>
           </div>
           { this.renderContent() }
         </div>

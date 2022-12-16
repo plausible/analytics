@@ -160,21 +160,21 @@ export default class Devices extends React.Component {
 
     if (isActive) {
       return (
-        <li
+        <button
           className="inline-block h-5 font-bold text-indigo-700 active-prop-heading dark:text-indigo-500"
         >
           {name}
-        </li>
+        </button>
       )
     }
 
     return (
-      <li
+      <button
         className="cursor-pointer hover:text-indigo-600"
         onClick={this.setMode(mode)}
       >
         {name}
-      </li>
+      </button>
     )
   }
 
@@ -188,11 +188,11 @@ export default class Devices extends React.Component {
         >
           <div className="flex justify-between w-full">
             <h3 className="font-bold dark:text-gray-100">Devices</h3>
-            <ul className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
+            <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
               { this.renderPill('Size', 'size') }
               { this.renderPill('Browser', 'browser') }
               { this.renderPill('OS', 'os') }
-            </ul>
+            </div>
           </div>
           { this.renderContent() }
         </div>
