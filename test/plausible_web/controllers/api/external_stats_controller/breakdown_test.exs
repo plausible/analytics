@@ -553,6 +553,34 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  test "breakdown by event:page when there are no events in the second page", %{
+    conn: conn,
+    site: site
+  } do
+    populate_stats([
+      build(:pageview, pathname: "/", domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, pathname: "/", domain: site.domain, timestamp: ~N[2021-01-01 00:25:00]),
+      build(:pageview,
+        pathname: "/plausible.io",
+        domain: site.domain,
+        timestamp: ~N[2021-01-01 00:00:00]
+      )
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "property" => "event:page",
+        "metrics" => "visitors,bounce_rate",
+        "page" => 2,
+        "limit" => 2
+      })
+
+    assert json_response(conn, 200) == %{"results" => []}
+  end
+
   describe "custom events" do
     test "can breakdown by event:name", %{conn: conn, site: site} do
       populate_stats([

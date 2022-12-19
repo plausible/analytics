@@ -118,21 +118,25 @@ defmodule Plausible.Stats.Breakdown do
           Query.put_filter(query, "visit:entry_page", {:member, Enum.map(pages, & &1[:page])})
       end
 
-    {limit, _page} = pagination
+    if Enum.any?(event_metrics) && Enum.empty?(event_result) do
+      []
+    else
+      {limit, _page} = pagination
 
-    session_result =
-      breakdown_sessions(site, new_query, "visit:entry_page", session_metrics, {limit, 1})
-      |> transform_keys(%{entry_page: :page})
+      session_result =
+        breakdown_sessions(site, new_query, "visit:entry_page", session_metrics, {limit, 1})
+        |> transform_keys(%{entry_page: :page})
 
-    metrics = metrics ++ [:page]
+      metrics = metrics ++ [:page]
 
-    zip_results(
-      event_result,
-      session_result,
-      :page,
-      metrics
-    )
-    |> Enum.map(&Map.take(&1, metrics))
+      zip_results(
+        event_result,
+        session_result,
+        :page,
+        metrics
+      )
+      |> Enum.map(&Map.take(&1, metrics))
+    end
   end
 
   def breakdown(site, query, property, metrics, pagination) when property in @event_props do
