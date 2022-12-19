@@ -362,10 +362,10 @@ export default class VisitorGraph extends React.Component {
     const { metric, topStatData } = this.state;
 
     if (this.props.query !== prevProps.query) {
-      if (metric) {
-        this.setState({ mainGraphLoadingState: LOADING_STATE.loading, topStatsLoadingState: LOADING_STATE.loading, graphData: null, topStatData: null }, this.maybeRollbackInterval)
-      } else {
+      if (this.isGraphCollapsed()) {
         this.setState({ topStatsLoadingState: LOADING_STATE.loading, topStatData: null })
+      } else {
+        this.setState({ mainGraphLoadingState: LOADING_STATE.loading, topStatsLoadingState: LOADING_STATE.loading, graphData: null, topStatData: null }, this.maybeRollbackInterval)
       }
       this.fetchTopStatData()
     }
@@ -388,6 +388,10 @@ export default class VisitorGraph extends React.Component {
     }
   }
 
+  isGraphCollapsed() {
+    return !this.state.metric
+  }
+
   componentWillUnmount() {
     document.removeEventListener('tick', this.maybeRollbackInterval)
     document.removeEventListener('tick', this.fetchTopStatData)
@@ -401,13 +405,13 @@ export default class VisitorGraph extends React.Component {
   }
 
   fetchGraphData() {
-    if (!this.state.metric) {
+    if (this.isGraphCollapsed()) {
       this.setState({ mainGraphLoadingState: LOADING_STATE.loaded, graphData: null })
       return
     }
 
     const url = `/api/stats/${encodeURIComponent(this.props.site.domain)}/main-graph`
-    let params = {metric: this.state.metric || 'none'}
+    let params = {metric: this.state.metric}
     if (this.state.interval) { params.interval = this.state.interval }
 
     api.get(url, this.props.query, params)
