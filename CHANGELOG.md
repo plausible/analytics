@@ -3,10 +3,13 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Changed
+- Always show direct traffic in sources reports plausible/analytics#2531
+
 ## v1.5.1 - 2022-12-06
 
 ### Fixed
-- Fallback to empty build metadata when failing to parse $BUILD_METADATA plausible/analytics#2503 
+- Fallback to empty build metadata when failing to parse $BUILD_METADATA plausible/analytics#2503
 
 ## v1.5.0 - 2022-12-02
 
