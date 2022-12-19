@@ -393,14 +393,11 @@ export default class VisitorGraph extends React.Component {
     document.removeEventListener('tick', this.fetchTopStatData)
   }
 
-  updateMetric(newMetric) {
-    if (newMetric === this.state.metric) {
-      storage.setItem(`metric__${this.props.site.domain}`, "")
-      this.setState({ metric: "" })
-    } else {
-      storage.setItem(`metric__${this.props.site.domain}`, newMetric)
-      this.setState({ metric: newMetric })
-    }
+  updateMetric(clickedMetric) {
+    const newMetric = clickedMetric !== this.state.metric ? clickedMetric : ""
+
+    storage.setItem(`metric__${this.props.site.domain}`, newMetric)
+    this.setState({ metric: newMetric })
   }
 
   fetchGraphData() {
