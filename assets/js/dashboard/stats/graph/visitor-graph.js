@@ -360,8 +360,9 @@ export default class VisitorGraph extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     const { metric, topStatData } = this.state;
+    const { query, site } = this.props
 
-    if (this.props.query !== prevProps.query) {
+    if (query !== prevProps.query) {
       if (this.isGraphCollapsed()) {
         this.setState({ topStatsLoadingState: LOADING_STATE.loading, topStatData: null })
       } else {
@@ -374,11 +375,11 @@ export default class VisitorGraph extends React.Component {
       this.setState({mainGraphLoadingState: LOADING_STATE.refreshing}, this.maybeRollbackInterval)
     }
 
-    const savedMetric = storage.getItem(`metric__${this.props.site.domain}`)
+    const savedMetric = storage.getItem(`metric__${site.domain}`)
     const topStatLabels = topStatData && topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
     const prevTopStatLabels = prevState.topStatData && prevState.topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
     if (topStatLabels && `${topStatLabels}` !== `${prevTopStatLabels}`) {
-      if (this.props.query.filters.goal && metric !== 'conversions') {
+      if (query.filters.goal && metric !== 'conversions') {
         this.setState({ metric: 'conversions' })
       } else if (topStatLabels.includes(savedMetric) && savedMetric !== "") {
         this.setState({ metric: savedMetric })
