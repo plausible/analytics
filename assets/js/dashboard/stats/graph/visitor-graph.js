@@ -321,7 +321,6 @@ export default class VisitorGraph extends React.Component {
     this.updateMetric = this.updateMetric.bind(this)
     this.fetchTopStatData = this.fetchTopStatData.bind(this)
     this.fetchGraphData = this.fetchGraphData.bind(this)
-    this.maybeRollbackInterval = this.maybeRollbackInterval.bind(this)
     this.updateInterval = this.updateInterval.bind(this)
   }
 
@@ -330,16 +329,9 @@ export default class VisitorGraph extends React.Component {
     return validIntervals.includes(interval)
   }
 
-  maybeRollbackInterval() {
+  resetInterval() {
     const storedInterval = getStoredInterval(this.props.query.period, this.props.site.domain)
-    if (storedInterval) {
-      this.setState({interval: storedInterval}, this.fetchGraphData)
-    } else {
-      this.setState({interval: undefined}, () => {
-        this.setState({graphData: null})
-        this.fetchGraphData()
-      })
-    }
+    this.setState({interval: storedInterval || undefined})
   }
 
   updateInterval(interval) {
@@ -350,10 +342,10 @@ export default class VisitorGraph extends React.Component {
   }
 
   onVisible() {
-    this.setState({mainGraphLoadingState: LOADING_STATE.loading}, this.maybeRollbackInterval)
+    this.setState({mainGraphLoadingState: LOADING_STATE.loading}, this.fetchGraphData)
     this.fetchTopStatData()
     if (this.props.query.period === 'realtime') {
-      document.addEventListener('tick', this.maybeRollbackInterval)
+      document.addEventListener('tick', this.fetchGraphData)
       document.addEventListener('tick', this.fetchTopStatData)
     }
   }
@@ -362,17 +354,21 @@ export default class VisitorGraph extends React.Component {
     const { metric, topStatData } = this.state;
     const { query, site } = this.props
 
+    if (query.period !== prevProps.query.period) {
+      this.resetInterval()
+    }
+
     if (query !== prevProps.query) {
       if (this.isGraphCollapsed()) {
         this.setState({ topStatsLoadingState: LOADING_STATE.loading, topStatData: null })
       } else {
-        this.setState({ mainGraphLoadingState: LOADING_STATE.loading, topStatsLoadingState: LOADING_STATE.loading, graphData: null, topStatData: null }, this.maybeRollbackInterval)
+        this.setState({ mainGraphLoadingState: LOADING_STATE.loading, topStatsLoadingState: LOADING_STATE.loading, graphData: null, topStatData: null }, this.fetchGraphData)
       }
       this.fetchTopStatData()
     }
 
     if (metric !== prevState.metric) {
-      this.setState({mainGraphLoadingState: LOADING_STATE.refreshing}, this.maybeRollbackInterval)
+      this.setState({mainGraphLoadingState: LOADING_STATE.refreshing}, this.fetchGraphData)
     }
 
     const savedMetric = storage.getItem(`metric__${site.domain}`)
@@ -394,7 +390,7 @@ export default class VisitorGraph extends React.Component {
   }
 
   componentWillUnmount() {
-    document.removeEventListener('tick', this.maybeRollbackInterval)
+    document.removeEventListener('tick', this.fetchGraphData)
     document.removeEventListener('tick', this.fetchTopStatData)
   }
 
