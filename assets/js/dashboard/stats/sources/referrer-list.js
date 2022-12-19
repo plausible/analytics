@@ -13,7 +13,7 @@ function LinkOption(props) {
   if (props.disabled) {
     return <span {...props}>{props.children}</span>
   } else {
-    props = Object.assign({}, props, {className: props.className + ' hover:underline'})
+    props = Object.assign({}, props, { className: props.className + ' hover:underline' })
     return <Link {...props}>{props.children}</Link>
   }
 }
@@ -21,7 +21,7 @@ function LinkOption(props) {
 export default class Referrers extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {loading: true}
+    this.state = { loading: true }
     this.onVisible = this.onVisible.bind(this)
   }
 
@@ -32,13 +32,9 @@ export default class Referrers extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
-      this.setState({loading: true, referrers: null})
+      this.setState({ loading: true, referrers: null })
       this.fetchReferrers()
     }
-  }
-
-  showNoRef() {
-    return this.props.query.period === 'realtime'
   }
 
   showConversionRate() {
@@ -47,15 +43,15 @@ export default class Referrers extends React.Component {
 
   fetchReferrers() {
     if (this.props.query.filters.source) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${encodeURIComponent(this.props.query.filters.source)}`, this.props.query, {show_noref: this.showNoRef()})
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${encodeURIComponent(this.props.query.filters.source)}`, this.props.query)
         .then((res) => res.search_terms || res.referrers)
-        .then((referrers) => this.setState({loading: false, referrers: referrers}))
+        .then((referrers) => this.setState({ loading: false, referrers: referrers }))
     } else if (this.props.query.filters.goal) {
       api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers`, this.props.query)
-        .then((res) => this.setState({loading: false, referrers: res}))
+        .then((res) => this.setState({ loading: false, referrers: res }))
     } else {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers`, this.props.query, {show_noref: this.showNoRef()})
-        .then((res) => this.setState({loading: false, referrers: res}))
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers`, this.props.query)
+        .then((res) => this.setState({ loading: false, referrers: res }))
     }
   }
 
@@ -71,7 +67,7 @@ export default class Referrers extends React.Component {
   }
 
   renderReferrer(referrer) {
-    const maxWidthDeduction =  this.showConversionRate() ? "10rem" : "5rem"
+    const maxWidthDeduction = this.showConversionRate() ? "10rem" : "5rem"
     const query = new URLSearchParams(window.location.search)
     query.set('referrer', referrer.name)
 
@@ -86,7 +82,7 @@ export default class Referrers extends React.Component {
           <span className="flex px-2 py-1.5 z-9 relative break-all group">
             <LinkOption
               className="block md:truncate dark:text-gray-300"
-              to={{search: query.toString()}}
+              to={{ search: query.toString() }}
               disabled={referrer.name === 'Direct / None'}
             >
               <img
@@ -94,9 +90,9 @@ export default class Referrers extends React.Component {
                 referrerPolicy="no-referrer"
                 className="inline w-4 h-4 mr-2 -mt-px align-middle"
               />
-              { referrer.name }
+              {referrer.name}
             </LinkOption>
-            { this.renderExternalLink(referrer) }
+            {this.renderExternalLink(referrer)}
           </span>
         </Bar>
         <span className="font-medium dark:text-gray-200">{numberFormatter(referrer.visitors)}</span>
@@ -151,7 +147,7 @@ export default class Referrers extends React.Component {
     if (this.state.referrers) {
       return (
         <React.Fragment>
-          { this.renderList() }
+          {this.renderList()}
           <MoreLink site={this.props.site} list={this.state.referrers} endpoint={`referrers/${this.props.query.filters.source}`} />
         </React.Fragment>
       )
@@ -165,9 +161,9 @@ export default class Referrers extends React.Component {
       >
         <LazyLoader onVisible={this.onVisible} className="flex flex-col flex-grow">
           <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
-          { this.state.loading && <div className="mx-auto loading mt-44"><div></div></div> }
+          {this.state.loading && <div className="mx-auto loading mt-44"><div></div></div>}
           <FadeIn show={!this.state.loading}>
-            { this.renderContent() }
+            {this.renderContent()}
           </FadeIn>
         </LazyLoader>
       </div>

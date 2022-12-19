@@ -17,16 +17,26 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           referrer: "google.com"
         ),
         build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com"
+        ),
+        build(:pageview,
           referrer_source: "DuckDuckGo",
           referrer: "duckduckgo.com"
-        )
+        ),
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com"
+        ),
+        build(:pageview)
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/sources")
 
       assert json_response(conn, 200) == [
-               %{"name" => "Google", "visitors" => 2},
-               %{"name" => "DuckDuckGo", "visitors" => 1}
+               %{"name" => "Google", "visitors" => 3},
+               %{"name" => "DuckDuckGo", "visitors" => 2},
+               %{"name" => "Direct / None", "visitors" => 1}
              ]
     end
 

@@ -371,7 +371,6 @@ defmodule PlausibleWeb.Api.StatsController do
     query =
       Query.from(site, params)
       |> Filters.add_prefix()
-      |> maybe_hide_noref("visit:source", params)
 
     pagination = parse_pagination(params)
 
@@ -402,7 +401,6 @@ defmodule PlausibleWeb.Api.StatsController do
     query =
       Query.from(site, params)
       |> Filters.add_prefix()
-      |> maybe_hide_noref("visit:utm_medium", params)
 
     pagination = parse_pagination(params)
 
@@ -432,7 +430,6 @@ defmodule PlausibleWeb.Api.StatsController do
     query =
       Query.from(site, params)
       |> Filters.add_prefix()
-      |> maybe_hide_noref("visit:utm_campaign", params)
 
     pagination = parse_pagination(params)
 
@@ -462,7 +459,6 @@ defmodule PlausibleWeb.Api.StatsController do
     query =
       Query.from(site, params)
       |> Filters.add_prefix()
-      |> maybe_hide_noref("visit:utm_content", params)
 
     pagination = parse_pagination(params)
     metrics = [:visitors, :bounce_rate, :visit_duration]
@@ -491,7 +487,6 @@ defmodule PlausibleWeb.Api.StatsController do
     query =
       Query.from(site, params)
       |> Filters.add_prefix()
-      |> maybe_hide_noref("visit:utm_term", params)
 
     pagination = parse_pagination(params)
     metrics = [:visitors, :bounce_rate, :visit_duration]
@@ -520,7 +515,6 @@ defmodule PlausibleWeb.Api.StatsController do
     query =
       Query.from(site, params)
       |> Filters.add_prefix()
-      |> maybe_hide_noref("visit:utm_source", params)
 
     pagination = parse_pagination(params)
 
@@ -1105,17 +1099,6 @@ defmodule PlausibleWeb.Api.StatsController do
       Enum.map(stat_list, fn stat ->
         Map.put(stat, :percentage, round(stat[:visitors] / total * 100))
       end)
-    end
-  end
-
-  defp maybe_hide_noref(query, property, params) do
-    cond do
-      is_nil(query.filters[property]) and params["show_noref"] != "true" ->
-        new_filters = Map.put(query.filters, property, {:is_not, "Direct / None"})
-        %Query{query | filters: new_filters}
-
-      true ->
-        query
     end
   end
 
