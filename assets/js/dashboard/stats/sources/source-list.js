@@ -30,16 +30,12 @@ class AllSources extends React.Component {
     }
   }
 
-  showNoRef() {
-    return this.props.query.period === 'realtime'
-  }
-
   showConversionRate() {
     return !!this.props.query.filters.goal
   }
 
   fetchReferrers() {
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/sources`, this.props.query, { show_noref: this.showNoRef() })
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/sources`, this.props.query)
       .then((res) => this.setState({ loading: false, referrers: res }))
   }
 
@@ -173,7 +169,7 @@ class UTMSources extends React.Component {
 
   fetchReferrers() {
     const endpoint = UTM_TAGS[this.props.tab].endpoint
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/${endpoint}`, this.props.query, { show_noref: this.showNoRef() })
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/${endpoint}`, this.props.query)
       .then((res) => this.setState({ loading: false, referrers: res }))
   }
 
