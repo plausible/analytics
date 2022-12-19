@@ -359,7 +359,7 @@ export default class VisitorGraph extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { metric, topStatData, interval } = this.state;
+    const { metric, topStatData } = this.state;
 
     if (this.props.query !== prevProps.query) {
       if (metric) {
@@ -371,10 +371,6 @@ export default class VisitorGraph extends React.Component {
     }
 
     if (metric !== prevState.metric) {
-      this.setState({mainGraphLoadingState: LOADING_STATE.refreshing}, this.maybeRollbackInterval)
-    }
-
-    if (interval !== prevState.interval && interval) {
       this.setState({mainGraphLoadingState: LOADING_STATE.refreshing}, this.maybeRollbackInterval)
     }
 
