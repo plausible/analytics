@@ -395,7 +395,7 @@ export default class VisitorGraph extends React.Component {
   }
 
   updateMetric(clickedMetric) {
-    const newMetric = clickedMetric !== this.state.metric ? clickedMetric : ""
+    const newMetric = clickedMetric === this.state.metric ? "" : clickedMetric
 
     storage.setItem(`metric__${this.props.site.domain}`, newMetric)
     this.setState({ metric: newMetric })
