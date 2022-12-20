@@ -8,7 +8,7 @@ import LazyLoader from '../../components/lazy-loader'
 import {GraphTooltip, buildDataSet, METRIC_MAPPING, METRIC_LABELS, METRIC_FORMATTER} from './graph-util';
 import dateFormatter from './date-formatter';
 import TopStats from './top-stats';
-import { IntervalPicker, getStoredInterval, storeInterval } from './interval-picker';
+import { IntervalPicker, getStoredInterval, storeInterval, removeStoredInterval } from './interval-picker';
 import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
 import classNames from "classnames";
@@ -315,7 +315,7 @@ export default class VisitorGraph extends React.Component {
       topStatsLoadingState: LOADING_STATE.loading,
       mainGraphLoadingState: LOADING_STATE.loading,
       metric: storage.getItem(`metric__${this.props.site.domain}`) || 'visitors',
-      interval: getStoredInterval(this.props.query.period, this.props.site.domain)
+      interval: undefined
     }
     this.onVisible = this.onVisible.bind(this)
     this.updateMetric = this.updateMetric.bind(this)
@@ -324,14 +324,29 @@ export default class VisitorGraph extends React.Component {
     this.updateInterval = this.updateInterval.bind(this)
   }
 
+  componentDidMount() {
+    // Before fetching any data, we want to make sure that the stored interval is valid.
+    // For example if Plausible ever changes an interval name or removes an interval for
+    // a period, users' localStorage would still keep the old invalid value. We need to
+    // check that and reset the interval in this case
+    this.resetInterval()
+  }
+
   isIntervalValid(interval) {
     const validIntervals = this.props.site.validIntervalsByPeriod[this.props.query.period] || []
     return validIntervals.includes(interval)
   }
 
   resetInterval() {
-    const storedInterval = getStoredInterval(this.props.query.period, this.props.site.domain)
-    this.setState({interval: storedInterval || undefined})
+    const { query, site } = this.props
+    const storedInterval = getStoredInterval(query.period, site.domain)
+
+    if (this.isIntervalValid(storedInterval)) {
+      this.setState({interval: storedInterval})
+    } else {
+      this.setState({interval: undefined})
+      removeStoredInterval(query.period, site.domain)
+    }
   }
 
   updateInterval(interval) {
