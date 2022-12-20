@@ -386,7 +386,7 @@ export default class VisitorGraph extends React.Component {
   }
 
   isGraphCollapsed() {
-    return !this.state.metric
+    return this.state.metric === ""
   }
 
   componentWillUnmount() {
