@@ -8,7 +8,7 @@ import LazyLoader from '../../components/lazy-loader'
 import {GraphTooltip, buildDataSet, METRIC_MAPPING, METRIC_LABELS, METRIC_FORMATTER} from './graph-util';
 import dateFormatter from './date-formatter';
 import TopStats from './top-stats';
-import { IntervalPicker, getStoredInterval, storeInterval, removeStoredInterval } from './interval-picker';
+import { IntervalPicker, getStoredInterval, storeInterval } from './interval-picker';
 import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
 import classNames from "classnames";
@@ -233,7 +233,7 @@ class LineGraph extends React.Component {
           </div>
         )
       } else {
-        const interval = this.props.graphData?.interval || this.state.interval
+        const interval = this.props.graphData?.interval
         const queryParams = api.serializeQuery(this.props.query, [{ interval }])
         const endpoint = `/${encodeURIComponent(this.props.site.domain)}/export${queryParams}`
 
@@ -314,8 +314,7 @@ export default class VisitorGraph extends React.Component {
     this.state = {
       topStatsLoadingState: LOADING_STATE.loading,
       mainGraphLoadingState: LOADING_STATE.loading,
-      metric: storage.getItem(`metric__${this.props.site.domain}`) || 'visitors',
-      interval: undefined
+      metric: storage.getItem(`metric__${this.props.site.domain}`) || 'visitors'
     }
     this.onVisible = this.onVisible.bind(this)
     this.updateMetric = this.updateMetric.bind(this)
@@ -324,35 +323,30 @@ export default class VisitorGraph extends React.Component {
     this.updateInterval = this.updateInterval.bind(this)
   }
 
-  componentDidMount() {
-    // Before fetching any data, we want to make sure that the stored interval is valid.
-    // For example if Plausible ever changes an interval name or removes an interval for
-    // a period, users' localStorage would still keep the old invalid value. We need to
-    // check that and reset the interval in this case
-    this.resetInterval()
-  }
+
 
   isIntervalValid(interval) {
-    const validIntervals = this.props.site.validIntervalsByPeriod[this.props.query.period] || []
+    const { query, site } = this.props
+    const validIntervals = site.validIntervalsByPeriod[query.period] || []
+
     return validIntervals.includes(interval)
   }
 
-  resetInterval() {
+  getIntervalFromStorage() {
     const { query, site } = this.props
     const storedInterval = getStoredInterval(query.period, site.domain)
 
     if (this.isIntervalValid(storedInterval)) {
-      this.setState({interval: storedInterval})
+      return storedInterval
     } else {
-      this.setState({interval: undefined})
-      removeStoredInterval(query.period, site.domain)
+      return null
     }
   }
 
   updateInterval(interval) {
     if (this.isIntervalValid(interval)) {
-      this.setState({interval, mainGraphLoadingState: LOADING_STATE.refreshing}, this.fetchGraphData)
       storeInterval(this.props.query.period, this.props.site.domain, interval)
+      this.setState({ mainGraphLoadingState: LOADING_STATE.refreshing }, this.fetchGraphData)
     }
   }
 
@@ -368,10 +362,6 @@ export default class VisitorGraph extends React.Component {
   componentDidUpdate(prevProps, prevState) {
     const { metric, topStatData } = this.state;
     const { query, site } = this.props
-
-    if (query.period !== prevProps.query.period) {
-      this.resetInterval()
-    }
 
     if (query !== prevProps.query) {
       if (this.isGraphCollapsed()) {
@@ -423,8 +413,9 @@ export default class VisitorGraph extends React.Component {
     }
 
     const url = `/api/stats/${encodeURIComponent(this.props.site.domain)}/main-graph`
-    let params = {metric: this.state.metric}
-    if (this.state.interval) { params.interval = this.state.interval }
+    let params = { metric: this.state.metric }
+    const interval = this.getIntervalFromStorage()
+    if (interval) { params.interval = interval }
 
     api.get(url, this.props.query, params)
       .then((res) => {
