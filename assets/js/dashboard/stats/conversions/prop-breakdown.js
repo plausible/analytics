@@ -149,7 +149,7 @@ export default class PropertyBreakdown extends React.Component {
   renderLoading() {
     if (this.state.loading) {
       return <div className="px-4 py-2"><div className="loading sm mx-auto"><div></div></div></div>
-    } else if (this.state.moreResultsAvailable) {
+    } else if (this.state.moreResultsAvailable && this.props.query.period !== 'realtime') {
       return (
         <div className="w-full text-center my-4">
           <button onClick={this.loadMore.bind(this)} type="button" className="button">
