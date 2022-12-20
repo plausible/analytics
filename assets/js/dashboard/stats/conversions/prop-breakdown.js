@@ -69,13 +69,17 @@ export default class PropertyBreakdown extends React.Component {
 
   fetchPropBreakdown() {
     if (this.props.query.filters['goal']) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/property/${encodeURIComponent(this.state.propKey)}`, this.props.query, {limit: 100, page: this.state.page})
+      this.doFetch()
         .then((res) => this.setState((state) => ({
             loading: false,
             breakdown: state.breakdown.concat(res),
             moreResultsAvailable: res.length === 100
           })))
     }
+  }
+
+  doFetch() {
+    return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/property/${encodeURIComponent(this.state.propKey)}`, this.props.query, {limit: 100, page: this.state.page})
   }
 
   loadMore() {
