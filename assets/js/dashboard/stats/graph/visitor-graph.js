@@ -436,14 +436,14 @@ export default class VisitorGraph extends React.Component {
 
     const theme = document.querySelector('html').classList.contains('dark') || false
 
-    const topStatsReadyOrRefreshing = (topStatsLoadingState === LOADING_STATE.loaded || topStatsLoadingState === LOADING_STATE.refreshing)
-    const mainGraphReadyOrRefreshing = (mainGraphLoadingState === LOADING_STATE.loaded || mainGraphLoadingState === LOADING_STATE.refreshing)
+    const topStatsLoadedOrRefreshing = (topStatsLoadingState === LOADING_STATE.loaded || topStatsLoadingState === LOADING_STATE.refreshing)
+    const mainGraphLoadedOrRefreshing = (mainGraphLoadingState === LOADING_STATE.loaded || mainGraphLoadingState === LOADING_STATE.refreshing)
     const noMetricOrRefreshing = (!metric || mainGraphLoadingState === LOADING_STATE.refreshing)
     const topStatAndGraphLoaded = !!(topStatData && graphData)
 
     const showGraph =
-      topStatsReadyOrRefreshing &&
-      mainGraphReadyOrRefreshing &&
+    topStatsLoadedOrRefreshing &&
+    mainGraphLoadedOrRefreshing &&
       (topStatData && noMetricOrRefreshing || topStatAndGraphLoaded)
 
     return (
