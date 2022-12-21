@@ -35,6 +35,9 @@ export default function ListReport(props) {
   const showConversionRate = !!props.query.filters.goal
 
   const fetchData = useCallback(() => {
+      if (props.query.period !== 'realtime') {
+        setState({loading: true, list: null})
+      }
       props.fetchData()
         .then((res) => setState({loading: false, list: res}))
     }, [props.query])
