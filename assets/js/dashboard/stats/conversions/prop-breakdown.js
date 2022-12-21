@@ -8,6 +8,7 @@ import * as api from '../../api'
 
 const MOBILE_UPPER_WIDTH = 767
 const DEFAULT_WIDTH = 1080
+const BREAKDOWN_LIMIT = 100
 
 // https://stackoverflow.com/a/43467144
 function isValidHttpUrl(string) {
@@ -70,20 +71,33 @@ export default class PropertyBreakdown extends React.Component {
   fetchPropBreakdown() {
     if (this.props.query.filters['goal']) {
       this.doFetch()
-        .then((res) => this.setState((state) => ({
+        .then((res) => this.setState(() => ({
             loading: false,
-            breakdown: state.breakdown.concat(res),
-            moreResultsAvailable: res.length === 100
+            breakdown: res,
+            moreResultsAvailable: res.length === BREAKDOWN_LIMIT
           })))
     }
   }
 
-  doFetch() {
-    return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/property/${encodeURIComponent(this.state.propKey)}`, this.props.query, {limit: 100, page: this.state.page})
+
+  fetchNextPage() {
+    if (this.props.query.filters['goal']) {
+      this.doFetch(true)
+        .then((res) => this.setState((state) => ({
+            loading: false,
+            breakdown: state.breakdown.concat(res),
+            moreResultsAvailable: res.length === BREAKDOWN_LIMIT
+          })))
+    }
+  }
+
+  doFetch(nextPage=false) {
+    const page = nextPage ? this.state.page : 1
+    return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/property/${encodeURIComponent(this.state.propKey)}`, this.props.query, {limit: BREAKDOWN_LIMIT, page: page})
   }
 
   loadMore() {
-    this.setState({loading: true, page: this.state.page + 1}, this.fetchPropBreakdown.bind(this))
+    this.setState({loading: true, page: this.state.page + 1}, this.fetchNextPage.bind(this))
   }
 
   renderUrl(value) {
