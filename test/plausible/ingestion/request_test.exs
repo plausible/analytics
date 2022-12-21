@@ -202,4 +202,30 @@ defmodule Plausible.Ingestion.RequestTest do
     assert request.query_params["foo"] == "bar"
     assert request.query_params["baz"] == "bam"
   end
+
+  test "returns validation error when using data uris" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "data:text/html,%3Cscript%3Ealert%28%27hi%27%29%3B%3C%2Fscript%3E"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:error, changeset} = Request.build(conn)
+    assert {"scheme is not allowed", _} = changeset.errors[:url]
+  end
+
+  test "returns validation error when pathname is too long" do
+    long_string = for _ <- 1..5000, do: "a", into: ""
+
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "https://dummy.site/#{long_string}"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:error, changeset} = Request.build(conn)
+    assert {"should be at most %{count} character(s)", _} = changeset.errors[:pathname]
+  end
 end
