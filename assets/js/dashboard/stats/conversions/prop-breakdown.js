@@ -46,6 +46,7 @@ export default class PropertyBreakdown extends React.Component {
     }
 
     this.handleResize = this.handleResize.bind(this);
+    this.fetchPropBreakdown = this.fetchPropBreakdown.bind(this)
   }
 
   componentDidMount() {
@@ -53,10 +54,15 @@ export default class PropertyBreakdown extends React.Component {
 
     this.handleResize();
     this.fetchPropBreakdown()
+
+    if (this.props.query.period === 'realtime') {
+      document.addEventListener('tick', this.fetchPropBreakdown)
+    }
   }
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.handleResize, false);
+    document.removeEventListener('tick', this.fetchPropBreakdown)
   }
 
   handleResize() {
