@@ -3,8 +3,8 @@ import { Link, withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import * as api from '../../api'
-import numberFormatter, {durationFormatter} from '../../util/number-formatter'
-import {parseQuery} from '../../query'
+import numberFormatter, { durationFormatter } from '../../util/number-formatter'
+import { parseQuery } from '../../query'
 
 const TITLES = {
   sources: 'Top Sources',
@@ -28,12 +28,12 @@ class SourcesModal extends React.Component {
   }
 
   loadSources() {
-    const {site} = this.props
-    const {query, page, sources} = this.state
+    const { site } = this.props
+    const { query, page, sources } = this.state
 
     const detailed = this.showExtra()
-    api.get(`/api/stats/${encodeURIComponent(site.domain)}/${this.currentFilter()}`, query, {limit: 100, page, detailed, show_noref: true})
-      .then((res) => this.setState({loading: false, sources: sources.concat(res), moreResultsAvailable: res.length === 100}))
+    api.get(`/api/stats/${encodeURIComponent(site.domain)}/${this.currentFilter()}`, query, { limit: 100, page, detailed })
+      .then((res) => this.setState({ loading: false, sources: sources.concat(res), moreResultsAvailable: res.length === 100 }))
   }
 
   componentDidMount() {
@@ -42,7 +42,7 @@ class SourcesModal extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (this.props.location.pathname !== prevProps.location.pathname) {
-      this.setState({sources: [], loading: true}, this.loadSources.bind(this))
+      this.setState({ sources: [], loading: true }, this.loadSources.bind(this))
     }
   }
 
@@ -60,11 +60,11 @@ class SourcesModal extends React.Component {
   }
 
   loadMore() {
-    this.setState({loading: true, page: this.state.page + 1}, this.loadSources.bind(this))
+    this.setState({ loading: true, page: this.state.page + 1 }, this.loadSources.bind(this))
   }
 
   formatBounceRate(page) {
-    if (typeof(page.bounce_rate) === 'number') {
+    if (typeof (page.bounce_rate) === 'number') {
       return page.bounce_rate + '%'
     } else {
       return '-'
@@ -72,7 +72,7 @@ class SourcesModal extends React.Component {
   }
 
   formatDuration(source) {
-    if (typeof(source.visit_duration) === 'number') {
+    if (typeof (source.visit_duration) === 'number') {
       return durationFormatter(source.visit_duration)
     } else {
       return '-'
@@ -103,14 +103,14 @@ class SourcesModal extends React.Component {
     return (
       <tr className="text-sm dark:text-gray-200" key={source.name}>
         <td className="p-2">
-          { this.icon(source) }
-          <Link className="hover:underline" to={{search: query.toString(), pathname: '/' + encodeURIComponent(this.props.site.domain)}}>{ source.name }</Link>
+          {this.icon(source)}
+          <Link className="hover:underline" to={{ search: query.toString(), pathname: '/' + encodeURIComponent(this.props.site.domain) }}>{source.name}</Link>
         </td>
-        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(source.total_visitors)}</td> }
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(source.total_visitors)}</td>}
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(source.visitors)}</td>
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(source)}</td> }
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatDuration(source)}</td> }
-        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{source.conversion_rate}%</td> }
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(source)}</td>}
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatDuration(source)}</td>}
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{source.conversion_rate}%</td>}
       </tr>
     )
   }
@@ -165,12 +165,12 @@ class SourcesModal extends React.Component {
               </tr>
             </thead>
             <tbody>
-              { this.state.sources.map(this.renderSource.bind(this)) }
+              {this.state.sources.map(this.renderSource.bind(this))}
             </tbody>
           </table>
         </main>
 
-        { this.renderLoading() }
+        {this.renderLoading()}
       </Modal>
     )
   }

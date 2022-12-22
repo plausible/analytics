@@ -106,7 +106,7 @@ export default class TopStats extends React.Component {
             {statExtraName && <span className="hidden sm:inline-block ml-1">{statExtraName}</span>}
           </div>
           <div className="flex items-center justify-between my-1 whitespace-nowrap">
-            <b className="mr-4 text-xl md:text-2xl dark:text-gray-100">{this.topStatNumberShort(stat)}</b>
+            <b className="mr-4 text-xl md:text-2xl dark:text-gray-100" id={METRIC_MAPPING[stat.name]}>{this.topStatNumberShort(stat)}</b>
             {this.renderComparison(stat.name, stat.change)}
           </div>
         </Tooltip>

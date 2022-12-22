@@ -57,6 +57,7 @@ defmodule Plausible.Ingestion.Request do
           :pathname,
           :timestamp
         ])
+        |> Changeset.validate_length(:pathname, max: 2000)
         |> Changeset.apply_action(nil)
 
       {:error, :invalid_json} ->
@@ -128,18 +129,15 @@ defmodule Plausible.Ingestion.Request do
     end
   end
 
+  @disallowed_schemes ~w(data)
   defp put_uri(changeset, %{} = request_body) do
-    url = request_body["u"] || request_body["url"]
-
-    case url do
-      nil ->
-        Changeset.add_error(changeset, :url, "is required")
-
-      url when is_binary(url) ->
-        Changeset.put_change(changeset, :uri, URI.parse(url))
-
-      _ ->
-        Changeset.add_error(changeset, :url, "must be a string")
+    with url when is_binary(url) <- request_body["u"] || request_body["url"],
+         %URI{} = uri when uri.scheme not in @disallowed_schemes <- URI.parse(url) do
+      Changeset.put_change(changeset, :uri, uri)
+    else
+      nil -> Changeset.add_error(changeset, :url, "is required")
+      %URI{} -> Changeset.add_error(changeset, :url, "scheme is not allowed")
+      _ -> Changeset.add_error(changeset, :url, "must be a string")
     end
   end
 

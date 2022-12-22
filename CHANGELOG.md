@@ -3,10 +3,17 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Fixed
+- Automatically update all visible dashboard reports in the realtime view
+
+### Changed
+- Reject events with long URIs and data URIs plausible/analytics#2536
+- Always show direct traffic in sources reports plausible/analytics#2531
+
 ## v1.5.1 - 2022-12-06
 
 ### Fixed
-- Automatically update all visible dashboard reports in the realtime view
+- Return empty list when breaking down by event:page without events plausible/analytics#2530
 - Fallback to empty build metadata when failing to parse $BUILD_METADATA plausible/analytics#2503
 
 ## v1.5.0 - 2022-12-02
