@@ -21,10 +21,6 @@ export const storeInterval = function(period, domain, interval) {
   storage.setItem(`interval__${period}__${domain}`, interval)
 }
 
-export const removeStoredInterval = function(period, domain) {
-  storage.removeItem(`interval__${period}__${domain}`)
-}
-
 function subscribeKeybinding(element) {
   const handleKeyPress = useCallback((event) => {
     if (isKeyPressed(event, "i")) element.current?.click()

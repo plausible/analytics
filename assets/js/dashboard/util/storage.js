@@ -33,11 +33,3 @@ export function getItem(key) {
     return memStore[key]
   }
 }
-
-export function removeItem(key) {
-  if (isLocalStorageAvailable) {
-    window.localStorage.removeItem(key)
-  } else {
-    delete memStore[key]
-  }
-}
