@@ -46,23 +46,25 @@ export default class PropertyBreakdown extends React.Component {
     }
 
     this.handleResize = this.handleResize.bind(this);
-    this.fetchPropBreakdown = this.fetchPropBreakdown.bind(this)
+    this.fetch = this.fetch.bind(this)
+    this.fetchAndReplace = this.fetchAndReplace.bind(this)
+    this.fetchAndConcat = this.fetchAndConcat.bind(this)
   }
 
   componentDidMount() {
     window.addEventListener('resize', this.handleResize, false);
 
     this.handleResize();
-    this.fetchPropBreakdown()
+    this.fetchAndReplace()
 
     if (this.props.query.period === 'realtime') {
-      document.addEventListener('tick', this.fetchPropBreakdown)
+      document.addEventListener('tick', this.fetchAndReplace)
     }
   }
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.handleResize, false);
-    document.removeEventListener('tick', this.fetchPropBreakdown)
+    document.removeEventListener('tick', this.fetchAndReplace)
   }
 
   handleResize() {
@@ -74,36 +76,31 @@ export default class PropertyBreakdown extends React.Component {
     return viewport > MOBILE_UPPER_WIDTH ? "16rem" : "10rem";
   }
 
-  fetchPropBreakdown() {
-    if (this.props.query.filters['goal']) {
-      this.doFetch()
-        .then((res) => this.setState(() => ({
-            loading: false,
-            breakdown: res,
-            moreResultsAvailable: res.length === BREAKDOWN_LIMIT
-          })))
-    }
+  fetch({concat}) {
+    if (!this.props.query.filters['goal']) return
+
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/property/${encodeURIComponent(this.state.propKey)}`, this.props.query, {limit: BREAKDOWN_LIMIT, page: this.state.page})
+      .then((res) => {
+        let breakdown = concat ? this.state.breakdown.concat(res) : res
+
+        this.setState(() => ({
+          loading: false,
+          breakdown: breakdown,
+          moreResultsAvailable: res.length >= BREAKDOWN_LIMIT
+        }))
+      })
   }
 
-
-  fetchNextPage() {
-    if (this.props.query.filters['goal']) {
-      this.doFetch(true)
-        .then((res) => this.setState((state) => ({
-            loading: false,
-            breakdown: state.breakdown.concat(res),
-            moreResultsAvailable: res.length === BREAKDOWN_LIMIT
-          })))
-    }
+  fetchAndReplace() {
+    this.fetch({concat: false})
   }
 
-  doFetch(nextPage=false) {
-    const page = nextPage ? this.state.page : 1
-    return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/property/${encodeURIComponent(this.state.propKey)}`, this.props.query, {limit: BREAKDOWN_LIMIT, page: page})
+  fetchAndConcat() {
+    this.fetch({concat: true})
   }
 
   loadMore() {
-    this.setState({loading: true, page: this.state.page + 1}, this.fetchNextPage.bind(this))
+    this.setState({loading: true, page: this.state.page + 1}, this.fetchAndConcat.bind(this))
   }
 
   renderUrl(value) {
@@ -167,7 +164,7 @@ export default class PropertyBreakdown extends React.Component {
 
   changePropKey(newKey) {
     storage.setItem(this.storageKey, newKey)
-    this.setState({propKey: newKey, loading: true, breakdown: [], page: 1, moreResultsAvailable: false}, this.fetchPropBreakdown)
+    this.setState({propKey: newKey, loading: true, breakdown: [], page: 1, moreResultsAvailable: false}, this.fetchAndReplace)
   }
 
   renderLoading() {
