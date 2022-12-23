@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.FaviconTest do
-  use Plausible.DataCase, async: true
+  use Plausible.DataCase, async: false
   use Plug.Test
   alias PlausibleWeb.Favicon
 
