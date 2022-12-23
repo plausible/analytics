@@ -71,7 +71,7 @@ jobs:
       - name: Check Credo Warnings
         run: mix credo diff --from-git-merge-base origin/master
       - name: Run tests
-        run: mix test --include slow
+        run: mix test --include slow --max-failures 1
       - name: Check Dialyzer
         run: mix dialyzer
 env:
