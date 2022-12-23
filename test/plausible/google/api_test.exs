@@ -1,5 +1,5 @@
 defmodule Plausible.Google.ApiTest do
-  use Plausible.DataCase, async: true
+  use Plausible.DataCase, async: false
   use ExVCR.Mock, adapter: ExVCR.Adapter.Finch
   alias Plausible.Google.Api
 
