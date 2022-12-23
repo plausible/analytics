@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Api.InternalControllerTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
 
   describe "GET /api/:domain/status" do

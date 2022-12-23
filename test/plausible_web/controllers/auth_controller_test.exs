@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.AuthControllerTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
   use Bamboo.Test
   use Plausible.Repo
 

@@ -97,11 +97,16 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         screen_width: 1440
       }
 
+      t1 = System.convert_time_unit(System.monotonic_time(), :native, :millisecond)
+
       conn
       |> put_req_header("user-agent", @user_agent)
       |> post("/api/event", params)
 
-      :timer.sleep(1500)
+      t2 = System.convert_time_unit(System.monotonic_time(), :native, :millisecond)
+
+      # timestamps are in second precision, so we need to wait for it to flip
+      Process.sleep(1000 - (t2 - t1))
 
       conn
       |> put_req_header("user-agent", @user_agent)

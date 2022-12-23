@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
 
   setup %{conn: conn} do
