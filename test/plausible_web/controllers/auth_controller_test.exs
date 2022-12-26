@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.AuthControllerTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
   use Bamboo.Test
   use Plausible.Repo
 
@@ -15,9 +15,12 @@ defmodule PlausibleWeb.AuthControllerTest do
   end
 
   describe "POST /register" do
-    test "registering sends an activation link", %{conn: conn} do
+    setup do
       mock_captcha_success()
+      :ok
+    end
 
+    test "registering sends an activation link", %{conn: conn} do
       post(conn, "/register",
         user: %{
           name: "Jane Doe",
@@ -33,8 +36,6 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "user is redirected to activate page after registration", %{conn: conn} do
-      mock_captcha_success()
-
       conn =
         post(conn, "/register",
           user: %{
@@ -49,8 +50,6 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "creates user record", %{conn: conn} do
-      mock_captcha_success()
-
       post(conn, "/register",
         user: %{
           name: "Jane Doe",
@@ -65,8 +64,6 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "logs the user in", %{conn: conn} do
-      mock_captcha_success()
-
       conn =
         post(conn, "/register",
           user: %{
@@ -81,8 +78,6 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "user is redirected to activation after registration", %{conn: conn} do
-      mock_captcha_success()
-
       conn =
         post(conn, "/register",
           user: %{
@@ -94,22 +89,6 @@ defmodule PlausibleWeb.AuthControllerTest do
         )
 
       assert redirected_to(conn) == "/activate"
-    end
-
-    test "renders captcha errors in case of captcha input verification failure", %{conn: conn} do
-      mock_captcha_failure()
-
-      conn =
-        post(conn, "/register",
-          user: %{
-            name: "Jane Doe",
-            email: "user@example.com",
-            password: "very-secret",
-            password_confirmation: "very-secret"
-          }
-        )
-
-      assert html_response(conn, 200) =~ "Please complete the captcha"
     end
   end
 
@@ -134,6 +113,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
   describe "POST /register/invitation/:invitation_id" do
     setup do
+      mock_captcha_success()
       inviter = insert(:user)
       site = insert(:site, members: [inviter])
 
@@ -149,8 +129,6 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "registering sends an activation link", %{conn: conn, invitation: invitation} do
-      mock_captcha_success()
-
       post(conn, "/register/invitation/#{invitation.invitation_id}",
         user: %{
           name: "Jane Doe",
@@ -169,8 +147,6 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn: conn,
       invitation: invitation
     } do
-      mock_captcha_success()
-
       conn =
         post(conn, "/register/invitation/#{invitation.invitation_id}",
           user: %{
@@ -185,8 +161,6 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "creates user record", %{conn: conn, invitation: invitation} do
-      mock_captcha_success()
-
       post(conn, "/register/invitation/#{invitation.invitation_id}",
         user: %{
           name: "Jane Doe",
@@ -204,8 +178,6 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn: conn,
       invitation: invitation
     } do
-      mock_captcha_success()
-
       post(conn, "/register/invitation/#{invitation.invitation_id}",
         user: %{
           name: "Jane Doe",
@@ -220,8 +192,6 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "logs the user in", %{conn: conn, invitation: invitation} do
-      mock_captcha_success()
-
       conn =
         post(conn, "/register/invitation/#{invitation.invitation_id}",
           user: %{
@@ -236,8 +206,6 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "user is redirected to activation after registration", %{conn: conn} do
-      mock_captcha_success()
-
       conn =
         post(conn, "/register",
           user: %{
@@ -250,13 +218,29 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert redirected_to(conn) == "/activate"
     end
+  end
+
+  describe "captcha failure" do
+    setup do
+      mock_captcha_failure()
+      inviter = insert(:user)
+      site = insert(:site, members: [inviter])
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: inviter,
+          email: "user@email.co",
+          role: :admin
+        )
+
+      {:ok, %{site: site, invitation: invitation}}
+    end
 
     test "renders captcha errors in case of captcha input verification failure", %{
       conn: conn,
       invitation: invitation
     } do
-      mock_captcha_failure()
-
       conn =
         post(conn, "/register/invitation/#{invitation.invitation_id}",
           user: %{

@@ -39,6 +39,7 @@ defmodule Plausible.Google.BufferTest do
     assert imported_count(site, "imported_visitors") == 10, "expected to have flushed"
   end
 
+  @tag :slow
   test "insert_many/3 uses separate buffers for each table", %{site: site} do
     {:ok, pid} = Buffer.start_link()
 
@@ -72,6 +73,7 @@ defmodule Plausible.Google.BufferTest do
     assert imported_count(site, "imported_visitors") == 50, "expected to have flushed"
   end
 
+  @tag :slow
   test "flush/2 flushes all buffers", %{site: site} do
     {:ok, pid} = Buffer.start_link()
 

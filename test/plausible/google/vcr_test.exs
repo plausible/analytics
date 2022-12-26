@@ -7,6 +7,7 @@ defmodule Plausible.Google.Api.VCRTest do
   # We need real HTTP Client for VCR tests
   setup_patch_env(:http_impl, Plausible.HTTPClient)
 
+  @tag :slow
   test "imports page views from Google Analytics", %{site: site} do
     use_cassette "google_analytics_import#1", match_requests_on: [:request_body] do
       view_id = "54297898"

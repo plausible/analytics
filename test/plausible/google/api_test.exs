@@ -1,5 +1,5 @@
 defmodule Plausible.Google.ApiTest do
-  use Plausible.DataCase, async: true
+  use Plausible.DataCase, async: false
   use ExVCR.Mock, adapter: ExVCR.Adapter.Finch
   alias Plausible.Google.Api
 
@@ -25,6 +25,7 @@ defmodule Plausible.Google.ApiTest do
                     |> Enum.map(&File.read!/1)
                     |> Enum.map(&Jason.decode!/1)
 
+  @tag :slow
   test "import_analytics/4 refreshes OAuth token when needed", %{site: site} do
     past = DateTime.add(DateTime.utc_now(), -3600, :second)
     auth = {"redacted_access_token", "redacted_refresh_token", DateTime.to_iso8601(past)}
