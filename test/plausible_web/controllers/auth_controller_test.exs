@@ -677,6 +677,13 @@ defmodule PlausibleWeb.AuthControllerTest do
         }
       ])
 
+      Repo.insert_all("sent_renewal_notifications", [
+        %{
+          user_id: user.id,
+          timestamp: NaiveDateTime.utc_now()
+        }
+      ])
+
       insert(:google_auth, site: site, user: user)
       insert(:subscription, user: user, status: "deleted")
 
