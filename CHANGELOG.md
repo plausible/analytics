@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Changed
+- Move bounce rate from Top Pages to Entry Pages plausible/analytics#2552
 - Reject events with long URIs and data URIs plausible/analytics#2536
 - Always show direct traffic in sources reports plausible/analytics#2531
 
