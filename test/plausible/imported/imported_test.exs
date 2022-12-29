@@ -670,14 +670,12 @@ defmodule Plausible.ImportedTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "bounce_rate" => nil,
                  "time_on_page" => 60,
                  "visitors" => 3,
                  "pageviews" => 4,
                  "name" => "/some-other-page"
                },
                %{
-                 "bounce_rate" => 25.0,
                  "time_on_page" => 800.0,
                  "visitors" => 2,
                  "pageviews" => 2,

@@ -603,7 +603,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       if params["detailed"],
-        do: [:visitors, :pageviews, :bounce_rate, :time_on_page],
+        do: [:visitors, :pageviews, :time_on_page],
         else: [:visitors]
 
     pagination = parse_pagination(params)
@@ -619,7 +619,7 @@ defmodule PlausibleWeb.Api.StatsController do
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
       else
-        pages |> to_csv([:name, :visitors, :pageviews, :bounce_rate, :time_on_page])
+        pages |> to_csv([:name, :visitors, :pageviews, :time_on_page])
       end
     else
       json(conn, pages)
@@ -647,7 +647,8 @@ defmodule PlausibleWeb.Api.StatsController do
         |> transform_keys(%{unique_entrances: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
       else
-        entry_pages |> to_csv([:name, :unique_entrances, :total_entrances, :visit_duration, :bounce_rate])
+        entry_pages
+        |> to_csv([:name, :unique_entrances, :total_entrances, :visit_duration, :bounce_rate])
       end
     else
       json(conn, entry_pages)

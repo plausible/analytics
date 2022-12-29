@@ -124,20 +124,18 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/blog/john-2",
                  "visitors" => 2,
                  "pageviews" => 2,
-                 "bounce_rate" => 0,
                  "time_on_page" => 600
                },
                %{
                  "name" => "/blog/john-1",
                  "visitors" => 1,
                  "pageviews" => 1,
-                 "bounce_rate" => 0,
                  "time_on_page" => 60
                }
              ]
     end
 
-    test "calculates bounce_rate and time_on_page with :is_not filter on custom pageview props",
+    test "calculates time_on_page with :is_not filter on custom pageview props",
          %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -186,20 +184,18 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/blog",
                  "visitors" => 2,
                  "pageviews" => 2,
-                 "bounce_rate" => 0,
                  "time_on_page" => 120.0
                },
                %{
                  "name" => "/blog/other-post",
                  "visitors" => 1,
                  "pageviews" => 1,
-                 "bounce_rate" => nil,
                  "time_on_page" => nil
                }
              ]
     end
 
-    test "calculates bounce_rate and time_on_page with :is (none) filter on custom pageview props",
+    test "calculates time_on_page with :is (none) filter on custom pageview props",
          %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -238,20 +234,18 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/blog",
                  "visitors" => 2,
                  "pageviews" => 2,
-                 "bounce_rate" => 50,
                  "time_on_page" => 60
                },
                %{
                  "name" => "/blog/other-post",
                  "visitors" => 1,
                  "pageviews" => 1,
-                 "bounce_rate" => nil,
                  "time_on_page" => nil
                }
              ]
     end
 
-    test "calculates bounce_rate and time_on_page with :is_not (none) filter on custom pageview props",
+    test "calculates time_on_page with :is_not (none) filter on custom pageview props",
          %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -294,20 +288,18 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/blog/other-post",
                  "visitors" => 2,
                  "pageviews" => 2,
-                 "bounce_rate" => 100,
                  "time_on_page" => nil
                },
                %{
                  "name" => "/blog/john-1",
                  "visitors" => 1,
                  "pageviews" => 1,
-                 "bounce_rate" => 0,
                  "time_on_page" => 60
                }
              ]
     end
 
-    test "calculates bounce_rate and time_on_page for pages filtered by page path",
+    test "calculates time_on_page for pages filtered by page path",
          %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -348,7 +340,6 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/",
                  "visitors" => 2,
                  "pageviews" => 3,
-                 "bounce_rate" => 50,
                  "time_on_page" => 60
                }
              ]
@@ -409,14 +400,12 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "bounce_rate" => 50.0,
                  "time_on_page" => 900.0,
                  "visitors" => 2,
                  "pageviews" => 2,
                  "name" => "/"
                },
                %{
-                 "bounce_rate" => nil,
                  "time_on_page" => nil,
                  "visitors" => 1,
                  "pageviews" => 1,
@@ -470,14 +459,12 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "bounce_rate" => 40.0,
                  "time_on_page" => 800.0,
                  "visitors" => 3,
                  "pageviews" => 3,
                  "name" => "/"
                },
                %{
-                 "bounce_rate" => nil,
                  "time_on_page" => 60,
                  "visitors" => 2,
                  "pageviews" => 2,
