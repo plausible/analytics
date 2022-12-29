@@ -94,6 +94,7 @@ class EntryPagesModal extends React.Component {
         {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_entrances)}</td>}
         {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{durationFormatter(page.visit_duration)}</td>}
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.conversion_rate)}%</td>}
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td> }
       </tr>
     )
   }
@@ -133,6 +134,7 @@ class EntryPagesModal extends React.Component {
                   {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Total Entrances </th> }
                   {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Visit Duration </th> }
                   {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >CR </th>}
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Bounce rate</th> }
                 </tr>
               </thead>
               <tbody>

@@ -559,13 +559,15 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "unique_entrances" => 2,
                  "total_entrances" => 2,
                  "name" => "/page1",
-                 "visit_duration" => 0
+                 "visit_duration" => 0,
+                 "bounce_rate" => 100
                },
                %{
                  "unique_entrances" => 1,
                  "total_entrances" => 2,
                  "name" => "/page2",
-                 "visit_duration" => 450
+                 "visit_duration" => 450,
+                 "bounce_rate" => 50
                }
              ]
     end
@@ -615,13 +617,15 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "unique_entrances" => 1,
                  "total_entrances" => 1,
                  "name" => "/blog",
-                 "visit_duration" => 60
+                 "visit_duration" => 60,
+                 "bounce_rate" => 0
                },
                %{
                  "unique_entrances" => 1,
                  "total_entrances" => 1,
                  "name" => "/blog/john-2",
-                 "visit_duration" => 0
+                 "visit_duration" => 0,
+                 "bounce_rate" => 100
                }
              ]
     end
@@ -670,13 +674,15 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "unique_entrances" => 2,
                  "total_entrances" => 2,
                  "name" => "/page1",
-                 "visit_duration" => 0
+                 "visit_duration" => 0,
+                 "bounce_rate" => 100
                },
                %{
                  "unique_entrances" => 1,
                  "total_entrances" => 2,
                  "name" => "/page2",
-                 "visit_duration" => 450
+                 "visit_duration" => 450,
+                 "bounce_rate" => 50
                }
              ]
 
@@ -691,13 +697,15 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "unique_entrances" => 3,
                  "total_entrances" => 5,
                  "name" => "/page2",
-                 "visit_duration" => 240.0
+                 "visit_duration" => 240.0,
+                 "bounce_rate" => 20.0
                },
                %{
                  "unique_entrances" => 2,
                  "total_entrances" => 2,
                  "name" => "/page1",
-                 "visit_duration" => 0
+                 "visit_duration" => 0,
+                 "bounce_rate" => 100.0
                }
              ]
     end
@@ -751,7 +759,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "total_entrances" => 1,
                  "name" => "/page2",
                  "visit_duration" => 900,
-                 "conversion_rate" => 100.0
+                 "conversion_rate" => 100.0,
+                 "bounce_rate" => 0
                },
                %{
                  "total_visitors" => 2,
@@ -759,7 +768,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "total_entrances" => 1,
                  "name" => "/page1",
                  "visit_duration" => 0,
-                 "conversion_rate" => 50.0
+                 "conversion_rate" => 50.0,
+                 "bounce_rate" => 0
                }
              ]
     end

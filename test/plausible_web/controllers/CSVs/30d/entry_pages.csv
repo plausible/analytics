@@ -1,2 +1,2 @@
-name,unique_entrances,total_entrances,visit_duration
-/,4,4,15
+name,unique_entrances,total_entrances,visit_duration,bounce_rate
+/,4,4,15,75
