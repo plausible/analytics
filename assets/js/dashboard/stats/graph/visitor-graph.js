@@ -5,7 +5,7 @@ import { navigateToQuery } from '../../query'
 import * as api from '../../api'
 import * as storage from '../../util/storage'
 import LazyLoader from '../../components/lazy-loader'
-import {GraphTooltip, buildDataSet, INTERVALS, METRIC_MAPPING, METRIC_LABELS, METRIC_FORMATTER} from './graph-util';
+import {GraphTooltip, buildDataSet, METRIC_MAPPING, METRIC_LABELS, METRIC_FORMATTER} from './graph-util';
 import dateFormatter from './date-formatter';
 import TopStats from './top-stats';
 import { IntervalPicker, getStoredInterval, storeInterval } from './interval-picker';
@@ -233,7 +233,7 @@ class LineGraph extends React.Component {
           </div>
         )
       } else {
-        const interval = this.props.graphData?.interval || this.state.interval
+        const interval = this.props.graphData?.interval
         const queryParams = api.serializeQuery(this.props.query, [{ interval }])
         const endpoint = `/${encodeURIComponent(this.props.site.domain)}/export${queryParams}`
 
@@ -314,81 +314,71 @@ export default class VisitorGraph extends React.Component {
     this.state = {
       topStatsLoadingState: LOADING_STATE.loading,
       mainGraphLoadingState: LOADING_STATE.loading,
-      metric: storage.getItem(`metric__${this.props.site.domain}`) || 'visitors',
-      interval: getStoredInterval(this.props.query.period, this.props.site.domain)
+      metric: storage.getItem(`metric__${this.props.site.domain}`) || 'visitors'
     }
     this.onVisible = this.onVisible.bind(this)
     this.updateMetric = this.updateMetric.bind(this)
     this.fetchTopStatData = this.fetchTopStatData.bind(this)
     this.fetchGraphData = this.fetchGraphData.bind(this)
-    this.maybeRollbackInterval = this.maybeRollbackInterval.bind(this)
     this.updateInterval = this.updateInterval.bind(this)
   }
 
-  isIntervalValid({ query, site }) {
-    const period = query?.period
-    const validIntervalsForPeriod = site.validIntervalsByPeriod[period] || []
-    const storedInterval = getStoredInterval(period, site.domain)
+  isIntervalValid(interval) {
+    const { query, site } = this.props
+    const validIntervals = site.validIntervalsByPeriod[query.period] || []
 
-    return validIntervalsForPeriod.includes(storedInterval)
+    return validIntervals.includes(interval)
   }
 
-  maybeRollbackInterval() {
-    if (this.isIntervalValid(this.props)) {
-      const interval = getStoredInterval(this.props.query.period, this.props.site.domain)
+  getIntervalFromStorage() {
+    const { query, site } = this.props
+    const storedInterval = getStoredInterval(query.period, site.domain)
 
-      this.setState({interval}, () => {
-        this.fetchGraphData()
-      })
+    if (this.isIntervalValid(storedInterval)) {
+      return storedInterval
     } else {
-      this.setState({interval: undefined}, () => {
-        this.setState({graphData: null})
-        this.fetchGraphData()
-      })
+      return null
     }
   }
 
   updateInterval(interval) {
-    if (INTERVALS.includes(interval)) {
-      this.setState({interval, mainGraphLoadingState: LOADING_STATE.refreshing}, this.maybeRollbackInterval)
+    if (this.isIntervalValid(interval)) {
       storeInterval(this.props.query.period, this.props.site.domain, interval)
+      this.setState({ mainGraphLoadingState: LOADING_STATE.refreshing }, this.fetchGraphData)
     }
   }
 
   onVisible() {
-    this.setState({mainGraphLoadingState: LOADING_STATE.loading}, this.maybeRollbackInterval)
+    this.setState({mainGraphLoadingState: LOADING_STATE.loading}, this.fetchGraphData)
     this.fetchTopStatData()
-    if (this.props.timer) {
-      this.props.timer.onTick(this.maybeRollbackInterval)
-      this.props.timer.onTick(this.fetchTopStatData)
+    if (this.props.query.period === 'realtime') {
+      document.addEventListener('tick', this.fetchGraphData)
+      document.addEventListener('tick', this.fetchTopStatData)
     }
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { metric, topStatData, interval } = this.state;
+    const { metric, topStatData } = this.state;
+    const { query, site } = this.props
 
-    if (this.props.query !== prevProps.query) {
-      if (metric) {
-        this.setState({ mainGraphLoadingState: LOADING_STATE.loading, topStatsLoadingState: LOADING_STATE.loading, graphData: null, topStatData: null }, this.maybeRollbackInterval)
-      } else {
+    if (query !== prevProps.query) {
+      if (this.isGraphCollapsed()) {
         this.setState({ topStatsLoadingState: LOADING_STATE.loading, topStatData: null })
+      } else {
+        this.setState({ mainGraphLoadingState: LOADING_STATE.loading, topStatsLoadingState: LOADING_STATE.loading, graphData: null, topStatData: null }, this.fetchGraphData)
       }
       this.fetchTopStatData()
     }
 
     if (metric !== prevState.metric) {
-      this.setState({mainGraphLoadingState: LOADING_STATE.refreshing}, this.maybeRollbackInterval)
+      this.setState({mainGraphLoadingState: LOADING_STATE.refreshing}, this.fetchGraphData)
     }
 
-    if (interval !== prevState.interval && interval) {
-      this.setState({mainGraphLoadingState: LOADING_STATE.refreshing}, this.maybeRollbackInterval)
-    }
-
-    const savedMetric = storage.getItem(`metric__${this.props.site.domain}`)
+    const savedMetric = storage.getItem(`metric__${site.domain}`)
     const topStatLabels = topStatData && topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
     const prevTopStatLabels = prevState.topStatData && prevState.topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
     if (topStatLabels && `${topStatLabels}` !== `${prevTopStatLabels}`) {
-      if (this.props.query.filters.goal && metric !== 'conversions') {
+      if (query.filters.goal && metric !== 'conversions') {
         this.setState({ metric: 'conversions' })
       } else if (topStatLabels.includes(savedMetric) && savedMetric !== "") {
         this.setState({ metric: savedMetric })
@@ -398,41 +388,48 @@ export default class VisitorGraph extends React.Component {
     }
   }
 
-  updateMetric(newMetric) {
-    if (newMetric === this.state.metric) {
-      storage.setItem(`metric__${this.props.site.domain}`, "")
-      this.setState({ metric: "" })
-    } else {
-      storage.setItem(`metric__${this.props.site.domain}`, newMetric)
-      this.setState({ metric: newMetric })
-    }
+  isGraphCollapsed() {
+    return this.state.metric === ""
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('tick', this.fetchGraphData)
+    document.removeEventListener('tick', this.fetchTopStatData)
+  }
+
+  updateMetric(clickedMetric) {
+    const newMetric = clickedMetric === this.state.metric ? "" : clickedMetric
+
+    storage.setItem(`metric__${this.props.site.domain}`, newMetric)
+    this.setState({ metric: newMetric })
   }
 
   fetchGraphData() {
-    if (!this.state.metric) {
-      this.setState({ mainGraphLoadingState: LOADING_STATE.ready, graphData: null })
+    if (this.isGraphCollapsed()) {
+      this.setState({ mainGraphLoadingState: LOADING_STATE.loaded, graphData: null })
       return
     }
 
     const url = `/api/stats/${encodeURIComponent(this.props.site.domain)}/main-graph`
-    let params = {metric: this.state.metric || 'none'}
-    if (this.state.interval) { params.interval = this.state.interval }
+    let params = { metric: this.state.metric }
+    const interval = this.getIntervalFromStorage()
+    if (interval) { params.interval = interval }
 
     api.get(url, this.props.query, params)
       .then((res) => {
-        this.setState({ mainGraphLoadingState: LOADING_STATE.ready, graphData: res })
+        this.setState({ mainGraphLoadingState: LOADING_STATE.loaded, graphData: res })
         return res
       })
       .catch((err) => {
         console.log(err)
-        this.setState({ mainGraphLoadingState: LOADING_STATE.ready, graphData: false })
+        this.setState({ mainGraphLoadingState: LOADING_STATE.loaded, graphData: false })
       })
   }
 
   fetchTopStatData() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/top-stats`, this.props.query)
       .then((res) => {
-        this.setState({ topStatsLoadingState: LOADING_STATE.ready, topStatData: res })
+        this.setState({ topStatsLoadingState: LOADING_STATE.loaded, topStatData: res })
         return res
       })
   }
@@ -443,14 +440,14 @@ export default class VisitorGraph extends React.Component {
 
     const theme = document.querySelector('html').classList.contains('dark') || false
 
-    const topStatsReadyOrRefreshing = (topStatsLoadingState === LOADING_STATE.ready || topStatsLoadingState === LOADING_STATE.refreshing)
-    const mainGraphReadyOrRefreshing = (mainGraphLoadingState === LOADING_STATE.ready || mainGraphLoadingState === LOADING_STATE.refreshing)
+    const topStatsLoadedOrRefreshing = (topStatsLoadingState === LOADING_STATE.loaded || topStatsLoadingState === LOADING_STATE.refreshing)
+    const mainGraphLoadedOrRefreshing = (mainGraphLoadingState === LOADING_STATE.loaded || mainGraphLoadingState === LOADING_STATE.refreshing)
     const noMetricOrRefreshing = (!metric || mainGraphLoadingState === LOADING_STATE.refreshing)
     const topStatAndGraphLoaded = !!(topStatData && graphData)
 
     const showGraph =
-      topStatsReadyOrRefreshing &&
-      mainGraphReadyOrRefreshing &&
+    topStatsLoadedOrRefreshing &&
+    mainGraphLoadedOrRefreshing &&
       (topStatData && noMetricOrRefreshing || topStatAndGraphLoaded)
 
     return (

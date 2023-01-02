@@ -32,7 +32,7 @@ function Historical(props) {
         <div className="items-center w-full flex">
           <div className="flex items-center w-full">
             <SiteSwitcher site={props.site} loggedIn={props.loggedIn} currentUserRole={props.currentUserRole} />
-            <CurrentVisitors timer={props.timer} site={props.site} query={props.query} />
+            <CurrentVisitors site={props.site} query={props.query} />
             <Filters className="flex" site={props.site} query={props.query} history={props.history} />
           </div>
           <Datepicker site={props.site} query={props.query} />

@@ -101,12 +101,12 @@ export default class Pages extends React.Component {
   renderContent() {
     switch(this.state.mode) {
     case "entry-pages":
-      return <EntryPages site={this.props.site} query={this.props.query} timer={this.props.timer} />
+      return <EntryPages site={this.props.site} query={this.props.query} />
     case "exit-pages":
-      return <ExitPages site={this.props.site} query={this.props.query} timer={this.props.timer} />
+      return <ExitPages site={this.props.site} query={this.props.query} />
     case "pages":
     default:
-      return <TopPages site={this.props.site} query={this.props.query} timer={this.props.timer} />
+      return <TopPages site={this.props.site} query={this.props.query} />
     }
   }
 

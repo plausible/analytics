@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
+import FlipMove from 'react-flip-move'
+
 
 import Bar from '../bar'
 import PropBreakdown from './prop-breakdown'
@@ -20,7 +22,7 @@ export default class Conversions extends React.Component {
       viewport: DEFAULT_WIDTH,
     }
     this.onVisible = this.onVisible.bind(this)
-
+    this.fetchConversions = this.fetchConversions.bind(this)
     this.handleResize = this.handleResize.bind(this);
   }
 
@@ -31,6 +33,7 @@ export default class Conversions extends React.Component {
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.handleResize, false);
+    document.removeEventListener('tick', this.fetchConversions)
   }
 
   handleResize() {
@@ -39,6 +42,9 @@ export default class Conversions extends React.Component {
 
   onVisible() {
     this.fetchConversions()
+    if (this.props.query.period === 'realtime') {
+      document.addEventListener('tick', this.fetchConversions)
+    }
   }
 
   componentDidUpdate(prevProps) {
@@ -102,8 +108,9 @@ export default class Conversions extends React.Component {
               <span className="inline-block w-20">CR</span>
             </div>
           </div>
-
-          { this.state.goals.map(this.renderGoal.bind(this)) }
+          <FlipMove>
+            { this.state.goals.map(this.renderGoal.bind(this)) }
+          </FlipMove>
         </React.Fragment>
       )
     }

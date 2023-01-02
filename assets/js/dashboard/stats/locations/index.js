@@ -131,14 +131,14 @@ export default class Locations extends React.Component {
 	renderContent() {
     switch(this.state.mode) {
 		case "cities":
-      return <Cities site={this.props.site} query={this.props.query} timer={this.props.timer}/>
+      return <Cities site={this.props.site} query={this.props.query} />
 		case "regions":
-      return <Regions onClick={this.onRegionFilter} site={this.props.site} query={this.props.query} timer={this.props.timer}/>
+      return <Regions onClick={this.onRegionFilter} site={this.props.site} query={this.props.query} />
 		case "countries":
-      return <Countries onClick={this.onCountryFilter('countries')} site={this.props.site} query={this.props.query} timer={this.props.timer}/>
+      return <Countries onClick={this.onCountryFilter('countries')} site={this.props.site} query={this.props.query} />
     case "map":
     default:
-      return <CountriesMap onClick={this.onCountryFilter('map')} site={this.props.site} query={this.props.query} timer={this.props.timer}/>
+      return <CountriesMap onClick={this.onCountryFilter('map')} site={this.props.site} query={this.props.query}/>
     }
   }
 

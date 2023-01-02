@@ -15,12 +15,15 @@ class AllSources extends React.Component {
   constructor(props) {
     super(props)
     this.onVisible = this.onVisible.bind(this)
+    this.fetchReferrers = this.fetchReferrers.bind(this)
     this.state = { loading: true }
   }
 
   onVisible() {
     this.fetchReferrers()
-    if (this.props.timer) this.props.timer.onTick(this.fetchReferrers.bind(this))
+    if (this.props.query.period === 'realtime') {
+      document.addEventListener('tick', this.fetchReferrers)
+    }
   }
 
   componentDidUpdate(prevProps) {
@@ -28,6 +31,10 @@ class AllSources extends React.Component {
       this.setState({ loading: true, referrers: null })
       this.fetchReferrers()
     }
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('tick', this.fetchReferrers)
   }
 
   showConversionRate() {
@@ -103,7 +110,7 @@ class AllSources extends React.Component {
         </React.Fragment>
       )
     } else {
-      return <div className="font-medium text-center text-gray-500 mt-44">No data yet</div>
+      return <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">No data yet</div>
     }
   }
 
@@ -144,12 +151,16 @@ const UTM_TAGS = {
 class UTMSources extends React.Component {
   constructor(props) {
     super(props)
+    this.onVisible = this.onVisible.bind(this)
+    this.fetchReferrers = this.fetchReferrers.bind(this)
     this.state = { loading: true }
   }
 
-  componentDidMount() {
+  onVisible() {
     this.fetchReferrers()
-    if (this.props.timer) this.props.timer.onTick(this.fetchReferrers.bind(this))
+    if (this.props.query.period === 'realtime') {
+      document.addEventListener('tick', this.fetchReferrers)
+    }
   }
 
   componentDidUpdate(prevProps) {
@@ -157,6 +168,10 @@ class UTMSources extends React.Component {
       this.setState({ loading: true, referrers: null })
       this.fetchReferrers()
     }
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('tick', this.fetchReferrers)
   }
 
   showNoRef() {
@@ -240,7 +255,7 @@ class UTMSources extends React.Component {
 
   renderContent() {
     return (
-      <React.Fragment>
+      <LazyLoader onVisible={this.onVisible}>
         <div className="flex justify-between w-full">
           <h3 className="font-bold dark:text-gray-100">Top Sources</h3>
           {this.props.renderTabs()}
@@ -249,7 +264,7 @@ class UTMSources extends React.Component {
         <FadeIn show={!this.state.loading} className="flex flex-col flex-grow">
           {this.renderList()}
         </FadeIn>
-      </React.Fragment>
+      </LazyLoader>
     )
   }
 
@@ -289,7 +304,7 @@ export default class SourceList extends React.Component {
   renderTabs() {
     const activeClass = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading truncate text-left'
     const defaultClass = 'hover:text-indigo-600 cursor-pointer truncate text-left'
-    const dropdownOptions = ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content']
+    const dropdownOptions = Object.keys(UTM_TAGS)
     let buttonText = UTM_TAGS[this.state.tab] ? UTM_TAGS[this.state.tab].label : 'Campaigns'
 
     return (
@@ -344,15 +359,7 @@ export default class SourceList extends React.Component {
   render() {
     if (this.state.tab === 'all') {
       return <AllSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
-    } else if (this.state.tab === 'utm_medium') {
-      return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
-    } else if (this.state.tab === 'utm_source') {
-      return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
-    } else if (this.state.tab === 'utm_campaign') {
-      return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
-    } else if (this.state.tab === 'utm_content') {
-      return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
-    } else if (this.state.tab === 'utm_term') {
+    } else if (Object.keys(UTM_TAGS).includes(this.state.tab)) {
       return <UTMSources tab={this.state.tab} setTab={this.setTab.bind(this)} renderTabs={this.renderTabs.bind(this)} {...this.props} />
     }
   }

@@ -1,8 +1,6 @@
 import numberFormatter, {durationFormatter} from '../../util/number-formatter'
 import dateFormatter from './date-formatter.js'
 
-export const INTERVALS = ["month", "week", "date", "hour", "minute"]
-
 export const METRIC_MAPPING = {
   'Unique visitors (last 30 min)': 'visitors',
   'Pageviews (last 30 min)': 'pageviews',

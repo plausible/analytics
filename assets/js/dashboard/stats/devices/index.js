@@ -139,18 +139,18 @@ export default class Devices extends React.Component {
     switch (this.state.mode) {
       case 'browser':
         if (this.props.query.filters.browser) {
-          return <BrowserVersions site={this.props.site} query={this.props.query} timer={this.props.timer} />
+          return <BrowserVersions site={this.props.site} query={this.props.query} />
         }
-        return <Browsers site={this.props.site} query={this.props.query} timer={this.props.timer} />
+        return <Browsers site={this.props.site} query={this.props.query} />
       case 'os':
         if (this.props.query.filters.os) {
-          return <OperatingSystemVersions site={this.props.site} query={this.props.query} timer={this.props.timer} />
+          return <OperatingSystemVersions site={this.props.site} query={this.props.query} />
         }
-        return <OperatingSystems site={this.props.site} query={this.props.query} timer={this.props.timer} />
+        return <OperatingSystems site={this.props.site} query={this.props.query} />
       case 'size':
       default:
         return (
-          <ScreenSizes site={this.props.site} query={this.props.query} timer={this.props.timer} />
+          <ScreenSizes site={this.props.site} query={this.props.query} />
         )
     }
   }

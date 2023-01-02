@@ -21,6 +21,7 @@ class Countries extends React.Component {
       darkTheme: document.querySelector('html').classList.contains('dark') || false
     }
     this.onVisible = this.onVisible.bind(this)
+    this.updateCountries = this.updateCountries.bind(this)
   }
 
   componentDidUpdate(prevProps) {
@@ -33,12 +34,15 @@ class Countries extends React.Component {
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.resizeMap);
+    document.removeEventListener('tick', this.updateCountries);
   }
 
   onVisible() {
     this.fetchCountries().then(this.drawMap.bind(this))
     window.addEventListener('resize', this.resizeMap);
-    if (this.props.timer) this.props.timer.onTick(this.updateCountries.bind(this))
+    if (this.props.query.period === 'realtime') {
+      document.addEventListener('tick', this.updateCountries)
+    }
   }
 
   getDataset() {

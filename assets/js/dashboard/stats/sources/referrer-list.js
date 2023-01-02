@@ -23,11 +23,14 @@ export default class Referrers extends React.Component {
     super(props)
     this.state = { loading: true }
     this.onVisible = this.onVisible.bind(this)
+    this.fetchReferrers = this.fetchReferrers.bind(this)
   }
 
   onVisible() {
     this.fetchReferrers()
-    if (this.props.timer) this.props.timer.onTick(this.fetchReferrers.bind(this))
+    if (this.props.query.period === 'realtime') {
+      document.addEventListener('tick', this.fetchReferrers)
+    }
   }
 
   componentDidUpdate(prevProps) {
@@ -35,6 +38,10 @@ export default class Referrers extends React.Component {
       this.setState({ loading: true, referrers: null })
       this.fetchReferrers()
     }
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('tick', this.fetchReferrers)
   }
 
   showConversionRate() {
