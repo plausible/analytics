@@ -7,6 +7,7 @@ defmodule Plausible.Stats.Query do
             include_imported: false
 
   @default_sample_threshold 20_000_000
+  require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{FilterParser, Interval}
 
   def shift_back(%__MODULE__{period: "year"} = query, site) do
@@ -335,5 +336,16 @@ defmodule Plausible.Stats.Query do
       imported_data_requested && has_imported_data && date_range_overlaps && no_filters_applied
 
     %{query | include_imported: !!include_imported}
+  end
+
+  @spec trace(%__MODULE__{}) :: %__MODULE__{}
+  def trace(%__MODULE__{} = query) do
+    Tracer.set_attributes([
+      {"plausible.query.interval", query.interval},
+      {"plausible.query.period", query.period},
+      {"plausible.query.include_imported", query.include_imported}
+    ])
+
+    query
   end
 end

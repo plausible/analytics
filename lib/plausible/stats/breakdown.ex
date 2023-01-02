@@ -1,6 +1,7 @@
 defmodule Plausible.Stats.Breakdown do
   use Plausible.ClickhouseRepo
   import Plausible.Stats.{Base, Imported}
+  require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.Query
   alias Plausible.Goals
   @no_ref "Direct / None"
@@ -9,7 +10,7 @@ defmodule Plausible.Stats.Breakdown do
   @session_metrics [:visits, :bounce_rate, :visit_duration]
   @event_props ["event:page", "event:page_match", "event:name"]
 
-  def breakdown(site, query, "event:goal", metrics, pagination) do
+  def breakdown(site, query, "event:goal" = property, metrics, pagination) do
     {event_goals, pageview_goals} =
       site.domain
       |> Goals.for_domain()
@@ -17,6 +18,8 @@ defmodule Plausible.Stats.Breakdown do
 
     events = Enum.map(event_goals, & &1.event_name)
     event_query = %Query{query | filters: Map.put(query.filters, "event:name", {:member, events})}
+
+    trace(query, property, metrics)
 
     event_results =
       if Enum.any?(event_goals) do
@@ -60,7 +63,7 @@ defmodule Plausible.Stats.Breakdown do
     zip_results(event_results, page_results, :goal, metrics)
   end
 
-  def breakdown(site, query, "event:props:" <> custom_prop, metrics, pagination) do
+  def breakdown(site, query, "event:props:" <> custom_prop = property, metrics, pagination) do
     {limit, _} = pagination
 
     none_result =
@@ -80,6 +83,7 @@ defmodule Plausible.Stats.Breakdown do
         []
       end
 
+    trace(query, property, metrics)
     results = breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
 
     zipped = zip_results(none_result, results, custom_prop, metrics)
@@ -91,7 +95,7 @@ defmodule Plausible.Stats.Breakdown do
     end
   end
 
-  def breakdown(site, query, "event:page", metrics, pagination) do
+  def breakdown(site, query, "event:page" = property, metrics, pagination) do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
@@ -118,6 +122,8 @@ defmodule Plausible.Stats.Breakdown do
           Query.put_filter(query, "visit:entry_page", {:member, Enum.map(pages, & &1[:page])})
       end
 
+    trace(new_query, property, metrics)
+
     if Enum.any?(event_metrics) && Enum.empty?(event_result) do
       []
     else
@@ -140,6 +146,7 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   def breakdown(site, query, property, metrics, pagination) when property in @event_props do
+    trace(query, property, metrics)
     breakdown_events(site, query, property, metrics, pagination)
   end
 
@@ -157,10 +164,12 @@ defmodule Plausible.Stats.Breakdown do
       |> Query.treat_page_filter_as_entry_page()
       |> Query.treat_prop_filter_as_entry_prop()
 
+    trace(query, property, metrics)
     breakdown_sessions(site, query, property, metrics, pagination)
   end
 
   def breakdown(site, query, property, metrics, pagination) do
+    trace(query, property, metrics)
     breakdown_sessions(site, query, property, metrics, pagination)
   end
 
@@ -554,5 +563,14 @@ defmodule Plausible.Stats.Breakdown do
     q
     |> Ecto.Query.limit(^limit)
     |> Ecto.Query.offset(^offset)
+  end
+
+  defp trace(query, property, metrics) do
+    Query.trace(query)
+
+    Tracer.set_attributes([
+      {"plausible.query.breakdown_property", property},
+      {"plausible.query.breakdown_metrics", metrics}
+    ])
   end
 end
