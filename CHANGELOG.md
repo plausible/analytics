@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Fixed
+- Show appropriate top-stat metric labels on the realtime dashboard when filtering by a goal
 - Automatically update all visible dashboard reports in the realtime view
 
 ### Changed
