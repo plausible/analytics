@@ -223,7 +223,7 @@ defmodule Plausible.Stats.Breakdown do
 
   defp breakdown_events(site, query, property, metrics, pagination) do
     from(e in base_event_query(site, query),
-      order_by: [desc: fragment("uniq(?)", e.user_id)],
+      order_by: [desc: fragment("uniq(?)", e.user_id), asc: fragment("min(?)", e.timestamp)],
       select: %{}
     )
     |> do_group_by(property)
