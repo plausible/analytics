@@ -198,5 +198,5 @@ defmodule Plausible.Ingestion.CityOverrides do
     # Hackney -> London
     2_647_694 => 2_643_743
   }
-  def get, do: @overrides
+  def get(key, default), do: Map.get(@overrides, key, default)
 end

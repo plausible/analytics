@@ -9,7 +9,7 @@ defmodule Plausible.Ingestion.Geolocation do
       |> ignore_unknown_country()
 
     city_geoname_id = country_code && get_in(result, [:city, :geoname_id])
-    city_geoname_id = Map.get(CityOverrides.get(), city_geoname_id, city_geoname_id)
+    city_geoname_id = CityOverrides.get(city_geoname_id, city_geoname_id)
 
     %{
       country_code: country_code,
