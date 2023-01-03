@@ -5,7 +5,7 @@ defmodule Plausible.Ingestion.Event do
   are uniformly either buffered in batches (to Clickhouse) or dropped
   (e.g. due to spam blocklist) from the processing pipeline.
   """
-  alias Plausible.Ingestion.{Request, CityOverrides}
+  alias Plausible.Ingestion.Request
   alias Plausible.ClickhouseEvent
   alias Plausible.Site.GateKeeper
 
@@ -168,39 +168,9 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp put_geolocation(%__MODULE__{} = event) do
-    result = Geolix.lookup(event.request.remote_ip, where: :geolocation)
+    result = Plausible.Ingestion.Geolocation.lookup(event.request.remote_ip)
 
-    country_code =
-      get_in(result, [:country, :iso_code])
-      |> ignore_unknown_country()
-
-    city_geoname_id = get_in(result, [:city, :geoname_id])
-    city_geoname_id = Map.get(CityOverrides.get(), city_geoname_id, city_geoname_id)
-
-    subdivision1_code =
-      case result do
-        %{subdivisions: [%{iso_code: iso_code} | _rest]} ->
-          country_code <> "-" <> iso_code
-
-        _ ->
-          ""
-      end
-
-    subdivision2_code =
-      case result do
-        %{subdivisions: [_first, %{iso_code: iso_code} | _rest]} ->
-          country_code <> "-" <> iso_code
-
-        _ ->
-          ""
-      end
-
-    update_attrs(event, %{
-      country_code: country_code,
-      subdivision1_code: subdivision1_code,
-      subdivision2_code: subdivision2_code,
-      city_geoname_id: city_geoname_id
-    })
+    update_attrs(event, result)
   end
 
   defp put_screen_size(%__MODULE__{} = event) do
@@ -371,9 +341,6 @@ defmodule Plausible.Ingestion.Event do
         |> Enum.join(".")
     end
   end
-
-  defp ignore_unknown_country("ZZ"), do: nil
-  defp ignore_unknown_country(country), do: country
 
   defp generate_user_id(request, domain, hostname, salt) do
     cond do

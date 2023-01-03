@@ -56,7 +56,9 @@ config :geolix,
         {1, 1, 1, 1} => %{country: %{iso_code: "US"}},
         {2, 2, 2, 2} => geolix_sample_lookup,
         {1, 1, 1, 1, 1, 1, 1, 1} => %{country: %{iso_code: "US"}},
-        {0, 0, 0, 0} => %{country: %{iso_code: "ZZ"}}
+        {0, 0, 0, 0} => %{country: %{iso_code: "ZZ"}, city: %{geoname_id: 123_123}},
+        {0, 0, 0, 1} => %{country: %{iso_code: "XX"}, subdivisions: [%{iso_code: "IDF"}]},
+        {0, 0, 0, 2} => %{country: %{iso_code: "T1"}, subdivisions: [%{}, %{iso_code: "IDF"}]}
       }
     }
   ]
