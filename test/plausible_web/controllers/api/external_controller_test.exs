@@ -685,6 +685,47 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = get_event(domain)
 
       assert pageview.country_code == <<0, 0>>
+      assert pageview.subdivision1_code == ""
+      assert pageview.subdivision2_code == ""
+      assert pageview.city_geoname_id == 0
+    end
+
+    test "ignores disputed territory code XX", %{conn: conn, domain: domain} do
+      params = %{
+        name: "pageview",
+        domain: domain,
+        url: "http://gigride.live/"
+      }
+
+      conn
+      |> put_req_header("x-forwarded-for", "0.0.0.1")
+      |> post("/api/event", params)
+
+      pageview = get_event(domain)
+
+      assert pageview.country_code == <<0, 0>>
+      assert pageview.subdivision1_code == ""
+      assert pageview.subdivision2_code == ""
+      assert pageview.city_geoname_id == 0
+    end
+
+    test "ignores TOR exit node country code T1", %{conn: conn, domain: domain} do
+      params = %{
+        name: "pageview",
+        domain: domain,
+        url: "http://gigride.live/"
+      }
+
+      conn
+      |> put_req_header("x-forwarded-for", "0.0.0.2")
+      |> post("/api/event", params)
+
+      pageview = get_event(domain)
+
+      assert pageview.country_code == <<0, 0>>
+      assert pageview.subdivision1_code == ""
+      assert pageview.subdivision2_code == ""
+      assert pageview.city_geoname_id == 0
     end
 
     test "scrubs port from x-forwarded-for", %{conn: conn, domain: domain} do
