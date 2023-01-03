@@ -191,21 +191,24 @@ defmodule Plausible.Billing do
         Map.put(params, "passthrough", user && user.id)
       end
 
-    changeset = Subscription.changeset(%Subscription{}, format_subscription(params))
-
-    Repo.insert(changeset) |> after_subscription_update
+    %Subscription{}
+    |> Subscription.changeset(format_subscription(params))
+    |> Repo.insert!()
+    |> after_subscription_update()
   end
 
   defp handle_subscription_updated(params) do
-    subscription = Repo.get_by!(Subscription, paddle_subscription_id: params["subscription_id"])
-    changeset = Subscription.changeset(subscription, format_subscription(params))
-
-    Repo.update(changeset) |> after_subscription_update
+    Subscription
+    |> Repo.get_by!(paddle_subscription_id: params["subscription_id"])
+    |> Subscription.changeset(format_subscription(params))
+    |> Repo.update!()
+    |> after_subscription_update()
   end
 
   defp handle_subscription_cancelled(params) do
     subscription =
-      Repo.get_by(Subscription, paddle_subscription_id: params["subscription_id"])
+      Subscription
+      |> Repo.get_by(paddle_subscription_id: params["subscription_id"])
       |> Repo.preload(:user)
 
     if subscription do
@@ -214,16 +217,14 @@ defmodule Plausible.Billing do
           status: params["status"]
         })
 
-      case Repo.update(changeset) do
-        {:ok, updated} ->
-          PlausibleWeb.Email.cancellation_email(subscription.user)
-          |> Plausible.Mailer.send()
+      updated = Repo.update!(changeset)
 
-          {:ok, updated}
+      subscription
+      |> Map.fetch!(:user)
+      |> PlausibleWeb.Email.cancellation_email()
+      |> Plausible.Mailer.send()
 
-        err ->
-          err
-      end
+      updated
     end
   end
 
@@ -236,14 +237,13 @@ defmodule Plausible.Billing do
       amount =
         :erlang.float_to_binary(api_subscription["next_payment"]["amount"] / 1, decimals: 2)
 
-      changeset =
-        Subscription.changeset(subscription, %{
-          next_bill_amount: amount,
-          next_bill_date: api_subscription["next_payment"]["date"],
-          last_bill_date: api_subscription["last_payment"]["date"]
-        })
-
-      Repo.update(changeset)
+      subscription
+      |> Subscription.changeset(%{
+        next_bill_amount: amount,
+        next_bill_date: api_subscription["next_payment"]["date"],
+        last_bill_date: api_subscription["last_payment"]["date"]
+      })
+      |> Repo.update!()
     end
   end
 
@@ -287,24 +287,22 @@ defmodule Plausible.Billing do
         if new_allowance > allowance_required do
           user
           |> Plausible.Auth.GracePeriod.remove_changeset()
-          |> Repo.update()
+          |> Repo.update!()
         else
-          {:ok, user}
+          user
         end
 
       _ ->
-        {:ok, user}
+        user
     end
   end
 
-  defp check_lock_status({:ok, user}) do
+  defp check_lock_status(user) do
     Plausible.Billing.SiteLocker.check_sites_for(user)
-    {:ok, user}
+    user
   end
 
-  defp check_lock_status(err), do: err
-
-  defp maybe_adjust_api_key_limits({:ok, user}) do
+  defp maybe_adjust_api_key_limits(user) do
     plan =
       Repo.get_by(Plausible.Billing.EnterprisePlan,
         user_id: user.id,
@@ -317,10 +315,8 @@ defmodule Plausible.Billing do
       Repo.update_all(api_keys, set: [hourly_request_limit: plan.hourly_api_request_limit])
     end
 
-    {:ok, user}
+    user
   end
-
-  defp maybe_adjust_api_key_limits(err), do: err
 
   def paddle_api(), do: Application.fetch_env!(:plausible, :paddle_api)
 
@@ -331,16 +327,15 @@ defmodule Plausible.Billing do
       limit: 1
   end
 
-  defp after_subscription_update({:ok, subscription}) do
+  defp after_subscription_update(subscription) do
     user =
-      Repo.get(Plausible.Auth.User, subscription.user_id)
+      Plausible.Auth.User
+      |> Repo.get!(subscription.user_id)
       |> Map.put(:subscription, subscription)
 
     user
-    |> maybe_remove_grace_period
-    |> check_lock_status
-    |> maybe_adjust_api_key_limits
+    |> maybe_remove_grace_period()
+    |> check_lock_status()
+    |> maybe_adjust_api_key_limits()
   end
-
-  defp after_subscription_update(err), do: err
 end
