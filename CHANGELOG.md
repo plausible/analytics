@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Reject events with long URIs and data URIs plausible/analytics#2536
 - Always show direct traffic in sources reports plausible/analytics#2531
+- Stop recording XX and T1 country codes plausible/analytics#2556
 
 ## Fixed
 - Cascade delete sent_renewal_notifications table when user is deleted plausible/analytics#2549
