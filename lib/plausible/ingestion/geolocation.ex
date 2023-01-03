@@ -1,4 +1,5 @@
 defmodule Plausible.Ingestion.Geolocation do
+  @moduledoc false
   alias Plausible.Ingestion.CityOverrides
 
   def lookup(remote_ip) do
