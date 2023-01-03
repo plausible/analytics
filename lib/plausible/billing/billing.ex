@@ -14,75 +14,25 @@ defmodule Plausible.Billing do
 
   def subscription_created(params) do
     Repo.transaction(fn ->
-      params =
-        if present?(params["passthrough"]) do
-          params
-        else
-          user = Repo.get_by(Plausible.Auth.User, email: params["email"])
-          Map.put(params, "passthrough", user && user.id)
-        end
-
-      changeset = Subscription.changeset(%Subscription{}, format_subscription(params))
-
-      Repo.insert(changeset) |> after_subscription_update
+      handle_subscription_created(params)
     end)
   end
 
   def subscription_updated(params) do
     Repo.transaction(fn ->
-      subscription = Repo.get_by!(Subscription, paddle_subscription_id: params["subscription_id"])
-      changeset = Subscription.changeset(subscription, format_subscription(params))
-
-      Repo.update(changeset) |> after_subscription_update
+      handle_subscription_updated(params)
     end)
   end
 
   def subscription_cancelled(params) do
     Repo.transaction(fn ->
-      subscription =
-        Repo.get_by(Subscription, paddle_subscription_id: params["subscription_id"])
-        |> Repo.preload(:user)
-
-      if subscription do
-        changeset =
-          Subscription.changeset(subscription, %{
-            status: params["status"]
-          })
-
-        case Repo.update(changeset) do
-          {:ok, updated} ->
-            PlausibleWeb.Email.cancellation_email(subscription.user)
-            |> Plausible.Mailer.send()
-
-            {:ok, updated}
-
-          err ->
-            err
-        end
-      end
+      handle_subscription_cancelled(params)
     end)
   end
 
   def subscription_payment_succeeded(params) do
     Repo.transaction(fn ->
-      subscription = Repo.get_by(Subscription, paddle_subscription_id: params["subscription_id"])
-
-      if subscription do
-        {:ok, api_subscription} =
-          paddle_api().get_subscription(subscription.paddle_subscription_id)
-
-        amount =
-          :erlang.float_to_binary(api_subscription["next_payment"]["amount"] / 1, decimals: 2)
-
-        changeset =
-          Subscription.changeset(subscription, %{
-            next_bill_amount: amount,
-            next_bill_date: api_subscription["next_payment"]["date"],
-            last_bill_date: api_subscription["last_payment"]["date"]
-          })
-
-        Repo.update(changeset)
-      end
+      handle_subscription_payment_succeeded(params)
     end)
   end
 
@@ -229,6 +179,71 @@ defmodule Plausible.Billing do
 
       true ->
         Application.get_env(:plausible, :site_limit)
+    end
+  end
+
+  defp handle_subscription_created(params) do
+    params =
+      if present?(params["passthrough"]) do
+        params
+      else
+        user = Repo.get_by(Plausible.Auth.User, email: params["email"])
+        Map.put(params, "passthrough", user && user.id)
+      end
+
+    changeset = Subscription.changeset(%Subscription{}, format_subscription(params))
+
+    Repo.insert(changeset) |> after_subscription_update
+  end
+
+  defp handle_subscription_updated(params) do
+    subscription = Repo.get_by!(Subscription, paddle_subscription_id: params["subscription_id"])
+    changeset = Subscription.changeset(subscription, format_subscription(params))
+
+    Repo.update(changeset) |> after_subscription_update
+  end
+
+  defp handle_subscription_cancelled(params) do
+    subscription =
+      Repo.get_by(Subscription, paddle_subscription_id: params["subscription_id"])
+      |> Repo.preload(:user)
+
+    if subscription do
+      changeset =
+        Subscription.changeset(subscription, %{
+          status: params["status"]
+        })
+
+      case Repo.update(changeset) do
+        {:ok, updated} ->
+          PlausibleWeb.Email.cancellation_email(subscription.user)
+          |> Plausible.Mailer.send()
+
+          {:ok, updated}
+
+        err ->
+          err
+      end
+    end
+  end
+
+  defp handle_subscription_payment_succeeded(params) do
+    subscription = Repo.get_by(Subscription, paddle_subscription_id: params["subscription_id"])
+
+    if subscription do
+      {:ok, api_subscription} = paddle_api().get_subscription(subscription.paddle_subscription_id)
+
+      amount =
+        :erlang.float_to_binary(api_subscription["next_payment"]["amount"] / 1, decimals: 2)
+
+      changeset =
+        Subscription.changeset(subscription, %{
+          next_bill_amount: amount,
+          next_bill_date: api_subscription["next_payment"]["date"],
+          last_bill_date: api_subscription["last_payment"]["date"]
+        })
+
+      Repo.update(changeset)
     end
   end
 
