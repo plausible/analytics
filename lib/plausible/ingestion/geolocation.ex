@@ -42,7 +42,6 @@ defmodule Plausible.Ingestion.Geolocation do
     # Tor exit node
     "T1"
   ]
-  # ZZ - worldwide
   defp ignore_unknown_country(code) when code in @ignored_countries, do: nil
   defp ignore_unknown_country(country), do: country
 end
