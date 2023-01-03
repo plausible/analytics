@@ -230,7 +230,10 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp fetch_top_stats(site, %Query{period: "realtime", filters: %{"event:goal" => _goal}} = query) do
+  defp fetch_top_stats(
+         site,
+         %Query{period: "realtime", filters: %{"event:goal" => _goal}} = query
+       ) do
     query_30m = %Query{query | period: "30m"}
 
     %{

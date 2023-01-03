@@ -156,13 +156,16 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert %{"name" => "Current visitors", "value" => 3} in res["top_stats"]
     end
 
-    test "shows unique/total conversions (last 30 min) with goal filter", %{conn: conn, site: site} do
+    test "shows unique/total conversions (last 30 min) with goal filter", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:event, name: "Signup", timestamp: relative_time(minutes: -45)),
         build(:event, name: "Signup", timestamp: relative_time(minutes: -25)),
         build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minutes: -22)),
         build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minutes: -21)),
-        build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minutes: -20)),
+        build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minutes: -20))
       ])
 
       filters = Jason.encode!(%{goal: "Signup"})
