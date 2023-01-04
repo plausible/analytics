@@ -13,13 +13,10 @@ defmodule Plausible.Stats.Timeseries do
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
     [event_result, session_result] =
-      Task.await_many(
-        [
-          Task.async(fn -> events_timeseries(site, query, event_metrics) end),
-          Task.async(fn -> sessions_timeseries(site, query, session_metrics) end)
-        ],
-        10_000
-      )
+      Plausible.ClickhouseRepo.parallel_tasks([
+        fn -> events_timeseries(site, query, event_metrics) end,
+        fn -> sessions_timeseries(site, query, session_metrics) end
+      ])
 
     Enum.map(steps, fn step ->
       empty_row(step, metrics)

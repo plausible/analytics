@@ -23,13 +23,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
           prev_query = Query.shift_back(query, site)
 
           [prev_result, curr_result] =
-            Task.await_many(
-              [
-                Task.async(fn -> Plausible.Stats.aggregate(site, prev_query, metrics) end),
-                Task.async(fn -> Plausible.Stats.aggregate(site, query, metrics) end)
-              ],
-              10_000
-            )
+            Plausible.ClickhouseRepo.parallel_tasks([
+              fn -> Plausible.Stats.aggregate(site, prev_query, metrics) end,
+              fn -> Plausible.Stats.aggregate(site, query, metrics) end
+            ])
 
           Enum.map(curr_result, fn {metric, %{value: current_val}} ->
             %{value: prev_val} = prev_result[metric]
