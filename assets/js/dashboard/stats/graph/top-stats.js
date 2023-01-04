@@ -85,6 +85,12 @@ export default class TopStats extends React.Component {
     )
   }
 
+  blinkingDot() {
+    return (
+      <div key="dot" className="block pulsating-circle" style={{ left: '125px', top: '52px' }}></div>
+    )
+  }
+
   render() {
     const { metric, topStatData, query } = this.props
 
@@ -114,7 +120,7 @@ export default class TopStats extends React.Component {
     })
 
     if (stats && query && query.period === 'realtime') {
-      stats.push(<div key="dot" className="block pulsating-circle" style={{ left: '125px', top: '52px' }}></div>)
+      stats.push(this.blinkingDot())
     }
 
     return stats || null;
