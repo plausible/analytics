@@ -13,7 +13,14 @@ defmodule Plausible.ClickhouseRepo do
 
   @task_timeout 60_000
   def parallel_tasks(queries) do
-    Task.async_stream(queries, fn fun -> fun.() end, max_concurrency: 3, timeout: @task_timeout)
+    ctx = OpenTelemetry.Ctx.get_current()
+
+    execute_with_tracing = fn fun ->
+      OpenTelemetry.Ctx.attach(ctx)
+      fun.()
+    end
+
+    Task.async_stream(queries, execute_with_tracing, max_concurrency: 3, timeout: @task_timeout)
     |> Enum.to_list()
     |> Keyword.values()
   end
