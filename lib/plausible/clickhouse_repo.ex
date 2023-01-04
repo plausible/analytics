@@ -11,9 +11,10 @@ defmodule Plausible.ClickhouseRepo do
     end
   end
 
-  @task_timeout 15_000
+  @task_timeout 60_000
   def parallel_tasks(queries) do
-    Enum.map(queries, &Task.async/1)
-    |> Task.await_many(@task_timeout)
+    Task.async_stream(queries, fn fun -> fun.() end, max_concurrency: 3, timeout: @task_timeout)
+    |> Enum.to_list()
+    |> Keyword.values()
   end
 end
