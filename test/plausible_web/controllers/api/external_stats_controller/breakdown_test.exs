@@ -1592,13 +1592,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       populate_stats([
         build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["apple"]}),
         build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["kiwi"]}),
-        build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["kiwi"]}),
         build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["pineapple"]}),
-        build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["pineapple"]}),
-        build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["pineapple"]}),
-        build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["grapes"]}),
-        build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["grapes"]}),
-        build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["grapes"]}),
         build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["grapes"]})
       ])
 
