@@ -82,12 +82,26 @@ export default class TopStats extends React.Component {
     )
   }
 
+  renderStatName(stat) {
+    const { metric } = this.props
+    const isSelected = metric === METRIC_MAPPING[stat.name]
+
+    const [statDisplayName, statExtraName] = stat.name.split(/(\(.+\))/g)
+    const statDisplayNameClass = isSelected ? 'text-indigo-700 dark:text-indigo-500 border-indigo-700 dark:border-indigo-500' : 'group-hover:text-indigo-700 dark:group-hover:text-indigo-500 border-transparent'
+
+    return(
+      <div
+        className={`text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-content border-b ${statDisplayNameClass}`}>
+        {statDisplayName}
+        {statExtraName && <span className="hidden sm:inline-block ml-1">{statExtraName}</span>}
+      </div>
+    )
+  }
+
   render() {
-    const { metric, topStatData, query } = this.props
+    const { topStatData, query } = this.props
 
     const stats = topStatData && topStatData.top_stats.map((stat, index) => {
-      const isSelected = metric === METRIC_MAPPING[stat.name]
-      const [statDisplayName, statExtraName] = stat.name.split(/(\(.+\))/g)
 
       const className = classNames('px-4 md:px-6 w-1/2 my-4 lg:w-auto group select-none', {
         'cursor-pointer': this.canMetricBeGraphed(stat),
@@ -96,17 +110,13 @@ export default class TopStats extends React.Component {
       })
 
       return (
-        <Tooltip key={stat.name} info={this.topStatTooltip(stat)} className={className} onClick={() => { this.maybeUpdateMetric(stat) }} boundary={this.props.tooltipBoundary}>
-          <div
-            className={`text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-content border-b ${isSelected ? 'text-indigo-700 dark:text-indigo-500 border-indigo-700 dark:border-indigo-500' : 'group-hover:text-indigo-700 dark:group-hover:text-indigo-500 border-transparent'}`}>
-            {statDisplayName}
-            {statExtraName && <span className="hidden sm:inline-block ml-1">{statExtraName}</span>}
-          </div>
-          <div className="flex items-center justify-between my-1 whitespace-nowrap">
-            <b className="mr-4 text-xl md:text-2xl dark:text-gray-100" id={METRIC_MAPPING[stat.name]}>{this.topStatNumberShort(stat)}</b>
-            {this.renderComparison(stat.name, stat.change)}
-          </div>
-        </Tooltip>
+          <Tooltip key={stat.name} info={this.topStatTooltip(stat)} className={className} onClick={() => { this.maybeUpdateMetric(stat) }} boundary={this.props.tooltipBoundary}>
+            {this.renderStatName(stat)}
+            <div className="flex items-center justify-between my-1 whitespace-nowrap">
+              <b className="mr-4 text-xl md:text-2xl dark:text-gray-100" id={METRIC_MAPPING[stat.name]}>{this.topStatNumberShort(stat)}</b>
+              {this.renderComparison(stat.name, stat.change)}
+            </div>
+          </Tooltip>
       )
     })
 
