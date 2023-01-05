@@ -75,16 +75,7 @@ export default class TopStats extends React.Component {
       this.props.updateMetric(METRIC_MAPPING[stat.name])
     }
   }
-
-  renderStat(stat) {
-    return (
-      <Tooltip info={this.topStatTooltip(stat)} className="flex items-center justify-between my-1 whitespace-nowrap">
-        <b className="mr-4 text-xl md:text-2xl dark:text-gray-100">{this.topStatNumberShort(stat)}</b>
-        {this.renderComparison(stat.name, stat.change)}
-      </Tooltip>
-    )
-  }
-
+  
   blinkingDot() {
     return (
       <div key="dot" className="block pulsating-circle" style={{ left: '125px', top: '52px' }}></div>
