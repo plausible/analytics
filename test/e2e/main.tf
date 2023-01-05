@@ -139,7 +139,15 @@ resource "checkly_check_group" "reachability" {
   use_global_alert_settings = false
 
   alert_channel_subscription {
-    channel_id = checkly_alert_channel.email.id
+    channel_id = checkly_alert_channel.pagerduty.id
     activated  = true
+  }
+}
+
+resource "checkly_alert_channel" "pagerduty" {
+  pagerduty {
+    account      = "plausible"
+    service_key  = var.checkly_alert_channel_pagerduty_service_key
+    service_name = "Plausible application"
   }
 }
