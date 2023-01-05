@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Fixed
+- Fix breakdown API pagination when using event metrics plausible/analytics#2562
 - Automatically update all visible dashboard reports in the realtime view
 
 ### Changed

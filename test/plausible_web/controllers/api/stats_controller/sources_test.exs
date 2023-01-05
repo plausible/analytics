@@ -280,16 +280,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "name" => "Google",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 900
-               },
-               %{
                  "name" => "DuckDuckGo",
                  "visitors" => 1,
                  "bounce_rate" => 100,
                  "visit_duration" => 0
+               },
+               %{
+                 "name" => "Google",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 900
                }
              ]
     end
@@ -345,16 +345,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "name" => "Google",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 900
-               },
-               %{
                  "name" => "DuckDuckGo",
                  "visitors" => 1,
                  "bounce_rate" => 100,
                  "visit_duration" => 0
+               },
+               %{
+                 "name" => "Google",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 900
                }
              ]
 
@@ -813,16 +813,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "name" => "Google",
-                 "visitors" => 1,
-                 "conversion_rate" => 50.0,
-                 "total_visitors" => 2
-               },
-               %{
                  "name" => "DuckDuckGo",
                  "visitors" => 1,
                  "conversion_rate" => 100.0,
                  "total_visitors" => 1
+               },
+               %{
+                 "name" => "Google",
+                 "visitors" => 1,
+                 "conversion_rate" => 50.0,
+                 "total_visitors" => 2
                }
              ]
     end
