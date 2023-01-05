@@ -14,8 +14,17 @@ terraform {
 
 }
 
-variable "checkly_api_key" {}
-variable "checkly_account_id" {}
+variable "checkly_api_key" {
+  sensitive = true
+}
+
+variable "checkly_account_id" {
+  sensitive = true
+}
+
+variable "checkly_alert_channel_pagerduty_service_key" {
+  sensitive = true
+}
 
 provider "checkly" {
   api_key    = var.checkly_api_key
