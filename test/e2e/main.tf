@@ -5,6 +5,13 @@ terraform {
       version = "~> 1.0"
     }
   }
+
+  cloud {
+    workspaces {
+      name = "checkly-e2e"
+    }
+  }
+
 }
 
 variable "checkly_api_key" {}
