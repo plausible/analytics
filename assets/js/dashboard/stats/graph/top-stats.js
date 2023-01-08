@@ -48,7 +48,7 @@ export default class TopStats extends React.Component {
       <div>
         <div className="whitespace-nowrap">{this.topStatNumberLong(stat)} {statName}</div>
         {this.canMetricBeGraphed(stat) && <div className="font-normal text-xs">{this.titleFor(stat)}</div>}
-        {stat.name === 'Current visitors' && <p className="font-normal text-xs">Last updated <SecondsSinceLastLoad lastLoadTimestamp={this.props.lastLoadTimestamp}/> seconds ago</p>}
+        {stat.name === 'Current visitors' && <p className="font-normal text-xs">Last updated <SecondsSinceLastLoad lastLoadTimestamp={this.props.lastLoadTimestamp}/>s ago</p>}
       </div>
     )
   }

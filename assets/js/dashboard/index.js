@@ -40,7 +40,7 @@ class Dashboard extends React.Component {
     if (this.state.query.period === 'realtime') {
       return <Realtime site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} query={query} lastLoadTimestamp={lastLoadTimestamp}/>
     } else {
-      return <Historical site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} query={query}/>
+      return <Historical site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} query={query} lastLoadTimestamp={lastLoadTimestamp}/>
     }
   }
 }
