@@ -34,10 +34,13 @@ class Dashboard extends React.Component {
   }
 
   render() {
+    const { site, loggedIn, currentUserRole } = this.props
+    const { query, lastLoadTimestamp } = this.state
+
     if (this.state.query.period === 'realtime') {
-      return <Realtime site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} query={this.state.query} lastLoadTimestamp={this.state.lastLoadTimestamp}/>
+      return <Realtime site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} query={query} lastLoadTimestamp={lastLoadTimestamp}/>
     } else {
-      return <Historical site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} query={this.state.query} />
+      return <Historical site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} query={query}/>
     }
   }
 }
