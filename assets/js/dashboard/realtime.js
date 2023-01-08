@@ -39,7 +39,7 @@ class Realtime extends React.Component {
             <Datepicker site={this.props.site} query={this.props.query} />
           </div>
         </div>
-        <VisitorGraph site={this.props.site} query={this.props.query} />
+        <VisitorGraph site={this.props.site} query={this.props.query} lastLoadTimestamp={this.props.lastLoadTimestamp} />
         <div className="items-start justify-between block w-full md:flex">
           <Sources site={this.props.site} query={this.props.query} />
           <Pages site={this.props.site} query={this.props.query} />

@@ -10,21 +10,32 @@ import { withComparisonProvider } from './comparison-provider-hoc';
 class Dashboard extends React.Component {
   constructor(props) {
     super(props)
+    this.updateLastLoadTimestamp = this.updateLastLoadTimestamp.bind(this)
     this.state = {
       query: parseQuery(props.location.search, this.props.site),
+      lastLoadTimestamp: new Date()
     }
+  }
+
+  componentDidMount() {
+    document.addEventListener('tick', this.updateLastLoadTimestamp)
   }
 
   componentDidUpdate(prevProps) {
     if (prevProps.location.search !== this.props.location.search) {
       api.cancelAll()
       this.setState({query: parseQuery(this.props.location.search, this.props.site)})
+      this.updateLastLoadTimestamp()
     }
+  }
+
+  updateLastLoadTimestamp() {
+    this.setState({lastLoadTimestamp: new Date()})
   }
 
   render() {
     if (this.state.query.period === 'realtime') {
-      return <Realtime site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} query={this.state.query} />
+      return <Realtime site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} query={this.state.query} lastLoadTimestamp={this.state.lastLoadTimestamp}/>
     } else {
       return <Historical site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} query={this.state.query} />
     }

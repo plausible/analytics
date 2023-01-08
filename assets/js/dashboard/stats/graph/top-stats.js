@@ -1,5 +1,6 @@
 import React from "react";
 import { Tooltip } from '../../util/tooltip'
+import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from "classnames";
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { METRIC_MAPPING } from './graph-util'
@@ -47,6 +48,7 @@ export default class TopStats extends React.Component {
       <div>
         <div className="whitespace-nowrap">{this.topStatNumberLong(stat)} {statName}</div>
         {this.canMetricBeGraphed(stat) && <div className="font-normal text-xs">{this.titleFor(stat)}</div>}
+        {stat.name === 'Current visitors' && <p className="font-normal text-xs">Last updated <SecondsSinceLastLoad lastLoadTimestamp={this.props.lastLoadTimestamp}/> seconds ago</p>}
       </div>
     )
   }
@@ -75,7 +77,7 @@ export default class TopStats extends React.Component {
       this.props.updateMetric(METRIC_MAPPING[stat.name])
     }
   }
-  
+
   blinkingDot() {
     return (
       <div key="dot" className="block pulsating-circle" style={{ left: '125px', top: '52px' }}></div>
