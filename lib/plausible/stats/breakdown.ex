@@ -327,7 +327,8 @@ defmodule Plausible.Stats.Breakdown do
       group_by: e.name,
       where: meta.key == ^prop,
       group_by: meta.value,
-      select_merge: %{^prop => meta.value}
+      select_merge: %{^prop => meta.value},
+      order_by: {:asc, meta.value}
     )
   end
 
@@ -340,7 +341,8 @@ defmodule Plausible.Stats.Breakdown do
       inner_lateral_join: meta in fragment("meta"),
       where: meta.key == ^prop,
       group_by: meta.value,
-      select_merge: %{^prop => meta.value}
+      select_merge: %{^prop => meta.value},
+      order_by: {:asc, meta.value}
     )
   end
 
@@ -351,7 +353,8 @@ defmodule Plausible.Stats.Breakdown do
     from(
       e in q,
       group_by: e.name,
-      select_merge: %{name: e.name}
+      select_merge: %{name: e.name},
+      order_by: {:asc, e.name}
     )
   end
 
@@ -362,7 +365,8 @@ defmodule Plausible.Stats.Breakdown do
     from(
       e in q,
       group_by: e.pathname,
-      select_merge: %{page: e.pathname}
+      select_merge: %{page: e.pathname},
+      order_by: {:asc, e.pathname}
     )
   end
 
@@ -378,7 +382,8 @@ defmodule Plausible.Stats.Breakdown do
           select_merge: %{
             index: fragment("arrayJoin(indices) as index"),
             page_match: fragment("array(?)[index]", ^match_exprs)
-          }
+          },
+          order_by: {:asc, fragment("index")}
         )
     end
   end
@@ -389,7 +394,8 @@ defmodule Plausible.Stats.Breakdown do
       group_by: s.referrer_source,
       select_merge: %{
         source: fragment("if(empty(?), ?, ?)", s.referrer_source, @no_ref, s.referrer_source)
-      }
+      },
+      order_by: {:asc, s.referrer_source}
     )
   end
 
@@ -398,7 +404,8 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       where: s.country_code != "\0\0" and s.country_code != "ZZ",
       group_by: s.country_code,
-      select_merge: %{country: s.country_code}
+      select_merge: %{country: s.country_code},
+      order_by: {:asc, s.country_code}
     )
   end
 
@@ -407,7 +414,8 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       where: s.subdivision1_code != "",
       group_by: s.subdivision1_code,
-      select_merge: %{region: s.subdivision1_code}
+      select_merge: %{region: s.subdivision1_code},
+      order_by: {:asc, s.subdivision1_code}
     )
   end
 
@@ -416,7 +424,8 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       where: s.city_geoname_id != 0,
       group_by: s.city_geoname_id,
-      select_merge: %{city: s.city_geoname_id}
+      select_merge: %{city: s.city_geoname_id},
+      order_by: {:asc, s.city_geoname_id}
     )
   end
 
@@ -424,7 +433,8 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.entry_page,
-      select_merge: %{entry_page: s.entry_page}
+      select_merge: %{entry_page: s.entry_page},
+      order_by: {:asc, s.entry_page}
     )
   end
 
@@ -432,7 +442,8 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.exit_page,
-      select_merge: %{exit_page: s.exit_page}
+      select_merge: %{exit_page: s.exit_page},
+      order_by: {:asc, s.exit_page}
     )
   end
 
@@ -442,7 +453,8 @@ defmodule Plausible.Stats.Breakdown do
       group_by: s.referrer,
       select_merge: %{
         referrer: fragment("if(empty(?), ?, ?)", s.referrer, @no_ref, s.referrer)
-      }
+      },
+      order_by: {:asc, s.referrer}
     )
   end
 
@@ -500,7 +512,8 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.screen_size,
-      select_merge: %{device: s.screen_size}
+      select_merge: %{device: s.screen_size},
+      order_by: {:asc, s.screen_size}
     )
   end
 
@@ -508,7 +521,8 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.operating_system,
-      select_merge: %{operating_system: s.operating_system}
+      select_merge: %{operating_system: s.operating_system},
+      order_by: {:asc, s.operating_system}
     )
   end
 
@@ -516,7 +530,8 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.operating_system_version,
-      select_merge: %{os_version: s.operating_system_version}
+      select_merge: %{os_version: s.operating_system_version},
+      order_by: {:asc, s.operating_system_version}
     )
   end
 
@@ -524,7 +539,8 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.browser,
-      select_merge: %{browser: s.browser}
+      select_merge: %{browser: s.browser},
+      order_by: {:asc, s.browser}
     )
   end
 
@@ -532,7 +548,8 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.browser_version,
-      select_merge: %{browser_version: s.browser_version}
+      select_merge: %{browser_version: s.browser_version},
+      order_by: {:asc, s.browser_version}
     )
   end
 
