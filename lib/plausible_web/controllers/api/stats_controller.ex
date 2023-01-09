@@ -230,6 +230,35 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  defp fetch_top_stats(
+         site,
+         %Query{period: "realtime", filters: %{"event:goal" => _goal}} = query
+       ) do
+    query_30m = %Query{query | period: "30m"}
+
+    %{
+      visitors: %{value: unique_conversions},
+      events: %{value: total_conversions}
+    } = Stats.aggregate(site, query_30m, [:visitors, :events])
+
+    stats = [
+      %{
+        name: "Current visitors",
+        value: Stats.current_visitors(site)
+      },
+      %{
+        name: "Unique conversions (last 30 min)",
+        value: unique_conversions
+      },
+      %{
+        name: "Total conversions (last 30 min)",
+        value: total_conversions
+      }
+    ]
+
+    {stats, 100}
+  end
+
   defp fetch_top_stats(site, %Query{period: "realtime"} = query) do
     query_30m = %Query{query | period: "30m"}
 
