@@ -65,6 +65,27 @@ resource "checkly_check" "plausible-io-api-health" {
   }
 }
 
+resource "checkly_check" "plausible-io-custom-domain-server-health" {
+  name         = "Check custom.plausible.io"
+  type         = "API"
+  activated    = true
+  frequency    = 1
+  double_check = true
+
+  group_id = checkly_check_group.reachability.id
+
+  request {
+    url              = "https://custom.plausible.io"
+    follow_redirects = false
+    skip_ssl         = false
+    assertion {
+      source     = "STATUS_CODE"
+      comparison = "EQUALS"
+      target     = "200"
+    }
+  }
+}
+
 resource "checkly_check" "plausible-io-ingestion" {
   name         = "Check plausible.io/api/event"
   type         = "API"
