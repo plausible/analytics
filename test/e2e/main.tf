@@ -65,6 +65,40 @@ resource "checkly_check" "plausible-io-api-health" {
   }
 }
 
+resource "checkly_check" "plausible-io-lb-health" {
+  name         = "Check one.lb.plausible.io/api/health"
+  type         = "API"
+  activated    = true
+  frequency    = 1
+  double_check = true
+
+  group_id = checkly_check_group.reachability.id
+
+  request {
+    url              = "https://one.lb.plausible.io/api/health"
+    follow_redirects = false
+    skip_ssl         = false
+    assertion {
+      source     = "JSON_BODY"
+      property   = "$.clickhouse"
+      comparison = "EQUALS"
+      target     = "ok"
+    }
+    assertion {
+      source     = "JSON_BODY"
+      property   = "$.postgres"
+      comparison = "EQUALS"
+      target     = "ok"
+    }
+    assertion {
+      source     = "JSON_BODY"
+      property   = "$.sites_cache"
+      comparison = "EQUALS"
+      target     = "ok"
+    }
+  }
+}
+
 resource "checkly_check" "plausible-io-custom-domain-server-health" {
   name         = "Check custom.plausible.io"
   type         = "API"
