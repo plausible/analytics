@@ -148,7 +148,7 @@ geolite2_country_db =
 ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", geolite2_country_db)
 geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
 maxmind_license_key = get_var_from_path_or_env(config_dir, "MAXMIND_LICENSE_KEY")
-maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION")
+maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLite2-City")
 
 if System.get_env("DISABLE_AUTH") do
   require Logger
