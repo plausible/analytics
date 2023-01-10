@@ -1013,25 +1013,14 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_new_site]
 
     test "lists Google Analytics views", %{conn: conn, site: site} do
-      bypass = Bypass.open()
-
-      Bypass.expect_once(
-        bypass,
-        "GET",
-        "/analytics/v3/management/accounts/~all/webproperties/~all/profiles",
-        fn conn ->
-          response_body = File.read!("fixture/ga_list_views.json")
-
-          conn
-          |> Plug.Conn.put_resp_header("content-type", "application/json")
-          |> Plug.Conn.resp(200, response_body)
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn _url, _body ->
+          body = "fixture/ga_list_views.json" |> File.read!() |> Jason.decode!()
+          {:ok, %Finch.Response{body: body, status: 200}}
         end
       )
-
-      :plausible
-      |> Application.get_env(:google)
-      |> Keyword.put(:api_url, "http://0.0.0.0:#{bypass.port}")
-      |> then(&Application.put_env(:plausible, :google, &1))
 
       response =
         conn

@@ -7,10 +7,7 @@ defmodule PlausibleWeb.FirewallTest do
   @blocked_ip "127.0.0.2"
   @opts [blocklist: [@blocked_ip]]
 
-  setup do
-    Application.put_env(:plausible, PlausibleWeb.Firewall, blocklist: [@blocked_ip])
-    :ok
-  end
+  setup_patch_env(PlausibleWeb.Firewall, blocklist: [@blocked_ip])
 
   test "ignores request if IP is allowed" do
     conn =

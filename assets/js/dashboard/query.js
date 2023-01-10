@@ -8,15 +8,15 @@ const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'year',
 export function parseQuery(querystring, site) {
   const q = new URLSearchParams(querystring)
   let period = q.get('period')
-  const periodKey = `period__${  site.domain}`
+  const periodKey = `period__${site.domain}`
 
   if (PERIODS.includes(period)) {
     if (period !== 'custom' && period !== 'realtime') storage.setItem(periodKey, period)
   } else if (storage.getItem(periodKey)) {
-      period = storage.getItem(periodKey)
-    } else {
-      period = '30d'
-    }
+    period = storage.getItem(periodKey)
+  } else {
+    period = '30d'
+  }
 
   return {
     period,
@@ -101,7 +101,7 @@ class QueryLink extends React.Component {
         to={{ pathname: window.location.pathname, search: generateQueryString(to) }}
         onClick={this.onClick}
       />
-)
+    )
   }
 }
 const QueryLinkWithRouter = withRouter(QueryLink)

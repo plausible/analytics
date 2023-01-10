@@ -139,6 +139,43 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res = json_response(conn, 200)
       assert %{"name" => "Pageviews (last 30 min)", "value" => 3} in res["top_stats"]
     end
+
+    test "shows current visitors (last 5 min) with goal filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: relative_time(minutes: -10)),
+        build(:pageview, timestamp: relative_time(minutes: -3)),
+        build(:event, name: "Signup", timestamp: relative_time(minutes: -2)),
+        build(:event, name: "Signup", timestamp: relative_time(minutes: -1))
+      ])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime&filters=#{filters}")
+
+      res = json_response(conn, 200)
+      assert %{"name" => "Current visitors", "value" => 3} in res["top_stats"]
+    end
+
+    test "shows unique/total conversions (last 30 min) with goal filter", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, name: "Signup", timestamp: relative_time(minutes: -45)),
+        build(:event, name: "Signup", timestamp: relative_time(minutes: -25)),
+        build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minutes: -22)),
+        build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minutes: -21)),
+        build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minutes: -20))
+      ])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime&filters=#{filters}")
+
+      res = json_response(conn, 200)
+      assert %{"name" => "Unique conversions (last 30 min)", "value" => 2} in res["top_stats"]
+      assert %{"name" => "Total conversions (last 30 min)", "value" => 4} in res["top_stats"]
+    end
   end
 
   describe "GET /api/stats/top-stats - filters" do

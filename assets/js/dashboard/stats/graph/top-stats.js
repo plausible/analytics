@@ -1,8 +1,8 @@
 import React from "react";
-import classNames from "classnames";
 import { Tooltip } from '../../util/tooltip'
+import classNames from "classnames";
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
-import { METRIC_MAPPING } from './visitor-graph'
+import { METRIC_MAPPING } from './graph-util'
 
 export default class TopStats extends React.Component {
   renderComparison(name, comparison) {
@@ -106,17 +106,17 @@ export default class TopStats extends React.Component {
             {statExtraName && <span className="hidden sm:inline-block ml-1">{statExtraName}</span>}
           </div>
           <div className="flex items-center justify-between my-1 whitespace-nowrap">
-            <b className="mr-4 text-xl md:text-2xl dark:text-gray-100">{this.topStatNumberShort(stat)}</b>
+            <b className="mr-4 text-xl md:text-2xl dark:text-gray-100" id={METRIC_MAPPING[stat.name]}>{this.topStatNumberShort(stat)}</b>
             {this.renderComparison(stat.name, stat.change)}
           </div>
         </Tooltip>
       )
     })
 
-    if (query && query.period === 'realtime') {
+    if (stats && query && query.period === 'realtime') {
       stats.push(<div key="dot" className="block pulsating-circle" style={{ left: '125px', top: '52px' }}></div>)
     }
 
-    return stats
+    return stats || null;
   }
 }

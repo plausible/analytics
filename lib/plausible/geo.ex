@@ -1,5 +1,8 @@
 defmodule Plausible.Geo do
-  @moduledoc "Geolocation functions"
+  @moduledoc """
+  This module provides an API for fetching IP geolocation.
+  """
+
   require Logger
 
   @db :geolocation
@@ -9,14 +12,14 @@ defmodule Plausible.Geo do
 
   Loading a local file:
 
-      iex> load_db(path: "/etc/plausible/dbip-city.mmdb")
-      :ok
+  iex> load_db(path: "/etc/plausible/dbip-city.mmdb")
+  :ok
 
   Loading a maxmind db:
 
       # this license key is no longer active
-      iex> load_db(license_key: "LNpsJCCKPis6XvBP", edition: "GeoLite2-City", async: true)
-      :ok
+  iex> load_db(license_key: "LNpsJCCKPis6XvBP", edition: "GeoLite2-City", async: true)
+  :ok
 
   """
   def load_db(opts) do
@@ -44,13 +47,13 @@ defmodule Plausible.Geo do
 
   Example:
 
-      # in the case of a dbip db
-      iex> database_type()
-      "DBIP-City-Lite"
+  # in the case of a dbip db
+  iex> database_type()
+  "DBIP-City-Lite"
 
-      # in the case of a maxmind db
-      iex> database_type()
-      "GeoLite2-City"
+  # in the case of a maxmind db
+  iex> database_type()
+  "GeoLite2-City"
 
   """
   def database_type do

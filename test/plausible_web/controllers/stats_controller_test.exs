@@ -102,6 +102,32 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20")
       assert_zip(conn, "30d")
     end
+
+    test "exports data grouped by interval", %{conn: conn, site: site} do
+      populate_exported_stats(site)
+      conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20&period=30d&interval=week")
+
+      assert response = response(conn, 200)
+      {:ok, zip} = :zip.unzip(response, [:memory])
+
+      {_filename, visitors} =
+        Enum.find(zip, fn {filename, _data} -> filename == 'visitors.csv' end)
+
+      parsed_csv =
+        visitors
+        |> String.split("\r\n")
+        |> Enum.map(&String.split(&1, ","))
+
+      assert parsed_csv == [
+               ["date", "visitors", "pageviews", "bounce_rate", "visit_duration"],
+               ["2021-09-20", "1", "1", "100", "0"],
+               ["2021-09-27", "0", "0", "", ""],
+               ["2021-10-04", "0", "0", "", ""],
+               ["2021-10-11", "0", "0", "", ""],
+               ["2021-10-18", "3", "3", "67", "20"],
+               [""]
+             ]
+    end
   end
 
   describe "GET /:website/export - via shared link" do

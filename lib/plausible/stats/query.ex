@@ -7,7 +7,8 @@ defmodule Plausible.Stats.Query do
             include_imported: false
 
   @default_sample_threshold 20_000_000
-  alias Plausible.Stats.FilterParser
+  require OpenTelemetry.Tracer, as: Tracer
+  alias Plausible.Stats.{FilterParser, Interval}
 
   def shift_back(%__MODULE__{period: "year"} = query, site) do
     # Querying current year to date
@@ -67,7 +68,7 @@ defmodule Plausible.Stats.Query do
 
     %__MODULE__{
       period: "realtime",
-      interval: "minute",
+      interval: params["interval"] || Interval.default_for_period(params["period"]),
       date_range: Date.range(date, date),
       filters: FilterParser.parse_filters(params["filters"]),
       sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold),
@@ -81,7 +82,7 @@ defmodule Plausible.Stats.Query do
     %__MODULE__{
       period: "day",
       date_range: Date.range(date, date),
-      interval: "hour",
+      interval: params["interval"] || Interval.default_for_period(params["period"]),
       filters: FilterParser.parse_filters(params["filters"]),
       sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
     }
@@ -95,7 +96,7 @@ defmodule Plausible.Stats.Query do
     %__MODULE__{
       period: "7d",
       date_range: Date.range(start_date, end_date),
-      interval: "date",
+      interval: params["interval"] || Interval.default_for_period(params["period"]),
       filters: FilterParser.parse_filters(params["filters"]),
       sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
     }
@@ -109,7 +110,7 @@ defmodule Plausible.Stats.Query do
     %__MODULE__{
       period: "30d",
       date_range: Date.range(start_date, end_date),
-      interval: "date",
+      interval: params["interval"] || Interval.default_for_period(params["period"]),
       filters: FilterParser.parse_filters(params["filters"]),
       sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
     }
@@ -125,7 +126,7 @@ defmodule Plausible.Stats.Query do
     %__MODULE__{
       period: "month",
       date_range: Date.range(start_date, end_date),
-      interval: "date",
+      interval: params["interval"] || Interval.default_for_period(params["period"]),
       filters: FilterParser.parse_filters(params["filters"]),
       sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
     }
@@ -144,7 +145,7 @@ defmodule Plausible.Stats.Query do
     %__MODULE__{
       period: "6mo",
       date_range: Date.range(start_date, end_date),
-      interval: Map.get(params, "interval", "month"),
+      interval: params["interval"] || Interval.default_for_period(params["period"]),
       filters: FilterParser.parse_filters(params["filters"]),
       sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
     }
@@ -163,7 +164,7 @@ defmodule Plausible.Stats.Query do
     %__MODULE__{
       period: "12mo",
       date_range: Date.range(start_date, end_date),
-      interval: Map.get(params, "interval", "month"),
+      interval: params["interval"] || Interval.default_for_period(params["period"]),
       filters: FilterParser.parse_filters(params["filters"]),
       sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
     }
@@ -180,7 +181,7 @@ defmodule Plausible.Stats.Query do
     %__MODULE__{
       period: "year",
       date_range: Date.range(start_date, end_date),
-      interval: Map.get(params, "interval", "month"),
+      interval: params["interval"] || Interval.default_for_period(params["period"]),
       filters: FilterParser.parse_filters(params["filters"]),
       sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
     }
@@ -199,7 +200,7 @@ defmodule Plausible.Stats.Query do
             "period" => "custom",
             "from" => Date.to_iso8601(start_date),
             "to" => Date.to_iso8601(now),
-            "interval" => "month"
+            "interval" => params["interval"] || "month"
           })
         )
         |> Map.put(:period, "all")
@@ -211,7 +212,7 @@ defmodule Plausible.Stats.Query do
             "period" => "custom",
             "from" => Date.to_iso8601(start_date),
             "to" => Date.to_iso8601(now),
-            "interval" => "date"
+            "interval" => params["interval"] || "date"
           })
         )
         |> Map.put(:period, "all")
@@ -240,7 +241,7 @@ defmodule Plausible.Stats.Query do
     %__MODULE__{
       period: "custom",
       date_range: Date.range(from_date, to_date),
-      interval: Map.get(params, "interval", "date"),
+      interval: params["interval"] || Interval.default_for_period(params["period"]),
       filters: FilterParser.parse_filters(params["filters"]),
       sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
     }
@@ -335,5 +336,16 @@ defmodule Plausible.Stats.Query do
       imported_data_requested && has_imported_data && date_range_overlaps && no_filters_applied
 
     %{query | include_imported: !!include_imported}
+  end
+
+  @spec trace(%__MODULE__{}) :: %__MODULE__{}
+  def trace(%__MODULE__{} = query) do
+    Tracer.set_attributes([
+      {"plausible.query.interval", query.interval},
+      {"plausible.query.period", query.period},
+      {"plausible.query.include_imported", query.include_imported}
+    ])
+
+    query
   end
 end

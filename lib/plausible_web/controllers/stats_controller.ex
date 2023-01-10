@@ -111,30 +111,33 @@ defmodule PlausibleWeb.StatsController do
     params = Map.merge(params, %{"limit" => "300", "csv" => "True", "detailed" => "True"})
     limited_params = Map.merge(params, %{"limit" => "100"})
 
-    csvs = [
-      {'sources.csv', fn -> Api.StatsController.sources(conn, params) end},
-      {'utm_mediums.csv', fn -> Api.StatsController.utm_mediums(conn, params) end},
-      {'utm_sources.csv', fn -> Api.StatsController.utm_sources(conn, params) end},
-      {'utm_campaigns.csv', fn -> Api.StatsController.utm_campaigns(conn, params) end},
-      {'utm_contents.csv', fn -> Api.StatsController.utm_contents(conn, params) end},
-      {'utm_terms.csv', fn -> Api.StatsController.utm_terms(conn, params) end},
-      {'pages.csv', fn -> Api.StatsController.pages(conn, limited_params) end},
-      {'entry_pages.csv', fn -> Api.StatsController.entry_pages(conn, params) end},
-      {'exit_pages.csv', fn -> Api.StatsController.exit_pages(conn, limited_params) end},
-      {'countries.csv', fn -> Api.StatsController.countries(conn, params) end},
-      {'regions.csv', fn -> Api.StatsController.regions(conn, params) end},
-      {'cities.csv', fn -> Api.StatsController.cities(conn, params) end},
-      {'browsers.csv', fn -> Api.StatsController.browsers(conn, params) end},
-      {'operating_systems.csv', fn -> Api.StatsController.operating_systems(conn, params) end},
-      {'devices.csv', fn -> Api.StatsController.screen_sizes(conn, params) end},
-      {'conversions.csv', fn -> Api.StatsController.conversions(conn, params) end},
-      {'prop_breakdown.csv', fn -> Api.StatsController.all_props_breakdown(conn, params) end}
-    ]
+    csvs = %{
+      'sources.csv' => fn -> Api.StatsController.sources(conn, params) end,
+      'utm_mediums.csv' => fn -> Api.StatsController.utm_mediums(conn, params) end,
+      'utm_sources.csv' => fn -> Api.StatsController.utm_sources(conn, params) end,
+      'utm_campaigns.csv' => fn -> Api.StatsController.utm_campaigns(conn, params) end,
+      'utm_contents.csv' => fn -> Api.StatsController.utm_contents(conn, params) end,
+      'utm_terms.csv' => fn -> Api.StatsController.utm_terms(conn, params) end,
+      'pages.csv' => fn -> Api.StatsController.pages(conn, limited_params) end,
+      'entry_pages.csv' => fn -> Api.StatsController.entry_pages(conn, params) end,
+      'exit_pages.csv' => fn -> Api.StatsController.exit_pages(conn, limited_params) end,
+      'countries.csv' => fn -> Api.StatsController.countries(conn, params) end,
+      'regions.csv' => fn -> Api.StatsController.regions(conn, params) end,
+      'cities.csv' => fn -> Api.StatsController.cities(conn, params) end,
+      'browsers.csv' => fn -> Api.StatsController.browsers(conn, params) end,
+      'operating_systems.csv' => fn -> Api.StatsController.operating_systems(conn, params) end,
+      'devices.csv' => fn -> Api.StatsController.screen_sizes(conn, params) end,
+      'conversions.csv' => fn -> Api.StatsController.conversions(conn, params) end,
+      'prop_breakdown.csv' => fn -> Api.StatsController.all_props_breakdown(conn, params) end
+    }
+
+    csv_values =
+      Map.values(csvs)
+      |> Plausible.ClickhouseRepo.parallel_tasks()
 
     csvs =
-      csvs
-      |> Enum.map(fn {file, task} -> {file, Task.async(task)} end)
-      |> Enum.map(fn {file, task} -> {file, Task.await(task)} end)
+      Map.keys(csvs)
+      |> Enum.zip(csv_values)
 
     csvs = [{'visitors.csv', visitors} | csvs]
 

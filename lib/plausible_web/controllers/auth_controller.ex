@@ -561,6 +561,39 @@ defmodule PlausibleWeb.AuthController do
     |> redirect(to: redirect_to)
   end
 
+  def google_auth_callback(conn, %{"error" => error, "state" => state} = params) do
+    [site_id, _redirect_to] = Jason.decode!(state)
+    site = Repo.get(Plausible.Site, site_id)
+
+    case error do
+      "access_denied" ->
+        conn
+        |> put_flash(
+          :error,
+          "We were unable to authenticate your Google Analytics account. Please check that you have granted us permission to 'See and download your Google Analytics data' and try again."
+        )
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+
+      message when message in ["server_error", "temporarily_unavailable"] ->
+        conn
+        |> put_flash(
+          :error,
+          "We are unable to authenticate your Google Analytics account because Google's authentication service is temporarily unavailable. Please try again in a few moments."
+        )
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+
+      _any ->
+        Sentry.capture_message("Google OAuth callback failed. Reason: #{inspect(params)}")
+
+        conn
+        |> put_flash(
+          :error,
+          "We were unable to authenticate your Google Analytics account. If the problem persists, please contact support for assistance."
+        )
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+    end
+  end
+
   def google_auth_callback(conn, %{"code" => code, "state" => state}) do
     res = Plausible.Google.HTTP.fetch_access_token(code)
     [site_id, redirect_to] = Jason.decode!(state)

@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
 
   setup %{conn: conn} do
@@ -62,7 +62,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     end
 
     test "does not allow creating more sites than the limit", %{conn: conn, user: user} do
-      Application.put_env(:plausible, :site_limit, 3)
+      patch_env(:site_limit, 3)
       insert(:site, members: [user])
       insert(:site, members: [user])
       insert(:site, members: [user])

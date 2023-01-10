@@ -8,20 +8,19 @@ defmodule Plausible.Stats.Aggregate do
 
   def aggregate(site, query, metrics) do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
-    event_task = Task.async(fn -> aggregate_events(site, query, event_metrics) end)
+    event_task = fn -> aggregate_events(site, query, event_metrics) end
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
-    session_task = Task.async(fn -> aggregate_sessions(site, query, session_metrics) end)
+    session_task = fn -> aggregate_sessions(site, query, session_metrics) end
 
     time_on_page_task =
       if :time_on_page in metrics do
-        Task.async(fn -> aggregate_time_on_page(site, query) end)
+        fn -> aggregate_time_on_page(site, query) end
       else
-        Task.async(fn -> %{} end)
+        fn -> %{} end
       end
 
-    Task.await(session_task, 10_000)
-    |> Map.merge(Task.await(event_task, 10_000))
-    |> Map.merge(Task.await(time_on_page_task, 10_000))
+    Plausible.ClickhouseRepo.parallel_tasks([session_task, event_task, time_on_page_task])
+    |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(aggregate, task_result) end)
     |> Enum.map(fn {metric, value} ->
       {metric, %{value: round(value || 0)}}
     end)

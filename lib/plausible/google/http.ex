@@ -135,17 +135,16 @@ defmodule Plausible.Google.HTTP do
 
     headers = [{"Authorization", "Bearer #{access_token}"}]
 
-    case HTTPClient.get(url, headers) do
+    case HTTPClient.impl().get(url, headers) do
       {:ok, %Finch.Response{body: body, status: 200}} ->
         {:ok, body}
 
-      {:error, %{reason: %Finch.Response{body: body}}} ->
-        Sentry.capture_message("Error fetching Google view ID", extra: %{body: inspect(body)})
-        {:error, body}
+      {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
+        {:error, :authentication_failed}
 
-      {:error, %{reason: reason} = e} ->
-        Sentry.capture_message("Error fetching Google view ID", extra: %{error: inspect(e)})
-        {:error, reason}
+      {:error, %HTTPClient.Non200Error{} = error} ->
+        Sentry.capture_message("Error listing GA views for user", extra: %{error: error})
+        {:error, :unknown}
     end
   end
 

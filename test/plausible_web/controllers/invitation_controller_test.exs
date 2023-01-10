@@ -161,6 +161,33 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
       assert new_owner_membership.role == :owner
     end
+
+    test "works in self-hosted", %{conn: conn, user: user} do
+      patch_env(:is_selfhost, true)
+
+      old_owner = insert(:user)
+      site = insert(:site, members: [old_owner])
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: old_owner,
+          email: user.email,
+          role: :owner
+        )
+
+      post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+
+      old_owner_membership =
+        Repo.get_by(Plausible.Site.Membership, user_id: old_owner.id, site_id: site.id)
+
+      assert old_owner_membership.role == :admin
+
+      new_owner_membership =
+        Repo.get_by(Plausible.Site.Membership, user_id: user.id, site_id: site.id)
+
+      assert new_owner_membership.role == :owner
+    end
   end
 
   describe "POST /sites/invitations/:invitation_id/reject" do

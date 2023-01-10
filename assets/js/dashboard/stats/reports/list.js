@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom'
+import FlipMove from 'react-flip-move';
+
 
 import FadeIn from '../../fade-in'
 import MoreLink from '../more-link'
@@ -28,25 +30,32 @@ function ExternalLink({item, externalLinkDest}) {
 
 export default function ListReport(props) {
   const [state, setState] = useState({loading: true, list: null})
+  const [visible, setVisible] = useState(false)
   const valueKey = props.valueKey || 'visitors'
   const showConversionRate = !!props.query.filters.goal
-  const prevQuery = useRef();
 
-  function fetchData() {
-    if (typeof(prevQuery.current) === 'undefined' || prevQuery.current !== props.query) {
-      prevQuery.current = props.query;
-      setState({loading: true, list: null})
+  const fetchData = useCallback(() => {
+      if (props.query.period !== 'realtime') {
+        setState({loading: true, list: null})
+      }
       props.fetchData()
         .then((res) => setState({loading: false, list: res}))
+    }, [props.query])
+
+  function onVisible() {
+    setVisible(true)
+    if (props.query.period == 'realtime') {
+      document.addEventListener('tick', fetchData)
     }
   }
 
+  useEffect(() => {
+    if (visible) { fetchData() }
+  }, [props.query, visible]);
 
-  function onVisible() {
-    fetchData()
-    if (props.timer) props.timer.onTick(fetchData)
-  }
-
+  useEffect(() => {
+    return () => { document.removeEventListener('tick', fetchData) }
+  }, []);
 
   function label() {
     if (props.query.period === 'realtime') {
@@ -59,8 +68,6 @@ export default function ListReport(props) {
 
     return props.valueLabel || 'Visitors'
   }
-
-  useEffect(fetchData, [props.query]);
 
   function renderListItem(listItem) {
     const query = new URLSearchParams(window.location.search)
@@ -115,7 +122,9 @@ export default function ListReport(props) {
               {showConversionRate && <span className="inline-block w-20">CR</span>}
             </span>
           </div>
-          { state.list && state.list.map(renderListItem) }
+          <FlipMove>
+          { state.list.map(renderListItem) }
+          </FlipMove>
         </>
       )
     }

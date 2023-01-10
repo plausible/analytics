@@ -8,29 +8,37 @@ defmodule PlausibleWeb.Api.ExternalController do
   use PlausibleWeb, :controller
   require Logger
 
-  def event(conn, _params) do
-    with {:ok, ingestion_request} <- Plausible.Ingestion.Request.build(conn),
-         _ <- Sentry.Context.set_extra_context(%{request: ingestion_request}),
-         :ok <- Plausible.Ingestion.Event.build_and_buffer(ingestion_request) do
-      conn |> put_status(202) |> text("ok")
-    else
-      :skip ->
-        conn |> put_status(202) |> text("ok")
+  alias Plausible.Ingestion
 
-      {:error, :invalid_json} ->
+  def event(conn, _params) do
+    with {:ok, request} <- Ingestion.Request.build(conn),
+         _ <- Sentry.Context.set_extra_context(%{request: request}) do
+      case Ingestion.Event.build_and_buffer(request) do
+        {:ok, %{dropped: [], buffered: _buffered}} ->
+          conn
+          |> put_status(202)
+          |> text("ok")
+
+        {:ok, %{dropped: dropped, buffered: _}} ->
+          first_invalid_changeset = find_first_invalid_changeset(dropped)
+
+          if first_invalid_changeset do
+            conn
+            |> put_resp_header("x-plausible-dropped", "#{Enum.count(dropped)}")
+            |> put_status(400)
+            |> json(%{errors: traverse_errors(first_invalid_changeset)})
+          else
+            conn
+            |> put_resp_header("x-plausible-dropped", "#{Enum.count(dropped)}")
+            |> put_status(202)
+            |> text("ok")
+          end
+      end
+    else
+      {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(400)
-        |> json(%{errors: %{request: "Unable to parse request body as json"}})
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        errors =
-          Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-            Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
-              opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
-            end)
-          end)
-
-        conn |> put_status(400) |> json(%{errors: errors})
+        |> json(%{errors: traverse_errors(changeset)})
     end
   end
 
@@ -52,16 +60,22 @@ defmodule PlausibleWeb.Api.ExternalController do
         e -> "error: #{inspect(e)}"
       end
 
+    sites_cache_health =
+      if postgres_health == "ok" and Plausible.Site.Cache.ready?() do
+        "ok"
+      end
+
     status =
-      case {postgres_health, clickhouse_health} do
-        {"ok", "ok"} -> 200
+      case {postgres_health, clickhouse_health, sites_cache_health} do
+        {"ok", "ok", "ok"} -> 200
         _ -> 500
       end
 
     put_status(conn, status)
     |> json(%{
       postgres: postgres_health,
-      clickhouse: clickhouse_health
+      clickhouse: clickhouse_health,
+      sites_cache: sites_cache_health
     })
   end
 
@@ -78,5 +92,24 @@ defmodule PlausibleWeb.Api.ExternalController do
       geo_database: geo_database,
       build: build
     })
+  end
+
+  defp find_first_invalid_changeset(dropped) do
+    Enum.find_value(dropped, nil, fn dropped_event ->
+      case dropped_event.drop_reason do
+        {:error, %Ecto.Changeset{} = changeset} -> changeset
+        _ -> false
+      end
+    end)
+  end
+
+  defp traverse_errors(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+        opts
+        |> Keyword.get(String.to_existing_atom(key), key)
+        |> to_string()
+      end)
+    end)
   end
 end

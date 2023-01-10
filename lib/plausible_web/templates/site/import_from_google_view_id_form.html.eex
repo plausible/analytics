@@ -5,22 +5,15 @@
   <%= hidden_input(f, :refresh_token, value: @refresh_token) %>
   <%= hidden_input(f, :expires_at, value: @expires_at) %>
 
-  <%= case @view_ids do %>
-    <% {:ok, view_ids} -> %>
+  <div class="mt-6 text-sm text-gray-500 dark:text-gray-200">
+    Choose the view in your Google Analytics account that will be imported to the <%= @site.domain %> dashboard.
+  </div>
 
-      <div class="mt-6 text-sm text-gray-500 dark:text-gray-200">
-        Choose the view in your Google Analytics account that will be imported to the <%= @site.domain %> dashboard.
-      </div>
+  <div class="mt-3">
+    <%= styled_label(f, :view_id, "Google Analytics view") %>
+    <%= styled_select f, :view_id, @view_ids, prompt: "(Choose view)", required: "true" %>
+    <%= styled_error(@conn.assigns[:selected_view_id_error]) %>
+  </div>
 
-      <div class="mt-3">
-        <%= styled_label(f, :view_id, "Google Analytics view") %>
-        <%= styled_select f, :view_id, view_ids, prompt: "(Choose view)", required: "true" %>
-        <%= styled_error(@conn.assigns[:selected_view_id_error]) %>
-      </div>
-    <% {:error, error} -> %>
-      <p class="text-gray-700 dark:text-gray-300 mt-6">The following error occurred when fetching your Google Analytics view ids.</p>
-      <p class="text-red-700 font-medium mt-3"><%= error %></p>
-    <% end %>
-
-    <%= submit "Continue ->", class: "button mt-6" %>
+  <%= submit "Continue ->", class: "button mt-6" %>
 <% end %>
