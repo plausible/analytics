@@ -37,7 +37,7 @@
     "iframe-resizer": "^4.3.2",
     "mini-css-extract-plugin": "^1.6.0",
     "phoenix": "1.5.0",
-    "phoenix_html": "2.12",
+    "phoenix_html": "3.0",
     "postcss": "^8.3.0",
     "postcss-loader": "^6.1.1",
     "react": "^16.13.1",
