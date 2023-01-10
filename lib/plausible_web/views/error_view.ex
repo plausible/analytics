@@ -38,7 +38,7 @@ defmodule PlausibleWeb.ErrorView do
           |> Jason.encode!()
 
         ~E"""
-        <script src="https://browser.sentry-cdn.com/5.9.1/bundle.min.js" integrity="sha384-/x1aHz0nKRd6zVUazsV6CbQvjJvr6zQL2CHbQZf3yoLkezyEtZUpqUNnOLW9Nt3v" crossorigin="anonymous"></script>
+        <script src="<%= Routes.static_path(@conn, "/js/sentry-bundle-5.9.1-min.js") %>" integrity="sha384-/x1aHz0nKRd6zVUazsV6CbQvjJvr6zQL2CHbQZf3yoLkezyEtZUpqUNnOLW9Nt3v" crossorigin="anonymous"></script>
         <script>
         Sentry.init({ dsn: '<%= Sentry.Config.dsn() %>' });
         Sentry.showReportDialog(<%= raw opts %>)
