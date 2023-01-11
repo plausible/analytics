@@ -8,18 +8,34 @@ defmodule Plausible.Geo do
   @db :geolocation
 
   @doc """
-  Starts the geodatabase loading process. Two options are supported, local file and maxmind key.
+  Starts the geodatabase loading process. Two modes are supported: local file
+  and MaxMind license key.
 
-  Loading a local file:
+  ## Options
 
-  iex> load_db(path: "/etc/plausible/dbip-city.mmdb")
-  :ok
+    * `:path` - the path to the .mmdb database local file. When present,
+      `:license_key` and `:edition` are not required.
 
-  Loading a maxmind db:
+    * `:license_key` - the [license key](https://support.maxmind.com/hc/en-us/articles/4407111582235-Generate-a-License-Key)
+      from MaxMind to authenticate requests to MaxMind.
 
-      # this license key is no longer active
-  iex> load_db(license_key: "LNpsJCCKPis6XvBP", edition: "GeoLite2-City", async: true)
-  :ok
+    * `:edition` - the name of the MaxMind database to be downloaded from MaxMind
+      servers. Defaults to `GeoLite2-City`.
+
+    * `:async` - when used, configures the database loading to run
+      asynchronously.
+
+  ## Examples
+
+    Loading from a local file:
+
+      iex> load_db(path: "/etc/plausible/dbip-city.mmdb")
+      :ok
+
+    Downloading a MaxMind DB (this license key is no longer active):
+
+      iex> load_db(license_key: "LNpsJCCKPis6XvBP", edition: "GeoLite2-City", async: true)
+      :ok
 
   """
   def load_db(opts) do
@@ -43,17 +59,21 @@ defmodule Plausible.Geo do
   end
 
   @doc """
-  Returns geodatabase type. Used for deciding whether to show the DBIP disclaimer.
+  Returns geodatabase type.
 
-  Example:
+  Used for deciding whether to show the DB-IP disclaimer or not.
 
-  # in the case of a dbip db
-  iex> database_type()
-  "DBIP-City-Lite"
+  ## Examples
 
-  # in the case of a maxmind db
-  iex> database_type()
-  "GeoLite2-City"
+    In the case of a DB-IP database:
+
+      iex> database_type()
+      "DBIP-City-Lite"
+
+    In the case of a MaxMind database:
+
+      iex> database_type()
+      "GeoLite2-City"
 
   """
   def database_type do
@@ -64,9 +84,9 @@ defmodule Plausible.Geo do
   end
 
   @doc """
-  Looks up geo info about an ip address.
+  Looks up geo info about an IP address.
 
-  Example:
+  ## Examples
 
       iex> lookup("8.7.6.5")
       %{
