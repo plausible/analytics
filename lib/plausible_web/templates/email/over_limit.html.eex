@@ -1,8 +1,8 @@
 Thanks for being a Plausible Analytics subscriber!
 <br /><br />
-This is a notice that your traffic has exceeded your subscription tier two months in a row. Congrats on all that traffic!
+This is a notice that your traffic has exceeded your subscription tier. Congrats on all that traffic!
 <br /><br />
-In order to keep your stats running, we require you to upgrade your account to accommodate your new traffic levels. If you do not upgrade your account within the next 7 days, we will lock your stats and they won't be accessible.
+To keep having access to your stats, we require you to upgrade your account to accommodate your new traffic levels. If you do not upgrade your account within the next 7 days, we will lock your stats and they won't be accessible.
 <br /><br />
 In the last billing cycle (<%= date_format(@last_cycle.first) %> to <%= date_format(@last_cycle.last) %>), your account has used <%= PlausibleWeb.StatsView.large_number_format(@usage) %> billable pageviews.
 <%= if @suggested_plan == :enterprise do %>
@@ -12,9 +12,9 @@ Based on that we recommend you select the <%= @suggested_plan[:volume] %>/mo pla
 <br /><br />
 You can upgrade your subscription using our self-serve platform. The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire.
 <br /><br />
-<a href="https://plausible.io/settings">Click here</a> to go to your site settings. You can upgrade your subscription tier by clicking the 'change plan' link.
+<a href="https://plausible.io/settings">Click here</a> to go to your account settings. You can upgrade your subscription tier by clicking the 'Change plan' link.
 <% end %>
 <br /><br />
-Have questions or need help with anything? Just reply to this email and we'll gladly help.
+Was this only a temporary spike in traffic? Do you have questions or need help with anything? Just reply to this email and we'll gladly help.
 <br /><br />
 Thanks again for using our product and for your support!
