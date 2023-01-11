@@ -19,6 +19,8 @@
     "@juggle/resize-observer": "^3.3.1",
     "@kunukn/react-collapse": "^2.2.9",
     "@popperjs/core": "^2.11.6",
+    "@sentry/react": "^7.30.0",
+    "@sentry/tracing": "^7.30.0",
     "@tailwindcss/aspect-ratio": "^0.2.1",
     "@tailwindcss/forms": "^0.3.2",
     "@tailwindcss/typography": "^0.4.1",
