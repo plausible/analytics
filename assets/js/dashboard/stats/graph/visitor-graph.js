@@ -381,15 +381,14 @@ export default class VisitorGraph extends React.Component {
 
     const savedMetric = storage.getItem(`metric__${site.domain}`)
     const selectableMetrics = topStatData && topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
+    const canSelectSavedMetric = selectableMetrics && selectableMetrics.includes(savedMetric)
 
-    if (selectableMetrics) {
-      if (query.filters.goal) {
-        this.setState({ metric: 'conversions' })
-      } else if (selectableMetrics.includes(savedMetric) && savedMetric !== "") {
-        this.setState({ metric: savedMetric })
-      } else {
-        this.setState({ metric: 'visitors' })
-      }
+    if (query.filters.goal) {
+      this.setState({ metric: 'conversions' })
+    } else if (canSelectSavedMetric || savedMetric === "") {
+      this.setState({ metric: savedMetric })
+    } else {
+      this.setState({ metric: 'visitors' })
     }
   }
 
