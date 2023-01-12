@@ -373,24 +373,22 @@ export default class VisitorGraph extends React.Component {
     if (metric !== prevState.metric) {
       this.setState({mainGraphLoadingState: LOADING_STATE.refreshing}, this.fetchGraphData)
     }
-
-    this.maybeUpdateMetric(prevState)
   }
 
-  maybeUpdateMetric(prevState) {
+  resetMetric() {
     const { metric, topStatData } = this.state;
     const { query, site } = this.props
 
     const savedMetric = storage.getItem(`metric__${site.domain}`)
-    const topStatLabels = topStatData && topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
-    const prevTopStatLabels = prevState.topStatData && prevState.topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
-    if (topStatLabels && `${topStatLabels}` !== `${prevTopStatLabels}`) {
+    const selectableMetrics = topStatData && topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
+
+    if (selectableMetrics) {
       if (query.filters.goal && metric !== 'conversions') {
         this.setState({ metric: 'conversions' })
-      } else if (topStatLabels.includes(savedMetric) && savedMetric !== "") {
+      } else if (selectableMetrics.includes(savedMetric) && savedMetric !== "") {
         this.setState({ metric: savedMetric })
       } else {
-        this.setState({ metric: topStatLabels[0] })
+        this.setState({ metric: selectableMetrics[0] })
       }
     }
   }
@@ -437,6 +435,7 @@ export default class VisitorGraph extends React.Component {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/top-stats`, this.props.query)
       .then((res) => {
         this.setState({ topStatsLoadingState: LOADING_STATE.loaded, topStatData: res })
+        this.resetMetric()
         return res
       })
   }
