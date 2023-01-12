@@ -193,7 +193,7 @@ resource "checkly_check" "plausible-io-tracker-script" {
 resource "checkly_check_group" "reachability" {
   name      = "Reachability probes - via automation"
   activated = true
-  muted     = true
+  muted     = false
   tags      = ["terraform"]
 
   locations = [
