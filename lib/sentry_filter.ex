@@ -19,6 +19,13 @@ defmodule Plausible.SentryFilter do
     %{event | fingerprint: ["ecto", "db_connection", "timeout"]}
   end
 
+  def before_send(
+        %{exception: [%{type: "Clickhousex.Error"}], original_exception: %{code: code}} = event
+      )
+      when is_atom(code) do
+    %{event | fingerprint: ["clickhouse", "db_connection", to_string(code)]}
+  end
+
   def before_send(event) do
     event
   end
