@@ -5,6 +5,8 @@ defmodule PlausibleWeb.Api.StatsController do
   alias Plausible.Stats
   alias Plausible.Stats.{Query, Filters}
 
+  require Logger
+
   @doc """
   Returns a time-series based on given parameters.
 
@@ -805,7 +807,7 @@ defmodule PlausibleWeb.Api.StatsController do
           country_entry = get_country(region_entry.country_code)
           Map.merge(region, %{name: region_entry.name, country_flag: country_entry.flag})
         else
-          Sentry.capture_message("Could not find region info", extra: %{code: region[:code]})
+          Logger.warning("Could not find region info - code: #{inspect(region[:code])}")
           Map.merge(region, %{name: region[:code]})
         end
       end)
@@ -842,7 +844,7 @@ defmodule PlausibleWeb.Api.StatsController do
             country_flag: country_info.flag
           })
         else
-          Sentry.capture_message("Could not find city info", extra: %{code: city[:code]})
+          Logger.warning("Could not find city info - code: #{inspect(city[:code])}")
 
           Map.merge(city, %{name: "N/A"})
         end
@@ -1173,7 +1175,7 @@ defmodule PlausibleWeb.Api.StatsController do
   defp get_country(code) do
     case Location.get_country(code) do
       nil ->
-        Sentry.capture_message("Could not find country info", extra: %{code: code})
+        Logger.warning("Could not find country info - code: #{inspect(code)}")
 
         %Location.Country{
           alpha_2: code,
