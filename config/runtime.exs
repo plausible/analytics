@@ -440,7 +440,8 @@ geo_opts =
     maxmind_license_key ->
       [
         license_key: maxmind_license_key,
-        edition: maxmind_edition
+        edition: maxmind_edition,
+        async: true
       ]
 
     ip_geolocation_db ->

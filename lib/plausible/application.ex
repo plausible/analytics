@@ -30,10 +30,14 @@ defmodule Plausible.Application do
     ]
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
+
     setup_sentry()
     setup_opentelemetry()
+
     setup_geolocation()
     Location.load_all()
+    Plausible.Geo.await_loader()
+
     Supervisor.start_link(children, opts)
   end
 

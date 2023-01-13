@@ -59,6 +59,11 @@ defmodule Plausible.Geo do
   end
 
   @doc """
+  Waits for the database to start after calling `load_db/1` with the async option.
+  """
+  def await_loader, do: :locus.await_loader(@db)
+
+  @doc """
   Returns geodatabase type.
 
   Used for deciding whether to show the DB-IP disclaimer or not.
