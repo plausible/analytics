@@ -7,6 +7,7 @@ defmodule Plausible.SentryFilter do
   def exclude_exception?(%Sentry.CrashError{}, _source), do: true
   def exclude_exception?(%Phoenix.NotAcceptableError{}, _), do: true
   def exclude_exception?(%Plug.CSRFProtection.InvalidCSRFTokenError{}, _), do: true
+  def exclude_exception?(%Plug.Static.InvalidPathError{}, _), do: true
 
   def exclude_exception?(exception, source) do
     Sentry.DefaultEventFilter.exclude_exception?(exception, source)
