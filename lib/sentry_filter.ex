@@ -27,6 +27,15 @@ defmodule Plausible.SentryFilter do
     %{event | fingerprint: ["clickhouse", "db_connection", "protocol_error"]}
   end
 
+  def before_send(
+        %{
+          exception: [%{type: "DBConnection.ConnectionError"}],
+          original_exception: %{reason: reason}
+        } = event
+      ) do
+    %{event | fingerprint: ["db_connection", reason]}
+  end
+
   def before_send(event) do
     event
   end
