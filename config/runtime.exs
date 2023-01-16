@@ -305,7 +305,8 @@ case mailer_adapter do
 
   _ ->
     # check mailer_adapter exist as module
-    case Module.__info__(:"Elixir.#{mailer_adapter}") do
+    adapter = Module.safe_concat([mailer_adapter])
+    case adapter.__info__(:module) do
       module() ->
         config :plausible, Plausible.Mailer,
           adapter: :"Elixir.#{mailer_adapter}",
