@@ -89,11 +89,14 @@ export default class TopStats extends React.Component {
     const isSelected = metric === METRIC_MAPPING[stat.name]
 
     const [statDisplayName, statExtraName] = stat.name.split(/(\(.+\))/g)
-    const statDisplayNameClass = isSelected ? 'text-indigo-700 dark:text-indigo-500 border-indigo-700 dark:border-indigo-500' : 'group-hover:text-indigo-700 dark:group-hover:text-indigo-500 border-transparent'
+
+    const statDisplayNameClass = classNames('text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-content border-b', {
+      'text-indigo-700 dark:text-indigo-500 border-indigo-700 dark:border-indigo-500': isSelected,
+      'group-hover:text-indigo-700 dark:group-hover:text-indigo-500 border-transparent': !isSelected
+    })
 
     return(
-      <div
-        className={`text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-content border-b ${statDisplayNameClass}`}>
+      <div className={statDisplayNameClass}>
         {statDisplayName}
         {statExtraName && <span className="hidden sm:inline-block ml-1">{statExtraName}</span>}
       </div>
