@@ -304,14 +304,14 @@ case mailer_adapter do
     config :plausible, Plausible.Mailer, adapter: Bamboo.TestAdapter
 
   _ ->
-    case String.length(get_var_from_path_or_env(config_dir, "MAILER_API_KEY")) ->
-      0 ->
-        raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
-      _ ->
+    mailer_api_key = get_var_from_path_or_env(config_dir, "MAILER_API_KEY")
+    if mailer_api_key == "" do
+      raise "Unknown mailer_adapter #{inspect(mailer_adapter)}; expected SMTPAdapter or PostmarkAdapter"
+    else
         config :plausible, Plausible.Mailer,
           adapter: :"Elixir.#{mailer_adapter}",
           request_options: [recv_timeout: 10_000],
-          api_key: get_var_from_path_or_env(config_dir, "MAILER_API_KEY"),
+          api_key: mailer_api_key,
           domain: get_var_from_path_or_env(config_dir, "MAILER_DOMAIN") # optional, only set if needed in the adapter
     end
 end
