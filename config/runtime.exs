@@ -275,12 +275,14 @@ config :plausible, Plausible.ClickhouseRepo,
   max_buffer_size: ch_max_buffer_size
 
 case mailer_adapter do
+
+  # Keep this just in case of backward compatibility
   "Bamboo.PostmarkAdapter" ->
     config :plausible, Plausible.Mailer,
       adapter: :"Elixir.#{mailer_adapter}",
-      request_options: [recv_timeout: 10_000],
+      request_options: [recv_timeout: 10_000],      # POSTMARK_API_KEY must be deprecated, use MAILER_API_KEY instead.
       api_key: get_var_from_path_or_env(config_dir, "POSTMARK_API_KEY")
-
+      
   "Bamboo.SMTPAdapter" ->
     config :plausible, Plausible.Mailer,
       adapter: :"Elixir.#{mailer_adapter}",
@@ -302,7 +304,15 @@ case mailer_adapter do
     config :plausible, Plausible.Mailer, adapter: Bamboo.TestAdapter
 
   _ ->
-    raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
+    case String.length(get_var_from_path_or_env(config_dir, "MAILER_API_KEY")) ->
+      0 ->
+        raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
+      _ ->
+        config :plausible, Plausible.Mailer,
+          adapter: :"Elixir.#{mailer_adapter}",
+          request_options: [recv_timeout: 10_000],
+          api_key: get_var_from_path_or_env(config_dir, "MAILER_API_KEY") # POSTMARK_API_KEY must be deprecated, use MAILER_API_KEY instead.
+    end
 end
 
 config :plausible, PlausibleWeb.Firewall,
