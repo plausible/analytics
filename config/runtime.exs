@@ -311,7 +311,8 @@ case mailer_adapter do
         config :plausible, Plausible.Mailer,
           adapter: :"Elixir.#{mailer_adapter}",
           request_options: [recv_timeout: 10_000],
-          api_key: get_var_from_path_or_env(config_dir, "MAILER_API_KEY")
+          api_key: get_var_from_path_or_env(config_dir, "MAILER_API_KEY"),
+          domain: get_var_from_path_or_env(config_dir, "MAILER_DOMAIN") # optional, only set if needed in the adapter
     end
 end
 
