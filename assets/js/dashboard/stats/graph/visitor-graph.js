@@ -288,7 +288,7 @@ class LineGraph extends React.Component {
     return (
       <div className="graph-inner">
         <div className="flex flex-wrap" ref={this.boundary}>
-          <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current}/>
+          <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current} lastLoadTimestamp={this.props.lastLoadTimestamp} />
         </div>
         <div className="relative px-2">
           <div className="absolute right-4 -top-10 py-2 md:py-0 flex items-center">
@@ -452,7 +452,7 @@ export default class VisitorGraph extends React.Component {
 
     return (
       <FadeIn show={showGraph}>
-        <LineGraphWithRouter graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} updateInterval={this.updateInterval}/>
+        <LineGraphWithRouter graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} updateInterval={this.updateInterval} lastLoadTimestamp={this.props.lastLoadTimestamp} />
       </FadeIn>
     )
   }

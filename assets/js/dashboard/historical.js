@@ -13,6 +13,8 @@ import Conversions from './stats/conversions'
 import { withPinnedHeader } from './pinned-header-hoc';
 
 function Historical(props) {
+  const tooltipBoundary = React.useRef(null)
+
   function renderConversions() {
     if (props.site.hasGoals) {
       return (
@@ -30,9 +32,9 @@ function Historical(props) {
       <div id="stats-container-top"></div>
       <div className={`relative top-0 sm:py-3 py-2 z-10 ${props.stuck && !props.site.embedded ? 'sticky fullwidth-shadow bg-gray-50 dark:bg-gray-850' : ''}`}>
         <div className="items-center w-full flex">
-          <div className="flex items-center w-full">
+          <div className="flex items-center w-full" ref={tooltipBoundary}>
             <SiteSwitcher site={props.site} loggedIn={props.loggedIn} currentUserRole={props.currentUserRole} />
-            <CurrentVisitors site={props.site} query={props.query} />
+            <CurrentVisitors site={props.site} query={props.query} lastLoadTimestamp={props.lastLoadTimestamp} tooltipBoundary={tooltipBoundary.current} />
             <Filters className="flex" site={props.site} query={props.query} history={props.history} />
           </div>
           <Datepicker site={props.site} query={props.query} />

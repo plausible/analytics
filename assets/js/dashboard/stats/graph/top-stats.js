@@ -1,5 +1,6 @@
 import React from "react";
 import { Tooltip } from '../../util/tooltip'
+import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from "classnames";
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { METRIC_MAPPING } from './graph-util'
@@ -47,6 +48,7 @@ export default class TopStats extends React.Component {
       <div>
         <div className="whitespace-nowrap">{this.topStatNumberLong(stat)} {statName}</div>
         {this.canMetricBeGraphed(stat) && <div className="font-normal text-xs">{this.titleFor(stat)}</div>}
+        {stat.name === 'Current visitors' && <p className="font-normal text-xs">Last updated <SecondsSinceLastLoad lastLoadTimestamp={this.props.lastLoadTimestamp}/>s ago</p>}
       </div>
     )
   }
@@ -76,21 +78,35 @@ export default class TopStats extends React.Component {
     }
   }
 
-  renderStat(stat) {
+  blinkingDot() {
     return (
-      <Tooltip info={this.topStatTooltip(stat)} className="flex items-center justify-between my-1 whitespace-nowrap">
-        <b className="mr-4 text-xl md:text-2xl dark:text-gray-100">{this.topStatNumberShort(stat)}</b>
-        {this.renderComparison(stat.name, stat.change)}
-      </Tooltip>
+      <div key="dot" className="block pulsating-circle" style={{ left: '125px', top: '52px' }}></div>
+    )
+  }
+
+  renderStatName(stat) {
+    const { metric } = this.props
+    const isSelected = metric === METRIC_MAPPING[stat.name]
+
+    const [statDisplayName, statExtraName] = stat.name.split(/(\(.+\))/g)
+
+    const statDisplayNameClass = classNames('text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-content border-b', {
+      'text-indigo-700 dark:text-indigo-500 border-indigo-700 dark:border-indigo-500': isSelected,
+      'group-hover:text-indigo-700 dark:group-hover:text-indigo-500 border-transparent': !isSelected
+    })
+
+    return(
+      <div className={statDisplayNameClass}>
+        {statDisplayName}
+        {statExtraName && <span className="hidden sm:inline-block ml-1">{statExtraName}</span>}
+      </div>
     )
   }
 
   render() {
-    const { metric, topStatData, query } = this.props
+    const { topStatData, query } = this.props
 
     const stats = topStatData && topStatData.top_stats.map((stat, index) => {
-      const isSelected = metric === METRIC_MAPPING[stat.name]
-      const [statDisplayName, statExtraName] = stat.name.split(/(\(.+\))/g)
 
       const className = classNames('px-4 md:px-6 w-1/2 my-4 lg:w-auto group select-none', {
         'cursor-pointer': this.canMetricBeGraphed(stat),
@@ -99,22 +115,18 @@ export default class TopStats extends React.Component {
       })
 
       return (
-        <Tooltip key={stat.name} info={this.topStatTooltip(stat)} className={className} onClick={() => { this.maybeUpdateMetric(stat) }} boundary={this.props.tooltipBoundary}>
-          <div
-            className={`text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400 whitespace-nowrap flex w-content border-b ${isSelected ? 'text-indigo-700 dark:text-indigo-500 border-indigo-700 dark:border-indigo-500' : 'group-hover:text-indigo-700 dark:group-hover:text-indigo-500 border-transparent'}`}>
-            {statDisplayName}
-            {statExtraName && <span className="hidden sm:inline-block ml-1">{statExtraName}</span>}
-          </div>
-          <div className="flex items-center justify-between my-1 whitespace-nowrap">
-            <b className="mr-4 text-xl md:text-2xl dark:text-gray-100" id={METRIC_MAPPING[stat.name]}>{this.topStatNumberShort(stat)}</b>
-            {this.renderComparison(stat.name, stat.change)}
-          </div>
-        </Tooltip>
+          <Tooltip key={stat.name} info={this.topStatTooltip(stat)} className={className} onClick={() => { this.maybeUpdateMetric(stat) }} boundary={this.props.tooltipBoundary}>
+            {this.renderStatName(stat)}
+            <div className="flex items-center justify-between my-1 whitespace-nowrap">
+              <b className="mr-4 text-xl md:text-2xl dark:text-gray-100" id={METRIC_MAPPING[stat.name]}>{this.topStatNumberShort(stat)}</b>
+              {this.renderComparison(stat.name, stat.change)}
+            </div>
+          </Tooltip>
       )
     })
 
     if (stats && query && query.period === 'realtime') {
-      stats.push(<div key="dot" className="block pulsating-circle" style={{ left: '125px', top: '52px' }}></div>)
+      stats.push(this.blinkingDot())
     }
 
     return stats || null;
