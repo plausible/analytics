@@ -181,8 +181,11 @@ defmodule Plausible.Geo do
       :not_found ->
         nil
 
+      {:error, {:invalid_address, _address}} ->
+        nil
+
       {:error, reason} ->
-        Logger.error("failed to lookup ip address: " <> inspect(reason))
+        Logger.error("Failed to lookup IP address. Reason: " <> inspect(reason))
         nil
     end
   end
