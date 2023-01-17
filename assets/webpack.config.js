@@ -14,10 +14,11 @@ module.exports = (env, options) => ({
     ]
   },
   entry: {
-      'app': ['./js/app.js'],
-      'dashboard': ['./js/dashboard/mount.js'],
-      'embed.host': ['./js/embed.host.js'],
-      'embed.content': ['./js/embed.content.js']
+    'app': ['./js/app.js'],
+    'dashboard': ['./js/dashboard/mount.js'],
+    'dashboard.sentry': ['./js/dashboard/sentry.js'],
+    'embed.host': ['./js/embed.host.js'],
+    'embed.content': ['./js/embed.content.js']
   },
   output: {
     filename: '[name].js',
@@ -40,8 +41,8 @@ module.exports = (env, options) => ({
   },
   externals: { moment: 'moment' },
   plugins: [
-    new MiniCssExtractPlugin({filename: '../css/[name].css'}),
-    new CopyWebpackPlugin({patterns: [{from: 'static/', to: '../' }]}),
+    new MiniCssExtractPlugin({ filename: '../css/[name].css' }),
+    new CopyWebpackPlugin({ patterns: [{ from: 'static/', to: '../' }] }),
     new webpack.ProvidePlugin({
       ResizeObserver: ['@juggle/resize-observer', 'ResizeObserver'] // https://caniuse.com/?search=ResizeObserver
     })
