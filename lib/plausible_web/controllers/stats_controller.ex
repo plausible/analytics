@@ -62,6 +62,9 @@ defmodule PlausibleWeb.StatsController do
         |> remove_email_report_banner(site)
         |> put_resp_header("x-robots-tag", "noindex")
         |> render("stats.html",
+          sentry_dsn: Application.get_env(:sentry, :dsn),
+          environment: Application.get_env(:plausible, :environment),
+          sentry_release: Application.get_env(:sentry, :release),
           site: site,
           has_goals: Plausible.Sites.has_goals?(site),
           stats_start_date: stats_start_date,
@@ -275,6 +278,9 @@ defmodule PlausibleWeb.StatsController do
         |> put_resp_header("x-robots-tag", "noindex")
         |> delete_resp_header("x-frame-options")
         |> render("stats.html",
+          sentry_dsn: Application.get_env(:sentry, :dsn),
+          environment: Application.get_env(:plausible, :environment),
+          sentry_release: Application.get_env(:sentry, :release),
           site: shared_link.site,
           has_goals: Sites.has_goals?(shared_link.site),
           stats_start_date: shared_link.site.stats_start_date,
