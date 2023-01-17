@@ -213,6 +213,14 @@ resource "checkly_check_group" "reachability" {
     channel_id = checkly_alert_channel.pagerduty.id
     activated  = true
   }
+
+  alert_settings {
+    escalation_type = "TIME_BASED"
+
+    time_based_escalation {
+      minutes_failing_threshold = 5
+    }
+  }
 }
 
 resource "checkly_alert_channel" "pagerduty" {
