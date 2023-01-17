@@ -142,11 +142,13 @@ geolite2_country_db =
   get_var_from_path_or_env(
     config_dir,
     "GEOLITE2_COUNTRY_DB",
-    Application.app_dir(:plausible, "/priv/geodb/dbip-country.mmdb")
+    Application.app_dir(:plausible, "/priv/geodb/dbip-country.mmdb.gz")
   )
 
 ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", geolite2_country_db)
 geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
+maxmind_license_key = get_var_from_path_or_env(config_dir, "MAXMIND_LICENSE_KEY")
+maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLite2-City")
 
 if System.get_env("DISABLE_AUTH") do
   require Logger
@@ -433,17 +435,38 @@ config :kaffy,
     ]
   ]
 
-if config_env() != :test do
-  config :geolix,
-    databases: [
-      %{
-        id: :geolocation,
-        adapter: Geolix.Adapter.MMDB2,
-        source: ip_geolocation_db,
-        result_as: :raw
-      }
-    ]
-end
+geo_opts =
+  cond do
+    maxmind_license_key ->
+      [
+        license_key: maxmind_license_key,
+        edition: maxmind_edition,
+        async: true
+      ]
+
+    ip_geolocation_db ->
+      [path: ip_geolocation_db]
+
+    true ->
+      raise """
+      Missing geolocation database configuration.
+
+      Please set the IP_GEOLOCATION_DB environment value to the location of
+      your IP geolocation .mmdb file:
+
+          IP_GEOLOCATION_DB=/etc/plausible/dbip-city.mmdb
+
+      Or authenticate with MaxMind by
+      configuring MAXMIND_LICENSE_KEY and (optionally) MAXMIND_EDITION environment
+      variables:
+
+          MAXMIND_LICENSE_KEY=LNpsJCCKPis6XvBP
+          MAXMIND_EDITION=GeoLite2-City # this is the default edition
+
+      """
+  end
+
+config :plausible, Plausible.Geo, geo_opts
 
 if geonames_source_file do
   config :location, :geonames_source_file, geonames_source_file

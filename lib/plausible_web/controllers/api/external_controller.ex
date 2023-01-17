@@ -86,14 +86,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       |> Keyword.take([:version, :commit, :created, :tags])
       |> Map.new()
 
-    geo_database =
-      case Geolix.metadata(where: :geolocation) do
-        %{database_type: type} ->
-          type
-
-        _ ->
-          "(not configured)"
-      end
+    geo_database = Plausible.Geo.database_type() || "(not configured)"
 
     json(conn, %{
       geo_database: geo_database,

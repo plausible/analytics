@@ -651,7 +651,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert event.referrer == ""
     end
 
-    # Fake data is set up in config/test.exs
+    # Fake geo is loaded from test/priv/GeoLite2-City-Test.mmdb
     test "looks up location data from the ip address", %{conn: conn, domain: domain} do
       params = %{
         name: "pageview",
@@ -660,15 +660,15 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
-      |> put_req_header("x-forwarded-for", "2.2.2.2")
+      |> put_req_header("x-forwarded-for", "2.125.160.216")
       |> post("/api/event", params)
 
       pageview = get_event(domain)
 
-      assert pageview.country_code == "FR"
-      assert pageview.subdivision1_code == "FR-IDF"
-      assert pageview.subdivision2_code == "FR-75"
-      assert pageview.city_geoname_id == 2_988_507
+      assert pageview.country_code == "GB"
+      assert pageview.subdivision1_code == "GB-ENG"
+      assert pageview.subdivision2_code == "GB-WBK"
+      assert pageview.city_geoname_id == 2_655_045
     end
 
     test "ignores unknown country code ZZ", %{conn: conn, domain: domain} do
@@ -736,7 +736,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1:123")
+      |> put_req_header("x-forwarded-for", "216.160.83.56:123")
       |> post("/api/event", params)
 
       pageview = get_event(domain)
@@ -752,12 +752,12 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
-      |> put_req_header("x-forwarded-for", "1:1:1:1:1:1:1:1")
+      |> put_req_header("x-forwarded-for", "2001:218:1:1:1:1:1:1")
       |> post("/api/event", params)
 
       pageview = get_event(domain)
 
-      assert pageview.country_code == "US"
+      assert pageview.country_code == "JP"
     end
 
     test "works with ipv6 with a port number in x-forwarded-for", %{conn: conn, domain: domain} do
@@ -768,12 +768,12 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
-      |> put_req_header("x-forwarded-for", "[1:1:1:1:1:1:1:1]:123")
+      |> put_req_header("x-forwarded-for", "[2001:218:1:1:1:1:1:1]:123")
       |> post("/api/event", params)
 
       pageview = get_event(domain)
 
-      assert pageview.country_code == "US"
+      assert pageview.country_code == "JP"
     end
 
     test "uses cloudflare's special header for client IP address if present", %{
@@ -788,7 +788,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       conn
       |> put_req_header("x-forwarded-for", "0.0.0.0")
-      |> put_req_header("cf-connecting-ip", "1.1.1.1")
+      |> put_req_header("cf-connecting-ip", "216.160.83.56")
       |> post("/api/event", params)
 
       pageview = get_event(domain)
@@ -808,7 +808,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       conn
       |> put_req_header("x-forwarded-for", "0.0.0.0")
-      |> put_req_header("b-forwarded-for", "1.1.1.1,9.9.9.9")
+      |> put_req_header("b-forwarded-for", "216.160.83.56,9.9.9.9")
       |> post("/api/event", params)
 
       pageview = get_event(domain)
@@ -827,7 +827,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       }
 
       conn
-      |> put_req_header("forwarded", "by=0.0.0.0;for=1.1.1.1;host=somehost.com;proto=https")
+      |> put_req_header("forwarded", "by=0.0.0.0;for=216.160.83.56;host=somehost.com;proto=https")
       |> post("/api/event", params)
 
       pageview = get_event(domain)
@@ -845,13 +845,13 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn
       |> put_req_header(
         "forwarded",
-        "by=0.0.0.0;for=\"[1:1:1:1:1:1:1:1]\",for=0.0.0.0;host=somehost.com;proto=https"
+        "by=0.0.0.0;for=\"[2001:218:1:1:1:1:1:1]\",for=0.0.0.0;host=somehost.com;proto=https"
       )
       |> post("/api/event", params)
 
       pageview = get_event(domain)
 
-      assert pageview.country_code == "US"
+      assert pageview.country_code == "JP"
     end
 
     test "URL is decoded", %{conn: conn, domain: domain} do
@@ -1042,7 +1042,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       conn
       |> put_req_header("user-agent", @user_agent)
-      |> put_req_header("x-forwarded-for", "982.32.12.1")
+      |> put_req_header("x-forwarded-for", "82.32.12.1")
       |> post("/api/event", params)
 
       [one, two] = get_events(domain)

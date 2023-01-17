@@ -168,7 +168,7 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp put_geolocation(%__MODULE__{} = event) do
-    result = Plausible.Ingestion.Geolocation.lookup(event.request.remote_ip)
+    result = Plausible.Ingestion.Geolocation.lookup(event.request.remote_ip) || %{}
 
     update_attrs(event, result)
   end

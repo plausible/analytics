@@ -1,33 +1,39 @@
 defmodule Plausible.Ingestion.Geolocation do
   @moduledoc false
-  alias Plausible.Ingestion.CityOverrides
 
-  def lookup(remote_ip) do
-    result = Geolix.lookup(remote_ip, where: :geolocation)
+  def lookup(ip_address) do
+    case Plausible.Geo.lookup(ip_address) do
+      %{} = entry ->
+        country_code =
+          entry
+          |> get_in(["country", "iso_code"])
+          |> ignore_unknown_country()
 
-    country_code =
-      get_in(result, [:country, :iso_code])
-      |> ignore_unknown_country()
+        city_geoname_id = country_code && get_in(entry, ["city", "geoname_id"])
+        city_geoname_id = Plausible.Ingestion.CityOverrides.get(city_geoname_id, city_geoname_id)
 
-    city_geoname_id = country_code && get_in(result, [:city, :geoname_id])
-    city_geoname_id = CityOverrides.get(city_geoname_id, city_geoname_id)
+        %{
+          country_code: country_code,
+          subdivision1_code: subdivision1_code(country_code, entry),
+          subdivision2_code: subdivision2_code(country_code, entry),
+          city_geoname_id: city_geoname_id
+        }
 
-    %{
-      country_code: country_code,
-      subdivision1_code: subdivision1_code(country_code, result),
-      subdivision2_code: subdivision2_code(country_code, result),
-      city_geoname_id: city_geoname_id
-    }
+      nil ->
+        nil
+    end
   end
 
-  defp subdivision1_code(country_code, %{subdivisions: [%{iso_code: iso_code} | _rest]})
+  defp subdivision1_code(country_code, %{"subdivisions" => [%{"iso_code" => iso_code} | _rest]})
        when not is_nil(country_code) do
     country_code <> "-" <> iso_code
   end
 
   defp subdivision1_code(_, _), do: nil
 
-  defp subdivision2_code(country_code, %{subdivisions: [_first, %{iso_code: iso_code} | _rest]})
+  defp subdivision2_code(country_code, %{
+         "subdivisions" => [_first, %{"iso_code" => iso_code} | _rest]
+       })
        when not is_nil(country_code) do
     country_code <> "-" <> iso_code
   end
