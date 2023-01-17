@@ -1,5 +1,6 @@
 defmodule Plausible.Sites do
   use Plausible.Repo
+  alias Plausible.ClickhouseRepo
   alias Plausible.Site
   alias Plausible.Site.SharedLink
   import Ecto.Query
@@ -10,25 +11,48 @@ defmodule Plausible.Sites do
 
   def create(user, params) do
     limit = Plausible.Billing.sites_limit(user)
+    site_changeset = Site.changeset(%Site{}, params)
 
-    if owned_sites_count(user) >= limit do
-      {:error, :limit, limit}
-    else
-      site_changeset = Site.changeset(%Site{}, params)
+    cond do
+      owned_sites_count(user) >= limit ->
+        {:error, :limit, limit}
 
-      Ecto.Multi.new()
-      |> Ecto.Multi.insert(:site, site_changeset)
-      |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
-        membership_changeset =
-          Site.Membership.changeset(%Site.Membership{}, %{
-            site_id: site.id,
-            user_id: user.id
-          })
+      true ->
+        Ecto.Multi.new()
+        |> Ecto.Multi.insert(:site, site_changeset)
+        |> Ecto.Multi.run(:existing_events, fn _, %{site: site} ->
+          changeset =
+            Ecto.Changeset.validate_change(site_changeset, :domain, fn :domain, domain ->
+              if has_events?(domain) do
+                Sentry.capture_message("Refused to create a site with existing events",
+                  extra: %{params: params}
+                )
 
-        repo.insert(membership_changeset)
-      end)
-      |> maybe_start_trial(user)
-      |> Repo.transaction()
+                [
+                  domain: """
+                  We cannot create '#{site.domain}' at the moment; if the site was recently deleted, 
+                  we are still processing the deletion, in which case please try again later. 
+                  Otherwise, please contact support.
+                  """
+                ]
+              else
+                []
+              end
+            end)
+
+          Ecto.Changeset.apply_action(changeset, :insert)
+        end)
+        |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
+          membership_changeset =
+            Site.Membership.changeset(%Site.Membership{}, %{
+              site_id: site.id,
+              user_id: user.id
+            })
+
+          repo.insert(membership_changeset)
+        end)
+        |> maybe_start_trial(user)
+        |> Repo.transaction()
     end
   end
 
@@ -70,6 +94,11 @@ defmodule Plausible.Sites do
 
   def has_stats?(site) do
     !!stats_start_date(site)
+  end
+
+  def has_events?(domain) do
+    q = from e in "events", where: e.domain == ^domain, select: true, limit: 1
+    ClickhouseRepo.one(q) == true
   end
 
   def create_shared_link(site, name, password \\ nil) do
