@@ -15,6 +15,9 @@
   <div
     id="stats-react-container"
     style="overflow-anchor: none;"
+    data-sentry-dsn="<%= @sentry_dsn %>",
+    data-sentry-release="<%= @sentry_release %>",
+    data-environment="<%= @environment %>",
     data-domain="<%= @site.domain %>"
     data-offset="<%= Timex.Timezone.total_offset(Timex.Timezone.get(@site.timezone)) %>"
     data-has-goals="<%= @has_goals %>"
@@ -52,6 +55,6 @@
       </div>
     </div>
   <% end %>
-  <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/dashboard.instrumentation.js") %>"></script>
+  <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/dashboard.sentry.js") %>"></script>
   <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/dashboard.js") %>"></script>
 </div>
