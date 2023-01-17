@@ -1,4 +1,4 @@
-import {parseUTCDate, formatMonthYYYY, formatDay, formatDayShort} from '../../util/date'
+import {formatMonthYYYY, formatDay, formatDayShort} from '../../util/date'
 
 const browserDateFormat = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
 
@@ -7,7 +7,7 @@ const is12HourClock = function() {
 }
 
 const parseISODate = function(isoDate) {
-  const date = parseUTCDate(isoDate)
+  const date = new Date(isoDate)
   const minutes = date.getMinutes();
   return { date, minutes }
 }
@@ -60,7 +60,7 @@ const hourIntervalFormatter = {
   },
   short(isoDate, _options) {
     const formatted = formatHours(isoDate)
-    
+
     if (is12HourClock()) {
       return formatted.replace(' ', '').toLowerCase()
     } else {
