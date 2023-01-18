@@ -358,8 +358,8 @@ export default class VisitorGraph extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { metric, topStatData } = this.state;
-    const { query, site } = this.props
+    const { metric } = this.state;
+    const { query } = this.props
 
     if (query !== prevProps.query) {
       if (this.isGraphCollapsed()) {
@@ -373,18 +373,22 @@ export default class VisitorGraph extends React.Component {
     if (metric !== prevState.metric) {
       this.setState({mainGraphLoadingState: LOADING_STATE.refreshing}, this.fetchGraphData)
     }
+  }
+
+  resetMetric() {
+    const { topStatData } = this.state
+    const { query, site } = this.props
 
     const savedMetric = storage.getItem(`metric__${site.domain}`)
-    const topStatLabels = topStatData && topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
-    const prevTopStatLabels = prevState.topStatData && prevState.topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
-    if (topStatLabels && `${topStatLabels}` !== `${prevTopStatLabels}`) {
-      if (query.filters.goal && metric !== 'conversions') {
-        this.setState({ metric: 'conversions' })
-      } else if (topStatLabels.includes(savedMetric) && savedMetric !== "") {
-        this.setState({ metric: savedMetric })
-      } else {
-        this.setState({ metric: topStatLabels[0] })
-      }
+    const selectableMetrics = topStatData && topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
+    const canSelectSavedMetric = selectableMetrics && selectableMetrics.includes(savedMetric)
+
+    if (query.filters.goal) {
+      this.setState({ metric: 'conversions' })
+    } else if (canSelectSavedMetric || savedMetric === "") {
+      this.setState({ metric: savedMetric })
+    } else {
+      this.setState({ metric: 'visitors' })
     }
   }
 
@@ -429,7 +433,7 @@ export default class VisitorGraph extends React.Component {
   fetchTopStatData() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/top-stats`, this.props.query)
       .then((res) => {
-        this.setState({ topStatsLoadingState: LOADING_STATE.loaded, topStatData: res })
+        this.setState({ topStatsLoadingState: LOADING_STATE.loaded, topStatData: res }, this.resetMetric)
         return res
       })
   }
