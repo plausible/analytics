@@ -191,11 +191,8 @@ defmodule Plausible.Sites do
       )
 
       [
-        domain: """
-        We cannot create '#{domain}' at the moment; if the site was recently deleted, 
-        we are still processing the deletion, in which case please try again later. 
-        Otherwise, please contact support.
-        """
+        domain:
+          "This domain has already been taken. Perhaps one of your team members registered it? If that's not the case, please contact support@plausible.io"
       ]
     else
       []

@@ -126,7 +126,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert html = html_response(conn, 200)
-      assert html =~ "We cannot create &#39;#{domain}&#39;"
+      assert html =~ "This domain has already been taken."
       assert html =~ "please contact support"
       refute Repo.get_by(Plausible.Site, domain: domain)
     end
