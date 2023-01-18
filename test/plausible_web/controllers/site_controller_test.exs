@@ -105,7 +105,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) == "/example.com/snippet"
-      assert Repo.exists?(Plausible.Site, domain: "example.com")
+      assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
     test "refuses to create the site when events exist (pending deletion)", %{conn: conn} do
@@ -128,7 +128,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html = html_response(conn, 200)
       assert html =~ "We cannot create &#39;#{domain}&#39;"
       assert html =~ "please contact support"
-      refute Repo.exists?(Plausible.Site, domain: domain)
+      refute Repo.get_by(Plausible.Site, domain: domain)
     end
 
     test "starts trial if user does not have trial yet", %{conn: conn, user: user} do
@@ -217,7 +217,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) == "/example.com/snippet"
-      assert Repo.exists?(Plausible.Site, domain: "example.com")
+      assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
     test "allows enterprise accounts to create unlimited sites", %{
@@ -240,7 +240,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) == "/example.com/snippet"
-      assert Repo.exists?(Plausible.Site, domain: "example.com")
+      assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
     test "cleans up the url", %{conn: conn} do
@@ -253,7 +253,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) == "/example.com/snippet"
-      assert Repo.exists?(Plausible.Site, domain: "example.com")
+      assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
     test "renders form again when domain is missing", %{conn: conn} do
