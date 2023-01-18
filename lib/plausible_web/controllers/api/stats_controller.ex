@@ -841,22 +841,23 @@ defmodule PlausibleWeb.Api.StatsController do
 
     cities =
       Stats.breakdown(site, query, "visit:city", [:visitors], pagination)
-      |> transform_keys(%{city: :code})
-      |> Enum.map(fn city ->
-        city_info = Location.get_city(city[:code])
+      |> transform_keys(%{city: :code, city_name: :name})
+      |> Enum.map(fn
+        %{name: name} = city when name != nil and name != "" ->
+          city
 
-        if city_info do
-          country_info = get_country(city_info.country_code)
+        %{code: code} = city ->
+          if city_info = Location.get_city(code) do
+            country_info = get_country(city_info.country_code)
 
-          Map.merge(city, %{
-            name: city_info.name,
-            country_flag: country_info.flag
-          })
-        else
-          Logger.warning("Could not find city info - code: #{inspect(city[:code])}")
-
-          Map.merge(city, %{name: "N/A"})
-        end
+            Map.merge(city, %{
+              name: city_info.name,
+              country_flag: country_info.flag
+            })
+          else
+            Logger.warning("Could not find city info - code: #{inspect(city[:code])}")
+            Map.merge(city, %{name: "N/A"})
+          end
       end)
 
     if params["csv"] do

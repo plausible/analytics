@@ -1,4 +1,8 @@
 defmodule ObanErrorReporter do
+  @moduledoc false
+
+  require Logger
+
   def handle_event([:oban, :job, :exception], measure, %{job: job} = meta, _) do
     extra =
       job
@@ -7,18 +11,21 @@ defmodule ObanErrorReporter do
 
     on_job_exception(job)
 
+    Logger.warn("Failed to complete Oban job. Reason: #{inspect(meta.reason)}")
     Sentry.capture_exception(meta.reason, stacktrace: meta.stacktrace, extra: extra)
   end
 
   def handle_event([:oban, :notifier, :exception], _timing, meta, _) do
     extra = Map.take(meta, ~w(channel payload)a)
 
+    Logger.warn("Failed to complete Oban job. Reason: #{inspect(meta.reason)}")
     Sentry.capture_exception(meta.reason, stacktrace: meta.stacktrace, extra: extra)
   end
 
   def handle_event([:oban, :plugin, :exception], _timing, meta, _) do
     extra = Map.take(meta, ~w(plugin)a)
 
+    Logger.warn("Failed to complete Oban job. Reason: #{inspect(meta.reason)}")
     Sentry.capture_exception(meta.reason, stacktrace: meta.stacktrace, extra: extra)
   end
 
