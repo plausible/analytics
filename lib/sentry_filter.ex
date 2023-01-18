@@ -38,6 +38,5 @@ defmodule Plausible.SentryFilter do
 
   def before_send(event) do
     event
-    |> IO.inspect(label: :hello)
   end
 end
