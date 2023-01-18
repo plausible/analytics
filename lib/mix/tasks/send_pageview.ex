@@ -15,13 +15,17 @@ defmodule Mix.Tasks.SendPageview do
   @default_domain "dummy.site"
   @default_page "/"
   @default_referrer "https://google.com"
+  @default_event "pageview"
+  @default_props "{}"
   @options [
     ip: :string,
     user_agent: :string,
     domain: :string,
     page: :string,
     referrer: :string,
-    host: :string
+    host: :string,
+    event: :string,
+    props: :string
   ]
 
   def run(opts) do
@@ -78,13 +82,16 @@ defmodule Mix.Tasks.SendPageview do
     domain = Keyword.get(opts, :domain, @default_domain)
     page = Keyword.get(opts, :page, @default_page)
     referrer = Keyword.get(opts, :referrer, @default_referrer)
+    event = Keyword.get(opts, :event, @default_event)
+    props = Keyword.get(opts, :props, @default_props)
 
     %{
-      name: "pageview",
+      name: event,
       url: "http://#{domain}#{page}",
       domain: domain,
       referrer: referrer,
-      width: 1666
+      width: 1666,
+      props: props
     }
   end
 
