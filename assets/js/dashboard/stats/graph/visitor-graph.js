@@ -433,7 +433,7 @@ export default class VisitorGraph extends React.Component {
   fetchTopStatData() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/top-stats`, this.props.query)
       .then((res) => {
-        this.setState({ topStatsLoadingState: LOADING_STATE.loaded, topStatData: res }, this.resetMetric())
+        this.setState({ topStatsLoadingState: LOADING_STATE.loaded, topStatData: res }, this.resetMetric)
         return res
       })
   }
