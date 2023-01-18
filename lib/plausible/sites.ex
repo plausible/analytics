@@ -24,27 +24,12 @@ defmodule Plausible.Sites do
       end
     end)
     |> Ecto.Multi.insert(:site, site_changeset)
-    |> Ecto.Multi.run(:existing_events, fn _, %{site: site} ->
-      changeset =
-        Ecto.Changeset.validate_change(site_changeset, :domain, fn :domain, domain ->
-          if has_events?(domain) do
-            Sentry.capture_message("Refused to create a site with existing events",
-              extra: %{params: params}
-            )
-
-            [
-              domain: """
-              We cannot create '#{site.domain}' at the moment; if the site was recently deleted, 
-              we are still processing the deletion, in which case please try again later. 
-              Otherwise, please contact support.
-              """
-            ]
-          else
-            []
-          end
-        end)
-
-      Ecto.Changeset.apply_action(changeset, :insert)
+    |> Ecto.Multi.run(:existing_events, fn _, _ ->
+      site_changeset
+      |> Ecto.Changeset.validate_change(:domain, fn :domain, domain ->
+        check_for_existing_events(domain, params)
+      end)
+      |> Ecto.Changeset.apply_action(:insert)
     end)
     |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
       membership_changeset =
@@ -197,5 +182,23 @@ defmodule Plausible.Sites do
         where: sm.site_id == ^site.id,
         where: sm.role == :owner
     )
+  end
+
+  defp check_for_existing_events(domain, params) do
+    if has_events?(domain) do
+      Sentry.capture_message("Refused to create a site with existing events",
+        extra: %{params: params}
+      )
+
+      [
+        domain: """
+        We cannot create '#{domain}' at the moment; if the site was recently deleted, 
+        we are still processing the deletion, in which case please try again later. 
+        Otherwise, please contact support.
+        """
+      ]
+    else
+      []
+    end
   end
 end
