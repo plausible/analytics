@@ -10,50 +10,53 @@ defmodule Plausible.Sites do
   end
 
   def create(user, params) do
-    limit = Plausible.Billing.sites_limit(user)
     site_changeset = Site.changeset(%Site{}, params)
 
-    cond do
-      owned_sites_count(user) >= limit ->
-        {:error, :limit, limit}
+    Ecto.Multi.new()
+    |> Ecto.Multi.run(:limit, fn _, _ ->
+      limit = Plausible.Billing.sites_limit(user)
+      count = owned_sites_count(user)
 
-      true ->
-        Ecto.Multi.new()
-        |> Ecto.Multi.insert(:site, site_changeset)
-        |> Ecto.Multi.run(:existing_events, fn _, %{site: site} ->
-          changeset =
-            Ecto.Changeset.validate_change(site_changeset, :domain, fn :domain, domain ->
-              if has_events?(domain) do
-                Sentry.capture_message("Refused to create a site with existing events",
-                  extra: %{params: params}
-                )
+      if count >= limit do
+        {:error, limit}
+      else
+        {:ok, count}
+      end
+    end)
+    |> Ecto.Multi.insert(:site, site_changeset)
+    |> Ecto.Multi.run(:existing_events, fn _, %{site: site} ->
+      changeset =
+        Ecto.Changeset.validate_change(site_changeset, :domain, fn :domain, domain ->
+          if has_events?(domain) do
+            Sentry.capture_message("Refused to create a site with existing events",
+              extra: %{params: params}
+            )
 
-                [
-                  domain: """
-                  We cannot create '#{site.domain}' at the moment; if the site was recently deleted, 
-                  we are still processing the deletion, in which case please try again later. 
-                  Otherwise, please contact support.
-                  """
-                ]
-              else
-                []
-              end
-            end)
-
-          Ecto.Changeset.apply_action(changeset, :insert)
+            [
+              domain: """
+              We cannot create '#{site.domain}' at the moment; if the site was recently deleted, 
+              we are still processing the deletion, in which case please try again later. 
+              Otherwise, please contact support.
+              """
+            ]
+          else
+            []
+          end
         end)
-        |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
-          membership_changeset =
-            Site.Membership.changeset(%Site.Membership{}, %{
-              site_id: site.id,
-              user_id: user.id
-            })
 
-          repo.insert(membership_changeset)
-        end)
-        |> maybe_start_trial(user)
-        |> Repo.transaction()
-    end
+      Ecto.Changeset.apply_action(changeset, :insert)
+    end)
+    |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
+      membership_changeset =
+        Site.Membership.changeset(%Site.Membership{}, %{
+          site_id: site.id,
+          user_id: user.id
+        })
+
+      repo.insert(membership_changeset)
+    end)
+    |> maybe_start_trial(user)
+    |> Repo.transaction()
   end
 
   defp maybe_start_trial(multi, user) do

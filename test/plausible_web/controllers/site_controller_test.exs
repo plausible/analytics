@@ -183,12 +183,16 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn =
         post(conn, "/sites", %{
           "site" => %{
-            "domain" => "example.com",
+            "domain" => "over-limit.example.com",
             "timezone" => "Europe/London"
           }
         })
 
-      assert conn.status == 400
+      assert html = html_response(conn, 200)
+      assert html =~ "Upgrade required"
+      assert html =~ "Your account is limited to 3 sites"
+      assert html =~ "Please contact support"
+      refute Repo.get_by(Plausible.Site, domain: "over-limit.example.com")
     end
 
     test "allows accounts registered before 2021-05-05 to go over the limit", %{

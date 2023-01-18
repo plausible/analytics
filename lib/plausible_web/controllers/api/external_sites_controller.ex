@@ -18,7 +18,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
         |> put_status(400)
         |> json(serialize_errors(changeset))
 
-      {:error, :limit, limit} ->
+      {:error, :limit, limit, _} ->
         conn
         |> put_status(403)
         |> json(%{
