@@ -57,7 +57,7 @@ defmodule Plausible.Google.ReportRequest do
       },
       %__MODULE__{
         dataset: "imported_locations",
-        dimensions: ["ga:date", "ga:countryIsoCode", "ga:regionIsoCode"],
+        dimensions: ["ga:date", "ga:countryIsoCode", "ga:regionIsoCode", "ga:city"],
         metrics: ["ga:users", "ga:sessions", "ga:bounces", "ga:sessionDuration"]
       },
       %__MODULE__{
