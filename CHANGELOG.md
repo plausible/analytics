@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - 'Last updated X seconds ago' info to 'current visitors' tooltips
 
 ### Fixed
+- Fix [more pageviews with session prop filter than with no filters](https://github.com/plausible/analytics/issues/1666)
 - Cascade delete sent_renewal_notifications table when user is deleted plausible/analytics#2549
 - Show appropriate top-stat metric labels on the realtime dashboard when filtering by a goal
 - Fix breakdown API pagination when using event metrics plausible/analytics#2562
