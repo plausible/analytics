@@ -84,16 +84,22 @@ defmodule PlausibleWeb.SiteController do
         |> put_session(site.domain <> "_offer_email_report", true)
         |> redirect(to: Routes.site_path(conn, :add_snippet, site.domain))
 
-      {:error, :site, changeset, _} ->
+      {:error, :limit, limit, _} ->
+        render(conn, "new.html",
+          changeset: Plausible.Site.changeset(%Plausible.Site{}),
+          is_first_site: is_first_site,
+          is_at_limit: true,
+          site_limit: limit,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
+      {:error, _, changeset, _} ->
         render(conn, "new.html",
           changeset: changeset,
           is_first_site: is_first_site,
           is_at_limit: false,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
-
-      {:error, :limit, _limit} ->
-        send_resp(conn, 400, "Site limit reached")
     end
   end
 
