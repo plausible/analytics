@@ -24,7 +24,7 @@ clickhouse-prod: ## Start a container with the same version of clickhouse as the
 	docker run $(CH_FLAGS) --volume=$$PWD/.clickhouse_db_vol_prod:/var/lib/clickhouse clickhouse/clickhouse-server:21.11.3.6
 
 clickhouse-ci: ## Start a container with the same version of clickhouse as the one in .github/workflows/elixir.yml
-	docker run $(CH_FLAGS)--volume=$$PWD/.clickhouse_db_vol_ci:/var/lib/clickhouse yandex/clickhouse-server:21.11
+	docker run $(CH_FLAGS) --volume=$$PWD/.clickhouse_db_vol_ci:/var/lib/clickhouse yandex/clickhouse-server:21.11
 
 clickhouse-stop: ## Stop and remove the clickhouse container
 	docker stop plausible_clickhouse && docker rm plausible_clickhouse
