@@ -14,7 +14,9 @@ defmodule Plausible.Stats.Base do
       sessions_q =
         from(
           s in query_sessions(site, query),
-          select: %{session_id: fragment("DISTINCT ?", s.session_id)}
+          select: %{session_id: s.session_id},
+          where: s.sign == 1,
+          group_by: s.session_id
         )
 
       from(
@@ -148,7 +150,7 @@ defmodule Plausible.Stats.Base do
       from(
         s in "sessions",
         where: s.domain == ^site.domain,
-        where: s.start >= ^first_datetime and s.start < ^last_datetime
+        where: s.start >= ^first_datetime and s.start < ^last_datetime,
       )
       |> add_sample_hint(query)
 
