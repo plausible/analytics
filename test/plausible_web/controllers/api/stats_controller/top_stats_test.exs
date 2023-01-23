@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: false
 
   @user_id 123
 
@@ -30,6 +30,72 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
       assert %{"name" => "Total pageviews", "value" => 3, "change" => 100} in res["top_stats"]
+    end
+
+    test "counts pageviews correctly when filtering", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, screen_size: "Desktop"),
+        build(:pageview, screen_size: "Desktop", user_id: 123),
+        build(:pageview, screen_size: "Tablet", user_id: 123),
+        build(:pageview, screen_size: "Tablet"),
+        build(:pageview, screen_size: "Desktop", user_id: 123),
+        build(:pageview, screen_size: "Desktop")
+      ])
+
+      filters = Jason.encode!(%{screen: "Desktop"})
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}")
+
+      assert %{"top_stats" => stats} = json_response(conn, 200)
+      assert %{"name" => "Total pageviews", "value" => 4, "change" => 100} in stats
+    end
+
+    test "total pageviews are always greater than filtered pageviews", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, screen_size: "Desktop"),
+        build(:pageview, screen_size: "Desktop", user_id: 123),
+        build(:pageview, screen_size: "Tablet", user_id: 123),
+        build(:pageview, screen_size: "Tablet"),
+        build(:pageview, screen_size: "Desktop", user_id: 123),
+        build(:pageview, screen_size: "Desktop")
+      ])
+
+      populate_stats(site, [
+        build(:pageview, screen_size: "Desktop"),
+        build(:pageview, screen_size: "Desktop", user_id: 123),
+        build(:pageview, screen_size: "Tablet", user_id: 123),
+        build(:pageview, screen_size: "Tablet"),
+        build(:pageview, screen_size: "Desktop", user_id: 123),
+        build(:pageview, screen_size: "Desktop")
+      ])
+
+      populate_stats(site, [
+        build(:pageview, screen_size: "Desktop"),
+        build(:pageview, screen_size: "Desktop", user_id: 123),
+        build(:pageview, screen_size: "Tablet", user_id: 123),
+        build(:pageview, screen_size: "Tablet"),
+        build(:pageview, screen_size: "Desktop", user_id: 123),
+        build(:pageview, screen_size: "Desktop")
+      ])
+
+      filters = Jason.encode!(%{screen: "Desktop"})
+
+      filtered_pageviews =
+        conn
+        |> get("/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}")
+        |> json_response(200)
+        |> Map.get("top_stats")
+        |> Enum.find(&(&1["name"] == "Total pageviews"))
+        |> Map.get("value")
+
+      unfiltered_pageviews =
+        conn
+        |> get("/api/stats/#{site.domain}/top-stats?period=month")
+        |> json_response(200)
+        |> Map.get("top_stats")
+        |> Enum.find(&(&1["name"] == "Total pageviews"))
+        |> Map.get("value")
+
+      assert unfiltered_pageviews > filtered_pageviews
     end
 
     test "calculates bounce rate", %{conn: conn, site: site} do
