@@ -18,4 +18,20 @@ defmodule PlausibleWeb.EmailView do
   def date_format(date) do
     Timex.format!(date, "{D} {Mshort} {YYYY}")
   end
+
+  def sentry_link(trace_id, dsn \\ Application.get_env(:sentry, :dsn)) do
+    search_query = URI.encode_query(%{query: trace_id})
+    path = "/organizations/sentry/issues/"
+
+    if is_binary(dsn) do
+      dsn
+      |> URI.parse()
+      |> Map.put(:userinfo, nil)
+      |> Map.put(:path, path)
+      |> Map.put(:query, search_query)
+      |> URI.to_string()
+    else
+      ""
+    end
+  end
 end
