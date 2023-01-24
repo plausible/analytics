@@ -60,7 +60,7 @@ defmodule Plausible.Application do
   end
 
   defp maybe_add_sentry_pool(pool_config) do
-    case Application.get_env(:sentry, :dsn) do
+    case Sentry.Config.dsn() do
       dsn when is_binary(dsn) ->
         Map.put(pool_config, dsn, size: 50)
 
