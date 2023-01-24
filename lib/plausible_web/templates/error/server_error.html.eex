@@ -20,7 +20,7 @@
             <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
               <p>
               <%= if assigns[:trace_id] && !assigns[:selfhosted?] do %>
-                If you would like to help, tell us what you were trying to do. Our development team will recieve your report.
+                If you would like to help, tell us what you were trying to do. Our development team will receive your report.
               <% else %>
                 We have been notified.
               <% end %>
