@@ -321,10 +321,10 @@ defmodule PlausibleWeb.Email do
   end
 
   def error_report(reported_by, trace_id, feedback) do
-    bugs_email = "bugs@plausible.io"
-
-    base_email(%{layout: nil})
-    |> to(bugs_email)
+    Map.new()
+    |> Map.put(:layout, nil)
+    |> base_email()
+    |> to("bugs@plausible.io")
     |> put_param("ReplyTo", reported_by)
     |> tag("sentry")
     |> subject("Feedback to Sentry Trace #{trace_id}")
