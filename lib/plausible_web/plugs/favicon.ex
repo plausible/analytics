@@ -42,21 +42,42 @@ defmodule PlausibleWeb.Favicon do
 
   @ddg_broken_icon <<137, 80, 78, 71, 13, 10, 26, 10>>
   @doc """
-  Proxies HTTP request to DuckDuckGo favicon service. Swallows hop-by-hop HTTP headers that
-  should not be forwarded as defined in RFC 2616 (https://www.rfc-editor.org/rfc/rfc2616#section-13.5.1)
+  Proxies HTTP request to DuckDuckGo favicon service. Swallows hop-by-hop HTTP
+  headers that should not be forwarded as defined in [RFC 2616](https://www.rfc-editor.org/rfc/rfc2616#section-13.5.1)
+
+  ## Placeholder
 
   Cases where we show a placeholder icon instead:
-  * In case of network error to DuckDuckGo
-  * In case of non-2xx status code from DuckDuckGo
-  * In case of broken image response body from DuckDuckGo
 
-  I'm not sure why DDG sometimes returns a broken PNG image in their response but we filter that out.
-  When the icon request fails, we show a placeholder favicon instead. The placeholder is an emoji
-  from https://favicon.io/emoji-favicons/
+  1. In case of network error to DuckDuckGo
+  2. In case of non-2xx status code from DuckDuckGo
+  3. In case of broken image response body from DuckDuckGo
 
-  DuckDuckGo favicon service has some issues with [svg favicons](https://css-tricks.com/svg-favicons-and-all-the-fun-things-we-can-do-with-them/).
-  For some reason, they return them with `content-type=image/x-icon` whereas SVG icons should be returned with `content-type=image/svg+xml`.
-  This plug detects when the response body starts with <svg and will override the content-type to correct it.
+  I'm not sure why DDG sometimes returns a broken PNG image in their response
+  but we filter that out.  When the icon request fails, we show a placeholder
+  favicon instead. The placeholder is an emoji from
+  [https://favicon.io/emoji-favicons/](https://favicon.io/emoji-favicons/)
+
+  DuckDuckGo favicon service has some issues with [SVG favicons](https://css-tricks.com/svg-favicons-and-all-the-fun-things-we-can-do-with-them/).
+  For some reason, they return them with `content-type=image/x-icon` whereas SVG
+  icons should be returned with `content-type=image/svg+xml`. This Plug detects
+  when the response body starts with `<svg` and will override the `Content-Type`
+  to correct it.
+
+  ## Preventing XSS vulnerabilities
+
+  SVGs may contain `<script>` tags, and as these SVGs come from external
+  sources, we need to prevent untrusted code from running on the browser.
+
+  - This Plug sets a strict `Content-Security-Policy` header telling the browser
+    not to run scripts.
+
+  - This Plug sets `Content-Disposition=attachment` to prevent the SVG from
+    rendering when navigating to `/favicon/sources/:domain` directly.
+
+  - Browsers do not execute scripts from `<img>` tags, therefore it is safe to
+    use `<img src="https://plausible.io/favicon/sources/dummy.site"></img>`
+
   """
   def call(conn, favicon_domains: favicon_domains) do
     case conn.path_info do
@@ -73,8 +94,9 @@ defmodule PlausibleWeb.Favicon do
             conn
             |> forward_headers(headers)
             |> maybe_override_content_type(body)
+            |> prevent_javascript_execution()
             |> send_resp(200, body)
-            |> halt
+            |> halt()
 
           _ ->
             send_placeholder(conn)
@@ -104,4 +126,10 @@ defmodule PlausibleWeb.Favicon do
   end
 
   defp maybe_override_content_type(conn, _), do: conn
+
+  defp prevent_javascript_execution(conn) do
+    conn
+    |> put_resp_header("content-security-policy", "script-src 'none'")
+    |> put_resp_header("content-disposition", "attachment")
+  end
 end

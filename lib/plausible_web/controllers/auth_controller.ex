@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.AuthController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.Auth
+  alias Plausible.{Auth, Release}
   require Logger
 
   plug PlausibleWeb.RequireLoggedOutPlug
@@ -24,52 +24,63 @@ defmodule PlausibleWeb.AuthController do
               :activate_form
             ]
 
-  def register_form(conn, _params) do
-    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) != false do
-      redirect(conn, to: Routes.auth_path(conn, :login_form))
-    else
-      changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
+  plug :maybe_disable_registration when action in [:register_form, :register]
+  plug :assign_is_selfhost
 
-      render(conn, "register_form.html",
-        changeset: changeset,
-        layout: {PlausibleWeb.LayoutView, "focus.html"}
-      )
+  defp maybe_disable_registration(conn, _opts) do
+    selfhost_config = Application.get_env(:plausible, :selfhost)
+    disable_registration = Keyword.fetch!(selfhost_config, :disable_registration)
+    first_launch? = Release.should_be_first_launch?()
+
+    cond do
+      first_launch? ->
+        conn
+
+      disable_registration in [:invite_only, true] ->
+        conn |> redirect(to: Routes.auth_path(conn, :login_form)) |> halt()
+
+      true ->
+        conn
     end
   end
 
+  defp assign_is_selfhost(conn, _opts) do
+    assign(conn, :is_selfhost, Plausible.Release.selfhost?())
+  end
+
+  def register_form(conn, _params) do
+    changeset = Auth.User.changeset(%Auth.User{})
+
+    render(conn, "register_form.html",
+      changeset: changeset,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
+  end
+
   def register(conn, params) do
-    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) != false do
-      redirect(conn, to: Routes.auth_path(conn, :login_form))
-    else
-      user = Plausible.Auth.User.new(params["user"])
+    conn = put_layout(conn, {PlausibleWeb.LayoutView, "focus.html"})
+    user = Plausible.Auth.User.new(params["user"])
 
-      if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
-        case Repo.insert(user) do
-          {:ok, user} ->
-            conn = set_user_session(conn, user)
+    if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
+      case Repo.insert(user) do
+        {:ok, user} ->
+          conn = set_user_session(conn, user)
 
-            case user.email_verified do
-              false ->
-                send_email_verification(user)
-                redirect(conn, to: Routes.auth_path(conn, :activate_form))
+          if user.email_verified do
+            redirect(conn, to: Routes.site_path(conn, :new))
+          else
+            send_email_verification(user)
+            redirect(conn, to: Routes.auth_path(conn, :activate_form))
+          end
 
-              true ->
-                redirect(conn, to: Routes.site_path(conn, :new))
-            end
-
-          {:error, changeset} ->
-            render(conn, "register_form.html",
-              changeset: changeset,
-              layout: {PlausibleWeb.LayoutView, "focus.html"}
-            )
-        end
-      else
-        render(conn, "register_form.html",
-          changeset: user,
-          captcha_error: "Please complete the captcha to register",
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
+        {:error, changeset} ->
+          render(conn, "register_form.html", changeset: changeset)
       end
+    else
+      render(conn, "register_form.html",
+        changeset: user,
+        captcha_error: "Please complete the captcha to register"
+      )
     end
   end
 
@@ -548,6 +559,39 @@ defmodule PlausibleWeb.AuthController do
     |> configure_session(drop: true)
     |> delete_resp_cookie("logged_in")
     |> redirect(to: redirect_to)
+  end
+
+  def google_auth_callback(conn, %{"error" => error, "state" => state} = params) do
+    [site_id, _redirect_to] = Jason.decode!(state)
+    site = Repo.get(Plausible.Site, site_id)
+
+    case error do
+      "access_denied" ->
+        conn
+        |> put_flash(
+          :error,
+          "We were unable to authenticate your Google Analytics account. Please check that you have granted us permission to 'See and download your Google Analytics data' and try again."
+        )
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+
+      message when message in ["server_error", "temporarily_unavailable"] ->
+        conn
+        |> put_flash(
+          :error,
+          "We are unable to authenticate your Google Analytics account because Google's authentication service is temporarily unavailable. Please try again in a few moments."
+        )
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+
+      _any ->
+        Sentry.capture_message("Google OAuth callback failed. Reason: #{inspect(params)}")
+
+        conn
+        |> put_flash(
+          :error,
+          "We were unable to authenticate your Google Analytics account. If the problem persists, please contact support for assistance."
+        )
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+    end
   end
 
   def google_auth_callback(conn, %{"code" => code, "state" => state}) do

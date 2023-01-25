@@ -3,6 +3,8 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
   Custom PromEx plugin for instrumenting code within Plausible app.
   """
   use PromEx.Plugin
+  alias Plausible.Site
+  alias Plausible.Ingestion
 
   @impl true
   def polling_metrics(opts) do
@@ -17,6 +19,45 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
       write_buffer_metrics(metric_prefix, poll_rate),
       cache_metrics(metric_prefix, poll_rate)
     ]
+  end
+
+  @impl true
+  def event_metrics(opts) do
+    otp_app = Keyword.fetch!(opts, :otp_app)
+    metric_prefix = Keyword.get(opts, :metric_prefix, PromEx.metric_prefix(otp_app, :plausible))
+
+    Event.build(
+      :plausible_internal_telemetry,
+      [
+        distribution(
+          metric_prefix ++ [:cache_warmer, :sites, :refresh, :all],
+          event_name: Site.Cache.telemetry_event_refresh(:all),
+          reporter_options: [
+            buckets: [500, 1000, 2000, 5000, 10_000]
+          ],
+          unit: {:native, :millisecond},
+          measurement: :duration
+        ),
+        distribution(
+          metric_prefix ++ [:cache_warmer, :sites, :refresh, :updated_recently],
+          event_name: Site.Cache.telemetry_event_refresh(:updated_recently),
+          reporter_options: [
+            buckets: [500, 1000, 2000, 5000, 10_000]
+          ],
+          unit: {:native, :millisecond},
+          measurement: :duration
+        ),
+        counter(
+          metric_prefix ++ [:ingest, :events, :buffered, :total],
+          event_name: Ingestion.Event.telemetry_event_buffered()
+        ),
+        counter(
+          metric_prefix ++ [:ingest, :events, :dropped, :total],
+          event_name: Ingestion.Event.telemetry_event_dropped(),
+          tags: [:reason]
+        )
+      ]
+    )
   end
 
   @doc """
@@ -68,6 +109,11 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
       count: sessions_count,
       hit_rate: sessions_hit_rate
     })
+
+    :telemetry.execute([:prom_ex, :plugin, :cachex, :sites], %{
+      count: Site.Cache.size(),
+      hit_rate: Site.Cache.hit_rate()
+    })
   end
 
   defp write_buffer_metrics(metric_prefix, poll_rate) do
@@ -109,13 +155,21 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         last_value(
           metric_prefix ++ [:cache, :user_agents, :hit_ratio],
           event_name: [:prom_ex, :plugin, :cachex, :user_agents],
-          description: "UA cache hit ratio",
           measurement: :hit_rate
         ),
         last_value(
           metric_prefix ++ [:cache, :sessions, :hit_ratio],
           event_name: [:prom_ex, :plugin, :cachex, :sessions],
-          description: "Sessions cache hit ratio",
+          measurement: :hit_rate
+        ),
+        last_value(
+          metric_prefix ++ [:cache, :sites, :size],
+          event_name: [:prom_ex, :plugin, :cachex, :sites],
+          measurement: :count
+        ),
+        last_value(
+          metric_prefix ++ [:cache, :sites, :hit_ratio],
+          event_name: [:prom_ex, :plugin, :cachex, :sites],
           measurement: :hit_rate
         )
       ]

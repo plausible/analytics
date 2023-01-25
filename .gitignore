@@ -63,6 +63,7 @@ plausible-report.xml
 
 # Geolocation databases
 /priv/geodb/*.mmdb
+/priv/geodb/*.mmdb.gz
 
 # Auto-generated tracker files
 /priv/tracker/js/*.js

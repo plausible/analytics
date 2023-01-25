@@ -39,8 +39,8 @@ defmodule Plausible.Factory do
 
     %Plausible.ClickhouseSession{
       sign: 1,
-      session_id: SipHash.hash!(hash_key(), UUID.uuid4()),
-      user_id: SipHash.hash!(hash_key(), UUID.uuid4()),
+      session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
+      user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
       hostname: hostname,
       domain: hostname,
       referrer: "",
@@ -83,8 +83,8 @@ defmodule Plausible.Factory do
       domain: hostname,
       pathname: "/",
       timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
-      user_id: SipHash.hash!(hash_key(), UUID.uuid4()),
-      session_id: SipHash.hash!(hash_key(), UUID.uuid4()),
+      user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
+      session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
       referrer: "",
       referrer_source: "",
       utm_medium: "",

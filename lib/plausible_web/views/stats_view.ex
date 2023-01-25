@@ -1,10 +1,6 @@
 defmodule PlausibleWeb.StatsView do
   use PlausibleWeb, :view
 
-  def admin_email do
-    Application.get_env(:plausible, :admin_email)
-  end
-
   def base_domain do
     PlausibleWeb.Endpoint.host()
   end
@@ -56,7 +52,7 @@ defmodule PlausibleWeb.StatsView do
   def stats_container_class(conn) do
     cond do
       conn.assigns[:embedded] && conn.assigns[:width] == "manual" -> ""
-      conn.assigns[:embedded] -> "max-width-screen-lg mx-auto"
+      conn.assigns[:embedded] -> "max-w-screen-lg mx-auto"
       !conn.assigns[:embedded] -> "container"
     end
   end

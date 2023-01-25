@@ -12,7 +12,22 @@
   <% end %>
 
   <div class="pt-6"></div>
-  <div id="stats-react-container" style="overflow-anchor: none;" data-domain="<%= @site.domain %>" data-offset="<%= Timex.Timezone.total_offset(Timex.Timezone.get(@site.timezone)) %>" data-has-goals="<%= @has_goals %>" data-logged-in="<%= !!@conn.assigns[:current_user] %>" data-stats-begin="<%= @stats_start_date %>" data-shared-link-auth="<%= assigns[:shared_link_auth] %>" data-embedded="<%= @conn.assigns[:embedded] %>" data-background="<%= @conn.assigns[:background] %>" data-is-dbip="<%= @is_dbip %>" data-current-user-role="<%= @conn.assigns[:current_user_role] %>" data-flags="<%= Jason.encode!(@flags) %>"></div>
+  <div
+    id="stats-react-container"
+    style="overflow-anchor: none;"
+    data-domain="<%= @site.domain %>"
+    data-offset="<%= Timex.Timezone.total_offset(Timex.Timezone.get(@site.timezone)) %>"
+    data-has-goals="<%= @has_goals %>"
+    data-logged-in="<%= !!@conn.assigns[:current_user] %>"
+    data-stats-begin="<%= @stats_start_date %>"
+    data-shared-link-auth="<%= assigns[:shared_link_auth] %>"
+    data-embedded="<%= @conn.assigns[:embedded] %>"
+    data-background="<%= @conn.assigns[:background] %>"
+    data-is-dbip="<%= @is_dbip %>"
+    data-current-user-role="<%= @conn.assigns[:current_user_role] %>"
+    data-flags="<%= Jason.encode!(@flags) %>"
+    data-valid-intervals-by-period="<%= Plausible.Stats.Interval.valid_by_period() |> Jason.encode!() %>">
+  </div>
   <div id="modal_root"></div>
   <%= if !@conn.assigns[:current_user] && @conn.assigns[:demo] do %>
     <div class="bg-gray-50 dark:bg-gray-850">

@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        postgres_version: [12,13,14]
+        postgres_version: [12, 13, 14]
 
     services:
       postgres:
@@ -71,7 +71,7 @@ jobs:
       - name: Check Credo Warnings
         run: mix credo diff --from-git-merge-base origin/master
       - name: Run tests
-        run: mix test
+        run: mix test --include slow --max-failures 1 --warnings-as-errors
       - name: Check Dialyzer
         run: mix dialyzer
 env:

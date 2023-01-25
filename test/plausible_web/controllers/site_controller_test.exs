@@ -105,7 +105,30 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) == "/example.com/snippet"
-      assert Repo.exists?(Plausible.Site, domain: "example.com")
+      assert Repo.get_by(Plausible.Site, domain: "example.com")
+    end
+
+    test "refuses to create the site when events exist (pending deletion)", %{conn: conn} do
+      domain = "events-exist.example.com"
+
+      populate_stats(%{domain: domain}, [
+        build(:pageview)
+      ])
+
+      :inserted = eventually(fn -> {Plausible.Sites.has_events?(domain), :inserted} end)
+
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => domain,
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert html = html_response(conn, 200)
+      assert html =~ "This domain has already been taken."
+      assert html =~ "please contact support"
+      refute Repo.get_by(Plausible.Site, domain: domain)
     end
 
     test "starts trial if user does not have trial yet", %{conn: conn, user: user} do
@@ -160,12 +183,16 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn =
         post(conn, "/sites", %{
           "site" => %{
-            "domain" => "example.com",
+            "domain" => "over-limit.example.com",
             "timezone" => "Europe/London"
           }
         })
 
-      assert conn.status == 400
+      assert html = html_response(conn, 200)
+      assert html =~ "Upgrade required"
+      assert html =~ "Your account is limited to 3 sites"
+      assert html =~ "Please contact support"
+      refute Repo.get_by(Plausible.Site, domain: "over-limit.example.com")
     end
 
     test "allows accounts registered before 2021-05-05 to go over the limit", %{
@@ -190,7 +217,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) == "/example.com/snippet"
-      assert Repo.exists?(Plausible.Site, domain: "example.com")
+      assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
     test "allows enterprise accounts to create unlimited sites", %{
@@ -213,7 +240,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) == "/example.com/snippet"
-      assert Repo.exists?(Plausible.Site, domain: "example.com")
+      assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
     test "cleans up the url", %{conn: conn} do
@@ -226,7 +253,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) == "/example.com/snippet"
-      assert Repo.exists?(Plausible.Site, domain: "example.com")
+      assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
     test "renders form again when domain is missing", %{conn: conn} do
@@ -1013,25 +1040,14 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_new_site]
 
     test "lists Google Analytics views", %{conn: conn, site: site} do
-      bypass = Bypass.open()
-
-      Bypass.expect_once(
-        bypass,
-        "GET",
-        "/analytics/v3/management/accounts/~all/webproperties/~all/profiles",
-        fn conn ->
-          response_body = File.read!("fixture/ga_list_views.json")
-
-          conn
-          |> Plug.Conn.put_resp_header("content-type", "application/json")
-          |> Plug.Conn.resp(200, response_body)
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn _url, _body ->
+          body = "fixture/ga_list_views.json" |> File.read!() |> Jason.decode!()
+          {:ok, %Finch.Response{body: body, status: 200}}
         end
       )
-
-      :plausible
-      |> Application.get_env(:google)
-      |> Keyword.put(:api_url, "http://0.0.0.0:#{bypass.port}")
-      |> then(&Application.put_env(:plausible, :google, &1))
 
       response =
         conn

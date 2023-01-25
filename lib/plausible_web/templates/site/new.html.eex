@@ -16,7 +16,7 @@
             </h3>
             <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
               <p>
-              Your account is limited to <%= @site_limit %> sites. Please contact hello@plausible.io to add more sites.
+                Your account is limited to <%= @site_limit %> sites. Please contact support@plausible.io to add more sites.
               </p>
             </div>
           </div>

@@ -101,12 +101,12 @@ export default class Pages extends React.Component {
   renderContent() {
     switch(this.state.mode) {
     case "entry-pages":
-      return <EntryPages site={this.props.site} query={this.props.query} timer={this.props.timer} />
+      return <EntryPages site={this.props.site} query={this.props.query} />
     case "exit-pages":
-      return <ExitPages site={this.props.site} query={this.props.query} timer={this.props.timer} />
+      return <ExitPages site={this.props.site} query={this.props.query} />
     case "pages":
     default:
-      return <TopPages site={this.props.site} query={this.props.query} timer={this.props.timer} />
+      return <TopPages site={this.props.site} query={this.props.query} />
     }
   }
 
@@ -116,21 +116,21 @@ export default class Pages extends React.Component {
 
     if (isActive) {
       return (
-        <li
+        <button
           className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading"
         >
           {name}
-        </li>
+        </button>
       )
     }
 
     return (
-      <li
+      <button
         className="hover:text-indigo-600 cursor-pointer"
         onClick={this.setMode(mode)}
       >
         {name}
-      </li>
+      </button>
     )
   }
 
@@ -147,11 +147,11 @@ export default class Pages extends React.Component {
             <h3 className="font-bold dark:text-gray-100">
               {labelFor[this.state.mode] || 'Page Visits'}
             </h3>
-            <ul className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
+            <div className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
               { this.renderPill('Top Pages', 'pages') }
               { this.renderPill('Entry Pages', 'entry-pages') }
               { this.renderPill('Exit Pages', 'exit-pages') }
-            </ul>
+            </div>
           </div>
           {/* Main Contents */}
           { this.renderContent() }

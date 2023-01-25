@@ -35,6 +35,68 @@ defmodule Plausible.Stats.Fragments do
     end
   end
 
+  @doc """
+  Converts time or date and time to the specified timezone.
+
+  Reference: https://clickhouse.com/docs/en/sql-reference/functions/date-time-functions/#totimezone
+  """
+  defmacro to_timezone(date, timezone) do
+    quote do
+      fragment("toTimeZone(?, ?)", unquote(date), unquote(timezone))
+    end
+  end
+
+  @doc """
+  Returns the weekstart for `date`. If the weekstart is before the `not_before`
+  boundary, `not_before` is returned.
+
+  ## Examples
+
+  In this pseudo-code example, the fragment returns the weekstart. The
+  `not_before` boundary is set to the past Saturday, which is before the
+  weekstart, therefore the cap does not apply.
+
+    iex> this_wednesday = ~D[2022-11-09]
+    ...> past_saturday = ~D[2022-11-05]
+    ...> weekstart_not_before(this_wednesday, past_saturday)
+    ~D[2022-11-07]
+
+
+  In this other example, the fragment returns Tuesday and not the weekstart.
+  The `not_before` boundary is set to Tuesday, which is past the weekstart,
+  therefore the cap applies.
+
+    iex> this_wednesday = ~D[2022-11-09]
+    ...> this_tuesday = ~D[2022-11-08]
+    ...> weekstart_not_before(this_wednesday, this_tuesday)
+    ~D[2022-11-08]
+
+  """
+  defmacro weekstart_not_before(date, not_before) do
+    quote do
+      fragment(
+        "if(toMonday(?) < toDate(?), toDate(?), toMonday(?))",
+        unquote(date),
+        unquote(not_before),
+        unquote(not_before),
+        unquote(date)
+      )
+    end
+  end
+
+  @doc """
+  Same as Plausible.Stats.Fragments.weekstart_not_before/2 but converts dates to
+  the specified timezone.
+  """
+  defmacro weekstart_not_before(date, not_before, timezone) do
+    quote do
+      weekstart_not_before(
+        to_timezone(unquote(date), unquote(timezone)),
+        unquote(not_before)
+      )
+    end
+  end
+
   defmacro __using__(_) do
     quote do
       import Plausible.Stats.Fragments

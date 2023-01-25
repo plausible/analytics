@@ -22,6 +22,7 @@ import {
   isAfter,
 } from "./util/date";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
+import { shouldIgnoreKeypress } from "./keybinding.js"
 
 function renderArrow(query, site, period, prevDate, nextDate) {
   const insertionDate = parseUTCDate(site.statsBegin);
@@ -38,11 +39,11 @@ function renderArrow(query, site, period, prevDate, nextDate) {
 
   const leftClasses = `flex items-center px-1 sm:px-2 border-r border-gray-300 rounded-l
       dark:border-gray-500 dark:text-gray-100 ${
-      disabledLeft ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
-    }`;
+  disabledLeft ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
+}`;
   const rightClasses = `flex items-center px-1 sm:px-2 rounded-r dark:text-gray-100 ${
-      disabledRight ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
-    }`;
+    disabledRight ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
+  }`;
   return (
     <div className="flex rounded shadow bg-white mr-2 sm:mr-4 cursor-pointer dark:bg-gray-800">
       <QueryButton
@@ -133,14 +134,13 @@ class DatePicker extends React.Component {
   handleKeydown(e) {
     const { query, history } = this.props;
 
-    if (e.target.tagName === 'INPUT') return true;
-    if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.keyCode === 229) return true;
+    if (shouldIgnoreKeypress(e)) return true
 
     const newSearch = {
       period: false,
       from: false,
       to: false,
-      date: false,
+      date: false
     };
 
     const insertionDate = parseUTCDate(this.props.site.statsBegin);
@@ -209,7 +209,7 @@ class DatePicker extends React.Component {
             period: 'day',
             date: formatISO(from),
             from: false,
-            to: false,
+            to: false
           }
         )
       } else {
@@ -383,7 +383,7 @@ class DatePicker extends React.Component {
             onChange={this.setCustomDate}
           />
         </div>
-        )
+      )
     }
   }
 

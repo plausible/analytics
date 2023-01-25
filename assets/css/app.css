@@ -135,8 +135,6 @@ blockquote {
 
 .pulsating-circle {
   position: absolute;
-  left: 50%;
-  top: 50%;
   width: 10px;
   height: 10px;
 }

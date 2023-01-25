@@ -553,6 +553,34 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  test "breakdown by event:page when there are no events in the second page", %{
+    conn: conn,
+    site: site
+  } do
+    populate_stats([
+      build(:pageview, pathname: "/", domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, pathname: "/", domain: site.domain, timestamp: ~N[2021-01-01 00:25:00]),
+      build(:pageview,
+        pathname: "/plausible.io",
+        domain: site.domain,
+        timestamp: ~N[2021-01-01 00:00:00]
+      )
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "property" => "event:page",
+        "metrics" => "visitors,bounce_rate",
+        "page" => 2,
+        "limit" => 2
+      })
+
+    assert json_response(conn, 200) == %{"results" => []}
+  end
+
   describe "custom events" do
     test "can breakdown by event:name", %{conn: conn, site: site} do
       populate_stats([
@@ -1558,6 +1586,41 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
       res = json_response(conn, 200)
       assert Enum.count(res["results"]) == 2
+    end
+
+    test "does not repeat results", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["apple"]}),
+        build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["kiwi"]}),
+        build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["pineapple"]}),
+        build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["grapes"]})
+      ])
+
+      params = %{
+        "site_id" => site.domain,
+        "metrics" => "visitors",
+        "property" => "event:props:item",
+        "limit" => 3,
+        "page" => nil
+      }
+
+      first_page =
+        conn
+        |> get("/api/v1/stats/breakdown", %{params | "page" => 1})
+        |> json_response(200)
+        |> Map.get("results")
+        |> Enum.map(& &1["item"])
+        |> MapSet.new()
+
+      second_page =
+        conn
+        |> get("/api/v1/stats/breakdown", %{params | "page" => 2})
+        |> json_response(200)
+        |> Map.get("results")
+        |> Enum.map(& &1["item"])
+        |> MapSet.new()
+
+      assert first_page |> MapSet.intersection(second_page) |> Enum.empty?()
     end
 
     @invalid_limit_message "Please provide limit as a number between 1 and 1000."

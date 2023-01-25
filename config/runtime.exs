@@ -1,5 +1,6 @@
 import Config
 import Plausible.ConfigHelpers
+require Logger
 
 if config_env() in [:dev, :test] do
   Envy.load(["config/.env.#{config_env()}"])
@@ -58,9 +59,6 @@ db_url =
 
 db_socket_dir = get_var_from_path_or_env(config_dir, "DATABASE_SOCKET_DIR")
 
-admin_user = get_var_from_path_or_env(config_dir, "ADMIN_USER_NAME")
-admin_email = get_var_from_path_or_env(config_dir, "ADMIN_USER_EMAIL")
-
 super_admin_user_ids =
   get_var_from_path_or_env(config_dir, "ADMIN_USER_IDS", "")
   |> String.split(",")
@@ -71,7 +69,6 @@ super_admin_user_ids =
   end)
   |> Enum.filter(& &1)
 
-admin_pwd = get_var_from_path_or_env(config_dir, "ADMIN_USER_PWD")
 env = get_var_from_path_or_env(config_dir, "ENVIRONMENT", "prod")
 mailer_adapter = get_var_from_path_or_env(config_dir, "MAILER_ADAPTER", "Bamboo.SMTPAdapter")
 mailer_email = get_var_from_path_or_env(config_dir, "MAILER_EMAIL", "hello@plausible.local")
@@ -96,10 +93,26 @@ ch_db_url =
 
 ### Mandatory params End
 
+build_metadata_raw = get_var_from_path_or_env(config_dir, "BUILD_METADATA", "{}")
+
 build_metadata =
-  config_dir
-  |> get_var_from_path_or_env("BUILD_METADATA", "{}")
-  |> Jason.decode!()
+  case Jason.decode(build_metadata_raw) do
+    {:ok, build_metadata} ->
+      build_metadata
+
+    {:error, error} ->
+      error = Exception.format(:error, error)
+
+      Logger.warn("""
+      failed to parse $BUILD_METADATA: #{error}
+
+          $BUILD_METADATA is set to #{build_metadata_raw}\
+      """)
+
+      Logger.warn("falling back to empty build metadata, as if $BUILD_METADATA was set to {}")
+
+      _fallback = %{}
+  end
 
 runtime_metadata = [
   version: get_in(build_metadata, ["labels", "org.opencontainers.image.version"]),
@@ -129,16 +142,18 @@ geolite2_country_db =
   get_var_from_path_or_env(
     config_dir,
     "GEOLITE2_COUNTRY_DB",
-    Application.app_dir(:plausible, "/priv/geodb/dbip-country.mmdb")
+    Application.app_dir(:plausible, "/priv/geodb/dbip-country.mmdb.gz")
   )
 
 ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", geolite2_country_db)
 geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
+maxmind_license_key = get_var_from_path_or_env(config_dir, "MAXMIND_LICENSE_KEY")
+maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLite2-City")
 
-disable_auth =
-  config_dir
-  |> get_var_from_path_or_env("DISABLE_AUTH", "false")
-  |> String.to_existing_atom()
+if System.get_env("DISABLE_AUTH") do
+  require Logger
+  Logger.warn("DISABLE_AUTH env var is no longer supported")
+end
 
 enable_email_verification =
   config_dir
@@ -161,11 +176,6 @@ log_level =
   config_dir
   |> get_var_from_path_or_env("LOG_LEVEL", "warn")
   |> String.to_existing_atom()
-
-domain_blacklist =
-  config_dir
-  |> get_var_from_path_or_env("DOMAIN_BLACKLIST", "")
-  |> String.split(",")
 
 is_selfhost =
   config_dir
@@ -193,22 +203,17 @@ disable_cron =
   |> String.to_existing_atom()
 
 config :plausible,
-  admin_user: admin_user,
-  admin_email: admin_email,
-  admin_pwd: admin_pwd,
   environment: env,
   mailer_email: mailer_email,
   super_admin_user_ids: super_admin_user_ids,
   site_limit: site_limit,
   site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost,
-  custom_script_name: custom_script_name,
-  domain_blacklist: domain_blacklist
+  custom_script_name: custom_script_name
 
 config :plausible, :selfhost,
-  disable_authentication: disable_auth,
   enable_email_verification: enable_email_verification,
-  disable_registration: if(!disable_auth, do: disable_registration, else: false)
+  disable_registration: disable_registration
 
 config :plausible, PlausibleWeb.Endpoint,
   url: [scheme: base_url.scheme, host: base_url.host, path: base_url.path, port: base_url.port],
@@ -430,17 +435,38 @@ config :kaffy,
     ]
   ]
 
-if config_env() != :test do
-  config :geolix,
-    databases: [
-      %{
-        id: :geolocation,
-        adapter: Geolix.Adapter.MMDB2,
-        source: ip_geolocation_db,
-        result_as: :raw
-      }
-    ]
-end
+geo_opts =
+  cond do
+    maxmind_license_key ->
+      [
+        license_key: maxmind_license_key,
+        edition: maxmind_edition,
+        async: true
+      ]
+
+    ip_geolocation_db ->
+      [path: ip_geolocation_db]
+
+    true ->
+      raise """
+      Missing geolocation database configuration.
+
+      Please set the IP_GEOLOCATION_DB environment value to the location of
+      your IP geolocation .mmdb file:
+
+          IP_GEOLOCATION_DB=/etc/plausible/dbip-city.mmdb
+
+      Or authenticate with MaxMind by
+      configuring MAXMIND_LICENSE_KEY and (optionally) MAXMIND_EDITION environment
+      variables:
+
+          MAXMIND_LICENSE_KEY=LNpsJCCKPis6XvBP
+          MAXMIND_EDITION=GeoLite2-City # this is the default edition
+
+      """
+  end
+
+config :plausible, Plausible.Geo, geo_opts
 
 if geonames_source_file do
   config :location, :geonames_source_file, geonames_source_file

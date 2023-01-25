@@ -8,6 +8,8 @@ Handlebars.registerHelper('any', function (...args) {
   return args.slice(0, -1).some(Boolean)
 })
 
+Handlebars.registerPartial('customEvents', Handlebars.compile(fs.readFileSync(relPath('src/customEvents.js')).toString()))
+
 function relPath(segment) {
   return path.join(__dirname, segment)
 }
@@ -24,7 +26,7 @@ function compilefile(input, output, templateVars = {}) {
   }
 }
 
-const base_variants = ["hash", "outbound-links", "exclusions", "compat", "local", "manual", "file-downloads", "dimensions"]
+const base_variants = ["hash", "outbound-links", "exclusions", "compat", "local", "manual", "file-downloads", "dimensions", "tagged-events"]
 const variants = [...g.clone.powerSet(base_variants)].filter(a => a.length > 0).map(a => a.sort());
 
 compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.js'))

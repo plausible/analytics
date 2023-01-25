@@ -7,46 +7,40 @@ import {parseQuery} from './query'
 import * as api from './api'
 import { withComparisonProvider } from './comparison-provider-hoc';
 
-const THIRTY_SECONDS = 30000
-
-class Timer {
-  constructor() {
-    this.listeners = []
-    this.intervalId = setInterval(this.dispatchTick.bind(this), THIRTY_SECONDS)
-  }
-
-  onTick(listener) {
-    this.listeners.push(listener)
-  }
-
-  dispatchTick() {
-    for (const listener of this.listeners) {
-      listener()
-    }
-  }
-}
-
 class Dashboard extends React.Component {
   constructor(props) {
     super(props)
+    this.updateLastLoadTimestamp = this.updateLastLoadTimestamp.bind(this)
     this.state = {
       query: parseQuery(props.location.search, this.props.site),
-      timer: new Timer()
+      lastLoadTimestamp: new Date()
     }
+  }
+
+  componentDidMount() {
+    document.addEventListener('tick', this.updateLastLoadTimestamp)
   }
 
   componentDidUpdate(prevProps) {
     if (prevProps.location.search !== this.props.location.search) {
       api.cancelAll()
       this.setState({query: parseQuery(this.props.location.search, this.props.site)})
+      this.updateLastLoadTimestamp()
     }
   }
 
+  updateLastLoadTimestamp() {
+    this.setState({lastLoadTimestamp: new Date()})
+  }
+
   render() {
+    const { site, loggedIn, currentUserRole } = this.props
+    const { query, lastLoadTimestamp } = this.state
+
     if (this.state.query.period === 'realtime') {
-      return <Realtime timer={this.state.timer} site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} query={this.state.query} />
+      return <Realtime site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} query={query} lastLoadTimestamp={lastLoadTimestamp}/>
     } else {
-      return <Historical timer={this.state.timer} site={this.props.site} loggedIn={this.props.loggedIn} currentUserRole={this.props.currentUserRole} query={this.state.query} />
+      return <Historical site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} query={query} lastLoadTimestamp={lastLoadTimestamp}/>
     }
   }
 }

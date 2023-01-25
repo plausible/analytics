@@ -1,5 +1,7 @@
 defmodule Plausible.Release do
   use Plausible.Repo
+  require Logger
+
   @app :plausible
   @start_apps [
     :postgrex,
@@ -7,24 +9,13 @@ defmodule Plausible.Release do
     :ecto
   ]
 
-  def init_admin do
-    prepare()
+  @spec selfhost? :: boolean
+  def selfhost? do
+    Application.fetch_env!(@app, :is_selfhost)
+  end
 
-    {admin_email, admin_user, admin_pwd} =
-      validate_admin(
-        {Application.get_env(:plausible, :admin_email),
-         Application.get_env(:plausible, :admin_user),
-         Application.get_env(:plausible, :admin_pwd)}
-      )
-
-    case Plausible.Auth.find_user_by(email: admin_email) do
-      nil ->
-        {:ok, _} = Plausible.Auth.create_user(admin_user, admin_email, admin_pwd)
-        IO.puts("Admin user created successful!")
-
-      _ ->
-        IO.puts("Admin user already exists. I won't override, bailing")
-    end
+  def should_be_first_launch? do
+    selfhost?() and not (_has_users? = Repo.exists?(Plausible.Auth.User))
   end
 
   def migrate do
@@ -80,18 +71,6 @@ defmodule Plausible.Release do
   end
 
   ##############################
-
-  defp validate_admin({nil, nil, nil}) do
-    random_user = :crypto.strong_rand_bytes(8) |> Base.encode64() |> binary_part(0, 8)
-    random_pwd = :crypto.strong_rand_bytes(20) |> Base.encode64() |> binary_part(0, 20)
-    random_email = "#{random_user}@#{System.get_env("HOST")}"
-    IO.puts("generated admin user/password: #{random_email} / #{random_pwd}")
-    {random_email, random_user, random_pwd}
-  end
-
-  defp validate_admin({admin_email, admin_user, admin_password}) do
-    {admin_email, admin_user, admin_password}
-  end
 
   defp repos do
     Application.fetch_env!(@app, :ecto_repos)

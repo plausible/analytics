@@ -13,7 +13,7 @@ defmodule PlausibleWeb.TrackerTest do
   If you're making changes in the tracker template files (`src/plausible.js`, `compile.js`),
   do regenerate the files before running tests, so they're up to date.
   """
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
   use Plug.Test
 
   test "returns legacy script p.js" do

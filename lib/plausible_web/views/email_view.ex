@@ -1,10 +1,6 @@
 defmodule PlausibleWeb.EmailView do
   use PlausibleWeb, :view
 
-  def admin_email do
-    Application.get_env(:plausible, :admin_email)
-  end
-
   def plausible_url do
     PlausibleWeb.Endpoint.url()
   end
@@ -13,15 +9,29 @@ defmodule PlausibleWeb.EmailView do
     PlausibleWeb.Endpoint.host()
   end
 
-  def user_salutation(user) do
-    if user.name do
-      String.split(user.name) |> List.first()
-    else
-      ""
-    end
+  def greet_recipient(%{user: %{name: name}}) when is_binary(name) do
+    "Hey #{String.split(name) |> List.first()},"
   end
+
+  def greet_recipient(_), do: "Hey,"
 
   def date_format(date) do
     Timex.format!(date, "{D} {Mshort} {YYYY}")
+  end
+
+  def sentry_link(trace_id, dsn \\ Sentry.Config.dsn()) do
+    search_query = URI.encode_query(%{query: trace_id})
+    path = "/organizations/sentry/issues/"
+
+    if is_binary(dsn) do
+      dsn
+      |> URI.parse()
+      |> Map.replace(:userinfo, nil)
+      |> Map.replace(:path, path)
+      |> Map.replace(:query, search_query)
+      |> URI.to_string()
+    else
+      ""
+    end
   end
 end

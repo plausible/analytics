@@ -5,6 +5,9 @@ import 'url-search-params-polyfill';
 import Router from './router'
 import ErrorBoundary from './error-boundary'
 import * as api from './api'
+import * as timer from './util/realtime-update-timer'
+
+timer.start()
 
 const container = document.getElementById('stats-react-container')
 
@@ -17,7 +20,8 @@ if (container) {
     embedded: container.dataset.embedded,
     background: container.dataset.background,
     isDbip: container.dataset.isDbip === 'true',
-    flags: JSON.parse(container.dataset.flags)
+    flags: JSON.parse(container.dataset.flags),
+    validIntervalsByPeriod: JSON.parse(container.dataset.validIntervalsByPeriod)
   }
 
   const loggedIn = container.dataset.loggedIn === 'true'

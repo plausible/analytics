@@ -22,7 +22,14 @@ defmodule Plausible.SiteAdmin do
       domain: %{update: :readonly},
       timezone: %{choices: Plausible.Timezones.options()},
       public: nil,
-      stats_start_date: nil
+      stats_start_date: nil,
+      ingest_rate_limit_scale_seconds: %{
+        help_text: "Time scale for which events rate-limiting is calculated. Default: 60"
+      },
+      ingest_rate_limit_threshold: %{
+        help_text:
+          "Keep empty to disable rate limiting, set to 0 to bar all events. Any positive number sets the limit."
+      }
     ]
   end
 
@@ -33,7 +40,16 @@ defmodule Plausible.SiteAdmin do
       timezone: nil,
       public: nil,
       owner: %{value: &get_owner_email/1},
-      other_members: %{value: &get_other_members/1}
+      other_members: %{value: &get_other_members/1},
+      limits: %{
+        value: fn site ->
+          case site.ingest_rate_limit_threshold do
+            nil -> ""
+            0 -> "🛑 BLOCKED"
+            n -> "⏱ #{n}/#{site.ingest_rate_limit_scale_seconds}s (per server)"
+          end
+        end
+      }
     ]
   end
 

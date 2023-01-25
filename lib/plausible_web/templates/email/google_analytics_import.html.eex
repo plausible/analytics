@@ -1,5 +1,3 @@
-Hey <%= user_salutation(@user) %>,
-<br /><br />
 <%= if @success do %>
   Your Google Analytics import has completed successfully. The Plausible dashboard for <%= @site.domain %> now contains historical imported data from <%= date_format(@site.imported_data.start_date) %> to <%= date_format(@site.imported_data.end_date) %>
 <br /><br />
@@ -31,14 +29,6 @@ Hey <%= user_salutation(@user) %>,
 
   <%= if !Application.get_env(:plausible, :is_selfhost) do %>
     <br /> <br />
-
-    Please reply to this email to let us know if you're still experiencing issues with the import. Thanks!
-    <br /> <br />
-
-    The Plausible Team 💌
+    Please reply to this email to let us know if you're still experiencing issues with the import.
   <% end %>
 <% end %>
-<br /><br />
---
-<br /><br />
-<%= plausible_url() %><br />

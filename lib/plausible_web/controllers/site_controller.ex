@@ -84,16 +84,22 @@ defmodule PlausibleWeb.SiteController do
         |> put_session(site.domain <> "_offer_email_report", true)
         |> redirect(to: Routes.site_path(conn, :add_snippet, site.domain))
 
-      {:error, :site, changeset, _} ->
+      {:error, :limit, limit, _} ->
+        render(conn, "new.html",
+          changeset: Plausible.Site.changeset(%Plausible.Site{}),
+          is_first_site: is_first_site,
+          is_at_limit: true,
+          site_limit: limit,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
+      {:error, _, changeset, _} ->
         render(conn, "new.html",
           changeset: changeset,
           is_first_site: is_first_site,
           is_at_limit: false,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
-
-      {:error, :limit, _limit} ->
-        send_resp(conn, 400, "Site limit reached")
     end
   end
 
@@ -686,19 +692,35 @@ defmodule PlausibleWeb.SiteController do
         "refresh_token" => refresh_token,
         "expires_at" => expires_at
       }) do
-    site = conn.assigns[:site]
-    view_ids = Plausible.Google.Api.list_views(access_token)
+    case Plausible.Google.Api.list_views(access_token) do
+      {:ok, view_ids} ->
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("import_from_google_view_id_form.html",
+          access_token: access_token,
+          refresh_token: refresh_token,
+          expires_at: expires_at,
+          site: conn.assigns.site,
+          view_ids: view_ids,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
 
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> render("import_from_google_view_id_form.html",
-      access_token: access_token,
-      refresh_token: refresh_token,
-      expires_at: expires_at,
-      site: site,
-      view_ids: view_ids,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
+      {:error, :authentication_failed} ->
+        conn
+        |> put_flash(
+          :error,
+          "We were unable to authenticate your Google Analytics account. Please check that you have granted us permission to 'See and download your Google Analytics data' and try again."
+        )
+        |> redirect(to: Routes.site_path(conn, :settings_general, conn.assigns.site.domain))
+
+      {:error, _any} ->
+        conn
+        |> put_flash(
+          :error,
+          "We were unable to list your Google Analytics properties. If the problem persists, please contact support for assistance."
+        )
+        |> redirect(to: Routes.site_path(conn, :settings_general, conn.assigns.site.domain))
+    end
   end
 
   # see https://stackoverflow.com/a/57416769
@@ -715,7 +737,7 @@ defmodule PlausibleWeb.SiteController do
     case start_date do
       {:ok, nil} ->
         site = conn.assigns[:site]
-        view_ids = Plausible.Google.Api.list_views(access_token)
+        {:ok, view_ids} = Plausible.Google.Api.list_views(access_token)
 
         conn
         |> assign(:skip_plausible_tracking, true)

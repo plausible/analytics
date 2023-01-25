@@ -3,7 +3,7 @@ defmodule Plausible.ConfigHelpers do
     var_path = Path.join(config_dir, var_name)
 
     if File.exists?(var_path) do
-      File.read!(var_path)
+      File.read!(var_path) |> String.trim()
     else
       System.get_env(var_name, default)
     end

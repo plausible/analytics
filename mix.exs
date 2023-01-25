@@ -47,7 +47,7 @@ defmodule Plausible.MixProject do
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(env) when env in [:test, :dev], do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
   # Specifies your project dependencies.
@@ -57,12 +57,13 @@ defmodule Plausible.MixProject do
     [
       {:bamboo, "~> 2.2"},
       {:bamboo_phoenix, "~> 1.0.0"},
-      {:bamboo_postmark, git: "https://github.com/pablo-co/bamboo_postmark.git", tag: "master"},
+      {:bamboo_postmark, git: "https://github.com/plausible/bamboo_postmark.git", branch: "main"},
       {:bamboo_smtp, "~> 4.1"},
       {:bcrypt_elixir, "~> 2.0"},
       {:bypass, "~> 2.1", only: [:dev, :test]},
       {:cachex, "~> 3.4"},
       {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
+      {:clickhousex, github: "plausible/clickhousex", branch: "master", override: true},
       {:combination, "~> 0.0.3"},
       {:connection, "~> 1.1", override: true},
       {:cors_plug, "~> 3.0"},
@@ -71,17 +72,16 @@ defmodule Plausible.MixProject do
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:double, "~> 0.8.0", only: :test},
       {:ecto_sql, "~> 3.0"},
-      {:elixir_uuid, "~> 1.2", only: :test},
       {:envy, "~> 1.1.1"},
-      {:ex_machina, "~> 2.3", only: :test},
+      {:ex_machina, "~> 2.3", only: [:dev, :test]},
       {:excoveralls, "~> 0.10", only: :test},
       {:exvcr, "~> 0.11", only: :test},
-      {:finch, "~> 0.12.0", override: true},
+      {:finch, "~> 0.14.0", override: true},
       {:floki, "~> 0.32.0", only: :test},
       {:fun_with_flags, "~> 1.9.0"},
       {:fun_with_flags_ui, "~> 0.8"},
-      {:geolix, "~> 2.0"},
-      {:geolix_adapter_mmdb2, "~> 0.6.0"},
+      {:locus, "~> 2.3"},
+      {:gen_cycle, "~> 1.0"},
       {:hackney, "~> 1.8"},
       {:hammer, "~> 6.0"},
       {:httpoison, "~> 1.4"},

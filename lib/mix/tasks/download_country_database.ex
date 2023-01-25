@@ -34,7 +34,7 @@ defmodule Mix.Tasks.DownloadCountryDatabase do
 
     if res.status_code == 200 do
       File.mkdir("priv/geodb")
-      File.write!("priv/geodb/dbip-country.mmdb", res.body)
+      File.write!("priv/geodb/dbip-country.mmdb.gz", res.body)
       Logger.info("Downloaded and saved the database successfully")
     else
       Logger.error("Unable to download and save the database. Response: #{inspect(res)}")

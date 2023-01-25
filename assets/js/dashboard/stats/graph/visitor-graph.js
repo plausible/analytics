@@ -2,47 +2,21 @@ import React from 'react';
 import { withRouter, Link } from 'react-router-dom'
 import Chart from 'chart.js/auto';
 import { navigateToQuery } from '../../query'
-import numberFormatter, {durationFormatter} from '../../util/number-formatter'
 import * as api from '../../api'
 import * as storage from '../../util/storage'
 import LazyLoader from '../../components/lazy-loader'
-import {GraphTooltip, buildDataSet, dateFormatter} from './graph-util';
+import {GraphTooltip, buildDataSet, METRIC_MAPPING, METRIC_LABELS, METRIC_FORMATTER} from './graph-util';
+import dateFormatter from './date-formatter';
 import TopStats from './top-stats';
+import { IntervalPicker, getStoredInterval, storeInterval } from './interval-picker';
+import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
+import classNames from "classnames";
 
-export const METRIC_MAPPING = {
-  'Unique visitors (last 30 min)': 'visitors',
-  'Pageviews (last 30 min)': 'pageviews',
-  'Unique visitors': 'visitors',
-  'Visit duration': 'visit_duration',
-  'Total pageviews': 'pageviews',
-  'Bounce rate': 'bounce_rate',
-  'Unique conversions': 'conversions',
-  // 'Time on Page': 'time',
-  // 'Conversion rate': 'conversion_rate',
-  // 'Total conversions': 't_conversions',
-}
-
-export const METRIC_LABELS = {
-  'visitors': 'Visitors',
-  'pageviews': 'Pageviews',
-  'bounce_rate': 'Bounce Rate',
-  'visit_duration': 'Visit Duration',
-  'conversions': 'Converted Visitors',
-  // 'time': 'Time on Page',
-  // 'conversion_rate': 'Conversion Rate',
-  // 't_conversions': 'Total Conversions'
-}
-
-export const METRIC_FORMATTER = {
-  'visitors': numberFormatter,
-  'pageviews': numberFormatter,
-  'bounce_rate': (number) => (`${number}%`),
-  'visit_duration': durationFormatter,
-  'conversions': numberFormatter,
-  // 'time': durationFormatter,
-  // 'conversion_rate': (number) => (`${Math.max(number, 100)}%`),
-  // 't_conversions': numberFormatter
+const LOADING_STATE = {
+  loading: 'loading',
+  refreshing: 'refreshing',
+  loaded: 'loaded'
 }
 
 class LineGraph extends React.Component {
@@ -57,7 +31,7 @@ class LineGraph extends React.Component {
   }
 
   regenerateChart() {
-    const { graphData, metric } = this.props
+    const { graphData, metric, query } = this.props
     const graphEl = document.getElementById("main-graph-canvas")
     this.ctx = graphEl.getContext('2d');
     const dataSet = buildDataSet(graphData.plot, graphData.present_index, this.ctx, METRIC_LABELS[metric])
@@ -79,7 +53,7 @@ class LineGraph extends React.Component {
             mode: 'index',
             intersect: false,
             position: 'average',
-            external: GraphTooltip(graphData, metric)
+            external: GraphTooltip(graphData, metric, query)
           },
         },
         responsive: true,
@@ -103,7 +77,23 @@ class LineGraph extends React.Component {
             grid: { display: false },
             ticks: {
               maxTicksLimit: 8,
-              callback: function(val, _index, _ticks) { return dateFormatter(graphData.interval)(this.getLabelForValue(val)) },
+              callback: function (val, _index, _ticks) {
+                if (graphData.interval === 'hour' && query.period !== 'day') {
+                  const date = dateFormatter("date", false, query.period)(this.getLabelForValue(val))
+                  const hour = dateFormatter(graphData.interval, false, query.period)(this.getLabelForValue(val))
+
+                  // Returns a combination of date and hour. This is because
+                  // small intervals like hour may return multiple days
+                  // depending on the query period.
+                  return `${date}, ${hour}`
+                }
+
+                if (graphData.interval === 'minute' && query.period !== 'realtime') {
+                  return dateFormatter("hour", false, query.period)(this.getLabelForValue(val))
+                }
+
+                return dateFormatter(graphData.interval, false, query.period)(this.getLabelForValue(val))
+              },
               color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             }
           }
@@ -142,15 +132,18 @@ class LineGraph extends React.Component {
     const { graphData, metric, darkTheme } = this.props;
     const tooltip = document.getElementById('chartjs-tooltip');
 
-    if (metric && graphData && (
+    if (
       graphData !== prevProps.graphData ||
       darkTheme !== prevProps.darkTheme
-    )) {
-      if (this.chart) {
-        this.chart.destroy();
+    ) {
+
+      if (metric && graphData) {
+        if (this.chart) {
+          this.chart.destroy();
+        }
+        this.chart = this.regenerateChart();
+        this.chart.update();
       }
-      this.chart = this.regenerateChart();
-      this.chart.update();
 
       if (tooltip) {
         tooltip.style.display = 'none';
@@ -240,11 +233,13 @@ class LineGraph extends React.Component {
           </div>
         )
       } else {
-        const endpoint = `/${encodeURIComponent(this.props.site.domain)}/export${api.serializeQuery(this.props.query)}`
+        const interval = this.props.graphData?.interval
+        const queryParams = api.serializeQuery(this.props.query, [{ interval }])
+        const endpoint = `/${encodeURIComponent(this.props.site.domain)}/export${queryParams}`
 
         return (
           <a className="w-4 h-4 mx-2" href={endpoint} download onClick={this.downloadSpinner.bind(this)}>
-            <svg className="absolute text-gray-700 feather dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <svg className="absolute text-gray-700 feather dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           </a>
         )
       }
@@ -266,7 +261,7 @@ class LineGraph extends React.Component {
   }
 
   importedNotice() {
-    const source = this.props.topStatData.imported_source;
+    const source = this.props.topStatData && this.props.topStatData.imported_source;
 
     if (source) {
       const withImported = this.props.topStatData.with_imported;
@@ -287,21 +282,24 @@ class LineGraph extends React.Component {
   }
 
   render() {
-    const { updateMetric, metric, topStatData, query } = this.props
+    const { updateMetric, metric, topStatData, query, site, graphData } = this.props
     const extraClass = this.props.graphData && this.props.graphData.interval === 'hour' ? '' : 'cursor-pointer'
 
     return (
       <div className="graph-inner">
         <div className="flex flex-wrap" ref={this.boundary}>
-          <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current} />
+          <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current} lastLoadTimestamp={this.props.lastLoadTimestamp} />
         </div>
         <div className="relative px-2">
-          <div className="absolute right-4 -top-10 flex">
-            {this.downloadLink()}
-            {this.samplingNotice()}
+          <div className="absolute right-4 -top-10 py-2 md:py-0 flex items-center">
+            { this.downloadLink() }
+            { this.samplingNotice() }
             { this.importedNotice() }
+            <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={this.props.updateInterval}/>
           </div>
-          <canvas id="main-graph-canvas" className={'mt-4 select-none ' + extraClass} width="1054" height="342"></canvas>
+          <FadeIn show={graphData}>
+            <canvas id="main-graph-canvas" className={'mt-4 select-none ' + extraClass} width="1054" height="342"></canvas>
+          </FadeIn>
         </div>
       </div>
     )
@@ -314,102 +312,173 @@ export default class VisitorGraph extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      loading: 2,
+      topStatsLoadingState: LOADING_STATE.loading,
+      mainGraphLoadingState: LOADING_STATE.loading,
       metric: storage.getItem(`metric__${this.props.site.domain}`) || 'visitors'
     }
     this.onVisible = this.onVisible.bind(this)
     this.updateMetric = this.updateMetric.bind(this)
     this.fetchTopStatData = this.fetchTopStatData.bind(this)
     this.fetchGraphData = this.fetchGraphData.bind(this)
+    this.updateInterval = this.updateInterval.bind(this)
+  }
+
+  isIntervalValid(interval) {
+    const { query, site } = this.props
+    const validIntervals = site.validIntervalsByPeriod[query.period] || []
+
+    return validIntervals.includes(interval)
+  }
+
+  getIntervalFromStorage() {
+    const { query, site } = this.props
+    const storedInterval = getStoredInterval(query.period, site.domain)
+
+    if (this.isIntervalValid(storedInterval)) {
+      return storedInterval
+    } else {
+      return null
+    }
+  }
+
+  updateInterval(interval) {
+    if (this.isIntervalValid(interval)) {
+      storeInterval(this.props.query.period, this.props.site.domain, interval)
+      this.setState({ mainGraphLoadingState: LOADING_STATE.refreshing }, this.fetchGraphData)
+    }
   }
 
   onVisible() {
-    this.fetchGraphData()
+    this.setState({mainGraphLoadingState: LOADING_STATE.loading}, this.fetchGraphData)
     this.fetchTopStatData()
-    if (this.props.timer) {
-      this.props.timer.onTick(this.fetchGraphData)
-      this.props.timer.onTick(this.fetchTopStatData)
+    if (this.props.query.period === 'realtime') {
+      document.addEventListener('tick', this.fetchGraphData)
+      document.addEventListener('tick', this.fetchTopStatData)
     }
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { metric, topStatData } = this.state;
+    const { metric } = this.state;
+    const { query } = this.props
 
-    if (this.props.query !== prevProps.query) {
-      this.setState({ loading: 3, graphData: null, topStatData: null })
-      this.fetchGraphData()
+    if (query !== prevProps.query) {
+      if (this.isGraphCollapsed()) {
+        this.setState({ topStatsLoadingState: LOADING_STATE.loading, topStatData: null })
+      } else {
+        this.setState({ mainGraphLoadingState: LOADING_STATE.loading, topStatsLoadingState: LOADING_STATE.loading, graphData: null, topStatData: null }, this.fetchGraphData)
+      }
       this.fetchTopStatData()
     }
 
     if (metric !== prevState.metric) {
-      this.setState({loading: 1, graphData: null})
-      this.fetchGraphData()
-    }
-
-    const savedMetric = storage.getItem(`metric__${this.props.site.domain}`)
-    const topStatLabels = topStatData && topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
-    const prevTopStatLabels = prevState.topStatData && prevState.topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
-    if (topStatLabels && `${topStatLabels}` !== `${prevTopStatLabels}`) {
-      if (this.props.query.filters.goal && metric !== 'conversions') {
-        this.setState({ metric: 'conversions' })
-      } else if (topStatLabels.includes(savedMetric) && savedMetric !== "") {
-        this.setState({ metric: savedMetric })
-      } else {
-        this.setState({ metric: topStatLabels[0] })
-      }
+      this.setState({mainGraphLoadingState: LOADING_STATE.refreshing}, this.fetchGraphData)
     }
   }
 
-  updateMetric(newMetric) {
-    if (newMetric === this.state.metric) {
-      storage.setItem(`metric__${this.props.site.domain}`, "")
-      this.setState({ metric: "" })
+  resetMetric() {
+    const { topStatData } = this.state
+    const { query, site } = this.props
+
+    const savedMetric = storage.getItem(`metric__${site.domain}`)
+    const selectableMetrics = topStatData && topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
+    const canSelectSavedMetric = selectableMetrics && selectableMetrics.includes(savedMetric)
+
+    if (query.filters.goal) {
+      this.setState({ metric: 'conversions' })
+    } else if (canSelectSavedMetric || savedMetric === "") {
+      this.setState({ metric: savedMetric })
     } else {
-      storage.setItem(`metric__${this.props.site.domain}`, newMetric)
-      this.setState({ metric: newMetric })
+      this.setState({ metric: 'visitors' })
     }
+  }
+
+  isGraphCollapsed() {
+    return this.state.metric === ""
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('tick', this.fetchGraphData)
+    document.removeEventListener('tick', this.fetchTopStatData)
+  }
+
+  updateMetric(clickedMetric) {
+    const newMetric = clickedMetric === this.state.metric ? "" : clickedMetric
+
+    storage.setItem(`metric__${this.props.site.domain}`, newMetric)
+    this.setState({ metric: newMetric })
   }
 
   fetchGraphData() {
-    if (this.state.metric) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/main-graph`, this.props.query, {metric: this.state.metric || 'none'})
+    if (this.isGraphCollapsed()) {
+      this.setState({ mainGraphLoadingState: LOADING_STATE.loaded, graphData: null })
+      return
+    }
+
+    const url = `/api/stats/${encodeURIComponent(this.props.site.domain)}/main-graph`
+    let params = { metric: this.state.metric }
+    const interval = this.getIntervalFromStorage()
+    if (interval) { params.interval = interval }
+
+    api.get(url, this.props.query, params)
       .then((res) => {
-        this.setState((state) => ({ loading: state.loading-2, graphData: res }))
+        this.setState({ mainGraphLoadingState: LOADING_STATE.loaded, graphData: res })
         return res
       })
-    } else {
-      this.setState((state) => ({ loading: state.loading-2, graphData: null }))
-    }
+      .catch((err) => {
+        console.log(err)
+        this.setState({ mainGraphLoadingState: LOADING_STATE.loaded, graphData: false })
+      })
   }
 
   fetchTopStatData() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/top-stats`, this.props.query)
       .then((res) => {
-        this.setState((state) => ({ loading: state.loading-1, topStatData: res }))
+        this.setState({ topStatsLoadingState: LOADING_STATE.loaded, topStatData: res }, this.resetMetric)
         return res
       })
-    }
+  }
 
   renderInner() {
     const { query, site } = this.props;
-    const { graphData, metric, topStatData, loading } = this.state;
+    const { graphData, metric, topStatData, topStatsLoadingState, mainGraphLoadingState } = this.state;
 
     const theme = document.querySelector('html').classList.contains('dark') || false
 
-    if ((loading <= 1 && topStatData) || (topStatData && graphData)) {
-      return (
-          <LineGraphWithRouter graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} />
-      )
-    }
+    const topStatsLoadedOrRefreshing = (topStatsLoadingState === LOADING_STATE.loaded || topStatsLoadingState === LOADING_STATE.refreshing)
+    const mainGraphLoadedOrRefreshing = (mainGraphLoadingState === LOADING_STATE.loaded || mainGraphLoadingState === LOADING_STATE.refreshing)
+    const noMetricOrRefreshing = (!metric || mainGraphLoadingState === LOADING_STATE.refreshing)
+    const topStatAndGraphLoaded = !!(topStatData && graphData)
+
+    const showGraph =
+    topStatsLoadedOrRefreshing &&
+    mainGraphLoadedOrRefreshing &&
+      (topStatData && noMetricOrRefreshing || topStatAndGraphLoaded)
+
+    return (
+      <FadeIn show={showGraph}>
+        <LineGraphWithRouter graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} updateInterval={this.updateInterval} lastLoadTimestamp={this.props.lastLoadTimestamp} />
+      </FadeIn>
+    )
   }
 
   render() {
-    const {metric, topStatData, graphData} = this.state
+    const {metric, mainGraphLoadingState, topStatsLoadingState} = this.state
+    const loaderClassName = classNames('mx-auto loading', {
+      'pt-52 sm:pt-56 md:pt-60': mainGraphLoadingState == LOADING_STATE.refreshing,
+      'pt-32 sm:pt-36 md:pt-48': mainGraphLoadingState !== LOADING_STATE.refreshing && metric,
+      'pt-16 sm:pt-14 md:pt-18 lg:pt-5': mainGraphLoadingState !== LOADING_STATE.refreshing && !metric
+    })
+
+    const loadingOrRefreshing =
+          mainGraphLoadingState == LOADING_STATE.refreshing ||
+          mainGraphLoadingState == LOADING_STATE.loading ||
+          topStatsLoadingState == LOADING_STATE.refreshing ||
+          topStatsLoadingState == LOADING_STATE.loading
 
     return (
       <LazyLoader onVisible={this.onVisible}>
         <div className={`relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825 transition-padding ease-in-out duration-150 ${metric ? 'main-graph' : 'top-stats-only'}`}>
-          {this.state.loading > 0 && <div className="graph-inner"><div className={`${topStatData && !graphData ? 'pt-52 sm:pt-56 md:pt-60' : metric ? 'pt-32 sm:pt-36 md:pt-48' : 'pt-16 sm:pt-14 md:pt-18 lg:pt-5'} mx-auto loading`}><div></div></div></div>}
+          {loadingOrRefreshing && <div className="graph-inner"><div className={loaderClassName}><div></div></div></div>}
           {this.renderInner()}
         </div>
       </LazyLoader>

@@ -18,44 +18,77 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("welcome-email")
+<<<<<<< HEAD
     |> subject("Bienvenido a nuestras estadísticas!")
     |> render("welcome_email.html", user: user)
+=======
+    |> subject("Welcome to Plausible")
+    |> render("welcome_email.html", user: user, unsubscribe: true)
+>>>>>>> ad12e1ef315c9b4c8eabb20d8cd6a86f3262fc97
   end
 
   def create_site_email(user) do
     base_email()
     |> to(user)
     |> tag("create-site-email")
+<<<<<<< HEAD
     |> subject("Agrega los detalles de tu sitio")
     |> render("create_site_email.html", user: user)
+=======
+    |> subject("Your Plausible setup: Add your website details")
+    |> render("create_site_email.html", user: user, unsubscribe: true)
+>>>>>>> ad12e1ef315c9b4c8eabb20d8cd6a86f3262fc97
   end
 
   def site_setup_help(user, site) do
     base_email()
     |> to(user)
     |> tag("help-email")
+<<<<<<< HEAD
     |> subject("Esperando las primeras visitas")
     |> render("site_setup_help_email.html", user: user, site: site)
+=======
+    |> subject("Your Plausible setup: Waiting for the first page views")
+    |> render("site_setup_help_email.html",
+      user: user,
+      site: site,
+      unsubscribe: true
+    )
+>>>>>>> ad12e1ef315c9b4c8eabb20d8cd6a86f3262fc97
   end
 
   def site_setup_success(user, site) do
     base_email()
     |> to(user)
     |> tag("setup-success-email")
+<<<<<<< HEAD
     |> subject("Estamos registrando las estadísticas")
     |> render("site_setup_success_email.html", user: user, site: site)
+=======
+    |> subject("Plausible is now tracking your website stats")
+    |> render("site_setup_success_email.html",
+      user: user,
+      site: site,
+      unsubscribe: true
+    )
+>>>>>>> ad12e1ef315c9b4c8eabb20d8cd6a86f3262fc97
   end
 
   def check_stats_email(user) do
     base_email()
     |> to(user)
     |> tag("check-stats-email")
+<<<<<<< HEAD
     |> subject("Chequea las estadísticas")
     |> render("check_stats_email.html", user: user)
+=======
+    |> subject("Check your Plausible website stats")
+    |> render("check_stats_email.html", user: user, unsubscribe: true)
+>>>>>>> ad12e1ef315c9b4c8eabb20d8cd6a86f3262fc97
   end
 
   def password_reset_email(email, reset_link) do
-    base_email()
+    base_email(%{layout: nil})
     |> to(email)
     |> tag("password-reset-email")
     |> subject("Reiniciamos tu contraseña")
@@ -66,8 +99,13 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("trial-one-week-reminder")
+<<<<<<< HEAD
     |> subject("Tu cuenta trial expira en una semana")
     |> render("trial_one_week_reminder.html", user: user)
+=======
+    |> subject("Your Plausible trial expires next week")
+    |> render("trial_one_week_reminder.html", user: user, unsubscribe: true)
+>>>>>>> ad12e1ef315c9b4c8eabb20d8cd6a86f3262fc97
   end
 
   def trial_upgrade_email(user, day, {pageviews, custom_events}) do
@@ -82,7 +120,8 @@ defmodule PlausibleWeb.Email do
       day: day,
       custom_events: custom_events,
       usage: pageviews + custom_events,
-      suggested_plan: suggested_plan
+      suggested_plan: suggested_plan,
+      unsubscribe: true
     )
   end
 
@@ -90,12 +129,17 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user)
     |> tag("trial-over-email")
+<<<<<<< HEAD
     |> subject("Tu período a prueba finalizó!")
     |> render("trial_over_email.html", user: user)
+=======
+    |> subject("Your Plausible trial has ended")
+    |> render("trial_over_email.html", user: user, unsubscribe: true)
+>>>>>>> ad12e1ef315c9b4c8eabb20d8cd6a86f3262fc97
   end
 
   def weekly_report(email, site, assigns) do
-    base_email()
+    base_email(%{layout: nil})
     |> to(email)
     |> tag("weekly-report")
     |> subject("#{assigns[:name]} reporte para #{site.domain}")
@@ -124,12 +168,13 @@ defmodule PlausibleWeb.Email do
       user: user,
       usage: usage,
       last_cycle: last_cycle,
-      suggested_plan: suggested_plan
+      suggested_plan: suggested_plan,
+      unsubscribe: true
     })
   end
 
   def enterprise_over_limit_internal_email(user, usage, last_cycle, site_usage, site_allowance) do
-    base_email()
+    base_email(%{layout: nil})
     |> to("enterprise@plausible.io")
     |> tag("enterprise-over-limit")
     |> subject("#{user.email} superó su plan")
@@ -187,8 +232,13 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(user.email)
     |> tag("cancelled-email")
+<<<<<<< HEAD
     |> subject("Tu subscripción fue cancelada")
     |> render("cancellation_email.html", name: user.name)
+=======
+    |> subject("Your Plausible Analytics subscription has been canceled")
+    |> render("cancellation_email.html", user: user)
+>>>>>>> ad12e1ef315c9b4c8eabb20d8cd6a86f3262fc97
   end
 
   def new_user_invitation(invitation) do
@@ -230,6 +280,7 @@ defmodule PlausibleWeb.Email do
       "#{invitation.email} aceptó tu invitación a #{invitation.site.domain}"
     )
     |> render("invitation_accepted.html",
+      user: invitation.inviter,
       invitation: invitation
     )
   end
@@ -242,6 +293,7 @@ defmodule PlausibleWeb.Email do
       "#{invitation.email} rechazó tu invitación a #{invitation.site.domain}"
     )
     |> render("invitation_rejected.html",
+      user: invitation.inviter,
       invitation: invitation
     )
   end
@@ -254,6 +306,7 @@ defmodule PlausibleWeb.Email do
       "#{invitation.email} aceptó la transferencia de #{invitation.site.domain}"
     )
     |> render("ownership_transfer_accepted.html",
+      user: invitation.inviter,
       invitation: invitation
     )
   end
@@ -266,6 +319,7 @@ defmodule PlausibleWeb.Email do
       "#{invitation.email} rechazó la transferencia de #{invitation.site.domain}"
     )
     |> render("ownership_transfer_rejected.html",
+      user: invitation.inviter,
       invitation: invitation
     )
   end
@@ -276,6 +330,7 @@ defmodule PlausibleWeb.Email do
     |> tag("site-member-removed")
     |> subject("Tu acceso a #{membership.site.domain} fue revocado")
     |> render("site_member_removed.html",
+      user: membership.user,
       membership: membership
     )
   end
@@ -305,11 +360,35 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  defp base_email() do
+  def error_report(reported_by, trace_id, feedback) do
+    Map.new()
+    |> Map.put(:layout, nil)
+    |> base_email()
+    |> to("bugs@plausible.io")
+    |> put_param("ReplyTo", reported_by)
+    |> tag("sentry")
+    |> subject("Feedback to Sentry Trace #{trace_id}")
+    |> render("error_report_email.html", %{
+      reported_by: reported_by,
+      feedback: feedback,
+      trace_id: trace_id
+    })
+  end
+
+  def base_email(), do: base_email(%{layout: "base_email.html"})
+
+  def base_email(%{layout: layout}) do
     mailer_from = Application.get_env(:plausible, :mailer_email)
 
     new_email()
     |> put_param("TrackOpens", false)
     |> from(mailer_from)
+    |> maybe_put_layout(layout)
+  end
+
+  defp maybe_put_layout(email, nil), do: email
+
+  defp maybe_put_layout(email, layout) do
+    put_html_layout(email, {PlausibleWeb.LayoutView, layout})
   end
 end

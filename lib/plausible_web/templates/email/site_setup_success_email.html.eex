@@ -1,5 +1,3 @@
-Hey <%= user_salutation(@user) %>,
-<br /><br />
 Congrats! The Plausible script has been installed correctly on <%= link(@site.domain, to: "https://#{@site.domain}") %>. Your website traffic is now being tracked without compromising the user experience and the privacy of your visitors.
 <br /><br />
 <%= link("Check your stats", to: "#{plausible_url()}/#{URI.encode_www_form(@site.domain)}") %>
@@ -11,9 +9,3 @@ Congrats! The Plausible script has been installed correctly on <%= link(@site.do
 PS: You can import your historical Google Analytics (Universal Analytics) stats into your Plausible dashboard. <%= link("Learn how our GA importer works", to: "https://plausible.io/docs/google-analytics-import") %>.
 <br /><br />
 Do reply back to this email if you have any questions.
-<br /><br />
-Thanks,<br />
-Uku and Marko<br />
---<br />
-<%= plausible_url() %><br />
-{{{ pm:unsubscribe }}}

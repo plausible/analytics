@@ -31,7 +31,7 @@ defmodule Plausible.Workers.SpikeNotifier do
     :ok
   end
 
-  def notify(notification, current_visitors, sources) do
+  defp notify(notification, current_visitors, sources) do
     for recipient <- notification.recipients do
       send_notification(recipient, notification.site, current_visitors, sources)
     end
@@ -45,7 +45,7 @@ defmodule Plausible.Workers.SpikeNotifier do
     site = Repo.preload(site, :members)
 
     dashboard_link =
-      if Enum.member?(site.members, recipient) do
+      if Enum.any?(site.members, &(&1.email == recipient)) do
         PlausibleWeb.Endpoint.url() <> "/" <> URI.encode_www_form(site.domain)
       end
 

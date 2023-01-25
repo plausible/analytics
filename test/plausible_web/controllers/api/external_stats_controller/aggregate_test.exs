@@ -798,5 +798,31 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
 
       assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 3}}
     end
+
+    test "joins correctly with the sessions (CollapsingMergeTree) table", %{
+      conn: conn,
+      site: site
+    } do
+      create_sessions([
+        %{domain: site.domain, session_id: 1000, country_code: "EE", sign: 1, events: 1},
+        %{domain: site.domain, session_id: 1000, country_code: "EE", sign: -1, events: 1},
+        %{domain: site.domain, session_id: 1000, country_code: "EE", sign: 1, events: 2}
+      ])
+
+      create_events([
+        %{domain: site.domain, session_id: 1000, country_code: "EE", name: "pageview"},
+        %{domain: site.domain, session_id: 1000, country_code: "EE", name: "pageview"},
+        %{domain: site.domain, session_id: 1000, country_code: "EE", name: "pageview"}
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "pageviews",
+          "filters" => "visit:country==EE"
+        })
+
+      assert json_response(conn, 200)["results"] == %{"pageviews" => %{"value" => 3}}
+    end
   end
 end
