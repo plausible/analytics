@@ -320,6 +320,21 @@ defmodule PlausibleWeb.Email do
     })
   end
 
+  def error_report(reported_by, trace_id, feedback) do
+    Map.new()
+    |> Map.put(:layout, nil)
+    |> base_email()
+    |> to("bugs@plausible.io")
+    |> put_param("ReplyTo", reported_by)
+    |> tag("sentry")
+    |> subject("Feedback to Sentry Trace #{trace_id}")
+    |> render("error_report_email.html", %{
+      reported_by: reported_by,
+      feedback: feedback,
+      trace_id: trace_id
+    })
+  end
+
   def base_email(), do: base_email(%{layout: "base_email.html"})
 
   def base_email(%{layout: layout}) do
@@ -334,7 +349,6 @@ defmodule PlausibleWeb.Email do
   defp maybe_put_layout(email, nil), do: email
 
   defp maybe_put_layout(email, layout) do
-    email
-    |> put_html_layout({PlausibleWeb.LayoutView, layout})
+    put_html_layout(email, {PlausibleWeb.LayoutView, layout})
   end
 end
