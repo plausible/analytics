@@ -26,9 +26,9 @@ defmodule PlausibleWeb.EmailView do
     if is_binary(dsn) do
       dsn
       |> URI.parse()
-      |> Map.put(:userinfo, nil)
-      |> Map.put(:path, path)
-      |> Map.put(:query, search_query)
+      |> Map.replace(:userinfo, nil)
+      |> Map.replace(:path, path)
+      |> Map.replace(:query, search_query)
       |> URI.to_string()
     else
       ""
