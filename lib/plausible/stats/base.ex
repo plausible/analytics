@@ -14,7 +14,8 @@ defmodule Plausible.Stats.Base do
       sessions_q =
         from(
           s in query_sessions(site, query),
-          select: %{session_id: s.session_id}
+          select: %{session_id: s.session_id},
+          group_by: s.session_id
         )
 
       from(
