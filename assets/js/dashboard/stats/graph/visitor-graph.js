@@ -122,14 +122,14 @@ class LineGraph extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.metric && this.props.graphData) {
+    if (this.props.graphData) {
       this.chart = this.regenerateChart();
     }
     window.addEventListener('mousemove', this.repositionTooltip);
   }
 
   componentDidUpdate(prevProps) {
-    const { graphData, metric, darkTheme } = this.props;
+    const { graphData, darkTheme } = this.props;
     const tooltip = document.getElementById('chartjs-tooltip');
 
     if (
@@ -137,7 +137,7 @@ class LineGraph extends React.Component {
       darkTheme !== prevProps.darkTheme
     ) {
 
-      if (metric && graphData) {
+      if (graphData) {
         if (this.chart) {
           this.chart.destroy();
         }
@@ -150,7 +150,7 @@ class LineGraph extends React.Component {
       }
     }
 
-    if (!graphData || !metric) {
+    if (!graphData) {
       if (this.chart) {
         this.chart.destroy();
       }
@@ -362,11 +362,7 @@ export default class VisitorGraph extends React.Component {
     const { query } = this.props
 
     if (query !== prevProps.query) {
-      if (this.isGraphCollapsed()) {
-        this.setState({ topStatsLoadingState: LOADING_STATE.loading, topStatData: null })
-      } else {
-        this.setState({ mainGraphLoadingState: LOADING_STATE.loading, topStatsLoadingState: LOADING_STATE.loading, graphData: null, topStatData: null }, this.fetchGraphData)
-      }
+      this.setState({ mainGraphLoadingState: LOADING_STATE.loading, topStatsLoadingState: LOADING_STATE.loading, graphData: null, topStatData: null }, this.fetchGraphData)
       this.fetchTopStatData()
     }
 
@@ -385,15 +381,11 @@ export default class VisitorGraph extends React.Component {
 
     if (query.filters.goal) {
       this.setState({ metric: 'conversions' })
-    } else if (canSelectSavedMetric || savedMetric === "") {
+    } else if (canSelectSavedMetric) {
       this.setState({ metric: savedMetric })
     } else {
       this.setState({ metric: 'visitors' })
     }
-  }
-
-  isGraphCollapsed() {
-    return this.state.metric === ""
   }
 
   componentWillUnmount() {
@@ -402,18 +394,13 @@ export default class VisitorGraph extends React.Component {
   }
 
   updateMetric(clickedMetric) {
-    const newMetric = clickedMetric === this.state.metric ? "" : clickedMetric
+    if (this.state.metric == clickedMetric) return
 
-    storage.setItem(`metric__${this.props.site.domain}`, newMetric)
-    this.setState({ metric: newMetric })
+    storage.setItem(`metric__${this.props.site.domain}`, clickedMetric)
+    this.setState({ metric: clickedMetric })
   }
 
   fetchGraphData() {
-    if (this.isGraphCollapsed()) {
-      this.setState({ mainGraphLoadingState: LOADING_STATE.loaded, graphData: null })
-      return
-    }
-
     const url = `/api/stats/${encodeURIComponent(this.props.site.domain)}/main-graph`
     let params = { metric: this.state.metric }
     const interval = this.getIntervalFromStorage()
@@ -446,13 +433,13 @@ export default class VisitorGraph extends React.Component {
 
     const topStatsLoadedOrRefreshing = (topStatsLoadingState === LOADING_STATE.loaded || topStatsLoadingState === LOADING_STATE.refreshing)
     const mainGraphLoadedOrRefreshing = (mainGraphLoadingState === LOADING_STATE.loaded || mainGraphLoadingState === LOADING_STATE.refreshing)
-    const noMetricOrRefreshing = (!metric || mainGraphLoadingState === LOADING_STATE.refreshing)
+    const refreshing = (mainGraphLoadingState === LOADING_STATE.refreshing)
     const topStatAndGraphLoaded = !!(topStatData && graphData)
 
     const showGraph =
     topStatsLoadedOrRefreshing &&
     mainGraphLoadedOrRefreshing &&
-      (topStatData && noMetricOrRefreshing || topStatAndGraphLoaded)
+      (topStatData && refreshing || topStatAndGraphLoaded)
 
     return (
       <FadeIn show={showGraph}>
@@ -462,11 +449,10 @@ export default class VisitorGraph extends React.Component {
   }
 
   render() {
-    const {metric, mainGraphLoadingState, topStatsLoadingState} = this.state
+    const {mainGraphLoadingState, topStatsLoadingState} = this.state
     const loaderClassName = classNames('mx-auto loading', {
       'pt-52 sm:pt-56 md:pt-60': mainGraphLoadingState == LOADING_STATE.refreshing,
-      'pt-32 sm:pt-36 md:pt-48': mainGraphLoadingState !== LOADING_STATE.refreshing && metric,
-      'pt-16 sm:pt-14 md:pt-18 lg:pt-5': mainGraphLoadingState !== LOADING_STATE.refreshing && !metric
+      'pt-32 sm:pt-36 md:pt-48': mainGraphLoadingState !== LOADING_STATE.refreshing,
     })
 
     const loadingOrRefreshing =
@@ -477,7 +463,7 @@ export default class VisitorGraph extends React.Component {
 
     return (
       <LazyLoader onVisible={this.onVisible}>
-        <div className={`relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825 transition-padding ease-in-out duration-150 ${metric ? 'main-graph' : 'top-stats-only'}`}>
+        <div className={"relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825 main-graph"}>
           {loadingOrRefreshing && <div className="graph-inner"><div className={loaderClassName}><div></div></div></div>}
           {this.renderInner()}
         </div>

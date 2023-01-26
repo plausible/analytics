@@ -47,22 +47,9 @@ export default class TopStats extends React.Component {
     return (
       <div>
         <div className="whitespace-nowrap">{this.topStatNumberLong(stat)} {statName}</div>
-        {this.canMetricBeGraphed(stat) && <div className="font-normal text-xs">{this.titleFor(stat)}</div>}
         {stat.name === 'Current visitors' && <p className="font-normal text-xs">Last updated <SecondsSinceLastLoad lastLoadTimestamp={this.props.lastLoadTimestamp}/>s ago</p>}
       </div>
     )
-  }
-
-  titleFor(stat) {
-    const isClickable = this.canMetricBeGraphed(stat)
-
-    if (isClickable && this.props.metric === METRIC_MAPPING[stat.name]) {
-      return "Click to hide"
-    } else if (isClickable) {
-      return "Click to show"
-    } else {
-      return null
-    }
   }
 
   canMetricBeGraphed(stat) {
