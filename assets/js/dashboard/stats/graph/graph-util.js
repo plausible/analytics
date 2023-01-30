@@ -27,6 +27,14 @@ export const METRIC_FORMATTER = {
   'conversions': numberFormatter,
 }
 
+export const LoadingState = {
+  loading: 'loading',
+  refreshing: 'refreshing',
+  loaded: 'loaded',
+  isLoadingOrRefreshing: function (state) { return [this.loading, this.refreshing].includes(state) },
+  isLoadedOrRefreshing: function (state) { return [this.loaded, this.refreshing].includes(state) }
+}
+
 export const GraphTooltip = (graphData, metric, query) => {
   return (context) => {
     const tooltipModel = context.tooltip;
