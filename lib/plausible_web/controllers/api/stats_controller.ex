@@ -856,7 +856,7 @@ defmodule PlausibleWeb.Api.StatsController do
             })
           else
             Logger.warning("Could not find city info - code: #{inspect(city[:code])}")
-            Map.merge(city, %{name: "N/A"})
+            Map.put(city, :name, "N/A")
           end
       end)
 
