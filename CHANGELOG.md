@@ -19,6 +19,9 @@ All notable changes to this project will be documented in this file.
 - Always show direct traffic in sources reports plausible/analytics#2531
 - Stop recording XX and T1 country codes plausible/analytics#2556
 
+### Removed
+- Remove the ability to collapse the main graph plausible/analytics#2627
+
 ## v1.5.1 - 2022-12-06
 
 ### Fixed
