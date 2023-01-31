@@ -532,6 +532,7 @@ defmodule PlausibleWeb.AuthController do
     |> redirect(to: "/settings#api-keys")
   end
 
+  # FIXME: this whole thing needs to be a transaction
   def delete_me(conn, params) do
     user =
       conn.assigns[:current_user]
@@ -542,7 +543,7 @@ defmodule PlausibleWeb.AuthController do
       Repo.delete!(membership)
 
       if membership.role == :owner do
-        Plausible.Purge.delete_site!(membership.site)
+        Plausible.Site.Removal.run(membership.site.domain)
       end
     end
 

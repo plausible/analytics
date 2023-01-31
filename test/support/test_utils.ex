@@ -184,4 +184,16 @@ defmodule Plausible.TestUtils do
       end
     end)
   end
+
+  def await_clickhouse_count(query, expected) do
+    eventually(
+      fn ->
+        count = Plausible.ClickhouseRepo.aggregate(query, :count)
+
+        {count == expected, count}
+      end,
+      200,
+      10
+    )
+  end
 end
