@@ -532,7 +532,6 @@ defmodule PlausibleWeb.AuthController do
     |> redirect(to: "/settings#api-keys")
   end
 
-  # FIXME: this whole thing needs to be a transaction
   def delete_me(conn, params) do
     user =
       conn.assigns[:current_user]
