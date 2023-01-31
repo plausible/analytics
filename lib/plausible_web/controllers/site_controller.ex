@@ -359,10 +359,10 @@ defmodule PlausibleWeb.SiteController do
   def delete_site(conn, _params) do
     site = conn.assigns[:site]
 
-    Plausible.Purge.delete_site!(site)
+    Plausible.Site.Removal.run(site.domain)
 
     conn
-    |> put_flash(:success, "Site deleted successfully along with all pageviews")
+    |> put_flash(:success, "Your site and page views deletion process has started.")
     |> redirect(to: "/sites")
   end
 
