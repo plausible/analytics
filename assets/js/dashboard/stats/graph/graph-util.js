@@ -65,10 +65,6 @@ export const GraphTooltip = (graphData, metric, query) => {
       return;
     }
 
-    function getBody(bodyItem) {
-      return bodyItem.lines;
-    }
-
     // Returns a string describing the bucket. Used when hovering the graph to
     // show time buckets.
     function renderBucketLabel(label) {
@@ -89,16 +85,13 @@ export const GraphTooltip = (graphData, metric, query) => {
 
     // Set Tooltip Body
     if (tooltipModel.body) {
-      var bodyLines = tooltipModel.body.map(getBody);
-
-      // Remove duplicated line on overlap between dashed and normal
-      if (bodyLines.length == 3) {
-        bodyLines[1] = false
-      }
-
       const data = tooltipModel.dataPoints[0]
-      const label = graphData.labels[data.dataIndex]
+      const dataToCompare = tooltipModel.dataPoints[tooltipModel.dataPoints.length - 1]
+
       const point = data.raw || 0
+      const pointToCompare = dataToCompare?.raw || 0
+
+      const label = graphData.labels[data.dataIndex]
 
       let innerHtml = `
       <div class='text-gray-100 flex flex-col'>
@@ -112,6 +105,8 @@ export const GraphTooltip = (graphData, metric, query) => {
               <span>${renderBucketLabel(label)}</span>
             </span>
             <span class='text-base font-bold'>${METRIC_FORMATTER[metric](point)}</span>
+            vs.
+            <span class='text-base font-bold'>${METRIC_FORMATTER[metric](pointToCompare)}</span>
           </div>
         </div>
         <span class='font-semibold italic'>${graphData.interval === 'month' ? 'Click to view month' : graphData.interval === 'date' ? 'Click to view day' : ''}</span>
@@ -124,7 +119,7 @@ export const GraphTooltip = (graphData, metric, query) => {
   }
 }
 
-export const buildDataSet = (plot, present_index, ctx, label, isPrevious) => {
+export const buildDataSet = (plot, comparisonPlot, present_index, ctx, label) => {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
   var prev_gradient = ctx.createLinearGradient(0, 0, 0, 300);
   gradient.addColorStop(0, 'rgba(101,116,205, 0.2)');
@@ -132,16 +127,35 @@ export const buildDataSet = (plot, present_index, ctx, label, isPrevious) => {
   prev_gradient.addColorStop(0, 'rgba(101,116,205, 0.075)');
   prev_gradient.addColorStop(1, 'rgba(101,116,205, 0)');
 
-  if (!isPrevious) {
-    if (present_index) {
-      var dashedPart = plot.slice(present_index - 1, present_index + 1);
-      var dashedPlot = (new Array(present_index - 1)).concat(dashedPart)
-      const _plot = [...plot]
-      for (var i = present_index; i < _plot.length; i++) {
-        _plot[i] = undefined
+  let comparisonDataSet = []
+  if (comparisonPlot) {
+    comparisonDataSet = [
+      {
+        label,
+        data: comparisonPlot,
+        borderWidth: 3,
+        borderColor: 'rgba(60,70,110,0.2)',
+        pointBackgroundColor: 'rgba(60,70,110,0.2)',
+        pointHoverBackgroundColor: 'rgba(60, 70, 110)',
+        pointBorderColor: 'transparent',
+        pointHoverRadius: 4,
+        backgroundColor: gradient,
+        fill: true,
+        yAxisID: 'yComparison',
       }
+    ]
+  }
 
-      return [{
+  if (present_index) {
+    var dashedPart = plot.slice(present_index - 1, present_index + 1);
+    var dashedPlot = (new Array(present_index - 1)).concat(dashedPart)
+    const _plot = [...plot]
+    for (var i = present_index; i < _plot.length; i++) {
+      _plot[i] = undefined
+    }
+
+    return [
+      {
         label,
         data: _plot,
         borderWidth: 3,
@@ -152,6 +166,7 @@ export const buildDataSet = (plot, present_index, ctx, label, isPrevious) => {
         pointHoverRadius: 4,
         backgroundColor: gradient,
         fill: true,
+        yAxisID: 'y',
       },
       {
         label,
@@ -164,9 +179,12 @@ export const buildDataSet = (plot, present_index, ctx, label, isPrevious) => {
         pointHoverRadius: 4,
         backgroundColor: gradient,
         fill: true,
-      }]
-    } else {
-      return [{
+        yAxisID: 'y',
+      }
+    ].concat(comparisonDataSet)
+  } else {
+    return [
+      {
         label,
         data: plot,
         borderWidth: 3,
@@ -176,20 +194,8 @@ export const buildDataSet = (plot, present_index, ctx, label, isPrevious) => {
         pointHoverRadius: 4,
         backgroundColor: gradient,
         fill: true,
-      }]
-    }
-  } else {
-    return [{
-      label,
-      data: plot,
-      borderWidth: 2,
-      borderColor: 'rgba(166,187,210,0.5)',
-      pointHoverBackgroundColor: 'rgba(166,187,210,0.8)',
-      pointBorderColor: 'transparent',
-      pointHoverBorderColor: 'transparent',
-      pointHoverRadius: 4,
-      backgroundColor: prev_gradient,
-      fill: true,
-    }]
+        yAxisID: 'y',
+      }
+    ].concat(comparisonDataSet)
   }
 }
