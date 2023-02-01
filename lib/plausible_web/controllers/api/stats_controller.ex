@@ -97,9 +97,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
       selected_metric =
         if !params["metric"] || params["metric"] == "conversions" do
-          "visitors"
+          :visitors
         else
-          params["metric"]
+          String.to_existing_atom(params["metric"])
         end
 
       timeseries_query =
@@ -109,20 +109,24 @@ defmodule PlausibleWeb.Api.StatsController do
           query
         end
 
-      timeseries_result =
-        Stats.timeseries(site, timeseries_query, [String.to_existing_atom(selected_metric)])
+      comparison_plot =
+        if params["comparison"] do
+          comparison_query = Query.shift_back(query, site)
 
-      plot =
-        Enum.map(timeseries_result, fn row ->
-          row[String.to_existing_atom(selected_metric)] || 0
-        end)
+          site
+          |> Stats.timeseries(comparison_query, [selected_metric])
+          |> plot(selected_metric)
+        end
+
+      timeseries_result = Stats.timeseries(site, timeseries_query, [selected_metric])
 
       labels = Enum.map(timeseries_result, fn row -> row[:date] end)
       present_index = present_index_for(site, query, labels)
       full_intervals = build_full_intervals(query, labels)
 
       json(conn, %{
-        plot: plot,
+        plot: plot(timeseries_result, selected_metric),
+        comparison_plot: comparison_plot,
         labels: labels,
         present_index: present_index,
         interval: query.interval,
@@ -133,6 +137,10 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       {:error, message} when is_binary(message) -> bad_request(conn, message)
     end
+  end
+
+  defp plot(timeseries, metric) do
+    Enum.map(timeseries, fn row -> row[metric] || 0 end)
   end
 
   defp build_full_intervals(%{interval: "week", date_range: range}, labels) do
