@@ -68,6 +68,22 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
       })
     end
 
+    test "short feedback is not sent", %{conn: conn} do
+      action_path = Routes.error_report_path(Endpoint, :submit_error_report)
+
+      conn =
+        post(conn, action_path, %{
+          "error" => %{"trace_id" => "some-trace-id", "user_feedback" => "short"}
+        })
+
+      assert html = html_response(conn, 200)
+      assert html =~ "Your report has been submitted"
+
+      refute_email_delivered_with(%{
+        subject: "Feedback to Sentry Trace some-trace-id"
+      })
+    end
+
     test "submitting no feedback for authenticated user", %{conn: conn} do
       action_path = Routes.error_report_path(Endpoint, :submit_error_report)
 
