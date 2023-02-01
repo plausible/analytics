@@ -54,7 +54,7 @@ export function IntervalPicker({ graphData, query, site, updateInterval }) {
   const menuElement = React.useRef(null)
   subscribeKeybinding(menuElement)
 
-  const currentInterval = graphData?.interval
+  const currentInterval = graphData?.interval || getStoredInterval(query.period, site.domain)
   const options = site.validIntervalsByPeriod[query.period]
 
   return (
