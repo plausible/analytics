@@ -843,7 +843,7 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:city", [:visitors], pagination)
       |> transform_keys(%{city: :code, city_name: :name})
       |> Enum.map(fn
-        city when is_binary(city.name) and city.name != "" ->
+        %{name: <<_, _::binary>>} = city ->
           city
 
         %{code: code} = city ->
