@@ -24,6 +24,7 @@ export function parseQuery(querystring, site) {
     from: q.get('from') ? parseUTCDate(q.get('from')) : undefined,
     to: q.get('to') ? parseUTCDate(q.get('to')) : undefined,
     with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
+    comparison: !!q.get('comparison'),
     filters: {
       'goal': q.get('goal'),
       'props': JSON.parse(q.get('props')),

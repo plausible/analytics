@@ -10,6 +10,7 @@ import Pages from './stats/pages'
 import Locations from './stats/locations';
 import Devices from './stats/devices'
 import Conversions from './stats/conversions'
+import ComparisonInput from './comparison-input'
 import { withPinnedHeader } from './pinned-header-hoc';
 
 function Historical(props) {
@@ -38,6 +39,7 @@ function Historical(props) {
             <Filters className="flex" site={props.site} query={props.query} history={props.history} />
           </div>
           <Datepicker site={props.site} query={props.query} />
+          <ComparisonInput site={props.site} query={props.query} />
         </div>
       </div>
       <VisitorGraph site={props.site} query={props.query} />
