@@ -53,20 +53,33 @@ const renderBucketLabel = function(query, graphData, label, comparison = false) 
   return formattedLabel
 }
 
+const calculatePercentageDifference = function(oldValue, newValue) {
+  if (oldValue == 0 && newValue > 0) {
+    return 100
+  } else if (oldValue == 0 && newValue == 0) {
+    return 0
+  } else {
+    return Math.round((newValue - oldValue) / oldValue * 100)
+  }
+}
+
 const buildTooltipData = function(query, graphData, metric, tooltipModel) {
   const hasComparison = !!graphData.comparison_plot
-
   const data = tooltipModel.dataPoints[0]
   const comparisonData = hasComparison && tooltipModel.dataPoints[tooltipModel.dataPoints.length - 1]
 
   const label = renderBucketLabel(query, graphData, graphData.labels[data.dataIndex])
   const comparisonLabel = hasComparison && renderBucketLabel(query, graphData, graphData.comparison_labels[data.dataIndex], true)
 
-  const metricFormatter = METRIC_FORMATTER[metric]
-  const value = metricFormatter(data?.raw || 0)
-  const comparisonValue = hasComparison && metricFormatter(comparisonData?.raw || 0)
+  const value = data?.raw || 0
+  const comparisonValue = comparisonData?.raw || 0
+  const comparisonDifference = hasComparison && calculatePercentageDifference(comparisonValue, value)
 
-  return { label, value, comparisonLabel, comparisonValue }
+  const metricFormatter = METRIC_FORMATTER[metric]
+  const formattedValue = metricFormatter(value)
+  const formattedComparisonValue = hasComparison && metricFormatter(comparisonValue)
+
+  return { label, formattedValue, comparisonLabel, formattedComparisonValue, comparisonDifference }
 }
 
 export const GraphTooltip = (graphData, metric, query) => {
@@ -101,33 +114,29 @@ export const GraphTooltip = (graphData, metric, query) => {
 
     // Set Tooltip Body
     if (tooltipModel.body) {
-      const {
-        value,
-        label,
-        comparisonValue,
-        comparisonLabel
-      } = buildTooltipData(query, graphData, metric, tooltipModel)
+      const tooltipData = buildTooltipData(query, graphData, metric, tooltipModel)
 
       let innerHtml = `
       <div class='text-gray-100 flex flex-col'>
         <div class='flex justify-between items-center'>
           <span class='font-semibold mr-4 text-lg'>${METRIC_LABELS[metric]}</span>
+          ${tooltipData.comparisonDifference ? `<span class='font-semibold text-sm'>${tooltipData.comparisonDifference}%</span>` : ''}
         </div>
         <div class='flex flex-col'>
           <div class='flex flex-row justify-between items-center'>
             <span class='flex items-center mr-4'>
               <div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(101,116,205)'></div>
-              <span>${label}</span>
+              <span>${tooltipData.label}</span>
             </span>
-            <span class='text-base font-bold'>${value}</span>
+            <span class='text-base font-bold'>${tooltipData.formattedValue}</span>
           </div>
 
-          ${comparisonValue ? `<div class='flex flex-row justify-between items-center'>
+          ${tooltipData.formattedComparisonValue ? `<div class='flex flex-row justify-between items-center'>
             <span class='flex items-center mr-4'>
               <div class='w-3 h-3 mr-1 rounded-full bg-gray-500'></div>
-              <span>${comparisonLabel}</span>
+              <span>${tooltipData.comparisonLabel}</span>
             </span>
-            <span class='text-base font-bold'>${comparisonValue}</span>
+            <span class='text-base font-bold'>${tooltipData.formattedComparisonValue}</span>
           </div>
         </div>
         <span class='font-semibold italic'>${graphData.interval === 'month' ? 'Click to view month' : graphData.interval === 'date' ? 'Click to view day' : ''}</span>
