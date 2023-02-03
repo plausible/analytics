@@ -118,8 +118,7 @@ runtime_metadata = [
   version: get_in(build_metadata, ["labels", "org.opencontainers.image.version"]),
   commit: get_in(build_metadata, ["labels", "org.opencontainers.image.revision"]),
   created: get_in(build_metadata, ["labels", "org.opencontainers.image.created"]),
-  tags: get_in(build_metadata, ["tags"]),
-  host: get_var_from_path_or_env(config_dir, "APP_HOST", "app-unknown")
+  tags: get_in(build_metadata, ["tags"])
 ]
 
 config :plausible, :runtime_metadata, runtime_metadata
@@ -245,7 +244,7 @@ config :sentry,
   environment_name: env,
   included_environments: included_environments,
   release: sentry_app_version,
-  tags: %{app_version: sentry_app_version, server_name: runtime_metadata[:host]},
+  tags: %{app_version: sentry_app_version},
   enable_source_code_context: true,
   root_source_code_path: [File.cwd!()],
   client: Plausible.Sentry.Client,
