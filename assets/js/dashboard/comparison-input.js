@@ -2,10 +2,10 @@ import React from 'react'
 import { withRouter } from "react-router-dom";
 import { navigateToQuery } from './query'
 
-const DISABLED_PERIODS = ['realtime', 'all']
+export const COMPARISON_DISABLED_PERIODS = ['realtime', 'all']
 
 const ComparisonInput = function({ _graphData, query, history }) {
-  if (DISABLED_PERIODS.includes(query.period)) return null
+  if (COMPARISON_DISABLED_PERIODS.includes(query.period)) return null
 
   function update(event) {
     navigateToQuery(history, query, { comparison: event.target.checked })

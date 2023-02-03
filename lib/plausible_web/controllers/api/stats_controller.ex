@@ -109,25 +109,22 @@ defmodule PlausibleWeb.Api.StatsController do
           query
         end
 
-      comparison_plot =
-        if params["comparison"] do
-          comparison_query = Query.shift_back(query, site)
-
-          site
-          |> Stats.timeseries(comparison_query, [selected_metric])
-          |> plot(selected_metric)
-        end
-
       timeseries_result = Stats.timeseries(site, timeseries_query, [selected_metric])
-
-      labels = Enum.map(timeseries_result, fn row -> row[:date] end)
+      labels = label_timeseries(timeseries_result)
       present_index = present_index_for(site, query, labels)
       full_intervals = build_full_intervals(query, labels)
 
+      comparison_result =
+        if params["comparison"] do
+          comparison_query = Query.shift_back(query, site)
+          Stats.timeseries(site, comparison_query, [selected_metric])
+        end
+
       json(conn, %{
-        plot: plot(timeseries_result, selected_metric),
-        comparison_plot: comparison_plot,
+        plot: plot_timeseries(timeseries_result, selected_metric),
         labels: labels,
+        comparison_plot: comparison_result && plot_timeseries(comparison_result, selected_metric),
+        comparison_labels: comparison_result && label_timeseries(comparison_result),
         present_index: present_index,
         interval: query.interval,
         with_imported: query.include_imported,
@@ -139,8 +136,12 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp plot(timeseries, metric) do
+  defp plot_timeseries(timeseries, metric) do
     Enum.map(timeseries, fn row -> row[metric] || 0 end)
+  end
+
+  defp label_timeseries(timeseries) do
+    Enum.map(timeseries, & &1.date)
   end
 
   defp build_full_intervals(%{interval: "week", date_range: range}, labels) do

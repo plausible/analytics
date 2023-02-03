@@ -35,6 +35,40 @@ export const LoadingState = {
   isLoadedOrRefreshing: function (state) { return [this.loaded, this.refreshing].includes(state) }
 }
 
+const renderBucketLabel = function(query, graphData, label, comparison = false) {
+  let isPeriodFull = graphData.full_intervals?.[label]
+  if (comparison) isPeriodFull = true
+
+  const formattedLabel = dateFormatter(graphData.interval, true, query.period, isPeriodFull)(label)
+
+  if (query.period === 'realtime') {
+    return dateFormatter(graphData.interval, true, query.period)(label)
+  }
+
+  if (graphData.interval === 'hour' || graphData.interval == 'minute') {
+    const date = dateFormatter("date", true, query.period)(label)
+    return `${date}, ${formattedLabel}`
+  }
+
+  return formattedLabel
+}
+
+const buildTooltipData = function(query, graphData, metric, tooltipModel) {
+  const hasComparison = !!graphData.comparison_plot
+
+  const data = tooltipModel.dataPoints[0]
+  const comparisonData = hasComparison && tooltipModel.dataPoints[tooltipModel.dataPoints.length - 1]
+
+  const label = renderBucketLabel(query, graphData, graphData.labels[data.dataIndex])
+  const comparisonLabel = hasComparison && renderBucketLabel(query, graphData, graphData.comparison_labels[data.dataIndex], true)
+
+  const metricFormatter = METRIC_FORMATTER[metric]
+  const value = metricFormatter(data?.raw || 0)
+  const comparisonValue = hasComparison && metricFormatter(comparisonData?.raw || 0)
+
+  return { label, value, comparisonLabel, comparisonValue }
+}
+
 export const GraphTooltip = (graphData, metric, query) => {
   return (context) => {
     const tooltipModel = context.tooltip;
@@ -65,33 +99,14 @@ export const GraphTooltip = (graphData, metric, query) => {
       return;
     }
 
-    // Returns a string describing the bucket. Used when hovering the graph to
-    // show time buckets.
-    function renderBucketLabel(label) {
-      const isPeriodFull = graphData.full_intervals?.[label]
-      const formattedLabel = dateFormatter(graphData.interval, true, query.period, isPeriodFull)(label)
-
-      if (query.period === 'realtime') {
-        return dateFormatter(graphData.interval, true, query.period)(label)
-      }
-
-      if (graphData.interval === 'hour' || graphData.interval == 'minute') {
-        const date = dateFormatter("date", true, query.period)(label)
-        return `${date}, ${formattedLabel}`
-      }
-
-      return formattedLabel
-    }
-
     // Set Tooltip Body
     if (tooltipModel.body) {
-      const data = tooltipModel.dataPoints[0]
-      const dataToCompare = tooltipModel.dataPoints[tooltipModel.dataPoints.length - 1]
-
-      const point = data.raw || 0
-      const pointToCompare = dataToCompare?.raw || 0
-
-      const label = graphData.labels[data.dataIndex]
+      const {
+        value,
+        label,
+        comparisonValue,
+        comparisonLabel
+      } = buildTooltipData(query, graphData, metric, tooltipModel)
 
       let innerHtml = `
       <div class='text-gray-100 flex flex-col'>
@@ -102,15 +117,21 @@ export const GraphTooltip = (graphData, metric, query) => {
           <div class='flex flex-row justify-between items-center'>
             <span class='flex items-center mr-4'>
               <div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(101,116,205)'></div>
-              <span>${renderBucketLabel(label)}</span>
+              <span>${label}</span>
             </span>
-            <span class='text-base font-bold'>${METRIC_FORMATTER[metric](point)}</span>
-            vs.
-            <span class='text-base font-bold'>${METRIC_FORMATTER[metric](pointToCompare)}</span>
+            <span class='text-base font-bold'>${value}</span>
+          </div>
+
+          ${comparisonValue ? `<div class='flex flex-row justify-between items-center'>
+            <span class='flex items-center mr-4'>
+              <div class='w-3 h-3 mr-1 rounded-full bg-gray-500'></div>
+              <span>${comparisonLabel}</span>
+            </span>
+            <span class='text-base font-bold'>${comparisonValue}</span>
           </div>
         </div>
         <span class='font-semibold italic'>${graphData.interval === 'month' ? 'Click to view month' : graphData.interval === 'date' ? 'Click to view day' : ''}</span>
-      </div>
+      </div>` : ''}
       `;
 
       tooltipEl.innerHTML = innerHtml;
