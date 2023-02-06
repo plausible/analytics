@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       conn = post(conn, "/api/v1/sites", %{})
 
       assert json_response(conn, 400) == %{
-               "error" => "domain can't be blank"
+               "error" => "domain: can't be blank"
              }
     end
 
@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         conn = post(conn, "/api/v1/sites", %{"domain" => bad_domain})
 
         assert %{"error" => error} = json_response(conn, 400)
-        assert error =~ "domain must not contain URI reserved characters"
+        assert error =~ "domain: must not contain URI reserved characters"
       end)
     end
 
