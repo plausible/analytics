@@ -18,10 +18,11 @@ const calculateMaximumY = function(dataset) {
     .flatMap((item) => item.data)
     .map((item) => item || 0)
 
-  const maximumY = Math.max(...yAxisValues)
-  const maximumYWithMargin = Math.round(maximumY * 1.2)
-
-  return maximumYWithMargin > 0 ? maximumYWithMargin : 1
+  if (yAxisValues) {
+    return Math.max(...yAxisValues)
+  } else {
+    return 1
+  }
 }
 
 class LineGraph extends React.Component {
@@ -66,7 +67,7 @@ class LineGraph extends React.Component {
         scales: {
           y: {
             min: 0,
-            max: calculateMaximumY(dataSet),
+            suggestedMax: calculateMaximumY(dataSet),
             ticks: {
               callback: METRIC_FORMATTER[metric],
               maxTicksLimit: 8,
@@ -79,7 +80,7 @@ class LineGraph extends React.Component {
           },
           yComparison: {
             min: 0,
-            max: calculateMaximumY(dataSet),
+            suggestedMax: calculateMaximumY(dataSet),
             display: false,
             grid: { display: false },
           },
