@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       conn = post(conn, "/api/v1/sites", %{})
 
       assert json_response(conn, 400) == %{
-               "error" => "domain can't be blank"
+               "error" => "domain: can't be blank"
              }
     end
 
@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         conn = post(conn, "/api/v1/sites", %{"domain" => bad_domain})
 
         assert %{"error" => error} = json_response(conn, 400)
-        assert error =~ "domain must not contain URI reserved characters"
+        assert error =~ "domain: must not contain URI reserved characters"
       end)
     end
 
@@ -76,6 +76,29 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert json_response(conn, 403) == %{
                "error" =>
                  "Your account has reached the limit of 3 sites per account. Please contact hello@plausible.io to unlock more sites."
+             }
+    end
+
+    test "does not allow creating a site when external events are present", %{
+      conn: conn
+    } do
+      domain = "events-exist.example.com"
+
+      populate_stats(%{domain: domain}, [
+        build(:pageview)
+      ])
+
+      :inserted = eventually(fn -> {Plausible.Sites.has_events?(domain), :inserted} end)
+
+      conn =
+        post(conn, "/api/v1/sites", %{
+          "domain" => domain,
+          "timezone" => "Europe/Tallinn"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "domain: This domain has already been taken. Perhaps one of your team members registered it? If that's not the case, please contact support@plausible.io"
              }
     end
 
