@@ -98,7 +98,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
       assert json_response(conn, 400) == %{
                "error" =>
-                 "domain: This domain has already been taken. Perhaps one of your team members registered it? If that's not the case, please contact support@plausible.io"
+                 "domain: This domain cannot be registered. Perhaps one of your colleagues registered it? Or did you recently delete it from your account? The deletion may take up to 48 hours before you can add the same site again. If that's not the case, please contact support@plausible.io"
              }
     end
 
