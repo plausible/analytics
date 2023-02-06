@@ -148,6 +148,14 @@ export const GraphTooltip = (graphData, metric, query) => {
   }
 }
 
+const truncateToPresentIndex = function(array, presentIndex) {
+  if (presentIndex) {
+    for (var i = presentIndex; i < array.length; i++) {
+      array[i] = undefined
+    }
+  }
+}
+
 export const buildDataSet = (plot, comparisonPlot, present_index, ctx, label) => {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
   var prev_gradient = ctx.createLinearGradient(0, 0, 0, 300);
@@ -158,6 +166,8 @@ export const buildDataSet = (plot, comparisonPlot, present_index, ctx, label) =>
 
   let comparisonDataSet = []
   if (comparisonPlot) {
+    truncateToPresentIndex(comparisonPlot, present_index)
+
     comparisonDataSet = [
       {
         label,
@@ -179,9 +189,8 @@ export const buildDataSet = (plot, comparisonPlot, present_index, ctx, label) =>
     var dashedPart = plot.slice(present_index - 1, present_index + 1);
     var dashedPlot = (new Array(present_index - 1)).concat(dashedPart)
     const _plot = [...plot]
-    for (var i = present_index; i < _plot.length; i++) {
-      _plot[i] = undefined
-    }
+
+    truncateToPresentIndex(_plot, present_index)
 
     return [
       {
