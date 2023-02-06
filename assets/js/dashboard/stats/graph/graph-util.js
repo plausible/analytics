@@ -64,20 +64,19 @@ const calculatePercentageDifference = function(oldValue, newValue) {
 }
 
 const buildTooltipData = function(query, graphData, metric, tooltipModel) {
-  const hasComparison = !!graphData.comparison_plot
-  const data = tooltipModel.dataPoints[0]
-  const comparisonData = hasComparison && tooltipModel.dataPoints[tooltipModel.dataPoints.length - 1]
+  const data = tooltipModel.dataPoints.find((dataPoint) => dataPoint.dataset.yAxisID == "y")
+  const comparisonData = tooltipModel.dataPoints.find((dataPoint) => dataPoint.dataset.yAxisID == "yComparison")
 
   const label = renderBucketLabel(query, graphData, graphData.labels[data.dataIndex])
-  const comparisonLabel = hasComparison && renderBucketLabel(query, graphData, graphData.comparison_labels[data.dataIndex], true)
+  const comparisonLabel = comparisonData && renderBucketLabel(query, graphData, graphData.comparison_labels[data.dataIndex], true)
 
   const value = data?.raw || 0
   const comparisonValue = comparisonData?.raw || 0
-  const comparisonDifference = hasComparison && calculatePercentageDifference(comparisonValue, value)
+  const comparisonDifference = comparisonData && calculatePercentageDifference(comparisonValue, value)
 
   const metricFormatter = METRIC_FORMATTER[metric]
   const formattedValue = metricFormatter(value)
-  const formattedComparisonValue = hasComparison && metricFormatter(comparisonValue)
+  const formattedComparisonValue = comparisonData && metricFormatter(comparisonValue)
 
   return { label, formattedValue, comparisonLabel, formattedComparisonValue, comparisonDifference }
 }
@@ -131,7 +130,7 @@ export const GraphTooltip = (graphData, metric, query) => {
             <span class='text-base font-bold'>${tooltipData.formattedValue}</span>
           </div>
 
-          ${tooltipData.formattedComparisonValue ? `<div class='flex flex-row justify-between items-center'>
+          ${tooltipData.comparisonLabel ? `<div class='flex flex-row justify-between items-center'>
             <span class='flex items-center mr-4'>
               <div class='w-3 h-3 mr-1 rounded-full bg-gray-500'></div>
               <span>${tooltipData.comparisonLabel}</span>
