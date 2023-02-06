@@ -322,7 +322,7 @@ case mailer_adapter do
     config :plausible, Plausible.Mailer, adapter: Bamboo.TestAdapter
 
   _ ->
-    raise """
+    raise ArgumentError, """
     Unknown mailer_adapter: #{inspect(mailer_adapter)}
 
     Please see https://hexdocs.pm/bamboo/readme.html#available-adapters
