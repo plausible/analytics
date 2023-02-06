@@ -25,25 +25,16 @@ function BrowserVersions({ query, site }) {
     return api.get(url.apiPath(site, '/browser-versions'), query)
   }
 
-  if (query.filters.browser == "(not set)") {
-    return (
-      <ListReport
-        fetchData={fetchData}
-        filter={{}}
-        keyLabel="Browser"
-        query={query}
-      />
-    )
-  } else {
-    return (
-      <ListReport
-        fetchData={fetchData}
-        filter={{ browser_version: 'name' }}
-        keyLabel={query.filters.browser + ' version'}
-        query={query}
-      />
-    )
-  }
+  const browserName = query.filters.browser === '(not set)' ? 'Browser' : query.filters.browser
+
+  return (
+    <ListReport
+      fetchData={fetchData}
+      filter={{ browser_version: 'name' }}
+      keyLabel={browserName + ' version'}
+      query={query}
+    />
+  )
 
 }
 
@@ -67,25 +58,16 @@ function OperatingSystemVersions({ query, site }) {
     return api.get(url.apiPath(site, '/operating-system-versions'), query)
   }
 
-  if (query.filters.os == "(not set)") {
-    return (
-      <ListReport
-        fetchData={fetchData}
-        filter={{}}
-        keyLabel="Operating System"
-        query={query}
-      />
-    )
-  } else {
-    return (
-      <ListReport
-        fetchData={fetchData}
-        filter={{ os_version: 'name' }}
-        keyLabel={query.filters.os + ' version'}
-        query={query}
-      />
-    )
-  }
+  const osName = query.filters.os === '(not set)' ? 'Operating System' : query.filters.os
+
+  return (
+    <ListReport
+      fetchData={fetchData}
+      filter={{ os_version: 'name' }}
+      keyLabel={osName + ' version'}
+      query={query}
+    />
+  )
 
 }
 
@@ -139,11 +121,7 @@ function iconFor(screenSize) {
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
     )
   } else if (screenSize === '(not set)') {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-      </svg>
-    )
+    return null
   }
 }
 

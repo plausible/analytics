@@ -50,11 +50,11 @@ function filterText(key, rawValue, query) {
     return <>{eventName}.{metaKey} {toFilterType(metaValue)} <b>{valueWithoutPrefix(metaValue)}</b></>
   }
   if (key === "browser_version") {
-    const browserName = query.filters.browser ? query.filters.browser : 'Browser'
+    const browserName = query.filters.browser === '(not set)' ? 'Browser' : query.filters.browser
     return <>{browserName}.Version {type} <b>{value}</b></>
   }
   if (key === "os_version") {
-    const osName = query.filters.os ? query.filters.os : 'OS'
+    const osName = query.filters.os === '(not set)' ? 'OS' : query.filters.os
     return <>{osName}.Version {type} <b>{value}</b></>
   }
   if (key === "country") {
