@@ -5,6 +5,7 @@ defmodule Plausible.Stats.Breakdown do
   alias Plausible.Stats.Query
   alias Plausible.Goals
   @no_ref "Direct / None"
+  @not_set "(not set)"
 
   @event_metrics [:visitors, :pageviews, :events]
   @session_metrics [:visits, :bounce_rate, :visit_duration]
@@ -512,7 +513,9 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.screen_size,
-      select_merge: %{device: s.screen_size},
+      select_merge: %{
+        device: fragment("if(empty(?), ?, ?)", s.screen_size, @not_set, s.screen_size)
+      },
       order_by: {:asc, s.screen_size}
     )
   end
@@ -521,7 +524,10 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.operating_system,
-      select_merge: %{operating_system: s.operating_system},
+      select_merge: %{
+        operating_system:
+          fragment("if(empty(?), ?, ?)", s.operating_system, @not_set, s.operating_system)
+      },
       order_by: {:asc, s.operating_system}
     )
   end
@@ -530,7 +536,15 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.operating_system_version,
-      select_merge: %{os_version: s.operating_system_version},
+      select_merge: %{
+        os_version:
+          fragment(
+            "if(empty(?), ?, ?)",
+            s.operating_system_version,
+            @not_set,
+            s.operating_system_version
+          )
+      },
       order_by: {:asc, s.operating_system_version}
     )
   end
@@ -539,7 +553,9 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.browser,
-      select_merge: %{browser: s.browser},
+      select_merge: %{
+        browser: fragment("if(empty(?), ?, ?)", s.browser, @not_set, s.browser)
+      },
       order_by: {:asc, s.browser}
     )
   end
@@ -548,7 +564,10 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.browser_version,
-      select_merge: %{browser_version: s.browser_version},
+      select_merge: %{
+        browser_version:
+          fragment("if(empty(?), ?, ?)", s.browser_version, @not_set, s.browser_version)
+      },
       order_by: {:asc, s.browser_version}
     )
   end
