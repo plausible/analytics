@@ -4,7 +4,8 @@ import { navigateToQuery } from './query'
 
 export const COMPARISON_DISABLED_PERIODS = ['realtime', 'all']
 
-const ComparisonInput = function({ _graphData, query, history }) {
+const ComparisonInput = function({ site, query, history }) {
+  if (!site.flags.comparisons) return null
   if (COMPARISON_DISABLED_PERIODS.includes(query.period)) return null
 
   function update(event) {
