@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - 'Last updated X seconds ago' info to 'current visitors' tooltips
+- Add support for more Bamboo adapters, i.e. `Bamboo.MailgunAdapter`, `Bamboo.MandrillAdapter`, `Bamboo.SendGridAdapter` plausible/analytics#2649
 
 ### Fixed
 - Empty values for Screen Size, OS and Browser are uniformly replaced with "(not set)"

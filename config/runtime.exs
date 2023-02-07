@@ -278,13 +278,32 @@ config :plausible, Plausible.ClickhouseRepo,
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
     config :plausible, Plausible.Mailer,
-      adapter: :"Elixir.#{mailer_adapter}",
+      adapter: Bamboo.PostmarkAdapter,
       request_options: [recv_timeout: 10_000],
       api_key: get_var_from_path_or_env(config_dir, "POSTMARK_API_KEY")
 
+  "Bamboo.MailgunAdapter" ->
+    config :plausible, Plausible.Mailer,
+      adapter: Bamboo.MailgunAdapter,
+      hackney_opts: [recv_timeout: :timer.seconds(10)],
+      api_key: get_var_from_path_or_env(config_dir, "MAILGUN_API_KEY"),
+      domain: get_var_from_path_or_env(config_dir, "MAILGUN_DOMAIN")
+
+  "Bamboo.MandrillAdapter" ->
+    config :plausible, Plausible.Mailer,
+      adapter: Bamboo.MandrillAdapter,
+      hackney_opts: [recv_timeout: :timer.seconds(10)],
+      api_key: get_var_from_path_or_env(config_dir, "MANDRILL_API_KEY")
+
+  "Bamboo.SendGridAdapter" ->
+    config :plausible, Plausible.Mailer,
+      adapter: Bamboo.SendGridAdapter,
+      hackney_opts: [recv_timeout: :timer.seconds(10)],
+      api_key: get_var_from_path_or_env(config_dir, "SENDGRID_API_KEY")
+
   "Bamboo.SMTPAdapter" ->
     config :plausible, Plausible.Mailer,
-      adapter: :"Elixir.#{mailer_adapter}",
+      adapter: Bamboo.SMTPAdapter,
       server: get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR", "mail"),
       hostname: base_url.host,
       port: get_var_from_path_or_env(config_dir, "SMTP_HOST_PORT", "25"),
@@ -303,7 +322,12 @@ case mailer_adapter do
     config :plausible, Plausible.Mailer, adapter: Bamboo.TestAdapter
 
   _ ->
-    raise "Unknown mailer_adapter; expected SMTPAdapter or PostmarkAdapter"
+    raise ArgumentError, """
+    Unknown mailer_adapter: #{inspect(mailer_adapter)}
+
+    Please see https://hexdocs.pm/bamboo/readme.html#available-adapters
+    for the list of available adapters that ship with Bamboo
+    """
 end
 
 config :plausible, PlausibleWeb.Firewall,
