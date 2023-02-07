@@ -6,6 +6,7 @@ defmodule Plausible.Stats.Base do
   # Ecto typespec has not been updated for this PR: https://github.com/elixir-ecto/ecto/pull/3592
   @dialyzer {:nowarn_function, add_sample_hint: 2}
   @no_ref "Direct / None"
+  @not_set "(not set)"
 
   def base_event_query(site, query) do
     events_q = query_events(site, query)
@@ -391,6 +392,7 @@ defmodule Plausible.Stats.Base do
   defp db_prop_val(:utm_campaign, @no_ref), do: ""
   defp db_prop_val(:utm_content, @no_ref), do: ""
   defp db_prop_val(:utm_term, @no_ref), do: ""
+  defp db_prop_val(_, @not_set), do: ""
   defp db_prop_val(_, val), do: val
 
   def utc_boundaries(%Query{period: "realtime"}, _timezone) do
