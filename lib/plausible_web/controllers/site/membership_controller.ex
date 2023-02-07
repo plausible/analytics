@@ -136,16 +136,17 @@ defmodule PlausibleWeb.Site.MembershipController do
           put_flash(conn, :success, "Site transfer request has been sent to #{email}")
 
         {:error, changeset} ->
-          errors = Ecto.Changeset.traverse_errors(changeset, fn {msg, _} -> msg end)
+          errors = Plausible.ChangesetHelpers.traverse_errors(changeset)
 
           message =
-            if errors[:invitation] do
-              "#{email} has already been invited but hasn't yet accepted the join request to #{site_domain}"
-            else
-              "Site transfer request to #{email} has failed"
+            case errors do
+              %{invitation: [error | _]} -> String.capitalize(error)
+              _other -> "Site transfer request to #{email} has failed"
             end
 
-          put_flash(conn, :error, message)
+          conn
+          |> put_flash(:error_title, "Transfer error")
+          |> put_flash(:error, message)
       end
 
     redirect(conn, to: Routes.site_path(conn, :settings_people, site.domain))

@@ -13,7 +13,7 @@ All notable changes to this project will be documented in this file.
 - Fix breakdown API pagination when using event metrics plausible/analytics#2562
 - Automatically update all visible dashboard reports in the realtime view
 - Connect via TLS when using HTTPS scheme in ClickHouse URL plausible/analytics#2570
-- Add more descriptive error message in case a transfer to an invited (but not joined) user is requested plausible/analytics#2651
+- Add error message in case a transfer to an invited (but not joined) user is requested plausible/analytics#2651
 
 ### Changed
 - Reject events with long URIs and data URIs plausible/analytics#2536

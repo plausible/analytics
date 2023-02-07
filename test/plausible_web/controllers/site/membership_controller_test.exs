@@ -230,9 +230,9 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       conn = post(conn, "/sites/#{site.domain}/transfer-ownership", %{email: invited})
       conn = get(recycle(conn), redirected_to(conn, 302))
-
-      assert html_response(conn, 200) =~
-               "#{invited} has already been invited but hasn&#39;t yet accepted the join request to #{site.domain}"
+      html = html_response(conn, 200)
+      assert html =~ "Transfer error"
+      assert html =~ "Invitation already exists"
     end
   end
 
