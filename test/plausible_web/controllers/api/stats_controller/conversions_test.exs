@@ -353,7 +353,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
-    test "bug: property breakdown with prop filter", %{conn: conn, site: site} do
+    test "Property breakdown with prop and goal filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1, utm_campaign: "campaignA"),
         build(:event,
