@@ -116,22 +116,39 @@ defmodule PlausibleWeb.Site.MembershipController do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
     user = Plausible.Auth.find_user_by(email: email)
 
-    invitation =
+    invite_result =
       Invitation.new(%{
         email: email,
         role: :owner,
         site_id: site.id,
         inviter_id: conn.assigns[:current_user].id
       })
-      |> Repo.insert!()
-      |> Repo.preload([:site, :inviter])
+      |> Repo.insert()
 
-    PlausibleWeb.Email.ownership_transfer_request(invitation, user)
-    |> Plausible.Mailer.send()
+    conn =
+      case invite_result do
+        {:ok, invitation} ->
+          invitation
+          |> Repo.preload([:site, :inviter])
+          |> PlausibleWeb.Email.ownership_transfer_request(user)
+          |> Plausible.Mailer.send()
 
-    conn
-    |> put_flash(:success, "Site transfer request has been sent to #{email}")
-    |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+          put_flash(conn, :success, "Site transfer request has been sent to #{email}")
+
+        {:error, changeset} ->
+          errors = Ecto.Changeset.traverse_errors(changeset, fn {msg, _} -> msg end)
+
+          message =
+            if errors[:invitation] do
+              "#{email} has already been invited but hasn't yet accepted the join request to #{site_domain}"
+            else
+              "Site transfer request to #{email} has failed"
+            end
+
+          put_flash(conn, :error, message)
+      end
+
+    redirect(conn, to: Routes.site_path(conn, :settings_people, site.domain))
   end
 
   @doc """
