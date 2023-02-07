@@ -319,7 +319,7 @@ defmodule Plausible.Stats.Breakdown do
     Enum.any?(
       ecto_q.joins,
       fn
-        %Ecto.Query.JoinExpr{source: {t, _}} when t == table -> true
+        %Ecto.Query.JoinExpr{source: {^table, _}} -> true
         _ -> false
       end
     )
