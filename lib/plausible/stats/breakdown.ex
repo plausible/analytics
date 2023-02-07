@@ -315,7 +315,7 @@ defmodule Plausible.Stats.Breakdown do
     end
   end
 
-  defp has_join_with_table(ecto_q, table) do
+  defp joins_table?(ecto_q, table) do
     Enum.any?(
       ecto_q.joins,
       fn
@@ -330,7 +330,7 @@ defmodule Plausible.Stats.Breakdown do
          "event:props:" <> prop
        ) do
     q =
-      if has_join_with_table(q, "meta") do
+      if joins_table?(q, "meta") do
         q
       else
         from(
