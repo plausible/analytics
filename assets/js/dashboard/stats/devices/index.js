@@ -25,12 +25,14 @@ function BrowserVersions({ query, site }) {
     return api.get(url.apiPath(site, '/browser-versions'), query)
   }
 
-  const browserName = query.filters.browser === '(not set)' ? 'Browser' : query.filters.browser
+  const isNotSet = query.filters.browser === '(not set)'
+  const browserName = isNotSet ? 'Browser' : query.filters.browser
+  const filter = isNotSet ? {} : { browser_version: 'name' }
 
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{ browser_version: 'name' }}
+      filter={filter}
       keyLabel={browserName + ' version'}
       query={query}
     />
@@ -58,12 +60,14 @@ function OperatingSystemVersions({ query, site }) {
     return api.get(url.apiPath(site, '/operating-system-versions'), query)
   }
 
-  const osName = query.filters.os === '(not set)' ? 'Operating System' : query.filters.os
+  const isNotSet = query.filters.os === '(not set)'
+  const osName = isNotSet ? 'Operating System' : query.filters.os
+  const filter = isNotSet ? {} : { os_version: 'name' }
 
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{ os_version: 'name' }}
+      filter={filter}
       keyLabel={osName + ' version'}
       query={query}
     />
