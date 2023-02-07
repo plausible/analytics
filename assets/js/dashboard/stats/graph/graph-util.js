@@ -149,11 +149,7 @@ export const GraphTooltip = (graphData, metric, query) => {
 }
 
 const truncateToPresentIndex = function(array, presentIndex) {
-  if (presentIndex) {
-    for (var i = presentIndex; i < array.length; i++) {
-      array[i] = undefined
-    }
-  }
+  return array.slice(0, presentIndex)
 }
 
 export const buildDataSet = (plot, comparisonPlot, present_index, ctx, label) => {
@@ -166,12 +162,10 @@ export const buildDataSet = (plot, comparisonPlot, present_index, ctx, label) =>
 
   let comparisonDataSet = []
   if (comparisonPlot) {
-    truncateToPresentIndex(comparisonPlot, present_index)
-
     comparisonDataSet = [
       {
         label,
-        data: comparisonPlot,
+        data: truncateToPresentIndex(comparisonPlot, present_index),
         borderWidth: 3,
         borderColor: 'rgba(60,70,110,0.2)',
         pointBackgroundColor: 'rgba(60,70,110,0.2)',
@@ -188,9 +182,7 @@ export const buildDataSet = (plot, comparisonPlot, present_index, ctx, label) =>
   if (present_index) {
     var dashedPart = plot.slice(present_index - 1, present_index + 1);
     var dashedPlot = (new Array(present_index - 1)).concat(dashedPart)
-    const _plot = [...plot]
-
-    truncateToPresentIndex(_plot, present_index)
+    const _plot = truncateToPresentIndex([...plot], present_index)
 
     return [
       {
