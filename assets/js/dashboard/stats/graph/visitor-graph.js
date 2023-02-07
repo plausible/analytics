@@ -13,6 +13,18 @@ import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
 import classNames from "classnames";
 
+const calculateMaximumY = function(dataset) {
+  const yAxisValues = dataset
+    .flatMap((item) => item.data)
+    .map((item) => item || 0)
+
+  if (yAxisValues) {
+    return Math.max(...yAxisValues)
+  } else {
+    return 1
+  }
+}
+
 class LineGraph extends React.Component {
   constructor(props) {
     super(props);
@@ -28,7 +40,7 @@ class LineGraph extends React.Component {
     const { graphData, metric, query } = this.props
     const graphEl = document.getElementById("main-graph-canvas")
     this.ctx = graphEl.getContext('2d');
-    const dataSet = buildDataSet(graphData.plot, graphData.present_index, this.ctx, METRIC_LABELS[metric])
+    const dataSet = buildDataSet(graphData.plot, graphData.comparison_plot, graphData.present_index, this.ctx, METRIC_LABELS[metric])
 
     return new Chart(this.ctx, {
       type: 'line',
@@ -54,7 +66,8 @@ class LineGraph extends React.Component {
         onClick: this.onClick.bind(this),
         scales: {
           y: {
-            beginAtZero: true,
+            min: 0,
+            suggestedMax: calculateMaximumY(dataSet),
             ticks: {
               callback: METRIC_FORMATTER[metric],
               maxTicksLimit: 8,
@@ -64,6 +77,12 @@ class LineGraph extends React.Component {
               zeroLineColor: 'transparent',
               drawBorder: false,
             }
+          },
+          yComparison: {
+            min: 0,
+            suggestedMax: calculateMaximumY(dataSet),
+            display: false,
+            grid: { display: false },
           },
           x: {
             grid: { display: false },
