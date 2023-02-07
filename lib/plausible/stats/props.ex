@@ -7,11 +7,11 @@ defmodule Plausible.Stats.Props do
       Enum.find(query.filters, fn {key, _} -> String.starts_with?(key, "event:props:") end)
 
     if prop_filter do
-      {key, val} = prop_filter
+      {"event:props:" <> key, {_, val}} = prop_filter
 
       if val == "(none)" do
-        goal = query.filters["goal"]
-        %{goal => [key]}
+        {_, _, goal_name} = query.filters["event:goal"]
+        %{goal_name => [key]}
       else
         ClickhouseRepo.all(
           from [e, meta: meta] in base_event_query(site, query),
