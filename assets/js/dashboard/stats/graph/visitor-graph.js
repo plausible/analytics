@@ -274,15 +274,16 @@ class LineGraph extends React.Component {
   }
 
   render() {
-    const { updateMetric, metric, topStatData, query, site, graphData } = this.props
+    const { shouldRenderLoader, updateMetric, metric, topStatData, query, site, graphData } = this.props
     const extraClass = this.props.graphData && this.props.graphData.interval === 'hour' ? '' : 'cursor-pointer'
 
     return (
-      <div className="graph-inner">
+      <div>
         <div className="flex flex-wrap" ref={this.boundary}>
           <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current} lastLoadTimestamp={this.props.lastLoadTimestamp} />
         </div>
         <div className="relative px-2">
+          {shouldRenderLoader && renderLoader()}
           <div className="absolute right-4 -top-10 py-2 md:py-0 flex items-center">
             { this.downloadLink() }
             { this.samplingNotice() }
@@ -433,17 +434,14 @@ export default class VisitorGraph extends React.Component {
 
     return (
       <FadeIn show={showGraph}>
-        <LineGraphWithRouter graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} updateInterval={this.updateInterval} lastLoadTimestamp={this.props.lastLoadTimestamp} />
+        <LineGraphWithRouter shouldRenderLoader={mainGraphRefreshing} graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} updateInterval={this.updateInterval} lastLoadTimestamp={this.props.lastLoadTimestamp} />
       </FadeIn>
     )
   }
 
   render() {
     const {mainGraphLoadingState, topStatsLoadingState} = this.state
-    const loaderClassName = classNames('mx-auto loading', {
-      'pt-52 sm:pt-56 md:pt-60': mainGraphLoadingState == LoadingState.refreshing,
-      'pt-32 sm:pt-36 md:pt-48': mainGraphLoadingState !== LoadingState.refreshing,
-    })
+    const mainGraphRefreshing = mainGraphLoadingState === LoadingState.refreshing
 
     const showLoader =
       LoadingState.isLoadingOrRefreshing(mainGraphLoadingState) ||
@@ -451,11 +449,21 @@ export default class VisitorGraph extends React.Component {
 
     return (
       <LazyLoader onVisible={this.onVisible}>
-        <div className={"relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825 main-graph"}>
-          {showLoader && <div className="graph-inner"><div className={loaderClassName}><div></div></div></div>}
+        <div className={"relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825"}>
+          {showLoader && !mainGraphRefreshing && renderLoader()}
           {this.renderInner()}
         </div>
       </LazyLoader>
     )
   }
+}
+
+function renderLoader() {
+  return (
+    <div className="absolute h-full w-full flex items-center justify-center">
+      <div className="loading">
+        <div></div>
+      </div>
+    </div>
+  )
 }

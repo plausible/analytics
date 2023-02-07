@@ -67,64 +67,6 @@ blockquote {
 @tailwind utilities;
 
 
-.main-graph {
-  position: relative;
-  height: 0;
-
-  /* Formula is: (top row height + (graph height / graph width * 100%) - adjustment for stat selectors) */
-  padding-top: calc(168px + (451 / 1088 * 100%) - 20px);
-}
-
-@screen sm {
-  .main-graph {
-    padding-top: calc(148px + (451 / 1088 * 100%));
-  }
-}
-
-@screen md {
-  .main-graph {
-    padding-top: calc(128px + (451 / 1088 * 100%));
-  }
-}
-
-@screen lg {
-  .main-graph {
-    padding-top: calc(28px + (451 / 1088 * 100%) - 10px);
-  }
-}
-
-.top-stats-only {
-  position: relative;
-  height: 0;
-  padding-top: calc(158px + 15px);
-}
-
-@screen sm {
-  .top-stats-only {
-    padding-top: calc(155px + 15px);
-  }
-}
-
-@screen md {
-  .top-stats-only {
-    padding-top: calc(168px + 15px);
-  }
-}
-
-@screen lg {
-  .top-stats-only {
-    padding-top: calc(75px + 15px);
-  }
-}
-
-.graph-inner {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: auto;
-}
-
 .light-text {
   color: #F0F4F8;
 }
