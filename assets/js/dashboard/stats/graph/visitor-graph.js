@@ -49,6 +49,7 @@ class LineGraph extends React.Component {
           },
         },
         responsive: true,
+        maintainAspectRatio: false,
         onResize: this.updateWindowDimensions,
         elements: { line: { tension: 0 }, point: { radius: 0 } },
         onClick: this.onClick.bind(this),
@@ -291,7 +292,9 @@ class LineGraph extends React.Component {
             <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={this.props.updateInterval}/>
           </div>
           <FadeIn show={graphData}>
-            <canvas id="main-graph-canvas" className={'mt-4 select-none ' + extraClass} width="1054" height="342"></canvas>
+            <div className="relative h-96 w-full">
+              <canvas id="main-graph-canvas" className={'mt-4 select-none ' + extraClass}></canvas>
+            </div>
           </FadeIn>
         </div>
       </div>
