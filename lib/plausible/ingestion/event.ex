@@ -78,7 +78,6 @@ defmodule Plausible.Ingestion.Event do
       &put_referrer/1,
       &put_utm_tags/1,
       &put_geolocation/1,
-      &put_screen_size/1,
       &put_props/1,
       &put_salts/1,
       &put_user_id/1,
@@ -128,7 +127,8 @@ defmodule Plausible.Ingestion.Event do
           operating_system: os_name(user_agent),
           operating_system_version: os_version(user_agent),
           browser: browser_name(user_agent),
-          browser_version: browser_version(user_agent)
+          browser_version: browser_version(user_agent),
+          screen_size: screen_size(user_agent)
         })
 
       _any ->
@@ -171,19 +171,6 @@ defmodule Plausible.Ingestion.Event do
     result = Plausible.Ingestion.Geolocation.lookup(event.request.remote_ip) || %{}
 
     update_attrs(event, result)
-  end
-
-  defp put_screen_size(%__MODULE__{} = event) do
-    screen_size =
-      case event.request.screen_width do
-        nil -> nil
-        width when width < 576 -> "Mobile"
-        width when width < 992 -> "Tablet"
-        width when width < 1440 -> "Laptop"
-        width when width >= 1440 -> "Desktop"
-      end
-
-    update_attrs(event, %{screen_size: screen_size})
   end
 
   defp put_props(%__MODULE__{request: %{props: %{} = props}} = event) do
@@ -304,6 +291,23 @@ defmodule Plausible.Ingestion.Event do
       %UAInspector.Result.Client{name: "Chrome Webview"} -> "Mobile App"
       %UAInspector.Result.Client{type: "mobile app"} -> "Mobile App"
       client -> client.name
+    end
+  end
+
+  defp screen_size(ua) do
+    case ua.device do
+      %UAInspector.Result.Device{type: "smartphone"} -> "Mobile"
+      %UAInspector.Result.Device{type: "feature phone"} -> "Mobile"
+      %UAInspector.Result.Device{type: "portable media player"} -> "Mobile"
+      %UAInspector.Result.Device{type: "phablet"} -> "Mobile"
+      %UAInspector.Result.Device{type: "wearable"} -> "Mobile"
+      %UAInspector.Result.Device{type: "camera"} -> "Mobile"
+      %UAInspector.Result.Device{type: "car browser"} -> "Tablet"
+      %UAInspector.Result.Device{type: "tablet"} -> "Tablet"
+      %UAInspector.Result.Device{type: "tv"} -> "Desktop"
+      %UAInspector.Result.Device{type: "console"} -> "Desktop"
+      %UAInspector.Result.Device{type: "desktop"} -> "Desktop"
+      _ -> nil
     end
   end
 
