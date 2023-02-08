@@ -275,16 +275,16 @@ class LineGraph extends React.Component {
   }
 
   render() {
-    const { shouldRenderLoader, updateMetric, metric, topStatData, query, site, graphData } = this.props
+    const { onlyGraphLoading, updateMetric, metric, topStatData, query, site, graphData } = this.props
     const extraClass = this.props.graphData && this.props.graphData.interval === 'hour' ? '' : 'cursor-pointer'
-
+    
     return (
       <div>
         <div className="flex flex-wrap" ref={this.boundary}>
           <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current} lastLoadTimestamp={this.props.lastLoadTimestamp} />
         </div>
         <div className="relative px-2">
-          {shouldRenderLoader && renderLoader()}
+          {onlyGraphLoading && renderLoader()}
           <div className="absolute right-4 -top-10 py-2 md:py-0 flex items-center">
             { this.downloadLink() }
             { this.samplingNotice() }
@@ -427,17 +427,17 @@ export default class VisitorGraph extends React.Component {
 
     const theme = document.querySelector('html').classList.contains('dark') || false
 
-    const mainGraphRefreshing = (mainGraphLoadingState === LoadingState.refreshing)
+    const onlyGraphLoading = (mainGraphLoadingState === LoadingState.refreshing)
     const topStatAndGraphLoaded = !!(topStatData && graphData)
 
     const showGraph =
       LoadingState.isLoadedOrRefreshing(topStatsLoadingState) &&
       LoadingState.isLoadedOrRefreshing(mainGraphLoadingState) &&
-      (topStatData && mainGraphRefreshing || topStatAndGraphLoaded)
+      (topStatData && onlyGraphLoading || topStatAndGraphLoaded)
 
     return (
       <FadeIn show={showGraph}>
-        <LineGraphWithRouter shouldRenderLoader={mainGraphRefreshing} graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} updateInterval={this.updateInterval} lastLoadTimestamp={this.props.lastLoadTimestamp} />
+        <LineGraphWithRouter onlyGraphLoading={onlyGraphLoading} graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} updateInterval={this.updateInterval} lastLoadTimestamp={this.props.lastLoadTimestamp} />
       </FadeIn>
     )
   }
