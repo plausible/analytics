@@ -9,7 +9,7 @@ defmodule Plausible.PromEx do
       Plugins.Application,
       Plugins.Beam,
       {Plugins.Phoenix, router: PlausibleWeb.Router, endpoint: PlausibleWeb.Endpoint},
-      Plugins.Ecto,
+      {Plugins.Ecto, repos: [Plausible.Repo, Plausible.ClickhouseRepo, Plausible.IngestRepo]},
       Plugins.Oban,
       Plausible.PromEx.Plugins.PlausibleMetrics
     ]
