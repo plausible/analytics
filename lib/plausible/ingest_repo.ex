@@ -1,4 +1,8 @@
 defmodule Plausible.IngestRepo do
+  @moduledoc """
+  Write-centric Clickhouse access interface
+  """
+
   use Ecto.Repo,
     otp_app: :plausible,
     adapter: ClickhouseEcto
