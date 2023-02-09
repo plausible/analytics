@@ -250,6 +250,39 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
     end
   end
 
+  describe "GET /api/stats/:domain/conversions - with goal and prop=(none) filter" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    test "returns only the conversion that is filtered for", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/", user_id: 1),
+        build(:pageview, pathname: "/", user_id: 2),
+        build(:event, name: "Signup", user_id: 1, "meta.key": ["variant"], "meta.value": ["A"]),
+        build(:event, name: "Signup", user_id: 2)
+      ])
+
+      insert(:goal, %{domain: site.domain, event_name: "Signup"})
+
+      filters = Jason.encode!(%{goal: "Signup", props: %{variant: "(none)"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Signup",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "prop_names" => ["variant"],
+                 "conversion_rate" => 50
+               }
+             ]
+    end
+  end
+
   describe "GET /api/stats/:domain/property/:key" do
     setup [:create_user, :log_in, :create_new_site]
 
