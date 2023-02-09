@@ -1,4 +1,4 @@
-.PHONY: help install server clickhouse clickhouse-prod clickhouse-ci clickhouse-stop postgres postgres-prod postgres-stop
+.PHONY: help install server clickhouse clickhouse-prod clickhouse-stop postgres postgres-prod postgres-stop
 
 help:
 	@perl -nle'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -22,9 +22,6 @@ clickhouse: ## Start a container with a recent version of clickhouse
 
 clickhouse-prod: ## Start a container with the same version of clickhouse as the one in prod
 	docker run $(CH_FLAGS) --volume=$$PWD/.clickhouse_db_vol_prod:/var/lib/clickhouse clickhouse/clickhouse-server:22.8.13.20-alpine
-
-clickhouse-ci: ## Start a container with the same version of clickhouse as the one in .github/workflows/elixir.yml
-	docker run $(CH_FLAGS) --volume=$$PWD/.clickhouse_db_vol_ci:/var/lib/clickhouse yandex/clickhouse-server:22.8.13.20-alpine
 
 clickhouse-stop: ## Stop and remove the clickhouse container
 	docker stop plausible_clickhouse && docker rm plausible_clickhouse
