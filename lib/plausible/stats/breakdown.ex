@@ -316,20 +316,13 @@ defmodule Plausible.Stats.Breakdown do
     end
   end
 
-  defp do_group_by(
-         %Ecto.Query{
-           from: %Ecto.Query.FromExpr{source: {"events", _}},
-           joins: [%Ecto.Query.JoinExpr{source: {"meta", _}}]
-         } = q,
-         "event:props:" <> prop
-       ) do
-    from(
-      [e, meta] in q,
-      group_by: e.name,
-      where: meta.key == ^prop,
-      group_by: meta.value,
-      select_merge: %{^prop => meta.value},
-      order_by: {:asc, meta.value}
+  defp joins_table?(ecto_q, table) do
+    Enum.any?(
+      ecto_q.joins,
+      fn
+        %Ecto.Query.JoinExpr{source: {^table, _}} -> true
+        _ -> false
+      end
     )
   end
 
@@ -337,9 +330,18 @@ defmodule Plausible.Stats.Breakdown do
          %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events", _}}} = q,
          "event:props:" <> prop
        ) do
+    q =
+      if joins_table?(q, "meta") do
+        q
+      else
+        from(
+          e in q,
+          inner_lateral_join: meta in fragment("meta")
+        )
+      end
+
     from(
-      e in q,
-      inner_lateral_join: meta in fragment("meta"),
+      [e, meta] in q,
       where: meta.key == ^prop,
       group_by: meta.value,
       select_merge: %{^prop => meta.value},
