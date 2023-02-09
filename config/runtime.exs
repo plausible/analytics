@@ -85,7 +85,7 @@ ch_db_url =
   get_var_from_path_or_env(
     config_dir,
     "CLICKHOUSE_INGEST_POOL_SIZE",
-    3
+    "3"
   )
   |> Integer.parse()
 
