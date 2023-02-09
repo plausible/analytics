@@ -11,7 +11,6 @@ import TopStats from './top-stats';
 import { IntervalPicker, getStoredInterval, storeInterval } from './interval-picker';
 import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
-import classNames from "classnames";
 
 class LineGraph extends React.Component {
   constructor(props) {
