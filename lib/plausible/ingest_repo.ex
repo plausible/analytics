@@ -9,7 +9,7 @@ defmodule Plausible.IngestRepo do
 
   defmacro __using__(_) do
     quote do
-      alias Plausible.ClickhouseRepo
+      alias Plausible.IngestRepo
       import Ecto
       import Ecto.Query, only: [from: 1, from: 2]
     end
