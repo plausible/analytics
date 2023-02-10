@@ -11,6 +11,7 @@ import TopStats from './top-stats';
 import { IntervalPicker, getStoredInterval, storeInterval } from './interval-picker';
 import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
+import classNames from 'classnames';
 
 class LineGraph extends React.Component {
   constructor(props) {
@@ -287,7 +288,7 @@ class LineGraph extends React.Component {
 
   render() {
     const { onlyGraphLoading, updateMetric, metric, topStatData, query, site, graphData } = this.props
-    const extraClass = this.props.graphData && this.props.graphData.interval === 'hour' ? '' : 'cursor-pointer'
+    const canvasClass = classNames('mt-4 select-none', {'cursor-pointer': !['minute', 'hour'].includes(graphData?.interval)})
 
     return (
       <div>
@@ -304,7 +305,7 @@ class LineGraph extends React.Component {
           </div>
           <FadeIn show={graphData}>
             <div className="relative h-96 w-full">
-              <canvas id="main-graph-canvas" className={'mt-4 select-none ' + extraClass}></canvas>
+              <canvas id="main-graph-canvas" className={canvasClass}></canvas>
             </div>
           </FadeIn>
         </div>
