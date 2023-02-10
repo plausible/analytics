@@ -814,8 +814,13 @@ defmodule Plausible.ImportedTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"code" => 0, "name" => "Tartu", "visitors" => 1},
-               %{"code" => 0, "name" => "Edinburgh", "visitors" => 1}
+               %{"code" => 588_335, "name" => "Tartu", "visitors" => 1, "country_flag" => "🇪🇪"},
+               %{
+                 "code" => 2_650_225,
+                 "name" => "Edinburgh",
+                 "visitors" => 1,
+                 "country_flag" => "🇬🇧"
+               }
              ]
     end
 
