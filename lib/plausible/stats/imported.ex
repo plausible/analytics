@@ -1,4 +1,3 @@
-# credo:disable-for-this-file Credo.Check.Refactor.CyclomaticComplexity
 defmodule Plausible.Stats.Imported do
   use Plausible.ClickhouseRepo
   alias Plausible.Stats.Query
@@ -121,13 +120,6 @@ defmodule Plausible.Stats.Imported do
       |> select_imported_metrics(metrics)
 
     imported_q =
-      if dim == :city do
-        group_by(imported_q, [i], i.city_name)
-      else
-        imported_q
-      end
-
-    imported_q =
       case query.filters[property] do
         {:is_not, value} ->
           value = if value == @no_ref, do: "", else: value
@@ -203,9 +195,7 @@ defmodule Plausible.Stats.Imported do
           imported_q |> where([i], i.region != "") |> select_merge([i], %{region: i.region})
 
         :city ->
-          imported_q
-          |> where([i], not is_nil(i.city_name))
-          |> select_merge([i], %{city: i.city, city_name: i.city_name})
+          imported_q |> where([i], i.city != 0) |> select_merge([i], %{city: i.city})
 
         :device ->
           imported_q |> select_merge([i], %{device: i.device})
@@ -297,9 +287,8 @@ defmodule Plausible.Stats.Imported do
 
       :city ->
         q
-        |> select_merge([s, i], %{
-          city: s.city,
-          city_name: i.city_name
+        |> select_merge([i, s], %{
+          city: fragment("coalesce(?, ?)", s.city, i.city)
         })
 
       :device ->
