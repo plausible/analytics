@@ -5,8 +5,10 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - 'Last updated X seconds ago' info to 'current visitors' tooltips
+- Add support for more Bamboo adapters, i.e. `Bamboo.MailgunAdapter`, `Bamboo.MandrillAdapter`, `Bamboo.SendGridAdapter` plausible/analytics#2649
 
 ### Fixed
+- Empty values for Screen Size, OS and Browser are uniformly replaced with "(not set)"
 - Fix [more pageviews with session prop filter than with no filters](https://github.com/plausible/analytics/issues/1666)
 - Cascade delete sent_renewal_notifications table when user is deleted plausible/analytics#2549
 - Show appropriate top-stat metric labels on the realtime dashboard when filtering by a goal
@@ -14,6 +16,8 @@ All notable changes to this project will be documented in this file.
 - Automatically update all visible dashboard reports in the realtime view
 - Connect via TLS when using HTTPS scheme in ClickHouse URL plausible/analytics#2570
 - Add error message in case a transfer to an invited (but not joined) user is requested plausible/analytics#2651
+- Fix bug with [showing property breakdown with a prop filter](https://github.com/plausible/analytics/issues/1789)
+- Fix bug when combining goal and prop filters plausible/analytics#2654
 
 ### Changed
 - Reject events with long URIs and data URIs plausible/analytics#2536

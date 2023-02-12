@@ -2,6 +2,8 @@ defmodule Plausible.Event.WriteBuffer do
   use GenServer
   require Logger
 
+  alias Plausible.IngestRepo
+
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
@@ -62,15 +64,15 @@ defmodule Plausible.Event.WriteBuffer do
       events ->
         Logger.info("Flushing #{length(events)} events")
         events = Enum.map(events, &(Map.from_struct(&1) |> Map.delete(:__meta__)))
-        Plausible.ClickhouseRepo.insert_all(Plausible.ClickhouseEvent, events)
+        IngestRepo.insert_all(Plausible.ClickhouseEvent, events)
     end
   end
 
   defp flush_interval_ms() do
-    Keyword.fetch!(Application.get_env(:plausible, Plausible.ClickhouseRepo), :flush_interval_ms)
+    Keyword.fetch!(Application.get_env(:plausible, IngestRepo), :flush_interval_ms)
   end
 
   defp max_buffer_size() do
-    Keyword.fetch!(Application.get_env(:plausible, Plausible.ClickhouseRepo), :max_buffer_size)
+    Keyword.fetch!(Application.get_env(:plausible, IngestRepo), :max_buffer_size)
   end
 end
