@@ -90,7 +90,7 @@ class LineGraph extends React.Component {
               maxTicksLimit: 8,
               callback: function (val, _index, _ticks) {
                 // realtime graph labels are not date strings
-                const hasMultipleYears = typeof graphData.labels[0] === 'number' ? false :
+                const hasMultipleYears = typeof graphData.labels[0] !== 'string' ? false :
                     graphData.labels
                     // date format: 'yyyy-mm-dd'; maps to -> 'yyyy'
                     .map(date => date.split('-')[0])
