@@ -232,7 +232,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       conn = get(recycle(conn), redirected_to(conn, 302))
       html = html_response(conn, 200)
       assert html =~ "Transfer error"
-      assert html =~ "Invitation already exists"
+      assert html =~ "Already sent"
     end
   end
 

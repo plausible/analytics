@@ -22,7 +22,7 @@ defmodule Plausible.Auth.Invitation do
     |> unique_constraint([:email, :site_id],
       name: :invitations_site_id_email_index,
       error_key: :invitation,
-      message: "invitation already exists"
+      message: "already sent"
     )
   end
 end
