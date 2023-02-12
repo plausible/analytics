@@ -1,10 +1,6 @@
 import Config
 
 config :plausible, PlausibleWeb.Endpoint,
-  render_errors: [
-    view: PlausibleWeb.ErrorView,
-    accepts: ~w(html json)
-  ],
   server: true,
   debug_errors: true,
   code_reloader: true,

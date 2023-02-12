@@ -139,6 +139,7 @@ defmodule PlausibleWeb.Router do
     post "/password/request-reset", AuthController, :password_reset_request
     get "/password/reset", AuthController, :password_reset_form
     post "/password/reset", AuthController, :password_reset
+    post "/error_report", ErrorReportController, :submit_error_report
   end
 
   scope "/", PlausibleWeb do

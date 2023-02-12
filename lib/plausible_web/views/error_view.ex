@@ -22,41 +22,25 @@ defmodule PlausibleWeb.ErrorView do
     )
   end
 
-  def render("500.html", assigns) do
-    case Sentry.get_last_event_id_and_source() do
-      {event_id, :plug} when is_binary(event_id) ->
-        current_user = assigns[:current_user]
+  def render(<<"5", _error_5xx::binary-size(2), ".html">>, assigns) do
+    current_user = assigns[:current_user]
+    selfhosted? = Plausible.Release.selfhost?()
+    last_event = Sentry.get_last_event_id_and_source()
 
-        opts =
-          %{
-            eventId: event_id,
-            user: %{
-              name: current_user && current_user.name,
-              email: current_user && current_user.email
-            }
-          }
-          |> Jason.encode!()
+    case {selfhosted?, current_user, last_event} do
+      {false, current_user, {event_id, :plug}}
+      when is_binary(event_id) and not is_nil(current_user) ->
+        opts = %{
+          trace_id: event_id,
+          user_name: current_user.name,
+          user_email: current_user.email,
+          selfhosted?: selfhosted?
+        }
 
-        ~E"""
-        <script src="<%= Routes.static_path(@conn, "/js/sentry-bundle-5.9.1-min.js") %>" integrity="sha384-/x1aHz0nKRd6zVUazsV6CbQvjJvr6zQL2CHbQZf3yoLkezyEtZUpqUNnOLW9Nt3v" crossorigin="anonymous"></script>
-        <script>
-        Sentry.init({ dsn: '<%= Sentry.Config.dsn() %>' });
-        Sentry.showReportDialog(<%= raw opts %>)
-        </script>
-        """
+        render("server_error.html", Map.merge(opts, assigns))
 
       _ ->
-        render(
-          "error.html",
-          Map.merge(
-            %{
-              layout: false,
-              status: 500,
-              message: "Oops! Looks like we're having server issues"
-            },
-            assigns
-          )
-        )
+        render("server_error.html", Map.put(assigns, :selfhosted?, selfhosted?))
     end
   end
 

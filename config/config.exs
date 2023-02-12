@@ -1,9 +1,15 @@
 import Config
 
 config :plausible,
-  ecto_repos: [Plausible.Repo, Plausible.ClickhouseRepo]
+  ecto_repos: [Plausible.Repo, Plausible.IngestRepo]
 
-config :plausible, PlausibleWeb.Endpoint, pubsub_server: Plausible.PubSub
+config :plausible, PlausibleWeb.Endpoint,
+  pubsub_server: Plausible.PubSub,
+  render_errors: [
+    view: PlausibleWeb.ErrorView,
+    layout: {PlausibleWeb.LayoutView, "focus.html"},
+    accepts: ~w(html json)
+  ]
 
 # Configures Elixir's Logger
 config :logger, :console,

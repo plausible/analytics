@@ -34,7 +34,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "shows locked page if page is locked", %{conn: conn, user: user} do
       locked_site = insert(:site, locked: true, members: [user])
       conn = get(conn, "/" <> locked_site.domain)
-      assert html_response(conn, 200) =~ "Site locked"
+      assert html_response(conn, 200) =~ "Dashboard locked"
     end
 
     test "can not view stats of someone else's website", %{conn: conn} do
@@ -285,7 +285,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
 
-      assert html_response(conn, 200) =~ "Site locked"
+      assert html_response(conn, 200) =~ "Dashboard locked"
       refute String.contains?(html_response(conn, 200), "Back to my sites")
     end
 
