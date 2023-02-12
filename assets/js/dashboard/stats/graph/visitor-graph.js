@@ -97,7 +97,6 @@ class LineGraph extends React.Component {
                     // reject any year that appears at a previous index, unique years only
                     .filter((value, index, list) => list.indexOf(value) === index)
                     .length > 1
-                    console.log(hasMultipleYears)
 
                 if (graphData.interval === 'hour' && query.period !== 'day') {
                   const date = dateFormatter({
