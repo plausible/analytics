@@ -39,14 +39,18 @@ const renderBucketLabel = function(query, graphData, label, comparison = false) 
   let isPeriodFull = graphData.full_intervals?.[label]
   if (comparison) isPeriodFull = true
 
-  const formattedLabel = dateFormatter(graphData.interval, true, query.period, isPeriodFull)(label)
+  const formattedLabel = dateFormatter({
+    interval: graphData.interval, longForm: true, period: query.period, isPeriodFull,
+  })(label)
 
   if (query.period === 'realtime') {
-    return dateFormatter(graphData.interval, true, query.period)(label)
+    return dateFormatter({
+      interval: graphData.interval, longForm: true, period: query.period,
+    })(label)
   }
 
   if (graphData.interval === 'hour' || graphData.interval == 'minute') {
-    const date = dateFormatter("date", true, query.period)(label)
+    const date = dateFormatter({ interval: "date", longForm: true, period: query.period })(label)
     return `${date}, ${formattedLabel}`
   }
 

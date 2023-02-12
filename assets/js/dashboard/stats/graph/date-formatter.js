@@ -124,7 +124,6 @@ const factory = {
  * @param {boolean} config.isPeriodFull - Indicates whether the interval has been cut
  * off by the requested date range or not. If false, the returned formatted date
  * indicates this cut off, e.g. `Partial week of November 8`.
- * @param {string} config.period - The period of the query, e.g. `12mo`, `day`
  * @param {boolean} config.shouldShowYear - Should the year be appended to the date?
  * Defaults to false. Rendering year string is a newer opt-in feature to be enabled where needed.
  */
