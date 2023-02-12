@@ -81,6 +81,14 @@ ch_db_url =
     "http://plausible_events_db:8123/plausible_events_db"
   )
 
+{ingest_pool_size, ""} =
+  get_var_from_path_or_env(
+    config_dir,
+    "CLICKHOUSE_INGEST_POOL_SIZE",
+    "5"
+  )
+  |> Integer.parse()
+
 {ch_flush_interval_ms, ""} =
   config_dir
   |> get_var_from_path_or_env("CLICKHOUSE_FLUSH_INTERVAL_MS", "5000")
@@ -271,9 +279,16 @@ config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
   queue_target: 500,
   queue_interval: 2000,
+  url: ch_db_url
+
+config :plausible, Plausible.IngestRepo,
+  loggers: [Ecto.LogEntry],
+  queue_target: 500,
+  queue_interval: 2000,
   url: ch_db_url,
   flush_interval_ms: ch_flush_interval_ms,
-  max_buffer_size: ch_max_buffer_size
+  max_buffer_size: ch_max_buffer_size,
+  pool_size: ingest_pool_size
 
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->

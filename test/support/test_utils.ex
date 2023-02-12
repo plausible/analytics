@@ -71,7 +71,7 @@ defmodule Plausible.TestUtils do
         Factory.build(:pageview, pageview) |> Map.from_struct() |> Map.delete(:__meta__)
       end)
 
-    Plausible.ClickhouseRepo.insert_all("events", pageviews)
+    Plausible.IngestRepo.insert_all("events", pageviews)
   end
 
   def create_events(events) do
@@ -80,7 +80,7 @@ defmodule Plausible.TestUtils do
         Factory.build(:event, event) |> Map.from_struct() |> Map.delete(:__meta__)
       end)
 
-    Plausible.ClickhouseRepo.insert_all("events", events)
+    Plausible.IngestRepo.insert_all("events", events)
   end
 
   def create_sessions(sessions) do
@@ -89,7 +89,7 @@ defmodule Plausible.TestUtils do
         Factory.build(:ch_session, session) |> Map.from_struct() |> Map.delete(:__meta__)
       end)
 
-    Plausible.ClickhouseRepo.insert_all("sessions", sessions)
+    Plausible.IngestRepo.insert_all("sessions", sessions)
   end
 
   def log_in(%{user: user, conn: conn}) do
@@ -163,7 +163,7 @@ defmodule Plausible.TestUtils do
 
   defp populate_imported_stats(events) do
     Enum.group_by(events, &Map.fetch!(&1, :table), &Map.delete(&1, :table))
-    |> Enum.map(fn {table, events} -> Plausible.ClickhouseRepo.insert_all(table, events) end)
+    |> Enum.map(fn {table, events} -> Plausible.IngestRepo.insert_all(table, events) end)
   end
 
   def relative_time(shifts) do

@@ -1,7 +1,7 @@
 import Config
 
 config :plausible,
-  ecto_repos: [Plausible.Repo, Plausible.ClickhouseRepo]
+  ecto_repos: [Plausible.Repo, Plausible.IngestRepo]
 
 config :plausible, PlausibleWeb.Endpoint,
   pubsub_server: Plausible.PubSub,

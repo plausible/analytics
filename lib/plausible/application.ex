@@ -9,6 +9,7 @@ defmodule Plausible.Application do
     children = [
       Plausible.Repo,
       Plausible.ClickhouseRepo,
+      Plausible.IngestRepo,
       {Finch, name: Plausible.Finch, pools: finch_pool_config()},
       {Phoenix.PubSub, name: Plausible.PubSub},
       Plausible.Session.Salts,
