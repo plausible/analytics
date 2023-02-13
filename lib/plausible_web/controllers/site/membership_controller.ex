@@ -140,11 +140,12 @@ defmodule PlausibleWeb.Site.MembershipController do
 
           message =
             case errors do
-              %{invitation: [error | _]} -> String.capitalize(error)
+              %{invitation: ["already sent" | _]} -> "Invitation has already been sent"
               _other -> "Site transfer request to #{email} has failed"
             end
 
           conn
+          |> put_flash(:ttl, :timer.seconds(5))
           |> put_flash(:error_title, "Transfer error")
           |> put_flash(:error, message)
       end
