@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom'
+import { Link, useRouteMatch } from 'react-router-dom'
 import FlipMove from 'react-flip-move';
 
 
@@ -31,6 +31,7 @@ function ExternalLink({item, externalLinkDest}) {
 export default function ListReport(props) {
   const [state, setState] = useState({loading: true, list: null})
   const [visible, setVisible] = useState(false)
+  const { url } = useRouteMatch()
   const valueKey = props.valueKey || 'visitors'
   const showConversionRate = !!props.query.filters.goal
 
@@ -90,7 +91,7 @@ export default function ListReport(props) {
           plot={valueKey}
         >
           <span className="flex px-2 py-1.5 group dark:text-gray-300 relative z-9 break-all" tooltip={props.tooltipText && props.tooltipText(listItem)}>
-            <Link onClick={props.onClick || noop} className="md:truncate block hover:underline" to={{search: query.toString()}}>
+            <Link onClick={props.onClick || noop} className="md:truncate block hover:underline" to={`${url}/?${query.toString()}`}>
               {props.renderIcon && props.renderIcon(listItem)}
               {props.renderIcon && ' '}
               {listItem.name}
