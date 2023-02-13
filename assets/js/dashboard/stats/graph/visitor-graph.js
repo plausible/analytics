@@ -287,7 +287,7 @@ class LineGraph extends React.Component {
   }
 
   render() {
-    const { onlyGraphLoading, updateMetric, metric, topStatData, query, site, graphData } = this.props
+    const { mainGraphRefreshing, updateMetric, metric, topStatData, query, site, graphData } = this.props
     const canvasClass = classNames('mt-4 select-none', {'cursor-pointer': !['minute', 'hour'].includes(graphData?.interval)})
 
     return (
@@ -296,7 +296,7 @@ class LineGraph extends React.Component {
           <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current} lastLoadTimestamp={this.props.lastLoadTimestamp} />
         </div>
         <div className="relative px-2">
-          {onlyGraphLoading && renderLoader()}
+          {mainGraphRefreshing && renderLoader()}
           <div className="absolute right-4 -top-10 py-2 md:py-0 flex items-center">
             { this.downloadLink() }
             { this.samplingNotice() }
@@ -446,17 +446,17 @@ export default class VisitorGraph extends React.Component {
 
     const theme = document.querySelector('html').classList.contains('dark') || false
 
-    const onlyGraphLoading = (mainGraphLoadingState === LoadingState.refreshing)
+    const mainGraphRefreshing = (mainGraphLoadingState === LoadingState.refreshing)
     const topStatAndGraphLoaded = !!(topStatData && graphData)
 
-    const showGraph =
-      LoadingState.isLoadedOrRefreshing(topStatsLoadingState) &&
+    const shouldShow =
+      topStatsLoadingState === LoadingState.loaded &&
       LoadingState.isLoadedOrRefreshing(mainGraphLoadingState) &&
-      (topStatData && onlyGraphLoading || topStatAndGraphLoaded)
+      (topStatData && mainGraphRefreshing || topStatAndGraphLoaded)
 
     return (
-      <FadeIn show={showGraph}>
-        <LineGraphWithRouter onlyGraphLoading={onlyGraphLoading} graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} updateInterval={this.updateInterval} lastLoadTimestamp={this.props.lastLoadTimestamp} />
+      <FadeIn show={shouldShow}>
+        <LineGraphWithRouter mainGraphRefreshing={mainGraphRefreshing} graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} updateInterval={this.updateInterval} lastLoadTimestamp={this.props.lastLoadTimestamp} />
       </FadeIn>
     )
   }
@@ -467,7 +467,7 @@ export default class VisitorGraph extends React.Component {
 
     const showLoader =
       LoadingState.isLoadingOrRefreshing(mainGraphLoadingState) ||
-      LoadingState.isLoadingOrRefreshing(topStatsLoadingState)
+      topStatsLoadingState === LoadingState.loading
 
     return (
       <LazyLoader onVisible={this.onVisible}>
