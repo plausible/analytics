@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Fix breakdown API pagination when using event metrics plausible/analytics#2562
 - Automatically update all visible dashboard reports in the realtime view
 - Connect via TLS when using HTTPS scheme in ClickHouse URL plausible/analytics#2570
+- Add error message in case a transfer to an invited (but not joined) user is requested plausible/analytics#2651
 - Fix bug with [showing property breakdown with a prop filter](https://github.com/plausible/analytics/issues/1789)
 - Fix bug when combining goal and prop filters plausible/analytics#2654
 
