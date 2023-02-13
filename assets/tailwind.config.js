@@ -1,7 +1,7 @@
 const colors = require('tailwindcss/colors')
 
 module.exports = {
-  purge: [
+  content: [
     './js/**/*.js',
     '../lib/plausible_web/templates/**/*.html.eex',
   ],
@@ -45,23 +45,7 @@ module.exports = {
       }
     },
   },
-  variants: {
-    textColor: ['responsive', 'hover', 'focus', 'group-hover'],
-    display: ['responsive', 'hover', 'focus', 'group-hover'],
-    extend: {
-      textColor: ['dark'],
-      borderWidth: ['dark'],
-      backgroundOpacity: ['dark'],
-      display: ['dark'],
-      cursor: ['hover'],
-      justifyContent: ['responsive'],
-      backgroundColor: ['odd', 'even'],
-      shadow: ['dark']
-    }
-  },
   plugins: [
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/aspect-ratio'),
+    require('@tailwindcss/forms')
   ]
 }
