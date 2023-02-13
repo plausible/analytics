@@ -287,13 +287,13 @@ class LineGraph extends React.Component {
   }
 
   render() {
-    const { mainGraphRefreshing, updateMetric, metric, topStatData, query, site, graphData } = this.props
+    const { mainGraphRefreshing, updateMetric, updateInterval, metric, topStatData, query, site, graphData, lastLoadTimestamp } = this.props
     const canvasClass = classNames('mt-4 select-none', {'cursor-pointer': !['minute', 'hour'].includes(graphData?.interval)})
 
     return (
       <div>
         <div id="top-stats-container" className="flex flex-wrap" ref={this.boundary} style={{height: this.getTopStatsHeight()}}>
-          <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current} lastLoadTimestamp={this.props.lastLoadTimestamp} />
+          <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current} lastLoadTimestamp={lastLoadTimestamp} />
         </div>
         <div className="relative px-2">
           {mainGraphRefreshing && renderLoader()}
@@ -301,7 +301,7 @@ class LineGraph extends React.Component {
             { this.downloadLink() }
             { this.samplingNotice() }
             { this.importedNotice() }
-            <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={this.props.updateInterval}/>
+            <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={updateInterval}/>
           </div>
           <FadeIn show={graphData}>
             <div className="relative h-96 w-full">
@@ -352,7 +352,7 @@ export default class VisitorGraph extends React.Component {
   updateInterval(interval) {
     if (this.isIntervalValid(interval)) {
       storeInterval(this.props.query.period, this.props.site.domain, interval)
-      this.setState({ mainGraphLoadingState: LoadingState.refreshing }, this.fetchGraphData)
+      this.setState({ mainGraphLoadingState: LoadingState.refreshing, graphData: null }, this.fetchGraphData)
     }
   }
 
