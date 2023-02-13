@@ -463,16 +463,15 @@ export default class VisitorGraph extends React.Component {
 
   render() {
     const {mainGraphLoadingState, topStatsLoadingState} = this.state
-    const mainGraphRefreshing = mainGraphLoadingState === LoadingState.refreshing
 
     const showLoader =
-      LoadingState.isLoadingOrRefreshing(mainGraphLoadingState) ||
-      topStatsLoadingState === LoadingState.loading
+      [mainGraphLoadingState, topStatsLoadingState].includes(LoadingState.loading) &&
+      mainGraphLoadingState !== LoadingState.refreshing
 
     return (
       <LazyLoader onVisible={this.onVisible}>
         <div className={"relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825"}>
-          {showLoader && !mainGraphRefreshing && renderLoader()}
+          {showLoader && renderLoader()}
           {this.renderInner()}
         </div>
       </LazyLoader>
