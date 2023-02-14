@@ -89,9 +89,29 @@ class LineGraph extends React.Component {
             ticks: {
               maxTicksLimit: 8,
               callback: function (val, _index, _ticks) {
+                // realtime graph labels are not date strings
+                const hasMultipleYears = typeof graphData.labels[0] !== 'string' ? false :
+                    graphData.labels
+                    // date format: 'yyyy-mm-dd'; maps to -> 'yyyy'
+                    .map(date => date.split('-')[0])
+                    // reject any year that appears at a previous index, unique years only
+                    .filter((value, index, list) => list.indexOf(value) === index)
+                    .length > 1
+
                 if (graphData.interval === 'hour' && query.period !== 'day') {
-                  const date = dateFormatter("date", false, query.period)(this.getLabelForValue(val))
-                  const hour = dateFormatter(graphData.interval, false, query.period)(this.getLabelForValue(val))
+                  const date = dateFormatter({
+                    interval: "date",
+                    longForm: false,
+                    period: query.period,
+                    shouldShowYear: hasMultipleYears,
+                  })(this.getLabelForValue(val))
+
+                  const hour = dateFormatter({
+                    interval: graphData.interval,
+                    longForm: false,
+                    period: query.period,
+                    shouldShowYear: hasMultipleYears,
+                  })(this.getLabelForValue(val))
 
                   // Returns a combination of date and hour. This is because
                   // small intervals like hour may return multiple days
@@ -100,10 +120,14 @@ class LineGraph extends React.Component {
                 }
 
                 if (graphData.interval === 'minute' && query.period !== 'realtime') {
-                  return dateFormatter("hour", false, query.period)(this.getLabelForValue(val))
+                  return dateFormatter({
+                    interval: "hour", longForm: false, period: query.period,
+                  })(this.getLabelForValue(val))
                 }
 
-                return dateFormatter(graphData.interval, false, query.period)(this.getLabelForValue(val))
+                return dateFormatter({
+                  interval: graphData.interval, longForm: false, period: query.period, shouldShowYear: hasMultipleYears,
+                })(this.getLabelForValue(val))
               },
               color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             }
