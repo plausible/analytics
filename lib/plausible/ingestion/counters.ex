@@ -10,13 +10,12 @@ defmodule Plausible.Ingestion.Counters do
 
   @telemetry_events [@event_dropped, @event_buffered]
   @telemetry_handler &__MODULE__.handle_event/4
-  @telemetry_handler_name "ingest-scoreboard"
 
   @dump_interval :timer.seconds(10)
   @bucket_fn &__MODULE__.minute_spiral/0
 
   @ets_name __MODULE__
-  @repo Plausible.IngestRepo
+  @insert_fn &Plausible.IngestRepo.insert_all/2
 
   @ets_opts [
     :public,
@@ -73,10 +72,10 @@ defmodule Plausible.Ingestion.Counters do
             }
           end)
 
-        repo = Keyword.fetch!(opts, :repo)
+        insert_fn = Keyword.fetch!(opts, :insert_fn)
 
         try do
-          {_, _} = repo.insert_all(Record, records)
+          {_, _} = insert_fn.(Record, records)
         catch
           _, thrown ->
             Logger.error(
@@ -101,7 +100,36 @@ defmodule Plausible.Ingestion.Counters do
     aggregate("buffered", domain, opts)
   end
 
-  def aggregate(metric, domain, opts) do
+  def minute_spiral(now \\ DateTime.utc_now()) do
+    now
+    |> DateTime.truncate(:second)
+    |> Map.replace(:second, 0)
+    |> DateTime.to_unix()
+  end
+
+  defp make_ets(opts) do
+    name = Keyword.fetch!(opts, :ets_name)
+    ^name = :ets.new(name, @ets_opts)
+    :ok
+  end
+
+  defp setup_telemetry(opts) do
+    handler = Keyword.fetch!(opts, :telemetry_handler)
+    handler_name = Keyword.fetch!(opts, :ets_name)
+
+    :ok = :telemetry.attach_many(handler_name, @telemetry_events, handler, opts)
+  end
+
+  defp init_defaults(opts) do
+    opts
+    |> Keyword.put_new(:bucket_fn, @bucket_fn)
+    |> Keyword.put_new(:ets_name, @ets_name)
+    |> Keyword.put_new(:insert_fn, @insert_fn)
+    |> Keyword.put_new(:interval, @dump_interval)
+    |> Keyword.put_new(:telemetry_handler, @telemetry_handler)
+  end
+
+  defp aggregate(metric, domain, opts) do
     bucket = Keyword.fetch!(opts, :bucket_fn).()
     ets_name = Keyword.fetch!(opts, :ets_name)
 
@@ -113,7 +141,7 @@ defmodule Plausible.Ingestion.Counters do
     )
   end
 
-  def dequeue_old_buckets(opts) do
+  defp dequeue_old_buckets(opts) do
     bucket_fn = Keyword.fetch!(opts, :bucket_fn)
     ets_name = Keyword.fetch!(opts, :ets_name)
 
@@ -132,35 +160,5 @@ defmodule Plausible.Ingestion.Counters do
         :ets.select_delete(ets_name, match_specs_delete)
         data
     end
-  end
-
-  def minute_spiral() do
-    DateTime.utc_now()
-    |> DateTime.truncate(:second)
-    |> Map.replace(:second, 0)
-    |> DateTime.to_unix()
-  end
-
-  defp make_ets(opts) do
-    name = Keyword.fetch!(opts, :ets_name)
-    ^name = :ets.new(name, @ets_opts)
-    :ok
-  end
-
-  defp setup_telemetry(opts) do
-    handler = Keyword.fetch!(opts, :telemetry_handler)
-    handler_name = Keyword.fetch!(opts, :telemetry_handler_name)
-
-    :ok = :telemetry.attach_many(handler_name, @telemetry_events, handler, opts)
-  end
-
-  defp init_defaults(opts) do
-    opts
-    |> Keyword.put_new(:bucket_fn, @bucket_fn)
-    |> Keyword.put_new(:telemetry_handler, @telemetry_handler)
-    |> Keyword.put_new(:telemetry_handler_name, @telemetry_handler_name)
-    |> Keyword.put_new(:ets_name, @ets_name)
-    |> Keyword.put_new(:interval, @dump_interval)
-    |> Keyword.put_new(:repo, @repo)
   end
 end
