@@ -1,7 +1,8 @@
 defmodule Plausible.Ingestion.Counters do
   @behaviour :gen_cycle
 
-  alias Plausible.IngestRepo
+  require Logger
+
   alias Plausible.Ingestion.Counters.Record
 
   @event_dropped Plausible.Ingestion.Event.telemetry_event_dropped()
@@ -14,6 +15,9 @@ defmodule Plausible.Ingestion.Counters do
   @dump_interval :timer.seconds(10)
   @bucket_fn &__MODULE__.minute_spiral/0
 
+  @ets_name __MODULE__
+  @repo Plausible.IngestRepo
+
   @ets_opts [
     :public,
     :ordered_set,
@@ -23,11 +27,11 @@ defmodule Plausible.Ingestion.Counters do
 
   @spec child_spec(Keyword.t()) :: Supervisor.child_spec() | :ignore
   def child_spec(opts) do
-    child_name = Keyword.get(opts, :child_name, __MODULE__)
+    ets_name = Keyword.get(opts, :ets_name, __MODULE__)
 
     %{
-      id: child_name,
-      start: {:gen_cycle, :start_link, [{:local, child_name}, __MODULE__, opts]}
+      id: ets_name,
+      start: {:gen_cycle, :start_link, [{:local, ets_name}, __MODULE__, opts]}
     }
   end
 
@@ -39,11 +43,12 @@ defmodule Plausible.Ingestion.Counters do
   def init_cycle(opts) do
     force_start? = Keyword.get(opts, :force_start?, false)
 
+    opts = init_defaults(opts)
+
     if enabled?() or force_start? do
       :ok = make_ets(opts)
       :ok = setup_telemetry(opts)
-
-      interval = Keyword.get(opts, :interval, @dump_interval)
+      interval = Keyword.fetch!(opts, :interval)
       {:ok, {interval, opts}}
     else
       :ignore
@@ -52,7 +57,7 @@ defmodule Plausible.Ingestion.Counters do
 
   @impl true
   def handle_cycle(opts) do
-    case dequeue_old_buckets() do
+    case dequeue_old_buckets(opts) do
       [] ->
         {:continue_hibernated, opts}
 
@@ -68,8 +73,16 @@ defmodule Plausible.Ingestion.Counters do
             }
           end)
 
-        IngestRepo.insert_all(Record, records)
-        |> IO.inspect(label: :inserted)
+        repo = Keyword.fetch!(opts, :repo)
+
+        try do
+          {_, _} = repo.insert_all(Record, records)
+        catch
+          _, thrown ->
+            Logger.error(
+              "Caught an error when trying to flush ingest counters: #{inspect(thrown)}"
+            )
+        end
 
         {:continue_hibernated, opts}
     end
@@ -80,26 +93,30 @@ defmodule Plausible.Ingestion.Counters do
     {:continue, state}
   end
 
-  def handle_event(@event_dropped, _measurements, %{domain: domain, reason: reason}, config) do
-    aggregate("dropped_#{reason}", domain, Map.fetch!(config, :bucket_fn))
+  def handle_event(@event_dropped, _measurements, %{domain: domain, reason: reason}, opts) do
+    aggregate("dropped_#{reason}", domain, opts)
   end
 
-  def handle_event(@event_buffered, _measurements, %{domain: domain}, config) do
-    aggregate("buffered", domain, Map.fetch!(config, :bucket_fn))
+  def handle_event(@event_buffered, _measurements, %{domain: domain}, opts) do
+    aggregate("buffered", domain, opts)
   end
 
-  def aggregate(metric, domain, bucket_fn) do
-    bucket = bucket_fn.()
+  def aggregate(metric, domain, opts) do
+    bucket = Keyword.fetch!(opts, :bucket_fn).()
+    ets_name = Keyword.fetch!(opts, :ets_name)
 
     :ets.update_counter(
-      __MODULE__,
+      ets_name,
       {bucket, metric, domain},
       {2, 1},
       {{bucket, metric, domain}, 0}
     )
   end
 
-  def dequeue_old_buckets(bucket_fn \\ @bucket_fn) do
+  def dequeue_old_buckets(opts) do
+    bucket_fn = Keyword.fetch!(opts, :bucket_fn)
+    ets_name = Keyword.fetch!(opts, :ets_name)
+
     match = {{:"$1", :"$2", :"$3"}, :"$4"}
     guard = {:<, :"$1", bucket_fn.()}
     select = {{:"$1", :"$2", :"$3", :"$4"}}
@@ -107,12 +124,12 @@ defmodule Plausible.Ingestion.Counters do
     match_specs_read = [{match, [guard], [select]}]
     match_specs_delete = [{match, [guard], [true]}]
 
-    case :ets.select(__MODULE__, match_specs_read) do
+    case :ets.select(ets_name, match_specs_read) do
       [] ->
         []
 
       data ->
-        :ets.select_delete(__MODULE__, match_specs_delete)
+        :ets.select_delete(ets_name, match_specs_delete)
         data
     end
   end
@@ -125,19 +142,25 @@ defmodule Plausible.Ingestion.Counters do
   end
 
   defp make_ets(opts) do
-    name = Keyword.get(opts, :ets_table_name, __MODULE__)
+    name = Keyword.fetch!(opts, :ets_name)
     ^name = :ets.new(name, @ets_opts)
     :ok
   end
 
   defp setup_telemetry(opts) do
-    bucket_fn = Keyword.get(opts, :bucket_fn, @bucket_fn)
-    handler = Keyword.get(opts, :telemetry_handler, @telemetry_handler)
-    handler_name = Keyword.get(opts, :telemetry_handler_name, @telemetry_handler_name)
+    handler = Keyword.fetch!(opts, :telemetry_handler)
+    handler_name = Keyword.fetch!(opts, :telemetry_handler_name)
 
-    :ok =
-      :telemetry.attach_many(handler_name, @telemetry_events, handler, %{
-        bucket_fn: bucket_fn
-      })
+    :ok = :telemetry.attach_many(handler_name, @telemetry_events, handler, opts)
+  end
+
+  defp init_defaults(opts) do
+    opts
+    |> Keyword.put_new(:bucket_fn, @bucket_fn)
+    |> Keyword.put_new(:telemetry_handler, @telemetry_handler)
+    |> Keyword.put_new(:telemetry_handler_name, @telemetry_handler_name)
+    |> Keyword.put_new(:ets_name, @ets_name)
+    |> Keyword.put_new(:interval, @dump_interval)
+    |> Keyword.put_new(:repo, @repo)
   end
 end
