@@ -29,4 +29,4 @@ config :plausible,
   http_impl: Plausible.HTTPClient.Mock,
   sites_by_domain_cache_enabled: false
 
-config :plausible, Plausible.Ingestion.Scoreboard, enabled: false
+config :plausible, Plausible.Ingestion.Counters, enabled: false

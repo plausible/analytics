@@ -10,7 +10,7 @@ defmodule Plausible.Application do
       Plausible.Repo,
       Plausible.ClickhouseRepo,
       Plausible.IngestRepo,
-      Plausible.Ingestion.Scoreboard,
+      Plausible.Ingestion.Counters,
       {Finch, name: Plausible.Finch, pools: finch_pool_config()},
       {Phoenix.PubSub, name: Plausible.PubSub},
       Plausible.Session.Salts,
