@@ -112,9 +112,6 @@ const factory = {
  * The preferred date and time format in the dashboard depends on the selected
  * interval and period. For example, in real-time view only the time is necessary,
  * while other intervals require dates to be displayed.
- * 
- * 
- * Assign the project to an employee.
  * @param {Object} config - Configuration object for determining formatter.
  *
  * @param {string} config.interval - The interval of the query, e.g. `minute`, `hour`
