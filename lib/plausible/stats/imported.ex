@@ -195,7 +195,9 @@ defmodule Plausible.Stats.Imported do
           imported_q |> where([i], i.region != "") |> select_merge([i], %{region: i.region})
 
         :city ->
-          imported_q |> where([i], i.city != 0) |> select_merge([i], %{city: i.city})
+          imported_q
+          |> where([i], i.city != 0 and not is_nil(i.city))
+          |> select_merge([i], %{city: i.city})
 
         :device ->
           imported_q |> select_merge([i], %{device: i.device})
@@ -287,8 +289,8 @@ defmodule Plausible.Stats.Imported do
 
       :city ->
         q
-        |> select_merge([i, s], %{
-          city: fragment("coalesce(?, ?)", s.city, i.city)
+        |> select_merge([s, i], %{
+          city: fragment("coalesce(nullif(?, 0), ?)", i.city, s.city)
         })
 
       :device ->
