@@ -430,6 +430,51 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                }
              ]
     end
+
+    test "Property breakdown with goal and source filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 1, referrer_source: "Google"),
+        build(:event,
+          user_id: 1,
+          name: "ButtonClick",
+          "meta.key": ["variant"],
+          "meta.value": ["A"]
+        ),
+        build(:pageview, user_id: 2, referrer_source: "Google"),
+        build(:pageview, user_id: 3, referrer_source: "ignore"),
+        build(:event,
+          user_id: 3,
+          name: "ButtonClick",
+          "meta.key": ["variant"],
+          "meta.value": ["B"]
+        )
+      ])
+
+      insert(:goal, %{domain: site.domain, event_name: "ButtonClick"})
+
+      filters =
+        Jason.encode!(%{
+          goal: "ButtonClick",
+          source: "Google"
+        })
+
+      prop_key = "variant"
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/property/#{prop_key}?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "A",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "conversion_rate" => 50.0
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/conversions - with glob goals" do
