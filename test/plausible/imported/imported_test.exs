@@ -756,7 +756,7 @@ defmodule Plausible.ImportedTest do
              ]
     end
 
-    test "Location data imported from Google Analytics", %{conn: conn, site: site} do
+    test "imports city data from Google Analytics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           country_code: "EE",
@@ -777,6 +777,7 @@ defmodule Plausible.ImportedTest do
           %{
             dimensions: %{
               "ga:countryIsoCode" => "EE",
+              "ga:city" => "Tartu",
               "ga:date" => "20210101",
               "ga:regionIsoCode" => "Tartumaa"
             },
@@ -790,6 +791,75 @@ defmodule Plausible.ImportedTest do
           %{
             dimensions: %{
               "ga:countryIsoCode" => "GB",
+              "ga:city" => "Edinburgh",
+              "ga:date" => "20210101",
+              "ga:regionIsoCode" => "Midlothian"
+            },
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "10",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          }
+        ],
+        site.id,
+        "imported_locations"
+      )
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/cities?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"code" => 588_335, "name" => "Tartu", "visitors" => 1, "country_flag" => "🇪🇪"},
+               %{
+                 "code" => 2_650_225,
+                 "name" => "Edinburgh",
+                 "visitors" => 1,
+                 "country_flag" => "🇬🇧"
+               }
+             ]
+    end
+
+    test "imports country data from Google Analytics", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          country_code: "EE",
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          country_code: "EE",
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          country_code: "GB",
+          timestamp: ~N[2021-01-01 00:15:00]
+        )
+      ])
+
+      import_data(
+        [
+          %{
+            dimensions: %{
+              "ga:countryIsoCode" => "EE",
+              "ga:city" => "Tartu",
+              "ga:date" => "20210101",
+              "ga:regionIsoCode" => "Tartumaa"
+            },
+            metrics: %{
+              "ga:bounces" => "0",
+              "ga:sessionDuration" => "10",
+              "ga:sessions" => "1",
+              "ga:users" => "1"
+            }
+          },
+          %{
+            dimensions: %{
+              "ga:countryIsoCode" => "GB",
+              "ga:city" => "Edinburgh",
               "ga:date" => "20210101",
               "ga:regionIsoCode" => "Midlothian"
             },

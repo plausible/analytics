@@ -14,7 +14,7 @@ user = Plausible.Factory.insert(:user, email: "user@plausible.test", password: "
 
 site = Plausible.Factory.insert(:site, domain: "dummy.site")
 
-membership = Plausible.Factory.insert(:site_membership, user: user, site: site, role: :owner)
+_membership = Plausible.Factory.insert(:site_membership, user: user, site: site, role: :owner)
 
 put_random_time = fn date ->
   random_time = Time.new!(:rand.uniform(23), :rand.uniform(59), 0)
