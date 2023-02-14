@@ -1,6 +1,9 @@
 defmodule Plausible.Ingestion.Scoreboard do
   @behaviour :gen_cycle
 
+  alias Plausible.IngestRepo
+  alias Plausible.Ingestion.Scoreboard.Record
+
   @event_dropped Plausible.Ingestion.Event.telemetry_event_dropped()
   @event_buffered Plausible.Ingestion.Event.telemetry_event_buffered()
 
@@ -9,7 +12,7 @@ defmodule Plausible.Ingestion.Scoreboard do
   @telemetry_handler_name "ingest-scoreboard"
 
   @dump_interval :timer.seconds(10)
-  @bucket_fn &__MODULE__.current_bucket/0
+  @bucket_fn &__MODULE__.minute_spiral/0
 
   @ets_opts [
     :public,
@@ -49,9 +52,27 @@ defmodule Plausible.Ingestion.Scoreboard do
 
   @impl true
   def handle_cycle(opts) do
-    IO.inspect(dump(), label: :dumplings)
+    case dequeue_old_buckets() do
+      [] ->
+        {:continue_hibernated, opts}
 
-    {:continue_hibernated, opts}
+      records ->
+        records =
+          Enum.map(records, fn {bucket, metric, domain, value} ->
+            %{
+              event_timebucket: DateTime.from_unix!(bucket),
+              application: to_string(node()),
+              metric: metric,
+              domain: domain,
+              value: value
+            }
+          end)
+
+        IngestRepo.insert_all(Record, records)
+        |> IO.inspect(label: :inserted)
+
+        {:continue_hibernated, opts}
+    end
   end
 
   @impl true
@@ -60,14 +81,14 @@ defmodule Plausible.Ingestion.Scoreboard do
   end
 
   def handle_event(@event_dropped, _measurements, %{domain: domain, reason: reason}, config) do
-    save("dropped_#{reason}", domain, Map.fetch!(config, :bucket_fn))
+    aggregate("dropped_#{reason}", domain, Map.fetch!(config, :bucket_fn))
   end
 
   def handle_event(@event_buffered, _measurements, %{domain: domain}, config) do
-    save("buffered", domain, Map.fetch!(config, :bucket_fn))
+    aggregate("buffered", domain, Map.fetch!(config, :bucket_fn))
   end
 
-  def save(metric, domain, bucket_fn) do
+  def aggregate(metric, domain, bucket_fn) do
     bucket = bucket_fn.()
 
     :ets.update_counter(
@@ -78,19 +99,25 @@ defmodule Plausible.Ingestion.Scoreboard do
     )
   end
 
-  def dump(bucket_fn \\ @bucket_fn) do
+  def dequeue_old_buckets(bucket_fn \\ @bucket_fn) do
     match = {{:"$1", :"$2", :"$3"}, :"$4"}
     guard = {:<, :"$1", bucket_fn.()}
     select = {{:"$1", :"$2", :"$3", :"$4"}}
 
-    match_specs = [
-      {match, [guard], [select]}
-    ]
+    match_specs_read = [{match, [guard], [select]}]
+    match_specs_delete = [{match, [guard], [true]}]
 
-    :ets.select(__MODULE__, match_specs)
+    case :ets.select(__MODULE__, match_specs_read) do
+      [] ->
+        []
+
+      data ->
+        :ets.select_delete(__MODULE__, match_specs_delete)
+        data
+    end
   end
 
-  def current_bucket() do
+  def minute_spiral() do
     DateTime.utc_now()
     |> DateTime.truncate(:second)
     |> Map.replace(:second, 0)
