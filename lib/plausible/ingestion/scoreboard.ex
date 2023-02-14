@@ -28,13 +28,23 @@ defmodule Plausible.Ingestion.Scoreboard do
     }
   end
 
+  def enabled?() do
+    Application.fetch_env!(:plausible, __MODULE__)[:enabled] == true
+  end
+
   @impl true
   def init_cycle(opts) do
-    :ok = make_ets(opts)
-    :ok = setup_telemetry(opts)
+    force_start? = Keyword.get(opts, :force_start?, false)
 
-    interval = Keyword.get(opts, :interval, @dump_interval)
-    {:ok, {interval, opts}}
+    if enabled?() or force_start? do
+      :ok = make_ets(opts)
+      :ok = setup_telemetry(opts)
+
+      interval = Keyword.get(opts, :interval, @dump_interval)
+      {:ok, {interval, opts}}
+    else
+      :ignore
+    end
   end
 
   @impl true
