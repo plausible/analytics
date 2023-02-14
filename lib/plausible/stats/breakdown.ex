@@ -336,12 +336,13 @@ defmodule Plausible.Stats.Breakdown do
       else
         from(
           e in q,
-          inner_lateral_join: meta in fragment("meta")
+          inner_lateral_join: meta in fragment("meta"),
+          as: :meta
         )
       end
 
     from(
-      [e, meta] in q,
+      [e, meta: meta] in q,
       where: meta.key == ^prop,
       group_by: meta.value,
       select_merge: %{^prop => meta.value},
