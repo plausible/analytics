@@ -29,7 +29,7 @@ export default function MyCombobox(props) {
 
   function onOpen() {
     setOptions([])
-    fetchOptions(props.selection.value)
+    fetchOptions(props.selection.label)
   }
 
   function onBlur(e) {

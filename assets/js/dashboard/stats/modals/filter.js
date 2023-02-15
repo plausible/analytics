@@ -29,32 +29,31 @@ function getFormState(filterGroup, query) {
 
     if (entries && entries.length == 1) {
       const propKey = entries[0][0]
-      const propValue = valueWithoutPrefix(entries[0][1])
+      const {type, value} = parseQueryFilter(entries[0][1])
 
       return {
         'prop_key': { label: propKey, value: propKey, type: FILTER_TYPES.is },
-        'prop_value': { label: propValue, value: propValue, type: toFilterType(entries[0][1]) }
+        'prop_value': { label: value, value: value, type: type }
       }
     }
   }
 
   return FILTER_GROUPS[filterGroup].reduce((result, filter) => {
     const rawFilterValue = query.filters[filter] || ''
-    const type = toFilterType(rawFilterValue)
-    const filterValue = valueWithoutPrefix(rawFilterValue)
+    const {type, value} = parseQueryFilter(rawFilterValue)
 
-    let filterLabel = filterValue
+    let filterLabel = value
 
-    if (filter === 'country' && filterValue !== '') {
+    if (filter === 'country' && value !== '') {
       filterLabel = (new URLSearchParams(window.location.search)).get('country_name')
     }
-    if (filter === 'region' && filterValue !== '') {
+    if (filter === 'region' && value !== '') {
       filterLabel = (new URLSearchParams(window.location.search)).get('region_name')
     }
-    if (filter === 'city' && filterValue !== '') {
+    if (filter === 'city' && value !== '') {
       filterLabel = (new URLSearchParams(window.location.search)).get('city_name')
     }
-    return Object.assign(result, { [filter]: { label: filterLabel, value: filterValue, type } })
+    return Object.assign(result, { [filter]: { label: filterLabel, value: value, type } })
   }, {})
 }
 
@@ -70,15 +69,15 @@ const FILTER_PREFIXES = {
   [FILTER_TYPES.is]: ''
 };
 
-export function toFilterType(value) {
-  return Object.keys(FILTER_PREFIXES)
-    .find(type => FILTER_PREFIXES[type] === value[0]) || FILTER_TYPES.is;
-}
+export function parseQueryFilter(queryFilter) {
+  const type = Object.keys(FILTER_PREFIXES)
+    .find(type => FILTER_PREFIXES[type] === queryFilter[0]) || FILTER_TYPES.is;
 
-export function valueWithoutPrefix(value) {
-  return [FILTER_TYPES.isNot, FILTER_TYPES.contains].includes(toFilterType(value))
-    ? value.substring(1)
-    : value;
+  const value = [FILTER_TYPES.isNot, FILTER_TYPES.contains].includes(type)
+    ? queryFilter.substring(1)
+    : queryFilter;
+
+  return {type, value}
 }
 
 function toFilterQuery(value, type) {
