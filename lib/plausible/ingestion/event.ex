@@ -71,6 +71,16 @@ defmodule Plausible.Ingestion.Event do
     [:plausible, :ingest, :event, :dropped]
   end
 
+  @spec emit_telemetry_buffered(String.t()) :: :ok
+  def emit_telemetry_buffered(domain) do
+    :telemetry.execute(telemetry_event_buffered(), %{}, %{domain: domain})
+  end
+
+  @spec emit_telemetry_dropped(String.t(), drop_reason()) :: :ok
+  def emit_telemetry_dropped(domain, reason) do
+    :telemetry.execute(telemetry_event_dropped(), %{}, %{domain: domain, reason: reason})
+  end
+
   defp pipeline() do
     [
       &put_user_agent/1,
@@ -374,12 +384,4 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp spam_referrer?(_), do: false
-
-  defp emit_telemetry_buffered(domain) do
-    :telemetry.execute(telemetry_event_buffered(), %{}, %{domain: domain})
-  end
-
-  defp emit_telemetry_dropped(domain, reason) do
-    :telemetry.execute(telemetry_event_dropped(), %{}, %{domain: domain, reason: reason})
-  end
 end

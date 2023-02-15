@@ -1,64 +1,61 @@
 defmodule Plausible.Ingestion.Counters do
+  @moduledoc """
+  This is instrumentation necessary for keeping track of per-domain
+  internal metrics. Due to metric labels cardinatlity (domain x metric_name),
+  these statistics are not suitable for prometheus/grafana exposure,
+  hence an internal storage is used.
+
+  The module installs `Counters.TelemetryHandler` and periodicially
+  flushes the internal counter aggregates via `Counters.Buffer` interface.
+  """
+
   @behaviour :gen_cycle
 
   require Logger
 
+  alias Plausible.Ingestion.Counters.Buffer
   alias Plausible.Ingestion.Counters.Record
+  alias Plausible.Ingestion.Counters.TelemetryHandler
 
-  @event_dropped Plausible.Ingestion.Event.telemetry_event_dropped()
-  @event_buffered Plausible.Ingestion.Event.telemetry_event_buffered()
-
-  @telemetry_events [@event_dropped, @event_buffered]
-  @telemetry_handler &__MODULE__.handle_event/4
-
-  @dump_interval :timer.seconds(10)
-  @bucket_fn &__MODULE__.minute_spiral/0
-
-  @ets_name __MODULE__
-  @insert_fn &Plausible.IngestRepo.insert_all/2
-
-  @ets_opts [
-    :public,
-    :ordered_set,
-    :named_table,
-    write_concurrency: true
-  ]
+  @interval :timer.seconds(10)
 
   @spec child_spec(Keyword.t()) :: Supervisor.child_spec() | :ignore
   def child_spec(opts) do
-    ets_name = Keyword.get(opts, :ets_name, __MODULE__)
+    buffer_name = Keyword.get(opts, :buffer_name, __MODULE__)
 
     %{
-      id: ets_name,
-      start: {:gen_cycle, :start_link, [{:local, ets_name}, __MODULE__, opts]}
+      id: buffer_name,
+      start: {:gen_cycle, :start_link, [{:local, buffer_name}, __MODULE__, opts]}
     }
   end
 
+  @spec enabled?() :: boolean()
   def enabled?() do
     Application.fetch_env!(:plausible, __MODULE__)[:enabled] == true
   end
 
   @impl true
   def init_cycle(opts) do
+    buffer_name = Keyword.get(opts, :buffer_name, __MODULE__)
     force_start? = Keyword.get(opts, :force_start?, false)
 
-    opts = init_defaults(opts)
-
     if enabled?() or force_start? do
-      :ok = make_ets(opts)
-      :ok = setup_telemetry(opts)
-      interval = Keyword.fetch!(opts, :interval)
-      {:ok, {interval, opts}}
+      buffer = Buffer.new(buffer_name, opts)
+      :ok = TelemetryHandler.install(buffer)
+
+      interval = Keyword.get(opts, :interval, @interval)
+
+      {:ok, {interval, buffer}}
     else
       :ignore
     end
   end
 
   @impl true
-  def handle_cycle(opts) do
-    case dequeue_old_buckets(opts) do
+  def handle_cycle(buffer) do
+    case Buffer.flush(buffer) do
       [] ->
-        {:continue_hibernated, opts}
+        :noop
 
       records ->
         records =
@@ -72,93 +69,23 @@ defmodule Plausible.Ingestion.Counters do
             }
           end)
 
-        insert_fn = Keyword.fetch!(opts, :insert_fn)
-
         try do
-          {_, _} = insert_fn.(Record, records)
+          # XXX: This must be changed to async_insert=1 clause
+          # Trying to figure out how to do that with the current driver
+          {_, _} = Plausible.IngestRepo.insert_all(Record, records)
         catch
           _, thrown ->
             Logger.error(
               "Caught an error when trying to flush ingest counters: #{inspect(thrown)}"
             )
         end
-
-        {:continue_hibernated, opts}
     end
+
+    {:continue_hibernated, buffer}
   end
 
   @impl true
   def handle_info(_msg, state) do
     {:continue, state}
-  end
-
-  def handle_event(@event_dropped, _measurements, %{domain: domain, reason: reason}, opts) do
-    aggregate("dropped_#{reason}", domain, opts)
-  end
-
-  def handle_event(@event_buffered, _measurements, %{domain: domain}, opts) do
-    aggregate("buffered", domain, opts)
-  end
-
-  def minute_spiral(now \\ DateTime.utc_now()) do
-    now
-    |> DateTime.truncate(:second)
-    |> Map.replace(:second, 0)
-    |> DateTime.to_unix()
-  end
-
-  defp make_ets(opts) do
-    name = Keyword.fetch!(opts, :ets_name)
-    ^name = :ets.new(name, @ets_opts)
-    :ok
-  end
-
-  defp setup_telemetry(opts) do
-    handler = Keyword.fetch!(opts, :telemetry_handler)
-    handler_name = Keyword.fetch!(opts, :ets_name)
-
-    :ok = :telemetry.attach_many(handler_name, @telemetry_events, handler, opts)
-  end
-
-  defp init_defaults(opts) do
-    opts
-    |> Keyword.put_new(:bucket_fn, @bucket_fn)
-    |> Keyword.put_new(:ets_name, @ets_name)
-    |> Keyword.put_new(:insert_fn, @insert_fn)
-    |> Keyword.put_new(:interval, @dump_interval)
-    |> Keyword.put_new(:telemetry_handler, @telemetry_handler)
-  end
-
-  defp aggregate(metric, domain, opts) do
-    bucket = Keyword.fetch!(opts, :bucket_fn).()
-    ets_name = Keyword.fetch!(opts, :ets_name)
-
-    :ets.update_counter(
-      ets_name,
-      {bucket, metric, domain},
-      {2, 1},
-      {{bucket, metric, domain}, 0}
-    )
-  end
-
-  defp dequeue_old_buckets(opts) do
-    bucket_fn = Keyword.fetch!(opts, :bucket_fn)
-    ets_name = Keyword.fetch!(opts, :ets_name)
-
-    match = {{:"$1", :"$2", :"$3"}, :"$4"}
-    guard = {:<, :"$1", bucket_fn.()}
-    select = {{:"$1", :"$2", :"$3", :"$4"}}
-
-    match_specs_read = [{match, [guard], [select]}]
-    match_specs_delete = [{match, [guard], [true]}]
-
-    case :ets.select(ets_name, match_specs_read) do
-      [] ->
-        []
-
-      data ->
-        :ets.select_delete(ets_name, match_specs_delete)
-        data
-    end
   end
 end
