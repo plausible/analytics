@@ -29,9 +29,11 @@ defmodule Plausible.Ingestion.Counters.TelemetryHandler do
   @spec handle_event([atom()], any(), map(), Counters.Buffer.t()) :: :ok
   def handle_event(@event_dropped, _measurements, %{domain: domain, reason: reason}, buffer) do
     Counters.Buffer.aggregate(buffer, "dropped_#{reason}", domain)
+    :ok
   end
 
   def handle_event(@event_buffered, _measurements, %{domain: domain}, buffer) do
     Counters.Buffer.aggregate(buffer, "buffered", domain)
+    :ok
   end
 end
