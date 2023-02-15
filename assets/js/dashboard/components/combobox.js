@@ -12,7 +12,7 @@ function Spinner() {
   )
 }
 
-export default function MyCombobox(props) {
+export default function PlausibleCombobox(props) {
   const [options, setOptions] = useState([])
   const [loading, setLoading] = useState(false)
 
