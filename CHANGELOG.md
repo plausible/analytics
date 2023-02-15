@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Add support for more Bamboo adapters, i.e. `Bamboo.MailgunAdapter`, `Bamboo.MandrillAdapter`, `Bamboo.SendGridAdapter` plausible/analytics#2649
 
 ### Fixed
+- City report showing N/A instead of city names with imported data plausible/analytics#2675
 - Empty values for Screen Size, OS and Browser are uniformly replaced with "(not set)"
 - Fix [more pageviews with session prop filter than with no filters](https://github.com/plausible/analytics/issues/1666)
 - Cascade delete sent_renewal_notifications table when user is deleted plausible/analytics#2549
