@@ -11,7 +11,7 @@ defmodule Plausible.Ingestion.CountersTest do
   describe "integration" do
     test "periodically flushes buffer aggregates to the database", %{test: test} do
       on_exit(:detach, fn ->
-        :telemetry.detach(test)
+        :telemetry.detach("ingest-counters-#{test}")
       end)
 
       start_counters(

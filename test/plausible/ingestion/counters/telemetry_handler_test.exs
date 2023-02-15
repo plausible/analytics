@@ -7,7 +7,7 @@ defmodule Plausible.Ingestion.Counters.TelemetryHandlerTest do
 
   test "install/1 attaches a telemetry handler", %{test: test} do
     on_exit(:detach, fn ->
-      :telemetry.detach(test)
+      :telemetry.detach("ingest-counters-#{test}")
     end)
 
     buffer = Buffer.new(test)
@@ -28,7 +28,7 @@ defmodule Plausible.Ingestion.Counters.TelemetryHandlerTest do
 
   test "handles ingest events by aggregating the counts", %{test: test} do
     on_exit(:detach, fn ->
-      :telemetry.detach(test)
+      :telemetry.detach("ingest-counters-#{test}")
     end)
 
     buffer = Buffer.new(test)
