@@ -95,7 +95,13 @@ defmodule PlausibleWeb.StatsController do
     site = conn.assigns[:site]
     query = Query.from(site, params) |> Filters.add_prefix()
 
-    metrics = [:visitors, :pageviews, :bounce_rate, :visit_duration]
+
+    metrics = if query.filters["event:goal"] do
+      [:visitors, :pageviews, :bounce_rate, :visit_duration]
+    else
+      [:visitors, :pageviews, :visits, :bounce_rate, :visit_duration]
+    end
+
     graph = Plausible.Stats.timeseries(site, query, metrics)
     headers = [:date | metrics]
 
