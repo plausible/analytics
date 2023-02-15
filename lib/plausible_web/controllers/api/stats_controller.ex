@@ -365,6 +365,7 @@ defmodule PlausibleWeb.Api.StatsController do
       [
         top_stats_entry(current_results, prev_results, "Unique visitors", :visitors),
         top_stats_entry(current_results, prev_results, "Total pageviews", :pageviews),
+        top_stats_entry(current_results, prev_results, "Visits", :visits),
         top_stats_entry(current_results, prev_results, "Bounce rate", :bounce_rate),
         top_stats_entry(current_results, prev_results, "Visit duration", :visit_duration),
         top_stats_entry(current_results, prev_results, "Time on page", :time_on_page)
