@@ -6,6 +6,10 @@ defmodule Plausible.Ingestion.Counters.TelemetryHandlerTest do
   alias Plausible.Ingestion.Event
 
   test "install/1 attaches a telemetry handler", %{test: test} do
+    on_exit(:detach, fn ->
+      :telemetry.detach(test)
+    end)
+
     buffer = Buffer.new(test)
     assert :ok = TelemetryHandler.install(buffer)
 
@@ -23,6 +27,10 @@ defmodule Plausible.Ingestion.Counters.TelemetryHandlerTest do
   end
 
   test "handles ingest events by aggregating the counts", %{test: test} do
+    on_exit(:detach, fn ->
+      :telemetry.detach(test)
+    end)
+
     buffer = Buffer.new(test)
     assert :ok = TelemetryHandler.install(buffer)
 
@@ -33,15 +41,10 @@ defmodule Plausible.Ingestion.Counters.TelemetryHandlerTest do
 
     future = DateTime.utc_now() |> DateTime.add(120, :second)
 
-    assert aggregates =
-             buffer
-             |> Buffer.flush(future)
-             |> Enum.sort_by(&elem(&1, 2))
+    assert aggregates = Buffer.flush(buffer, future)
 
-    assert [
-             {_, "dropped_invalid", "a.example.com", 1},
-             {_, "dropped_not_found", "b.example.com", 2},
-             {_, "buffered", "c.example.com", 1}
-           ] = aggregates
+    assert Enum.find(aggregates, &match?({_, "dropped_invalid", "a.example.com", 1}, &1))
+    assert Enum.find(aggregates, &match?({_, "dropped_not_found", "b.example.com", 2}, &1))
+    assert Enum.find(aggregates, &match?({_, "buffered", "c.example.com", 1}, &1))
   end
 end

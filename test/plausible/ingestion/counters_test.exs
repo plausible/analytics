@@ -10,6 +10,10 @@ defmodule Plausible.Ingestion.CountersTest do
 
   describe "integration" do
     test "periodically flushes buffer aggregates to the database", %{test: test} do
+      on_exit(:detach, fn ->
+        :telemetry.detach(test)
+      end)
+
       start_counters(
         buffer_name: test,
         interval: 100,
@@ -17,8 +21,6 @@ defmodule Plausible.Ingestion.CountersTest do
           System.os_time(:second)
         end
       )
-
-      Logger.configure(level: :debug)
 
       {:ok, dropped} = emit_dropped_request()
       {:ok, buffered} = emit_buffered_request()
