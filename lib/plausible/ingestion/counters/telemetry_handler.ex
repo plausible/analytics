@@ -2,7 +2,7 @@ defmodule Plausible.Ingestion.Counters.TelemetryHandler do
   @moduledoc """
   Susbcribes to telemetry events emitted by `Plausible.Ingestion.Event`.
   Every time a user-event is either dispatched to clickhouse or dropped,
-  a telemetry event is emitted respecitvely. That event is captured here,
+  a telemetry event is emitted respectively. That event is captured here,
   its metadata is extracted and sent for internal stats aggregation via
   `Counters.Buffer` interface. 
   """
