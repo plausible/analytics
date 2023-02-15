@@ -32,8 +32,8 @@ function getFormState(filterGroup, query) {
       const propValue = valueWithoutPrefix(entries[0][1])
 
       return {
-        'prop_key': { name: propKey, value: propKey, type: FILTER_TYPES.is },
-        'prop_value': { name: propValue, value: propValue, type: toFilterType(entries[0][1]) }
+        'prop_key': { label: propKey, value: propKey, type: FILTER_TYPES.is },
+        'prop_value': { label: propValue, value: propValue, type: toFilterType(entries[0][1]) }
       }
     }
   }
@@ -43,18 +43,18 @@ function getFormState(filterGroup, query) {
     const type = toFilterType(rawFilterValue)
     const filterValue = valueWithoutPrefix(rawFilterValue)
 
-    let filterName = filterValue
+    let filterLabel = filterValue
 
     if (filter === 'country' && filterValue !== '') {
-      filterName = (new URLSearchParams(window.location.search)).get('country_name')
+      filterLabel = (new URLSearchParams(window.location.search)).get('country_name')
     }
     if (filter === 'region' && filterValue !== '') {
-      filterName = (new URLSearchParams(window.location.search)).get('region_name')
+      filterLabel = (new URLSearchParams(window.location.search)).get('region_name')
     }
     if (filter === 'city' && filterValue !== '') {
-      filterName = (new URLSearchParams(window.location.search)).get('city_name')
+      filterLabel = (new URLSearchParams(window.location.search)).get('city_name')
     }
-    return Object.assign(result, { [filter]: { name: filterName, value: filterValue, type } })
+    return Object.assign(result, { [filter]: { label: filterLabel, value: filterValue, type } })
   }, {})
 }
 
@@ -161,10 +161,10 @@ class FilterModal extends React.Component {
   handleSubmit() {
     const { formState } = this.state;
 
-    const filters = Object.entries(formState).reduce((res, [filterKey, { type, value, name }]) => {
-      if (filterKey === 'country') { res.push({ filter: 'country_name', value: name }) }
-      if (filterKey === 'region') { res.push({ filter: 'region_name', value: name }) }
-      if (filterKey === 'city') { res.push({ filter: 'city_name', value: name }) }
+    const filters = Object.entries(formState).reduce((res, [filterKey, { type, value, label }]) => {
+      if (filterKey === 'country') { res.push({ filter: 'country_name', value: label }) }
+      if (filterKey === 'region') { res.push({ filter: 'region_name', value: label }) }
+      if (filterKey === 'city') { res.push({ filter: 'city_name', value: label }) }
       if (filterKey === 'prop_value') { return res }
       if (filterKey === 'prop_key') {
         let propValue = formState['prop_value']
@@ -180,27 +180,11 @@ class FilterModal extends React.Component {
     this.selectFiltersAndCloseModal(filters)
   }
 
-  onSelect(filterName) {
-    return (value) => {
-      console.log('onSelect: ' + value)
+  onChange(filterName) {
+    return (selection) => {
       this.setState(prevState => ({
         formState: Object.assign(prevState.formState, {
-          [filterName]: Object.assign(prevState.formState[filterName], { value: value.code, name: value.name })
-        })
-      }))
-    }
-  }
-
-  onInput(filterName) {
-    if (this.state.selectedFilterGroup === 'location') {
-      return () => { }
-    }
-
-    return (value) => {
-      console.log('onInput: ' + value)
-      this.setState(prevState => ({
-        formState: Object.assign(prevState.formState, {
-          [filterName]: Object.assign(prevState.formState[filterName], { value })
+          [filterName]: Object.assign(prevState.formState[filterName], selection)
         })
       }))
     }
@@ -260,7 +244,8 @@ class FilterModal extends React.Component {
   }
 
   renderSearchBox(filter) {
-    return <Combobox fetchOptions={this.fetchOptions(filter)} initialSelectedItem={this.state.formState[filter]} onInput={this.onInput(filter)} onSelect={this.onSelect(filter)} placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`} />
+    const isStrict = this.state.selectedFilterGroup === 'location'
+    return <Combobox fetchOptions={this.fetchOptions(filter)} strict={isStrict} selection={this.state.formState[filter]} onChange={this.onChange(filter)} placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`} />
   }
 
   renderFilterInputs() {

@@ -21,8 +21,8 @@ defmodule Plausible.Stats.FilterSuggestions do
     |> Enum.slice(0..24)
     |> Enum.map(fn match ->
       %{
-        code: match.alpha_2,
-        name: match.name
+        value: match.alpha_2,
+        label: match.name
       }
     end)
   end
@@ -41,8 +41,8 @@ defmodule Plausible.Stats.FilterSuggestions do
       subdiv = Location.get_subdivision(c)
 
       %{
-        code: c,
-        name: subdiv.name
+        value: c,
+        label: subdiv.name
       }
     end)
   end
@@ -64,8 +64,8 @@ defmodule Plausible.Stats.FilterSuggestions do
     |> Enum.slice(0..24)
     |> Enum.map(fn subdiv ->
       %{
-        code: subdiv.code,
-        name: subdiv.name
+        value: subdiv.code,
+        label: subdiv.name
       }
     end)
   end
@@ -84,8 +84,8 @@ defmodule Plausible.Stats.FilterSuggestions do
       city = Location.get_city(c)
 
       %{
-        code: Integer.to_string(c),
-        name: (city && city.name) || "N/A"
+        value: Integer.to_string(c),
+        label: (city && city.name) || "N/A"
       }
     end)
   end
@@ -111,8 +111,8 @@ defmodule Plausible.Stats.FilterSuggestions do
     |> Enum.slice(0..24)
     |> Enum.map(fn c ->
       %{
-        code: Integer.to_string(c.id),
-        name: c.name
+        value: Integer.to_string(c.id),
+        label: c.name
       }
     end)
   end
@@ -127,6 +127,7 @@ defmodule Plausible.Stats.FilterSuggestions do
         String.downcase(filter_search)
       )
     end)
+    |> wrap_suggestions()
   end
 
   def filter_suggestions(site, query, "prop_key", filter_search) do
@@ -151,6 +152,7 @@ defmodule Plausible.Stats.FilterSuggestions do
 
     ClickhouseRepo.all(q)
     |> Enum.filter(fn suggestion -> suggestion != "" end)
+    |> wrap_suggestions()
   end
 
   def filter_suggestions(site, query, "prop_value", filter_search) do
@@ -175,6 +177,7 @@ defmodule Plausible.Stats.FilterSuggestions do
 
     ClickhouseRepo.all(q)
     |> Enum.filter(fn suggestion -> suggestion != "" end)
+    |> wrap_suggestions()
   end
 
   def filter_suggestions(site, query, filter_name, filter_search) do
@@ -298,5 +301,10 @@ defmodule Plausible.Stats.FilterSuggestions do
 
     ClickhouseRepo.all(q)
     |> Enum.filter(fn suggestion -> suggestion != "" end)
+    |> wrap_suggestions()
+  end
+
+  defp wrap_suggestions(list) do
+    Enum.map(list, fn val -> %{value: val, label: val} end)
   end
 end
