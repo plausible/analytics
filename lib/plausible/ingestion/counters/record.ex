@@ -1,4 +1,7 @@
 defmodule Plausible.Ingestion.Counters.Record do
+  @moduledoc """
+  Clickhouse schema for storing ingest counter metrics
+  """
   use Ecto.Schema
 
   @primary_key false
