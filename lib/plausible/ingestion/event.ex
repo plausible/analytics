@@ -311,6 +311,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp screen_size(ua) do
     case ua.device do
       %UAInspector.Result.Device{type: "smartphone"} -> "Mobile"
