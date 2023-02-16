@@ -84,10 +84,6 @@ function ScreenSizes({ query, site }) {
     return iconFor(screenSize.name)
   }
 
-  function renderTooltipText(screenSize) {
-    return EXPLANATION[screenSize.name]
-  }
-
   return (
     <ListReport
       fetchData={fetchData}
@@ -95,16 +91,8 @@ function ScreenSizes({ query, site }) {
       keyLabel="Screen size"
       query={query}
       renderIcon={renderIcon}
-      tooltipText={renderTooltipText}
     />
   )
-}
-
-const EXPLANATION = {
-  'Mobile': 'up to 576px',
-  'Tablet': '576px to 992px',
-  'Laptop': '992px to 1440px',
-  'Desktop': 'above 1440px',
 }
 
 function iconFor(screenSize) {
