@@ -8,14 +8,14 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
       populate_stats(site, [
         build(:pageview, screen_size: "Desktop"),
         build(:pageview, screen_size: "Desktop"),
-        build(:pageview, screen_size: "Laptop")
+        build(:pageview, screen_size: "Mobile")
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
 
       assert json_response(conn, 200) == [
                %{"name" => "Desktop", "visitors" => 2, "percentage" => 67},
-               %{"name" => "Laptop", "visitors" => 1, "percentage" => 33}
+               %{"name" => "Mobile", "visitors" => 1, "percentage" => 33}
              ]
     end
 
@@ -119,27 +119,26 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
       populate_stats(site, [
         build(:pageview, screen_size: "Desktop"),
         build(:pageview, screen_size: "Desktop"),
-        build(:pageview, screen_size: "Laptop")
+        build(:pageview, screen_size: "Mobile")
       ])
 
       populate_stats(site, [
         build(:imported_devices, device: "Mobile"),
-        build(:imported_devices, device: "Laptop")
+        build(:imported_devices, device: "Mobile")
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
 
       assert json_response(conn, 200) == [
                %{"name" => "Desktop", "visitors" => 2, "percentage" => 67},
-               %{"name" => "Laptop", "visitors" => 1, "percentage" => 33}
+               %{"name" => "Mobile", "visitors" => 1, "percentage" => 33}
              ]
 
       conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&with_imported=true")
 
       assert json_response(conn, 200) == [
                %{"name" => "Desktop", "visitors" => 2, "percentage" => 40},
-               %{"name" => "Laptop", "visitors" => 2, "percentage" => 40},
-               %{"name" => "Mobile", "visitors" => 1, "percentage" => 20}
+               %{"name" => "Mobile", "visitors" => 3, "percentage" => 20}
              ]
     end
 

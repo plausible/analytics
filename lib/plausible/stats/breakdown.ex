@@ -515,11 +515,18 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:device") do
     from(
       s in q,
-      group_by: s.screen_size,
       select_merge: %{
-        device: fragment("if(empty(?), ?, ?)", s.screen_size, @not_set, s.screen_size)
+        device:
+          fragment(
+            "multiIf(empty(?), ?, ? = 'Laptop', 'Desktop', ?) as device",
+            s.screen_size,
+            @not_set,
+            s.screen_size,
+            s.screen_size
+          )
       },
-      order_by: {:asc, s.screen_size}
+      group_by: fragment("device"),
+      order_by: fragment("device ASC")
     )
   end
 
