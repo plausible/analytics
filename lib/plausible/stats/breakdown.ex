@@ -9,7 +9,7 @@ defmodule Plausible.Stats.Breakdown do
 
   @event_metrics [:visitors, :pageviews, :events]
   @session_metrics [:visits, :bounce_rate, :visit_duration]
-  @event_props ["event:page", "event:page_match", "event:name"]
+  @event_props Plausible.Stats.Props.event_props()
 
   def breakdown(site, query, "event:goal" = property, metrics, pagination) do
     {event_goals, pageview_goals} =
