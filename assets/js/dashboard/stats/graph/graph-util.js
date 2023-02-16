@@ -37,8 +37,14 @@ export const LoadingState = {
 const buildComparisonDataset = function(comparisonPlot, presentIndex) {
   if (!comparisonPlot) return []
 
+  let data = [...comparisonPlot]
+  if (presentIndex) {
+    const dashedPartIncludedIndex = presentIndex + 1
+    data = data.slice(0, dashedPartIncludedIndex)
+  }
+
   return [{
-    data: comparisonPlot.slice(0, presentIndex),
+    data: data,
     borderColor: 'rgba(60,70,110,0.2)',
     pointBackgroundColor: 'rgba(60,70,110,0.2)',
     pointHoverBackgroundColor: 'rgba(60, 70, 110)',
