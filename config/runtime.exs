@@ -247,19 +247,6 @@ end
 included_environments = if sentry_dsn, do: ["prod", "staging", "dev"], else: []
 sentry_app_version = runtime_metadata[:version] || app_version
 
-add_async_insert = fn url ->
-  uri = URI.parse(url)
-
-  query =
-    uri.query ||
-      ""
-      |> URI.decode_query()
-      |> Map.put("custom_http_params", "async_insert=1,wait_for_async_insert=0")
-      |> URI.encode_query()
-
-  to_string(%{uri | query: query})
-end
-
 config :sentry,
   dsn: sentry_dsn,
   environment_name: env,
@@ -302,13 +289,6 @@ config :plausible, Plausible.IngestRepo,
   flush_interval_ms: ch_flush_interval_ms,
   max_buffer_size: ch_max_buffer_size,
   pool_size: ingest_pool_size
-
-config :plausible, Plausible.IngestRepoAsync,
-  loggers: [Ecto.LogEntry],
-  queue_target: 500,
-  queue_interval: 2000,
-  url: add_async_insert.(ch_db_url),
-  pool_size: 1
 
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
