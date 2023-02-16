@@ -38,6 +38,63 @@ const truncateToPresentIndex = function(array, presentIndex) {
   return array.slice(0, presentIndex)
 }
 
+const buildComparisonDataset = function(comparisonPlot, presentIndex, label, gradient) {
+  if (!comparisonPlot) return []
+
+  return [{
+    label,
+    data: truncateToPresentIndex(comparisonPlot, presentIndex),
+    borderWidth: 3,
+    borderColor: 'rgba(60,70,110,0.2)',
+    pointBackgroundColor: 'rgba(60,70,110,0.2)',
+    pointHoverBackgroundColor: 'rgba(60, 70, 110)',
+    pointBorderColor: 'transparent',
+    pointHoverRadius: 4,
+    backgroundColor: gradient,
+    fill: true,
+    yAxisID: 'yComparison',
+  }]
+}
+
+const buildDashedDataset = function(plot, presentIndex, label, gradient) {
+  if (!presentIndex) return []
+
+  const dashedPart = plot.slice(presentIndex - 1, presentIndex + 1);
+  const dashedPlot = (new Array(presentIndex - 1)).concat(dashedPart)
+
+  return [{
+    label,
+    data: dashedPlot,
+    borderWidth: 3,
+    borderDash: [3, 3],
+    borderColor: 'rgba(101,116,205)',
+    pointHoverBackgroundColor: 'rgba(71, 87, 193)',
+    pointBorderColor: 'transparent',
+    pointHoverRadius: 4,
+    backgroundColor: gradient,
+    fill: true,
+    yAxisID: 'y',
+  }]
+}
+
+const buildMainPlotDataset = function(plot, presentIndex, label, gradient) {
+  const data = presentIndex ? truncateToPresentIndex(plot, presentIndex) : plot
+
+  return [{
+    label,
+    data: data,
+    borderWidth: 3,
+    borderColor: 'rgba(101,116,205)',
+    pointBackgroundColor: 'rgba(101,116,205)',
+    pointHoverBackgroundColor: 'rgba(71, 87, 193)',
+    pointBorderColor: 'transparent',
+    pointHoverRadius: 4,
+    backgroundColor: gradient,
+    fill: true,
+    yAxisID: 'y',
+  }]
+}
+
 export const buildDataSet = (plot, comparisonPlot, present_index, ctx, label) => {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
   var prev_gradient = ctx.createLinearGradient(0, 0, 0, 300);
@@ -46,72 +103,9 @@ export const buildDataSet = (plot, comparisonPlot, present_index, ctx, label) =>
   prev_gradient.addColorStop(0, 'rgba(101,116,205, 0.075)');
   prev_gradient.addColorStop(1, 'rgba(101,116,205, 0)');
 
-  let comparisonDataSet = []
-  if (comparisonPlot) {
-    comparisonDataSet = [
-      {
-        label,
-        data: truncateToPresentIndex(comparisonPlot, present_index),
-        borderWidth: 3,
-        borderColor: 'rgba(60,70,110,0.2)',
-        pointBackgroundColor: 'rgba(60,70,110,0.2)',
-        pointHoverBackgroundColor: 'rgba(60, 70, 110)',
-        pointBorderColor: 'transparent',
-        pointHoverRadius: 4,
-        backgroundColor: gradient,
-        fill: true,
-        yAxisID: 'yComparison',
-      }
-    ]
-  }
-
-  if (present_index) {
-    var dashedPart = plot.slice(present_index - 1, present_index + 1);
-    var dashedPlot = (new Array(present_index - 1)).concat(dashedPart)
-    const _plot = truncateToPresentIndex([...plot], present_index)
-
-    return [
-      {
-        label,
-        data: _plot,
-        borderWidth: 3,
-        borderColor: 'rgba(101,116,205)',
-        pointBackgroundColor: 'rgba(101,116,205)',
-        pointHoverBackgroundColor: 'rgba(71, 87, 193)',
-        pointBorderColor: 'transparent',
-        pointHoverRadius: 4,
-        backgroundColor: gradient,
-        fill: true,
-        yAxisID: 'y',
-      },
-      {
-        label,
-        data: dashedPlot,
-        borderWidth: 3,
-        borderDash: [3, 3],
-        borderColor: 'rgba(101,116,205)',
-        pointHoverBackgroundColor: 'rgba(71, 87, 193)',
-        pointBorderColor: 'transparent',
-        pointHoverRadius: 4,
-        backgroundColor: gradient,
-        fill: true,
-        yAxisID: 'y',
-      }
-    ].concat(comparisonDataSet)
-  } else {
-    return [
-      {
-        label,
-        data: plot,
-        borderWidth: 3,
-        borderColor: 'rgba(101,116,205)',
-        pointHoverBackgroundColor: 'rgba(71, 87, 193)',
-        pointBorderColor: 'transparent',
-        pointHoverRadius: 4,
-        backgroundColor: gradient,
-        fill: true,
-        yAxisID: 'y',
-      }
-    ].concat(comparisonDataSet)
-  }
+  return [
+    ...buildMainPlotDataset(plot, present_index, label, gradient),
+    ...buildComparisonDataset(comparisonPlot, present_index, label, gradient),
+    ...buildDashedDataset(plot, present_index, label, gradient)
+  ]
 }
