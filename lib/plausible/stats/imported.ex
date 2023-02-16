@@ -383,7 +383,7 @@ defmodule Plausible.Stats.Imported do
     q
     |> select_merge([i], %{
       bounces: sum(i.bounces),
-      visits: sum(i.entrances)
+      __internal_visits: sum(i.entrances)
     })
     |> select_imported_metrics(rest)
   end
@@ -392,7 +392,7 @@ defmodule Plausible.Stats.Imported do
     q
     |> select_merge([i], %{
       bounces: sum(i.bounces),
-      visits: sum(i.visits)
+      __internal_visits: sum(i.visits)
     })
     |> select_imported_metrics(rest)
   end
@@ -404,7 +404,7 @@ defmodule Plausible.Stats.Imported do
     q
     |> select_merge([i], %{
       visit_duration: sum(i.visit_duration),
-      visits: sum(i.entrances)
+      __internal_visits: sum(i.entrances)
     })
     |> select_imported_metrics(rest)
   end
@@ -413,7 +413,7 @@ defmodule Plausible.Stats.Imported do
     q
     |> select_merge([i], %{
       visit_duration: sum(i.visit_duration),
-      visits: sum(i.visits)
+      __internal_visits: sum(i.visits)
     })
     |> select_imported_metrics(rest)
   end
@@ -462,9 +462,9 @@ defmodule Plausible.Stats.Imported do
           "round(100 * (coalesce(?, 0) + coalesce((? * ? / 100), 0)) / (coalesce(?, 0) + coalesce(?, 0)))",
           i.bounces,
           s.bounce_rate,
-          s.visits,
-          i.visits,
-          s.visits
+          s.__internal_visits,
+          i.__internal_visits,
+          s.__internal_visits
         )
     })
     |> select_joined_metrics(rest)
@@ -478,9 +478,9 @@ defmodule Plausible.Stats.Imported do
           "round((? + ? * ?) / (? + ?), 1)",
           i.visit_duration,
           s.visit_duration,
-          s.visits,
-          s.visits,
-          i.visits
+          s.__internal_visits,
+          s.__internal_visits,
+          i.__internal_visits
         )
     })
     |> select_joined_metrics(rest)
