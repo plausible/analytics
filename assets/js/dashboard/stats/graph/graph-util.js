@@ -34,15 +34,11 @@ export const LoadingState = {
   isLoadedOrRefreshing: function (state) { return [this.loaded, this.refreshing].includes(state) }
 }
 
-const truncateToPresentIndex = function(array, presentIndex) {
-  return array.slice(0, presentIndex)
-}
-
 const buildComparisonDataset = function(comparisonPlot, presentIndex) {
   if (!comparisonPlot) return []
 
   return [{
-    data: truncateToPresentIndex(comparisonPlot, presentIndex),
+    data: comparisonPlot.slice(0, presentIndex),
     borderColor: 'rgba(60,70,110,0.2)',
     pointBackgroundColor: 'rgba(60,70,110,0.2)',
     pointHoverBackgroundColor: 'rgba(60, 70, 110)',
@@ -66,7 +62,7 @@ const buildDashedDataset = function(plot, presentIndex) {
 }
 
 const buildMainPlotDataset = function(plot, presentIndex) {
-  const data = presentIndex ? truncateToPresentIndex(plot, presentIndex) : plot
+  const data = presentIndex ? plot.slice(0, presentIndex) : plot
 
   return [{
     data: data,
