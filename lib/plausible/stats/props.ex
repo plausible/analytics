@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Props do
   use Plausible.ClickhouseRepo
   import Plausible.Stats.Base
-  @event_props ["event:page", "event:page_match", "event:name"]
+  @event_props ["event:page", "event:page_match", "event:name", "event:goal"]
   @session_props [
     "visit:source",
     "visit:country",
@@ -15,7 +15,7 @@ defmodule Plausible.Stats.Props do
     "visit:utm_campaign",
     "visit:utm_content",
     "visit:utm_term",
-    "visit_device",
+    "visit:device",
     "visit:os",
     "visit:os_version",
     "visit:browser",
