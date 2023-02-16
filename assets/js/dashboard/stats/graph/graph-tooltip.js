@@ -83,11 +83,12 @@ export default function GraphTooltip(graphData, metric, query) {
       const tooltipData = buildTooltipData(query, graphData, metric, tooltipModel)
 
       let innerHtml = (
-        <div className="text-gray-100 flex flex-col">
+        <aside className="text-gray-100 flex flex-col">
           <div className="flex justify-between items-center">
             <span className="font-semibold mr-4 text-lg">{METRIC_LABELS[metric]}</span>
             {tooltipData.comparisonDifference && <span className="font-semibold text-sm" >{tooltipData.comparisonDifference}%</span>}
           </div>
+
           <div className="flex flex-col">
             <div className="flex flex-row justify-between items-center">
               <span className="flex items-center mr-4">
@@ -109,7 +110,7 @@ export default function GraphTooltip(graphData, metric, query) {
 
           {graphData.interval === "month" && <span className="font-semibold italic">Click to view month</span>}
           {graphData.interval === "date" && <span className="font-semibold italic">Click to view day</span>}
-        </div>
+        </aside>
       )
 
       tooltipEl.innerHTML = renderToStaticMarkup(innerHtml)
