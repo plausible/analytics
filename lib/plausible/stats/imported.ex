@@ -181,13 +181,12 @@ defmodule Plausible.Stats.Imported do
         :entry_page ->
           imported_q
           |> select_merge([i], %{
-            entry_page: i.entry_page,
-            visits: sum(i.entrances)
+            entry_page: i.entry_page
           })
 
         :exit_page ->
           imported_q
-          |> select_merge([i], %{exit_page: i.exit_page, visits: sum(i.exits)})
+          |> select_merge([i], %{exit_page: i.exit_page})
 
         :country ->
           imported_q |> where([i], i.country != "ZZ") |> select_merge([i], %{country: i.country})
@@ -347,9 +346,45 @@ defmodule Plausible.Stats.Imported do
     |> select_imported_metrics(rest)
   end
 
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_exit_pages", _}}} = q,
+         [:visits | rest]
+       ) do
+    q
+    |> select_merge([i], %{visits: sum(i.exits)})
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_entry_pages", _}}} = q,
+         [:visits | rest]
+       ) do
+    q
+    |> select_merge([i], %{visits: sum(i.entrances)})
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(q, [:visits | rest]) do
+    q
+    |> select_merge([i], %{visits: sum(i.visits)})
+    |> select_imported_metrics(rest)
+  end
+
   defp select_imported_metrics(q, [:pageviews | rest]) do
     q
     |> select_merge([i], %{pageviews: sum(i.pageviews)})
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_entry_pages", _}}} = q,
+         [:bounce_rate | rest]
+       ) do
+    q
+    |> select_merge([i], %{
+      bounces: sum(i.bounces),
+      visits: sum(i.entrances)
+    })
     |> select_imported_metrics(rest)
   end
 
@@ -358,6 +393,18 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([i], %{
       bounces: sum(i.bounces),
       visits: sum(i.visits)
+    })
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_entry_pages", _}}} = q,
+         [:visit_duration | rest]
+       ) do
+    q
+    |> select_merge([i], %{
+      visit_duration: sum(i.visit_duration),
+      visits: sum(i.entrances)
     })
     |> select_imported_metrics(rest)
   end
