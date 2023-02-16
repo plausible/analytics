@@ -1,3 +1,5 @@
+import React from 'react'
+import { renderToStaticMarkup } from 'react-dom/server';
 import { METRIC_FORMATTER, METRIC_LABELS } from './graph-util.js'
 import dateFormatter from './date-formatter.js'
 
@@ -85,34 +87,36 @@ export default function GraphTooltip(graphData, metric, query) {
     if (tooltipModel.body) {
       const tooltipData = buildTooltipData(query, graphData, metric, tooltipModel)
 
-      let innerHtml = `
-      <div class='text-gray-100 flex flex-col'>
-        <div class='flex justify-between items-center'>
-          <span class='font-semibold mr-4 text-lg'>${METRIC_LABELS[metric]}</span>
-          ${tooltipData.comparisonDifference ? `<span class='font-semibold text-sm'>${tooltipData.comparisonDifference}%</span>` : ''}
-        </div>
-        <div class='flex flex-col'>
-          <div class='flex flex-row justify-between items-center'>
-            <span class='flex items-center mr-4'>
-              <div class='w-3 h-3 mr-1 rounded-full' style='background-color: rgba(101,116,205)'></div>
-              <span>${tooltipData.label}</span>
-            </span>
-            <span class='text-base font-bold'>${tooltipData.formattedValue}</span>
+      let innerHtml = (
+        <div className="text-gray-100 flex flex-col">
+          <div className="flex justify-between items-center">
+            <span className="font-semibold mr-4 text-lg">{METRIC_LABELS[metric]}</span>
+            {tooltipData.comparisonDifference && <span className="font-semibold text-sm" >{tooltipData.comparisonDifference}%</span>}
           </div>
+          <div className="flex flex-col">
+            <div className="flex flex-row justify-between items-center">
+              <span className="flex items-center mr-4">
+                <div className="w-3 h-3 mr-1 rounded-full" style={{backgroundColor: "rgba(101,116,205)"}}></div>
+                <span>{tooltipData.label}</span>
+              </span>
+              <span className="text-base font-bold">{tooltipData.formattedValue}</span>
+            </div>
 
-          ${tooltipData.comparisonLabel ? `<div class='flex flex-row justify-between items-center'>
-            <span class='flex items-center mr-4'>
-              <div class='w-3 h-3 mr-1 rounded-full bg-gray-500'></div>
-              <span>${tooltipData.comparisonLabel}</span>
-            </span>
-            <span class='text-base font-bold'>${tooltipData.formattedComparisonValue}</span>
+            {tooltipData.comparisonLabel &&
+            <div className="flex flex-row justify-between items-center">
+              <span className="flex items-center mr-4">
+                <div className="w-3 h-3 mr-1 rounded-full bg-gray-500"></div>
+                <span>{tooltipData.comparisonLabel}</span>
+              </span>
+              <span className="text-base font-bold">{tooltipData.formattedComparisonValue}</span>
+            </div>}
+
+            <span className="font-semibold italic">{graphData.interval === 'month' ? 'Click to view month' : graphData.interval === 'date' ? 'Click to view day' : ''}</span>
           </div>
         </div>
-        <span class='font-semibold italic'>${graphData.interval === 'month' ? 'Click to view month' : graphData.interval === 'date' ? 'Click to view day' : ''}</span>
-      </div>` : ''}
-      `;
+      )
 
-      tooltipEl.innerHTML = innerHtml;
+      tooltipEl.innerHTML = renderToStaticMarkup(innerHtml)
     }
     tooltipEl.style.display = null;
   }
