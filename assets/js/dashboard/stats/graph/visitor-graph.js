@@ -1,6 +1,6 @@
 import React from 'react';
 import { withRouter, Link } from 'react-router-dom'
-import Chart from 'chart.js/auto';
+import {Chart, LineController, LineElement, PointElement, CategoryScale, LinearScale, Tooltip} from 'chart.js';
 import { navigateToQuery } from '../../query'
 import * as api from '../../api'
 import * as storage from '../../util/storage'
@@ -41,6 +41,7 @@ class LineGraph extends React.Component {
     const graphEl = document.getElementById("main-graph-canvas")
     this.ctx = graphEl.getContext('2d');
     const dataSet = buildDataSet(graphData.plot, graphData.comparison_plot, graphData.present_index, this.ctx, METRIC_LABELS[metric])
+    Chart.register([LineController, LineElement, PointElement, CategoryScale, LinearScale, Tooltip])
 
     return new Chart(this.ctx, {
       type: 'line',
