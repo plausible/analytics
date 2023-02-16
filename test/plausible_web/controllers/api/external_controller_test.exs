@@ -37,8 +37,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         domain: domain,
         name: "pageview",
-        url: "http://gigride.live/",
-        screen_width: 1440
+        url: "http://gigride.live/"
       }
 
       conn =
@@ -489,7 +488,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         name: "pageview",
         url: "http://gigride.live/",
-        screen_width: nil,
         domain: domain
       }
 
