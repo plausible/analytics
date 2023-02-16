@@ -86,7 +86,11 @@ export default function GraphTooltip(graphData, metric, query) {
         <aside className="text-gray-100 flex flex-col">
           <div className="flex justify-between items-center">
             <span className="font-semibold mr-4 text-lg">{METRIC_LABELS[metric]}</span>
-            {tooltipData.comparisonDifference && <span className="font-semibold text-sm" >{tooltipData.comparisonDifference}%</span>}
+            <div className="inline-flex items-center space-x-1">
+              {tooltipData.comparisonDifference > 0 && <><span className="font-semibold text-sm text-green-500">&uarr;</span><span>{tooltipData.comparisonDifference}%</span></>}
+              {tooltipData.comparisonDifference < 0 && <><span className="font-semibold text-sm text-red-400">&darr;</span><span>{tooltipData.comparisonDifference * -1}%</span></>}
+              {tooltipData.comparisonDifference == 0 && <span className="font-semibold text-sm">〰 0%</span>}
+            </div>
           </div>
 
           <div className="flex flex-col">
