@@ -14,6 +14,8 @@ defmodule Plausible.Ingestion.CountersTest do
         :telemetry.detach("ingest-counters-#{test}")
       end)
 
+      Logger.configure(level: :debug)
+
       start_counters(
         buffer_name: test,
         interval: 100,
