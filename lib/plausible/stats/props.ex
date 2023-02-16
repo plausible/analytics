@@ -26,7 +26,7 @@ defmodule Plausible.Stats.Props do
 
   def valid_prop?(prop) when prop in @event_props, do: true
   def valid_prop?(prop) when prop in @session_props, do: true
-  def valid_prop?("event:props:" <> prop) when is_binary(prop), do: true
+  def valid_prop?("event:props:" <> prop) when byte_size(prop) > 0, do: true
   def valid_prop?(_), do: false
 
   def props(site, query) do
