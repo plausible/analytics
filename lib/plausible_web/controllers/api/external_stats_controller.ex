@@ -85,7 +85,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp validate_property(%{"property" => property}) do
-    {:ok, property}
+    if Plausible.Stats.Props.valid_prop?(property) do
+      {:ok, property}
+    else
+      {:error,
+       "Invalid property '#{property}'. Please provide a valid property for the breakdown endpoint: https://plausible.io/docs/stats-api#properties"}
+    end
   end
 
   defp validate_property(_) do
