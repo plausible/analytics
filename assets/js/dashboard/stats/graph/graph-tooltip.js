@@ -1,5 +1,3 @@
-import React from 'react'
-import { renderToStaticMarkup } from 'react-dom/server';
 import { METRIC_FORMATTER, METRIC_LABELS } from './graph-util.js'
 import dateFormatter from './date-formatter.js'
 
@@ -82,42 +80,40 @@ export default function GraphTooltip(graphData, metric, query) {
     if (tooltipModel.body) {
       const tooltipData = buildTooltipData(query, graphData, metric, tooltipModel)
 
-      let innerHtml = (
-        <aside className="text-gray-100 flex flex-col">
-          <div className="flex justify-between items-center">
-            <span className="font-semibold mr-4 text-lg">{METRIC_LABELS[metric]}</span>
-            <div className="inline-flex items-center space-x-1">
-              {tooltipData.comparisonDifference > 0 && <><span className="font-semibold text-sm text-green-500">&uarr;</span><span>{tooltipData.comparisonDifference}%</span></>}
-              {tooltipData.comparisonDifference < 0 && <><span className="font-semibold text-sm text-red-400">&darr;</span><span>{tooltipData.comparisonDifference * -1}%</span></>}
-              {tooltipData.comparisonDifference == 0 && <span className="font-semibold text-sm">〰 0%</span>}
+      tooltipEl.innerHTML = `
+        <aside class="text-gray-100 flex flex-col">
+          <div class="flex justify-between items-center">
+            <span class="font-semibold mr-4 text-lg">${METRIC_LABELS[metric]}</span>
+            <div class="inline-flex items-center space-x-1">
+              ${tooltipData.comparisonDifference > 0 ? `<span class="font-semibold text-sm text-green-500">&uarr;</span><span>${tooltipData.comparisonDifference}%</span>` : ""}
+              ${tooltipData.comparisonDifference < 0 ? `<span class="font-semibold text-sm text-red-400">&darr;</span><span>${tooltipData.comparisonDifference * -1}%</span>` : ""}
+              ${tooltipData.comparisonDifference == 0 ? `<span class="font-semibold text-sm">〰 0%</span>` : ""}
             </div>
           </div>
 
-          <div className="flex flex-col">
-            <div className="flex flex-row justify-between items-center">
-              <span className="flex items-center mr-4">
-                <div className="w-3 h-3 mr-1 rounded-full" style={{backgroundColor: "rgba(101,116,205)"}}></div>
-                <span>{tooltipData.label}</span>
+          <div class="flex flex-col">
+            <div class="flex flex-row justify-between items-center">
+              <span class="flex items-center mr-4">
+                <div class="w-3 h-3 mr-1 rounded-full" style="background-color: rgba(101,116,205)"></div>
+                <span>${tooltipData.label}</span>
               </span>
-              <span className="text-base font-bold">{tooltipData.formattedValue}</span>
+              <span class="text-base font-bold">${tooltipData.formattedValue}</span>
             </div>
 
-            {tooltipData.comparisonLabel &&
-            <div className="flex flex-row justify-between items-center">
-              <span className="flex items-center mr-4">
-                <div className="w-3 h-3 mr-1 rounded-full bg-gray-500"></div>
-                <span>{tooltipData.comparisonLabel}</span>
+            ${tooltipData.comparisonLabel ?
+            `<div class="flex flex-row justify-between items-center">
+              <span class="flex items-center mr-4">
+                <div class="w-3 h-3 mr-1 rounded-full bg-gray-500"></div>
+                <span>${tooltipData.comparisonLabel}</span>
               </span>
-              <span className="text-base font-bold">{tooltipData.formattedComparisonValue}</span>
-            </div>}
+              <span class="text-base font-bold">${tooltipData.formattedComparisonValue}</span>
+            </div>` : ""}
           </div>
 
-          {graphData.interval === "month" && <span className="font-semibold italic">Click to view month</span>}
-          {graphData.interval === "date" && <span className="font-semibold italic">Click to view day</span>}
+          ${graphData.interval === "month" ? `<span class="font-semibold italic">Click to view month</span>` : ""}
+          ${graphData.interval === "date" ? `<span class="font-semibold italic">Click to view day</span>` : ""}
         </aside>
-      )
-
-      tooltipEl.innerHTML = renderToStaticMarkup(innerHtml)
+      `
     }
     tooltipEl.style.display = null
   }
