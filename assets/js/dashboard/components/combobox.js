@@ -43,13 +43,13 @@ export default function PlausibleCombobox(props) {
   function renderOptions() {
     if (loading) {
       return (
-        <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+        <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
           Loading options...
         </div>
       )
     } else if (!loading && options.length === 0) {
       return (
-        <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+        <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
           No matches found in the current dashboard. Try selecting a different time range or searching for something different
         </div>
       )
@@ -60,7 +60,7 @@ export default function PlausibleCombobox(props) {
           <Combobox.Option
             key={option.value}
             className={({ active }) =>
-              `relative cursor-default select-none py-2 px-3 ${active ? 'bg-indigo-600 text-white' : 'text-gray-900'
+              `relative cursor-default select-none py-2 px-3 ${active ? 'bg-indigo-600 text-white' : 'text-gray-900 dark:text-gray-300'
               }`
             }
             value={option}
@@ -78,6 +78,7 @@ export default function PlausibleCombobox(props) {
         <Combobox.Button as="div" className="relative dark:bg-gray-900 dark:text-gray-300 block rounded-md shadow-sm border border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus-within:ring-indigo-500 focus-within:border-indigo-500 ">
           <Combobox.Input
             className="border-none rounded-md focus:outline-none focus:ring-0 pr-10 text-sm"
+            style={{backgroundColor: 'inherit'}}
             placeholder={props.placeholder}
             displayValue={(item) => item && item.label}
             onChange={(event) => debouncedFetchOptions(event.target.value)}
@@ -95,7 +96,7 @@ export default function PlausibleCombobox(props) {
           leaveTo="opacity-0"
           beforeEnter={onOpen}
         >
-          <Combobox.Options className="z-50 absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+          <Combobox.Options className="z-50 absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900">
             {renderOptions()}
           </Combobox.Options>
         </Transition>
