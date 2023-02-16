@@ -319,6 +319,7 @@ defmodule PlausibleWeb.StatsController do
   defp get_flags(user) do
     %{
       custom_dimension_filter: FunWithFlags.enabled?(:custom_dimension_filter, for: user),
+      visits_metric: FunWithFlags.enabled?(:visits_metric, for: user),
       comparisons: FunWithFlags.enabled?(:comparisons, for: user)
     }
   end
