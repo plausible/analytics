@@ -75,6 +75,7 @@ defmodule Plausible.Ingestion.Counters do
           # Trying to figure out how to do that with the current driver
           IngestRepo.checkout(fn ->
             IngestRepo.query!("SET async_insert = 1")
+            IngestRepo.query!("SET wait_for_async_insert = 0")
             {_, _} = IngestRepo.insert_all(Record, records)
             IngestRepo.query!("SET async_insert = 0")
           end)
