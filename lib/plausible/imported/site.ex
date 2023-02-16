@@ -98,12 +98,16 @@ defmodule Plausible.Imported do
   end
 
   defp new_from_google_analytics(site_id, "imported_locations", row) do
+    country_code = row.dimensions |> Map.fetch!("ga:countryIsoCode") |> default_if_missing("")
+    city_name = row.dimensions |> Map.fetch!("ga:city") |> default_if_missing("")
+    city_data = Location.get_city(city_name, country_code)
+
     %{
       site_id: site_id,
       date: get_date(row),
-      country: row.dimensions |> Map.fetch!("ga:countryIsoCode") |> default_if_missing(""),
+      country: country_code,
       region: row.dimensions |> Map.fetch!("ga:regionIsoCode") |> default_if_missing(""),
-      city: 0,
+      city: city_data && city_data.id,
       visitors: row.metrics |> Map.fetch!("ga:users") |> parse_number(),
       visits: row.metrics |> Map.fetch!("ga:sessions") |> parse_number(),
       bounces: row.metrics |> Map.fetch!("ga:bounces") |> parse_number(),

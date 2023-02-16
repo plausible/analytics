@@ -1,5 +1,6 @@
 defmodule Plausible.Workers.ImportGoogleAnalytics do
   use Plausible.Repo
+  require Logger
 
   use Oban.Worker,
     queue: :google_analytics_imports,
@@ -41,6 +42,7 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
         :ok
 
       {:error, error} ->
+        Logger.error("Import: Failed to import from GA. Reason: #{inspect(error)}")
         import_failed(site)
 
         {:error, error}

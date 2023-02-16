@@ -1,7 +1,8 @@
 defmodule Plausible.ClickhouseRepo do
   use Ecto.Repo,
     otp_app: :plausible,
-    adapter: ClickhouseEcto
+    adapter: ClickhouseEcto,
+    read_only: true
 
   defmacro __using__(_) do
     quote do

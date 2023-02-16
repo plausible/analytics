@@ -19,6 +19,33 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
              ]
     end
 
+    test "returns (not set) when appropriate", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          operating_system: ""
+        ),
+        build(:pageview,
+          operating_system: "Linux"
+        )
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/operating-systems?period=day")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "(not set)", "visitors" => 1, "percentage" => 50},
+               %{"name" => "Linux", "visitors" => 1, "percentage" => 50}
+             ]
+
+      filters = Jason.encode!(%{os: "(not set)"})
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "(not set)", "visitors" => 1, "percentage" => 100}
+             ]
+    end
+
     test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1, operating_system: "Mac"),

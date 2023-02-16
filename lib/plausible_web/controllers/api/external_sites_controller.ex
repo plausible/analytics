@@ -13,11 +13,6 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       {:ok, %{site: site}} ->
         json(conn, site)
 
-      {:error, :site, changeset, _} ->
-        conn
-        |> put_status(400)
-        |> json(serialize_errors(changeset))
-
       {:error, :limit, limit, _} ->
         conn
         |> put_status(403)
@@ -25,6 +20,11 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
           error:
             "Your account has reached the limit of #{limit} sites per account. Please contact hello@plausible.io to unlock more sites."
         })
+
+      {:error, _, changeset, _} ->
+        conn
+        |> put_status(400)
+        |> json(serialize_errors(changeset))
     end
   end
 
@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     site = Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner])
 
     if site do
-      Plausible.Purge.delete_site!(site)
+      {:ok, _} = Plausible.Site.Removal.run(site.domain)
       json(conn, %{"deleted" => true})
     else
       H.not_found(conn, "Site could not be found")
@@ -139,7 +139,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
   defp serialize_errors(changeset) do
     {field, {msg, _opts}} = List.first(changeset.errors)
-    error_msg = Atom.to_string(field) <> " " <> msg
+    error_msg = Atom.to_string(field) <> ": " <> msg
     %{"error" => error_msg}
   end
 

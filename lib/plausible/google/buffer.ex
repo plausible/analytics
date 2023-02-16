@@ -91,6 +91,6 @@ defmodule Plausible.Google.Buffer do
     Process.sleep(1000)
 
     Logger.info("Import: Flushing #{length(records)} from #{table_name} buffer")
-    Plausible.ClickhouseRepo.insert_all(table_name, records)
+    Plausible.IngestRepo.insert_all(table_name, records)
   end
 end
