@@ -38,59 +38,41 @@ const truncateToPresentIndex = function(array, presentIndex) {
   return array.slice(0, presentIndex)
 }
 
-const buildComparisonDataset = function(comparisonPlot, presentIndex, label, gradient) {
+const buildComparisonDataset = function(comparisonPlot, presentIndex) {
   if (!comparisonPlot) return []
 
   return [{
-    label,
     data: truncateToPresentIndex(comparisonPlot, presentIndex),
-    borderWidth: 3,
     borderColor: 'rgba(60,70,110,0.2)',
     pointBackgroundColor: 'rgba(60,70,110,0.2)',
     pointHoverBackgroundColor: 'rgba(60, 70, 110)',
-    pointBorderColor: 'transparent',
-    pointHoverRadius: 4,
-    backgroundColor: gradient,
-    fill: true,
     yAxisID: 'yComparison',
   }]
 }
 
-const buildDashedDataset = function(plot, presentIndex, label, gradient) {
+const buildDashedDataset = function(plot, presentIndex) {
   if (!presentIndex) return []
 
   const dashedPart = plot.slice(presentIndex - 1, presentIndex + 1);
   const dashedPlot = (new Array(presentIndex - 1)).concat(dashedPart)
 
   return [{
-    label,
     data: dashedPlot,
-    borderWidth: 3,
     borderDash: [3, 3],
     borderColor: 'rgba(101,116,205)',
     pointHoverBackgroundColor: 'rgba(71, 87, 193)',
-    pointBorderColor: 'transparent',
-    pointHoverRadius: 4,
-    backgroundColor: gradient,
-    fill: true,
     yAxisID: 'y',
   }]
 }
 
-const buildMainPlotDataset = function(plot, presentIndex, label, gradient) {
+const buildMainPlotDataset = function(plot, presentIndex) {
   const data = presentIndex ? truncateToPresentIndex(plot, presentIndex) : plot
 
   return [{
-    label,
     data: data,
-    borderWidth: 3,
     borderColor: 'rgba(101,116,205)',
     pointBackgroundColor: 'rgba(101,116,205)',
     pointHoverBackgroundColor: 'rgba(71, 87, 193)',
-    pointBorderColor: 'transparent',
-    pointHoverRadius: 4,
-    backgroundColor: gradient,
-    fill: true,
     yAxisID: 'y',
   }]
 }
@@ -103,9 +85,13 @@ export const buildDataSet = (plot, comparisonPlot, present_index, ctx, label) =>
   prev_gradient.addColorStop(0, 'rgba(101,116,205, 0.075)');
   prev_gradient.addColorStop(1, 'rgba(101,116,205, 0)');
 
-  return [
-    ...buildMainPlotDataset(plot, present_index, label, gradient),
-    ...buildComparisonDataset(comparisonPlot, present_index, label, gradient),
-    ...buildDashedDataset(plot, present_index, label, gradient)
+  const defaultOptions = { label, borderWidth: 3, pointBorderColor: "transparent", pointHoverRadius: 4, backgroundColor: gradient, fill: true }
+
+  const dataset = [
+    ...buildMainPlotDataset(plot, present_index),
+    ...buildDashedDataset(plot, present_index),
+    ...buildComparisonDataset(comparisonPlot, present_index)
   ]
+
+  return dataset.map((item) => Object.assign(item, defaultOptions))
 }
