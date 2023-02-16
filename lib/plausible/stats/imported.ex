@@ -213,7 +213,8 @@ defmodule Plausible.Stats.Imported do
     q =
       from(s in Ecto.Query.subquery(q),
         full_join: i in subquery(imported_q),
-        on: field(s, ^dim) == field(i, ^dim)
+        on: field(s, ^dim) == field(i, ^dim),
+        select: %{}
       )
       |> select_joined_metrics(metrics)
       |> apply_order_by(metrics)
@@ -265,15 +266,13 @@ defmodule Plausible.Stats.Imported do
       :entry_page ->
         q
         |> select_merge([s, i], %{
-          entry_page: fragment("if(empty(?), ?, ?)", i.entry_page, s.entry_page, i.entry_page),
-          visits: fragment("? + ?", s.visits, i.visits)
+          entry_page: fragment("if(empty(?), ?, ?)", i.entry_page, s.entry_page, i.entry_page)
         })
 
       :exit_page ->
         q
         |> select_merge([s, i], %{
-          exit_page: fragment("if(empty(?), ?, ?)", i.exit_page, s.exit_page, i.exit_page),
-          visits: fragment("coalesce(?, 0) + coalesce(?, 0)", s.visits, i.visits)
+          exit_page: fragment("if(empty(?), ?, ?)", i.exit_page, s.exit_page, i.exit_page)
         })
 
       :country ->
@@ -383,6 +382,14 @@ defmodule Plausible.Stats.Imported do
   # queries should fetch bounces/total_visit_duration and visits and be
   # used as subqueries to a main query that then find the bounce rate/avg
   # visit_duration.
+
+  defp select_joined_metrics(q, [:visits | rest]) do
+    q
+    |> select_merge([s, i], %{
+      :visits => fragment("? + ?", s.visits, i.visits)
+    })
+    |> select_joined_metrics(rest)
+  end
 
   defp select_joined_metrics(q, [:visitors | rest]) do
     q
