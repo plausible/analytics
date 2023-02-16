@@ -55,35 +55,30 @@ const buildTooltipData = function(query, graphData, metric, tooltipModel) {
 
 export default function GraphTooltip(graphData, metric, query) {
   return (context) => {
-    const tooltipModel = context.tooltip;
+    const tooltipModel = context.tooltip
     const offset = document.getElementById("main-graph-canvas").getBoundingClientRect()
+    let tooltipEl = document.getElementById('chartjs-tooltip')
 
-    // Tooltip Element
-    let tooltipEl = document.getElementById('chartjs-tooltip');
-
-    // Create element on first render
     if (!tooltipEl) {
-      tooltipEl = document.createElement('div');
-      tooltipEl.id = 'chartjs-tooltip';
-      tooltipEl.style.display = 'none';
-      tooltipEl.style.opacity = 0;
-      document.body.appendChild(tooltipEl);
+      tooltipEl = document.createElement('div')
+      tooltipEl.id = 'chartjs-tooltip'
+      tooltipEl.style.display = 'none'
+      tooltipEl.style.opacity = 0
+      document.body.appendChild(tooltipEl)
     }
 
     if (tooltipEl && offset && window.innerWidth < 768) {
       tooltipEl.style.top = offset.y + offset.height + window.scrollY + 15 + 'px'
       tooltipEl.style.left = offset.x + 'px'
-      tooltipEl.style.right = null;
-      tooltipEl.style.opacity = 1;
+      tooltipEl.style.right = null
+      tooltipEl.style.opacity = 1
     }
 
-    // Stop if no tooltip showing
     if (tooltipModel.opacity === 0) {
-      tooltipEl.style.display = 'none';
-      return;
+      tooltipEl.style.display = 'none'
+      return
     }
 
-    // Set Tooltip Body
     if (tooltipModel.body) {
       const tooltipData = buildTooltipData(query, graphData, metric, tooltipModel)
 
@@ -110,14 +105,15 @@ export default function GraphTooltip(graphData, metric, query) {
               </span>
               <span className="text-base font-bold">{tooltipData.formattedComparisonValue}</span>
             </div>}
-
-            <span className="font-semibold italic">{graphData.interval === 'month' ? 'Click to view month' : graphData.interval === 'date' ? 'Click to view day' : ''}</span>
           </div>
+
+          {graphData.interval === "month" && <span className="font-semibold italic">Click to view month</span>}
+          {graphData.interval === "date" && <span className="font-semibold italic">Click to view day</span>}
         </div>
       )
 
       tooltipEl.innerHTML = renderToStaticMarkup(innerHtml)
     }
-    tooltipEl.style.display = null;
+    tooltipEl.style.display = null
   }
 }
