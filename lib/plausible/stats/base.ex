@@ -305,7 +305,7 @@ defmodule Plausible.Stats.Base do
       select_merge: %{
         bounce_rate:
           fragment("toUInt32(ifNotFinite(round(sum(is_bounce * sign) / sum(sign) * 100), 0))"),
-        visits: fragment("toUInt32(sum(sign))")
+        __internal_visits: fragment("toUInt32(sum(sign))")
       }
     )
     |> select_session_metrics(rest)
@@ -353,7 +353,7 @@ defmodule Plausible.Stats.Base do
       select_merge: %{
         :visit_duration =>
           fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))"),
-        visits: fragment("toUInt32(sum(sign))")
+        __internal_visits: fragment("toUInt32(sum(sign))")
       }
     )
     |> select_session_metrics(rest)
