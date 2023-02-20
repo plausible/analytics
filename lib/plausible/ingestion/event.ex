@@ -71,6 +71,23 @@ defmodule Plausible.Ingestion.Event do
     [:plausible, :ingest, :event, :dropped]
   end
 
+  @spec emit_telemetry_buffered(t()) :: :ok
+  def emit_telemetry_buffered(event) do
+    :telemetry.execute(telemetry_event_buffered(), %{}, %{
+      domain: event.domain,
+      request_timestamp: event.request.timestamp
+    })
+  end
+
+  @spec emit_telemetry_dropped(t(), drop_reason()) :: :ok
+  def emit_telemetry_dropped(event, reason) do
+    :telemetry.execute(telemetry_event_dropped(), %{}, %{
+      domain: event.domain,
+      reason: reason,
+      request_timestamp: event.request.timestamp
+    })
+  end
+
   defp pipeline() do
     [
       &put_user_agent/1,
@@ -107,7 +124,7 @@ defmodule Plausible.Ingestion.Event do
       |> Keyword.put(:dropped?, true)
       |> Keyword.put(:drop_reason, reason)
 
-    emit_telemetry_dropped(reason)
+    emit_telemetry_dropped(event, reason)
     struct!(event, fields)
   end
 
@@ -243,7 +260,7 @@ defmodule Plausible.Ingestion.Event do
 
   defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event} = event) do
     {:ok, _} = Plausible.Event.WriteBuffer.insert(clickhouse_event)
-    emit_telemetry_buffered()
+    emit_telemetry_buffered(event)
     event
   end
 
@@ -374,12 +391,4 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp spam_referrer?(_), do: false
-
-  defp emit_telemetry_buffered() do
-    :telemetry.execute(telemetry_event_buffered(), %{}, %{})
-  end
-
-  defp emit_telemetry_dropped(reason) do
-    :telemetry.execute(telemetry_event_dropped(), %{}, %{reason: reason})
-  end
 end
