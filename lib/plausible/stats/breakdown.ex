@@ -217,7 +217,7 @@ defmodule Plausible.Stats.Breakdown do
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
     |> transform_keys(%{operating_system: :os})
-    |> maybe_remove_visits_metric(metrics)
+    |> remove_internal_visits_metric(metrics)
   end
 
   defp breakdown_events(_, _, _, [], _), do: []
@@ -584,13 +584,13 @@ defmodule Plausible.Stats.Breakdown do
     end)
   end
 
-  defp maybe_remove_visits_metric(results, metrics) do
-    # "visits" is fetched when querying bounce rate and visit duration, as it
+  defp remove_internal_visits_metric(results, metrics) do
+    # "__internal_visits" is fetched when querying bounce rate and visit duration, as it
     # is needed to calculate these from imported data. Let's remove it from the
     # result if it wasn't requested.
-    if (:bounce_rate in metrics or :visit_duration in metrics) and :visits not in metrics do
+    if :bounce_rate in metrics or :visit_duration in metrics do
       results
-      |> Enum.map(&Map.delete(&1, :visits))
+      |> Enum.map(&Map.delete(&1, :__internal_visits))
     else
       results
     end
