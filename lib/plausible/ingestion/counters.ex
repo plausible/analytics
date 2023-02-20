@@ -62,7 +62,7 @@ defmodule Plausible.Ingestion.Counters do
         records =
           Enum.map(records, fn {bucket, metric, domain, value} ->
             %{
-              event_timebucket: DateTime.from_unix!(bucket),
+              event_timebucket: to_0_minute_datetime(bucket),
               metric: metric,
               site_id: Plausible.Site.Cache.get_site_id(domain),
               domain: domain,
@@ -92,5 +92,12 @@ defmodule Plausible.Ingestion.Counters do
   @impl true
   def handle_info(_msg, state) do
     {:continue, state}
+  end
+
+  defp to_0_minute_datetime(unix_ts) when is_integer(unix_ts) do
+    unix_ts
+    |> DateTime.from_unix!()
+    |> DateTime.truncate(:second)
+    |> Map.replace(:second, 0)
   end
 end

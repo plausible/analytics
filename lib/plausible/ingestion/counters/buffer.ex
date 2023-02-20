@@ -9,7 +9,7 @@ defmodule Plausible.Ingestion.Counters.Buffer do
   flush until its time has passed.
   """
 
-  defstruct [:buffer_name, :aggregate_bucket_fn]
+  defstruct [:buffer_name, :aggregate_bucket_fn, :flush_boundary_fn]
 
   alias Plausible.Ingestion.Counters.Record
 
@@ -17,6 +17,7 @@ defmodule Plausible.Ingestion.Counters.Buffer do
   @type unix_timestamp() :: pos_integer()
   @type bucket_fn_opt() ::
           {:aggregate_bucket_fn, (NaiveDateTime.t() -> unix_timestamp())}
+          | {:flush_boundary_fn, (DateTime.t() -> unix_timestamp())}
 
   @ets_opts [
     :public,
@@ -30,10 +31,12 @@ defmodule Plausible.Ingestion.Counters.Buffer do
     ^buffer_name = :ets.new(buffer_name, @ets_opts)
 
     aggregate_bucket_fn = Keyword.get(opts, :aggregate_bucket_fn, &bucket_10s/1)
+    flush_boundary_fn = Keyword.get(opts, :flush_boundary_fn, &previous_10s/1)
 
     %__MODULE__{
       buffer_name: buffer_name,
-      aggregate_bucket_fn: aggregate_bucket_fn
+      aggregate_bucket_fn: aggregate_bucket_fn,
+      flush_boundary_fn: flush_boundary_fn
     }
   end
 
@@ -44,9 +47,7 @@ defmodule Plausible.Ingestion.Counters.Buffer do
         domain,
         timestamp
       ) do
-    bucket =
-      bucket_fn.(timestamp)
-      |> IO.inspect(label: :bucket)
+    bucket = bucket_fn.(timestamp)
 
     :ets.update_counter(
       buffer_name,
@@ -60,11 +61,10 @@ defmodule Plausible.Ingestion.Counters.Buffer do
 
   @spec flush(t(), now :: DateTime.t()) :: [Record.t()]
   def flush(
-        %__MODULE__{buffer_name: buffer_name},
+        %__MODULE__{buffer_name: buffer_name, flush_boundary_fn: flush_boundary_fn},
         now \\ DateTime.utc_now()
       ) do
-    boundary =
-      now |> DateTime.add(-10, :second) |> IO.inspect(label: :minus) |> DateTime.to_unix()
+    boundary = flush_boundary_fn.(now)
 
     match = {{:"$1", :"$2", :"$3"}, :"$4"}
     guard = {:"=<", :"$1", boundary}
@@ -86,12 +86,16 @@ defmodule Plausible.Ingestion.Counters.Buffer do
   @spec bucket_10s(NaiveDateTime.t()) :: unix_timestamp()
   def bucket_10s(datetime) do
     datetime
-    |> IO.inspect(label: :input_dt)
     |> DateTime.from_naive!("Etc/UTC")
     |> DateTime.truncate(:second)
     |> Map.replace(:second, div(datetime.second, 10) * 10)
-    |> IO.inspect(label: :agg_bucket_dt)
     |> DateTime.to_unix()
-    |> IO.inspect(label: :agg_bucket)
+  end
+
+  @spec previous_10s(DateTime.t()) :: unix_timestamp()
+  def previous_10s(datetime) do
+    datetime
+    |> DateTime.add(-10, :second)
+    |> DateTime.to_unix()
   end
 end
