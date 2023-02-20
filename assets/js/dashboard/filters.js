@@ -9,8 +9,7 @@ import {
   FILTER_GROUPS,
   formatFilterGroup,
   filterGroupForFilter,
-  toFilterType,
-  valueWithoutPrefix
+  parseQueryFilter
 } from "./stats/modals/filter";
 
 function removeFilter(key, history, query) {
@@ -38,8 +37,7 @@ function clearAllFilters(history, query) {
 }
 
 function filterText(key, rawValue, query) {
-  let type = toFilterType(rawValue)
-  const value = valueWithoutPrefix(rawValue)
+  const {type, value} = parseQueryFilter(rawValue)
 
   if (key === "goal") {
     return <>Completed goal <b>{value}</b></>
@@ -47,7 +45,8 @@ function filterText(key, rawValue, query) {
   if (key === "props") {
     const [metaKey, metaValue] = Object.entries(value)[0]
     const eventName = query.filters.goal ? query.filters.goal : 'event'
-    return <>{eventName}.{metaKey} {toFilterType(metaValue)} <b>{valueWithoutPrefix(metaValue)}</b></>
+    const metaFilter = parseQueryFilter(metaValue)
+    return <>{eventName}.{metaKey} {metaFilter.type} <b>{metaFilter.value}</b></>
   }
   if (key === "browser_version") {
     const isNotSet = query.filters.browser === '(not set)' || (!query.filters.browser)
