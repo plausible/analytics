@@ -1,12 +1,21 @@
 defmodule Plausible.Ingestion.Counters do
   @moduledoc """
   This is instrumentation necessary for keeping track of per-domain
-  internal metrics. Due to metric labels cardinatlity (domain x metric_name),
+  internal metrics. Due to metric labels cardinality (domain x metric_name),
   these statistics are not suitable for prometheus/grafana exposure,
   hence an internal storage is used.
 
-  The module installs `Counters.TelemetryHandler` and periodicially
+  The module installs `Counters.TelemetryHandler` and periodically
   flushes the internal counter aggregates via `Counters.Buffer` interface.
+
+  The underlying database schema is running `SummingMergeTree` engine.
+  To take advantage of automatic roll-ups it provides, upon dispatching the
+  buffered records to Clickhouse this module transforms each `event_timebucket`
+  aggregate into a 1-minute resolution.
+
+  Clickhouse connection is set to insert counters asynchronously every time
+  a pool checkout is made. Those properties are reverted once the insert is done 
+  (or naturally, if the connection crashes).
   """
 
   @behaviour :gen_cycle
